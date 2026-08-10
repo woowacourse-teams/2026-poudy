@@ -3,7 +3,7 @@
 | 디렉터리 | 내용 |
 | --- | --- |
 | [server](server) | Spring Boot 백엔드 |
-| client | 프론트엔드 (준비 중) |
+| [client](client) | Next.js 프론트엔드 |
 | common | 백엔드에서 생성한 API 타입 (`api.d.ts`) |
 
 ## 클론 후 1회
