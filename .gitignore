@@ -1,56 +1,28 @@
-### Java / Gradle ###
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-.gradle/
-*.class
-*.log
+# 저장소 어디에나 생기는 것만 둔다.
+# 빌드 산출물과 의존성은 각 디렉터리가 관리한다.
+#   server/.gitignore — Java / Gradle
+#   client/.gitignore — Node / Next.js
 
-### IntelliJ IDEA ###
+### IDE ###
 .idea/
 *.iws
 *.iml
 *.ipr
-out/
-
-### Eclipse / STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
 .vscode/
-
-### 환경 변수 ###
-# 백엔드와 프론트엔드 모두 해당한다. 견본인 .env.example 만 커밋한다.
-.env
-.env.*
-!.env.example
-
-### Node / Frontend ###
-node_modules/
-dist/
-coverage/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
 ### OS ###
 .DS_Store
 Thumbs.db
 
+### 환경 변수와 비밀 ###
+# 견본인 .env.example 만 커밋한다. 서버와 클라이언트 모두 해당한다.
+.env
+.env.*
+!.env.example
+*.pem
+
 ### Claude Code ###
+# 슬래시가 든 패턴은 이 파일이 있는 디렉터리에만 걸린다.
+# client 나 server 안에서 만든 것까지 막으려면 ** 가 필요하다.
 CLAUDE.local.md
-.claude/settings.local.json
+**/.claude/settings.local.json
