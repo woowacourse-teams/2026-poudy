@@ -204,13 +204,11 @@ jobs:
           docker logs poudy-ci
           exit 1
 
-      - name: Show container log on failure
-        if: failure()
-        run: docker logs poudy-ci || true
-
   # 필수 체크로 걸 잡. 앞 잡이 건너뛰어도 반드시 결과를 보고한다.
   # 서버와 무관한 PR 에서는 앞 잡이 skipped 로 끝나고 여기서 성공으로 마무리된다.
-  # 브랜치 보호에는 이 잡 하나만 필수 체크로 등록하면 된다.
+  #
+  # 이 잡은 이 워크플로 안의 잡만 모은다. Commit Lint 처럼 다른 워크플로는
+  # 각자 필수 체크로 등록해야 한다. Server CI 안에서는 이것 하나면 된다는 뜻이다.
   #
   # always() 가 아니라 !cancelled() 다. always() 로 두면 연속 push 로 이전 실행이
   # 취소됐을 때도 이 잡이 깨어나, 선행 잡의 cancelled 를 보고 빨간 X 를 남긴다.

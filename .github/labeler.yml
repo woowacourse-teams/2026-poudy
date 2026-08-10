@@ -8,6 +8,12 @@
 #   종류   bug, feat, hotfix, refactor, style, documentation
 #   상태   question, stale
 # 이슈 템플릿과 stale 워크플로가 위 목록에 기대고 있으므로 이름을 바꾸지 않는다.
+#
+# 영역을 추가하거나 이름을 바꿀 때는 세 곳을 함께 고친다.
+#   1. 이 파일
+#   2. .github/ISSUE_TEMPLATE/*.yml 의 영역 드롭다운 (6 개)
+#   3. .github/workflows/issue-area-label.yml 의 areas 배열
+# 한 곳만 고치면 이슈에서 고른 영역이 조용히 무시된다.
 
 server:
   - changed-files:

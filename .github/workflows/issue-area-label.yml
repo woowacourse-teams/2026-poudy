@@ -30,6 +30,8 @@ jobs:
             const match = body.match(/###\s*영역\s*\n+\s*([^\n]+)/);
             const picked = match ? match[1].trim() : null;
 
+            // 판단할 수 없으면 이미 붙어 있는 영역 레이블을 그대로 둔다.
+            // 폼을 잘못 편집해 값이 비었을 때 손으로 붙인 레이블까지 떼는 것보다 낫다.
             if (!picked || !areas.includes(picked)) {
               core.info(`영역을 판단할 수 없습니다: ${picked ?? '(없음)'}`);
               return;
