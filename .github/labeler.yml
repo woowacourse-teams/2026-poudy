@@ -13,9 +13,17 @@ common:
   - changed-files:
       - any-glob-to-any-file: ['common/**']
 
+# ci 레이블은 워크플로와 저장소 설정을 함께 가리킨다.
+# 루트의 Git 설정 파일만 고친 PR 이 아무 레이블도 받지 못하던 것을 포함시켰다.
 ci:
   - changed-files:
-      - any-glob-to-any-file: ['.github/**', '.githooks/**']
+      - any-glob-to-any-file:
+          - '.github/**'
+          - '.githooks/**'
+          - '.gitattributes'
+          - '.gitignore'
+          - '.gitmessage.txt'
+          - 'setup-git.sh'
 
 documentation:
   - changed-files:
