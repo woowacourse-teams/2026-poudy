@@ -1,7 +1,7 @@
-name: 기능 추가
-description: 새로 구현할 기능
-title: "[FEAT] "
-labels: [feat]
+name: 문서 작업
+description: 문서 추가 또는 수정
+title: "[DOCS] "
+labels: [documentation]
 body:
   - type: dropdown
     id: area
@@ -16,19 +16,18 @@ body:
       required: true
 
   - type: textarea
-    id: work
+    id: target
+    attributes:
+      label: 대상
+      description: 어떤 문서를 다루나요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: content
     attributes:
       label: 작업 내용
       value: |
         -
     validations:
       required: true
-
-  - type: textarea
-    id: checklist
-    attributes:
-      label: 체크리스트
-      value: |
-        - [ ]
-    validations:
-      required: false

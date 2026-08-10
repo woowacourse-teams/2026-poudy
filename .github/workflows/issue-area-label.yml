@@ -18,11 +18,12 @@ concurrency:
 jobs:
   label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/github-script@v9
         with:
           script: |
-            const areas = ['server', 'client', 'common'];
+            const areas = ['server', 'client', 'common', 'ci'];
             const body = context.payload.issue.body || '';
 
             // 이슈 폼은 '### 영역' 다음 줄에 선택값을 넣는다.

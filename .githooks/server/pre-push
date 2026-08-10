@@ -26,7 +26,10 @@ is_zero() {
     esac
 }
 
+head_sha=$(git rev-parse HEAD)
+
 openapi_relevant=0
+mismatched=''
 while read -r local_ref local_sha remote_ref remote_sha; do
     [ -z "$local_sha" ] && continue
     is_zero "$local_sha" && continue      # 브랜치 삭제
@@ -40,10 +43,26 @@ while read -r local_ref local_sha remote_ref remote_sha; do
             -- $openapi_watched | head -1)
     fi
 
-    [ -n "$touched" ] && openapi_relevant=1
+    if [ -n "$touched" ]; then
+        openapi_relevant=1
+        # 생성기는 커밋이 아니라 작업 트리를 읽고, 아래 자동 커밋도 HEAD 에 쌓인다.
+        # HEAD 가 아닌 ref 를 밀면 검사 대상과 push 대상이 어긋나고,
+        # 갱신 커밋이 의도하지 않은 브랜치에 생긴다.
+        [ "$local_sha" = "$head_sha" ] || mismatched="$mismatched $local_ref"
+    fi
 done
 
 [ "$openapi_relevant" -eq 0 ] && exit 0
+
+if [ -n "$mismatched" ]; then
+    echo "[pre-push] HEAD 가 아닌 ref 를 밀고 있어 생성물을 검증할 수 없습니다."
+    for ref in $mismatched; do
+        echo "  $ref"
+    done
+    echo
+    echo "  해당 브랜치로 옮긴 뒤 다시 push 하세요."
+    exit 1
+fi
 
 # 생성기는 커밋이 아니라 작업 트리를 읽는다. 생성 입력에 커밋하지 않은 변경이
 # 있으면 push 되는 커밋과 다른 결과가 나오므로 판단을 보류한다.
