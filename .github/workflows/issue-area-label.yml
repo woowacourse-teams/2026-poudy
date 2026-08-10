@@ -30,8 +30,7 @@ jobs:
             const match = body.match(/###\s*영역\s*\n+\s*([^\n]+)/);
             const picked = match ? match[1].trim() : null;
 
-            // 판단할 수 없으면 이미 붙어 있는 영역 레이블을 그대로 둔다.
-            // 폼을 잘못 편집해 값이 비었을 때 손으로 붙인 레이블까지 떼는 것보다 낫다.
+            // 판단할 수 없으면 이미 붙은 레이블을 그대로 둔다.
             if (!picked || !areas.includes(picked)) {
               core.info(`영역을 판단할 수 없습니다: ${picked ?? '(없음)'}`);
               return;
@@ -49,9 +48,8 @@ jobs:
               return;
             }
 
-            // addLabels 는 없는 이름을 임의 색으로 만들어 버린다. labeler 는 반대로
-            // 없으면 실패하므로, 그대로 두면 이슈 쪽에서만 설명 없는 레이블이 생겨
-            // 두 워크플로가 같은 이름을 다르게 다루게 된다. 있는 것만 붙인다.
+            // addLabels 는 없는 이름을 임의 색으로 만든다. labeler 는 반대로 실패하므로
+            // 그대로 두면 두 워크플로가 같은 이름을 다르게 다룬다.
             const defined = await github.paginate(github.rest.issues.listLabelsForRepo, {
               owner: issue.owner,
               repo: issue.repo,

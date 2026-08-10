@@ -1,13 +1,8 @@
 name: Server CI
 
-# 기본 브랜치는 dev 다. main 만 감시하면 머지 커밋이 한 번도 검사되지 않는다.
-# PR 각각이 통과해도 합쳐진 결과는 다를 수 있다. 특히 OpenAPI 생성물은 두 PR 이
-# 각자 다른 엔드포인트를 더하면 머지 후 어느 쪽과도 달라진다.
-#
-# 워크플로 수준 paths 는 쓰지 않는다. paths 로 걸러 내면 서버와 무관한 PR 에서
-# 워크플로가 아예 실행되지 않아, 필수 체크로 걸었을 때 Expected 로 남고 머지가
-# 영원히 막힌다. 대신 changes 잡이 경로를 판단하고 무거운 잡에 if 를 걸며,
-# gate 잡이 결과를 모아 항상 보고한다. 필수 체크는 gate 하나만 걸면 된다.
+# dev 도 감시한다. PR 이 각각 통과해도 머지 결과는 다를 수 있다.
+# 워크플로 수준 paths 는 쓰지 않는다. 실행 자체가 안 되면 필수 체크가
+# Expected 로 남아 머지가 막힌다. changes 로 판단하고 gate 가 항상 보고한다.
 on:
   push:
     branches: [main, dev]
@@ -17,8 +12,7 @@ on:
 permissions:
   contents: read
 
-# PR 은 연속 push 시 이전 실행을 취소한다. 통합 브랜치는 취소하지 않는다.
-# 취소하면 그 커밋이 통과했는지에 대한 기록이 남지 않는다.
+# 통합 브랜치는 취소하지 않는다. 그 커밋의 통과 기록이 사라진다.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -46,12 +40,10 @@ jobs:
     needs: changes
     if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
-    # generateApiTypes 는 앱을 띄우고 응답을 기다린다. 기동이 매달리면
-    # 기본 타임아웃 6 시간을 그대로 쓰므로 상한을 둔다.
+    # generateApiTypes 는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20
 
-    # 워크플로 전체가 아니라 이 잡에만 건다. 위에 두면 docker 잡에 run 스텝을
-    # 추가했을 때 조용히 server 에서 실행된다.
+    # 이 잡에만 건다. 위에 두면 docker 잡의 run 스텝도 server 에서 돈다.
     defaults:
       run:
         working-directory: server
@@ -80,22 +72,19 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # 데몬을 끄지 않는다. setup-gradle 은 데몬 재사용을 전제로 캐시를 관리하고
-      # 잡이 끝날 때 정리까지 맡는다.
+      # --no-daemon 을 쓰지 않는다. setup-gradle 이 데몬 재사용을 전제로 캐시를 관리한다.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # v5 부터 package.json 의 packageManager 를 보고 캐시를 자동으로 켠다.
-      # 여기서 Node 는 openapi-typescript 를 npx 로 한 번 돌리는 데만 쓰고,
-      # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패하므로 꺼 둔다.
+      # v5 부터 packageManager 를 보고 캐시를 켠다. 여기선 npx 만 쓰므로
+      # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패한다.
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
           node-version: '22'
           package-manager-cache: false
 
-      # 커밋 훅을 우회했거나 훅이 설치되지 않은 채로 올라온 변경을 잡는다.
-      # 다시 생성해서 커밋된 것과 다르면 실패시킨다.
+      # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
         run: ./gradlew generateApiTypes
 
@@ -109,9 +98,8 @@ jobs:
             exit 1
           fi
 
-      # 기본 프로필인 test(H2) 를 따로 한 번 돌린다. 아래 build 는 integration 으로만
-      # 도는데, 팀원이 로컬에서 쓰는 것은 test 다. 여기서 검증하지 않으면
-      # application-test.yml 이 깨져도 CI 는 초록으로 남는다. H2 라 비용이 거의 없다.
+      # 아래 build 는 integration 으로만 돈다. 로컬 기본값은 test 라, 여기서
+      # 안 돌리면 application-test.yml 이 깨져도 CI 는 초록으로 남는다.
       - name: Test with H2 profile
         id: h2test
         run: ./gradlew test
@@ -124,8 +112,7 @@ jobs:
           DB_USERNAME: poudy
           DB_PASSWORD: poudy
 
-      # build 는 spotless 와 checkstyle 도 돌린다. 테스트 보고서만 올리면
-      # 그쪽이 실패했을 때 로그 외에 남는 것이 없다. reports 를 통째로 올린다.
+      # build 는 spotless 와 checkstyle 도 돌리므로 reports 를 통째로 올린다.
       - name: Upload reports
         if: failure() && (steps.h2test.outcome == 'failure' || steps.test.outcome == 'failure')
         uses: actions/upload-artifact@v7
@@ -133,18 +120,14 @@ jobs:
           name: server-reports
           path: server/build/reports
 
-  # Dockerfile 은 build/libs 에 jar 가 하나뿐이라는 것과 jarmode 추출 레이아웃에
-  # 기대고 있다. 여기서 빌드하지 않으면 그 전제가 깨져도 배포 시점까지 모른다.
-  #
-  # build 뒤에 둔다. 컨테이너 안에서 의존성을 다시 받고 bootJar 를 다시 만들기
-  # 때문에, 테스트가 1 분 만에 깨져도 여기서 15 분을 더 쓴다.
+  # Dockerfile 은 jar 가 하나뿐이라는 것과 jarmode 추출 레이아웃에 기대고 있다.
+  # build 뒤에 둔다. 컨테이너 안에서 다시 빌드하므로 헛돌면 15 분이 낭비다.
   docker:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # 이미지를 띄워 보려면 붙을 DB 가 필요하다. prod 프로필은 접속 정보가 없으면
-    # 기동 시점에 바로 실패하도록 되어 있다.
+    # prod 프로필은 접속 정보가 없으면 기동 시점에 실패한다.
     services:
       postgres:
         image: postgres:18-alpine
@@ -170,7 +153,7 @@ jobs:
         with:
           context: server
           push: false
-          # 아래 스텝에서 실제로 띄워 보려면 로컬 데몬에 이미지가 올라와야 한다.
+          # 아래에서 띄워 보려면 로컬 데몬에 올라와야 한다.
           load: true
           tags: poudy:ci
           cache-from: type=gha
@@ -178,8 +161,7 @@ jobs:
           # 표현식은 참인 쪽이 빈 문자열이면 거짓으로 취급되므로 조건을 뒤집어 둔다.
           cache-to: ${{ !github.event.pull_request.head.repo.fork && 'type=gha,mode=max' || '' }}
 
-      # 빌드만으로는 이미지가 뜨는지 알 수 없다. JarLauncher 경로가 맞는지,
-      # root 로 복사한 계층을 spring 사용자가 읽을 수 있는지는 실행해야 드러난다.
+      # JarLauncher 경로와 계층 파일 권한은 실제로 띄워야 드러난다.
       - name: Run image and check health
         run: |
           docker run -d --name poudy-ci --network host \
@@ -204,14 +186,9 @@ jobs:
           docker logs poudy-ci
           exit 1
 
-  # 필수 체크로 걸 잡. 앞 잡이 건너뛰어도 반드시 결과를 보고한다.
-  # 서버와 무관한 PR 에서는 앞 잡이 skipped 로 끝나고 여기서 성공으로 마무리된다.
-  #
-  # 이 잡은 이 워크플로 안의 잡만 모은다. Commit Lint 처럼 다른 워크플로는
-  # 각자 필수 체크로 등록해야 한다. Server CI 안에서는 이것 하나면 된다는 뜻이다.
-  #
-  # always() 가 아니라 !cancelled() 다. always() 로 두면 연속 push 로 이전 실행이
-  # 취소됐을 때도 이 잡이 깨어나, 선행 잡의 cancelled 를 보고 빨간 X 를 남긴다.
+  # 필수 체크로 걸 잡. 앞 잡이 skipped 여도 결과를 보고한다.
+  # 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록해야 한다.
+  # always() 는 취소된 실행까지 실패로 보고해 !cancelled() 를 쓴다.
   gate:
     needs: [changes, build, docker]
     if: ${{ !cancelled() }}
