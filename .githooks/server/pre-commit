@@ -5,13 +5,21 @@
 
 set -e
 
+# git 이 내는 경로 목록은 개행으로 구분된다. 기본 IFS 는 공백도 구분자로 쓰므로
+# 경로에 공백이 있으면 조각으로 쪼개져, 없는 경로를 검사하거나 add 를 건너뛴다.
+# 개행만 구분자로 남겨 그 분해를 막는다.
+IFS='
+'
+
 root=$(git rev-parse --show-toplevel)
 cd "$root"
 
-staged=$(git diff --cached --name-only --diff-filter=ACMR -- server/src | grep '\.java$' || true)
+# quotePath 를 끄지 않으면 비 ASCII 경로가 8진 이스케이프로 나와 실제 경로와 어긋난다.
+staged=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR \
+    -- server/src | grep '\.java$' || true)
 [ -z "$staged" ] && exit 0
 
-partial=$(git diff --name-only -- $staged || true)
+partial=$(git -c core.quotePath=false diff --name-only -- $staged || true)
 
 echo "[pre-commit] 자바 포맷 확인 중..."
 
