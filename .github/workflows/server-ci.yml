@@ -3,6 +3,10 @@ name: Server CI
 # 기본 브랜치는 dev 다. main 만 감시하면 머지 커밋이 한 번도 검사되지 않는다.
 # PR 각각이 통과해도 합쳐진 결과는 다를 수 있다. 특히 OpenAPI 생성물은 두 PR 이
 # 각자 다른 엔드포인트를 더하면 머지 후 어느 쪽과도 달라진다.
+#
+# paths 로 서버와 무관한 변경은 건너뛴다. 다만 이 워크플로를 필수 체크로 걸면
+# client 만 고친 PR 은 실행되지 않아 Expected 로 남고 머지가 영원히 막힌다.
+# 게이트가 필요하면 paths 가 없어 항상 도는 Commit Lint 를 쓴다.
 on:
   push:
     branches: [main, dev]
