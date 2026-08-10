@@ -18,6 +18,7 @@ concurrency:
 jobs:
   label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/github-script@v9
         with:
