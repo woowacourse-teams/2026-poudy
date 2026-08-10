@@ -1,0 +1,144 @@
+name: Client CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - "client/**"
+      - ".github/workflows/client-ci.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: client
+
+jobs:
+  check:
+    name: Client checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      # setup-node 의 pnpm cache가 store 경로를 찾을 수 있도록 pnpm을 먼저 설치한다.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        id: format
+        continue-on-error: true
+        run: pnpm run format:check
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: pnpm run lint
+
+      - name: Type check
+        id: typecheck
+        continue-on-error: true
+        run: pnpm run typecheck
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: pnpm run build
+
+      - name: Setup Chrome
+        id: chrome
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        uses: browser-actions/setup-chrome@v2
+
+      - name: Lighthouse
+        id: lighthouse
+        if: steps.build.outcome == 'success' && steps.chrome.outcome == 'success'
+        continue-on-error: true
+        run: |
+          pnpm start --hostname 127.0.0.1 --port 3000 >/tmp/client-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" || true' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000 >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          curl -fsS http://127.0.0.1:3000 >/dev/null
+          pnpm dlx lighthouse http://127.0.0.1:3000 \
+            --output=json \
+            --output-path=./lighthouse-report.json \
+            --quiet \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+
+      - name: Save check results
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const results = {
+            format: '${{ steps.format.outcome }}',
+            lint: '${{ steps.lint.outcome }}',
+            typecheck: '${{ steps.typecheck.outcome }}',
+            build: '${{ steps.build.outcome }}',
+            lighthouse: '${{ steps.lighthouse.outcome }}',
+          };
+
+          if (fs.existsSync('lighthouse-report.json')) {
+            try {
+              const report = JSON.parse(
+                fs.readFileSync('lighthouse-report.json', 'utf8'),
+              );
+              const score = (key) => {
+                const value = report.categories?.[key]?.score;
+                return typeof value === 'number' ? Math.round(value * 100) : null;
+              };
+
+              results.lighthouseScores = {
+                performance: score('performance'),
+                accessibility: score('accessibility'),
+                bestPractices: score('best-practices'),
+                seo: score('seo'),
+              };
+            } catch {
+              results.lighthouseScores = null;
+            }
+          } else {
+            results.lighthouseScores = null;
+          }
+
+          fs.writeFileSync('client-ci-results.json', JSON.stringify(results));
+          NODE
+
+      - name: Upload check results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-results
+          path: |
+            client/client-ci-results.json
+            client/lighthouse-report.json
+          if-no-files-found: error
+
+      - name: Fail if any check failed
+        if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.build.outcome == 'failure' || steps.chrome.outcome == 'failure' || steps.lighthouse.outcome == 'failure'
+        run: exit 1
