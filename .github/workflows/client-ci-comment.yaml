@@ -42,12 +42,12 @@ jobs:
                   commit_sha: run.head_sha,
                 });
               pullRequest = associatedPullRequests.find((pull) =>
-                ['dev', 'main'].includes(pull.base.ref),
+                pull.base.ref === 'dev',
               );
             }
 
-            if (!pullRequest || !['dev', 'main'].includes(pullRequest.base.ref)) {
-              core.info('dev 또는 main 대상 PR을 찾지 못해 댓글을 건너뜁니다.');
+            if (!pullRequest || pullRequest.base.ref !== 'dev') {
+              core.info('dev 대상 PR을 찾지 못해 댓글을 건너뜁니다.');
               return;
             }
 

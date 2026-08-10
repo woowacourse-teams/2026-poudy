@@ -2,7 +2,7 @@ name: Client CI
 
 on:
   pull_request:
-    branches: [dev, main]
+    branches: [dev]
     paths:
       - "client/**"
       - ".github/workflows/client-ci.yaml"
@@ -39,6 +39,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Next.js types
+        run: pnpm exec next typegen
 
       - name: Format
         id: format
