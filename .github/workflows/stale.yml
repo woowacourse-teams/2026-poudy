@@ -33,9 +33,8 @@ jobs:
           close-pr-message: 활동이 없어 닫습니다. 필요하면 다시 열어 주세요.
 
           # 긴급 건과 논의 중인 항목은 대상에서 뺀다.
+          # 담당자와 마일스톤은 예외로 두지 않는다. PR 은 작성자가 직접 만들고
+          # 직접 머지하므로 담당자 지정이 "다른 사람이 진행 중"을 뜻하지 않고,
+          # 마일스톤은 쓰지 않는다. 예외로 두면 방치된 항목이 그대로 남는다.
           exempt-issue-labels: hotfix,question
-          exempt-pr-labels: hotfix
-
-          # 마일스톤이나 담당자가 있으면 진행 중으로 본다.
-          exempt-all-milestones: true
-          exempt-all-assignees: true
+          exempt-pr-labels: hotfix,question
