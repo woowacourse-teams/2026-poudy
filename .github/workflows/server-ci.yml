@@ -26,16 +26,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-defaults:
-  run:
-    working-directory: server
-
 jobs:
   build:
     runs-on: ubuntu-latest
     # generateApiTypes 는 앱을 띄우고 응답을 기다린다. 기동이 매달리면
     # 기본 타임아웃 6 시간을 그대로 쓰므로 상한을 둔다.
     timeout-minutes: 20
+
+    # 워크플로 전체가 아니라 이 잡에만 건다. 위에 두면 docker 잡에 run 스텝을
+    # 추가했을 때 조용히 server 에서 실행된다.
+    defaults:
+      run:
+        working-directory: server
 
     services:
       postgres:
@@ -61,6 +63,8 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # 데몬을 끄지 않는다. setup-gradle 은 데몬 재사용을 전제로 캐시를 관리하고
+      # 잡이 끝날 때 정리까지 맡는다.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -72,25 +76,29 @@ jobs:
       # 커밋 훅을 우회했거나 훅이 설치되지 않은 채로 올라온 변경을 잡는다.
       # 다시 생성해서 커밋된 것과 다르면 실패시킨다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiTypes --no-daemon
+        run: ./gradlew generateApiTypes
 
+      # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
         working-directory: .
         run: |
-          if ! git diff --exit-code -- server/openapi.json common/api.d.ts; then
+          if [ -n "$(git status --porcelain -- server/openapi.json common/api.d.ts)" ]; then
             echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiTypes' 실행 후 커밋하세요."
+            git --no-pager diff -- server/openapi.json common/api.d.ts
             exit 1
           fi
 
       - name: Build and test
-        run: ./gradlew -Dspring.profiles.active=integration build --no-daemon
+        id: test
+        run: ./gradlew -Dspring.profiles.active=integration build
         env:
           DB_URL: jdbc:postgresql://localhost:5432/poudy
           DB_USERNAME: poudy
           DB_PASSWORD: poudy
 
+      # 앞 단계에서 실패하면 테스트가 돈 적이 없어 보고서 경로가 비어 있다.
       - name: Upload test report
-        if: failure()
+        if: failure() && steps.test.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: test-report
