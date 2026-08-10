@@ -109,6 +109,13 @@ jobs:
             exit 1
           fi
 
+      # 기본 프로필인 test(H2) 를 따로 한 번 돌린다. 아래 build 는 integration 으로만
+      # 도는데, 팀원이 로컬에서 쓰는 것은 test 다. 여기서 검증하지 않으면
+      # application-test.yml 이 깨져도 CI 는 초록으로 남는다. H2 라 비용이 거의 없다.
+      - name: Test with H2 profile
+        id: h2test
+        run: ./gradlew test
+
       - name: Build and test
         id: test
         run: ./gradlew -Dspring.profiles.active=integration build
@@ -117,13 +124,14 @@ jobs:
           DB_USERNAME: poudy
           DB_PASSWORD: poudy
 
-      # 앞 단계에서 실패하면 테스트가 돈 적이 없어 보고서 경로가 비어 있다.
-      - name: Upload test report
-        if: failure() && steps.test.outcome == 'failure'
+      # build 는 spotless 와 checkstyle 도 돌린다. 테스트 보고서만 올리면
+      # 그쪽이 실패했을 때 로그 외에 남는 것이 없다. reports 를 통째로 올린다.
+      - name: Upload reports
+        if: failure() && (steps.h2test.outcome == 'failure' || steps.test.outcome == 'failure')
         uses: actions/upload-artifact@v7
         with:
-          name: test-report
-          path: server/build/reports/tests/test
+          name: server-reports
+          path: server/build/reports
 
   # Dockerfile 은 build/libs 에 jar 가 하나뿐이라는 것과 jarmode 추출 레이아웃에
   # 기대고 있다. 여기서 빌드하지 않으면 그 전제가 깨져도 배포 시점까지 모른다.
@@ -150,12 +158,15 @@ jobs:
           # 표현식은 참인 쪽이 빈 문자열이면 거짓으로 취급되므로 조건을 뒤집어 둔다.
           cache-to: ${{ !github.event.pull_request.head.repo.fork && 'type=gha,mode=max' || '' }}
 
-  # 필수 체크로 걸 잡. always() 라서 앞 잡이 건너뛰어도 반드시 결과를 보고한다.
+  # 필수 체크로 걸 잡. 앞 잡이 건너뛰어도 반드시 결과를 보고한다.
   # 서버와 무관한 PR 에서는 앞 잡이 skipped 로 끝나고 여기서 성공으로 마무리된다.
   # 브랜치 보호에는 이 잡 하나만 필수 체크로 등록하면 된다.
+  #
+  # always() 가 아니라 !cancelled() 다. always() 로 두면 연속 push 로 이전 실행이
+  # 취소됐을 때도 이 잡이 깨어나, 선행 잡의 cancelled 를 보고 빨간 X 를 남긴다.
   gate:
     needs: [changes, build, docker]
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
