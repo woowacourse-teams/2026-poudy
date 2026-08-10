@@ -1,8 +1,11 @@
 name: Server CI
 
+# 기본 브랜치는 dev 다. main 만 감시하면 머지 커밋이 한 번도 검사되지 않는다.
+# PR 각각이 통과해도 합쳐진 결과는 다를 수 있다. 특히 OpenAPI 생성물은 두 PR 이
+# 각자 다른 엔드포인트를 더하면 머지 후 어느 쪽과도 달라진다.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'server/**'
       - 'common/api.d.ts'
@@ -17,18 +20,24 @@ on:
 permissions:
   contents: read
 
-# 같은 브랜치에 연속으로 push 하면 이전 실행을 취소한다.
+# PR 은 연속 push 시 이전 실행을 취소한다. 통합 브랜치는 취소하지 않는다.
+# 취소하면 그 커밋이 통과했는지에 대한 기록이 남지 않는다.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: server
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # generateApiTypes 는 앱을 띄우고 응답을 기다린다. 기동이 매달리면
+    # 기본 타임아웃 6 시간을 그대로 쓰므로 상한을 둔다.
+    timeout-minutes: 20
+
+    # 워크플로 전체가 아니라 이 잡에만 건다. 위에 두면 docker 잡에 run 스텝을
+    # 추가했을 때 조용히 server 에서 실행된다.
+    defaults:
+      run:
+        working-directory: server
 
     services:
       postgres:
@@ -46,45 +55,55 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
+      # 데몬을 끄지 않는다. setup-gradle 은 데몬 재사용을 전제로 캐시를 관리하고
+      # 잡이 끝날 때 정리까지 맡는다.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
+      # v5 부터 package.json 의 packageManager 를 보고 캐시를 자동으로 켠다.
+      # 여기서 Node 는 openapi-typescript 를 npx 로 한 번 돌리는 데만 쓰고,
+      # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패하므로 꺼 둔다.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
 
       # 커밋 훅을 우회했거나 훅이 설치되지 않은 채로 올라온 변경을 잡는다.
       # 다시 생성해서 커밋된 것과 다르면 실패시킨다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiTypes --no-daemon
+        run: ./gradlew generateApiTypes
 
+      # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
         working-directory: .
         run: |
-          if ! git diff --exit-code -- server/openapi.json common/api.d.ts; then
+          if [ -n "$(git status --porcelain -- server/openapi.json common/api.d.ts)" ]; then
             echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiTypes' 실행 후 커밋하세요."
+            git --no-pager diff -- server/openapi.json common/api.d.ts
             exit 1
           fi
 
       - name: Build and test
-        run: ./gradlew -Dspring.profiles.active=integration build --no-daemon
+        id: test
+        run: ./gradlew -Dspring.profiles.active=integration build
         env:
           DB_URL: jdbc:postgresql://localhost:5432/poudy
           DB_USERNAME: poudy
           DB_PASSWORD: poudy
 
+      # 앞 단계에서 실패하면 테스트가 돈 적이 없어 보고서 경로가 비어 있다.
       - name: Upload test report
-        if: failure()
-        uses: actions/upload-artifact@v4
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
         with:
           name: test-report
           path: server/build/reports/tests/test
@@ -93,14 +112,15 @@ jobs:
   # 기대고 있다. 여기서 빌드하지 않으면 그 전제가 깨져도 배포 시점까지 모른다.
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Build image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: server
           push: false
