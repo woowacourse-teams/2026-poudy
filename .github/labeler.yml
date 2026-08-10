@@ -1,5 +1,13 @@
 # PR 의 변경 경로를 보고 영역 레이블을 붙인다.
-# 여기 적힌 레이블은 저장소에 미리 만들어져 있어야 한다.
+#
+# 여기 적힌 레이블은 저장소에 미리 만들어져 있어야 한다. actions/labeler 는
+# 없는 레이블을 만들지 않고 실패한다.
+#
+# 저장소가 쓰는 레이블 전체
+#   영역   server, client, common, ci
+#   종류   bug, feat, hotfix, refactor, style, documentation
+#   상태   question, stale
+# 이슈 템플릿과 stale 워크플로가 위 목록에 기대고 있으므로 이름을 바꾸지 않는다.
 
 server:
   - changed-files:

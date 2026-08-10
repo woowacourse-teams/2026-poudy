@@ -47,6 +47,19 @@ jobs:
               return;
             }
 
+            // addLabels 는 없는 이름을 임의 색으로 만들어 버린다. labeler 는 반대로
+            // 없으면 실패하므로, 그대로 두면 이슈 쪽에서만 설명 없는 레이블이 생겨
+            // 두 워크플로가 같은 이름을 다르게 다루게 된다. 있는 것만 붙인다.
+            const defined = await github.paginate(github.rest.issues.listLabelsForRepo, {
+              owner: issue.owner,
+              repo: issue.repo,
+            });
+
+            if (!defined.some(l => l.name === picked)) {
+              core.warning(`${picked} 레이블이 저장소에 없어 붙이지 않습니다. 먼저 만들어 주세요.`);
+              return;
+            }
+
             // 영역을 바꾼 경우를 위해 다른 영역 레이블은 떼어 낸다.
             for (const stale of areas.filter(a => a !== picked && current.includes(a))) {
               await github.rest.issues.removeLabel({ ...issue, name: stale });
