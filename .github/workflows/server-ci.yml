@@ -33,6 +33,9 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # generateApiTypes 는 앱을 띄우고 응답을 기다린다. 기동이 매달리면
+    # 기본 타임아웃 6 시간을 그대로 쓰므로 상한을 둔다.
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -97,6 +100,7 @@ jobs:
   # 기대고 있다. 여기서 빌드하지 않으면 그 전제가 깨져도 배포 시점까지 모른다.
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
