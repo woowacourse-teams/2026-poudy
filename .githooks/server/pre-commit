@@ -11,10 +11,18 @@ cd "$root"
 staged=$(git diff --cached --name-only --diff-filter=ACMR -- server/src | grep '\.java$' || true)
 [ -z "$staged" ] && exit 0
 
-# spotlessApply 는 스테이징 여부와 무관하게 파일 전체를 고친다.
-# 부분 스테이징된 파일을 그대로 다시 add 하면 스테이징하지 않은 변경까지
-# 커밋되므로, 미리 걸러 두고 나중에 건드리지 않는다.
+# spotlessApply 는 스테이징 여부와 무관하게 파일 전체를 고친다. 부분 스테이징된
+# 파일은 고친 뒤 add 하면 스테이징하지 않은 변경까지 딸려 가고, add 하지 않으면
+# 인덱스에 정리 전 내용이 남아 그대로 커밋된다. 작업 트리를 건드리기 전에 멈춘다.
 partial=$(git diff --name-only -- $staged || true)
+
+if [ -n "$partial" ]; then
+    echo "[pre-commit] 스테이징하지 않은 변경이 남은 자바 파일이 있어 포맷을 적용할 수 없습니다."
+    printf '%s\n' "$partial" | sed 's/^/  /'
+    echo
+    echo "  해당 파일을 전부 스테이징하거나(git add <파일>), 커밋을 나눈 뒤 다시 커밋하세요."
+    exit 1
+fi
 
 echo "[pre-commit] 자바 포맷 정리 중..."
 
@@ -24,10 +32,6 @@ if ! (cd server && ./gradlew spotlessApply --quiet); then
 fi
 
 for file in $staged; do
-    if printf '%s\n' "$partial" | grep -qxF "$file"; then
-        echo "[pre-commit] $file 은 스테이징하지 않은 변경이 있어 건너뜁니다."
-        continue
-    fi
     [ -f "$file" ] || continue
     git add -- "$file"
 done
