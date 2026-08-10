@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# client
 
-## Getting Started
+Next.js 프론트엔드.
 
-First, run the development server:
+## 기술 스택
+
+| 구분          | 선택 기술                           |
+| ------------- | ----------------------------------- |
+| 개발 언어     | TypeScript                          |
+| 프레임워크    | Next.js 16.3.0 (App Router)         |
+| UI 라이브러리 | React 19.2.8                        |
+| 스타일링      | Tailwind CSS 4                      |
+| 패키지 매니저 | pnpm 11.21.0                        |
+| 코드 품질     | ESLint 9, Prettier 3                |
+| 타입 검사     | TypeScript 5                        |
+| 자동 검증     | Git hook (`pre-commit`, `pre-push`) |
+
+## 요구 사항
+
+Node.js 22 이상, pnpm 11.21.0.
+
+저장소를 클론한 뒤 프로젝트 루트에서 `./setup-git.sh`를 한 번 실행합니다. Git hook과 커밋 메시지 템플릿을 등록합니다.
+
+## 설치
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 실행
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+개발 서버가 실행되면 [http://localhost:3000](http://localhost:3000)에서 확인합니다.
 
-## Learn More
+## 검사
 
-To learn more about Next.js, take a look at the following resources:
+각 검사를 따로 실행할 수 있습니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm run lint
+pnpm run format:check
+pnpm run typecheck
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+커밋 전에 필요한 검사를 한 번에 실행하려면 `check`를 사용합니다.
 
-## Deploy on Vercel
+```bash
+pnpm run check
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`check`는 ESLint, Prettier, TypeScript 검사와 production build를 순서대로 실행합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+파일을 수정한 뒤 포맷을 적용할 때는 다음 명령을 실행합니다.
+
+```bash
+pnpm run format
+```
+
+## Git hook
+
+프로젝트 루트의 Git hook이 Client 변경을 검사합니다.
+
+- `pre-commit`: Client의 staged 파일에 `lint-staged`를 실행합니다.
+- `pre-push`: push 대상 커밋에 Client 변경이 있으면 `pnpm run check`를 실행합니다.
+
+hook을 우회했거나 설치하지 않은 경우에도 push 전에 다음 명령으로 같은 검사를 실행합니다.
+
+```bash
+pnpm run check
+```
+
+## API 타입
+
+`common/api.d.ts`는 Server의 OpenAPI 문서에서 생성합니다. Client에서 API 타입이 필요할 때 생성된 타입을 그대로 import합니다.
+
+API 타입 생성 방법은 [Server README](../server/README.md#api-타입-생성)를 참고하세요.
+
+## 디렉터리 구조
+
+| 경로     | 내용                         |
+| -------- | ---------------------------- |
+| `app`    | App Router 페이지와 레이아웃 |
+| `public` | 정적 파일                    |
+
+## 배포용 실행
+
+먼저 production build를 생성한 뒤 서버를 실행합니다.
+
+```bash
+pnpm build
+pnpm start
+```
