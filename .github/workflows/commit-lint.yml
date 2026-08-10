@@ -24,6 +24,9 @@ jobs:
 
       # 훅 스크립트를 그대로 재사용해 규칙이 두 곳으로 갈라지지 않게 한다.
       - name: Validate commit messages
+        env:
+          # 훅 위치를 옮기면 이 값도 함께 고쳐야 한다.
+          HOOK_PATH: .githooks/commit-msg
         run: |
           base='${{ github.event.pull_request.base.sha }}'
           failed=0
@@ -31,8 +34,13 @@ jobs:
 
           # 훅은 베이스 브랜치 버전을 쓴다. 체크아웃된 PR 쪽 훅을 실행하면
           # 훅을 무력화한 PR 이 자기 자신을 통과시킬 수 있다.
+          if ! git cat-file -e "$base:$HOOK_PATH" 2>/dev/null; then
+            echo "::error::베이스 브랜치에서 $HOOK_PATH 를 찾을 수 없습니다. 훅 위치가 바뀌었다면 이 워크플로의 HOOK_PATH 도 함께 고치세요."
+            exit 1
+          fi
+
           hook=$(mktemp)
-          git show "$base:.githooks/commit-msg" > "$hook"
+          git show "$base:$HOOK_PATH" > "$hook"
           chmod +x "$hook"
 
           for sha in $(git rev-list --no-merges "$base"..HEAD); do
