@@ -5,32 +5,51 @@
 
 set -e
 
+# git 이 내는 경로 목록은 개행으로 구분된다. 기본 IFS 는 공백도 구분자로 쓰므로
+# 경로에 공백이 있으면 조각으로 쪼개져, 없는 경로를 검사하거나 add 를 건너뛴다.
+# 개행만 구분자로 남겨 그 분해를 막는다.
+IFS='
+'
+
 root=$(git rev-parse --show-toplevel)
 cd "$root"
 
-staged=$(git diff --cached --name-only --diff-filter=ACMR -- server/src | grep '\.java$' || true)
+# quotePath 를 끄지 않으면 비 ASCII 경로가 8진 이스케이프로 나와 실제 경로와 어긋난다.
+staged=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR \
+    -- server/src | grep '\.java$' || true)
 [ -z "$staged" ] && exit 0
 
-# spotlessApply 는 스테이징 여부와 무관하게 파일 전체를 고친다.
-# 부분 스테이징된 파일을 그대로 다시 add 하면 스테이징하지 않은 변경까지
-# 커밋되므로, 미리 걸러 두고 나중에 건드리지 않는다.
-partial=$(git diff --name-only -- $staged || true)
+partial=$(git -c core.quotePath=false diff --name-only -- $staged || true)
 
-echo "[pre-commit] 자바 포맷 정리 중..."
+echo "[pre-commit] 자바 포맷 확인 중..."
 
-if ! (cd server && ./gradlew spotlessApply --quiet); then
-    echo "[pre-commit] 포맷 적용에 실패했습니다."
-    exit 1
-fi
+# 고칠 것이 있는지 먼저 읽기만 하는 검사로 본다. 이미 맞으면 작업 트리를 건드릴
+# 이유가 없으므로, 한 파일을 hunk 단위로 나눠 스테이징했어도 그대로 진행한다.
+if ! (cd server && ./gradlew spotlessCheck --quiet) >/dev/null 2>&1; then
 
-for file in $staged; do
-    if printf '%s\n' "$partial" | grep -qxF "$file"; then
-        echo "[pre-commit] $file 은 스테이징하지 않은 변경이 있어 건너뜁니다."
-        continue
+    # spotlessApply 는 스테이징 여부와 무관하게 파일 전체를 고친다. 부분 스테이징된
+    # 파일은 고친 뒤 add 하면 스테이징하지 않은 변경까지 딸려 가고, add 하지 않으면
+    # 인덱스에 정리 전 내용이 남아 그대로 커밋된다. 고치기 전에 멈춘다.
+    if [ -n "$partial" ]; then
+        echo "[pre-commit] 포맷을 고쳐야 하는데 스테이징하지 않은 변경이 남은 자바 파일이 있습니다."
+        printf '%s\n' "$partial" | sed 's/^/  /'
+        echo
+        echo "  해당 파일을 전부 스테이징하거나(git add <파일>), 커밋을 나눈 뒤 다시 커밋하세요."
+        exit 1
     fi
-    [ -f "$file" ] || continue
-    git add -- "$file"
-done
+
+    echo "[pre-commit] 자바 포맷 정리 중..."
+
+    if ! (cd server && ./gradlew spotlessApply --quiet); then
+        echo "[pre-commit] 포맷 적용에 실패했습니다."
+        exit 1
+    fi
+
+    for file in $staged; do
+        [ -f "$file" ] || continue
+        git add -- "$file"
+    done
+fi
 
 # 포맷과 달리 규칙 위반은 자동으로 고칠 수 없다. 직접 고쳐야 하므로 커밋을 막는다.
 echo "[pre-commit] 코드 규칙 검사 중..."

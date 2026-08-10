@@ -105,4 +105,6 @@ jobs:
           context: server
           push: false
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # 포크 PR 은 Actions 캐시에 쓸 수 없다. 읽기만 하고 쓰기는 건너뛴다.
+          # 표현식은 참인 쪽이 빈 문자열이면 거짓으로 취급되므로 조건을 뒤집어 둔다.
+          cache-to: ${{ !github.event.pull_request.head.repo.fork && 'type=gha,mode=max' || '' }}

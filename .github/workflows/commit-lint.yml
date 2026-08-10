@@ -28,9 +28,15 @@ jobs:
           failed=0
           message=$(mktemp)
 
+          # 훅은 베이스 브랜치 버전을 쓴다. 체크아웃된 PR 쪽 훅을 실행하면
+          # 훅을 무력화한 PR 이 자기 자신을 통과시킬 수 있다.
+          hook=$(mktemp)
+          git show "$base:.githooks/commit-msg" > "$hook"
+          chmod +x "$hook"
+
           for sha in $(git rev-list --no-merges "$base"..HEAD); do
             git log -1 --format=%B "$sha" > "$message"
-            if ! .githooks/commit-msg "$message"; then
+            if ! "$hook" "$message"; then
               echo "::error::$(git log -1 --format='%h %s' "$sha")"
               failed=1
             fi
