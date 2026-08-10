@@ -55,10 +55,10 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -66,12 +66,16 @@ jobs:
       # 데몬을 끄지 않는다. setup-gradle 은 데몬 재사용을 전제로 캐시를 관리하고
       # 잡이 끝날 때 정리까지 맡는다.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
+      # v5 부터 package.json 의 packageManager 를 보고 캐시를 자동으로 켠다.
+      # 여기서 Node 는 openapi-typescript 를 npx 로 한 번 돌리는 데만 쓰고,
+      # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패하므로 꺼 둔다.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
 
       # 커밋 훅을 우회했거나 훅이 설치되지 않은 채로 올라온 변경을 잡는다.
       # 다시 생성해서 커밋된 것과 다르면 실패시킨다.
@@ -99,7 +103,7 @@ jobs:
       # 앞 단계에서 실패하면 테스트가 돈 적이 없어 보고서 경로가 비어 있다.
       - name: Upload test report
         if: failure() && steps.test.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-report
           path: server/build/reports/tests/test
@@ -111,12 +115,12 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Build image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: server
           push: false
