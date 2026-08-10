@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# 스테이징된 client 파일의 lint-staged 검사를 실행한다.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+client_watched="client"
+client_changed=$(git diff --cached --name-only --diff-filter=ACMR -- "$client_watched" | head -n 1 || true)
+
+[ -z "$client_changed" ] && exit 0
+
+echo "[pre-commit] 프론트엔드 staged 파일 검사 중..."
+if ! (cd "$root/client" && pnpm exec lint-staged --cwd .); then
+    echo "[pre-commit] 프론트엔드 검사에 실패했습니다."
+    exit 1
+fi

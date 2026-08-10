@@ -1,107 +1,15 @@
 #!/bin/sh
 #
-# OpenAPI 생성물이 최신인지 push 직전에 확인한다.
-#
-# pre-commit 이 아니라 pre-push 인 이유: 문서 생성은 앱을 한 번 띄워야 해서
-# 커밋마다 돌리면 비용이 커밋 수만큼 곱해진다. push 는 커밋 여러 개를 묶어
-# 한 번만 검사하므로 같은 보호를 훨씬 싸게 얻는다.
-#
-# 이 훅은 저장소를 고치지 않는다. 생성물이 낡았으면 push 를 막고 안내만 한다.
-# pre-push 시점에는 커밋이 이미 확정돼서 생성물을 그 커밋에 넣을 수 없기 때문이다.
+# server 와 client 의 pre-push 검사를 각각 실행한다.
 
 set -e
 
 root=$(git rev-parse --show-toplevel)
-cd "$root"
+input=$(mktemp)
+trap 'rm -f "$input"' EXIT
 
-generation_inputs="server/src/main server/build.gradle server/settings.gradle"
-generated="server/openapi.json common/api.d.ts"
+# pre-push 입력은 한 번만 읽을 수 있으므로 두 하위 hook에 같은 내용을 전달한다.
+cat > "$input"
 
-# 생성물 자체가 바뀐 push 도 검사한다. 생성 입력만 보면, 손으로 고친 생성물이
-# 검사 없이 통과한다. 그 경우 훅은 넘어가고 CI 에서야 잡혀 왕복이 한 번 늘어난다.
-watched="$generation_inputs $generated"
-
-is_zero() {
-    case "$1" in
-        *[!0]*) return 1 ;;
-        *) return 0 ;;
-    esac
-}
-
-# push 대상 커밋 중 문서 생성에 영향을 주는 변경이 있는지 본다.
-# 프론트엔드나 문서만 고친 push 는 그냥 통과한다.
-relevant=0
-while read -r local_ref local_sha remote_ref remote_sha; do
-    [ -z "$local_sha" ] && continue
-    is_zero "$local_sha" && continue      # 브랜치 삭제
-
-    if is_zero "$remote_sha"; then
-        # 원격에 없는 새 브랜치. 다른 원격 브랜치에 없는 커밋만 검사 대상으로 삼는다.
-        touched=$(git log --format= --name-only "$local_sha" --not --remotes \
-            -- $watched | head -1)
-    else
-        touched=$(git log --format= --name-only "$remote_sha..$local_sha" \
-            -- $watched | head -1)
-    fi
-
-    [ -n "$touched" ] && relevant=1
-done
-
-[ "$relevant" -eq 0 ] && exit 0
-
-# 생성기는 커밋이 아니라 작업 트리를 읽는다. 생성 입력에 커밋하지 않은 변경이
-# 있으면 push 되는 커밋과 다른 결과가 나오므로 판단을 보류한다.
-if ! git diff --quiet HEAD -- $generation_inputs ||
-    [ -n "$(git ls-files --others --exclude-standard -- $generation_inputs)" ]; then
-    echo "[pre-push] 커밋하지 않은 변경이 있어 생성물을 검증할 수 없습니다."
-    echo "  관련 변경을 커밋하거나 stash 한 뒤 다시 push 하세요."
-    exit 1
-fi
-
-# 생성물을 백업해 두고, 검사 결과와 무관하게 원래대로 되돌린다.
-# 훅이 작업 트리를 바꿔 놓으면 push 실패 원인과 파일 변경이 뒤섞여 헷갈린다.
-backup=$(mktemp -d)
-trap 'cp "$backup/openapi.json" server/openapi.json 2>/dev/null || true
-      cp "$backup/api.d.ts" common/api.d.ts 2>/dev/null || true
-      rm -rf "$backup"' EXIT
-
-cp server/openapi.json "$backup/openapi.json" 2>/dev/null || true
-cp common/api.d.ts "$backup/api.d.ts" 2>/dev/null || true
-
-echo "[pre-push] OpenAPI 생성물 확인 중..."
-
-# 빌드 로그는 실패했을 때만 보여준다. 성공 경로에서는 훅 메시지만 남긴다.
-log="$backup/gradle.log"
-if ! (cd server && ./gradlew generateApiTypes --quiet) > "$log" 2>&1; then
-    echo "[pre-push] 생성에 실패했습니다. Node.js 가 설치돼 있는지 확인해 보세요."
-    echo
-    sed 's/^/  /' "$log"
-    exit 1
-fi
-
-if cmp -s server/openapi.json "$backup/openapi.json" &&
-    cmp -s common/api.d.ts "$backup/api.d.ts"; then
-    echo "[pre-push] 최신입니다."
-    exit 0
-fi
-
-# 갱신본을 그대로 커밋한다. 여기서 되돌리면 커밋 내용과 작업 트리가 어긋난다.
-trap - EXIT
-rm -rf "$backup"
-
-# 경로를 지정해 다른 스테이징 변경이 함께 커밋되지 않게 한다.
-if ! git commit -q -m "refactor : OpenAPI 생성물 갱신" -- $generated; then
-    echo "[pre-push] 생성물 커밋에 실패했습니다."
-    exit 1
-fi
-
-echo
-echo "[pre-push] 생성물이 낡아 자동으로 커밋했습니다."
-git --no-pager log --format="  %h %s" -1
-echo
-echo "  이 커밋까지 보내려면 다시 push 하세요."
-echo
-
-# push 대상 SHA 는 훅 실행 전에 확정되어 방금 만든 커밋이 포함되지 않는다.
-# 그래서 이번 push 는 중단하고 다시 실행하게 한다.
-exit 1
+"$root/.githooks/server/pre-push" < "$input"
+"$root/.githooks/client/pre-push" < "$input"

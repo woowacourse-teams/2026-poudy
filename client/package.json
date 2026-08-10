@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run build"
   },
   "dependencies": {
     "next": "16.3.0",
@@ -29,9 +30,19 @@
     "eslint-plugin-functional": "^10",
     "eslint-plugin-import": "^2",
     "globals": "^16",
+    "lint-staged": "^17.3.0",
     "prettier": "^3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@11.21.0"
+  "packageManager": "pnpm@11.21.0",
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": [
+      "prettier --write"
+    ]
+  }
 }
