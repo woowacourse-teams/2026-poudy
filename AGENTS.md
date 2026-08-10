@@ -15,21 +15,14 @@
 - 꼬릿말: 선택 사항. 관련 이슈가 있을 때만 `Ref: #7` 또는 `Close: #7` 형식으로 작성한다.
 - 본문과 꼬릿말은 각각 빈 줄로 구분한다.
 
-### 예외: 우리가 메시지를 정하지 않는 커밋
+### 예외: 머지 커밋
 
-두 가지는 형식을 따르지 않는다. 도구가 메시지를 만들고 우리가 바꿀 수 없기 때문이다.
-
-| 대상 | 예 | 어디서 제외하나 |
-| --- | --- | --- |
-| 머지 커밋 | `Merge pull request #7 from ...` | `commit-msg` 훅(`MERGE_HEAD` 확인), Commit Lint(`--no-merges`) |
-| Dependabot 커밋 | `Bump actions/checkout from 6 to 7` | Commit Lint(`github.actor` 확인) |
-
-머지 커밋은 GitHub 이 PR 을 머지하며 만드는 것뿐 아니라, 작업 브랜치에서 직접 실행한
-`git merge dev` 의 결과도 포함한다. 어느 쪽이든 메시지를 만드는 것은 git 이고,
+머지 커밋은 형식을 따르지 않는다. 메시지를 만드는 것이 git 이고 우리가 바꾸지 않기 때문이다.
+GitHub 이 PR 을 머지하며 만드는 `Merge pull request #7 from ...` 뿐 아니라,
+작업 브랜치에서 직접 실행한 `git merge dev` 의 결과도 같다.
 어느 브랜치가 언제 합쳐졌는지를 그 형태 그대로 남기는 편이 히스토리를 읽기 쉽다.
 
-Dependabot 은 `commit-message.prefix` 를 줘도 `fix: Bump ...` 형태라 `타입 : 제목` 규칙에 맞출 수 없고,
-rebase 때마다 커밋을 다시 써서 손으로 고쳐도 남지 않는다.
+`commit-msg` 훅은 `MERGE_HEAD` 로, Commit Lint 워크플로는 `--no-merges` 로 제외한다.
 
 **기준은 "누가 커밋했는가"가 아니라 "메시지를 누가 썼는가"다.**
 메시지를 직접 쓰는 커밋에는 예외가 없다.
