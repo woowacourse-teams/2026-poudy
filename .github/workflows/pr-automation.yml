@@ -1,18 +1,20 @@
 name: PR Automation
 
-# pull_request_target 이 아니라 pull_request 를 쓴다.
-# 같은 저장소 브랜치에서 올린 PR 은 토큰에 쓰기 권한이 있고,
-# pull_request_target 은 포크 PR 의 코드를 쓰기 권한과 함께 실행해 위험하다.
+# 포크 PR 은 pull_request 에서 토큰이 읽기 전용이라 레이블을 붙이지 못한다.
+# pull_request_target 은 쓰기 권한을 주는 대신, PR 코드를 실행하면 그 권한이
+# 그대로 넘어간다. 이 워크플로는 코드를 내려받지 않고 API 만 쓰므로 안전하다.
+# actions/checkout 이나 빌드 스텝을 추가하면 그 전제가 깨진다.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
   pull-requests: write
 
+# pull_request_target 의 github.ref 는 베이스 브랜치라 모든 PR 이 한 그룹이 된다.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
