@@ -1,10 +1,12 @@
 # poudy
 
-| 디렉터리 | 내용 |
-| --- | --- |
-| [server](server) | Spring Boot 백엔드 |
-| [client](client) | Next.js 프론트엔드 |
-| common | 백엔드에서 생성한 API 타입 (`api.d.ts`) |
+| 디렉터리         | 내용                                    |
+| ---------------- | --------------------------------------- |
+| [server](server) | Spring Boot 백엔드                      |
+| [client](client) | Next.js 프론트엔드                      |
+| common           | 백엔드에서 생성한 API 타입 (`api.d.ts`) |
+
+Client 개발 환경과 실행 방법은 [client/README.md](client/README.md)를 참고하세요.
 
 ## 클론 후 1회
 
