@@ -51,7 +51,7 @@ test("rejects malformed requests and reports delivery failures", async () => {
     500,
   );
 
-  globalThis.fetch = async () => new Response("failed", { status: 429 });
+  globalThis.fetch = async () => new Response("failed", { status: 500 });
   assert.equal((await worker.fetch(signedRequest("issues", issuePayload), env)).status, 502);
 
   globalThis.fetch = async () => {
@@ -63,6 +63,30 @@ test("rejects malformed requests and reports delivery failures", async () => {
     throw new DOMException("timed out", "TimeoutError");
   };
   assert.equal((await worker.fetch(signedRequest("issues", issuePayload), env)).status, 502);
+});
+
+test("does not ask GitHub to retry what a retry cannot fix", async () => {
+  globalThis.fetch = async () =>
+    new Response("rate limited", {
+      status: 429,
+      headers: { "Retry-After": "3.5" },
+    });
+  const rateLimited = await worker.fetch(signedRequest("issues", issuePayload), env);
+
+  assert.equal(rateLimited.status, 200);
+
+  let attempted = false;
+  globalThis.fetch = async () => {
+    attempted = true;
+    return new Response(null, { status: 204 });
+  };
+  const invalidUrl = await worker.fetch(signedRequest("issues", issuePayload), {
+    ...env,
+    DISCORD_WEBHOOK_ISSUE_UPDATE: "not-a-url",
+  });
+
+  assert.equal(invalidUrl.status, 200);
+  assert.equal(attempted, false);
 });
 
 test("falls back for empty deployment URLs and deleted users", async () => {
