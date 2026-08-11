@@ -30,6 +30,8 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # 기본값이 저장소 기본 브랜치라, 그 설정이 바뀌면 관계없는 push 도 걸린다.
+          base: ${{ github.ref_name }}
           filters: |
             server:
               - 'server/**'
