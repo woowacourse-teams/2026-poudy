@@ -62,7 +62,13 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
       "pull_request_review",
       {
         action: "submitted",
-        pull_request: pullRequest,
+        pull_request: {
+          number: pullRequest.number,
+          user: pullRequest.user,
+          title: pullRequest.title,
+          body: pullRequest.body,
+          html_url: pullRequest.html_url,
+        },
         review: {
           state: "approved",
           user: user("bob"),

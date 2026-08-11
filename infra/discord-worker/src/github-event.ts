@@ -33,6 +33,14 @@ const pullRequestSchema = z.object({
   updated_at: timestampSchema,
 });
 
+const pullRequestReviewTargetSchema = pullRequestSchema.pick({
+  number: true,
+  user: true,
+  title: true,
+  body: true,
+  html_url: true,
+});
+
 const issueSchema = z.object({
   number: z.number(),
   state: z.string(),
@@ -74,7 +82,7 @@ export const pullRequestPayloadSchema = z.object({
 
 export const pullRequestReviewPayloadSchema = z.object({
   action: z.string(),
-  pull_request: pullRequestSchema,
+  pull_request: pullRequestReviewTargetSchema,
   review: z.object({
     state: z.string(),
     user: githubUserSchema,
