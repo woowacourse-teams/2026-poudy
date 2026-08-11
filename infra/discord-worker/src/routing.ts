@@ -7,8 +7,8 @@ export type WorkerEnv = {
   readonly WORKFLOW_RUNS?: KVNamespace;
   readonly DISCORD_WEBHOOK_ISSUE_UPDATE?: string;
   readonly DISCORD_WEBHOOK_PR_UPDATE?: string;
-  readonly DISCORD_WEBHOOK_STAGING_CICD?: string;
-  readonly DISCORD_WEBHOOK_PRODUCTION_CICD?: string;
+  readonly DISCORD_WEBHOOK_STAGING?: string;
+  readonly DISCORD_WEBHOOK_PRODUCTION?: string;
   readonly DISCORD_WEBHOOK_WIKI_UPDATE?: string;
 };
 
@@ -17,12 +17,12 @@ type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "GITHUB_API
 const webhookKeys = {
   issueUpdate: "DISCORD_WEBHOOK_ISSUE_UPDATE",
   prUpdate: "DISCORD_WEBHOOK_PR_UPDATE",
-  stagingCicd: "DISCORD_WEBHOOK_STAGING_CICD",
-  productionCicd: "DISCORD_WEBHOOK_PRODUCTION_CICD",
+  staging: "DISCORD_WEBHOOK_STAGING",
+  production: "DISCORD_WEBHOOK_PRODUCTION",
   wikiUpdate: "DISCORD_WEBHOOK_WIKI_UPDATE",
 } as const satisfies Readonly<Record<string, WebhookKey>>;
 
-function cicdWebhookKey(target: string | null | undefined): WebhookKey | undefined {
+function deploymentWebhookKey(target: string | null | undefined): WebhookKey | undefined {
   const normalizedTarget = target?.toLowerCase();
 
   if (!normalizedTarget) {
@@ -34,11 +34,11 @@ function cicdWebhookKey(target: string | null | undefined): WebhookKey | undefin
     normalizedTarget === "master" ||
     /^(production|prod)([-_/]|$)/.test(normalizedTarget)
   ) {
-    return webhookKeys.productionCicd;
+    return webhookKeys.production;
   }
 
   if (/^(staging|stage|dev|develop|development)([-_/]|$)/.test(normalizedTarget)) {
-    return webhookKeys.stagingCicd;
+    return webhookKeys.staging;
   }
 
   return undefined;
@@ -70,10 +70,10 @@ export function webhookKeyFor(parsedEvent: ParsedGitHubEvent): WebhookKey | unde
         return webhookKeys.prUpdate;
       }
 
-      return cicdWebhookKey(run.head_branch);
+      return deploymentWebhookKey(run.head_branch);
     }
     case "deployment_status":
-      return cicdWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);
+      return deploymentWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);
     default:
       return assertNever(parsedEvent);
   }

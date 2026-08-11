@@ -50,8 +50,8 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 - `GITHUB_API_TOKEN` (선택, 공개 저장소에서는 불필요)
 - `DISCORD_WEBHOOK_ISSUE_UPDATE`
 - `DISCORD_WEBHOOK_PR_UPDATE`
-- `DISCORD_WEBHOOK_STAGING_CICD`
-- `DISCORD_WEBHOOK_PRODUCTION_CICD`
+- `DISCORD_WEBHOOK_STAGING`
+- `DISCORD_WEBHOOK_PRODUCTION`
 - `DISCORD_WEBHOOK_WIKI_UPDATE`
 
 ### `GITHUB_API_TOKEN`
@@ -183,15 +183,15 @@ deployment 채널에는 **`dev`나 `main`에 머지된 뒤 도는 워크플로**
 
 기준 이름은 대소문자를 구분하지 않으며 아래와 같이 판정합니다.
 
-- `main`, `master` 또는 `production`·`prod`으로 시작 → `DISCORD_WEBHOOK_PRODUCTION_CICD`
-- `staging`·`stage`·`dev`·`develop`·`development`로 시작 → `DISCORD_WEBHOOK_STAGING_CICD`
+- `main`, `master` 또는 `production`·`prod`으로 시작 → `DISCORD_WEBHOOK_PRODUCTION`
+- `staging`·`stage`·`dev`·`develop`·`development`로 시작 → `DISCORD_WEBHOOK_STAGING`
 
 접두사는 이름 전체이거나 뒤에 `-`, `_`, `/`가 와야 합니다. 따라서 `prod-kr`은 production으로
 가지만 `reproduction`이나 `devops`는 어느 쪽에도 해당하지 않아 알림을 보내지 않습니다.
 
-어느 쪽에도 해당하지 않으면 알림을 보내지 않고 `200`으로 응답합니다. 이 저장소의 CI/CD가
-`dev`와 `main` 머지에서만 실행되기 때문에 문제가 되지 않습니다. 다른 브랜치에서도 CI/CD를
-돌리게 되면 그 브랜치 이름을 `cicdWebhookKey`의 판정 규칙에 추가해야 합니다.
+어느 쪽에도 해당하지 않으면 알림을 보내지 않고 `200`으로 응답합니다. 이 저장소의 워크플로가
+`dev`와 `main` 머지에서만 실행되기 때문에 문제가 되지 않습니다. 다른 브랜치에서도
+돌리게 되면 그 브랜치 이름을 `deploymentWebhookKey`의 판정 규칙에 추가해야 합니다.
 
 알림을 보내지 않는 액션도 있습니다. Draft 상태로 열린 PR, 승인이 아닌 리뷰,
 `created`가 아닌 이슈 댓글, 봇이 작성한 댓글, 완료되지 않은 워크플로가 여기 해당하며

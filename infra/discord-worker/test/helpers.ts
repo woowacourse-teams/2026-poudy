@@ -17,8 +17,8 @@ export const env = {
   GITHUB_WEBHOOK_SECRET: secret,
   DISCORD_WEBHOOK_ISSUE_UPDATE: webhookUrls.issue,
   DISCORD_WEBHOOK_PR_UPDATE: webhookUrls.pr,
-  DISCORD_WEBHOOK_STAGING_CICD: webhookUrls.staging,
-  DISCORD_WEBHOOK_PRODUCTION_CICD: webhookUrls.production,
+  DISCORD_WEBHOOK_STAGING: webhookUrls.staging,
+  DISCORD_WEBHOOK_PRODUCTION: webhookUrls.production,
   DISCORD_WEBHOOK_WIKI_UPDATE: webhookUrls.wiki,
 } satisfies WorkerEnv;
 
