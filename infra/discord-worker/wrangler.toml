@@ -1,6 +1,6 @@
 name = "poudy-discord-worker"
 main = "src/index.ts"
-compatibility_date = "2026-08-10"
+compatibility_date = "2026-08-08"
 workers_dev = true
 keep_vars = true
 
