@@ -1,20 +1,9 @@
-import type {
-  DeploymentStatusPayload,
-  WorkflowRunPayload,
-} from "../github-event.ts";
-import {
-  type DiscordEmbed,
-  embedColors,
-  githubAuthor,
-  repositoryFooter,
-  truncateText,
-} from "./shared.ts";
+import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
+import { type DiscordEmbed, embedColors, githubAuthor, repositoryFooter, truncateText } from "./shared.ts";
 
 type EmbedState = readonly [title: string, color: number];
 
-export function workflowRunEmbed(
-  payload: WorkflowRunPayload,
-): DiscordEmbed | undefined {
+export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | undefined {
   if (payload.action !== "completed") {
     return undefined;
   }
@@ -57,9 +46,7 @@ export function workflowRunEmbed(
   };
 }
 
-export function deploymentStatusEmbed(
-  payload: DeploymentStatusPayload,
-): DiscordEmbed {
+export function deploymentStatusEmbed(payload: DeploymentStatusPayload): DiscordEmbed {
   const status = payload.deployment_status;
   const deployment = payload.deployment;
   const resultByState: Readonly<Record<string, EmbedState>> = {
@@ -70,25 +57,16 @@ export function deploymentStatusEmbed(
     error: ["⚠️ 배포 오류", embedColors.red],
     inactive: ["⏹️ 배포 비활성화", embedColors.gray],
   };
-  const result: EmbedState = resultByState[status.state] ?? [
-    `ℹ️ 배포 ${status.state}`,
-    embedColors.blue,
-  ];
+  const result: EmbedState = resultByState[status.state] ?? [`ℹ️ 배포 ${status.state}`, embedColors.blue];
   const environment = deployment.environment || deployment.ref;
-  const url =
-    status.environment_url ||
-    status.log_url ||
-    status.target_url ||
-    payload.repository.html_url;
+  const url = status.environment_url || status.log_url || status.target_url || payload.repository.html_url;
 
   return {
     title: result[0],
     url,
     color: result[1],
     author: githubAuthor(payload.sender),
-    description:
-      truncateText(status.description ?? deployment.description, 900) ||
-      undefined,
+    description: truncateText(status.description ?? deployment.description, 900) || undefined,
     fields: [
       { name: "환경", value: environment, inline: true },
       { name: "기준", value: `\`${deployment.ref}\``, inline: true },

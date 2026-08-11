@@ -1,8 +1,4 @@
-import type {
-  DiscussionCommentPayload,
-  DiscussionPayload,
-  WikiPayload,
-} from "../github-event.ts";
+import type { DiscussionCommentPayload, DiscussionPayload, WikiPayload } from "../github-event.ts";
 import {
   type DiscordEmbed,
   type DiscordField,
@@ -15,9 +11,12 @@ import {
 
 type EmbedState = readonly [title: string, color: number];
 
-export function discussionEmbed(
-  payload: DiscussionPayload,
-): DiscordEmbed | undefined {
+const wikiActionTextByAction: Readonly<Record<string, string>> = {
+  created: "생성",
+  edited: "수정",
+};
+
+export function discussionEmbed(payload: DiscussionPayload): DiscordEmbed | undefined {
   const stateByAction: Readonly<Record<string, EmbedState>> = {
     created: ["💬 새로운 Discussion", embedColors.blue],
     edited: ["✏️ Discussion 수정", embedColors.yellow],
@@ -58,9 +57,7 @@ export function discussionEmbed(
   };
 }
 
-export function discussionCommentEmbed(
-  payload: DiscussionCommentPayload,
-): DiscordEmbed | undefined {
+export function discussionCommentEmbed(payload: DiscussionCommentPayload): DiscordEmbed | undefined {
   const stateByAction: Readonly<Record<string, EmbedState>> = {
     created: ["💬 Discussion에 새 댓글", embedColors.blue],
     edited: ["✏️ Discussion 댓글 수정", embedColors.yellow],
@@ -77,10 +74,7 @@ export function discussionCommentEmbed(
     url: payload.comment.html_url,
     color: state[1],
     author: githubAuthor(payload.comment.user),
-    description: descriptionWithBody(
-      payload.discussion.title,
-      payload.comment.body,
-    ),
+    description: descriptionWithBody(payload.discussion.title, payload.comment.body),
     fields: [
       {
         name: "Discussion 작성자",
@@ -105,22 +99,15 @@ export function wikiEmbed(payload: WikiPayload): DiscordEmbed | undefined {
     return undefined;
   }
 
-  const actionTextByAction: Readonly<Record<string, string>> = {
-    created: "생성",
-    edited: "수정",
-  };
   const visiblePages = payload.pages.slice(0, 6);
   const pageDescriptions = visiblePages.map((page) => {
-    const action = actionTextByAction[page.action] ?? page.action;
-    const title =
-      page.title.length > 100 ? `${page.title.slice(0, 97)}...` : page.title;
+    const action = wikiActionTextByAction[page.action] ?? page.action;
+    const title = page.title.length > 100 ? `${page.title.slice(0, 97)}...` : page.title;
     const summary = page.summary?.trim();
     const details = [`**[${action}: ${title}](${page.html_url})**`];
 
     if (summary) {
-      details.push(
-        summary.length > 180 ? `${summary.slice(0, 177)}...` : summary,
-      );
+      details.push(summary.length > 180 ? `${summary.slice(0, 177)}...` : summary);
     }
 
     details.push(`커밋 \`${page.sha.slice(0, 7)}\``);
@@ -140,10 +127,7 @@ export function wikiEmbed(payload: WikiPayload): DiscordEmbed | undefined {
     url: firstPage.html_url,
     color: embedColors.blue,
     author: githubAuthor(payload.sender),
-    description:
-      description.length > 4096
-        ? `${description.slice(0, 4093)}...`
-        : description,
+    description: description.length > 4096 ? `${description.slice(0, 4093)}...` : description,
     fields: [
       {
         name: "저장소",

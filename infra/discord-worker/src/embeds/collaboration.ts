@@ -17,9 +17,13 @@ import {
 
 type EmbedState = readonly [title: string, color: number];
 
-export function pullRequestEmbed(
-  payload: PullRequestPayload,
-): DiscordEmbed | undefined {
+const issueStateByAction: Readonly<Record<string, EmbedState>> = {
+  opened: ["🎫 새로운 이슈", embedColors.green],
+  reopened: ["🔄 이슈 다시 열림", embedColors.yellow],
+  closed: ["✅ 이슈 닫힘", embedColors.gray],
+};
+
+export function pullRequestEmbed(payload: PullRequestPayload): DiscordEmbed | undefined {
   const pullRequest = payload.pull_request;
   const stateByAction: Readonly<Record<string, EmbedState>> = {
     opened: ["🔀 새로운 Pull Request", embedColors.blue],
@@ -63,9 +67,7 @@ export function pullRequestEmbed(
   };
 }
 
-export function pullRequestReviewEmbed(
-  payload: PullRequestReviewPayload,
-): DiscordEmbed | undefined {
+export function pullRequestReviewEmbed(payload: PullRequestReviewPayload): DiscordEmbed | undefined {
   if (payload.action !== "submitted" || payload.review.state !== "approved") {
     return undefined;
   }
@@ -93,12 +95,7 @@ export function pullRequestReviewEmbed(
 }
 
 export function issueEmbed(payload: IssuePayload): DiscordEmbed | undefined {
-  const stateByAction: Readonly<Record<string, EmbedState>> = {
-    opened: ["🎫 새로운 이슈", embedColors.green],
-    reopened: ["🔄 이슈 다시 열림", embedColors.yellow],
-    closed: ["✅ 이슈 닫힘", embedColors.gray],
-  };
-  const state = stateByAction[payload.action];
+  const state = issueStateByAction[payload.action];
 
   if (!state) {
     return undefined;
@@ -139,9 +136,7 @@ export function issueEmbed(payload: IssuePayload): DiscordEmbed | undefined {
   };
 }
 
-export function issueCommentEmbed(
-  payload: IssueCommentPayload,
-): DiscordEmbed | undefined {
+export function issueCommentEmbed(payload: IssueCommentPayload): DiscordEmbed | undefined {
   if (payload.action !== "created" || payload.comment.user?.type === "Bot") {
     return undefined;
   }

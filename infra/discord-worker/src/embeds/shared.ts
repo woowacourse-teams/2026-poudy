@@ -44,19 +44,13 @@ type RepositoryCarrier = {
   };
 };
 
-export function truncateText(
-  value: string | null | undefined,
-  limit: number,
-): string {
+export function truncateText(value: string | null | undefined, limit: number): string {
   const text = value?.trim() ?? "";
 
   return text.length > limit ? `${text.slice(0, limit - 3)}...` : text;
 }
 
-export function descriptionWithBody(
-  title: string,
-  body: string | null | undefined,
-): string {
+export function descriptionWithBody(title: string, body: string | null | undefined): string {
   const heading = `**${truncateText(title, 256)}**`;
   const excerpt = truncateText(body, 900);
 
