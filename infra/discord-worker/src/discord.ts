@@ -1,15 +1,27 @@
 import type { DiscordEmbed } from "./embeds/shared.ts";
 
-export function sendDiscordEmbed(
+export async function sendDiscordEmbed(
   webhookUrl: string,
   embed: DiscordEmbed,
-): Promise<Response> {
-  return fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      embeds: [embed],
-      allowed_mentions: { parse: [] },
-    }),
-  });
+): Promise<boolean> {
+  try {
+    const url = new URL(webhookUrl);
+    url.searchParams.set("wait", "true");
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [embed],
+        allowed_mentions: { parse: [] },
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    return response.ok;
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof DOMException) {
+      return false;
+    }
+    throw error;
+  }
 }

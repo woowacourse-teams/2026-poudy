@@ -207,9 +207,9 @@ async function deliverParsedEvent(
     });
   }
 
-  const discordResponse = await sendDiscordEmbed(webhookUrl, embed);
+  const delivered = await sendDiscordEmbed(webhookUrl, embed);
 
-  if (!discordResponse.ok) {
+  if (!delivered) {
     return new Response("Discord delivery failed", { status: 502 });
   }
 

@@ -199,7 +199,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
 
     assert.equal(response.status, 200, event);
     assert.ok(call, event);
-    assert.equal(call.url, expectedUrl, event);
+    assert.equal(call.url, `${expectedUrl}?wait=true`, event);
     assert.equal(call.body.embeds.length, 1, event);
     const embed = call.body.embeds[0];
     assert.ok(embed, event);

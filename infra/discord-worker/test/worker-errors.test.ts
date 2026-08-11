@@ -9,6 +9,7 @@ import {
   repository,
   signedRequest,
   user,
+  webhookUrls,
 } from "./helpers.ts";
 
 const issuePayload = {
@@ -76,11 +77,21 @@ test("rejects malformed requests and reports delivery failures", async () => {
     (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
     502,
   );
+
+  globalThis.fetch = async () => {
+    throw new TypeError("network down");
+  };
+  assert.equal(
+    (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
+    502,
+  );
 });
 
 test("falls back for empty deployment URLs and deleted users", async () => {
   let sent: DiscordBody | undefined;
-  globalThis.fetch = async (_input, init) => {
+  let sentUrl: string | undefined;
+  globalThis.fetch = async (input, init) => {
+    sentUrl = input.toString();
     sent = parseRequestBody(init);
     return new Response(null, { status: 204 });
   };
@@ -115,4 +126,5 @@ test("falls back for empty deployment URLs and deleted users", async () => {
   assert.equal(embed.url, repository.html_url);
   assert.equal(embed.author.name, "삭제된 사용자");
   assert.equal(embed.description, undefined);
+  assert.equal(sentUrl, `${webhookUrls.production}?wait=true`);
 });
