@@ -14,7 +14,7 @@ export async function sendDiscordEmbed(
         embeds: [embed],
         allowed_mentions: { parse: [] },
       }),
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(5_000),
     });
 
     return response.ok;
