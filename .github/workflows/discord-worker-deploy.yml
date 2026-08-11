@@ -1,0 +1,71 @@
+name: Discord Worker Deploy
+
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - "infra/discord-worker/**"
+      - ".github/workflows/discord-worker-deploy.yml"
+  push:
+    branches: [dev]
+    paths:
+      - "infra/discord-worker/**"
+      - ".github/workflows/discord-worker-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-worker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: infra/discord-worker/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: infra/discord-worker
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit production dependencies
+        working-directory: infra/discord-worker
+        run: pnpm audit --prod
+
+      - name: Test
+        working-directory: infra/discord-worker
+        run: pnpm test
+
+      - name: Check TypeScript
+        working-directory: infra/discord-worker
+        run: pnpm run check
+
+      - name: Check Worker bundle
+        working-directory: infra/discord-worker
+        run: pnpm run deploy:dry-run
+
+      - name: Deploy Worker
+        if: >-
+          github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: infra/discord-worker
+          packageManager: pnpm
+          command: deploy --name ${{ vars.CLOUDFLARE_WORKER_NAME || 'poudy-discord-worker' }}

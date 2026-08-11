@@ -1,0 +1,22 @@
+{
+  "name": "@poudy/discord-worker",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "check": "tsc --project tsconfig.json --noEmit && biome check .",
+    "format": "biome format --write .",
+    "test": "node --experimental-strip-types --test",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.7",
+    "@types/node": "^22.0.0",
+    "typescript": "7.0.2",
+    "wrangler": "^4.0.0"
+  }
+}
