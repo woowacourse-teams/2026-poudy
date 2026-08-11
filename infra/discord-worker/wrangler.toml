@@ -1,0 +1,8 @@
+name = "poudy-discord-worker"
+main = "src/index.ts"
+compatibility_date = "2026-08-10"
+workers_dev = true
+keep_vars = true
+
+[observability]
+enabled = true
