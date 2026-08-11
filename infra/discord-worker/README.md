@@ -26,7 +26,7 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 환경 변수도 유지합니다.
 
 - `GITHUB_WEBHOOK_SECRET`
-- `GITHUB_API_TOKEN` (선택)
+- `GITHUB_API_TOKEN` (선택, 공개 저장소에서는 불필요)
 - `DISCORD_WEBHOOK_ISSUE_UPDATE`
 - `DISCORD_WEBHOOK_PR_UPDATE`
 - `DISCORD_WEBHOOK_STAGING_CICD`
@@ -35,32 +35,33 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 
 ### `GITHUB_API_TOKEN`
 
-CI/CD 알림에 **PR 링크와 단계 진행 상황**을 넣기 위한 Fine-grained PAT입니다.
-없으면 두 항목만 빠지고 나머지 알림은 그대로 동작하므로 필수는 아닙니다.
+CI/CD 알림에 **PR 링크와 단계 진행 상황**을 넣기 위해 GitHub API를 조회할 때 씁니다.
+
+**저장소가 공개인 동안에는 등록하지 않아도 됩니다.** 두 조회 모두 인증 없이 동작합니다.
+아래 두 경우에만 필요합니다.
+
+- 저장소를 비공개로 전환하는 경우
+- 시간당 60회인 비인증 요청 한도가 부족해지는 경우 (인증 시 5,000회)
+
+등록한다면 [Fine-grained PAT](https://github.com/settings/personal-access-tokens)을
+아래 권한으로 발급합니다. 이 Worker는 PR과 워크플로 실행만 읽으므로 그 외 권한은
+필요하지 않습니다. Issue, Discussion, Wiki 알림은 웹훅 페이로드만으로 만들어집니다.
+
+- Resource owner: `woowacourse-teams`, 대상 저장소: `2026-poudy`와 각자의 fork
+- Repository permissions: `Pull requests: Read`, `Actions: Read`
+
+조직 설정에 따라 발급 후 조직 관리자의 승인이 필요할 수 있습니다. 승인 전이거나
+토큰이 만료되어도 조회에 실패한 항목만 빠지고 알림은 계속 전송됩니다.
+
+### PR 링크를 찾는 방법
 
 `workflow_run` 페이로드의 `pull_requests` 배열은 **같은 저장소에 올린 PR만** 채워집니다.
-이 경우에는 토큰 없이도 PR 번호를 알 수 있어 링크를 바로 만듭니다.
+이 경우 조회 없이 페이로드의 번호로 링크를 만듭니다.
 
-| PR 방식 | PR 링크 | 단계 진행 상황 |
-| --- | --- | --- |
-| 같은 저장소 브랜치에서 올린 PR | 토큰 없이 표시 | 토큰 필요 |
-| fork에서 올린 PR | 토큰 필요 | 토큰 필요 |
-
-fork PR은 배열이 비어 있어, 커밋이 실제로 있는 `head_repository`를
+fork에서 올린 PR은 이 배열이 비어 있어, 커밋이 실제로 있는 `head_repository`를
 `GET /repos/{head_repository}/commits/{head_sha}/pulls`로 조회해 PR을 되짚습니다.
 워크플로가 도는 저장소로 조회하면 fork PR은 빈 배열이 돌아옵니다.
 단계 수는 `jobs_url`로 조회합니다.
-
-**이 저장소는 fork에서 PR을 올리는 방식이므로 PR 링크를 보려면 토큰이 필요합니다.**
-저장소가 공개여도 위 두 응답은 인증 없이는 비어서 돌아옵니다.
-[Fine-grained PAT](https://github.com/settings/personal-access-tokens)을 아래 권한으로 발급합니다.
-
-- Resource owner: `woowacourse-teams`, 대상 저장소: `2026-poudy`와 각자의 fork
-- Repository permissions: `Contents: Read`, `Pull requests: Read`, `Actions: Read`
-
-조직 설정에 따라 발급 후 조직 관리자의 승인이 필요할 수 있습니다. 승인 전에는 조회가
-실패하지만 알림은 계속 전송됩니다. 토큰 만료일이 지나도 마찬가지이므로,
-PR 링크가 사라지면 토큰 만료를 먼저 확인합니다.
 
 ## GitHub Webhook 설정
 
