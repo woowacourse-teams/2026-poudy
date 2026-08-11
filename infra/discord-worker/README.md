@@ -139,10 +139,10 @@ GitHub Webhook은 2xx가 아닌 응답을 실패로 기록하고 재전송합니
 이 두 경우는 아래처럼 Worker 로그로 확인합니다.
 
 ```bash
-npx wrangler tail poudy-discord-worker
+npx wrangler tail "${CLOUDFLARE_WORKER_NAME:-poudy-discord-worker}"
 ```
 
-```
+```text
 Discord rate limited: DISCORD_WEBHOOK_PR_UPDATE 3.5
 Invalid Discord webhook URL: DISCORD_WEBHOOK_ISSUE_UPDATE
 ```
