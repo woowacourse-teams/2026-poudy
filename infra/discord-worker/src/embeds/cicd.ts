@@ -1,6 +1,8 @@
+import type { WorkflowRunContext } from "../github-api.ts";
 import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
 import {
   type DiscordEmbed,
+  type DiscordField,
   type EmbedState,
   embedColors,
   githubAuthor,
@@ -25,7 +27,47 @@ const resultByState: Readonly<Record<string, EmbedState>> = {
   inactive: ["⏹️ 배포 비활성화", embedColors.gray],
 };
 
-export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | undefined {
+// Wiki 알림처럼 링크를 본문 앞으로 올려, 무엇이 왜 돌았는지 한눈에 읽히게 한다.
+function workflowDescription(run: WorkflowRunPayload["workflow_run"], context: WorkflowRunContext): string {
+  const lines = [`**[${truncateText(run.name, 100)}](${run.html_url})**`];
+  const title = run.display_title?.trim();
+
+  if (title && title !== run.name) {
+    lines.push(truncateText(title, 180));
+  }
+
+  if (context.pullRequest) {
+    const { number, html_url } = context.pullRequest;
+    lines.push(`[#${number} PR 보기](${html_url})`);
+  }
+
+  return lines.join("\n");
+}
+
+function workflowFields(run: WorkflowRunPayload["workflow_run"], context: WorkflowRunContext): DiscordField[] {
+  const fields: DiscordField[] = [
+    { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
+    { name: "커밋", value: `\`${run.head_sha.slice(0, 7)}\``, inline: true },
+  ];
+
+  if (context.steps) {
+    fields.push({
+      name: "단계",
+      value: `${context.steps.total}단계 중 ${context.steps.completed}단계 완료`,
+      inline: true,
+    });
+  }
+
+  const attempt = run.run_attempt > 1 ? ` · 재시도 ${run.run_attempt}회차` : "";
+  fields.push({ name: "실행", value: `#${run.run_number}${attempt} · ${run.event}`, inline: true });
+
+  return fields;
+}
+
+export function workflowRunEmbed(
+  payload: WorkflowRunPayload,
+  context: WorkflowRunContext = { pullRequest: undefined, steps: undefined },
+): DiscordEmbed | undefined {
   if (payload.action !== "completed") {
     return undefined;
   }
@@ -41,21 +83,8 @@ export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | un
     url: run.html_url,
     color: result[1],
     author: githubAuthor(run.actor),
-    description: `**${truncateText(run.name, 256)}**`,
-    fields: [
-      { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
-      { name: "이벤트", value: run.event, inline: true },
-      {
-        name: "실행",
-        value: `#${run.run_number} · 시도 ${run.run_attempt}`,
-        inline: true,
-      },
-      {
-        name: "커밋",
-        value: `\`${run.head_sha.slice(0, 7)}\``,
-        inline: true,
-      },
-    ],
+    description: workflowDescription(run, context),
+    fields: workflowFields(run, context),
     footer: repositoryFooter(payload),
     timestamp: run.updated_at,
   };

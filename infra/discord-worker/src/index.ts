@@ -88,7 +88,11 @@ async function createEmbed(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Prom
     case "workflow_run":
       return workflowRunEmbed(
         parsedEvent.payload,
-        await workflowRunContext(parsedEvent.payload.workflow_run, env.GITHUB_API_TOKEN),
+        await workflowRunContext(
+          parsedEvent.payload.workflow_run,
+          parsedEvent.payload.repository.html_url,
+          env.GITHUB_API_TOKEN,
+        ),
       );
     case "deployment_status":
       return deploymentStatusEmbed(parsedEvent.payload);

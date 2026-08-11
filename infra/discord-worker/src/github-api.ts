@@ -72,24 +72,38 @@ async function lookupSteps(jobsUrl: string, token: string): Promise<WorkflowRunC
   }
 }
 
+type WorkflowRunLike = {
+  readonly head_sha: string;
+  readonly jobs_url?: string | undefined;
+  readonly head_repository?: { readonly full_name: string } | undefined;
+  readonly pull_requests?: readonly { readonly number?: number | undefined }[] | undefined;
+};
+
+// 같은 저장소에 올린 PR 은 페이로드에 번호가 들어 있다. 이때는 조회하지 않는다.
+// 페이로드에는 html_url 이 없으므로 저장소 주소로 링크를 만든다.
+function pullRequestFromPayload(run: WorkflowRunLike, repositoryHtmlUrl: string): WorkflowRunContext["pullRequest"] {
+  const number = run.pull_requests?.[0]?.number;
+
+  return number === undefined ? undefined : { number, html_url: `${repositoryHtmlUrl}/pull/${number}` };
+}
+
 export async function workflowRunContext(
-  run: {
-    readonly head_sha: string;
-    readonly jobs_url?: string | undefined;
-    readonly head_repository?: { readonly full_name: string } | undefined;
-  },
+  run: WorkflowRunLike,
+  repositoryHtmlUrl: string,
   token: string | undefined,
 ): Promise<WorkflowRunContext> {
+  const payloadPullRequest = pullRequestFromPayload(run, repositoryHtmlUrl);
   const headRepository = run.head_repository?.full_name;
 
-  if (!token || !headRepository) {
-    return { pullRequest: undefined, steps: undefined };
+  if (!token) {
+    return { pullRequest: payloadPullRequest, steps: undefined };
   }
 
-  const [pullRequest, steps] = await Promise.all([
-    lookupPullRequest(headRepository, run.head_sha, token),
+  const [lookedUpPullRequest, steps] = await Promise.all([
+    // fork PR 은 페이로드가 비어 있어 커밋으로 되짚어야 한다.
+    payloadPullRequest ?? (headRepository ? lookupPullRequest(headRepository, run.head_sha, token) : undefined),
     run.jobs_url ? lookupSteps(run.jobs_url, token) : undefined,
   ]);
 
-  return { pullRequest, steps };
+  return { pullRequest: lookedUpPullRequest, steps };
 }

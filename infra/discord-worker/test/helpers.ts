@@ -45,6 +45,7 @@ export const discordBodySchema = z.object({
         url: z.string(),
         description: z.string().optional(),
         author: z.object({ name: z.string() }),
+        fields: z.array(z.object({ name: z.string(), value: z.string(), inline: z.boolean() })).optional(),
       })
       .loose(),
   ),
