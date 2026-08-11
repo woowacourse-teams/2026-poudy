@@ -2,6 +2,27 @@
 
 GitHub Webhook 이벤트를 이벤트별 Discord 채널로 전달하는 Cloudflare Worker입니다.
 
+```mermaid
+flowchart TD
+  GH[GitHub Webhook] --> P{이벤트}
+
+  P -->|issues<br/>discussion| ISSUE["#issue-update"]
+  P -->|gollum| WIKI["#wiki-update"]
+  P -->|pull_request| PR["#pr-update"]
+  P -->|workflow_run| W{어디서 실행?}
+
+  W -->|dev 머지| STG["#staging"]
+  W -->|main 머지| PROD["#production"]
+  W -->|PR| EDIT[PR 메시지에<br/>CI 결과 채움]
+
+  EDIT -.->|message_id| KV[(KV)]
+  PR -.->|message_id| KV
+  EDIT ==> PR
+
+  style PR fill:#5865f2,color:#fff
+  style EDIT fill:#5865f2,color:#fff
+```
+
 ## GitHub Actions 설정
 
 저장소 Secret에 아래 값을 등록합니다.
@@ -76,10 +97,40 @@ PR 에서 도는 CI 는 별도 알림을 만들지 않고 **그 PR 알림 메시
 npx wrangler kv namespace create WORKFLOW_RUNS
 ```
 
+```mermaid
+sequenceDiagram
+  participant GH as GitHub
+  participant W as Worker
+  participant KV
+  participant D as Discord
+
+  GH->>W: pull_request (opened)
+  W->>D: 메시지 전송
+  D-->>W: message_id
+  W->>KV: PR 번호 키와 sha 키에 저장
+
+  Note over GH,D: 몇 분 뒤, 워크플로가 하나씩 끝난다
+
+  GH->>W: workflow_run (Server CI)
+  W->>KV: sha:aaa 로 조회
+  KV-->>W: message_id
+  W->>D: 같은 메시지 수정 (CI 한 줄 추가)
+
+  GH->>W: workflow_run (Client CI)
+  W->>D: 같은 메시지 수정 (CI 두 줄)
+```
+
 저장하는 키는 두 가지입니다. PR 번호로 찾는 키와, `workflow_run` 이 PR 번호를 주지
 않으므로 `head_sha` 로 찾는 키를 함께 씁니다. 커밋을 푸시하면 `head_sha` 가 바뀌므로
 `synchronize` 에서 새 sha 를 이어 두고, 이전 커밋의 CI 결과는 버립니다.
 저장한 값은 3일 뒤 만료됩니다.
+
+| 시점 | 저장되는 키 | CI 결과 |
+| --- | --- | --- |
+| PR 열림 (sha `aaa`) | `pr:...15`, `sha:aaa` | 비어 있음 |
+| CI 완료 | 그대로 | 쌓임 |
+| 커밋 푸시 (sha `bbb`) | `pr:...15`, **`sha:bbb`** | **버림** |
+| 새 커밋의 CI 완료 | 그대로 | 새로 쌓임 |
 
 바인딩이 없으면 PR 메시지를 찾지 못해 **PR 에서 도는 CI 알림이 나가지 않습니다.**
 PR 알림과 머지 후 워크플로 알림은 그대로 동작합니다.
