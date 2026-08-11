@@ -186,12 +186,11 @@ jobs:
           docker logs poudy-ci
           exit 1
 
-  # 필수 체크로 걸 잡. 앞 잡이 skipped 여도 결과를 보고한다.
-  # 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록해야 한다.
-  # always() 는 취소된 실행까지 실패로 보고해 !cancelled() 를 쓴다.
+  # 필수 체크로 걸 잡. 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록한다.
+  # !cancelled() 는 취소 시 skipped 가 되고 브랜치 보호가 이를 통과로 본다.
   gate:
     needs: [changes, build, docker]
-    if: ${{ !cancelled() }}
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
