@@ -52,9 +52,7 @@ const issueSchema = z.object({
   body: bodySchema,
   html_url: urlSchema,
   pull_request: z.object({}).optional(),
-  labels: z
-    .array(z.union([z.string(), z.object({ name: z.string().nullable() })]))
-    .optional(),
+  labels: z.array(z.union([z.string(), z.object({ name: z.string().nullable() })])).optional(),
   assignees: z.array(githubUserSchema).optional(),
   updated_at: timestampSchema,
 });
@@ -151,9 +149,7 @@ export const workflowRunPayloadSchema = z.object({
     actor: githubUserSchema,
     html_url: urlSchema,
     updated_at: timestampSchema,
-    pull_requests: z
-      .array(z.object({ base: z.object({ ref: z.string() }) }))
-      .optional(),
+    pull_requests: z.array(z.object({ base: z.object({ ref: z.string() }) })).optional(),
   }),
   repository: repositorySchema,
 });
@@ -179,20 +175,14 @@ export const deploymentStatusPayloadSchema = z.object({
 
 export type GitHubUser = z.infer<typeof githubUserSchema>;
 export type PullRequestPayload = z.infer<typeof pullRequestPayloadSchema>;
-export type PullRequestReviewPayload = z.infer<
-  typeof pullRequestReviewPayloadSchema
->;
+export type PullRequestReviewPayload = z.infer<typeof pullRequestReviewPayloadSchema>;
 export type IssuePayload = z.infer<typeof issuePayloadSchema>;
 export type IssueCommentPayload = z.infer<typeof issueCommentPayloadSchema>;
 export type DiscussionPayload = z.infer<typeof discussionPayloadSchema>;
-export type DiscussionCommentPayload = z.infer<
-  typeof discussionCommentPayloadSchema
->;
+export type DiscussionCommentPayload = z.infer<typeof discussionCommentPayloadSchema>;
 export type WikiPayload = z.infer<typeof wikiPayloadSchema>;
 export type WorkflowRunPayload = z.infer<typeof workflowRunPayloadSchema>;
-export type DeploymentStatusPayload = z.infer<
-  typeof deploymentStatusPayloadSchema
->;
+export type DeploymentStatusPayload = z.infer<typeof deploymentStatusPayloadSchema>;
 
 export type ParsedGitHubEvent =
   | { readonly event: "pull_request"; readonly payload: PullRequestPayload }
@@ -217,10 +207,7 @@ export type ParsedGitHubEvent =
       readonly payload: DeploymentStatusPayload;
     };
 
-export function parseGitHubEvent(
-  event: string,
-  payload: unknown,
-): ParsedGitHubEvent | undefined {
+export function parseGitHubEvent(event: string, payload: unknown): ParsedGitHubEvent | undefined {
   switch (event) {
     case "pull_request":
       return { event, payload: pullRequestPayloadSchema.parse(payload) };

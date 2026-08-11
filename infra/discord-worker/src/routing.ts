@@ -19,9 +19,7 @@ const webhookKeys = {
   wikiUpdate: "DISCORD_WEBHOOK_WIKI_UPDATE",
 } as const satisfies Readonly<Record<string, WebhookKey>>;
 
-function cicdWebhookKey(
-  target: string | null | undefined,
-): WebhookKey | undefined {
+function cicdWebhookKey(target: string | null | undefined): WebhookKey | undefined {
   const normalizedTarget = target?.toLowerCase();
 
   if (!normalizedTarget) {
@@ -36,9 +34,7 @@ function cicdWebhookKey(
     return webhookKeys.productionCicd;
   }
 
-  if (
-    /^(staging|stage|dev|develop|development)([-_/]|$)/.test(normalizedTarget)
-  ) {
+  if (/^(staging|stage|dev|develop|development)([-_/]|$)/.test(normalizedTarget)) {
     return webhookKeys.stagingCicd;
   }
 
@@ -49,17 +45,13 @@ export function assertNever(value: never): never {
   throw new TypeError(`Unhandled variant: ${JSON.stringify(value)}`);
 }
 
-export function webhookKeyFor(
-  parsedEvent: ParsedGitHubEvent,
-): WebhookKey | undefined {
+export function webhookKeyFor(parsedEvent: ParsedGitHubEvent): WebhookKey | undefined {
   switch (parsedEvent.event) {
     case "pull_request":
     case "pull_request_review":
       return webhookKeys.prUpdate;
     case "issue_comment":
-      return parsedEvent.payload.issue.pull_request
-        ? webhookKeys.prUpdate
-        : webhookKeys.issueUpdate;
+      return parsedEvent.payload.issue.pull_request ? webhookKeys.prUpdate : webhookKeys.issueUpdate;
     case "issues":
     case "discussion":
     case "discussion_comment":
@@ -73,15 +65,10 @@ export function webhookKeyFor(
         return webhookKeys.stagingCicd;
       }
 
-      return cicdWebhookKey(
-        run.pull_requests?.[0]?.base.ref ?? run.head_branch,
-      );
+      return cicdWebhookKey(run.pull_requests?.[0]?.base.ref ?? run.head_branch);
     }
     case "deployment_status":
-      return cicdWebhookKey(
-        parsedEvent.payload.deployment.environment ||
-          parsedEvent.payload.deployment.ref,
-      );
+      return cicdWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);
     default:
       return assertNever(parsedEvent);
   }
