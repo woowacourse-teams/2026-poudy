@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { sendDiscordEmbed } from "./discord.ts";
+import { type DiscordDeliveryResult, sendDiscordEmbed } from "./discord.ts";
 import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
 import { issueCommentEmbed, issueEmbed, pullRequestEmbed, pullRequestReviewEmbed } from "./embeds/collaboration.ts";
 import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
@@ -93,10 +93,6 @@ function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
   }
 }
 
-function parseJson(body: string): unknown {
-  return JSON.parse(body);
-}
-
 async function parseWebhookRequest(request: Request, githubSecret: string): Promise<WebhookRequestParseResult> {
   const body = await request.text();
   const signature = request.headers.get("X-Hub-Signature-256");
@@ -116,7 +112,7 @@ async function parseWebhookRequest(request: Request, githubSecret: string): Prom
 
   let rawPayload: unknown;
   try {
-    rawPayload = parseJson(body);
+    rawPayload = JSON.parse(body);
   } catch (error) {
     if (error instanceof SyntaxError) {
       return {
@@ -150,6 +146,24 @@ async function parseWebhookRequest(request: Request, githubSecret: string): Prom
   return { kind: "parsed", parsedEvent };
 }
 
+function deliveryResponse(result: DiscordDeliveryResult, webhookKey: string): Response {
+  switch (result.kind) {
+    case "delivered":
+      return new Response("Delivered", { status: 200 });
+    // 재전송해도 같은 결과이므로 GitHub 재시도를 유도하지 않는다.
+    case "invalid-webhook-url":
+      console.error(`Invalid Discord webhook URL: ${webhookKey}`);
+      return new Response("Invalid Discord webhook URL", { status: 200 });
+    case "rate-limited":
+      console.error(`Discord rate limited: ${webhookKey}`, result.retryAfterSeconds);
+      return new Response("Discord rate limited", { status: 200 });
+    case "failed":
+      return new Response("Discord delivery failed", { status: 502 });
+    default:
+      return assertNever(result);
+  }
+}
+
 async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<Response> {
   const embed = createEmbed(parsedEvent);
   const webhookKey = webhookKeyFor(parsedEvent);
@@ -166,13 +180,7 @@ async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv
     });
   }
 
-  const delivered = await sendDiscordEmbed(webhookUrl, embed);
-
-  if (!delivered) {
-    return new Response("Discord delivery failed", { status: 502 });
-  }
-
-  return new Response("Delivered", { status: 200 });
+  return deliveryResponse(await sendDiscordEmbed(webhookUrl, embed), webhookKey);
 }
 
 export default { fetch: handleRequest } satisfies WorkerHandler;
