@@ -1,8 +1,13 @@
 name: Discord Worker Deploy
 
 on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - "infra/discord-worker/**"
+      - ".github/workflows/discord-worker-deploy.yml"
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "infra/discord-worker/**"
       - ".github/workflows/discord-worker-deploy.yml"
@@ -12,8 +17,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: discord-worker-production
-  cancel-in-progress: false
+  group: discord-worker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
   deploy:
@@ -45,7 +50,12 @@ jobs:
         working-directory: infra/discord-worker
         run: pnpm run check
 
+      - name: Check Worker bundle
+        working-directory: infra/discord-worker
+        run: pnpm run deploy:dry-run
+
       - name: Deploy Worker
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
