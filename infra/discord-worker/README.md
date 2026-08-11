@@ -63,6 +63,22 @@ fork에서 올린 PR은 이 배열이 비어 있어, 커밋이 실제로 있는 
 워크플로가 도는 저장소로 조회하면 fork PR은 빈 배열이 돌아옵니다.
 단계 수는 `jobs_url`로 조회합니다.
 
+## KV 네임스페이스
+
+커밋 하나에 워크플로가 여러 개 돌기 때문에 `workflow_run` 은 여러 번 도착합니다.
+그때마다 새 알림을 보내지 않고 **먼저 보낸 메시지를 고쳐** 하나로 모으며,
+이를 위해 커밋별 결과와 Discord `message_id` 를 KV 에 둡니다.
+
+아래 명령으로 네임스페이스를 만들고, 출력된 id 를 `wrangler.toml` 의
+`kv_namespaces` 에 채웁니다.
+
+```bash
+npx wrangler kv namespace create WORKFLOW_RUNS
+```
+
+바인딩이 없으면 워크플로마다 알림이 하나씩 나가던 이전 동작으로 돌아갑니다.
+알림이 사라지지는 않습니다. 저장한 값은 6시간 뒤 만료됩니다.
+
 ## GitHub Webhook 설정
 
 GitHub 저장소의 `Settings > Webhooks > Add webhook`에서 아래와 같이 등록합니다.
