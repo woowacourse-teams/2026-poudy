@@ -4,5 +4,12 @@ compatibility_date = "2026-08-08"
 workers_dev = true
 keep_vars = true
 
+# 커밋 하나에 여러 워크플로가 돌기 때문에, 먼저 보낸 Discord 메시지를 다시 찾아
+# 수정하려면 message_id 를 기억해야 한다. 아래 id 는 네임스페이스를 만든 뒤 채운다.
+#   npx wrangler kv namespace create WORKFLOW_RUNS
+[[kv_namespaces]]
+binding = "WORKFLOW_RUNS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
 [observability]
 enabled = true

@@ -1,13 +1,14 @@
 import { z } from "zod";
 
-import { type DiscordDeliveryResult, sendDiscordEmbed } from "./discord.ts";
+import { type DiscordDeliveryResult, editDiscordEmbed, sendDiscordEmbed } from "./discord.ts";
 import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
 import { issueCommentEmbed, issueEmbed, pullRequestEmbed, pullRequestReviewEmbed } from "./embeds/collaboration.ts";
 import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
 import { workflowRunContext } from "./github-api.ts";
-import { type ParsedGitHubEvent, parseGitHubEvent } from "./github-event.ts";
+import { type ParsedGitHubEvent, parseGitHubEvent, type WorkflowRunPayload } from "./github-event.ts";
 import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
+import { groupKey, mergeOutcome, readGroup, writeGroup } from "./workflow-group.ts";
 
 export type { WorkerEnv } from "./routing.ts";
 
@@ -69,7 +70,7 @@ async function hasValidSignature(body: string, signature: string | null, secret:
   return crypto.subtle.verify("HMAC", key, hexToBytes(signature.slice(7)), encoder.encode(body));
 }
 
-async function createEmbed(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<DiscordEmbed | undefined> {
+function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
   switch (parsedEvent.event) {
     case "pull_request":
       return pullRequestEmbed(parsedEvent.payload);
@@ -85,15 +86,9 @@ async function createEmbed(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Prom
       return discussionCommentEmbed(parsedEvent.payload);
     case "gollum":
       return wikiEmbed(parsedEvent.payload);
+    // workflow_run 은 커밋 하나에 여러 번 도착하므로 deliverWorkflowRun 에서 따로 다룬다.
     case "workflow_run":
-      return workflowRunEmbed(
-        parsedEvent.payload,
-        await workflowRunContext(
-          parsedEvent.payload.workflow_run,
-          parsedEvent.payload.repository.html_url,
-          env.GITHUB_API_TOKEN,
-        ),
-      );
+      return undefined;
     case "deployment_status":
       return deploymentStatusEmbed(parsedEvent.payload);
     default:
@@ -172,11 +167,67 @@ function deliveryResponse(result: DiscordDeliveryResult, webhookKey: string): Re
   }
 }
 
+// 이미 보낸 메시지가 있으면 고치고, 없거나 고치기에 실패하면 새로 보낸다.
+// 메시지가 지워졌거나 오래되어 수정이 막히는 경우에도 알림을 잃지 않는다.
+async function upsertEmbed(
+  webhookUrl: string,
+  embed: DiscordEmbed,
+  messageId: string | undefined,
+): Promise<DiscordDeliveryResult> {
+  if (messageId) {
+    const edited = await editDiscordEmbed(webhookUrl, messageId, embed);
+
+    if (edited.kind !== "failed") {
+      return edited;
+    }
+  }
+
+  return sendDiscordEmbed(webhookUrl, embed);
+}
+
+type WebhookTarget = { readonly url: string; readonly key: string };
+
+async function deliverWorkflowRun(
+  payload: WorkflowRunPayload,
+  target: WebhookTarget,
+  env: WorkerEnv,
+): Promise<Response> {
+  const run = payload.workflow_run;
+
+  if (payload.action !== "completed") {
+    return new Response("Ignored", { status: 200 });
+  }
+
+  const key = groupKey(run.head_sha, run.run_attempt);
+  const stored = await readGroup(env.WORKFLOW_RUNS, key);
+  const outcomes = mergeOutcome(stored?.outcomes ?? [], {
+    name: run.name,
+    conclusion: run.conclusion,
+    html_url: run.html_url,
+  });
+  const context = await workflowRunContext(run, payload.repository.html_url, env.GITHUB_API_TOKEN);
+  const embed = workflowRunEmbed(payload, outcomes, context);
+
+  if (!embed) {
+    return new Response("Ignored", { status: 200 });
+  }
+
+  const result = await upsertEmbed(target.url, embed, stored?.messageId);
+
+  if (result.kind === "delivered") {
+    await writeGroup(env.WORKFLOW_RUNS, key, {
+      messageId: result.messageId ?? stored?.messageId,
+      outcomes,
+    });
+  }
+
+  return deliveryResponse(result, target.key);
+}
+
 async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<Response> {
-  const embed = await createEmbed(parsedEvent, env);
   const webhookKey = webhookKeyFor(parsedEvent);
 
-  if (!embed || !webhookKey) {
+  if (!webhookKey) {
     return new Response("Ignored", { status: 200 });
   }
 
@@ -186,6 +237,16 @@ async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv
     return new Response(`Missing Discord webhook: ${webhookKey}`, {
       status: 500,
     });
+  }
+
+  if (parsedEvent.event === "workflow_run") {
+    return deliverWorkflowRun(parsedEvent.payload, { url: webhookUrl, key: webhookKey }, env);
+  }
+
+  const embed = createEmbed(parsedEvent);
+
+  if (!embed) {
+    return new Response("Ignored", { status: 200 });
   }
 
   return deliveryResponse(await sendDiscordEmbed(webhookUrl, embed), webhookKey);

@@ -1,5 +1,6 @@
 import type { WorkflowRunContext } from "../github-api.ts";
 import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
+import type { WorkflowOutcome } from "../workflow-group.ts";
 import {
   type DiscordEmbed,
   type DiscordField,
@@ -10,14 +11,6 @@ import {
   truncateText,
 } from "./shared.ts";
 
-const resultByConclusion: Readonly<Record<string, EmbedState>> = {
-  success: ["✅ CI/CD 성공", embedColors.green],
-  failure: ["❌ CI/CD 실패", embedColors.red],
-  cancelled: ["⏹️ CI/CD 취소", embedColors.gray],
-  timed_out: ["⏱️ CI/CD 시간 초과", embedColors.red],
-  skipped: ["⏭️ CI/CD 건너뜀", embedColors.gray],
-};
-
 const resultByState: Readonly<Record<string, EmbedState>> = {
   queued: ["⏳ 배포 대기 중", embedColors.yellow],
   in_progress: ["🚀 배포 진행 중", embedColors.blue],
@@ -27,13 +20,42 @@ const resultByState: Readonly<Record<string, EmbedState>> = {
   inactive: ["⏹️ 배포 비활성화", embedColors.gray],
 };
 
+const markByConclusion: Readonly<Record<string, string>> = {
+  success: "✅",
+  failure: "❌",
+  cancelled: "⏹️",
+  timed_out: "⏱️",
+  skipped: "⏭️",
+};
+
+// 하나라도 실패하면 전체를 실패로 본다. 성공만 모였을 때만 성공이다.
+function groupState(outcomes: readonly WorkflowOutcome[]): EmbedState {
+  if (outcomes.some((outcome) => outcome.conclusion === "failure" || outcome.conclusion === "timed_out")) {
+    return ["❌ CI/CD 실패", embedColors.red];
+  }
+
+  if (outcomes.some((outcome) => outcome.conclusion === "cancelled")) {
+    return ["⏹️ CI/CD 취소", embedColors.gray];
+  }
+
+  if (outcomes.every((outcome) => outcome.conclusion === "success" || outcome.conclusion === "skipped")) {
+    return ["✅ CI/CD 성공", embedColors.green];
+  }
+
+  return ["⚠️ CI/CD 완료", embedColors.yellow];
+}
+
 // Wiki 알림처럼 링크를 본문 앞으로 올려, 무엇이 왜 돌았는지 한눈에 읽히게 한다.
-function workflowDescription(run: WorkflowRunPayload["workflow_run"], context: WorkflowRunContext): string {
-  const lines = [`**[${truncateText(run.name, 100)}](${run.html_url})**`];
+function workflowDescription(
+  run: WorkflowRunPayload["workflow_run"],
+  context: WorkflowRunContext,
+  outcomes: readonly WorkflowOutcome[],
+): string {
+  const lines: string[] = [];
   const title = run.display_title?.trim();
 
-  if (title && title !== run.name) {
-    lines.push(truncateText(title, 180));
+  if (title) {
+    lines.push(`**${truncateText(title, 180)}**`);
   }
 
   if (context.pullRequest) {
@@ -41,50 +63,51 @@ function workflowDescription(run: WorkflowRunPayload["workflow_run"], context: W
     lines.push(`[#${number} PR 보기](${html_url})`);
   }
 
-  return lines.join("\n");
-}
-
-function workflowFields(run: WorkflowRunPayload["workflow_run"], context: WorkflowRunContext): DiscordField[] {
-  const fields: DiscordField[] = [
-    { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
-    { name: "커밋", value: `\`${run.head_sha.slice(0, 7)}\``, inline: true },
-  ];
-
-  if (context.steps) {
-    fields.push({
-      name: "단계",
-      value: `${context.steps.total}단계 중 ${context.steps.completed}단계 완료`,
-      inline: true,
-    });
+  if (lines.length > 0) {
+    lines.push("");
   }
 
-  const attempt = run.run_attempt > 1 ? ` · 재시도 ${run.run_attempt}회차` : "";
-  fields.push({ name: "실행", value: `#${run.run_number}${attempt} · ${run.event}`, inline: true });
+  for (const outcome of outcomes) {
+    const mark = markByConclusion[outcome.conclusion ?? ""] ?? "⚠️";
+    lines.push(`${mark} [${truncateText(outcome.name, 80)}](${outcome.html_url})`);
+  }
 
-  return fields;
+  return truncateText(lines.join("\n"), 4096);
 }
 
+function workflowFields(run: WorkflowRunPayload["workflow_run"], outcomes: readonly WorkflowOutcome[]): DiscordField[] {
+  const attempt = run.run_attempt > 1 ? ` · 재시도 ${run.run_attempt}회차` : "";
+  const finished = outcomes.filter((outcome) => outcome.conclusion !== null).length;
+
+  return [
+    { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
+    { name: "커밋", value: `\`${run.head_sha.slice(0, 7)}\``, inline: true },
+    { name: "워크플로", value: `${outcomes.length}개 중 ${finished}개 완료`, inline: true },
+    { name: "이벤트", value: `${run.event}${attempt}`, inline: true },
+  ];
+}
+
+// 커밋 하나에 워크플로가 여러 개 돌기 때문에, 지금까지 끝난 것을 모두 담아 메시지
+// 하나로 보여 준다. 매번 전체를 다시 그리므로 수정에도 그대로 쓸 수 있다.
 export function workflowRunEmbed(
   payload: WorkflowRunPayload,
+  outcomes: readonly WorkflowOutcome[],
   context: WorkflowRunContext = { pullRequest: undefined, steps: undefined },
 ): DiscordEmbed | undefined {
-  if (payload.action !== "completed") {
+  if (payload.action !== "completed" || outcomes.length === 0) {
     return undefined;
   }
 
   const run = payload.workflow_run;
-  const result: EmbedState = resultByConclusion[run.conclusion ?? ""] ?? [
-    `⚠️ CI/CD ${run.conclusion ?? "완료"}`,
-    embedColors.yellow,
-  ];
+  const state = groupState(outcomes);
 
   return {
-    title: result[0],
-    url: run.html_url,
-    color: result[1],
+    title: state[0],
+    url: context.pullRequest?.html_url ?? run.html_url,
+    color: state[1],
     author: githubAuthor(run.actor),
-    description: workflowDescription(run, context),
-    fields: workflowFields(run, context),
+    description: workflowDescription(run, context, outcomes),
+    fields: workflowFields(run, outcomes),
     footer: repositoryFooter(payload),
     timestamp: run.updated_at,
   };
