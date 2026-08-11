@@ -15,7 +15,7 @@ import {
 } from "./embeds/community.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
 import { type ParsedGitHubEvent, parseGitHubEvent } from "./github-event.ts";
-import { type WorkerEnv, webhookKeyFor } from "./routing.ts";
+import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
 
 export type { WorkerEnv } from "./routing.ts";
 
@@ -94,10 +94,6 @@ async function hasValidSignature(
     hexToBytes(signature.slice(7)),
     encoder.encode(body),
   );
-}
-
-function assertNever(value: never): never {
-  return value;
 }
 
 function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {

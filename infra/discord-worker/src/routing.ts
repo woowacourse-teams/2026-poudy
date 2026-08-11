@@ -45,8 +45,8 @@ function cicdWebhookKey(
   return undefined;
 }
 
-function assertNever(value: never): never {
-  return value;
+export function assertNever(value: never): never {
+  throw new TypeError(`Unhandled variant: ${JSON.stringify(value)}`);
 }
 
 export function webhookKeyFor(
