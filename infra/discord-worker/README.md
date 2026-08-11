@@ -65,19 +65,24 @@ fork에서 올린 PR은 이 배열이 비어 있어, 커밋이 실제로 있는 
 
 ## KV 네임스페이스
 
-커밋 하나에 워크플로가 여러 개 돌기 때문에 `workflow_run` 은 여러 번 도착합니다.
-그때마다 새 알림을 보내지 않고 **먼저 보낸 메시지를 고쳐** 하나로 모으며,
-이를 위해 커밋별 결과와 Discord `message_id` 를 KV 에 둡니다.
+PR 에서 도는 CI 는 별도 알림을 만들지 않고 **그 PR 알림 메시지에 CI 항목을 채워
+넣습니다.** PR 이벤트와 `workflow_run` 은 서로 다른 웹훅으로 따로 도착하므로,
+먼저 보낸 메시지의 `message_id` 를 기억해 두어야 나중에 찾아 고칠 수 있습니다.
 
-아래 명령으로 네임스페이스를 만들고, 출력된 id 를 `wrangler.toml` 의
-`kv_namespaces` 에 채웁니다.
+이미 만들어 둔 네임스페이스를 `wrangler.toml` 에 연결해 두었습니다. 새로 만들려면
+아래 명령을 쓰고 출력된 id 를 `kv_namespaces` 에 채웁니다.
 
 ```bash
 npx wrangler kv namespace create WORKFLOW_RUNS
 ```
 
-바인딩이 없으면 워크플로마다 알림이 하나씩 나가던 이전 동작으로 돌아갑니다.
-알림이 사라지지는 않습니다. 저장한 값은 6시간 뒤 만료됩니다.
+저장하는 키는 두 가지입니다. PR 번호로 찾는 키와, `workflow_run` 이 PR 번호를 주지
+않으므로 `head_sha` 로 찾는 키를 함께 씁니다. 커밋을 푸시하면 `head_sha` 가 바뀌므로
+`synchronize` 에서 새 sha 를 이어 두고, 이전 커밋의 CI 결과는 버립니다.
+저장한 값은 3일 뒤 만료됩니다.
+
+바인딩이 없으면 PR 메시지를 찾지 못해 **PR 에서 도는 CI 알림이 나가지 않습니다.**
+PR 알림과 머지 후 워크플로 알림은 그대로 동작합니다.
 
 ## GitHub Webhook 설정
 
@@ -105,19 +110,25 @@ GitHub 저장소의 `Settings > Webhooks > Add webhook`에서 아래와 같이 �
 
 ## 채널 라우팅
 
-| 이벤트 | 대상 Secret |
-| --- | --- |
-| `pull_request`, `pull_request_review` | `DISCORD_WEBHOOK_PR_UPDATE` |
-| `issue_comment` | PR에 달린 댓글이면 `..._PR_UPDATE`, 아니면 `..._ISSUE_UPDATE` |
-| `issues`, `discussion`, `discussion_comment` | `DISCORD_WEBHOOK_ISSUE_UPDATE` |
-| `gollum` | `DISCORD_WEBHOOK_WIKI_UPDATE` |
-| `workflow_run`, `deployment_status` | 아래 기준에 따라 staging 또는 production |
+| 이벤트                                             | 대상 Secret                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------- |
+| `pull_request`, `pull_request_review`              | `DISCORD_WEBHOOK_PR_UPDATE`                                   |
+| `issue_comment`                                    | PR에 달린 댓글이면 `..._PR_UPDATE`, 아니면 `..._ISSUE_UPDATE` |
+| `issues`, `discussion`, `discussion_comment`       | `DISCORD_WEBHOOK_ISSUE_UPDATE`                                |
+| `gollum`                                           | `DISCORD_WEBHOOK_WIKI_UPDATE`                                 |
+| `workflow_run` (PR에서 실행)                       | `DISCORD_WEBHOOK_PR_UPDATE` (새 알림 대신 PR 메시지에 채움)   |
+| `workflow_run` (머지 후 실행), `deployment_status` | 아래 기준에 따라 staging 또는 production                      |
 
-CI/CD 이벤트는 **머지 대상 브랜치**를 기준으로 채널을 정합니다.
+**PR에서 도는 CI는 별도 알림을 만들지 않습니다.** 그 PR 알림 메시지에 CI 항목이
+채워지므로 `#pr-update` 하나만 봐도 어느 PR의 결과인지 구분됩니다. 다만 메시지를
+고치는 방식이라 Discord 알림은 울리지 않습니다.
 
-- `workflow_run`: PR에서 실행된 워크플로는 항상 staging으로 보냅니다. 그 밖에는
-  연결된 PR의 base 브랜치를, 없으면 `head_branch`를 기준으로 삼습니다.
+deployment 채널에는 **`dev`나 `main`에 머지된 뒤 도는 워크플로**만 남습니다.
+기준은 아래와 같습니다.
+
+- `workflow_run`: `head_branch`를 기준으로 삼습니다.
 - `deployment_status`: `deployment.environment`를, 비어 있으면 `deployment.ref`를 기준으로 삼습니다.
+  이 이벤트는 워크플로에 `environment:`를 선언하거나 Deployments API를 쓸 때만 발생합니다.
 
 기준 이름은 대소문자를 구분하지 않으며 아래와 같이 판정합니다.
 
@@ -140,16 +151,16 @@ CI/CD 이벤트는 **머지 대상 브랜치**를 기준으로 채널을 정합�
 GitHub Webhook은 2xx가 아닌 응답을 실패로 기록하고 재전송합니다. 그래서 이 Worker는
 **재시도로 해결될 수 있는 실패에만 5xx를 반환**합니다.
 
-| 상황 | 응답 | 이유 |
-| --- | --- | --- |
-| 전송 성공 | 200 | |
-| 알림 대상이 아닌 이벤트·액션 | 200 | 무시한 것이므로 실패가 아닙니다. |
-| Discord 레이트 리밋 (429) | 200 | 재전송해도 다시 429이며, 재시도가 한도를 더 밀어붙입니다. |
-| Discord Webhook URL 형식 오류 | 200 | 설정 오류라 재시도로 고쳐지지 않습니다. |
-| Discord 5xx·네트워크 오류·타임아웃 | 502 | 일시적 장애이므로 재시도할 가치가 있습니다. |
-| 서명 불일치 | 401 | |
-| JSON 또는 페이로드 형식 오류 | 400 | |
-| `GITHUB_WEBHOOK_SECRET` 또는 대상 Discord Webhook 미등록 | 500 | 설정을 채우면 재시도가 성공합니다. |
+| 상황                                                     | 응답 | 이유                                                      |
+| -------------------------------------------------------- | ---- | --------------------------------------------------------- |
+| 전송 성공                                                | 200  |                                                           |
+| 알림 대상이 아닌 이벤트·액션                             | 200  | 무시한 것이므로 실패가 아닙니다.                          |
+| Discord 레이트 리밋 (429)                                | 200  | 재전송해도 다시 429이며, 재시도가 한도를 더 밀어붙입니다. |
+| Discord Webhook URL 형식 오류                            | 200  | 설정 오류라 재시도로 고쳐지지 않습니다.                   |
+| Discord 5xx·네트워크 오류·타임아웃                       | 502  | 일시적 장애이므로 재시도할 가치가 있습니다.               |
+| 서명 불일치                                              | 401  |                                                           |
+| JSON 또는 페이로드 형식 오류                             | 400  |                                                           |
+| `GITHUB_WEBHOOK_SECRET` 또는 대상 Discord Webhook 미등록 | 500  | 설정을 채우면 재시도가 성공합니다.                        |
 
 레이트 리밋과 URL 형식 오류는 200을 반환하므로 **Recent Deliveries에는 성공으로 표시됩니다.**
 이 두 경우는 아래처럼 Worker 로그로 확인합니다.
