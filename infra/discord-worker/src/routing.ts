@@ -3,24 +3,26 @@ import type { ParsedGitHubEvent } from "./github-event.ts";
 export type WorkerEnv = {
   readonly GITHUB_WEBHOOK_SECRET?: string;
   readonly GITHUB_API_TOKEN?: string;
+  // 커밋별 워크플로 결과와 Discord message_id 를 담는다. 없으면 워크플로마다 새 메시지를 보낸다.
+  readonly WORKFLOW_RUNS?: KVNamespace;
   readonly DISCORD_WEBHOOK_ISSUE_UPDATE?: string;
   readonly DISCORD_WEBHOOK_PR_UPDATE?: string;
-  readonly DISCORD_WEBHOOK_STAGING_CICD?: string;
-  readonly DISCORD_WEBHOOK_PRODUCTION_CICD?: string;
+  readonly DISCORD_WEBHOOK_STAGING?: string;
+  readonly DISCORD_WEBHOOK_PRODUCTION?: string;
   readonly DISCORD_WEBHOOK_WIKI_UPDATE?: string;
 };
 
-type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "GITHUB_API_TOKEN">;
+type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "GITHUB_API_TOKEN" | "WORKFLOW_RUNS">;
 
 const webhookKeys = {
   issueUpdate: "DISCORD_WEBHOOK_ISSUE_UPDATE",
   prUpdate: "DISCORD_WEBHOOK_PR_UPDATE",
-  stagingCicd: "DISCORD_WEBHOOK_STAGING_CICD",
-  productionCicd: "DISCORD_WEBHOOK_PRODUCTION_CICD",
+  staging: "DISCORD_WEBHOOK_STAGING",
+  production: "DISCORD_WEBHOOK_PRODUCTION",
   wikiUpdate: "DISCORD_WEBHOOK_WIKI_UPDATE",
 } as const satisfies Readonly<Record<string, WebhookKey>>;
 
-function cicdWebhookKey(target: string | null | undefined): WebhookKey | undefined {
+function deploymentWebhookKey(target: string | null | undefined): WebhookKey | undefined {
   const normalizedTarget = target?.toLowerCase();
 
   if (!normalizedTarget) {
@@ -32,11 +34,11 @@ function cicdWebhookKey(target: string | null | undefined): WebhookKey | undefin
     normalizedTarget === "master" ||
     /^(production|prod)([-_/]|$)/.test(normalizedTarget)
   ) {
-    return webhookKeys.productionCicd;
+    return webhookKeys.production;
   }
 
   if (/^(staging|stage|dev|develop|development)([-_/]|$)/.test(normalizedTarget)) {
-    return webhookKeys.stagingCicd;
+    return webhookKeys.staging;
   }
 
   return undefined;
@@ -62,14 +64,21 @@ export function webhookKeyFor(parsedEvent: ParsedGitHubEvent): WebhookKey | unde
     case "workflow_run": {
       const run = parsedEvent.payload.workflow_run;
 
+      // PR 에서 도는 CI 는 그 PR 알림에 붙여 보여 준다.
       if (run.event === "pull_request") {
-        return webhookKeys.stagingCicd;
+        return webhookKeys.prUpdate;
       }
 
-      return cicdWebhookKey(run.pull_requests?.[0]?.base.ref ?? run.head_branch);
+      // deployment 채널에는 머지로 생긴 push 만 남긴다. 다른 워크플로가 끝나 이어
+      // 도는 것(workflow_run)이나 예약·수동 실행은 배포와 무관하다.
+      if (run.event !== "push") {
+        return undefined;
+      }
+
+      return deploymentWebhookKey(run.head_branch);
     }
     case "deployment_status":
-      return cicdWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);
+      return deploymentWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);
     default:
       return assertNever(parsedEvent);
   }

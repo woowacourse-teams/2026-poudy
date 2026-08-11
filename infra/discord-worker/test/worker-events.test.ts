@@ -16,7 +16,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
     title: "Discord Embed 적용",
     body: "PR 본문입니다.",
     html_url: "https://github.test/pull/12",
-    head: { ref: "feature/embed" },
+    head: { ref: "feature/embed", sha: "abcdef1234567890" },
     base: { ref: "dev" },
     updated_at: "2026-08-10T00:00:00Z",
   };
@@ -122,10 +122,11 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
       {
         action: "completed",
         workflow_run: {
-          event: "pull_request",
+          // PR 에서 도는 CI 는 PR 메시지에 붙으므로 여기서는 머지된 뒤를 확인한다.
+          event: "push",
           conclusion: "success",
           name: "Server CI",
-          head_branch: "feature/embed",
+          head_branch: "dev",
           head_sha: "abcdef123456",
           run_number: 24,
           run_attempt: 1,
@@ -184,4 +185,48 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
   }
 
   assert.equal(calls.length, fixtures.length);
+});
+
+test("keeps long pull request bodies short in the notification", async () => {
+  const body = [
+    "## 작업 내용",
+    "",
+    "DB 와 Docker 가 필요 없어져 관련 설정을 전부 걷어냈습니다.",
+    "",
+    "**삭제한 파일**",
+    "",
+    "- `Dockerfile`",
+    "- `compose.yaml`",
+    `- ${"긴 목록 ".repeat(200)}`,
+  ].join("\n");
+  const calls: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    calls.push(parseRequestBody(init).embeds[0]?.description ?? "");
+    return new Response(null, { status: 204 });
+  };
+
+  const response = await worker.fetch(
+    signedRequest("issues", {
+      action: "opened",
+      issue: {
+        number: 1,
+        state: "open",
+        title: "remove : DB 와 Docker 제거",
+        body,
+        html_url: "https://github.test/issues/1",
+        updated_at: "2026-08-11T00:00:00Z",
+      },
+      sender: user("alice"),
+      repository,
+    }),
+    env,
+  );
+
+  assert.equal(response.status, 200);
+  const description = calls[0] ?? "";
+  // 머리글이 아니라 실제 첫 문단이 실린다.
+  assert.match(description, /DB 와 Docker 가 필요 없어져/);
+  // 뒤따르는 목록은 싣지 않는다.
+  assert.equal(description.includes("Dockerfile"), false);
+  assert.ok(description.length < 400, `본문이 너무 깁니다: ${description.length}자`);
 });

@@ -82,41 +82,33 @@ test("routes collaboration events by their discussion surface", () => {
   );
 });
 
-test("routes workflow runs by the branch being merged into", () => {
-  // PR 워크플로는 대상 브랜치와 무관하게 staging 으로 모은다.
-  assert.equal(workflowRunKey({ event: "pull_request", head_branch: "feature/embed" }), "DISCORD_WEBHOOK_STAGING_CICD");
+test("routes workflow runs by where they were triggered", () => {
+  // PR 에서 도는 CI 는 그 PR 알림에 붙이므로 PR 채널로 간다.
+  assert.equal(workflowRunKey({ event: "pull_request", head_branch: "feature/embed" }), "DISCORD_WEBHOOK_PR_UPDATE");
+  assert.equal(workflowRunKey({ event: "pull_request", head_branch: "dev" }), "DISCORD_WEBHOOK_PR_UPDATE");
 
-  // base ref 가 있으면 head_branch 보다 우선한다.
-  assert.equal(
-    workflowRunKey({
-      event: "push",
-      head_branch: "feature/embed",
-      pull_requests: [{ base: { ref: "main" } }],
-    }),
-    "DISCORD_WEBHOOK_PRODUCTION_CICD",
-  );
+  // 머지된 뒤 도는 워크플로는 브랜치에 따라 deployment 채널로 나뉜다.
+  assert.equal(workflowRunKey({ head_branch: "main" }), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(workflowRunKey({ head_branch: "master" }), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(workflowRunKey({ head_branch: "dev" }), "DISCORD_WEBHOOK_STAGING");
+  assert.equal(workflowRunKey({ head_branch: "develop" }), "DISCORD_WEBHOOK_STAGING");
 
-  assert.equal(workflowRunKey({ head_branch: "main" }), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(workflowRunKey({ head_branch: "master" }), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(workflowRunKey({ head_branch: "dev" }), "DISCORD_WEBHOOK_STAGING_CICD");
-  assert.equal(workflowRunKey({ head_branch: "develop" }), "DISCORD_WEBHOOK_STAGING_CICD");
-
-  // CI 는 dev/main 머지에서만 도므로 그 밖의 브랜치는 알림 대상이 아니다.
+  // CI/CD 는 dev/main 머지에서만 도므로 그 밖의 브랜치는 알림 대상이 아니다.
   assert.equal(workflowRunKey({ head_branch: "feature/embed" }), undefined);
 });
 
 test("matches environment prefixes only on a word boundary", () => {
-  assert.equal(deploymentStatusKey("production"), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(deploymentStatusKey("prod-kr"), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(deploymentStatusKey("Production"), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(deploymentStatusKey("staging/api"), "DISCORD_WEBHOOK_STAGING_CICD");
+  assert.equal(deploymentStatusKey("production"), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(deploymentStatusKey("prod-kr"), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(deploymentStatusKey("Production"), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(deploymentStatusKey("staging/api"), "DISCORD_WEBHOOK_STAGING");
 
   // 접두사가 단어 경계에서 끝나지 않으면 매칭하지 않는다.
-  assert.equal(deploymentStatusKey("production-mirror"), "DISCORD_WEBHOOK_PRODUCTION_CICD");
+  assert.equal(deploymentStatusKey("production-mirror"), "DISCORD_WEBHOOK_PRODUCTION");
   assert.equal(deploymentStatusKey("reproduction"), undefined);
   assert.equal(deploymentStatusKey("devops"), undefined);
 
   // environment 가 비면 ref 로 판단한다.
-  assert.equal(deploymentStatusKey("", "main"), "DISCORD_WEBHOOK_PRODUCTION_CICD");
-  assert.equal(deploymentStatusKey(null, "dev"), "DISCORD_WEBHOOK_STAGING_CICD");
+  assert.equal(deploymentStatusKey("", "main"), "DISCORD_WEBHOOK_PRODUCTION");
+  assert.equal(deploymentStatusKey(null, "dev"), "DISCORD_WEBHOOK_STAGING");
 });

@@ -4,5 +4,11 @@ compatibility_date = "2026-08-08"
 workers_dev = true
 keep_vars = true
 
+# PR 알림 메시지를 나중에 다시 찾아 CI 결과를 채워 넣으려면 message_id 를 기억해야 한다.
+# PR 이벤트와 workflow_run 이벤트는 따로 도착하므로 그 사이를 이어 줄 저장소가 필요하다.
+[[kv_namespaces]]
+binding = "WORKFLOW_RUNS"
+id = "da560f0fc4ef4899a55d184a9fea7f3b"
+
 [observability]
 enabled = true

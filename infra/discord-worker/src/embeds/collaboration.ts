@@ -3,7 +3,9 @@ import type {
   IssuePayload,
   PullRequestPayload,
   PullRequestReviewPayload,
+  WorkflowRunPayload,
 } from "../github-event.ts";
+import type { PullRequestMessage, WorkflowOutcome } from "../workflow-group.ts";
 import {
   type DiscordEmbed,
   type DiscordField,
@@ -29,7 +31,33 @@ const pullRequestStateByAction: Readonly<Record<string, EmbedState>> = {
 
 const mergedState: EmbedState = ["🎉 Pull Request 머지 완료", embedColors.purple];
 
-export function pullRequestEmbed(payload: PullRequestPayload): DiscordEmbed | undefined {
+const markByConclusion: Readonly<Record<string, string>> = {
+  success: "✅",
+  failure: "❌",
+  cancelled: "⏹️",
+  timed_out: "⏱️",
+  skipped: "⏭️",
+};
+
+// PR 에서 도는 CI 는 별도 알림 대신 이 PR 메시지에 한 줄씩 덧붙인다.
+function checkField(outcomes: readonly WorkflowOutcome[]): DiscordField | undefined {
+  if (outcomes.length === 0) {
+    return undefined;
+  }
+
+  const lines = outcomes.map((outcome) => {
+    const mark = markByConclusion[outcome.conclusion ?? ""] ?? "⚠️";
+
+    return `${mark} [${truncateText(outcome.name, 60)}](${outcome.html_url})`;
+  });
+
+  return { name: "CI", value: truncateText(lines.join("\n"), 1024), inline: false };
+}
+
+export function pullRequestEmbed(
+  payload: PullRequestPayload,
+  outcomes: readonly WorkflowOutcome[] = [],
+): DiscordEmbed | undefined {
   const pullRequest = payload.pull_request;
   const state =
     payload.action === "closed" && pullRequest.merged ? mergedState : pullRequestStateByAction[payload.action];
@@ -55,6 +83,12 @@ export function pullRequestEmbed(payload: PullRequestPayload): DiscordEmbed | un
     });
   }
 
+  const checks = checkField(outcomes);
+
+  if (checks) {
+    fields.push(checks);
+  }
+
   return {
     title: state[0],
     url: pullRequest.html_url,
@@ -64,6 +98,31 @@ export function pullRequestEmbed(payload: PullRequestPayload): DiscordEmbed | un
     fields,
     footer: repositoryFooter(payload),
     timestamp: pullRequest.updated_at,
+  };
+}
+
+// workflow_run 만 도착했을 때는 PR 페이로드가 없다. 저장해 둔 값으로 같은 메시지를
+// 다시 그려 CI 줄만 갱신한다.
+export function storedPullRequestEmbed(stored: PullRequestMessage, run: WorkflowRunPayload): DiscordEmbed {
+  const fields: DiscordField[] = [
+    { name: "PR", value: `#${stored.number}`, inline: true },
+    { name: "브랜치", value: `\`${stored.head_ref}\` → \`${stored.base_ref}\``, inline: true },
+  ];
+  const checks = checkField(stored.outcomes);
+
+  if (checks) {
+    fields.push(checks);
+  }
+
+  return {
+    title: stored.title_line,
+    url: stored.html_url,
+    color: stored.color,
+    author: githubAuthor(run.workflow_run.actor),
+    description: descriptionWithBody(stored.title, stored.body),
+    fields,
+    footer: repositoryFooter(run),
+    timestamp: run.workflow_run.updated_at,
   };
 }
 
