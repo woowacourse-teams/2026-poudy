@@ -16,7 +16,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
     title: "Discord Embed 적용",
     body: "PR 본문입니다.",
     html_url: "https://github.test/pull/12",
-    head: { ref: "feature/embed" },
+    head: { ref: "feature/embed", sha: "abcdef1234567890" },
     base: { ref: "dev" },
     updated_at: "2026-08-10T00:00:00Z",
   };
@@ -122,10 +122,11 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
       {
         action: "completed",
         workflow_run: {
-          event: "pull_request",
+          // PR 에서 도는 CI 는 PR 메시지에 붙으므로 여기서는 머지된 뒤를 확인한다.
+          event: "push",
           conclusion: "success",
           name: "Server CI",
-          head_branch: "feature/embed",
+          head_branch: "dev",
           head_sha: "abcdef123456",
           run_number: 24,
           run_attempt: 1,

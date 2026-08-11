@@ -64,11 +64,13 @@ export function webhookKeyFor(parsedEvent: ParsedGitHubEvent): WebhookKey | unde
     case "workflow_run": {
       const run = parsedEvent.payload.workflow_run;
 
+      // PR 에서 도는 CI 는 그 PR 알림에 붙여 보여 준다. deployment 채널에는
+      // dev 나 main 에 머지되어 도는 워크플로만 남긴다.
       if (run.event === "pull_request") {
-        return webhookKeys.stagingCicd;
+        return webhookKeys.prUpdate;
       }
 
-      return cicdWebhookKey(run.pull_requests?.[0]?.base.ref ?? run.head_branch);
+      return cicdWebhookKey(run.head_branch);
     }
     case "deployment_status":
       return cicdWebhookKey(parsedEvent.payload.deployment.environment || parsedEvent.payload.deployment.ref);

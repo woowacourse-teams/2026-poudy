@@ -31,7 +31,8 @@ const pullRequestSchema = z.object({
   title: z.string(),
   body: bodySchema,
   html_url: urlSchema,
-  head: z.object({ ref: z.string() }),
+  // head.sha 로 workflow_run 과 같은 PR 을 이어 붙인다.
+  head: z.object({ ref: z.string(), sha: z.string() }),
   base: z.object({ ref: z.string() }),
   merged_by: githubUserSchema.optional(),
   updated_at: timestampSchema,

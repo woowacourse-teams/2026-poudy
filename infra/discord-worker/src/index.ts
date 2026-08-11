@@ -2,13 +2,23 @@ import { z } from "zod";
 
 import { type DiscordDeliveryResult, editDiscordEmbed, sendDiscordEmbed } from "./discord.ts";
 import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
-import { issueCommentEmbed, issueEmbed, pullRequestEmbed, pullRequestReviewEmbed } from "./embeds/collaboration.ts";
+import {
+  issueCommentEmbed,
+  issueEmbed,
+  pullRequestEmbed,
+  pullRequestReviewEmbed,
+  storedPullRequestEmbed,
+} from "./embeds/collaboration.ts";
 import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
-import { workflowRunContext } from "./github-api.ts";
-import { type ParsedGitHubEvent, parseGitHubEvent, type WorkflowRunPayload } from "./github-event.ts";
+import {
+  type ParsedGitHubEvent,
+  type PullRequestPayload,
+  parseGitHubEvent,
+  type WorkflowRunPayload,
+} from "./github-event.ts";
 import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
-import { groupKey, mergeOutcome, readGroup, writeGroup } from "./workflow-group.ts";
+import { commitKey, mergeOutcome, pullRequestKey, readMessage, writeMessage } from "./workflow-group.ts";
 
 export type { WorkerEnv } from "./routing.ts";
 
@@ -86,9 +96,10 @@ function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
       return discussionCommentEmbed(parsedEvent.payload);
     case "gollum":
       return wikiEmbed(parsedEvent.payload);
-    // workflow_run 은 커밋 하나에 여러 번 도착하므로 deliverWorkflowRun 에서 따로 다룬다.
+    // PR 에서 도는 CI 는 deliverWorkflowRun 이 PR 메시지에 붙인다. 여기까지 오는 것은
+    // 머지된 뒤 도는 워크플로뿐이라 그대로 알린다.
     case "workflow_run":
-      return undefined;
+      return workflowRunEmbed(parsedEvent.payload);
     case "deployment_status":
       return deploymentStatusEmbed(parsedEvent.payload);
     default:
@@ -167,26 +178,59 @@ function deliveryResponse(result: DiscordDeliveryResult, webhookKey: string): Re
   }
 }
 
-// 이미 보낸 메시지가 있으면 고치고, 없거나 고치기에 실패하면 새로 보낸다.
-// 메시지가 지워졌거나 오래되어 수정이 막히는 경우에도 알림을 잃지 않는다.
-async function upsertEmbed(
-  webhookUrl: string,
-  embed: DiscordEmbed,
-  messageId: string | undefined,
-): Promise<DiscordDeliveryResult> {
-  if (messageId) {
-    const edited = await editDiscordEmbed(webhookUrl, messageId, embed);
-
-    if (edited.kind !== "failed") {
-      return edited;
-    }
-  }
-
-  return sendDiscordEmbed(webhookUrl, embed);
-}
-
 type WebhookTarget = { readonly url: string; readonly key: string };
 
+// PR 알림을 보낸 뒤, 그 PR 에서 도는 CI 가 찾아올 수 있도록 message_id 를 남긴다.
+async function deliverPullRequest(
+  payload: PullRequestPayload,
+  target: WebhookTarget,
+  env: WorkerEnv,
+): Promise<Response> {
+  const pullRequest = payload.pull_request;
+  const repository = payload.repository.full_name;
+  const prKey = pullRequestKey(repository, pullRequest.number);
+  const previous = await readMessage(env.WORKFLOW_RUNS, prKey);
+  const embed = pullRequestEmbed(payload, previous?.outcomes ?? []);
+
+  // 커밋을 푸시하면 head sha 가 바뀐다. 알림을 보내지 않는 synchronize 에서도
+  // 새 sha 를 이어 두어야 그 커밋의 CI 가 기존 PR 메시지를 찾을 수 있다.
+  if (!embed) {
+    if (previous) {
+      const carried =
+        previous.head_sha === pullRequest.head.sha
+          ? previous
+          : { ...previous, head_sha: pullRequest.head.sha, outcomes: [] };
+
+      await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, pullRequest.head.sha)], carried);
+    }
+
+    return new Response("Ignored", { status: 200 });
+  }
+
+  // 머지나 리뷰 준비 같은 다음 소식은 새 메시지로 알린다. 수정만 하면 알림이 울리지 않는다.
+  const result = await sendDiscordEmbed(target.url, embed);
+
+  if (result.kind === "delivered" && result.messageId) {
+    await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, pullRequest.head.sha)], {
+      messageId: result.messageId,
+      number: pullRequest.number,
+      title_line: embed.title,
+      color: embed.color,
+      title: pullRequest.title,
+      body: pullRequest.body ?? null,
+      html_url: pullRequest.html_url,
+      head_ref: pullRequest.head.ref,
+      base_ref: pullRequest.base.ref,
+      head_sha: pullRequest.head.sha,
+      // 새 커밋이 올라오면 이전 CI 결과는 더 이상 유효하지 않다.
+      outcomes: previous && previous.head_sha === pullRequest.head.sha ? previous.outcomes : [],
+    });
+  }
+
+  return deliveryResponse(result, target.key);
+}
+
+// PR 에서 도는 CI 는 별도 알림을 만들지 않고 그 PR 메시지의 CI 줄만 고친다.
 async function deliverWorkflowRun(
   payload: WorkflowRunPayload,
   target: WebhookTarget,
@@ -198,27 +242,24 @@ async function deliverWorkflowRun(
     return new Response("Ignored", { status: 200 });
   }
 
-  const key = groupKey(run.head_sha, run.run_attempt);
-  const stored = await readGroup(env.WORKFLOW_RUNS, key);
-  const outcomes = mergeOutcome(stored?.outcomes ?? [], {
+  const key = commitKey(payload.repository.full_name, run.head_sha);
+  const stored = await readMessage(env.WORKFLOW_RUNS, key);
+
+  // PR 메시지를 찾지 못하면 붙일 곳이 없다. 알림을 새로 만들지는 않는다.
+  if (!stored) {
+    return new Response("Ignored", { status: 200 });
+  }
+
+  const outcomes = mergeOutcome(stored.outcomes, {
     name: run.name,
     conclusion: run.conclusion,
     html_url: run.html_url,
   });
-  const context = await workflowRunContext(run, payload.repository.html_url, env.GITHUB_API_TOKEN);
-  const embed = workflowRunEmbed(payload, outcomes, context);
-
-  if (!embed) {
-    return new Response("Ignored", { status: 200 });
-  }
-
-  const result = await upsertEmbed(target.url, embed, stored?.messageId);
+  const updated = { ...stored, outcomes };
+  const result = await editDiscordEmbed(target.url, stored.messageId, storedPullRequestEmbed(updated, payload));
 
   if (result.kind === "delivered") {
-    await writeGroup(env.WORKFLOW_RUNS, key, {
-      messageId: result.messageId ?? stored?.messageId,
-      outcomes,
-    });
+    await writeMessage(env.WORKFLOW_RUNS, [pullRequestKey(payload.repository.full_name, stored.number), key], updated);
   }
 
   return deliveryResponse(result, target.key);
@@ -239,8 +280,15 @@ async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv
     });
   }
 
-  if (parsedEvent.event === "workflow_run") {
-    return deliverWorkflowRun(parsedEvent.payload, { url: webhookUrl, key: webhookKey }, env);
+  const target = { url: webhookUrl, key: webhookKey };
+
+  if (parsedEvent.event === "pull_request") {
+    return deliverPullRequest(parsedEvent.payload, target, env);
+  }
+
+  // PR 채널로 가는 workflow_run 만 PR 메시지에 붙인다. 머지 후 도는 것은 그대로 보낸다.
+  if (parsedEvent.event === "workflow_run" && webhookKey === "DISCORD_WEBHOOK_PR_UPDATE") {
+    return deliverWorkflowRun(parsedEvent.payload, target, env);
   }
 
   const embed = createEmbed(parsedEvent);

@@ -75,30 +75,27 @@ function workflowDescription(
   return truncateText(lines.join("\n"), 4096);
 }
 
-function workflowFields(run: WorkflowRunPayload["workflow_run"], outcomes: readonly WorkflowOutcome[]): DiscordField[] {
+function workflowFields(run: WorkflowRunPayload["workflow_run"]): DiscordField[] {
   const attempt = run.run_attempt > 1 ? ` · 재시도 ${run.run_attempt}회차` : "";
-  const finished = outcomes.filter((outcome) => outcome.conclusion !== null).length;
 
   return [
     { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
     { name: "커밋", value: `\`${run.head_sha.slice(0, 7)}\``, inline: true },
-    { name: "워크플로", value: `${outcomes.length}개 중 ${finished}개 완료`, inline: true },
-    { name: "이벤트", value: `${run.event}${attempt}`, inline: true },
+    { name: "실행", value: `#${run.run_number}${attempt} · ${run.event}`, inline: true },
   ];
 }
 
-// 커밋 하나에 워크플로가 여러 개 돌기 때문에, 지금까지 끝난 것을 모두 담아 메시지
-// 하나로 보여 준다. 매번 전체를 다시 그리므로 수정에도 그대로 쓸 수 있다.
+// 머지된 뒤 도는 워크플로를 알린다. PR 에서 도는 CI 는 PR 메시지에 붙이므로 여기 오지 않는다.
 export function workflowRunEmbed(
   payload: WorkflowRunPayload,
-  outcomes: readonly WorkflowOutcome[],
   context: WorkflowRunContext = { pullRequest: undefined, steps: undefined },
 ): DiscordEmbed | undefined {
-  if (payload.action !== "completed" || outcomes.length === 0) {
+  if (payload.action !== "completed") {
     return undefined;
   }
 
   const run = payload.workflow_run;
+  const outcomes: readonly WorkflowOutcome[] = [{ name: run.name, conclusion: run.conclusion, html_url: run.html_url }];
   const state = groupState(outcomes);
 
   return {
@@ -107,7 +104,7 @@ export function workflowRunEmbed(
     color: state[1],
     author: githubAuthor(run.actor),
     description: workflowDescription(run, context, outcomes),
-    fields: workflowFields(run, outcomes),
+    fields: workflowFields(run),
     footer: repositoryFooter(payload),
     timestamp: run.updated_at,
   };

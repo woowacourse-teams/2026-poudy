@@ -25,85 +25,38 @@ const workflowRun = {
 
 const payload = { action: "completed", workflow_run: workflowRun, repository };
 
-async function sendWorkflowRun(overrides: Record<string, unknown> = {}): Promise<DiscordBody> {
-  let sent: DiscordBody | undefined;
-  const realFetch = globalThis.fetch;
+const pullRequest = {
+  number: 15,
+  draft: false,
+  merged: false,
+  user: user("inaemin"),
+  title: "feat : Discord 알림 개선",
+  body: "## 작업 내용\n\nCI 결과를 PR 알림에 붙입니다.",
+  html_url: "https://github.test/pull/15",
+  head: { ref: "feat/discord-worker", sha: workflowRun.head_sha },
+  base: { ref: "dev" },
+  updated_at: "2026-08-11T00:00:00Z",
+};
 
-  globalThis.fetch = async (input, init) => {
-    const url = input.toString();
-
-    if (url.startsWith("https://api.github.test")) {
-      return new Response(JSON.stringify({ jobs: [{ steps: [{ conclusion: "success" }] }] }), { status: 200 });
-    }
-    if (url.includes("/commits/")) {
-      return new Response(JSON.stringify([{ number: 15, html_url: "https://github.test/pull/15" }]), { status: 200 });
-    }
-
-    sent = parseRequestBody(init);
-    return new Response(null, { status: 204 });
-  };
-
-  const response = await worker.fetch(
-    signedRequest("workflow_run", { ...payload, workflow_run: { ...workflowRun, ...overrides } }),
-    { ...env, GITHUB_API_TOKEN: "test-token" },
-  );
-  globalThis.fetch = realFetch;
-
-  assert.equal(response.status, 200);
-  assert.ok(sent);
-  return sent;
-}
-
-test("lists the finished workflows with the PR link", async () => {
-  const body = await sendWorkflowRun();
-  const embed = body.embeds[0];
-  assert.ok(embed);
-
-  assert.match(embed.description ?? "", /feat : Discord 알림 개선/);
-  assert.match(embed.description ?? "", /\[#15 PR 보기\]\(https:\/\/github\.test\/pull\/15\)/);
-  // 끝난 워크플로가 결과 표시와 함께 한 줄씩 쌓인다.
-  assert.match(embed.description ?? "", /✅ \[Server CI\]\(https:\/\/github\.test\/actions\/runs\/1\)/);
-
-  const fields = embed.fields ?? [];
-  assert.deepEqual(
-    fields.map((field) => field.name),
-    ["브랜치", "커밋", "워크플로", "이벤트"],
-  );
-  assert.equal(fields[2]?.value, "1개 중 1개 완료");
-  // 첫 시도에는 재시도 회차를 붙이지 않는다.
-  assert.equal(fields[3]?.value, "pull_request");
-});
-
-test("marks the attempt number only when the run was retried", async () => {
-  const body = await sendWorkflowRun({ run_attempt: 3 });
-  const fields = body.embeds[0]?.fields ?? [];
-
-  assert.equal(fields.at(-1)?.value, "pull_request · 재시도 3회차");
-});
-
-// 커밋 하나에 워크플로가 여러 개 도착하는 상황을 재현한다.
+// KV 바인딩을 흉내 내 PR 알림과 CI 결과가 서로를 찾아가는지 본다.
 function fakeKv() {
   const store = new Map<string, string>();
 
   return {
-    kv: {
-      get: async (key: string) => {
-        const raw = store.get(key);
-        return raw ? JSON.parse(raw) : null;
-      },
-      put: async (key: string, value: string) => {
-        store.set(key, value);
-      },
+    get: async (key: string) => {
+      const raw = store.get(key);
+      return raw ? JSON.parse(raw) : null;
     },
-    store,
+    put: async (key: string, value: string) => {
+      store.set(key, value);
+    },
   };
 }
 
-test("collects several workflows of one commit into a single message", async () => {
-  const { kv } = fakeKv();
-  const requests: { method: string; url: string; body: DiscordBody }[] = [];
-  const realFetch = globalThis.fetch;
+type Sent = { method: string; url: string; body: DiscordBody };
 
+// GitHub API 조회는 비우고 Discord 요청만 기록한다.
+function captureDiscord(sent: Sent[], messageId = "msg-1") {
   globalThis.fetch = async (input, init) => {
     const url = input.toString();
 
@@ -111,88 +64,128 @@ test("collects several workflows of one commit into a single message", async () 
       return new Response(JSON.stringify([]), { status: 200 });
     }
 
-    requests.push({ method: init?.method ?? "GET", url, body: parseRequestBody(init) });
-    return new Response(JSON.stringify({ id: "msg-1" }), { status: 200 });
+    sent.push({ method: init?.method ?? "GET", url, body: parseRequestBody(init) });
+    return new Response(JSON.stringify({ id: messageId }), { status: 200 });
   };
+}
 
-  const workerEnv = { ...env, WORKFLOW_RUNS: kv } as unknown as Parameters<typeof worker.fetch>[1];
-  const send = (name: string, conclusion: string) =>
-    worker.fetch(
-      signedRequest("workflow_run", {
-        ...payload,
-        workflow_run: { ...workflowRun, name, conclusion, html_url: `https://github.test/runs/${name}` },
-      }),
-      workerEnv,
-    );
+function workerEnv(kv: ReturnType<typeof fakeKv>) {
+  return { ...env, WORKFLOW_RUNS: kv } as unknown as Parameters<typeof worker.fetch>[1];
+}
 
-  assert.equal((await send("Server CI", "success")).status, 200);
-  assert.equal((await send("Client CI", "failure")).status, 200);
+test("adds CI results to the pull request message instead of a new one", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  assert.equal(
+    (
+      await worker.fetch(
+        signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+        workerEnv(kv),
+      )
+    ).status,
+    200,
+  );
+  assert.equal((await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv))).status, 200);
+  assert.equal(
+    (
+      await worker.fetch(
+        signedRequest("workflow_run", {
+          ...payload,
+          workflow_run: { ...workflowRun, name: "Client CI", conclusion: "failure" },
+        }),
+        workerEnv(kv),
+      )
+    ).status,
+    200,
+  );
   globalThis.fetch = realFetch;
 
-  // 첫 워크플로는 새 메시지, 두 번째는 같은 메시지 수정이어야 한다.
-  assert.equal(requests.length, 2);
-  assert.equal(requests[0]?.method, "POST");
-  assert.equal(requests[1]?.method, "PATCH");
-  assert.match(requests[1]?.url ?? "", /\/messages\/msg-1/);
+  // PR 알림만 새 메시지고, CI 결과는 그 메시지를 고친다.
+  assert.deepEqual(
+    sent.map((request) => request.method),
+    ["POST", "PATCH", "PATCH"],
+  );
+  assert.match(sent[1]?.url ?? "", /\/messages\/msg-1/);
 
-  // 수정된 메시지에는 두 워크플로가 모두 담긴다.
-  const merged = requests[1]?.body.embeds[0];
-  assert.ok(merged);
-  assert.match(merged.description ?? "", /Client CI/);
-  assert.match(merged.description ?? "", /Server CI/);
-  // 하나라도 실패하면 전체를 실패로 본다.
-  assert.match(merged.title, /실패/);
-  assert.equal(merged.fields?.[2]?.value, "2개 중 2개 완료");
+  const ci = sent[2]?.body.embeds[0]?.fields?.find((field) => field.name === "CI");
+  assert.ok(ci, "CI 필드가 있어야 합니다");
+  assert.match(ci.value, /✅ \[Server CI\]/);
+  assert.match(ci.value, /❌ \[Client CI\]/);
+  // PR 본문은 첫 문단까지만 싣는다.
+  assert.match(sent[2]?.body.embeds[0]?.description ?? "", /CI 결과를 PR 알림에 붙입니다/);
 });
 
-test("starts a new message when editing the stored one fails", async () => {
-  const { kv } = fakeKv();
-  await kv.put("run:abcdef1234567890:1", JSON.stringify({ messageId: "gone", outcomes: [] }));
-
-  const methods: string[] = [];
+test("drops earlier CI results when a new commit is pushed", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input, init) => {
-    const url = input.toString();
+  captureDiscord(sent);
 
-    if (url.startsWith("https://api.github")) {
-      return new Response(JSON.stringify([]), { status: 200 });
-    }
+  const open = signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository });
+  await worker.fetch(open, workerEnv(kv));
+  await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
 
-    methods.push(init?.method ?? "GET");
-    // 지워진 메시지를 수정하려 하면 실패한다.
-    if (init?.method === "PATCH") {
-      return new Response("not found", { status: 404 });
-    }
-    return new Response(JSON.stringify({ id: "msg-2" }), { status: 200 });
-  };
+  // 커밋을 푸시하면 head sha 가 바뀌고 알림은 보내지 않는다.
+  const pushed = { ...pullRequest, head: { ref: pullRequest.head.ref, sha: "999888777666" } };
+  const sync = await worker.fetch(
+    signedRequest("pull_request", { action: "synchronize", pull_request: pushed, repository }),
+    workerEnv(kv),
+  );
 
-  const response = await worker.fetch(signedRequest("workflow_run", payload), {
-    ...env,
-    WORKFLOW_RUNS: kv,
-  } as unknown as Parameters<typeof worker.fetch>[1]);
+  // 새 커밋의 CI 는 여전히 같은 PR 메시지를 찾아간다.
+  await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: { ...workflowRun, head_sha: "999888777666", name: "Client CI", conclusion: "failure" },
+    }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(sync.status, 200);
+  const ci = sent.at(-1)?.body.embeds[0]?.fields?.find((field) => field.name === "CI");
+  assert.ok(ci);
+  // 이전 커밋의 결과는 남지 않는다.
+  assert.equal(ci.value.includes("Server CI"), false);
+  assert.match(ci.value, /❌ \[Client CI\]/);
+});
+
+test("ignores CI when no pull request message was stored", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  const response = await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  globalThis.fetch = realFetch;
+
+  // 붙일 PR 메시지가 없으면 새 알림을 만들지 않는다.
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, 0);
+});
+
+test("sends merged branch workflows to the deployment channel", async () => {
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: { ...workflowRun, event: "push", head_branch: "dev" },
+    }),
+    env,
+  );
   globalThis.fetch = realFetch;
 
   assert.equal(response.status, 200);
-  assert.deepEqual(methods, ["PATCH", "POST"]);
-});
-
-test("keeps sending one message per workflow without KV", async () => {
-  const methods: string[] = [];
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input, init) => {
-    if (input.toString().startsWith("https://api.github")) {
-      return new Response(JSON.stringify([]), { status: 200 });
-    }
-    methods.push(init?.method ?? "GET");
-    return new Response(JSON.stringify({ id: "msg-3" }), { status: 200 });
-  };
-
-  // KV 바인딩이 없어도 알림 자체는 계속 나간다.
-  assert.equal((await worker.fetch(signedRequest("workflow_run", payload), env)).status, 200);
-  assert.equal((await worker.fetch(signedRequest("workflow_run", payload), env)).status, 200);
-  globalThis.fetch = realFetch;
-
-  assert.deepEqual(methods, ["POST", "POST"]);
+  // dev 에 머지된 뒤 도는 워크플로는 PR 메시지와 무관하게 그대로 알린다.
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0]?.method, "POST");
+  assert.match(sent[0]?.url ?? "", /discord\.test\/staging/);
 });
 
 test("keeps the notification when the GitHub lookup fails", async () => {
