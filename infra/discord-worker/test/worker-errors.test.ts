@@ -9,7 +9,6 @@ import {
   repository,
   signedRequest,
   user,
-  webhookUrls,
 } from "./helpers.ts";
 
 const issuePayload = {
@@ -105,7 +104,7 @@ test("falls back for empty deployment URLs and deleted users", async () => {
   };
   const payload = {
     deployment: {
-      environment: "production",
+      environment: "",
       ref: "main",
       sha: "abcdef123456",
       description: null,
@@ -134,5 +133,20 @@ test("falls back for empty deployment URLs and deleted users", async () => {
   assert.equal(embed.url, repository.html_url);
   assert.equal(embed.author.name, "삭제된 사용자");
   assert.equal(embed.description, undefined);
-  assert.equal(sentUrl, `${webhookUrls.production}?wait=true`);
+  assert.equal(
+    sentUrl,
+    "https://discord.test/production?thread_id=1&wait=true",
+  );
+
+  const invalidUrlResponse = await worker.fetch(
+    signedRequest("deployment_status", {
+      ...payload,
+      deployment_status: {
+        ...payload.deployment_status,
+        environment_url: "not-a-url",
+      },
+    }),
+    env,
+  );
+  assert.equal(invalidUrlResponse.status, 400);
 });

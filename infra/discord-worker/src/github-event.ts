@@ -3,6 +3,10 @@ import { z } from "zod";
 const urlSchema = z.url();
 const timestampSchema = z.string().optional();
 const bodySchema = z.string().nullable().optional();
+const optionalUrlSchema = z
+  .union([urlSchema, z.literal("")])
+  .nullable()
+  .optional();
 
 export const githubUserSchema = z
   .object({
@@ -163,9 +167,9 @@ export const deploymentStatusPayloadSchema = z.object({
   }),
   deployment_status: z.object({
     state: z.string(),
-    environment_url: z.string().nullable().optional(),
-    log_url: z.string().nullable().optional(),
-    target_url: z.string().nullable().optional(),
+    environment_url: optionalUrlSchema,
+    log_url: optionalUrlSchema,
+    target_url: optionalUrlSchema,
     description: bodySchema,
     updated_at: timestampSchema,
   }),

@@ -9,7 +9,7 @@ export const webhookUrls = {
   issue: "https://discord.test/issue",
   pr: "https://discord.test/pr",
   staging: "https://discord.test/staging",
-  production: "https://discord.test/production",
+  production: "https://discord.test/production?thread_id=1",
   wiki: "https://discord.test/wiki",
 } as const;
 

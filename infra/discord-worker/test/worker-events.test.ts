@@ -196,10 +196,12 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
   for (const [event, payload, expectedUrl, expectedTitle] of fixtures) {
     const response = await worker.fetch(signedRequest(event, payload), env);
     const call = calls.at(-1);
+    const expectedWebhookUrl = new URL(expectedUrl);
+    expectedWebhookUrl.searchParams.set("wait", "true");
 
     assert.equal(response.status, 200, event);
     assert.ok(call, event);
-    assert.equal(call.url, `${expectedUrl}?wait=true`, event);
+    assert.equal(call.url, expectedWebhookUrl.toString(), event);
     assert.equal(call.body.embeds.length, 1, event);
     const embed = call.body.embeds[0];
     assert.ok(embed, event);

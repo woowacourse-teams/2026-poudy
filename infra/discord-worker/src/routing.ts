@@ -79,7 +79,7 @@ export function webhookKeyFor(
     }
     case "deployment_status":
       return cicdWebhookKey(
-        parsedEvent.payload.deployment.environment ??
+        parsedEvent.payload.deployment.environment ||
           parsedEvent.payload.deployment.ref,
       );
     default:
