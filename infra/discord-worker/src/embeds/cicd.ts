@@ -1,7 +1,29 @@
 import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
-import { type DiscordEmbed, embedColors, githubAuthor, repositoryFooter, truncateText } from "./shared.ts";
+import {
+  type DiscordEmbed,
+  type EmbedState,
+  embedColors,
+  githubAuthor,
+  repositoryFooter,
+  truncateText,
+} from "./shared.ts";
 
-type EmbedState = readonly [title: string, color: number];
+const resultByConclusion: Readonly<Record<string, EmbedState>> = {
+  success: ["✅ CI/CD 성공", embedColors.green],
+  failure: ["❌ CI/CD 실패", embedColors.red],
+  cancelled: ["⏹️ CI/CD 취소", embedColors.gray],
+  timed_out: ["⏱️ CI/CD 시간 초과", embedColors.red],
+  skipped: ["⏭️ CI/CD 건너뜀", embedColors.gray],
+};
+
+const resultByState: Readonly<Record<string, EmbedState>> = {
+  queued: ["⏳ 배포 대기 중", embedColors.yellow],
+  in_progress: ["🚀 배포 진행 중", embedColors.blue],
+  success: ["✅ 배포 성공", embedColors.green],
+  failure: ["❌ 배포 실패", embedColors.red],
+  error: ["⚠️ 배포 오류", embedColors.red],
+  inactive: ["⏹️ 배포 비활성화", embedColors.gray],
+};
 
 export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | undefined {
   if (payload.action !== "completed") {
@@ -9,13 +31,6 @@ export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | un
   }
 
   const run = payload.workflow_run;
-  const resultByConclusion: Readonly<Record<string, EmbedState>> = {
-    success: ["✅ CI/CD 성공", embedColors.green],
-    failure: ["❌ CI/CD 실패", embedColors.red],
-    cancelled: ["⏹️ CI/CD 취소", embedColors.gray],
-    timed_out: ["⏱️ CI/CD 시간 초과", embedColors.red],
-    skipped: ["⏭️ CI/CD 건너뜀", embedColors.gray],
-  };
   const result: EmbedState = resultByConclusion[run.conclusion ?? ""] ?? [
     `⚠️ CI/CD ${run.conclusion ?? "완료"}`,
     embedColors.yellow,
@@ -49,14 +64,6 @@ export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | un
 export function deploymentStatusEmbed(payload: DeploymentStatusPayload): DiscordEmbed {
   const status = payload.deployment_status;
   const deployment = payload.deployment;
-  const resultByState: Readonly<Record<string, EmbedState>> = {
-    queued: ["⏳ 배포 대기 중", embedColors.yellow],
-    in_progress: ["🚀 배포 진행 중", embedColors.blue],
-    success: ["✅ 배포 성공", embedColors.green],
-    failure: ["❌ 배포 실패", embedColors.red],
-    error: ["⚠️ 배포 오류", embedColors.red],
-    inactive: ["⏹️ 배포 비활성화", embedColors.gray],
-  };
   const result: EmbedState = resultByState[status.state] ?? [`ℹ️ 배포 ${status.state}`, embedColors.blue];
   const environment = deployment.environment || deployment.ref;
   const url = status.environment_url || status.log_url || status.target_url || payload.repository.html_url;

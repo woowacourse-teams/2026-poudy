@@ -3,26 +3,32 @@ import {
   type DiscordEmbed,
   type DiscordField,
   descriptionWithBody,
+  type EmbedState,
   embedColors,
   githubAuthor,
   githubLogin,
   repositoryFooter,
 } from "./shared.ts";
 
-type EmbedState = readonly [title: string, color: number];
-
 const wikiActionTextByAction: Readonly<Record<string, string>> = {
   created: "생성",
   edited: "수정",
 };
 
+const discussionStateByAction: Readonly<Record<string, EmbedState>> = {
+  created: ["💬 새로운 Discussion", embedColors.blue],
+  edited: ["✏️ Discussion 수정", embedColors.yellow],
+  deleted: ["🗑️ Discussion 삭제", embedColors.gray],
+};
+
+const discussionCommentStateByAction: Readonly<Record<string, EmbedState>> = {
+  created: ["💬 Discussion에 새 댓글", embedColors.blue],
+  edited: ["✏️ Discussion 댓글 수정", embedColors.yellow],
+  deleted: ["🗑️ Discussion 댓글 삭제", embedColors.gray],
+};
+
 export function discussionEmbed(payload: DiscussionPayload): DiscordEmbed | undefined {
-  const stateByAction: Readonly<Record<string, EmbedState>> = {
-    created: ["💬 새로운 Discussion", embedColors.blue],
-    edited: ["✏️ Discussion 수정", embedColors.yellow],
-    deleted: ["🗑️ Discussion 삭제", embedColors.gray],
-  };
-  const state = stateByAction[payload.action];
+  const state = discussionStateByAction[payload.action];
 
   if (!state) {
     return undefined;
@@ -58,12 +64,7 @@ export function discussionEmbed(payload: DiscussionPayload): DiscordEmbed | unde
 }
 
 export function discussionCommentEmbed(payload: DiscussionCommentPayload): DiscordEmbed | undefined {
-  const stateByAction: Readonly<Record<string, EmbedState>> = {
-    created: ["💬 Discussion에 새 댓글", embedColors.blue],
-    edited: ["✏️ Discussion 댓글 수정", embedColors.yellow],
-    deleted: ["🗑️ Discussion 댓글 삭제", embedColors.gray],
-  };
-  const state = stateByAction[payload.action];
+  const state = discussionCommentStateByAction[payload.action];
 
   if (!state) {
     return undefined;

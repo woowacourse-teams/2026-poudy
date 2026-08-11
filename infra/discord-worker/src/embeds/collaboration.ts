@@ -8,6 +8,7 @@ import {
   type DiscordEmbed,
   type DiscordField,
   descriptionWithBody,
+  type EmbedState,
   embedColors,
   githubAuthor,
   githubLogin,
@@ -15,24 +16,23 @@ import {
   truncateText,
 } from "./shared.ts";
 
-type EmbedState = readonly [title: string, color: number];
-
 const issueStateByAction: Readonly<Record<string, EmbedState>> = {
   opened: ["🎫 새로운 이슈", embedColors.green],
   reopened: ["🔄 이슈 다시 열림", embedColors.yellow],
   closed: ["✅ 이슈 닫힘", embedColors.gray],
 };
 
+const pullRequestStateByAction: Readonly<Record<string, EmbedState>> = {
+  opened: ["🔀 새로운 Pull Request", embedColors.blue],
+  ready_for_review: ["✅ 리뷰 준비 완료", embedColors.yellow],
+};
+
+const mergedState: EmbedState = ["🎉 Pull Request 머지 완료", embedColors.purple];
+
 export function pullRequestEmbed(payload: PullRequestPayload): DiscordEmbed | undefined {
   const pullRequest = payload.pull_request;
-  const stateByAction: Readonly<Record<string, EmbedState>> = {
-    opened: ["🔀 새로운 Pull Request", embedColors.blue],
-    ready_for_review: ["✅ 리뷰 준비 완료", embedColors.yellow],
-  };
   const state =
-    payload.action === "closed" && pullRequest.merged
-      ? (["🎉 Pull Request 머지 완료", embedColors.purple] as const)
-      : stateByAction[payload.action];
+    payload.action === "closed" && pullRequest.merged ? mergedState : pullRequestStateByAction[payload.action];
 
   if (!state || (payload.action === "opened" && pullRequest.draft)) {
     return undefined;

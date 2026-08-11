@@ -28,6 +28,8 @@ export type DiscordEmbed = {
   readonly timestamp?: string | undefined;
 };
 
+export type EmbedState = readonly [title: string, color: number];
+
 export const embedColors = {
   blue: 5793266,
   green: 5763719,
