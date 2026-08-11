@@ -31,30 +31,16 @@ ext {
 
 dependencies {
     // testImplementation extends implementation, so it inherits the BOM.
-    // developmentOnly does not, so the platform is declared for it separately.
     implementation platform(SpringBootPlugin.BOM_COORDINATES)
-    developmentOnly platform(SpringBootPlugin.BOM_COORDINATES)
-
-    // OpenAPI 문서를 뽑을 때만 쓰는 인메모리 DB.
-    // developmentOnly 라서 bootJar 에는 포함되지 않는다.
-    developmentOnly 'com.h2database:h2'
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
-    runtimeOnly 'org.postgresql:postgresql'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-    testRuntimeOnly 'com.h2database:h2'
 }
 
 // 자바 포맷을 자동으로 맞춘다. 규칙은 config/formatter.xml 에 있다.
@@ -91,17 +77,12 @@ checkstyle {
 }
 
 // bootJar만 만들면 되므로 사용하지 않는 plain jar 생성을 끈다.
-// 켜두면 build/libs 에 jar 가 두 개 생겨 Dockerfile 의 와일드카드 COPY 가 실패한다.
 tasks.named('jar') {
     enabled = false
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-    // 로컬 테스트는 외부 DB 없이 실행한다. CI나 통합 테스트에서는
-    // -Dspring.profiles.active=<profile> 로 실제 PostgreSQL 프로필을 지정할 수 있다.
-    systemProperty 'spring.profiles.active',
-            System.getProperty('spring.profiles.active', 'test')
     testLogging {
         events 'passed', 'skipped', 'failed'
     }
@@ -119,10 +100,6 @@ tasks.register('setupGit', Exec) {
 }
 
 // 앱을 띄워 OpenAPI 문서를 openapi.json 으로 뽑는다.
-// 문서 생성에는 테이블이 필요 없으므로 DB 는 인메모리로 대체하고,
-// 마이그레이션과 스키마 생성을 모두 건너뛴다.
-// ddl-auto 를 create-drop 으로 두면 PostgreSQL 전용 타입(jsonb 등)에서
-// H2 가 DDL 을 거부해 로그가 오염되므로 none 을 쓴다.
 // 기본 포트(8080)를 쓰면 개발 중 띄워둔 앱이 8080 을 점유했을 때
 // 포크된 앱이 바인딩에 실패해도 플러그인이 그 앱의 응답을 받아 저장한다.
 // 낡은 문서가 조용히 커밋되므로 전용 포트를 쓴다.
@@ -131,15 +108,7 @@ openApi {
     outputFileName = 'openapi.json'
     apiDocsUrl = "http://localhost:${openApiDocPort}/v3/api-docs"
     customBootRun {
-        args = [
-            "--server.port=${openApiDocPort}",
-            '--spring.datasource.url=jdbc:h2:mem:openapi',
-            '--spring.datasource.driver-class-name=org.h2.Driver',
-            '--spring.datasource.username=sa',
-            '--spring.datasource.password=',
-            '--spring.flyway.enabled=false',
-            '--spring.jpa.hibernate.ddl-auto=none'
-        ]
+        args = ["--server.port=${openApiDocPort}"]
     }
 }
 
@@ -172,17 +141,4 @@ tasks.register('generateApiTypes', Exec) {
     commandLine isWindows ? 'npx.cmd' : 'npx', '--yes', 'openapi-typescript@7.13.0',
             layout.projectDirectory.file('openapi.json').asFile.absolutePath,
             '-o', output.absolutePath
-}
-
-// Docker 빌드가 소스 없이 의존성 계층만 먼저 굳히는 데 쓴다.
-// 기본 제공되는 dependencies 리포트 태스크는 그래프만 해석하고 jar 는 받지 않아
-// 캐시가 채워지지 않는다. 여기서는 실제 파일을 해석해 캐시에 내려받는다.
-tasks.register('resolveDependencies') {
-    group = 'build setup'
-    description = 'Downloads compile and runtime dependency artifacts into the Gradle cache'
-
-    def targets = configurations.matching { it.canBeResolved }
-    doLast {
-        targets.each { it.resolve() }
-    }
 }

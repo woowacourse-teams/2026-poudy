@@ -2,25 +2,10 @@ spring:
   application:
     name: poudy
   # 프로필을 지정하지 않고 실행하면 로컬 개발용 dev 로 뜬다.
-  # 운영은 Dockerfile 이 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
+  # 운영은 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
   profiles:
     default: dev
-  # 접속 정보는 여기 두지 않는다. dev 와 prod 가 같은 설정을 공유하면
-  # 접속 대상이 환경 변수 값 하나로만 갈려서, 로컬에서 운영 DB 에 붙어도
-  # 막을 수단이 없다. 프로필별 파일에서 각자 정의한다.
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
-  # dev 와 prod 가 같은 방식으로 스키마를 관리한다. 로컬에서 마이그레이션이
-  # 실제로 적용되어야 운영에서 처음 도는 SQL 이 생기지 않는다.
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-  # 롤링 배포로 컨테이너가 교체될 때 처리 중이던 요청을 끊지 않는다.
+  # 배포 중 인스턴스가 교체될 때 처리 중이던 요청을 끊지 않는다.
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
