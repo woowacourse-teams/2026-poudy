@@ -12,9 +12,12 @@ GitHub Webhook 이벤트를 이벤트별 Discord 채널로 전달하는 Cloudfla
 기존 Worker 이름이 `poudy-discord-worker`와 다르면 저장소 Variable
 `CLOUDFLARE_WORKER_NAME`에 실제 이름을 등록합니다.
 
-`infra/discord-worker/**`를 건드리는 Pull Request와 `dev` push에서는 의존성 취약점 점검,
-테스트, 정적 검사, Worker 번들 생성만 수행합니다. 운영 배포는 `main` 브랜치에서
-`Discord Worker Deploy` 워크플로를 수동 실행(`workflow_dispatch`)할 때만 이뤄집니다.
+`infra/discord-worker/**`를 건드리는 Pull Request에서는 의존성 취약점 점검, 테스트,
+정적 검사, Worker 번들 생성만 수행합니다.
+
+**배포는 `dev`에 머지될 때 자동으로 이뤄집니다.** 같은 검사를 모두 통과한 뒤에만
+배포 단계가 실행됩니다. 특정 시점의 코드를 다시 배포하려면 `Discord Worker Deploy`
+워크플로를 수동 실행(`workflow_dispatch`)합니다.
 
 ## Cloudflare Worker Secret
 
@@ -23,11 +26,41 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 환경 변수도 유지합니다.
 
 - `GITHUB_WEBHOOK_SECRET`
+- `GITHUB_API_TOKEN` (선택)
 - `DISCORD_WEBHOOK_ISSUE_UPDATE`
 - `DISCORD_WEBHOOK_PR_UPDATE`
 - `DISCORD_WEBHOOK_STAGING_CICD`
 - `DISCORD_WEBHOOK_PRODUCTION_CICD`
 - `DISCORD_WEBHOOK_WIKI_UPDATE`
+
+### `GITHUB_API_TOKEN`
+
+CI/CD 알림에 **PR 링크와 단계 진행 상황**을 넣기 위한 Fine-grained PAT입니다.
+없으면 두 항목만 빠지고 나머지 알림은 그대로 동작하므로 필수는 아닙니다.
+
+`workflow_run` 페이로드의 `pull_requests` 배열은 **같은 저장소에 올린 PR만** 채워집니다.
+이 경우에는 토큰 없이도 PR 번호를 알 수 있어 링크를 바로 만듭니다.
+
+| PR 방식 | PR 링크 | 단계 진행 상황 |
+| --- | --- | --- |
+| 같은 저장소 브랜치에서 올린 PR | 토큰 없이 표시 | 토큰 필요 |
+| fork에서 올린 PR | 토큰 필요 | 토큰 필요 |
+
+fork PR은 배열이 비어 있어, 커밋이 실제로 있는 `head_repository`를
+`GET /repos/{head_repository}/commits/{head_sha}/pulls`로 조회해 PR을 되짚습니다.
+워크플로가 도는 저장소로 조회하면 fork PR은 빈 배열이 돌아옵니다.
+단계 수는 `jobs_url`로 조회합니다.
+
+**이 저장소는 fork에서 PR을 올리는 방식이므로 PR 링크를 보려면 토큰이 필요합니다.**
+저장소가 공개여도 위 두 응답은 인증 없이는 비어서 돌아옵니다.
+[Fine-grained PAT](https://github.com/settings/personal-access-tokens)을 아래 권한으로 발급합니다.
+
+- Resource owner: `woowacourse-teams`, 대상 저장소: `2026-poudy`와 각자의 fork
+- Repository permissions: `Contents: Read`, `Pull requests: Read`, `Actions: Read`
+
+조직 설정에 따라 발급 후 조직 관리자의 승인이 필요할 수 있습니다. 승인 전에는 조회가
+실패하지만 알림은 계속 전송됩니다. 토큰 만료일이 지나도 마찬가지이므로,
+PR 링크가 사라지면 토큰 만료를 먼저 확인합니다.
 
 ## GitHub Webhook 설정
 
