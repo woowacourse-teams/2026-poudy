@@ -2,17 +2,8 @@ import { z } from "zod";
 
 import { sendDiscordEmbed } from "./discord.ts";
 import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
-import {
-  issueCommentEmbed,
-  issueEmbed,
-  pullRequestEmbed,
-  pullRequestReviewEmbed,
-} from "./embeds/collaboration.ts";
-import {
-  discussionCommentEmbed,
-  discussionEmbed,
-  wikiEmbed,
-} from "./embeds/community.ts";
+import { issueCommentEmbed, issueEmbed, pullRequestEmbed, pullRequestReviewEmbed } from "./embeds/collaboration.ts";
+import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
 import { type ParsedGitHubEvent, parseGitHubEvent } from "./github-event.ts";
 import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
@@ -29,10 +20,7 @@ type WebhookRequestParseResult =
 
 const encoder = new TextEncoder();
 
-async function handleRequest(
-  request: Request,
-  env: WorkerEnv,
-): Promise<Response> {
+async function handleRequest(request: Request, env: WorkerEnv): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method not allowed", {
       status: 405,
@@ -68,32 +56,16 @@ function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-async function hasValidSignature(
-  body: string,
-  signature: string | null,
-  secret: string,
-): Promise<boolean> {
-  if (
-    !signature?.startsWith("sha256=") ||
-    !/^[0-9a-f]{64}$/i.test(signature.slice(7))
-  ) {
+async function hasValidSignature(body: string, signature: string | null, secret: string): Promise<boolean> {
+  if (!signature?.startsWith("sha256=") || !/^[0-9a-f]{64}$/i.test(signature.slice(7))) {
     return false;
   }
 
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"],
-  );
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, [
+    "verify",
+  ]);
 
-  return crypto.subtle.verify(
-    "HMAC",
-    key,
-    hexToBytes(signature.slice(7)),
-    encoder.encode(body),
-  );
+  return crypto.subtle.verify("HMAC", key, hexToBytes(signature.slice(7)), encoder.encode(body));
 }
 
 function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
@@ -125,10 +97,7 @@ function parseJson(body: string): unknown {
   return JSON.parse(body);
 }
 
-async function parseWebhookRequest(
-  request: Request,
-  githubSecret: string,
-): Promise<WebhookRequestParseResult> {
+async function parseWebhookRequest(request: Request, githubSecret: string): Promise<WebhookRequestParseResult> {
   const body = await request.text();
   const signature = request.headers.get("X-Hub-Signature-256");
 
@@ -142,10 +111,7 @@ async function parseWebhookRequest(
   const event = request.headers.get("X-GitHub-Event");
 
   if (!event) {
-    return {
-      kind: "response",
-      response: new Response("Missing GitHub event", { status: 400 }),
-    };
+    return { kind: "response", response: new Response("Missing GitHub event", { status: 400 }) };
   }
 
   let rawPayload: unknown;
@@ -184,10 +150,7 @@ async function parseWebhookRequest(
   return { kind: "parsed", parsedEvent };
 }
 
-async function deliverParsedEvent(
-  parsedEvent: ParsedGitHubEvent,
-  env: WorkerEnv,
-): Promise<Response> {
+async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<Response> {
   const embed = createEmbed(parsedEvent);
   const webhookKey = webhookKeyFor(parsedEvent);
 

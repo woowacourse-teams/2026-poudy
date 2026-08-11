@@ -1,9 +1,6 @@
 import type { DiscordEmbed } from "./embeds/shared.ts";
 
-export async function sendDiscordEmbed(
-  webhookUrl: string,
-  embed: DiscordEmbed,
-): Promise<boolean> {
+export async function sendDiscordEmbed(webhookUrl: string, embed: DiscordEmbed): Promise<boolean> {
   try {
     const url = new URL(webhookUrl);
     url.searchParams.set("wait", "true");
