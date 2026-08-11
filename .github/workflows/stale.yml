@@ -40,7 +40,8 @@ jobs:
 
           # 긴급 건과 논의 중인 항목만 뺀다. 작성자가 직접 만들고 머지하므로
           # 담당자 지정은 진행 중을 뜻하지 않고, 마일스톤은 쓰지 않는다.
-          exempt-issue-labels: hotfix,question
+          # feat 은 백로그로 미리 만들어 두는 이슈라 무활동이 방치를 뜻하지 않는다.
+          exempt-issue-labels: hotfix,question,feat
           exempt-pr-labels: hotfix,question
 
           # 드래프트는 작성자가 준비 중이라고 스스로 표시한 상태다.
