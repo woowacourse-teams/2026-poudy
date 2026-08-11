@@ -62,11 +62,7 @@ export function parseRequestBody(init: RequestInit | undefined): DiscordBody {
   return discordBodySchema.parse(JSON.parse(init.body));
 }
 
-export function signedRequest(
-  event: string,
-  payload: unknown,
-  bodyOverride?: string,
-): Request {
+export function signedRequest(event: string, payload: unknown, bodyOverride?: string): Request {
   const body = bodyOverride ?? JSON.stringify(payload);
   const signature = createHmac("sha256", secret).update(body).digest("hex");
 

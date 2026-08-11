@@ -3,13 +3,7 @@ import test from "node:test";
 
 import worker from "../src/index.ts";
 import type { DiscordBody } from "./helpers.ts";
-import {
-  env,
-  parseRequestBody,
-  repository,
-  signedRequest,
-  user,
-} from "./helpers.ts";
+import { env, parseRequestBody, repository, signedRequest, user } from "./helpers.ts";
 
 const issuePayload = {
   action: "opened",
@@ -28,17 +22,9 @@ const issuePayload = {
 };
 
 test("rejects malformed requests and reports delivery failures", async () => {
+  assert.equal((await worker.fetch(new Request("https://worker.test"), env)).status, 405);
   assert.equal(
-    (await worker.fetch(new Request("https://worker.test"), env)).status,
-    405,
-  );
-  assert.equal(
-    (
-      await worker.fetch(
-        new Request("https://worker.test", { method: "POST", body: "{}" }),
-        {},
-      )
-    ).status,
+    (await worker.fetch(new Request("https://worker.test", { method: "POST", body: "{}" }), {})).status,
     500,
   );
   assert.equal(
@@ -54,14 +40,8 @@ test("rejects malformed requests and reports delivery failures", async () => {
     ).status,
     401,
   );
-  assert.equal(
-    (await worker.fetch(signedRequest("issues", {}, "{"), env)).status,
-    400,
-  );
-  assert.equal(
-    (await worker.fetch(signedRequest("ping", {}), env)).status,
-    200,
-  );
+  assert.equal((await worker.fetch(signedRequest("issues", {}, "{"), env)).status, 400);
+  assert.equal((await worker.fetch(signedRequest("ping", {}), env)).status, 200);
   assert.equal(
     (
       await worker.fetch(signedRequest("issues", issuePayload), {
@@ -72,26 +52,17 @@ test("rejects malformed requests and reports delivery failures", async () => {
   );
 
   globalThis.fetch = async () => new Response("failed", { status: 429 });
-  assert.equal(
-    (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
-    502,
-  );
+  assert.equal((await worker.fetch(signedRequest("issues", issuePayload), env)).status, 502);
 
   globalThis.fetch = async () => {
     throw new Error("Network connection lost");
   };
-  assert.equal(
-    (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
-    502,
-  );
+  assert.equal((await worker.fetch(signedRequest("issues", issuePayload), env)).status, 502);
 
   globalThis.fetch = async () => {
     throw new DOMException("timed out", "TimeoutError");
   };
-  assert.equal(
-    (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
-    502,
-  );
+  assert.equal((await worker.fetch(signedRequest("issues", issuePayload), env)).status, 502);
 });
 
 test("falls back for empty deployment URLs and deleted users", async () => {
@@ -121,10 +92,7 @@ test("falls back for empty deployment URLs and deleted users", async () => {
     repository,
   };
 
-  const response = await worker.fetch(
-    signedRequest("deployment_status", payload),
-    env,
-  );
+  const response = await worker.fetch(signedRequest("deployment_status", payload), env);
 
   assert.equal(response.status, 200);
   assert.ok(sent);
@@ -133,10 +101,7 @@ test("falls back for empty deployment URLs and deleted users", async () => {
   assert.equal(embed.url, repository.html_url);
   assert.equal(embed.author.name, "삭제된 사용자");
   assert.equal(embed.description, undefined);
-  assert.equal(
-    sentUrl,
-    "https://discord.test/production?thread_id=1&wait=true",
-  );
+  assert.equal(sentUrl, "https://discord.test/production?thread_id=1&wait=true");
 
   const invalidUrlResponse = await worker.fetch(
     signedRequest("deployment_status", {

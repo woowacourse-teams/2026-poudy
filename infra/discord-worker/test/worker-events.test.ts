@@ -3,21 +3,9 @@ import test from "node:test";
 
 import worker from "../src/index.ts";
 import type { DiscordBody } from "./helpers.ts";
-import {
-  env,
-  parseRequestBody,
-  repository,
-  signedRequest,
-  user,
-  webhookUrls,
-} from "./helpers.ts";
+import { env, parseRequestBody, repository, signedRequest, user, webhookUrls } from "./helpers.ts";
 
-type EventFixture = readonly [
-  event: string,
-  payload: unknown,
-  expectedUrl: string,
-  expectedTitle: RegExp,
-];
+type EventFixture = readonly [event: string, payload: unknown, expectedUrl: string, expectedTitle: RegExp];
 
 test("routes every supported GitHub event as one rich Discord embed", async () => {
   const pullRequest = {
@@ -52,12 +40,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
     updated_at: "2026-08-10T00:00:00Z",
   };
   const fixtures: readonly EventFixture[] = [
-    [
-      "pull_request",
-      { action: "opened", pull_request: pullRequest, repository },
-      webhookUrls.pr,
-      /Pull Request/,
-    ],
+    ["pull_request", { action: "opened", pull_request: pullRequest, repository }, webhookUrls.pr, /Pull Request/],
     [
       "pull_request_review",
       {
@@ -81,12 +64,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
       webhookUrls.pr,
       /승인/,
     ],
-    [
-      "issues",
-      { action: "opened", issue, sender: user("erin"), repository },
-      webhookUrls.issue,
-      /이슈/,
-    ],
+    ["issues", { action: "opened", issue, sender: user("erin"), repository }, webhookUrls.issue, /이슈/],
     [
       "issue_comment",
       {
@@ -103,12 +81,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
       webhookUrls.issue,
       /댓글/,
     ],
-    [
-      "discussion",
-      { action: "created", discussion, repository },
-      webhookUrls.issue,
-      /Discussion/,
-    ],
+    ["discussion", { action: "created", discussion, repository }, webhookUrls.issue, /Discussion/],
     [
       "discussion_comment",
       {
