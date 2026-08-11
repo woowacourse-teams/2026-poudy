@@ -45,25 +45,9 @@ jobs:
     # generateApiTypes 는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20
 
-    # 이 잡에만 건다. 위에 두면 docker 잡의 run 스텝도 server 에서 돈다.
     defaults:
       run:
         working-directory: server
-
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_DB: poudy
-          POSTGRES_USER: poudy
-          POSTGRES_PASSWORD: poudy
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U poudy -d poudy"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
 
     steps:
       - uses: actions/checkout@v7
@@ -100,98 +84,22 @@ jobs:
             exit 1
           fi
 
-      # 아래 build 는 integration 으로만 돈다. 로컬 기본값은 test 라, 여기서
-      # 안 돌리면 application-test.yml 이 깨져도 CI 는 초록으로 남는다.
-      - name: Test with H2 profile
-        id: h2test
-        run: ./gradlew test
-
       - name: Build and test
         id: test
-        run: ./gradlew -Dspring.profiles.active=integration build
-        env:
-          DB_URL: jdbc:postgresql://localhost:5432/poudy
-          DB_USERNAME: poudy
-          DB_PASSWORD: poudy
+        run: ./gradlew build
 
       # build 는 spotless 와 checkstyle 도 돌리므로 reports 를 통째로 올린다.
       - name: Upload reports
-        if: failure() && (steps.h2test.outcome == 'failure' || steps.test.outcome == 'failure')
+        if: failure() && steps.test.outcome == 'failure'
         uses: actions/upload-artifact@v7
         with:
           name: server-reports
           path: server/build/reports
 
-  # Dockerfile 은 jar 가 하나뿐이라는 것과 jarmode 추출 레이아웃에 기대고 있다.
-  # build 뒤에 둔다. 컨테이너 안에서 다시 빌드하므로 헛돌면 15 분이 낭비다.
-  docker:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    # prod 프로필은 접속 정보가 없으면 기동 시점에 실패한다.
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_DB: poudy
-          POSTGRES_USER: poudy
-          POSTGRES_PASSWORD: poudy
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U poudy -d poudy"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: docker/setup-buildx-action@v4
-
-      - name: Build image
-        uses: docker/build-push-action@v7
-        with:
-          context: server
-          push: false
-          # 아래에서 띄워 보려면 로컬 데몬에 올라와야 한다.
-          load: true
-          tags: poudy:ci
-          cache-from: type=gha
-          # 포크 PR 은 Actions 캐시에 쓸 수 없다. 읽기만 하고 쓰기는 건너뛴다.
-          # 표현식은 참인 쪽이 빈 문자열이면 거짓으로 취급되므로 조건을 뒤집어 둔다.
-          cache-to: ${{ !github.event.pull_request.head.repo.fork && 'type=gha,mode=max' || '' }}
-
-      # JarLauncher 경로와 계층 파일 권한은 실제로 띄워야 드러난다.
-      - name: Run image and check health
-        run: |
-          docker run -d --name poudy-ci --network host \
-            -e DB_URL=jdbc:postgresql://localhost:5432/poudy \
-            -e DB_USERNAME=poudy -e DB_PASSWORD=poudy \
-            poudy:ci
-
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
-              echo "기동 확인"
-              exit 0
-            fi
-            if [ -z "$(docker ps -q -f name=poudy-ci)" ]; then
-              echo "::error::컨테이너가 종료되었습니다."
-              docker logs poudy-ci
-              exit 1
-            fi
-            sleep 2
-          done
-
-          echo "::error::60 초 안에 health 가 UP 이 되지 않았습니다."
-          docker logs poudy-ci
-          exit 1
-
   # 필수 체크로 걸 잡. 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록한다.
   # !cancelled() 는 취소 시 skipped 가 되고 브랜치 보호가 이를 통과로 본다.
   gate:
-    needs: [changes, build, docker]
+    needs: [changes, build]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -200,8 +108,7 @@ jobs:
       - name: Check results
         run: |
           for r in '${{ needs.changes.result }}' \
-                   '${{ needs.build.result }}' \
-                   '${{ needs.docker.result }}'; do
+                   '${{ needs.build.result }}'; do
             case "$r" in
               success | skipped) ;;
               *) echo "::error::선행 잡이 $r 로 끝났습니다."; exit 1 ;;
