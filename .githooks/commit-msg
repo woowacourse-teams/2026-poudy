@@ -27,6 +27,14 @@ cleaned=$(
         '
 )
 
+# `git commit -m "...\n..."`의 일반 따옴표 안에서 \n은 개행으로 해석되지 않는다.
+# 그대로 허용하면 여러 본문 항목이 한 줄에 저장되므로 실제 줄바꿈을 사용하게 강제한다.
+if printf '%s\n' "$cleaned" | grep -qF '\n'; then
+    printf '%s\n' '[commit-msg] 문자열 \n 대신 실제 줄바꿈을 사용해야 합니다.'
+    printf '%s\n' '  여러 줄 메시지는 편집기 또는 git commit -F <메시지 파일>로 작성하세요.'
+    exit 1
+fi
+
 subject=$(printf '%s\n' "$cleaned" | sed -n '1p')
 
 # rebase --autosquash 가 합치면서 사라질 임시 커밋이다.
