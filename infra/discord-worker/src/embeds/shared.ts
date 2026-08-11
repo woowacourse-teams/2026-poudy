@@ -63,7 +63,8 @@ function firstParagraph(body: string): string {
     const lines = block.split("\n").filter((line) => line.trim().length > 0);
 
     // 머리글만 있는 블록, HTML 주석, 이미지·배지 줄은 건너뛴다.
-    if (lines.every((line) => /^\s*(?:#{1,6}\s|<!--|!\[)/.test(line))) {
+    // 배지는 [![대체글](이미지)](링크) 처럼 링크로 감싸는 형태가 흔하다.
+    if (lines.every((line) => /^\s*(?:#{1,6}\s|<!--|!\[|\[!\[|<img\b)/i.test(line))) {
       continue;
     }
 

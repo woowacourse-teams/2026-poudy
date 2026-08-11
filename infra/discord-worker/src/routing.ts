@@ -64,10 +64,15 @@ export function webhookKeyFor(parsedEvent: ParsedGitHubEvent): WebhookKey | unde
     case "workflow_run": {
       const run = parsedEvent.payload.workflow_run;
 
-      // PR 에서 도는 CI 는 그 PR 알림에 붙여 보여 준다. deployment 채널에는
-      // dev 나 main 에 머지되어 도는 워크플로만 남긴다.
+      // PR 에서 도는 CI 는 그 PR 알림에 붙여 보여 준다.
       if (run.event === "pull_request") {
         return webhookKeys.prUpdate;
+      }
+
+      // deployment 채널에는 머지로 생긴 push 만 남긴다. 다른 워크플로가 끝나 이어
+      // 도는 것(workflow_run)이나 예약·수동 실행은 배포와 무관하다.
+      if (run.event !== "push") {
+        return undefined;
       }
 
       return deploymentWebhookKey(run.head_branch);

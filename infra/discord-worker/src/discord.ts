@@ -4,6 +4,8 @@ export type DiscordDeliveryResult =
   | { readonly kind: "delivered"; readonly messageId: string | undefined }
   | { readonly kind: "invalid-webhook-url" }
   | { readonly kind: "rate-limited"; readonly retryAfterSeconds: number | undefined }
+  // 고치려던 메시지가 지워졌다. 재시도해도 같으므로 새로 보내야 한다.
+  | { readonly kind: "message-gone" }
   | { readonly kind: "failed" };
 
 const deliveryTimeoutMs = 5_000;
@@ -44,6 +46,10 @@ async function toDeliveryResult(response: Response): Promise<DiscordDeliveryResu
 
   if (response.status === 429) {
     return { kind: "rate-limited", retryAfterSeconds: parseRetryAfterSeconds(response) };
+  }
+
+  if (response.status === 404) {
+    return { kind: "message-gone" };
   }
 
   return { kind: "failed" };

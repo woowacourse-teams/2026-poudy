@@ -39,11 +39,16 @@ const pullRequest = {
 };
 
 // KV 바인딩을 흉내 내 PR 알림과 CI 결과가 서로를 찾아가는지 본다.
-function fakeKv() {
+// delayMs 를 주면 읽기가 늦어져, 두 요청이 같은 값을 읽는 경합을 재현할 수 있다.
+function fakeKv(delayMs = 0) {
   const store = new Map<string, string>();
 
   return {
     get: async (key: string) => {
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
       const raw = store.get(key);
       return raw ? JSON.parse(raw) : null;
     },
@@ -153,7 +158,7 @@ test("drops earlier CI results when a new commit is pushed", async () => {
   assert.match(ci.value, /❌ \[Client CI\]/);
 });
 
-test("ignores CI when no pull request message was stored", async () => {
+test("sends a separate message when no pull request message was stored", async () => {
   const kv = fakeKv();
   const sent: Sent[] = [];
   const realFetch = globalThis.fetch;
@@ -162,9 +167,113 @@ test("ignores CI when no pull request message was stored", async () => {
   const response = await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
   globalThis.fetch = realFetch;
 
-  // 붙일 PR 메시지가 없으면 새 알림을 만들지 않는다.
+  // 붙일 PR 메시지를 못 찾아도 결과를 잃지 않는다.
   assert.equal(response.status, 200);
-  assert.equal(sent.length, 0);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0]?.method, "POST");
+});
+
+test("ignores workflow runs for a superseded commit", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+
+  // 새 커밋을 푸시하면 PR 레코드가 그 sha 를 가리킨다.
+  const pushed = { ...pullRequest, head: { ref: pullRequest.head.ref, sha: "999888777666" } };
+  await worker.fetch(
+    signedRequest("pull_request", { action: "synchronize", pull_request: pushed, repository }),
+    workerEnv(kv),
+  );
+
+  const before = sent.length;
+  // 뒤늦게 도착한 이전 커밋의 결과는 PR 레코드를 되돌리지 않는다.
+  const response = await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, before);
+});
+
+test("keeps a result written by another workflow while this one was running", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+
+  // Discord 로 보내는 동안 다른 워크플로가 결과를 먼저 저장한 상황을 만든다.
+  const prKey = `pr:${repository.full_name}#15`;
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = input.toString();
+
+    if (!url.startsWith("https://api.github")) {
+      const snapshot = (await kv.get(prKey)) as { outcomes: unknown[] } | null;
+
+      if (snapshot && snapshot.outcomes.length === 0) {
+        await kv.put(
+          prKey,
+          JSON.stringify({
+            ...snapshot,
+            outcomes: [{ name: "Client CI", conclusion: "failure", html_url: "https://github.test/runs/client" }],
+          }),
+        );
+      }
+    }
+
+    return original(input, init);
+  };
+
+  await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  globalThis.fetch = realFetch;
+
+  // 쓰기 직전에 다시 읽어 합치므로 그 사이 들어온 결과가 사라지지 않는다.
+  const stored = (await kv.get(prKey)) as { outcomes: { name: string }[] } | null;
+  assert.ok(stored);
+  assert.deepEqual(stored.outcomes.map((outcome) => outcome.name).sort(), ["Client CI", "Server CI"]);
+});
+
+test("posts a new message when the stored one was deleted", async () => {
+  const kv = fakeKv();
+  const methods: string[] = [];
+  const realFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input, init) => {
+    const url = input.toString();
+
+    if (url.startsWith("https://api.github")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+
+    const method = init?.method ?? "GET";
+    methods.push(method);
+
+    // 지워진 메시지를 고치려 하면 404 가 온다.
+    if (method === "PATCH") {
+      return new Response("not found", { status: 404 });
+    }
+    return new Response(JSON.stringify({ id: "msg-new" }), { status: 200 });
+  };
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  const response = await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(methods, ["POST", "PATCH", "POST"]);
 });
 
 test("sends merged branch workflows to the deployment channel", async () => {
