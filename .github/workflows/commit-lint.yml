@@ -65,3 +65,60 @@ jobs:
           fi
 
           echo "모든 커밋 메시지가 규칙에 맞습니다."
+
+      # 위 검사는 베이스 훅을 쓰므로 이 PR 이 훅을 고쳐도 그 변경은 실행되지 않는다.
+      # 훅 자체가 의도대로 동작하는지는 체크아웃된 버전으로 따로 확인한다.
+      - name: Test the hook in this pull request
+        env:
+          HOOK_PATH: .githooks/commit-msg
+        run: |
+          hook="./$HOOK_PATH"
+          chmod +x "$hook"
+          message=$(mktemp)
+          failed=0
+
+          # 통과해야 하는 메시지는 0, 막아야 하는 메시지는 1 을 기대한다.
+          expect() {
+            expected=$1
+            name=$2
+            if "$hook" "$message" >/dev/null 2>&1; then
+              actual=0
+            else
+              actual=1
+            fi
+            if [ "$actual" -ne "$expected" ]; then
+              echo "::error::훅 테스트 실패: $name (기대 $expected, 실제 $actual)"
+              failed=1
+            fi
+          }
+
+          printf 'feat : 제목만 있는 커밋\n' > "$message"
+          expect 0 "제목만"
+
+          printf 'feat : 실제 줄바꿈 본문\n\n- 첫째 줄\n- 둘째 줄\n' > "$message"
+          expect 0 "실제 줄바꿈 본문"
+
+          # 작은따옴표라 셸이 해석하지 않는다. 파일에 역슬래시와 n 두 글자가 그대로 들어간다.
+          printf 'feat : 이스케이프 본문\n\n- 첫째 줄\\n- 둘째 줄\n' > "$message"
+          expect 1 "개행 이스케이프 문자열"
+
+          printf 'feat : 제목 안 이스케이프\\n붙음\n' > "$message"
+          expect 1 "제목 안 개행 이스케이프"
+
+          printf '제목에 타입이 없다\n' > "$message"
+          expect 1 "타입 없는 제목"
+
+          printf 'feat : 이모지 금지 \360\237\216\211\n' > "$message"
+          expect 1 "제목 이모지"
+
+          printf 'feat : 제목\n본문이 붙어 있다\n' > "$message"
+          expect 1 "제목과 본문 사이 빈 줄 없음"
+
+          printf 'feat : 제목\n\n본문\n\nCo-authored-by: someone <a@b.c>\n' > "$message"
+          expect 1 "공동 작성자 트레일러"
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "훅이 모든 테스트를 통과했습니다."
