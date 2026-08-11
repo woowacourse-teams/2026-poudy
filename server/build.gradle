@@ -99,16 +99,38 @@ tasks.register('setupGit', Exec) {
     onlyIf { rootProject.file('../.git').exists() && System.getenv('CI') == null }
 }
 
-// 앱을 띄워 OpenAPI 문서를 openapi.json 으로 뽑는다.
+// 앱을 띄워 OpenAPI 문서를 뽑는다.
 // 기본 포트(8080)를 쓰면 개발 중 띄워둔 앱이 8080 을 점유했을 때
 // 포크된 앱이 바인딩에 실패해도 플러그인이 그 앱의 응답을 받아 저장한다.
 // 낡은 문서가 조용히 커밋되므로 전용 포트를 쓴다.
+//
+// outputDir 을 프로젝트 루트로 두면 server/ 전체가 이 태스크의 출력이 되어,
+// 그 아래를 읽는 태스크(spotless, checkstyle, compile, test)가 전부 의존성
+// 미선언으로 잡힌다. build 와 한 번에 실행하면 Gradle 이 거부하므로 build 아래에
+// 뽑고, 저장소에 커밋할 위치로는 copyOpenApiDoc 이 옮긴다.
 openApi {
-    outputDir = layout.projectDirectory
+    outputDir = layout.buildDirectory.dir('openapi')
     outputFileName = 'openapi.json'
     apiDocsUrl = "http://localhost:${openApiDocPort}/v3/api-docs"
     customBootRun {
         args = ["--server.port=${openApiDocPort}"]
+    }
+}
+
+// 출력을 파일 하나로 선언한다. 디렉터리로 두면 위와 같은 문제가 다시 생긴다.
+tasks.register('copyOpenApiDoc') {
+    group = 'openapi'
+    description = 'Copies the generated OpenAPI document into the repository'
+    dependsOn 'generateOpenApiDocs'
+
+    def source = layout.buildDirectory.file('openapi/openapi.json')
+    def target = layout.projectDirectory.file('openapi.json')
+
+    inputs.file(source)
+    outputs.file(target)
+
+    doLast {
+        target.asFile.bytes = source.get().asFile.bytes
     }
 }
 
@@ -126,7 +148,7 @@ tasks.named('forkedSpringBootRun') {
 tasks.register('generateApiTypes', Exec) {
     group = 'openapi'
     description = 'Generates TypeScript types from openapi.json'
-    dependsOn 'generateOpenApiDocs'
+    dependsOn 'copyOpenApiDoc'
 
     def output = rootProject.file('../common/api.d.ts')
     def source = layout.projectDirectory.file('openapi.json')
