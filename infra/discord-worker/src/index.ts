@@ -5,6 +5,7 @@ import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
 import { issueCommentEmbed, issueEmbed, pullRequestEmbed, pullRequestReviewEmbed } from "./embeds/collaboration.ts";
 import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
+import { workflowRunContext } from "./github-api.ts";
 import { type ParsedGitHubEvent, parseGitHubEvent } from "./github-event.ts";
 import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
 
@@ -68,7 +69,7 @@ async function hasValidSignature(body: string, signature: string | null, secret:
   return crypto.subtle.verify("HMAC", key, hexToBytes(signature.slice(7)), encoder.encode(body));
 }
 
-function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
+async function createEmbed(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<DiscordEmbed | undefined> {
   switch (parsedEvent.event) {
     case "pull_request":
       return pullRequestEmbed(parsedEvent.payload);
@@ -85,7 +86,10 @@ function createEmbed(parsedEvent: ParsedGitHubEvent): DiscordEmbed | undefined {
     case "gollum":
       return wikiEmbed(parsedEvent.payload);
     case "workflow_run":
-      return workflowRunEmbed(parsedEvent.payload);
+      return workflowRunEmbed(
+        parsedEvent.payload,
+        await workflowRunContext(parsedEvent.payload.workflow_run, env.GITHUB_API_TOKEN),
+      );
     case "deployment_status":
       return deploymentStatusEmbed(parsedEvent.payload);
     default:
@@ -165,7 +169,7 @@ function deliveryResponse(result: DiscordDeliveryResult, webhookKey: string): Re
 }
 
 async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv): Promise<Response> {
-  const embed = createEmbed(parsedEvent);
+  const embed = await createEmbed(parsedEvent, env);
   const webhookKey = webhookKeyFor(parsedEvent);
 
   if (!embed || !webhookKey) {

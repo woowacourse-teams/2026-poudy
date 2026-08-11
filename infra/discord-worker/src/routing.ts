@@ -2,6 +2,7 @@ import type { ParsedGitHubEvent } from "./github-event.ts";
 
 export type WorkerEnv = {
   readonly GITHUB_WEBHOOK_SECRET?: string;
+  readonly GITHUB_API_TOKEN?: string;
   readonly DISCORD_WEBHOOK_ISSUE_UPDATE?: string;
   readonly DISCORD_WEBHOOK_PR_UPDATE?: string;
   readonly DISCORD_WEBHOOK_STAGING_CICD?: string;
@@ -9,7 +10,7 @@ export type WorkerEnv = {
   readonly DISCORD_WEBHOOK_WIKI_UPDATE?: string;
 };
 
-type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET">;
+type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "GITHUB_API_TOKEN">;
 
 const webhookKeys = {
   issueUpdate: "DISCORD_WEBHOOK_ISSUE_UPDATE",
