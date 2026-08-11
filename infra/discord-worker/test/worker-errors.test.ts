@@ -79,7 +79,15 @@ test("rejects malformed requests and reports delivery failures", async () => {
   );
 
   globalThis.fetch = async () => {
-    throw new TypeError("network down");
+    throw new Error("Network connection lost");
+  };
+  assert.equal(
+    (await worker.fetch(signedRequest("issues", issuePayload), env)).status,
+    502,
+  );
+
+  globalThis.fetch = async () => {
+    throw new DOMException("timed out", "TimeoutError");
   };
   assert.equal(
     (await worker.fetch(signedRequest("issues", issuePayload), env)).status,

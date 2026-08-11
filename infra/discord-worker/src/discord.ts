@@ -14,12 +14,12 @@ export async function sendDiscordEmbed(
         embeds: [embed],
         allowed_mentions: { parse: [] },
       }),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(8_000),
     });
 
     return response.ok;
   } catch (error) {
-    if (error instanceof TypeError || error instanceof DOMException) {
+    if (error instanceof Error) {
       return false;
     }
     throw error;
