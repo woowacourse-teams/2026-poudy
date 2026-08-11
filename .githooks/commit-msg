@@ -29,6 +29,11 @@ cleaned=$(
 
 subject=$(printf '%s\n' "$cleaned" | sed -n '1p')
 
+# rebase --autosquash 가 합치면서 사라질 임시 커밋이다.
+case "$subject" in
+    'fixup! '* | 'squash! '*) exit 0 ;;
+esac
+
 if ! printf '%s\n' "$subject" | grep -Eq \
     '^(feat|fix|docs|style|refactor|rename|remove) : [^[:space:]].*$'; then
     echo "[commit-msg] 제목 형식이 올바르지 않습니다."
