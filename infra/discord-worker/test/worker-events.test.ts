@@ -185,3 +185,47 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
 
   assert.equal(calls.length, fixtures.length);
 });
+
+test("keeps long pull request bodies short in the notification", async () => {
+  const body = [
+    "## 작업 내용",
+    "",
+    "DB 와 Docker 가 필요 없어져 관련 설정을 전부 걷어냈습니다.",
+    "",
+    "**삭제한 파일**",
+    "",
+    "- `Dockerfile`",
+    "- `compose.yaml`",
+    `- ${"긴 목록 ".repeat(200)}`,
+  ].join("\n");
+  const calls: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    calls.push(parseRequestBody(init).embeds[0]?.description ?? "");
+    return new Response(null, { status: 204 });
+  };
+
+  const response = await worker.fetch(
+    signedRequest("issues", {
+      action: "opened",
+      issue: {
+        number: 1,
+        state: "open",
+        title: "remove : DB 와 Docker 제거",
+        body,
+        html_url: "https://github.test/issues/1",
+        updated_at: "2026-08-11T00:00:00Z",
+      },
+      sender: user("alice"),
+      repository,
+    }),
+    env,
+  );
+
+  assert.equal(response.status, 200);
+  const description = calls[0] ?? "";
+  // 머리글이 아니라 실제 첫 문단이 실린다.
+  assert.match(description, /DB 와 Docker 가 필요 없어져/);
+  // 뒤따르는 목록은 싣지 않는다.
+  assert.equal(description.includes("Dockerfile"), false);
+  assert.ok(description.length < 400, `본문이 너무 깁니다: ${description.length}자`);
+});
