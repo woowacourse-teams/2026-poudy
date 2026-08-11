@@ -1,15 +1,4 @@
-# 운영 배포용 프로필. Dockerfile 이 SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
-#
-# 접속 정보에 기본값을 두지 않는다. 환경 변수를 빠뜨리거나 이름을 틀렸을 때
-# 조용히 다른 DB 에 붙는 대신 기동 시점에 즉시 실패한다.
-# 비밀번호를 저장소에 커밋해 두지 않으려는 목적도 있다.
-#
-# .env 도 읽지 않는다. 운영 접속 정보는 컨테이너 환경 변수로만 들어온다.
-spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+# 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
 # API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
 # /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
