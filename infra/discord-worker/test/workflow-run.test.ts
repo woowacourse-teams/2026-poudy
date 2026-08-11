@@ -103,30 +103,50 @@ test("keeps the notification when the GitHub lookup fails", async () => {
   assert.equal(context.steps, undefined);
 });
 
-test("skips the lookup entirely without a token", async () => {
-  let called = false;
+test("looks up public repository data without a token", async () => {
+  let authorizationSent: string | null = null;
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    called = true;
-    return new Response("{}", { status: 200 });
+  globalThis.fetch = async (input, init) => {
+    authorizationSent = new Headers(init?.headers).get("Authorization");
+
+    if (input.toString().includes("/commits/")) {
+      return new Response(JSON.stringify([{ number: 15, html_url: "https://github.test/pull/15" }]), { status: 200 });
+    }
+    return new Response(JSON.stringify({ jobs: [{ steps: [{ conclusion: "success" }] }] }), { status: 200 });
   };
 
   const context = await workflowRunContext(workflowRun, repository.html_url, undefined);
   globalThis.fetch = realFetch;
 
-  assert.equal(called, false);
-  assert.equal(context.pullRequest, undefined);
+  // 공개 저장소는 인증 없이도 조회되므로 Authorization 헤더를 붙이지 않는다.
+  assert.equal(authorizationSent, null);
+  assert.equal(context.pullRequest?.number, 15);
+  assert.deepEqual(context.steps, { completed: 1, total: 1 });
 });
 
-test("uses the payload PR without calling the API for same-repo runs", async () => {
-  let called = false;
+test("sends the token when one is configured", async () => {
+  let authorizationSent: string | null = null;
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    called = true;
-    return new Response("{}", { status: 200 });
+  globalThis.fetch = async (_input, init) => {
+    authorizationSent = new Headers(init?.headers).get("Authorization");
+    return new Response(JSON.stringify([]), { status: 200 });
   };
 
-  // 같은 저장소에 올린 PR 은 페이로드에 번호가 들어 있어 토큰이 없어도 링크를 만든다.
+  await workflowRunContext(workflowRun, repository.html_url, "test-token");
+  globalThis.fetch = realFetch;
+
+  assert.equal(authorizationSent, "Bearer test-token");
+});
+
+test("uses the payload PR without looking it up for same-repo runs", async () => {
+  const requested: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    requested.push(input.toString());
+    return new Response(JSON.stringify({ jobs: [] }), { status: 200 });
+  };
+
+  // 같은 저장소에 올린 PR 은 페이로드에 번호가 들어 있어 PR 조회를 하지 않는다.
   const context = await workflowRunContext(
     { ...workflowRun, pull_requests: [{ number: 15 }] },
     repository.html_url,
@@ -134,7 +154,10 @@ test("uses the payload PR without calling the API for same-repo runs", async () 
   );
   globalThis.fetch = realFetch;
 
-  assert.equal(called, false);
+  assert.equal(
+    requested.some((url) => url.includes("/commits/")),
+    false,
+  );
   assert.deepEqual(context.pullRequest, {
     number: 15,
     html_url: `${repository.html_url}/pull/15`,

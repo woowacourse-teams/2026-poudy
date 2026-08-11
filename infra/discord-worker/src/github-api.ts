@@ -17,11 +17,12 @@ const jobListSchema = z.object({
   ),
 });
 
-// 토큰이 없거나 조회가 실패하면 그 필드만 비운다. 알림 자체는 계속 보낸다.
-async function fetchJson(url: string, token: string): Promise<unknown> {
+// 공개 저장소는 토큰 없이도 조회된다. 토큰은 비공개 저장소와 더 높은 요청 한도를 위한 것이다.
+// 조회가 실패하면 그 필드만 비운다. 알림 자체는 계속 보낸다.
+async function fetchJson(url: string, token: string | undefined): Promise<unknown> {
   const response = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       "User-Agent": "poudy-discord-worker",
@@ -42,7 +43,7 @@ async function fetchJson(url: string, token: string): Promise<unknown> {
 async function lookupPullRequest(
   headRepositoryFullName: string,
   headSha: string,
-  token: string,
+  token: string | undefined,
 ): Promise<WorkflowRunContext["pullRequest"]> {
   try {
     const url = `https://api.github.com/repos/${headRepositoryFullName}/commits/${headSha}/pulls`;
@@ -54,7 +55,7 @@ async function lookupPullRequest(
   }
 }
 
-async function lookupSteps(jobsUrl: string, token: string): Promise<WorkflowRunContext["steps"]> {
+async function lookupSteps(jobsUrl: string, token: string | undefined): Promise<WorkflowRunContext["steps"]> {
   try {
     const { jobs } = jobListSchema.parse(await fetchJson(jobsUrl, token));
     const steps = jobs.flatMap((job) => job.steps ?? []);
@@ -94,10 +95,6 @@ export async function workflowRunContext(
 ): Promise<WorkflowRunContext> {
   const payloadPullRequest = pullRequestFromPayload(run, repositoryHtmlUrl);
   const headRepository = run.head_repository?.full_name;
-
-  if (!token) {
-    return { pullRequest: payloadPullRequest, steps: undefined };
-  }
 
   const [lookedUpPullRequest, steps] = await Promise.all([
     // fork PR 은 페이로드가 비어 있어 커밋으로 되짚어야 한다.
