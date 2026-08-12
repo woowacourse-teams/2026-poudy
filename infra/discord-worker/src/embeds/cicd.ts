@@ -1,6 +1,5 @@
 import type { WorkflowRunContext } from "../github-api.ts";
 import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
-import type { WorkflowOutcome } from "../workflow-group.ts";
 import {
   type DiscordEmbed,
   type DiscordField,
@@ -20,69 +19,85 @@ const resultByState: Readonly<Record<string, EmbedState>> = {
   inactive: ["⏹️ 배포 비활성화", embedColors.gray],
 };
 
-const markByConclusion: Readonly<Record<string, string>> = {
-  success: "✅",
-  failure: "❌",
-  cancelled: "⏹️",
-  timed_out: "⏱️",
-  skipped: "⏭️",
-};
-
-// 하나라도 실패하면 전체를 실패로 본다. 성공만 모였을 때만 성공이다.
-function groupState(outcomes: readonly WorkflowOutcome[]): EmbedState {
-  if (outcomes.some((outcome) => outcome.conclusion === "failure" || outcome.conclusion === "timed_out")) {
-    return ["❌ CI/CD 실패", embedColors.red];
+// 머지된 뒤 도는 워크플로는 하나씩 알린다. 어떤 워크플로인지 제목에서 바로 보이게 한다.
+function runState(name: string, conclusion: string | null): EmbedState {
+  switch (conclusion) {
+    case "success":
+      return [`✅ ${name} 성공`, embedColors.green];
+    case "failure":
+      return [`❌ ${name} 실패`, embedColors.red];
+    case "timed_out":
+      return [`⏱️ ${name} 시간 초과`, embedColors.red];
+    case "cancelled":
+      return [`⏹️ ${name} 취소`, embedColors.gray];
+    case "skipped":
+      return [`⏭️ ${name} 건너뜀`, embedColors.gray];
+    default:
+      return [`⚠️ ${name} ${conclusion ?? "완료"}`, embedColors.yellow];
   }
-
-  if (outcomes.some((outcome) => outcome.conclusion === "cancelled")) {
-    return ["⏹️ CI/CD 취소", embedColors.gray];
-  }
-
-  if (outcomes.every((outcome) => outcome.conclusion === "success" || outcome.conclusion === "skipped")) {
-    return ["✅ CI/CD 성공", embedColors.green];
-  }
-
-  return ["⚠️ CI/CD 완료", embedColors.yellow];
 }
 
-// Wiki 알림처럼 링크를 본문 앞으로 올려, 무엇이 왜 돌았는지 한눈에 읽히게 한다.
+// GitHub 이 만드는 머지 커밋은 "Merge pull request #22 from ..." 다음 빈 줄에 PR 제목을 둔다.
+// 앞줄만 쓰면 어떤 작업이 배포됐는지 알 수 없어, 번호와 실제 제목을 함께 꺼낸다.
+type MergedPullRequest = { readonly number: number | undefined; readonly title: string | undefined };
+
+function mergedPullRequest(message: string | undefined): MergedPullRequest {
+  if (!message?.startsWith("Merge pull request ")) {
+    return { number: undefined, title: undefined };
+  }
+
+  const number = Number.parseInt(message.match(/^Merge pull request #(\d+)\b/)?.[1] ?? "", 10);
+  const title = message
+    .split("\n")
+    .slice(1)
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+
+  return { number: Number.isFinite(number) ? number : undefined, title };
+}
+
+// 무엇이 이 실행을 유발했는지 본문 앞에 둔다. 머지면 PR 제목과 링크를,
+// 직접 푸시한 커밋이면 그 커밋 제목을 쓴다.
 function workflowDescription(
   run: WorkflowRunPayload["workflow_run"],
+  repositoryHtmlUrl: string,
   context: WorkflowRunContext,
-  outcomes: readonly WorkflowOutcome[],
 ): string {
+  const merged = mergedPullRequest(run.head_commit?.message);
+  const pushedTitle = run.head_commit?.message?.split("\n")[0]?.trim();
+  const title = merged.title ?? pushedTitle ?? run.display_title?.trim();
   const lines: string[] = [];
-  const title = run.display_title?.trim();
 
   if (title) {
     lines.push(`**${truncateText(title, 180)}**`);
   }
 
-  if (context.pullRequest) {
-    const { number, html_url } = context.pullRequest;
-    lines.push(`[#${number} PR 보기](${html_url})`);
-  }
+  const pullRequest = context.pullRequest ?? (merged.number ? { number: merged.number } : undefined);
 
-  if (lines.length > 0) {
-    lines.push("");
-  }
-
-  for (const outcome of outcomes) {
-    const mark = markByConclusion[outcome.conclusion ?? ""] ?? "⚠️";
-    lines.push(`${mark} [${truncateText(outcome.name, 80)}](${outcome.html_url})`);
+  if (pullRequest) {
+    const url = "html_url" in pullRequest ? pullRequest.html_url : `${repositoryHtmlUrl}/pull/${pullRequest.number}`;
+    lines.push(`[#${pullRequest.number} PR 보기](${url})`);
   }
 
   return truncateText(lines.join("\n"), 4096);
 }
 
-function workflowFields(run: WorkflowRunPayload["workflow_run"]): DiscordField[] {
-  const attempt = run.run_attempt > 1 ? ` · 재시도 ${run.run_attempt}회차` : "";
-
-  return [
+function workflowFields(run: WorkflowRunPayload["workflow_run"], repositoryHtmlUrl: string): DiscordField[] {
+  const fields: DiscordField[] = [
     { name: "브랜치", value: `\`${run.head_branch}\``, inline: true },
-    { name: "커밋", value: `\`${run.head_sha.slice(0, 7)}\``, inline: true },
-    { name: "실행", value: `#${run.run_number}${attempt} · ${run.event}`, inline: true },
+    {
+      name: "커밋",
+      value: `[\`${run.head_sha.slice(0, 7)}\`](${repositoryHtmlUrl}/commit/${run.head_sha})`,
+      inline: true,
+    },
   ];
+
+  // 재시도는 드물지만 같은 커밋의 알림이 다시 왔을 때 이유를 알려 준다.
+  if (run.run_attempt > 1) {
+    fields.push({ name: "재시도", value: `${run.run_attempt}회차`, inline: true });
+  }
+
+  return fields;
 }
 
 // 머지된 뒤 도는 워크플로를 알린다. PR 에서 도는 CI 는 PR 메시지에 붙이므로 여기 오지 않는다.
@@ -95,16 +110,16 @@ export function workflowRunEmbed(
   }
 
   const run = payload.workflow_run;
-  const outcomes: readonly WorkflowOutcome[] = [{ name: run.name, conclusion: run.conclusion, html_url: run.html_url }];
-  const state = groupState(outcomes);
+  const state = runState(run.name, run.conclusion);
 
   return {
     title: state[0],
-    url: context.pullRequest?.html_url ?? run.html_url,
+    // 실행 로그로 바로 갈 수 있어야 실패 원인을 확인하기 쉽다.
+    url: run.html_url,
     color: state[1],
     author: githubAuthor(run.actor),
-    description: workflowDescription(run, context, outcomes),
-    fields: workflowFields(run),
+    description: workflowDescription(run, payload.repository.html_url, context),
+    fields: workflowFields(run, payload.repository.html_url),
     footer: repositoryFooter(payload),
     timestamp: run.updated_at,
   };

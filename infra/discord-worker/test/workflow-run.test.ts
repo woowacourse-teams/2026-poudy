@@ -374,3 +374,70 @@ test("uses the payload PR without looking it up for same-repo runs", async () =>
     html_url: `${repository.html_url}/pull/15`,
   });
 });
+
+test("shows the pull request title instead of the merge commit subject", async () => {
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // 머지 커밋의 display_title 은 git 이 만든 문장이라 어떤 작업인지 알 수 없다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        event: "push",
+        head_branch: "dev",
+        display_title: "Merge pull request #22 from woowacourse-teams/feat/api-zod",
+        head_commit: {
+          message: "Merge pull request #22 from woowacourse-teams/feat/api-zod\n\nfeat : zod 스키마 생성 추가",
+        },
+      },
+    }),
+    env,
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  const embed = sent[0]?.body.embeds[0];
+  assert.ok(embed);
+  // 제목에 어떤 워크플로인지 드러난다.
+  assert.match(embed.title, /Server CI 성공/);
+  // 본문에는 머지 커밋 제목 대신 실제 PR 제목이 실린다.
+  assert.match(embed.description ?? "", /feat : zod 스키마 생성 추가/);
+  assert.equal((embed.description ?? "").includes("Merge pull request"), false);
+});
+
+test("links the commit and shows the commit subject for a direct push", async () => {
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // 머지가 아니라 dev 에 바로 푸시한 경우다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        event: "push",
+        head_branch: "dev",
+        display_title: "fix : 오타 수정",
+        head_commit: { message: "fix : 오타 수정\n\n- 문구를 다듬었다" },
+      },
+    }),
+    env,
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  const embed = sent[0]?.body.embeds[0];
+  assert.ok(embed);
+  assert.match(embed.description ?? "", /fix : 오타 수정/);
+  // 붙일 PR 이 없으므로 PR 줄은 넣지 않는다.
+  assert.equal((embed.description ?? "").includes("PR 보기"), false);
+
+  // 커밋은 언제나 눌러서 확인할 수 있어야 한다.
+  const commit = embed.fields?.find((field) => field.name === "커밋");
+  assert.ok(commit);
+  assert.match(commit.value, /\/commit\/abcdef1234567890/);
+});
