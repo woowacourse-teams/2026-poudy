@@ -327,6 +327,8 @@ test("shows the pull request title instead of the merge commit subject", async (
   // 본문에는 머지 커밋 제목 대신 실제 PR 제목이 실린다.
   assert.match(embed.description ?? "", /feat : zod 스키마 생성 추가/);
   assert.equal((embed.description ?? "").includes("Merge pull request"), false);
+  // 커밋 메시지에서 꺼낸 번호로 PR 링크를 만든다.
+  assert.match(embed.description ?? "", /\[#22 PR 보기\]\([^)]*\/pull\/22\)/);
 });
 
 test("links the commit and shows the commit subject for a direct push", async () => {
