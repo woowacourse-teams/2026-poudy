@@ -14,7 +14,7 @@ root=$(git rev-parse --show-toplevel)
 cd "$root"
 
 openapi_inputs="server/src/main server/build.gradle server/settings.gradle"
-openapi_outputs="server/openapi.json common/api.d.ts common/api.zod.ts common/api.zod.types.d.ts"
+openapi_outputs="server/openapi.json common/api.zod.ts common/api.zod.types.d.ts"
 openapi_watched="$openapi_inputs $openapi_outputs"
 
 # 생성물 자체가 바뀐 push 도 검사한다. 생성 입력만 보면, 손으로 고친 생성물이

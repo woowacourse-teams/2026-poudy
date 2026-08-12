@@ -42,7 +42,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
-    # generateApiTypes 는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
+    # 생성 태스크는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20
 
     defaults:
@@ -78,7 +78,7 @@ jobs:
       - name: Verify OpenAPI artifacts are up to date
         working-directory: .
         env:
-          ARTIFACTS: server/openapi.json common/api.d.ts common/api.zod.ts common/api.zod.types.d.ts
+          ARTIFACTS: server/openapi.json common/api.zod.ts common/api.zod.types.d.ts
         run: |
           if [ -n "$(git status --porcelain -- $ARTIFACTS)" ]; then
             echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiArtifacts' 실행 후 커밋하세요."

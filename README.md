@@ -24,4 +24,4 @@ Windows 는 Git Bash 에서 실행합니다. cmd 와 PowerShell 은 `.sh` 를 �
 
 ## API 타입
 
-`common/api.d.ts` 는 백엔드에서 생성합니다. 프론트엔드는 그대로 import 합니다. 생성 방법은 [server/README.md](server/README.md) 를 참고하세요.
+`common/api.zod.ts` 는 백엔드에서 생성합니다. 프론트엔드는 그대로 import 합니다. 생성 방법은 [server/README.md](server/README.md) 를 참고하세요.
