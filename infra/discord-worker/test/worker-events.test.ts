@@ -138,7 +138,7 @@ test("routes every supported GitHub event as one rich Discord embed", async () =
         repository,
       },
       webhookUrls.staging,
-      /CI\/CD 성공/,
+      /Server CI 성공/,
     ],
     [
       "deployment_status",

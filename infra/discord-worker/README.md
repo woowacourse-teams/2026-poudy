@@ -47,42 +47,28 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 환경 변수도 유지합니다.
 
 - `GITHUB_WEBHOOK_SECRET`
-- `GITHUB_API_TOKEN` (선택, 공개 저장소에서는 불필요)
 - `DISCORD_WEBHOOK_ISSUE_UPDATE`
 - `DISCORD_WEBHOOK_PR_UPDATE`
 - `DISCORD_WEBHOOK_STAGING`
 - `DISCORD_WEBHOOK_PRODUCTION`
 - `DISCORD_WEBHOOK_WIKI_UPDATE`
 
-### `GITHUB_API_TOKEN`
-
-CI/CD 알림에 **PR 링크와 단계 진행 상황**을 넣기 위해 GitHub API를 조회할 때 씁니다.
-
-**저장소가 공개인 동안에는 등록하지 않아도 됩니다.** 두 조회 모두 인증 없이 동작합니다.
-아래 두 경우에만 필요합니다.
-
-- 저장소를 비공개로 전환하는 경우
-- 시간당 60회인 비인증 요청 한도가 부족해지는 경우 (인증 시 5,000회)
-
-등록한다면 [Fine-grained PAT](https://github.com/settings/personal-access-tokens)을
-아래 권한으로 발급합니다. 이 Worker는 PR과 워크플로 실행만 읽으므로 그 외 권한은
-필요하지 않습니다. Issue, Discussion, Wiki 알림은 웹훅 페이로드만으로 만들어집니다.
-
-- Resource owner: `woowacourse-teams`, 대상 저장소: `2026-poudy`와 각자의 fork
-- Repository permissions: `Pull requests: Read`, `Actions: Read`
-
-조직 설정에 따라 발급 후 조직 관리자의 승인이 필요할 수 있습니다. 승인 전이거나
-토큰이 만료되어도 조회에 실패한 항목만 빠지고 알림은 계속 전송됩니다.
+이 Worker는 **GitHub API를 호출하지 않습니다.** 알림에 필요한 값은 모두 웹훅
+페이로드 안에 있으므로 GitHub 토큰이 필요하지 않습니다.
 
 ### PR 링크를 찾는 방법
 
-`workflow_run` 페이로드의 `pull_requests` 배열은 **같은 저장소에 올린 PR만** 채워집니다.
-이 경우 조회 없이 페이로드의 번호로 링크를 만듭니다.
+`workflow_run` 페이로드는 PR 번호를 직접 주지 않습니다. 대신 GitHub이 만드는 머지
+커밋 메시지에서 번호를 꺼냅니다.
 
-fork에서 올린 PR은 이 배열이 비어 있어, 커밋이 실제로 있는 `head_repository`를
-`GET /repos/{head_repository}/commits/{head_sha}/pulls`로 조회해 PR을 되짚습니다.
-워크플로가 도는 저장소로 조회하면 fork PR은 빈 배열이 돌아옵니다.
-단계 수는 `jobs_url`로 조회합니다.
+```text
+Merge pull request #22 from woowacourse-teams/feat/api-zod
+                                      ← 빈 줄
+feat : zod 스키마 생성 추가            ← 실제 PR 제목
+```
+
+첫 줄에서 번호를, 그 뒤 첫 문장에서 제목을 가져옵니다. 머지 커밋이 아니면
+(예: `dev`에 직접 푸시) PR이 없으므로 커밋 제목만 싣습니다.
 
 ## KV 네임스페이스
 
@@ -125,12 +111,12 @@ sequenceDiagram
 `synchronize` 에서 새 sha 를 이어 두고, 이전 커밋의 CI 결과는 버립니다.
 저장한 값은 3일 뒤 만료됩니다.
 
-| 시점 | 저장되는 키 | CI 결과 |
-| --- | --- | --- |
-| PR 열림 (sha `aaa`) | `pr:...15`, `sha:aaa` | 비어 있음 |
-| CI 완료 | 그대로 | 쌓임 |
-| 커밋 푸시 (sha `bbb`) | `pr:...15`, **`sha:bbb`** | **버림** |
-| 새 커밋의 CI 완료 | 그대로 | 새로 쌓임 |
+| 시점                  | 저장되는 키               | CI 결과   |
+| --------------------- | ------------------------- | --------- |
+| PR 열림 (sha `aaa`)   | `pr:...15`, `sha:aaa`     | 비어 있음 |
+| CI 완료               | 그대로                    | 쌓임      |
+| 커밋 푸시 (sha `bbb`) | `pr:...15`, **`sha:bbb`** | **버림**  |
+| 새 커밋의 CI 완료     | 그대로                    | 새로 쌓임 |
 
 바인딩이 없거나 저장된 PR 메시지를 찾지 못하면 그 워크플로만 따로 알립니다.
 결과를 잃지는 않지만 PR 메시지에 모이지 않습니다.
@@ -187,7 +173,9 @@ GitHub 저장소의 `Settings > Webhooks > Add webhook`에서 아래와 같이 �
 deployment 채널에는 **`dev`나 `main`에 머지된 뒤 도는 워크플로**만 남습니다.
 기준은 아래와 같습니다.
 
-- `workflow_run`: `head_branch`를 기준으로 삼습니다.
+- `workflow_run`: `head_branch`를 기준으로 삼습니다. 알림 제목에는 워크플로 이름과 결과가
+  들어가고, 본문에는 무엇이 이 실행을 유발했는지를 담습니다. 머지 커밋이면 커밋 메시지에서
+  PR 제목과 번호를 꺼내 링크를 붙이고, 직접 푸시한 커밋이면 그 커밋 제목을 씁니다.
 - `deployment_status`: `deployment.environment`를, 비어 있으면 `deployment.ref`를 기준으로 삼습니다.
   이 이벤트는 워크플로에 `environment:`를 선언하거나 Deployments API를 쓸 때만 발생합니다.
 
