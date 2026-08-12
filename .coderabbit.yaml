@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# 자동 리뷰를 끈다. 필요하면 PR 에 @coderabbitai review 로 부른다.
+reviews:
+  auto_review:
+    enabled: false
