@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { workflowRunContext } from "../src/github-api.ts";
 import worker from "../src/index.ts";
 import type { DiscordBody } from "./helpers.ts";
 import { env, parseRequestBody, repository, signedRequest, user } from "./helpers.ts";
@@ -295,84 +294,6 @@ test("sends merged branch workflows to the deployment channel", async () => {
   assert.equal(sent.length, 1);
   assert.equal(sent[0]?.method, "POST");
   assert.match(sent[0]?.url ?? "", /discord\.test\/staging/);
-});
-
-test("keeps the notification when the GitHub lookup fails", async () => {
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
-    if (input.toString().startsWith("https://api.github")) {
-      return new Response("forbidden", { status: 403 });
-    }
-    return new Response(null, { status: 204 });
-  };
-
-  const context = await workflowRunContext(workflowRun, repository.html_url, "test-token");
-  globalThis.fetch = realFetch;
-
-  // 조회에 실패해도 그 필드만 비우고 알림은 계속 보낸다.
-  assert.equal(context.pullRequest, undefined);
-  assert.equal(context.steps, undefined);
-});
-
-test("looks up public repository data without a token", async () => {
-  let authorizationSent: string | null = null;
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input, init) => {
-    authorizationSent = new Headers(init?.headers).get("Authorization");
-
-    if (input.toString().includes("/commits/")) {
-      return new Response(JSON.stringify([{ number: 15, html_url: "https://github.test/pull/15" }]), { status: 200 });
-    }
-    return new Response(JSON.stringify({ jobs: [{ steps: [{ conclusion: "success" }] }] }), { status: 200 });
-  };
-
-  const context = await workflowRunContext(workflowRun, repository.html_url, undefined);
-  globalThis.fetch = realFetch;
-
-  // 공개 저장소는 인증 없이도 조회되므로 Authorization 헤더를 붙이지 않는다.
-  assert.equal(authorizationSent, null);
-  assert.equal(context.pullRequest?.number, 15);
-  assert.deepEqual(context.steps, { completed: 1, total: 1 });
-});
-
-test("sends the token when one is configured", async () => {
-  let authorizationSent: string | null = null;
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (_input, init) => {
-    authorizationSent = new Headers(init?.headers).get("Authorization");
-    return new Response(JSON.stringify([]), { status: 200 });
-  };
-
-  await workflowRunContext(workflowRun, repository.html_url, "test-token");
-  globalThis.fetch = realFetch;
-
-  assert.equal(authorizationSent, "Bearer test-token");
-});
-
-test("uses the payload PR without looking it up for same-repo runs", async () => {
-  const requested: string[] = [];
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
-    requested.push(input.toString());
-    return new Response(JSON.stringify({ jobs: [] }), { status: 200 });
-  };
-
-  // 같은 저장소에 올린 PR 은 페이로드에 번호가 들어 있어 PR 조회를 하지 않는다.
-  const context = await workflowRunContext(
-    { ...workflowRun, pull_requests: [{ number: 15 }] },
-    repository.html_url,
-    undefined,
-  );
-  globalThis.fetch = realFetch;
-
-  assert.equal(
-    requested.some((url) => url.includes("/commits/")),
-    false,
-  );
-  assert.deepEqual(context.pullRequest, {
-    number: 15,
-    html_url: `${repository.html_url}/pull/15`,
-  });
 });
 
 test("shows the pull request title instead of the merge commit subject", async () => {

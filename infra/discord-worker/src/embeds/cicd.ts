@@ -1,4 +1,3 @@
-import type { WorkflowRunContext } from "../github-api.ts";
 import type { DeploymentStatusPayload, WorkflowRunPayload } from "../github-event.ts";
 import {
   type DiscordEmbed,
@@ -58,11 +57,7 @@ function mergedPullRequest(message: string | undefined): MergedPullRequest {
 
 // 무엇이 이 실행을 유발했는지 본문 앞에 둔다. 머지면 PR 제목과 링크를,
 // 직접 푸시한 커밋이면 그 커밋 제목을 쓴다.
-function workflowDescription(
-  run: WorkflowRunPayload["workflow_run"],
-  repositoryHtmlUrl: string,
-  context: WorkflowRunContext,
-): string {
+function workflowDescription(run: WorkflowRunPayload["workflow_run"], repositoryHtmlUrl: string): string {
   const merged = mergedPullRequest(run.head_commit?.message);
   const pushedTitle = run.head_commit?.message?.split("\n")[0]?.trim();
   const title = merged.title ?? pushedTitle ?? run.display_title?.trim();
@@ -72,11 +67,8 @@ function workflowDescription(
     lines.push(`**${truncateText(title, 180)}**`);
   }
 
-  const pullRequest = context.pullRequest ?? (merged.number ? { number: merged.number } : undefined);
-
-  if (pullRequest) {
-    const url = "html_url" in pullRequest ? pullRequest.html_url : `${repositoryHtmlUrl}/pull/${pullRequest.number}`;
-    lines.push(`[#${pullRequest.number} PR 보기](${url})`);
+  if (merged.number) {
+    lines.push(`[#${merged.number} PR 보기](${repositoryHtmlUrl}/pull/${merged.number})`);
   }
 
   return truncateText(lines.join("\n"), 4096);
@@ -101,10 +93,7 @@ function workflowFields(run: WorkflowRunPayload["workflow_run"], repositoryHtmlU
 }
 
 // 머지된 뒤 도는 워크플로를 알린다. PR 에서 도는 CI 는 PR 메시지에 붙이므로 여기 오지 않는다.
-export function workflowRunEmbed(
-  payload: WorkflowRunPayload,
-  context: WorkflowRunContext = { pullRequest: undefined, steps: undefined },
-): DiscordEmbed | undefined {
+export function workflowRunEmbed(payload: WorkflowRunPayload): DiscordEmbed | undefined {
   if (payload.action !== "completed") {
     return undefined;
   }
@@ -118,7 +107,7 @@ export function workflowRunEmbed(
     url: run.html_url,
     color: state[1],
     author: githubAuthor(run.actor),
-    description: workflowDescription(run, payload.repository.html_url, context),
+    description: workflowDescription(run, payload.repository.html_url),
     fields: workflowFields(run, payload.repository.html_url),
     footer: repositoryFooter(payload),
     timestamp: run.updated_at,

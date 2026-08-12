@@ -145,7 +145,7 @@ export const workflowRunPayloadSchema = z.object({
     name: z.string(),
     display_title: z.string().optional(),
     // 머지 커밋의 display_title 은 git 이 만든 "Merge pull request ..." 라 정보가 없다.
-    // 커밋 메시지 둘째 줄에 실제 PR 제목이 들어 있어 그것을 대신 쓴다.
+    // 커밋 메시지에서 PR 번호와 실제 제목을 꺼내 쓴다.
     head_commit: z.object({ message: z.string() }).nullable().optional(),
     head_branch: z.string(),
     head_sha: z.string(),
@@ -153,8 +153,6 @@ export const workflowRunPayloadSchema = z.object({
     run_attempt: z.number(),
     actor: githubUserSchema,
     html_url: urlSchema,
-    jobs_url: urlSchema.optional(),
-    head_repository: z.object({ full_name: z.string() }).optional(),
     updated_at: timestampSchema,
     pull_requests: z.array(z.object({ number: z.number().optional(), base: z.object({ ref: z.string() }) })).optional(),
   }),

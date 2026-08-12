@@ -2,7 +2,6 @@ import type { ParsedGitHubEvent } from "./github-event.ts";
 
 export type WorkerEnv = {
   readonly GITHUB_WEBHOOK_SECRET?: string;
-  readonly GITHUB_API_TOKEN?: string;
   // 커밋별 워크플로 결과와 Discord message_id 를 담는다. 없으면 워크플로마다 새 메시지를 보낸다.
   readonly WORKFLOW_RUNS?: KVNamespace;
   readonly DISCORD_WEBHOOK_ISSUE_UPDATE?: string;
@@ -12,7 +11,7 @@ export type WorkerEnv = {
   readonly DISCORD_WEBHOOK_WIKI_UPDATE?: string;
 };
 
-type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "GITHUB_API_TOKEN" | "WORKFLOW_RUNS">;
+type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "WORKFLOW_RUNS">;
 
 const webhookKeys = {
   issueUpdate: "DISCORD_WEBHOOK_ISSUE_UPDATE",
