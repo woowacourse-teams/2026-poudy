@@ -12,7 +12,7 @@ Spring Boot 백엔드.
 | 단위 테스트 | JUnit 6, Mockito 5 |
 | 통합 테스트 | Spring Boot Test |
 | API 문서 | OpenAPI / springdoc 3.1 (Swagger UI) |
-| API 타입 생성 | openapi-typescript |
+| API 타입 생성 | typed-openapi (zod) |
 | 코드 품질 | Spotless, Checkstyle (우아한테크코스 코드 스타일) |
 | 자동 검증 | GitHub Actions |
 
@@ -43,8 +43,7 @@ JDK 21 이상, Node.js 22.
 | 파일 | 내용 |
 | --- | --- |
 | `server/openapi.json` | OpenAPI 문서 |
-| `common/api.d.ts` | TypeScript 타입 |
-| `common/api.zod.ts` | zod 스키마 (런타임 검증) |
+| `common/api.zod.ts` | zod 스키마와 타입 |
 | `common/api.zod.types.d.ts` | 위 파일이 참조하는 타입 선언 |
 
 직접 갱신하려면 `./gradlew generateApiArtifacts` 를 실행합니다.
