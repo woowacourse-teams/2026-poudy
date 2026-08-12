@@ -8,6 +8,8 @@ build/
 out/
 
 ### Eclipse / STS ###
+# JDT 언어 서버의 컴파일 출력. server/bin 만 막는다.
+/bin/
 .apt_generated
 .classpath
 .factorypath

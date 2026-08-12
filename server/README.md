@@ -38,9 +38,27 @@ JDK 21 이상, Node.js 22.
 
 ## API 타입 생성
 
-컨트롤러나 DTO 를 바꾸면 `pre-push` 훅이 `openapi.json` 과 `common/api.d.ts` 를 갱신해 커밋합니다. 안내가 뜨면 `git push` 를 한 번 더 실행하면 됩니다.
+컨트롤러나 DTO 를 바꾸면 `pre-push` 훅이 아래 생성물을 갱신해 커밋합니다. 안내가 뜨면 `git push` 를 한 번 더 실행하면 됩니다.
 
-DTO 필드에 `@NotNull` 을 붙이면 생성되는 TypeScript 타입에서 옵셔널(`?`)이 사라집니다.
+| 파일 | 내용 |
+| --- | --- |
+| `server/openapi.json` | OpenAPI 문서 |
+| `common/api.d.ts` | TypeScript 타입 |
+| `common/api.zod.ts` | zod 스키마 (런타임 검증) |
+| `common/api.zod.types.d.ts` | 위 파일이 참조하는 타입 선언 |
+
+직접 갱신하려면 `./gradlew generateApiArtifacts` 를 실행합니다.
+
+DTO 필드의 Bean Validation 애노테이션이 그대로 내려갑니다.
+
+| 애노테이션 | 생성 결과 |
+| --- | --- |
+| `@NotNull` | 타입에서 옵셔널(`?`)이 사라지고 zod 에서 `.optional()` 이 빠짐 |
+| `@Size(min, max)` | `z.string().min().max()` |
+
+**응답 DTO 에도 `@NotNull` 을 붙입니다.** 서버 검증이 아니라 프론트 타입 품질 때문입니다. 빠뜨리면 항상 채워 보내는 필드도 프론트에서 옵셔널이 됩니다.
+
+**DTO 클래스명은 전역에서 고유해야 합니다.** 스키마 키가 패키지 없는 단순명이라, 다른 패키지에 같은 이름이 있으면 경고 없이 하나가 덮어씁니다.
 
 ## 테스트
 

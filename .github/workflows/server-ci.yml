@@ -72,15 +72,17 @@ jobs:
 
       # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiTypes
+        run: ./gradlew generateApiArtifacts
 
       # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
         working-directory: .
+        env:
+          ARTIFACTS: server/openapi.json common/api.d.ts common/api.zod.ts common/api.zod.types.d.ts
         run: |
-          if [ -n "$(git status --porcelain -- server/openapi.json common/api.d.ts)" ]; then
-            echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiTypes' 실행 후 커밋하세요."
-            git --no-pager diff -- server/openapi.json common/api.d.ts
+          if [ -n "$(git status --porcelain -- $ARTIFACTS)" ]; then
+            echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiArtifacts' 실행 후 커밋하세요."
+            git --no-pager diff -- $ARTIFACTS
             exit 1
           fi
 

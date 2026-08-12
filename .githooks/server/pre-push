@@ -14,7 +14,7 @@ root=$(git rev-parse --show-toplevel)
 cd "$root"
 
 openapi_inputs="server/src/main server/build.gradle server/settings.gradle"
-openapi_outputs="server/openapi.json common/api.d.ts"
+openapi_outputs="server/openapi.json common/api.d.ts common/api.zod.ts common/api.zod.types.d.ts"
 openapi_watched="$openapi_inputs $openapi_outputs"
 
 # 생성물 자체가 바뀐 push 도 검사한다. 생성 입력만 보면, 손으로 고친 생성물이
@@ -75,27 +75,37 @@ fi
 
 # 검사 중에는 기존 생성물을 백업한다. 생성 결과가 최신이면 원래대로 되돌리고,
 # 생성물이 낡았으면 갱신본을 작업 트리에 남겨 자동 커밋한다.
+# basename 으로 백업하므로 openapi_outputs 의 파일명은 서로 달라야 한다.
 backup=$(mktemp -d)
-trap 'cp "$backup/openapi.json" server/openapi.json 2>/dev/null || true
-      cp "$backup/api.d.ts" common/api.d.ts 2>/dev/null || true
-      rm -rf "$backup"' EXIT
+restore_backup() {
+    for file in $openapi_outputs; do
+        cp "$backup/$(basename "$file")" "$file" 2>/dev/null || true
+    done
+    rm -rf "$backup"
+}
+trap restore_backup EXIT
 
-cp server/openapi.json "$backup/openapi.json" 2>/dev/null || true
-cp common/api.d.ts "$backup/api.d.ts" 2>/dev/null || true
+for file in $openapi_outputs; do
+    cp "$file" "$backup/$(basename "$file")" 2>/dev/null || true
+done
 
 echo "[pre-push] OpenAPI 생성물 확인 중..."
 
 # 빌드 로그는 실패했을 때만 보여준다. 성공 경로에서는 훅 메시지만 남긴다.
 log="$backup/gradle.log"
-if ! (cd server && ./gradlew generateApiTypes --quiet) > "$log" 2>&1; then
+if ! (cd server && ./gradlew generateApiArtifacts --quiet) > "$log" 2>&1; then
     echo "[pre-push] 생성에 실패했습니다. Node.js 가 설치돼 있는지 확인해 보세요."
     echo
     sed 's/^/  /' "$log"
     exit 1
 fi
 
-if cmp -s server/openapi.json "$backup/openapi.json" &&
-    cmp -s common/api.d.ts "$backup/api.d.ts"; then
+stale=0
+for file in $openapi_outputs; do
+    cmp -s "$file" "$backup/$(basename "$file")" || stale=1
+done
+
+if [ "$stale" -eq 0 ]; then
     echo "[pre-push] 최신입니다."
     exit 0
 fi
@@ -103,6 +113,12 @@ fi
 # 갱신본을 그대로 커밋한다. 여기서 되돌리면 커밋 내용과 작업 트리가 어긋난다.
 trap - EXIT
 rm -rf "$backup"
+
+# 새로 생긴 생성물은 추적되지 않아 경로 지정 커밋이 통째로 실패한다. 먼저 인덱스에 올린다.
+if ! git add -- $openapi_outputs; then
+    echo "[pre-push] 생성물 스테이징에 실패했습니다."
+    exit 1
+fi
 
 # 경로를 지정해 다른 스테이징 변경이 함께 커밋되지 않게 한다.
 if ! git commit -q -m "refactor : OpenAPI 생성물 갱신" -- $openapi_outputs; then
