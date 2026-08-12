@@ -143,29 +143,8 @@ tasks.named('forkedSpringBootRun') {
     javaLauncher = javaToolchains.launcherFor(java.toolchain)
 }
 
-// openapi.json 을 프론트엔드가 그대로 쓰는 TypeScript 타입으로 변환한다.
-// 프론트엔드는 재생성을 신경 쓸 필요 없이 커밋된 api.d.ts 를 import 하면 된다.
-tasks.register('generateApiTypes', Exec) {
-    group = 'openapi'
-    description = 'Generates TypeScript types from openapi.json'
-    dependsOn 'copyOpenApiDoc'
-
-    def output = rootProject.file('../common/api.d.ts')
-    def source = layout.projectDirectory.file('openapi.json')
-
-    // 문서 내용이 그대로면 다시 만들지 않는다.
-    inputs.file(source)
-    outputs.file(output)
-
-    doFirst {
-        output.parentFile.mkdirs()
-    }
-    commandLine isWindows ? 'npx.cmd' : 'npx', '--yes', 'openapi-typescript@7.13.0',
-            layout.projectDirectory.file('openapi.json').asFile.absolutePath,
-            '-o', output.absolutePath
-}
-
 // api.zod.ts 가 api.zod.types.d.ts 를 import 하므로 둘 다 커밋한다.
+// 프론트엔드는 재생성을 신경 쓸 필요 없이 커밋된 파일을 import 하면 된다.
 tasks.register('generateApiZod', Exec) {
     group = 'openapi'
     description = 'Generates zod schemas from openapi.json'
@@ -175,6 +154,7 @@ tasks.register('generateApiZod', Exec) {
     def declarations = rootProject.file('../common/api.zod.types.d.ts')
     def source = layout.projectDirectory.file('openapi.json')
 
+    // 문서 내용이 그대로면 다시 만들지 않는다.
     inputs.file(source)
     outputs.files(output, declarations)
 
@@ -190,5 +170,5 @@ tasks.register('generateApiZod', Exec) {
 tasks.register('generateApiArtifacts') {
     group = 'openapi'
     description = 'Generates every artifact the frontend consumes'
-    dependsOn 'generateApiTypes', 'generateApiZod'
+    dependsOn 'generateApiZod'
 }
