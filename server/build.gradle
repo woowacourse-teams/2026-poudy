@@ -164,3 +164,31 @@ tasks.register('generateApiTypes', Exec) {
             layout.projectDirectory.file('openapi.json').asFile.absolutePath,
             '-o', output.absolutePath
 }
+
+// api.zod.ts 가 api.zod.types.d.ts 를 import 하므로 둘 다 커밋한다.
+tasks.register('generateApiZod', Exec) {
+    group = 'openapi'
+    description = 'Generates zod schemas from openapi.json'
+    dependsOn 'copyOpenApiDoc'
+
+    def output = rootProject.file('../common/api.zod.ts')
+    def declarations = rootProject.file('../common/api.zod.types.d.ts')
+    def source = layout.projectDirectory.file('openapi.json')
+
+    inputs.file(source)
+    outputs.files(output, declarations)
+
+    doFirst {
+        output.parentFile.mkdirs()
+    }
+    commandLine isWindows ? 'npx.cmd' : 'npx', '--yes', 'typed-openapi@3.2.1',
+            source.asFile.absolutePath,
+            '-r', 'zod', '-o', output.absolutePath
+}
+
+// 훅과 CI 의 진입점.
+tasks.register('generateApiArtifacts') {
+    group = 'openapi'
+    description = 'Generates every artifact the frontend consumes'
+    dependsOn 'generateApiTypes', 'generateApiZod'
+}
