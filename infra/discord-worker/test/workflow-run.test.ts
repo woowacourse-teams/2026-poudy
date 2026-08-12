@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { workflowRunContext } from "../src/github-api.ts";
 import worker from "../src/index.ts";
 import type { DiscordBody } from "./helpers.ts";
 import { env, parseRequestBody, repository, signedRequest, user } from "./helpers.ts";
@@ -297,80 +296,71 @@ test("sends merged branch workflows to the deployment channel", async () => {
   assert.match(sent[0]?.url ?? "", /discord\.test\/staging/);
 });
 
-test("keeps the notification when the GitHub lookup fails", async () => {
+test("shows the pull request title instead of the merge commit subject", async () => {
+  const sent: Sent[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
-    if (input.toString().startsWith("https://api.github")) {
-      return new Response("forbidden", { status: 403 });
-    }
-    return new Response(null, { status: 204 });
-  };
+  captureDiscord(sent);
 
-  const context = await workflowRunContext(workflowRun, repository.html_url, "test-token");
-  globalThis.fetch = realFetch;
-
-  // 조회에 실패해도 그 필드만 비우고 알림은 계속 보낸다.
-  assert.equal(context.pullRequest, undefined);
-  assert.equal(context.steps, undefined);
-});
-
-test("looks up public repository data without a token", async () => {
-  let authorizationSent: string | null = null;
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input, init) => {
-    authorizationSent = new Headers(init?.headers).get("Authorization");
-
-    if (input.toString().includes("/commits/")) {
-      return new Response(JSON.stringify([{ number: 15, html_url: "https://github.test/pull/15" }]), { status: 200 });
-    }
-    return new Response(JSON.stringify({ jobs: [{ steps: [{ conclusion: "success" }] }] }), { status: 200 });
-  };
-
-  const context = await workflowRunContext(workflowRun, repository.html_url, undefined);
-  globalThis.fetch = realFetch;
-
-  // 공개 저장소는 인증 없이도 조회되므로 Authorization 헤더를 붙이지 않는다.
-  assert.equal(authorizationSent, null);
-  assert.equal(context.pullRequest?.number, 15);
-  assert.deepEqual(context.steps, { completed: 1, total: 1 });
-});
-
-test("sends the token when one is configured", async () => {
-  let authorizationSent: string | null = null;
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (_input, init) => {
-    authorizationSent = new Headers(init?.headers).get("Authorization");
-    return new Response(JSON.stringify([]), { status: 200 });
-  };
-
-  await workflowRunContext(workflowRun, repository.html_url, "test-token");
-  globalThis.fetch = realFetch;
-
-  assert.equal(authorizationSent, "Bearer test-token");
-});
-
-test("uses the payload PR without looking it up for same-repo runs", async () => {
-  const requested: string[] = [];
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
-    requested.push(input.toString());
-    return new Response(JSON.stringify({ jobs: [] }), { status: 200 });
-  };
-
-  // 같은 저장소에 올린 PR 은 페이로드에 번호가 들어 있어 PR 조회를 하지 않는다.
-  const context = await workflowRunContext(
-    { ...workflowRun, pull_requests: [{ number: 15 }] },
-    repository.html_url,
-    undefined,
+  // 머지 커밋의 display_title 은 git 이 만든 문장이라 어떤 작업인지 알 수 없다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        event: "push",
+        head_branch: "dev",
+        display_title: "Merge pull request #22 from woowacourse-teams/feat/api-zod",
+        head_commit: {
+          message: "Merge pull request #22 from woowacourse-teams/feat/api-zod\n\nfeat : zod 스키마 생성 추가",
+        },
+      },
+    }),
+    env,
   );
   globalThis.fetch = realFetch;
 
-  assert.equal(
-    requested.some((url) => url.includes("/commits/")),
-    false,
+  assert.equal(response.status, 200);
+  const embed = sent[0]?.body.embeds[0];
+  assert.ok(embed);
+  // 제목에 어떤 워크플로인지 드러난다.
+  assert.match(embed.title, /Server CI 성공/);
+  // 본문에는 머지 커밋 제목 대신 실제 PR 제목이 실린다.
+  assert.match(embed.description ?? "", /feat : zod 스키마 생성 추가/);
+  assert.equal((embed.description ?? "").includes("Merge pull request"), false);
+  // 커밋 메시지에서 꺼낸 번호로 PR 링크를 만든다.
+  assert.match(embed.description ?? "", /\[#22 PR 보기\]\([^)]*\/pull\/22\)/);
+});
+
+test("links the commit and shows the commit subject for a direct push", async () => {
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // 머지가 아니라 dev 에 바로 푸시한 경우다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        event: "push",
+        head_branch: "dev",
+        display_title: "fix : 오타 수정",
+        head_commit: { message: "fix : 오타 수정\n\n- 문구를 다듬었다" },
+      },
+    }),
+    env,
   );
-  assert.deepEqual(context.pullRequest, {
-    number: 15,
-    html_url: `${repository.html_url}/pull/15`,
-  });
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  const embed = sent[0]?.body.embeds[0];
+  assert.ok(embed);
+  assert.match(embed.description ?? "", /fix : 오타 수정/);
+  // 붙일 PR 이 없으므로 PR 줄은 넣지 않는다.
+  assert.equal((embed.description ?? "").includes("PR 보기"), false);
+
+  // 커밋은 언제나 눌러서 확인할 수 있어야 한다.
+  const commit = embed.fields?.find((field) => field.name === "커밋");
+  assert.ok(commit);
+  assert.match(commit.value, /\/commit\/abcdef1234567890/);
 });
