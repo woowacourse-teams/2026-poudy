@@ -114,6 +114,12 @@ fi
 trap - EXIT
 rm -rf "$backup"
 
+# 새로 생긴 생성물은 추적되지 않아 경로 지정 커밋이 통째로 실패한다. 먼저 인덱스에 올린다.
+if ! git add -- $openapi_outputs; then
+    echo "[pre-push] 생성물 스테이징에 실패했습니다."
+    exit 1
+fi
+
 # 경로를 지정해 다른 스테이징 변경이 함께 커밋되지 않게 한다.
 if ! git commit -q -m "refactor : OpenAPI 생성물 갱신" -- $openapi_outputs; then
     echo "[pre-push] 생성물 커밋에 실패했습니다."
