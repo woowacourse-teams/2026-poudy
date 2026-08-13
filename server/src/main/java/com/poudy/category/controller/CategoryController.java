@@ -3,12 +3,14 @@ package com.poudy.category.controller;
 import com.poudy.category.dto.CategoryChildResponse;
 import com.poudy.category.dto.CategoryListResponse;
 import com.poudy.category.dto.CategoryResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "카테고리")
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {

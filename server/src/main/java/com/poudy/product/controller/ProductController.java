@@ -12,6 +12,7 @@ import com.poudy.product.dto.ProductIngredientResponse;
 import com.poudy.product.dto.ProductPageRequest;
 import com.poudy.product.dto.ProductPageResponse;
 import com.poudy.product.dto.ProductResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "제품")
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {

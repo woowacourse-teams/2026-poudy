@@ -5,6 +5,7 @@ import com.poudy.ingredient.dto.IngredientDetailResponse;
 import com.poudy.ingredient.dto.IngredientListResponse;
 import com.poudy.ingredient.dto.IngredientResponse;
 import com.poudy.ingredient.dto.IngredientSummaryResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "성분")
 @RestController
 @RequestMapping("/api/ingredients")
 public class IngredientController {
