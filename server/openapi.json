@@ -10,6 +10,67 @@
     }
   ],
   "paths": {
+    "/api/brands": {
+      "get": {
+        "operationId": "findBrands",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "brand-controller"
+        ]
+      }
+    },
+    "/api/brands/{brandId}": {
+      "get": {
+        "operationId": "findBrand",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "brandId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "brand-controller"
+        ]
+      }
+    },
     "/api/ingredients": {
       "get": {
         "operationId": "findIngredients",
@@ -74,6 +135,45 @@
   },
   "components": {
     "schemas": {
+      "BrandListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrandResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "BrandResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "id",
+          "logoUrl",
+          "name",
+          "productCount"
+        ]
+      },
       "EffectResponse": {
         "type": "object",
         "properties": {

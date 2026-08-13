@@ -4,6 +4,12 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
+export const BrandResponse = z.object({ id: z.number().int(), logoUrl: z.string(), name: z.string(), productCount: z.number().int() });
+
+export type BrandListResponse = __TypedOpenapi.Schemas.BrandListResponse;
+export const BrandListResponse = z.object({ items: z.array(BrandResponse) });
+
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ color: z.string(), id: z.number().int(), name: z.string() });
 
@@ -22,6 +28,26 @@ export const IngredientListResponse = z.object({ items: z.array(IngredientRespon
 // </Schemas>
 
 // <Endpoints>
+export type get_FindBrands = __TypedOpenapi.Endpoints.get_FindBrands;
+export const get_FindBrands = {
+  method: z.literal("GET"),
+  path: z.literal("/api/brands"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
+  responses: { 200: BrandListResponse },
+};
+
+export type get_FindBrand = __TypedOpenapi.Endpoints.get_FindBrand;
+export const get_FindBrand = {
+  method: z.literal("GET"),
+  path: z.literal("/api/brands/{brandId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ brandId: z.coerce.number().int() }) },
+  responses: { 200: BrandResponse },
+};
+
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
 export const get_FindIngredients = {
   method: z.literal("GET"),
@@ -48,7 +74,9 @@ export const get_FindIngredient = {
      // <EndpointByMethod>
      export const EndpointByMethod: __TypedOpenapi.EndpointByMethod = {
      get: {
-           "/api/ingredients": get_FindIngredients as any,
+           "/api/brands": get_FindBrands as any,
+"/api/brands/{brandId}": get_FindBrand as any,
+"/api/ingredients": get_FindIngredients as any,
 "/api/ingredients/{ingredientId}": get_FindIngredient as any
          }
      }
