@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.common.dto.PaginationRequest;
 import com.poudy.product.controller.ProductController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,13 @@ class GlobalExceptionHandlerWebTest {
     @Test
     void invalidRequestReportsQueryParameterCode() throws Exception {
         mockMvc.perform(get("/api/products").param("size", "0")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
+
+    @Test
+    void sizeAboveMaximumReportsQueryParameterCode() throws Exception {
+        mockMvc.perform(get("/api/products").param("size", String.valueOf(PaginationRequest.MAX_SIZE + 1)))
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
     }
 
