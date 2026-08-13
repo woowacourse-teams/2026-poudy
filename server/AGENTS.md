@@ -15,6 +15,10 @@ sh ./scripts/test.sh
 sh ./scripts/verify.sh
 ```
 
+`verify.sh`는 OpenAPI와 TypeScript 생성물을 재생성해 드리프트가 없는지 확인한 뒤 전체
+빌드를 실행한다. 생성물이 낡았다면 갱신본을 남기고 실패하므로 생성물을 확인한 뒤 다시
+실행한다.
+
 ## Rules
 
 - `server/` 밖은 수정하지 않는다. 단, `./gradlew generateApiArtifacts`가 갱신하는
