@@ -14,16 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/brands")
 public class BrandController {
 
-    private static final BrandResponse SAMPLE_BRAND = new BrandResponse(12L, "브랜드명",
-            "https://cdn.example.com/brands/12/logo.png", 48L);
-
     @GetMapping
     public ResponseEntity<BrandListResponse> findBrands(@RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(new BrandListResponse(List.of(SAMPLE_BRAND)));
+        return ResponseEntity.ok(new BrandListResponse(List.of(sampleBrand(12L))));
     }
 
     @GetMapping("/{brandId}")
     public ResponseEntity<BrandResponse> findBrand(@PathVariable Long brandId) {
-        return ResponseEntity.ok(SAMPLE_BRAND);
+        return ResponseEntity.ok(sampleBrand(brandId));
+    }
+
+    private BrandResponse sampleBrand(Long id) {
+        return new BrandResponse(id, "브랜드명", "https://cdn.example.com/brands/" + id + "/logo.png", 48L);
     }
 }
