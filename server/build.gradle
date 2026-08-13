@@ -158,11 +158,25 @@ tasks.register('generateApiZod', Exec) {
     }
 }
 
+// 줄 끝 공백과 주석을 걷어내면 그 자리에 빈 줄이 남는다. 연속된 빈 줄은 하나로 줄이고
+// 파일 앞뒤의 빈 줄은 없앤다.
 def tidy(String text, boolean dropComments) {
-    return text.readLines()
+    def lines = text.readLines()
             .findAll { !dropComments || !it.trim().startsWith('//') }
             .collect { it.replaceFirst(/\s+$/, '') }
-            .join('\n') + '\n'
+
+    def collapsed = []
+    lines.each { line ->
+        if (line.isEmpty() && (collapsed.isEmpty() || collapsed.last().isEmpty())) {
+            return
+        }
+        collapsed << line
+    }
+    while (!collapsed.isEmpty() && collapsed.last().isEmpty()) {
+        collapsed.removeLast()
+    }
+
+    return collapsed.join('\n') + '\n'
 }
 
 tasks.register('generateApiArtifacts') {

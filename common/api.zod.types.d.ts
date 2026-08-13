@@ -1,4 +1,3 @@
-
   export namespace Schemas {
   export type BenefitResponse = { color: string, id: number, ingredientIds: Array<number>, name: string }
 export type BrandResponse = { id: number, logoUrl: string, name: string, productCount: number }
@@ -36,9 +35,6 @@ export type get_FindBrands = {
       parameters: {
             query?:  Partial<{ keyword: string }>,
 
-
-
-
           }
       responses: {200: Schemas.BrandListResponse,
 400: Schemas.ProblemDetail,
@@ -57,8 +53,6 @@ export type get_FindBrand = {
       parameters: {
 
         path:  { brandId: number },
-
-
 
           }
       responses: {200: Schemas.BrandResponse,
@@ -94,9 +88,6 @@ export type get_FindIngredients = {
       parameters: {
             query?:  Partial<{ keyword: string }>,
 
-
-
-
           }
       responses: {200: Schemas.IngredientListResponse,
 400: Schemas.ProblemDetail,
@@ -115,8 +106,6 @@ export type get_FindIngredient = {
       parameters: {
 
         path:  { ingredientId: number },
-
-
 
           }
       responses: {200: Schemas.IngredientDetailResponse,
@@ -158,9 +147,6 @@ export type get_FindProducts = {
   size: number;
 }>,
 
-
-
-
           }
       responses: {200: Schemas.ProductPageResponse,
 400: Schemas.ProblemDetail,
@@ -179,9 +165,6 @@ export type get_CountProducts = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number> }>,
-
-
-
 
           }
       responses: {200: Schemas.ProductCountResponse,
@@ -203,8 +186,6 @@ export type get_FindProductDetail = {
 
         path:  { productId: number },
 
-
-
           }
       responses: {200: Schemas.ProductDetailResponse,
 400: Schemas.ProblemDetail,
@@ -225,8 +206,6 @@ export type get_FindProduct = {
 
         path:  { productId: number },
 
-
-
           }
       responses: {200: Schemas.ProductResponse,
 400: Schemas.ProblemDetail,
@@ -237,7 +216,6 @@ export type get_FindProduct = {
     }
 
   }
-
 
      export type EndpointByMethod = {
      get: {
@@ -253,7 +231,4 @@ export type get_FindProduct = {
          }
      }
 
-
-
     export type GetEndpoints = EndpointByMethod["get"]
-

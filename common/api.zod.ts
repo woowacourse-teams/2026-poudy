@@ -65,7 +65,3 @@ export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse });
 
 // </Schemas>
-
-
-
-
