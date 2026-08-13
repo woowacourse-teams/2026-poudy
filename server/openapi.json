@@ -509,7 +509,10 @@
               "default": "NAME_ASC",
               "description": "정렬 조건",
               "enum": [
-                "NAME_ASC"
+                "NAME_ASC",
+                "NAME_DESC",
+                "PRICE_ASC",
+                "PRICE_DESC"
               ]
             }
           },

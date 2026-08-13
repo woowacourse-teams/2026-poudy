@@ -144,7 +144,10 @@ export type get_FindProducts = {
   excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  sort: "NAME_ASC";
+  /**
+   * 정렬 조건
+   */
+  sort: ("NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC");
   /**
    * 조회할 페이지 번호 (0부터 시작)
    */
