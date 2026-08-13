@@ -81,7 +81,7 @@ public class ErrorResponseConfig {
         schema.addProperty("title", new StringSchema().example("Bad Request"));
         schema.addProperty("status", new IntegerSchema().example(400));
         schema.addProperty("detail", new StringSchema().example(ErrorCode.INVALID_QUERY_PARAMETER.message()));
-        schema.addProperty("instance", new StringSchema().format("uri").example("/api/products"));
+        schema.addProperty("instance", new StringSchema().format("uri-reference").example("/api/products"));
         schema.addProperty(GlobalExceptionHandler.CODE_PROPERTY, new StringSchema()._enum(codes));
         schema.setRequired(List.of("title", "status", "detail", GlobalExceptionHandler.CODE_PROPERTY));
 

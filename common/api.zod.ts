@@ -47,7 +47,7 @@ export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
 export const PaginationResponse = z.object({ hasNext: z.boolean(), page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int() });
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
-export const ProblemDetail = z.object({ code: z.enum(["INVALID_QUERY_PARAMETER", "CONFLICTING_INGREDIENT_FILTER", "UNSUPPORTED_REQUEST", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]), detail: z.string(), instance: z.url().optional(), status: z.number().int(), title: z.string(), type: z.url().optional() });
+export const ProblemDetail = z.object({ code: z.enum(["INVALID_QUERY_PARAMETER", "CONFLICTING_INGREDIENT_FILTER", "UNSUPPORTED_REQUEST", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]), detail: z.string(), instance: z.string().optional(), status: z.number().int(), title: z.string(), type: z.url().optional() });
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });

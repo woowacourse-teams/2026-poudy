@@ -1400,7 +1400,7 @@
           },
           "instance": {
             "type": "string",
-            "format": "uri",
+            "format": "uri-reference",
             "example": "/api/products"
           },
           "status": {
