@@ -17,7 +17,8 @@ com.poudy
 │   │   ├── BrandController
 │   │   └── dto
 │   │       ├── BrandResponse
-│   │       └── BrandDetailResponse
+│   │       ├── BrandListResponse
+│   │       └── BrandSummaryResponse
 │   ├── service
 │   │   └── BrandService
 │   ├── domain
@@ -28,7 +29,11 @@ com.poudy
 ├── category
 │   ├── controller
 │   │   ├── CategoryController
-│   │   └── CategoriesResponse
+│   │   └── dto
+│   │       ├── CategoryResponse
+│   │       ├── CategoryChildResponse
+│   │       ├── CategoryListResponse
+│   │       └── CategorySummaryResponse
 │   ├── service
 │   │   └── CategoryService
 │   ├── domain
@@ -40,14 +45,17 @@ com.poudy
 │   ├── controller
 │   │   ├── IngredientController
 │   │   └── dto
-│   │       ├── IngredientSearchRequest
-│   │       ├── IngredientsResponse
-│   │       └── IngredientDetailResponse
+│   │       ├── IngredientResponse
+│   │       ├── IngredientListResponse
+│   │       ├── IngredientDetailResponse
+│   │       ├── IngredientSummaryResponse
+│   │       └── EffectResponse
 │   ├── service
 │   │   └── IngredientService
 │   ├── domain
 │   │   ├── Ingredient
-│   │   └── Ingredients
+│   │   ├── Ingredients
+│   │   └── ExcludeCode
 │   └── repository
 │       └── IngredientRepository
 ├── tag
@@ -61,22 +69,40 @@ com.poudy
 │   │   └── Tags
 │   └── repository
 │       └── TagRepository
-└── product
-    ├── controller
-    │   ├── ProductController
-    │   └── dto
-    │       ├── ProductSearchRequest
-    │       ├── ProductsResponse
-    │       ├── ProductCountResponse
-    │       ├── ProductSimpleResponse
-    │       └── ProductDetailResponse
-    ├── service
-    │   └── ProductService
-    ├── domain
-    │   ├── Product
-    │   └── Products
-    └── repository
-        └── ProductRepository
+├── product
+│   ├── controller
+│   │   ├── ProductController
+│   │   └── dto
+│   │       ├── ProductFilterRequest
+│   │       ├── ProductSortRequest
+│   │       ├── ProductPageResponse
+│   │       ├── ProductCountResponse
+│   │       ├── ProductResponse
+│   │       ├── ProductDetailResponse
+│   │       ├── ProductIngredientResponse
+│   │       └── BenefitResponse
+│   ├── service
+│   │   └── ProductService
+│   ├── domain
+│   │   ├── Product
+│   │   ├── Products
+│   │   └── ProductSort
+│   └── repository
+│       └── ProductRepository
+├── common
+│   └── dto
+│       ├── PaginationRequest
+│       └── PaginationResponse
+├── config
+│   ├── OpenApiConfig
+│   └── ErrorResponseConfig
+└── exception
+    ├── ErrorCode
+    ├── GlobalExceptionHandler
+    ├── InvalidRequestException
+    ├── ResourceNotFoundException
+    ├── ConflictException
+    └── InfrastructureException
 ```
 
 패키지 구성 규칙은 다음과 같다.
@@ -84,6 +110,10 @@ com.poudy
 - 기능 모듈은 `controller`, `service`, `domain`, `repository`로 나눈다.
 - 한 계층에서 DTO가 여러 개 사용되면 해당 계층 아래에 `dto` 디렉터리를 만들고 DTO들을 모은다.
 - 실제 구현 중 필요하지 않은 DTO나 Domain 클래스는 만들지 않는다. 위 구조의 이름은 API를 구현할 때 사용할 경계를 보여준다.
+- 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
+- 다른 기능의 응답에 중첩되는 DTO는 그 개념을 정의하는 기능이 소유하며 다른 기능이 재사용한다. 제품 응답은 `brand.controller.dto.BrandSummaryResponse`를 사용한다.
+- 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
+- 공통 예외 처리는 `exception`에, OpenAPI 설정은 `config`에 둔다.
 
 ## Dependency direction
 
@@ -205,6 +235,15 @@ Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller
 
 현재 Repository 인터페이스는 만들지 않는다. 이후 데이터베이스 저장소로 교체하는 작업을 시작할 때 Service와 Repository 사이의 인터페이스를 함께 결정한다.
 
+### Exception handling
+
+`GlobalExceptionHandler`가 모든 오류 응답을 RFC 9457 `ProblemDetail` 형태로 반환한다. `ResponseEntityExceptionHandler`를 상속해 프레임워크가 던지는 예외는 기반 클래스가 처리하고, 응답 계약에 필요한 `code`와 문구만 덧입힌다.
+
+- 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `ConflictException`, `InfrastructureException` 네 가지다.
+- 대상이 제품인지 브랜드인지 성분인지는 예외 타입이 아니라 예외가 들고 있는 `ErrorCode`가 구분한다.
+- `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
+- `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
+
 ## Data flow
 
 ### List and count
@@ -235,20 +274,36 @@ Detail Response DTO
 
 ## External interfaces
 
-첨부 API 명세에서 확인한 조회 기능은 다음과 같다.
+Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 같다.
 
 | Module | Method | Endpoint | Description |
 | --- | --- | --- | --- |
-| product | GET | `/api/v1/products` | 제품 목록 조회 |
-| product | GET | `/api/v1/products/count` | 제품 필터 결과 개수 조회 |
-| product | GET | `/api/v1/products/{productId}` | 제품 상세 조회 |
-| category | GET | `/api/v1/categories` | 카테고리 조회 |
-| brand | GET | `/api/v1/brands` | 브랜드 조회 |
-| brand | GET | `/api/v1/brands/{brandId}` | 브랜드 상세 조회 |
-| ingredient | GET | `/api/v1/ingredients` | 성분 조회 |
-| ingredient | GET | `/api/v1/ingredients/{ingredientId}` | 성분 상세 조회 |
+| product | GET | `/api/products` | 제품 목록 조회 |
+| product | GET | `/api/products/count` | 제품 필터 결과 개수 조회 |
+| product | GET | `/api/products/{productId}` | 제품 간단 조회 |
+| product | GET | `/api/products/detail/{productId}` | 제품 상세 조회 |
+| category | GET | `/api/categories` | 카테고리 조회 |
+| brand | GET | `/api/brands` | 브랜드 조회 |
+| brand | GET | `/api/brands/{brandId}` | 브랜드 상세 조회 |
+| ingredient | GET | `/api/ingredients` | 성분 조회 |
+| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
 
-세부 요청과 응답 필드는 API 구현 시 첨부 명세와 생성된 OpenAPI 문서를 기준으로 관리한다.
+제품 간단 조회와 상세 조회는 서로 다른 응답 계약을 사용한다.
+
+- `/api/products/{productId}`는 제품 목록 항목과 같은 `ProductResponse`를 반환한다.
+- `/api/products/detail/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
+
+### API contract generation
+
+Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `./gradlew generateApiArtifacts`가 다음 생성물을 갱신한다.
+
+| Output | Role |
+| --- | --- |
+| `server/openapi.json` | OpenAPI 문서 |
+| `common/api.zod.ts` | 프론트엔드용 Zod 스키마와 타입 |
+| `common/api.zod.types.d.ts` | 생성 타입 선언 |
+
+생성물은 직접 수정하지 않는다. 계약이 바뀌면 생성 작업을 실행해 함께 커밋한다.
 
 ## Architecture rules
 
@@ -262,3 +317,9 @@ Detail Response DTO
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
 10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다.
+11. 외부 API의 기본 경로는 `/api`다.
+12. 제품 간단 조회와 제품 상세 조회는 별도 엔드포인트와 응답 DTO를 사용한다.
+13. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
+14. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
+15. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
+16. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
