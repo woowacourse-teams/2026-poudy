@@ -163,7 +163,7 @@ tasks.register('generateApiZod', Exec) {
     }
     commandLine isWindows ? 'npx.cmd' : 'npx', '--yes', 'typed-openapi@3.2.1',
             source.asFile.absolutePath,
-            '-r', 'zod', '-o', output.absolutePath
+            '-r', 'zod', '--schemas-only', '-o', output.absolutePath
 
     // 생성기 출력을 그대로 두면 쓸 수 없는 부분이 있어 여기서 다듬는다.
     // 손으로 고치면 다음 생성 때 되돌아가고 훅과 CI 가 낡았다고 잡으므로, 생성 단계에 붙인다.
