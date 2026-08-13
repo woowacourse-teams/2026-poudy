@@ -5,11 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.ConflictException;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("제품 필터 조건")
 class ProductFilterRequestTest {
 
     @Test
+    @DisplayName("같은 성분이 포함과 제외에 함께 있으면 거절한다")
     void rejectsIngredientPresentInBothFilters() {
         ProductFilterRequest request = filterOf(List.of(1001L, 1005L), List.of(1005L));
 
@@ -17,6 +20,7 @@ class ProductFilterRequestTest {
     }
 
     @Test
+    @DisplayName("포함과 제외가 겹치지 않으면 통과한다")
     void acceptsDisjointIngredientFilters() {
         ProductFilterRequest request = filterOf(List.of(1005L), List.of(1001L));
 
@@ -24,6 +28,7 @@ class ProductFilterRequestTest {
     }
 
     @Test
+    @DisplayName("성분 조건이 없으면 통과한다")
     void acceptsMissingIngredientFilters() {
         assertThatCode(filterOf(null, null)::validateIngredientFilters).doesNotThrowAnyException();
         assertThatCode(filterOf(List.of(1005L), null)::validateIngredientFilters).doesNotThrowAnyException();
