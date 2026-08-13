@@ -2,8 +2,8 @@
 
 ## Status
 
-첨부된 서비스 기획에서 백엔드 작업에 필요한 현재 맥락만 보존한다. 이미 구현된
-기능이나 확정 API 계약이 아니다.
+첨부된 서비스 기획에서 백엔드 작업에 필요한 현재 맥락만 보존한다. 구현된 API 계약은
+`ARCHITECTURE.md`, Controller, DTO와 생성된 OpenAPI 문서를 기준으로 한다.
 
 ## Service goal
 
@@ -31,5 +31,3 @@
 - 실제 catalog 원천 형식과 갱신 책임
 - canonical JSON과 공개 ID 형식
 - 빠른 제외 그룹과 피부 관련 규칙
-- API request, response와 error 계약
-- 가격, 정렬, pagination과 상세 근거 전달 방식
