@@ -1,7 +1,5 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.exception.ConflictException;
-import com.poudy.exception.ErrorCode;
 import com.poudy.ingredient.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,13 +17,4 @@ public record ProductFilterRequest(
         @UniqueElements @ArraySchema(uniqueItems = true) List<ExcludeCode> excludeCodes,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1005"), uniqueItems = true) List<Long> includeIngredientIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1001"), uniqueItems = true) List<Long> excludeIngredientIds) {
-
-    public void validateIngredientFilters() {
-        if (includeIngredientIds == null || excludeIngredientIds == null) {
-            return;
-        }
-        if (includeIngredientIds.stream().anyMatch(excludeIngredientIds::contains)) {
-            throw new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER);
-        }
-    }
 }

@@ -17,4 +17,16 @@ class ProductSortTest {
                 ProductSort.PRICE_ASC,
                 ProductSort.PRICE_DESC);
     }
+
+    @Test
+    @DisplayName("정렬 조건을 생략하면 기본 정렬을 쓴다")
+    void usesDefaultWhenSortIsMissing() {
+        assertThat(ProductSort.orDefault(null)).isEqualTo(ProductSort.valueOf(ProductSort.DEFAULT_NAME));
+    }
+
+    @Test
+    @DisplayName("정렬 조건이 있으면 그대로 쓴다")
+    void keepsGivenSort() {
+        assertThat(ProductSort.orDefault(ProductSort.PRICE_DESC)).isEqualTo(ProductSort.PRICE_DESC);
+    }
 }

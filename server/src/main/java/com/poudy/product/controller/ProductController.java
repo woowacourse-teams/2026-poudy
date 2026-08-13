@@ -14,6 +14,7 @@ import com.poudy.product.controller.dto.ProductIngredientResponse;
 import com.poudy.product.controller.dto.ProductPageResponse;
 import com.poudy.product.controller.dto.ProductResponse;
 import com.poudy.product.controller.dto.ProductSortRequest;
+import com.poudy.product.domain.IngredientFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,7 +45,7 @@ public class ProductController {
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        filter.validateIngredientFilters();
+        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
 
         return ResponseEntity.ok(
                 new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
@@ -53,7 +54,7 @@ public class ProductController {
     @Operation(summary = "제품 필터 결과 개수 조회", description = "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.")
     @GetMapping("/count")
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        filter.validateIngredientFilters();
+        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
 
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
@@ -69,6 +70,10 @@ public class ProductController {
     public ResponseEntity<ProductDetailResponse> findProductDetail(
             @Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProductDetail(productId));
+    }
+
+    private IngredientFilter ingredientFilterOf(ProductFilterRequest filter) {
+        return new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
     }
 
     private static ProductResponse sampleProduct(Long id) {
