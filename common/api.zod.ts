@@ -120,7 +120,7 @@ export const get_FindProducts = {
   path: z.literal("/api/products"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()), sort: z.literal("NAME_ASC"), page: z.coerce.number().int().min(0), size: z.coerce.number().int().min(1).max(100) }).partial().optional() },
+  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()), sort: z.literal("NAME_ASC"), page: z.coerce.number().int().min(0).default(0), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
   responses: { 200: ProductPageResponse, 400: ErrorResponse, 500: ErrorResponse },
 };
 

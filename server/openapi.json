@@ -385,6 +385,7 @@
             "required": false,
             "schema": {
               "type": "string",
+              "default": "NAME_ASC",
               "enum": [
                 "NAME_ASC"
               ]
@@ -397,6 +398,7 @@
             "schema": {
               "type": "integer",
               "format": "int32",
+              "default": 0,
               "minimum": 0
             }
           },
@@ -407,6 +409,7 @@
             "schema": {
               "type": "integer",
               "format": "int32",
+              "default": 20,
               "maximum": 100,
               "minimum": 1
             }
