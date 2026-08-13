@@ -31,11 +31,14 @@ export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ color: z.string(), id: z.number().int(), name: z.string() });
 
+export type ErrorResponse = __TypedOpenapi.Schemas.ErrorResponse;
+export const ErrorResponse = z.object({ code: z.enum(["INVALID_PATH_PARAMETER", "INVALID_QUERY_PARAMETER", "CONFLICTING_INGREDIENT_FILTER", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]), message: z.string() });
+
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ englishName: z.string(), id: z.number().int(), koreanName: z.string() });
 
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
-export const IngredientDetailResponse = z.object({ description: z.string(), effectSources: z.array(z.string()), effects: z.array(EffectResponse), englishName: z.string(), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), id: z.number().int(), infoSources: z.array(z.string()), koreanName: z.string(), productCount: z.number().int(), relatedIngredients: z.array(IngredientSummaryResponse), updatedAt: z.string() });
+export const IngredientDetailResponse = z.object({ description: z.string(), effectSources: z.array(z.string()), effects: z.array(EffectResponse), englishName: z.string(), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), id: z.number().int(), infoSources: z.array(z.string()), koreanName: z.string(), productCount: z.number().int(), relatedIngredients: z.array(IngredientSummaryResponse), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
 export const IngredientResponse = z.object({ effects: z.array(EffectResponse), englishName: z.string(), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), id: z.number().int(), koreanName: z.string() });
@@ -68,7 +71,7 @@ export const get_FindBrands = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
-  responses: { 200: BrandListResponse },
+  responses: { 200: BrandListResponse, 400: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindBrand = __TypedOpenapi.Endpoints.get_FindBrand;
@@ -78,7 +81,7 @@ export const get_FindBrand = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ brandId: z.coerce.number().int() }) },
-  responses: { 200: BrandResponse },
+  responses: { 200: BrandResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindCategories = __TypedOpenapi.Endpoints.get_FindCategories;
@@ -88,7 +91,7 @@ export const get_FindCategories = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: z.never(),
-  responses: { 200: CategoryListResponse },
+  responses: { 200: CategoryListResponse, 400: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
@@ -98,7 +101,7 @@ export const get_FindIngredients = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
-  responses: { 200: IngredientListResponse },
+  responses: { 200: IngredientListResponse, 400: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindIngredient = __TypedOpenapi.Endpoints.get_FindIngredient;
@@ -108,7 +111,7 @@ export const get_FindIngredient = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ ingredientId: z.coerce.number().int() }) },
-  responses: { 200: IngredientDetailResponse },
+  responses: { 200: IngredientDetailResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindProducts = __TypedOpenapi.Endpoints.get_FindProducts;
@@ -118,7 +121,7 @@ export const get_FindProducts = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()), sort: z.literal("NAME_ASC"), page: z.coerce.number().int().min(0), size: z.coerce.number().int().min(1).max(100) }).partial().optional() },
-  responses: { 200: ProductPageResponse },
+  responses: { 200: ProductPageResponse, 400: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_CountProducts = __TypedOpenapi.Endpoints.get_CountProducts;
@@ -128,22 +131,32 @@ export const get_CountProducts = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()) }).partial().optional() },
-  responses: { 200: ProductCountResponse },
+  responses: { 200: ProductCountResponse, 400: ErrorResponse, 500: ErrorResponse },
+};
+
+export type get_FindProductDetail = __TypedOpenapi.Endpoints.get_FindProductDetail;
+export const get_FindProductDetail = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/detail/{productId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 200: ProductDetailResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
 };
 
 export type get_FindProduct = __TypedOpenapi.Endpoints.get_FindProduct;
 export const get_FindProduct = {
   method: z.literal("GET"),
-  path: z.literal("/api/products/detail/{productId}"),
+  path: z.literal("/api/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ view: z.enum(["DETAIL", "SIMPLE"]).default("DETAIL") }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
-  responses: { 200: z.union([ProductDetailResponse, ProductResponse]) },
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 200: ProductResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
 };
 
 // </Endpoints>
 
-  
+
      // <EndpointByMethod>
      export const EndpointByMethod: __TypedOpenapi.EndpointByMethod = {
      get: {
@@ -154,18 +167,19 @@ export const get_FindProduct = {
 "/api/ingredients/{ingredientId}": get_FindIngredient as any,
 "/api/products": get_FindProducts as any,
 "/api/products/count": get_CountProducts as any,
-"/api/products/detail/{productId}": get_FindProduct as any
+"/api/products/detail/{productId}": get_FindProductDetail as any,
+"/api/products/{productId}": get_FindProduct as any
          }
      }
      export type EndpointByMethod = __TypedOpenapi.EndpointByMethod;
      // </EndpointByMethod>
-     
+
 
     // <EndpointByMethod.Shorthands>
     export type GetEndpoints = EndpointByMethod["get"]
     // </EndpointByMethod.Shorthands>
-    
-  
+
+
 // <ApiClientTypes>
 export type EndpointParameters = {
   body?: unknown;
@@ -186,28 +200,28 @@ export type SecurityRequirements = readonly (readonly string[])[];
     // <EndpointRequestFormats>
     /** Non-json request body encodings; missing entries default to `"json"`. */
     export const endpointRequestFormats = {
-    
+
     } as Partial<{ [M in keyof EndpointByMethod]: Partial<{ [P in keyof EndpointByMethod[M]]: RequestFormat }> }>;
     // </EndpointRequestFormats>
-    
+
 
     // <EndpointResponseFormats>
     /** Non-json response body modes; missing entries default to `"json"`. SSE skips JSON parse + output validation. */
     export const endpointResponseFormats = {
-    
+
     } as Partial<{ [M in keyof EndpointByMethod]: Partial<{ [P in keyof EndpointByMethod[M]]: ResponseFormat }> }>;
     // </EndpointResponseFormats>
-    
+
 
     // <EndpointSecurityRequirements>
     /** OpenAPI security requirements applied when an endpoint has no explicit entry. */
     export const defaultSecurityRequirements = [] as SecurityRequirements;
     /** Endpoint-specific security requirements that differ from the default. */
     export const endpointSecurityRequirements = {
-    
+
     } as Partial<{ [M in keyof EndpointByMethod]: Partial<{ [P in keyof EndpointByMethod[M]]: SecurityRequirements }> }>;
     // </EndpointSecurityRequirements>
-    
+
 
 export type DefaultEndpoint = {
   parameters?: EndpointParameters | undefined;
@@ -581,7 +595,7 @@ export class ApiClient {
         return this.request("get", path, ...params);
     }
     // </ApiClient.get>
-    
+
 
     // <ApiClient.request>
     /**
@@ -753,4 +767,4 @@ export function createApiClient(
 
 // </ApiClient>
 
-  
+

@@ -1,6 +1,5 @@
 
   export namespace Schemas {
-    // <Schemas>
   export type BenefitResponse = { color: string, id: number, ingredientIds: Array<number>, name: string }
 export type BrandResponse = { id: number, logoUrl: string, name: string, productCount: number }
 export type BrandListResponse = { items: Array<BrandResponse> }
@@ -10,6 +9,7 @@ export type CategoryResponse = { children: Array<CategoryChildResponse>, id: num
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type CategorySummaryResponse = { id: number, name: string }
 export type EffectResponse = { color: string, id: number, name: string }
+export type ErrorResponse = { code: ("INVALID_PATH_PARAMETER" | "INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INTERNAL_SERVER_ERROR"), message: string }
 export type IngredientSummaryResponse = { englishName: string, id: number, koreanName: string }
 export type IngredientDetailResponse = { description: string, effectSources: Array<string>, effects: Array<EffectResponse>, englishName: string, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, id: number, infoSources: Array<string>, koreanName: string, productCount: number, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type IngredientResponse = { effects: Array<EffectResponse>, englishName: string, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, id: number, koreanName: string }
@@ -20,12 +20,10 @@ export type ProductDetailResponse = { benefits: Array<BenefitResponse>, brand: B
 export type ProductResponse = { brand: BrandSummaryResponse, id: number, imageUrl: string, name: string, price: number, volumeUnit: string, volumeValue: number }
 export type ProductPageResponse = { hasNext: boolean, items: Array<ProductResponse>, page: number, size: number }
 
-    // </Schemas>
     }
-  
+
   export namespace Endpoints {
-  // <Endpoints>
-  
+
   export type get_FindBrands = {
       method: "GET",
       path: "/api/brands",
@@ -33,14 +31,16 @@ export type ProductPageResponse = { hasNext: boolean, items: Array<ProductRespon
       responseFormat: "json",
       parameters: {
             query?:  Partial<{ keyword: string }>,
-        
-        
-        
-        
+
+
+
+
           }
       responses: {200: Schemas.BrandListResponse,
+400: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_FindBrand = {
       method: "GET",
@@ -48,15 +48,18 @@ export type get_FindBrand = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            
+
         path:  { brandId: number },
-        
-        
-        
+
+
+
           }
       responses: {200: Schemas.BrandResponse,
+400: Schemas.ErrorResponse,
+404: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_FindCategories = {
       method: "GET",
@@ -65,8 +68,10 @@ export type get_FindCategories = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.CategoryListResponse,
+400: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_FindIngredients = {
       method: "GET",
@@ -75,14 +80,16 @@ export type get_FindIngredients = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{ keyword: string }>,
-        
-        
-        
-        
+
+
+
+
           }
       responses: {200: Schemas.IngredientListResponse,
+400: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_FindIngredient = {
       method: "GET",
@@ -90,15 +97,18 @@ export type get_FindIngredient = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            
+
         path:  { ingredientId: number },
-        
-        
-        
+
+
+
           }
       responses: {200: Schemas.IngredientDetailResponse,
+400: Schemas.ErrorResponse,
+404: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_FindProducts = {
       method: "GET",
@@ -107,14 +117,16 @@ export type get_FindProducts = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number>, sort: "NAME_ASC", page: number, size: number }>,
-        
-        
-        
-        
+
+
+
+
           }
       responses: {200: Schemas.ProductPageResponse,
+400: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
 export type get_CountProducts = {
       method: "GET",
@@ -123,37 +135,59 @@ export type get_CountProducts = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number> }>,
-        
-        
-        
-        
+
+
+
+
           }
       responses: {200: Schemas.ProductCountResponse,
+400: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
     }
-export type get_FindProduct = {
+export type get_FindProductDetail = {
       method: "GET",
       path: "/api/products/detail/{productId}",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ view: ("DETAIL" | "SIMPLE") }>,
+
         path:  { productId: number },
-        
-        
-        
+
+
+
           }
-      responses: {200: (Schemas.ProductDetailResponse | Schemas.ProductResponse),
+      responses: {200: Schemas.ProductDetailResponse,
+400: Schemas.ErrorResponse,
+404: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
 },
-      
+
+    }
+export type get_FindProduct = {
+      method: "GET",
+      path: "/api/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+
+
+          }
+      responses: {200: Schemas.ProductResponse,
+400: Schemas.ErrorResponse,
+404: Schemas.ErrorResponse,
+500: Schemas.ErrorResponse,
+},
+
     }
 
-  // </Endpoints>
   }
-  
-  
-     // <EndpointByMethod>
+
+
      export type EndpointByMethod = {
      get: {
            "/api/brands": Endpoints.get_FindBrands,
@@ -163,14 +197,12 @@ export type get_FindProduct = {
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/count": Endpoints.get_CountProducts,
-"/api/products/detail/{productId}": Endpoints.get_FindProduct
+"/api/products/detail/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/{productId}": Endpoints.get_FindProduct
          }
      }
-     
-     // </EndpointByMethod>
-     
 
-    // <EndpointByMethod.Shorthands>
+
+
     export type GetEndpoints = EndpointByMethod["get"]
-    // </EndpointByMethod.Shorthands>
-    
+
