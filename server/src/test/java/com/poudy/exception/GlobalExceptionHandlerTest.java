@@ -18,25 +18,25 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void invalidRequestExceptionReturnsBadRequest() {
+    void invalidInputExceptionReturnsBadRequest() {
         ResponseEntity<ProblemDetail> response = handler
-                .handleInvalidRequestException(new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER));
+                .handleInvalidInputException(new InvalidInputException(ErrorCode.INVALID_QUERY_PARAMETER));
 
         assertProblem(response, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_QUERY_PARAMETER);
     }
 
     @Test
-    void notFoundExceptionReturnsNotFound() {
+    void entityNotFoundExceptionReturnsNotFound() {
         ResponseEntity<ProblemDetail> response = handler
-                .handleNotFoundException(new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+                .handleEntityNotFoundException(new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
         assertProblem(response, HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     @Test
-    void conflictExceptionReturnsConflict() {
-        ResponseEntity<ProblemDetail> response = handler
-                .handleConflictException(new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER));
+    void businessRuleViolationExceptionReturnsConflict() {
+        ResponseEntity<ProblemDetail> response = handler.handleBusinessRuleViolationException(
+                new BusinessRuleViolationException(ErrorCode.CONFLICTING_INGREDIENT_FILTER));
 
         assertProblem(response, HttpStatus.CONFLICT, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }

@@ -1,14 +1,14 @@
 package com.poudy.exception;
 
-public class ConflictException extends RuntimeException {
+public class InvalidInputException extends RuntimeException {
 
     private final ErrorCode code;
 
-    public ConflictException(ErrorCode code) {
+    public InvalidInputException(ErrorCode code) {
         this(code, code.message());
     }
 
-    public ConflictException(ErrorCode code, String message) {
+    public InvalidInputException(ErrorCode code, String message) {
         super(message);
         this.code = code;
     }

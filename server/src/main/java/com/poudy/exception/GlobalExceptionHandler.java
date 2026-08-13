@@ -49,18 +49,19 @@ public class GlobalExceptionHandler {
                 .body(validationProblem(HttpStatus.BAD_REQUEST, exception.getFieldErrors()));
     }
 
-    @ExceptionHandler(InvalidRequestException.class)
-    public ResponseEntity<ProblemDetail> handleInvalidRequestException(InvalidRequestException exception) {
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidInputException(InvalidInputException exception) {
         return problem(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNotFoundException(NotFoundException exception) {
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleEntityNotFoundException(EntityNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ProblemDetail> handleConflictException(ConflictException exception) {
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ProblemDetail> handleBusinessRuleViolationException(
+            BusinessRuleViolationException exception) {
         return problem(HttpStatus.CONFLICT, exception.code(), exception.getMessage());
     }
 
