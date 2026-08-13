@@ -164,6 +164,26 @@ tasks.register('generateApiZod', Exec) {
     commandLine isWindows ? 'npx.cmd' : 'npx', '--yes', 'typed-openapi@3.2.1',
             source.asFile.absolutePath,
             '-r', 'zod', '-o', output.absolutePath
+
+    // 생성기 출력을 그대로 두면 쓸 수 없는 부분이 있어 여기서 다듬는다.
+    // 손으로 고치면 다음 생성 때 되돌아가고 훅과 CI 가 낡았다고 잡으므로, 생성 단계에 붙인다.
+    doLast {
+        // zod 의 z.iso.datetime() 은 기본적으로 오프셋을 거부한다. 서버는 OffsetDateTime 을
+        // +09:00 로 내보내므로 그대로 두면 프론트에서 파싱이 실패한다.
+        output.text = tidy(output.text.replace('z.iso.datetime()', 'z.iso.datetime({ offset: true })'), false)
+
+        // 선언 파일에 남는 것은 생성기의 구역 표시 주석뿐이라 지운다.
+        // api.zod.ts 의 // @ts-nocheck 는 지우면 타입 검사가 깨지므로 건드리지 않는다.
+        declarations.text = tidy(declarations.text, true)
+    }
+}
+
+// 줄 끝 공백을 없애고, 선택적으로 주석만 있는 줄을 지운다.
+def tidy(String text, boolean dropComments) {
+    return text.readLines()
+            .findAll { !dropComments || !it.trim().startsWith('//') }
+            .collect { it.replaceFirst(/\s+$/, '') }
+            .join('\n') + '\n'
 }
 
 // 훅과 CI 의 진입점.
