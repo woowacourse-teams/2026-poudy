@@ -110,8 +110,15 @@ tasks.register('copyOpenApiDoc') {
     inputs.file(source)
     outputs.file(target)
 
+    // 마지막 개행이 없으면 diff 도구가 파일 끝을 오류로 표시한다.
     doLast {
-        target.asFile.bytes = source.get().asFile.bytes
+        def bytes = source.get().asFile.bytes
+        target.asFile.withOutputStream { out ->
+            out.write(bytes)
+            if (bytes.length == 0 || bytes[bytes.length - 1] != (byte) 10) {
+                out.write(10)
+            }
+        }
     }
 }
 
