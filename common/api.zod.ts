@@ -10,6 +10,15 @@ export const BrandResponse = z.object({ id: z.number().int(), logoUrl: z.string(
 export type BrandListResponse = __TypedOpenapi.Schemas.BrandListResponse;
 export const BrandListResponse = z.object({ items: z.array(BrandResponse) });
 
+export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
+export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
+
+export type CategoryResponse = __TypedOpenapi.Schemas.CategoryResponse;
+export const CategoryResponse = z.object({ children: z.array(CategoryChildResponse), id: z.number().int(), name: z.string(), productCount: z.number().int() });
+
+export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
+export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });
+
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ color: z.string(), id: z.number().int(), name: z.string() });
 
@@ -48,6 +57,16 @@ export const get_FindBrand = {
   responses: { 200: BrandResponse },
 };
 
+export type get_FindCategories = __TypedOpenapi.Endpoints.get_FindCategories;
+export const get_FindCategories = {
+  method: z.literal("GET"),
+  path: z.literal("/api/categories"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: CategoryListResponse },
+};
+
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
 export const get_FindIngredients = {
   method: z.literal("GET"),
@@ -76,6 +95,7 @@ export const get_FindIngredient = {
      get: {
            "/api/brands": get_FindBrands as any,
 "/api/brands/{brandId}": get_FindBrand as any,
+"/api/categories": get_FindCategories as any,
 "/api/ingredients": get_FindIngredients as any,
 "/api/ingredients/{ingredientId}": get_FindIngredient as any
          }

@@ -71,6 +71,26 @@
         ]
       }
     },
+    "/api/categories": {
+      "get": {
+        "operationId": "findCategories",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "category-controller"
+        ]
+      }
+    },
     "/api/ingredients": {
       "get": {
         "operationId": "findIngredients",
@@ -170,6 +190,69 @@
         "required": [
           "id",
           "logoUrl",
+          "name",
+          "productCount"
+        ]
+      },
+      "CategoryChildResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "productCount"
+        ]
+      },
+      "CategoryListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryChildResponse"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "children",
+          "id",
           "name",
           "productCount"
         ]
