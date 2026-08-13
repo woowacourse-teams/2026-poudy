@@ -31,9 +31,6 @@ export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ color: z.string(), id: z.number().int(), name: z.string() });
 
-export type ErrorResponse = __TypedOpenapi.Schemas.ErrorResponse;
-export const ErrorResponse = z.object({ code: z.enum(["INVALID_PATH_PARAMETER", "INVALID_QUERY_PARAMETER", "CONFLICTING_INGREDIENT_FILTER", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]), message: z.string() });
-
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ englishName: z.string(), id: z.number().int(), koreanName: z.string() });
 
@@ -45,6 +42,12 @@ export const IngredientResponse = z.object({ effects: z.array(EffectResponse), e
 
 export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
 export const IngredientListResponse = z.object({ items: z.array(IngredientResponse) });
+
+export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
+export const PaginationResponse = z.object({ hasNext: z.boolean(), page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int() });
+
+export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
+export const ProblemDetail = z.object({ code: z.enum(["INVALID_PATH_PARAMETER", "INVALID_QUERY_PARAMETER", "INVALID_PAGINATION_PARAMETER", "CONFLICTING_INGREDIENT_FILTER", "UNSUPPORTED_REQUEST", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]), detail: z.string(), instance: z.url().optional(), status: z.number().int(), title: z.string(), type: z.url().optional() });
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
@@ -59,7 +62,7 @@ export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
 export const ProductResponse = z.object({ brand: BrandSummaryResponse, id: z.number().int(), imageUrl: z.string(), name: z.string(), price: z.number().int(), volumeUnit: z.string(), volumeValue: z.number() });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
-export const ProductPageResponse = z.object({ hasNext: z.boolean(), items: z.array(ProductResponse), page: z.number().int(), size: z.number().int() });
+export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse });
 
 // </Schemas>
 
@@ -71,7 +74,7 @@ export const get_FindBrands = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
-  responses: { 200: BrandListResponse, 400: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: BrandListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindBrand = __TypedOpenapi.Endpoints.get_FindBrand;
@@ -81,7 +84,7 @@ export const get_FindBrand = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ brandId: z.coerce.number().int() }) },
-  responses: { 200: BrandResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: BrandResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindCategories = __TypedOpenapi.Endpoints.get_FindCategories;
@@ -91,7 +94,7 @@ export const get_FindCategories = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: z.never(),
-  responses: { 200: CategoryListResponse, 400: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: CategoryListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
@@ -101,7 +104,7 @@ export const get_FindIngredients = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
-  responses: { 200: IngredientListResponse, 400: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: IngredientListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindIngredient = __TypedOpenapi.Endpoints.get_FindIngredient;
@@ -111,7 +114,7 @@ export const get_FindIngredient = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ ingredientId: z.coerce.number().int() }) },
-  responses: { 200: IngredientDetailResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: IngredientDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProducts = __TypedOpenapi.Endpoints.get_FindProducts;
@@ -120,8 +123,8 @@ export const get_FindProducts = {
   path: z.literal("/api/products"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()), sort: z.literal("NAME_ASC"), page: z.coerce.number().int().min(0).default(0), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
-  responses: { 200: ProductPageResponse, 400: ErrorResponse, 500: ErrorResponse },
+  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sort: z.literal("NAME_ASC"), page: z.coerce.number().int().min(0).default(0), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: ProductPageResponse, 400: ProblemDetail, 409: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_CountProducts = __TypedOpenapi.Endpoints.get_CountProducts;
@@ -130,8 +133,8 @@ export const get_CountProducts = {
   path: z.literal("/api/products/count"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()), brandIds: z.array(z.coerce.number().int()), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)), oilLevel: z.array(z.coerce.number().int().min(0).max(3)), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), includeIngredientIds: z.array(z.coerce.number().int()), excludeIngredientIds: z.array(z.coerce.number().int()) }).partial().optional() },
-  responses: { 200: ProductCountResponse, 400: ErrorResponse, 500: ErrorResponse },
+  parameters: { query: z.object({ keyword: z.string(), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }).partial().optional() },
+  responses: { 200: ProductCountResponse, 400: ProblemDetail, 409: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProductDetail = __TypedOpenapi.Endpoints.get_FindProductDetail;
@@ -141,7 +144,7 @@ export const get_FindProductDetail = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
-  responses: { 200: ProductDetailResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: ProductDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProduct = __TypedOpenapi.Endpoints.get_FindProduct;
@@ -151,7 +154,7 @@ export const get_FindProduct = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
-  responses: { 200: ProductResponse, 400: ErrorResponse, 404: ErrorResponse, 500: ErrorResponse },
+  responses: { 200: ProductResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 // </Endpoints>

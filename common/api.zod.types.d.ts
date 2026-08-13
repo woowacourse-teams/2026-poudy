@@ -9,16 +9,17 @@ export type CategoryResponse = { children: Array<CategoryChildResponse>, id: num
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type CategorySummaryResponse = { id: number, name: string }
 export type EffectResponse = { color: string, id: number, name: string }
-export type ErrorResponse = { code: ("INVALID_PATH_PARAMETER" | "INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INTERNAL_SERVER_ERROR"), message: string }
 export type IngredientSummaryResponse = { englishName: string, id: number, koreanName: string }
 export type IngredientDetailResponse = { description: string, effectSources: Array<string>, effects: Array<EffectResponse>, englishName: string, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, id: number, infoSources: Array<string>, koreanName: string, productCount: number, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type IngredientResponse = { effects: Array<EffectResponse>, englishName: string, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, id: number, koreanName: string }
 export type IngredientListResponse = { items: Array<IngredientResponse> }
+export type PaginationResponse = { hasNext: boolean, page: number, size: number, totalElements: number, totalPages: number }
+export type ProblemDetail = { code: ("INVALID_PATH_PARAMETER" | "INVALID_QUERY_PARAMETER" | "INVALID_PAGINATION_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR"), detail: string, instance?: string, status: number, title: string, type?: string }
 export type ProductCountResponse = { count: number }
 export type ProductIngredientResponse = { effects: Array<EffectResponse>, englishName: string, id: number, koreanName: string }
 export type ProductDetailResponse = { benefits: Array<BenefitResponse>, brand: BrandSummaryResponse, categories: Array<CategorySummaryResponse>, freeOfCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, id: number, imageUrl: string, ingredients: Array<ProductIngredientResponse>, moistureLevel: number, name: string, oilLevel: number, price: number, volumeUnit: string, volumeValue: number }
 export type ProductResponse = { brand: BrandSummaryResponse, id: number, imageUrl: string, name: string, price: number, volumeUnit: string, volumeValue: number }
-export type ProductPageResponse = { hasNext: boolean, items: Array<ProductResponse>, page: number, size: number }
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse }
 
     }
 
@@ -40,13 +41,13 @@ export type get_FindBrands = {
 
           }
       responses: {200: Schemas.BrandListResponse,
-400: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
 /**
- * 브랜드 ID 에 해당하는 상세 정보를 조회한다.
+ * 브랜드 ID 에 해당하는 상세 정보를 조회한다. 브랜드에 속한 제품 목록은 제품 조회에서 brandIds 로 받는다.
  */
 export type get_FindBrand = {
       method: "GET",
@@ -61,9 +62,9 @@ export type get_FindBrand = {
 
           }
       responses: {200: Schemas.BrandResponse,
-400: Schemas.ErrorResponse,
-404: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -77,8 +78,8 @@ export type get_FindCategories = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.CategoryListResponse,
-400: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -98,8 +99,8 @@ export type get_FindIngredients = {
 
           }
       responses: {200: Schemas.IngredientListResponse,
-400: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -119,9 +120,9 @@ export type get_FindIngredient = {
 
           }
       responses: {200: Schemas.IngredientDetailResponse,
-400: Schemas.ErrorResponse,
-404: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -134,15 +135,34 @@ export type get_FindProducts = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number>, sort: "NAME_ASC", page: number, size: number }>,
+            query?:  Partial<{
+  keyword: string;
+  categoryIds: Array<number>;
+  brandIds: Array<number>;
+  moistureLevel: Array<number>;
+  oilLevel: Array<number>;
+  excludeCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>;
+  includeIngredientIds: Array<number>;
+  excludeIngredientIds: Array<number>;
+  sort: "NAME_ASC";
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
 
 
 
 
           }
       responses: {200: Schemas.ProductPageResponse,
-400: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+409: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -162,8 +182,9 @@ export type get_CountProducts = {
 
           }
       responses: {200: Schemas.ProductCountResponse,
-400: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+409: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -183,9 +204,9 @@ export type get_FindProductDetail = {
 
           }
       responses: {200: Schemas.ProductDetailResponse,
-400: Schemas.ErrorResponse,
-404: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
@@ -205,9 +226,9 @@ export type get_FindProduct = {
 
           }
       responses: {200: Schemas.ProductResponse,
-400: Schemas.ErrorResponse,
-404: Schemas.ErrorResponse,
-500: Schemas.ErrorResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
 },
 
     }
