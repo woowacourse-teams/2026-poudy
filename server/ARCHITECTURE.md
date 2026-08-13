@@ -4,7 +4,7 @@
 
 Poudy 백엔드는 Spring Web MVC 구조를 사용한다.
 
-`brand`, `category`, `ingredient`, `product`를 각각 기능 모듈로 나누고, 각 모듈 아래에 MVC 구조가 존재하도록 구성한다. Controller와 Service는 얇게 유지하고, 제품 탐색과 같은 문제 해결은 가능한 한 Domain 객체가 담당한다.
+`brand`, `category`, `ingredient`, `tag`, `product`를 각각 기능 모듈로 나누고, 각 모듈 아래에 MVC 구조가 존재하도록 구성한다. Controller와 Service는 얇게 유지하고, 제품 탐색과 같은 문제 해결은 가능한 한 Domain 객체가 담당한다.
 
 MVP의 데이터는 JSON 파일에서 읽는다. Repository는 JSON 파일이라는 저장 방식이 Controller, Service, Domain에 노출되지 않도록 한다. 이후 데이터베이스를 사용하게 되더라도 Repository 부분을 교체할 수 있는 구조를 유지한다.
 
@@ -50,6 +50,17 @@ com.poudy
 │   │   └── Ingredients
 │   └── repository
 │       └── IngredientRepository
+├── tag
+│   ├── controller
+│   │   ├── TagController
+│   │   └── TagResponse
+│   ├── service
+│   │   └── TagService
+│   ├── domain
+│   │   ├── Tag
+│   │   └── Tags
+│   └── repository
+│       └── TagRepository
 └── product
     ├── controller
     │   ├── ProductController
@@ -113,9 +124,15 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 ### Ingredient
 
-`Ingredient`는 성분 정보를 표현한다. API 명세에 따라 이름, 설명, 효과, 정보 출처, 제외 성분군 등의 정보를 가질 수 있다.
+`Ingredient`는 성분 정보를 표현한다. API 명세에 따라 이름, 설명, 효과, 정보 출처, 제외 성분군 등의 정보를 가질 수 있으며 여러 `Tag`를 가진다.
 
 `Ingredients`는 `List<Ingredient>`를 가지는 일급 컬렉션이다. 여러 성분을 대상으로 하는 문제를 담당한다.
+
+### Tag
+
+`Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
+
+`Tags`는 `List<Tag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리한다.
 
 ### Product
 
@@ -180,7 +197,7 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 
 - `Product`는 제품 하나에 대한 규칙을 담당한다.
 - `Products`는 제품 목록 전체에 대한 규칙을 담당한다.
-- `Brands`, `Categories`, `Ingredients`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
+- `Brands`, `Categories`, `Ingredients`, `Tags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
 
 ### Repository
 
@@ -235,7 +252,7 @@ Detail Response DTO
 
 ## Architecture rules
 
-1. `brand`, `category`, `ingredient`, `product` 각각에 MVC 구조를 둔다.
+1. `brand`, `category`, `ingredient`, `tag`, `product` 각각에 MVC 구조를 둔다.
 2. Controller와 Service는 얇게 유지한다.
 3. 문제 해결은 가능한 한 Domain 객체가 담당한다.
 4. `Products`는 `List<Product>`를 갖는 일급 컬렉션이다.
@@ -244,5 +261,4 @@ Detail Response DTO
 7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
-10. VO를 위한 별도 디렉터리는 만들지 않는다.
-11. Repository 아래에 `file` 디렉터리를 만들지 않는다.
+10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다.
