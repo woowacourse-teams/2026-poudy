@@ -24,7 +24,10 @@ export type ProductPageResponse = { hasNext: boolean, items: Array<ProductRespon
 
   export namespace Endpoints {
 
-  export type get_FindBrands = {
+  /**
+ * 브랜드 목록을 조회하거나 브랜드명으로 검색한다. keyword 를 생략하면 전체를 브랜드명 오름차순으로 반환한다.
+ */
+export type get_FindBrands = {
       method: "GET",
       path: "/api/brands",
       requestFormat: "json",
@@ -42,6 +45,9 @@ export type ProductPageResponse = { hasNext: boolean, items: Array<ProductRespon
 },
 
     }
+/**
+ * 브랜드 ID 에 해당하는 상세 정보를 조회한다.
+ */
 export type get_FindBrand = {
       method: "GET",
       path: "/api/brands/{brandId}",
@@ -61,6 +67,9 @@ export type get_FindBrand = {
 },
 
     }
+/**
+ * 제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.
+ */
 export type get_FindCategories = {
       method: "GET",
       path: "/api/categories",
@@ -73,6 +82,9 @@ export type get_FindCategories = {
 },
 
     }
+/**
+ * 성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.
+ */
 export type get_FindIngredients = {
       method: "GET",
       path: "/api/ingredients",
@@ -91,6 +103,9 @@ export type get_FindIngredients = {
 },
 
     }
+/**
+ * 성분 ID 에 해당하는 상세 정보를 조회한다.
+ */
 export type get_FindIngredient = {
       method: "GET",
       path: "/api/ingredients/{ingredientId}",
@@ -110,6 +125,9 @@ export type get_FindIngredient = {
 },
 
     }
+/**
+ * 검색어와 필터 조건에 해당하는 제품 목록을 조회한다.
+ */
 export type get_FindProducts = {
       method: "GET",
       path: "/api/products",
@@ -128,6 +146,9 @@ export type get_FindProducts = {
 },
 
     }
+/**
+ * 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.
+ */
 export type get_CountProducts = {
       method: "GET",
       path: "/api/products/count",
@@ -146,6 +167,9 @@ export type get_CountProducts = {
 },
 
     }
+/**
+ * 제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.
+ */
 export type get_FindProductDetail = {
       method: "GET",
       path: "/api/products/detail/{productId}",
@@ -165,6 +189,9 @@ export type get_FindProductDetail = {
 },
 
     }
+/**
+ * 제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.
+ */
 export type get_FindProduct = {
       method: "GET",
       path: "/api/products/{productId}",

@@ -9,9 +9,28 @@
       "url": "/"
     }
   ],
+  "tags": [
+    {
+      "description": "카테고리 조회 API",
+      "name": "카테고리"
+    },
+    {
+      "description": "브랜드 조회 API",
+      "name": "브랜드"
+    },
+    {
+      "description": "제품 조회 API",
+      "name": "제품"
+    },
+    {
+      "description": "성분 조회 API",
+      "name": "성분"
+    }
+  ],
   "paths": {
     "/api/brands": {
       "get": {
+        "description": "브랜드 목록을 조회하거나 브랜드명으로 검색한다. keyword 를 생략하면 전체를 브랜드명 오름차순으로 반환한다.",
         "operationId": "findBrands",
         "parameters": [
           {
@@ -55,6 +74,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "브랜드 조회",
         "tags": [
           "브랜드"
         ]
@@ -62,6 +82,7 @@
     },
     "/api/brands/{brandId}": {
       "get": {
+        "description": "브랜드 ID 에 해당하는 상세 정보를 조회한다.",
         "operationId": "findBrand",
         "parameters": [
           {
@@ -116,6 +137,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "브랜드 상세 조회",
         "tags": [
           "브랜드"
         ]
@@ -123,6 +145,7 @@
     },
     "/api/categories": {
       "get": {
+        "description": "제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.",
         "operationId": "findCategories",
         "responses": {
           "200": {
@@ -156,6 +179,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "카테고리 조회",
         "tags": [
           "카테고리"
         ]
@@ -163,6 +187,7 @@
     },
     "/api/ingredients": {
       "get": {
+        "description": "성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.",
         "operationId": "findIngredients",
         "parameters": [
           {
@@ -206,6 +231,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "성분 조회",
         "tags": [
           "성분"
         ]
@@ -213,6 +239,7 @@
     },
     "/api/ingredients/{ingredientId}": {
       "get": {
+        "description": "성분 ID 에 해당하는 상세 정보를 조회한다.",
         "operationId": "findIngredient",
         "parameters": [
           {
@@ -267,6 +294,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "성분 상세 조회",
         "tags": [
           "성분"
         ]
@@ -274,6 +302,7 @@
     },
     "/api/products": {
       "get": {
+        "description": "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.",
         "operationId": "findProducts",
         "parameters": [
           {
@@ -447,6 +476,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "제품 조회",
         "tags": [
           "제품"
         ]
@@ -454,6 +484,7 @@
     },
     "/api/products/count": {
       "get": {
+        "description": "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.",
         "operationId": "countProducts",
         "parameters": [
           {
@@ -592,6 +623,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "제품 필터 결과 개수 조회",
         "tags": [
           "제품"
         ]
@@ -599,6 +631,7 @@
     },
     "/api/products/detail/{productId}": {
       "get": {
+        "description": "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.",
         "operationId": "findProductDetail",
         "parameters": [
           {
@@ -653,6 +686,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "제품 상세 조회",
         "tags": [
           "제품"
         ]
@@ -660,6 +694,7 @@
     },
     "/api/products/{productId}": {
       "get": {
+        "description": "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.",
         "operationId": "findProduct",
         "parameters": [
           {
@@ -714,6 +749,7 @@
             "description": "서버 오류"
           }
         },
+        "summary": "제품 간단 조회",
         "tags": [
           "제품"
         ]
