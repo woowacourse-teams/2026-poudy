@@ -1,4 +1,4 @@
-package com.poudy.product.dto;
+package com.poudy.product.controller.dto;
 
 import com.poudy.common.dto.PaginationResponse;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,4 @@
-package com.poudy.category.dto;
+package com.poudy.category.controller.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

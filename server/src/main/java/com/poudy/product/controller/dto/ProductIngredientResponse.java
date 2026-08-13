@@ -1,6 +1,6 @@
-package com.poudy.product.dto;
+package com.poudy.product.controller.dto;
 
-import com.poudy.ingredient.dto.EffectResponse;
+import com.poudy.ingredient.controller.dto.EffectResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

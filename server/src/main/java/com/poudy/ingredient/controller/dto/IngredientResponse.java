@@ -1,4 +1,4 @@
-package com.poudy.ingredient.dto;
+package com.poudy.ingredient.controller.dto;
 
 import com.poudy.ingredient.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.Schema;

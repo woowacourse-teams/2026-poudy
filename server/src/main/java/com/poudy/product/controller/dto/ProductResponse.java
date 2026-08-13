@@ -1,6 +1,6 @@
-package com.poudy.product.dto;
+package com.poudy.product.controller.dto;
 
-import com.poudy.brand.dto.BrandSummaryResponse;
+import com.poudy.brand.controller.dto.BrandSummaryResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;

@@ -1,7 +1,7 @@
 package com.poudy.brand.controller;
 
-import com.poudy.brand.dto.BrandListResponse;
-import com.poudy.brand.dto.BrandResponse;
+import com.poudy.brand.controller.dto.BrandListResponse;
+import com.poudy.brand.controller.dto.BrandResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

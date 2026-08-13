@@ -1,4 +1,4 @@
-package com.poudy.ingredient.dto;
+package com.poudy.ingredient.controller.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

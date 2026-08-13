@@ -1,8 +1,8 @@
 package com.poudy.category.controller;
 
-import com.poudy.category.dto.CategoryChildResponse;
-import com.poudy.category.dto.CategoryListResponse;
-import com.poudy.category.dto.CategoryResponse;
+import com.poudy.category.controller.dto.CategoryChildResponse;
+import com.poudy.category.controller.dto.CategoryListResponse;
+import com.poudy.category.controller.dto.CategoryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;

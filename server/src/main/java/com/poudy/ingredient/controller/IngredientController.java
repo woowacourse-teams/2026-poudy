@@ -1,10 +1,10 @@
 package com.poudy.ingredient.controller;
 
-import com.poudy.ingredient.dto.EffectResponse;
-import com.poudy.ingredient.dto.IngredientDetailResponse;
-import com.poudy.ingredient.dto.IngredientListResponse;
-import com.poudy.ingredient.dto.IngredientResponse;
-import com.poudy.ingredient.dto.IngredientSummaryResponse;
+import com.poudy.ingredient.controller.dto.EffectResponse;
+import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
+import com.poudy.ingredient.controller.dto.IngredientListResponse;
+import com.poudy.ingredient.controller.dto.IngredientResponse;
+import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
