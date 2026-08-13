@@ -71,11 +71,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return ErrorCode.INTERNAL_SERVER_ERROR;
         }
 
-        return switch (HttpStatus.valueOf(status.value())) {
-            case BAD_REQUEST -> ErrorCode.INVALID_QUERY_PARAMETER;
-            case NOT_FOUND -> ErrorCode.ENDPOINT_NOT_FOUND;
-            default -> ErrorCode.UNSUPPORTED_REQUEST;
-        };
+        if (status.isSameCodeAs(HttpStatus.BAD_REQUEST)) {
+            return ErrorCode.INVALID_QUERY_PARAMETER;
+        }
+        if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
+            return ErrorCode.ENDPOINT_NOT_FOUND;
+        }
+
+        return ErrorCode.UNSUPPORTED_REQUEST;
     }
 
     private ResponseEntity<ProblemDetail> serverError() {

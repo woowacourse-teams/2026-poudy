@@ -1,5 +1,7 @@
 package com.poudy.product.domain;
 
+import java.util.Objects;
+
 public enum ProductSort {
 
     NAME_ASC,
@@ -10,6 +12,6 @@ public enum ProductSort {
     public static final String DEFAULT_NAME = "NAME_ASC";
 
     public static ProductSort orDefault(ProductSort sort) {
-        return sort == null ? NAME_ASC : sort;
+        return Objects.requireNonNullElse(sort, NAME_ASC);
     }
 }

@@ -71,7 +71,11 @@ public class ErrorResponseConfig {
 
         String[] segments = path.split("/");
 
-        return segments.length > 2 ? Optional.ofNullable(NOT_FOUND_CODES.get(segments[2])) : Optional.empty();
+        if (segments.length <= 2) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(NOT_FOUND_CODES.get(segments[2]));
     }
 
     private Schema<?> problemDetailSchema() {
