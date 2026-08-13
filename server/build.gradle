@@ -24,13 +24,11 @@ repositories {
 ext {
     springdocVersion = '3.1.0'
     openApiDocPort = 8099
-    // Exec 태스크는 PATH 에서 실행 파일을 그대로 찾으므로 Windows 의 .cmd 래퍼를
-    // 직접 지정해야 한다. 'npx' 로 두면 Windows 에서 실행 파일을 찾지 못한다.
+    // Exec 는 PATH 에서 실행 파일을 그대로 찾아 Windows 에서 'npx' 를 찾지 못한다.
     isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
 }
 
 dependencies {
-    // testImplementation extends implementation, so it inherits the BOM.
     implementation platform(SpringBootPlugin.BOM_COORDINATES)
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -43,40 +41,31 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 }
 
-// 자바 포맷을 자동으로 맞춘다. 규칙은 config/formatter.xml 에 있다.
-// spotlessCheck 는 check 에 물려 있어 build 로도 걸린다.
 spotless {
     java {
         target 'src/**/*.java'
 
-        // 스텝은 선언 순서대로 돈다.
-        // 원본 스타일 파일에 없는 스텝이다. IntelliJ 는 코드 스타일이 아니라
-        // Optimize Imports 로 처리한다.
         removeUnusedImports()
 
-        // static 을 먼저 두고 나머지를 한 덩어리로. '\\#' 가 static 이다.
+        // '\\#' 가 static import 다.
         importOrder('\\#', '')
 
         eclipse().configFile(rootProject.file('config/formatter.xml'))
 
-        // 포매터가 줄 끝 공백을 남기는 경우가 있어 뒤에 둔다.
+        // 포매터가 줄 끝 공백을 남기므로 뒤에 둔다.
         trimTrailingWhitespace()
         endWithNewline()
 
-        // // spotless:off 와 // spotless:on 사이는 원문 그대로 둔다.
         toggleOffOn()
     }
 }
 
-// 포매터가 고칠 수 없는 규칙만 검사한다. checkstyleMain 과 checkstyleTest 도
-// check 에 물린다.
 checkstyle {
     toolVersion = '13.9.0'
     configFile = file('config/checkstyle/checkstyle.xml')
     maxWarnings = 0
 }
 
-// bootJar만 만들면 되므로 사용하지 않는 plain jar 생성을 끈다.
 tasks.named('jar') {
     enabled = false
 }
@@ -88,26 +77,18 @@ tasks.named('test') {
     }
 }
 
-// 저장소 Git 설정을 등록한다. 실제 동작은 루트의 setup-git.sh 가 한다.
-// JDK 없이도 등록할 수 있도록 스크립트를 원본으로 두고, 여기서는 위임만 한다.
+// JDK 없이도 등록할 수 있도록 스크립트를 원본으로 두고 위임만 한다.
 tasks.register('setupGit', Exec) {
     group = 'build setup'
     description = 'Installs repository Git hooks and commit message template'
     workingDir = rootProject.projectDir
     commandLine 'sh', '../setup-git.sh'
-    // CI 에서는 훅이 쓰이지 않으므로 건너뛴다.
     onlyIf { rootProject.file('../.git').exists() && System.getenv('CI') == null }
 }
 
-// 앱을 띄워 OpenAPI 문서를 뽑는다.
-// 기본 포트(8080)를 쓰면 개발 중 띄워둔 앱이 8080 을 점유했을 때
-// 포크된 앱이 바인딩에 실패해도 플러그인이 그 앱의 응답을 받아 저장한다.
-// 낡은 문서가 조용히 커밋되므로 전용 포트를 쓴다.
-//
-// outputDir 을 프로젝트 루트로 두면 server/ 전체가 이 태스크의 출력이 되어,
-// 그 아래를 읽는 태스크(spotless, checkstyle, compile, test)가 전부 의존성
-// 미선언으로 잡힌다. build 와 한 번에 실행하면 Gradle 이 거부하므로 build 아래에
-// 뽑고, 저장소에 커밋할 위치로는 copyOpenApiDoc 이 옮긴다.
+// 전용 포트를 쓴다. 8080 이면 개발 중 띄워둔 앱의 응답을 받아 낡은 문서가 조용히 커밋된다.
+// outputDir 을 프로젝트 루트로 두면 server/ 전체가 이 태스크의 출력이 되어 그 아래를 읽는
+// 태스크가 전부 의존성 미선언으로 잡힌다. build 아래에 뽑고 copyOpenApiDoc 이 옮긴다.
 openApi {
     outputDir = layout.buildDirectory.dir('openapi')
     outputFileName = 'openapi.json'
@@ -134,17 +115,13 @@ tasks.register('copyOpenApiDoc') {
     }
 }
 
-// 포크된 앱은 기본적으로 Gradle 이 돌고 있는 JVM 을 그대로 쓴다.
-// 팀원의 기본 JDK 가 21 보다 낮으면 21 로 컴파일된 클래스를 못 읽어 기동에 실패하는데,
-// 플러그인은 원인 대신 "30초 기다렸다"는 메시지만 남겨 원인 찾기가 어렵다.
-// 컴파일과 같은 툴체인을 쓰게 해서 기본 JDK 와 무관하게 돌아가도록 한다.
-// 위 java.toolchain 을 그대로 참조하므로 버전을 올릴 때 한 곳만 고치면 된다.
+// 포크된 앱은 Gradle 이 도는 JVM 을 쓴다. 기본 JDK 가 21 보다 낮으면 기동에 실패하는데
+// 플러그인은 "30초 기다렸다"는 메시지만 남긴다. 컴파일과 같은 툴체인을 쓰게 한다.
 tasks.named('forkedSpringBootRun') {
     javaLauncher = javaToolchains.launcherFor(java.toolchain)
 }
 
 // api.zod.ts 가 api.zod.types.d.ts 를 import 하므로 둘 다 커밋한다.
-// 프론트엔드는 재생성을 신경 쓸 필요 없이 커밋된 파일을 import 하면 된다.
 tasks.register('generateApiZod', Exec) {
     group = 'openapi'
     description = 'Generates zod schemas from openapi.json'
@@ -154,7 +131,6 @@ tasks.register('generateApiZod', Exec) {
     def declarations = rootProject.file('../common/api.zod.types.d.ts')
     def source = layout.projectDirectory.file('openapi.json')
 
-    // 문서 내용이 그대로면 다시 만들지 않는다.
     inputs.file(source)
     outputs.files(output, declarations)
 
@@ -165,20 +141,16 @@ tasks.register('generateApiZod', Exec) {
             source.asFile.absolutePath,
             '-r', 'zod', '--schemas-only', '-o', output.absolutePath
 
-    // 생성기 출력을 그대로 두면 쓸 수 없는 부분이 있어 여기서 다듬는다.
-    // 손으로 고치면 다음 생성 때 되돌아가고 훅과 CI 가 낡았다고 잡으므로, 생성 단계에 붙인다.
+    // 손으로 고치면 다음 생성 때 되돌아가므로 생성 단계에 붙인다.
     doLast {
-        // zod 의 z.iso.datetime() 은 기본적으로 오프셋을 거부한다. 서버는 OffsetDateTime 을
-        // +09:00 로 내보내므로 그대로 두면 프론트에서 파싱이 실패한다.
+        // z.iso.datetime() 은 오프셋을 거부한다. 서버는 OffsetDateTime 을 +09:00 로 내보낸다.
         output.text = tidy(output.text.replace('z.iso.datetime()', 'z.iso.datetime({ offset: true })'), false)
 
-        // 선언 파일에 남는 것은 생성기의 구역 표시 주석뿐이라 지운다.
         // api.zod.ts 의 // @ts-nocheck 는 지우면 타입 검사가 깨지므로 건드리지 않는다.
         declarations.text = tidy(declarations.text, true)
     }
 }
 
-// 줄 끝 공백을 없애고, 선택적으로 주석만 있는 줄을 지운다.
 def tidy(String text, boolean dropComments) {
     return text.readLines()
             .findAll { !dropComments || !it.trim().startsWith('//') }
@@ -186,7 +158,6 @@ def tidy(String text, boolean dropComments) {
             .join('\n') + '\n'
 }
 
-// 훅과 CI 의 진입점.
 tasks.register('generateApiArtifacts') {
     group = 'openapi'
     description = 'Generates every artifact the frontend consumes'
