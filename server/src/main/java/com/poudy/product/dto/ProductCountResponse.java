@@ -1,6 +1,7 @@
 package com.poudy.product.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
-public record ProductCountResponse(@NotNull Long count) {
+public record ProductCountResponse(@NotNull @Schema(example = "127") Long count) {
 }

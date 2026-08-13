@@ -6,6 +6,7 @@ import com.poudy.ingredient.dto.IngredientListResponse;
 import com.poudy.ingredient.dto.IngredientResponse;
 import com.poudy.ingredient.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -26,13 +27,15 @@ public class IngredientController {
 
     @Operation(summary = "성분 조회", description = "성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.")
     @GetMapping
-    public ResponseEntity<IngredientListResponse> findIngredients(@RequestParam(required = false) String keyword) {
+    public ResponseEntity<IngredientListResponse> findIngredients(
+            @Parameter(example = "글리세린") @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(new IngredientListResponse(List.of(sampleIngredient(1005L))));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 상세 정보를 조회한다.")
     @GetMapping("/{ingredientId}")
-    public ResponseEntity<IngredientDetailResponse> findIngredient(@PathVariable Long ingredientId) {
+    public ResponseEntity<IngredientDetailResponse> findIngredient(
+            @Parameter(example = "1005") @PathVariable Long ingredientId) {
         return ResponseEntity.ok(sampleIngredientDetail(ingredientId));
     }
 
@@ -41,8 +44,17 @@ public class IngredientController {
     }
 
     private IngredientDetailResponse sampleIngredientDetail(Long id) {
-        return new IngredientDetailResponse(id, "글리세린", "Glycerin", "피부 표면의 수분을 끌어당겨 유지시키는 대표적인 보습 성분이다.",
-                List.of(SAMPLE_EFFECT), List.of(), 84L, List.of("대한화장품협회 성분사전"), List.of("PubMed 논문 링크"),
-                List.of(new IngredientSummaryResponse(1010L, "부틸렌글라이콜", "Butylene Glycol")), SAMPLE_UPDATED_AT);
+        return new IngredientDetailResponse(
+                id,
+                "글리세린",
+                "Glycerin",
+                "피부 표면의 수분을 끌어당겨 유지시키는 대표적인 보습 성분이다.",
+                List.of(SAMPLE_EFFECT),
+                List.of(),
+                84L,
+                List.of("성분 정보 출처"),
+                List.of("성분 효과 출처"),
+                List.of(new IngredientSummaryResponse(1010L, "부틸렌글라이콜", "Butylene Glycol")),
+                SAMPLE_UPDATED_AT);
     }
 }

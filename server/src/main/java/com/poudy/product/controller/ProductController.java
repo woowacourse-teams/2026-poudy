@@ -2,6 +2,8 @@ package com.poudy.product.controller;
 
 import com.poudy.brand.dto.BrandSummaryResponse;
 import com.poudy.category.dto.CategorySummaryResponse;
+import com.poudy.common.dto.PaginationRequest;
+import com.poudy.common.dto.PaginationResponse;
 import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.dto.EffectResponse;
 import com.poudy.product.dto.BenefitResponse;
@@ -9,10 +11,11 @@ import com.poudy.product.dto.ProductCountResponse;
 import com.poudy.product.dto.ProductDetailResponse;
 import com.poudy.product.dto.ProductFilterRequest;
 import com.poudy.product.dto.ProductIngredientResponse;
-import com.poudy.product.dto.ProductPageRequest;
 import com.poudy.product.dto.ProductPageResponse;
 import com.poudy.product.dto.ProductResponse;
+import com.poudy.product.dto.ProductSortRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
@@ -29,15 +32,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(12L, "브랜드명",
+    private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(
+            12L,
+            "브랜드 이름",
             "https://cdn.example.com/brands/12/logo.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
 
     @Operation(summary = "제품 조회", description = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.")
     @GetMapping
-    public ResponseEntity<ProductPageResponse> findProducts(@Valid @ModelAttribute ProductFilterRequest filter,
-            @Valid @ModelAttribute ProductPageRequest page) {
-        return ResponseEntity.ok(new ProductPageResponse(SAMPLE_PRODUCTS, page.page(), page.size(), false));
+    public ResponseEntity<ProductPageResponse> findProducts(
+            @Valid @ModelAttribute ProductFilterRequest filter,
+            @Valid @ModelAttribute ProductSortRequest sort,
+            @Valid @ModelAttribute PaginationRequest pagination) {
+        return ResponseEntity.ok(
+                new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
     }
 
     @Operation(summary = "제품 필터 결과 개수 조회", description = "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.")
@@ -48,28 +56,47 @@ public class ProductController {
 
     @Operation(summary = "제품 간단 조회", description = "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.")
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> findProduct(@PathVariable Long productId) {
+    public ResponseEntity<ProductResponse> findProduct(@Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProduct(productId));
     }
 
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
     @GetMapping("/detail/{productId}")
-    public ResponseEntity<ProductDetailResponse> findProductDetail(@PathVariable Long productId) {
+    public ResponseEntity<ProductDetailResponse> findProductDetail(
+            @Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProductDetail(productId));
     }
 
     private static ProductResponse sampleProduct(Long id) {
-        return new ProductResponse(id, "수분 진정 토너", SAMPLE_BRAND, "https://cdn.example.com/products/" + id + ".png",
-                18000L, new BigDecimal("200"), "ml");
+        return new ProductResponse(
+                id,
+                "스킨케어 이름",
+                SAMPLE_BRAND,
+                "https://cdn.example.com/products/" + id + ".png",
+                18000L,
+                new BigDecimal("200"),
+                "ml");
     }
 
     private static ProductDetailResponse sampleProductDetail(Long id) {
-        return new ProductDetailResponse(id, "수분 진정 토너", SAMPLE_BRAND,
+        return new ProductDetailResponse(
+                id,
+                "스킨케어 이름",
+                SAMPLE_BRAND,
                 List.of(new CategorySummaryResponse(1L, "스킨케어"), new CategorySummaryResponse(7L, "토너")),
-                "https://cdn.example.com/products/" + id + ".png", 18000L, new BigDecimal("200"), "ml", 3, 1,
+                "https://cdn.example.com/products/" + id + ".png",
+                18000L,
+                new BigDecimal("200"),
+                "ml",
+                3,
+                1,
                 List.of(new BenefitResponse(1L, "보습", "#4CAF50", List.of(1001L, 1005L))),
-                List.of(new ProductIngredientResponse(1001L, "정제수", "Water", List.of()),
-                        new ProductIngredientResponse(1005L, "글리세린", "Glycerin",
+                List.of(
+                        new ProductIngredientResponse(1001L, "정제수", "Water", List.of()),
+                        new ProductIngredientResponse(
+                                1005L,
+                                "글리세린",
+                                "Glycerin",
                                 List.of(new EffectResponse(1L, "보습", "#4CAF50")))),
                 List.of(ExcludeCode.PARABEN_7, ExcludeCode.MINERAL_OIL));
     }
