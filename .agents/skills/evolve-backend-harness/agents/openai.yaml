@@ -1,0 +1,4 @@
+interface:
+  display_name: "백엔드 하네스 발전"
+  short_description: "개발 근거에 따라 백엔드 하네스를 점진적으로 개선"
+  default_prompt: "$evolve-backend-harness로 최근 개발 결과를 바탕으로 백엔드 하네스를 개선해줘."
