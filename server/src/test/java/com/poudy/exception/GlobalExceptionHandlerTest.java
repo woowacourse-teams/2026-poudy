@@ -12,30 +12,27 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void invalidRequestExceptionKeepsItsErrorCode() {
-        ResponseEntity<ProblemDetail> response = handler
-                .handleInvalidRequestException(new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER));
-
-        assertProblem(response, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_QUERY_PARAMETER);
+    void mapsEachCustomExceptionToItsStatus() {
+        assertProblem(
+                handler.handleInvalidRequestException(new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER)),
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_QUERY_PARAMETER);
+        assertProblem(
+                handler.handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND)),
+                HttpStatus.NOT_FOUND,
+                ErrorCode.PRODUCT_NOT_FOUND);
+        assertProblem(
+                handler.handleConflictException(new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
+                HttpStatus.CONFLICT,
+                ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }
 
     @Test
-    void resourceNotFoundExceptionKeepsItsErrorCode() {
-        ResponseEntity<ProblemDetail> product = handler
-                .handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+    void distinguishesTargetsByErrorCodeAlone() {
         ResponseEntity<ProblemDetail> brand = handler
                 .handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
 
-        assertProblem(product, HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(brand, HttpStatus.NOT_FOUND, ErrorCode.BRAND_NOT_FOUND);
-    }
-
-    @Test
-    void conflictExceptionKeepsItsErrorCode() {
-        ResponseEntity<ProblemDetail> response = handler
-                .handleConflictException(new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER));
-
-        assertProblem(response, HttpStatus.CONFLICT, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }
 
     @Test

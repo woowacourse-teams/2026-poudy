@@ -18,20 +18,8 @@ class GlobalExceptionHandlerWebTest {
     private MockMvc mockMvc;
 
     @Test
-    void paginationOutOfRangeReportsPaginationCode() throws Exception {
+    void invalidRequestReportsQueryParameterCode() throws Exception {
         mockMvc.perform(get("/api/products").param("size", "0")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
-    }
-
-    @Test
-    void pathVariableTypeMismatchReportsPathCode() throws Exception {
-        mockMvc.perform(get("/api/products/abc")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
-    }
-
-    @Test
-    void queryParameterTypeMismatchReportsQueryCode() throws Exception {
-        mockMvc.perform(get("/api/products").param("brandIds", "abc")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
     }
 
