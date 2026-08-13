@@ -18,33 +18,39 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void invalidInputExceptionReturnsBadRequest() {
-        ResponseEntity<ProblemDetail> response = handler
-                .handleInvalidInputException(new InvalidInputException(ErrorCode.INVALID_QUERY_PARAMETER));
-
-        assertProblem(response, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_QUERY_PARAMETER);
-    }
-
-    @Test
-    void entityNotFoundExceptionReturnsNotFound() {
-        ResponseEntity<ProblemDetail> response = handler
-                .handleEntityNotFoundException(new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+    void unknownProductExceptionReturnsProductNotFound() {
+        ResponseEntity<ProblemDetail> response = handler.handleUnknownProductException(new UnknownProductException());
 
         assertProblem(response, HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     @Test
-    void businessRuleViolationExceptionReturnsConflict() {
-        ResponseEntity<ProblemDetail> response = handler.handleBusinessRuleViolationException(
-                new BusinessRuleViolationException(ErrorCode.CONFLICTING_INGREDIENT_FILTER));
+    void unknownBrandExceptionReturnsBrandNotFound() {
+        ResponseEntity<ProblemDetail> response = handler.handleUnknownBrandException(new UnknownBrandException());
+
+        assertProblem(response, HttpStatus.NOT_FOUND, ErrorCode.BRAND_NOT_FOUND);
+    }
+
+    @Test
+    void unknownIngredientExceptionReturnsIngredientNotFound() {
+        ResponseEntity<ProblemDetail> response = handler
+                .handleUnknownIngredientException(new UnknownIngredientException());
+
+        assertProblem(response, HttpStatus.NOT_FOUND, ErrorCode.INGREDIENT_NOT_FOUND);
+    }
+
+    @Test
+    void incompatibleIngredientFilterExceptionReturnsConflict() {
+        ResponseEntity<ProblemDetail> response = handler
+                .handleIncompatibleIngredientFilterException(new IncompatibleIngredientFilterException());
 
         assertProblem(response, HttpStatus.CONFLICT, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }
 
     @Test
-    void infrastructureExceptionHidesInternalMessage() {
-        ResponseEntity<ProblemDetail> response = handler.handleInfrastructureException(
-                new InfrastructureException("database password", new RuntimeException()));
+    void catalogAccessExceptionHidesInternalMessage() {
+        ResponseEntity<ProblemDetail> response = handler
+                .handleCatalogAccessException(new CatalogAccessException("database password", new RuntimeException()));
 
         assertProblem(response, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();

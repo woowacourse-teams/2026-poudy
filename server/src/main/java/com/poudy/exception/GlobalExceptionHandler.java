@@ -49,24 +49,29 @@ public class GlobalExceptionHandler {
                 .body(validationProblem(HttpStatus.BAD_REQUEST, exception.getFieldErrors()));
     }
 
-    @ExceptionHandler(InvalidInputException.class)
-    public ResponseEntity<ProblemDetail> handleInvalidInputException(InvalidInputException exception) {
-        return problem(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());
+    @ExceptionHandler(UnknownProductException.class)
+    public ResponseEntity<ProblemDetail> handleUnknownProductException(UnknownProductException exception) {
+        return problem(HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND, exception.getMessage());
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleEntityNotFoundException(EntityNotFoundException exception) {
-        return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
+    @ExceptionHandler(UnknownBrandException.class)
+    public ResponseEntity<ProblemDetail> handleUnknownBrandException(UnknownBrandException exception) {
+        return problem(HttpStatus.NOT_FOUND, ErrorCode.BRAND_NOT_FOUND, exception.getMessage());
     }
 
-    @ExceptionHandler(BusinessRuleViolationException.class)
-    public ResponseEntity<ProblemDetail> handleBusinessRuleViolationException(
-            BusinessRuleViolationException exception) {
-        return problem(HttpStatus.CONFLICT, exception.code(), exception.getMessage());
+    @ExceptionHandler(UnknownIngredientException.class)
+    public ResponseEntity<ProblemDetail> handleUnknownIngredientException(UnknownIngredientException exception) {
+        return problem(HttpStatus.NOT_FOUND, ErrorCode.INGREDIENT_NOT_FOUND, exception.getMessage());
     }
 
-    @ExceptionHandler(InfrastructureException.class)
-    public ResponseEntity<ProblemDetail> handleInfrastructureException(InfrastructureException exception) {
+    @ExceptionHandler(IncompatibleIngredientFilterException.class)
+    public ResponseEntity<ProblemDetail> handleIncompatibleIngredientFilterException(
+            IncompatibleIngredientFilterException exception) {
+        return problem(HttpStatus.CONFLICT, ErrorCode.CONFLICTING_INGREDIENT_FILTER, exception.getMessage());
+    }
+
+    @ExceptionHandler(CatalogAccessException.class)
+    public ResponseEntity<ProblemDetail> handleCatalogAccessException(CatalogAccessException exception) {
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR, SERVER_ERROR_MESSAGE);
     }
 
