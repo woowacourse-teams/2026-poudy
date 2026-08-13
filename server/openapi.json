@@ -9,6 +9,243 @@
       "url": "/"
     }
   ],
-  "paths": {},
-  "components": {}
+  "paths": {
+    "/api/ingredients": {
+      "get": {
+        "operationId": "findIngredients",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "ingredient-controller"
+        ]
+      }
+    },
+    "/api/ingredients/{ingredientId}": {
+      "get": {
+        "operationId": "findIngredient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ingredientId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientDetailResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "ingredient-controller"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EffectResponse": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "name"
+        ]
+      },
+      "IngredientDetailResponse": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "effectSources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "groupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SENSITIVE",
+                "FRAGRANCE",
+                "ETHANOL",
+                "PARABEN_7",
+                "MINERAL_OIL",
+                "ALLERGEN"
+              ]
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "infoSources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "koreanName": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "relatedIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientSummaryResponse"
+            }
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "effectSources",
+          "effects",
+          "englishName",
+          "groupCodes",
+          "id",
+          "infoSources",
+          "koreanName",
+          "productCount",
+          "relatedIngredients",
+          "updatedAt"
+        ]
+      },
+      "IngredientListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "IngredientResponse": {
+        "type": "object",
+        "properties": {
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "groupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SENSITIVE",
+                "FRAGRANCE",
+                "ETHANOL",
+                "PARABEN_7",
+                "MINERAL_OIL",
+                "ALLERGEN"
+              ]
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "koreanName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "effects",
+          "englishName",
+          "groupCodes",
+          "id",
+          "koreanName"
+        ]
+      },
+      "IngredientSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "englishName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "koreanName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "koreanName"
+        ]
+      }
+    }
+  }
 }

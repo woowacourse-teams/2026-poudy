@@ -4,22 +4,60 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
+export const EffectResponse = z.object({ color: z.string(), id: z.number().int(), name: z.string() });
+
+export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
+export const IngredientSummaryResponse = z.object({ englishName: z.string(), id: z.number().int(), koreanName: z.string() });
+
+export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
+export const IngredientDetailResponse = z.object({ description: z.string(), effectSources: z.array(z.string()), effects: z.array(EffectResponse), englishName: z.string(), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), id: z.number().int(), infoSources: z.array(z.string()), koreanName: z.string(), productCount: z.number().int(), relatedIngredients: z.array(IngredientSummaryResponse), updatedAt: z.string() });
+
+export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
+export const IngredientResponse = z.object({ effects: z.array(EffectResponse), englishName: z.string(), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), id: z.number().int(), koreanName: z.string() });
+
+export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
+export const IngredientListResponse = z.object({ items: z.array(IngredientResponse) });
+
 // </Schemas>
 
 // <Endpoints>
+export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
+export const get_FindIngredients = {
+  method: z.literal("GET"),
+  path: z.literal("/api/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ keyword: z.string() }).partial().optional() },
+  responses: { 200: IngredientListResponse },
+};
+
+export type get_FindIngredient = __TypedOpenapi.Endpoints.get_FindIngredient;
+export const get_FindIngredient = {
+  method: z.literal("GET"),
+  path: z.literal("/api/ingredients/{ingredientId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ ingredientId: z.coerce.number().int() }) },
+  responses: { 200: IngredientDetailResponse },
+};
+
 // </Endpoints>
 
   
      // <EndpointByMethod>
      export const EndpointByMethod: __TypedOpenapi.EndpointByMethod = {
-     
+     get: {
+           "/api/ingredients": get_FindIngredients as any,
+"/api/ingredients/{ingredientId}": get_FindIngredient as any
+         }
      }
      export type EndpointByMethod = __TypedOpenapi.EndpointByMethod;
      // </EndpointByMethod>
      
 
     // <EndpointByMethod.Shorthands>
-    
+    export type GetEndpoints = EndpointByMethod["get"]
     // </EndpointByMethod.Shorthands>
     
   
@@ -412,7 +450,33 @@ export class ApiClient {
     return
   }
 
-  
+  // <ApiClient.get>
+    get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<SafeApiResponse<TEndpoint>>;
+
+    get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<InferSuccessData<TEndpoint>>;
+
+    get<Path extends keyof GetEndpoints, _TEndpoint extends GetEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<any>
+    ): Promise<any> {
+        return this.request("get", path, ...params);
+    }
+    // </ApiClient.get>
+    
 
     // <ApiClient.request>
     /**
