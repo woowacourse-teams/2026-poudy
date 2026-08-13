@@ -151,10 +151,371 @@
           "ingredient-controller"
         ]
       }
+    },
+    "/api/products": {
+      "get": {
+        "operationId": "findProducts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "brandIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "moistureLevel",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "maximum": 3,
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "oilLevel",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "maximum": 3,
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeCodes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "SENSITIVE",
+                  "FRAGRANCE",
+                  "ETHANOL",
+                  "PARABEN_7",
+                  "MINERAL_OIL",
+                  "ALLERGEN"
+                ]
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeIngredientIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeIngredientIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NAME_ASC"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPageResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "product-controller"
+        ]
+      }
+    },
+    "/api/products/count": {
+      "get": {
+        "operationId": "countProducts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "brandIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "moistureLevel",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "maximum": 3,
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "oilLevel",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "maximum": 3,
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeCodes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "SENSITIVE",
+                  "FRAGRANCE",
+                  "ETHANOL",
+                  "PARABEN_7",
+                  "MINERAL_OIL",
+                  "ALLERGEN"
+                ]
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeIngredientIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeIngredientIds",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCountResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "product-controller"
+        ]
+      }
+    },
+    "/api/products/detail/{productId}": {
+      "get": {
+        "operationId": "findProduct",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "DETAIL",
+              "enum": [
+                "DETAIL",
+                "SIMPLE"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProductDetailResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "product-controller"
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "BenefitResponse": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ingredientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "ingredientIds",
+          "name"
+        ]
+      },
       "BrandListResponse": {
         "type": "object",
         "properties": {
@@ -192,6 +553,26 @@
           "logoUrl",
           "name",
           "productCount"
+        ]
+      },
+      "BrandSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "logoUrl",
+          "name"
         ]
       },
       "CategoryChildResponse": {
@@ -255,6 +636,22 @@
           "id",
           "name",
           "productCount"
+        ]
+      },
+      "CategorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "EffectResponse": {
@@ -427,6 +824,197 @@
           "englishName",
           "id",
           "koreanName"
+        ]
+      },
+      "ProductCountResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "ProductDetailResponse": {
+        "type": "object",
+        "properties": {
+          "benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BenefitResponse"
+            }
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandSummaryResponse"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategorySummaryResponse"
+            }
+          },
+          "freeOfCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SENSITIVE",
+                "FRAGRANCE",
+                "ETHANOL",
+                "PARABEN_7",
+                "MINERAL_OIL",
+                "ALLERGEN"
+              ]
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductIngredientResponse"
+            }
+          },
+          "moistureLevel": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 3,
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "oilLevel": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 3,
+            "minimum": 0
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "volumeUnit": {
+            "type": "string"
+          },
+          "volumeValue": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "benefits",
+          "brand",
+          "categories",
+          "freeOfCodes",
+          "id",
+          "imageUrl",
+          "ingredients",
+          "moistureLevel",
+          "name",
+          "oilLevel",
+          "price",
+          "volumeUnit",
+          "volumeValue"
+        ]
+      },
+      "ProductIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "koreanName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "effects",
+          "englishName",
+          "id",
+          "koreanName"
+        ]
+      },
+      "ProductPageResponse": {
+        "type": "object",
+        "properties": {
+          "hasNext": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "hasNext",
+          "items",
+          "page",
+          "size"
+        ]
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/BrandSummaryResponse"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "volumeUnit": {
+            "type": "string"
+          },
+          "volumeValue": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "brand",
+          "id",
+          "imageUrl",
+          "name",
+          "price",
+          "volumeUnit",
+          "volumeValue"
         ]
       }
     }
