@@ -5,6 +5,7 @@ import com.poudy.ingredient.dto.IngredientDetailResponse;
 import com.poudy.ingredient.dto.IngredientListResponse;
 import com.poudy.ingredient.dto.IngredientResponse;
 import com.poudy.ingredient.dto.IngredientSummaryResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "성분")
+@Tag(name = "성분", description = "성분 조회 API")
 @RestController
 @RequestMapping("/api/ingredients")
 public class IngredientController {
@@ -23,11 +24,13 @@ public class IngredientController {
     private static final EffectResponse SAMPLE_EFFECT = new EffectResponse(1L, "보습", "#4CAF50");
     private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
 
+    @Operation(summary = "성분 조회", description = "성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.")
     @GetMapping
     public ResponseEntity<IngredientListResponse> findIngredients(@RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(new IngredientListResponse(List.of(sampleIngredient(1005L))));
     }
 
+    @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 상세 정보를 조회한다.")
     @GetMapping("/{ingredientId}")
     public ResponseEntity<IngredientDetailResponse> findIngredient(@PathVariable Long ingredientId) {
         return ResponseEntity.ok(sampleIngredientDetail(ingredientId));
