@@ -59,7 +59,7 @@
               "application/problem+json": {
                 "example": {
                   "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "keyword 값이 올바르지 않습니다.",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -124,8 +124,8 @@
             "content": {
               "application/problem+json": {
                 "example": {
-                  "code": "INVALID_PATH_PARAMETER",
-                  "detail": "brandId 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -260,7 +260,7 @@
               "application/problem+json": {
                 "example": {
                   "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "keyword 값이 올바르지 않습니다.",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -325,8 +325,8 @@
             "content": {
               "application/problem+json": {
                 "example": {
-                  "code": "INVALID_PATH_PARAMETER",
-                  "detail": "ingredientId 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -558,23 +558,11 @@
           "400": {
             "content": {
               "application/problem+json": {
-                "examples": {
-                  "INVALID_PAGINATION_PARAMETER": {
-                    "value": {
-                      "code": "INVALID_PAGINATION_PARAMETER",
-                      "detail": "size 값이 올바르지 않습니다.",
-                      "status": 400,
-                      "title": "Bad Request"
-                    }
-                  },
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "code": "INVALID_QUERY_PARAMETER",
-                      "detail": "keyword 값이 올바르지 않습니다.",
-                      "status": 400,
-                      "title": "Bad Request"
-                    }
-                  }
+                "example": {
+                  "code": "INVALID_QUERY_PARAMETER",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "status": 400,
+                  "title": "Bad Request"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
@@ -762,7 +750,7 @@
               "application/problem+json": {
                 "example": {
                   "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "keyword 값이 올바르지 않습니다.",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -843,8 +831,8 @@
             "content": {
               "application/problem+json": {
                 "example": {
-                  "code": "INVALID_PATH_PARAMETER",
-                  "detail": "productId 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -925,8 +913,8 @@
             "content": {
               "application/problem+json": {
                 "example": {
-                  "code": "INVALID_PATH_PARAMETER",
-                  "detail": "productId 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER",
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "status": 400,
                   "title": "Bad Request"
                 },
@@ -1396,9 +1384,7 @@
           "code": {
             "type": "string",
             "enum": [
-              "INVALID_PATH_PARAMETER",
               "INVALID_QUERY_PARAMETER",
-              "INVALID_PAGINATION_PARAMETER",
               "CONFLICTING_INGREDIENT_FILTER",
               "UNSUPPORTED_REQUEST",
               "PRODUCT_NOT_FOUND",
@@ -1410,7 +1396,7 @@
           },
           "detail": {
             "type": "string",
-            "example": "size 값이 올바르지 않습니다."
+            "example": "요청 파라미터 값이 올바르지 않습니다."
           },
           "instance": {
             "type": "string",
