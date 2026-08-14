@@ -104,6 +104,8 @@ public class ProductController {
     @Parameter(name = KEYWORD, example = "토너")
     @GetMapping(SUGGESTIONS_PATH)
     public ResponseEntity<ProductSuggestionListResponse> suggestProducts(@Valid @ModelAttribute KeywordRequest search) {
+        search.validate();
+
         return ResponseEntity.ok(new ProductSuggestionListResponse(List.of(sampleSuggestion(101L))));
     }
 

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record KeywordRequest(@NotBlank @Schema(description = "검색어") String keyword) {
 
-    public KeywordRequest {
+    public void validate() {
         if (keyword == null || keyword.isBlank()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
