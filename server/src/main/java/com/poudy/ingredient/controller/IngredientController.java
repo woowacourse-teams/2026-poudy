@@ -33,8 +33,6 @@ public class IngredientController {
     @Parameter(name = "keyword", example = "글리")
     @GetMapping
     public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute KeywordRequest search) {
-        search.validate();
-
         return ResponseEntity.ok(new IngredientListResponse(List.of(sampleIngredient(1005L))));
     }
 
