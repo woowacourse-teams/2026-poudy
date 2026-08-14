@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Code Review"
+  short_description: "백엔드 변경에서 고신뢰·실행 가능한 결함만 검토"
+  default_prompt: "Use $review-backend-code to find only high-confidence, actionable defects in the current backend diff."
