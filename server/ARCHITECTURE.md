@@ -18,6 +18,7 @@ com.poudy
 │   │   └── dto
 │   │       ├── BrandResponse
 │   │       ├── BrandDetailResponse
+│   │       ├── BrandListItemResponse
 │   │       └── BrandListResponse
 │   ├── service
 │   │   └── BrandService
@@ -48,8 +49,7 @@ com.poudy
 │   │       ├── IngredientResponse
 │   │       ├── IngredientListResponse
 │   │       ├── IngredientDetailResponse
-│   │       ├── IngredientSummaryResponse
-│   │       └── EffectResponse
+│   │       └── IngredientSummaryResponse
 │   ├── service
 │   │   └── IngredientService
 │   ├── domain
@@ -60,7 +60,9 @@ com.poudy
 ├── tag
 │   ├── controller
 │   │   ├── TagController
-│   │   └── TagResponse
+│   │   └── dto
+│   │       ├── FormulationRoleResponse
+│   │       └── SkinEffectResponse
 │   ├── service
 │   │   └── TagService
 │   ├── domain
@@ -76,10 +78,12 @@ com.poudy
 │   │       ├── ProductSortRequest
 │   │       ├── ProductPageResponse
 │   │       ├── ProductCountResponse
+│   │       ├── ProductSuggestionResponse
+│   │       ├── ProductSuggestionListResponse
 │   │       ├── ProductResponse
 │   │       ├── ProductDetailResponse
 │   │       ├── ProductIngredientResponse
-│   │       └── BenefitResponse
+│   │       └── SkinEffectGroupResponse
 │   ├── service
 │   │   └── ProductService
 │   ├── domain
@@ -156,7 +160,9 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 ### Brand
 
-`Brand`는 브랜드 정보를 표현한다. 응답에 싣는 값은 ID, 한글명, 영문명, 이미지 URL 네 가지다. 브랜드를 참조하는 모든 응답이 같은 `BrandResponse`를 쓴다.
+`Brand`는 브랜드 정보를 표현한다. 응답에 싣는 값은 ID, 한글명, 영문명, 이미지 URL 네 가지다. 다른 기능의 응답에 브랜드가 중첩될 때는 모두 같은 `BrandResponse`를 쓴다.
+
+브랜드 목록만 `BrandListItemResponse`로 제품 수를 더해 내려보낸다. `BrandResponse`에 제품 수를 넣으면 제품 카드마다 쓰지 않는 값이 실리고, `ProductPageResponse.brands`에서는 그 수가 결과 기준인지 전체 기준인지 읽는 쪽이 알 수 없다. 목록 항목의 제품 수는 전체 카탈로그 기준이며 제품 조회 필터와 무관하다.
 
 `Brands`는 `List<Brand>`를 가지는 일급 컬렉션이다. 여러 브랜드를 대상으로 하는 문제를 담당한다.
 
@@ -175,6 +181,19 @@ Domain 객체는 Service와 Repository가 사용한다.
 ### Tag
 
 `Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
+
+태그는 성격이 다른 두 축으로 나뉘며 응답에서도 따로 싣는다.
+
+| 축 | 응답 필드 | 뜻 | 예 |
+| --- | --- | --- | --- |
+| CosIng `FUNCTION` | `formulationRoles` | 제형에서 이 성분이 맡는 역할 | 습윤제, 유화제, 보존제, 용제 |
+| `BIOLOGICAL_EFFECT` | `skinEffects` | 피부에 기대할 수 있는 작용 | 피부 장벽 관련, 미백 관련, 주름 관련 |
+
+두 이름은 기준을 앞에 둔다. 하나는 제형을, 다른 하나는 피부를 기준으로 한다는 것이 이름에 있어야 나란히 놓았을 때 갈린다. `purposes`와 `effects`처럼 기준이 빠진 이름은 둘 다 "성분이 무엇을 하는가"로 읽혀 구분되지 않는다.
+
+응답 필드를 `functions`로 부르지 않는다. `FUNCTION`은 배합 목적인데 우리말로 "기능"이라 옮기면 피부 작용 쪽으로 읽혀 두 축이 뒤집힌다. 문서와 화면 문구에서도 피부 작용을 "기능"이라 부르지 않는다.
+
+제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
 
 `Tags`는 `List<Tag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리한다.
 
@@ -211,12 +230,17 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 - 선택한 수분감과 유분감 조건에 해당해야 한다.
 - 포함 성분은 선택한 성분을 모두 포함해야 한다.
 - 제외 성분은 선택한 성분 중 하나라도 포함하면 제외한다.
+- 제외 성분군은 그 성분군에 속한 성분을 하나라도 포함하면 제외한다.
 
 ### ExcludeCode
 
 `ExcludeCode`는 빠른 필터에 쓰는 제외 성분군 하나를 뜻한다. 성분과 개념이 달라 별도 모듈이 소유한다.
 
-제품 조회는 성분군을 받지 않는다. 프론트가 `/api/exclude-codes`로 각 성분군의 성분을 받아, 고른 성분군을 `excludeIngredientIds`로 펼쳐 보낸다. 서버가 성분군을 다시 성분으로 푸는 경로를 두지 않으므로 필터 판정은 성분 하나로 일원화된다.
+제품 조회는 `excludeCodes`로 성분군을 그대로 받는다. 성분군을 성분으로 푸는 일은 서버가 담당한다. 프론트가 `/api/exclude-codes`의 성분 목록을 `excludeIngredientIds`로 펼쳐 보내면 성분군의 구성이 바뀔 때마다 프론트가 보낸 목록이 낡고, 요청 길이도 성분 수만큼 늘어난다.
+
+`/api/exclude-codes`의 `ingredients`는 성분군에 무엇이 속하는지 화면에 보여 주는 용도로 남는다. 필터 요청에는 쓰지 않는다.
+
+`excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 다만 포함 성분이 제외 성분군에 속하는 경우를 서버가 아직 검사하지 않는다. 성분군과 성분의 매핑을 Repository가 갖게 되는 시점에 `CONFLICTING_INGREDIENT_FILTER`로 막을지 결정한다.
 
 빠른 제외 성분군은 다음 6개를 제공한다.
 
@@ -323,15 +347,15 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 | --- | --- | --- | --- |
 | product | GET | `/api/products` | 제품 조회 (검색 또는 필터) |
 | product | GET | `/api/products/count` | 제품 조회 결과 개수 조회 |
+| product | GET | `/api/products/suggestions` | 제품 검색 제안 조회 |
 | product | GET | `/api/products/{productId}` | 제품 상세 조회 |
 | storage | GET | `/api/storage` | 보관함 제품 조회 |
 | excludecode | GET | `/api/exclude-codes` | 제외 성분군 조회 (빠른 필터) |
 | category | GET | `/api/categories` | 카테고리 조회 |
 | brand | GET | `/api/brands` | 브랜드 조회 |
 | brand | GET | `/api/brands/{brandId}` | 브랜드 상세 조회 (제품 카테고리 포함) |
-| ingredient | GET | `/api/ingredients/suggestions` | 성분 추천 검색어 |
-| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 기본 조회 |
-| ingredient | GET | `/api/ingredients/detail/{ingredientId}` | 성분 상세 조회 |
+| ingredient | GET | `/api/ingredients` | 성분 검색 |
+| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
 
 제품 하나만 조회하는 엔드포인트는 상세 조회뿐이다. 목록 항목과 같은 `ProductResponse`가 필요한 곳은 필터 조회, 검색, 보관함이며 셋 다 여러 건을 한 번에 반환한다.
 
@@ -353,7 +377,9 @@ OpenAPI는 한 경로의 GET을 오퍼레이션 하나로만 표현한다. 두 �
 - `/api/storage`는 콤마로 구분해 받은 `productIds`에 해당하는 `ProductResponse` 목록을 페이지 없이 전부 반환한다.
 - `/api/products/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
 
-`/api/products/count`는 `/api/products/{productId}`와 같은 자리를 쓴다. 고정 문자열이 경로 변수보다 먼저 매칭되므로 지금은 문제가 없지만, 제품 아래에 고정 경로를 더 만들 때는 그 이름이 제품 ID로 올 수 없는지 확인한다.
+`/api/products/count`와 `/api/products/suggestions`는 `/api/products/{productId}`와 같은 자리를 쓴다. 고정 문자열이 경로 변수보다 먼저 매칭되고 두 이름 모두 제품 ID로 올 수 없으므로 문제가 없다. 제품 아래에 고정 경로를 더 만들 때는 그 이름이 제품 ID로 올 수 없는지 확인한다.
+
+제품 검색 제안은 `/api/products`와 경로를 나눈다. 같은 검색어를 받지만 돌려주는 표현이 다르기 때문이다. 목록은 페이지와 브랜드를 포함한 `ProductResponse`를 주고, 제안은 입력 중 띄울 후보라 ID와 이름, 이미지, 브랜드 이름만 준다. 한 경로에서 표현을 파라미터로 가르면 응답 타입이 요청에 따라 달라져 생성된 타입이 둘을 구분하지 못한다.
 
 ### API contract generation
 
