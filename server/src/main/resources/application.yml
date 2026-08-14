@@ -23,10 +23,9 @@ management:
         enabled: true
 
 springdoc:
-  # 키를 사전순으로 정렬해 문서를 만든다. 정렬하지 않으면 클래스패스 스캔 순서가
-  # 그대로 반영되는데, 그 순서는 파일 시스템에 따라 달라진다. 로컬(macOS)과
-  # CI(Linux)에서 순서만 다른 문서가 나오면 멀쩡한 커밋이 최신이 아닌 것으로 잡힌다.
-  writer-with-order-by-keys: true
+  # 응답 필드를 DTO 선언 순서 그대로 문서에 싣는다. 사전순으로 정렬하면
+  # children 같은 필드가 앞으로 올라와 실제 응답과 읽는 순서가 어긋난다.
+  writer-with-order-by-keys: false
   # produces 를 적지 않으면 문서에 */* 로 올라가, 생성된 타입도 content['*/*'] 가 된다.
   default-produces-media-type: application/json
   # @ModelAttribute 로 묶은 쿼리 파라미터를 개별 파라미터로 편다. 안 펴면 문서가 실제 요청과 어긋난다.
