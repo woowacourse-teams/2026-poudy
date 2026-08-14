@@ -1,8 +1,0 @@
-package com.poudy.ingredient.controller.dto;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import java.util.List;
-
-public record IngredientListResponse(@NotNull @Schema(description = "검색 결과 성분 목록") List<IngredientResponse> items) {
-}

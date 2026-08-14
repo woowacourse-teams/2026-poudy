@@ -70,13 +70,6 @@ export type ProductDetailResponse = {
   freeOfCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>;
 }
 export type ProductCountResponse = { count: number }
-export type IngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")> }
-export type IngredientListResponse = {
-  /**
-   * 검색 결과 성분 목록
-   */
-  items: Array<IngredientResponse>;
-}
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type IngredientDetailResponse = { id: number, koreanName: string, englishName: string, description: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, productCount: number, infoSources: Array<string>, effectSources: Array<string>, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type IngredientSuggestionResponse = {
@@ -196,24 +189,6 @@ export type get_CountProducts = {
 
     }
 /**
- * 검색어에 해당하는 성분을 한글명 오름차순으로 조회한다.
- */
-export type get_SearchIngredients = {
-      method: "GET",
-      path: "/api/ingredients",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-            query:  { keyword: string },
-
-          }
-      responses: {200: Schemas.IngredientListResponse,
-400: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
  * 성분 ID 에 해당하는 상세 정보를 조회한다.
  */
 export type get_FindIngredient = {
@@ -290,7 +265,6 @@ export type get_FindBrands = {
 "/api/products/{productId}": Endpoints.get_FindProduct,
 "/api/products/detail/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/count": Endpoints.get_CountProducts,
-"/api/ingredients": Endpoints.get_SearchIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/categories": Endpoints.get_FindCategories,

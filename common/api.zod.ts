@@ -37,12 +37,6 @@ export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.st
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 
-export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
-export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), effects: z.array(EffectResponse), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])) });
-
-export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
-export const IngredientListResponse = z.object({ items: z.array(IngredientResponse) });
-
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string() });
 

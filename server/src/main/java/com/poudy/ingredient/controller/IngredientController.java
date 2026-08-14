@@ -2,8 +2,6 @@ package com.poudy.ingredient.controller;
 
 import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
-import com.poudy.ingredient.controller.dto.IngredientListResponse;
-import com.poudy.ingredient.controller.dto.IngredientResponse;
 import com.poudy.ingredient.controller.dto.IngredientSuggestionResponse;
 import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,13 +25,6 @@ public class IngredientController {
     private static final EffectResponse SAMPLE_EFFECT = new EffectResponse(1L, "보습", "#4CAF50");
     private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
 
-    @Operation(summary = "성분 검색", description = "검색어에 해당하는 성분을 한글명 오름차순으로 조회한다.")
-    @GetMapping
-    public ResponseEntity<IngredientListResponse> searchIngredients(
-            @Parameter(example = "글리세린") @RequestParam @NotBlank String keyword) {
-        return ResponseEntity.ok(new IngredientListResponse(List.of(sampleIngredient(1005L))));
-    }
-
     @Operation(summary = "성분 자동완성", description = "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.")
     @GetMapping("/suggestions")
     public ResponseEntity<IngredientSuggestionResponse> suggestIngredients(
@@ -47,10 +38,6 @@ public class IngredientController {
     public ResponseEntity<IngredientDetailResponse> findIngredient(
             @Parameter(example = "1005") @PathVariable Long ingredientId) {
         return ResponseEntity.ok(sampleIngredientDetail(ingredientId));
-    }
-
-    private IngredientResponse sampleIngredient(Long id) {
-        return new IngredientResponse(id, "글리세린", "Glycerin", List.of(SAMPLE_EFFECT), List.of());
     }
 
     private IngredientDetailResponse sampleIngredientDetail(Long id) {
