@@ -122,7 +122,7 @@ export type BrandResponse = {
   productCount: number;
 }
 export type BrandListResponse = { items: Array<BrandResponse> }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -311,6 +311,26 @@ export type get_FindBrands = {
 },
 
     }
+/**
+ * 브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.
+ */
+export type get_FindBrand = {
+      method: "GET",
+      path: "/api/brands/{brandId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { brandId: number },
+
+          }
+      responses: {200: Schemas.BrandResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 
   }
 
@@ -324,7 +344,8 @@ export type get_FindBrands = {
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/ingredients/detail/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/categories": Endpoints.get_FindCategories,
-"/api/brands": Endpoints.get_FindBrands
+"/api/brands": Endpoints.get_FindBrands,
+"/api/brands/{brandId}": Endpoints.get_FindBrand
          }
      }
 

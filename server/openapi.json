@@ -913,6 +913,88 @@
           }
         }
       }
+    },
+    "/api/brands/{brandId}": {
+      "get": {
+        "tags": [
+          "브랜드"
+        ],
+        "summary": "브랜드 상세 조회",
+        "description": "브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.",
+        "operationId": "findBrand",
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "브랜드를 찾을 수 없습니다.",
+                  "code": "BRAND_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1597,6 +1679,7 @@
               "CONFLICTING_INGREDIENT_FILTER",
               "UNSUPPORTED_REQUEST",
               "PRODUCT_NOT_FOUND",
+              "BRAND_NOT_FOUND",
               "INGREDIENT_NOT_FOUND",
               "ENDPOINT_NOT_FOUND",
               "INTERNAL_SERVER_ERROR"
