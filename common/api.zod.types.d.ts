@@ -194,26 +194,6 @@ export type get_FindBrands = {
 },
 
     }
-/**
- * 브랜드 ID 에 해당하는 상세 정보를 조회한다. 브랜드에 속한 제품 목록은 제품 조회에서 brandIds 로 받는다.
- */
-export type get_FindBrand = {
-      method: "GET",
-      path: "/api/brands/{brandId}",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-
-        path:  { brandId: number },
-
-          }
-      responses: {200: Schemas.BrandResponse,
-400: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
 
   }
 
@@ -226,8 +206,7 @@ export type get_FindBrand = {
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
 "/api/categories": Endpoints.get_FindCategories,
-"/api/brands": Endpoints.get_FindBrands,
-"/api/brands/{brandId}": Endpoints.get_FindBrand
+"/api/brands": Endpoints.get_FindBrands
          }
      }
 
