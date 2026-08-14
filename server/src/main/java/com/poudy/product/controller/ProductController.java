@@ -63,7 +63,7 @@ public class ProductController {
     }
 
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
-    @GetMapping("/detail/{productId}")
+    @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
             @Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProductDetail(productId));
