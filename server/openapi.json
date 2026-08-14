@@ -217,6 +217,28 @@
             }
           },
           {
+            "name": "excludeCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
+                "enum": [
+                  "FRAGRANCE_ALLERGENS",
+                  "DRYING_ALCOHOLS",
+                  "HARSH_PRESERVATIVES",
+                  "SULFATES",
+                  "CYCLIC_SILICONES",
+                  "SYNTHETIC_COLORANTS"
+                ],
+                "example": "HARSH_PRESERVATIVES"
+              },
+              "uniqueItems": true
+            }
+          },
+          {
             "name": "sort",
             "in": "query",
             "description": "정렬 조건",
@@ -409,6 +431,73 @@
         }
       }
     },
+    "/api/products/suggestions": {
+      "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품 검색 제안 조회",
+        "description": "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.",
+        "operationId": "suggestProducts",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "검색어",
+              "minLength": 1
+            },
+            "example": "토너"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSuggestionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products/count": {
       "get": {
         "tags": [
@@ -515,6 +604,28 @@
               },
               "uniqueItems": true
             }
+          },
+          {
+            "name": "excludeCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
+                "enum": [
+                  "FRAGRANCE_ALLERGENS",
+                  "DRYING_ALCOHOLS",
+                  "HARSH_PRESERVATIVES",
+                  "SULFATES",
+                  "CYCLIC_SILICONES",
+                  "SYNTHETIC_COLORANTS"
+                ],
+                "example": "HARSH_PRESERVATIVES"
+              },
+              "uniqueItems": true
+            }
           }
         ],
         "responses": {
@@ -575,96 +686,14 @@
         }
       }
     },
-    "/api/ingredients/{ingredientId}": {
+    "/api/ingredients": {
       "get": {
         "tags": [
           "성분"
         ],
-        "summary": "성분 기본 조회",
-        "description": "성분 ID 에 해당하는 기본 정보와 효과를 조회한다.",
-        "operationId": "findIngredient",
-        "parameters": [
-          {
-            "name": "ingredientId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 1005
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IngredientResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Not Found",
-                  "status": 404,
-                  "detail": "성분을 찾을 수 없습니다.",
-                  "code": "INGREDIENT_NOT_FOUND"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Internal Server Error",
-                  "status": 500,
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "code": "INTERNAL_SERVER_ERROR"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/ingredients/suggestions": {
-      "get": {
-        "tags": [
-          "성분"
-        ],
-        "summary": "성분 추천 검색어",
-        "description": "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.",
-        "operationId": "suggestIngredients",
+        "summary": "성분 검색",
+        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다.",
+        "operationId": "findIngredients",
         "parameters": [
           {
             "name": "keyword",
@@ -672,6 +701,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "description": "검색어",
               "minLength": 1
             },
             "example": "글리"
@@ -683,7 +713,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngredientSuggestionResponse"
+                  "$ref": "#/components/schemas/IngredientListResponse"
                 }
               }
             }
@@ -723,13 +753,13 @@
         }
       }
     },
-    "/api/ingredients/detail/{ingredientId}": {
+    "/api/ingredients/{ingredientId}": {
       "get": {
         "tags": [
           "성분"
         ],
         "summary": "성분 상세 조회",
-        "description": "성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.",
+        "description": "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.",
         "operationId": "findIngredientDetail",
         "parameters": [
           {
@@ -811,7 +841,7 @@
           "제외 성분군"
         ],
         "summary": "제외 성분군 조회",
-        "description": "빠른 필터에 쓰는 성분군 전체와 각 성분군에 속한 성분을 조회한다. 제품 조회는 성분군을 받지 않으므로, 고른 성분군의 ingredients 를 excludeIngredientIds 로 펼쳐 보낸다.",
+        "description": "빠른 필터에 쓰는 성분군 전체와 각 성분군에 속한 성분을 조회한다. 제품 조회에는 고른 성분군의 code 를 excludeCodes 로 보낸다. ingredients 는 성분군에 무엇이 속하는지 보여주는 데 쓴다.",
         "operationId": "findExcludeCodes",
         "responses": {
           "200": {
@@ -887,7 +917,7 @@
           "브랜드"
         ],
         "summary": "브랜드 조회",
-        "description": "전체 브랜드를 브랜드명 오름차순으로 조회한다.",
+        "description": "전체 브랜드를 브랜드명 오름차순으로 조회하고 브랜드마다 제품 수를 함께 싣는다.",
         "operationId": "findBrands",
         "responses": {
           "200": {
@@ -1181,38 +1211,6 @@
           "pagination"
         ]
       },
-      "BenefitResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "보습"
-          },
-          "color": {
-            "type": "string",
-            "example": "#4CAF50"
-          },
-          "ingredientIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int64",
-              "example": 1005
-            }
-          }
-        },
-        "required": [
-          "color",
-          "id",
-          "ingredientIds",
-          "name"
-        ]
-      },
       "CategoryPathResponse": {
         "type": "object",
         "properties": {
@@ -1280,25 +1278,22 @@
           "value"
         ]
       },
-      "EffectResponse": {
+      "FormulationRoleResponse": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "배합 목적 ID",
             "example": 1
           },
           "name": {
             "type": "string",
-            "example": "보습"
-          },
-          "color": {
-            "type": "string",
-            "example": "#4CAF50"
+            "description": "배합 목적 이름 (CosIng Function)",
+            "example": "습윤제"
           }
         },
         "required": [
-          "color",
           "id",
           "name"
         ]
@@ -1333,25 +1328,9 @@
             "description": "제품 대표 이미지 URL",
             "example": "https://cdn.example.com/products/101.png"
           },
-          "price": {
-            "type": "integer",
-            "format": "int64",
-            "description": "제품 가격 (원)",
-            "example": 18000
-          },
-          "volumeValue": {
-            "type": "number",
-            "description": "제품 용량 값",
-            "example": 200
-          },
-          "volumeUnit": {
-            "type": "string",
-            "description": "제품 용량 단위",
-            "example": "ml"
-          },
           "variants": {
             "type": "array",
-            "description": "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다",
+            "description": "같은 제품의 용량 옵션 전체. 가격과 용량은 옵션마다 따로 있다",
             "example": [
               {
                 "id": 1,
@@ -1388,11 +1367,11 @@
             "maximum": 3,
             "minimum": 0
           },
-          "benefits": {
+          "skinEffectGroups": {
             "type": "array",
-            "description": "효과별 성분 그룹",
+            "description": "피부 작용별 성분 그룹",
             "items": {
-              "$ref": "#/components/schemas/BenefitResponse"
+              "$ref": "#/components/schemas/SkinEffectGroupResponse"
             }
           },
           "ingredients": {
@@ -1416,10 +1395,15 @@
                 "SYNTHETIC_COLORANTS"
               ]
             }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "제품 정보를 마지막으로 갱신한 시각",
+            "example": "2026-08-01T09:30:00+09:00"
           }
         },
         "required": [
-          "benefits",
           "brand",
           "categories",
           "freeOfCodes",
@@ -1429,10 +1413,9 @@
           "moistureLevel",
           "name",
           "oilLevel",
-          "price",
-          "variants",
-          "volumeUnit",
-          "volumeValue"
+          "skinEffectGroups",
+          "updatedAt",
+          "variants"
         ]
       },
       "ProductIngredientResponse": {
@@ -1451,11 +1434,18 @@
             "type": "string",
             "example": "Glycerin"
           },
-          "effects": {
+          "formulationRoles": {
             "type": "array",
-            "description": "성분 효과 목록",
+            "description": "배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제",
             "items": {
-              "$ref": "#/components/schemas/EffectResponse"
+              "$ref": "#/components/schemas/FormulationRoleResponse"
+            }
+          },
+          "skinEffects": {
+            "type": "array",
+            "description": "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectResponse"
             }
           },
           "disclosedAmount": {
@@ -1464,10 +1454,11 @@
           }
         },
         "required": [
-          "effects",
           "englishName",
+          "formulationRoles",
           "id",
-          "koreanName"
+          "koreanName",
+          "skinEffects"
         ]
       },
       "ProductVariantResponse": {
@@ -1509,6 +1500,108 @@
           "volumeValue"
         ]
       },
+      "SkinEffectGroupResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "피부 작용 ID",
+            "example": 21
+          },
+          "name": {
+            "type": "string",
+            "description": "피부 작용 이름",
+            "example": "피부 장벽 관련"
+          },
+          "color": {
+            "type": "string",
+            "description": "화면에서 이 피부 작용을 구분하는 색",
+            "example": "#4CAF50"
+          },
+          "ingredientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1005
+            }
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "ingredientIds",
+          "name"
+        ]
+      },
+      "SkinEffectResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "피부 작용 ID",
+            "example": 21
+          },
+          "name": {
+            "type": "string",
+            "description": "피부 작용 이름",
+            "example": "피부 장벽 관련"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ProductSuggestionListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "검색어에 해당하는 제품",
+            "items": {
+              "$ref": "#/components/schemas/ProductSuggestionResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ProductSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "제품 ID",
+            "example": 101
+          },
+          "name": {
+            "type": "string",
+            "description": "제품명",
+            "example": "스킨케어 이름"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "제품 대표 이미지 URL",
+            "example": "https://cdn.example.com/products/101.png"
+          },
+          "brandName": {
+            "type": "string",
+            "description": "브랜드 한글명",
+            "example": "브랜드 이름"
+          }
+        },
+        "required": [
+          "brandName",
+          "id",
+          "imageUrl",
+          "name"
+        ]
+      },
       "ProductCountResponse": {
         "type": "object",
         "properties": {
@@ -1520,6 +1613,21 @@
         },
         "required": [
           "count"
+        ]
+      },
+      "IngredientListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "검색어에 해당하는 성분",
+            "items": {
+              "$ref": "#/components/schemas/IngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "IngredientResponse": {
@@ -1541,57 +1649,19 @@
             "description": "성분 영문명",
             "example": "Glycerin"
           },
-          "effects": {
+          "skinEffects": {
             "type": "array",
-            "description": "성분의 주요 효과",
+            "description": "피부 작용 태그 (BIOLOGICAL_EFFECT)",
             "items": {
-              "$ref": "#/components/schemas/EffectResponse"
+              "$ref": "#/components/schemas/SkinEffectResponse"
             }
-          }
-        },
-        "required": [
-          "effects",
-          "englishName",
-          "id",
-          "koreanName"
-        ]
-      },
-      "IngredientSuggestionResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "description": "자동완성 후보. 최대 10건",
-            "items": {
-              "$ref": "#/components/schemas/IngredientSummaryResponse"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ]
-      },
-      "IngredientSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1010
-          },
-          "koreanName": {
-            "type": "string",
-            "example": "부틸렌글라이콜"
-          },
-          "englishName": {
-            "type": "string",
-            "example": "Butylene Glycol"
           }
         },
         "required": [
           "englishName",
           "id",
-          "koreanName"
+          "koreanName",
+          "skinEffects"
         ]
       },
       "IngredientDetailResponse": {
@@ -1614,10 +1684,18 @@
             "type": "string",
             "example": "피부 표면의 수분을 끌어당겨 유지시키는 대표적인 보습 성분이다."
           },
-          "effects": {
+          "formulationRoles": {
             "type": "array",
+            "description": "배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제",
             "items": {
-              "$ref": "#/components/schemas/EffectResponse"
+              "$ref": "#/components/schemas/FormulationRoleResponse"
+            }
+          },
+          "skinEffects": {
+            "type": "array",
+            "description": "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectResponse"
             }
           },
           "groupCodes": {
@@ -1637,6 +1715,7 @@
           "productCount": {
             "type": "integer",
             "format": "int64",
+            "description": "이 성분을 포함한 제품 수",
             "example": 84
           },
           "infoSources": {
@@ -1653,12 +1732,6 @@
               "example": "성분 효과 출처"
             }
           },
-          "relatedIngredients": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IngredientSummaryResponse"
-            }
-          },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
@@ -1668,14 +1741,14 @@
         "required": [
           "description",
           "effectSources",
-          "effects",
           "englishName",
+          "formulationRoles",
           "groupCodes",
           "id",
           "infoSources",
           "koreanName",
           "productCount",
-          "relatedIngredients",
+          "skinEffects",
           "updatedAt"
         ]
       },
@@ -1717,16 +1790,45 @@
           },
           "ingredients": {
             "type": "array",
-            "description": "이 성분군에 속한 성분. 제품 조회의 excludeIngredientIds 로 펼쳐 보낸다",
+            "description": "이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다",
             "items": {
               "$ref": "#/components/schemas/IngredientSummaryResponse"
             }
+          },
+          "description": {
+            "type": "string",
+            "description": "성분군 설명",
+            "example": "자극을 유발할 수 있는 방부제 성분을 제외합니다."
           }
         },
         "required": [
           "code",
+          "description",
           "ingredients",
           "name"
+        ]
+      },
+      "IngredientSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1010
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "부틸렌글라이콜"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Butylene Glycol"
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "koreanName"
         ]
       },
       "CategoryChildResponse": {
@@ -1798,13 +1900,52 @@
           "productCount"
         ]
       },
+      "BrandListItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "브랜드 ID",
+            "example": 12
+          },
+          "name": {
+            "type": "string",
+            "description": "브랜드 한글명",
+            "example": "라운드랩"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "브랜드 영문명",
+            "example": "ROUND LAB"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "브랜드 이미지 URL",
+            "example": "https://cdn.example.com/brands/12/image.png"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "이 브랜드의 제품 수. 전체 카탈로그 기준이며 제품 조회 필터와 무관하다",
+            "example": 27
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "imageUrl",
+          "name",
+          "productCount"
+        ]
+      },
       "BrandListResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/BrandResponse"
+              "$ref": "#/components/schemas/BrandListItemResponse"
             }
           }
         },

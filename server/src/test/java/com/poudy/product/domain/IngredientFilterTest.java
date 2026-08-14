@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.InvalidRequestException;
+import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,5 +35,34 @@ class IngredientFilterTest {
         assertThat(filter.excludedIds()).isEmpty();
         assertThatCode(() -> new IngredientFilter(List.of(1005L), null)).doesNotThrowAnyException();
         assertThatCode(() -> new IngredientFilter(null, List.of(1001L))).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("포함 성분이 제외 성분군에 속하면 만들 수 없다")
+    void rejectsIngredientCoveredByExcludedCode() {
+        assertThatThrownBy(() -> IngredientFilter.of(List.of(2301L), null, List.of(ExcludeCode.HARSH_PRESERVATIVES)))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    @DisplayName("제외 성분군을 성분으로 풀어 제외 목록에 넣는다")
+    void resolvesExcludedCodesIntoIngredientIds() {
+        IngredientFilter filter = IngredientFilter.of(List.of(1005L), List.of(1001L), List.of(ExcludeCode.SULFATES));
+
+        assertThat(filter.excludedIds()).contains(1001L, 2401L, 2402L, 2403L, 2404L);
+    }
+
+    @Test
+    @DisplayName("제외 성분군이 없으면 제외 목록을 그대로 쓴다")
+    void keepsExcludedIdsWhenNoCodeGiven() {
+        assertThat(IngredientFilter.of(List.of(1005L), List.of(1001L), null).excludedIds()).containsExactly(1001L);
+        assertThat(IngredientFilter.of(null, null, List.of()).excludedIds()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("성분군과 성분으로 같은 제외를 중복해 보내도 한 번만 남는다")
+    void deduplicatesResolvedExclusions() {
+        assertThat(IngredientFilter.of(null, List.of(2401L), List.of(ExcludeCode.SULFATES)).excludedIds())
+                .filteredOn(id -> id.equals(2401L)).hasSize(1);
     }
 }
