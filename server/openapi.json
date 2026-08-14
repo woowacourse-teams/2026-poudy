@@ -1193,6 +1193,31 @@
           "name"
         ]
       },
+      "DisclosedAmountResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "공개 형태",
+            "example": "exact"
+          },
+          "value": {
+            "type": "number",
+            "description": "함량 값",
+            "example": 10500
+          },
+          "unit": {
+            "type": "string",
+            "description": "함량 단위",
+            "example": "ppm"
+          }
+        },
+        "required": [
+          "type",
+          "unit",
+          "value"
+        ]
+      },
       "EffectResponse": {
         "type": "object",
         "properties": {
@@ -1350,9 +1375,14 @@
           },
           "effects": {
             "type": "array",
+            "description": "성분 효과 목록",
             "items": {
               "$ref": "#/components/schemas/EffectResponse"
             }
+          },
+          "disclosedAmount": {
+            "$ref": "#/components/schemas/DisclosedAmountResponse",
+            "description": "공개된 함량. 공개하지 않은 성분은 비어 있다"
           }
         },
         "required": [
@@ -1386,11 +1416,17 @@
             "type": "string",
             "description": "용량 단위",
             "example": "ml"
+          },
+          "status": {
+            "type": "string",
+            "description": "판매 상태",
+            "example": "active"
           }
         },
         "required": [
           "id",
           "price",
+          "status",
           "volumeUnit",
           "volumeValue"
         ]

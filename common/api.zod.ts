@@ -25,14 +25,17 @@ export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse.optional() });
 
+export type DisclosedAmountResponse = __TypedOpenapi.Schemas.DisclosedAmountResponse;
+export const DisclosedAmountResponse = z.object({ type: z.string(), value: z.number(), unit: z.string() });
+
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ id: z.number().int(), name: z.string(), color: z.string() });
 
 export type ProductVariantResponse = __TypedOpenapi.Schemas.ProductVariantResponse;
-export const ProductVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string() });
+export const ProductVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), status: z.string() });
 
 export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredientResponse;
-export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), effects: z.array(EffectResponse) });
+export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), effects: z.array(EffectResponse), disclosedAmount: DisclosedAmountResponse.optional() });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandSummaryResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), benefits: z.array(BenefitResponse), ingredients: z.array(ProductIngredientResponse), freeOfCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])) });

@@ -16,6 +16,20 @@ export type CategoryPathResponse = {
   name: string;
   child?: CategorySummaryResponse;
 }
+export type DisclosedAmountResponse = {
+  /**
+   * 공개 형태
+   */
+  type: string;
+  /**
+   * 함량 값
+   */
+  value: number;
+  /**
+   * 함량 단위
+   */
+  unit: string;
+}
 export type EffectResponse = { id: number, name: string, color: string }
 export type ProductVariantResponse = {
   /**
@@ -34,8 +48,21 @@ export type ProductVariantResponse = {
    * 용량 단위
    */
   volumeUnit: string;
+  /**
+   * 판매 상태
+   */
+  status: string;
 }
-export type ProductIngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse> }
+export type ProductIngredientResponse = {
+  id: number;
+  koreanName: string;
+  englishName: string;
+  /**
+   * 성분 효과 목록
+   */
+  effects: Array<EffectResponse>;
+  disclosedAmount?: DisclosedAmountResponse;
+}
 export type ProductDetailResponse = {
   /**
    * 제품 ID

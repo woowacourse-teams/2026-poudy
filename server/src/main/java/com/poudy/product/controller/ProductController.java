@@ -8,6 +8,7 @@ import com.poudy.common.dto.PaginationResponse;
 import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.product.controller.dto.BenefitResponse;
+import com.poudy.product.controller.dto.DisclosedAmountResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
 import com.poudy.product.controller.dto.ProductDetailResponse;
 import com.poudy.product.controller.dto.ProductFilterRequest;
@@ -100,18 +101,19 @@ public class ProductController {
                 new BigDecimal("200"),
                 "ml",
                 List.of(
-                        new ProductVariantResponse(1L, 18000L, new BigDecimal("200"), "ml"),
-                        new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml")),
+                        new ProductVariantResponse(1L, 18000L, new BigDecimal("200"), "ml", "active"),
+                        new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml", "active")),
                 3,
                 1,
                 List.of(new BenefitResponse(1L, "보습", "#4CAF50", List.of(1001L, 1005L))),
                 List.of(
-                        new ProductIngredientResponse(1001L, "정제수", "Water", List.of()),
+                        new ProductIngredientResponse(1001L, "정제수", "Water", List.of(), null),
                         new ProductIngredientResponse(
                                 1005L,
                                 "글리세린",
                                 "Glycerin",
-                                List.of(new EffectResponse(1L, "보습", "#4CAF50")))),
+                                List.of(new EffectResponse(1L, "보습", "#4CAF50")),
+                                new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm"))),
                 List.of(ExcludeCode.PARABEN_7, ExcludeCode.MINERAL_OIL));
     }
 }
