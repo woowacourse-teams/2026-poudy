@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.poudy.exception.ConflictException;
+import com.poudy.exception.InvalidRequestException;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ class IngredientFilterTest {
     @DisplayName("같은 성분이 포함과 제외에 함께 있으면 만들 수 없다")
     void rejectsIngredientPresentInBothSides() {
         assertThatThrownBy(() -> new IngredientFilter(List.of(1001L, 1005L), List.of(1005L)))
-                .isInstanceOf(ConflictException.class);
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     @Test

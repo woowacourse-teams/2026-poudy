@@ -218,27 +218,23 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "요청 충돌",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Conflict",
-                  "status": 409,
-                  "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
-                  "code": "CONFLICTING_INGREDIENT_FILTER"
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "CONFLICTING_INGREDIENT_FILTER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
+                      "code": "CONFLICTING_INGREDIENT_FILTER"
+                    }
+                  }
                 }
               }
             }
@@ -572,27 +568,23 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "요청 충돌",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Conflict",
-                  "status": 409,
-                  "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
-                  "code": "CONFLICTING_INGREDIENT_FILTER"
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "CONFLICTING_INGREDIENT_FILTER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
+                      "code": "CONFLICTING_INGREDIENT_FILTER"
+                    }
+                  }
                 }
               }
             }

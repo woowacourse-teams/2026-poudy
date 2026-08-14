@@ -142,7 +142,6 @@ export type get_FindProducts = {
           }
       responses: {200: Schemas.ProductPageResponse,
 400: Schemas.ProblemDetail,
-409: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -201,7 +200,6 @@ export type get_CountProducts = {
           }
       responses: {200: Schemas.ProductCountResponse,
 400: Schemas.ProblemDetail,
-409: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 

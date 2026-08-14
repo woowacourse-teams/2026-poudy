@@ -2,6 +2,7 @@ package com.poudy.config;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.GlobalExceptionHandler;
+import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.MediaType;
@@ -37,17 +38,10 @@ public class ErrorResponseConfig {
 
             openApi.getPaths().forEach((path, pathItem) -> pathItem.readOperations().forEach(operation -> {
                 ApiResponses responses = operation.getResponses();
-                responses.addApiResponse(
-                        "400",
-                        errorResponse("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorCode.INVALID_QUERY_PARAMETER));
+                responses.addApiResponse("400", errorResponse("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes(path)));
                 notFoundCode(path).ifPresent(
                         code -> responses
                                 .addApiResponse("404", errorResponse("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)));
-                if (isProductFilterPath(path)) {
-                    responses.addApiResponse(
-                            "409",
-                            errorResponse("요청 충돌", HttpStatus.CONFLICT, ErrorCode.CONFLICTING_INGREDIENT_FILTER));
-                }
                 responses.addApiResponse(
                         "500",
                         errorResponse("서버 오류", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR));
@@ -57,6 +51,14 @@ public class ErrorResponseConfig {
 
     private boolean isProductFilterPath(String path) {
         return "/api/products".equals(path) || "/api/products/count".equals(path);
+    }
+
+    private ErrorCode[] badRequestCodes(String path) {
+        if (isProductFilterPath(path)) {
+            return new ErrorCode[] {ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER};
+        }
+
+        return new ErrorCode[] {ErrorCode.INVALID_QUERY_PARAMETER};
     }
 
     private Optional<ErrorCode> notFoundCode(String path) {
@@ -87,15 +89,28 @@ public class ErrorResponseConfig {
         return schema;
     }
 
-    private ApiResponse errorResponse(String description, HttpStatus status, ErrorCode code) {
+    private ApiResponse errorResponse(String description, HttpStatus status, ErrorCode... codes) {
+        MediaType mediaType = new MediaType().schema(new Schema<>().$ref(SCHEMA_REF));
+
+        if (codes.length == 1) {
+            mediaType.example(example(status, codes[0]));
+        }
+        if (codes.length > 1) {
+            for (ErrorCode code : codes) {
+                mediaType.addExamples(code.name(), new Example().value(example(status, code)));
+            }
+        }
+
+        return new ApiResponse().description(description).content(new Content().addMediaType(PROBLEM_JSON, mediaType));
+    }
+
+    private Map<String, Object> example(HttpStatus status, ErrorCode code) {
         Map<String, Object> example = new LinkedHashMap<>();
         example.put("title", status.getReasonPhrase());
         example.put("status", status.value());
         example.put("detail", code.message());
         example.put(GlobalExceptionHandler.CODE_PROPERTY, code.name());
 
-        MediaType mediaType = new MediaType().schema(new Schema<>().$ref(SCHEMA_REF)).example(example);
-
-        return new ApiResponse().description(description).content(new Content().addMediaType(PROBLEM_JSON, mediaType));
+        return example;
     }
 }

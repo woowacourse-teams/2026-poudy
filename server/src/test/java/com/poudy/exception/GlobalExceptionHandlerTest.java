@@ -25,8 +25,9 @@ class GlobalExceptionHandlerTest {
                 HttpStatus.NOT_FOUND,
                 ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(
-                handler.handleConflictException(new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
-                HttpStatus.CONFLICT,
+                handler.handleInvalidRequestException(
+                        new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
+                HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }
 
