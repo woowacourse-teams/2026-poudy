@@ -5,9 +5,70 @@ export type ProductResponse = { id: number, name: string, brand: BrandSummaryRes
 export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse }
 export type BenefitResponse = { id: number, name: string, color: string, ingredientIds: Array<number> }
 export type CategorySummaryResponse = { id: number, name: string }
+export type CategoryPathResponse = {
+  /**
+   * 대분류 ID
+   */
+  id: number;
+  /**
+   * 대분류 이름
+   */
+  name: string;
+  child?: CategorySummaryResponse;
+}
 export type EffectResponse = { id: number, name: string, color: string }
 export type ProductIngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse> }
-export type ProductDetailResponse = { id: number, name: string, brand: BrandSummaryResponse, categories: Array<CategorySummaryResponse>, imageUrl: string, price: number, volumeValue: number, volumeUnit: string, moistureLevel: number, oilLevel: number, benefits: Array<BenefitResponse>, ingredients: Array<ProductIngredientResponse>, freeOfCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")> }
+export type ProductDetailResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  brand: BrandSummaryResponse;
+  /**
+   * 제품 카테고리 목록
+   */
+  categories: Array<CategoryPathResponse>;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 제품 가격 (원)
+   */
+  price: number;
+  /**
+   * 제품 용량 값
+   */
+  volumeValue: number;
+  /**
+   * 제품 용량 단위
+   */
+  volumeUnit: string;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+  /**
+   * 효과별 성분 그룹
+   */
+  benefits: Array<BenefitResponse>;
+  /**
+   * 표시 순서대로 정렬된 전체 성분
+   */
+  ingredients: Array<ProductIngredientResponse>;
+  /**
+   * 이 제품이 포함하지 않는 성분군 (프리 뱃지)
+   */
+  freeOfCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>;
+}
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")> }
 export type IngredientListResponse = { items: Array<IngredientResponse> }

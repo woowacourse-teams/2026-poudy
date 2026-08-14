@@ -1,6 +1,7 @@
 package com.poudy.product.controller;
 
 import com.poudy.brand.controller.dto.BrandSummaryResponse;
+import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
@@ -92,7 +93,7 @@ public class ProductController {
                 id,
                 "스킨케어 이름",
                 SAMPLE_BRAND,
-                List.of(new CategorySummaryResponse(1L, "스킨케어"), new CategorySummaryResponse(7L, "토너")),
+                List.of(new CategoryPathResponse(1L, "스킨케어", new CategorySummaryResponse(7L, "토너"))),
                 "https://cdn.example.com/products/" + id + ".png",
                 18000L,
                 new BigDecimal("200"),

@@ -1037,6 +1037,30 @@
           "name"
         ]
       },
+      "CategoryPathResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "대분류 ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "대분류 이름",
+            "example": "스킨케어"
+          },
+          "child": {
+            "$ref": "#/components/schemas/CategorySummaryResponse",
+            "description": "소분류. 대분류만 지정된 제품은 비어 있다"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "CategorySummaryResponse": {
         "type": "object",
         "properties": {
@@ -1084,41 +1108,50 @@
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "제품 ID",
             "example": 101
           },
           "name": {
             "type": "string",
+            "description": "제품명",
             "example": "스킨케어 이름"
           },
           "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse"
+            "$ref": "#/components/schemas/BrandSummaryResponse",
+            "description": "브랜드 정보"
           },
           "categories": {
             "type": "array",
+            "description": "제품 카테고리 목록",
             "items": {
-              "$ref": "#/components/schemas/CategorySummaryResponse"
+              "$ref": "#/components/schemas/CategoryPathResponse"
             }
           },
           "imageUrl": {
             "type": "string",
+            "description": "제품 대표 이미지 URL",
             "example": "https://cdn.example.com/products/101.png"
           },
           "price": {
             "type": "integer",
             "format": "int64",
+            "description": "제품 가격 (원)",
             "example": 18000
           },
           "volumeValue": {
             "type": "number",
+            "description": "제품 용량 값",
             "example": 200
           },
           "volumeUnit": {
             "type": "string",
+            "description": "제품 용량 단위",
             "example": "ml"
           },
           "moistureLevel": {
             "type": "integer",
             "format": "int32",
+            "description": "수분감 단계 (0~3)",
             "example": 3,
             "maximum": 3,
             "minimum": 0
@@ -1126,24 +1159,28 @@
           "oilLevel": {
             "type": "integer",
             "format": "int32",
+            "description": "유분감 단계 (0~3)",
             "example": 1,
             "maximum": 3,
             "minimum": 0
           },
           "benefits": {
             "type": "array",
+            "description": "효과별 성분 그룹",
             "items": {
               "$ref": "#/components/schemas/BenefitResponse"
             }
           },
           "ingredients": {
             "type": "array",
+            "description": "표시 순서대로 정렬된 전체 성분",
             "items": {
               "$ref": "#/components/schemas/ProductIngredientResponse"
             }
           },
           "freeOfCodes": {
             "type": "array",
+            "description": "이 제품이 포함하지 않는 성분군 (프리 뱃지)",
             "items": {
               "type": "string",
               "enum": [

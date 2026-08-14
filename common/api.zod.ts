@@ -22,6 +22,9 @@ export const BenefitResponse = z.object({ id: z.number().int(), name: z.string()
 export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
 export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
 
+export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
+export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse.optional() });
+
 export type EffectResponse = __TypedOpenapi.Schemas.EffectResponse;
 export const EffectResponse = z.object({ id: z.number().int(), name: z.string(), color: z.string() });
 
@@ -29,7 +32,7 @@ export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredient
 export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), effects: z.array(EffectResponse) });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandSummaryResponse, categories: z.array(CategorySummaryResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), benefits: z.array(BenefitResponse), ingredients: z.array(ProductIngredientResponse), freeOfCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandSummaryResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), benefits: z.array(BenefitResponse), ingredients: z.array(ProductIngredientResponse), freeOfCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])) });
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
