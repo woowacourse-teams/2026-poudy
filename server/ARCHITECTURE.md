@@ -101,7 +101,6 @@ com.poudy
     ├── GlobalExceptionHandler
     ├── InvalidRequestException
     ├── ResourceNotFoundException
-    ├── ConflictException
     └── InfrastructureException
 ```
 
@@ -239,7 +238,7 @@ Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller
 
 `GlobalExceptionHandler`가 모든 오류 응답을 RFC 9457 `ProblemDetail` 형태로 반환한다. `ResponseEntityExceptionHandler`를 상속해 프레임워크가 던지는 예외는 기반 클래스가 처리하고, 응답 계약에 필요한 `code`와 문구만 덧입힌다.
 
-- 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `ConflictException`, `InfrastructureException` 네 가지다.
+- 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `InfrastructureException` 세 가지다.
 - 대상이 제품인지 브랜드인지 성분인지는 예외 타입이 아니라 예외가 들고 있는 `ErrorCode`가 구분한다.
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
@@ -284,9 +283,9 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 | product | GET | `/api/products/detail/{productId}` | 제품 상세 조회 |
 | category | GET | `/api/categories` | 카테고리 조회 |
 | brand | GET | `/api/brands` | 브랜드 조회 |
-| brand | GET | `/api/brands/{brandId}` | 브랜드 상세 조회 |
-| ingredient | GET | `/api/ingredients` | 성분 조회 |
-| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
+| ingredient | GET | `/api/ingredients/suggestions` | 성분 추천 검색어 |
+| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 기본 조회 |
+| ingredient | GET | `/api/ingredients/detail/{ingredientId}` | 성분 상세 조회 |
 
 제품 간단 조회와 상세 조회는 서로 다른 응답 계약을 사용한다.
 

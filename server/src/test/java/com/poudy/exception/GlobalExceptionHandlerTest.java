@@ -25,18 +25,22 @@ class GlobalExceptionHandlerTest {
                 HttpStatus.NOT_FOUND,
                 ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(
-                handler.handleConflictException(new ConflictException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
-                HttpStatus.CONFLICT,
+                handler.handleInvalidRequestException(
+                        new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
+                HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
     }
 
     @Test
     @DisplayName("대상 구분은 예외 타입이 아니라 ErrorCode 가 한다")
     void distinguishesTargetsByErrorCodeAlone() {
-        ResponseEntity<ProblemDetail> brand = handler
-                .handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+        ResponseEntity<ProblemDetail> product = handler
+                .handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        ResponseEntity<ProblemDetail> ingredient = handler
+                .handleResourceNotFoundException(new ResourceNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
-        assertProblem(brand, HttpStatus.NOT_FOUND, ErrorCode.BRAND_NOT_FOUND);
+        assertProblem(product, HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND);
+        assertProblem(ingredient, HttpStatus.NOT_FOUND, ErrorCode.INGREDIENT_NOT_FOUND);
     }
 
     @Test

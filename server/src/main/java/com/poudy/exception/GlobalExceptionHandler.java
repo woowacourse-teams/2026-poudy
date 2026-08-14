@@ -29,11 +29,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ProblemDetail> handleConflictException(ConflictException exception) {
-        return problem(HttpStatus.CONFLICT, exception.code(), exception.getMessage());
-    }
-
     @ExceptionHandler(InfrastructureException.class)
     public ResponseEntity<ProblemDetail> handleInfrastructureException(InfrastructureException exception) {
         log.error("Infrastructure failure", exception);

@@ -11,389 +11,45 @@
   ],
   "tags": [
     {
-      "description": "카테고리 조회 API",
-      "name": "카테고리"
+      "name": "카테고리",
+      "description": "카테고리 조회 API"
     },
     {
-      "description": "브랜드 조회 API",
-      "name": "브랜드"
+      "name": "브랜드",
+      "description": "브랜드 조회 API"
     },
     {
-      "description": "제품 조회 API",
-      "name": "제품"
+      "name": "제품",
+      "description": "제품 조회 API"
     },
     {
-      "description": "성분 조회 API",
-      "name": "성분"
+      "name": "성분",
+      "description": "성분 조회 API"
     }
   ],
   "paths": {
-    "/api/brands": {
-      "get": {
-        "description": "브랜드 목록을 조회하거나 브랜드명으로 검색한다. keyword 를 생략하면 전체를 브랜드명 오름차순으로 반환한다.",
-        "operationId": "findBrands",
-        "parameters": [
-          {
-            "example": "브랜드",
-            "in": "query",
-            "name": "keyword",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrandListResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "500": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "서버 오류"
-          }
-        },
-        "summary": "브랜드 조회",
-        "tags": [
-          "브랜드"
-        ]
-      }
-    },
-    "/api/brands/{brandId}": {
-      "get": {
-        "description": "브랜드 ID 에 해당하는 상세 정보를 조회한다. 브랜드에 속한 제품 목록은 제품 조회에서 brandIds 로 받는다.",
-        "operationId": "findBrand",
-        "parameters": [
-          {
-            "example": 12,
-            "in": "path",
-            "name": "brandId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrandResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "404": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "BRAND_NOT_FOUND",
-                  "detail": "브랜드를 찾을 수 없습니다.",
-                  "status": 404,
-                  "title": "Not Found"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "대상을 찾을 수 없음"
-          },
-          "500": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "서버 오류"
-          }
-        },
-        "summary": "브랜드 상세 조회",
-        "tags": [
-          "브랜드"
-        ]
-      }
-    },
-    "/api/categories": {
-      "get": {
-        "description": "제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.",
-        "operationId": "findCategories",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryListResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "500": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "서버 오류"
-          }
-        },
-        "summary": "카테고리 조회",
-        "tags": [
-          "카테고리"
-        ]
-      }
-    },
-    "/api/ingredients": {
-      "get": {
-        "description": "성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.",
-        "operationId": "findIngredients",
-        "parameters": [
-          {
-            "example": "글리세린",
-            "in": "query",
-            "name": "keyword",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IngredientListResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "500": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "서버 오류"
-          }
-        },
-        "summary": "성분 조회",
-        "tags": [
-          "성분"
-        ]
-      }
-    },
-    "/api/ingredients/{ingredientId}": {
-      "get": {
-        "description": "성분 ID 에 해당하는 상세 정보를 조회한다.",
-        "operationId": "findIngredient",
-        "parameters": [
-          {
-            "example": 1005,
-            "in": "path",
-            "name": "ingredientId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IngredientDetailResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "404": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INGREDIENT_NOT_FOUND",
-                  "detail": "성분을 찾을 수 없습니다.",
-                  "status": 404,
-                  "title": "Not Found"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "대상을 찾을 수 없음"
-          },
-          "500": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "서버 오류"
-          }
-        },
-        "summary": "성분 상세 조회",
-        "tags": [
-          "성분"
-        ]
-      }
-    },
     "/api/products": {
       "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품 조회",
         "description": "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.",
         "operationId": "findProducts",
         "parameters": [
           {
-            "example": "토너",
-            "in": "query",
             "name": "keyword",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "example": "토너"
-            }
+            },
+            "example": "토너"
           },
           {
-            "in": "query",
             "name": "categoryIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -406,8 +62,8 @@
             }
           },
           {
-            "in": "query",
             "name": "brandIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -420,8 +76,8 @@
             }
           },
           {
-            "in": "query",
             "name": "moistureLevel",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -436,8 +92,8 @@
             }
           },
           {
-            "in": "query",
             "name": "oilLevel",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -452,8 +108,8 @@
             }
           },
           {
-            "in": "query",
             "name": "excludeCodes",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -472,8 +128,8 @@
             }
           },
           {
-            "in": "query",
             "name": "includeIngredientIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -486,8 +142,8 @@
             }
           },
           {
-            "in": "query",
             "name": "excludeIngredientIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -500,9 +156,9 @@
             }
           },
           {
-            "description": "정렬 조건",
-            "in": "query",
             "name": "sort",
+            "in": "query",
+            "description": "정렬 조건",
             "required": false,
             "schema": {
               "type": "string",
@@ -517,9 +173,9 @@
             }
           },
           {
-            "description": "조회할 페이지 번호 (0부터 시작)",
-            "in": "query",
             "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (0부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
@@ -530,9 +186,9 @@
             }
           },
           {
-            "description": "페이지당 항목 개수",
-            "in": "query",
             "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
             "required": false,
             "schema": {
               "type": "integer",
@@ -546,88 +202,248 @@
         ],
         "responses": {
           "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductPageResponse"
                 }
               }
-            },
-            "description": "OK"
+            }
           },
           "400": {
+            "description": "잘못된 요청",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "409": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "CONFLICTING_INGREDIENT_FILTER",
-                  "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
-                  "status": 409,
-                  "title": "Conflict"
                 },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "CONFLICTING_INGREDIENT_FILTER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
+                      "code": "CONFLICTING_INGREDIENT_FILTER"
+                    }
+                  }
                 }
               }
-            },
-            "description": "요청 충돌"
+            }
           },
           "500": {
+            "description": "서버 오류",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
                 }
               }
-            },
-            "description": "서버 오류"
+            }
           }
-        },
-        "summary": "제품 조회",
+        }
+      }
+    },
+    "/api/products/{productId}": {
+      "get": {
         "tags": [
           "제품"
-        ]
+        ],
+        "summary": "제품 간단 조회",
+        "description": "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.",
+        "operationId": "findProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 101
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "제품을 찾을 수 없습니다.",
+                  "code": "PRODUCT_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/detail/{productId}": {
+      "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품 상세 조회",
+        "description": "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.",
+        "operationId": "findProductDetail",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 101
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "제품을 찾을 수 없습니다.",
+                  "code": "PRODUCT_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/products/count": {
       "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품 필터 결과 개수 조회",
         "description": "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.",
         "operationId": "countProducts",
         "parameters": [
           {
-            "example": "토너",
-            "in": "query",
             "name": "keyword",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "example": "토너"
-            }
+            },
+            "example": "토너"
           },
           {
-            "in": "query",
             "name": "categoryIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -640,8 +456,8 @@
             }
           },
           {
-            "in": "query",
             "name": "brandIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -654,8 +470,8 @@
             }
           },
           {
-            "in": "query",
             "name": "moistureLevel",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -670,8 +486,8 @@
             }
           },
           {
-            "in": "query",
             "name": "oilLevel",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -686,8 +502,8 @@
             }
           },
           {
-            "in": "query",
             "name": "excludeCodes",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -706,8 +522,8 @@
             }
           },
           {
-            "in": "query",
             "name": "includeIngredientIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -720,8 +536,8 @@
             }
           },
           {
-            "in": "query",
             "name": "excludeIngredientIds",
+            "in": "query",
             "required": false,
             "schema": {
               "type": "array",
@@ -736,248 +552,506 @@
         ],
         "responses": {
           "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductCountResponse"
                 }
               }
-            },
-            "description": "OK"
+            }
           },
           "400": {
+            "description": "잘못된 요청",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "잘못된 요청"
-          },
-          "409": {
-            "content": {
-              "application/problem+json": {
-                "example": {
-                  "code": "CONFLICTING_INGREDIENT_FILTER",
-                  "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
-                  "status": 409,
-                  "title": "Conflict"
                 },
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "CONFLICTING_INGREDIENT_FILTER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
+                      "code": "CONFLICTING_INGREDIENT_FILTER"
+                    }
+                  }
                 }
               }
-            },
-            "description": "요청 충돌"
+            }
           },
           "500": {
+            "description": "서버 오류",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
                 }
               }
-            },
-            "description": "서버 오류"
+            }
           }
-        },
-        "summary": "제품 필터 결과 개수 조회",
-        "tags": [
-          "제품"
-        ]
+        }
       }
     },
-    "/api/products/detail/{productId}": {
+    "/api/ingredients/{ingredientId}": {
       "get": {
-        "description": "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.",
-        "operationId": "findProductDetail",
+        "tags": [
+          "성분"
+        ],
+        "summary": "성분 기본 조회",
+        "description": "성분 ID 에 해당하는 기본 정보와 효과를 조회한다.",
+        "operationId": "findIngredient",
         "parameters": [
           {
-            "example": 101,
+            "name": "ingredientId",
             "in": "path",
-            "name": "productId",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "example": 1005
           }
         ],
         "responses": {
           "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProductDetailResponse"
+                  "$ref": "#/components/schemas/IngredientResponse"
                 }
               }
-            },
-            "description": "OK"
+            }
           },
           "400": {
+            "description": "잘못된 요청",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
-            },
-            "description": "잘못된 요청"
+            }
           },
           "404": {
+            "description": "대상을 찾을 수 없음",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "PRODUCT_NOT_FOUND",
-                  "detail": "제품을 찾을 수 없습니다.",
-                  "status": 404,
-                  "title": "Not Found"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "성분을 찾을 수 없습니다.",
+                  "code": "INGREDIENT_NOT_FOUND"
                 }
               }
-            },
-            "description": "대상을 찾을 수 없음"
+            }
           },
           "500": {
+            "description": "서버 오류",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
                 }
               }
-            },
-            "description": "서버 오류"
+            }
           }
-        },
-        "summary": "제품 상세 조회",
-        "tags": [
-          "제품"
-        ]
+        }
       }
     },
-    "/api/products/{productId}": {
+    "/api/ingredients/suggestions": {
       "get": {
-        "description": "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.",
-        "operationId": "findProduct",
+        "tags": [
+          "성분"
+        ],
+        "summary": "성분 추천 검색어",
+        "description": "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.",
+        "operationId": "suggestIngredients",
         "parameters": [
           {
-            "example": 101,
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "글리"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientSuggestionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingredients/detail/{ingredientId}": {
+      "get": {
+        "tags": [
+          "성분"
+        ],
+        "summary": "성분 상세 조회",
+        "description": "성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.",
+        "operationId": "findIngredientDetail",
+        "parameters": [
+          {
+            "name": "ingredientId",
             "in": "path",
-            "name": "productId",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "example": 1005
           }
         ],
         "responses": {
           "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
+                  "$ref": "#/components/schemas/IngredientDetailResponse"
                 }
               }
-            },
-            "description": "OK"
+            }
           },
           "400": {
+            "description": "잘못된 요청",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INVALID_QUERY_PARAMETER",
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "status": 400,
-                  "title": "Bad Request"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
-            },
-            "description": "잘못된 요청"
+            }
           },
           "404": {
+            "description": "대상을 찾을 수 없음",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "PRODUCT_NOT_FOUND",
-                  "detail": "제품을 찾을 수 없습니다.",
-                  "status": 404,
-                  "title": "Not Found"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "성분을 찾을 수 없습니다.",
+                  "code": "INGREDIENT_NOT_FOUND"
                 }
               }
-            },
-            "description": "대상을 찾을 수 없음"
+            }
           },
           "500": {
+            "description": "서버 오류",
             "content": {
               "application/problem+json": {
-                "example": {
-                  "code": "INTERNAL_SERVER_ERROR",
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "status": 500,
-                  "title": "Internal Server Error"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
                 }
               }
-            },
-            "description": "서버 오류"
+            }
           }
-        },
-        "summary": "제품 간단 조회",
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
         "tags": [
-          "제품"
-        ]
+          "카테고리"
+        ],
+        "summary": "카테고리 조회",
+        "description": "제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.",
+        "operationId": "findCategories",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brands": {
+      "get": {
+        "tags": [
+          "브랜드"
+        ],
+        "summary": "브랜드 조회",
+        "description": "전체 브랜드를 브랜드명 오름차순으로 조회한다.",
+        "operationId": "findBrands",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandListResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
   "components": {
     "schemas": {
+      "BrandSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 12
+          },
+          "name": {
+            "type": "string",
+            "example": "브랜드 이름"
+          },
+          "logoUrl": {
+            "type": "string",
+            "example": "https://cdn.example.com/brands/12/logo.png"
+          }
+        },
+        "required": [
+          "id",
+          "logoUrl",
+          "name"
+        ]
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 48
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "hasNext": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "hasNext",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "ProductPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        },
+        "required": [
+          "items",
+          "pagination"
+        ]
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 101
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨케어 이름"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandSummaryResponse"
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://cdn.example.com/products/101.png"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "example": 200
+          },
+          "volumeUnit": {
+            "type": "string",
+            "example": "ml"
+          }
+        },
+        "required": [
+          "brand",
+          "id",
+          "imageUrl",
+          "name",
+          "price",
+          "volumeUnit",
+          "volumeValue"
+        ]
+      },
       "BenefitResponse": {
         "type": "object",
         "properties": {
-          "color": {
-            "type": "string",
-            "example": "#4CAF50"
-          },
           "id": {
             "type": "integer",
             "format": "int64",
             "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "보습"
+          },
+          "color": {
+            "type": "string",
+            "example": "#4CAF50"
           },
           "ingredientIds": {
             "type": "array",
@@ -986,10 +1060,6 @@
               "format": "int64",
               "example": 1005
             }
-          },
-          "name": {
-            "type": "string",
-            "example": "보습"
           }
         },
         "required": [
@@ -999,13 +1069,264 @@
           "name"
         ]
       },
-      "BrandListResponse": {
+      "CategoryPathResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "대분류 ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "대분류 이름",
+            "example": "스킨케어"
+          },
+          "child": {
+            "$ref": "#/components/schemas/CategorySummaryResponse",
+            "description": "소분류. 대분류만 지정된 제품은 비어 있다"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CategorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨케어"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "EffectResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "보습"
+          },
+          "color": {
+            "type": "string",
+            "example": "#4CAF50"
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "name"
+        ]
+      },
+      "ProductDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "제품 ID",
+            "example": 101
+          },
+          "name": {
+            "type": "string",
+            "description": "제품명",
+            "example": "스킨케어 이름"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandSummaryResponse",
+            "description": "브랜드 정보"
+          },
+          "categories": {
+            "type": "array",
+            "description": "제품 카테고리 목록",
+            "items": {
+              "$ref": "#/components/schemas/CategoryPathResponse"
+            }
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "제품 대표 이미지 URL",
+            "example": "https://cdn.example.com/products/101.png"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "description": "제품 가격 (원)",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "description": "제품 용량 값",
+            "example": 200
+          },
+          "volumeUnit": {
+            "type": "string",
+            "description": "제품 용량 단위",
+            "example": "ml"
+          },
+          "moistureLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "수분감 단계 (0~3)",
+            "example": 3,
+            "maximum": 3,
+            "minimum": 0
+          },
+          "oilLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "유분감 단계 (0~3)",
+            "example": 1,
+            "maximum": 3,
+            "minimum": 0
+          },
+          "benefits": {
+            "type": "array",
+            "description": "효과별 성분 그룹",
+            "items": {
+              "$ref": "#/components/schemas/BenefitResponse"
+            }
+          },
+          "ingredients": {
+            "type": "array",
+            "description": "표시 순서대로 정렬된 전체 성분",
+            "items": {
+              "$ref": "#/components/schemas/ProductIngredientResponse"
+            }
+          },
+          "freeOfCodes": {
+            "type": "array",
+            "description": "이 제품이 포함하지 않는 성분군 (프리 뱃지)",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SENSITIVE",
+                "FRAGRANCE",
+                "ETHANOL",
+                "PARABEN_7",
+                "MINERAL_OIL",
+                "ALLERGEN"
+              ]
+            }
+          }
+        },
+        "required": [
+          "benefits",
+          "brand",
+          "categories",
+          "freeOfCodes",
+          "id",
+          "imageUrl",
+          "ingredients",
+          "moistureLevel",
+          "name",
+          "oilLevel",
+          "price",
+          "volumeUnit",
+          "volumeValue"
+        ]
+      },
+      "ProductIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1005
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "글리세린"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Glycerin"
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          }
+        },
+        "required": [
+          "effects",
+          "englishName",
+          "id",
+          "koreanName"
+        ]
+      },
+      "ProductCountResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "example": 127
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "IngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "성분 ID",
+            "example": 1005
+          },
+          "koreanName": {
+            "type": "string",
+            "description": "성분 한글명",
+            "example": "글리세린"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "성분 영문명",
+            "example": "Glycerin"
+          },
+          "effects": {
+            "type": "array",
+            "description": "성분의 주요 효과",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          }
+        },
+        "required": [
+          "effects",
+          "englishName",
+          "id",
+          "koreanName"
+        ]
+      },
+      "IngredientSuggestionResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
+            "description": "자동완성 후보. 최대 10건",
             "items": {
-              "$ref": "#/components/schemas/BrandResponse"
+              "$ref": "#/components/schemas/IngredientSummaryResponse"
             }
           }
         },
@@ -1013,56 +1334,112 @@
           "items"
         ]
       },
-      "BrandResponse": {
+      "IngredientSummaryResponse": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 12
+            "example": 1010
           },
-          "logoUrl": {
+          "koreanName": {
             "type": "string",
-            "example": "https://cdn.example.com/brands/12/logo.png"
+            "example": "부틸렌글라이콜"
           },
-          "name": {
+          "englishName": {
             "type": "string",
-            "example": "브랜드 이름"
+            "example": "Butylene Glycol"
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "koreanName"
+        ]
+      },
+      "IngredientDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1005
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "글리세린"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Glycerin"
+          },
+          "description": {
+            "type": "string",
+            "example": "피부 표면의 수분을 끌어당겨 유지시키는 대표적인 보습 성분이다."
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EffectResponse"
+            }
+          },
+          "groupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SENSITIVE",
+                "FRAGRANCE",
+                "ETHANOL",
+                "PARABEN_7",
+                "MINERAL_OIL",
+                "ALLERGEN"
+              ]
+            }
           },
           "productCount": {
             "type": "integer",
             "format": "int64",
-            "example": 48
+            "example": 84
+          },
+          "infoSources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "성분 정보 출처"
+            }
+          },
+          "effectSources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "성분 효과 출처"
+            }
+          },
+          "relatedIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientSummaryResponse"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-01T09:30:00+09:00"
           }
         },
         "required": [
+          "description",
+          "effectSources",
+          "effects",
+          "englishName",
+          "groupCodes",
           "id",
-          "logoUrl",
-          "name",
-          "productCount"
-        ]
-      },
-      "BrandSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 12
-          },
-          "logoUrl": {
-            "type": "string",
-            "example": "https://cdn.example.com/brands/12/logo.png"
-          },
-          "name": {
-            "type": "string",
-            "example": "브랜드 이름"
-          }
-        },
-        "required": [
-          "id",
-          "logoUrl",
-          "name"
+          "infoSources",
+          "koreanName",
+          "productCount",
+          "relatedIngredients",
+          "updatedAt"
         ]
       },
       "CategoryChildResponse": {
@@ -1106,12 +1483,6 @@
       "CategoryResponse": {
         "type": "object",
         "properties": {
-          "children": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategoryChildResponse"
-            }
-          },
           "id": {
             "type": "integer",
             "format": "int64",
@@ -1120,6 +1491,12 @@
           "name": {
             "type": "string",
             "example": "스킨케어"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryChildResponse"
+            }
           },
           "productCount": {
             "type": "integer",
@@ -1134,139 +1511,13 @@
           "productCount"
         ]
       },
-      "CategorySummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨케어"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
-      "EffectResponse": {
-        "type": "object",
-        "properties": {
-          "color": {
-            "type": "string",
-            "example": "#4CAF50"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "보습"
-          }
-        },
-        "required": [
-          "color",
-          "id",
-          "name"
-        ]
-      },
-      "IngredientDetailResponse": {
-        "type": "object",
-        "properties": {
-          "description": {
-            "type": "string",
-            "example": "피부 표면의 수분을 끌어당겨 유지시키는 대표적인 보습 성분이다."
-          },
-          "effectSources": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "성분 효과 출처"
-            }
-          },
-          "effects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EffectResponse"
-            }
-          },
-          "englishName": {
-            "type": "string",
-            "example": "Glycerin"
-          },
-          "groupCodes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
-              ]
-            }
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1005
-          },
-          "infoSources": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "성분 정보 출처"
-            }
-          },
-          "koreanName": {
-            "type": "string",
-            "example": "글리세린"
-          },
-          "productCount": {
-            "type": "integer",
-            "format": "int64",
-            "example": 84
-          },
-          "relatedIngredients": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IngredientSummaryResponse"
-            }
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2026-08-01T09:30:00+09:00"
-          }
-        },
-        "required": [
-          "description",
-          "effectSources",
-          "effects",
-          "englishName",
-          "groupCodes",
-          "id",
-          "infoSources",
-          "koreanName",
-          "productCount",
-          "relatedIngredients",
-          "updatedAt"
-        ]
-      },
-      "IngredientListResponse": {
+      "BrandListResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/IngredientResponse"
+              "$ref": "#/components/schemas/BrandResponse"
             }
           }
         },
@@ -1274,125 +1525,51 @@
           "items"
         ]
       },
-      "IngredientResponse": {
+      "BrandResponse": {
         "type": "object",
         "properties": {
-          "effects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EffectResponse"
-            }
-          },
-          "englishName": {
-            "type": "string",
-            "example": "Glycerin"
-          },
-          "groupCodes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
-              ]
-            }
-          },
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1005
+            "example": 12
           },
-          "koreanName": {
+          "name": {
             "type": "string",
-            "example": "글리세린"
-          }
-        },
-        "required": [
-          "effects",
-          "englishName",
-          "groupCodes",
-          "id",
-          "koreanName"
-        ]
-      },
-      "IngredientSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "englishName": {
+            "example": "브랜드 이름"
+          },
+          "logoUrl": {
             "type": "string",
-            "example": "Butylene Glycol"
+            "example": "https://cdn.example.com/brands/12/logo.png"
           },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1010
-          },
-          "koreanName": {
-            "type": "string",
-            "example": "부틸렌글라이콜"
-          }
-        },
-        "required": [
-          "englishName",
-          "id",
-          "koreanName"
-        ]
-      },
-      "PaginationResponse": {
-        "type": "object",
-        "properties": {
-          "hasNext": {
-            "type": "boolean",
-            "example": true
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32",
-            "example": 0
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32",
-            "example": 20
-          },
-          "totalElements": {
+          "productCount": {
             "type": "integer",
             "format": "int64",
             "example": 48
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32",
-            "example": 3
           }
         },
         "required": [
-          "hasNext",
-          "page",
-          "size",
-          "totalElements",
-          "totalPages"
+          "id",
+          "logoUrl",
+          "name",
+          "productCount"
         ]
       },
       "ProblemDetail": {
         "type": "object",
         "properties": {
-          "code": {
+          "type": {
             "type": "string",
-            "enum": [
-              "INVALID_QUERY_PARAMETER",
-              "CONFLICTING_INGREDIENT_FILTER",
-              "UNSUPPORTED_REQUEST",
-              "PRODUCT_NOT_FOUND",
-              "BRAND_NOT_FOUND",
-              "INGREDIENT_NOT_FOUND",
-              "ENDPOINT_NOT_FOUND",
-              "INTERNAL_SERVER_ERROR"
-            ]
+            "format": "uri",
+            "example": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "example": 400
           },
           "detail": {
             "type": "string",
@@ -1403,19 +1580,17 @@
             "format": "uri-reference",
             "example": "/api/products"
           },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "example": 400
-          },
-          "title": {
+          "code": {
             "type": "string",
-            "example": "Bad Request"
-          },
-          "type": {
-            "type": "string",
-            "format": "uri",
-            "example": "about:blank"
+            "enum": [
+              "INVALID_QUERY_PARAMETER",
+              "CONFLICTING_INGREDIENT_FILTER",
+              "UNSUPPORTED_REQUEST",
+              "PRODUCT_NOT_FOUND",
+              "INGREDIENT_NOT_FOUND",
+              "ENDPOINT_NOT_FOUND",
+              "INTERNAL_SERVER_ERROR"
+            ]
           }
         },
         "required": [
@@ -1423,205 +1598,6 @@
           "detail",
           "status",
           "title"
-        ]
-      },
-      "ProductCountResponse": {
-        "type": "object",
-        "properties": {
-          "count": {
-            "type": "integer",
-            "format": "int64",
-            "example": 127
-          }
-        },
-        "required": [
-          "count"
-        ]
-      },
-      "ProductDetailResponse": {
-        "type": "object",
-        "properties": {
-          "benefits": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BenefitResponse"
-            }
-          },
-          "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategorySummaryResponse"
-            }
-          },
-          "freeOfCodes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
-              ]
-            }
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 101
-          },
-          "imageUrl": {
-            "type": "string",
-            "example": "https://cdn.example.com/products/101.png"
-          },
-          "ingredients": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProductIngredientResponse"
-            }
-          },
-          "moistureLevel": {
-            "type": "integer",
-            "format": "int32",
-            "example": 3,
-            "maximum": 3,
-            "minimum": 0
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨케어 이름"
-          },
-          "oilLevel": {
-            "type": "integer",
-            "format": "int32",
-            "example": 1,
-            "maximum": 3,
-            "minimum": 0
-          },
-          "price": {
-            "type": "integer",
-            "format": "int64",
-            "example": 18000
-          },
-          "volumeUnit": {
-            "type": "string",
-            "example": "ml"
-          },
-          "volumeValue": {
-            "type": "number",
-            "example": 200
-          }
-        },
-        "required": [
-          "benefits",
-          "brand",
-          "categories",
-          "freeOfCodes",
-          "id",
-          "imageUrl",
-          "ingredients",
-          "moistureLevel",
-          "name",
-          "oilLevel",
-          "price",
-          "volumeUnit",
-          "volumeValue"
-        ]
-      },
-      "ProductIngredientResponse": {
-        "type": "object",
-        "properties": {
-          "effects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EffectResponse"
-            }
-          },
-          "englishName": {
-            "type": "string",
-            "example": "Glycerin"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1005
-          },
-          "koreanName": {
-            "type": "string",
-            "example": "글리세린"
-          }
-        },
-        "required": [
-          "effects",
-          "englishName",
-          "id",
-          "koreanName"
-        ]
-      },
-      "ProductPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProductResponse"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationResponse"
-          }
-        },
-        "required": [
-          "items",
-          "pagination"
-        ]
-      },
-      "ProductResponse": {
-        "type": "object",
-        "properties": {
-          "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 101
-          },
-          "imageUrl": {
-            "type": "string",
-            "example": "https://cdn.example.com/products/101.png"
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨케어 이름"
-          },
-          "price": {
-            "type": "integer",
-            "format": "int64",
-            "example": 18000
-          },
-          "volumeUnit": {
-            "type": "string",
-            "example": "ml"
-          },
-          "volumeValue": {
-            "type": "number",
-            "example": 200
-          }
-        },
-        "required": [
-          "brand",
-          "id",
-          "imageUrl",
-          "name",
-          "price",
-          "volumeUnit",
-          "volumeValue"
         ]
       }
     }
