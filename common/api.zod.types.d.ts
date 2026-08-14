@@ -238,17 +238,14 @@ export type get_FindCategories = {
 
     }
 /**
- * 브랜드 목록을 조회하거나 브랜드명으로 검색한다. keyword 를 생략하면 전체를 브랜드명 오름차순으로 반환한다.
+ * 전체 브랜드를 브랜드명 오름차순으로 조회한다.
  */
 export type get_FindBrands = {
       method: "GET",
       path: "/api/brands",
       requestFormat: "json",
       responseFormat: "json",
-      parameters: {
-            query?:  Partial<{ keyword: string }>,
-
-          }
+      parameters: never,
       responses: {200: Schemas.BrandListResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
