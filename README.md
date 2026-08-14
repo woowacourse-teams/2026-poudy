@@ -20,7 +20,7 @@ Windows 는 Git Bash 에서 실행합니다. cmd 와 PowerShell 은 `.sh` 를 �
 
 ## 커밋 규칙
 
-[AGENTS.md](AGENTS.md) 를 따릅니다.
+[CONTRIBUTING.md](CONTRIBUTING.md)의 커밋 메시지 규칙을 따릅니다.
 
 ## API 타입
 
