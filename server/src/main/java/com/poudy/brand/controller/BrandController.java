@@ -20,7 +20,6 @@ public class BrandController {
     private static final Long SAMPLE_BRAND_ID = 12L;
     private static final String SAMPLE_BRAND_NAME = "라운드랩";
     private static final String SAMPLE_BRAND_ENGLISH_NAME = "ROUND LAB";
-    private static final Long SAMPLE_PRODUCT_COUNT = 48L;
 
     @Operation(summary = "브랜드 조회", description = "전체 브랜드를 브랜드명 오름차순으로 조회한다.")
     @GetMapping
@@ -35,11 +34,10 @@ public class BrandController {
     }
 
     private BrandResponse sampleBrand(Long id) {
-        return new BrandResponse(
-                id,
-                SAMPLE_BRAND_NAME,
-                SAMPLE_BRAND_ENGLISH_NAME,
-                "https://cdn.example.com/brands/" + id + "/logo.png",
-                SAMPLE_PRODUCT_COUNT);
+        return new BrandResponse(id, SAMPLE_BRAND_NAME, SAMPLE_BRAND_ENGLISH_NAME, imageUrl(id));
+    }
+
+    private String imageUrl(Long id) {
+        return "https://cdn.example.com/brands/" + id + "/image.png";
     }
 }

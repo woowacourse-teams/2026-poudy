@@ -1,6 +1,6 @@
 package com.poudy.storage.controller;
 
-import com.poudy.brand.controller.dto.BrandSummaryResponse;
+import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.product.controller.dto.ProductResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,10 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/storage")
 public class StorageController {
 
-    private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(
+    private static final BrandResponse SAMPLE_BRAND = new BrandResponse(
             12L,
             "브랜드 이름",
-            "https://cdn.example.com/brands/12/logo.png");
+            "BRAND NAME",
+            "https://cdn.example.com/brands/12/image.png");
 
     @Operation(summary = "보관함 조회", description = "보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. "
             + "받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.")

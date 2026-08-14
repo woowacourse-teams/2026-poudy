@@ -1,6 +1,6 @@
 package com.poudy.product.controller;
 
-import com.poudy.brand.controller.dto.BrandSummaryResponse;
+import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.common.dto.PaginationRequest;
@@ -46,12 +46,13 @@ public class ProductController {
     private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. "
             + "목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.";
 
-    private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(
+    private static final BrandResponse SAMPLE_BRAND = new BrandResponse(
             12L,
             "브랜드 이름",
-            "https://cdn.example.com/brands/12/logo.png");
+            "BRAND NAME",
+            "https://cdn.example.com/brands/12/image.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
-    private static final List<BrandSummaryResponse> SAMPLE_RESULT_BRANDS = List.of(SAMPLE_BRAND);
+    private static final List<BrandResponse> SAMPLE_RESULT_BRANDS = List.of(SAMPLE_BRAND);
 
     @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
     @GetMapping(params = KEYWORD)
