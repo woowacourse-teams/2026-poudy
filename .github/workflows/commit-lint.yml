@@ -60,7 +60,7 @@ jobs:
           done
 
           if [ "$failed" -ne 0 ]; then
-            echo "커밋 메시지 규칙은 AGENTS.md 를 참고하세요."
+            echo "커밋 메시지 규칙은 CONTRIBUTING.md 를 참고하세요."
             exit 1
           fi
 
@@ -92,8 +92,15 @@ jobs:
             fi
           }
 
-          printf 'feat : 제목만 있는 커밋\n' > "$message"
-          expect 0 "제목만"
+          for type in build ci docs feat fix perf refactor test; do
+            printf '%s : 제목만 있는 커밋\n' "$type" > "$message"
+            expect 0 "$type 타입"
+          done
+
+          for type in style rename remove; do
+            printf '%s : 더 이상 허용하지 않는 타입\n' "$type" > "$message"
+            expect 1 "$type 타입 거부"
+          done
 
           printf 'feat : 실제 줄바꿈 본문\n\n- 첫째 줄\n- 둘째 줄\n' > "$message"
           expect 0 "실제 줄바꿈 본문"
