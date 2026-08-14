@@ -1,8 +1,8 @@
 package com.poudy.brand.controller;
 
 import com.poudy.brand.controller.dto.BrandDetailResponse;
+import com.poudy.brand.controller.dto.BrandListItemResponse;
 import com.poudy.brand.controller.dto.BrandListResponse;
-import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryChildResponse;
 import com.poudy.category.controller.dto.CategoryResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,10 +31,10 @@ public class BrandController {
                     21L),
             new CategoryResponse(2L, "클렌징", List.of(), 6L));
 
-    @Operation(summary = "브랜드 조회", description = "전체 브랜드를 브랜드명 오름차순으로 조회한다.")
+    @Operation(summary = "브랜드 조회", description = "전체 브랜드를 브랜드명 오름차순으로 조회하고 브랜드마다 제품 수를 함께 싣는다.")
     @GetMapping
     public ResponseEntity<BrandListResponse> findBrands() {
-        return ResponseEntity.ok(new BrandListResponse(List.of(sampleBrand(SAMPLE_BRAND_ID))));
+        return ResponseEntity.ok(new BrandListResponse(List.of(sampleBrandListItem(SAMPLE_BRAND_ID))));
     }
 
     @Operation(summary = "브랜드 상세 조회", description = "브랜드 ID 에 해당하는 정보와 이 브랜드 제품이 속한 카테고리를 조회한다. "
@@ -44,8 +44,8 @@ public class BrandController {
         return ResponseEntity.ok(sampleBrandDetail(brandId));
     }
 
-    private BrandResponse sampleBrand(Long id) {
-        return new BrandResponse(id, SAMPLE_BRAND_NAME, SAMPLE_BRAND_ENGLISH_NAME, imageUrl(id));
+    private BrandListItemResponse sampleBrandListItem(Long id) {
+        return new BrandListItemResponse(id, SAMPLE_BRAND_NAME, SAMPLE_BRAND_ENGLISH_NAME, imageUrl(id), 27L);
     }
 
     private BrandDetailResponse sampleBrandDetail(Long id) {
