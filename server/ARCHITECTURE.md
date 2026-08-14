@@ -100,7 +100,9 @@ com.poudy
 │   │       ├── ExcludeCodeResponse
 │   │       └── ExcludeCodeListResponse
 │   └── domain
-│       └── ExcludeCode
+│       ├── ExcludeCode
+│       ├── ExcludeCodeIngredient
+│       └── ExcludeCodeIngredients
 ├── storage
 │   ├── controller
 │   │   ├── StorageController
@@ -109,6 +111,7 @@ com.poudy
 │       └── StorageService
 ├── common
 │   └── dto
+│       ├── KeywordRequest
 │       ├── PaginationRequest
 │       └── PaginationResponse
 ├── config
@@ -240,7 +243,9 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
 `/api/exclude-codes`의 `ingredients`는 성분군에 무엇이 속하는지 화면에 보여 주는 용도로 남는다. 필터 요청에는 쓰지 않는다.
 
-`excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 다만 포함 성분이 제외 성분군에 속하는 경우를 서버가 아직 검사하지 않는다. 성분군과 성분의 매핑을 Repository가 갖게 되는 시점에 `CONFLICTING_INGREDIENT_FILTER`로 막을지 결정한다.
+`excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 포함 성분이 제외 성분군에 속하면 `CONFLICTING_INGREDIENT_FILTER`로 거절한다. 같은 모순을 성분 ID 두 개로 표현하든 성분군으로 표현하든 같은 오류가 나와야 프론트가 "조건에 맞는 제품 없음"과 "잘못된 조건"을 구분할 수 있다.
+
+`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
 
 빠른 제외 성분군은 다음 6개를 제공한다.
 
@@ -404,11 +409,11 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
-10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다.
+10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
 11. 외부 API의 기본 경로는 `/api`다.
-12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓰고, 제품 상세 조회만 별도 엔드포인트와 응답 DTO를 사용한다.
+12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
 13. 검색과 필터는 경로를 나누지 않고 `keyword` 유무로 Controller 메서드를 나눈다. 목록에서 둘을 함께 보낸 요청은 `CONFLICTING_SEARCH_AND_FILTER`로 거절한다.
-14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다.
+14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다. 다만 검사를 생성자에 두지 않는다. 바인딩 중 생성자가 던진 예외는 `BeanInstantiationException`으로 감싸여 `GlobalExceptionHandler`가 400으로 바꾸지 못하고 500이 된다. Bean Validation 애노테이션이나 Controller가 호출하는 검사 메서드를 쓴다.
 15. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 16. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
 17. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
