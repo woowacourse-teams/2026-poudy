@@ -141,6 +141,6 @@ public class ProductController {
                                 "Glycerin",
                                 List.of(new EffectResponse(1L, "보습", "#4CAF50")),
                                 new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm"))),
-                List.of(ExcludeCode.PARABEN_7, ExcludeCode.MINERAL_OIL));
+                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES));
     }
 }
