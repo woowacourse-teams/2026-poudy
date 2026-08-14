@@ -1082,38 +1082,63 @@
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "제품 ID",
             "example": 101
           },
           "name": {
             "type": "string",
+            "description": "제품명",
             "example": "스킨케어 이름"
           },
           "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse"
+            "$ref": "#/components/schemas/BrandSummaryResponse",
+            "description": "브랜드 정보"
           },
           "imageUrl": {
             "type": "string",
+            "description": "제품 대표 이미지 URL",
             "example": "https://cdn.example.com/products/101.png"
           },
           "price": {
             "type": "integer",
             "format": "int64",
+            "description": "제품 가격 (원)",
             "example": 18000
           },
           "volumeValue": {
             "type": "number",
+            "description": "제품 용량 값",
             "example": 200
           },
           "volumeUnit": {
             "type": "string",
+            "description": "제품 용량 단위",
             "example": "ml"
+          },
+          "moistureLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "수분감 단계 (0~3)",
+            "example": 3,
+            "maximum": 3,
+            "minimum": 0
+          },
+          "oilLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "유분감 단계 (0~3)",
+            "example": 1,
+            "maximum": 3,
+            "minimum": 0
           }
         },
         "required": [
           "brand",
           "id",
           "imageUrl",
+          "moistureLevel",
           "name",
+          "oilLevel",
           "price",
           "volumeUnit",
           "volumeValue"

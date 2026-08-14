@@ -11,7 +11,7 @@ export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
 export const PaginationResponse = z.object({ page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int(), hasNext: z.boolean() });
 
 export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
-export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandSummaryResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string() });
+export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandSummaryResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse });
