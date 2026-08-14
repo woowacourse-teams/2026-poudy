@@ -70,14 +70,32 @@ export type ProductDetailResponse = {
   freeOfCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>;
 }
 export type ProductCountResponse = { count: number }
+export type IngredientResponse = {
+  /**
+   * 성분 ID
+   */
+  id: number;
+  /**
+   * 성분 한글명
+   */
+  koreanName: string;
+  /**
+   * 성분 영문명
+   */
+  englishName: string;
+  /**
+   * 성분의 주요 효과
+   */
+  effects: Array<EffectResponse>;
+}
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
-export type IngredientDetailResponse = { id: number, koreanName: string, englishName: string, description: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, productCount: number, infoSources: Array<string>, effectSources: Array<string>, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type IngredientSuggestionResponse = {
   /**
    * 자동완성 후보. 최대 10건
    */
   items: Array<IngredientSummaryResponse>;
 }
+export type IngredientDetailResponse = { id: number, koreanName: string, englishName: string, description: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, productCount: number, infoSources: Array<string>, effectSources: Array<string>, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
@@ -189,7 +207,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분 ID 에 해당하는 상세 정보를 조회한다.
+ * 성분 ID 에 해당하는 기본 정보와 효과를 조회한다.
  */
 export type get_FindIngredient = {
       method: "GET",
@@ -201,7 +219,7 @@ export type get_FindIngredient = {
         path:  { ingredientId: number },
 
           }
-      responses: {200: Schemas.IngredientDetailResponse,
+      responses: {200: Schemas.IngredientResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -222,6 +240,26 @@ export type get_SuggestIngredients = {
           }
       responses: {200: Schemas.IngredientSuggestionResponse,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.
+ */
+export type get_FindIngredientDetail = {
+      method: "GET",
+      path: "/api/ingredients/detail/{ingredientId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { ingredientId: number },
+
+          }
+      responses: {200: Schemas.IngredientDetailResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -267,6 +305,7 @@ export type get_FindBrands = {
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
+"/api/ingredients/detail/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands
          }

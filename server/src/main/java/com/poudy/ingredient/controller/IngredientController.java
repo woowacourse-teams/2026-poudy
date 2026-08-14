@@ -2,6 +2,7 @@ package com.poudy.ingredient.controller;
 
 import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
+import com.poudy.ingredient.controller.dto.IngredientResponse;
 import com.poudy.ingredient.controller.dto.IngredientSuggestionResponse;
 import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "성분", description = "성분 검색 API")
+@Tag(name = "성분", description = "성분 조회 API")
 @RestController
 @RequestMapping("/api/ingredients")
 public class IngredientController {
@@ -25,7 +26,7 @@ public class IngredientController {
     private static final EffectResponse SAMPLE_EFFECT = new EffectResponse(1L, "보습", "#4CAF50");
     private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
 
-    @Operation(summary = "성분 자동완성", description = "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.")
+    @Operation(summary = "성분 추천 검색어", description = "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.")
     @GetMapping("/suggestions")
     public ResponseEntity<IngredientSuggestionResponse> suggestIngredients(
             @Parameter(example = "글리") @RequestParam @NotBlank String keyword) {
@@ -33,11 +34,22 @@ public class IngredientController {
                 new IngredientSuggestionResponse(List.of(new IngredientSummaryResponse(1005L, "글리세린", "Glycerin"))));
     }
 
-    @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 상세 정보를 조회한다.")
+    @Operation(summary = "성분 기본 조회", description = "성분 ID 에 해당하는 기본 정보와 효과를 조회한다.")
     @GetMapping("/{ingredientId}")
-    public ResponseEntity<IngredientDetailResponse> findIngredient(
+    public ResponseEntity<IngredientResponse> findIngredient(
+            @Parameter(example = "1005") @PathVariable Long ingredientId) {
+        return ResponseEntity.ok(sampleIngredient(ingredientId));
+    }
+
+    @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.")
+    @GetMapping("/detail/{ingredientId}")
+    public ResponseEntity<IngredientDetailResponse> findIngredientDetail(
             @Parameter(example = "1005") @PathVariable Long ingredientId) {
         return ResponseEntity.ok(sampleIngredientDetail(ingredientId));
+    }
+
+    private IngredientResponse sampleIngredient(Long id) {
+        return new IngredientResponse(id, "글리세린", "Glycerin", List.of(SAMPLE_EFFECT));
     }
 
     private IngredientDetailResponse sampleIngredientDetail(Long id) {
