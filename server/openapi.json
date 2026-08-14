@@ -1408,12 +1408,12 @@
             "items": {
               "type": "string",
               "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
+                "FRAGRANCE_ALLERGENS",
+                "DRYING_ALCOHOLS",
+                "HARSH_PRESERVATIVES",
+                "SULFATES",
+                "CYCLIC_SILICONES",
+                "SYNTHETIC_COLORANTS"
               ]
             }
           }
@@ -1625,12 +1625,12 @@
             "items": {
               "type": "string",
               "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
+                "FRAGRANCE_ALLERGENS",
+                "DRYING_ALCOHOLS",
+                "HARSH_PRESERVATIVES",
+                "SULFATES",
+                "CYCLIC_SILICONES",
+                "SYNTHETIC_COLORANTS"
               ]
             }
           },
@@ -1701,19 +1701,19 @@
             "type": "string",
             "description": "성분군을 구분하는 값",
             "enum": [
-              "SENSITIVE",
-              "FRAGRANCE",
-              "ETHANOL",
-              "PARABEN_7",
-              "MINERAL_OIL",
-              "ALLERGEN"
+              "FRAGRANCE_ALLERGENS",
+              "DRYING_ALCOHOLS",
+              "HARSH_PRESERVATIVES",
+              "SULFATES",
+              "CYCLIC_SILICONES",
+              "SYNTHETIC_COLORANTS"
             ],
-            "example": "PARABEN_7"
+            "example": "HARSH_PRESERVATIVES"
           },
           "name": {
             "type": "string",
             "description": "빠른 필터에 표시할 이름",
-            "example": "파라벤 7종 없음"
+            "example": "자극성 방부제 제외"
           },
           "ingredients": {
             "type": "array",
