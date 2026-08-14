@@ -19,20 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/exclude-codes")
 public class ExcludeCodeController {
 
-    private static final Map<ExcludeCode, String> SAMPLE_NAMES = Map.of(
-            ExcludeCode.FRAGRANCE_ALLERGENS,
-            "향료/알레르기 성분 제외",
-            ExcludeCode.DRYING_ALCOHOLS,
-            "건조 알코올 제외",
-            ExcludeCode.HARSH_PRESERVATIVES,
-            "자극성 방부제 제외",
-            ExcludeCode.SULFATES,
-            "설페이트 성분 제외",
-            ExcludeCode.CYCLIC_SILICONES,
-            "실리콘 자극원 제외",
-            ExcludeCode.SYNTHETIC_COLORANTS,
-            "합성 색소 제외");
-
     private static final Map<ExcludeCode, List<IngredientSummaryResponse>> SAMPLE_INGREDIENTS = Map.of(
             ExcludeCode.FRAGRANCE_ALLERGENS,
             List.of(
@@ -99,7 +85,7 @@ public class ExcludeCodeController {
     }
 
     private ExcludeCodeResponse sampleExcludeCode(ExcludeCode code) {
-        return new ExcludeCodeResponse(code, SAMPLE_NAMES.get(code), SAMPLE_INGREDIENTS.get(code));
+        return new ExcludeCodeResponse(code, code.displayName(), SAMPLE_INGREDIENTS.get(code), code.description());
     }
 
     private static IngredientSummaryResponse ingredient(Long id, String koreanName, String englishName) {
