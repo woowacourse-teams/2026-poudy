@@ -5,8 +5,8 @@ import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
-import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.product.controller.dto.BenefitResponse;
 import com.poudy.product.controller.dto.DisclosedAmountResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
@@ -36,28 +36,50 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
+    private static final String KEYWORD = ProductFilterRequest.KEYWORD;
+    private static final String FIND_PRODUCTS = "findProducts";
+    private static final String PRODUCTS_SUMMARY = "제품 조회";
+    private static final String PRODUCTS_DESCRIPTION = "검색어 또는 필터 조건에 해당하는 제품 목록을 조회한다. "
+            + "keyword 와 필터 조건은 한쪽만 보낼 수 있고, 함께 보내면 400 을 반환한다. " + "sort 와 페이지 조건은 양쪽 모두에 쓴다.";
+    private static final String COUNT_PATH = "/count";
+    private static final String COUNT_SUMMARY = "제품 조회 결과 개수 조회";
+    private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. "
+            + "목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.";
+
     private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(
             12L,
             "브랜드 이름",
             "https://cdn.example.com/brands/12/logo.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
 
-    @Operation(summary = "제품 조회", description = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.")
-    @GetMapping
-    public ResponseEntity<ProductPageResponse> findProducts(
+    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @GetMapping(params = KEYWORD)
+    public ResponseEntity<ProductPageResponse> searchProducts(
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
+        filter.validateSearchOnly();
 
         return ResponseEntity.ok(
                 new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
     }
 
-    @Operation(summary = "제품 필터 결과 개수 조회", description = "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.")
-    @GetMapping("/count")
+    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @GetMapping(params = "!" + KEYWORD)
+    public ResponseEntity<ProductPageResponse> findProducts(
+            @Valid @ModelAttribute ProductFilterRequest filter,
+            @Valid @ModelAttribute ProductSortRequest sort,
+            @Valid @ModelAttribute PaginationRequest pagination) {
+        validateIngredientFilter(filter);
+
+        return ResponseEntity.ok(
+                new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
+    }
+
+    @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
+    @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
+        validateIngredientFilter(filter);
 
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
@@ -69,8 +91,8 @@ public class ProductController {
         return ResponseEntity.ok(sampleProductDetail(productId));
     }
 
-    private IngredientFilter ingredientFilterOf(ProductFilterRequest filter) {
-        return new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
+    private void validateIngredientFilter(ProductFilterRequest filter) {
+        new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
     }
 
     private static ProductResponse sampleProduct(Long id) {
