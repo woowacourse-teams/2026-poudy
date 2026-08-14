@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,6 +58,7 @@ public class ProductController {
             "https://cdn.example.com/brands/12/image.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
     private static final List<BrandResponse> SAMPLE_RESULT_BRANDS = List.of(SAMPLE_BRAND);
+    private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
 
     @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
     @GetMapping(params = KEYWORD)
@@ -143,9 +145,6 @@ public class ProductController {
                 SAMPLE_BRAND,
                 List.of(new CategoryPathResponse(1L, "스킨케어", new CategorySummaryResponse(7L, "토너"))),
                 "https://cdn.example.com/products/" + id + ".png",
-                18000L,
-                new BigDecimal("200"),
-                "ml",
                 List.of(
                         new ProductVariantResponse(1L, 18000L, new BigDecimal("200"), "ml", "active"),
                         new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml", "active")),
@@ -160,6 +159,7 @@ public class ProductController {
                                 "Glycerin",
                                 List.of(new EffectResponse(1L, "보습", "#4CAF50")),
                                 new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm"))),
-                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES));
+                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES),
+                SAMPLE_UPDATED_AT);
     }
 }
