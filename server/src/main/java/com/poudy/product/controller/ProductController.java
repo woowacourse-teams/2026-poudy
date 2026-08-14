@@ -7,8 +7,6 @@ import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
 import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.ingredient.controller.dto.EffectResponse;
-import com.poudy.product.controller.dto.BenefitResponse;
 import com.poudy.product.controller.dto.DisclosedAmountResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
 import com.poudy.product.controller.dto.ProductDetailResponse;
@@ -20,7 +18,10 @@ import com.poudy.product.controller.dto.ProductSortRequest;
 import com.poudy.product.controller.dto.ProductSuggestionListResponse;
 import com.poudy.product.controller.dto.ProductSuggestionResponse;
 import com.poudy.product.controller.dto.ProductVariantResponse;
+import com.poudy.product.controller.dto.SkinEffectGroupResponse;
 import com.poudy.product.domain.IngredientFilter;
+import com.poudy.tag.controller.dto.FormulationRoleResponse;
+import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -150,14 +151,23 @@ public class ProductController {
                         new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml", "active")),
                 3,
                 1,
-                List.of(new BenefitResponse(1L, "보습", "#4CAF50", List.of(1001L, 1005L))),
+                List.of(new SkinEffectGroupResponse(21L, "피부 장벽 관련", "#4CAF50", List.of(1005L))),
                 List.of(
-                        new ProductIngredientResponse(1001L, "정제수", "Water", List.of(), null),
+                        new ProductIngredientResponse(
+                                1001L,
+                                "정제수",
+                                "Water",
+                                List.of(new FormulationRoleResponse(3L, "용제")),
+                                List.of(),
+                                null),
                         new ProductIngredientResponse(
                                 1005L,
                                 "글리세린",
                                 "Glycerin",
-                                List.of(new EffectResponse(1L, "보습", "#4CAF50")),
+                                List.of(
+                                        new FormulationRoleResponse(1L, "습윤제"),
+                                        new FormulationRoleResponse(2L, "피부 컨디셔닝제")),
+                                List.of(new SkinEffectResponse(21L, "피부 장벽 관련")),
                                 new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm"))),
                 List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES),
                 SAMPLE_UPDATED_AT);
