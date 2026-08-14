@@ -59,7 +59,7 @@ export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
 export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
-export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), logoUrl: z.string(), productCount: z.number().int() });
+export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string(), logoUrl: z.string(), productCount: z.number().int() });
 
 export type BrandListResponse = __TypedOpenapi.Schemas.BrandListResponse;
 export const BrandListResponse = z.object({ items: z.array(BrandResponse) });

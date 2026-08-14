@@ -99,7 +99,28 @@ export type IngredientDetailResponse = { id: number, koreanName: string, english
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
-export type BrandResponse = { id: number, name: string, logoUrl: string, productCount: number }
+export type BrandResponse = {
+  /**
+   * 브랜드 ID
+   */
+  id: number;
+  /**
+   * 브랜드 한글명
+   */
+  name: string;
+  /**
+   * 브랜드 영문명
+   */
+  englishName: string;
+  /**
+   * 브랜드 로고 URL
+   */
+  logoUrl: string;
+  /**
+   * 브랜드에 등록된 제품 개수
+   */
+  productCount: number;
+}
 export type BrandListResponse = { items: Array<BrandResponse> }
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 

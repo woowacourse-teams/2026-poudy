@@ -1531,23 +1531,33 @@
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "브랜드 ID",
             "example": 12
           },
           "name": {
             "type": "string",
-            "example": "브랜드 이름"
+            "description": "브랜드 한글명",
+            "example": "라운드랩"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "브랜드 영문명",
+            "example": "ROUND LAB"
           },
           "logoUrl": {
             "type": "string",
+            "description": "브랜드 로고 URL",
             "example": "https://cdn.example.com/brands/12/logo.png"
           },
           "productCount": {
             "type": "integer",
             "format": "int64",
+            "description": "브랜드에 등록된 제품 개수",
             "example": 48
           }
         },
         "required": [
+          "englishName",
           "id",
           "logoUrl",
           "name",
