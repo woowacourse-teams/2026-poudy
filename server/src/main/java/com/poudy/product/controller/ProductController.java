@@ -51,6 +51,7 @@ public class ProductController {
             "브랜드 이름",
             "https://cdn.example.com/brands/12/logo.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
+    private static final List<BrandSummaryResponse> SAMPLE_RESULT_BRANDS = List.of(SAMPLE_BRAND);
 
     @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
     @GetMapping(params = KEYWORD)
@@ -61,7 +62,10 @@ public class ProductController {
         filter.validateSearchOnly();
 
         return ResponseEntity.ok(
-                new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
+                new ProductPageResponse(
+                        SAMPLE_PRODUCTS,
+                        PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size()),
+                        SAMPLE_RESULT_BRANDS));
     }
 
     @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
@@ -73,7 +77,10 @@ public class ProductController {
         validateIngredientFilter(filter);
 
         return ResponseEntity.ok(
-                new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
+                new ProductPageResponse(
+                        SAMPLE_PRODUCTS,
+                        PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size()),
+                        SAMPLE_RESULT_BRANDS));
     }
 
     @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
