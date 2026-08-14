@@ -62,12 +62,6 @@ public class ProductController {
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
 
-    @Operation(summary = "제품 간단 조회", description = "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.")
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> findProduct(@Parameter(example = "101") @PathVariable Long productId) {
-        return ResponseEntity.ok(sampleProduct(productId));
-    }
-
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
     @GetMapping("/detail/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
