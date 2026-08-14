@@ -1290,6 +1290,22 @@
           "variants": {
             "type": "array",
             "description": "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다",
+            "example": [
+              {
+                "id": 1,
+                "price": 18000,
+                "volumeValue": 200,
+                "volumeUnit": "ml",
+                "status": "active"
+              },
+              {
+                "id": 2,
+                "price": 27000,
+                "volumeValue": 300,
+                "volumeUnit": "ml",
+                "status": "active"
+              }
+            ],
             "items": {
               "$ref": "#/components/schemas/ProductVariantResponse"
             }
@@ -1410,7 +1426,7 @@
           "volumeValue": {
             "type": "number",
             "description": "용량 값",
-            "example": 150
+            "example": 200
           },
           "volumeUnit": {
             "type": "string",

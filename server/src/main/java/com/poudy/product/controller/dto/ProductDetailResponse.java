@@ -19,7 +19,10 @@ public record ProductDetailResponse(
         @NotNull @Schema(description = "제품 가격 (원)", example = "18000") Long price,
         @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
         @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
-        @NotNull @Schema(description = "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다") List<ProductVariantResponse> variants,
+        @NotNull @Schema(description = "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다", example = """
+                [{"id":1,"price":18000,"volumeValue":200,"volumeUnit":"ml","status":"active"},\
+                {"id":2,"price":27000,"volumeValue":300,"volumeUnit":"ml","status":"active"}]\
+                """) List<ProductVariantResponse> variants,
         @NotNull @Min(0) @Max(3) @Schema(description = "수분감 단계 (0~3)", example = "3") Integer moistureLevel,
         @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel,
         @NotNull @Schema(description = "효과별 성분 그룹") List<BenefitResponse> benefits,
