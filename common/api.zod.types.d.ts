@@ -1,7 +1,41 @@
   export namespace Schemas {
   export type BrandSummaryResponse = { id: number, name: string, logoUrl: string }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
-export type ProductResponse = { id: number, name: string, brand: BrandSummaryResponse, imageUrl: string, price: number, volumeValue: number, volumeUnit: string }
+export type ProductResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  brand: BrandSummaryResponse;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 제품 가격 (원)
+   */
+  price: number;
+  /**
+   * 제품 용량 값
+   */
+  volumeValue: number;
+  /**
+   * 제품 용량 단위
+   */
+  volumeUnit: string;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+}
 export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse }
 export type BenefitResponse = { id: number, name: string, color: string, ingredientIds: Array<number> }
 export type CategorySummaryResponse = { id: number, name: string }

@@ -87,7 +87,9 @@ public class ProductController {
                 "https://cdn.example.com/products/" + id + ".png",
                 18000L,
                 new BigDecimal("200"),
-                "ml");
+                "ml",
+                3,
+                1);
     }
 
     private static ProductDetailResponse sampleProductDetail(Long id) {
