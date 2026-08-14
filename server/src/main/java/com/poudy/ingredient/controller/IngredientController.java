@@ -1,21 +1,21 @@
 package com.poudy.ingredient.controller;
 
+import com.poudy.common.dto.KeywordRequest;
 import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
+import com.poudy.ingredient.controller.dto.IngredientListResponse;
 import com.poudy.ingredient.controller.dto.IngredientResponse;
-import com.poudy.ingredient.controller.dto.IngredientSuggestionResponse;
-import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "성분", description = "성분 조회 API")
@@ -26,23 +26,15 @@ public class IngredientController {
     private static final EffectResponse SAMPLE_EFFECT = new EffectResponse(1L, "보습", "#4CAF50");
     private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
 
-    @Operation(summary = "성분 추천 검색어", description = "검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.")
-    @GetMapping("/suggestions")
-    public ResponseEntity<IngredientSuggestionResponse> suggestIngredients(
-            @Parameter(example = "글리") @RequestParam @NotBlank String keyword) {
-        return ResponseEntity.ok(
-                new IngredientSuggestionResponse(List.of(new IngredientSummaryResponse(1005L, "글리세린", "Glycerin"))));
+    @Operation(summary = "성분 검색", description = "검색어에 해당하는 성분을 ID, 이름과 효과만 담아 조회한다.")
+    @Parameter(name = "keyword", example = "글리")
+    @GetMapping
+    public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute KeywordRequest search) {
+        return ResponseEntity.ok(new IngredientListResponse(List.of(sampleIngredient(1005L))));
     }
 
-    @Operation(summary = "성분 기본 조회", description = "성분 ID 에 해당하는 기본 정보와 효과를 조회한다.")
+    @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")
     @GetMapping("/{ingredientId}")
-    public ResponseEntity<IngredientResponse> findIngredient(
-            @Parameter(example = "1005") @PathVariable Long ingredientId) {
-        return ResponseEntity.ok(sampleIngredient(ingredientId));
-    }
-
-    @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.")
-    @GetMapping("/detail/{ingredientId}")
     public ResponseEntity<IngredientDetailResponse> findIngredientDetail(
             @Parameter(example = "1005") @PathVariable Long ingredientId) {
         return ResponseEntity.ok(sampleIngredientDetail(ingredientId));
@@ -63,7 +55,6 @@ public class IngredientController {
                 84L,
                 List.of("성분 정보 출처"),
                 List.of("성분 효과 출처"),
-                List.of(new IngredientSummaryResponse(1010L, "부틸렌글라이콜", "Butylene Glycol")),
                 SAMPLE_UPDATED_AT);
     }
 }
