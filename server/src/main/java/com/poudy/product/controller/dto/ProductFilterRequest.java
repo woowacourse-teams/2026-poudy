@@ -1,6 +1,7 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.exception.ErrorCode;
+import com.poudy.exception.InvalidRequestException;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -14,7 +15,33 @@ public record ProductFilterRequest(
         @UniqueElements @ArraySchema(schema = @Schema(example = "12"), uniqueItems = true) List<Long> brandIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "3"), uniqueItems = true) List<@Min(0) @Max(3) Integer> moistureLevel,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<@Min(0) @Max(3) Integer> oilLevel,
-        @UniqueElements @ArraySchema(uniqueItems = true) List<ExcludeCode> excludeCodes,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1005"), uniqueItems = true) List<Long> includeIngredientIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1001"), uniqueItems = true) List<Long> excludeIngredientIds) {
+
+    public static final String KEYWORD = "keyword";
+
+    public void validateSearchOnly() {
+        if (hasFilterCondition()) {
+            throw new InvalidRequestException(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
+        }
+        if (keyword == null) {
+            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
+        }
+        validateKeywordIfPresent();
+    }
+
+    public void validateKeywordIfPresent() {
+        if (keyword != null && keyword.isBlank()) {
+            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
+        }
+    }
+
+    public boolean hasFilterCondition() {
+        return isPresent(categoryIds) || isPresent(brandIds) || isPresent(moistureLevel) || isPresent(oilLevel)
+                || isPresent(includeIngredientIds) || isPresent(excludeIngredientIds);
+    }
+
+    private boolean isPresent(List<?> condition) {
+        return condition != null && !condition.isEmpty();
+    }
 }

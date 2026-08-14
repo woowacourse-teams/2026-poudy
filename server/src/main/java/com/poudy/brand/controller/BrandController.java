@@ -1,7 +1,10 @@
 package com.poudy.brand.controller;
 
+import com.poudy.brand.controller.dto.BrandDetailResponse;
 import com.poudy.brand.controller.dto.BrandListResponse;
 import com.poudy.brand.controller.dto.BrandResponse;
+import com.poudy.category.controller.dto.CategoryChildResponse;
+import com.poudy.category.controller.dto.CategoryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +23,13 @@ public class BrandController {
     private static final Long SAMPLE_BRAND_ID = 12L;
     private static final String SAMPLE_BRAND_NAME = "라운드랩";
     private static final String SAMPLE_BRAND_ENGLISH_NAME = "ROUND LAB";
-    private static final Long SAMPLE_PRODUCT_COUNT = 48L;
+    private static final List<CategoryResponse> SAMPLE_CATEGORIES = List.of(
+            new CategoryResponse(
+                    1L,
+                    "스킨케어",
+                    List.of(new CategoryChildResponse(7L, "토너", 12L), new CategoryChildResponse(8L, "세럼", 9L)),
+                    21L),
+            new CategoryResponse(2L, "클렌징", List.of(), 6L));
 
     @Operation(summary = "브랜드 조회", description = "전체 브랜드를 브랜드명 오름차순으로 조회한다.")
     @GetMapping
@@ -28,18 +37,27 @@ public class BrandController {
         return ResponseEntity.ok(new BrandListResponse(List.of(sampleBrand(SAMPLE_BRAND_ID))));
     }
 
-    @Operation(summary = "브랜드 상세 조회", description = "브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.")
+    @Operation(summary = "브랜드 상세 조회", description = "브랜드 ID 에 해당하는 정보와 이 브랜드 제품이 속한 카테고리를 조회한다. "
+            + "브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.")
     @GetMapping("/{brandId}")
-    public ResponseEntity<BrandResponse> findBrand(@Parameter(example = "12") @PathVariable Long brandId) {
-        return ResponseEntity.ok(sampleBrand(brandId));
+    public ResponseEntity<BrandDetailResponse> findBrand(@Parameter(example = "12") @PathVariable Long brandId) {
+        return ResponseEntity.ok(sampleBrandDetail(brandId));
     }
 
     private BrandResponse sampleBrand(Long id) {
-        return new BrandResponse(
+        return new BrandResponse(id, SAMPLE_BRAND_NAME, SAMPLE_BRAND_ENGLISH_NAME, imageUrl(id));
+    }
+
+    private BrandDetailResponse sampleBrandDetail(Long id) {
+        return new BrandDetailResponse(
                 id,
                 SAMPLE_BRAND_NAME,
                 SAMPLE_BRAND_ENGLISH_NAME,
-                "https://cdn.example.com/brands/" + id + "/logo.png",
-                SAMPLE_PRODUCT_COUNT);
+                imageUrl(id),
+                SAMPLE_CATEGORIES);
+    }
+
+    private String imageUrl(Long id) {
+        return "https://cdn.example.com/brands/" + id + "/image.png";
     }
 }

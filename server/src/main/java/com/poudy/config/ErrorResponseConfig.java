@@ -13,6 +13,7 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,8 @@ import org.springframework.http.HttpStatus;
 @Configuration
 public class ErrorResponseConfig {
 
+    private static final String PRODUCTS_PATH = "/api/products";
+    private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
     private static final String SCHEMA_NAME = "ProblemDetail";
     private static final String SCHEMA_REF = "#/components/schemas/" + SCHEMA_NAME;
     private static final String PROBLEM_JSON = org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
@@ -61,7 +64,11 @@ public class ErrorResponseConfig {
     }
 
     private boolean isProductFilterPath(String path) {
-        return "/api/products".equals(path) || "/api/products/count".equals(path);
+        return PRODUCTS_PATH.equals(path) || PRODUCTS_COUNT_PATH.equals(path);
+    }
+
+    private boolean isSearchAndFilterExclusivePath(String path) {
+        return PRODUCTS_PATH.equals(path);
     }
 
     private boolean hasInput(Operation operation) {
@@ -71,11 +78,17 @@ public class ErrorResponseConfig {
     }
 
     private ErrorCode[] badRequestCodes(String path) {
+        List<ErrorCode> codes = new ArrayList<>();
+        codes.add(ErrorCode.INVALID_QUERY_PARAMETER);
+
         if (isProductFilterPath(path)) {
-            return new ErrorCode[] {ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER};
+            codes.add(ErrorCode.CONFLICTING_INGREDIENT_FILTER);
+        }
+        if (isSearchAndFilterExclusivePath(path)) {
+            codes.add(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
         }
 
-        return new ErrorCode[] {ErrorCode.INVALID_QUERY_PARAMETER};
+        return codes.toArray(new ErrorCode[0]);
     }
 
     private Optional<ErrorCode> notFoundCode(String path) {

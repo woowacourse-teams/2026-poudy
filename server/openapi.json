@@ -11,8 +11,16 @@
   ],
   "tags": [
     {
+      "name": "보관함",
+      "description": "보관함 조회 API"
+    },
+    {
       "name": "카테고리",
       "description": "카테고리 조회 API"
+    },
+    {
+      "name": "제외 성분군",
+      "description": "빠른 필터 조회 API"
     },
     {
       "name": "브랜드",
@@ -28,13 +36,86 @@
     }
   ],
   "paths": {
+    "/api/storage": {
+      "get": {
+        "tags": [
+          "보관함"
+        ],
+        "summary": "보관함 조회",
+        "description": "보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. 받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.",
+        "operationId": "findStorageProducts",
+        "parameters": [
+          {
+            "name": "productIds",
+            "in": "query",
+            "description": "보관함에 담긴 제품 ID. 콤마로 구분한다",
+            "required": true,
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "example": 101
+              },
+              "uniqueItems": true
+            },
+            "example": "101,205"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products": {
       "get": {
         "tags": [
           "제품"
         ],
         "summary": "제품 조회",
-        "description": "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.",
+        "description": "검색어 또는 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 한쪽만 보낼 수 있고, 함께 보내면 400 을 반환한다. sort 와 페이지 조건은 양쪽 모두에 쓴다.",
         "operationId": "findProducts",
         "parameters": [
           {
@@ -103,26 +184,6 @@
                 "example": 1,
                 "maximum": 3,
                 "minimum": 0
-              },
-              "uniqueItems": true
-            }
-          },
-          {
-            "name": "excludeCodes",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "SENSITIVE",
-                  "FRAGRANCE",
-                  "ETHANOL",
-                  "PARABEN_7",
-                  "MINERAL_OIL",
-                  "ALLERGEN"
-                ]
               },
               "uniqueItems": true
             }
@@ -234,6 +295,14 @@
                       "detail": "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.",
                       "code": "CONFLICTING_INGREDIENT_FILTER"
                     }
+                  },
+                  "CONFLICTING_SEARCH_AND_FILTER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "검색어와 필터 조건을 함께 쓸 수 없습니다.",
+                      "code": "CONFLICTING_SEARCH_AND_FILTER"
+                    }
                   }
                 }
               }
@@ -259,88 +328,6 @@
       }
     },
     "/api/products/{productId}": {
-      "get": {
-        "tags": [
-          "제품"
-        ],
-        "summary": "제품 간단 조회",
-        "description": "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.",
-        "operationId": "findProduct",
-        "parameters": [
-          {
-            "name": "productId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 101
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Not Found",
-                  "status": 404,
-                  "detail": "제품을 찾을 수 없습니다.",
-                  "code": "PRODUCT_NOT_FOUND"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Internal Server Error",
-                  "status": 500,
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "code": "INTERNAL_SERVER_ERROR"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/products/detail/{productId}": {
       "get": {
         "tags": [
           "제품"
@@ -427,8 +414,8 @@
         "tags": [
           "제품"
         ],
-        "summary": "제품 필터 결과 개수 조회",
-        "description": "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.",
+        "summary": "제품 조회 결과 개수 조회",
+        "description": "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.",
         "operationId": "countProducts",
         "parameters": [
           {
@@ -497,26 +484,6 @@
                 "example": 1,
                 "maximum": 3,
                 "minimum": 0
-              },
-              "uniqueItems": true
-            }
-          },
-          {
-            "name": "excludeCodes",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "SENSITIVE",
-                  "FRAGRANCE",
-                  "ETHANOL",
-                  "PARABEN_7",
-                  "MINERAL_OIL",
-                  "ALLERGEN"
-                ]
               },
               "uniqueItems": true
             }
@@ -838,6 +805,44 @@
         }
       }
     },
+    "/api/exclude-codes": {
+      "get": {
+        "tags": [
+          "제외 성분군"
+        ],
+        "summary": "제외 성분군 조회",
+        "description": "빠른 필터에 쓰는 성분군 전체와 각 성분군에 속한 성분을 조회한다. 제품 조회는 성분군을 받지 않으므로, 고른 성분군의 ingredients 를 excludeIngredientIds 로 펼쳐 보낸다.",
+        "operationId": "findExcludeCodes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcludeCodeListResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
@@ -920,7 +925,7 @@
           "브랜드"
         ],
         "summary": "브랜드 상세 조회",
-        "description": "브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.",
+        "description": "브랜드 ID 에 해당하는 정보와 이 브랜드 제품이 속한 카테고리를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.",
         "operationId": "findBrand",
         "parameters": [
           {
@@ -940,7 +945,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrandResponse"
+                  "$ref": "#/components/schemas/BrandDetailResponse"
                 }
               }
             }
@@ -999,81 +1004,36 @@
   },
   "components": {
     "schemas": {
-      "BrandSummaryResponse": {
+      "BrandResponse": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "브랜드 ID",
             "example": 12
           },
           "name": {
             "type": "string",
-            "example": "브랜드 이름"
+            "description": "브랜드 한글명",
+            "example": "라운드랩"
           },
-          "logoUrl": {
+          "englishName": {
             "type": "string",
-            "example": "https://cdn.example.com/brands/12/logo.png"
+            "description": "브랜드 영문명",
+            "example": "ROUND LAB"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "브랜드 이미지 URL",
+            "example": "https://cdn.example.com/brands/12/image.png"
           }
         },
         "required": [
+          "englishName",
           "id",
-          "logoUrl",
+          "imageUrl",
           "name"
-        ]
-      },
-      "PaginationResponse": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "type": "integer",
-            "format": "int32",
-            "example": 0
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32",
-            "example": 20
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64",
-            "example": 48
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32",
-            "example": 3
-          },
-          "hasNext": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "hasNext",
-          "page",
-          "size",
-          "totalElements",
-          "totalPages"
-        ]
-      },
-      "ProductPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProductResponse"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationResponse"
-          }
-        },
-        "required": [
-          "items",
-          "pagination"
         ]
       },
       "ProductResponse": {
@@ -1091,7 +1051,7 @@
             "example": "스킨케어 이름"
           },
           "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse",
+            "$ref": "#/components/schemas/BrandResponse",
             "description": "브랜드 정보"
           },
           "imageUrl": {
@@ -1142,6 +1102,83 @@
           "price",
           "volumeUnit",
           "volumeValue"
+        ]
+      },
+      "StorageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "요청한 ID 순서대로 담긴 제품. 찾지 못한 ID 는 빠진다",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 48
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "hasNext": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "hasNext",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "ProductPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          },
+          "brands": {
+            "type": "array",
+            "description": "조회 조건에 해당하는 제품 전체의 브랜드. 페이지에 걸리지 않고 결과 전체를 기준으로 한다",
+            "items": {
+              "$ref": "#/components/schemas/BrandResponse"
+            }
+          }
+        },
+        "required": [
+          "brands",
+          "items",
+          "pagination"
         ]
       },
       "BenefitResponse": {
@@ -1281,7 +1318,7 @@
             "example": "스킨케어 이름"
           },
           "brand": {
-            "$ref": "#/components/schemas/BrandSummaryResponse",
+            "$ref": "#/components/schemas/BrandResponse",
             "description": "브랜드 정보"
           },
           "categories": {
@@ -1371,12 +1408,12 @@
             "items": {
               "type": "string",
               "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
+                "FRAGRANCE_ALLERGENS",
+                "DRYING_ALCOHOLS",
+                "HARSH_PRESERVATIVES",
+                "SULFATES",
+                "CYCLIC_SILICONES",
+                "SYNTHETIC_COLORANTS"
               ]
             }
           }
@@ -1588,12 +1625,12 @@
             "items": {
               "type": "string",
               "enum": [
-                "SENSITIVE",
-                "FRAGRANCE",
-                "ETHANOL",
-                "PARABEN_7",
-                "MINERAL_OIL",
-                "ALLERGEN"
+                "FRAGRANCE_ALLERGENS",
+                "DRYING_ALCOHOLS",
+                "HARSH_PRESERVATIVES",
+                "SULFATES",
+                "CYCLIC_SILICONES",
+                "SYNTHETIC_COLORANTS"
               ]
             }
           },
@@ -1640,6 +1677,56 @@
           "productCount",
           "relatedIngredients",
           "updatedAt"
+        ]
+      },
+      "ExcludeCodeListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "빠른 필터에 쓰는 성분군 전체",
+            "items": {
+              "$ref": "#/components/schemas/ExcludeCodeResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ExcludeCodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "성분군을 구분하는 값",
+            "enum": [
+              "FRAGRANCE_ALLERGENS",
+              "DRYING_ALCOHOLS",
+              "HARSH_PRESERVATIVES",
+              "SULFATES",
+              "CYCLIC_SILICONES",
+              "SYNTHETIC_COLORANTS"
+            ],
+            "example": "HARSH_PRESERVATIVES"
+          },
+          "name": {
+            "type": "string",
+            "description": "빠른 필터에 표시할 이름",
+            "example": "자극성 방부제 제외"
+          },
+          "ingredients": {
+            "type": "array",
+            "description": "이 성분군에 속한 성분. 제품 조회의 excludeIngredientIds 로 펼쳐 보낸다",
+            "items": {
+              "$ref": "#/components/schemas/IngredientSummaryResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "ingredients",
+          "name"
         ]
       },
       "CategoryChildResponse": {
@@ -1725,7 +1812,7 @@
           "items"
         ]
       },
-      "BrandResponse": {
+      "BrandDetailResponse": {
         "type": "object",
         "properties": {
           "id": {
@@ -1744,24 +1831,25 @@
             "description": "브랜드 영문명",
             "example": "ROUND LAB"
           },
-          "logoUrl": {
+          "imageUrl": {
             "type": "string",
-            "description": "브랜드 로고 URL",
-            "example": "https://cdn.example.com/brands/12/logo.png"
+            "description": "브랜드 이미지 URL",
+            "example": "https://cdn.example.com/brands/12/image.png"
           },
-          "productCount": {
-            "type": "integer",
-            "format": "int64",
-            "description": "브랜드에 등록된 제품 개수",
-            "example": 48
+          "categories": {
+            "type": "array",
+            "description": "이 브랜드 제품이 속한 카테고리를 대분류와 소분류로 표시한다. productCount 는 이 브랜드 안에서 센 값이다",
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            }
           }
         },
         "required": [
+          "categories",
           "englishName",
           "id",
-          "logoUrl",
-          "name",
-          "productCount"
+          "imageUrl",
+          "name"
         ]
       },
       "ProblemDetail": {
@@ -1795,6 +1883,7 @@
             "enum": [
               "INVALID_QUERY_PARAMETER",
               "CONFLICTING_INGREDIENT_FILTER",
+              "CONFLICTING_SEARCH_AND_FILTER",
               "UNSUPPORTED_REQUEST",
               "PRODUCT_NOT_FOUND",
               "BRAND_NOT_FOUND",

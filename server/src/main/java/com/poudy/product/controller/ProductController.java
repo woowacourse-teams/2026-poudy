@@ -1,12 +1,12 @@
 package com.poudy.product.controller;
 
-import com.poudy.brand.controller.dto.BrandSummaryResponse;
+import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.ingredient.controller.dto.EffectResponse;
-import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.product.controller.dto.BenefitResponse;
 import com.poudy.product.controller.dto.DisclosedAmountResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
@@ -36,47 +36,72 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private static final BrandSummaryResponse SAMPLE_BRAND = new BrandSummaryResponse(
+    private static final String KEYWORD = ProductFilterRequest.KEYWORD;
+    private static final String FIND_PRODUCTS = "findProducts";
+    private static final String PRODUCTS_SUMMARY = "제품 조회";
+    private static final String PRODUCTS_DESCRIPTION = "검색어 또는 필터 조건에 해당하는 제품 목록을 조회한다. "
+            + "keyword 와 필터 조건은 한쪽만 보낼 수 있고, 함께 보내면 400 을 반환한다. " + "sort 와 페이지 조건은 양쪽 모두에 쓴다.";
+    private static final String COUNT_PATH = "/count";
+    private static final String COUNT_SUMMARY = "제품 조회 결과 개수 조회";
+    private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. "
+            + "목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.";
+
+    private static final BrandResponse SAMPLE_BRAND = new BrandResponse(
             12L,
             "브랜드 이름",
-            "https://cdn.example.com/brands/12/logo.png");
+            "BRAND NAME",
+            "https://cdn.example.com/brands/12/image.png");
     private static final List<ProductResponse> SAMPLE_PRODUCTS = List.of(sampleProduct(101L));
+    private static final List<BrandResponse> SAMPLE_RESULT_BRANDS = List.of(SAMPLE_BRAND);
 
-    @Operation(summary = "제품 조회", description = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다.")
-    @GetMapping
+    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @GetMapping(params = KEYWORD)
+    public ResponseEntity<ProductPageResponse> searchProducts(
+            @Valid @ModelAttribute ProductFilterRequest filter,
+            @Valid @ModelAttribute ProductSortRequest sort,
+            @Valid @ModelAttribute PaginationRequest pagination) {
+        filter.validateSearchOnly();
+
+        return ResponseEntity.ok(
+                new ProductPageResponse(
+                        SAMPLE_PRODUCTS,
+                        PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size()),
+                        SAMPLE_RESULT_BRANDS));
+    }
+
+    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @GetMapping(params = "!" + KEYWORD)
     public ResponseEntity<ProductPageResponse> findProducts(
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
+        validateIngredientFilter(filter);
 
         return ResponseEntity.ok(
-                new ProductPageResponse(SAMPLE_PRODUCTS, PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size())));
+                new ProductPageResponse(
+                        SAMPLE_PRODUCTS,
+                        PaginationResponse.of(pagination, SAMPLE_PRODUCTS.size()),
+                        SAMPLE_RESULT_BRANDS));
     }
 
-    @Operation(summary = "제품 필터 결과 개수 조회", description = "필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 판정 규칙을 쓴다.")
-    @GetMapping("/count")
+    @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
+    @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        IngredientFilter ingredientFilter = ingredientFilterOf(filter);
+        validateIngredientFilter(filter);
+        filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
 
-    @Operation(summary = "제품 간단 조회", description = "제품 ID 에 해당하는 기본 정보를 조회한다. 제품 목록 항목과 같은 형태다.")
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> findProduct(@Parameter(example = "101") @PathVariable Long productId) {
-        return ResponseEntity.ok(sampleProduct(productId));
-    }
-
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
-    @GetMapping("/detail/{productId}")
+    @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
             @Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProductDetail(productId));
     }
 
-    private IngredientFilter ingredientFilterOf(ProductFilterRequest filter) {
-        return new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
+    private void validateIngredientFilter(ProductFilterRequest filter) {
+        new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
     }
 
     private static ProductResponse sampleProduct(Long id) {
@@ -116,6 +141,6 @@ public class ProductController {
                                 "Glycerin",
                                 List.of(new EffectResponse(1L, "보습", "#4CAF50")),
                                 new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm"))),
-                List.of(ExcludeCode.PARABEN_7, ExcludeCode.MINERAL_OIL));
+                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES));
     }
 }
