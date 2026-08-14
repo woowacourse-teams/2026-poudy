@@ -49,6 +49,9 @@ export const IngredientSummaryResponse = z.object({ id: z.number().int(), korean
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
 export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), effects: z.array(EffectResponse), groupCodes: z.array(z.enum(["SENSITIVE", "FRAGRANCE", "ETHANOL", "PARABEN_7", "MINERAL_OIL", "ALLERGEN"])), productCount: z.number().int(), infoSources: z.array(z.string()), effectSources: z.array(z.string()), relatedIngredients: z.array(IngredientSummaryResponse), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type IngredientSuggestionResponse = __TypedOpenapi.Schemas.IngredientSuggestionResponse;
+export const IngredientSuggestionResponse = z.object({ items: z.array(IngredientSummaryResponse) });
+
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
 

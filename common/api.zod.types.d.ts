@@ -71,9 +71,20 @@ export type ProductDetailResponse = {
 }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")> }
-export type IngredientListResponse = { items: Array<IngredientResponse> }
+export type IngredientListResponse = {
+  /**
+   * 검색 결과 성분 목록
+   */
+  items: Array<IngredientResponse>;
+}
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type IngredientDetailResponse = { id: number, koreanName: string, englishName: string, description: string, effects: Array<EffectResponse>, groupCodes: Array<("SENSITIVE" | "FRAGRANCE" | "ETHANOL" | "PARABEN_7" | "MINERAL_OIL" | "ALLERGEN")>, productCount: number, infoSources: Array<string>, effectSources: Array<string>, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
+export type IngredientSuggestionResponse = {
+  /**
+   * 자동완성 후보. 최대 10건
+   */
+  items: Array<IngredientSummaryResponse>;
+}
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
@@ -185,15 +196,15 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분 목록을 조회하거나 성분명으로 검색한다. keyword 를 생략하면 전체를 한글명 오름차순으로 반환한다.
+ * 검색어에 해당하는 성분을 한글명 오름차순으로 조회한다.
  */
-export type get_FindIngredients = {
+export type get_SearchIngredients = {
       method: "GET",
       path: "/api/ingredients",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ keyword: string }>,
+            query:  { keyword: string },
 
           }
       responses: {200: Schemas.IngredientListResponse,
@@ -218,6 +229,24 @@ export type get_FindIngredient = {
       responses: {200: Schemas.IngredientDetailResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.
+ */
+export type get_SuggestIngredients = {
+      method: "GET",
+      path: "/api/ingredients/suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { keyword: string },
+
+          }
+      responses: {200: Schemas.IngredientSuggestionResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -261,8 +290,9 @@ export type get_FindBrands = {
 "/api/products/{productId}": Endpoints.get_FindProduct,
 "/api/products/detail/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/count": Endpoints.get_CountProducts,
-"/api/ingredients": Endpoints.get_FindIngredients,
+"/api/ingredients": Endpoints.get_SearchIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
+"/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands
          }

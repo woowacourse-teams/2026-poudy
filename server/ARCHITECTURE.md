@@ -284,7 +284,8 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 | product | GET | `/api/products/detail/{productId}` | 제품 상세 조회 |
 | category | GET | `/api/categories` | 카테고리 조회 |
 | brand | GET | `/api/brands` | 브랜드 조회 |
-| ingredient | GET | `/api/ingredients` | 성분 조회 |
+| ingredient | GET | `/api/ingredients` | 성분 검색 |
+| ingredient | GET | `/api/ingredients/suggestions` | 성분 자동완성 |
 | ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
 
 제품 간단 조회와 상세 조회는 서로 다른 응답 계약을 사용한다.
