@@ -17,6 +17,24 @@ export type CategoryPathResponse = {
   child?: CategorySummaryResponse;
 }
 export type EffectResponse = { id: number, name: string, color: string }
+export type ProductVariantResponse = {
+  /**
+   * 용량 옵션 ID
+   */
+  id: number;
+  /**
+   * 가격 (원)
+   */
+  price: number;
+  /**
+   * 용량 값
+   */
+  volumeValue: number;
+  /**
+   * 용량 단위
+   */
+  volumeUnit: string;
+}
 export type ProductIngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse> }
 export type ProductDetailResponse = {
   /**
@@ -48,6 +66,10 @@ export type ProductDetailResponse = {
    * 제품 용량 단위
    */
   volumeUnit: string;
+  /**
+   * 같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다
+   */
+  variants: Array<ProductVariantResponse>;
   /**
    * 수분감 단계 (0~3)
    */

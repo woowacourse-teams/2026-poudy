@@ -1262,6 +1262,13 @@
             "description": "제품 용량 단위",
             "example": "ml"
           },
+          "variants": {
+            "type": "array",
+            "description": "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다",
+            "items": {
+              "$ref": "#/components/schemas/ProductVariantResponse"
+            }
+          },
           "moistureLevel": {
             "type": "integer",
             "format": "int32",
@@ -1320,6 +1327,7 @@
           "name",
           "oilLevel",
           "price",
+          "variants",
           "volumeUnit",
           "volumeValue"
         ]
@@ -1352,6 +1360,39 @@
           "englishName",
           "id",
           "koreanName"
+        ]
+      },
+      "ProductVariantResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "용량 옵션 ID",
+            "example": 1
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "description": "가격 (원)",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "description": "용량 값",
+            "example": 150
+          },
+          "volumeUnit": {
+            "type": "string",
+            "description": "용량 단위",
+            "example": "ml"
+          }
+        },
+        "required": [
+          "id",
+          "price",
+          "volumeUnit",
+          "volumeValue"
         ]
       },
       "ProductCountResponse": {

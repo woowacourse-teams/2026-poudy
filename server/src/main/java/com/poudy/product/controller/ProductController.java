@@ -15,6 +15,7 @@ import com.poudy.product.controller.dto.ProductIngredientResponse;
 import com.poudy.product.controller.dto.ProductPageResponse;
 import com.poudy.product.controller.dto.ProductResponse;
 import com.poudy.product.controller.dto.ProductSortRequest;
+import com.poudy.product.controller.dto.ProductVariantResponse;
 import com.poudy.product.domain.IngredientFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -98,6 +99,9 @@ public class ProductController {
                 18000L,
                 new BigDecimal("200"),
                 "ml",
+                List.of(
+                        new ProductVariantResponse(1L, 18000L, new BigDecimal("200"), "ml"),
+                        new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml")),
                 3,
                 1,
                 List.of(new BenefitResponse(1L, "보습", "#4CAF50", List.of(1001L, 1005L))),
