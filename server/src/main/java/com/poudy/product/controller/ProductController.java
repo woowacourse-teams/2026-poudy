@@ -3,6 +3,7 @@ package com.poudy.product.controller;
 import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
+import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
 import com.poudy.excludecode.domain.ExcludeCode;
@@ -16,6 +17,8 @@ import com.poudy.product.controller.dto.ProductIngredientResponse;
 import com.poudy.product.controller.dto.ProductPageResponse;
 import com.poudy.product.controller.dto.ProductResponse;
 import com.poudy.product.controller.dto.ProductSortRequest;
+import com.poudy.product.controller.dto.ProductSuggestionListResponse;
+import com.poudy.product.controller.dto.ProductSuggestionResponse;
 import com.poudy.product.controller.dto.ProductVariantResponse;
 import com.poudy.product.domain.IngredientFilter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,6 +48,7 @@ public class ProductController {
     private static final String COUNT_SUMMARY = "제품 조회 결과 개수 조회";
     private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. "
             + "목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.";
+    private static final String SUGGESTIONS_PATH = "/suggestions";
 
     private static final BrandResponse SAMPLE_BRAND = new BrandResponse(
             12L,
@@ -93,6 +97,13 @@ public class ProductController {
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
 
+    @Operation(summary = "제품 검색 제안 조회", description = "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.")
+    @Parameter(name = KEYWORD, example = "토너")
+    @GetMapping(SUGGESTIONS_PATH)
+    public ResponseEntity<ProductSuggestionListResponse> suggestProducts(@Valid @ModelAttribute KeywordRequest search) {
+        return ResponseEntity.ok(new ProductSuggestionListResponse(List.of(sampleSuggestion(101L))));
+    }
+
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
@@ -115,6 +126,14 @@ public class ProductController {
                 "ml",
                 3,
                 1);
+    }
+
+    private static ProductSuggestionResponse sampleSuggestion(Long id) {
+        return new ProductSuggestionResponse(
+                id,
+                "스킨케어 이름",
+                "https://cdn.example.com/products/" + id + ".png",
+                SAMPLE_BRAND.name());
     }
 
     private static ProductDetailResponse sampleProductDetail(Long id) {
