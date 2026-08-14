@@ -16,8 +16,53 @@ export type CategoryPathResponse = {
   name: string;
   child?: CategorySummaryResponse;
 }
+export type DisclosedAmountResponse = {
+  /**
+   * 공개 형태
+   */
+  type: string;
+  /**
+   * 함량 값
+   */
+  value: number;
+  /**
+   * 함량 단위
+   */
+  unit: string;
+}
 export type EffectResponse = { id: number, name: string, color: string }
-export type ProductIngredientResponse = { id: number, koreanName: string, englishName: string, effects: Array<EffectResponse> }
+export type ProductVariantResponse = {
+  /**
+   * 용량 옵션 ID
+   */
+  id: number;
+  /**
+   * 가격 (원)
+   */
+  price: number;
+  /**
+   * 용량 값
+   */
+  volumeValue: number;
+  /**
+   * 용량 단위
+   */
+  volumeUnit: string;
+  /**
+   * 판매 상태
+   */
+  status: string;
+}
+export type ProductIngredientResponse = {
+  id: number;
+  koreanName: string;
+  englishName: string;
+  /**
+   * 성분 효과 목록
+   */
+  effects: Array<EffectResponse>;
+  disclosedAmount?: DisclosedAmountResponse;
+}
 export type ProductDetailResponse = {
   /**
    * 제품 ID
@@ -48,6 +93,10 @@ export type ProductDetailResponse = {
    * 제품 용량 단위
    */
   volumeUnit: string;
+  /**
+   * 같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다
+   */
+  variants: Array<ProductVariantResponse>;
   /**
    * 수분감 단계 (0~3)
    */
@@ -99,9 +148,30 @@ export type IngredientDetailResponse = { id: number, koreanName: string, english
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
-export type BrandResponse = { id: number, name: string, logoUrl: string, productCount: number }
+export type BrandResponse = {
+  /**
+   * 브랜드 ID
+   */
+  id: number;
+  /**
+   * 브랜드 한글명
+   */
+  name: string;
+  /**
+   * 브랜드 영문명
+   */
+  englishName: string;
+  /**
+   * 브랜드 로고 URL
+   */
+  logoUrl: string;
+  /**
+   * 브랜드에 등록된 제품 개수
+   */
+  productCount: number;
+}
 export type BrandListResponse = { items: Array<BrandResponse> }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -290,6 +360,26 @@ export type get_FindBrands = {
 },
 
     }
+/**
+ * 브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.
+ */
+export type get_FindBrand = {
+      method: "GET",
+      path: "/api/brands/{brandId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { brandId: number },
+
+          }
+      responses: {200: Schemas.BrandResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 
   }
 
@@ -303,7 +393,8 @@ export type get_FindBrands = {
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/ingredients/detail/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/categories": Endpoints.get_FindCategories,
-"/api/brands": Endpoints.get_FindBrands
+"/api/brands": Endpoints.get_FindBrands,
+"/api/brands/{brandId}": Endpoints.get_FindBrand
          }
      }
 

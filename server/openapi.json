@@ -913,6 +913,88 @@
           }
         }
       }
+    },
+    "/api/brands/{brandId}": {
+      "get": {
+        "tags": [
+          "브랜드"
+        ],
+        "summary": "브랜드 상세 조회",
+        "description": "브랜드 ID 에 해당하는 정보를 조회한다. 브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.",
+        "operationId": "findBrand",
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "브랜드를 찾을 수 없습니다.",
+                  "code": "BRAND_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1111,6 +1193,31 @@
           "name"
         ]
       },
+      "DisclosedAmountResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "공개 형태",
+            "example": "exact"
+          },
+          "value": {
+            "type": "number",
+            "description": "함량 값",
+            "example": 10500
+          },
+          "unit": {
+            "type": "string",
+            "description": "함량 단위",
+            "example": "ppm"
+          }
+        },
+        "required": [
+          "type",
+          "unit",
+          "value"
+        ]
+      },
       "EffectResponse": {
         "type": "object",
         "properties": {
@@ -1180,6 +1287,29 @@
             "description": "제품 용량 단위",
             "example": "ml"
           },
+          "variants": {
+            "type": "array",
+            "description": "같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다",
+            "example": [
+              {
+                "id": 1,
+                "price": 18000,
+                "volumeValue": 200,
+                "volumeUnit": "ml",
+                "status": "active"
+              },
+              {
+                "id": 2,
+                "price": 27000,
+                "volumeValue": 300,
+                "volumeUnit": "ml",
+                "status": "active"
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ProductVariantResponse"
+            }
+          },
           "moistureLevel": {
             "type": "integer",
             "format": "int32",
@@ -1238,6 +1368,7 @@
           "name",
           "oilLevel",
           "price",
+          "variants",
           "volumeUnit",
           "volumeValue"
         ]
@@ -1260,9 +1391,14 @@
           },
           "effects": {
             "type": "array",
+            "description": "성분 효과 목록",
             "items": {
               "$ref": "#/components/schemas/EffectResponse"
             }
+          },
+          "disclosedAmount": {
+            "$ref": "#/components/schemas/DisclosedAmountResponse",
+            "description": "공개된 함량. 공개하지 않은 성분은 비어 있다"
           }
         },
         "required": [
@@ -1270,6 +1406,45 @@
           "englishName",
           "id",
           "koreanName"
+        ]
+      },
+      "ProductVariantResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "용량 옵션 ID",
+            "example": 1
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "description": "가격 (원)",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "description": "용량 값",
+            "example": 200
+          },
+          "volumeUnit": {
+            "type": "string",
+            "description": "용량 단위",
+            "example": "ml"
+          },
+          "status": {
+            "type": "string",
+            "description": "판매 상태",
+            "example": "active"
+          }
+        },
+        "required": [
+          "id",
+          "price",
+          "status",
+          "volumeUnit",
+          "volumeValue"
         ]
       },
       "ProductCountResponse": {
@@ -1531,23 +1706,33 @@
           "id": {
             "type": "integer",
             "format": "int64",
+            "description": "브랜드 ID",
             "example": 12
           },
           "name": {
             "type": "string",
-            "example": "브랜드 이름"
+            "description": "브랜드 한글명",
+            "example": "라운드랩"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "브랜드 영문명",
+            "example": "ROUND LAB"
           },
           "logoUrl": {
             "type": "string",
+            "description": "브랜드 로고 URL",
             "example": "https://cdn.example.com/brands/12/logo.png"
           },
           "productCount": {
             "type": "integer",
             "format": "int64",
+            "description": "브랜드에 등록된 제품 개수",
             "example": 48
           }
         },
         "required": [
+          "englishName",
           "id",
           "logoUrl",
           "name",
@@ -1587,6 +1772,7 @@
               "CONFLICTING_INGREDIENT_FILTER",
               "UNSUPPORTED_REQUEST",
               "PRODUCT_NOT_FOUND",
+              "BRAND_NOT_FOUND",
               "INGREDIENT_NOT_FOUND",
               "ENDPOINT_NOT_FOUND",
               "INTERNAL_SERVER_ERROR"
