@@ -43,9 +43,10 @@ case "$subject" in
 esac
 
 if ! printf '%s\n' "$subject" | grep -Eq \
-    '^(feat|fix|docs|style|refactor|rename|remove) : [^[:space:]].*$'; then
+    '^(build|ci|docs|feat|fix|perf|refactor|test) : [^[:space:]].*$'; then
     echo "[commit-msg] 제목 형식이 올바르지 않습니다."
     echo "  예: feat : 회원 가입 API 추가"
+    echo "  규칙: CONTRIBUTING.md의 커밋 메시지 규칙"
     exit 1
 fi
 
