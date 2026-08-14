@@ -27,13 +27,8 @@ public class ErrorResponseConfig {
     private static final String SCHEMA_REF = "#/components/schemas/" + SCHEMA_NAME;
     private static final String PROBLEM_JSON = org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 
-    private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
-            "brands",
-            ErrorCode.BRAND_NOT_FOUND,
-            "ingredients",
-            ErrorCode.INGREDIENT_NOT_FOUND,
-            "products",
-            ErrorCode.PRODUCT_NOT_FOUND);
+    private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map
+            .of("ingredients", ErrorCode.INGREDIENT_NOT_FOUND, "products", ErrorCode.PRODUCT_NOT_FOUND);
 
     @Bean
     public OpenApiCustomizer errorResponseCustomizer() {
