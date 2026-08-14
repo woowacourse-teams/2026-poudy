@@ -24,7 +24,14 @@ public record ProductFilterRequest(
         if (hasFilterCondition()) {
             throw new InvalidRequestException(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
         }
-        if (keyword == null || keyword.isBlank()) {
+        if (keyword == null) {
+            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
+        }
+        validateKeywordIfPresent();
+    }
+
+    public void validateKeywordIfPresent() {
+        if (keyword != null && keyword.isBlank()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
     }

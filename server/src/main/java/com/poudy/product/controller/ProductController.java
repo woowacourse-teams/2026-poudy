@@ -88,6 +88,7 @@ public class ProductController {
     @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
         validateIngredientFilter(filter);
+        filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
     }
