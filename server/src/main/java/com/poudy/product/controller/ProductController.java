@@ -115,7 +115,7 @@ public class ProductController {
     }
 
     private void validateIngredientFilter(ProductFilterRequest filter) {
-        new IngredientFilter(filter.includeIngredientIds(), filter.excludeIngredientIds());
+        IngredientFilter.of(filter.includeIngredientIds(), filter.excludeIngredientIds(), filter.excludeCodes());
     }
 
     private static ProductResponse sampleProduct(Long id) {
