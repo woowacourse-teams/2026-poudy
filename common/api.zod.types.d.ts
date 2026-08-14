@@ -67,7 +67,6 @@ export type ProductPageResponse = {
    */
   brands: Array<BrandResponse>;
 }
-export type BenefitResponse = { id: number, name: string, color: string, ingredientIds: Array<number> }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -94,7 +93,16 @@ export type DisclosedAmountResponse = {
    */
   unit: string;
 }
-export type EffectResponse = { id: number, name: string, color: string }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: number;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -117,14 +125,43 @@ export type ProductVariantResponse = {
    */
   status: string;
 }
+export type SkinEffectGroupResponse = {
+  /**
+   * 피부 작용 ID
+   */
+  id: number;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+  /**
+   * 화면에서 이 피부 작용을 구분하는 색
+   */
+  color: string;
+  ingredientIds: Array<number>;
+}
+export type SkinEffectResponse = {
+  /**
+   * 피부 작용 ID
+   */
+  id: number;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+}
 export type ProductIngredientResponse = {
   id: number;
   koreanName: string;
   englishName: string;
   /**
-   * 성분 효과 목록
+   * 배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제
    */
-  effects: Array<EffectResponse>;
+  formulationRoles: Array<FormulationRoleResponse>;
+  /**
+   * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
+   */
+  skinEffects: Array<SkinEffectResponse>;
   disclosedAmount?: DisclosedAmountResponse;
 }
 export type ProductDetailResponse = {
@@ -146,19 +183,7 @@ export type ProductDetailResponse = {
    */
   imageUrl: string;
   /**
-   * 제품 가격 (원)
-   */
-  price: number;
-  /**
-   * 제품 용량 값
-   */
-  volumeValue: number;
-  /**
-   * 제품 용량 단위
-   */
-  volumeUnit: string;
-  /**
-   * 같은 제품의 용량 옵션 전체. 위 가격과 용량은 대표 옵션 값이다
+   * 같은 제품의 용량 옵션 전체. 가격과 용량은 옵션마다 따로 있다
    */
   variants: Array<ProductVariantResponse>;
   /**
@@ -170,9 +195,9 @@ export type ProductDetailResponse = {
    */
   oilLevel: number;
   /**
-   * 효과별 성분 그룹
+   * 피부 작용별 성분 그룹
    */
-  benefits: Array<BenefitResponse>;
+  skinEffectGroups: Array<SkinEffectGroupResponse>;
   /**
    * 표시 순서대로 정렬된 전체 성분
    */
@@ -181,6 +206,34 @@ export type ProductDetailResponse = {
    * 이 제품이 포함하지 않는 성분군 (프리 뱃지)
    */
   freeOfCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  /**
+   * 제품 정보를 마지막으로 갱신한 시각
+   */
+  updatedAt: string;
+}
+export type ProductSuggestionResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 브랜드 한글명
+   */
+  brandName: string;
+}
+export type ProductSuggestionListResponse = {
+  /**
+   * 검색어에 해당하는 제품
+   */
+  items: Array<ProductSuggestionResponse>;
 }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
@@ -197,18 +250,39 @@ export type IngredientResponse = {
    */
   englishName: string;
   /**
-   * 성분의 주요 효과
+   * 피부 작용 태그 (BIOLOGICAL_EFFECT)
    */
-  effects: Array<EffectResponse>;
+  skinEffects: Array<SkinEffectResponse>;
+}
+export type IngredientListResponse = {
+  /**
+   * 검색어에 해당하는 성분
+   */
+  items: Array<IngredientResponse>;
+}
+export type IngredientDetailResponse = {
+  id: number;
+  koreanName: string;
+  englishName: string;
+  description: string;
+  /**
+   * 배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제
+   */
+  formulationRoles: Array<FormulationRoleResponse>;
+  /**
+   * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
+   */
+  skinEffects: Array<SkinEffectResponse>;
+  groupCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  /**
+   * 이 성분을 포함한 제품 수
+   */
+  productCount: number;
+  infoSources: Array<string>;
+  effectSources: Array<string>;
+  updatedAt: string;
 }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
-export type IngredientSuggestionResponse = {
-  /**
-   * 자동완성 후보. 최대 10건
-   */
-  items: Array<IngredientSummaryResponse>;
-}
-export type IngredientDetailResponse = { id: number, koreanName: string, englishName: string, description: string, effects: Array<EffectResponse>, groupCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>, productCount: number, infoSources: Array<string>, effectSources: Array<string>, relatedIngredients: Array<IngredientSummaryResponse>, updatedAt: string }
 export type ExcludeCodeResponse = {
   /**
    * 성분군을 구분하는 값
@@ -219,9 +293,13 @@ export type ExcludeCodeResponse = {
    */
   name: string;
   /**
-   * 이 성분군에 속한 성분. 제품 조회의 excludeIngredientIds 로 펼쳐 보낸다
+   * 이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다
    */
   ingredients: Array<IngredientSummaryResponse>;
+  /**
+   * 성분군 설명
+   */
+  description: string;
 }
 export type ExcludeCodeListResponse = {
   /**
@@ -232,7 +310,29 @@ export type ExcludeCodeListResponse = {
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
-export type BrandListResponse = { items: Array<BrandResponse> }
+export type BrandListItemResponse = {
+  /**
+   * 브랜드 ID
+   */
+  id: number;
+  /**
+   * 브랜드 한글명
+   */
+  name: string;
+  /**
+   * 브랜드 영문명
+   */
+  englishName: string;
+  /**
+   * 브랜드 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 이 브랜드의 제품 수. 전체 카탈로그 기준이며 제품 조회 필터와 무관하다
+   */
+  productCount: number;
+}
+export type BrandListResponse = { items: Array<BrandListItemResponse> }
 export type BrandDetailResponse = {
   /**
    * 브랜드 ID
@@ -296,6 +396,7 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
   /**
    * 정렬 조건
    */
@@ -338,6 +439,29 @@ export type get_FindProductDetail = {
 
     }
 /**
+ * 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.
+ */
+export type get_SuggestProducts = {
+      method: "GET",
+      path: "/api/products/suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+},
+
+          }
+      responses: {200: Schemas.ProductSuggestionListResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.
  */
 export type get_CountProducts = {
@@ -346,7 +470,7 @@ export type get_CountProducts = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number> }>,
+            query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number>, excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")> }>,
 
           }
       responses: {200: Schemas.ProductCountResponse,
@@ -356,49 +480,34 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분 ID 에 해당하는 기본 정보와 효과를 조회한다.
+ * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다.
  */
-export type get_FindIngredient = {
+export type get_FindIngredients = {
       method: "GET",
-      path: "/api/ingredients/{ingredientId}",
+      path: "/api/ingredients",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
-        path:  { ingredientId: number },
-
-          }
-      responses: {200: Schemas.IngredientResponse,
-400: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
 },
 
-    }
-/**
- * 검색어에 해당하는 성분 이름을 최대 10건 반환한다. 검색 입력 중 호출한다.
- */
-export type get_SuggestIngredients = {
-      method: "GET",
-      path: "/api/ingredients/suggestions",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-            query:  { keyword: string },
-
           }
-      responses: {200: Schemas.IngredientSuggestionResponse,
+      responses: {200: Schemas.IngredientListResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
     }
 /**
- * 성분 ID 에 해당하는 설명, 출처와 연관 성분까지 조회한다.
+ * 성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.
  */
 export type get_FindIngredientDetail = {
       method: "GET",
-      path: "/api/ingredients/detail/{ingredientId}",
+      path: "/api/ingredients/{ingredientId}",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -414,7 +523,7 @@ export type get_FindIngredientDetail = {
 
     }
 /**
- * 빠른 필터에 쓰는 성분군 전체와 각 성분군에 속한 성분을 조회한다. 제품 조회는 성분군을 받지 않으므로, 고른 성분군의 ingredients 를 excludeIngredientIds 로 펼쳐 보낸다.
+ * 빠른 필터에 쓰는 성분군 전체와 각 성분군에 속한 성분을 조회한다. 제품 조회에는 고른 성분군의 code 를 excludeCodes 로 보낸다. ingredients 는 성분군에 무엇이 속하는지 보여주는 데 쓴다.
  */
 export type get_FindExcludeCodes = {
       method: "GET",
@@ -442,7 +551,7 @@ export type get_FindCategories = {
 
     }
 /**
- * 전체 브랜드를 브랜드명 오름차순으로 조회한다.
+ * 전체 브랜드를 브랜드명 오름차순으로 조회하고 브랜드마다 제품 수를 함께 싣는다.
  */
 export type get_FindBrands = {
       method: "GET",
@@ -483,10 +592,10 @@ export type get_FindBrand = {
            "/api/storage": Endpoints.get_FindStorageProducts,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/count": Endpoints.get_CountProducts,
-"/api/ingredients/{ingredientId}": Endpoints.get_FindIngredient,
-"/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
-"/api/ingredients/detail/{ingredientId}": Endpoints.get_FindIngredientDetail,
+"/api/ingredients": Endpoints.get_FindIngredients,
+"/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
