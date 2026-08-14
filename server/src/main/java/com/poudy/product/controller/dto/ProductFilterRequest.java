@@ -2,7 +2,7 @@ package com.poudy.product.controller.dto;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;

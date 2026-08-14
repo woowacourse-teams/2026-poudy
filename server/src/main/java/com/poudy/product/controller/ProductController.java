@@ -5,7 +5,7 @@ import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.ingredient.controller.dto.EffectResponse;
 import com.poudy.product.controller.dto.BenefitResponse;
 import com.poudy.product.controller.dto.DisclosedAmountResponse;

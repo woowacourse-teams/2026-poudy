@@ -2,7 +2,7 @@ package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryPathResponse;
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
