@@ -2,6 +2,7 @@ package com.poudy.config;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.GlobalExceptionHandler;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import java.util.Arrays;
@@ -38,7 +40,11 @@ public class ErrorResponseConfig {
 
             openApi.getPaths().forEach((path, pathItem) -> pathItem.readOperations().forEach(operation -> {
                 ApiResponses responses = operation.getResponses();
-                responses.addApiResponse("400", errorResponse("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes(path)));
+                if (hasInput(operation)) {
+                    responses.addApiResponse(
+                            "400",
+                            errorResponse("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes(path)));
+                }
                 notFoundCode(path).ifPresent(
                         code -> responses
                                 .addApiResponse("404", errorResponse("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)));
@@ -51,6 +57,12 @@ public class ErrorResponseConfig {
 
     private boolean isProductFilterPath(String path) {
         return "/api/products".equals(path) || "/api/products/count".equals(path);
+    }
+
+    private boolean hasInput(Operation operation) {
+        List<Parameter> parameters = operation.getParameters();
+
+        return parameters != null && !parameters.isEmpty();
     }
 
     private ErrorCode[] badRequestCodes(String path) {

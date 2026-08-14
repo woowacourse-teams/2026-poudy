@@ -857,22 +857,6 @@
               }
             }
           },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
-                }
-              }
-            }
-          },
           "500": {
             "description": "서버 오류",
             "content": {
@@ -907,22 +891,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BrandListResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }

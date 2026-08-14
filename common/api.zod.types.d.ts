@@ -272,7 +272,6 @@ export type get_FindCategories = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.CategoryListResponse,
-400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -287,7 +286,6 @@ export type get_FindBrands = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.BrandListResponse,
-400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
