@@ -18,15 +18,15 @@ public class IngredientRepository {
         this.ingredients = new Ingredients(jsonDataReader.readList(INGREDIENTS_FILE_NAME, Ingredient.class));
     }
 
-    public List<Ingredient> findAll() {
-        return ingredients.values();
-    }
-
     public List<Ingredient> search(String keyword) {
         return ingredients.search(keyword);
     }
 
     public Optional<Ingredient> findById(Long id) {
         return ingredients.findById(id);
+    }
+
+    public Optional<Ingredient> findByName(String name) {
+        return ingredients.findByName(name);
     }
 }

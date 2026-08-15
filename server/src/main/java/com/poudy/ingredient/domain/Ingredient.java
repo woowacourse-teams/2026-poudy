@@ -5,7 +5,6 @@ import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 public record Ingredient(
@@ -34,10 +33,6 @@ public record Ingredient(
                 || aliases.stream()
                         .anyMatch(keyword::matches);
         // spotless:on
-    }
-
-    public String lowerCaseEnglishName() {
-        return englishName.toLowerCase(Locale.ROOT);
     }
 
     public List<FormulationRole> formulationRoles() {
