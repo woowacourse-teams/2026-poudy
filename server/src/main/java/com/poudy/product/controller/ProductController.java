@@ -7,6 +7,7 @@ import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.product.controller.dto.DisclosedAmountResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
 import com.poudy.product.controller.dto.ProductDetailResponse;
@@ -40,6 +41,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
+    private final ExcludeCodeIngredients excludeCodeIngredients;
+
+    public ProductController(ExcludeCodeIngredients excludeCodeIngredients) {
+        this.excludeCodeIngredients = excludeCodeIngredients;
+    }
 
     private static final String KEYWORD = ProductFilterRequest.KEYWORD;
     private static final String FIND_PRODUCTS = "findProducts";
@@ -115,7 +122,10 @@ public class ProductController {
     }
 
     private void validateIngredientFilter(ProductFilterRequest filter) {
-        IngredientFilter.of(filter.includeIngredientIds(), filter.excludeIngredientIds(), filter.excludeCodes());
+        IngredientFilter.of(
+                filter.includeIngredientIds(),
+                filter.excludeIngredientIds(),
+                excludeCodeIngredients.idsOf(filter.excludeCodes()));
     }
 
     private static ProductResponse sampleProduct(Long id) {

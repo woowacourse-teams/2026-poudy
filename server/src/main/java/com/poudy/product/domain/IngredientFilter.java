@@ -2,10 +2,10 @@ package com.poudy.product.domain;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
-import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
@@ -19,10 +19,15 @@ public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
         }
     }
 
-    public static IngredientFilter of(List<Long> includedIds, List<Long> excludedIds, List<ExcludeCode> excludedCodes) {
-        List<Long> resolved = Stream.concat(
-                Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
-                ExcludeCodeIngredients.idsOf(excludedCodes).stream()).distinct().toList();
+    public static IngredientFilter of(
+            List<Long> includedIds,
+            List<Long> excludedIds,
+            Collection<Long> excludedCodeIngredientIds) {
+        List<Long> resolved = Stream
+                .concat(
+                        Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
+                        Objects.requireNonNullElse(excludedCodeIngredientIds, Set.<Long>of()).stream())
+                .distinct().toList();
 
         return new IngredientFilter(includedIds, resolved);
     }

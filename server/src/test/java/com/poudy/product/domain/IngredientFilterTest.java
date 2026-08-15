@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.InvalidRequestException;
-import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,29 +40,29 @@ class IngredientFilterTest {
     @Test
     @DisplayName("포함 성분이 제외 성분군에 속하면 만들 수 없다")
     void rejectsIngredientCoveredByExcludedCode() {
-        assertThatThrownBy(() -> IngredientFilter.of(List.of(2301L), null, List.of(ExcludeCode.HARSH_PRESERVATIVES)))
+        assertThatThrownBy(() -> IngredientFilter.of(List.of(3551L), null, Set.of(3551L, 213L)))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
     @Test
     @DisplayName("제외 성분군을 성분으로 풀어 제외 목록에 넣는다")
     void resolvesExcludedCodesIntoIngredientIds() {
-        IngredientFilter filter = IngredientFilter.of(List.of(1005L), List.of(1001L), List.of(ExcludeCode.SULFATES));
+        IngredientFilter filter = IngredientFilter.of(List.of(1005L), List.of(1001L), Set.of(1079L, 1050L));
 
-        assertThat(filter.excludedIds()).contains(1001L, 2401L, 2402L, 2403L, 2404L);
+        assertThat(filter.excludedIds()).contains(1001L, 1079L, 1050L);
     }
 
     @Test
     @DisplayName("제외 성분군이 없으면 제외 목록을 그대로 쓴다")
     void keepsExcludedIdsWhenNoCodeGiven() {
         assertThat(IngredientFilter.of(List.of(1005L), List.of(1001L), null).excludedIds()).containsExactly(1001L);
-        assertThat(IngredientFilter.of(null, null, List.of()).excludedIds()).isEmpty();
+        assertThat(IngredientFilter.of(null, null, Set.of()).excludedIds()).isEmpty();
     }
 
     @Test
     @DisplayName("성분군과 성분으로 같은 제외를 중복해 보내도 한 번만 남는다")
     void deduplicatesResolvedExclusions() {
-        assertThat(IngredientFilter.of(null, List.of(2401L), List.of(ExcludeCode.SULFATES)).excludedIds())
-                .filteredOn(id -> id.equals(2401L)).hasSize(1);
+        assertThat(IngredientFilter.of(null, List.of(1079L), Set.of(1079L, 1050L)).excludedIds())
+                .filteredOn(id -> id.equals(1079L)).hasSize(1);
     }
 }
