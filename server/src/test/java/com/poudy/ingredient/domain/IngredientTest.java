@@ -122,6 +122,20 @@ class IngredientTest {
     }
 
     @Test
+    @DisplayName("줄바꿈으로 합쳐진 태그 근거를 별도 효과 출처로 반환한다")
+    void splitsLineSeparatedTagEvidence() {
+        Ingredient ingredient = withEvidenceAndTags(
+                "설명 근거",
+                List.of(
+                        new IngredientTag(
+                                "BARRIER_SUPPORT_RELATED",
+                                TagCategory.BIOLOGICAL_EFFECT,
+                                "피부 장벽 연구\n보습 연구")));
+
+        assertThat(ingredient.effectSources()).containsExactly("피부 장벽 연구", "보습 연구");
+    }
+
+    @Test
     @DisplayName("출처 안의 괄호에 있는 세미콜론은 출처 경계로 보지 않는다")
     void preservesSemicolonInsideEvidence() {
         Ingredient ingredient = withEvidence(

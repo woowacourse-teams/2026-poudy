@@ -5,8 +5,6 @@ import java.util.List;
 
 final class EvidenceSources {
 
-    private static final char DELIMITER = ';';
-
     private EvidenceSources() {
     }
 
@@ -27,7 +25,7 @@ final class EvidenceSources {
                 parenthesisDepth--;
             }
 
-            if (character == DELIMITER && parenthesisDepth == 0) {
+            if (isDelimiter(character) && parenthesisDepth == 0) {
                 add(evidences, current);
                 current.setLength(0);
                 continue;
@@ -37,6 +35,10 @@ final class EvidenceSources {
         add(evidences, current);
 
         return List.copyOf(evidences);
+    }
+
+    private static boolean isDelimiter(char character) {
+        return character == ';' || character == '\n' || character == '\r';
     }
 
     private static void add(List<String> evidences, StringBuilder candidate) {
