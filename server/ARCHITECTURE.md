@@ -54,7 +54,9 @@ com.poudy
 │   │   └── IngredientService
 │   ├── domain
 │   │   ├── Ingredient
-│   │   └── Ingredients
+│   │   ├── Ingredients
+│   │   ├── IngredientTag
+│   │   └── IngredientTags
 │   └── repository
 │       └── IngredientRepository
 ├── tag
@@ -66,8 +68,9 @@ com.poudy
 │   ├── service
 │   │   └── TagService
 │   ├── domain
-│   │   ├── Tag
-│   │   └── Tags
+│   │   ├── FormulationRole
+│   │   ├── SkinEffect
+│   │   └── TagCategory
 │   └── repository
 │       └── TagRepository
 ├── product
@@ -110,6 +113,8 @@ com.poudy
 │   └── service
 │       └── StorageService
 ├── common
+│   ├── domain
+│   │   └── SearchKeyword
 │   ├── dto
 │   │   ├── KeywordRequest
 │   │   ├── PaginationRequest
@@ -118,7 +123,9 @@ com.poudy
 │       └── JsonDataReader
 ├── config
 │   ├── OpenApiConfig
-│   └── ErrorResponseConfig
+│   ├── ErrorResponseConfig
+│   ├── ErrorResponseCodes
+│   └── ProblemDetailResponses
 └── exception
     ├── ErrorCode
     ├── GlobalExceptionHandler
@@ -136,6 +143,7 @@ com.poudy
 - 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 - 다른 기능의 응답에 중첩되는 DTO는 그 개념을 정의하는 기능이 소유하며 다른 기능이 재사용한다. 제품 응답은 `brand.controller.dto.BrandResponse`를 사용한다.
 - 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
+- 검색어처럼 어느 기능의 개념도 아닌 도메인 값은 `common.domain`에 둔다. 성분과 제품이 같은 검색어 규칙을 쓰는데 한쪽 기능의 `domain`에 두면 다른 기능이 그 기능을 참조하게 되어 의존이 한 방향으로 서지 않는다.
 - 공통 예외 처리는 `exception`에, OpenAPI 설정은 `config`에 둔다.
 
 ## Dependency direction
@@ -214,7 +222,7 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
 
-`Tags`는 `List<Tag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리한다.
+`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다. `tag.domain`에는 두 축의 태그 이름을 정의하는 `FormulationRole`, `SkinEffect`와 원천 데이터의 태그 구분인 `TagCategory`를 둔다.
 
 ### Product
 
@@ -428,13 +436,14 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
-10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
+10. `Ingredient`는 여러 `IngredientTag`를 가지며, 여러 태그는 `IngredientTags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
 11. 외부 API의 기본 경로는 `/api`다.
 12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
 13. 검색과 필터는 경로도 Controller 메서드도 나누지 않는다. 검색어는 다른 필터와 함께 보낼 수 있고 AND로 결합한다.
 14. 요청 규칙은 `@ModelAttribute` 바인딩에서 끝낸다. Controller는 검사 메서드를 호출하지 않고, 횡단 필터나 인터셉터도 두지 않는다. 값 하나로 끝나는 규칙은 Bean Validation 애노테이션에, 여러 값을 함께 봐야 하는 규칙은 클래스 레벨 커스텀 제약에 둔다. `ConflictingIngredientFilter`가 후자이며 `ExcludeCodeIngredients`를 주입받아 판정을 도메인에 넘긴다.
 15. 바인딩 검증 실패는 모두 400이라 상태만으로 구분되지 않는다. 전용 코드가 필요한 커스텀 제약은 `message`에 `ErrorCode` 이름을 적고, `GlobalExceptionHandler`가 위반 문구에서 그 이름으로 코드를 되찾는다. 이름이 없으면 `INVALID_QUERY_PARAMETER`다. 이 방식이라야 `exception` 패키지가 기능 패키지를 참조하지 않는다.
 16. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
-17. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
+17. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에, 여러 기능이 공유하는 도메인 값은 `common.domain`에 둔다.
 18. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
 19. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
+20. 접근 제어자를 생략하지 않는다. 기본 접근에 기대는 대신 `public` 또는 `private`을 적는다.
