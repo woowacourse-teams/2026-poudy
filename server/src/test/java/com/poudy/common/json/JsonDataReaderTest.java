@@ -52,6 +52,22 @@ class JsonDataReaderTest {
     }
 
     @Test
+    @DisplayName("돌려준 목록은 밖에서 고칠 수 없다")
+    void returnsUnmodifiableList() {
+        List<Sample> samples = jsonDataReader.readList(SAMPLE_FILE, Sample.class);
+
+        assertThatThrownBy(() -> samples.add(new Sample(99L, "침입", List.of(), null)))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    @DisplayName("최상위 필드가 null 이면 기동 시점에 인프라 예외로 실패한다")
+    void wrapsNullRootField() {
+        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-null-root.json", Sample.class))
+                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-null-root");
+    }
+
+    @Test
     @DisplayName("파일이 없으면 인프라 예외로 감싸고 어떤 파일인지 남긴다")
     void wrapsMissingFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-missing.json", Sample.class))
