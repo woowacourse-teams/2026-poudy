@@ -1,11 +1,18 @@
 package com.poudy.common.domain;
 
+import java.text.Normalizer;
 import java.util.Locale;
 
 public record SearchKeyword(String value) {
 
     public SearchKeyword {
-        value = value.strip().toLowerCase(Locale.ROOT);
+        value = normalize(value);
+    }
+
+    private static String normalize(String value) {
+        String composed = Normalizer.normalize(value, Normalizer.Form.NFC);
+
+        return Chosung.toCompatibilityLetters(composed).strip().toLowerCase(Locale.ROOT);
     }
 
     public boolean matches(String candidate) {

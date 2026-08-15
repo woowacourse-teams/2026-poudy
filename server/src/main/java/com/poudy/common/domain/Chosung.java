@@ -6,6 +6,8 @@ public record Chosung(String value) {
     private static final String DOUBLE_LETTERS = "ㄲㄸㅃㅆㅉ";
     private static final String FOLDED_LETTERS = "ㄱㄷㅂㅅㅈ";
     private static final char BREAK = ' ';
+    private static final char FIRST_INITIAL_JAMO = 'ᄀ';
+    private static final char LAST_INITIAL_JAMO = 'ᄒ';
     private static final char FIRST_SYLLABLE = '가';
     private static final char LAST_SYLLABLE = '힣';
     private static final int LETTERS_PER_CHOSUNG = 588;
@@ -19,6 +21,19 @@ public record Chosung(String value) {
         }
 
         return new Chosung(extracted.toString());
+    }
+
+    public static String toCompatibilityLetters(String text) {
+        StringBuilder unified = new StringBuilder(text);
+
+        for (int index = 0; index < unified.length(); index++) {
+            char character = unified.charAt(index);
+            if (isInitialJamo(character)) {
+                unified.setCharAt(index, LETTERS.charAt(character - FIRST_INITIAL_JAMO));
+            }
+        }
+
+        return unified.toString();
     }
 
     public static boolean isWrittenIn(String text) {
@@ -48,6 +63,10 @@ public record Chosung(String value) {
         }
 
         return new Chosung(folded.toString());
+    }
+
+    private static boolean isInitialJamo(char character) {
+        return character >= FIRST_INITIAL_JAMO && character <= LAST_INITIAL_JAMO;
     }
 
     private static boolean isSyllable(char character) {
