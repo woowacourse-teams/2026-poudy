@@ -3,6 +3,7 @@ package com.poudy.product.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -38,5 +39,24 @@ class ProductsTest {
     @DisplayName("성분 ID 가 없으면 0 이다")
     void countsZeroForMissingId() {
         assertThat(products.countContaining(null)).isZero();
+    }
+
+    @Test
+    @DisplayName("카테고리 ID별 제품 수를 센다")
+    void countsProductsByCategoryId() {
+        Products categorizedProducts = new Products(
+                List.of(productInCategory(1L, 2L), productInCategory(2L, 2L), productInCategory(3L, 3L)));
+
+        assertThat(categorizedProducts.countByCategoryId()).containsExactlyInAnyOrderEntriesOf(Map.of(2L, 2L, 3L, 1L));
+    }
+
+    @Test
+    @DisplayName("제품이 없으면 카테고리별 제품 수도 비어 있다")
+    void returnsEmptyCountsWithoutProducts() {
+        assertThat(new Products(List.of()).countByCategoryId()).isEmpty();
+    }
+
+    private static Product productInCategory(Long id, Long categoryId) {
+        return new Product(id, 1L, categoryId, "제품 " + id, List.of());
     }
 }

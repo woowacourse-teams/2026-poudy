@@ -1,5 +1,6 @@
 package com.poudy.category.domain;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +35,22 @@ public class Categories {
         return values.stream().filter(category -> category.isChildOf(parent)).toList();
     }
 
+    public Map<Long, Long> aggregateProductCounts(Map<Long, Long> countsByCategoryId) {
+        Map<Long, Long> childCounts = Map.copyOf(Objects.requireNonNullElse(countsByCategoryId, Map.of()));
+        validateProductCountsBelongToChildren(childCounts);
+
+        Map<Long, Long> aggregatedCounts = new HashMap<>();
+        for (Category parent : parents()) {
+            List<Category> children = childrenOf(parent);
+            for (Category child : children) {
+                aggregatedCounts.put(child.id(), childCounts.getOrDefault(child.id(), 0L));
+            }
+            long parentCount = children.stream().mapToLong(child -> aggregatedCounts.get(child.id())).sum();
+            aggregatedCounts.put(parent.id(), parentCount);
+        }
+        return Map.copyOf(aggregatedCounts);
+    }
+
     private void validateChildrenBelongToParent() {
         values.stream().filter(category -> !category.isParent()).forEach(this::validateChildBelongsToParent);
     }
@@ -42,6 +59,14 @@ public class Categories {
         Category parent = byId.get(child.parentId());
         if (parent == null || !parent.isParent()) {
             throw new IllegalArgumentException("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
+        }
+    }
+
+    private void validateProductCountsBelongToChildren(Map<Long, Long> countsByCategoryId) {
+        boolean hasInvalidCategory = countsByCategoryId.keySet().stream().map(byId::get)
+                .anyMatch(category -> category == null || category.isParent());
+        if (hasInvalidCategory) {
+            throw new IllegalArgumentException("제품은 존재하는 소분류에 속해야 합니다.");
         }
     }
 
