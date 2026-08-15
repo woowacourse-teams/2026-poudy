@@ -19,7 +19,6 @@ public class JsonDataReader {
 
     private static final String DATA_LOCATION = ResourceLoader.CLASSPATH_URL_PREFIX;
 
-    // HTTP 응답 직렬화에 쓰는 ObjectMapper 에 이 설정을 걸면 API 계약이 바뀐다.
     private static final ObjectMapper MAPPER = JsonMapper.builder()
             .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();

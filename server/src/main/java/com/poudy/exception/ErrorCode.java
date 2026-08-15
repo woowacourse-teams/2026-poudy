@@ -1,5 +1,11 @@
 package com.poudy.exception;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public enum ErrorCode {
 
     INVALID_QUERY_PARAMETER("요청 파라미터 값이 올바르지 않습니다."),
@@ -11,10 +17,17 @@ public enum ErrorCode {
     ENDPOINT_NOT_FOUND("요청한 경로를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR("서버에서 요청을 처리하지 못했습니다.");
 
+    private static final Map<String, ErrorCode> BY_NAME = Arrays.stream(values())
+            .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
+
     private final String message;
 
     ErrorCode(String message) {
         this.message = message;
+    }
+
+    public static Optional<ErrorCode> from(String name) {
+        return Optional.ofNullable(BY_NAME.get(name));
     }
 
     public String message() {

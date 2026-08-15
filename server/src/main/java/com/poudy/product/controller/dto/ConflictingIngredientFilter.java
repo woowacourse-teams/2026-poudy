@@ -11,9 +11,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = ConflictingIngredientFilterValidator.class)
 public @interface ConflictingIngredientFilter {
 
-    String NAME = "ConflictingIngredientFilter";
-
-    String message() default "같은 성분을 포함과 제외에 함께 쓸 수 없습니다.";
+    String message() default "CONFLICTING_INGREDIENT_FILTER";
 
     Class<?>[] groups() default {};
 

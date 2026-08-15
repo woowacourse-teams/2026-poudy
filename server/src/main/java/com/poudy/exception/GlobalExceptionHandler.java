@@ -1,11 +1,8 @@
 package com.poudy.exception;
 
-import com.poudy.product.controller.dto.ConflictingIngredientFilter;
-import com.poudy.product.domain.ConflictingIngredientFilterException;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanInstantiationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -33,25 +30,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
-    }
-
-    // 바인딩 중 요청 DTO 생성자가 던진 예외는 스프링이 BeanInstantiationException 으로 감싼다.
-    // 풀지 않으면 요청 오류가 500 으로 나간다.
-    @ExceptionHandler(BeanInstantiationException.class)
-    public ResponseEntity<ProblemDetail> handleBeanInstantiationException(BeanInstantiationException exception) {
-        if (exception.getCause() instanceof InvalidRequestException cause) {
-            return problem(HttpStatus.BAD_REQUEST, cause.code(), cause.getMessage());
-        }
-        if (exception.getCause() instanceof ConflictingIngredientFilterException) {
-            return problem(
-                    HttpStatus.BAD_REQUEST,
-                    ErrorCode.CONFLICTING_INGREDIENT_FILTER,
-                    ErrorCode.CONFLICTING_INGREDIENT_FILTER.message());
-        }
-
-        log.error("Request binding failure", exception);
-
-        return serverError();
     }
 
     @ExceptionHandler(InfrastructureException.class)
@@ -101,13 +79,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ErrorCode.UNSUPPORTED_REQUEST;
     }
 
-    // 바인딩 검증 실패는 모두 400 이라 상태만으로는 구분되지 않는다. 전용 코드를 가진 제약은
-    // 위반 목록에서 찾아 그 코드로 돌려준다.
     private ErrorCode bindingCode(Exception exception) {
         if (exception instanceof BindException bindException) {
-            return bindException.getAllErrors().stream().map(ObjectError::getCode)
-                    .filter(ConflictingIngredientFilter.NAME::equals).findFirst()
-                    .map(code -> ErrorCode.CONFLICTING_INGREDIENT_FILTER).orElse(ErrorCode.INVALID_QUERY_PARAMETER);
+            return bindException.getAllErrors().stream().map(ObjectError::getDefaultMessage)
+                    .flatMap(message -> ErrorCode.from(message).stream()).findFirst()
+                    .orElse(ErrorCode.INVALID_QUERY_PARAMETER);
         }
 
         return ErrorCode.INVALID_QUERY_PARAMETER;

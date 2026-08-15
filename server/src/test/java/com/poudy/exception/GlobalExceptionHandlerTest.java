@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.BeanInstantiationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -42,35 +41,6 @@ class GlobalExceptionHandlerTest {
 
         assertProblem(product, HttpStatus.NOT_FOUND, ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(ingredient, HttpStatus.NOT_FOUND, ErrorCode.INGREDIENT_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("바인딩 중 생성자가 던진 요청 예외를 원래 코드와 400 으로 되돌린다")
-    void unwrapsInvalidRequestExceptionThrownWhileBinding() {
-        BeanInstantiationException exception = new BeanInstantiationException(
-                Object.class,
-                "Constructor threw exception",
-                new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER));
-
-        assertProblem(
-                handler.handleBeanInstantiationException(exception),
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.CONFLICTING_INGREDIENT_FILTER);
-    }
-
-    @Test
-    @DisplayName("바인딩 실패의 원인이 요청 예외가 아니면 500 으로 처리한다")
-    void keepsOtherBindingFailuresAsServerError() {
-        BeanInstantiationException exception = new BeanInstantiationException(
-                Object.class,
-                "Constructor threw exception",
-                new IllegalStateException("database password"));
-
-        ResponseEntity<ProblemDetail> response = handler.handleBeanInstantiationException(exception);
-
-        assertProblem(response, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR.message());
     }
 
     @Test
