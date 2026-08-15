@@ -16,11 +16,14 @@ common:
       - any-glob-to-any-file: ['common/**']
 
 # 워크플로와 저장소 설정. 루트 Git 설정만 고친 PR 도 레이블을 받게 한다.
+# 배포 인프라(infra/**)도 여기에 넣는다. 전용 레이블을 만들 만큼 자주 바뀌지 않고,
+# 레이블 없이 두면 그 PR 만 영역 구분에서 빠진다.
 ci:
   - changed-files:
       - any-glob-to-any-file:
           - '.github/**'
           - '.githooks/**'
+          - 'infra/**'
           - '.gitattributes'
           - '.gitignore'
           - '.gitmessage.txt'
