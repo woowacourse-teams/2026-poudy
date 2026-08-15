@@ -24,14 +24,10 @@ public class ExcludeCodeIngredients {
     }
 
     public List<ExcludeCodeIngredient> of(ExcludeCode code) {
-        return ingredients.getOrDefault(code, List.of());
+        return ingredients.get(code);
     }
 
     public Set<Long> idsOf(List<ExcludeCode> codes) {
-        if (codes == null) {
-            return Set.of();
-        }
-
         // spotless:off
         return codes.stream()
                 .flatMap(code -> of(code).stream())
