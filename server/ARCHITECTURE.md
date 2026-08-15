@@ -183,6 +183,13 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 `Ingredients`는 `List<Ingredient>`를 가지는 일급 컬렉션이다. 여러 성분을 대상으로 하는 문제를 담당한다.
 
+성분 검색은 앞뒤 공백을 제거한 검색어로 한글명, 영문명과 별칭을 부분 일치시킨다. 영문명과
+영문 별칭은 대소문자를 구분하지 않는다. 검색 결과 ID와 상세 조회 ID는 같은 성분 데이터에서
+가져온다.
+
+성분 데이터의 `description_evidence`는 괄호 밖의 세미콜론으로 여러 출처를 구분한다. 논문
+저자처럼 괄호 안에 있는 세미콜론은 같은 출처의 일부이므로 보존한다.
+
 ### Tag
 
 `Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
@@ -260,7 +267,7 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 | `CYCLIC_SILICONES` | 실리콘 자극원 제외 | D4, D5, D6와 사이클로메티콘 |
 | `SYNTHETIC_COLORANTS` | 합성 색소 제외 | 등록된 타르색소와 `X색O호` 형식의 합성 색소 |
 
-`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `SYNTHETIC_COLORANTS`는 등록된 성분 ID뿐 아니라 원천 데이터를 정규화할 때 `X색O호` 이름 패턴과 CI 코드도 함께 판정한다.
+`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `SYNTHETIC_COLORANTS`는 `황색4호`, `적색103호의(1)`, `염기성황색57호`처럼 등록 색소명 형식에 해당하는 성분을 포함한다. 이 등록 성분에서 CI 코드를 추출하고, 같은 CI 코드를 가진 별도 표기도 함께 포함한다. CI 코드가 있다는 이유만으로 징크옥사이드·티타늄디옥사이드 같은 다른 원료까지 합성 색소로 보지는 않는다.
 
 ### Storage
 
@@ -308,6 +315,10 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller에 전달할 응답 DTO를 만들거나 제품 필터 규칙을 구현하지 않는다.
 
 파일을 열고 파싱하는 부분은 Repository마다 같으므로 `common.json.JsonDataReader`가 맡는다. Repository는 자기 파일 이름과 도메인 타입만 넘긴다. 파일을 두는 위치, snake_case 변환, `{"<파일명>": [ … ]}` 최상위 필드 해제는 모두 Reader가 처리한다. 최상위 필드 이름은 확장자를 뗀 파일 이름과 같아야 한다. Reader는 데이터 파일 전용 `ObjectMapper`를 쓰므로 이 설정이 HTTP 응답 직렬화에 영향을 주지 않는다.
+
+운영 JSON은 저장소에 커밋하지 않는다. OpenAPI 생성은 데이터 내용이 아니라 애플리케이션 기동만
+필요하므로, 깨끗한 CI에서도 재현되도록 `forkedSpringBootRun`이 커밋된 테스트 fixture를 우선하는
+test runtime classpath로 실행된다. 실제 서버 실행은 계속 main resources의 운영 JSON을 사용한다.
 
 형식만 옮기는 중간 타입은 두지 않는다. Jackson이 도메인 레코드를 직접 만들기 때문에 도메인에 Jackson 애너테이션은 없지만, 그 대신 도메인 필드 이름이 곧 파일과의 계약이 된다. 필드 이름을 바꾸면 컴파일은 통과하고 파싱만 깨지므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
 
