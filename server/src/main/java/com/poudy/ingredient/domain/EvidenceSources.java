@@ -9,31 +9,27 @@ final class EvidenceSources {
     }
 
     static List<String> parseDescription(String source) {
-        return parse(source, false);
+        return parse(source, EvidenceDelimiter.SEMICOLON);
     }
 
     static List<String> parseTag(String source) {
-        return parse(source, true);
+        return parse(source, EvidenceDelimiter.SEMICOLON_OR_LINE_BREAK);
     }
 
-    private static List<String> parse(String source, boolean splitLines) {
+    private static List<String> parse(String source, EvidenceDelimiter delimiter) {
         if (source == null || source.isBlank()) {
             return List.of();
         }
 
         List<String> evidences = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        int parenthesisDepth = 0;
+        ParenthesisDepth depth = new ParenthesisDepth();
 
         for (int index = 0; index < source.length(); index++) {
             char character = source.charAt(index);
-            if (character == '(') {
-                parenthesisDepth++;
-            } else if (character == ')' && parenthesisDepth > 0) {
-                parenthesisDepth--;
-            }
+            depth.accept(character);
 
-            if (isDelimiter(character, splitLines) && parenthesisDepth == 0) {
+            if (delimiter.isBoundary(character) && depth.isOutside()) {
                 add(evidences, current);
                 current.setLength(0);
                 continue;
@@ -43,10 +39,6 @@ final class EvidenceSources {
         add(evidences, current);
 
         return List.copyOf(evidences);
-    }
-
-    private static boolean isDelimiter(char character, boolean splitLines) {
-        return character == ';' || splitLines && (character == '\n' || character == '\r');
     }
 
     private static void add(List<String> evidences, StringBuilder candidate) {
