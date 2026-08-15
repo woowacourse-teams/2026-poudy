@@ -2,13 +2,10 @@ package com.poudy.ingredient.domain;
 
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
-import com.poudy.tag.domain.TagCategory;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 public record Ingredient(
         Long id,
@@ -43,21 +40,11 @@ public record Ingredient(
     }
 
     public List<FormulationRole> formulationRoles() {
-        // spotless:off
-        return namesOf(TagCategory.FUNCTION)
-                .map(FormulationRole::from)
-                .flatMap(Optional::stream)
-                .toList();
-        // spotless:on
+        return tags().formulationRoles();
     }
 
     public List<SkinEffect> skinEffects() {
-        // spotless:off
-        return namesOf(TagCategory.BIOLOGICAL_EFFECT)
-                .map(SkinEffect::from)
-                .flatMap(Optional::stream)
-                .toList();
-        // spotless:on
+        return tags().skinEffects();
     }
 
     public List<String> infoSources() {
@@ -65,24 +52,14 @@ public record Ingredient(
     }
 
     public List<String> effectSources() {
-        // spotless:off
-        return tagMappings.stream()
-                .filter(IngredientTag::isDisplayedSkinEffect)
-                .flatMap(tag -> tag.sources().stream())
-                .distinct()
-                .toList();
-        // spotless:on
+        return tags().effectSources();
     }
 
     private static boolean contains(String value, String keyword) {
         return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
     }
 
-    private Stream<String> namesOf(TagCategory category) {
-        // spotless:off
-        return tagMappings.stream()
-                .filter(tag -> tag.isOf(category))
-                .map(IngredientTag::name);
-        // spotless:on
+    private IngredientTags tags() {
+        return new IngredientTags(tagMappings);
     }
 }
