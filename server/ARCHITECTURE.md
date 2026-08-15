@@ -105,7 +105,8 @@ com.poudy
 │   └── domain
 │       ├── ExcludeCode
 │       ├── ExcludeCodeIngredient
-│       └── ExcludeCodeIngredients
+│       ├── ExcludeCodeIngredients
+│       └── ResolvedExcludeCode
 ├── storage
 │   ├── controller
 │   │   ├── StorageController
@@ -123,6 +124,7 @@ com.poudy
 │       └── JsonDataReader
 ├── config
 │   ├── OpenApiConfig
+│   ├── ExcludeCodeConfig
 │   ├── ErrorResponseConfig
 │   ├── ErrorResponseCodes
 │   └── ProblemDetailResponses
@@ -269,7 +271,7 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
 `excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 포함 성분이 제외 성분군에 속하면 `CONFLICTING_INGREDIENT_FILTER`로 거절한다. 같은 모순을 성분 ID 두 개로 표현하든 성분군으로 표현하든 같은 오류가 나와야 프론트가 "조건에 맞는 제품 없음"과 "잘못된 조건"을 구분할 수 있다.
 
-`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
+`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. 고정 성분명을 성분으로 푸는 일은 `ResolvedExcludeCode`가 성분군 하나씩 한 번만 훑어 찾은 성분과 찾지 못한 이름을 함께 돌려주고, 하나라도 찾지 못하면 기동 시점에 실패한다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
 
 빠른 제외 성분군은 다음 6개를 제공한다.
 
@@ -323,7 +325,9 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 
 - `Product`는 제품 하나에 대한 규칙을 담당한다.
 - `Products`는 제품 목록 전체에 대한 규칙을 담당한다.
-- `Brands`, `Categories`, `Ingredients`, `Tags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
+- `Brands`, `Categories`, `Ingredients`, `IngredientTags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
+
+Domain은 Repository를 참조하지 않는다. 다른 기능의 데이터가 있어야 세울 수 있는 도메인 객체는 Repository가 돌려준 Domain 객체를 생성자로 받고, 그 조립만 `config`가 맡는다. `ExcludeCodeIngredients`가 `Ingredients`를 받고 `ExcludeCodeConfig`가 조립하는 것이 그 경우다. 도메인이 Repository를 직접 부르면 저장소 교체가 도메인까지 번지고, 도메인 테스트가 스프링 컨텍스트를 필요로 하게 된다.
 
 ### Repository
 
