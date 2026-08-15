@@ -2,6 +2,7 @@ package com.poudy.common.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.text.Normalizer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -65,6 +66,20 @@ class SearchKeywordTest {
     void matchesBySubstring() {
         assertThat(new SearchKeyword("글리세").matches("멘톤글리세린아세탈")).isTrue();
         assertThat(new SearchKeyword("GLYCERIN").matches("Glycerin")).isTrue();
+    }
+
+    @Test
+    @DisplayName("자모가 분해된 검색어도 찾는다")
+    void matchesDecomposedKeyword() {
+        String decomposed = Normalizer.normalize("글리", Normalizer.Form.NFD);
+
+        assertThat(new SearchKeyword(decomposed).matches("글리세린")).isTrue();
+    }
+
+    @Test
+    @DisplayName("분해된 자모로 친 초성도 초성 검색으로 받는다")
+    void matchesInitialJamoKeyword() {
+        assertThat(new SearchKeyword("ᄀᄅᄉᄅ").matches("글리세린")).isTrue();
     }
 
     @Test
