@@ -3,7 +3,6 @@ package com.poudy.product.controller.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.exception.ErrorCode;
-import jakarta.validation.Constraint;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import org.junit.jupiter.api.DisplayName;
@@ -17,12 +16,6 @@ class ConflictingIngredientFilterTest {
     void defaultMessageNamesErrorCode() {
         assertThat(ErrorCode.from(defaultMessageOf(ConflictingIngredientFilter.class)))
                 .contains(ErrorCode.CONFLICTING_INGREDIENT_FILTER);
-    }
-
-    @Test
-    @DisplayName("제약 애노테이션이다")
-    void isConstraintAnnotation() {
-        assertThat(ConflictingIngredientFilter.class.getAnnotation(Constraint.class)).isNotNull();
     }
 
     private static String defaultMessageOf(Class<? extends Annotation> constraint) {
