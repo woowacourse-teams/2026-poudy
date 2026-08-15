@@ -24,3 +24,6 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### 데이터 ###
+**/resources/**/*.json
