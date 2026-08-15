@@ -1,30 +1,26 @@
 package com.poudy.excludecode.domain;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.ingredient.domain.Ingredients;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.springframework.stereotype.Component;
 
-@Component
 public class ExcludeCodeIngredients {
 
     private final Map<ExcludeCode, List<ExcludeCodeIngredient>> ingredients;
     private final Map<Long, List<ExcludeCode>> codesByIngredientId;
 
-    public ExcludeCodeIngredients(IngredientRepository ingredientRepository) {
-        requireEveryNameResolved(ingredientRepository);
+    public ExcludeCodeIngredients(Ingredients allIngredients) {
+        List<ResolvedExcludeCode> resolved = resolveAll(allIngredients);
+        requireEveryNameResolved(resolved);
 
-        this.ingredients = resolveAll(ingredientRepository);
-        this.codesByIngredientId = indexCodes(this.ingredients);
+        this.ingredients = index(resolved);
+        this.codesByIngredientId = indexCodes(resolved);
     }
 
     public List<ExcludeCodeIngredient> of(ExcludeCode code) {
@@ -48,10 +44,18 @@ public class ExcludeCodeIngredients {
         return codesByIngredientId.getOrDefault(ingredientId, List.of());
     }
 
-    private static void requireEveryNameResolved(IngredientRepository ingredientRepository) {
+    private static List<ResolvedExcludeCode> resolveAll(Ingredients ingredients) {
         // spotless:off
-        List<String> missing = Arrays.stream(ExcludeCode.values())
-                .flatMap(code -> missingNames(code, ingredientRepository))
+        return Arrays.stream(ExcludeCode.values())
+                .map(code -> ResolvedExcludeCode.of(code, ingredients))
+                .toList();
+        // spotless:on
+    }
+
+    private static void requireEveryNameResolved(List<ResolvedExcludeCode> resolved) {
+        // spotless:off
+        List<String> missing = resolved.stream()
+                .flatMap(ResolvedExcludeCode::missingNames)
                 .toList();
         // spotless:on
 
@@ -60,50 +64,27 @@ public class ExcludeCodeIngredients {
         }
     }
 
-    private static Stream<String> missingNames(ExcludeCode code, IngredientRepository ingredientRepository) {
+    private static Map<ExcludeCode, List<ExcludeCodeIngredient>> index(List<ResolvedExcludeCode> resolved) {
         // spotless:off
-        return code.ingredientNames().stream()
-                .filter(name -> ingredientRepository.findByName(name).isEmpty())
-                .map(name -> code + " 의 " + name);
+        return resolved.stream()
+                .collect(Collectors.toUnmodifiableMap(ResolvedExcludeCode::code, ResolvedExcludeCode::found));
         // spotless:on
     }
 
-    private static Map<ExcludeCode, List<ExcludeCodeIngredient>> resolveAll(IngredientRepository ingredientRepository) {
-        // spotless:off
-        return Arrays.stream(ExcludeCode.values())
-                .collect(Collectors.toUnmodifiableMap(
-                        Function.identity(),
-                        code -> resolve(code, ingredientRepository)));
-        // spotless:on
-    }
-
-    private static List<ExcludeCodeIngredient> resolve(ExcludeCode code, IngredientRepository ingredientRepository) {
-        // spotless:off
-        return code.ingredientNames().stream()
-                .map(ingredientRepository::findByName)
-                .flatMap(Optional::stream)
-                .map(ExcludeCodeIngredient::from)
-                .toList();
-        // spotless:on
-    }
-
-    private static Map<Long, List<ExcludeCode>> indexCodes(Map<ExcludeCode, List<ExcludeCodeIngredient>> ingredients) {
+    private static Map<Long, List<ExcludeCode>> indexCodes(List<ResolvedExcludeCode> resolved) {
         Map<Long, List<ExcludeCode>> codes = new LinkedHashMap<>();
 
-        for (ExcludeCode code : ExcludeCode.values()) {
-            addCode(codes, code, ingredients.getOrDefault(code, List.of()));
+        for (ResolvedExcludeCode each : resolved) {
+            addCode(codes, each);
         }
         codes.replaceAll((id, found) -> List.copyOf(found));
 
         return Map.copyOf(codes);
     }
 
-    private static void addCode(
-            Map<Long, List<ExcludeCode>> codes,
-            ExcludeCode code,
-            List<ExcludeCodeIngredient> ingredients) {
-        for (ExcludeCodeIngredient ingredient : ingredients) {
-            codes.computeIfAbsent(ingredient.id(), id -> new ArrayList<>()).add(code);
+    private static void addCode(Map<Long, List<ExcludeCode>> codes, ResolvedExcludeCode resolved) {
+        for (ExcludeCodeIngredient ingredient : resolved.found()) {
+            codes.computeIfAbsent(ingredient.id(), id -> new ArrayList<>()).add(resolved.code());
         }
     }
 }
