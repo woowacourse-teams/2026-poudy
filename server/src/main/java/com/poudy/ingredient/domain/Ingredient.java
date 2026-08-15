@@ -61,14 +61,14 @@ public record Ingredient(
     }
 
     public List<String> infoSources() {
-        return EvidenceSources.parseDescription(descriptionEvidence);
+        return Evidence.ofDescription(descriptionEvidence).sources();
     }
 
     public List<String> effectSources() {
         // spotless:off
         return tagMappings.stream()
                 .filter(IngredientTag::isDisplayedSkinEffect)
-                .flatMap(tag -> EvidenceSources.parseTag(tag.source()).stream())
+                .flatMap(tag -> tag.sources().stream())
                 .distinct()
                 .toList();
         // spotless:on
