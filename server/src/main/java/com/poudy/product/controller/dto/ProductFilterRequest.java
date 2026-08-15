@@ -1,17 +1,18 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.exception.ErrorCode;
-import com.poudy.exception.InvalidRequestException;
 import com.poudy.excludecode.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
+import java.util.Objects;
 import org.hibernate.validator.constraints.UniqueElements;
 
+@ConflictingIngredientFilter
 public record ProductFilterRequest(
-        @Schema(example = "토너") String keyword,
+        @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @Schema(example = "토너") String keyword,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<Long> categoryIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "12"), uniqueItems = true) List<Long> brandIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "3"), uniqueItems = true) List<@Min(0) @Max(3) Integer> moistureLevel,
@@ -20,30 +21,17 @@ public record ProductFilterRequest(
         @UniqueElements @ArraySchema(schema = @Schema(example = "1001"), uniqueItems = true) List<Long> excludeIngredientIds,
         @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<ExcludeCode> excludeCodes) {
 
-    public static final String KEYWORD = "keyword";
-
-    public void validateSearchOnly() {
-        if (hasFilterCondition()) {
-            throw new InvalidRequestException(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
-        }
-        if (keyword == null) {
-            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
-        }
-        validateKeywordIfPresent();
+    public ProductFilterRequest {
+        categoryIds = emptyIfMissing(categoryIds);
+        brandIds = emptyIfMissing(brandIds);
+        moistureLevel = emptyIfMissing(moistureLevel);
+        oilLevel = emptyIfMissing(oilLevel);
+        includeIngredientIds = emptyIfMissing(includeIngredientIds);
+        excludeIngredientIds = emptyIfMissing(excludeIngredientIds);
+        excludeCodes = emptyIfMissing(excludeCodes);
     }
 
-    public void validateKeywordIfPresent() {
-        if (keyword != null && keyword.isBlank()) {
-            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
-        }
-    }
-
-    public boolean hasFilterCondition() {
-        return isPresent(categoryIds) || isPresent(brandIds) || isPresent(moistureLevel) || isPresent(oilLevel)
-                || isPresent(includeIngredientIds) || isPresent(excludeIngredientIds) || isPresent(excludeCodes);
-    }
-
-    private boolean isPresent(List<?> condition) {
-        return condition != null && !condition.isEmpty();
+    private static <T> List<T> emptyIfMissing(List<T> values) {
+        return Objects.requireNonNullElse(values, List.of());
     }
 }

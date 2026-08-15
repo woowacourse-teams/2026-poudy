@@ -19,14 +19,8 @@ class ProductSortTest {
     }
 
     @Test
-    @DisplayName("정렬 조건을 생략하면 기본 정렬을 쓴다")
-    void usesDefaultWhenSortIsMissing() {
-        assertThat(ProductSort.orDefault(null)).isEqualTo(ProductSort.valueOf(ProductSort.DEFAULT_NAME));
-    }
-
-    @Test
-    @DisplayName("정렬 조건이 있으면 그대로 쓴다")
-    void keepsGivenSort() {
-        assertThat(ProductSort.orDefault(ProductSort.PRICE_DESC)).isEqualTo(ProductSort.PRICE_DESC);
+    @DisplayName("문서에 싣는 기본 정렬 이름이 실제 정렬 조건과 같다")
+    void defaultNameMatchesSortOption() {
+        assertThat(ProductSort.valueOf(ProductSort.DEFAULT_NAME)).isEqualTo(ProductSort.NAME_ASC);
     }
 }

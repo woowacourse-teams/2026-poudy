@@ -25,7 +25,7 @@ class ProductFilterConflictTest {
     @ValueSource(strings = {"/api/products", "/api/products/count"})
     @DisplayName("포함 성분이 제외 성분군에 속하면 400 을 반환한다")
     void rejectsIngredientCoveredByExcludedCode(String path) throws Exception {
-        mockMvc.perform(get(path).param("includeIngredientIds", "2301").param("excludeCodes", "HARSH_PRESERVATIVES"))
+        mockMvc.perform(get(path).param("includeIngredientIds", "3551").param("excludeCodes", "HARSH_PRESERVATIVES"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.CONFLICTING_INGREDIENT_FILTER.name()));
     }
@@ -34,7 +34,7 @@ class ProductFilterConflictTest {
     @ValueSource(strings = {"/api/products", "/api/products/count"})
     @DisplayName("같은 모순을 성분 ID 로 표현해도 같은 코드로 거절한다")
     void rejectsSameConflictExpressedWithIngredientIds(String path) throws Exception {
-        mockMvc.perform(get(path).param("includeIngredientIds", "2301").param("excludeIngredientIds", "2301"))
+        mockMvc.perform(get(path).param("includeIngredientIds", "3551").param("excludeIngredientIds", "3551"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.CONFLICTING_INGREDIENT_FILTER.name()));
     }

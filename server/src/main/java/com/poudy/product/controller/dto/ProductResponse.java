@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
 
 public record ProductResponse(
         @NotNull @Schema(description = "제품 ID", example = "101") Long id,
@@ -17,4 +18,27 @@ public record ProductResponse(
         @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
         @NotNull @Min(0) @Max(3) @Schema(description = "수분감 단계 (0~3)", example = "3") Integer moistureLevel,
         @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel) {
+
+    public static final Long SAMPLE_ID = 101L;
+
+    public static ProductResponse sample(Long id) {
+        return new ProductResponse(
+                id,
+                "스킨케어 이름",
+                BrandResponse.sample(),
+                sampleImageUrl(id),
+                18000L,
+                new BigDecimal("200"),
+                "ml",
+                3,
+                1);
+    }
+
+    public static List<ProductResponse> samples() {
+        return List.of(sample(SAMPLE_ID));
+    }
+
+    public static String sampleImageUrl(Long id) {
+        return "https://cdn.example.com/products/" + id + ".png";
+    }
 }

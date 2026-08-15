@@ -95,6 +95,7 @@ openApi {
     apiDocsUrl = "http://localhost:${openApiDocPort}/v3/api-docs"
     customBootRun {
         args = ["--server.port=${openApiDocPort}"]
+        classpath.from(sourceSets.test.runtimeClasspath)
     }
 }
 
@@ -125,6 +126,7 @@ tasks.register('copyOpenApiDoc') {
 // 포크된 앱은 Gradle 이 도는 JVM 을 쓴다. 기본 JDK 가 21 보다 낮으면 기동에 실패하는데
 // 플러그인은 "30초 기다렸다"는 메시지만 남긴다. 컴파일과 같은 툴체인을 쓰게 한다.
 tasks.named('forkedSpringBootRun') {
+    dependsOn tasks.named('testClasses')
     javaLauncher = javaToolchains.launcherFor(java.toolchain)
 }
 

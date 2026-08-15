@@ -54,7 +54,9 @@ com.poudy
 │   │   └── IngredientService
 │   ├── domain
 │   │   ├── Ingredient
-│   │   └── Ingredients
+│   │   ├── Ingredients
+│   │   ├── IngredientTag
+│   │   └── IngredientTags
 │   └── repository
 │       └── IngredientRepository
 ├── tag
@@ -66,8 +68,9 @@ com.poudy
 │   ├── service
 │   │   └── TagService
 │   ├── domain
-│   │   ├── Tag
-│   │   └── Tags
+│   │   ├── FormulationRole
+│   │   ├── SkinEffect
+│   │   └── TagCategory
 │   └── repository
 │       └── TagRepository
 ├── product
@@ -102,7 +105,8 @@ com.poudy
 │   └── domain
 │       ├── ExcludeCode
 │       ├── ExcludeCodeIngredient
-│       └── ExcludeCodeIngredients
+│       ├── ExcludeCodeIngredients
+│       └── ResolvedExcludeCode
 ├── storage
 │   ├── controller
 │   │   ├── StorageController
@@ -110,6 +114,8 @@ com.poudy
 │   └── service
 │       └── StorageService
 ├── common
+│   ├── domain
+│   │   └── SearchKeyword
 │   ├── dto
 │   │   ├── KeywordRequest
 │   │   ├── PaginationRequest
@@ -118,7 +124,10 @@ com.poudy
 │       └── JsonDataReader
 ├── config
 │   ├── OpenApiConfig
-│   └── ErrorResponseConfig
+│   ├── ExcludeCodeConfig
+│   ├── ErrorResponseConfig
+│   ├── ErrorResponseCodes
+│   └── ProblemDetailResponses
 └── exception
     ├── ErrorCode
     ├── GlobalExceptionHandler
@@ -136,6 +145,7 @@ com.poudy
 - 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 - 다른 기능의 응답에 중첩되는 DTO는 그 개념을 정의하는 기능이 소유하며 다른 기능이 재사용한다. 제품 응답은 `brand.controller.dto.BrandResponse`를 사용한다.
 - 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
+- 검색어처럼 어느 기능의 개념도 아닌 도메인 값은 `common.domain`에 둔다. 성분과 제품이 같은 검색어 규칙을 쓰는데 한쪽 기능의 `domain`에 두면 다른 기능이 그 기능을 참조하게 되어 의존이 한 방향으로 서지 않는다.
 - 공통 예외 처리는 `exception`에, OpenAPI 설정은 `config`에 둔다.
 
 ## Dependency direction
@@ -183,6 +193,22 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 `Ingredients`는 `List<Ingredient>`를 가지는 일급 컬렉션이다. 여러 성분을 대상으로 하는 문제를 담당한다.
 
+제외 성분군의 고정 성분명처럼 이름 하나로 성분을 특정할 때는 한글명 완전 일치를 먼저 찾고, 없으면 영문명을 대소문자 없이 맞춘다. 같은 이름을 가진 성분이 여럿이면 ID가 작은 성분을 쓴다. 한 성분의 영문명이 다른 성분의 한글명과 같을 수 있어 순서를 정해 두지 않으면 어느 쪽이 나올지 데이터 순서에 달린다.
+
+성분 검색은 앞뒤 공백을 제거한 검색어로 한글명, 영문명과 별칭을 부분 일치시킨다. 영문명과
+영문 별칭은 대소문자를 구분하지 않는다. 검색 결과 ID와 상세 조회 ID는 같은 성분 데이터에서
+가져온다.
+
+성분 상세의 `infoSources`는 `description_evidence` 전체를 성분 설명 근거로 제공한다.
+`effectSources`는 응답에 노출되는 `BIOLOGICAL_EFFECT` 태그 매핑의 `source`만 피부 작용
+근거로 제공한다. 기관명이나 출처 제목으로 두 종류를 추론하지 않는다.
+
+두 근거 문자열은 괄호 밖의 세미콜론으로 여러 출처를 구분한다. 태그 매핑의 `source`는 데이터
+변환 과정에서 합쳐진 줄바꿈도 출처 경계로 사용한다. 설명 근거의 줄바꿈은 원문의 일부로 보존한다.
+논문 저자처럼 괄호 안에 있는 세미콜론은 같은 출처의 일부이므로 보존한다. 피부 작용 근거는 매핑 순서를 유지하며
+중복을 제거한다. `태그 보류`로 시작하는 근거는 `tag_mappings`에 저장하지 않고 로딩 시
+잘못된 데이터로 간주한다.
+
 ### Tag
 
 `Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
@@ -200,7 +226,7 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
 
-`Tags`는 `List<Tag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리한다.
+`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다. `tag.domain`에는 두 축의 태그 이름을 정의하는 `FormulationRole`, `SkinEffect`와 원천 데이터의 태그 구분인 `TagCategory`를 둔다.
 
 ### Product
 
@@ -226,7 +252,7 @@ Product
 
 `Products`는 `List<Product>`를 가지는 일급 컬렉션이다.
 
-제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색과 필터는 Controller 메서드가 나뉘어 있을 뿐 같은 `Products`가 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
+제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색어는 다른 필터와 함께 올 수 있으며 같은 `Products`가 한 번에 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
 
 API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
@@ -247,7 +273,7 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
 `excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 포함 성분이 제외 성분군에 속하면 `CONFLICTING_INGREDIENT_FILTER`로 거절한다. 같은 모순을 성분 ID 두 개로 표현하든 성분군으로 표현하든 같은 오류가 나와야 프론트가 "조건에 맞는 제품 없음"과 "잘못된 조건"을 구분할 수 있다.
 
-`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
+`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. 고정 성분명을 성분으로 푸는 일은 `ResolvedExcludeCode`가 성분군 하나씩 한 번만 훑어 찾은 성분과 찾지 못한 이름을 함께 돌려주고, 하나라도 찾지 못하면 기동 시점에 실패한다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
 
 빠른 제외 성분군은 다음 6개를 제공한다.
 
@@ -258,9 +284,9 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 | `HARSH_PRESERVATIVES` | 자극성 방부제 제외 | 페녹시에탄올, 파라벤 7종, BHA, BHT, DMDM 하이단토인 |
 | `SULFATES` | 설페이트 성분 제외 | SLS, SLES, ALS, ALES |
 | `CYCLIC_SILICONES` | 실리콘 자극원 제외 | D4, D5, D6와 사이클로메티콘 |
-| `SYNTHETIC_COLORANTS` | 합성 색소 제외 | 등록된 타르색소와 `X색O호` 형식의 합성 색소 |
+| `SYNTHETIC_COLORANTS` | 합성 색소 제외 | 검토해 고정 목록으로 승인한 합성 색소 84개 |
 
-`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `SYNTHETIC_COLORANTS`는 등록된 성분 ID뿐 아니라 원천 데이터를 정규화할 때 `X색O호` 이름 패턴과 CI 코드도 함께 판정한다.
+`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `SYNTHETIC_COLORANTS`는 2026-08-15 운영 성분 데이터에 이전 등록 색소명·CI 판정을 적용해 확인한 84개를 승인 기준으로 삼아 `ExcludeCode`의 고정 목록으로 관리한다. 패턴이나 CI 코드로 새 성분을 자동 포함하지 않으며, 포함 범위를 바꾸려면 목록 전체 지문과 운영 데이터 호환성을 함께 검토해 수정한다.
 
 ### Storage
 
@@ -301,13 +327,19 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 
 - `Product`는 제품 하나에 대한 규칙을 담당한다.
 - `Products`는 제품 목록 전체에 대한 규칙을 담당한다.
-- `Brands`, `Categories`, `Ingredients`, `Tags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
+- `Brands`, `Categories`, `Ingredients`, `IngredientTags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
+
+Domain은 Repository를 참조하지 않는다. 다른 기능의 데이터가 있어야 세울 수 있는 도메인 객체는 Repository가 돌려준 Domain 객체를 생성자로 받고, 그 조립만 `config`가 맡는다. `ExcludeCodeIngredients`가 `Ingredients`를 받고 `ExcludeCodeConfig`가 조립하는 것이 그 경우다. 도메인이 Repository를 직접 부르면 저장소 교체가 도메인까지 번지고, 도메인 테스트가 스프링 컨텍스트를 필요로 하게 된다.
 
 ### Repository
 
 Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller에 전달할 응답 DTO를 만들거나 제품 필터 규칙을 구현하지 않는다.
 
 파일을 열고 파싱하는 부분은 Repository마다 같으므로 `common.json.JsonDataReader`가 맡는다. Repository는 자기 파일 이름과 도메인 타입만 넘긴다. 파일을 두는 위치, snake_case 변환, `{"<파일명>": [ … ]}` 최상위 필드 해제는 모두 Reader가 처리한다. 최상위 필드 이름은 확장자를 뗀 파일 이름과 같아야 한다. Reader는 데이터 파일 전용 `ObjectMapper`를 쓰므로 이 설정이 HTTP 응답 직렬화에 영향을 주지 않는다.
+
+운영 JSON은 저장소에 커밋하지 않는다. OpenAPI 생성은 데이터 내용이 아니라 애플리케이션 기동만
+필요하므로, 깨끗한 CI에서도 재현되도록 `forkedSpringBootRun`이 커밋된 테스트 fixture를 우선하는
+test runtime classpath로 실행된다. 실제 서버 실행은 계속 main resources의 운영 JSON을 사용한다.
 
 형식만 옮기는 중간 타입은 두지 않는다. Jackson이 도메인 레코드를 직접 만들기 때문에 도메인에 Jackson 애너테이션은 없지만, 그 대신 도메인 필드 이름이 곧 파일과의 계약이 된다. 필드 이름을 바꾸면 컴파일은 통과하고 파싱만 깨지므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
 
@@ -317,7 +349,8 @@ Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller
 
 `GlobalExceptionHandler`가 모든 오류 응답을 RFC 9457 `ProblemDetail` 형태로 반환한다. `ResponseEntityExceptionHandler`를 상속해 프레임워크가 던지는 예외는 기반 클래스가 처리하고, 응답 계약에 필요한 `code`와 문구만 덧입힌다.
 
-- 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `InfrastructureException` 세 가지다.
+- `exception` 패키지의 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `InfrastructureException` 세 가지다. 이 셋은 HTTP 상태로 옮기는 분류이며 `ErrorCode`가 대상을 구분한다.
+- 도메인 규칙 위반은 그 규칙을 가진 도메인이 자기 예외를 직접 던지고, 그 예외는 도메인 패키지에 둔다. `IngredientFilter`의 `ConflictingIngredientFilterException`과 `IngredientTag`의 `DeferredTagEvidenceException`이 그렇다. 도메인은 `ErrorCode`를 알지 않으며, 요청 계층이 그 예외를 오류 코드로 옮긴다.
 - 대상이 제품인지 브랜드인지 성분인지는 예외 타입이 아니라 예외가 들고 있는 `ErrorCode`가 구분한다.
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
@@ -372,19 +405,13 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 
 검색어도 제품 목록을 좁히는 조건이므로 검색과 필터는 리소스를 나누지 않고 `/api/products` 하나를 쓴다. 경로에 `search` 같은 동사를 두면 리소스가 아닌 것을 리소스처럼 표현하게 된다.
 
-대신 목록은 둘을 섞은 요청을 받지 않는다. Controller는 `@GetMapping(params = "keyword")`와 `params = "!keyword"`로 메서드를 나누고, 검색 쪽은 `ProductFilterRequest.validateSearchOnly()`로 필터 조건이 함께 왔는지 확인해 `CONFLICTING_SEARCH_AND_FILTER`로 거절한다.
+검색어는 다른 필터와 같은 자격의 조건이므로 함께 보낼 수 있고, 다른 필터 종류와 마찬가지로 AND로 결합한다. Controller는 `/api/products`의 GET을 메서드 하나로 받고 `keyword` 유무로 나누지 않는다.
 
-검색 메서드도 필터 필드를 가진 `ProductFilterRequest`를 그대로 받는다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고, 조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
+목록은 필터 필드를 가진 `ProductFilterRequest`를 그대로 받는다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고, 조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
 
-규칙을 `keyword` 유무로 가르는 매핑 조건에만 맡기지 않고 오류 코드로 드러내는 이유는, `ProblemDetail`의 `code` enum이 생성물을 통해 프론트까지 전달되기 때문이다. OpenAPI 파라미터로 표현할 수 없는 규칙을 프론트가 읽을 수 있는 자리가 여기뿐이다.
+`/api/products`와 `/api/products/count`는 같은 요청 DTO를 같은 순서로 검사한다. 성분 필터 모순은 `CONFLICTING_INGREDIENT_FILTER`로, 빈 검색어는 `INVALID_QUERY_PARAMETER`로 거절한다. 조건을 하나도 보내지 않은 요청은 전체 목록 조회로 받는다.
 
-`/api/products/count`는 나누지 않는다. 개수는 검색어와 필터를 함께 걸어도 답할 수 있어야 한다.
-
-OpenAPI의 쿼리 파라미터에는 배타 관계를 적을 문법이 없다. 그래서 이 규칙은 파라미터 스키마가 아니라 오퍼레이션 설명과 400 응답의 `CONFLICTING_SEARCH_AND_FILTER` 예시로만 드러난다.
-
-OpenAPI는 한 경로의 GET을 오퍼레이션 하나로만 표현한다. 두 메서드는 문서에서 하나로 합쳐지므로 `@Operation`을 같게 두어, 병합에서 어느 쪽이 이기든 같은 문서가 나오게 한다. 파라미터는 합쳐진 목록으로 실리며, 함께 쓸 수 없다는 규칙은 설명으로만 남는다.
-
-- `/api/products`는 검색어 또는 필터 조건으로 고른 `ProductResponse` 목록을 페이지 단위로 반환하고, 조건에 해당하는 제품 전체의 브랜드를 함께 싣는다.
+- `/api/products`는 검색어와 필터 조건으로 고른 `ProductResponse` 목록을 페이지 단위로 반환하고, 조건에 해당하는 제품 전체의 브랜드를 함께 싣는다.
 - `/api/storage`는 콤마로 구분해 받은 `productIds`에 해당하는 `ProductResponse` 목록을 페이지 없이 전부 반환한다.
 - `/api/products/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
 
@@ -411,16 +438,18 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 3. 문제 해결은 가능한 한 Domain 객체가 담당한다.
 4. `Products`는 `List<Product>`를 갖는 일급 컬렉션이다.
 5. `Product`는 Brand, Category, Ingredient의 ID만 갖지 않고 객체를 직접 갖는다.
-6. 제품 조회와 count 조회는 같은 필터 규칙을 사용한다. 다만 목록은 검색어와 필터를 함께 받지 않고, count는 함께 받는다.
+6. 제품 조회와 count 조회는 같은 필터 규칙을 사용한다. 둘 다 검색어와 필터를 함께 받는다.
 7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
-10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
+10. `Ingredient`는 여러 `IngredientTag`를 가지며, 여러 태그는 `IngredientTags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
 11. 외부 API의 기본 경로는 `/api`다.
 12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
-13. 검색과 필터는 경로를 나누지 않고 `keyword` 유무로 Controller 메서드를 나눈다. 목록에서 둘을 함께 보낸 요청은 `CONFLICTING_SEARCH_AND_FILTER`로 거절한다.
-14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다. 다만 검사를 생성자에 두지 않는다. 바인딩 중 생성자가 던진 예외는 `BeanInstantiationException`으로 감싸여 `GlobalExceptionHandler`가 400으로 바꾸지 못하고 500이 된다. Bean Validation 애노테이션이나 Controller가 호출하는 검사 메서드를 쓴다.
-15. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
-16. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
-17. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
-18. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
+13. 검색과 필터는 경로도 Controller 메서드도 나누지 않는다. 검색어는 다른 필터와 함께 보낼 수 있고 AND로 결합한다.
+14. 요청 규칙은 `@ModelAttribute` 바인딩에서 끝낸다. Controller는 검사 메서드를 호출하지 않고, 횡단 필터나 인터셉터도 두지 않는다. 값 하나로 끝나는 규칙은 Bean Validation 애노테이션에, 여러 값을 함께 봐야 하는 규칙은 클래스 레벨 커스텀 제약에 둔다. `ConflictingIngredientFilter`가 후자이며 `ExcludeCodeIngredients`를 주입받아 판정을 도메인에 넘긴다.
+15. 바인딩 검증 실패는 모두 400이라 상태만으로 구분되지 않는다. 전용 코드가 필요한 커스텀 제약은 `message`에 `ErrorCode` 이름을 적고, `GlobalExceptionHandler`가 위반 문구에서 그 이름으로 코드를 되찾는다. 이름이 없으면 `INVALID_QUERY_PARAMETER`다. 이 방식이라야 `exception` 패키지가 기능 패키지를 참조하지 않는다.
+16. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
+17. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에, 여러 기능이 공유하는 도메인 값은 `common.domain`에 둔다.
+18. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
+19. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
+20. 접근 제어자를 생략하지 않는다. 기본 접근에 기대는 대신 `public` 또는 `private`을 적는다.

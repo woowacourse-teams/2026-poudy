@@ -26,4 +26,22 @@ public record ProductDetailResponse(
         @NotNull @Schema(description = "표시 순서대로 정렬된 전체 성분") List<ProductIngredientResponse> ingredients,
         @NotNull @Schema(description = "이 제품이 포함하지 않는 성분군 (프리 뱃지)") List<ExcludeCode> freeOfCodes,
         @NotNull @Schema(description = "제품 정보를 마지막으로 갱신한 시각", example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
+
+    private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
+
+    public static ProductDetailResponse sample(Long id) {
+        return new ProductDetailResponse(
+                id,
+                "스킨케어 이름",
+                BrandResponse.sample(),
+                CategoryPathResponse.samples(),
+                ProductResponse.sampleImageUrl(id),
+                ProductVariantResponse.samples(),
+                3,
+                1,
+                SkinEffectGroupResponse.samples(),
+                ProductIngredientResponse.samples(),
+                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES),
+                SAMPLE_UPDATED_AT);
+    }
 }

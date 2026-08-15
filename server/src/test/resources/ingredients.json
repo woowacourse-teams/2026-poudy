@@ -1,0 +1,2022 @@
+{
+  "ingredients": [
+    {
+      "id": 1,
+      "korean_name": "가공소금",
+      "english_name": null,
+      "origin_definition": null,
+      "description": "공개된 표준 자료만으로는 피부에서의 구체적인 효과나 화장품 내 용도를 확인하기 어려워요. 정확한 원료 조성이나 출처가 중요한 경우 제조사 정보를 함께 확인하고, 민감한 피부라면 제품 전체 성분과 사용 부위를 살펴보는 것이 좋아요.",
+      "description_evidence": "대한화장품협회 성분사전 「가공소금」(성분코드 1); 대한화장품협회 「성분사전 표준화명칭목록」(2026.04.30 기준)",
+      "aliases": [],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 2,
+      "korean_name": "가지열매추출물",
+      "english_name": "Solanum Melongena (Eggplant) Fruit Extract",
+      "origin_definition": "이 원료는 가지(Eggplant) Solanum melongena의 열매에서 추출한 것이다.",
+      "description": "피부를 부드럽게 관리하는 컨디셔닝 성분으로, 항산화 작용을 통해 외부 자극으로 지친 피부를 보호하는 데 도움을 줄 수 있어요. 식물 추출물이나 가지과 식물에 알레르기 경험이 있다면 원료 유래를 확인하고, 새로운 제품은 좁은 부위부터 사용해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2); Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014); Enhanced Antioxidant and Protective Effects of Fermented Solanum melongena L. Peel Extracts Against Ultraviolet B-Induced Skin Damage (Lee et al., 2025)",
+      "aliases": [
+        "가지추출물"
+      ],
+      "tag_mappings": [
+        {
+          "name": "BOTANICAL_EXTRACT",
+          "category": "INGREDIENT_CLASS",
+          "source": "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2); Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)"
+        },
+        {
+          "name": "ANTIOXIDANT_RELATED",
+          "category": "BIOLOGICAL_EFFECT",
+          "source": "Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014); Enhanced Antioxidant and Protective Effects of Fermented Solanum melongena L. Peel Extracts Against Ultraviolet B-Induced Skin Damage (Lee et al., 2025)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 9,
+      "korean_name": "리날룰",
+      "english_name": "Linalool",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 터펜이다.",
+      "description": "꽃이나 라벤더 향을 더하는 착향 성분으로, 피부 보습이나 진정을 위한 성분은 아니에요. 향료 알레르기나 접촉피부염 경험이 있다면 전성분에서 리날룰을 확인하고, 향료가 없는 제품을 선택하는 것이 도움이 될 수 있어요. 반복적으로 반응하면 전문가 상담을 권장해요.",
+      "description_evidence": "대한화장품협회 성분사전 「리날룰」(성분코드 9); Opinion on Fragrance Allergens in Cosmetic Products (SCCS, 2012); Contact Allergens Formed on Air Exposure of Linalool (Sköld et al., 2004); Air-Oxidized Linalool: A Frequent Cause of Fragrance Contact Allergy (Bråred Christensson et al., 2012)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "PERFUMING",
+          "category": "FUNCTION",
+          "source": "SCCS, Opinion on Fragrance Allergens in Cosmetic Products (2012); COSMILE Europe ‘Linalool’"
+        },
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "SCCS, Opinion on Fragrance Allergens in Cosmetic Products (2012); Contact Allergens Formed on Air Exposure of Linalool (Sköld et al., 2004); Air-Oxidized Linalool: A Frequent Cause of Fragrance Contact Allergy (Bråred Christensson et al., 2012)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Air-oxidized linalool: a frequent cause of fragrance contact allergy (Bråred Christensson et al., 2012; 산화 생성물 첩포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 20,
+      "korean_name": "리모넨",
+      "english_name": "Limonene",
+      "origin_definition": "이 원료는 d-리모넨, l-리모넨 또는 (라세믹) dl-리모넨 가운데 한 개 이상의 입체이성체로 이루어진 터펜이다.",
+      "description": "시트러스 계열 향을 더하고 향료 성분을 녹이는 데 사용하는 착향·용제 성분이에요. 공기 중에서 산화되면 알레르기 유발 가능성이 있는 물질이 생길 수 있어 향료 알레르기나 접촉피부염 이력이 있다면 전성분과 표시 기준을 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「리모넨」(성분코드 20); SCCS Opinion on Fragrance Allergens in Cosmetic Products (2012); Not only oxidized R-(+)- but also S-(-)-limonene is a common cause of contact allergy in dermatitis patients in Europe (Matura et al., 2006); Air oxidation increases skin irritation from fragrance terpenes (Bråred Christensson et al., 2009)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "PERFUMING",
+          "category": "FUNCTION",
+          "source": "COSMILE Europe ‘Limonene’; SCCS Opinion on Fragrance Allergens in Cosmetic Products (2012)"
+        },
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "SCCS Opinion on Fragrance Allergens in Cosmetic Products (2012); Not only oxidized R-(+)- but also S-(-)-limonene is a common cause of contact allergy in dermatitis patients in Europe (Matura et al., 2006)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Contact Allergy to Hydroperoxides of Linalool and D-Limonene in a US Population (2017; 산화 생성물 첩포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 213,
+      "korean_name": "메틸파라벤",
+      "english_name": "Methylparaben",
+      "origin_definition": "이 원료는 메틸알코올과 파라-하이드록시벤조익애씨드의 에스터이다. 다음의 구조를 갖는다.",
+      "description": "파라벤 계열 보존제로, 화장품의 미생물 증식을 막아 제품 안정성을 유지하는 데 사용에 사용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 허용 기준 내 사용은 안전성 평가가 있지만 파라벤에 개인적으로 민감하거나 알레르기 이력이 있다면 표시를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「메틸파라벤」(성분코드 213); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [
+        "메칠파라벤"
+      ],
+      "tag_mappings": [
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 523,
+      "korean_name": "벤질살리실레이트",
+      "english_name": "Benzyl Salicylate",
+      "origin_definition": "이 원료는 벤질알코올과 살리시릭애씨드의 에스터이다.",
+      "description": "자외선 흡수·차단을 보조하는 원료로, 자외선 차단 제품의 광보호 기능을 보조하는 데에 활용돼요. 자외선 차단 제품에서 광보호를 보조하지만 실제 보호력은 제품 배합과 표시 SPF에 따라 달라져요. 눈 시림이나 자외선 차단제에 민감하다면 눈가를 피하고 제품 표시와 사용 부위를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「벤질살리실레이트」(성분코드 523)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        },
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 532,
+      "korean_name": "변성알코올",
+      "english_name": "Alcohol Denat.",
+      "origin_definition": "이 원료는 한 개 혹은 그 이상의 변성제로 변성시킨 에칠알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「변성알코올」(성분코드 532)",
+      "aliases": [],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 535,
+      "korean_name": "에스디알코올40-B",
+      "english_name": "SD Alcohol 40-B",
+      "origin_definition": "이 원료는 미국 27CFR21에 따라 데나토늄벤조에이트 및 t-부틸알코올로 변성된 에틸알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「에스디알코올40-B」(성분코드 535)",
+      "aliases": [
+        "변성알코올40-B"
+      ],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 607,
+      "korean_name": "부틸파라벤",
+      "english_name": "Butylparaben",
+      "origin_definition": "이 원료는 부틸알코올 및 p-하이드록시벤조익애씨드의 에스터이다.",
+      "description": "제품 안정성을 유지하는 보존 계열의 원료로, 미생물 증식을 억제해 제품을 안전하게 보관하는 데에 활용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 보존제나 접촉피부염에 민감한 소비자는 전성분과 제품 유형을 확인하고 반복적인 가려움·붉어짐을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「부틸파라벤」(성분코드 607); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ANTIMICROBIAL",
+          "category": "FUNCTION",
+          "source": "항균 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 608,
+      "korean_name": "부틸페닐메틸프로피오날",
+      "english_name": "Butylphenyl Methylpropional",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 방향족 알데하이드이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「부틸페닐메틸프로피오날」(성분코드 608)",
+      "aliases": [
+        "부틸페닐메칠프로피오날"
+      ],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 718,
+      "korean_name": "비에이치에이",
+      "english_name": "BHA",
+      "origin_definition": "이 원료는 3급 부틸기로 치환된 4-메톡시페놀 이성질체의 혼합물이며 주로 3-t-부틸-4-하이드록시아니솔과 그보다 적은 양의 2-t-부틸-4-하이드록시아니솔로 구성된다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「비에이치에이」(성분코드 718)",
+      "aliases": [],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 719,
+      "korean_name": "비에이치티",
+      "english_name": "BHT",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 치환된 톨루엔이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「비에이치티」(성분코드 719)",
+      "aliases": [],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 767,
+      "korean_name": "사이클로메티콘",
+      "english_name": "Cyclomethicone",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 사이클릭다이메틸폴리실록세인 화합물의 일반명이다. n이 3이면 사이클로트리실록산, n이 4이면 사이클로테트라실록산, n이 5이면 사이클로펜타실록산, n이 6이면 사이클로헥사실록산, n이 7이면 사이클로헵타실록산이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「사이클로메티콘」(성분코드 767)",
+      "aliases": [
+        "사이클로메치콘"
+      ],
+      "tag_mappings": [
+        {
+          "name": "SILICONE",
+          "category": "INGREDIENT_CLASS",
+          "source": "실리콘·실록산계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 768,
+      "korean_name": "사이클로테트라실록세인",
+      "english_name": "Cyclotetrasiloxane",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 사이클릭다이메틸폴리실록세인이다. 구조에서 n은 평균 4이고 사이클로메티콘의 다른 성분들(n이 평균 5,6,7)은 1%이하로 존재한다.",
+      "description": "실리콘계 컨디셔닝 원료로, 피부·모발 표면에 매끄러운 막과 부드러운 발림성을 더하는 데에 활용돼요. 피부·모발 표면에 매끄러운 막과 미끄러짐을 더하는 제형 보조 원료예요. 실리콘 특유의 코팅감이나 무거운 사용감이 부담스럽다면 사용 후 답답함과 잔여감을 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「사이클로테트라실록세인」(성분코드 768)",
+      "aliases": [
+        "사이클로테트라실록산"
+      ],
+      "tag_mappings": [
+        {
+          "name": "SILICONE",
+          "category": "INGREDIENT_CLASS",
+          "source": "실리콘·실록산계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 769,
+      "korean_name": "사이클로펜타실록세인",
+      "english_name": "Cyclopentasiloxane",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 사이클릭다이메틸폴리실록세인이다. n은 5이며, 다른 사이클로메치콘(n이 3, 4, 6 또는 7)은 1 % 미만을 함유한다.",
+      "description": "실리콘계 컨디셔닝 원료로, 피부·모발 표면에 매끄러운 막과 부드러운 발림성을 더하는 데에 활용돼요. 피부·모발 표면에 매끄러운 막과 미끄러짐을 더하는 제형 보조 원료예요. 실리콘 특유의 코팅감이나 무거운 사용감이 부담스럽다면 사용 후 답답함과 잔여감을 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「사이클로펜타실록세인」(성분코드 769)",
+      "aliases": [
+        "사이클로펜타실록산"
+      ],
+      "tag_mappings": [
+        {
+          "name": "SILICONE",
+          "category": "INGREDIENT_CLASS",
+          "source": "실리콘·실록산계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 770,
+      "korean_name": "사이클로헥사실록세인",
+      "english_name": "Cyclohexasiloxane",
+      "origin_definition": "이 원료는 사이클릭다이메틸폴리실록세인이며 n이 6인 다음의 구조를 갖는다. n이 4, 5, 7인 사이클로메티콘의 다른 성분들은 1%미만이다.",
+      "description": "실리콘계 컨디셔닝 원료로, 피부·모발 표면에 매끄러운 막과 부드러운 발림성을 더하는 데에 활용돼요. 피부·모발 표면에 매끄러운 막과 미끄러짐을 더하는 제형 보조 원료예요. 실리콘 특유의 코팅감이나 무거운 사용감이 부담스럽다면 사용 후 답답함과 잔여감을 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「사이클로헥사실록세인」(성분코드 770)",
+      "aliases": [
+        "사이클로헥사실록산"
+      ],
+      "tag_mappings": [
+        {
+          "name": "SILICONE",
+          "category": "INGREDIENT_CLASS",
+          "source": "실리콘·실록산계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1005,
+      "korean_name": "세틸피리디늄클로라이드",
+      "english_name": "Cetylpyridinium Chloride",
+      "origin_definition": "이 원료는 주로 다음의 구조를 갖는 4급 암모늄염이다.",
+      "description": "계면활성·컨디셔닝 계열의 원료로, 물과 기름을 섞거나 세정·거품·모발 정돈을 돕는 데에 활용돼요. 세정력과 거품을 높이는 데 도움이 되지만 세정력이 강한 제형은 건조함을 줄 수 있어요. 세정력이 강한 제품은 건조·민감 피부에 당김을 줄 수 있으므로 사용 후 뻣뻣함이나 화끈거림을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「세틸피리디늄클로라이드」(성분코드 1005)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "HAIR_CONDITIONING",
+          "category": "FUNCTION",
+          "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT",
+          "category": "FUNCTION",
+          "source": "계면활성제 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1050,
+      "korean_name": "소듐라우레스설페이트",
+      "english_name": "Sodium Laureth Sulfate",
+      "origin_definition": "이 원료는 주로 다음의 구조를 갖는 설페이티드에톡실레이티드라우릴알코올의 소듐염이다. n은 평균 1~4이다.",
+      "description": "계면활성·컨디셔닝 계열의 원료로, 물과 기름을 섞거나 세정·거품·모발 정돈을 돕는 데에 활용돼요. 세정력과 거품을 높이는 데 도움이 되지만 세정력이 강한 제형은 건조함을 줄 수 있어요. 세정력이 강한 제품은 건조·민감 피부에 당김을 줄 수 있으므로 사용 후 뻣뻣함이나 화끈거림을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「소듐라우레스설페이트」(성분코드 1050)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CLEANSING",
+          "category": "FUNCTION",
+          "source": "세정 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT_FOAM_BOOSTING",
+          "category": "FUNCTION",
+          "source": "거품 증진 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT",
+          "category": "FUNCTION",
+          "source": "계면활성제 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BARRIER_IMPAIRMENT_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Profile of irritant patch testing with detergents: sodium lauryl sulfate, sodium laureth sulfate and alkyl polyglucoside (Löffler & Happle, 2003; 사람 피부 첩포시험에서 TEWL·피부 혈류 평가, SLS보다 경미한 반응)"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Profile of irritant patch testing with detergents: sodium lauryl sulfate, sodium laureth sulfate and alkyl polyglucoside (Löffler & Happle, 2003; 사람 피부 첩포시험에서 TEWL·피부 혈류 평가, SLS보다 경미한 반응)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1079,
+      "korean_name": "소듐라우릴설페이트",
+      "english_name": "Sodium Lauryl Sulfate",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 라우릴설페이트의 소듐염이다.",
+      "description": "계면활성·컨디셔닝 계열의 원료로, 물과 기름을 섞거나 세정·거품·모발 정돈을 돕는 데에 활용돼요. 세정력과 거품을 높이는 데 도움이 되지만 세정력이 강한 제형은 건조함을 줄 수 있어요. 세정력이 강한 제품은 건조·민감 피부에 당김을 줄 수 있으므로 사용 후 뻣뻣함이나 화끈거림을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「소듐라우릴설페이트」(성분코드 1079)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CLEANSING",
+          "category": "FUNCTION",
+          "source": "세정 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT_FOAM_BOOSTING",
+          "category": "FUNCTION",
+          "source": "거품 증진 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT",
+          "category": "FUNCTION",
+          "source": "계면활성제 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BARRIER_IMPAIRMENT_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Sodium lauryl sulphate for irritant patch testing—A dose-response study using bioengineering methods for determination of skin irritation (Agner & Serup, 1990; 사람 12명 피부 첩포시험에서 TEWL·홍반·부종 평가)"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Sodium lauryl sulphate for irritant patch testing—A dose-response study using bioengineering methods for determination of skin irritation (Agner & Serup, 1990; 사람 12명 피부 첩포시험에서 TEWL·홍반·부종 평가)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1521,
+      "korean_name": "시트랄",
+      "english_name": "Citral",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 알데하이드이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「시트랄」(성분코드 1521)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1528,
+      "korean_name": "시트로넬올",
+      "english_name": "Citronellol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 유기화합물이다",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「시트로넬올」(성분코드 1528)",
+      "aliases": [
+        "시트로넬롤"
+      ],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1669,
+      "korean_name": "아밀신남알",
+      "english_name": "Amyl Cinnamal",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 유기화합물이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「아밀신남알」(성분코드 1669)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1929,
+      "korean_name": "알파-아이소메틸아이오논",
+      "english_name": "Alpha-Isomethyl Ionone",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 유기화합물이다.",
+      "description": "산성 유기화합물 계열의 원료로, 피부 표면을 정돈하거나 제품의 pH를 조절하는 데에 활용돼요. 산도와 함량에 따라 각질·따가움 등 사용감이 달라질 수 있어요. 산도와 함량에 따라 따가움·건조함이 생길 수 있어 민감하거나 장벽이 약한 피부는 사용 후 반응을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「알파-아이소메틸아이오논」(성분코드 1929)",
+      "aliases": [
+        "알파-이소메칠이오논"
+      ],
+      "tag_mappings": [
+        {
+          "name": "ABRASIVE",
+          "category": "FUNCTION",
+          "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BUFFERING",
+          "category": "FUNCTION",
+          "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1933,
+      "korean_name": "암모늄라우레스설페이트",
+      "english_name": "Ammonium Laureth Sulfate",
+      "origin_definition": "이 원료는 주로 다음의 구조를 갖는 에톡실화 된 라우릴설페이트의 암모늄염이다.",
+      "description": "계면활성·컨디셔닝 계열의 원료로, 물과 기름을 섞거나 세정·거품·모발 정돈을 돕는 데에 활용돼요. 세정력과 거품을 높이는 데 도움이 되지만 세정력이 강한 제형은 건조함을 줄 수 있어요. 세정력이 강한 제품은 건조·민감 피부에 당김을 줄 수 있으므로 사용 후 뻣뻣함이나 화끈거림을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「암모늄라우레스설페이트」(성분코드 1933)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CLEANSING",
+          "category": "FUNCTION",
+          "source": "세정 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "HAIR_CONDITIONING",
+          "category": "FUNCTION",
+          "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT",
+          "category": "FUNCTION",
+          "source": "계면활성제 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT_FOAM_BOOSTING",
+          "category": "FUNCTION",
+          "source": "거품 증진 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 1934,
+      "korean_name": "암모늄라우릴설페이트",
+      "english_name": "Ammonium Lauryl Sulfate",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 라우릴설페이트의 암모늄염이다.",
+      "description": "계면활성·컨디셔닝 계열의 원료로, 물과 기름을 섞거나 세정·거품·모발 정돈을 돕는 데에 활용돼요. 세정력과 거품을 높이는 데 도움이 되지만 세정력이 강한 제형은 건조함을 줄 수 있어요. 세정력이 강한 제품은 건조·민감 피부에 당김을 줄 수 있으므로 사용 후 뻣뻣함이나 화끈거림을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「암모늄라우릴설페이트」(성분코드 1934)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CLEANSING",
+          "category": "FUNCTION",
+          "source": "세정 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "HAIR_CONDITIONING",
+          "category": "FUNCTION",
+          "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT",
+          "category": "FUNCTION",
+          "source": "계면활성제 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SURFACTANT_FOAM_BOOSTING",
+          "category": "FUNCTION",
+          "source": "거품 증진 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2063,
+      "korean_name": "에틸파라벤",
+      "english_name": "Ethylparaben",
+      "origin_definition": "이 원료는 에틸알코올과 p-하이드록시벤조익애씨드의 에스터이다.",
+      "description": "제품 안정성을 유지하는 보존 계열의 원료로, 미생물 증식을 억제해 제품을 안전하게 보관하는 데에 활용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 보존제나 접촉피부염에 민감한 소비자는 전성분과 제품 유형을 확인하고 반복적인 가려움·붉어짐을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「에틸파라벤」(성분코드 2063); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [
+        "에칠파라벤"
+      ],
+      "tag_mappings": [
+        {
+          "name": "ANTIMICROBIAL",
+          "category": "FUNCTION",
+          "source": "항균 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2088,
+      "korean_name": "에탄올",
+      "english_name": "Alcohol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 변성되지 않은 에틸알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「에탄올」(성분코드 2088)",
+      "aliases": [
+        "알코올"
+      ],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 2388,
+      "korean_name": "유제놀",
+      "english_name": "Eugenol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 치환된 페놀이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「유제놀」(성분코드 2388); SCCS Opinion on Fragrance Allergens in Cosmetic Products",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "PERFUMING",
+          "category": "FUNCTION",
+          "source": "향 부여 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2456,
+      "korean_name": "아이소부틸파라벤",
+      "english_name": "Isobutylparaben",
+      "origin_definition": "이 원료는 아이소부틸과 p-하이드록시벤조익애씨드의 에스터이다.",
+      "description": "제품 안정성을 유지하는 보존 계열의 원료로, 미생물 증식을 억제해 제품을 안전하게 보관하는 데에 활용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 보존제나 접촉피부염에 민감한 소비자는 전성분과 제품 유형을 확인하고 반복적인 가려움·붉어짐을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「아이소부틸파라벤」(성분코드 2456); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [
+        "이소부틸파라벤"
+      ],
+      "tag_mappings": [
+        {
+          "name": "ANTIMICROBIAL",
+          "category": "FUNCTION",
+          "source": "항균 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2530,
+      "korean_name": "아이소프로필알코올",
+      "english_name": "Isopropyl Alcohol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 지방족 알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「아이소프로필알코올」(성분코드 2530)",
+      "aliases": [
+        "이소프로필알코올"
+      ],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 2535,
+      "korean_name": "아이소프로필파라벤",
+      "english_name": "Isopropylparaben",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 아이소프로필알코올과 p-하이드록시벤조익애씨드의 에스터이다.",
+      "description": "제품 안정성을 유지하는 보존 계열의 원료로, 미생물 증식을 억제해 제품을 안전하게 보관하는 데에 활용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 보존제나 접촉피부염에 민감한 소비자는 전성분과 제품 유형을 확인하고 반복적인 가려움·붉어짐을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「아이소프로필파라벤」(성분코드 2535); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [
+        "이소프로필파라벤"
+      ],
+      "tag_mappings": [
+        {
+          "name": "ANTIMICROBIAL",
+          "category": "FUNCTION",
+          "source": "항균 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2597,
+      "korean_name": "자색201호",
+      "english_name": "Alizurine Purple SS,CI 60725",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 안트라퀴논계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「자색201호」(성분코드 2597)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2599,
+      "korean_name": "자색401호",
+      "english_name": "Alizurol Purple,CI 60730",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 안트라퀴논계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「자색401호」(성분코드 2599)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2609,
+      "korean_name": "녹색3호",
+      "english_name": "Fast Green FCF,CI 42053",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 트라이페닐메탄계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「녹색3호」(성분코드 2609)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2620,
+      "korean_name": "녹색201호",
+      "english_name": "Alizarine Cyanine Green F,CI 61570",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 안트라퀴논계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「녹색201호」(성분코드 2620)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2629,
+      "korean_name": "녹색202호",
+      "english_name": "Quinizarine Green SS,CI 61565",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 안트라퀴논계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「녹색202호」(성분코드 2629)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2639,
+      "korean_name": "녹색204호",
+      "english_name": "Pyranine Conc,CI 59040",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 피렌계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「녹색204호」(성분코드 2639)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2645,
+      "korean_name": "적색2호",
+      "english_name": "Amaranth,CI 16185",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색2호」(성분코드 2645)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2646,
+      "korean_name": "적색102호",
+      "english_name": "New Coccine,CI 16255",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색102호」(성분코드 2646)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2650,
+      "korean_name": "녹색401호",
+      "english_name": "Naphthol Green B,CI 10020",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 나이트로소계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「녹색401호」(성분코드 2650)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2651,
+      "korean_name": "적색106호",
+      "english_name": "Acid Red,CI 45100",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "산성 유기화합물 계열의 원료로, 피부 표면을 정돈하거나 제품의 pH를 조절하는 데에 활용돼요. 산도와 함량에 따라 각질·따가움 등 사용감이 달라질 수 있어요. 산도와 함량에 따라 따가움·건조함이 생길 수 있어 민감하거나 장벽이 약한 피부는 사용 후 반응을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색106호」(성분코드 2651)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ABRASIVE",
+          "category": "FUNCTION",
+          "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BUFFERING",
+          "category": "FUNCTION",
+          "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2652,
+      "korean_name": "적색40호",
+      "english_name": "Allura Red AC,CI 16035",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색40호」(성분코드 2652)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2653,
+      "korean_name": "적색201호",
+      "english_name": "Lithol Rubine B,CI 15850",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색201호」(성분코드 2653)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2654,
+      "korean_name": "적색202호",
+      "english_name": "Lithol Rubine BCA,CI 15850:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색202호」(성분코드 2654)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2655,
+      "korean_name": "적색205호",
+      "english_name": "Lithol Red,CI 15630",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색205호」(성분코드 2655)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2656,
+      "korean_name": "적색206호",
+      "english_name": "Lithol Red CA,CI 15630:2",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색206호」(성분코드 2656)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2657,
+      "korean_name": "적색207호",
+      "english_name": "Lithol Red BA,CI 15630:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색207호」(성분코드 2657)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2658,
+      "korean_name": "적색208호",
+      "english_name": "Lithol Red SR,CI 15630:3",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색208호」(성분코드 2658)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2659,
+      "korean_name": "적색218호",
+      "english_name": "Tetrachlorotetrabromofluorescein,CI 45410:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색218호」(성분코드 2659)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2660,
+      "korean_name": "적색219호",
+      "english_name": "Brilliant Lake Red R,CI 15800",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색219호」(성분코드 2660)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2661,
+      "korean_name": "적색220호",
+      "english_name": "Deep Maroon,CI 15800",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색220호」(성분코드 2661)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2662,
+      "korean_name": "적색221호",
+      "english_name": "Toluidine Red,CI 12120",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 나이트로소계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색221호」(성분코드 2662)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2663,
+      "korean_name": "적색223호",
+      "english_name": "Tetrabromofluorescein,CI 45380:2",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색223호」(성분코드 2663)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2665,
+      "korean_name": "적색225호",
+      "english_name": "Sudan III,CI 26100",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 다이사조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색225호」(성분코드 2665)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2666,
+      "korean_name": "적색226호",
+      "english_name": "Helindone Pink CN,CI 73360",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 화학적으로 티오인디고이드계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색226호」(성분코드 2666)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2667,
+      "korean_name": "적색227호",
+      "english_name": "Fast Acid Magenta,CI 17200",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "산성 유기화합물 계열의 원료로, 피부 표면을 정돈하거나 제품의 pH를 조절하는 데에 활용돼요. 산도와 함량에 따라 각질·따가움 등 사용감이 달라질 수 있어요. 산도와 함량에 따라 따가움·건조함이 생길 수 있어 민감하거나 장벽이 약한 피부는 사용 후 반응을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색227호」(성분코드 2667)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ABRASIVE",
+          "category": "FUNCTION",
+          "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BUFFERING",
+          "category": "FUNCTION",
+          "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2668,
+      "korean_name": "적색228호",
+      "english_name": "Permaton Red,CI 12085",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색228호」(성분코드 2668)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2670,
+      "korean_name": "적색401호",
+      "english_name": "Violamine R,CI 45190",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색401호」(성분코드 2670)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2671,
+      "korean_name": "적색405호",
+      "english_name": "Permanent Red F5R,CI 15865:2",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색405호」(성분코드 2671)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2673,
+      "korean_name": "적색504호",
+      "english_name": "Ponceau SX,CI 14700",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색504호」(성분코드 2673)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2674,
+      "korean_name": "적색506호",
+      "english_name": "Fast Red S,CI 15620",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「적색506호」(성분코드 2674)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2685,
+      "korean_name": "제라니올",
+      "english_name": "Geraniol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 터펜알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「제라니올」(성분코드 2685)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2802,
+      "korean_name": "청색1호",
+      "english_name": "Brilliant Blue FCF,CI 42090",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 트라이페닐메탄계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색1호」(성분코드 2802)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2805,
+      "korean_name": "청색2호",
+      "english_name": "Indigo Carmine,CI 73015",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 인디고이드계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색2호」(성분코드 2805)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2806,
+      "korean_name": "청색201호",
+      "english_name": "Indigo,CI 73000",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 인디고이드계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색201호」(성분코드 2806)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2807,
+      "korean_name": "청색204호",
+      "english_name": "Carbanthrene Blue,CI 69825",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 안트라퀴논계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색204호」(성분코드 2807)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2808,
+      "korean_name": "청색205호",
+      "english_name": "Alphazurine FG,CI 42090",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 트라이페닐메탄계 색소이다.",
+      "description": "산성 유기화합물 계열의 원료로, 피부 표면을 정돈하거나 제품의 pH를 조절하는 데에 활용돼요. 산도와 함량에 따라 각질·따가움 등 사용감이 달라질 수 있어요. 산도와 함량에 따라 따가움·건조함이 생길 수 있어 민감하거나 장벽이 약한 피부는 사용 후 반응을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색205호」(성분코드 2808)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ABRASIVE",
+          "category": "FUNCTION",
+          "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "BUFFERING",
+          "category": "FUNCTION",
+          "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 2809,
+      "korean_name": "청색404호",
+      "english_name": "Phthalocyanine Blue,CI 74160",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 화학적으로 프탈로시아닌계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「청색404호」(성분코드 2809)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 3105,
+      "korean_name": "쿠마린",
+      "english_name": "Coumarin",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 방향족 락톤이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「쿠마린」(성분코드 3105)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 3551,
+      "korean_name": "페녹시에탄올",
+      "english_name": "Phenoxyethanol",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 방향족 에텔알코올이다.",
+      "description": "용해·휘발을 돕는 용제 계열의 원료로, 다른 성분을 녹이고 제형의 건조감과 사용감을 조절하는 데에 활용돼요. 피부 효능보다 다른 원료를 녹이고 제형의 휘발·건조감을 조절하는 역할이 중심이에요. 휘발성 용제에 민감하거나 눈·코 주변에 사용하는 제품이라면 사용 부위와 환기 상태를 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「페녹시에탄올」(성분코드 3551)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Contact dermatitis associated with preservatives: Retrospective analysis of North American Contact Dermatitis Group data, 1994 through 2016 (Atwater et al., 2021; 사람 50,799명 첩포시험)"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 3985,
+      "korean_name": "프로필파라벤",
+      "english_name": "Propylparaben",
+      "origin_definition": "이 원료는 n-프로필알코올과 p-하이드록시벤조익애씨드의 에스터이다.",
+      "description": "제품 안정성을 유지하는 보존 계열의 원료로, 미생물 증식을 억제해 제품을 안전하게 보관하는 데에 활용돼요. 피부 효능보다 제품의 미생물 오염을 막는 보존 역할이 중심이에요. 보존제나 접촉피부염에 민감한 소비자는 전성분과 제품 유형을 확인하고 반복적인 가려움·붉어짐을 살펴보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「프로필파라벤」(성분코드 3985); Final report of the safety assessment of methylparaben and related parabens as used in cosmetics (CIR Expert Panel, 2008)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "ANTIMICROBIAL",
+          "category": "FUNCTION",
+          "source": "항균 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "PRESERVATIVE",
+          "category": "FUNCTION",
+          "source": "보존 기능이 명시적으로 확인됨"
+        },
+        {
+          "name": "ESTER",
+          "category": "INGREDIENT_CLASS",
+          "source": "에스터 구조 또는 에스터계 원료 정보"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4312,
+      "korean_name": "등색201호",
+      "english_name": "Dibromofluorescein,CI 45370:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색201호」(성분코드 4312)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4335,
+      "korean_name": "등색204호",
+      "english_name": "Benzidine Orange G,CI 21110",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 다이사조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색204호」(성분코드 4335)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4346,
+      "korean_name": "등색205호",
+      "english_name": "Orange II,CI 15510",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색205호」(성분코드 4346)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4357,
+      "korean_name": "등색206호",
+      "english_name": "Diiodofluorescein,CI 45425:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 플루오란계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색206호」(성분코드 4357)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4368,
+      "korean_name": "등색207호",
+      "english_name": "Erythrosine Yellowish NA,CI 45425",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 잔텐계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색207호」(성분코드 4368)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4815,
+      "korean_name": "향료",
+      "english_name": "Flavor,Fragrance,perfume,Parfum,Aroma",
+      "origin_definition": "이 원료는 화장품에서 특정 향을 생성하거나 가리기 위해 첨가하는 물질 혹은 물질들의 조합을 포함하는 물질을 구별하기 위해 사용하는 성분표시명이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「향료」(성분코드 4815); SCCS Opinion on Fragrance Allergens in Cosmetic Products",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "PERFUMING",
+          "category": "FUNCTION",
+          "source": "향 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4856,
+      "korean_name": "헥실신남알",
+      "english_name": "Hexyl Cinnamal",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 유기화합물이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「헥실신남알」(성분코드 4856)",
+      "aliases": [
+        "헥실신나몰"
+      ],
+      "tag_mappings": [
+        {
+          "name": "FRAGRANCE_ALLERGEN",
+          "category": "ALLERGEN",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        },
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4932,
+      "korean_name": "황색4호",
+      "english_name": "Tartrazine,CI 19140",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 피라졸계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색4호」(성분코드 4932)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4933,
+      "korean_name": "황색5호",
+      "english_name": "Sunset Yellow FCF,CI 15985",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색5호」(성분코드 4933)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4935,
+      "korean_name": "황색201호",
+      "english_name": "Fluorescein,CI 45350:1",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 플루오란계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색201호」(성분코드 4935)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4938,
+      "korean_name": "황색203호",
+      "english_name": "Quinoline Yellow WS,CI 47005",
+      "origin_definition": "이 원료는 (2-퀴놀릴)-1H-인덴-1,3(2H)-다이온의 모노 및 다이설포닉애씨드의 다이소듐염의 혼합물로서 주로 다음의 구조를 갖는다.",
+      "description": "식물·해조류·버섯에서 얻는 추출 원료로, 피부 컨디셔닝과 부드러운 사용감을 보조하는 데에 활용돼요. 식물의 부위·추출법에 따라 조성이 달라져 제품별 체감 효과를 동일하게 보기는 어려워요. 식물 추출물에 민감하거나 알레르기 경험이 있다면 원료의 부위·출처와 제품 사용 후 반응을 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색203호」(성분코드 4938)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        },
+        {
+          "name": "SKIN_CONDITIONING",
+          "category": "FUNCTION",
+          "source": "피부 컨디셔닝 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4939,
+      "korean_name": "황색204호",
+      "english_name": "Quinoline Yellow SS,CI 47000",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 퀴놀린계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색204호」(성분코드 4939)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4940,
+      "korean_name": "황색401호",
+      "english_name": "Hanza Yellow,CI 11680",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색401호」(성분코드 4940)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4942,
+      "korean_name": "황색407호",
+      "english_name": "Fast Light Yellow 3Gccccc,CI 18820",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「황색407호」(성분코드 4942)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 4999,
+      "korean_name": "흑색401호",
+      "english_name": "Naphthol Blue Black,CI 20470",
+      "origin_definition": "이 원료는 화학저적으로 다음의 구조를 갖는 다이사조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「흑색401호」(성분코드 4999)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "COLORANT",
+          "category": "FUNCTION",
+          "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 5147,
+      "korean_name": "디엠디엠하이단토인",
+      "english_name": "DMDM Hydantoin",
+      "origin_definition": "이 원료는 다음의 구조를 갖는 유기화합물이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「디엠디엠하이단토인」(성분코드 5147)",
+      "aliases": [],
+      "tag_mappings": [
+        {
+          "name": "CONTACT_ALLERGY_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Contact allergy to and allergic contact dermatitis from formaldehyde and formaldehyde releasers: A clinical review and update (Goossens & Aerts, 2022; 사람 접촉피부염 및 첩포시험 자료 검토)"
+        },
+        {
+          "name": "IRRITATION_REPORTED",
+          "category": "SKIN_REACTION",
+          "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:50:49.068Z"
+    },
+    {
+      "id": 18490,
+      "korean_name": "등색401호",
+      "english_name": "Orange no. 401,CI 11725",
+      "origin_definition": "이 원료는 화학적으로 다음의 구조를 갖는 모노아조계 색소이다.",
+      "description": "화장품 제형에 사용되는 컨디셔닝 원료로, 피부의 부드러운 사용감과 제품의 제형 안정성을 보조하는 데에 활용돼요. 특정 미백·주름 개선을 보장하는 성분으로 단정하기보다 제품 배합과 함량을 함께 보는 것이 좋아요. 특정 기능성 효과를 단정하기보다 제품 전체 성분과 사용 후 피부 반응을 함께 확인해 보세요.",
+      "description_evidence": "대한화장품협회 성분사전 「등색401호」(성분코드 18490)",
+      "aliases": [],
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z"
+    },
+    {
+      "id": 2647,
+      "korean_name": "적색103호의(1)",
+      "english_name": "Eosine YS,CI 45380"
+    },
+    {
+      "id": 2648,
+      "korean_name": "적색104호의(1)",
+      "english_name": "Phloxine B,CI 45410"
+    },
+    {
+      "id": 2649,
+      "korean_name": "적색104호의(2)",
+      "english_name": "Phloxine BK,CI 45410"
+    },
+    {
+      "id": 2669,
+      "korean_name": "적색230호의(2)",
+      "english_name": "Eosine Y나,CI 45380"
+    },
+    {
+      "id": 4936,
+      "korean_name": "황색202호의(1)",
+      "english_name": "Uranine,CI 45350"
+    },
+    {
+      "id": 4937,
+      "korean_name": "황색202호의(2)",
+      "english_name": "Uranine K,CI 45350"
+    },
+    {
+      "id": 4941,
+      "korean_name": "황색403호의(1)",
+      "english_name": "Naphthol Yellow S,CI 10316"
+    },
+    {
+      "id": 10020,
+      "korean_name": "에이치씨청색16호",
+      "english_name": "HC Blue No.16"
+    },
+    {
+      "id": 10021,
+      "korean_name": "에이치씨청색15호",
+      "english_name": "HC Blue No. 15"
+    },
+    {
+      "id": 10022,
+      "korean_name": "에이치씨청색12호",
+      "english_name": "HC Blue No. 12"
+    },
+    {
+      "id": 10023,
+      "korean_name": "염기성황색87호",
+      "english_name": "Basic Yellow 87"
+    },
+    {
+      "id": 10024,
+      "korean_name": "염기성황색57호",
+      "english_name": "CI 12719,Basic Yellow 57"
+    },
+    {
+      "id": 10025,
+      "korean_name": "염기성적색76호",
+      "english_name": "Basic Red 76,CI 12245"
+    },
+    {
+      "id": 10026,
+      "korean_name": "염기성적색51호",
+      "english_name": "Basic Red 51"
+    },
+    {
+      "id": 10027,
+      "korean_name": "염기성등색31호",
+      "english_name": "Basic Orange 31"
+    },
+    {
+      "id": 10028,
+      "korean_name": "염기성갈색16호",
+      "english_name": "Basic Brown 16,CI 12250"
+    },
+    {
+      "id": 10029,
+      "korean_name": "염기성갈색17호",
+      "english_name": "Basic Brown 17,CI 12251"
+    },
+    {
+      "id": 10030,
+      "korean_name": "염기성청색99호",
+      "english_name": "Basic Blue 99,CI 56059"
+    },
+    {
+      "id": 10325,
+      "korean_name": "염기성자색2호",
+      "english_name": "Basic Violet 2,CI 42520"
+    },
+    {
+      "id": 18491,
+      "korean_name": "에치씨황색17호",
+      "english_name": "HC Yellow No. 17"
+    },
+    {
+      "id": 18492,
+      "korean_name": "분산청색377호",
+      "english_name": "Disperse Blue 377"
+    },
+    {
+      "id": 18495,
+      "korean_name": "에치씨황색7호",
+      "english_name": "HC Yellow No. 7"
+    },
+    {
+      "id": 18496,
+      "korean_name": "분산자색1호",
+      "english_name": "Disperse Violet 1,CI 61100"
+    },
+    {
+      "id": 18497,
+      "korean_name": "에치씨적색1호",
+      "english_name": "HC Red No. 1"
+    },
+    {
+      "id": 18499,
+      "korean_name": "분산흑색9호",
+      "english_name": "Disperse Black 9"
+    },
+    {
+      "id": 18500,
+      "korean_name": "산성적색52호",
+      "english_name": "Acid Red 52,CI 45100"
+    },
+    {
+      "id": 18501,
+      "korean_name": "산성적색92호",
+      "english_name": "Acid Red 92"
+    },
+    {
+      "id": 18502,
+      "korean_name": "에치씨청색17호",
+      "english_name": "HC Blue No. 17"
+    },
+    {
+      "id": 18503,
+      "korean_name": "에치씨등색1호",
+      "english_name": "HC Orange No. 1"
+    },
+    {
+      "id": 19063,
+      "korean_name": "에치씨적색10호",
+      "english_name": "HC Red No.10"
+    },
+    {
+      "id": 19064,
+      "korean_name": "에치씨적색11호",
+      "english_name": "HC Red No.11"
+    },
+    {
+      "id": 19284,
+      "korean_name": "피그먼트적색5호",
+      "english_name": "Pigment Red 5"
+    },
+    {
+      "id": 19600,
+      "korean_name": "피그먼트자색23호",
+      "english_name": "Pigment Violet 23"
+    },
+    {
+      "id": 19601,
+      "korean_name": "피그먼트녹색7호",
+      "english_name": "Pigment Green 7"
+    }
+  ]
+}

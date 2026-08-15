@@ -6,4 +6,8 @@ import java.util.List;
 
 public record ProductSuggestionListResponse(
         @NotNull @Schema(description = "검색어에 해당하는 제품") List<ProductSuggestionResponse> items) {
+
+    public static ProductSuggestionListResponse sample() {
+        return new ProductSuggestionListResponse(List.of(ProductSuggestionResponse.sample(ProductResponse.SAMPLE_ID)));
+    }
 }

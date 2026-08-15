@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.exception.InfrastructureException;
+import com.poudy.ingredient.domain.Ingredient;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -19,7 +20,6 @@ class JsonDataReaderTest {
 
     private final JsonDataReader jsonDataReader = new JsonDataReader(new DefaultResourceLoader());
 
-    // 도메인 레코드를 흉내 낸다. Jackson 애너테이션을 붙이지 않는다.
     record Sample(Long id, String koreanName, List<Tag> tagMappings, OffsetDateTime createdAt) {
 
         record Tag(String name) {
@@ -80,6 +80,14 @@ class JsonDataReaderTest {
     void wrapsMalformedFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-broken.json", Sample.class))
                 .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-broken.json");
+    }
+
+    @Test
+    @DisplayName("두 번째 이후 근거가 태그 보류면 로딩에 실패한다")
+    void rejectsDeferredTagEvidenceAfterValidEvidence() {
+        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-deferred-tags.json", Ingredient.class))
+                .isInstanceOf(InfrastructureException.class)
+                .hasMessageContaining("json-data-reader-deferred-tags.json");
     }
 
     @Test
