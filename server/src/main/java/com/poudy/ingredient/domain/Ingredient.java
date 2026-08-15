@@ -35,6 +35,14 @@ public record Ingredient(
         // spotless:on
     }
 
+    public boolean hasName(String name) {
+        if (name == null || name.isEmpty()) {
+            return false;
+        }
+
+        return name.equals(koreanName) || name.equalsIgnoreCase(englishName);
+    }
+
     public List<FormulationRole> formulationRoles() {
         return tags().formulationRoles();
     }
