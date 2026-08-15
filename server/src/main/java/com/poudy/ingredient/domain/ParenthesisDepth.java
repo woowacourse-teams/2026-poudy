@@ -1,10 +1,10 @@
 package com.poudy.ingredient.domain;
 
-final class ParenthesisDepth {
+public final class ParenthesisDepth {
 
     private int depth;
 
-    void accept(char character) {
+    public void accept(char character) {
         if (character == '(') {
             depth++;
             return;
@@ -15,7 +15,7 @@ final class ParenthesisDepth {
         }
     }
 
-    boolean isOutside() {
+    public boolean isOutside() {
         return depth == 0;
     }
 

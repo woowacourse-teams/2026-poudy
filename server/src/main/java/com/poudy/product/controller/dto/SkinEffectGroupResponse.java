@@ -11,7 +11,7 @@ public record SkinEffectGroupResponse(
         @NotNull @Schema(description = "화면에서 이 피부 작용을 구분하는 색", example = "#4CAF50") String color,
         @NotNull @ArraySchema(schema = @Schema(example = "1005")) List<Long> ingredientIds) {
 
-    static List<SkinEffectGroupResponse> samples() {
+    public static List<SkinEffectGroupResponse> samples() {
         return List.of(new SkinEffectGroupResponse(21L, "피부 장벽 관련", "#4CAF50", List.of(1005L)));
     }
 }

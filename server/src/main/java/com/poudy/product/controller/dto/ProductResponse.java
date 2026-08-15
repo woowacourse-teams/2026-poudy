@@ -19,7 +19,7 @@ public record ProductResponse(
         @NotNull @Min(0) @Max(3) @Schema(description = "수분감 단계 (0~3)", example = "3") Integer moistureLevel,
         @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel) {
 
-    static final Long SAMPLE_ID = 101L;
+    public static final Long SAMPLE_ID = 101L;
 
     public static ProductResponse sample(Long id) {
         return new ProductResponse(
@@ -34,11 +34,11 @@ public record ProductResponse(
                 1);
     }
 
-    static List<ProductResponse> samples() {
+    public static List<ProductResponse> samples() {
         return List.of(sample(SAMPLE_ID));
     }
 
-    static String sampleImageUrl(Long id) {
+    public static String sampleImageUrl(Long id) {
         return "https://cdn.example.com/products/" + id + ".png";
     }
 }

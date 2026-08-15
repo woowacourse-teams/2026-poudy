@@ -9,7 +9,7 @@ public record DisclosedAmountResponse(
         @NotNull @Schema(description = "함량 값", example = "10500") BigDecimal value,
         @NotNull @Schema(description = "함량 단위", example = "ppm") String unit) {
 
-    static DisclosedAmountResponse sample() {
+    public static DisclosedAmountResponse sample() {
         return new DisclosedAmountResponse("exact", new BigDecimal("10500"), "ppm");
     }
 }

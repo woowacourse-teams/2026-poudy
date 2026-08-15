@@ -14,7 +14,7 @@ public record ProductIngredientResponse(
         @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects,
         @Schema(description = "공개된 함량. 공개하지 않은 성분은 비어 있다") DisclosedAmountResponse disclosedAmount) {
 
-    static List<ProductIngredientResponse> samples() {
+    public static List<ProductIngredientResponse> samples() {
         return List.of(
                 new ProductIngredientResponse(
                         1001L,

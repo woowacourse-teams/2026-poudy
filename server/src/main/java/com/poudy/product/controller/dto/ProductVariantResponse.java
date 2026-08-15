@@ -12,7 +12,7 @@ public record ProductVariantResponse(
         @NotNull @Schema(description = "용량 단위", example = "ml") String volumeUnit,
         @NotNull @Schema(description = "판매 상태", example = "active") String status) {
 
-    static List<ProductVariantResponse> samples() {
+    public static List<ProductVariantResponse> samples() {
         return List.of(
                 new ProductVariantResponse(1L, 18000L, new BigDecimal("200"), "ml", "active"),
                 new ProductVariantResponse(2L, 27000L, new BigDecimal("300"), "ml", "active"));

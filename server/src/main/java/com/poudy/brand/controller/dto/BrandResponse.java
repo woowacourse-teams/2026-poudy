@@ -9,15 +9,15 @@ public record BrandResponse(
         @NotNull @Schema(description = "브랜드 영문명", example = "BRAND NAME") String englishName,
         @NotNull @Schema(description = "브랜드 이미지 URL", example = "https://cdn.example.com/brands/12/image.png") String imageUrl) {
 
-    static final Long SAMPLE_ID = 12L;
-    static final String SAMPLE_NAME = "브랜드 이름";
-    static final String SAMPLE_ENGLISH_NAME = "BRAND NAME";
+    public static final Long SAMPLE_ID = 12L;
+    public static final String SAMPLE_NAME = "브랜드 이름";
+    public static final String SAMPLE_ENGLISH_NAME = "BRAND NAME";
 
     public static BrandResponse sample() {
         return new BrandResponse(SAMPLE_ID, SAMPLE_NAME, SAMPLE_ENGLISH_NAME, sampleImageUrl(SAMPLE_ID));
     }
 
-    static String sampleImageUrl(Long id) {
+    public static String sampleImageUrl(Long id) {
         return "https://cdn.example.com/brands/" + id + "/image.png";
     }
 }

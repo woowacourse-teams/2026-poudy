@@ -1,6 +1,6 @@
 package com.poudy.ingredient.domain;
 
-enum EvidenceDelimiter {
+public enum EvidenceDelimiter {
 
     SEMICOLON(";"),
     SEMICOLON_OR_LINE_BREAK(";\n\r");
@@ -11,7 +11,7 @@ enum EvidenceDelimiter {
         this.boundaries = boundaries;
     }
 
-    boolean isBoundary(char character) {
+    public boolean isBoundary(char character) {
         return boundaries.indexOf(character) >= 0;
     }
 }
