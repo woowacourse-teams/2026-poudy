@@ -6,36 +6,55 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.exception.InfrastructureException;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
-import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("JSON 데이터 읽기")
 class JsonDataReaderTest {
 
-    private final JsonDataReader jsonDataReader = new JsonDataReader(new ObjectMapper(), new DefaultResourceLoader());
+    private static final String SAMPLE_FILE = "json-data-reader-sample.json";
 
-    record SampleFile(List<Sample> samples) {
+    private final JsonDataReader jsonDataReader = new JsonDataReader(new DefaultResourceLoader());
 
-        record Sample(Long id, String name) {
+    // 도메인 레코드를 흉내 낸다. Jackson 애너테이션을 붙이지 않는다.
+    record Sample(Long id, String koreanName, List<Tag> tagMappings, OffsetDateTime createdAt) {
+
+        record Tag(String name) {
         }
     }
 
     @Test
-    @DisplayName("파일 이름만으로 리소스를 찾아 지정한 타입으로 만든다")
-    void readsFileIntoGivenType() {
-        SampleFile file = jsonDataReader.read("json-data-reader-sample.json", SampleFile.class);
+    @DisplayName("파일 이름과 같은 최상위 필드를 벗겨 도메인 객체 목록으로 만든다")
+    void readsRootFieldNamedAfterFile() {
+        List<Sample> samples = jsonDataReader.readList(SAMPLE_FILE, Sample.class);
 
-        assertThat(file.samples()).extracting(SampleFile.Sample::id, SampleFile.Sample::name)
+        assertThat(samples).extracting(Sample::id, Sample::koreanName)
                 .containsExactly(tuple(1L, "글리세린"), tuple(2L, "부틸렌글라이콜"));
+    }
+
+    @Test
+    @DisplayName("snake_case 필드와 중첩 목록, 시각을 애너테이션 없이 채운다")
+    void mapsSnakeCaseFieldsWithoutAnnotations() {
+        Sample first = jsonDataReader.readList(SAMPLE_FILE, Sample.class).get(0);
+
+        assertThat(first.koreanName()).isEqualTo("글리세린");
+        assertThat(first.tagMappings()).extracting(Sample.Tag::name).containsExactly("HUMECTANT");
+        assertThat(first.createdAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
+    }
+
+    @Test
+    @DisplayName("도메인에 없는 필드는 무시한다")
+    void ignoresFieldsMissingFromDomain() {
+        assertThat(jsonDataReader.readList(SAMPLE_FILE, Sample.class)).hasSize(2);
     }
 
     @Test
     @DisplayName("파일이 없으면 인프라 예외로 감싸고 어떤 파일인지 남긴다")
     void wrapsMissingFile() {
-        assertThatThrownBy(() -> jsonDataReader.read("json-data-reader-missing.json", SampleFile.class))
+        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-missing.json", Sample.class))
                 .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-missing.json")
                 .hasCauseInstanceOf(IOException.class);
     }
@@ -43,7 +62,14 @@ class JsonDataReaderTest {
     @Test
     @DisplayName("형식이 깨졌으면 인프라 예외로 감싼다")
     void wrapsMalformedFile() {
-        assertThatThrownBy(() -> jsonDataReader.read("json-data-reader-broken.json", SampleFile.class))
+        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-broken.json", Sample.class))
                 .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-broken.json");
+    }
+
+    @Test
+    @DisplayName("최상위 필드가 파일 이름과 다르면 무엇을 찾았는지 남기고 실패한다")
+    void wrapsRootFieldNotNamedAfterFile() {
+        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-wrong-root.json", Sample.class))
+                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-wrong-root");
     }
 }

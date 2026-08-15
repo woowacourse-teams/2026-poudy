@@ -1,12 +1,21 @@
 {
-  "samples": [
+  "json-data-reader-sample": [
     {
       "id": 1,
-      "name": "글리세린"
+      "korean_name": "글리세린",
+      "tag_mappings": [
+        {
+          "name": "HUMECTANT"
+        }
+      ],
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "unused_field": "도메인에 없는 필드"
     },
     {
       "id": 2,
-      "name": "부틸렌글라이콜"
+      "korean_name": "부틸렌글라이콜",
+      "tag_mappings": [],
+      "created_at": "2026-08-13T08:50:49.068Z"
     }
   ]
 }
