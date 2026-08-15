@@ -38,10 +38,6 @@ public record Ingredient(
         // spotless:on
     }
 
-    public boolean hasId(Long other) {
-        return id.equals(other);
-    }
-
     public String lowerCaseEnglishName() {
         return englishName.toLowerCase(Locale.ROOT);
     }

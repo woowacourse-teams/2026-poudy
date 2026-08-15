@@ -45,7 +45,6 @@ public enum FormulationRole {
         this.displayName = displayName;
     }
 
-    // 태그 이름은 성분마다 되풀이해 조회하므로 상수를 매번 훑지 않고 한 번 만든 색인을 쓴다.
     private static final Map<String, FormulationRole> BY_NAME = Arrays.stream(values())
             .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
 

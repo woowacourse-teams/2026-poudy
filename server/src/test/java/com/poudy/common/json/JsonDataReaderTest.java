@@ -20,7 +20,6 @@ class JsonDataReaderTest {
 
     private final JsonDataReader jsonDataReader = new JsonDataReader(new DefaultResourceLoader());
 
-    // 도메인 레코드를 흉내 낸다. Jackson 애너테이션을 붙이지 않는다.
     record Sample(Long id, String koreanName, List<Tag> tagMappings, OffsetDateTime createdAt) {
 
         record Tag(String name) {

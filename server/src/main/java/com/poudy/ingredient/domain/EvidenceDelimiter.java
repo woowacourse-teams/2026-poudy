@@ -2,19 +2,16 @@ package com.poudy.ingredient.domain;
 
 enum EvidenceDelimiter {
 
-    SEMICOLON {
-        @Override
-        boolean isBoundary(char character) {
-            return character == ';';
-        }
-    },
+    SEMICOLON(";"),
+    SEMICOLON_OR_LINE_BREAK(";\n\r");
 
-    SEMICOLON_OR_LINE_BREAK {
-        @Override
-        boolean isBoundary(char character) {
-            return SEMICOLON.isBoundary(character) || character == '\n' || character == '\r';
-        }
-    };
+    private final String boundaries;
 
-    abstract boolean isBoundary(char character);
+    EvidenceDelimiter(String boundaries) {
+        this.boundaries = boundaries;
+    }
+
+    boolean isBoundary(char character) {
+        return boundaries.indexOf(character) >= 0;
+    }
 }

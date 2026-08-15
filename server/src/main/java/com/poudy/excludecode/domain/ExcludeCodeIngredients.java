@@ -74,8 +74,6 @@ public class ExcludeCodeIngredients {
         return Map.copyOf(resolved);
     }
 
-    // 성분 상세는 성분 하나가 어느 성분군에 속하는지 묻는다. 요청마다 성분군 전체를 훑지 않도록
-    // 기동 시 성분 ID 로 찾는 역색인을 만들어 둔다. 목록 순서는 ExcludeCode 선언 순서를 따른다.
     private static Map<Long, List<ExcludeCode>> indexCodes(Map<ExcludeCode, List<ExcludeCodeIngredient>> ingredients) {
         Map<Long, List<ExcludeCode>> codes = new LinkedHashMap<>();
 
