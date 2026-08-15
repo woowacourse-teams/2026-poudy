@@ -1,9 +1,5 @@
 package com.poudy.ingredient.domain;
 
-/**
- * 근거 문자열을 훑는 동안 괄호 깊이를 센다. 논문 저자처럼 괄호 안에 있는 구분자는 같은 출처의
- * 일부이므로, 경계로 볼지는 이 깊이가 정한다.
- */
 final class ParenthesisDepth {
 
     private int depth;

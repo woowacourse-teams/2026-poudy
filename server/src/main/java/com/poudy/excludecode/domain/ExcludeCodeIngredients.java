@@ -94,7 +94,7 @@ public class ExcludeCodeIngredients {
                 .collect(Collectors.toMap(
                         key,
                         Function.identity(),
-                        // 같은 이름이 여러 번 나오면 id 가 작은 성분을 남긴다. 목록 순서와는 무관하다.
+                        // 목록 순서가 아니라 id 가 작은 성분을 남긴다.
                         BinaryOperator.minBy(Comparator.comparing(Ingredient::id)),
                         LinkedHashMap::new));
         // spotless:on

@@ -20,7 +20,6 @@ public record CategoryResponse(
                 new CategoryResponse(2L, "클렌징", List.of(), 12L));
     }
 
-    // 브랜드 상세의 productCount 는 그 브랜드 안에서 센 값이라 전체 카탈로그 기준과 다르다.
     public static List<CategoryResponse> samplesOfBrand() {
         return List.of(
                 new CategoryResponse(

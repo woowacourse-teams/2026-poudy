@@ -1,8 +1,5 @@
 package com.poudy.ingredient.domain;
 
-/**
- * 근거 문자열에서 출처의 경계로 볼 문자를 정한다. 근거 종류마다 경계가 다르므로 상수로 나눈다.
- */
 enum EvidenceDelimiter {
 
     // 설명 근거의 줄바꿈은 원문의 일부라 경계로 쓰지 않는다.

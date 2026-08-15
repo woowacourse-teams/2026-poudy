@@ -34,7 +34,6 @@ public record ProductResponse(
                 1);
     }
 
-    // 목록과 개수는 같은 조건에서 나온 결과여야 하므로 같은 표본을 본다.
     static List<ProductResponse> samples() {
         return List.of(sample(SAMPLE_ID));
     }
