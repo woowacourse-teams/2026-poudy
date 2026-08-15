@@ -36,6 +36,24 @@ class IngredientSearchOrderTest {
     }
 
     @Test
+    @DisplayName("같은 등급이면 여러 성분을 `/`로 묶은 이름을 뒤에 담는다")
+    void ordersCombinedNameLast() {
+        Ingredients ingredients = new Ingredients(
+                List.of(ingredient(10L, "글리세린/프탈릭애씨드코폴리머"), ingredient(20L, "글리세린다이메틸에터")));
+
+        assertThat(names(ingredients.search("글리세린"))).containsExactly("글리세린다이메틸에터", "글리세린/프탈릭애씨드코폴리머");
+    }
+
+    @Test
+    @DisplayName("`/`로 묶은 이름이라도 더 잘 맞으면 먼저 담는다")
+    void combinedNameKeepsBetterMatch() {
+        Ingredients ingredients = new Ingredients(
+                List.of(ingredient(10L, "다이글리세린"), ingredient(20L, "글리세린/프탈릭애씨드코폴리머")));
+
+        assertThat(names(ingredients.search("글리세린"))).containsExactly("글리세린/프탈릭애씨드코폴리머", "다이글리세린");
+    }
+
+    @Test
     @DisplayName("별칭으로만 걸린 성분은 이름으로 걸린 성분보다 뒤에 담는다")
     void ordersAliasMatchLast() {
         Ingredients ingredients = new Ingredients(
