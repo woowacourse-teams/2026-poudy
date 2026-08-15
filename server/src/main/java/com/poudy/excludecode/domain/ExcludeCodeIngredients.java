@@ -19,41 +19,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExcludeCodeIngredients {
 
-    private static final Map<ExcludeCode, List<String>> NAMES = Map.of(
-            ExcludeCode.FRAGRANCE_ALLERGENS,
-            List.of(
-                    "향료",
-                    "리날룰",
-                    "리모넨",
-                    "시트랄",
-                    "시트로넬올",
-                    "제라니올",
-                    "부틸페닐메틸프로피오날",
-                    "벤질살리실레이트",
-                    "알파-아이소메틸아이오논",
-                    "헥실신남알",
-                    "유제놀",
-                    "아밀신남알",
-                    "쿠마린"),
-            ExcludeCode.DRYING_ALCOHOLS,
-            List.of("변성알코올", "에탄올", "아이소프로필알코올", "에스디알코올40-B"),
-            ExcludeCode.HARSH_PRESERVATIVES,
-            List.of(
-                    "페녹시에탄올",
-                    "메틸파라벤",
-                    "에틸파라벤",
-                    "프로필파라벤",
-                    "부틸파라벤",
-                    "아이소부틸파라벤",
-                    "아이소프로필파라벤",
-                    "비에이치에이",
-                    "비에이치티",
-                    "디엠디엠하이단토인"),
-            ExcludeCode.SULFATES,
-            List.of("소듐라우릴설페이트", "소듐라우레스설페이트", "암모늄라우릴설페이트", "암모늄라우레스설페이트"),
-            ExcludeCode.CYCLIC_SILICONES,
-            List.of("사이클로테트라실록세인", "사이클로펜타실록세인", "사이클로헥사실록세인", "사이클로메티콘"));
-
     private static final Pattern SYNTHETIC_COLORANT = Pattern.compile("^[가-힣]+색\\d+호(?:의\\(\\d+\\))?$");
     private static final Pattern COLOR_INDEX = Pattern
             .compile("(?:^|[, /])CI\\s*(\\d+(?::\\d+)?)\\b", Pattern.CASE_INSENSITIVE);
@@ -90,9 +55,9 @@ public class ExcludeCodeIngredients {
         Map<ExcludeCode, List<ExcludeCodeIngredient>> resolved = new EnumMap<>(ExcludeCode.class);
         List<String> missing = new ArrayList<>();
 
-        NAMES.forEach((code, names) -> {
+        Arrays.stream(ExcludeCode.values()).filter(code -> code != ExcludeCode.SYNTHETIC_COLORANTS).forEach(code -> {
             List<ExcludeCodeIngredient> found = new ArrayList<>();
-            for (String name : names) {
+            for (String name : code.ingredientNames()) {
                 lookUp(byKoreanName, byEnglishName, name).map(ExcludeCodeIngredient::from)
                         .ifPresentOrElse(found::add, () -> missing.add(code + " 의 " + name));
             }

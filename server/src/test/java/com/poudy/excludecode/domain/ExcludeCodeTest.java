@@ -14,4 +14,11 @@ class ExcludeCodeTest {
             assertThat(code.description()).isNotBlank();
         });
     }
+
+    @Test
+    void 고정_성분명은_해당_제외_성분군이_가진다() {
+        assertThat(ExcludeCode.FRAGRANCE_ALLERGENS.ingredientNames()).contains("향료", "리날룰");
+        assertThat(ExcludeCode.DRYING_ALCOHOLS.ingredientNames()).contains("변성알코올", "에탄올");
+        assertThat(ExcludeCode.SYNTHETIC_COLORANTS.ingredientNames()).isEmpty();
+    }
 }
