@@ -22,6 +22,10 @@ public record SearchKeyword(String value) {
     }
 
     public NameMatch match(SearchableText candidate) {
+        if (value.isEmpty()) {
+            return NameMatch.NONE;
+        }
+
         String compared = compare(candidate);
 
         if (compared.equals(value)) {
@@ -58,7 +62,7 @@ public record SearchKeyword(String value) {
         return value.length() == 1 && !Chosung.isDouble(value);
     }
 
-    private static String withoutSpaces(String text) {
+    public static String withoutSpaces(String text) {
         StringBuilder compact = new StringBuilder(text.length());
 
         for (int index = 0; index < text.length(); index++) {
