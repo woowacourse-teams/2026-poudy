@@ -240,7 +240,7 @@ Product
 
 `Products`는 `List<Product>`를 가지는 일급 컬렉션이다.
 
-제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색과 필터는 Controller 메서드가 나뉘어 있을 뿐 같은 `Products`가 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
+제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색어는 다른 필터와 함께 올 수 있으며 같은 `Products`가 한 번에 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
 
 API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
@@ -390,19 +390,13 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 
 검색어도 제품 목록을 좁히는 조건이므로 검색과 필터는 리소스를 나누지 않고 `/api/products` 하나를 쓴다. 경로에 `search` 같은 동사를 두면 리소스가 아닌 것을 리소스처럼 표현하게 된다.
 
-대신 목록은 둘을 섞은 요청을 받지 않는다. Controller는 `@GetMapping(params = "keyword")`와 `params = "!keyword"`로 메서드를 나누고, 검색 쪽은 `ProductFilterRequest.validateSearchOnly()`로 필터 조건이 함께 왔는지 확인해 `CONFLICTING_SEARCH_AND_FILTER`로 거절한다.
+검색어는 다른 필터와 같은 자격의 조건이므로 함께 보낼 수 있고, 다른 필터 종류와 마찬가지로 AND로 결합한다. Controller는 `/api/products`의 GET을 메서드 하나로 받고 `keyword` 유무로 나누지 않는다.
 
-검색 메서드도 필터 필드를 가진 `ProductFilterRequest`를 그대로 받는다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고, 조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
+목록은 필터 필드를 가진 `ProductFilterRequest`를 그대로 받는다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고, 조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
 
-규칙을 `keyword` 유무로 가르는 매핑 조건에만 맡기지 않고 오류 코드로 드러내는 이유는, `ProblemDetail`의 `code` enum이 생성물을 통해 프론트까지 전달되기 때문이다. OpenAPI 파라미터로 표현할 수 없는 규칙을 프론트가 읽을 수 있는 자리가 여기뿐이다.
+`/api/products`와 `/api/products/count`는 같은 요청 DTO를 같은 순서로 검사한다. 성분 필터 모순은 `CONFLICTING_INGREDIENT_FILTER`로, 빈 검색어는 `INVALID_QUERY_PARAMETER`로 거절한다. 조건을 하나도 보내지 않은 요청은 전체 목록 조회로 받는다.
 
-`/api/products/count`는 나누지 않는다. 개수는 검색어와 필터를 함께 걸어도 답할 수 있어야 한다.
-
-OpenAPI의 쿼리 파라미터에는 배타 관계를 적을 문법이 없다. 그래서 이 규칙은 파라미터 스키마가 아니라 오퍼레이션 설명과 400 응답의 `CONFLICTING_SEARCH_AND_FILTER` 예시로만 드러난다.
-
-OpenAPI는 한 경로의 GET을 오퍼레이션 하나로만 표현한다. 두 메서드는 문서에서 하나로 합쳐지므로 `@Operation`을 같게 두어, 병합에서 어느 쪽이 이기든 같은 문서가 나오게 한다. 파라미터는 합쳐진 목록으로 실리며, 함께 쓸 수 없다는 규칙은 설명으로만 남는다.
-
-- `/api/products`는 검색어 또는 필터 조건으로 고른 `ProductResponse` 목록을 페이지 단위로 반환하고, 조건에 해당하는 제품 전체의 브랜드를 함께 싣는다.
+- `/api/products`는 검색어와 필터 조건으로 고른 `ProductResponse` 목록을 페이지 단위로 반환하고, 조건에 해당하는 제품 전체의 브랜드를 함께 싣는다.
 - `/api/storage`는 콤마로 구분해 받은 `productIds`에 해당하는 `ProductResponse` 목록을 페이지 없이 전부 반환한다.
 - `/api/products/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
 
@@ -429,14 +423,14 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 3. 문제 해결은 가능한 한 Domain 객체가 담당한다.
 4. `Products`는 `List<Product>`를 갖는 일급 컬렉션이다.
 5. `Product`는 Brand, Category, Ingredient의 ID만 갖지 않고 객체를 직접 갖는다.
-6. 제품 조회와 count 조회는 같은 필터 규칙을 사용한다. 다만 목록은 검색어와 필터를 함께 받지 않고, count는 함께 받는다.
+6. 제품 조회와 count 조회는 같은 필터 규칙을 사용한다. 둘 다 검색어와 필터를 함께 받는다.
 7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
 8. 저장 방식은 Repository 밖으로 노출하지 않는다.
 9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
 10. `Ingredient`는 여러 `Tag`를 가지며, 여러 태그는 `Tags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
 11. 외부 API의 기본 경로는 `/api`다.
 12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
-13. 검색과 필터는 경로를 나누지 않고 `keyword` 유무로 Controller 메서드를 나눈다. 목록에서 둘을 함께 보낸 요청은 `CONFLICTING_SEARCH_AND_FILTER`로 거절한다.
+13. 검색과 필터는 경로도 Controller 메서드도 나누지 않는다. 검색어는 다른 필터와 함께 보낼 수 있고 AND로 결합한다.
 14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다. 다만 검사를 생성자에 두지 않는다. 바인딩 중 생성자가 던진 예외는 `BeanInstantiationException`으로 감싸여 `GlobalExceptionHandler`가 400으로 바꾸지 못하고 500이 된다. Bean Validation 애노테이션이나 Controller가 호출하는 검사 메서드를 쓴다.
 15. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 16. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
