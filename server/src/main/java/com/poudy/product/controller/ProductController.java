@@ -2,7 +2,6 @@ package com.poudy.product.controller;
 
 import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.product.controller.dto.ProductCountResponse;
 import com.poudy.product.controller.dto.ProductDetailResponse;
 import com.poudy.product.controller.dto.ProductFilterRequest;
@@ -34,28 +33,18 @@ public class ProductController {
     private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.";
     private static final String SUGGESTIONS_PATH = "/suggestions";
 
-    private final ExcludeCodeIngredients excludeCodeIngredients;
-
-    public ProductController(ExcludeCodeIngredients excludeCodeIngredients) {
-        this.excludeCodeIngredients = excludeCodeIngredients;
-    }
-
     @Operation(summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
     @GetMapping
     public ResponseEntity<ProductPageResponse> findProducts(
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        filter.validateIngredientFilter(excludeCodeIngredients);
-
         return ResponseEntity.ok(ProductPageResponse.sample(pagination));
     }
 
     @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
     @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        filter.validateIngredientFilter(excludeCodeIngredients);
-
         return ResponseEntity.ok(ProductCountResponse.sample());
     }
 

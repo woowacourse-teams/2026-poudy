@@ -1,7 +1,6 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.product.domain.IngredientFilter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import org.hibernate.validator.constraints.UniqueElements;
 
+@ConflictingIngredientFilter
 public record ProductFilterRequest(
         @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @Schema(example = "토너") String keyword,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<Long> categoryIds,
@@ -24,9 +24,5 @@ public record ProductFilterRequest(
 
     public ProductFilterRequest {
         IngredientFilter.of(includeIngredientIds, excludeIngredientIds, Set.of());
-    }
-
-    public void validateIngredientFilter(ExcludeCodeIngredients excludeCodeIngredients) {
-        IngredientFilter.of(includeIngredientIds, excludeIngredientIds, excludeCodeIngredients.idsOf(excludeCodes));
     }
 }

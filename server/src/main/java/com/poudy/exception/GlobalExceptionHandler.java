@@ -1,5 +1,6 @@
 package com.poudy.exception;
 
+import com.poudy.product.controller.dto.ConflictingIngredientFilter;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -68,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ResponseEntity<Object> response = super.handleExceptionInternal(exception, body, headers, status, request);
 
         if (response != null && response.getBody() instanceof ProblemDetail problemDetail) {
-            ErrorCode code = frameworkCode(status);
+            ErrorCode code = frameworkCode(status, exception);
             problemDetail.setDetail(code.message());
             problemDetail.setProperty(CODE_PROPERTY, code);
         }
@@ -76,19 +79,31 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return response;
     }
 
-    private ErrorCode frameworkCode(HttpStatusCode status) {
+    private ErrorCode frameworkCode(HttpStatusCode status, Exception exception) {
         if (status.is5xxServerError()) {
             return ErrorCode.INTERNAL_SERVER_ERROR;
         }
 
         if (status.isSameCodeAs(HttpStatus.BAD_REQUEST)) {
-            return ErrorCode.INVALID_QUERY_PARAMETER;
+            return bindingCode(exception);
         }
         if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
             return ErrorCode.ENDPOINT_NOT_FOUND;
         }
 
         return ErrorCode.UNSUPPORTED_REQUEST;
+    }
+
+    // 바인딩 검증 실패는 모두 400 이라 상태만으로는 구분되지 않는다. 전용 코드를 가진 제약은
+    // 위반 목록에서 찾아 그 코드로 돌려준다.
+    private ErrorCode bindingCode(Exception exception) {
+        if (exception instanceof BindException bindException) {
+            return bindException.getAllErrors().stream().map(ObjectError::getCode)
+                    .filter(ConflictingIngredientFilter.NAME::equals).findFirst()
+                    .map(code -> ErrorCode.CONFLICTING_INGREDIENT_FILTER).orElse(ErrorCode.INVALID_QUERY_PARAMETER);
+        }
+
+        return ErrorCode.INVALID_QUERY_PARAMETER;
     }
 
     private ResponseEntity<ProblemDetail> serverError() {
