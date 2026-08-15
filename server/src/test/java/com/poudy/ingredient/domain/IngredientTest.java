@@ -136,6 +136,15 @@ class IngredientTest {
     }
 
     @Test
+    @DisplayName("설명 근거의 단어 중간 줄바꿈은 출처 경계로 보지 않는다")
+    void preservesLineBreakInsideDescriptionEvidence() {
+        String evidence = "대한화장품협회 성분사전 「소듐아세틸에스에이치-올리고펩타\n이드-195」(성분코드 21412)";
+        Ingredient ingredient = withEvidence(evidence);
+
+        assertThat(ingredient.infoSources()).containsExactly(evidence);
+    }
+
+    @Test
     @DisplayName("출처 안의 괄호에 있는 세미콜론은 출처 경계로 보지 않는다")
     void preservesSemicolonInsideEvidence() {
         Ingredient ingredient = withEvidence(

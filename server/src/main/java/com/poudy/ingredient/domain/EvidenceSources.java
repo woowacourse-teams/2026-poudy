@@ -8,7 +8,15 @@ final class EvidenceSources {
     private EvidenceSources() {
     }
 
-    static List<String> parse(String source) {
+    static List<String> parseDescription(String source) {
+        return parse(source, false);
+    }
+
+    static List<String> parseTag(String source) {
+        return parse(source, true);
+    }
+
+    private static List<String> parse(String source, boolean splitLines) {
         if (source == null || source.isBlank()) {
             return List.of();
         }
@@ -25,7 +33,7 @@ final class EvidenceSources {
                 parenthesisDepth--;
             }
 
-            if (isDelimiter(character) && parenthesisDepth == 0) {
+            if (isDelimiter(character, splitLines) && parenthesisDepth == 0) {
                 add(evidences, current);
                 current.setLength(0);
                 continue;
@@ -37,8 +45,8 @@ final class EvidenceSources {
         return List.copyOf(evidences);
     }
 
-    private static boolean isDelimiter(char character) {
-        return character == ';' || character == '\n' || character == '\r';
+    private static boolean isDelimiter(char character, boolean splitLines) {
+        return character == ';' || splitLines && (character == '\n' || character == '\r');
     }
 
     private static void add(List<String> evidences, StringBuilder candidate) {

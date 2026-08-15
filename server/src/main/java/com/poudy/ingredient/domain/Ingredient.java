@@ -41,13 +41,13 @@ public record Ingredient(
     }
 
     public List<String> infoSources() {
-        return EvidenceSources.parse(descriptionEvidence);
+        return EvidenceSources.parseDescription(descriptionEvidence);
     }
 
     public List<String> effectSources() {
         return tagMappings.stream().filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
                 .filter(tag -> SkinEffect.from(tag.name()).isPresent())
-                .flatMap(tag -> EvidenceSources.parse(tag.source()).stream()).distinct().toList();
+                .flatMap(tag -> EvidenceSources.parseTag(tag.source()).stream()).distinct().toList();
     }
 
     private Stream<String> namesOf(TagCategory category) {
