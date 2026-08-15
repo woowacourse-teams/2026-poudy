@@ -1,6 +1,8 @@
 package com.poudy.ingredient.controller.dto;
 
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.tag.controller.dto.FormulationRoleResponse;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -21,4 +23,21 @@ public record IngredientDetailResponse(
         @NotNull @ArraySchema(schema = @Schema(example = "성분 정보 출처")) List<String> infoSources,
         @NotNull @ArraySchema(schema = @Schema(example = "성분 효과 출처")) List<String> effectSources,
         @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
+
+    public static IngredientDetailResponse from(IngredientDetail detail) {
+        Ingredient ingredient = detail.ingredient();
+
+        return new IngredientDetailResponse(
+                ingredient.id(),
+                ingredient.koreanName(),
+                ingredient.englishName(),
+                ingredient.description(),
+                ingredient.formulationRoles().stream().map(FormulationRoleResponse::from).toList(),
+                ingredient.skinEffects().stream().map(SkinEffectResponse::from).toList(),
+                detail.groupCodes(),
+                detail.productCount(),
+                ingredient.infoSources(),
+                ingredient.effectSources(),
+                ingredient.updatedAt());
+    }
 }

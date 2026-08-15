@@ -3,17 +3,11 @@ package com.poudy.ingredient.controller;
 import com.poudy.common.dto.KeywordRequest;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
 import com.poudy.ingredient.controller.dto.IngredientListResponse;
-import com.poudy.ingredient.controller.dto.IngredientResponse;
-import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.service.IngredientService;
-import com.poudy.tag.controller.dto.FormulationRoleResponse;
-import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -36,44 +30,14 @@ public class IngredientController {
     @Parameter(name = "keyword", example = "글리")
     @GetMapping
     public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute KeywordRequest search) {
-        List<IngredientResponse> ingredients = ingredientService.search(search.keyword()).stream()
-                .map(IngredientController::toResponse).toList();
-
-        return ResponseEntity.ok(new IngredientListResponse(ingredients));
+        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.search(search.keyword())));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")
     @GetMapping("/{ingredientId}")
     public ResponseEntity<IngredientDetailResponse> findIngredientDetail(
             @Parameter(example = "1005") @PathVariable Long ingredientId) {
-        return ResponseEntity.ok(toDetailResponse(ingredientService.findDetail(ingredientId)));
+        return ResponseEntity.ok(IngredientDetailResponse.from(ingredientService.findDetail(ingredientId)));
     }
 
-    private static IngredientResponse toResponse(Ingredient ingredient) {
-        return new IngredientResponse(
-                ingredient.id(),
-                ingredient.koreanName(),
-                ingredient.englishName(),
-                ingredient.skinEffects().stream()
-                        .map(effect -> new SkinEffectResponse(effect.id(), effect.displayName())).toList());
-    }
-
-    private static IngredientDetailResponse toDetailResponse(IngredientDetail detail) {
-        Ingredient ingredient = detail.ingredient();
-
-        return new IngredientDetailResponse(
-                ingredient.id(),
-                ingredient.koreanName(),
-                ingredient.englishName(),
-                ingredient.description(),
-                ingredient.formulationRoles().stream()
-                        .map(role -> new FormulationRoleResponse(role.id(), role.displayName())).toList(),
-                ingredient.skinEffects().stream()
-                        .map(effect -> new SkinEffectResponse(effect.id(), effect.displayName())).toList(),
-                detail.groupCodes(),
-                detail.productCount(),
-                ingredient.infoSources(),
-                ingredient.effectSources(),
-                ingredient.updatedAt());
-    }
 }
