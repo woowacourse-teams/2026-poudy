@@ -1,0 +1,72 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "brand_id": 1,
+      "category_id": 2,
+      "product_name": "블랙 스네일 토너",
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z",
+      "ingredients": [
+        {
+          "ingredient_id": 4815
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "brand_id": 1,
+      "category_id": 3,
+      "product_name": "블랙스네일 레티놀 콜라겐 세럼 인텐스",
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z",
+      "ingredients": [
+        {
+          "ingredient_id": 4815
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "brand_id": 1,
+      "category_id": 14,
+      "product_name": "블랙스네일 글루타치온 톤업 선",
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z",
+      "ingredients": [
+        {
+          "ingredient_id": 4815
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "brand_id": 3,
+      "category_id": 2,
+      "product_name": "래디언스 비타 토너",
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z",
+      "ingredients": [
+        {
+          "ingredient_id": 4815
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "brand_id": 3,
+      "category_id": 2,
+      "product_name": "PH 컨디션 토너",
+      "created_at": "2026-08-13T08:28:29.301Z",
+      "updated_at": "2026-08-13T08:28:29.301Z",
+      "ingredients": [
+        {
+          "ingredient_id": 20
+        },
+        {
+          "ingredient_id": 9
+        }
+      ]
+    }
+  ]
+}
