@@ -71,8 +71,7 @@ public record Ingredient(
     public List<String> effectSources() {
         // spotless:off
         return tagMappings.stream()
-                .filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
-                .filter(tag -> SkinEffect.from(tag.name()).isPresent())
+                .filter(IngredientTag::isDisplayedSkinEffect)
                 .flatMap(tag -> EvidenceSources.parseTag(tag.source()).stream())
                 .distinct()
                 .toList();

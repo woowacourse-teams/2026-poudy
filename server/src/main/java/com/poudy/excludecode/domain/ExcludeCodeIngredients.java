@@ -4,7 +4,6 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -21,9 +20,11 @@ import org.springframework.stereotype.Component;
 public class ExcludeCodeIngredients {
 
     private final Map<ExcludeCode, List<ExcludeCodeIngredient>> ingredients;
+    private final Map<Long, List<ExcludeCode>> codesByIngredientId;
 
     public ExcludeCodeIngredients(IngredientRepository ingredientRepository) {
         this.ingredients = resolve(ingredientRepository.findAll());
+        this.codesByIngredientId = indexCodes(this.ingredients);
     }
 
     public List<ExcludeCodeIngredient> of(ExcludeCode code) {
@@ -44,12 +45,7 @@ public class ExcludeCodeIngredients {
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
-        // spotless:off
-        return Arrays.stream(ExcludeCode.values())
-                .filter(code -> of(code).stream()
-                        .anyMatch(ingredient -> ingredient.hasId(ingredientId)))
-                .toList();
-        // spotless:on
+        return codesByIngredientId.getOrDefault(ingredientId, List.of());
     }
 
     private static Map<ExcludeCode, List<ExcludeCodeIngredient>> resolve(List<Ingredient> all) {
@@ -59,24 +55,38 @@ public class ExcludeCodeIngredients {
         Map<ExcludeCode, List<ExcludeCodeIngredient>> resolved = new EnumMap<>(ExcludeCode.class);
         List<String> missing = new ArrayList<>();
 
-        // spotless:off
-        Arrays.stream(ExcludeCode.values())
-                .forEach(code -> {
-                    List<ExcludeCodeIngredient> found = new ArrayList<>();
-                    for (String name : code.ingredientNames()) {
-                        lookUp(byKoreanName, byEnglishName, name)
-                                .map(ExcludeCodeIngredient::from)
-                                .ifPresentOrElse(found::add, () -> missing.add(code + " 의 " + name));
-                    }
-                    resolved.put(code, List.copyOf(found));
-                });
-        // spotless:on
+        for (ExcludeCode code : ExcludeCode.values()) {
+            List<ExcludeCodeIngredient> found = new ArrayList<>();
+            for (String name : code.ingredientNames()) {
+                // spotless:off
+                lookUp(byKoreanName, byEnglishName, name)
+                        .map(ExcludeCodeIngredient::from)
+                        .ifPresentOrElse(found::add, () -> missing.add(code + " 의 " + name));
+                // spotless:on
+            }
+            resolved.put(code, List.copyOf(found));
+        }
 
         if (!missing.isEmpty()) {
             throw new InfrastructureException("성분 데이터에서 제외 성분군의 성분을 찾지 못했습니다: " + missing);
         }
 
         return Map.copyOf(resolved);
+    }
+
+    // 성분 상세는 성분 하나가 어느 성분군에 속하는지 묻는다. 요청마다 성분군 전체를 훑지 않도록
+    // 기동 시 성분 ID 로 찾는 역색인을 만들어 둔다. 목록 순서는 ExcludeCode 선언 순서를 따른다.
+    private static Map<Long, List<ExcludeCode>> indexCodes(Map<ExcludeCode, List<ExcludeCodeIngredient>> ingredients) {
+        Map<Long, List<ExcludeCode>> codes = new LinkedHashMap<>();
+
+        for (ExcludeCode code : ExcludeCode.values()) {
+            for (ExcludeCodeIngredient ingredient : ingredients.getOrDefault(code, List.of())) {
+                codes.computeIfAbsent(ingredient.id(), id -> new ArrayList<>()).add(code);
+            }
+        }
+        codes.replaceAll((id, found) -> List.copyOf(found));
+
+        return Map.copyOf(codes);
     }
 
     private static Optional<Ingredient> lookUp(

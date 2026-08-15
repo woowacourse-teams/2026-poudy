@@ -1,7 +1,10 @@
 package com.poudy.tag.domain;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public enum SkinEffect {
 
@@ -26,8 +29,12 @@ public enum SkinEffect {
         this.displayName = displayName;
     }
 
+    // 태그 이름은 성분마다 되풀이해 조회하므로 상수를 매번 훑지 않고 한 번 만든 색인을 쓴다.
+    private static final Map<String, SkinEffect> BY_NAME = Arrays.stream(values())
+            .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
+
     public static Optional<SkinEffect> from(String name) {
-        return Arrays.stream(values()).filter(effect -> effect.name().equals(name)).findFirst();
+        return Optional.ofNullable(BY_NAME.get(name));
     }
 
     public Long id() {
