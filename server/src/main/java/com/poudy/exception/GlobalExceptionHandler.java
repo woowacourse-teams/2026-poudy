@@ -1,5 +1,6 @@
 package com.poudy.exception;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -45,11 +46,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
-            Exception exception,
+            @NonNull Exception exception,
             Object body,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request) {
         ResponseEntity<Object> response = super.handleExceptionInternal(exception, body, headers, status, request);
 
         if (response != null && response.getBody() instanceof ProblemDetail problemDetail) {
