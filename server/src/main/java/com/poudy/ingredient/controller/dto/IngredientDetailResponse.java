@@ -27,17 +27,23 @@ public record IngredientDetailResponse(
     public static IngredientDetailResponse from(IngredientDetail detail) {
         Ingredient ingredient = detail.ingredient();
 
+        // spotless:off
         return new IngredientDetailResponse(
                 ingredient.id(),
                 ingredient.koreanName(),
                 ingredient.englishName(),
                 ingredient.description(),
-                ingredient.formulationRoles().stream().map(FormulationRoleResponse::from).toList(),
-                ingredient.skinEffects().stream().map(SkinEffectResponse::from).toList(),
+                ingredient.formulationRoles().stream()
+                        .map(FormulationRoleResponse::from)
+                        .toList(),
+                ingredient.skinEffects().stream()
+                        .map(SkinEffectResponse::from)
+                        .toList(),
                 detail.groupCodes(),
                 detail.productCount(),
                 ingredient.infoSources(),
                 ingredient.effectSources(),
                 ingredient.updatedAt());
+        // spotless:on
     }
 }

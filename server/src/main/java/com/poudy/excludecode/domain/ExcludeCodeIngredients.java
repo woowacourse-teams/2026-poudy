@@ -33,14 +33,21 @@ public class ExcludeCodeIngredients {
             return Set.of();
         }
 
-        return codes.stream().flatMap(code -> of(code).stream()).map(ExcludeCodeIngredient::id)
+        // spotless:off
+        return codes.stream()
+                .flatMap(code -> of(code).stream())
+                .map(ExcludeCodeIngredient::id)
                 .collect(Collectors.toUnmodifiableSet());
+        // spotless:on
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
+        // spotless:off
         return Arrays.stream(ExcludeCode.values())
-                .filter(code -> of(code).stream().anyMatch(ingredient -> ingredient.id().equals(ingredientId)))
+                .filter(code -> of(code).stream()
+                        .anyMatch(ingredient -> ingredient.id().equals(ingredientId)))
                 .toList();
+        // spotless:on
     }
 
     private static Map<ExcludeCode, List<ExcludeCodeIngredient>> resolve(List<Ingredient> all) {
@@ -50,14 +57,18 @@ public class ExcludeCodeIngredients {
         Map<ExcludeCode, List<ExcludeCodeIngredient>> resolved = new EnumMap<>(ExcludeCode.class);
         List<String> missing = new ArrayList<>();
 
-        Arrays.stream(ExcludeCode.values()).forEach(code -> {
-            List<ExcludeCodeIngredient> found = new ArrayList<>();
-            for (String name : code.ingredientNames()) {
-                lookUp(byKoreanName, byEnglishName, name).map(ExcludeCodeIngredient::from)
-                        .ifPresentOrElse(found::add, () -> missing.add(code + " 의 " + name));
-            }
-            resolved.put(code, List.copyOf(found));
-        });
+        // spotless:off
+        Arrays.stream(ExcludeCode.values())
+                .forEach(code -> {
+                    List<ExcludeCodeIngredient> found = new ArrayList<>();
+                    for (String name : code.ingredientNames()) {
+                        lookUp(byKoreanName, byEnglishName, name)
+                                .map(ExcludeCodeIngredient::from)
+                                .ifPresentOrElse(found::add, () -> missing.add(code + " 의 " + name));
+                    }
+                    resolved.put(code, List.copyOf(found));
+                });
+        // spotless:on
 
         if (!missing.isEmpty()) {
             throw new InfrastructureException("성분 데이터에서 제외 성분군의 성분을 찾지 못했습니다: " + missing);
@@ -75,11 +86,14 @@ public class ExcludeCodeIngredients {
     }
 
     private static Map<String, Ingredient> index(List<Ingredient> all, Function<Ingredient, String> key) {
-        return all.stream().filter(ingredient -> !key.apply(ingredient).isEmpty()).collect(
-                Collectors.toMap(
+        // spotless:off
+        return all.stream()
+                .filter(ingredient -> !key.apply(ingredient).isEmpty())
+                .collect(Collectors.toMap(
                         key,
                         Function.identity(),
                         (first, second) -> first.id() <= second.id() ? first : second,
                         LinkedHashMap::new));
+        // spotless:on
     }
 }

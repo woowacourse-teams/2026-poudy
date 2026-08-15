@@ -29,15 +29,29 @@ public record Ingredient(
     }
 
     public List<IngredientTag> tagsOf(TagCategory category) {
-        return tagMappings.stream().filter(tag -> tag.isOf(category)).toList();
+        // spotless:off
+        return tagMappings.stream()
+                .filter(tag -> tag.isOf(category))
+                .toList();
+        // spotless:on
     }
 
     public List<FormulationRole> formulationRoles() {
-        return namesOf(TagCategory.FUNCTION).map(FormulationRole::from).flatMap(Optional::stream).toList();
+        // spotless:off
+        return namesOf(TagCategory.FUNCTION)
+                .map(FormulationRole::from)
+                .flatMap(Optional::stream)
+                .toList();
+        // spotless:on
     }
 
     public List<SkinEffect> skinEffects() {
-        return namesOf(TagCategory.BIOLOGICAL_EFFECT).map(SkinEffect::from).flatMap(Optional::stream).toList();
+        // spotless:off
+        return namesOf(TagCategory.BIOLOGICAL_EFFECT)
+                .map(SkinEffect::from)
+                .flatMap(Optional::stream)
+                .toList();
+        // spotless:on
     }
 
     public List<String> infoSources() {
@@ -45,12 +59,21 @@ public record Ingredient(
     }
 
     public List<String> effectSources() {
-        return tagMappings.stream().filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
+        // spotless:off
+        return tagMappings.stream()
+                .filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
                 .filter(tag -> SkinEffect.from(tag.name()).isPresent())
-                .flatMap(tag -> EvidenceSources.parseTag(tag.source()).stream()).distinct().toList();
+                .flatMap(tag -> EvidenceSources.parseTag(tag.source()).stream())
+                .distinct()
+                .toList();
+        // spotless:on
     }
 
     private Stream<String> namesOf(TagCategory category) {
-        return tagMappings.stream().filter(tag -> tag.isOf(category)).map(IngredientTag::name);
+        // spotless:off
+        return tagMappings.stream()
+                .filter(tag -> tag.isOf(category))
+                .map(IngredientTag::name);
+        // spotless:on
     }
 }

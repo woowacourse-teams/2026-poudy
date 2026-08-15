@@ -15,7 +15,11 @@ public class Products {
             return 0;
         }
 
-        return products.stream().filter(product -> product.contains(ingredientId)).count();
+        // spotless:off
+        return products.stream()
+                .filter(product -> product.contains(ingredientId))
+                .count();
+        // spotless:on
     }
 
     public List<Product> values() {

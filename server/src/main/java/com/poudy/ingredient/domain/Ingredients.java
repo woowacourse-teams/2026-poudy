@@ -14,14 +14,20 @@ public class Ingredients {
 
     public Ingredients(List<Ingredient> values) {
         this.values = values == null ? List.of() : List.copyOf(values);
+        // spotless:off
         this.byId = this.values.stream()
                 .collect(Collectors.toUnmodifiableMap(Ingredient::id, Function.identity(), (first, second) -> first));
+        // spotless:on
     }
 
     public List<Ingredient> search(String keyword) {
         String normalizedKeyword = keyword.strip().toLowerCase(Locale.ROOT);
 
-        return values.stream().filter(ingredient -> matches(ingredient, normalizedKeyword)).toList();
+        // spotless:off
+        return values.stream()
+                .filter(ingredient -> matches(ingredient, normalizedKeyword))
+                .toList();
+        // spotless:on
     }
 
     public Optional<Ingredient> findById(Long id) {
@@ -33,8 +39,11 @@ public class Ingredients {
     }
 
     private static boolean matches(Ingredient ingredient, String keyword) {
+        // spotless:off
         return contains(ingredient.koreanName(), keyword) || contains(ingredient.englishName(), keyword)
-                || ingredient.aliases().stream().anyMatch(alias -> contains(alias, keyword));
+                || ingredient.aliases().stream()
+                        .anyMatch(alias -> contains(alias, keyword));
+        // spotless:on
     }
 
     private static boolean contains(String value, String keyword) {

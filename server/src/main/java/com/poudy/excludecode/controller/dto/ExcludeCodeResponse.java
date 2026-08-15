@@ -14,10 +14,14 @@ public record ExcludeCodeResponse(
         @NotNull @Schema(description = "성분군 설명", example = "자극을 유발할 수 있는 방부제 성분을 제외합니다.") String description) {
 
     public static ExcludeCodeResponse from(ExcludeCode code, List<ExcludeCodeIngredient> ingredients) {
+        // spotless:off
         return new ExcludeCodeResponse(
                 code,
                 code.displayName(),
-                ingredients.stream().map(IngredientSummaryResponse::from).toList(),
+                ingredients.stream()
+                        .map(IngredientSummaryResponse::from)
+                        .toList(),
                 code.description());
+        // spotless:on
     }
 }

@@ -11,8 +11,11 @@ public record ExcludeCodeListResponse(
         @NotNull @Schema(description = "빠른 필터에 쓰는 성분군 전체") List<ExcludeCodeResponse> items) {
 
     public static ExcludeCodeListResponse from(ExcludeCodeIngredients ingredients) {
+        // spotless:off
         return new ExcludeCodeListResponse(
-                Arrays.stream(ExcludeCode.values()).map(code -> ExcludeCodeResponse.from(code, ingredients.of(code)))
+                Arrays.stream(ExcludeCode.values())
+                        .map(code -> ExcludeCodeResponse.from(code, ingredients.of(code)))
                         .toList());
+        // spotless:on
     }
 }
