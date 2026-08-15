@@ -55,7 +55,6 @@ class IngredientTest {
                         new IngredientTag("BARRIER_SUPPORT_RELATED", TagCategory.BIOLOGICAL_EFFECT, "출처"),
                         new IngredientTag("BOTANICAL_EXTRACT", TagCategory.INGREDIENT_CLASS, "출처")));
 
-        // INGREDIENT_CLASS 태그는 두 축 어디에도 실리지 않는다.
         assertThat(ingredient.formulationRoles()).extracting(Enum::name)
                 .containsExactly("HUMECTANT", "SKIN_CONDITIONING");
         assertThat(ingredient.skinEffects()).extracting(Enum::name).containsExactly("BARRIER_SUPPORT_RELATED");

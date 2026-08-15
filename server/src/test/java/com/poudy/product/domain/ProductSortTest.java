@@ -18,7 +18,6 @@ class ProductSortTest {
                 ProductSort.PRICE_DESC);
     }
 
-    // 문자열이라 enum 과 어긋나도 컴파일은 통과한다.
     @Test
     @DisplayName("문서에 싣는 기본 정렬 이름이 실제 정렬 조건과 같다")
     void defaultNameMatchesSortOption() {

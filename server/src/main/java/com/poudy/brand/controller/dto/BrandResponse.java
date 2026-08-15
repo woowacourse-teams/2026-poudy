@@ -9,7 +9,6 @@ public record BrandResponse(
         @NotNull @Schema(description = "브랜드 영문명", example = "BRAND NAME") String englishName,
         @NotNull @Schema(description = "브랜드 이미지 URL", example = "https://cdn.example.com/brands/12/image.png") String imageUrl) {
 
-    // 표본과 문서 예시에 실제 브랜드를 쓰지 않는다.
     static final Long SAMPLE_ID = 12L;
     static final String SAMPLE_NAME = "브랜드 이름";
     static final String SAMPLE_ENGLISH_NAME = "BRAND NAME";

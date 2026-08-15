@@ -94,7 +94,6 @@ public class ExcludeCodeIngredients {
                 .collect(Collectors.toMap(
                         key,
                         Function.identity(),
-                        // 목록 순서가 아니라 id 가 작은 성분을 남긴다.
                         BinaryOperator.minBy(Comparator.comparing(Ingredient::id)),
                         LinkedHashMap::new));
         // spotless:on
