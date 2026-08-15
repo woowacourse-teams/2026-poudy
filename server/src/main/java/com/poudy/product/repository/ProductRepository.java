@@ -3,6 +3,7 @@ package com.poudy.product.repository;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
+import java.util.Map;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -18,5 +19,9 @@ public class ProductRepository {
 
     public long countContaining(Long ingredientId) {
         return products.countContaining(ingredientId);
+    }
+
+    public Map<Long, Long> countByCategoryId() {
+        return products.countByCategoryId();
     }
 }

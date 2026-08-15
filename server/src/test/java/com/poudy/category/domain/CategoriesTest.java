@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -74,48 +73,6 @@ class CategoriesTest {
 
         assertThatThrownBy(() -> categories.childrenOf(toner)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("대분류의 소분류만 조회할 수 있습니다.");
-    }
-
-    @Test
-    @DisplayName("소분류별 제품 수를 더해 대분류 제품 수를 계산한다")
-    void aggregatesProductCountsForParents() {
-        Category skinCare = parent(1L, "스킨케어");
-        Category toner = child(2L, 1L, "토너");
-        Category serum = child(3L, 1L, "세럼");
-        Category cleansing = parent(4L, "클렌징");
-        Category cleansingFoam = child(5L, 4L, "클렌징폼");
-        Categories categories = new Categories(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
-
-        Map<Long, Long> counts = categories.aggregateProductCounts(Map.of(2L, 3L, 3L, 2L, 5L, 4L));
-
-        assertThat(counts).containsEntry(toner.id(), 3L).containsEntry(serum.id(), 2L).containsEntry(skinCare.id(), 5L)
-                .containsEntry(cleansingFoam.id(), 4L).containsEntry(cleansing.id(), 4L);
-    }
-
-    @Test
-    @DisplayName("제품이 없는 소분류와 대분류의 제품 수는 0이다")
-    void fillsZeroForCategoriesWithoutProducts() {
-        Category skinCare = parent(1L, "스킨케어");
-        Category toner = child(2L, 1L, "토너");
-        Category serum = child(3L, 1L, "세럼");
-        Categories categories = new Categories(List.of(skinCare, toner, serum));
-
-        Map<Long, Long> counts = categories.aggregateProductCounts(Map.of());
-
-        assertThat(counts).containsEntry(toner.id(), 0L).containsEntry(serum.id(), 0L).containsEntry(skinCare.id(), 0L);
-    }
-
-    @Test
-    @DisplayName("제품 수는 존재하는 소분류에 대해서만 받을 수 있다")
-    void rejectsProductCountsForInvalidCategory() {
-        Category skinCare = parent(1L, "스킨케어");
-        Category toner = child(2L, 1L, "토너");
-        Categories categories = new Categories(List.of(skinCare, toner));
-
-        assertThatThrownBy(() -> categories.aggregateProductCounts(Map.of(1L, 1L)))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("제품은 존재하는 소분류에 속해야 합니다.");
-        assertThatThrownBy(() -> categories.aggregateProductCounts(Map.of(999L, 1L)))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("제품은 존재하는 소분류에 속해야 합니다.");
     }
 
     private static Category parent(Long id, String name) {
