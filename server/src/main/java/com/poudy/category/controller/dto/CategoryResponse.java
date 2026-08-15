@@ -9,4 +9,25 @@ public record CategoryResponse(
         @NotNull @Schema(example = "스킨케어") String name,
         @NotNull List<CategoryChildResponse> children,
         @NotNull @Schema(example = "51") Long productCount) {
+
+    public static List<CategoryResponse> samples() {
+        return List.of(
+                new CategoryResponse(
+                        1L,
+                        "스킨케어",
+                        List.of(new CategoryChildResponse(7L, "토너", 30L), new CategoryChildResponse(8L, "세럼", 21L)),
+                        51L),
+                new CategoryResponse(2L, "클렌징", List.of(), 12L));
+    }
+
+    // 브랜드 상세의 productCount 는 그 브랜드 안에서 센 값이라 전체 카탈로그 기준과 다르다.
+    public static List<CategoryResponse> samplesOfBrand() {
+        return List.of(
+                new CategoryResponse(
+                        1L,
+                        "스킨케어",
+                        List.of(new CategoryChildResponse(7L, "토너", 12L), new CategoryChildResponse(8L, "세럼", 9L)),
+                        21L),
+                new CategoryResponse(2L, "클렌징", List.of(), 6L));
+    }
 }

@@ -9,4 +9,8 @@ public record BrandListItemResponse(
         @NotNull @Schema(description = "브랜드 영문명", example = "ROUND LAB") String englishName,
         @NotNull @Schema(description = "브랜드 이미지 URL", example = "https://cdn.example.com/brands/12/image.png") String imageUrl,
         @NotNull @Schema(description = "이 브랜드의 제품 수. 전체 카탈로그 기준이며 제품 조회 필터와 무관하다", example = "27") Long productCount) {
+
+    public static BrandListItemResponse sample(Long id) {
+        return new BrandListItemResponse(id, "라운드랩", "ROUND LAB", BrandResponse.sampleImageUrl(id), 27L);
+    }
 }
