@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Ingredients {
@@ -36,11 +37,19 @@ public class Ingredients {
         return Optional.ofNullable(byId.get(id));
     }
 
-    // 같은 이름을 가진 성분이 여럿이면 먼저 등록된 성분을 쓴다.
     public Optional<Ingredient> findByName(String name) {
+        if (name == null || name.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return firstOf(ingredient -> ingredient.hasKoreanName(name))
+                .or(() -> firstOf(ingredient -> ingredient.hasEnglishName(name)));
+    }
+
+    private Optional<Ingredient> firstOf(Predicate<Ingredient> match) {
         // spotless:off
         return values.stream()
-                .filter(ingredient -> ingredient.hasName(name))
+                .filter(match)
                 .min(Comparator.comparing(Ingredient::id));
         // spotless:on
     }

@@ -35,12 +35,12 @@ public record Ingredient(
         // spotless:on
     }
 
-    public boolean hasName(String name) {
-        if (name == null || name.isEmpty()) {
-            return false;
-        }
+    public boolean hasKoreanName(String candidate) {
+        return candidate.equals(koreanName);
+    }
 
-        return name.equals(koreanName) || name.equalsIgnoreCase(englishName);
+    public boolean hasEnglishName(String candidate) {
+        return candidate.equalsIgnoreCase(englishName);
     }
 
     public List<FormulationRole> formulationRoles() {
