@@ -307,7 +307,9 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 
 Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller에 전달할 응답 DTO를 만들거나 제품 필터 규칙을 구현하지 않는다.
 
-파일을 열고 파싱하는 부분은 Repository마다 같으므로 `common.json.JsonDataReader`가 맡는다. Repository는 자기 파일 이름과 그 파일의 형식을 나타내는 타입만 넘긴다. 파일을 두는 위치는 `JsonDataReader`가 상수로 갖는다. 형식 타입은 Jackson 애너테이션과 원본 필드명을 흡수해 도메인에 노출하지 않도록 해당 `repository` 패키지 안에 두고 밖으로 공개하지 않는다.
+파일을 열고 파싱하는 부분은 Repository마다 같으므로 `common.json.JsonDataReader`가 맡는다. Repository는 자기 파일 이름과 도메인 타입만 넘긴다. 파일을 두는 위치, snake_case 변환, `{"<파일명>": [ … ]}` 최상위 필드 해제는 모두 Reader가 처리한다. 최상위 필드 이름은 확장자를 뗀 파일 이름과 같아야 한다. Reader는 데이터 파일 전용 `ObjectMapper`를 쓰므로 이 설정이 HTTP 응답 직렬화에 영향을 주지 않는다.
+
+형식만 옮기는 중간 타입은 두지 않는다. Jackson이 도메인 레코드를 직접 만들기 때문에 도메인에 Jackson 애너테이션은 없지만, 그 대신 도메인 필드 이름이 곧 파일과의 계약이 된다. 필드 이름을 바꾸면 컴파일은 통과하고 파싱만 깨지므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
 
 현재 Repository 인터페이스는 만들지 않는다. 이후 데이터베이스 저장소로 교체하는 작업을 시작할 때 Service와 Repository 사이의 인터페이스를 함께 결정한다.
 
