@@ -1,13 +1,14 @@
 package com.poudy.product.domain;
 
 import java.util.List;
+import java.util.Objects;
 
 public class Products {
 
     private final List<Product> products;
 
     public Products(List<Product> products) {
-        this.products = products == null ? List.of() : List.copyOf(products);
+        this.products = List.copyOf(Objects.requireNonNullElse(products, List.of()));
     }
 
     public long countContaining(Long ingredientId) {

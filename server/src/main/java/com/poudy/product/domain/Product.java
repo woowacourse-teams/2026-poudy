@@ -1,11 +1,12 @@
 package com.poudy.product.domain;
 
 import java.util.List;
+import java.util.Objects;
 
 public record Product(Long id, Long brandId, Long categoryId, String productName, List<ProductIngredient> ingredients) {
 
     public Product {
-        ingredients = ingredients == null ? List.of() : List.copyOf(ingredients);
+        ingredients = List.copyOf(Objects.requireNonNullElse(ingredients, List.of()));
     }
 
     public boolean contains(Long ingredientId) {

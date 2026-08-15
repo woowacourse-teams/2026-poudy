@@ -5,12 +5,14 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
@@ -92,7 +94,8 @@ public class ExcludeCodeIngredients {
                 .collect(Collectors.toMap(
                         key,
                         Function.identity(),
-                        (first, second) -> first.id() <= second.id() ? first : second,
+                        // 같은 이름이 여러 번 나오면 먼저 등록된 성분을 남긴다.
+                        BinaryOperator.minBy(Comparator.comparing(Ingredient::id)),
                         LinkedHashMap::new));
         // spotless:on
     }

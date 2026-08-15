@@ -5,6 +5,7 @@ import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.TagCategory;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -21,11 +22,11 @@ public record Ingredient(
         OffsetDateTime updatedAt) {
 
     public Ingredient {
-        englishName = englishName == null ? "" : englishName;
-        originDefinition = originDefinition == null ? "" : originDefinition;
-        descriptionEvidence = descriptionEvidence == null ? "" : descriptionEvidence;
-        aliases = aliases == null ? List.of() : List.copyOf(aliases);
-        tagMappings = tagMappings == null ? List.of() : List.copyOf(tagMappings);
+        englishName = Objects.requireNonNullElse(englishName, "");
+        originDefinition = Objects.requireNonNullElse(originDefinition, "");
+        descriptionEvidence = Objects.requireNonNullElse(descriptionEvidence, "");
+        aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
+        tagMappings = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
     }
 
     public List<IngredientTag> tagsOf(TagCategory category) {
