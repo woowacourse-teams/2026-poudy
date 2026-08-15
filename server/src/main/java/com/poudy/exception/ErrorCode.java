@@ -27,7 +27,7 @@ public enum ErrorCode {
     }
 
     public static Optional<ErrorCode> from(String name) {
-        return Optional.ofNullable(BY_NAME.get(name));
+        return Optional.ofNullable(name).map(BY_NAME::get);
     }
 
     public String message() {
