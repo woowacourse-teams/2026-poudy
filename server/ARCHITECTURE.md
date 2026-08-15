@@ -110,10 +110,12 @@ com.poudy
 │   └── service
 │       └── StorageService
 ├── common
-│   └── dto
-│       ├── KeywordRequest
-│       ├── PaginationRequest
-│       └── PaginationResponse
+│   ├── dto
+│   │   ├── KeywordRequest
+│   │   ├── PaginationRequest
+│   │   └── PaginationResponse
+│   └── json
+│       └── JsonDataReader
 ├── config
 │   ├── OpenApiConfig
 │   └── ErrorResponseConfig
@@ -304,6 +306,8 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 ### Repository
 
 Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller에 전달할 응답 DTO를 만들거나 제품 필터 규칙을 구현하지 않는다.
+
+파일을 열고 파싱하는 부분은 Repository마다 같으므로 `common.json.JsonDataReader`가 맡는다. Repository는 자기 파일 경로와 그 파일의 형식을 나타내는 타입만 넘긴다. 형식 타입은 Jackson 애너테이션과 원본 필드명을 흡수해 도메인에 노출하지 않도록 해당 `repository` 패키지 안에 두고 밖으로 공개하지 않는다.
 
 현재 Repository 인터페이스는 만들지 않는다. 이후 데이터베이스 저장소로 교체하는 작업을 시작할 때 Service와 Repository 사이의 인터페이스를 함께 결정한다.
 
