@@ -9,6 +9,52 @@ public record SearchKeyword(String value) {
         value = normalize(value);
     }
 
+    public boolean matches(String candidate) {
+        return match(candidate).isFound();
+    }
+
+    public NameMatch match(String candidate) {
+        if (candidate == null) {
+            return NameMatch.NONE;
+        }
+
+        String compared = compare(candidate);
+
+        if (compared.equals(value)) {
+            return NameMatch.EXACT;
+        }
+        if (compared.startsWith(value)) {
+            return NameMatch.PREFIX;
+        }
+        if (compared.contains(value)) {
+            return NameMatch.PARTIAL;
+        }
+
+        return NameMatch.NONE;
+    }
+
+    private String compare(String candidate) {
+        if (Chosung.isWrittenIn(value)) {
+            return chosungOf(candidate);
+        }
+
+        return withoutSpaces(candidate.toLowerCase(Locale.ROOT));
+    }
+
+    private String chosungOf(String candidate) {
+        Chosung chosung = Chosung.of(withoutSpaces(candidate));
+
+        if (foldsDoubleLetter()) {
+            return chosung.folded().value();
+        }
+
+        return chosung.value();
+    }
+
+    private boolean foldsDoubleLetter() {
+        return value.length() == 1 && !Chosung.isDouble(value);
+    }
+
     private static String normalize(String value) {
         String composed = Normalizer.normalize(value, Normalizer.Form.NFC);
 
@@ -30,30 +76,5 @@ public record SearchKeyword(String value) {
 
     private static boolean isSpace(char character) {
         return Character.isWhitespace(character) || Character.isSpaceChar(character);
-    }
-
-    public boolean matches(String candidate) {
-        if (candidate == null) {
-            return false;
-        }
-        if (Chosung.isWrittenIn(value)) {
-            return matchesChosung(candidate);
-        }
-
-        return withoutSpaces(candidate.toLowerCase(Locale.ROOT)).contains(value);
-    }
-
-    private boolean matchesChosung(String candidate) {
-        Chosung chosung = Chosung.of(withoutSpaces(candidate));
-
-        if (foldsDoubleLetter()) {
-            return chosung.folded().contains(value);
-        }
-
-        return chosung.contains(value);
-    }
-
-    private boolean foldsDoubleLetter() {
-        return value.length() == 1 && !Chosung.isDouble(value);
     }
 }

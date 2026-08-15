@@ -28,7 +28,10 @@ public class Ingredients {
 
         // spotless:off
         return values.stream()
-                .filter(ingredient -> ingredient.matches(searchKeyword))
+                .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
+                .filter(MatchedIngredient::isFound)
+                .sorted(MatchedIngredient.order())
+                .map(MatchedIngredient::ingredient)
                 .toList();
         // spotless:on
     }
