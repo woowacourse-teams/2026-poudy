@@ -111,4 +111,10 @@ class SearchKeywordTest {
     void ignoresNonBreakingSpace() {
         assertThat(new SearchKeyword("rosiglitazonemaleate").matches("Rosiglitazone\u00A0Maleate")).isTrue();
     }
+
+    @Test
+    @DisplayName("공백뿐인 검색어는 아무것도 찾지 않는다")
+    void spaceOnlyKeywordMatchesNothing() {
+        assertThat(new SearchKeyword("\u00A0").matches("글리세린")).isFalse();
+    }
 }
