@@ -6,7 +6,12 @@
   },
   "servers": [
     {
-      "url": "/"
+      "url": "http://localhost:8080",
+      "description": "로컬 개발 서버"
+    },
+    {
+      "url": "/",
+      "description": "현재 서버"
     }
   ],
   "tags": [
