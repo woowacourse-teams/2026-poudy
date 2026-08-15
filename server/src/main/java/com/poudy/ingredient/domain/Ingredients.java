@@ -1,7 +1,7 @@
 package com.poudy.ingredient.domain;
 
+import com.poudy.common.domain.SearchKeyword;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,11 +22,11 @@ public class Ingredients {
     }
 
     public List<Ingredient> search(String keyword) {
-        String normalizedKeyword = keyword.strip().toLowerCase(Locale.ROOT);
+        SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         // spotless:off
         return values.stream()
-                .filter(ingredient -> ingredient.matches(normalizedKeyword))
+                .filter(ingredient -> ingredient.matches(searchKeyword))
                 .toList();
         // spotless:on
     }

@@ -1,5 +1,6 @@
 package com.poudy.ingredient.domain;
 
+import com.poudy.common.domain.SearchKeyword;
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
@@ -27,11 +28,11 @@ public record Ingredient(
         tagMappings = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
     }
 
-    public boolean matches(String keyword) {
+    public boolean matches(SearchKeyword keyword) {
         // spotless:off
-        return contains(koreanName, keyword) || contains(englishName, keyword)
+        return keyword.matches(koreanName) || keyword.matches(englishName)
                 || aliases.stream()
-                        .anyMatch(alias -> contains(alias, keyword));
+                        .anyMatch(keyword::matches);
         // spotless:on
     }
 
@@ -53,10 +54,6 @@ public record Ingredient(
 
     public List<String> effectSources() {
         return tags().effectSources();
-    }
-
-    private static boolean contains(String value, String keyword) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
     }
 
     private IngredientTags tags() {
