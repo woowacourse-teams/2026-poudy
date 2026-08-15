@@ -47,7 +47,6 @@ public class ProductController {
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
         filter.validateIngredientFilter(excludeCodeIngredients);
-        filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(ProductPageResponse.sample(pagination));
     }
@@ -56,7 +55,6 @@ public class ProductController {
     @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
         filter.validateIngredientFilter(excludeCodeIngredients);
-        filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(ProductCountResponse.sample());
     }

@@ -129,7 +129,8 @@
             "required": false,
             "schema": {
               "type": "string",
-              "example": "토너"
+              "example": "토너",
+              "pattern": ".*\\S.*"
             },
             "example": "토너"
           },
@@ -510,7 +511,8 @@
             "required": false,
             "schema": {
               "type": "string",
-              "example": "토너"
+              "example": "토너",
+              "pattern": ".*\\S.*"
             },
             "example": "토너"
           },
