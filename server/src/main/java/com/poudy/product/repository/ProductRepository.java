@@ -16,7 +16,7 @@ public class ProductRepository {
         this.products = new Products(jsonDataReader.readList(PRODUCTS_FILE_NAME, Product.class));
     }
 
-    public Products findAll() {
-        return products;
+    public long countContaining(Long ingredientId) {
+        return products.countContaining(ingredientId);
     }
 }

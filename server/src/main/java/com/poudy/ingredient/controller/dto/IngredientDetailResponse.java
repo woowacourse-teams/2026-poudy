@@ -33,12 +33,8 @@ public record IngredientDetailResponse(
                 ingredient.koreanName(),
                 ingredient.englishName(),
                 ingredient.description(),
-                ingredient.formulationRoles().stream()
-                        .map(FormulationRoleResponse::from)
-                        .toList(),
-                ingredient.skinEffects().stream()
-                        .map(SkinEffectResponse::from)
-                        .toList(),
+                FormulationRoleResponse.from(ingredient.formulationRoles()),
+                SkinEffectResponse.from(ingredient.skinEffects()),
                 detail.groupCodes(),
                 detail.productCount(),
                 ingredient.infoSources(),

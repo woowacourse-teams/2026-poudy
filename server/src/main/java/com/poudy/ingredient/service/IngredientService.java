@@ -33,7 +33,7 @@ public class IngredientService {
         return new IngredientDetail(
                 ingredient,
                 excludeCodeIngredients.codesOf(ingredientId),
-                productRepository.findAll().countContaining(ingredientId));
+                productRepository.countContaining(ingredientId));
     }
 
     public List<Ingredient> search(String keyword) {

@@ -18,9 +18,7 @@ public record IngredientResponse(
                 ingredient.id(),
                 ingredient.koreanName(),
                 ingredient.englishName(),
-                ingredient.skinEffects().stream()
-                        .map(SkinEffectResponse::from)
-                        .toList());
+                SkinEffectResponse.from(ingredient.skinEffects()));
         // spotless:on
     }
 }

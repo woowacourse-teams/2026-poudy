@@ -26,7 +26,7 @@ public class Ingredients {
 
         // spotless:off
         return values.stream()
-                .filter(ingredient -> matches(ingredient, normalizedKeyword))
+                .filter(ingredient -> ingredient.matches(normalizedKeyword))
                 .toList();
         // spotless:on
     }
@@ -39,15 +39,4 @@ public class Ingredients {
         return values;
     }
 
-    private static boolean matches(Ingredient ingredient, String keyword) {
-        // spotless:off
-        return contains(ingredient.koreanName(), keyword) || contains(ingredient.englishName(), keyword)
-                || ingredient.aliases().stream()
-                        .anyMatch(alias -> contains(alias, keyword));
-        // spotless:on
-    }
-
-    private static boolean contains(String value, String keyword) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
-    }
 }

@@ -7,4 +7,8 @@ public record ExcludeCodeIngredient(Long id, String koreanName, String englishNa
     public static ExcludeCodeIngredient from(Ingredient ingredient) {
         return new ExcludeCodeIngredient(ingredient.id(), ingredient.koreanName(), ingredient.englishName());
     }
+
+    public boolean hasId(Long other) {
+        return id.equals(other);
+    }
 }

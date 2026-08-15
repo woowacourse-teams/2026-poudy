@@ -47,14 +47,14 @@ public class ExcludeCodeIngredients {
         // spotless:off
         return Arrays.stream(ExcludeCode.values())
                 .filter(code -> of(code).stream()
-                        .anyMatch(ingredient -> ingredient.id().equals(ingredientId)))
+                        .anyMatch(ingredient -> ingredient.hasId(ingredientId)))
                 .toList();
         // spotless:on
     }
 
     private static Map<ExcludeCode, List<ExcludeCodeIngredient>> resolve(List<Ingredient> all) {
         Map<String, Ingredient> byKoreanName = index(all, Ingredient::koreanName);
-        Map<String, Ingredient> byEnglishName = index(all, ingredient -> ingredient.englishName().toLowerCase());
+        Map<String, Ingredient> byEnglishName = index(all, Ingredient::lowerCaseEnglishName);
 
         Map<ExcludeCode, List<ExcludeCodeIngredient>> resolved = new EnumMap<>(ExcludeCode.class);
         List<String> missing = new ArrayList<>();

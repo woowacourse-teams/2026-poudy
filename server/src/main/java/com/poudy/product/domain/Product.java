@@ -12,7 +12,7 @@ public record Product(Long id, Long brandId, Long categoryId, String productName
     public boolean contains(Long ingredientId) {
         // spotless:off
         return ingredients.stream()
-                .anyMatch(ingredient -> ingredient.ingredientId().equals(ingredientId));
+                .anyMatch(ingredient -> ingredient.hasId(ingredientId));
         // spotless:on
     }
 }

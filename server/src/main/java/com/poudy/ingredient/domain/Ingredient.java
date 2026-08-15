@@ -5,6 +5,7 @@ import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.TagCategory;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -27,6 +28,22 @@ public record Ingredient(
         descriptionEvidence = Objects.requireNonNullElse(descriptionEvidence, "");
         aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
         tagMappings = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
+    }
+
+    public boolean matches(String keyword) {
+        // spotless:off
+        return contains(koreanName, keyword) || contains(englishName, keyword)
+                || aliases.stream()
+                        .anyMatch(alias -> contains(alias, keyword));
+        // spotless:on
+    }
+
+    public boolean hasId(Long other) {
+        return id.equals(other);
+    }
+
+    public String lowerCaseEnglishName() {
+        return englishName.toLowerCase(Locale.ROOT);
     }
 
     public List<FormulationRole> formulationRoles() {
@@ -60,6 +77,10 @@ public record Ingredient(
                 .distinct()
                 .toList();
         // spotless:on
+    }
+
+    private static boolean contains(String value, String keyword) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
     }
 
     private Stream<String> namesOf(TagCategory category) {
