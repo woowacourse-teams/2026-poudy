@@ -3,6 +3,7 @@ package com.poudy.exception;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanInstantiationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,6 +29,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
+    }
+
+    // 바인딩 중 요청 DTO 생성자가 던진 예외는 스프링이 BeanInstantiationException 으로 감싼다.
+    // 풀지 않으면 요청 오류가 500 으로 나간다.
+    @ExceptionHandler(BeanInstantiationException.class)
+    public ResponseEntity<ProblemDetail> handleBeanInstantiationException(BeanInstantiationException exception) {
+        if (exception.getCause() instanceof InvalidRequestException cause) {
+            return problem(HttpStatus.BAD_REQUEST, cause.code(), cause.getMessage());
+        }
+
+        log.error("Request binding failure", exception);
+
+        return serverError();
     }
 
     @ExceptionHandler(InfrastructureException.class)

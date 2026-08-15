@@ -431,7 +431,7 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 11. 외부 API의 기본 경로는 `/api`다.
 12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
 13. 검색과 필터는 경로도 Controller 메서드도 나누지 않는다. 검색어는 다른 필터와 함께 보낼 수 있고 AND로 결합한다.
-14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다. 다만 검사를 생성자에 두지 않는다. 바인딩 중 생성자가 던진 예외는 `BeanInstantiationException`으로 감싸여 `GlobalExceptionHandler`가 400으로 바꾸지 못하고 500이 된다. Bean Validation 애노테이션이나 Controller가 호출하는 검사 메서드를 쓴다.
+14. 요청 규칙은 `@ModelAttribute`로 받는 요청 DTO가 스스로 검사한다. 횡단 필터나 인터셉터를 두지 않는다. 요청 값만으로 판단할 수 있는 규칙은 생성자에서 검사한다. 바인딩 중 생성자가 던진 예외는 `BeanInstantiationException`으로 감싸이므로, `GlobalExceptionHandler`가 원인이 `InvalidRequestException`이면 풀어서 원래 `ErrorCode`와 400으로 되돌린다. 값 하나로 끝나는 규칙은 Bean Validation 애노테이션을 쓰고, 빈이 있어야 판단할 수 있는 규칙만 Controller가 호출하는 검사 메서드에 남긴다.
 15. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 16. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
 17. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
