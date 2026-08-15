@@ -87,4 +87,28 @@ class SearchKeywordTest {
     void stripsSurroundingSpaces() {
         assertThat(new SearchKeyword("  글리세린  ").matches("글리세린")).isTrue();
     }
+
+    @Test
+    @DisplayName("붙여 쓴 검색어가 띄어 쓴 이름을 찾는다")
+    void ignoresSpacesInName() {
+        assertThat(new SearchKeyword("리나칸투스콤무니스").matches("리나칸투스 콤무니스추출물")).isTrue();
+    }
+
+    @Test
+    @DisplayName("띄어 쓴 검색어가 붙여 쓴 이름을 찾는다")
+    void ignoresSpacesInKeyword() {
+        assertThat(new SearchKeyword("글리 세린").matches("글리세린")).isTrue();
+    }
+
+    @Test
+    @DisplayName("초성도 공백을 넘어 이어진다")
+    void chosungIgnoresSpaces() {
+        assertThat(new SearchKeyword("ㄹㄴㅋㅌㅅㅋㅁㄴㅅ").matches("리나칸투스 콤무니스추출물")).isTrue();
+    }
+
+    @Test
+    @DisplayName("줄바꿈 없는 공백도 공백으로 본다")
+    void ignoresNonBreakingSpace() {
+        assertThat(new SearchKeyword("rosiglitazonemaleate").matches("Rosiglitazone\u00A0Maleate")).isTrue();
+    }
 }
