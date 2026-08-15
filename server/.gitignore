@@ -24,3 +24,8 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### 데이터 ###
+**/resources/**/*.json
+# 테스트 픽스처는 예외다. 막아 두면 데이터를 읽는 코드를 CI 에서 검증할 방법이 없다.
+!src/test/resources/**
