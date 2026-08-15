@@ -12,7 +12,24 @@ public record SearchKeyword(String value) {
     private static String normalize(String value) {
         String composed = Normalizer.normalize(value, Normalizer.Form.NFC);
 
-        return Chosung.toCompatibilityLetters(composed).strip().toLowerCase(Locale.ROOT);
+        return withoutSpaces(Chosung.toCompatibilityLetters(composed)).toLowerCase(Locale.ROOT);
+    }
+
+    private static String withoutSpaces(String text) {
+        StringBuilder compact = new StringBuilder(text.length());
+
+        for (int index = 0; index < text.length(); index++) {
+            char character = text.charAt(index);
+            if (!isSpace(character)) {
+                compact.append(character);
+            }
+        }
+
+        return compact.toString();
+    }
+
+    private static boolean isSpace(char character) {
+        return Character.isWhitespace(character) || Character.isSpaceChar(character);
     }
 
     public boolean matches(String candidate) {
@@ -23,11 +40,11 @@ public record SearchKeyword(String value) {
             return matchesChosung(candidate);
         }
 
-        return candidate.toLowerCase(Locale.ROOT).contains(value);
+        return withoutSpaces(candidate.toLowerCase(Locale.ROOT)).contains(value);
     }
 
     private boolean matchesChosung(String candidate) {
-        Chosung chosung = Chosung.of(candidate);
+        Chosung chosung = Chosung.of(withoutSpaces(candidate));
 
         if (foldsDoubleLetter()) {
             return chosung.folded().contains(value);
