@@ -55,10 +55,10 @@ class IngredientTest {
                         new IngredientTag("BARRIER_SUPPORT_RELATED", TagCategory.BIOLOGICAL_EFFECT, "출처"),
                         new IngredientTag("BOTANICAL_EXTRACT", TagCategory.INGREDIENT_CLASS, "출처")));
 
-        assertThat(ingredient.tagsOf(TagCategory.FUNCTION)).extracting(IngredientTag::name)
+        // INGREDIENT_CLASS 태그는 두 축 어디에도 실리지 않는다.
+        assertThat(ingredient.formulationRoles()).extracting(Enum::name)
                 .containsExactly("HUMECTANT", "SKIN_CONDITIONING");
-        assertThat(ingredient.tagsOf(TagCategory.BIOLOGICAL_EFFECT)).extracting(IngredientTag::name)
-                .containsExactly("BARRIER_SUPPORT_RELATED");
+        assertThat(ingredient.skinEffects()).extracting(Enum::name).containsExactly("BARRIER_SUPPORT_RELATED");
     }
 
     @Test
@@ -85,7 +85,7 @@ class IngredientTest {
                 "유래",
                 List.of(new IngredientTag("NOT_IN_ENUM", TagCategory.FUNCTION, "출처")));
 
-        assertThat(ingredient.tagsOf(TagCategory.FUNCTION)).hasSize(1);
+        assertThat(ingredient.tagMappings()).hasSize(1);
         assertThat(ingredient.formulationRoles()).isEmpty();
     }
 

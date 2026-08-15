@@ -29,14 +29,6 @@ public record Ingredient(
         tagMappings = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
     }
 
-    public List<IngredientTag> tagsOf(TagCategory category) {
-        // spotless:off
-        return tagMappings.stream()
-                .filter(tag -> tag.isOf(category))
-                .toList();
-        // spotless:on
-    }
-
     public List<FormulationRole> formulationRoles() {
         // spotless:off
         return namesOf(TagCategory.FUNCTION)

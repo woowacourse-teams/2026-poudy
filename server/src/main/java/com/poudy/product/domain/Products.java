@@ -22,8 +22,4 @@ public class Products {
                 .count();
         // spotless:on
     }
-
-    public List<Product> values() {
-        return products;
-    }
 }

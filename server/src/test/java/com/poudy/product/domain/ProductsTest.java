@@ -39,10 +39,4 @@ class ProductsTest {
     void countsZeroForMissingId() {
         assertThat(products.countContaining(null)).isZero();
     }
-
-    @Test
-    @DisplayName("들고 있는 목록은 밖에서 고칠 수 없다")
-    void keepsListImmutable() {
-        assertThat(products.values()).isUnmodifiable();
-    }
 }
