@@ -14,12 +14,16 @@ public class Ingredients {
 
     private final List<Ingredient> values;
     private final Map<Long, Ingredient> byId;
+    private final List<SearchableIngredient> searchable;
 
     public Ingredients(List<Ingredient> values) {
         this.values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
         // spotless:off
         this.byId = this.values.stream()
                 .collect(Collectors.toUnmodifiableMap(Ingredient::id, Function.identity(), (first, second) -> first));
+        this.searchable = this.values.stream()
+                .map(SearchableIngredient::of)
+                .toList();
         // spotless:on
     }
 
@@ -27,7 +31,7 @@ public class Ingredients {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         // spotless:off
-        return values.stream()
+        return searchable.stream()
                 .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
                 .filter(MatchedIngredient::isFound)
                 .sorted(MatchedIngredient.order())

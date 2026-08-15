@@ -18,6 +18,10 @@ public record SearchKeyword(String value) {
             return NameMatch.NONE;
         }
 
+        return match(SearchableText.of(candidate));
+    }
+
+    public NameMatch match(SearchableText candidate) {
         String compared = compare(candidate);
 
         if (compared.equals(value)) {
@@ -33,32 +37,25 @@ public record SearchKeyword(String value) {
         return NameMatch.NONE;
     }
 
-    private String compare(String candidate) {
-        if (Chosung.isWrittenIn(value)) {
-            return chosungOf(candidate);
-        }
+    static String normalize(String text) {
+        String composed = Normalizer.normalize(text, Normalizer.Form.NFC);
 
-        return withoutSpaces(candidate.toLowerCase(Locale.ROOT));
+        return withoutSpaces(Chosung.toCompatibilityLetters(composed)).toLowerCase(Locale.ROOT);
     }
 
-    private String chosungOf(String candidate) {
-        Chosung chosung = Chosung.of(withoutSpaces(candidate));
-
+    private String compare(SearchableText candidate) {
+        if (!Chosung.isWrittenIn(value)) {
+            return candidate.normalized();
+        }
         if (foldsDoubleLetter()) {
-            return chosung.folded().value();
+            return candidate.foldedChosung();
         }
 
-        return chosung.value();
+        return candidate.chosung();
     }
 
     private boolean foldsDoubleLetter() {
         return value.length() == 1 && !Chosung.isDouble(value);
-    }
-
-    private static String normalize(String value) {
-        String composed = Normalizer.normalize(value, Normalizer.Form.NFC);
-
-        return withoutSpaces(Chosung.toCompatibilityLetters(composed)).toLowerCase(Locale.ROOT);
     }
 
     private static String withoutSpaces(String text) {

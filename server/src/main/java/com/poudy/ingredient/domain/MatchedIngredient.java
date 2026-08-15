@@ -9,8 +9,11 @@ public record MatchedIngredient(Ingredient ingredient, NameMatch match, NameMatc
     private static final Comparator<MatchedIngredient> ORDER = Comparator.comparing(MatchedIngredient::match)
             .thenComparing(MatchedIngredient::aliasRank).thenComparing(matched -> matched.ingredient().id());
 
-    public static MatchedIngredient of(Ingredient ingredient, SearchKeyword keyword) {
-        return new MatchedIngredient(ingredient, ingredient.match(keyword), ingredient.aliasMatch(keyword));
+    public static MatchedIngredient of(SearchableIngredient searchable, SearchKeyword keyword) {
+        return new MatchedIngredient(
+                searchable.ingredient(),
+                searchable.match(keyword),
+                searchable.aliasMatch(keyword));
     }
 
     public static Comparator<MatchedIngredient> order() {
