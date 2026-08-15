@@ -22,18 +22,6 @@ public record ProductFilterRequest(
         @UniqueElements @ArraySchema(schema = @Schema(example = "1001"), uniqueItems = true) List<Long> excludeIngredientIds,
         @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<ExcludeCode> excludeCodes) {
 
-    public static final String KEYWORD = "keyword";
-
-    public void validateSearchOnly() {
-        if (hasFilterCondition()) {
-            throw new InvalidRequestException(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
-        }
-        if (keyword == null) {
-            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
-        }
-        validateKeywordIfPresent();
-    }
-
     public void validateKeywordIfPresent() {
         if (keyword != null && keyword.isBlank()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
@@ -42,14 +30,5 @@ public record ProductFilterRequest(
 
     public void validateIngredientFilter(ExcludeCodeIngredients excludeCodeIngredients) {
         IngredientFilter.of(includeIngredientIds, excludeIngredientIds, excludeCodeIngredients.idsOf(excludeCodes));
-    }
-
-    public boolean hasFilterCondition() {
-        return isPresent(categoryIds) || isPresent(brandIds) || isPresent(moistureLevel) || isPresent(oilLevel)
-                || isPresent(includeIngredientIds) || isPresent(excludeIngredientIds) || isPresent(excludeCodes);
-    }
-
-    private boolean isPresent(List<?> condition) {
-        return condition != null && !condition.isEmpty();
     }
 }

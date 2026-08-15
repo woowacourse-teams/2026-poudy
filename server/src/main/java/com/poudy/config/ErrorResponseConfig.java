@@ -67,10 +67,6 @@ public class ErrorResponseConfig {
         return PRODUCTS_PATH.equals(path) || PRODUCTS_COUNT_PATH.equals(path);
     }
 
-    private boolean isSearchAndFilterExclusivePath(String path) {
-        return PRODUCTS_PATH.equals(path);
-    }
-
     private boolean hasInput(Operation operation) {
         List<Parameter> parameters = operation.getParameters();
 
@@ -83,9 +79,6 @@ public class ErrorResponseConfig {
 
         if (isProductFilterPath(path)) {
             codes.add(ErrorCode.CONFLICTING_INGREDIENT_FILTER);
-        }
-        if (isSearchAndFilterExclusivePath(path)) {
-            codes.add(ErrorCode.CONFLICTING_SEARCH_AND_FILTER);
         }
 
         return codes.toArray(new ErrorCode[0]);

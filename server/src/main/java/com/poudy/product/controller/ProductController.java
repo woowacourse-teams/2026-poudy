@@ -25,15 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private static final String KEYWORD = ProductFilterRequest.KEYWORD;
-    private static final String FIND_PRODUCTS = "findProducts";
+    private static final String KEYWORD = "keyword";
     private static final String PRODUCTS_SUMMARY = "제품 조회";
-    private static final String PRODUCTS_DESCRIPTION = "검색어 또는 필터 조건에 해당하는 제품 목록을 조회한다. "
-            + "keyword 와 필터 조건은 한쪽만 보낼 수 있고, 함께 보내면 400 을 반환한다. " + "sort 와 페이지 조건은 양쪽 모두에 쓴다.";
+    private static final String PRODUCTS_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
+            + "keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. " + "sort 와 페이지 조건도 함께 쓴다.";
     private static final String COUNT_PATH = "/count";
     private static final String COUNT_SUMMARY = "제품 조회 결과 개수 조회";
-    private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. "
-            + "목록과 달리 keyword 와 필터 조건을 함께 보낼 수 있다.";
+    private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.";
     private static final String SUGGESTIONS_PATH = "/suggestions";
 
     private final ExcludeCodeIngredients excludeCodeIngredients;
@@ -42,24 +40,14 @@ public class ProductController {
         this.excludeCodeIngredients = excludeCodeIngredients;
     }
 
-    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
-    @GetMapping(params = KEYWORD)
-    public ResponseEntity<ProductPageResponse> searchProducts(
-            @Valid @ModelAttribute ProductFilterRequest filter,
-            @Valid @ModelAttribute ProductSortRequest sort,
-            @Valid @ModelAttribute PaginationRequest pagination) {
-        filter.validateSearchOnly();
-
-        return ResponseEntity.ok(ProductPageResponse.sample(pagination));
-    }
-
-    @Operation(operationId = FIND_PRODUCTS, summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
-    @GetMapping(params = "!" + KEYWORD)
+    @Operation(summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @GetMapping
     public ResponseEntity<ProductPageResponse> findProducts(
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
         filter.validateIngredientFilter(excludeCodeIngredients);
+        filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(ProductPageResponse.sample(pagination));
     }
