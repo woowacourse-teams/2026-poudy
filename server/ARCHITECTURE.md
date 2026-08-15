@@ -335,7 +335,8 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 
 `GlobalExceptionHandler`가 모든 오류 응답을 RFC 9457 `ProblemDetail` 형태로 반환한다. `ResponseEntityExceptionHandler`를 상속해 프레임워크가 던지는 예외는 기반 클래스가 처리하고, 응답 계약에 필요한 `code`와 문구만 덧입힌다.
 
-- 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `InfrastructureException` 세 가지다.
+- `exception` 패키지의 커스텀 예외는 `InvalidRequestException`, `ResourceNotFoundException`, `InfrastructureException` 세 가지다. 이 셋은 HTTP 상태로 옮기는 분류이며 `ErrorCode`가 대상을 구분한다.
+- 도메인 규칙 위반은 그 규칙을 가진 도메인이 자기 예외를 직접 던지고, 그 예외는 도메인 패키지에 둔다. `IngredientFilter`의 `ConflictingIngredientFilterException`과 `IngredientTag`의 `DeferredTagEvidenceException`이 그렇다. 도메인은 `ErrorCode`를 알지 않으며, 요청 계층이 그 예외를 오류 코드로 옮긴다.
 - 대상이 제품인지 브랜드인지 성분인지는 예외 타입이 아니라 예외가 들고 있는 `ErrorCode`가 구분한다.
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.

@@ -17,7 +17,7 @@ class IngredientTagTest {
                         "SOOTHING_RELATED",
                         TagCategory.BIOLOGICAL_EFFECT,
                         "확인된 근거; 태그 보류 — 명확한 근거를 확인하지 못함"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("근거가 보류된 태그는 매핑할 수 없습니다.");
+                .isInstanceOf(DeferredTagEvidenceException.class).hasMessage("근거가 보류된 태그는 매핑할 수 없습니다.");
     }
 
     @Test
@@ -28,6 +28,6 @@ class IngredientTagTest {
                         "SOOTHING_RELATED",
                         TagCategory.BIOLOGICAL_EFFECT,
                         "확인된 근거\n태그 보류 — 명확한 근거를 확인하지 못함"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("근거가 보류된 태그는 매핑할 수 없습니다.");
+                .isInstanceOf(DeferredTagEvidenceException.class).hasMessage("근거가 보류된 태그는 매핑할 수 없습니다.");
     }
 }
