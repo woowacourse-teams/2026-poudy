@@ -32,7 +32,7 @@ class IngredientDetailTest {
                 .andExpect(jsonPath("$.groupCodes[0]").value(ExcludeCode.FRAGRANCE_ALLERGENS.name()))
                 .andExpect(jsonPath("$.productCount").value(1))
                 .andExpect(jsonPath("$.infoSources[0]").value("대한화장품협회 성분사전 「리날룰」(성분코드 9)"))
-                .andExpect(jsonPath("$.effectSources.length()").value(3))
+                .andExpect(jsonPath("$.infoSources.length()").value(4)).andExpect(jsonPath("$.effectSources").isEmpty())
                 .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:50:49.068Z"));
     }
 
@@ -43,7 +43,9 @@ class IngredientDetailTest {
                 .andExpect(jsonPath("$.formulationRoles").isEmpty())
                 .andExpect(jsonPath("$.skinEffects[0].id").value(104))
                 .andExpect(jsonPath("$.skinEffects[0].name").value("항산화 관련"))
-                .andExpect(jsonPath("$.groupCodes").isEmpty()).andExpect(jsonPath("$.productCount").value(0));
+                .andExpect(jsonPath("$.groupCodes").isEmpty()).andExpect(jsonPath("$.productCount").value(0))
+                .andExpect(jsonPath("$.infoSources.length()").value(3))
+                .andExpect(jsonPath("$.effectSources.length()").value(2));
     }
 
     @Test

@@ -21,6 +21,10 @@ class IngredientTest {
         return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", descriptionEvidence, null, List.of(), null, null);
     }
 
+    private static Ingredient withEvidenceAndTags(String descriptionEvidence, List<IngredientTag> tags) {
+        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", descriptionEvidence, null, tags, null, null);
+    }
+
     @Test
     @DisplayName("표준 자료에 없는 영문명과 유래는 빈 문자열로 채운다")
     void fillsMissingTextWithEmptyString() {
@@ -86,25 +90,35 @@ class IngredientTest {
     }
 
     @Test
-    @DisplayName("근거를 성분 정보 출처와 효과 출처로 가른다")
-    void splitsEvidenceIntoSources() {
+    @DisplayName("설명 근거 전체를 성분 정보 출처로 반환한다")
+    void returnsDescriptionEvidenceAsInfoSources() {
         Ingredient ingredient = withEvidence(
                 "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2); Antioxidant Activity (Salerno et al., 2014); "
                         + "Enhanced Antioxidant Effects (Lee et al., 2025)");
 
-        assertThat(ingredient.infoSources()).containsExactly("대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)");
-        assertThat(ingredient.effectSources()).containsExactly(
+        assertThat(ingredient.infoSources()).containsExactly(
+                "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)",
                 "Antioxidant Activity (Salerno et al., 2014)",
                 "Enhanced Antioxidant Effects (Lee et al., 2025)");
+        assertThat(ingredient.effectSources()).isEmpty();
     }
 
     @Test
-    @DisplayName("근거가 성분사전뿐이면 효과 출처는 비어 있다")
-    void leavesEffectSourcesEmptyWithoutEvidence() {
-        Ingredient ingredient = withEvidence("대한화장품협회 성분사전 「가공소금」(성분코드 1)");
+    @DisplayName("노출되는 피부 작용 태그의 근거만 효과 출처로 반환한다")
+    void returnsDisplayedBiologicalEffectEvidenceAsEffectSources() {
+        Ingredient ingredient = withEvidenceAndTags(
+                "설명 근거",
+                List.of(
+                        new IngredientTag("HUMECTANT", TagCategory.FUNCTION, "배합 목적 근거"),
+                        new IngredientTag(
+                                "BARRIER_SUPPORT_RELATED",
+                                TagCategory.BIOLOGICAL_EFFECT,
+                                "피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025); 공통 근거"),
+                        new IngredientTag("HYDRATION_RELATED", TagCategory.BIOLOGICAL_EFFECT, "공통 근거; 수분 공급 연구"),
+                        new IngredientTag("NOT_IN_ENUM", TagCategory.BIOLOGICAL_EFFECT, "노출되지 않는 태그 근거")));
 
-        assertThat(ingredient.infoSources()).hasSize(1);
-        assertThat(ingredient.effectSources()).isEmpty();
+        assertThat(ingredient.effectSources())
+                .containsExactly("피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025)", "공통 근거", "수분 공급 연구");
     }
 
     @Test
@@ -114,8 +128,9 @@ class IngredientTest {
                 "대한화장품협회 성분사전 「몬모릴로나이트」(성분코드 290); "
                         + "Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)");
 
-        assertThat(ingredient.effectSources())
-                .containsExactly("Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)");
+        assertThat(ingredient.infoSources()).containsExactly(
+                "대한화장품협회 성분사전 「몬모릴로나이트」(성분코드 290)",
+                "Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)");
     }
 
     @Test
