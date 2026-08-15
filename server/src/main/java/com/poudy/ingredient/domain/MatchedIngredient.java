@@ -1,10 +1,10 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.common.domain.NameMatch;
+import com.poudy.common.domain.NameRank;
 import com.poudy.common.domain.SearchKeyword;
 import java.util.Comparator;
 
-public record MatchedIngredient(Ingredient ingredient, NameMatch match, NameMatch aliasMatch) {
+public record MatchedIngredient(Ingredient ingredient, NameRank match, NameRank aliasMatch) {
 
     private static final Comparator<MatchedIngredient> ORDER = Comparator.comparing(MatchedIngredient::match)
             .thenComparing(MatchedIngredient::aliasRank).thenComparing(matched -> matched.ingredient().id());
@@ -24,9 +24,9 @@ public record MatchedIngredient(Ingredient ingredient, NameMatch match, NameMatc
         return match.isFound() || aliasMatch.isFound();
     }
 
-    private NameMatch aliasRank() {
+    private NameRank aliasRank() {
         if (match.isFound()) {
-            return NameMatch.NONE;
+            return NameRank.NONE;
         }
 
         return aliasMatch;

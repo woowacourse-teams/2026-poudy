@@ -1,6 +1,6 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.common.domain.NameMatch;
+import com.poudy.common.domain.NameRank;
 import com.poudy.common.domain.SearchKeyword;
 import com.poudy.common.domain.SearchableText;
 import java.util.Comparator;
@@ -23,20 +23,20 @@ public record SearchableIngredient(Ingredient ingredient, List<SearchableText> n
         // spotless:on
     }
 
-    public NameMatch match(SearchKeyword keyword) {
+    public NameRank match(SearchKeyword keyword) {
         return best(names, keyword);
     }
 
-    public NameMatch aliasMatch(SearchKeyword keyword) {
+    public NameRank aliasMatch(SearchKeyword keyword) {
         return best(aliases, keyword);
     }
 
-    private static NameMatch best(List<SearchableText> candidates, SearchKeyword keyword) {
+    private static NameRank best(List<SearchableText> candidates, SearchKeyword keyword) {
         // spotless:off
         return candidates.stream()
-                .map(keyword::match)
+                .map(candidate -> NameRank.of(keyword.match(candidate), candidate))
                 .min(Comparator.naturalOrder())
-                .orElse(NameMatch.NONE);
+                .orElse(NameRank.NONE);
         // spotless:on
     }
 }
