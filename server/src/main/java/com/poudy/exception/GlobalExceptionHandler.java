@@ -1,6 +1,7 @@
 package com.poudy.exception;
 
 import com.poudy.product.controller.dto.ConflictingIngredientFilter;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleBeanInstantiationException(BeanInstantiationException exception) {
         if (exception.getCause() instanceof InvalidRequestException cause) {
             return problem(HttpStatus.BAD_REQUEST, cause.code(), cause.getMessage());
+        }
+        if (exception.getCause() instanceof ConflictingIngredientFilterException) {
+            return problem(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorCode.CONFLICTING_INGREDIENT_FILTER,
+                    ErrorCode.CONFLICTING_INGREDIENT_FILTER.message());
         }
 
         log.error("Request binding failure", exception);

@@ -24,16 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private static final String KEYWORD = "keyword";
-    private static final String PRODUCTS_SUMMARY = "제품 조회";
-    private static final String PRODUCTS_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
-            + "keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. " + "sort 와 페이지 조건도 함께 쓴다.";
-    private static final String COUNT_PATH = "/count";
-    private static final String COUNT_SUMMARY = "제품 조회 결과 개수 조회";
-    private static final String COUNT_DESCRIPTION = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.";
-    private static final String SUGGESTIONS_PATH = "/suggestions";
-
-    @Operation(summary = PRODUCTS_SUMMARY, description = PRODUCTS_DESCRIPTION)
+    @Operation(summary = "제품 조회", description = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
+            + "keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. " + "sort 와 페이지 조건도 함께 쓴다.")
     @GetMapping
     public ResponseEntity<ProductPageResponse> findProducts(
             @Valid @ModelAttribute ProductFilterRequest filter,
@@ -42,15 +34,15 @@ public class ProductController {
         return ResponseEntity.ok(ProductPageResponse.sample(pagination));
     }
 
-    @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
-    @GetMapping(COUNT_PATH)
+    @Operation(summary = "제품 조회 결과 개수 조회", description = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.")
+    @GetMapping("/count")
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
         return ResponseEntity.ok(ProductCountResponse.sample());
     }
 
     @Operation(summary = "제품 검색 제안 조회", description = "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.")
-    @Parameter(name = KEYWORD, example = "토너")
-    @GetMapping(SUGGESTIONS_PATH)
+    @Parameter(name = "keyword", example = "토너")
+    @GetMapping("/suggestions")
     public ResponseEntity<ProductSuggestionListResponse> suggestProducts(@Valid @ModelAttribute KeywordRequest search) {
         return ResponseEntity.ok(ProductSuggestionListResponse.sample());
     }

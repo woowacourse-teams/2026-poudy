@@ -1,7 +1,7 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.exception.InvalidRequestException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.IngredientFilter;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -25,7 +25,7 @@ public class ConflictingIngredientFilterValidator
                     excludeCodeIngredients.idsOf(request.excludeCodes()));
 
             return true;
-        } catch (InvalidRequestException exception) {
+        } catch (ConflictingIngredientFilterException exception) {
             return false;
         }
     }
