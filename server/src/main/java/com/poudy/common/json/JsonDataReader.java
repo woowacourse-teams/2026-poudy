@@ -3,6 +3,7 @@ package com.poudy.common.json;
 import com.poudy.exception.InfrastructureException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -40,7 +41,14 @@ public class JsonDataReader {
 
         // 데이터가 없거나 형식이 깨졌으면 조회 시점이 아니라 기동 시점에 실패해야 원인을 찾기 쉽다.
         try (InputStream source = resourceLoader.getResource(DATA_LOCATION + fileName).getInputStream()) {
-            return MAPPER.readerForListOf(elementType).at("/" + rootField).readValue(source);
+            List<T> values = MAPPER.readerForListOf(elementType).at("/" + rootField).readValue(source);
+            if (values == null) {
+                throw new InfrastructureException(
+                        "데이터 파일의 최상위 필드가 비어 있습니다: %s (\"%s\")".formatted(fileName, rootField));
+            }
+
+            // 기동 시 한 번 읽고 다시 읽지 않으므로, 들고 있는 목록을 밖에서 고칠 수 없게 한다.
+            return Collections.unmodifiableList(values);
         } catch (IOException | JacksonException e) {
             throw new InfrastructureException(
                     "데이터 파일을 읽지 못했습니다: %s (최상위 필드 \"%s\" 를 찾는다)".formatted(fileName, rootField),
