@@ -3,6 +3,8 @@ package com.poudy.product.controller.dto;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.product.domain.IngredientFilter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -36,6 +38,10 @@ public record ProductFilterRequest(
         if (keyword != null && keyword.isBlank()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
+    }
+
+    public void validateIngredientFilter(ExcludeCodeIngredients excludeCodeIngredients) {
+        IngredientFilter.of(includeIngredientIds, excludeIngredientIds, excludeCodeIngredients.idsOf(excludeCodes));
     }
 
     public boolean hasFilterCondition() {

@@ -20,7 +20,6 @@ import com.poudy.product.controller.dto.ProductSuggestionListResponse;
 import com.poudy.product.controller.dto.ProductSuggestionResponse;
 import com.poudy.product.controller.dto.ProductVariantResponse;
 import com.poudy.product.controller.dto.SkinEffectGroupResponse;
-import com.poudy.product.domain.IngredientFilter;
 import com.poudy.tag.controller.dto.FormulationRoleResponse;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -89,7 +88,7 @@ public class ProductController {
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        validateIngredientFilter(filter);
+        filter.validateIngredientFilter(excludeCodeIngredients);
 
         return ResponseEntity.ok(
                 new ProductPageResponse(
@@ -101,7 +100,7 @@ public class ProductController {
     @Operation(summary = COUNT_SUMMARY, description = COUNT_DESCRIPTION)
     @GetMapping(COUNT_PATH)
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        validateIngredientFilter(filter);
+        filter.validateIngredientFilter(excludeCodeIngredients);
         filter.validateKeywordIfPresent();
 
         return ResponseEntity.ok(new ProductCountResponse((long) SAMPLE_PRODUCTS.size()));
@@ -119,13 +118,6 @@ public class ProductController {
     public ResponseEntity<ProductDetailResponse> findProductDetail(
             @Parameter(example = "101") @PathVariable Long productId) {
         return ResponseEntity.ok(sampleProductDetail(productId));
-    }
-
-    private void validateIngredientFilter(ProductFilterRequest filter) {
-        IngredientFilter.of(
-                filter.includeIngredientIds(),
-                filter.excludeIngredientIds(),
-                excludeCodeIngredients.idsOf(filter.excludeCodes()));
     }
 
     private static ProductResponse sampleProduct(Long id) {
