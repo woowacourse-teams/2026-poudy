@@ -14,7 +14,7 @@ public record ExcludeCodeListResponse(
         // spotless:off
         return new ExcludeCodeListResponse(
                 Arrays.stream(ExcludeCode.values())
-                        .map(code -> ExcludeCodeResponse.from(code, ingredients.of(code)))
+                        .map(code -> ExcludeCodeResponse.from(code, ingredients))
                         .toList());
         // spotless:on
     }

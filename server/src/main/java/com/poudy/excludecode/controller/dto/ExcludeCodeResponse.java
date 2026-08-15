@@ -1,7 +1,7 @@
 package com.poudy.excludecode.controller.dto;
 
 import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.excludecode.domain.ExcludeCodeIngredient;
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -13,12 +13,12 @@ public record ExcludeCodeResponse(
         @NotNull @Schema(description = "이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다") List<IngredientSummaryResponse> ingredients,
         @NotNull @Schema(description = "성분군 설명", example = "자극을 유발할 수 있는 방부제 성분을 제외합니다.") String description) {
 
-    public static ExcludeCodeResponse from(ExcludeCode code, List<ExcludeCodeIngredient> ingredients) {
+    public static ExcludeCodeResponse from(ExcludeCode code, ExcludeCodeIngredients ingredients) {
         // spotless:off
         return new ExcludeCodeResponse(
                 code,
                 code.displayName(),
-                ingredients.stream()
+                ingredients.of(code).stream()
                         .map(IngredientSummaryResponse::from)
                         .toList(),
                 code.description());
