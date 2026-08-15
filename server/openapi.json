@@ -1043,12 +1043,12 @@
           "name": {
             "type": "string",
             "description": "브랜드 한글명",
-            "example": "라운드랩"
+            "example": "브랜드 이름"
           },
           "englishName": {
             "type": "string",
             "description": "브랜드 영문명",
-            "example": "ROUND LAB"
+            "example": "BRAND NAME"
           },
           "imageUrl": {
             "type": "string",
@@ -1909,12 +1909,12 @@
           "name": {
             "type": "string",
             "description": "브랜드 한글명",
-            "example": "라운드랩"
+            "example": "브랜드 이름"
           },
           "englishName": {
             "type": "string",
             "description": "브랜드 영문명",
-            "example": "ROUND LAB"
+            "example": "BRAND NAME"
           },
           "imageUrl": {
             "type": "string",
@@ -1962,12 +1962,12 @@
           "name": {
             "type": "string",
             "description": "브랜드 한글명",
-            "example": "라운드랩"
+            "example": "브랜드 이름"
           },
           "englishName": {
             "type": "string",
             "description": "브랜드 영문명",
-            "example": "ROUND LAB"
+            "example": "BRAND NAME"
           },
           "imageUrl": {
             "type": "string",

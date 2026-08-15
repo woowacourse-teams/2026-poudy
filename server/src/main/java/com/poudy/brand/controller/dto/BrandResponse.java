@@ -5,14 +5,17 @@ import jakarta.validation.constraints.NotNull;
 
 public record BrandResponse(
         @NotNull @Schema(description = "브랜드 ID", example = "12") Long id,
-        @NotNull @Schema(description = "브랜드 한글명", example = "라운드랩") String name,
-        @NotNull @Schema(description = "브랜드 영문명", example = "ROUND LAB") String englishName,
+        @NotNull @Schema(description = "브랜드 한글명", example = "브랜드 이름") String name,
+        @NotNull @Schema(description = "브랜드 영문명", example = "BRAND NAME") String englishName,
         @NotNull @Schema(description = "브랜드 이미지 URL", example = "https://cdn.example.com/brands/12/image.png") String imageUrl) {
 
+    // 표본과 문서 예시에 실제 브랜드를 쓰지 않는다.
     static final Long SAMPLE_ID = 12L;
+    static final String SAMPLE_NAME = "브랜드 이름";
+    static final String SAMPLE_ENGLISH_NAME = "BRAND NAME";
 
     public static BrandResponse sample() {
-        return new BrandResponse(SAMPLE_ID, "브랜드 이름", "BRAND NAME", sampleImageUrl(SAMPLE_ID));
+        return new BrandResponse(SAMPLE_ID, SAMPLE_NAME, SAMPLE_ENGLISH_NAME, sampleImageUrl(SAMPLE_ID));
     }
 
     static String sampleImageUrl(Long id) {
