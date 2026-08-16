@@ -10,17 +10,18 @@ on:
 
 permissions:
   contents: read
+  issues: read
   pull-requests: write
-
-# pull_request_target 의 github.ref 는 베이스 브랜치라 모든 PR 이 한 그룹이 된다.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
 
 jobs:
   label:
     name: 변경 경로 레이블
     if: github.event.action != 'edited'
+    # pull_request_target 의 github.ref 는 베이스 브랜치라 모든 PR 이 한 그룹이 된다.
+    # 잡마다 그룹을 나눠 제목 수정이 진행 중인 경로 레이블을 취소하지 않게 한다.
+    concurrency:
+      group: ${{ github.workflow }}-path-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,6 +31,9 @@ jobs:
 
   type-label:
     name: 제목 타입 레이블
+    concurrency:
+      group: ${{ github.workflow }}-type-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
