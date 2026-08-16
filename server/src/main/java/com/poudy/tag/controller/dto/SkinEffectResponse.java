@@ -14,10 +14,8 @@ public record SkinEffectResponse(
     }
 
     public static List<SkinEffectResponse> from(List<SkinEffect> effects) {
-        // spotless:off
         return effects.stream()
                 .map(SkinEffectResponse::from)
                 .toList();
-        // spotless:on
     }
 }

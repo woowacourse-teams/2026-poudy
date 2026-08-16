@@ -9,10 +9,9 @@ public record StorageResponse(
         @NotNull @Schema(description = "요청한 ID 순서대로 담긴 제품. 찾지 못한 ID 는 빠진다") List<ProductResponse> items) {
 
     public static StorageResponse sample(List<Long> productIds) {
-        // spotless:off
-        return new StorageResponse(productIds.stream()
-                .map(ProductResponse::sample)
-                .toList());
-        // spotless:on
+        return new StorageResponse(
+                productIds.stream()
+                        .map(ProductResponse::sample)
+                        .toList());
     }
 }

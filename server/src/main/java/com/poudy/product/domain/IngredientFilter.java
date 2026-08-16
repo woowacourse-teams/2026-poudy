@@ -12,25 +12,21 @@ public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
         includedIds = List.copyOf(Objects.requireNonNullElse(includedIds, List.of()));
         excludedIds = List.copyOf(Objects.requireNonNullElse(excludedIds, List.of()));
 
-        // spotless:off
         if (includedIds.stream()
                 .anyMatch(excludedIds::contains)) {
             throw new ConflictingIngredientFilterException();
         }
-        // spotless:on
     }
 
     public static IngredientFilter of(
             List<Long> includedIds,
             List<Long> excludedIds,
             Collection<Long> excludedCodeIngredientIds) {
-        // spotless:off
         List<Long> resolved = Stream.concat(
-                        Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
-                        Objects.requireNonNullElse(excludedCodeIngredientIds, Set.<Long>of()).stream())
+                Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
+                Objects.requireNonNullElse(excludedCodeIngredientIds, Set.<Long>of()).stream())
                 .distinct()
                 .toList();
-        // spotless:on
 
         return new IngredientFilter(includedIds, resolved);
     }

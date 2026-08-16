@@ -27,7 +27,6 @@ public record IngredientDetailResponse(
     public static IngredientDetailResponse from(IngredientDetail detail) {
         Ingredient ingredient = detail.ingredient();
 
-        // spotless:off
         return new IngredientDetailResponse(
                 ingredient.id(),
                 ingredient.koreanName(),
@@ -40,6 +39,5 @@ public record IngredientDetailResponse(
                 ingredient.infoSources(),
                 ingredient.effectSources(),
                 ingredient.updatedAt());
-        // spotless:on
     }
 }

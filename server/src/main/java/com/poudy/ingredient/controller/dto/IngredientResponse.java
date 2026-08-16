@@ -13,12 +13,10 @@ public record IngredientResponse(
         @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT)") List<SkinEffectResponse> skinEffects) {
 
     public static IngredientResponse from(Ingredient ingredient) {
-        // spotless:off
         return new IngredientResponse(
                 ingredient.id(),
                 ingredient.koreanName(),
                 ingredient.englishName(),
                 SkinEffectResponse.from(ingredient.skinEffects()));
-        // spotless:on
     }
 }

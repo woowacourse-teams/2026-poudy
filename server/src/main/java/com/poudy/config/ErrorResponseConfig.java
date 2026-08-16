@@ -34,12 +34,11 @@ public class ErrorResponseConfig {
                     "400",
                     ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path)));
         }
-        // spotless:off
         ErrorResponseCodes.notFound(path)
-                .ifPresent(code -> responses.addApiResponse(
-                        "404",
-                        ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)));
-        // spotless:on
+                .ifPresent(
+                        code -> responses.addApiResponse(
+                                "404",
+                                ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)));
         responses.addApiResponse(
                 "500",
                 ProblemDetailResponses.of("서버 오류", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR));

@@ -15,10 +15,8 @@ public record IngredientSummaryResponse(
     }
 
     public static List<IngredientSummaryResponse> from(List<ExcludeCodeIngredient> ingredients) {
-        // spotless:off
         return ingredients.stream()
                 .map(IngredientSummaryResponse::from)
                 .toList();
-        // spotless:on
     }
 }

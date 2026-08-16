@@ -17,20 +17,16 @@ public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> 
         List<String> missing = new ArrayList<>();
 
         for (String name : code.ingredientNames()) {
-            // spotless:off
             ingredients.findByName(name)
                     .map(ExcludeCodeIngredient::from)
                     .ifPresentOrElse(found::add, () -> missing.add(name));
-            // spotless:on
         }
 
         return new ResolvedExcludeCode(code, found, missing);
     }
 
     public Stream<String> missingNames() {
-        // spotless:off
         return missing.stream()
                 .map(name -> code + " 의 " + name);
-        // spotless:on
     }
 }
