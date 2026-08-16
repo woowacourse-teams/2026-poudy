@@ -1,18 +1,20 @@
 package com.poudy.product.domain;
 
+import com.poudy.ingredient.domain.Ingredients;
 import java.util.List;
 import java.util.Objects;
 
-public record Product(Long id, Long brandId, Long categoryId, String productName, List<ProductIngredient> ingredients) {
+public record Product(Long id, Long brandId, Long categoryId, String productName, Ingredients ingredients) {
 
     public Product {
-        ingredients = List.copyOf(Objects.requireNonNullElse(ingredients, List.of()));
+        ingredients = Objects.requireNonNullElseGet(ingredients, () -> new Ingredients(List.of()));
     }
 
     public boolean contains(Long ingredientId) {
-        // spotless:off
-        return ingredients.stream()
-                .anyMatch(ingredient -> ingredient.hasId(ingredientId));
-        // spotless:on
+        if (ingredientId == null) {
+            return false;
+        }
+
+        return ingredients.findById(ingredientId).isPresent();
     }
 }
