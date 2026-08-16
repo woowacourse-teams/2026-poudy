@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
@@ -30,10 +31,18 @@ public class JsonDataReader {
     }
 
     public <T> List<T> readList(String fileName, Class<T> elementType) {
+        return readList(fileName, elementType, MAPPER);
+    }
+
+    public <T> List<T> readList(String fileName, Class<T> elementType, JacksonModule resolution) {
+        return readList(fileName, elementType, MAPPER.rebuild().addModule(resolution).build());
+    }
+
+    private <T> List<T> readList(String fileName, Class<T> elementType, ObjectMapper mapper) {
         String rootField = StringUtils.stripFilenameExtension(fileName);
 
         try (InputStream source = resourceLoader.getResource(DATA_LOCATION + fileName).getInputStream()) {
-            List<T> values = MAPPER.readerForListOf(elementType).at("/" + rootField).readValue(source);
+            List<T> values = mapper.readerForListOf(elementType).at("/" + rootField).readValue(source);
             if (values == null) {
                 throw new InfrastructureException(
                         "데이터 파일의 최상위 필드가 비어 있습니다: %s (\"%s\")".formatted(fileName, rootField));

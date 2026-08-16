@@ -1,6 +1,7 @@
 package com.poudy.ingredient.domain;
 
 import com.poudy.common.domain.SearchKeyword;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,15 @@ public class Ingredients {
 
     public Optional<Ingredient> findById(Long id) {
         return Optional.ofNullable(byId.get(id));
+    }
+
+    public Ingredients findAllById(Collection<Long> ids) {
+        // spotless:off
+        return new Ingredients(ids.stream()
+                .map(this::findById)
+                .flatMap(Optional::stream)
+                .toList());
+        // spotless:on
     }
 
     public Optional<Ingredient> findByName(String name) {
