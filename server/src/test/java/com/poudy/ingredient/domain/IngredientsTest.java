@@ -43,6 +43,29 @@ class IngredientsTest {
         assertThat(ingredients.findByName("")).isEmpty();
     }
 
+    @Test
+    @DisplayName("찾지 못한 ID 는 결과에서 뺀다")
+    void skipsUnknownIds() {
+        Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "글리세린", "Glycerin")));
+
+        Ingredients found = ingredients.findAllById(List.of(10L, 999L));
+
+        assertThat(found.findById(10L)).isPresent();
+        assertThat(found.findById(999L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("골라낸 성분 목록도 검색할 수 있다")
+    void searchesWithinSelectedIngredients() {
+        Ingredients ingredients = new Ingredients(
+                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+
+        Ingredients found = ingredients.findAllById(List.of(10L));
+
+        assertThat(found.search("글리")).map(Ingredient::id).containsExactly(10L);
+        assertThat(found.search("향료")).isEmpty();
+    }
+
     private static Ingredient ingredient(Long id, String koreanName, String englishName) {
         return new Ingredient(id, koreanName, englishName, null, null, null, null, null, null, null);
     }

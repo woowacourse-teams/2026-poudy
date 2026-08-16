@@ -13,19 +13,19 @@ import java.util.stream.Collectors;
 
 public class Ingredients {
 
-    private final List<Ingredient> values;
-    private final Map<Long, Ingredient> byId;
     private final List<SearchableIngredient> searchable;
+    private final Map<Long, SearchableIngredient> byId;
 
     public Ingredients(List<Ingredient> values) {
-        this.values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-        // spotless:off
-        this.byId = this.values.stream()
-                .collect(Collectors.toUnmodifiableMap(Ingredient::id, Function.identity(), (first, second) -> first));
-        this.searchable = this.values.stream()
-                .map(SearchableIngredient::of)
-                .toList();
-        // spotless:on
+        this.searchable = searchableOf(values);
+        this.byId = indexOf(this.searchable);
+    }
+
+    // 이미 계산해 둔 검색 표현을 그대로 물려받는다. 부분집합을 만들 때마다 이름을 다시 정규화하면
+    // 제품 수만큼 그 비용이 기동 시점에 쌓인다.
+    private Ingredients(List<SearchableIngredient> searchable, Map<Long, SearchableIngredient> byId) {
+        this.searchable = searchable;
+        this.byId = byId;
     }
 
     public List<Ingredient> search(String keyword) {
@@ -42,16 +42,21 @@ public class Ingredients {
     }
 
     public Optional<Ingredient> findById(Long id) {
-        return Optional.ofNullable(byId.get(id));
+        // spotless:off
+        return Optional.ofNullable(byId.get(id))
+                .map(SearchableIngredient::ingredient);
+        // spotless:on
     }
 
     public Ingredients findAllById(Collection<Long> ids) {
         // spotless:off
-        return new Ingredients(ids.stream()
-                .map(this::findById)
-                .flatMap(Optional::stream)
-                .toList());
+        List<SearchableIngredient> found = ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .toList();
         // spotless:on
+
+        return new Ingredients(found, indexOf(found));
     }
 
     public Optional<Ingredient> findByName(String name) {
@@ -65,9 +70,26 @@ public class Ingredients {
 
     private Optional<Ingredient> firstOf(Predicate<Ingredient> match) {
         // spotless:off
-        return values.stream()
+        return searchable.stream()
+                .map(SearchableIngredient::ingredient)
                 .filter(match)
                 .min(Comparator.comparing(Ingredient::id));
+        // spotless:on
+    }
+
+    private static List<SearchableIngredient> searchableOf(List<Ingredient> values) {
+        // spotless:off
+        return Objects.requireNonNullElse(values, List.<Ingredient>of()).stream()
+                .map(SearchableIngredient::of)
+                .toList();
+        // spotless:on
+    }
+
+    private static Map<Long, SearchableIngredient> indexOf(List<SearchableIngredient> searchable) {
+        // spotless:off
+        return searchable.stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        found -> found.ingredient().id(), Function.identity(), (first, second) -> first));
         // spotless:on
     }
 }
