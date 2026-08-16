@@ -2,6 +2,8 @@ package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.brand.domain.Brand;
+import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import java.util.Arrays;
@@ -22,7 +24,7 @@ class ProductsTest {
                 .map(ProductsTest::ingredient)
                 .toList();
 
-        return new Product(id, 1L, 1L, "제품 " + id, new Ingredients(ingredients));
+        return new Product(id, brand(1L), category(1L), "제품 " + id, new Ingredients(ingredients));
     }
 
     private final Products products = new Products(
@@ -76,10 +78,18 @@ class ProductsTest {
     }
 
     private static Product productOfBrand(Long id, Long brandId) {
-        return new Product(id, brandId, 1L, "제품 " + id, new Ingredients(List.of()));
+        return new Product(id, brand(brandId), category(1L), "제품 " + id, new Ingredients(List.of()));
     }
 
     private static Product productOfBrandAndCategory(Long id, Long brandId, Long categoryId) {
-        return new Product(id, brandId, categoryId, "제품 " + id, new Ingredients(List.of()));
+        return new Product(id, brand(brandId), category(categoryId), "제품 " + id, new Ingredients(List.of()));
+    }
+
+    private static Brand brand(Long id) {
+        return new Brand(id, "브랜드 " + id, null, null);
+    }
+
+    private static Category category(Long id) {
+        return new Category(id, 100L, "카테고리 " + id, 1, null, null);
     }
 }

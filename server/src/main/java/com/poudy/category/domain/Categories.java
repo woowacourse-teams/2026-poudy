@@ -3,6 +3,7 @@ package com.poudy.category.domain;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,10 @@ public class Categories {
         }
 
         return values.stream().filter(category -> category.isChildOf(parent)).toList();
+    }
+
+    public Optional<Category> findById(Long id) {
+        return Optional.ofNullable(byId.get(id));
     }
 
     private void validateChildrenBelongToParent() {
