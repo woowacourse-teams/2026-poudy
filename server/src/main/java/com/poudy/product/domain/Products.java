@@ -2,7 +2,9 @@ package com.poudy.product.domain;
 
 import com.poudy.common.domain.SearchKeyword;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Products {
 
@@ -35,5 +37,10 @@ public class Products {
         return products.stream()
                 .filter(product -> product.contains(ingredientId))
                 .count();
+    }
+
+    public Map<Long, Long> countByCategoryId() {
+        return products.stream()
+                .collect(Collectors.toUnmodifiableMap(Product::categoryId, product -> 1L, Long::sum));
     }
 }

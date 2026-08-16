@@ -1,5 +1,7 @@
 package com.poudy.category.controller.dto;
 
+import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryCounts;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -10,16 +12,12 @@ public record CategoryResponse(
         @NotNull List<CategoryChildResponse> children,
         @NotNull @Schema(example = "51") Long productCount) {
 
-    public static List<CategoryResponse> samples() {
-        return List.of(
-                new CategoryResponse(
-                        1L,
-                        "스킨케어",
-                        List.of(
-                                new CategoryChildResponse(2L, "스킨/토너", 30L),
-                                new CategoryChildResponse(3L, "에센스/세럼/앰플", 21L)),
-                        51L),
-                new CategoryResponse(10L, "클렌징", List.of(), 12L));
+    public static CategoryResponse from(Category parent, CategoryCounts categoryCounts) {
+        List<CategoryChildResponse> children = categoryCounts.childrenOf(parent).stream()
+                .map(child -> CategoryChildResponse.from(child, categoryCounts))
+                .toList();
+
+        return new CategoryResponse(parent.id(), parent.name(), children, categoryCounts.productCountOf(parent));
     }
 
     public static List<CategoryResponse> samplesOfBrand() {

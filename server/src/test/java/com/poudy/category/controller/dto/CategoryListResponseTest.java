@@ -1,0 +1,37 @@
+package com.poudy.category.controller.dto;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.poudy.category.domain.Categories;
+import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryCounts;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("카테고리 목록 응답")
+class CategoryListResponseTest {
+
+    @Test
+    @DisplayName("대분류와 소분류를 제품 수와 함께 계층 응답으로 변환한다")
+    void convertsCategoryCounts() {
+        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
+        Category toner = new Category(2L, 1L, "토너", 1, null, null);
+        Category serum = new Category(3L, 1L, "세럼", 1, null, null);
+        Category cleansing = new Category(4L, null, "클렌징", 0, null, null);
+        Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1, null, null);
+        Categories categories = new Categories(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
+        CategoryCounts categoryCounts = new CategoryCounts(categories, Map.of(2L, 2L, 3L, 1L, 5L, 4L));
+
+        CategoryListResponse response = CategoryListResponse.from(categoryCounts);
+
+        assertThat(response.items()).containsExactly(
+                new CategoryResponse(
+                        1L,
+                        "스킨케어",
+                        List.of(new CategoryChildResponse(2L, "토너", 2L), new CategoryChildResponse(3L, "세럼", 1L)),
+                        3L),
+                new CategoryResponse(4L, "클렌징", List.of(new CategoryChildResponse(5L, "클렌징폼", 4L)), 4L));
+    }
+}
