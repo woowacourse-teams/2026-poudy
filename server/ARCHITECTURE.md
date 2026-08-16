@@ -102,11 +102,14 @@ com.poudy
 │   │   └── dto
 │   │       ├── ExcludeCodeResponse
 │   │       └── ExcludeCodeListResponse
-│   └── domain
-│       ├── ExcludeCode
-│       ├── ExcludeCodeIngredient
-│       ├── ExcludeCodeIngredients
-│       └── ResolvedExcludeCode
+│   ├── domain
+│   │   ├── ExcludeCode
+│   │   ├── ExcludeCodeMapping
+│   │   ├── ExcludeCodeIngredient
+│   │   ├── ExcludeCodeIngredients
+│   │   └── ResolvedExcludeCode
+│   └── repository
+│       └── ExcludeCodeRepository
 ├── storage
 │   ├── controller
 │   │   ├── StorageController
@@ -193,7 +196,7 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 `Ingredients`는 `List<Ingredient>`를 가지는 일급 컬렉션이다. 여러 성분을 대상으로 하는 문제를 담당한다.
 
-제외 성분군의 고정 성분명처럼 이름 하나로 성분을 특정할 때는 한글명 완전 일치를 먼저 찾고, 없으면 영문명을 대소문자 없이 맞춘다. 같은 이름을 가진 성분이 여럿이면 ID가 작은 성분을 쓴다. 한 성분의 영문명이 다른 성분의 한글명과 같을 수 있어 순서를 정해 두지 않으면 어느 쪽이 나올지 데이터 순서에 달린다.
+이름 하나로 성분을 특정할 때는 한글명 완전 일치를 먼저 찾고, 없으면 영문명을 대소문자 없이 맞춘다. 같은 이름을 가진 성분이 여럿이면 ID가 작은 성분을 쓴다. 한 성분의 영문명이 다른 성분의 한글명과 같을 수 있어 순서를 정해 두지 않으면 어느 쪽이 나올지 데이터 순서에 달린다.
 
 성분 검색은 앞뒤 공백을 제거한 검색어로 한글명, 영문명과 별칭을 부분 일치시킨다. 영문명과
 영문 별칭은 대소문자를 구분하지 않는다. 결과 건수 상한은 두지 않는다.
@@ -316,7 +319,11 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
 `excludeCodes`와 `excludeIngredientIds`는 함께 보낼 수 있고 둘을 합집합으로 판정한다. 포함 성분이 제외 성분군에 속하면 `CONFLICTING_INGREDIENT_FILTER`로 거절한다. 같은 모순을 성분 ID 두 개로 표현하든 성분군으로 표현하든 같은 오류가 나와야 프론트가 "조건에 맞는 제품 없음"과 "잘못된 조건"을 구분할 수 있다.
 
-`ExcludeCodeIngredients`가 성분군에 속한 성분을 갖는다. 고정 성분명을 성분으로 푸는 일은 `ResolvedExcludeCode`가 성분군 하나씩 한 번만 훑어 찾은 성분과 찾지 못한 이름을 함께 돌려주고, 하나라도 찾지 못하면 기동 시점에 실패한다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다. 성분 데이터가 JSON이나 데이터베이스로 옮겨 가면 이 매핑도 Repository에서 읽어 오도록 바꾼다.
+성분군에 어떤 성분이 속하는지는 `exclude_codes.json`이 갖는다. `ExcludeCodeRepository`가 성분군마다 코드와 성분 ID 목록을 읽고, `ResolvedExcludeCode`가 성분군 하나씩 한 번만 훑어 찾은 성분과 찾지 못한 ID를 함께 돌려준다. 하나라도 찾지 못하면 기동 시점에 실패한다. `IngredientFilter.of`가 이 매핑으로 성분군을 성분으로 풀어 제외 목록에 합친 뒤 포함 성분과 대조하므로, 충돌 판정과 필터 판정 모두 성분 하나를 기준으로 한다.
+
+`ExcludeCode`에는 API 계약이 되는 코드값과 화면 문구만 남는다. 성분 목록을 서버 상수로 들고 있으면 데이터가 성분군 구성을 바꿔도 서버를 고쳐야 배포에 반영된다.
+
+성분군 정의는 코드마다 정확히 하나씩 있어야 하며, 빠지거나 중복되면 기동 시점에 실패한다. 정의가 빠진 성분군은 아무것도 거르지 않는 빠른 필터가 되어 조회 결과만 보고는 알아채지 못한다. 해석은 `ExcludeCode` 선언 순서로 돌아 응답의 성분군 순서와 성분 상세의 `groupCodes` 순서가 데이터 정렬에 흔들리지 않게 하고, 성분군 안의 성분 순서는 데이터가 준 순서를 그대로 쓴다.
 
 빠른 제외 성분군은 다음 6개를 제공한다.
 
@@ -327,9 +334,9 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 | `HARSH_PRESERVATIVES` | 자극성 방부제 제외 | 페녹시에탄올, 파라벤 6종, BHA, BHT, DMDM 하이단토인 |
 | `SULFATES` | 설페이트 성분 제외 | SLS, SLES, ALS, ALES |
 | `CYCLIC_SILICONES` | 실리콘 자극원 제외 | D4, D5, D6와 사이클로메티콘 |
-| `SYNTHETIC_COLORANTS` | 합성 색소 제외 | 검토해 고정 목록으로 승인한 합성 색소 84개 |
+| `SYNTHETIC_COLORANTS` | 합성 색소 제외 | 검토해 승인한 합성 색소 |
 
-`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `HARSH_PRESERVATIVES`의 파라벤은 메틸·에틸·프로필·부틸·아이소부틸·아이소프로필 6종이다. 벤질파라벤은 운영 성분 데이터에 없어 넣으면 기동 시점에 실패한다. 소듐메틸파라벤처럼 염 형태로 따로 등록된 성분은 별개의 성분이므로 담지 않는다. `SYNTHETIC_COLORANTS`는 2026-08-15 운영 성분 데이터에 이전 등록 색소명·CI 판정을 적용해 확인한 84개를 승인 기준으로 삼아 `ExcludeCode`의 고정 목록으로 관리한다. 패턴이나 CI 코드로 새 성분을 자동 포함하지 않으며, 포함 범위를 바꾸려면 목록 전체 지문과 운영 데이터 호환성을 함께 검토해 수정한다.
+`DRYING_ALCOHOLS`에는 세테아릴알코올·스테아릴알코올 같은 지방족 알코올과 페녹시에탄올을 넣지 않는다. 디메치콘은 `CYCLIC_SILICONES`에 넣지 않는다. `HARSH_PRESERVATIVES`의 파라벤은 메틸·에틸·프로필·부틸·아이소부틸·아이소프로필 6종이다. 벤질파라벤은 운영 성분 데이터에 없어 넣으면 기동 시점에 실패한다. 소듐메틸파라벤처럼 염 형태로 따로 등록된 성분은 별개의 성분이므로 담지 않는다. `SYNTHETIC_COLORANTS`는 이전 등록 색소명·CI 판정을 적용해 확인한 색소를 승인 기준으로 삼는다. 패턴이나 CI 코드로 새 성분을 자동 포함하지 않는다. 승인 목록은 이제 데이터 파이프라인의 `빠른 제외 성분군` 시트가 갖고 있으므로 포함 범위를 바꾸는 검토도 그쪽에서 한다. 서버는 목록을 고정하지 않으며 데이터가 준 성분을 그대로 쓴다.
 
 ### Storage
 
@@ -372,7 +379,7 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 - `Products`는 제품 목록 전체에 대한 규칙을 담당한다.
 - `Brands`, `Categories`, `Ingredients`, `IngredientTags`는 각 도메인의 목록 전체에 대한 규칙을 담당한다.
 
-Domain은 Repository를 참조하지 않는다. 다른 기능의 데이터가 있어야 세울 수 있는 도메인 객체는 Repository가 돌려준 Domain 객체를 생성자로 받고, 그 조립만 `config`가 맡는다. `ExcludeCodeIngredients`가 `Ingredients`를 받고 `ExcludeCodeConfig`가 조립하는 것이 그 경우다. 도메인이 Repository를 직접 부르면 저장소 교체가 도메인까지 번지고, 도메인 테스트가 스프링 컨텍스트를 필요로 하게 된다.
+Domain은 Repository를 참조하지 않는다. 다른 기능의 데이터가 있어야 세울 수 있는 도메인 객체는 Repository가 돌려준 Domain 객체를 생성자로 받고, 그 조립만 `config`가 맡는다. `ExcludeCodeIngredients`가 `Ingredients`와 성분군 정의를 받고 `ExcludeCodeConfig`가 조립하는 것이 그 경우다. 도메인이 Repository를 직접 부르면 저장소 교체가 도메인까지 번지고, 도메인 테스트가 스프링 컨텍스트를 필요로 하게 된다.
 
 같은 이유로 Repository도 다른 기능의 Repository를 참조하지 않는다. `IngredientConfig`가 `Ingredients`를 빈으로 내놓고, `ProductRepository`와 `ExcludeCodeConfig`는 그 값을 받는다. 기능 사이의 의존이 저장소가 아니라 도메인 값을 향해야 저장소 교체가 다른 기능으로 번지지 않는다.
 
