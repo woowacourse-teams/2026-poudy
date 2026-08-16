@@ -16,10 +16,8 @@ public record Evidence(String source, EvidenceDelimiter delimiter) {
     }
 
     public boolean isDeferred() {
-        // spotless:off
         return sources().stream()
                 .anyMatch(evidence -> evidence.startsWith(DEFERRED_PREFIX));
-        // spotless:on
     }
 
     public List<String> sources() {

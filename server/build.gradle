@@ -55,8 +55,6 @@ spotless {
         // 포매터가 줄 끝 공백을 남기므로 뒤에 둔다.
         trimTrailingWhitespace()
         endWithNewline()
-
-        toggleOffOn()
     }
 }
 

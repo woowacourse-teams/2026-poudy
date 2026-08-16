@@ -15,38 +15,30 @@ public record IngredientTags(List<IngredientTag> values) {
     }
 
     public List<FormulationRole> formulationRoles() {
-        // spotless:off
         return namesOf(TagCategory.FUNCTION)
                 .map(FormulationRole::from)
                 .flatMap(Optional::stream)
                 .toList();
-        // spotless:on
     }
 
     public List<SkinEffect> skinEffects() {
-        // spotless:off
         return namesOf(TagCategory.BIOLOGICAL_EFFECT)
                 .map(SkinEffect::from)
                 .flatMap(Optional::stream)
                 .toList();
-        // spotless:on
     }
 
     public List<String> effectSources() {
-        // spotless:off
         return values.stream()
                 .filter(IngredientTag::isDisplayedSkinEffect)
                 .flatMap(tag -> tag.sources().stream())
                 .distinct()
                 .toList();
-        // spotless:on
     }
 
     private Stream<String> namesOf(TagCategory category) {
-        // spotless:off
         return values.stream()
                 .filter(tag -> tag.isOf(category))
                 .map(IngredientTag::name);
-        // spotless:on
     }
 }

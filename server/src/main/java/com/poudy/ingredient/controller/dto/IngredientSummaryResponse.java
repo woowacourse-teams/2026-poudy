@@ -6,19 +6,17 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record IngredientSummaryResponse(
-        @NotNull @Schema(example = "1010") Long id,
-        @NotNull @Schema(example = "부틸렌글라이콜") String koreanName,
-        @NotNull @Schema(example = "Butylene Glycol") String englishName) {
+        @NotNull @Schema(example = "3551") Long id,
+        @NotNull @Schema(example = "페녹시에탄올") String koreanName,
+        @NotNull @Schema(example = "Phenoxyethanol") String englishName) {
 
     public static IngredientSummaryResponse from(ExcludeCodeIngredient ingredient) {
         return new IngredientSummaryResponse(ingredient.id(), ingredient.koreanName(), ingredient.englishName());
     }
 
     public static List<IngredientSummaryResponse> from(List<ExcludeCodeIngredient> ingredients) {
-        // spotless:off
         return ingredients.stream()
                 .map(IngredientSummaryResponse::from)
                 .toList();
-        // spotless:on
     }
 }

@@ -1,7 +1,7 @@
 package com.poudy.config;
 
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
-import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.ingredient.domain.Ingredients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class ExcludeCodeConfig {
 
     @Bean
-    public ExcludeCodeIngredients excludeCodeIngredients(IngredientRepository ingredientRepository) {
-        return new ExcludeCodeIngredients(ingredientRepository.findAll());
+    public ExcludeCodeIngredients excludeCodeIngredients(Ingredients ingredients) {
+        return new ExcludeCodeIngredients(ingredients);
     }
 }

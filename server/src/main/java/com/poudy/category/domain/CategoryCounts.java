@@ -46,12 +46,10 @@ public class CategoryCounts {
     }
 
     private void validateProductCountsBelongToChildren(Map<Long, Long> countsByCategoryId) {
-        // spotless:off
         Set<Long> childIds = parents().stream()
                 .flatMap(parent -> childrenOf(parent).stream())
                 .map(Category::id)
                 .collect(Collectors.toUnmodifiableSet());
-        // spotless:on
         if (!childIds.containsAll(countsByCategoryId.keySet())) {
             throw new IllegalArgumentException("제품은 존재하는 소분류에 속해야 합니다.");
         }

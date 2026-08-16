@@ -36,7 +36,7 @@ public class IngredientController {
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")
     @GetMapping("/{ingredientId}")
     public ResponseEntity<IngredientDetailResponse> findIngredientDetail(
-            @Parameter(example = "1005") @PathVariable Long ingredientId) {
+            @Parameter(example = "1012") @PathVariable Long ingredientId) {
         return ResponseEntity.ok(IngredientDetailResponse.from(ingredientService.findDetail(ingredientId)));
     }
 

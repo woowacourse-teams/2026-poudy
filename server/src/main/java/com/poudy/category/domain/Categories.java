@@ -13,10 +13,8 @@ public class Categories {
 
     public Categories(List<Category> values) {
         this.values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-        // spotless:off
         this.byId = this.values.stream()
                 .collect(Collectors.toUnmodifiableMap(Category::id, Function.identity(), (first, second) -> first));
-        // spotless:on
 
         validateChildrenBelongToParent();
         validateEveryParentHasChild();

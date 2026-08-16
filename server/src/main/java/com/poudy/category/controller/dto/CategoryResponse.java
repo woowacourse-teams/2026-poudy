@@ -13,11 +13,9 @@ public record CategoryResponse(
         @NotNull @Schema(example = "51") Long productCount) {
 
     public static CategoryResponse from(Category parent, CategoryCounts categoryCounts) {
-        // spotless:off
         List<CategoryChildResponse> children = categoryCounts.childrenOf(parent).stream()
                 .map(child -> CategoryChildResponse.from(child, categoryCounts))
                 .toList();
-        // spotless:on
 
         return new CategoryResponse(parent.id(), parent.name(), children, categoryCounts.productCountOf(parent));
     }
@@ -27,8 +25,10 @@ public record CategoryResponse(
                 new CategoryResponse(
                         1L,
                         "스킨케어",
-                        List.of(new CategoryChildResponse(7L, "토너", 12L), new CategoryChildResponse(8L, "세럼", 9L)),
+                        List.of(
+                                new CategoryChildResponse(2L, "스킨/토너", 12L),
+                                new CategoryChildResponse(3L, "에센스/세럼/앰플", 9L)),
                         21L),
-                new CategoryResponse(2L, "클렌징", List.of(), 6L));
+                new CategoryResponse(10L, "클렌징", List.of(), 6L));
     }
 }

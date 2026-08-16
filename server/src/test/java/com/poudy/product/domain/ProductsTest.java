@@ -2,21 +2,26 @@ package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.Ingredients;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("제품 목록")
 class ProductsTest {
 
+    private static Ingredient ingredient(Long id) {
+        return new Ingredient(id, "성분 " + id, null, null, null, null, null, null, null, null);
+    }
+
     private static Product product(Long id, Long... ingredientIds) {
-        return new Product(
-                id,
-                1L,
-                1L,
-                "제품 " + id,
-                List.of(ingredientIds).stream().map(ProductIngredient::new).toList());
+        List<Ingredient> ingredients = Arrays.stream(ingredientIds)
+                .map(ProductsTest::ingredient)
+                .toList();
+
+        return new Product(id, 1L, 1L, "제품 " + id, new Ingredients(ingredients));
     }
 
     private final Products products = new Products(
@@ -42,21 +47,8 @@ class ProductsTest {
     }
 
     @Test
-    @DisplayName("카테고리 ID별 제품 수를 센다")
-    void countsProductsByCategoryId() {
-        Products categorizedProducts = new Products(
-                List.of(productInCategory(1L, 2L), productInCategory(2L, 2L), productInCategory(3L, 3L)));
-
-        assertThat(categorizedProducts.countByCategoryId()).containsExactlyInAnyOrderEntriesOf(Map.of(2L, 2L, 3L, 1L));
-    }
-
-    @Test
-    @DisplayName("제품이 없으면 카테고리별 제품 수도 비어 있다")
-    void returnsEmptyCountsWithoutProducts() {
-        assertThat(new Products(List.of()).countByCategoryId()).isEmpty();
-    }
-
-    private static Product productInCategory(Long id, Long categoryId) {
-        return new Product(id, 1L, categoryId, "제품 " + id, List.of());
+    @DisplayName("성분 ID 가 없어도 제품은 포함 여부를 거짓으로 답한다")
+    void answersFalseForMissingId() {
+        assertThat(product(1L, 100L).contains(null)).isFalse();
     }
 }
