@@ -36,6 +36,23 @@ class BrandsTest {
         assertThat(new Brands(null).sortedByName()).isEmpty();
     }
 
+    @Test
+    @DisplayName("ID에 해당하는 브랜드를 찾는다")
+    void findsBrandById() {
+        Brand drG = brand(1L, "닥터지");
+        Brands brands = new Brands(List.of(drG));
+
+        assertThat(brands.findById(1L)).contains(drG);
+    }
+
+    @Test
+    @DisplayName("ID에 해당하는 브랜드가 없으면 빈 결과를 반환한다")
+    void returnsEmptyForUnknownId() {
+        Brands brands = new Brands(List.of(brand(1L, "닥터지")));
+
+        assertThat(brands.findById(999L)).isEmpty();
+    }
+
     private static Brand brand(Long id, String koreanName) {
         return new Brand(id, koreanName, null, null);
     }

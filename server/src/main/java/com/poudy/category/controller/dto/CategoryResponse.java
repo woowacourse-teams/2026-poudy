@@ -19,16 +19,4 @@ public record CategoryResponse(
 
         return new CategoryResponse(parent.id(), parent.name(), children, categoryCounts.productCountOf(parent));
     }
-
-    public static List<CategoryResponse> samplesOfBrand() {
-        return List.of(
-                new CategoryResponse(
-                        1L,
-                        "스킨케어",
-                        List.of(
-                                new CategoryChildResponse(2L, "스킨/토너", 12L),
-                                new CategoryChildResponse(3L, "에센스/세럼/앰플", 9L)),
-                        21L),
-                new CategoryResponse(10L, "클렌징", List.of(), 6L));
-    }
 }

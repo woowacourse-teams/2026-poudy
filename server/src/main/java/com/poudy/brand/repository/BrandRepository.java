@@ -3,6 +3,7 @@ package com.poudy.brand.repository;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
 import com.poudy.common.json.JsonDataReader;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -18,5 +19,9 @@ public class BrandRepository {
 
     public Brands findAll() {
         return brands;
+    }
+
+    public Optional<Brand> findById(Long id) {
+        return brands.findById(id);
     }
 }

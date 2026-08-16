@@ -26,4 +26,16 @@ class BrandRepositoryTest {
 
         assertThat(brands.sortedByName()).containsExactly(drG, medicube);
     }
+
+    @Test
+    @DisplayName("ID에 해당하는 브랜드를 조회한다")
+    void findsBrandById() {
+        JsonDataReader jsonDataReader = mock(JsonDataReader.class);
+        Brand drG = new Brand(1L, "닥터지", null, null);
+        given(jsonDataReader.readList("brands.json", Brand.class)).willReturn(List.of(drG));
+        BrandRepository brandRepository = new BrandRepository(jsonDataReader);
+
+        assertThat(brandRepository.findById(1L)).contains(drG);
+        assertThat(brandRepository.findById(999L)).isEmpty();
+    }
 }
