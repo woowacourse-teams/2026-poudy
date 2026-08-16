@@ -15,9 +15,11 @@ public record CategoryResponse(
                 new CategoryResponse(
                         1L,
                         "스킨케어",
-                        List.of(new CategoryChildResponse(7L, "토너", 30L), new CategoryChildResponse(8L, "세럼", 21L)),
+                        List.of(
+                                new CategoryChildResponse(2L, "스킨/토너", 30L),
+                                new CategoryChildResponse(3L, "에센스/세럼/앰플", 21L)),
                         51L),
-                new CategoryResponse(2L, "클렌징", List.of(), 12L));
+                new CategoryResponse(10L, "클렌징", List.of(), 12L));
     }
 
     public static List<CategoryResponse> samplesOfBrand() {
@@ -25,8 +27,10 @@ public record CategoryResponse(
                 new CategoryResponse(
                         1L,
                         "스킨케어",
-                        List.of(new CategoryChildResponse(7L, "토너", 12L), new CategoryChildResponse(8L, "세럼", 9L)),
+                        List.of(
+                                new CategoryChildResponse(2L, "스킨/토너", 12L),
+                                new CategoryChildResponse(3L, "에센스/세럼/앰플", 9L)),
                         21L),
-                new CategoryResponse(2L, "클렌징", List.of(), 6L));
+                new CategoryResponse(10L, "클렌징", List.of(), 6L));
     }
 }

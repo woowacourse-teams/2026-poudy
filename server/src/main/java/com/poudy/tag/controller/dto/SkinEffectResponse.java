@@ -6,8 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record SkinEffectResponse(
-        @NotNull @Schema(description = "피부 작용 ID", example = "21") Long id,
-        @NotNull @Schema(description = "피부 작용 이름", example = "피부 장벽 관련") String name) {
+        @NotNull @Schema(description = "피부 작용 ID", example = "108") Long id,
+        @NotNull @Schema(description = "피부 작용 이름", example = "수분 공급 관련") String name) {
 
     public static SkinEffectResponse from(SkinEffect effect) {
         return new SkinEffectResponse(effect.id(), effect.displayName());

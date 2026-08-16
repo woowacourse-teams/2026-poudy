@@ -203,7 +203,7 @@
               "items": {
                 "type": "integer",
                 "format": "int64",
-                "example": 1005
+                "example": 1012
               },
               "uniqueItems": true
             }
@@ -217,7 +217,7 @@
               "items": {
                 "type": "integer",
                 "format": "int64",
-                "example": 1001
+                "example": 3551
               },
               "uniqueItems": true
             }
@@ -585,7 +585,7 @@
               "items": {
                 "type": "integer",
                 "format": "int64",
-                "example": 1005
+                "example": 1012
               },
               "uniqueItems": true
             }
@@ -599,7 +599,7 @@
               "items": {
                 "type": "integer",
                 "format": "int64",
-                "example": 1001
+                "example": 3551
               },
               "uniqueItems": true
             }
@@ -769,7 +769,7 @@
               "type": "integer",
               "format": "int64"
             },
-            "example": 1005
+            "example": 1012
           }
         ],
         "responses": {
@@ -1240,11 +1240,11 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1
+            "example": 2
           },
           "name": {
             "type": "string",
-            "example": "스킨케어"
+            "example": "스킨/토너"
           }
         },
         "required": [
@@ -1284,12 +1284,12 @@
             "type": "integer",
             "format": "int64",
             "description": "배합 목적 ID",
-            "example": 1
+            "example": 20
           },
           "name": {
             "type": "string",
             "description": "배합 목적 이름 (CosIng Function)",
-            "example": "습윤제"
+            "example": "보습제"
           }
         },
         "required": [
@@ -1423,7 +1423,7 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1005
+            "example": 1012
           },
           "koreanName": {
             "type": "string",
@@ -1506,19 +1506,19 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 21
+            "example": 108
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "피부 장벽 관련"
+            "example": "수분 공급 관련"
           },
           "ingredientIds": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int64",
-              "example": 1005
+              "example": 1012
             }
           }
         },
@@ -1535,12 +1535,12 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 21
+            "example": 108
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "피부 장벽 관련"
+            "example": "수분 공급 관련"
           }
         },
         "required": [
@@ -1630,7 +1630,7 @@
             "type": "integer",
             "format": "int64",
             "description": "성분 ID",
-            "example": 1005
+            "example": 1012
           },
           "koreanName": {
             "type": "string",
@@ -1663,7 +1663,7 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1005
+            "example": 1012
           },
           "koreanName": {
             "type": "string",
@@ -1709,7 +1709,7 @@
             "type": "integer",
             "format": "int64",
             "description": "이 성분을 포함한 제품 수",
-            "example": 84
+            "example": 175
           },
           "infoSources": {
             "type": "array",
@@ -1807,15 +1807,15 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1010
+            "example": 3551
           },
           "koreanName": {
             "type": "string",
-            "example": "부틸렌글라이콜"
+            "example": "페녹시에탄올"
           },
           "englishName": {
             "type": "string",
-            "example": "Butylene Glycol"
+            "example": "Phenoxyethanol"
           }
         },
         "required": [
@@ -1830,11 +1830,11 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 7
+            "example": 2
           },
           "name": {
             "type": "string",
-            "example": "토너"
+            "example": "스킨/토너"
           },
           "productCount": {
             "type": "integer",
