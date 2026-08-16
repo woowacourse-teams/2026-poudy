@@ -1240,11 +1240,11 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "example": 1
+            "example": 2
           },
           "name": {
             "type": "string",
-            "example": "스킨케어"
+            "example": "스킨/토너"
           }
         },
         "required": [
@@ -1284,12 +1284,12 @@
             "type": "integer",
             "format": "int64",
             "description": "배합 목적 ID",
-            "example": 18
+            "example": 20
           },
           "name": {
             "type": "string",
             "description": "배합 목적 이름 (CosIng Function)",
-            "example": "습윤제"
+            "example": "보습제"
           }
         },
         "required": [
@@ -1506,12 +1506,12 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 105
+            "example": 108
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "피부 장벽 관련"
+            "example": "수분 공급 관련"
           },
           "ingredientIds": {
             "type": "array",
@@ -1535,12 +1535,12 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 105
+            "example": 108
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "피부 장벽 관련"
+            "example": "수분 공급 관련"
           }
         },
         "required": [
