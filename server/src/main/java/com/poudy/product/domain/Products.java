@@ -44,6 +44,12 @@ public class Products {
                 .collect(Collectors.toUnmodifiableMap(Product::categoryId, product -> 1L, Long::sum));
     }
 
+    public Map<Long, Long> countByCategoryIdInBrand(Long brandId) {
+        return products.stream()
+                .filter(product -> Objects.equals(product.brandId(), brandId))
+                .collect(Collectors.toUnmodifiableMap(Product::categoryId, product -> 1L, Long::sum));
+    }
+
     public Map<Long, Long> countByBrandId() {
         return products.stream()
                 .collect(Collectors.toUnmodifiableMap(Product::brandId, product -> 1L, Long::sum));

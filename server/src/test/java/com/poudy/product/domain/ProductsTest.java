@@ -62,7 +62,24 @@ class ProductsTest {
         assertThat(products.countByBrandId()).isEqualTo(Map.of(1L, 2L, 2L, 1L));
     }
 
+    @Test
+    @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
+    void countsProductsByCategoryIdWithinBrand() {
+        Products products = new Products(
+                List.of(
+                        productOfBrandAndCategory(1L, 1L, 2L),
+                        productOfBrandAndCategory(2L, 1L, 2L),
+                        productOfBrandAndCategory(3L, 1L, 3L),
+                        productOfBrandAndCategory(4L, 2L, 2L)));
+
+        assertThat(products.countByCategoryIdInBrand(1L)).isEqualTo(Map.of(2L, 2L, 3L, 1L));
+    }
+
     private static Product productOfBrand(Long id, Long brandId) {
         return new Product(id, brandId, 1L, "제품 " + id, new Ingredients(List.of()));
+    }
+
+    private static Product productOfBrandAndCategory(Long id, Long brandId, Long categoryId) {
+        return new Product(id, brandId, categoryId, "제품 " + id, new Ingredients(List.of()));
     }
 }
