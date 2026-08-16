@@ -1787,17 +1787,17 @@
             "description": "빠른 필터에 표시할 이름",
             "example": "자극성 방부제 제외"
           },
+          "description": {
+            "type": "string",
+            "description": "성분군 설명",
+            "example": "자극을 유발할 수 있는 방부제 성분을 제외합니다."
+          },
           "ingredients": {
             "type": "array",
             "description": "이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다",
             "items": {
               "$ref": "#/components/schemas/IngredientSummaryResponse"
             }
-          },
-          "description": {
-            "type": "string",
-            "description": "성분군 설명",
-            "example": "자극을 유발할 수 있는 방부제 성분을 제외합니다."
           }
         },
         "required": [

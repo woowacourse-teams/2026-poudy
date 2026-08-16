@@ -293,13 +293,13 @@ export type ExcludeCodeResponse = {
    */
   name: string;
   /**
-   * 이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다
-   */
-  ingredients: Array<IngredientSummaryResponse>;
-  /**
    * 성분군 설명
    */
   description: string;
+  /**
+   * 이 성분군에 속한 성분. 성분군에 무엇이 속하는지 보여주는 데 쓴다
+   */
+  ingredients: Array<IngredientSummaryResponse>;
 }
 export type ExcludeCodeListResponse = {
   /**
