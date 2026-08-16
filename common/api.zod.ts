@@ -35,7 +35,7 @@ export type ProductVariantResponse = __TypedOpenapi.Schemas.ProductVariantRespon
 export const ProductVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), status: z.string() });
 
 export type SkinEffectGroupResponse = __TypedOpenapi.Schemas.SkinEffectGroupResponse;
-export const SkinEffectGroupResponse = z.object({ id: z.number().int(), name: z.string(), color: z.string(), ingredientIds: z.array(z.number().int()) });
+export const SkinEffectGroupResponse = z.object({ id: z.number().int(), name: z.string(), ingredientIds: z.array(z.number().int()) });
 
 export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.number().int(), name: z.string() });

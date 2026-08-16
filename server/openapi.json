@@ -1513,11 +1513,6 @@
             "description": "피부 작용 이름",
             "example": "피부 장벽 관련"
           },
-          "color": {
-            "type": "string",
-            "description": "화면에서 이 피부 작용을 구분하는 색",
-            "example": "#4CAF50"
-          },
           "ingredientIds": {
             "type": "array",
             "items": {
@@ -1528,7 +1523,6 @@
           }
         },
         "required": [
-          "color",
           "id",
           "ingredientIds",
           "name"
