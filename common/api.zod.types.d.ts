@@ -134,10 +134,6 @@ export type SkinEffectGroupResponse = {
    * 피부 작용 이름
    */
   name: string;
-  /**
-   * 화면에서 이 피부 작용을 구분하는 색
-   */
-  color: string;
   ingredientIds: Array<number>;
 }
 export type SkinEffectResponse = {
