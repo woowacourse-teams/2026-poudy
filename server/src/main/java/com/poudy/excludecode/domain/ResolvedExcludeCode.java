@@ -5,28 +5,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> found, List<String> missing) {
+public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> found, List<Long> missing) {
 
     public ResolvedExcludeCode {
         found = List.copyOf(found);
         missing = List.copyOf(missing);
     }
 
-    public static ResolvedExcludeCode of(ExcludeCode code, Ingredients ingredients) {
+    public static ResolvedExcludeCode of(ExcludeCodeMapping mapping, Ingredients ingredients) {
         List<ExcludeCodeIngredient> found = new ArrayList<>();
-        List<String> missing = new ArrayList<>();
+        List<Long> missing = new ArrayList<>();
 
-        for (String name : code.ingredientNames()) {
-            ingredients.findByName(name)
+        for (Long ingredientId : mapping.ingredientIds()) {
+            ingredients.findById(ingredientId)
                     .map(ExcludeCodeIngredient::from)
-                    .ifPresentOrElse(found::add, () -> missing.add(name));
+                    .ifPresentOrElse(found::add, () -> missing.add(ingredientId));
         }
 
-        return new ResolvedExcludeCode(code, found, missing);
+        return new ResolvedExcludeCode(mapping.code(), found, missing);
     }
 
-    public Stream<String> missingNames() {
+    public Stream<String> missingReferences() {
         return missing.stream()
-                .map(name -> code + " 의 " + name);
+                .map(ingredientId -> code + " 의 성분 ID " + ingredientId);
     }
 }

@@ -50,19 +50,19 @@ class ExcludeCodeQueryTest {
     }
 
     @Test
-    @DisplayName("성분군에 속한 성분을 고정 목록 순서대로 실제 성분 데이터로 채운다")
+    @DisplayName("성분군에 속한 성분을 데이터 순서대로 실제 성분 데이터로 채운다")
     void findsResolvedIngredients() throws Exception {
         mockMvc.perform(get("/api/exclude-codes")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[2].ingredients.length()").value(10))
-                .andExpect(jsonPath("$.items[2].ingredients[0].id").value(3551))
-                .andExpect(jsonPath("$.items[2].ingredients[0].koreanName").value("페녹시에탄올"))
-                .andExpect(jsonPath("$.items[2].ingredients[0].englishName").value("Phenoxyethanol"))
-                .andExpect(jsonPath("$.items[2].ingredients[1].id").value(213))
-                .andExpect(jsonPath("$.items[2].ingredients[1].koreanName").value("메틸파라벤"))
+                .andExpect(jsonPath("$.items[2].ingredients[0].id").value(213))
+                .andExpect(jsonPath("$.items[2].ingredients[0].koreanName").value("메틸파라벤"))
+                .andExpect(jsonPath("$.items[2].ingredients[7].id").value(3551))
+                .andExpect(jsonPath("$.items[2].ingredients[7].koreanName").value("페녹시에탄올"))
+                .andExpect(jsonPath("$.items[2].ingredients[7].englishName").value("Phenoxyethanol"))
                 .andExpect(jsonPath("$.items[2].ingredients[9].koreanName").value("디엠디엠하이단토인"))
-                .andExpect(jsonPath("$.items[0].ingredients[0].koreanName").value("향료"))
-                .andExpect(jsonPath("$.items[3].ingredients[0].koreanName").value("소듐라우릴설페이트"))
-                .andExpect(jsonPath("$.items[4].ingredients[3].koreanName").value("사이클로메티콘"))
+                .andExpect(jsonPath("$.items[0].ingredients[0].koreanName").value("리날룰"))
+                .andExpect(jsonPath("$.items[3].ingredients[0].koreanName").value("소듐라우레스설페이트"))
+                .andExpect(jsonPath("$.items[4].ingredients[3].koreanName").value("사이클로헥사실록세인"))
                 .andExpect(jsonPath("$.items[5].ingredients.length()").value(84));
     }
 
