@@ -33,6 +33,6 @@ public class BrandController {
             + "브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.")
     @GetMapping("/{brandId}")
     public ResponseEntity<BrandDetailResponse> findBrand(@Parameter(example = "12") @PathVariable Long brandId) {
-        return ResponseEntity.ok(BrandDetailResponse.sample(brandId));
+        return ResponseEntity.ok(BrandDetailResponse.from(brandService.findDetail(brandId)));
     }
 }
