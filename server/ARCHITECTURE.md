@@ -271,7 +271,7 @@ Product
 ├── name
 ├── Brand
 ├── Category 객체
-├── Ingredient 객체 목록
+├── Ingredients 일급 컬렉션
 ├── image
 ├── price
 ├── volume
@@ -281,9 +281,15 @@ Product
 
 제품 하나에 관한 판단은 `Product`가 담당한다. 예를 들어 특정 브랜드나 카테고리에 해당하는지, 특정 성분을 포함하는지, 제외 대상 성분을 포함하는지를 `Product`에 물어보는 형태로 구현한다.
 
+전성분은 `List<Ingredient>`가 아니라 `ingredient.domain`의 `Ingredients`로 갖는다. 여러 성분을 대상으로 하는 문제는 이미 그 일급 컬렉션이 담당하므로, 제품이 성분 목록을 다시 훑는 코드를 갖지 않는다.
+
+성분별 함량처럼 성분이 아니라 제품과 성분의 관계에 붙는 값은 `Ingredients`에 자리가 없다. 제품 상세를 구현할 때 그 값을 어디에 둘지 함께 정한다. 지금은 `products.json`의 `disclosed_amount`를 읽지 않는다.
+
 ### Products
 
 `Products`는 `List<Product>`를 가지는 일급 컬렉션이다.
+
+제품 검색은 제품명을 성분 검색과 같은 규칙으로 맞춘다. `common.domain`의 `SearchKeyword`, `SearchableText`, `NameRank`를 그대로 쓰므로 NFC 정규화, 공백 흡수, 초성 검색과 결과 정렬이 성분과 같다. 제품명은 `복숭아 70 나이아신 세럼`처럼 숫자가 섞여 있어 초성이 그 자리에서 끊긴다. 성분의 `적색104호의(1)`과 같은 성질이다.
 
 제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색어는 다른 필터와 함께 올 수 있으며 같은 `Products`가 한 번에 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
 
@@ -364,6 +370,8 @@ Domain은 데이터만 보관하는 객체로 제한하지 않는다. 자신의 
 
 Domain은 Repository를 참조하지 않는다. 다른 기능의 데이터가 있어야 세울 수 있는 도메인 객체는 Repository가 돌려준 Domain 객체를 생성자로 받고, 그 조립만 `config`가 맡는다. `ExcludeCodeIngredients`가 `Ingredients`를 받고 `ExcludeCodeConfig`가 조립하는 것이 그 경우다. 도메인이 Repository를 직접 부르면 저장소 교체가 도메인까지 번지고, 도메인 테스트가 스프링 컨텍스트를 필요로 하게 된다.
 
+같은 이유로 Repository도 다른 기능의 Repository를 참조하지 않는다. `IngredientConfig`가 `Ingredients`를 빈으로 내놓고, `ProductRepository`와 `ExcludeCodeConfig`는 그 값을 받는다. 기능 사이의 의존이 저장소가 아니라 도메인 값을 향해야 저장소 교체가 다른 기능으로 번지지 않는다.
+
 ### Repository
 
 Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller에 전달할 응답 DTO를 만들거나 제품 필터 규칙을 구현하지 않는다.
@@ -374,7 +382,11 @@ Repository는 JSON 데이터를 읽고 Domain 객체를 생성한다. Controller
 필요하므로, 깨끗한 CI에서도 재현되도록 `forkedSpringBootRun`이 커밋된 테스트 fixture를 우선하는
 test runtime classpath로 실행된다. 실제 서버 실행은 계속 main resources의 운영 JSON을 사용한다.
 
-형식만 옮기는 중간 타입은 두지 않는다. Jackson이 도메인 레코드를 직접 만들기 때문에 도메인에 Jackson 애너테이션은 없지만, 그 대신 도메인 필드 이름이 곧 파일과의 계약이 된다. 필드 이름을 바꾸면 컴파일은 통과하고 파싱만 깨지므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
+형식만 옮기는 중간 타입은 두지 않는다. 파일 모양과 도메인 모양이 다를 때도 마찬가지다. `Product`는 `Ingredients`를 갖는데 `products.json`은 성분을 `{"ingredient_id": 4815}`로만 적는다. 이때 파일 모양을 받는 타입을 새로 만들지 않고, `readList`에 역직렬화 규칙을 함께 넘겨 Jackson이 읽으면서 ID를 성분 객체로 바꾸게 한다. 데이터베이스에서 조인이 매핑 단계에서 끝나고 애플리케이션이 행 타입을 따로 갖지 않는 것과 같다.
+
+그 규칙은 `ProductRepository`가 주입받은 `Ingredients`를 그대로 써서 저장소 안에서 만든다. 새 타입을 두지 않으며, `JsonDataReader`는 규칙을 받기만 하므로 어느 기능의 도메인도 알지 않는다. 성분을 고르고 찾지 못한 ID를 빼는 규칙 자체는 `Ingredients.findAllById`가 갖는다.
+
+Jackson이 도메인 레코드를 직접 만들기 때문에 도메인에 Jackson 애너테이션은 없지만, 그 대신 도메인 필드 이름이 곧 파일과의 계약이 된다. 필드 이름을 바꾸면 컴파일은 통과하고 파싱만 깨지므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
 
 현재 Repository 인터페이스는 만들지 않는다. 이후 데이터베이스 저장소로 교체하는 작업을 시작할 때 Service와 Repository 사이의 인터페이스를 함께 결정한다.
 
