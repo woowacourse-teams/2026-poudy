@@ -10,6 +10,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +50,12 @@ class ProductRepositoryTest {
     void countsWithResolvedIngredients() {
         assertThat(productRepository.countContaining(4815L)).isPositive();
         assertThat(productRepository.countContaining(999999L)).isZero();
+    }
+
+    @Test
+    @DisplayName("브랜드별 제품 수를 센다")
+    void countsProductsByBrandId() {
+        assertThat(productRepository.countByBrandId()).isEqualTo(Map.of(1L, 3L, 3L, 2L));
     }
 
     @ParameterizedTest

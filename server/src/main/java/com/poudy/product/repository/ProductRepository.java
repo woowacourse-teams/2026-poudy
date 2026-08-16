@@ -73,4 +73,8 @@ public class ProductRepository {
     public Map<Long, Long> countByCategoryId() {
         return products.countByCategoryId();
     }
+
+    public Map<Long, Long> countByBrandId() {
+        return products.countByBrandId();
+    }
 }
