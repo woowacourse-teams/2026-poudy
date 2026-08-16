@@ -6,6 +6,7 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -50,5 +51,18 @@ class ProductsTest {
     @DisplayName("성분 ID 가 없어도 제품은 포함 여부를 거짓으로 답한다")
     void answersFalseForMissingId() {
         assertThat(product(1L, 100L).contains(null)).isFalse();
+    }
+
+    @Test
+    @DisplayName("브랜드별 제품 수를 센다")
+    void countsProductsByBrandId() {
+        Products products = new Products(
+                List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L)));
+
+        assertThat(products.countByBrandId()).isEqualTo(Map.of(1L, 2L, 2L, 1L));
+    }
+
+    private static Product productOfBrand(Long id, Long brandId) {
+        return new Product(id, brandId, 1L, "제품 " + id, new Ingredients(List.of()));
     }
 }
