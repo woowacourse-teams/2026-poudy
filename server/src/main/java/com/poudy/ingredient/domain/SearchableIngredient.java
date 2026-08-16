@@ -15,12 +15,10 @@ public record SearchableIngredient(Ingredient ingredient, List<SearchableText> n
     }
 
     public static SearchableIngredient of(Ingredient ingredient) {
-        // spotless:off
         return new SearchableIngredient(
                 ingredient,
                 Stream.of(ingredient.koreanName(), ingredient.englishName()).map(SearchableText::of).toList(),
                 ingredient.aliases().stream().map(SearchableText::of).toList());
-        // spotless:on
     }
 
     public NameRank match(SearchKeyword keyword) {
@@ -32,11 +30,9 @@ public record SearchableIngredient(Ingredient ingredient, List<SearchableText> n
     }
 
     private static NameRank best(List<SearchableText> candidates, SearchKeyword keyword) {
-        // spotless:off
         return candidates.stream()
                 .map(candidate -> NameRank.of(keyword.match(candidate), candidate))
                 .min(Comparator.naturalOrder())
                 .orElse(NameRank.NONE);
-        // spotless:on
     }
 }

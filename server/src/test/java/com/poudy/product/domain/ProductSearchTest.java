@@ -15,11 +15,9 @@ class ProductSearchTest {
     }
 
     private static List<String> names(List<Product> products) {
-        // spotless:off
         return products.stream()
                 .map(Product::productName)
                 .toList();
-        // spotless:on
     }
 
     @Test

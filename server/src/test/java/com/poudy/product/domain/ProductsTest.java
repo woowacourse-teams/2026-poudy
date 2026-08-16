@@ -17,11 +17,9 @@ class ProductsTest {
     }
 
     private static Product product(Long id, Long... ingredientIds) {
-        // spotless:off
         List<Ingredient> ingredients = Arrays.stream(ingredientIds)
                 .map(ProductsTest::ingredient)
                 .toList();
-        // spotless:on
 
         return new Product(id, 1L, 1L, "제품 " + id, new Ingredients(ingredients));
     }

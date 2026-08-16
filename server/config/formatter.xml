@@ -17,6 +17,13 @@
     <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
+    <!--
+      나눠 둔 줄을 합치지 않는다. Eclipse 기본값 true 는 스트림 체인을 다시 한 줄로
+      접기 때문에, 전에는 그 자리마다 spotless 를 껐다 켜야 했다.
+      120 칸을 넘는 줄의 분할은 그대로 강제되고 그 안쪽 줄바꿈만 작성자가 정한다.
+      포매터가 교정하지 않으므로 줄바꿈은 도구가 아니라 작성자가 소유한다.
+    -->
+    <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="false"/>
 
     <!-- ============ 주석 ============ -->
     <!--

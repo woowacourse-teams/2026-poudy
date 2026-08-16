@@ -14,10 +14,8 @@ public record FormulationRoleResponse(
     }
 
     public static List<FormulationRoleResponse> from(List<FormulationRole> roles) {
-        // spotless:off
         return roles.stream()
                 .map(FormulationRoleResponse::from)
                 .toList();
-        // spotless:on
     }
 }

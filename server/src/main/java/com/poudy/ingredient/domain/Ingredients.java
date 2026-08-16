@@ -31,30 +31,24 @@ public class Ingredients {
     public List<Ingredient> search(String keyword) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
-        // spotless:off
         return searchable.stream()
                 .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
                 .filter(MatchedIngredient::isFound)
                 .sorted(MatchedIngredient.order())
                 .map(MatchedIngredient::ingredient)
                 .toList();
-        // spotless:on
     }
 
     public Optional<Ingredient> findById(Long id) {
-        // spotless:off
         return Optional.ofNullable(byId.get(id))
                 .map(SearchableIngredient::ingredient);
-        // spotless:on
     }
 
     public Ingredients findAllById(Collection<Long> ids) {
-        // spotless:off
         List<SearchableIngredient> found = ids.stream()
                 .map(byId::get)
                 .filter(Objects::nonNull)
                 .toList();
-        // spotless:on
 
         return new Ingredients(found, indexOf(found));
     }
@@ -69,27 +63,24 @@ public class Ingredients {
     }
 
     private Optional<Ingredient> firstOf(Predicate<Ingredient> match) {
-        // spotless:off
         return searchable.stream()
                 .map(SearchableIngredient::ingredient)
                 .filter(match)
                 .min(Comparator.comparing(Ingredient::id));
-        // spotless:on
     }
 
     private static List<SearchableIngredient> searchableOf(List<Ingredient> values) {
-        // spotless:off
         return Objects.requireNonNullElse(values, List.<Ingredient>of()).stream()
                 .map(SearchableIngredient::of)
                 .toList();
-        // spotless:on
     }
 
     private static Map<Long, SearchableIngredient> indexOf(List<SearchableIngredient> searchable) {
-        // spotless:off
         return searchable.stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        found -> found.ingredient().id(), Function.identity(), (first, second) -> first));
-        // spotless:on
+                .collect(
+                        Collectors.toUnmodifiableMap(
+                                found -> found.ingredient().id(),
+                                Function.identity(),
+                                (first, second) -> first));
     }
 }

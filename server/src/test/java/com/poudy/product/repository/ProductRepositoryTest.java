@@ -38,12 +38,10 @@ class ProductRepositoryTest {
         assertThat(product.brandId()).isEqualTo(1L);
         assertThat(product.categoryId()).isEqualTo(2L);
         assertThat(product.contains(4815L)).isTrue();
-        // spotless:off
         assertThat(product.ingredients().findById(4815L))
                 .get()
                 .extracting(Ingredient::koreanName)
                 .isEqualTo("향료");
-        // spotless:on
     }
 
     @Test

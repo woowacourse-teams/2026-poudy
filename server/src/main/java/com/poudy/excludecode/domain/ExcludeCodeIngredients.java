@@ -28,12 +28,10 @@ public class ExcludeCodeIngredients {
     }
 
     public Set<Long> idsOf(List<ExcludeCode> codes) {
-        // spotless:off
         return codes.stream()
                 .flatMap(code -> of(code).stream())
                 .map(ExcludeCodeIngredient::id)
                 .collect(Collectors.toUnmodifiableSet());
-        // spotless:on
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
@@ -41,19 +39,15 @@ public class ExcludeCodeIngredients {
     }
 
     private static List<ResolvedExcludeCode> resolveAll(Ingredients ingredients) {
-        // spotless:off
         return Arrays.stream(ExcludeCode.values())
                 .map(code -> ResolvedExcludeCode.of(code, ingredients))
                 .toList();
-        // spotless:on
     }
 
     private static void requireEveryNameResolved(List<ResolvedExcludeCode> resolved) {
-        // spotless:off
         List<String> missing = resolved.stream()
                 .flatMap(ResolvedExcludeCode::missingNames)
                 .toList();
-        // spotless:on
 
         if (!missing.isEmpty()) {
             throw new InfrastructureException("성분 데이터에서 제외 성분군의 성분을 찾지 못했습니다: " + missing);
@@ -61,10 +55,8 @@ public class ExcludeCodeIngredients {
     }
 
     private static Map<ExcludeCode, List<ExcludeCodeIngredient>> index(List<ResolvedExcludeCode> resolved) {
-        // spotless:off
         return resolved.stream()
                 .collect(Collectors.toUnmodifiableMap(ResolvedExcludeCode::code, ResolvedExcludeCode::found));
-        // spotless:on
     }
 
     private static Map<Long, List<ExcludeCode>> indexCodes(List<ResolvedExcludeCode> resolved) {
