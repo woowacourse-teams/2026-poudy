@@ -37,6 +37,18 @@ public class Categories {
         return Optional.ofNullable(byId.get(id));
     }
 
+    public List<Category> pathOf(Category category) {
+        Category found = byId.get(category.id());
+        if (found == null) {
+            throw new IllegalArgumentException("존재하는 카테고리의 경로만 조회할 수 있습니다.");
+        }
+        if (found.isParent()) {
+            return List.of(found);
+        }
+
+        return List.of(byId.get(found.parentId()), found);
+    }
+
     private void validateChildrenBelongToParent() {
         values.stream().filter(category -> !category.isParent()).forEach(this::validateChildBelongsToParent);
     }

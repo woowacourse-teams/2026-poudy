@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredients;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,12 +18,24 @@ class ProductSearchTest {
         Brand brand = new Brand(1L, "브랜드", null, null);
         Category category = new Category(1L, 100L, "카테고리", 1, null, null);
 
-        return new Product(id, brand, category, name, new Ingredients(List.of()));
+        ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
+
+        return new Product(
+                id,
+                name,
+                brand,
+                category,
+                new Ingredients(List.of()),
+                "https://example.com/" + id + ".png",
+                new ProductVariants(List.of(variant)),
+                1,
+                1,
+                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
     }
 
     private static List<String> names(List<Product> products) {
         return products.stream()
-                .map(Product::productName)
+                .map(Product::name)
                 .toList();
     }
 

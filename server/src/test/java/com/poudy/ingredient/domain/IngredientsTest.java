@@ -66,6 +66,28 @@ class IngredientsTest {
         assertThat(found.search("향료")).isEmpty();
     }
 
+    @Test
+    @DisplayName("요청한 성분을 모두 포함하는지 판단한다")
+    void checksContainingAllIngredients() {
+        Ingredients ingredients = new Ingredients(
+                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+
+        assertThat(ingredients.containsAll(List.of(10L, 20L))).isTrue();
+        assertThat(ingredients.containsAll(List.of(10L, 30L))).isFalse();
+        assertThat(ingredients.containsAll(List.of())).isTrue();
+    }
+
+    @Test
+    @DisplayName("요청한 성분 중 하나라도 포함하는지 판단한다")
+    void checksContainingAnyIngredient() {
+        Ingredients ingredients = new Ingredients(
+                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+
+        assertThat(ingredients.containsAny(List.of(20L, 30L))).isTrue();
+        assertThat(ingredients.containsAny(List.of(30L, 40L))).isFalse();
+        assertThat(ingredients.containsAny(List.of())).isFalse();
+    }
+
     private static Ingredient ingredient(Long id, String koreanName, String englishName) {
         return new Ingredient(id, koreanName, englishName, null, null, null, null, null, null, null);
     }

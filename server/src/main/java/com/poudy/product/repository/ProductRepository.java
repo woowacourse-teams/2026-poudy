@@ -7,7 +7,12 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductVariant;
+import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +33,15 @@ public class ProductRepository {
     private static final String BRAND_ID_FIELD = "brand_id";
     private static final String CATEGORY_ID_FIELD = "category_id";
     private static final String PRODUCT_NAME_FIELD = "product_name";
+    private static final String IMAGE_URL_FIELD = "image_url";
+    private static final String VARIANTS_FIELD = "variants";
+    private static final String PRICE_FIELD = "price";
+    private static final String VOLUME_VALUE_FIELD = "volume_value";
+    private static final String VOLUME_UNIT_FIELD = "volume_unit";
+    private static final String STATUS_FIELD = "status";
+    private static final String MOISTURE_LEVEL_FIELD = "moisture_level";
+    private static final String OIL_LEVEL_FIELD = "oil_level";
+    private static final String UPDATED_AT_FIELD = "updated_at";
     private static final String INGREDIENTS_FIELD = "ingredients";
     private static final String INGREDIENT_ID_FIELD = "ingredient_id";
 
@@ -55,10 +69,15 @@ public class ProductRepository {
 
                 return new Product(
                         idOf(product, ID_FIELD, context),
+                        requiredTextOf(product, PRODUCT_NAME_FIELD, context),
                         brandOf(product, brands, context),
                         categoryOf(product, categories, context),
-                        textOf(product, PRODUCT_NAME_FIELD),
-                        ingredientsOf(product, ingredients, context));
+                        ingredientsOf(product, ingredients, context),
+                        requiredTextOf(product, IMAGE_URL_FIELD, context),
+                        variantsOf(product, context),
+                        integerOf(product, MOISTURE_LEVEL_FIELD, context),
+                        integerOf(product, OIL_LEVEL_FIELD, context),
+                        updatedAtOf(product, context));
             }
         });
 
@@ -111,7 +130,32 @@ public class ProductRepository {
         return ingredients.findAllById(ids);
     }
 
+    private static ProductVariants variantsOf(JsonNode product, DeserializationContext context)
+            throws JacksonException {
+        JsonNode variants = product.get(VARIANTS_FIELD);
+        if (variants == null || !variants.isArray() || variants.size() == 0) {
+            return context.reportInputMismatch(ProductVariants.class, "제품 용량 옵션은 하나 이상이어야 합니다.");
+        }
+
+        List<ProductVariant> values = new ArrayList<>();
+        for (JsonNode variant : variants) {
+            values.add(
+                    new ProductVariant(
+                            idOf(variant, ID_FIELD, context),
+                            longOf(variant, PRICE_FIELD, context),
+                            decimalOf(variant, VOLUME_VALUE_FIELD, context),
+                            requiredTextOf(variant, VOLUME_UNIT_FIELD, context),
+                            requiredTextOf(variant, STATUS_FIELD, context)));
+        }
+
+        return new ProductVariants(values);
+    }
+
     private static Long idOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
+        return longOf(value, field, context);
+    }
+
+    private static Long longOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
         JsonNode id = value.get(field);
         if (id == null || !id.isIntegralNumber()) {
             return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 정수여야 합니다.", field);
@@ -120,13 +164,53 @@ public class ProductRepository {
         return id.asLong();
     }
 
+    private static Integer integerOf(JsonNode value, String field, DeserializationContext context)
+            throws JacksonException {
+        JsonNode number = value.get(field);
+        if (number == null || !number.isIntegralNumber()) {
+            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 정수여야 합니다.", field);
+        }
+
+        return number.asInt();
+    }
+
+    private static BigDecimal decimalOf(JsonNode value, String field, DeserializationContext context)
+            throws JacksonException {
+        JsonNode number = value.get(field);
+        if (number == null || !number.isNumber()) {
+            return context.reportInputMismatch(ProductVariant.class, "제품 용량 옵션의 \"%s\" 필드는 숫자여야 합니다.", field);
+        }
+
+        return new BigDecimal(number.asText());
+    }
+
+    private static String requiredTextOf(JsonNode value, String field, DeserializationContext context)
+            throws JacksonException {
+        String text = textOf(value, field);
+        if (text == null || text.isBlank()) {
+            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 문자열이어야 합니다.", field);
+        }
+
+        return text;
+    }
+
     private static String textOf(JsonNode value, String field) {
         JsonNode text = value.get(field);
-        if (text == null || text.isNull()) {
+        if (text == null || !text.isTextual()) {
             return null;
         }
 
         return text.asText();
+    }
+
+    private static OffsetDateTime updatedAtOf(JsonNode product, DeserializationContext context)
+            throws JacksonException {
+        String updatedAt = requiredTextOf(product, UPDATED_AT_FIELD, context);
+        try {
+            return OffsetDateTime.parse(updatedAt);
+        } catch (DateTimeParseException exception) {
+            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 날짜와 시간이어야 합니다.", UPDATED_AT_FIELD);
+        }
     }
 
     private static Long ingredientIdOf(JsonNode reference, DeserializationContext context) throws JacksonException {

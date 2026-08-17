@@ -12,7 +12,9 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +46,14 @@ class ProductRepositoryTest {
                 .containsExactly(1L, "다 브랜드");
         assertThat(product.category()).extracting(Category::id, Category::name)
                 .containsExactly(2L, "스킨/토너");
+        assertThat(product.name()).isEqualTo("블랙 스네일 토너");
+        assertThat(product.imageUrl()).isEqualTo("https://cdn.example.com/products/1.png");
+        assertThat(product.representativeVariant())
+                .extracting("price", "volumeValue", "volumeUnit", "status")
+                .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
+        assertThat(product.moistureLevel()).isEqualTo(3);
+        assertThat(product.oilLevel()).isEqualTo(1);
+        assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
                 .get()

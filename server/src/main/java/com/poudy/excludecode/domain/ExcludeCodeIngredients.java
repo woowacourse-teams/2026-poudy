@@ -39,6 +39,12 @@ public class ExcludeCodeIngredients {
         return codesByIngredientId.getOrDefault(ingredientId, List.of());
     }
 
+    public List<ExcludeCode> freeCodesOf(Ingredients productIngredients) {
+        return Arrays.stream(ExcludeCode.values())
+                .filter(code -> !productIngredients.containsAny(idsOf(List.of(code))))
+                .toList();
+    }
+
     private static Map<ExcludeCode, ExcludeCodeMapping> byCode(List<ExcludeCodeMapping> mappings) {
         Map<ExcludeCode, ExcludeCodeMapping> byCode = new EnumMap<>(ExcludeCode.class);
 
