@@ -125,6 +125,10 @@ EvidenceAssessment
 중복 저장하지 않으며, 부모의 source 참조가 존재하지 않으면 observation을
 `QUARANTINED`한다. 서로 다른 원천의 평가는 observation을 분리해 기록한다.
 
+현재 `EvidenceAssessment` 값 타입은 목적, 권위·직접성 등급, 독립 근거 그룹과 검수
+provenance를 필수로 보존한다. 등급 vocabulary가 확정되기 전까지 임의 enum으로 의미를
+좁히지 않으며, limitation은 값 또는 `MissingReason`의 tagged union으로 기록한다.
+
 ## FormulaObservation
 
 `FormulaObservation`은 원료 투입량이 공개된 처방 한 revision을 보존한다.
@@ -162,6 +166,10 @@ FormulaObservation
   차이를 기록한다.
 - 측정 물성은 값뿐 아니라 단위, 측정법, 장비, 온도 등 공개된 조건을 함께 보존한다.
 - `claimedSensoryTerms`는 원문 마케팅·기술 표현이며 관능 정답 라벨이 아니다.
+
+현재 `FormulaMassBalanceAssessment`는 구조화한 원료 투입량에서 관측 합계와 100 대비 signed
+difference를 계산한다. 합계가 정확히 100일 때만 `ACCEPTED`이고 나머지는 수치를 바꾸지
+않은 채 `QUARANTINED`다.
 
 ### 복합원료
 
@@ -432,6 +440,14 @@ resolver 결과에는 match rule과 resolver version을 기록한다. 수동 해
   `independenceGroup`으로 계산한다.
 - 같은 시판 처방의 usage variant와 제품 ID만 다른 동일 처방도 독립 처방 표본으로 세지
   않는다.
+
+`formula-deduplication-v1` signature는 합계 100인 처방만 받는다. canonical raw material
+ID, 합산한 질량과 canonical 성분 composition을 versioned binary tuple로 정렬해 SHA-256을
+만든다. 입력 순서, 같은 raw material의 분할 투입, 0% lineage, 원문 이름, match rule과
+resolver version은 signature에서 제외한다. source·observation·product·formula revision ID는
+입력 타입에 존재하지 않는다. 같은 raw material ID의 composition 충돌, composition 내부
+canonical 성분 중복과 미해결·모호 identity는 자동 병합하지 않고 signature 생성을
+거부한다.
 
 ## 버전과 산출물 경계
 

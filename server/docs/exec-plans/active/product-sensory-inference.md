@@ -1288,6 +1288,16 @@ ProductSensoryOverride
 - 2026-08-18: Evonik, Dow, Lubrizol, Hallstar와 Clariant의 공식 formulation 진입점을 초기
   수집 후보로 확인했다. 원문 byte·hash·revision·라이선스 검수 전에는 수집 건수로 세지
   않으며, `q.s.`·`ad 100`, 복합 trade blend와 PDF 표 추출은 pilot 검수 대상으로 남겼다.
+- 2026-08-18: Evonik PDF 세 건과 Dow PDF 한 건의 byte snapshot·SHA-256을 저장소 밖에
+  확보하고 전 페이지를 렌더링 대조했다. Evonik `H 23/16-1`은 수치 합계 100 외에 perfume
+  `q.s.`가 있고, Dow `01419`는 공식 표의 Distilled Water와 INCI가 불일치해 정확 처방
+  코퍼스에 자동 포함하지 않고 `QUARANTINED`한다.
+- 2026-08-18: observation별 근거 목적·권위·직접성·독립 그룹과 검수 provenance를
+  `EvidenceAssessment`로 구현했다. 등급 vocabulary는 근거 없이 enum으로 고정하지 않았다.
+- 2026-08-18: 처방 질량 합계와 100 대비 signed difference를 보존하는 검증 타입과
+  `formula-deduplication-v1` exact signature를 구현했다. signature는 합계 100과 해석 완료된
+  canonical composition만 받고, 입력 순서·분할 투입·원문 이름·source lineage를 제외한
+  versioned binary hash다.
 
 ## 아직 확정하지 않은 사항
 
