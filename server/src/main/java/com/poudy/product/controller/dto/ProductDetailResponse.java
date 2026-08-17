@@ -3,6 +3,8 @@ package com.poudy.product.controller.dto;
 import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,21 +29,21 @@ public record ProductDetailResponse(
         @NotNull @Schema(description = "이 제품이 포함하지 않는 성분군 (프리 뱃지)") List<ExcludeCode> freeOfCodes,
         @NotNull @Schema(description = "제품 정보를 마지막으로 갱신한 시각", example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 
-    private static final OffsetDateTime SAMPLE_UPDATED_AT = OffsetDateTime.parse("2026-08-01T09:30:00+09:00");
+    public static ProductDetailResponse from(ProductDetail detail) {
+        Product product = detail.product();
 
-    public static ProductDetailResponse sample(Long id) {
         return new ProductDetailResponse(
-                id,
-                "스킨케어 이름",
-                BrandResponse.sample(),
-                CategoryPathResponse.samples(),
-                ProductResponse.sampleImageUrl(id),
-                ProductVariantResponse.samples(),
-                3,
-                1,
-                SkinEffectGroupResponse.samples(),
-                ProductIngredientResponse.samples(),
-                List.of(ExcludeCode.HARSH_PRESERVATIVES, ExcludeCode.CYCLIC_SILICONES),
-                SAMPLE_UPDATED_AT);
+                product.id(),
+                product.name(),
+                BrandResponse.from(product.brand()),
+                CategoryPathResponse.from(detail.categoryPath()),
+                product.imageUrl(),
+                ProductVariantResponse.from(product.variants().values()),
+                product.moistureLevel(),
+                product.oilLevel(),
+                SkinEffectGroupResponse.from(product.skinEffectGroups()),
+                ProductIngredientResponse.from(product.ingredients().values()),
+                detail.freeOfCodes(),
+                product.updatedAt());
     }
 }

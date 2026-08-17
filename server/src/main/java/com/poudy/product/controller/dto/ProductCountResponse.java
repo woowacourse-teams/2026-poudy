@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record ProductCountResponse(@NotNull @Schema(example = "127") Long count) {
 
-    public static ProductCountResponse sample() {
-        return new ProductCountResponse((long) ProductResponse.samples().size());
+    public static ProductCountResponse from(long count) {
+        return new ProductCountResponse(count);
     }
 }
