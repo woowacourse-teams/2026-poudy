@@ -44,7 +44,8 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(ingredientsJson);
+        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(
+                Files.readAllBytes(ingredientsJson));
 
         assertThat(resolver.resolve(null, "글리세롤"))
                 .isEqualTo(
@@ -119,7 +120,8 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        List<IngredientVocabularyEntry> entries = new IngredientVocabularyReader().read(ingredientsJson);
+        List<IngredientVocabularyEntry> entries = new IngredientVocabularyReader().read(
+                Files.readAllBytes(ingredientsJson));
         assertThat(entries.get(0).englishNames()).containsExactly("1,2-Hexanediol");
         assertThat(entries.get(1).englishNames())
                 .containsExactly("N,N-Bis(2-Hydroxyethyl)-p-Phenylenediamine Sulfate");
@@ -175,7 +177,8 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(ingredientsJson);
+        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(
+                Files.readAllBytes(ingredientsJson));
 
         assertThat(resolver.resolve(null, "피이지-400/1,4-부탄다이올/에스엠디아이코폴리머"))
                 .isEqualTo(resolved(8295L, IngredientIdentityResolver.MatchRule.KOREAN_NAME_EXACT));
@@ -212,7 +215,8 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(ingredientsJson);
+        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(
+                Files.readAllBytes(ingredientsJson));
 
         assertThat(resolver.resolve(null, "5-나프탈렌다이올"))
                 .isInstanceOf(Unresolved.class);
@@ -250,7 +254,8 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(ingredientsJson);
+        IngredientIdentityResolver resolver = IngredientIdentityResolver.fromIngredientsJson(
+                Files.readAllBytes(ingredientsJson));
 
         assertThat(resolver.resolve(null, "정상별칭"))
                 .isEqualTo(resolved(18574L, IngredientIdentityResolver.MatchRule.ALIAS_EXACT));
@@ -284,7 +289,9 @@ class IngredientVocabularyReaderTest {
                 }
                 """);
 
-        assertThatThrownBy(() -> IngredientIdentityResolver.fromIngredientsJson(ingredientsJson))
+        assertThatThrownBy(
+                () -> IngredientIdentityResolver.fromIngredientsJson(
+                        Files.readAllBytes(ingredientsJson)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ingredients[1]")
                 .hasMessageContaining("중복 canonical ingredient ID")
@@ -295,7 +302,9 @@ class IngredientVocabularyReaderTest {
     @DisplayName("성분 배열과 vocabulary 필드의 잘못된 타입을 조용히 누락하지 않는다")
     void rejectsMalformedVocabulary() throws IOException {
         Path wrongRoot = write("{\"ingredients\": {}}");
-        assertThatThrownBy(() -> IngredientIdentityResolver.fromIngredientsJson(wrongRoot))
+        assertThatThrownBy(
+                () -> IngredientIdentityResolver.fromIngredientsJson(
+                        Files.readAllBytes(wrongRoot)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ingredients는 배열");
 
@@ -306,7 +315,9 @@ class IngredientVocabularyReaderTest {
                   ]
                 }
                 """);
-        assertThatThrownBy(() -> IngredientIdentityResolver.fromIngredientsJson(wrongAliases))
+        assertThatThrownBy(
+                () -> IngredientIdentityResolver.fromIngredientsJson(
+                        Files.readAllBytes(wrongAliases)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ingredients[0]")
                 .hasMessageContaining("aliases는 배열");
@@ -318,7 +329,9 @@ class IngredientVocabularyReaderTest {
                   ]
                 }
                 """);
-        assertThatThrownBy(() -> IngredientIdentityResolver.fromIngredientsJson(whitespaceAlias))
+        assertThatThrownBy(
+                () -> IngredientIdentityResolver.fromIngredientsJson(
+                        Files.readAllBytes(whitespaceAlias)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ingredients[0]")
                 .hasMessageContaining("aliases의 각 값");
@@ -330,7 +343,9 @@ class IngredientVocabularyReaderTest {
                   ]
                 }
                 """);
-        assertThatThrownBy(() -> IngredientIdentityResolver.fromIngredientsJson(emptyEnglishNameSegment))
+        assertThatThrownBy(
+                () -> IngredientIdentityResolver.fromIngredientsJson(
+                        Files.readAllBytes(emptyEnglishNameSegment)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ingredients[0]")
                 .hasMessageContaining("english_name의 쉼표 구분 항목");

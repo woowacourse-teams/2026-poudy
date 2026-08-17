@@ -5,7 +5,6 @@ import com.poudy.offline.sensorysource.IngredientResolution.Ambiguous;
 import com.poudy.offline.sensorysource.IngredientResolution.Resolved;
 import com.poudy.offline.sensorysource.IngredientResolution.Unresolved;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,11 +59,6 @@ public final class IngredientIdentityResolver {
                                 .thenComparing(issue -> issue.type().name())
                                 .thenComparing(issue -> String.join("\u0000", issue.rawValues())))
                 .toList();
-    }
-
-    public static IngredientIdentityResolver fromIngredientsJson(Path ingredientsJson) throws IOException {
-        Objects.requireNonNull(ingredientsJson, "ingredientsJson");
-        return new IngredientIdentityResolver(new IngredientVocabularyReader().read(ingredientsJson));
     }
 
     public static IngredientIdentityResolver fromIngredientsJson(byte[] ingredientsJsonSnapshot) throws IOException {

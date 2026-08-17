@@ -2,8 +2,6 @@ package com.poudy.offline.sensorysource.identity;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,10 +14,6 @@ import tools.jackson.databind.json.JsonMapper;
 final class IngredientVocabularyReader {
 
     private static final ObjectMapper MAPPER = JsonMapper.builder().build();
-
-    List<IngredientVocabularyEntry> read(Path ingredientsJson) throws IOException {
-        return read(Files.readAllBytes(ingredientsJson));
-    }
 
     List<IngredientVocabularyEntry> read(byte[] snapshot) throws IOException {
         JsonNode document = MAPPER.readTree(snapshot);
