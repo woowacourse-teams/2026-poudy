@@ -21,6 +21,8 @@
   5분 후 사용감이며, 임상 보습 효능과 분리한다.
 - 첫 운영 estimator의 계산 범위와 의도적으로 남긴 한계는
   [감각 추론 v0 기준과 한계](sensory-inference-v0.md)를 따른다.
+- 원천 제품 JSON에는 완성된 유수분 레벨을 넣지 않는다. 서버가 기동할 때 category와 순서가
+  보존된 전성분으로 한 번 계산하며 목록·상세·filter·count가 같은 값을 사용한다.
 - `없음`은 등록된 공식 전성분에서 찾지 못했다는 뜻이다.
 - 저장 제품과 최근 탐색은 브라우저 상태이며 백엔드 저장 대상이 아니다.
 
@@ -32,7 +34,8 @@
   [감각 원천 데이터 계약](sensory-source-data-contract.md)에 따라 런타임 classpath와
   저장소 밖에서 수집·검수하고, 서버에는 검증된 파생 참조 데이터만 전달한다.
 - 현재 외부 카탈로그의 구조·태그 커버리지와 원천 계약 공백은
-  [감각 준비도 보고서](catalog-sensory-readiness-report.md)를 기준으로 한다.
+  [감각 준비도 보고서](catalog-sensory-readiness-report.md)를 기준으로 한다. 이 보고서에는
+  원본이나 제품별 추론값 대신 현재 v0의 전체·category별 레벨과 confidence 집계만 커밋한다.
 - 데이터 접근 경계는 이후 DB 저장 방식으로 교체할 수 있어야 한다.
 
 ## Deferred decisions

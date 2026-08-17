@@ -7,8 +7,9 @@
 - 대상 브랜치: `product-sensory-inference`
 - 소유 도메인: `product`
 - 완료 시 이동 위치: `docs/exec-plans/completed/product-sensory-inference.md`
-- 최근 진행: 0단계 완료, 카탈로그 감사·원천 계약·결정적 입력 manifest와 기초 원천·결과
-  값 타입 구현 완료
+- 최근 진행: 0~2단계의 현재 가능한 범위와 6단계 기초 타입을 완료했다. category·전성분
+  순서 기반 v0 estimator를 `ProductFactory`와 runtime에 연결했고 외부 snapshot 199제품의
+  결정적 분포 보고서를 생성했다. 장기 물리 조성 모델·관능 보정은 계속 진행 중이다.
 
 이 문서는 제품별 `moisture_level`, `oil_level`을 원천 JSON에 사람이 미리 라벨링하는
 방식을 대체한다. 정확한 함량이 공개된 화장품 배합, 시판 제품 전성분, 성분 물성 및
@@ -118,9 +119,14 @@
   제형과 source URL이 모두 0건이다. 공식 사용법에 근거해 `LEAVE_ON`으로 확정한 제품은
   아직 0개이며 카테고리나 제품명으로 값을 채우지 않는다. 전성분 배열의 구조와 내부
   참조는 감사했지만 공식 원문이 없어 순서·누락·완전성 대조는 아직 하지 못했다.
-- 현재 `Product`는 `Integer moistureLevel`, `Integer oilLevel`을 갖고 null과 범위 밖 값을
-  거부한다.
-- 현재 `ProductRepository`는 `products.json`에서 두 필드를 정수로 직접 읽는다.
+- 현재 `Product`는 강타입 수분·유분, 내부 confidence와 다섯 버전을 묶은
+  `ProductSensory`를 소유한다. 기존 API의 `moistureLevel`, `oilLevel` 정수 계약은 경계
+  accessor로 유지한다.
+- 현재 `ProductRepository`는 원천 유수분 필드를 읽지 않는다. 참조를 해석한 뒤
+  `ProductFactory`가 v0 `ProductSensoryEstimator`로 기동 시 한 번 계산한다.
+- 외부 snapshot 199제품은 같은 v0 estimator로 모두 계산됐고 skip은 0건이다. 수분감
+  `0/1/2/3`은 `0/15/136/48`, 유분감은 `40/67/74/18`이다. 수분 2 집중과 수분 0 부재는
+  [v0 한계 문서](../../product/sensory-inference-v0.md)의 다음 보완 대상으로 남겼다.
 - `Ingredients`는 제품 전성분의 입력 순서를 보존하므로 위치 제약의 입력으로 사용할 수 있다.
 - 기존 `FormulationRole`에는 `HUMECTANT`, `MOISTURISING`, `EMOLLIENT`, `ABSORBENT`,
   `FILM_FORMING`, `VISCOSITY_CONTROLLING` 등 초기 분류에 쓸 수 있는 값이 있다.
@@ -136,8 +142,10 @@
 1. 제품별 완성 레벨은 저장하지 않고 `Product` 생성 시 계산한다.
 2. 계산 알고리즘은 Java Domain 코드가 소유하고, 성분별 물성·일반 사용 범위와
    카테고리 통계는 버전이 있는 참조 데이터로 관리한다.
-3. 카테고리는 최종 점수에 고정 가산점을 주지 않는다. 제형 유형과 가능한 함량의
-   사전확률을 바꾸는 데 사용한다.
+3. 목표 모델에서 카테고리는 최종 점수의 고정 가산점이 아니라 제형 유형과 가능한 함량의
+   사전확률을 바꾸는 데 사용한다. 정확 조성·관능 데이터 전의 운영 가능한 v0는 이 목표에
+   도달하기 전의 비교 baseline으로 버전된 category 시작점을 사용하며, 한계와 분포를 별도
+   보고한다.
 4. 전성분 순서는 정확한 함량으로 취급하지 않는다. 1% 초과 구간의 상대 순서에 대한
    제약으로만 사용한다.
 5. 1% 경계는 하나로 단정하지 않고 여러 후보와 확률로 표현한다.
@@ -1115,6 +1123,8 @@ ProductSensoryOverride
 
 ### 7. 추론 파이프라인
 
+- [x] category와 전성분 순서·기존 역할만 쓰는 결정적 v0 baseline을 구현한다.
+- [x] v0의 전체·category별 레벨과 confidence 분포를 외부 snapshot에서 생성한다.
 - [ ] `FormulaArchetypeClassifier`와 규칙 테스트를 구현한다.
 - [ ] 1% 경계 후보와 확률 계산을 구현한다.
 - [ ] `IngredientConcentrationEstimator`를 구현한다.
@@ -1130,21 +1140,22 @@ ProductSensoryOverride
 - [ ] 일반 미량 오일, 저농도 active, 저농도 레올로지 modifier의 기여 채널 분리 테스트를
   추가한다.
 - [ ] 임상 효능 근거가 공개 감각 추론의 입력으로 조립되지 않는지 테스트한다.
-- [ ] 독립된 수분·유분 순서형 모델을 구현한다.
+- [ ] 목표 물리 특징 파이프라인의 독립된 수분·유분 순서형 모델을 구현한다.
 - [ ] 신뢰도와 상위 기여 근거 계산을 구현한다.
 - [ ] 단순 베이스라인 두 개를 비교용으로 구현한다.
 
 ### 8. Product 생성과 API 연결
 
-- [ ] `ProductFactory`를 만든다.
-- [ ] `Product`가 `ProductSensory`를 소유하게 바꾼다.
-- [ ] `ProductRepository`에서 원천 유수분 필드 읽기를 제거한다.
-- [ ] 감각 참조 Repository와 `ProductSensoryConfig`를 추가한다.
-- [ ] 제품 fixture에서 유수분 필드를 제거한다.
-- [ ] DTO 경계에서 레벨 타입을 정수로 변환한다.
-- [ ] `ProductFilter` 내부를 가능한 범위에서 강타입으로 바꾼다.
-- [ ] 목록·상세·filter·count 회귀 테스트를 추가한다.
-- [ ] OpenAPI와 TypeScript 생성물을 갱신·검증한다.
+- [x] `ProductFactory`를 만든다.
+- [x] `Product`가 `ProductSensory`를 소유하게 바꾼다.
+- [x] `ProductRepository`에서 원천 유수분 필드 읽기를 제거한다.
+- [x] v0 estimator와 factory를 조립하는 `ProductSensoryConfig`를 추가한다.
+- [ ] 버전된 성분 프로필·category prior용 감각 참조 Repository를 추가한다.
+- [x] 제품 fixture에서 유수분 필드를 제거한다.
+- [x] DTO 경계에서 레벨 타입을 정수로 변환한다.
+- [x] `ProductFilter` 내부를 가능한 범위에서 강타입으로 바꾼다.
+- [x] 목록·상세·filter·count 회귀 테스트를 추가한다.
+- [x] OpenAPI와 TypeScript 생성물을 갱신·검증한다.
 
 ### 9. 관능평가와 모델 보정
 
@@ -1162,14 +1173,16 @@ ProductSensoryOverride
 
 ### 10. 운영 반영
 
+- [x] 저장소 밖 외부 snapshot 199제품을 같은 runtime estimator로 계산하고 집계 분포를
+  커밋한다.
 - [ ] 모델·프로필·사전분포·프로토콜 버전을 고정한다.
 - [ ] 운영 전체 제품을 계산한다.
 - [ ] 2단계 이상 변경과 낮은 신뢰도 제품을 검수한다.
 - [ ] 배포 전 데이터 품질 게이트를 추가한다.
 - [ ] 모델 변경 diff 리포트를 자동화한다.
 - [ ] 신규 성분·카테고리의 fallback과 검수 큐를 운영한다.
-- [ ] `ARCHITECTURE.md`와 제품 컨텍스트 문서를 갱신한다.
-- [ ] 전체 테스트와 `verify.sh`를 통과시킨다.
+- [x] `ARCHITECTURE.md`와 제품 컨텍스트 문서를 갱신한다.
+- [x] 전체 테스트와 `verify.sh`를 통과시킨다.
 
 ## 완료 조건
 
@@ -1310,6 +1323,12 @@ ProductSensoryOverride
   역할로 만드는 설명 가능하고 결정적인 v0 baseline으로 정했다. v0의 장점, 한계, confidence
   해석과 보완 순서는 [감각 추론 v0 기준과 한계](../../product/sensory-inference-v0.md)에
   기록하고, 후속 모델은 같은 estimator 경계에서 버전과 catalog diff를 남기며 교체한다.
+- 2026-08-18: v0 estimator를 `ProductFactory`를 통해 runtime 제품 생성에 연결했다. 원천
+  `moisture_level`, `oil_level`은 읽지 않고 `Product`가 완성된 `ProductSensory`를 소유하며,
+  API·filter·count는 같은 결과의 정수 accessor를 사용한다.
+- 2026-08-18: 외부 snapshot 199제품을 같은 estimator로 모두 계산해 보고서 v2에 전체·조합·
+  category별 레벨과 confidence 집계를 추가했다. 수분 2가 136건이고 수분 0이 없는 압축,
+  선크림·로션 category 내 유분 분산 부족을 다음 프로필·cut point 보완의 우선 근거로 삼는다.
 
 ## 아직 확정하지 않은 사항
 
