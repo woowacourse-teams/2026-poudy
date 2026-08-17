@@ -1306,6 +1306,10 @@ ProductSensoryOverride
   해석해 18건 exact, `Lauryl Oleate` 1건 unresolved를 확인했다. slash가 포함된 긴 공식 INCI는
   분리하지 않고 전체 이름으로 한 canonical ID에 resolve됐으며, 이 처방은 사용법 결측과 함께
   `QUARANTINED` 상태로 남긴다.
+- 2026-08-18: 첫 운영 목표는 완벽한 관능 모델이 아니라 기존 category·전성분 순서·감각
+  역할로 만드는 설명 가능하고 결정적인 v0 baseline으로 정했다. v0의 장점, 한계, confidence
+  해석과 보완 순서는 [감각 추론 v0 기준과 한계](../../product/sensory-inference-v0.md)에
+  기록하고, 후속 모델은 같은 estimator 경계에서 버전과 catalog diff를 남기며 교체한다.
 
 ## 아직 확정하지 않은 사항
 
