@@ -16,6 +16,12 @@ type ProductListProps = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandListItemResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
+  /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
+  readonly basePath?: string;
+  /** 화면이 고정하는 조건. 브랜드 상세의 브랜드처럼 사용자가 바꾸지 않는 값이다. */
+  readonly fixedFilter?: Partial<Filter>;
+  /** 고정한 조건에 해당하는 칩은 숨긴다. */
+  readonly hiddenChips?: readonly string[];
 };
 
 const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
@@ -34,10 +40,20 @@ const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
 ];
 
 /** S04 조건 일치 제품. 조건은 URL 이 들고, 목록은 페이지를 이어 붙인다. */
-export function ProductList({ categories, brands, excludeCodes }: ProductListProps) {
-  const { filter, setCondition, setSort } = useFilterQuery("/products");
+export function ProductList({
+  categories,
+  brands,
+  excludeCodes,
+  basePath = "/products",
+  fixedFilter,
+  hiddenChips = [],
+}: ProductListProps) {
+  const { filter: urlFilter, setCondition, setSort } = useFilterQuery(basePath);
   const { isSaved, toggle } = useSavedProducts();
   const [openSheet, setOpenSheet] = useState<SheetKind>();
+
+  // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
+  const filter = { ...urlFilter, ...fixedFilter };
 
   const { items, total, hasNext, loadNext, loading } = useProductPages(filter);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
@@ -45,7 +61,10 @@ export function ProductList({ categories, brands, excludeCodes }: ProductListPro
   return (
     <>
       <div className="sticky top-0 z-10 bg-white px-4 pt-2">
-        <FilterChipBar chips={chipsOf(filter)} onOpen={(id) => setOpenSheet(id as SheetKind)} />
+        <FilterChipBar
+          chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
+          onOpen={(id) => setOpenSheet(id as SheetKind)}
+        />
         <SortHeader total={total} sort={filter.sort} onChangeSort={setSort} />
       </div>
 
