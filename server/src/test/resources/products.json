@@ -6,8 +6,6 @@
       "category_id": 2,
       "product_name": "블랙 스네일 토너",
       "image_url": "https://cdn.example.com/products/1.png",
-      "moisture_level": 3,
-      "oil_level": 1,
       "variants": [
         {
           "id": 1,
@@ -31,8 +29,6 @@
       "category_id": 3,
       "product_name": "블랙스네일 레티놀 콜라겐 세럼 인텐스",
       "image_url": "https://cdn.example.com/products/7.png",
-      "moisture_level": 2,
-      "oil_level": 2,
       "variants": [
         {
           "id": 7,
@@ -56,8 +52,6 @@
       "category_id": 14,
       "product_name": "블랙스네일 글루타치온 톤업 선",
       "image_url": "https://cdn.example.com/products/10.png",
-      "moisture_level": 1,
-      "oil_level": 1,
       "variants": [
         {
           "id": 10,
@@ -81,8 +75,6 @@
       "category_id": 2,
       "product_name": "래디언스 비타 토너",
       "image_url": "https://cdn.example.com/products/13.png",
-      "moisture_level": 3,
-      "oil_level": 1,
       "variants": [
         {
           "id": 13,
@@ -106,8 +98,6 @@
       "category_id": 2,
       "product_name": "PH 컨디션 토너",
       "image_url": "https://cdn.example.com/products/15.png",
-      "moisture_level": 2,
-      "oil_level": 2,
       "variants": [
         {
           "id": 15,

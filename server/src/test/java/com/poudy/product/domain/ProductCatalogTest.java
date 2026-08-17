@@ -1,5 +1,6 @@
 package com.poudy.product.domain;
 
+import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
@@ -150,8 +151,7 @@ class ProductCatalogTest {
                 new Ingredients(ingredients),
                 "https://example.com/" + id + ".png",
                 new ProductVariants(List.of(variant)),
-                moistureLevel,
-                oilLevel,
+                sensory(moistureLevel, oilLevel),
                 OffsetDateTime.parse("2026-08-01T00:00:00Z"));
     }
 

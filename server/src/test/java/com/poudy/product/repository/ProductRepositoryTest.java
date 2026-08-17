@@ -12,6 +12,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -51,8 +52,10 @@ class ProductRepositoryTest {
         assertThat(product.representativeVariant())
                 .extracting("price", "volumeValue", "volumeUnit", "status")
                 .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
-        assertThat(product.moistureLevel()).isEqualTo(3);
-        assertThat(product.oilLevel()).isEqualTo(1);
+        assertThat(product.moistureLevel()).isEqualTo(2);
+        assertThat(product.oilLevel()).isZero();
+        assertThat(product.sensory().modelVersion().dataBuilderVersion())
+                .isEqualTo("product-sensory-builder-v0.1");
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
@@ -129,8 +132,6 @@ class ProductRepositoryTest {
                     "volume_unit":"ml",
                     "status":"active"
                   }],
-                  "moisture_level":1,
-                  "oil_level":1,
                   "updated_at":"2026-08-01T00:00:00Z",
                   "ingredients":[%s]
                 }]}
@@ -147,7 +148,8 @@ class ProductRepositoryTest {
                 new JsonDataReader(resourceLoader),
                 brands(),
                 categories(),
-                new Ingredients(List.of()));
+                new Ingredients(List.of()),
+                new HeuristicProductSensoryEstimator());
     }
 
     private static Brands brands() {

@@ -10,6 +10,7 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
+import com.poudy.product.domain.sensory.ProductSensoryEstimator;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -39,8 +40,6 @@ public class ProductRepository {
     private static final String VOLUME_VALUE_FIELD = "volume_value";
     private static final String VOLUME_UNIT_FIELD = "volume_unit";
     private static final String STATUS_FIELD = "status";
-    private static final String MOISTURE_LEVEL_FIELD = "moisture_level";
-    private static final String OIL_LEVEL_FIELD = "oil_level";
     private static final String UPDATED_AT_FIELD = "updated_at";
     private static final String INGREDIENTS_FIELD = "ingredients";
     private static final String INGREDIENT_ID_FIELD = "ingredient_id";
@@ -51,32 +50,38 @@ public class ProductRepository {
             JsonDataReader jsonDataReader,
             Brands brands,
             Categories categories,
-            Ingredients ingredients) {
+            Ingredients ingredients,
+            ProductSensoryEstimator sensoryEstimator) {
         this.products = new Products(
                 jsonDataReader.readList(
                         PRODUCTS_FILE_NAME,
                         Product.class,
-                        resolvedWith(brands, categories, ingredients)));
+                        resolvedWith(brands, categories, ingredients, sensoryEstimator)));
     }
 
-    private static JacksonModule resolvedWith(Brands brands, Categories categories, Ingredients ingredients) {
+    private static JacksonModule resolvedWith(
+            Brands brands,
+            Categories categories,
+            Ingredients ingredients,
+            ProductSensoryEstimator sensoryEstimator) {
         SimpleModule resolution = new SimpleModule("제품 참조 해석");
         resolution.addDeserializer(Product.class, new ValueDeserializer<Product>() {
 
             @Override
             public Product deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
                 JsonNode product = context.readTree(parser);
+                Category category = categoryOf(product, categories, context);
+                Ingredients productIngredients = ingredientsOf(product, ingredients, context);
 
                 return new Product(
                         idOf(product, ID_FIELD, context),
                         requiredTextOf(product, PRODUCT_NAME_FIELD, context),
                         brandOf(product, brands, context),
-                        categoryOf(product, categories, context),
-                        ingredientsOf(product, ingredients, context),
+                        category,
+                        productIngredients,
                         requiredTextOf(product, IMAGE_URL_FIELD, context),
                         variantsOf(product, context),
-                        integerOf(product, MOISTURE_LEVEL_FIELD, context),
-                        integerOf(product, OIL_LEVEL_FIELD, context),
+                        sensoryEstimator.estimate(category, productIngredients),
                         updatedAtOf(product, context));
             }
         });
@@ -173,16 +178,6 @@ public class ProductRepository {
         }
 
         return id.asLong();
-    }
-
-    private static Integer integerOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
-        JsonNode number = value.get(field);
-        if (number == null || !number.isIntegralNumber()) {
-            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 정수여야 합니다.", field);
-        }
-
-        return number.asInt();
     }
 
     private static BigDecimal decimalOf(JsonNode value, String field, DeserializationContext context)
