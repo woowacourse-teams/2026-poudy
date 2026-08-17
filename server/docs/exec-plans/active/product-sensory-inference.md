@@ -48,6 +48,30 @@
 필요해지면 별도의 `HydrationPotential`로 확장한다. 관능평가를 시작하기 전에 평가 부위,
 도포량, 대기 시간, 온도와 습도, 단계별 기준 제품을 포함한 프로토콜을 확정한다.
 
+### 내부에서 분리할 세 관점
+
+공개 유수분 레벨을 계산하기 전에 다음 세 관점을 명확히 구분한다.
+
+| 층 | 의미 | 1% 이하 성분 처리 |
+| --- | --- | --- |
+| 실제 물리 조성 | 수상·유상·분산 고형물·미분류의 배타적 예상 질량 분할 | 실제 예상 함량만큼만 질량 보존 방식으로 반영 |
+| 피부 보습 효능 근거 | 피부 수분 증가·TEWL 감소·장벽 유지에 관한 근거 | 초기 레벨에는 넣지 않고 조건과 농도 반응을 출처 데이터로만 보존 |
+| 5분 후 사용감 | 촉촉함·유분감·슬립·점착·왁시함·드라이다운 | 레올로지·필름 등 저농도 비선형 효과까지 반영 |
+
+`moistureLevel`, `oilLevel`은 세 번째 층의 공개 결과다. 첫 번째 층은 사용감 계산의
+기초 특징이다. 두 번째 층은 현재 계산 대상이 아니라 잘못된 감각 가산을 막고 향후 별도
+효능 모델을 만들 때 사용할 출처 근거다.
+
+휘발성은 수상·유상과 배타적인 상이 아니다. 에탄올은 수상에 있으면서 휘발할 수 있고,
+휘발성 실리콘은 유상에 있으면서 휘발할 수 있다. 따라서 실제 질량 분할은 합계가 100%인
+배타적 값으로 만들고, 휘발량과 5분 후 잔존량은 별도의 `EstimatedDryDown`으로 계산한다.
+
+따라서 `1% 이하`를 모든 성분에 동일한 감점으로 적용하지 않는다. 일반적인 오일과
+습윤제는 상 조성에 실제 함량만큼 제한적으로 기여하지만, 카보머·검류·일부 필름 형성제는
+상 조성에 거의 기여하지 않으면서 0.x%에서 사용감을 크게 바꿀 수 있다. 반대로 저농도
+히알루론산이나 판테놀의 임상적 보습 가능성은 유수상 질량과 공개 감각 레벨에서 제외하고
+별도의 효능 근거로만 관리한다.
+
 ## 범위
 
 ### 초기 범위
@@ -107,6 +131,13 @@
 9. 초기에는 설명 가능한 규칙·순서형 모델을 사용한다. 충분한 관능 라벨 없이
    딥러닝이나 성분 순서 Transformer를 도입하지 않는다.
 10. 관능 데이터는 계산 규칙 보정과 검증에 쓰지만 제품 원천 JSON의 수동 라벨로 쓰지 않는다.
+11. 1% 이하 성분은 일괄 무시하거나 일괄 감점하지 않고 효과 채널별 농도 반응을 적용한다.
+12. 레올로지 modifier의 실제 배합 질량은 배타적 상 분할에 보존하되, 레올로지 효과는
+    상 질량에 다시 가산하지 않고 제형 구조와 사용감 modifier로 처리한다.
+13. 저농도 active의 피부 보습 근거는 공개 수분감과 분리한 `EfficacyEvidenceObservation`으로
+    관리하고 초기 런타임 점수 계산에서는 제외한다.
+14. 분자량, 원료 등급, pH, 중화 상태처럼 전성분에서 알 수 없는 조건은 고정값으로
+    추측하지 않고 가능한 시나리오와 신뢰도 하락으로 표현한다.
 
 ## 전체 데이터 흐름
 
@@ -152,7 +183,7 @@ ProductSensory
 
 | 속성 | 의미 |
 | --- | --- |
-| phase affinity | 수상·오일상·파우더·휘발상 성향 |
+| phase allocation | 수상·오일상·분산 고형물·미분류로 나눌 질량 배분 |
 | ingredient family | 폴리올, 에스터, 식물유, 실리콘, 왁스 등 물성군 |
 | humectancy | 수분을 끌어당기고 유지하는 성향 |
 | aqueous retention | 사용 후 촉촉한 수상 감각을 남기는 성향 |
@@ -164,11 +195,49 @@ ProductSensory
 | tack | 끈적임 |
 | wax structure | 왁시함·리치함·구조감 |
 | rheology impact | 점도와 마찰을 바꾸는 정도 |
+| sensory effect channels | 사용감·레올로지·필름 중 어느 감각 채널에 기여하는지 |
+| concentration response | 선형·임계값·포화형 등 채널별 농도 반응 |
+| molecular weight dependency | 분자량에 따라 작용이 달라지는지 |
+| grade dependency | 원료 등급·가교도 등에 따라 작용이 달라지는지 |
+| pH dependency | pH에 따라 점도·전하·기능이 달라지는지 |
+| neutralization dependency | 중화 여부와 중화제에 따라 구조가 달라지는지 |
+| interaction requirements | 효과에 필요한 공존 성분이나 상 조건 |
 | typical use range | 제형별 통상 사용 범위 |
 | evidence | 출처, 신뢰 등급, 검수 상태와 버전 |
 
 성분 역할 하나를 곧바로 점수로 바꾸지 않는다. 같은 `EMOLLIENT`라도 가벼운 에스터,
 식물유, 미네랄오일, 휘발성 실리콘, 고점도 실리콘과 버터는 다른 프로필을 가진다.
+
+프로필은 하나의 `oiliness score`가 아니라 감각 효과 채널별 반응을 가진다.
+
+```text
+SensoryEffectChannel
+├─ AFTERFEEL_MOISTURE
+├─ AFTERFEEL_OILINESS
+├─ RHEOLOGY
+└─ FILM_FORMATION
+```
+
+실제 상 조성은 효과 채널이 아니며 `PhaseCompositionEstimator` 하나가 예상 함량과
+`phase allocation`을 이용해 질량 보존 방식으로 계산한다. 일반 오일의 유상 질량은 예상
+함량을 넘을 수 없다.
+카보머와 검류의 `RHEOLOGY`는 특정 농도부터 빠르게 커지고 포화되는 임계값 반응을
+사용할 수 있다. 히알루론산·판테놀 같은 성분의 임상 결과는 감각 채널과 분리한
+`EfficacyEvidenceObservation`에 근거 농도와 조건을 기록한다.
+
+저농도 예외 규칙을 만들 때 다음 근거를 초기 검토 자료로 포함한다.
+
+- [0.1% 히알루론산 제형의 피부 수분·탄력 임상 결과와 분자량 차이](https://pubmed.ncbi.nlm.nih.gov/22052267/)
+- [판테놀 0.5%, 1%, 5% 제형의 농도별 수분·TEWL 비교](https://pubmed.ncbi.nlm.nih.gov/21982351/)
+- [Carbopol 2984의 0.1~1.0% 권장량과 농도별 점도 특성](https://www.lubrizol.com/Personal-Care/Products/Product-Finder/Products-Data/Carbopol-2984-polymer)
+- [카보머 기반 네트워크와 제형 레올로지·피부 감각의 상관](https://pubmed.ncbi.nlm.nih.gov/34208474/)
+
+이 자료의 특정 결과를 모든 동명 INCI에 그대로 일반화하지 않는다. 예를 들어
+`Sodium Hyaluronate`라는 표시만으로 분자량을 알 수 없고, `Carbomer`라는 표시만으로
+등급·중화 상태·pH·전해질 조건을 알 수 없다. 공개되지 않은 조건은 여러 시나리오로
+계산하고 관련 감각 채널의 신뢰도를 낮춘다. HA·판테놀 임상 결과는 저농도라는 이유만으로
+효과를 0으로 둘 수 없다는 근거지만, 5분 후 촉촉함을 측정한 연구가 아니므로 공개
+`moistureLevel`의 가중치 근거로 쓰지 않는다.
 
 ### 3. 정확한 함량이 있는 배합 코퍼스
 
@@ -182,8 +251,9 @@ ProductSensory
 - CIR의 카테고리별 사용 농도 자료
 - 규제상 최대 사용 농도
 
-정확한 처방은 카테고리·제형별 성분 함량과 수상·오일상·휘발상·파우더 총량 분포를
-만드는 데 쓴다. 원료사의 감각 설명은 보조 메타데이터로만 저장하고 정답 라벨로 쓰지 않는다.
+정확한 처방은 카테고리·제형별 성분 함량, 배타적 상 질량 분포와 직교하는 휘발 물성
+분포를 만드는 데 쓴다. 원료사의 감각 설명은 보조 메타데이터로만 저장하고 정답 라벨로
+쓰지 않는다.
 
 ### 4. 시판 제품 전성분 코퍼스
 
@@ -308,6 +378,23 @@ MarketProductObservation
 성분이 특정 제품 처방에서 감각에 기여하는 방식을 나타낸다. 성분 자체의 절대적인
 제품 점수가 아니며 함량과 제형에 따라 적용된다.
 
+### EfficacyEvidenceObservation
+
+저농도 active의 임상 근거를 감각 프로필과 분리해 보존한다. 초기 런타임 추론 데이터가
+아니며 향후 별도 효능 모델의 입력 후보이다.
+
+```text
+EfficacyEvidenceObservation
+├─ ingredient or raw material identity
+├─ concentration and vehicle formula
+├─ molecular weight, grade, pH and neutralization when relevant
+├─ endpoint and measurement method
+├─ application amount, frequency and duration
+├─ comparator and sample population
+├─ result and uncertainty
+└─ source metadata and applicability limits
+```
+
 ### CategoryFormulationPrior
 
 카테고리와 제형에 조건을 둔 일반 배합 분포를 나타낸다.
@@ -393,37 +480,108 @@ UNKNOWN             0.02
 - 1% 이하 구간에는 순서 제약을 적용하지 않는다.
 - 성분별 통상 사용 범위와 규제 상한을 지킨다.
 - 공개 함량은 가장 강한 제약으로 사용한다.
-- 카테고리와 제형별 수상·오일상·파우더·휘발상 분포와 모순되지 않는다.
+- 카테고리와 제형별 수상·오일상·분산 고형물·미분류 질량 분포와 모순되지 않는다.
+- 휘발량은 상 질량과 별도의 직교 제약으로 적용한다.
 
 계산이 샘플링을 사용해도 결과는 결정적이어야 한다. 시드는 제품 ID가 아니라 카테고리,
 순서가 보존된 성분 ID와 estimator 버전으로 만든다. 동일한 처방은 제품 ID와 관계없이
 동일한 결과를 받는다.
 
-### 4. 조성별 감각 특징 생성
+### 4. 실제 상 조성 계산
 
-각 가능한 조성에서 다음 특징을 계산한다.
+각 가능한 조성에서 먼저 배타적인 물리 질량 비율을 계산한다.
 
 ```text
-humectantLoad
-aqueousRetentionLoad
-residualOilLoad
-occlusiveLoad
-volatileLoad
-powderAbsorbencyLoad
-slipLoad
-tackLoad
-waxStructureLoad
-rheologyLoad
+aqueousPhaseMass
+oilPhaseMass
+dispersedSolidMass
+unclassifiedMass
+
+aqueousPhaseMass + oilPhaseMass + dispersedSolidMass + unclassifiedMass = 100%
 ```
 
-기본 특징은 예상 함량과 성분 특성의 곱을 합산한다. 미량 성분이 많다는 이유만으로
-점수가 계속 커지지 않게 포화 함수를 적용한다.
+이 단계는 성분의 효능이나 소비자 감각을 계산하지 않는다. 0.3% 비휘발성 오일은
+유상에 최대 0.3%만 더하고, 0.1% 히알루론산이 수상 전체를 크게 늘리는 것으로 보지 않는다.
+성분별 예상 함량은 `phase allocation` 비율로 나누되 각 성분의 배분 합도 100%여야 한다.
+카보머·검류처럼 구조를 만드는 고분자의 실제 질량도 어느 한 상 또는 미분류 질량에
+보존하지만, 그 질량을 보습감·유분감으로 직접 변환하지 않는다.
+
+휘발성은 다음처럼 별도 직교 값으로 계산한다.
+
+```text
+EstimatedDryDown
+├─ volatileMassAtApplication
+└─ estimatedEvaporatedMassAtFiveMinutes
+```
+
+`volatileMassAtApplication`은 수상·유상 질량과 중복될 수 있으므로 상 질량 합계에 더하지
+않는다. 5분 후 잔존량은 원료의 증기압·분자량, 제형, 도포량과 환경을 전성분만으로 모두
+알 수 없으므로 범위와 신뢰도를 함께 가진다.
+
+### 5. 효과 채널별 농도 반응 계산
+
+성분마다 같은 위치 가중치를 적용하지 않고, 가능한 조성의 예상 함량을 각 효과 채널의
+농도 반응 함수에 넣는다.
+
+```text
+SensoryEffectChannel
+├─ AFTERFEEL_MOISTURE
+├─ AFTERFEEL_OILINESS
+├─ RHEOLOGY
+└─ FILM_FORMATION
+```
+
+지원할 초기 반응 형태는 다음과 같다.
+
+| 반응 | 용도 | 예시 |
+| --- | --- | --- |
+| linear | 일반 감각 특성의 함량 비례 기여 | 비휘발성 오일의 잔여감 |
+| saturating | 농도 증가에 따라 커지지만 점차 포화 | 글리세린 등 일반 습윤제 |
+| threshold/sigmoid | 낮은 농도에서는 작고 임계 구간에서 빠르게 증가 | 카보머·검류의 레올로지 |
+| evidence bounded | 근거가 있는 농도·제형 조건 안에서만 감각 반응을 부여 | 특정 필름 형성제의 관능 연구 |
+| none | 해당 감각 채널에는 기여하지 않음 | 감각 근거가 없는 저농도 active |
+
+정확한 반응 계수는 원천 근거와 관능 보정으로 정한다. 근거 없이 `1% 이하 = 0.1배` 같은
+공통 계수를 두지 않는다.
+
+### 6. 제형 modifier와 감각 특징 생성
+
+상 조성과 채널별 반응을 합쳐 다음 중간 특징을 만든다.
+
+```text
+EstimatedPhaseComposition
+├─ aqueousPhaseMass
+├─ oilPhaseMass
+├─ dispersedSolidMass
+└─ unclassifiedMass
+
+EstimatedDryDown
+├─ volatileMassAtApplication
+└─ estimatedEvaporatedMassAtFiveMinutes
+
+FormulationModifiers
+├─ humectantResponse
+├─ aqueousRetentionResponse
+├─ residualOilResponse
+├─ occlusiveResponse
+├─ rheologyResponse
+├─ filmResponse
+├─ slipResponse
+├─ tackResponse
+├─ waxStructureResponse
+└─ powderAbsorbencyResponse
+```
+
+기본 합산에도 미량 성분이 많다는 이유만으로 점수가 계속 커지지 않게 포화 함수를 적용한다.
 
 ```text
 saturated(x) = 1 - exp(-x / scale)
 ```
 
-### 5. 상호작용 적용
+`EfficacyEvidenceObservation`은 이 런타임 계산에 들어오지 않는다. 별도의 제품 효능
+요구와 검증 프로토콜이 확정되면 새 계획에서 효능 모델을 설계한다.
+
+### 7. 상호작용 적용
 
 다음 조합을 개별 성분 합산과 별도로 반영한다.
 
@@ -435,7 +593,11 @@ saturated(x) = 1 - exp(-x / scale)
 - 고순위 알코올 × 수상 제형: 초기 젖음과 5분 후 감각 분리
 - W/O 확률 × 높은 오일상: 피막과 잔여 유분 증가
 
-### 6. 카테고리 사전분포 적용
+레올로지·필름·슬립은 실제 유상 질량을 변경하지 않는다. 다만 소비자가 기름지거나
+무겁다고 느끼는 정도에는 간접적으로 기여할 수 있으므로 `oilPhaseMass`와
+`afterfeelOiliness` 사이의 modifier로만 적용한다.
+
+### 8. 카테고리 사전분포 적용
 
 카테고리는 최종 점수에 직접 가산하지 않는다. 카테고리로 제형 가능성, 성분별 포함 시
 함량과 상 총량의 분포가 달라지고, 바뀐 가능한 조성이 최종 점수를 바꾸게 한다.
@@ -450,7 +612,7 @@ saturated(x) = 1 - exp(-x / scale)
 → 전역 성분 사용 범위
 ```
 
-### 7. 독립된 두 레벨 확률 계산
+### 9. 독립된 두 레벨 확률 계산
 
 `SensoryLevelModel`은 수분감과 유분감에 대해 각각 레벨 확률을 반환한다.
 
@@ -462,7 +624,32 @@ oil:      [0.51, 0.37, 0.10, 0.02]
 가장 확률이 높은 값을 공개 레벨로 선택한다. 초기에는 전문가 규칙과 기준 제품으로
 계수와 경계를 설정하고, 관능 데이터가 쌓이면 누적 로짓과 같은 순서형 모델로 보정한다.
 
-### 8. 신뢰도 계산
+개념적인 입력 관계는 다음과 같다.
+
+```text
+afterfeel moisture =
+    f(water phase,
+      humectant response,
+      aqueous retention,
+      hydrophilic film,
+      rheology,
+      tack,
+      volatility)
+
+afterfeel oiliness =
+    f(oil phase,
+      residual oil,
+      wax structure,
+      nonvolatile film,
+      slip,
+      rheology,
+      powder absorbency)
+```
+
+이 관계는 카보머를 유상 성분으로 계산하거나 HA 0.1%를 수상 총량 증가로 계산하는 오류를
+막는다.
+
+### 10. 신뢰도 계산
 
 신뢰도는 다음 요소로 구성한다.
 
@@ -472,6 +659,8 @@ oil:      [0.51, 0.37, 0.10, 0.02]
 - 가능한 조성별 결과의 안정성
 - 선택한 레벨의 확률 우위
 - 카테고리 사전분포의 표본 수와 독립 출처 수
+- 분자량·원료 등급·pH·중화 상태 등 필요한 조건의 공개 여부
+- 효과 채널별 농도 반응 근거의 직접성
 
 하나의 매우 낮은 요소가 단순 평균에 가려지지 않게 기하평균과 최소값 제한을 사용한다.
 알려지지 않은 성분은 0점 처리하지 않고 커버리지와 신뢰도를 낮춘다.
@@ -499,6 +688,14 @@ product/domain/
    ├─ IngredientConcentrationEstimator
    ├─ EstimatedComposition
    ├─ EstimatedCompositions
+   ├─ SensoryEffectChannel
+   ├─ ConcentrationResponse
+   ├─ PhaseCompositionEstimator
+   ├─ EstimatedPhaseComposition
+   ├─ DryDownEstimator
+   ├─ EstimatedDryDown
+   ├─ SensoryEffectChannelEvaluator
+   ├─ FormulationModifiers
    ├─ SensoryFeatureExtractor
    ├─ SensoryFeatures
    ├─ SensoryLevelModel
@@ -530,6 +727,25 @@ public record ProductSensory(
 `MoistureLevel`과 `OilLevel`은 각각 `0~3` 값을 가진 별도 타입으로 만들어 생성자 인수나
 필터에서 서로 바뀌는 오류를 막는다.
 
+### 상 조성, 드라이다운, 제형 modifier와 효능 근거 경계
+
+중간 계산 결과도 의미별 타입으로 분리한다.
+
+- `EstimatedPhaseComposition`은 합계가 100%인 수상·유상·분산 고형물·미분류 질량과
+  불확실성을 보관한다. 모든 추정 성분 질량은 정확히 한 번 보존한다.
+- `EstimatedDryDown`은 상 분할과 직교하는 초기 휘발 질량과 5분 후 예상 증발 질량을
+  보관한다.
+- `FormulationModifiers`는 습윤, 잔여 유분, 레올로지, 피막, 슬립, 점착, 흡유처럼
+  도포 후 감각을 바꾸는 반응을 보관한다. 상 질량을 수정할 수 없다.
+- `ConcentrationResponse`는 성분과 `SensoryEffectChannel` 조합별 농도–반응 함수를 값으로
+  표현한다. 선형, 포화, 임계형, 근거 구간 한정형을 지원하되 임의의 실행 코드를
+  참조 데이터에서 주입하지 않는다.
+
+이 경계 덕분에 0.3% 오일은 실제 유상에 0.3%만 기여하면서도 잔여감 특성을 별도로
+가질 수 있고, 0.1% HA는 수상 질량을 부풀리지 않으면서 근거 범위 안에서만 보습 효능
+근거로 기록될 수 있다. 카보머 질량은 상 분할에 보존되고 낮은 농도에서도 별도 레올로지
+modifier로 작동할 수 있다.
+
 ### ProductSensoryEstimator
 
 카테고리와 성분 목록을 받아 순수한 Domain 계산만 수행한다.
@@ -545,13 +761,24 @@ public ProductSensory estimate(Category category, Ingredients ingredients) {
                     archetypes,
                     ingredientProfiles,
                     categoryPriors);
-    SensoryFeatures features = featureExtractor.extract(compositions);
+    EstimatedPhaseComposition phaseComposition =
+            phaseCompositionEstimator.estimate(compositions);
+    EstimatedDryDown dryDown =
+            dryDownEstimator.estimate(compositions, archetypes);
+    FormulationModifiers modifiers =
+            sensoryEffectChannelEvaluator.evaluate(compositions, ingredientProfiles);
+    SensoryFeatures features =
+            featureExtractor.extract(phaseComposition, dryDown, modifiers, archetypes);
     return levelModel.evaluate(features);
 }
 ```
 
 이 객체는 Spring, Repository, JSON, HTTP를 알지 않는다. 동일 입력과 동일 버전에 항상
 동일 결과를 돌려야 한다.
+
+`EfficacyEvidenceObservation`을 읽는 의존성은 `ProductSensoryEstimator`에 두지 않는다.
+피부 보습 효능 근거가 도포 5분 후 수분감 레벨에 잘못 가산되는 것을 타입과 조립 단계에서
+막기 위한 의존성 방향이다.
 
 ### ProductFactory
 
@@ -620,6 +847,7 @@ API 요청 → 이미 계산된 값을 조회·필터
 
 ```text
 source importer
+efficacy evidence importer
 ingredient canonicalizer
 raw material decomposer
 category mapper
@@ -634,8 +862,8 @@ provenance reporter
 ```
 
 출력은 성분 감각 프로필, 카테고리 사전분포, 모델 파라미터, 품질 리포트,
-미해결 성분 리포트와 출처 편향 리포트다. 같은 원천과 빌더 버전으로 같은 결과를
-재생성할 수 있어야 한다.
+미해결 성분 리포트, 출처 편향 리포트와 런타임에서 분리된 효능 근거 레지스트리다.
+같은 원천과 빌더 버전으로 같은 결과를 재생성할 수 있어야 한다.
 
 ## 관능평가 및 모델 보정
 
@@ -672,12 +900,16 @@ kappa, 카테고리별 성능, 신뢰도별 실제 오류율이다. 절대 수�
 
 - 레벨 값과 모델 버전의 불변조건
 - 프로필 중복과 존재하지 않는 성분 참조
+- 성분별 `phase allocation` 합계 100%
 - 카테고리 사전분포 중복과 fallback
 - 제형 확률 합계와 UNKNOWN 처리
 - 1% 경계 후보와 확률 합계
 - 가능한 조성의 함량 합계 100%
+- 배타적 상 질량 합계 100%와 성분 질량의 중복·누락 금지
+- 휘발량이 배타적 상 질량 합계에 더해지지 않음
 - 공개 함량의 우선 적용
 - 미분류 성분의 신뢰도 하락
+- 임상 효능 근거가 감각 estimator에 조립되지 않음
 - 동일 입력과 버전의 결정성
 
 ### 성질 기반 테스트
@@ -688,6 +920,10 @@ kappa, 카테고리별 성능, 신뢰도별 실제 오류율이다. 절대 수�
 - 비휘발성 오일 증가가 유분감을 낮추지 않는다.
 - 흡유 파우더 증가가 유분감을 높이지 않는다.
 - 휘발성 성분 증가가 최종 잔여 유분감을 높이지 않는다.
+- 같은 총량의 미량 오일을 여러 INCI로 나눠도 유상 질량이 증가하지 않는다.
+- 레올로지 반응만 바꿔도 배타적 상 질량은 바뀌지 않는다.
+- 휘발성 추정만 바꿔도 배타적 상 질량 합계는 바뀌지 않는다.
+- 임상 효능 근거의 추가·삭제만으로 공개 유수분 레벨이 바뀌지 않는다.
 - 제품 ID만 다른 동일 처방은 동일 결과를 낸다.
 
 상호작용 때문에 단조성이 성립하지 않는 조건은 예외를 암묵적으로 두지 않고 테스트 이름과
@@ -785,6 +1021,7 @@ ProductSensoryOverride
 - [ ] `SourceMetadata` 계약을 정의한다.
 - [ ] `FormulaObservation` 계약을 정의한다.
 - [ ] `MarketProductObservation` 계약을 정의한다.
+- [ ] 런타임 감각 입력과 분리된 `EfficacyEvidenceObservation` 계약을 정의한다.
 - [ ] 복합원료와 미상 구성비의 표현을 정의한다.
 - [ ] 카테고리와 제형 canonical 매핑을 정의한다.
 - [ ] 성분 ID·한글명·영문명·별칭 해석 규칙을 재사용한다.
@@ -799,6 +1036,8 @@ ProductSensoryOverride
 - [ ] 시판 공식 전성분 코퍼스를 구축한다.
 - [ ] 공개 함량과 공식 제형 표현을 별도로 수집한다.
 - [ ] 학술 물성·관능 연구에서 성분군 근거를 수집한다.
+- [ ] 저농도 active 임상 자료는 농도·vehicle·분자량·기간·endpoint 조건과 함께 감각
+  근거와 분리해 수집한다.
 - [ ] CIR와 규제 자료는 통상값이 아니라 상한·범위로 구분한다.
 - [ ] 출처 품질과 미해결 복합원료 리포트를 생성한다.
 
@@ -809,12 +1048,18 @@ ProductSensoryOverride
 ### 4. 성분 감각 프로필 구축
 
 - [ ] 성분 감각 특성과 단위·범위를 정의한다.
+- [ ] 상 질량 배분과 도포 후 수분감·유분감·레올로지·피막 감각 채널을 나눈다.
+- [ ] 모든 성분·성분군 `phase allocation` 합계가 100%가 되게 검증한다.
+- [ ] 채널별 농도–반응을 선형, 포화, 임계형, 근거 구간 한정형 또는 없음으로 정의한다.
 - [ ] 폴리올과 주요 습윤제 프로필을 작성한다.
 - [ ] 에스터·식물유·미네랄오일·실리콘을 분리한다.
 - [ ] 왁스·버터·지방알코올 프로필을 작성한다.
 - [ ] 휘발성 알코올·실리콘·탄화수소를 분리한다.
 - [ ] 파우더·실리카·전분·클레이의 흡유 특성을 작성한다.
 - [ ] 검·카보머·셀룰로오스·아크릴레이트의 점도·점착 특성을 작성한다.
+- [ ] 카보머와 검류는 유상 기여 없이 레올로지 임계 반응만 갖도록 검증한다.
+- [ ] HA는 분자량과 근거 농도, 카보머는 원료 등급·pH·중화 상태를 조건으로 기록한다.
+- [ ] HA·판테놀 등 저농도 active의 임상 근거를 감각 프로필과 분리해 보존한다.
 - [ ] 개별 프로필이 없는 성분을 위한 성분군 fallback을 정의한다.
 - [ ] 각 프로필에 출처·신뢰 등급·검수자·버전을 기록한다.
 - [ ] 실제 카탈로그 상위 영향 성분의 프로필 커버리지를 보고한다.
@@ -837,6 +1082,10 @@ ProductSensoryOverride
 - [ ] `SensoryConfidence`를 만든다.
 - [ ] `SensoryModelVersion`을 만든다.
 - [ ] `ProductSensory`를 만든다.
+- [ ] `SensoryEffectChannel`과 `ConcentrationResponse`를 만든다.
+- [ ] `EstimatedPhaseComposition`을 만든다.
+- [ ] `EstimatedDryDown`을 만든다.
+- [ ] `FormulationModifiers`를 만든다.
 - [ ] `IngredientSensoryProfile(s)`를 만든다.
 - [ ] `CategoryFormulationPrior(s)`를 만든다.
 - [ ] 모든 불변조건과 잘못된 참조 테스트를 추가한다.
@@ -847,8 +1096,17 @@ ProductSensoryOverride
 - [ ] 1% 경계 후보와 확률 계산을 구현한다.
 - [ ] `IngredientConcentrationEstimator`를 구현한다.
 - [ ] 결정적 조성 생성과 100% 합계 검증을 구현한다.
+- [ ] `PhaseCompositionEstimator` 하나가 배타적인 수상·유상·분산 고형물·미분류 질량을
+  계산하게 한다.
+- [ ] 상 질량 합계 100%, 성분별 질량 보존과 중복 배정 금지를 검증한다.
+- [ ] `DryDownEstimator`로 상 분할과 직교하는 초기 휘발량과 5분 후 증발량을 계산한다.
+- [ ] `SensoryEffectChannelEvaluator`로 감각 채널별 농도–반응과 근거 적용 범위를 계산한다.
 - [ ] `SensoryFeatureExtractor`를 구현한다.
 - [ ] 포화 함수와 상호작용을 구현한다.
+- [ ] 분자량·원료 등급·pH·중화 상태가 없을 때 시나리오 범위와 신뢰도 하락을 적용한다.
+- [ ] 일반 미량 오일, 저농도 active, 저농도 레올로지 modifier의 기여 채널 분리 테스트를
+  추가한다.
+- [ ] 임상 효능 근거가 공개 감각 추론의 입력으로 조립되지 않는지 테스트한다.
 - [ ] 독립된 수분·유분 순서형 모델을 구현한다.
 - [ ] 신뢰도와 상위 기여 근거 계산을 구현한다.
 - [ ] 단순 베이스라인 두 개를 비교용으로 구현한다.
@@ -874,6 +1132,8 @@ ProductSensoryOverride
 - [ ] 제품군·브랜드·출처 단위 holdout을 만든다.
 - [ ] 순서형 모델 계수와 경계를 보정한다.
 - [ ] 베이스라인 대비 성능을 비교한다.
+- [ ] 정확한 처방의 상 조성·휘발 물성은 물리 특징에, 관능평가는 도포 후 감각에만
+  맞춰지는지 검증한다.
 - [ ] 신뢰도와 실제 오류율의 상관을 검증한다.
 - [ ] 결과와 한계를 문서화한다.
 
@@ -897,6 +1157,12 @@ ProductSensoryOverride
 - 동일 입력과 동일 버전의 결과가 재현된다.
 - 계산 규칙, 성분 프로필과 카테고리 사전분포의 출처·버전이 추적된다.
 - 미분류 성분이 결과 0점으로 조용히 흡수되지 않는다.
+- 실제 상 조성, 직교하는 휘발 특성과 도포 후 감각이 서로 다른 타입과 계산 경로로
+  분리돼 있다.
+- 임상 효능 근거는 공개 감각 추론의 런타임 의존성에 포함되지 않는다.
+- 1% 이하 일반 성분은 개수로 누적 가산되지 않고 추정 함량만큼 상 조성에 기여한다.
+- 저농도 active는 도포 후 감각 근거가 있는 경우에만 해당 감각 채널에 기여하고,
+  레올로지 modifier는 상 질량을 부풀리지 않고 레올로지 채널에만 추가 기여한다.
 - 목록·상세·필터·count가 같은 계산 결과를 사용한다.
 - 실제 관능평가에서 목표 모델이 단순 베이스라인보다 낫다.
 - 신뢰도가 낮은 결과에서 실제 오류도 더 높아 신뢰도가 의미 있게 보정돼 있다.
@@ -914,6 +1180,11 @@ ProductSensoryOverride
 | 1% 경계 오판 | 단일 경계가 아닌 여러 후보와 확률로 계산 |
 | 복합원료 함량 부풀림 | raw material과 표시 INCI를 분리 보존 |
 | 카테고리 선입견 | 카테고리를 최종 가점이 아니라 함량 사전분포에만 사용 |
+| 모든 1% 이하 성분의 일괄 축소 | 실제 질량과 감각 채널별 농도–반응을 구분하고 근거 없는 공통 계수를 금지 |
+| 미량 오일 개수로 인한 유분 과대평가 | 성분 수가 아니라 가능한 조성의 실제 유상 질량과 포화된 modifier로 계산 |
+| 휘발성을 배타적 상으로 취급 | 질량 보존형 상 분할과 직교하는 `EstimatedDryDown`으로 분리 |
+| 레올로지를 유분 함량으로 오인 | 실제 질량은 상 분할에 한 번 보존하고 레올로지 반응은 `FormulationModifiers`로 분리 |
+| HA 분자량, 카보머 등급·pH·중화 상태 미상 | 감각 관련 조건은 시나리오와 신뢰도에 반영하고 임상 효능은 근거 적용 범위를 단정하지 않음 |
 | 미분류 성분 | 0점 대신 신뢰도 하락과 고영향 미분류 리포트 |
 | 동일 처방 결과 변동 | 처방 시그니처와 버전에 기반한 결정적 계산 |
 | 관능 데이터 과적합 | 브랜드·제품군·출처 단위 holdout과 단순 모델 비교 |
@@ -932,6 +1203,16 @@ ProductSensoryOverride
   제약으로 사용하는 가능한 조성 추론을 목표 모델로 정했다.
 - 2026-08-17: 계산은 `Product`나 DTO가 직접 수행하지 않고 순수 Domain 서비스와
   `ProductFactory`가 담당하며, `Product`는 완성된 `ProductSensory`를 소유하기로 했다.
+- 2026-08-17: 1% 이하 성분에 공통 감쇠 계수를 적용하지 않고 실제 상 조성은 질량 보존으로,
+  도포 후 감각·레올로지·피막은 감각 채널별 농도–반응으로 계산하기로 했다. 피부 보습
+  효능 근거는 이 계산에서 분리한다.
+- 2026-08-17: 저농도 HA·판테놀의 효능 가능성과 카보머의 레올로지 효과는 인정하되,
+  HA·판테놀 임상 근거는 초기 런타임 점수에서 제외하고 카보머의 실제 질량과 레올로지
+  반응은 서로 다른 계산에 한 번씩만 반영하기로 했다.
+- 2026-08-17: 분자량·원료 등급·pH·중화 상태처럼 전성분에서 알 수 없는 조건은 대표값으로
+  숨기지 않고 시나리오 범위와 신뢰도에 반영하기로 했다.
+- 2026-08-17: 휘발성은 수상·유상과 배타적인 상이 아니므로 합계 100%의 질량 분할과
+  직교하는 드라이다운 추정을 별도 타입으로 계산하기로 했다.
 
 ## 아직 확정하지 않은 사항
 
@@ -940,7 +1221,8 @@ ProductSensoryOverride
 - 관능평가 기준 제품과 정확한 도포량·부위·환경
 - 제형별 조성 샘플 수와 계산 비용의 균형
 - 초기 순서형 모델의 구체적인 계수와 레벨 경계
+- 효과 채널별 농도–반응 곡선의 계수, 임계값과 외삽 허용 범위
+- 별도 제품 보습 효능 요구와 검증 프로토콜이 생겨 효능 모델 계획을 시작할 조건
 - 공개 API에 신뢰도와 계산 근거를 노출할지 여부
 - 실제 공개 함량을 제품-성분 관계에 저장할 최종 데이터 계약
 - 수동 override가 실제로 필요한지와 승인 주체
-
