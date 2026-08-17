@@ -17,10 +17,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -44,7 +42,7 @@ public final class CatalogSensoryReadinessReportWriter {
 
         Path jsonTarget = outputDirectory.resolve(JSON_FILE_NAME);
         Path markdownTarget = outputDirectory.resolve(MARKDOWN_FILE_NAME);
-        replacePair(
+        AtomicReportPairWriter.write(
                 jsonTarget,
                 json.getBytes(StandardCharsets.UTF_8),
                 markdownTarget,
@@ -364,85 +362,6 @@ public final class CatalogSensoryReadinessReportWriter {
         markdown.append('\n');
     }
 
-    private static void replacePair(
-            Path firstTarget,
-            byte[] firstContent,
-            Path secondTarget,
-            byte[] secondContent)
-            throws IOException {
-        PreviousFile firstPrevious = PreviousFile.capture(firstTarget);
-        PreviousFile secondPrevious = PreviousFile.capture(secondTarget);
-        Path firstTemporary = Files.createTempFile(firstTarget.getParent(), "catalog-json-", ".tmp");
-        Path secondTemporary = Files.createTempFile(secondTarget.getParent(), "catalog-md-", ".tmp");
-        boolean firstMoved = false;
-        boolean secondMoved = false;
-
-        try {
-            Files.write(firstTemporary, firstContent);
-            Files.write(secondTemporary, secondContent);
-            moveReplacing(firstTemporary, firstTarget);
-            firstMoved = true;
-            moveReplacing(secondTemporary, secondTarget);
-            secondMoved = true;
-        } catch (IOException failure) {
-            IOException rollbackFailure = rollback(
-                    firstTarget,
-                    firstPrevious,
-                    firstMoved,
-                    secondTarget,
-                    secondPrevious,
-                    secondMoved);
-            if (rollbackFailure != null) {
-                failure.addSuppressed(rollbackFailure);
-            }
-            throw failure;
-        } finally {
-            Files.deleteIfExists(firstTemporary);
-            Files.deleteIfExists(secondTemporary);
-        }
-    }
-
-    private static IOException rollback(
-            Path firstTarget,
-            PreviousFile firstPrevious,
-            boolean firstMoved,
-            Path secondTarget,
-            PreviousFile secondPrevious,
-            boolean secondMoved) {
-        IOException failure = null;
-        try {
-            if (firstMoved) {
-                firstPrevious.restore(firstTarget);
-            }
-        } catch (IOException exception) {
-            failure = exception;
-        }
-        try {
-            if (secondMoved) {
-                secondPrevious.restore(secondTarget);
-            }
-        } catch (IOException exception) {
-            if (failure == null) {
-                failure = exception;
-            } else {
-                failure.addSuppressed(exception);
-            }
-        }
-        return failure;
-    }
-
-    private static void moveReplacing(Path source, Path target) throws IOException {
-        try {
-            Files.move(
-                    source,
-                    target,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
-        } catch (AtomicMoveNotSupportedException exception) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
     private static String percent(int numerator, int denominator) {
         if (denominator == 0) {
             return "0.00%";
@@ -479,28 +398,4 @@ public final class CatalogSensoryReadinessReportWriter {
         return value.replace("\r\n", "\n").replace('\r', '\n');
     }
 
-    private record PreviousFile(boolean existed, byte[] content) {
-
-        private static PreviousFile capture(Path target) throws IOException {
-            if (!Files.exists(target)) {
-                return new PreviousFile(false, new byte[0]);
-            }
-            return new PreviousFile(true, Files.readAllBytes(target));
-        }
-
-        private void restore(Path target) throws IOException {
-            if (!existed) {
-                Files.deleteIfExists(target);
-                return;
-            }
-
-            Path temporary = Files.createTempFile(target.getParent(), "catalog-restore-", ".tmp");
-            try {
-                Files.write(temporary, content);
-                moveReplacing(temporary, target);
-            } finally {
-                Files.deleteIfExists(temporary);
-            }
-        }
-    }
 }

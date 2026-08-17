@@ -4,6 +4,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.offline.catalogsensory.CatalogSensoryModelSnapshot.ProductInference;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CatalogSummary;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryCount;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryInference;
@@ -80,6 +81,23 @@ public final class CatalogSensoryReadinessAnalyzer {
     }
 
     public CatalogSensoryReadinessReport analyze(Path catalogDirectory) throws IOException, JacksonException {
+        return inspectCatalog(catalogDirectory).report();
+    }
+
+    public CatalogSensoryModelSnapshot analyzeModelSnapshot(Path catalogDirectory)
+            throws IOException,
+            JacksonException {
+        CatalogAnalysis analysis = inspectCatalog(catalogDirectory);
+        ensureComparableSnapshot(analysis.report());
+        return new CatalogSensoryModelSnapshot(
+                CatalogSensoryModelSnapshot.SCHEMA_VERSION,
+                CatalogSensoryModelSnapshot.TOOL_VERSION,
+                sensoryEstimator.modelVersion(),
+                analysis.report().inputs(),
+                analysis.products().inference.productInferences());
+    }
+
+    private CatalogAnalysis inspectCatalog(Path catalogDirectory) throws IOException, JacksonException {
         Path productsFile = catalogDirectory.resolve(PRODUCTS_FILE);
         Path ingredientsFile = catalogDirectory.resolve(INGREDIENTS_FILE);
         Path categoriesFile = catalogDirectory.resolve(CATEGORIES_FILE);
@@ -114,7 +132,7 @@ public final class CatalogSensoryReadinessAnalyzer {
                 ingredientCatalog.malformedTagMappings,
                 ingredientCatalog.unrecognizedFormulationRoles);
 
-        return new CatalogSensoryReadinessReport(
+        CatalogSensoryReadinessReport report = new CatalogSensoryReadinessReport(
                 CatalogSensoryReadinessReport.SCHEMA_VERSION,
                 CatalogSensoryReadinessReport.TOOL_VERSION,
                 List.of(productsInput.metadata, ingredientsInput.metadata, categoriesInput.metadata),
@@ -131,6 +149,33 @@ public final class CatalogSensoryReadinessAnalyzer {
                 productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.ALL),
                 productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.SENSORY_ROLE),
                 productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.WITHOUT_SENSORY_ROLE));
+        return new CatalogAnalysis(report, productInspection);
+    }
+
+    private static void ensureComparableSnapshot(CatalogSensoryReadinessReport report) {
+        CatalogSummary catalog = report.catalog();
+        IngredientListQuality ingredients = report.ingredientLists();
+        InferenceSummary inference = report.inference();
+        boolean invalidCatalog = catalog.malformedProducts() > 0
+                || catalog.malformedIngredients() > 0
+                || catalog.malformedCategories() > 0
+                || catalog.duplicateProductIds() > 0
+                || catalog.duplicateIngredientIds() > 0
+                || catalog.duplicateCategoryIds() > 0
+                || catalog.unknownCategoryReferences() > 0
+                || catalog.malformedTagMappings() > 0
+                || catalog.unrecognizedFormulationRoles() > 0;
+        boolean invalidIngredients = ingredients.missingOrInvalidArrays() > 0
+                || ingredients.emptyArrays() > 0
+                || ingredients.unresolvedReferences() > 0
+                || ingredients.malformedReferences() > 0;
+        boolean incompleteInference = inference.candidateProducts() != catalog.products()
+                || inference.inferredProducts() != catalog.products()
+                || inference.skippedProducts() > 0;
+        if (invalidCatalog || invalidIngredients || incompleteInference) {
+            throw new IllegalArgumentException(
+                    "모델 비교 snapshot은 ID·참조·전성분이 모두 유효하고 전 제품을 추론한 catalog에서만 만들 수 있습니다.");
+        }
     }
 
     private static CatalogInput readArray(Path file, String rootName) throws IOException, JacksonException {
@@ -296,6 +341,7 @@ public final class CatalogSensoryReadinessAnalyzer {
                     productIndex,
                     ingredients);
             inspection.acceptInference(
+                    productId,
                     categoryId,
                     productIngredients,
                     categories,
@@ -546,12 +592,17 @@ public final class CatalogSensoryReadinessAnalyzer {
         private final int[] oilLevels = new int[4];
         private final int[][] levelPairs = new int[4][4];
         private final List<BigDecimal> confidences = new ArrayList<>();
+        private final List<ProductInference> products = new ArrayList<>();
         private final Map<Long, CategoryInferenceInspection> categories = new TreeMap<>();
         private int candidateProducts;
         private int inferredProducts;
         private int skippedProducts;
 
-        private void accept(Long categoryId, String categoryPath, ProductSensory sensory) {
+        private void accept(
+                Long productId,
+                Long categoryId,
+                String categoryPath,
+                ProductSensory sensory) {
             candidateProducts++;
             inferredProducts++;
             int moistureLevel = sensory.moisture().value();
@@ -560,6 +611,15 @@ public final class CatalogSensoryReadinessAnalyzer {
             oilLevels[oilLevel]++;
             levelPairs[moistureLevel][oilLevel]++;
             confidences.add(sensory.confidence().value());
+            if (productId != null) {
+                products.add(
+                        new ProductInference(
+                                productId,
+                                categoryId,
+                                moistureLevel,
+                                oilLevel,
+                                sensory.confidence().value()));
+            }
             categories
                     .computeIfAbsent(
                             categoryId,
@@ -595,6 +655,12 @@ public final class CatalogSensoryReadinessAnalyzer {
                     categories.values().stream()
                             .map(CategoryInferenceInspection::toReport)
                             .toList());
+        }
+
+        private List<ProductInference> productInferences() {
+            return products.stream()
+                    .sorted(Comparator.comparingLong(ProductInference::productId))
+                    .toList();
         }
 
         private static LevelDistribution levelDistributionOf(int[] levels) {
@@ -782,6 +848,7 @@ public final class CatalogSensoryReadinessAnalyzer {
         }
 
         private void acceptInference(
+                Long productId,
                 Long categoryId,
                 Ingredients ingredients,
                 Map<Long, CategoryInfo> categories,
@@ -794,6 +861,7 @@ public final class CatalogSensoryReadinessAnalyzer {
             CategoryInfo category = categories.get(categoryId);
             ProductSensory sensory = sensoryEstimator.estimate(category.toDomain(categoryId), ingredients);
             inference.accept(
+                    productId,
                     categoryId,
                     categoryPathOf(categoryId, categories, new HashSet<>()),
                     sensory);
@@ -977,6 +1045,11 @@ public final class CatalogSensoryReadinessAnalyzer {
                     formulationRoles,
                     sensoryRoles);
         }
+    }
+
+    private record CatalogAnalysis(
+            CatalogSensoryReadinessReport report,
+            ProductInspection products) {
     }
 
     private static boolean includes(FrequencySelection selection, IngredientInfo ingredient) {
