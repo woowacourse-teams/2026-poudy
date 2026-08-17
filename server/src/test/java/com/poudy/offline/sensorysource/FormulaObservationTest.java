@@ -340,7 +340,7 @@ class FormulaObservationTest {
         return new RawMaterialInput(
                 id("raw-material", id),
                 name,
-                MassPercent.parse(amount),
+                FormulaAmountTestFixture.exact(amount),
                 composition);
     }
 

@@ -48,6 +48,25 @@ class ExactFormulaSignatureBuilderTest {
     }
 
     @Test
+    @DisplayName("검증된 ad 100 도출 provenance는 같은 최종 조성의 signature를 바꾸지 않는다")
+    void ignoresValidatedAmountDerivationProvenance() {
+        RawMaterialComposition water = knownComposition(resolved(1L));
+        List<RawMaterialInput> derived = List.of(
+                input(
+                        "water",
+                        "Water",
+                        FormulaAmountTestFixture.derivedToHundred("ad 100.00", "60"),
+                        water),
+                knownInput("oil", "Oil", "40", resolved(2L)));
+        List<RawMaterialInput> exact = List.of(
+                input("water", "Water", "60", water),
+                knownInput("oil", "Oil", "40", resolved(2L)));
+
+        assertThat(ExactFormulaSignatureBuilder.build(derived))
+                .isEqualTo(ExactFormulaSignatureBuilder.build(exact));
+    }
+
+    @Test
     @DisplayName("질량, raw material ID 또는 composition 내용이 바뀌면 signature도 바뀐다")
     void changesForFormulaContent() {
         List<RawMaterialInput> base = List.of(
@@ -199,10 +218,22 @@ class ExactFormulaSignatureBuilderTest {
             String publishedName,
             String amount,
             RawMaterialComposition composition) {
+        return input(
+                rawMaterialId,
+                publishedName,
+                FormulaAmountTestFixture.exact(amount),
+                composition);
+    }
+
+    private RawMaterialInput input(
+            String rawMaterialId,
+            String publishedName,
+            FormulaAmount amount,
+            RawMaterialComposition composition) {
         return new RawMaterialInput(
                 StableId.namespaced("raw-material", rawMaterialId),
                 publishedName,
-                MassPercent.parse(amount),
+                amount,
                 composition);
     }
 

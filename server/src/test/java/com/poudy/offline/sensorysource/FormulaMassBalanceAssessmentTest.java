@@ -42,6 +42,49 @@ class FormulaMassBalanceAssessmentTest {
     }
 
     @Test
+    @DisplayName("ad 100은 나머지 직접 공개량에서 정확히 한 원료의 질량만 도출한다")
+    void validatesSingleDerivedToHundredAmount() {
+        List<RawMaterialInput> inputs = List.of(
+                input("water", "Water", FormulaAmountTestFixture.derivedToHundred("ad 100.00", "84.87")),
+                input("oil", "Oil", "15.13"));
+
+        FormulaMassBalanceAssessment assessment = FormulaMassBalanceAssessment.assess(inputs);
+
+        assertThat(assessment.observedTotalMassPercent()).isEqualByComparingTo("100");
+        assertThat(assessment.validationStatus()).isEqualTo(ValidationStatus.ACCEPTED);
+        assertThat(inputs.getFirst().formulaAmount().expressionAsPublished())
+                .isEqualTo("ad 100.00");
+    }
+
+    @Test
+    @DisplayName("ad 100 도출값 불일치와 복수 remainder 원료를 거부한다")
+    void rejectsInvalidDerivedToHundredAmounts() {
+        assertThatThrownBy(
+                () -> FormulaMassBalanceAssessment.assess(
+                        List.of(
+                                input(
+                                        "water",
+                                        "Water",
+                                        FormulaAmountTestFixture.derivedToHundred("ad 100", "80")),
+                                input("oil", "Oil", "15"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("나머지");
+        assertThatThrownBy(
+                () -> FormulaMassBalanceAssessment.assess(
+                        List.of(
+                                input(
+                                        "water",
+                                        "Water",
+                                        FormulaAmountTestFixture.derivedToHundred("ad 100", "50")),
+                                input(
+                                        "other",
+                                        "Other",
+                                        FormulaAmountTestFixture.derivedToHundred("ad 100", "50")))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("한 개");
+    }
+
+    @Test
     @DisplayName("빈 목록과 null 원료 입력을 거부한다")
     void rejectsMissingFormulaInputs() {
         assertThatThrownBy(() -> FormulaMassBalanceAssessment.assess(null))
@@ -86,6 +129,10 @@ class FormulaMassBalanceAssessmentTest {
     }
 
     private RawMaterialInput input(String id, String name, String amount) {
+        return input(id, name, FormulaAmountTestFixture.exact(amount));
+    }
+
+    private RawMaterialInput input(String id, String name, FormulaAmount amount) {
         IngredientResolution.Resolved ingredient = new IngredientResolution.Resolved(
                 1L,
                 "CANONICAL_ID_DIRECT",
@@ -99,7 +146,7 @@ class FormulaMassBalanceAssessmentTest {
         return new RawMaterialInput(
                 StableId.namespaced("raw-material", id),
                 name,
-                MassPercent.parse(amount),
+                amount,
                 composition);
     }
 }

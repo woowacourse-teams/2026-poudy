@@ -1,6 +1,7 @@
 package com.poudy.offline.sensorysource;
 
 import com.poudy.offline.source.ValidationStatus;
+import com.poudy.offline.source.ValueOrMissing;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -45,14 +46,45 @@ public record FormulaMassBalanceAssessment(
             throw new IllegalArgumentException("처방 원료 입력은 null일 수 없습니다.");
         }
 
+        validateDerivedToHundredAmount(orderedRawMaterialInputs);
+
         BigDecimal total = orderedRawMaterialInputs.stream()
-                .map(input -> input.formulaAmount().value())
+                .map(input -> input.formulaAmount().normalizedMassPercent().value())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal difference = total.subtract(EXPECTED_TOTAL);
         ValidationStatus status = difference.compareTo(BigDecimal.ZERO) == 0
                 ? ValidationStatus.ACCEPTED
                 : ValidationStatus.QUARANTINED;
         return new FormulaMassBalanceAssessment(total, difference, status);
+    }
+
+    private static void validateDerivedToHundredAmount(List<RawMaterialInput> inputs) {
+        List<RawMaterialInput> derivedInputs = inputs.stream()
+                .filter(input -> input.formulaAmount().resolution() == FormulaAmount.Resolution.DERIVED_TO_HUNDRED)
+                .toList();
+        if (derivedInputs.size() > 1) {
+            throw new IllegalArgumentException("ad 100으로 도출하는 처방 원료는 한 개만 허용됩니다.");
+        }
+        if (derivedInputs.isEmpty()) {
+            return;
+        }
+
+        RawMaterialInput derivedInput = derivedInputs.getFirst();
+        FormulaAmount derivedAmount = derivedInput.formulaAmount();
+        if (!(derivedAmount.targetTotalMassPercent() instanceof ValueOrMissing.Present<MassPercent> target)) {
+            throw new IllegalArgumentException("ad 100 도출에는 목표 합계가 필요합니다.");
+        }
+        BigDecimal publishedTotal = inputs.stream()
+                .filter(input -> input != derivedInput)
+                .map(input -> input.formulaAmount().normalizedMassPercent().value())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal expectedDerived = target.value().value().subtract(publishedTotal);
+        if (expectedDerived.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("공개된 투입량 합계가 ad 100 목표를 초과합니다.");
+        }
+        if (derivedAmount.normalizedMassPercent().value().compareTo(expectedDerived) != 0) {
+            throw new IllegalArgumentException("ad 100에서 도출한 투입량이 나머지 공개 투입량과 일치하지 않습니다.");
+        }
     }
 
     private static BigDecimal requireNonNegative(BigDecimal value, String name) {

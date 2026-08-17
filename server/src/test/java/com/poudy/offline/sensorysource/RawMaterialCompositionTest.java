@@ -67,10 +67,11 @@ class RawMaterialCompositionTest {
         RawMaterialInput input = new RawMaterialInput(
                 StableId.namespaced("raw-material", "1"),
                 "Hydrating Blend",
-                MassPercent.parse("5"),
+                FormulaAmountTestFixture.exact("5"),
                 composition);
 
-        assertThat(input.formulaAmount().value()).isEqualByComparingTo("5");
+        assertThat(input.formulaAmount().normalizedMassPercent().value())
+                .isEqualByComparingTo("5");
         assertThat(RawMaterialComposition.UnquantifiedComponent.class.getRecordComponents())
                 .extracting(RecordComponent::getName)
                 .containsExactly("ingredientResolution", "nameAsPublished");

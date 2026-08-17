@@ -313,7 +313,7 @@ class FormulaObservationBatchTest {
         return new RawMaterialInput(
                 id("raw-material", "water"),
                 "Water",
-                MassPercent.parse("100"),
+                FormulaAmountTestFixture.exact("100"),
                 composition);
     }
 

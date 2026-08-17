@@ -42,7 +42,8 @@ public final class ExactFormulaSignatureBuilder {
     private static List<NormalizedRawMaterial> normalize(List<RawMaterialInput> inputs) {
         Map<String, NormalizedRawMaterial> inputsById = new TreeMap<>();
         for (RawMaterialInput input : inputs) {
-            if (input.formulaAmount().value().compareTo(BigDecimal.ZERO) == 0) {
+            BigDecimal normalizedAmount = input.formulaAmount().normalizedMassPercent().value();
+            if (normalizedAmount.compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }
 
@@ -54,7 +55,7 @@ public final class ExactFormulaSignatureBuilder {
                         rawMaterialId,
                         new NormalizedRawMaterial(
                                 rawMaterialId,
-                                input.formulaAmount().value(),
+                                normalizedAmount,
                                 composition));
                 continue;
             }
@@ -65,7 +66,7 @@ public final class ExactFormulaSignatureBuilder {
                     rawMaterialId,
                     new NormalizedRawMaterial(
                             rawMaterialId,
-                            canonical(existing.amount().add(input.formulaAmount().value())),
+                            canonical(existing.amount().add(normalizedAmount)),
                             composition));
         }
         if (inputsById.isEmpty()) {

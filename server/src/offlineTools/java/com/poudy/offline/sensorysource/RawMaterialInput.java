@@ -5,7 +5,7 @@ import com.poudy.offline.source.StableId;
 public record RawMaterialInput(
         StableId rawMaterialId,
         String rawMaterialNameAsPublished,
-        MassPercent formulaAmount,
+        FormulaAmount formulaAmount,
         RawMaterialComposition composition) {
 
     public RawMaterialInput {
@@ -16,7 +16,7 @@ public record RawMaterialInput(
             throw new IllegalArgumentException("원료 원문 이름이 필요합니다.");
         }
         if (formulaAmount == null) {
-            throw new IllegalArgumentException("원료 처방 투입량이 필요합니다.");
+            throw new IllegalArgumentException("원료 처방 투입량과 정규화 provenance가 필요합니다.");
         }
         if (composition == null) {
             throw new IllegalArgumentException("원료 구성 정보가 필요합니다.");
