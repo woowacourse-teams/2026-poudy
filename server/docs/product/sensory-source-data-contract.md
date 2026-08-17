@@ -376,6 +376,14 @@ CanonicalFormulationMapping
 후보들을 잃지 않는다. 두 observation은 이 mapping의 결과를 원문 표현과 rule/version 없이
 별도 필드로 중복 저장하지 않는다.
 
+현재 세 canonical mapping은 공통 `EXACT`, `REVIEWED`, `UNRESOLVED`, `AMBIGUOUS` 해석
+상태를 사용한다. category mapping은 양의 탐색 category ID만 확정값으로 허용한다. usage
+form mapping은 vocabulary의 안정 ID를 사용하고 모호한 후보를 결정적 순서로 보존한다.
+formulation mapping은 확정 상태에서만 단일 non-`UNKNOWN` 제형을 허용하며, 모호한 상태는
+`UNKNOWN`과 서로 다른 실제 제형 후보 둘 이상을 함께 가진다. category mapping table의
+입력 vocabulary content hash, mapping version, 검수자와 검수일은 별도 메타데이터로
+보존한다.
+
 공식 제형 표현은 강한 관측 근거지만 category mapping과 동일하지 않다. 공식 표현이 없으면
 제품명만으로 확정하지 않고 `UNKNOWN` 또는 여러 제형 확률의 입력으로 남긴다. mapping
 table은 입력 category vocabulary hash, mapping version, 검수자와 검수일을 가진다.

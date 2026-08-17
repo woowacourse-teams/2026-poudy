@@ -105,6 +105,9 @@
 - 외부 카탈로그 snapshot은 저장소와 runtime classpath에 복사하지 않고
   [감각 준비도 보고서](../../product/catalog-sensory-readiness-report.md) 생성기에 경로로만
   전달한다. 보고서는 입력 hash와 집계·검수 식별자만 보존한다.
+- 공식 처방 원천군과 pilot 검수 상태는
+  [감각 원천 수집 후보 register](../../product/sensory-source-acquisition-register.md)에
+  기록한다. URL 발견은 원문 수집·라이선스 승인·코퍼스 포함으로 세지 않는다.
 - 감사한 snapshot은 제품 199개, 성분 참조 7,623개이며 원천 `moisture_level`과
   `oil_level`은 전 제품에서 null이 아니라 필드 자체가 없다. 미해결 성분 참조는 0개지만
   제품 내부 중복 참조가 2개 있다.
@@ -1278,6 +1281,13 @@ ProductSensoryOverride
 - 2026-08-17: 제형 확률은 아홉 `FormulaArchetype`을 모두 명시한 불변 분포로 보관하고,
   각 값은 `0~1`, 전체 합은 정확히 `1`로 검증한다. 누락된 유형을 암묵적인 0으로 바꾸지
   않는다.
+- 2026-08-18: category, usage form과 formulation canonical mapping의 해석 상태와 허용
+  조합을 값 타입으로 구현했다. 확정 상태만 canonical 값을 가지며 미해결 값을 category나
+  제품명으로 채우지 않는다. 모호한 usage form과 formulation 후보는 결정적으로 정렬해
+  보존하고 category mapping table에는 입력 vocabulary hash와 검수 provenance를 기록한다.
+- 2026-08-18: Evonik, Dow, Lubrizol, Hallstar와 Clariant의 공식 formulation 진입점을 초기
+  수집 후보로 확인했다. 원문 byte·hash·revision·라이선스 검수 전에는 수집 건수로 세지
+  않으며, `q.s.`·`ad 100`, 복합 trade blend와 PDF 표 추출은 pilot 검수 대상으로 남겼다.
 
 ## 아직 확정하지 않은 사항
 
