@@ -59,6 +59,15 @@ Evonik HTML detail 응답도 외부 source store에 discovery snapshot으로 보
 중복되는 현재 pilot normalized input에는 아직 넣지 않는다. Dow의 query 없는 `.pdf` URL은
 HTML을 반환하므로 content magic을 확인한 query URL의 PDF byte만 위 표에 기록했다.
 
+`MKM 6142-022`의 공개 INCI 구성 20건(고유 이름 19건)을 외부 catalog
+`ingredients.json` 31,441,501 byte, SHA-256
+`f5d771e588d13d86161b06a46d4c35245e92f5ab21b62ab79a64a205d82a5c7d`와
+`ingredient-identity-resolver-v1`으로 예행 해석했다. 고유 이름 18건은 exact resolve됐고
+`Lauryl Oleate` 한 건은 vocabulary에 없어 `Unresolved`로 남았다.
+`Polyglyceryl-4 Diisostearate/Polyhydroxystearate/Sebacate`는 slash를 분리하지 않은 공식 이름
+전체로 canonical ID 한 건에 resolve됐다. 따라서 이 pilot은 질량 합계 100이어도 정상 사용
+절차 결측과 미해결 성분을 숨기지 않고 현재 `QUARANTINED`한다.
+
 ## 다음 수집 순서
 
 1. 확보한 PDF byte와 위 digest를 대조해 source revision을 고정한다.

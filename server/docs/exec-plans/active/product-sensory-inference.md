@@ -1298,6 +1298,14 @@ ProductSensoryOverride
   `formula-deduplication-v1` exact signature를 구현했다. signature는 합계 100과 해석 완료된
   canonical composition만 받고, 입력 순서·분할 투입·원문 이름·source lineage를 제외한
   versioned binary hash다.
+- 2026-08-18: 원천 순서의 원료, 독립된 category·application type·사용 형태·제형 mapping,
+  공정, 물성과 감각 원문을 묶는 `FormulaObservation` 값 타입을 구현했다. 물성의 한정자와
+  측정 조건은 원문으로 보존하며 미확정 application type, 질량 불일치와 미해결 성분을
+  `ACCEPTED`로 승격하지 않는다.
+- 2026-08-18: Evonik `MKM 6142-022`의 고유 INCI 이름 19건을 외부 운영 vocabulary로 예행
+  해석해 18건 exact, `Lauryl Oleate` 1건 unresolved를 확인했다. slash가 포함된 긴 공식 INCI는
+  분리하지 않고 전체 이름으로 한 canonical ID에 resolve됐으며, 이 처방은 사용법 결측과 함께
+  `QUARANTINED` 상태로 남긴다.
 
 ## 아직 확정하지 않은 사항
 

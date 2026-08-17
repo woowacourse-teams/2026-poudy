@@ -146,6 +146,7 @@ FormulaObservation
 ├─ canonicalUsageFormMapping
 ├─ canonicalFormulationMapping
 ├─ orderedRawMaterialInputs
+├─ massBalanceAssessment
 ├─ manufacturingProcess: value | MissingReason
 ├─ physicalPropertyMeasurements
 ├─ claimedSensoryTerms
@@ -170,6 +171,16 @@ FormulaObservation
 현재 `FormulaMassBalanceAssessment`는 구조화한 원료 투입량에서 관측 합계와 100 대비 signed
 difference를 계산한다. 합계가 정확히 100일 때만 `ACCEPTED`이고 나머지는 수치를 바꾸지
 않은 채 `QUARANTINED`다.
+
+현재 `FormulaObservation` 값 타입은 위 필수 참조와 원천 순서의 불변 목록을 보존하고
+`massBalanceAssessment`를 원료 입력에서 다시 계산해 대조한다. application type이
+`UNKNOWN`이거나 질량 합계가 100이 아니거나 구성 성분 identity가 미해결·모호하면 전체
+observation을 `ACCEPTED`로 만들 수 없다. source defect처럼 구조만으로 알 수 없는 이유로
+정상 구조의 observation을 보수적으로 `QUARANTINED` 또는 `REJECTED`하는 것은 허용한다.
+
+`PhysicalPropertyMeasurement`는 물성 이름과 값 표현을 원문 그대로 보존한다. 단위, 측정법,
+장비와 온도·경과 시간 등 조건은 각각 값 또는 `MissingReason`으로 보존한다. `< 1,000`, 범위,
+한정자처럼 의미가 있는 원문을 근거 없이 단일 수치로 바꾸지 않는다.
 
 ### 복합원료
 
