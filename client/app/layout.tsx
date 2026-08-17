@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
 
+import { MockProvider } from "@/mocks/MockProvider";
+
 import "./globals.css";
 
 // 디자인(v1.pen)의 ui-font 는 Noto Sans KR 이다. 한글 글리프는 subsets 로 고르지
@@ -42,7 +44,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <MockProvider>{children}</MockProvider>
+      </body>
     </html>
   );
 }

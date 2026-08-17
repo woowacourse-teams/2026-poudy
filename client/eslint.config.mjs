@@ -85,7 +85,8 @@ const eslintConfig = defineConfig([
   },
   eslintConfigPrettier,
   // Override the default ignores from eslint-config-next.
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // mockServiceWorker.js 는 msw 가 생성하는 파일이라 직접 고치지 않는다.
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "public/mockServiceWorker.js"]),
 ]);
 
 export default eslintConfig;
