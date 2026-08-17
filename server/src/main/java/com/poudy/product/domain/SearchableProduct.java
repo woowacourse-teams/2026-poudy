@@ -7,7 +7,7 @@ import com.poudy.common.domain.SearchableText;
 public record SearchableProduct(Product product, SearchableText name) {
 
     public static SearchableProduct of(Product product) {
-        return new SearchableProduct(product, SearchableText.of(product.productName()));
+        return new SearchableProduct(product, SearchableText.of(product.name()));
     }
 
     public NameRank match(SearchKeyword keyword) {

@@ -1,5 +1,6 @@
 package com.poudy.product.controller.dto;
 
+import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.tag.controller.dto.FormulationRoleResponse;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,21 +15,16 @@ public record ProductIngredientResponse(
         @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects,
         @Schema(description = "공개된 함량. 공개하지 않은 성분은 비어 있다") DisclosedAmountResponse disclosedAmount) {
 
-    public static List<ProductIngredientResponse> samples() {
-        return List.of(
-                new ProductIngredientResponse(
-                        2681L,
-                        "정제수",
-                        "Water",
-                        List.of(new FormulationRoleResponse(24L, "피부 컨디셔닝제")),
-                        List.of(),
-                        null),
-                new ProductIngredientResponse(
-                        1012L,
-                        "글리세린",
-                        "Glycerin",
-                        List.of(new FormulationRoleResponse(20L, "보습제")),
-                        List.of(new SkinEffectResponse(108L, "수분 공급 관련")),
-                        DisclosedAmountResponse.sample()));
+    public static List<ProductIngredientResponse> from(List<Ingredient> ingredients) {
+        return ingredients.stream()
+                .map(
+                        ingredient -> new ProductIngredientResponse(
+                                ingredient.id(),
+                                ingredient.koreanName(),
+                                ingredient.englishName(),
+                                FormulationRoleResponse.from(ingredient.formulationRoles()),
+                                SkinEffectResponse.from(ingredient.skinEffects()),
+                                null))
+                .toList();
     }
 }

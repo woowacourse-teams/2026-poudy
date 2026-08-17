@@ -1,7 +1,9 @@
 package com.poudy.brand.controller.dto;
 
+import com.poudy.brand.domain.Brand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import java.util.Objects;
 
 public record BrandResponse(
         @NotNull @Schema(description = "브랜드 ID", example = "12") Long id,
@@ -9,15 +11,12 @@ public record BrandResponse(
         @NotNull @Schema(description = "브랜드 영문명", example = "BRAND NAME") String englishName,
         @NotNull @Schema(description = "브랜드 이미지 URL", example = "https://cdn.example.com/brands/12/image.png") String imageUrl) {
 
-    public static final Long SAMPLE_ID = 12L;
-    public static final String SAMPLE_NAME = "브랜드 이름";
-    public static final String SAMPLE_ENGLISH_NAME = "BRAND NAME";
-
-    public static BrandResponse sample() {
-        return new BrandResponse(SAMPLE_ID, SAMPLE_NAME, SAMPLE_ENGLISH_NAME, sampleImageUrl(SAMPLE_ID));
+    public static BrandResponse from(Brand brand) {
+        return new BrandResponse(
+                brand.id(),
+                brand.koreanName(),
+                Objects.requireNonNullElse(brand.englishName(), ""),
+                Objects.requireNonNullElse(brand.imageUrl(), ""));
     }
 
-    public static String sampleImageUrl(Long id) {
-        return "https://cdn.example.com/brands/" + id + "/image.png";
-    }
 }

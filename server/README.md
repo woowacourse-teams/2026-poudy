@@ -18,7 +18,7 @@ Spring Boot 백엔드.
 
 ## 요구 사항
 
-JDK 21 이상, Node.js 22.
+JDK 21 이상, Node.js 22, POSIX `sh` (Windows는 Git Bash).
 
 ## 데이터 파일
 

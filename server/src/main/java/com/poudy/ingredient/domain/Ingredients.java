@@ -44,6 +44,20 @@ public class Ingredients {
                 .map(SearchableIngredient::ingredient);
     }
 
+    public boolean containsAll(Collection<Long> ids) {
+        return ids.stream().allMatch(byId::containsKey);
+    }
+
+    public boolean containsAny(Collection<Long> ids) {
+        return ids.stream().anyMatch(byId::containsKey);
+    }
+
+    public List<Ingredient> values() {
+        return searchable.stream()
+                .map(SearchableIngredient::ingredient)
+                .toList();
+    }
+
     public Ingredients findAllById(Collection<Long> ids) {
         List<SearchableIngredient> found = ids.stream()
                 .map(byId::get)

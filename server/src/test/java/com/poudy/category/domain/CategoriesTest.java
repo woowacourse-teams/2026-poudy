@@ -75,6 +75,28 @@ class CategoriesTest {
                 .hasMessage("대분류의 소분류만 조회할 수 있습니다.");
     }
 
+    @Test
+    @DisplayName("ID 로 카테고리를 조회한다")
+    void findsCategoryById() {
+        Category skinCare = parent(1L, "스킨케어");
+        Category toner = child(2L, 1L, "토너");
+        Categories categories = new Categories(List.of(skinCare, toner));
+
+        assertThat(categories.findById(2L)).contains(toner);
+        assertThat(categories.findById(999L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("제품 카테고리의 대분류부터 소분류까지 경로를 찾는다")
+    void findsCategoryPath() {
+        Category skinCare = parent(1L, "스킨케어");
+        Category toner = child(2L, 1L, "토너");
+        Categories categories = new Categories(List.of(skinCare, toner));
+
+        assertThat(categories.pathOf(toner)).containsExactly(skinCare, toner);
+        assertThat(categories.pathOf(skinCare)).containsExactly(skinCare);
+    }
+
     private static Category parent(Long id, String name) {
         return new Category(id, null, name, 0, null, null);
     }

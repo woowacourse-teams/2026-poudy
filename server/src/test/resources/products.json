@@ -5,6 +5,18 @@
       "brand_id": 1,
       "category_id": 2,
       "product_name": "블랙 스네일 토너",
+      "image_url": "https://cdn.example.com/products/1.png",
+      "moisture_level": 3,
+      "oil_level": 1,
+      "variants": [
+        {
+          "id": 1,
+          "price": 18000,
+          "volume_value": 200,
+          "volume_unit": "ml",
+          "status": "active"
+        }
+      ],
       "created_at": "2026-08-13T08:28:29.301Z",
       "updated_at": "2026-08-13T08:28:29.301Z",
       "ingredients": [
@@ -18,6 +30,18 @@
       "brand_id": 1,
       "category_id": 3,
       "product_name": "블랙스네일 레티놀 콜라겐 세럼 인텐스",
+      "image_url": "https://cdn.example.com/products/7.png",
+      "moisture_level": 2,
+      "oil_level": 2,
+      "variants": [
+        {
+          "id": 7,
+          "price": 24000,
+          "volume_value": 50,
+          "volume_unit": "ml",
+          "status": "active"
+        }
+      ],
       "created_at": "2026-08-13T08:28:29.301Z",
       "updated_at": "2026-08-13T08:28:29.301Z",
       "ingredients": [
@@ -31,6 +55,18 @@
       "brand_id": 1,
       "category_id": 14,
       "product_name": "블랙스네일 글루타치온 톤업 선",
+      "image_url": "https://cdn.example.com/products/10.png",
+      "moisture_level": 1,
+      "oil_level": 1,
+      "variants": [
+        {
+          "id": 10,
+          "price": 16000,
+          "volume_value": 50,
+          "volume_unit": "ml",
+          "status": "active"
+        }
+      ],
       "created_at": "2026-08-13T08:28:29.301Z",
       "updated_at": "2026-08-13T08:28:29.301Z",
       "ingredients": [
@@ -44,6 +80,18 @@
       "brand_id": 3,
       "category_id": 2,
       "product_name": "래디언스 비타 토너",
+      "image_url": "https://cdn.example.com/products/13.png",
+      "moisture_level": 3,
+      "oil_level": 1,
+      "variants": [
+        {
+          "id": 13,
+          "price": 21000,
+          "volume_value": 200,
+          "volume_unit": "ml",
+          "status": "active"
+        }
+      ],
       "created_at": "2026-08-13T08:28:29.301Z",
       "updated_at": "2026-08-13T08:28:29.301Z",
       "ingredients": [
@@ -57,6 +105,25 @@
       "brand_id": 3,
       "category_id": 2,
       "product_name": "PH 컨디션 토너",
+      "image_url": "https://cdn.example.com/products/15.png",
+      "moisture_level": 2,
+      "oil_level": 2,
+      "variants": [
+        {
+          "id": 15,
+          "price": 15000,
+          "volume_value": 150,
+          "volume_unit": "ml",
+          "status": "active"
+        },
+        {
+          "id": 16,
+          "price": 23000,
+          "volume_value": 250,
+          "volume_unit": "ml",
+          "status": "active"
+        }
+      ],
       "created_at": "2026-08-13T08:28:29.301Z",
       "updated_at": "2026-08-13T08:28:29.301Z",
       "ingredients": [

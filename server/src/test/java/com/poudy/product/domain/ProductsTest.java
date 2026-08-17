@@ -1,9 +1,14 @@
 package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.brand.domain.Brand;
+import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +27,7 @@ class ProductsTest {
                 .map(ProductsTest::ingredient)
                 .toList();
 
-        return new Product(id, 1L, 1L, "제품 " + id, new Ingredients(ingredients));
+        return product(id, brand(1L), category(1L), new Ingredients(ingredients));
     }
 
     private final Products products = new Products(
@@ -33,6 +38,22 @@ class ProductsTest {
     void countsProductsContainingIngredient() {
         assertThat(products.countContaining(200L)).isEqualTo(2);
         assertThat(products.countContaining(100L)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("요청한 ID 순서로 존재하는 제품만 찾는다")
+    void findsProductsInRequestedOrder() {
+        assertThat(products.findAllById(List.of(3L, 999L, 1L)))
+                .extracting(Product::id)
+                .containsExactly(3L, 1L);
+    }
+
+    @Test
+    @DisplayName("제품 ID가 중복되면 목록을 만들 수 없다")
+    void rejectsDuplicateProductIds() {
+        assertThatThrownBy(() -> new Products(List.of(product(1L), product(1L))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("1");
     }
 
     @Test
@@ -76,10 +97,34 @@ class ProductsTest {
     }
 
     private static Product productOfBrand(Long id, Long brandId) {
-        return new Product(id, brandId, 1L, "제품 " + id, new Ingredients(List.of()));
+        return product(id, brand(brandId), category(1L), new Ingredients(List.of()));
     }
 
     private static Product productOfBrandAndCategory(Long id, Long brandId, Long categoryId) {
-        return new Product(id, brandId, categoryId, "제품 " + id, new Ingredients(List.of()));
+        return product(id, brand(brandId), category(categoryId), new Ingredients(List.of()));
+    }
+
+    private static Product product(Long id, Brand brand, Category category, Ingredients ingredients) {
+        ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
+
+        return new Product(
+                id,
+                "제품 " + id,
+                brand,
+                category,
+                ingredients,
+                "https://example.com/" + id + ".png",
+                new ProductVariants(List.of(variant)),
+                1,
+                1,
+                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
+    }
+
+    private static Brand brand(Long id) {
+        return new Brand(id, "브랜드 " + id, null, null);
+    }
+
+    private static Category category(Long id) {
+        return new Category(id, 100L, "카테고리 " + id, 1, null, null);
     }
 }

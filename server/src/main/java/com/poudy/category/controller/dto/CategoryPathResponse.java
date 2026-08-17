@@ -1,5 +1,6 @@
 package com.poudy.category.controller.dto;
 
+import com.poudy.category.domain.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -9,7 +10,12 @@ public record CategoryPathResponse(
         @NotNull @Schema(description = "대분류 이름", example = "스킨케어") String name,
         @Schema(description = "소분류. 대분류만 지정된 제품은 비어 있다") CategorySummaryResponse child) {
 
-    public static List<CategoryPathResponse> samples() {
-        return List.of(new CategoryPathResponse(1L, "스킨케어", new CategorySummaryResponse(2L, "스킨/토너")));
+    public static List<CategoryPathResponse> from(List<Category> path) {
+        Category parent = path.getFirst();
+        CategorySummaryResponse child = path.size() == 1
+                ? null
+                : new CategorySummaryResponse(path.get(1).id(), path.get(1).name());
+
+        return List.of(new CategoryPathResponse(parent.id(), parent.name(), child));
     }
 }
