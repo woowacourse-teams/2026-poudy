@@ -99,6 +99,34 @@ v0는 runtime `products.json`의 수동 `moisture_level`, `oil_level`을 읽지 
 대해 v0와 전체 분포 및 제품별 diff를 만든 뒤, 특정 단계의 몰림을 줄였다는 이유만으로 채택하지
 않고 관능 표본에서 category-only와 v0보다 나아졌을 때 교체한다.
 
+## 모델 변경 diff 절차
+
+제품별 baseline은 원본 catalog와 함께 저장소 밖에 보관한다. 제품명과 전성분은 snapshot에
+복제하지 않으며 제품 ID, category ID, 두 레벨, confidence, 입력 내용 해시와 모델 버전만 남긴다.
+현재 모델의 baseline 생성 명령은 다음과 같다.
+
+```powershell
+.\gradlew.bat catalogSensoryModelSnapshot -PcatalogDir="<catalog-directory>" -PcatalogModelSnapshotDir="<external-baseline-directory>"
+```
+
+모델 규칙과 해당 구성 버전을 바꾼 뒤 같은 catalog byte로 다음 명령을 실행한다.
+
+```powershell
+.\gradlew.bat catalogSensoryModelDiff -PcatalogDir="<catalog-directory>" -PcatalogModelBaseline="<baseline-directory>\catalog-sensory-model-snapshot.json" -PcatalogModelDiffDir="<external-diff-directory>"
+```
+
+도구는 세 입력의 파일명·크기·SHA-256, 제품 ID 집합과 category가 모두 같지 않으면 데이터
+변경과 모델 변경을 섞지 않고 실패한다. 전 제품을 추론할 수 없는 catalog도 baseline으로
+받지 않는다. diff에는 축별 증가·감소와 `-3~+3` 이동 분포, 2단계 이상 이동 수, confidence
+변화 및 검수할 제품 ID가 담긴다. 결과가 달라졌는데 `SensoryModelVersion`의 다섯 구성 버전이
+같으면 실패한다.
+
+v0 baseline을 실제 외부 catalog 199제품으로 생성한 뒤 동일 모델에 대해 self-diff한 결과는
+수분감·유분감·confidence 모두 199건 unchanged, changed product 0건이었다. 이는 정확도 검증이
+아니라 snapshot 생성·역직렬화·동일 입력 비교가 손실 없이 이어진다는 도구 기준점이다. 외부에
+보존한 v0.1 baseline 파일은 24,910 bytes이며 SHA-256은
+`647d27157243d2ec56d9cfdb9f1ad71d8b4b479299bab21f4dff6201b1aa330f`다.
+
 ## 검증과 교체 기준
 
 v0 배포 전에는 다음을 확인한다.

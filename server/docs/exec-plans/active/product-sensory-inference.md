@@ -9,7 +9,8 @@
 - 완료 시 이동 위치: `docs/exec-plans/completed/product-sensory-inference.md`
 - 최근 진행: 0~2단계의 현재 가능한 범위와 6단계 기초 타입을 완료했다. category·전성분
   순서 기반 v0 estimator를 `ProductFactory`와 runtime에 연결했고 외부 snapshot 199제품의
-  결정적 분포 보고서를 생성했다. 장기 물리 조성 모델·관능 보정은 계속 진행 중이다.
+  결정적 분포 보고서와 동일 입력 전용 모델 snapshot·diff 도구를 생성했다. 장기 물리 조성
+  모델·관능 보정은 계속 진행 중이다.
 
 이 문서는 제품별 `moisture_level`, `oil_level`을 원천 JSON에 사람이 미리 라벨링하는
 방식을 대체한다. 정확한 함량이 공개된 화장품 배합, 시판 제품 전성분, 성분 물성 및
@@ -1179,7 +1180,7 @@ ProductSensoryOverride
 - [ ] 운영 전체 제품을 계산한다.
 - [ ] 2단계 이상 변경과 낮은 신뢰도 제품을 검수한다.
 - [ ] 배포 전 데이터 품질 게이트를 추가한다.
-- [ ] 모델 변경 diff 리포트를 자동화한다.
+- [x] 모델 변경 diff 리포트를 자동화한다.
 - [ ] 신규 성분·카테고리의 fallback과 검수 큐를 운영한다.
 - [x] `ARCHITECTURE.md`와 제품 컨텍스트 문서를 갱신한다.
 - [x] 전체 테스트와 `verify.sh`를 통과시킨다.
@@ -1329,6 +1330,12 @@ ProductSensoryOverride
 - 2026-08-18: 외부 snapshot 199제품을 같은 estimator로 모두 계산해 보고서 v2에 전체·조합·
   category별 레벨과 confidence 집계를 추가했다. 수분 2가 136건이고 수분 0이 없는 압축,
   선크림·로션 category 내 유분 분산 부족을 다음 프로필·cut point 보완의 우선 근거로 삼는다.
+- 2026-08-18: 제품별 추론 baseline은 저장소 밖에 두고 같은 세 catalog byte에서만 현재 모델과
+  비교하는 snapshot·diff 도구를 추가했다. 제품명·전성분은 복제하지 않고 제품 ID별 단계와
+  confidence 이동만 남기며, 결과 변경에 모델 구성 버전 변경이 없으면 실패한다. 실제 199제품
+  v0 self-diff는 세 출력 모두 unchanged 199건, changed product 0건이었다. 저장소 밖 v0.1
+  baseline은 24,910 bytes, SHA-256
+  `647d27157243d2ec56d9cfdb9f1ad71d8b4b479299bab21f4dff6201b1aa330f`로 고정했다.
 
 ## 아직 확정하지 않은 사항
 

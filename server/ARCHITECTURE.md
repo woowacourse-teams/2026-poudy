@@ -400,6 +400,13 @@ confidence 집계도 포함하되 제품별 결과와 원본 JSON은 보존하�
 보고할 대상이므로 정상 종료하고, 필수 파일 누락·파싱 실패·최상위 계약 위반은 기존 출력 쌍을
 보존한 채 실패한다.
 
+모델 변경 전에는 `catalogSensoryModelSnapshot`으로 제품 ID·category ID·수분감·유분감·
+confidence만 담은 baseline을 저장소 밖에 만든다. 변경 후 `catalogSensoryModelDiff`는 세 catalog
+입력의 파일명·크기·SHA-256과 제품 ID 집합·category가 모두 같을 때만 비교한다. 단계별 이동과
+2단계 이상 이동 수, confidence 변화를 제품 ID 단위로 출력하되 제품명·전성분·원본은 싣지 않는다.
+결과가 바뀌었는데 다섯 모델 구성 버전이 그대로면 실패한다. snapshot과 diff는 검수용 외부
+산출물이며 커밋하거나 runtime classpath에 넣지 않는다.
+
 실데이터가 없는 CI는 보고서 실행을 요구하지 않는다. `offlineTools` 컴파일과 fixture 기반
 테스트·정적 검사는 일반 `build`에 포함해 도구 자체의 드리프트는 CI에서 잡는다. 감각 원천
 문서와 normalized observation의 별도 경계는
