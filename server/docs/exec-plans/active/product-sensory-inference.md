@@ -9,8 +9,9 @@
 - 완료 시 이동 위치: `docs/exec-plans/completed/product-sensory-inference.md`
 - 최근 진행: 0~2단계의 현재 가능한 범위와 6단계 기초 타입을 완료했다. category·전성분
   순서 기반 v0 estimator를 `ProductFactory`와 runtime에 연결했고 외부 snapshot 199제품의
-  결정적 분포 보고서와 동일 입력 전용 모델 snapshot·diff 도구를 생성했다. 장기 물리 조성
-  모델·관능 보정은 계속 진행 중이다.
+  결정적 분포 보고서와 동일 입력 전용 모델 snapshot·diff 도구를 생성했다. 빈출 glycol의
+  무근거 축 보정을 diff로 거절하고 v0.2에서 함량 근거 전 보류 상태로 분리했다. 장기 물리
+  조성 모델·관능 보정은 계속 진행 중이다.
 
 이 문서는 제품별 `moisture_level`, `oil_level`을 원천 JSON에 사람이 미리 라벨링하는
 방식을 대체한다. 정확한 함량이 공개된 화장품 배합, 시판 제품 전성분, 성분 물성 및
@@ -1126,6 +1127,8 @@ ProductSensoryOverride
 
 - [x] category와 전성분 순서·기존 역할만 쓰는 결정적 v0 baseline을 구현한다.
 - [x] v0의 전체·category별 레벨과 confidence 분포를 외부 snapshot에서 생성한다.
+- [x] 빈출 미분류 성분 후보를 안정 ID로 검토하고 함량 없는 glycol 축 보정을 보류한다.
+- [x] v0.1 대비 후보·채택 프로필의 199제품 diff를 생성해 2단계 이상 변화를 확인한다.
 - [ ] `FormulaArchetypeClassifier`와 규칙 테스트를 구현한다.
 - [ ] 1% 경계 후보와 확률 계산을 구현한다.
 - [ ] `IngredientConcentrationEstimator`를 구현한다.
@@ -1336,6 +1339,11 @@ ProductSensoryOverride
   v0 self-diff는 세 출력 모두 unchanged 199건, changed product 0건이었다. 저장소 밖 v0.1
   baseline은 24,910 bytes, SHA-256
   `647d27157243d2ec56d9cfdb9f1ad71d8b4b479299bab21f4dff6201b1aa330f`로 고정했다.
+- 2026-08-18: ID `4840`, `2898`을 수분 축 신호로 넣는 첫 후보는 199제품 중 26개의 수분
+  단계를 올리고 135개의 confidence를 올려, 공개 함량 없는 보수적 변경으로 볼 수 없어
+  거절했다. v0.2는 이름 구분자를 해석하지 않고 두 ID를 `DEFERRED_CONCENTRATION`으로만
+  기록한다. v0.1 대비 최종 레벨·confidence는 199건 모두 unchanged다. 준비도 보고서 v3는
+  이 보류 목록과 아직 감각 검토가 없는 빈출 성분을 분리한다.
 
 ## 아직 확정하지 않은 사항
 

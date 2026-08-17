@@ -395,10 +395,10 @@ catalog-sensory-readiness-report.md
 
 보고서에는 입력 내용의 SHA-256, 보고서 schema·도구 버전과 결정적으로 정렬된 집계를 넣고,
 절대 경로와 현재 시각은 넣지 않는다. 같은 byte 입력과 같은 버전이면 byte-identical 출력이어야
-한다. v2 보고서는 runtime과 같은 `ProductSensoryEstimator`로 계산한 전체·category별 레벨과
-confidence 집계도 포함하되 제품별 결과와 원본 JSON은 보존하지 않는다. 데이터 품질 결함은
-보고할 대상이므로 정상 종료하고, 필수 파일 누락·파싱 실패·최상위 계약 위반은 기존 출력 쌍을
-보존한 채 실패한다.
+한다. v3 보고서는 runtime과 같은 `ProductSensoryEstimator`로 계산한 전체·category별 레벨과
+confidence 집계도 포함하고, 명시적 v0 축 신호·함량 근거 전 보류·아직 미검토인 빈출 성분을
+구분한다. 제품별 결과와 원본 JSON은 보존하지 않는다. 데이터 품질 결함은 보고할 대상이므로
+정상 종료하고, 필수 파일 누락·파싱 실패·최상위 계약 위반은 기존 출력 쌍을 보존한 채 실패한다.
 
 모델 변경 전에는 `catalogSensoryModelSnapshot`으로 제품 ID·category ID·수분감·유분감·
 confidence만 담은 baseline을 저장소 밖에 만든다. 변경 후 `catalogSensoryModelDiff`는 세 catalog
