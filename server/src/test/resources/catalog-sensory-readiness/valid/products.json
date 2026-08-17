@@ -1,0 +1,44 @@
+{
+  "products": [
+    {
+      "id": 10,
+      "category_id": 2,
+      "product_name": "토너",
+      "application_type": "leave_on",
+      "source_url": "https://example.com/toner",
+      "ingredients": [
+        {
+          "ingredient_id": 1
+        },
+        {
+          "ingredient_id": 2,
+          "disclosed_amount": {
+            "type": "exact",
+            "value": 5,
+            "unit": "percent"
+          }
+        },
+        {
+          "ingredient_id": 3
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "category_id": 3,
+      "product_name": "크림",
+      "moisture_level": null,
+      "oil_level": 2,
+      "usage_variant": "standard",
+      "formula_archetype": "cream",
+      "ingredients": [
+        {
+          "ingredient_id": 1
+        },
+        {
+          "ingredient_id": 4
+        }
+      ]
+    }
+  ]
+}

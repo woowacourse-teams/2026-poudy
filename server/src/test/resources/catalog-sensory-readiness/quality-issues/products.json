@@ -1,0 +1,40 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "category_id": 999,
+      "product_name": "결함 제품",
+      "moisture_level": 18446744073709551616,
+      "oil_level": "high",
+      "ingredients": [
+        {
+          "ingredient_id": 1
+        },
+        {
+          "ingredient_id": 1,
+          "disclosed_amount": null
+        },
+        {
+          "ingredient_id": 999
+        },
+        {
+          "ingredient_id": 0
+        },
+        "broken"
+      ]
+    },
+    {
+      "id": 1,
+      "product_name": "중복 ID 제품",
+      "oil_level": null,
+      "ingredients": []
+    },
+    {
+      "category_id": 2,
+      "product_name": "ID 없는 제품",
+      "moisture_level": 3,
+      "ingredients": null
+    },
+    "broken"
+  ]
+}

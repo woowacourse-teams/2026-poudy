@@ -1,0 +1,30 @@
+{
+  "ingredients": [
+    {
+      "id": 1,
+      "korean_name": "정제수",
+      "tag_mappings": [
+        {
+          "name": "UNKNOWN_FUNCTION_ROLE",
+          "category": "FUNCTION"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "korean_name": "잘못된 태그 성분",
+      "tag_mappings": {
+        "name": "MOISTURISING"
+      }
+    },
+    {
+      "id": 2,
+      "korean_name": "중복 성분",
+      "tag_mappings": []
+    },
+    {
+      "korean_name": "ID 없는 성분"
+    },
+    "broken"
+  ]
+}

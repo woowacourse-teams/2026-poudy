@@ -1,0 +1,43 @@
+{
+  "ingredients": [
+    {
+      "id": 1,
+      "korean_name": "정제수",
+      "tag_mappings": [
+        {
+          "name": "SKIN_CONDITIONING",
+          "category": "FUNCTION"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "korean_name": "글리세린",
+      "tag_mappings": [
+        {
+          "name": "MOISTURISING",
+          "category": "FUNCTION"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "korean_name": "잔탄검",
+      "tag_mappings": [
+        {
+          "name": "VISCOSITY_CONTROLLING",
+          "category": "FUNCTION"
+        },
+        {
+          "name": "FILM_FORMING",
+          "category": "FUNCTION"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "korean_name": "미분류 성분",
+      "tag_mappings": []
+    }
+  ]
+}
