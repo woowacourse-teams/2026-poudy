@@ -1,6 +1,6 @@
 {
-  "schemaVersion" : "catalog-sensory-readiness-v2",
-  "toolVersion" : "catalog-sensory-readiness-tool-v2",
+  "schemaVersion" : "catalog-sensory-readiness-v3",
+  "toolVersion" : "catalog-sensory-readiness-tool-v3",
   "inputs" : [ {
     "name" : "products.json",
     "bytes" : 552924,
@@ -101,7 +101,7 @@
   },
   "inference" : {
     "modelVersion" : {
-      "ingredientProfileVersion" : "ingredient-role-profile-v0.1",
+      "ingredientProfileVersion" : "ingredient-role-profile-v0.2",
       "categoryPriorVersion" : "category-sensory-prior-v0.1",
       "levelModelVersion" : "ordinal-level-model-v0.1",
       "assessmentProtocolVersion" : "sensory-assessment-protocol-0.1-draft",
@@ -889,14 +889,7 @@
     "formulationRoles" : [ "EMOLLIENT", "FILM_FORMING" ],
     "sensoryScreeningRoles" : [ "EMOLLIENT", "FILM_FORMING" ]
   } ],
-  "frequentWithoutSensoryRole" : [ {
-    "ingredientId" : 2681,
-    "ingredientName" : "정제수",
-    "products" : 194,
-    "occurrences" : 194,
-    "formulationRoles" : [ "SKIN_CONDITIONING" ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
+  "deferredProfileIngredients" : [ {
     "ingredientId" : 4840,
     "ingredientName" : "1,2-헥산다이올",
     "products" : 179,
@@ -904,24 +897,25 @@
     "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
-    "ingredientId" : 586,
-    "ingredientName" : "부틸렌글라이콜",
-    "products" : 166,
-    "occurrences" : 166,
+    "ingredientId" : 2898,
+    "ingredientName" : "카프릴릴글라이콜",
+    "products" : 59,
+    "occurrences" : 59,
     "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  } ],
+  "frequentWithoutSensoryReview" : [ {
+    "ingredientId" : 2681,
+    "ingredientName" : "정제수",
+    "products" : 194,
+    "occurrences" : 194,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
     "sensoryScreeningRoles" : [ ]
   }, {
     "ingredientId" : 1938,
     "ingredientName" : "나이아신아마이드",
     "products" : 121,
     "occurrences" : 121,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 3500,
-    "ingredientName" : "판테놀",
-    "products" : 106,
-    "occurrences" : 106,
     "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
@@ -932,38 +926,10 @@
     "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
-    "ingredientId" : 3260,
-    "ingredientName" : "토코페롤",
-    "products" : 101,
-    "occurrences" : 101,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 3953,
-    "ingredientName" : "프로판다이올",
-    "products" : 96,
-    "occurrences" : 96,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 4510,
-    "ingredientName" : "하이드로제네이티드레시틴",
-    "products" : 90,
-    "occurrences" : 90,
-    "formulationRoles" : [ "SKIN_CONDITIONING" ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
     "ingredientId" : 1824,
     "ingredientName" : "알란토인",
     "products" : 84,
     "occurrences" : 84,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 3605,
-    "ingredientName" : "펜틸렌글라이콜",
-    "products" : 82,
-    "occurrences" : 82,
     "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
@@ -988,32 +954,11 @@
     "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
-    "ingredientId" : 5218,
-    "ingredientName" : "다이프로필렌글라이콜",
-    "products" : 67,
-    "occurrences" : 67,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 2898,
-    "ingredientName" : "카프릴릴글라이콜",
-    "products" : 59,
-    "occurrences" : 59,
-    "formulationRoles" : [ ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
     "ingredientId" : 540,
     "ingredientName" : "병풀추출물",
     "products" : 57,
     "occurrences" : 57,
     "formulationRoles" : [ "SKIN_CONDITIONING" ],
-    "sensoryScreeningRoles" : [ ]
-  }, {
-    "ingredientId" : 475,
-    "ingredientName" : "베타인",
-    "products" : 52,
-    "occurrences" : 52,
-    "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   }, {
     "ingredientId" : 1880,
@@ -1023,11 +968,81 @@
     "formulationRoles" : [ "SKIN_CONDITIONING" ],
     "sensoryScreeningRoles" : [ ]
   }, {
-    "ingredientId" : 1463,
-    "ingredientName" : "스테아릭애씨드",
-    "products" : 40,
-    "occurrences" : 40,
+    "ingredientId" : 1737,
+    "ingredientName" : "아시아티코사이드",
+    "products" : 38,
+    "occurrences" : 38,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 4815,
+    "ingredientName" : "향료",
+    "products" : 38,
+    "occurrences" : 38,
+    "formulationRoles" : [ "PERFUMING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 8360,
+    "ingredientName" : "하이드록시아세토페논",
+    "products" : 38,
+    "occurrences" : 38,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 4670,
+    "ingredientName" : "하이드록시프로필트라이모늄하이알루로네이트",
+    "products" : 36,
+    "occurrences" : 36,
+    "formulationRoles" : [ "HAIR_CONDITIONING", "SURFACTANT" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 5215,
+    "ingredientName" : "다이포타슘글리시리제이트",
+    "products" : 34,
+    "occurrences" : 34,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 70,
+    "ingredientName" : "마데카소사이드",
+    "products" : 33,
+    "occurrences" : 33,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1738,
+    "ingredientName" : "아시아틱애씨드",
+    "products" : 33,
+    "occurrences" : 33,
     "formulationRoles" : [ "ABRASIVE", "BUFFERING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 71,
+    "ingredientName" : "마데카식애씨드",
+    "products" : 32,
+    "occurrences" : 32,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1233,
+    "ingredientName" : "소듐파이테이트",
+    "products" : 32,
+    "occurrences" : 32,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1530,
+    "ingredientName" : "시트릭애씨드",
+    "products" : 32,
+    "occurrences" : 32,
+    "formulationRoles" : [ "ABRASIVE", "BUFFERING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1546,
+    "ingredientName" : "실리카",
+    "products" : 27,
+    "occurrences" : 27,
+    "formulationRoles" : [ ],
     "sensoryScreeningRoles" : [ ]
   } ]
 }

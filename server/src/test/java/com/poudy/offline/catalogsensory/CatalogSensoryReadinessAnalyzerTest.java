@@ -83,9 +83,12 @@ public class CatalogSensoryReadinessAnalyzerTest {
         assertThat(report.sensoryRoleCandidates())
                 .extracting(CatalogSensoryReadinessReport.IngredientFrequency::ingredientId)
                 .containsExactly(2L, 3L);
-        assertThat(report.frequentWithoutSensoryRole())
+        assertThat(report.deferredProfileIngredients())
                 .extracting(CatalogSensoryReadinessReport.IngredientFrequency::ingredientId)
-                .containsExactly(1L, 4L);
+                .containsExactly(4840L);
+        assertThat(report.frequentWithoutSensoryReview())
+                .extracting(CatalogSensoryReadinessReport.IngredientFrequency::ingredientId)
+                .containsExactly(1L);
         assertThat(report.roleUsage()).hasSize(28);
         assertThat(report.roleUsage()).extracting(CatalogSensoryReadinessReport.RoleUsage::role).isSorted();
         assertThat(roleUsage(report, "ABSORBENT"))

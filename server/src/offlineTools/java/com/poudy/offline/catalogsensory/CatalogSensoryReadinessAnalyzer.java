@@ -24,6 +24,7 @@ import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelStatu
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.RoleCoverage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.RoleUsage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.SourceFieldPresence;
+import com.poudy.product.domain.sensory.HeuristicIngredientSensoryProfiles;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.product.domain.sensory.ProductSensoryEstimator;
@@ -148,7 +149,10 @@ public final class CatalogSensoryReadinessAnalyzer {
                 productInspection.sourceFields.toReport(),
                 productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.ALL),
                 productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.SENSORY_ROLE),
-                productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.WITHOUT_SENSORY_ROLE));
+                productInspection.frequencies(ingredientCatalog.values(), FrequencySelection.DEFERRED_PROFILE),
+                productInspection.frequencies(
+                        ingredientCatalog.values(),
+                        FrequencySelection.WITHOUT_SENSORY_REVIEW));
         return new CatalogAnalysis(report, productInspection);
     }
 
@@ -417,7 +421,8 @@ public final class CatalogSensoryReadinessAnalyzer {
     private enum FrequencySelection {
         ALL,
         SENSORY_ROLE,
-        WITHOUT_SENSORY_ROLE
+        DEFERRED_PROFILE,
+        WITHOUT_SENSORY_REVIEW
     }
 
     private record IngredientCatalog(
@@ -1002,7 +1007,7 @@ public final class CatalogSensoryReadinessAnalyzer {
                 Map<Long, IngredientInfo> ingredients,
                 FrequencySelection selection) {
             return ingredientFrequencies.entrySet().stream()
-                    .filter(entry -> includes(selection, ingredients.get(entry.getKey())))
+                    .filter(entry -> includes(selection, entry.getKey(), ingredients.get(entry.getKey())))
                     .sorted(
                             Map.Entry.<Long, FrequencyInspection>comparingByValue(
                                     Comparator.comparingInt(
@@ -1052,11 +1057,20 @@ public final class CatalogSensoryReadinessAnalyzer {
             ProductInspection products) {
     }
 
-    private static boolean includes(FrequencySelection selection, IngredientInfo ingredient) {
+    private static boolean includes(
+            FrequencySelection selection,
+            Long ingredientId,
+            IngredientInfo ingredient) {
         return switch (selection) {
             case ALL -> true;
             case SENSORY_ROLE -> ingredient != null && !ingredient.sensoryRoles.isEmpty();
-            case WITHOUT_SENSORY_ROLE -> ingredient == null || ingredient.sensoryRoles.isEmpty();
+            case DEFERRED_PROFILE -> HeuristicIngredientSensoryProfiles.reviewDisposition(ingredientId)
+                    .filter(
+                            disposition -> disposition == HeuristicIngredientSensoryProfiles.ReviewDisposition.DEFERRED_CONCENTRATION)
+                    .isPresent();
+            case WITHOUT_SENSORY_REVIEW -> ingredient == null
+                    || ingredient.sensoryRoles.isEmpty()
+                            && HeuristicIngredientSensoryProfiles.reviewDisposition(ingredientId).isEmpty();
         };
     }
 }

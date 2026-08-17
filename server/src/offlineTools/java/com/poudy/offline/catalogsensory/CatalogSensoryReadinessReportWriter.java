@@ -74,7 +74,14 @@ public final class CatalogSensoryReadinessReportWriter {
         appendSourceFields(markdown, report);
         appendFrequencies(markdown, "상위 빈출 성분", report.topFrequentIngredients());
         appendFrequencies(markdown, "감각 역할 기반 선별 후보", report.sensoryRoleCandidates());
-        appendFrequencies(markdown, "감각 역할이 없는 상위 빈출 성분", report.frequentWithoutSensoryRole());
+        appendFrequencies(
+                markdown,
+                "함량 근거 전까지 축 신호를 보류한 빈출 성분",
+                report.deferredProfileIngredients());
+        appendFrequencies(
+                markdown,
+                "감각 역할·v0 프로필 검토가 없는 상위 빈출 성분",
+                report.frequentWithoutSensoryReview());
 
         return markdown.toString().stripTrailing() + "\n";
     }

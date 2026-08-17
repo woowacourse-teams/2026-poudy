@@ -8,11 +8,12 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public final class HeuristicProductSensoryEstimator implements ProductSensoryEstimator {
 
-    public static final String INGREDIENT_PROFILE_VERSION = "ingredient-role-profile-v0.1";
+    public static final String INGREDIENT_PROFILE_VERSION = HeuristicIngredientSensoryProfiles.VERSION;
     public static final String CATEGORY_PRIOR_VERSION = "category-sensory-prior-v0.1";
     public static final String LEVEL_MODEL_VERSION = "ordinal-level-model-v0.1";
     public static final String ASSESSMENT_PROTOCOL_VERSION = "sensory-assessment-protocol-0.1-draft";
@@ -23,20 +24,6 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     private static final int MAX_OIL_BOOST = 90;
     private static final int MAX_OIL_REDUCTION = 60;
     private static final int MAX_CONFIDENCE_PERCENT = 55;
-
-    private static final Set<Long> MOISTURE_OVERRIDE_IDS = Set.of(
-            475L,
-            586L,
-            3500L,
-            3605L,
-            3953L,
-            5218L);
-    private static final Set<Long> OIL_OVERRIDE_IDS = Set.of(
-            1463L,
-            2896L,
-            3260L,
-            4510L,
-            7587L);
 
     private static final Map<Long, CategoryPrior> CATEGORY_PRIORS = Map.ofEntries(
             Map.entry(2L, new CategoryPrior(180, 35, 35)),
@@ -139,10 +126,12 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
 
     private static IngredientSignal signalOf(Ingredient ingredient) {
         Set<FormulationRole> roles = Set.copyOf(ingredient.formulationRoles());
+        Optional<HeuristicIngredientSensoryProfiles.Signal> explicitSignal = HeuristicIngredientSensoryProfiles
+                .findSignal(ingredient.id());
         boolean oil = roles.contains(FormulationRole.EMOLLIENT)
-                || OIL_OVERRIDE_IDS.contains(ingredient.id());
+                || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::oil).orElse(false);
         boolean moisture = roles.contains(FormulationRole.HUMECTANT)
-                || MOISTURE_OVERRIDE_IDS.contains(ingredient.id())
+                || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::moisture).orElse(false)
                 || roles.contains(FormulationRole.MOISTURISING) && !oil;
         boolean absorbent = roles.contains(FormulationRole.ABSORBENT);
         return new IngredientSignal(moisture, oil, absorbent);

@@ -21,10 +21,11 @@ public record CatalogSensoryReadinessReport(
         SourceFieldPresence sourceFields,
         List<IngredientFrequency> topFrequentIngredients,
         List<IngredientFrequency> sensoryRoleCandidates,
-        List<IngredientFrequency> frequentWithoutSensoryRole) {
+        List<IngredientFrequency> deferredProfileIngredients,
+        List<IngredientFrequency> frequentWithoutSensoryReview) {
 
-    public static final String SCHEMA_VERSION = "catalog-sensory-readiness-v2";
-    public static final String TOOL_VERSION = "catalog-sensory-readiness-tool-v2";
+    public static final String SCHEMA_VERSION = "catalog-sensory-readiness-v3";
+    public static final String TOOL_VERSION = "catalog-sensory-readiness-tool-v3";
 
     public record InputFile(String name, long bytes, String sha256) {
     }

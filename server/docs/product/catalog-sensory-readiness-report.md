@@ -1,8 +1,8 @@
 # Catalog sensory readiness report
 
-Schema: `catalog-sensory-readiness-v2`
+Schema: `catalog-sensory-readiness-v3`
 
-Tool: `catalog-sensory-readiness-tool-v2`
+Tool: `catalog-sensory-readiness-tool-v3`
 
 이 보고서는 입력 파일명과 내용 해시만 기록하며 실행 시각과 절대 경로를 기록하지 않는다. 같은 스키마·도구 버전과 같은 입력이면 같은 결과를 생성한다. 계산 규칙이 바뀌면 도구 버전을 올린다.
 
@@ -56,7 +56,7 @@ Tool: `catalog-sensory-readiness-tool-v2`
 - Candidate products: 199
 - Inferred products: 199
 - Skipped products: 0
-- Ingredient profile version: `ingredient-role-profile-v0.1`
+- Ingredient profile version: `ingredient-role-profile-v0.2`
 - Category prior version: `category-sensory-prior-v0.1`
 - Level model version: `ordinal-level-model-v0.1`
 - Assessment protocol version: `sensory-assessment-protocol-0.1-draft`
@@ -236,27 +236,34 @@ Tool: `catalog-sensory-readiness-tool-v2`
 | 3731 | 폴리글리세릴-10라우레이트 | 30 | 30 | MOISTURISING | MOISTURISING |
 | 4476 | 다이메티콘 | 30 | 30 | EMOLLIENT, FILM_FORMING | EMOLLIENT, FILM_FORMING |
 
-## 감각 역할이 없는 상위 빈출 성분
+## 함량 근거 전까지 축 신호를 보류한 빈출 성분
+
+| Ingredient ID | Ingredient | Products | Occurrences | Roles | Sensory roles |
+| ---: | --- | ---: | ---: | --- | --- |
+| 4840 | 1,2-헥산다이올 | 179 | 179 |  |  |
+| 2898 | 카프릴릴글라이콜 | 59 | 59 |  |  |
+
+## 감각 역할·v0 프로필 검토가 없는 상위 빈출 성분
 
 | Ingredient ID | Ingredient | Products | Occurrences | Roles | Sensory roles |
 | ---: | --- | ---: | ---: | --- | --- |
 | 2681 | 정제수 | 194 | 194 | SKIN_CONDITIONING |  |
-| 4840 | 1,2-헥산다이올 | 179 | 179 |  |  |
-| 586 | 부틸렌글라이콜 | 166 | 166 |  |  |
 | 1938 | 나이아신아마이드 | 121 | 121 |  |  |
-| 3500 | 판테놀 | 106 | 106 |  |  |
 | 1612 | 아데노신 | 101 | 101 |  |  |
-| 3260 | 토코페롤 | 101 | 101 |  |  |
-| 3953 | 프로판다이올 | 96 | 96 |  |  |
-| 4510 | 하이드로제네이티드레시틴 | 90 | 90 | SKIN_CONDITIONING |  |
 | 1824 | 알란토인 | 84 | 84 |  |  |
-| 3605 | 펜틸렌글라이콜 | 82 | 82 |  |  |
 | 3289 | 트로메타민 | 74 | 74 |  |  |
 | 2859 | 카보머 | 72 | 72 | SKIN_CONDITIONING |  |
 | 5079 | 다이소듐이디티에이 | 71 | 71 |  |  |
-| 5218 | 다이프로필렌글라이콜 | 67 | 67 |  |  |
-| 2898 | 카프릴릴글라이콜 | 59 | 59 |  |  |
 | 540 | 병풀추출물 | 57 | 57 | SKIN_CONDITIONING |  |
-| 475 | 베타인 | 52 | 52 |  |  |
 | 1880 | 알지닌 | 46 | 46 | SKIN_CONDITIONING |  |
-| 1463 | 스테아릭애씨드 | 40 | 40 | ABRASIVE, BUFFERING |  |
+| 1737 | 아시아티코사이드 | 38 | 38 |  |  |
+| 4815 | 향료 | 38 | 38 | PERFUMING |  |
+| 8360 | 하이드록시아세토페논 | 38 | 38 |  |  |
+| 4670 | 하이드록시프로필트라이모늄하이알루로네이트 | 36 | 36 | HAIR_CONDITIONING, SURFACTANT |  |
+| 5215 | 다이포타슘글리시리제이트 | 34 | 34 | SKIN_CONDITIONING |  |
+| 70 | 마데카소사이드 | 33 | 33 |  |  |
+| 1738 | 아시아틱애씨드 | 33 | 33 | ABRASIVE, BUFFERING |  |
+| 71 | 마데카식애씨드 | 32 | 32 |  |  |
+| 1233 | 소듐파이테이트 | 32 | 32 | SKIN_CONDITIONING |  |
+| 1530 | 시트릭애씨드 | 32 | 32 | ABRASIVE, BUFFERING |  |
+| 1546 | 실리카 | 27 | 27 |  |  |

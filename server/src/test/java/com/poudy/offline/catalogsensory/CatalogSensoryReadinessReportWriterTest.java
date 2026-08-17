@@ -31,8 +31,8 @@ public class CatalogSensoryReadinessReportWriterTest {
         assertThat(firstJson).isEqualTo(secondJson).endsWith("\n").doesNotContain("\r");
         assertThat(firstMarkdown).isEqualTo(secondMarkdown).endsWith("\n").doesNotContain("\r");
         assertThat(firstJson)
-                .contains("\"schemaVersion\" : \"catalog-sensory-readiness-v2\"")
-                .contains("\"toolVersion\" : \"catalog-sensory-readiness-tool-v2\"")
+                .contains("\"schemaVersion\" : \"catalog-sensory-readiness-v3\"")
+                .contains("\"toolVersion\" : \"catalog-sensory-readiness-tool-v3\"")
                 .contains("\"inferredProducts\" : 2");
         assertThat(firstMarkdown)
                 .contains("같은 스키마·도구 버전과 같은 입력이면 같은 결과")

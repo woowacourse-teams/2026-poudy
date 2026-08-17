@@ -22,7 +22,9 @@ public class CatalogSensoryReadinessToolVersionTest {
             "catalog-sensory-readiness-tool-v1",
             "16a9a563ad2b380ba7cb3ba0d2f8c4f05aa9d69bd29ca4faf83178d42a4227cd",
             "catalog-sensory-readiness-tool-v2",
-            "b6e295ba525b5e38c3d959946d1a44037dc911f396438feda8ccc4d38ea2e554");
+            "b6e295ba525b5e38c3d959946d1a44037dc911f396438feda8ccc4d38ea2e554",
+            "catalog-sensory-readiness-tool-v3",
+            "69937f8004b6e405db0bfbe517fed35c680cb169d2d2bb1264aa1f54598beeff");
 
     private final CatalogSensoryReadinessAnalyzer analyzer = new CatalogSensoryReadinessAnalyzer();
     private final CatalogSensoryReadinessReportWriter writer = new CatalogSensoryReadinessReportWriter();
