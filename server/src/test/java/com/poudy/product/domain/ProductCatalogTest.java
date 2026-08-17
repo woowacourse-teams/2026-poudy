@@ -7,6 +7,8 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -56,8 +58,8 @@ class ProductCatalogTest {
                 "토너",
                 List.of(1L),
                 List.of(1L),
-                List.of(2),
-                List.of(3),
+                List.of(new MoistureLevel(2)),
+                List.of(new OilLevel(3)),
                 new IngredientFilter(List.of(10L, 30L), List.of(20L)));
 
         assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20).items()).containsExactly(serum);

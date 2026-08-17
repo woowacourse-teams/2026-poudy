@@ -61,8 +61,8 @@ public record Product(
     public boolean matches(ProductFilter filter) {
         return matchesCategory(filter.categoryIds())
                 && matchesAny(filter.brandIds(), brand.id())
-                && matchesAny(filter.moistureLevels(), moistureLevel())
-                && matchesAny(filter.oilLevels(), oilLevel())
+                && matchesAny(filter.moistureLevels(), sensory.moisture())
+                && matchesAny(filter.oilLevels(), sensory.oil())
                 && ingredients.containsAll(filter.ingredientFilter().includedIds())
                 && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
     }
