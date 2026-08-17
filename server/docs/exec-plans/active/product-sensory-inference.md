@@ -7,7 +7,8 @@
 - 대상 브랜치: `product-sensory-inference`
 - 소유 도메인: `product`
 - 완료 시 이동 위치: `docs/exec-plans/completed/product-sensory-inference.md`
-- 최근 진행: 0단계 목표·프로토콜 완료, 6단계 기초 결과 값 5종 완료
+- 최근 진행: 0단계 완료, 카탈로그 감사·원천 계약·결정적 입력 manifest와 기초 원천·결과
+  값 타입 구현 완료
 
 이 문서는 제품별 `moisture_level`, `oil_level`을 원천 JSON에 사람이 미리 라벨링하는
 방식을 대체한다. 정확한 함량이 공개된 화장품 배합, 시판 제품 전성분, 성분 물성 및
@@ -1266,6 +1267,14 @@ ProductSensoryOverride
   해석하고 `/`는 절대 분리하지 않는다. producer가 이미 잘라 놓은 alias는 추측 복원하지
   않고 diagnostic으로 격리한다. 22,013개 성분 snapshot에서 의심 locant 분리 30건과
   지원하지 않는 `^` separator 6건을 격리했으며, 정상 이름과 alias만 exact index에 넣었다.
+- 2026-08-17: normalized batch의 모든 원천·mapping·rule·vocabulary·override·evidence byte
+  입력을 논리 식별자, 크기와 content hash로 묶는 결정적 `InputManifest`를 구현했다. 절대
+  경로·실행 시각·원문 byte는 보존하지 않고, versioned binary hash와 여덟 독립 버전을
+  `NormalizedObservationBatchMetadata`에 기록한다. importer는 한 번 읽은 동일 byte snapshot을
+  parser와 manifest에 전달한다.
+- 2026-08-17: `ApplicationTypeDecision`은 공식 근거가 있는 `LEAVE_ON`·`RINSE_OFF`와
+  근거 부족·상충에 따른 `UNKNOWN`의 허용 조합을 값 타입에서 강제한다. category나 제품명으로
+  미확정 사용 방식을 채우지 않고, 상충 근거와 limitation을 잃지 않는다.
 - 2026-08-17: 제형 확률은 아홉 `FormulaArchetype`을 모두 명시한 불변 분포로 보관하고,
   각 값은 `0~1`, 전체 합은 정확히 `1`로 검증한다. 누락된 유형을 암묵적인 0으로 바꾸지
   않는다.

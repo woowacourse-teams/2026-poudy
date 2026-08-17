@@ -267,6 +267,11 @@ ApplicationTypeDecision
 - `FormulaObservation`도 같은 decision 구조를 사용한다. 샘플 처방 문서에 정상 사용
   절차가 없다면 공식 제품처럼 가정하지 않는다.
 
+현재 `ApplicationTypeDecision` 값 타입은 `LEAVE_ON`과 `RINSE_OFF`에 실제 근거 위치와
+`EXACT` 또는 `REVIEWED` 상태를 강제한다. `UNKNOWN`은 `UNRESOLVED` 또는 `CONFLICTING`만
+허용하고 미확정 이유를 반드시 보존한다. `CONFLICTING`은 상충을 확인한 근거 위치도
+필수다.
+
 사용 형태는 application type 및 category와 다른 축이다.
 
 ```text
@@ -444,6 +449,17 @@ hash 또는 해당 버전이 반드시 바뀐다. 같은 입력 manifest와 같�
 byte-identical normalized output을 만들어야 한다.
 현재 시각, 절대 경로와 실행 순서는 파생 데이터에 넣지 않는다. 품질 결함은 조용히
 삭제하지 않고 accepted/quarantined/rejected 개수와 이유별 목록으로 보고한다.
+
+현재 `InputManifest`는 논리 파일명 또는 안정 ID, byte 크기와 원문 content SHA-256만
+보존하며 입력 등록 순서와 무관한 canonical 순서로 정렬한다. versioned binary tuple의
+SHA-256은 원문 digest와 다른 `InputManifestSha256` 타입으로 보관한다. builder는 완성 뒤
+재사용할 수 없고 같은 논리 입력의 중복과 충돌을 모두 거부한다. normalized importer는
+외부 경로를 한 번만 읽어 얻은 동일 `byte[]`을 parser와 manifest builder 양쪽에 전달해야
+한다. manifest에는 절대 경로, 원문 byte, 실행 시각을 넣지 않는다.
+
+`NormalizedObservationBatchMetadata`는 위 여덟 nonblank 버전 식별자와 강타입
+`inputManifestSha256`을 묶는다. 이 메타데이터 구현만으로 normalized observation builder나
+Stage 5의 재현성이 완료된 것은 아니다.
 
 런타임은 normalized observation을 직접 읽지 않는다. 이후 빌더가 생성할
 `IngredientSensoryProfiles`, `CategoryFormulationPriors`와 모델 파라미터만 별도 버전으로
