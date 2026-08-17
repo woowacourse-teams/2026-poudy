@@ -127,6 +127,17 @@ public class ProductRepository {
             ids.add(ingredientIdOf(reference, context));
         }
 
+        List<Long> unresolved = ids.stream()
+                .filter(id -> ingredients.findById(id).isEmpty())
+                .distinct()
+                .toList();
+        if (!unresolved.isEmpty()) {
+            return context.reportInputMismatch(
+                    Ingredients.class,
+                    "제품이 존재하지 않는 성분 ID를 참조합니다: %s",
+                    unresolved);
+        }
+
         return ingredients.findAllById(ids);
     }
 

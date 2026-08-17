@@ -3,11 +3,11 @@ package com.poudy.product.domain;
 import com.poudy.brand.domain.Brand;
 import com.poudy.common.domain.SearchKeyword;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Products {
@@ -21,8 +21,19 @@ public class Products {
         this.searchable = this.products.stream()
                 .map(SearchableProduct::of)
                 .toList();
-        this.byId = this.products.stream()
-                .collect(Collectors.toUnmodifiableMap(Product::id, Function.identity(), (first, second) -> first));
+        this.byId = indexById(this.products);
+    }
+
+    private static Map<Long, Product> indexById(List<Product> products) {
+        Map<Long, Product> indexed = new HashMap<>();
+
+        for (Product product : products) {
+            if (indexed.putIfAbsent(product.id(), product) != null) {
+                throw new IllegalArgumentException("제품 ID가 중복됐습니다: " + product.id());
+            }
+        }
+
+        return Map.copyOf(indexed);
     }
 
     public List<Product> search(String keyword) {

@@ -89,56 +89,52 @@ class ProductRepositoryTest {
             "{\"ingredient_id\":1.5}"})
     @DisplayName("성분 참조의 ID 가 누락됐거나 정수가 아니면 로딩에 실패한다")
     void rejectsInvalidIngredientReference(String reference) {
-        String productData = """
-                {"products":[{
-                  "id":1,
-                  "brand_id":1,
-                  "category_id":2,
-                  "product_name":"제품",
-                  "ingredients":[%s]
-                }]}
-                """.formatted(reference);
-        DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
+        assertThatThrownBy(() -> repositoryReading(1L, 2L, reference))
+                .isInstanceOf(InfrastructureException.class);
+    }
 
-            @Override
-            public Resource getResource(String location) {
-                return new ByteArrayResource(productData.getBytes(StandardCharsets.UTF_8));
-            }
-        };
-
-        assertThatThrownBy(
-                () -> new ProductRepository(
-                        new JsonDataReader(resourceLoader),
-                        brands(),
-                        categories(),
-                        new Ingredients(List.of())))
+    @Test
+    @DisplayName("존재하지 않는 성분을 참조하면 로딩에 실패한다")
+    void rejectsUnknownIngredientReference() {
+        assertThatThrownBy(() -> repositoryReading(1L, 2L, "{\"ingredient_id\":999}"))
                 .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 브랜드를 참조하면 로딩에 실패한다")
     void rejectsUnknownBrandReference() {
-        assertThatThrownBy(() -> repositoryReading(999L, 2L))
+        assertThatThrownBy(() -> repositoryReading(999L, 2L, ""))
                 .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 카테고리를 참조하면 로딩에 실패한다")
     void rejectsUnknownCategoryReference() {
-        assertThatThrownBy(() -> repositoryReading(1L, 999L))
+        assertThatThrownBy(() -> repositoryReading(1L, 999L, ""))
                 .isInstanceOf(InfrastructureException.class);
     }
 
-    private static ProductRepository repositoryReading(Long brandId, Long categoryId) {
+    private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
         String productData = """
                 {"products":[{
                   "id":1,
                   "brand_id":%d,
                   "category_id":%d,
                   "product_name":"제품",
-                  "ingredients":[]
+                  "image_url":"https://example.com/product.png",
+                  "variants":[{
+                    "id":1,
+                    "price":10000,
+                    "volume_value":100,
+                    "volume_unit":"ml",
+                    "status":"active"
+                  }],
+                  "moisture_level":1,
+                  "oil_level":1,
+                  "updated_at":"2026-08-01T00:00:00Z",
+                  "ingredients":[%s]
                 }]}
-                """.formatted(brandId, categoryId);
+                """.formatted(brandId, categoryId, ingredientReferences);
         DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
 
             @Override

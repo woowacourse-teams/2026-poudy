@@ -1,6 +1,7 @@
 package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
@@ -45,6 +46,14 @@ class ProductsTest {
         assertThat(products.findAllById(List.of(3L, 999L, 1L)))
                 .extracting(Product::id)
                 .containsExactly(3L, 1L);
+    }
+
+    @Test
+    @DisplayName("제품 ID가 중복되면 목록을 만들 수 없다")
+    void rejectsDuplicateProductIds() {
+        assertThatThrownBy(() -> new Products(List.of(product(1L), product(1L))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("1");
     }
 
     @Test
