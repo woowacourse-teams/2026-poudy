@@ -7,6 +7,8 @@ import { FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar, type FilterChipItem } from "@/components/ui/FilterChipBar";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
+import type { FilterType } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
 import type { Filter } from "@/lib/domain/filter";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
@@ -22,6 +24,14 @@ type ProductListProps = {
   readonly fixedFilter?: Partial<Filter>;
   /** 고정한 조건에 해당하는 칩은 숨긴다. */
   readonly hiddenChips?: readonly string[];
+};
+
+/** 칩 id 를 분석 이벤트의 filter_type 으로 옮긴다. */
+const FILTER_TYPES: Record<SheetKind, FilterType> = {
+  ingredient: "ingredient",
+  category: "category",
+  brand: "brand",
+  level: "moisture_oil",
 };
 
 const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
@@ -52,6 +62,19 @@ export function ProductList({
   const { isSaved, toggle } = useSavedProducts();
   const [openSheet, setOpenSheet] = useState<SheetKind>();
 
+  const onToggleSave = (productId: number) => {
+    toggle(productId);
+    track(isSaved(productId) ? "product_unsaved" : "product_saved", {
+      product_id: productId,
+      save_source: "product_list",
+    });
+  };
+
+  const onChangeSort = (sort: Filter["sort"]) => {
+    setSort(sort);
+    track("sort_applied", { sort });
+  };
+
   // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
   const filter = { ...urlFilter, ...fixedFilter };
 
@@ -65,7 +88,7 @@ export function ProductList({
           chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
           onOpen={(id) => setOpenSheet(id as SheetKind)}
         />
-        <SortHeader total={total} sort={filter.sort} onChangeSort={setSort} />
+        <SortHeader total={total} sort={filter.sort} onChangeSort={onChangeSort} />
       </div>
 
       <main className="flex-1 px-4">
@@ -77,7 +100,7 @@ export function ProductList({
           <ul className="divide-y divide-border">
             {items.map((product) => (
               <li key={product.id}>
-                <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={toggle} />
+                <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />
               </li>
             ))}
           </ul>
@@ -91,7 +114,16 @@ export function ProductList({
         openSheet={openSheet}
         onClose={() => setOpenSheet(undefined)}
         filter={filter}
-        onApply={setCondition}
+        onApply={(changed) => {
+          setCondition(changed);
+          if (openSheet) {
+            track("filter_applied", {
+              filter_type: FILTER_TYPES[openSheet],
+              filter_value_count: chipsOf({ ...filter, ...changed }).find((chip) => chip.id === openSheet)?.count ?? 0,
+              result_count: total,
+            });
+          }
+        }}
         categories={categories}
         brands={brands}
         excludeCodes={excludeCodes}

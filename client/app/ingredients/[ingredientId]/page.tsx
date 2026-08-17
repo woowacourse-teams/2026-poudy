@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { TrackView } from "@/components/analytics/TrackView";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
@@ -46,6 +47,10 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
   return (
     <>
       <TopBar title="성분 설명" variant="sub" />
+      <TrackView
+        event="ingredient_viewed"
+        properties={{ ingredient_id: ingredient.id, entry_point: "product_detail" }}
+      />
 
       <main className="flex-1 pb-10">
         <section className="px-4 py-5">
