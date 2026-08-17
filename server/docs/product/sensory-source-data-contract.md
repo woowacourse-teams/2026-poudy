@@ -20,6 +20,9 @@
   식별자를 가진다.
 - URL이나 파일 경로를 식별자로 쓰지 않는다. 원천이 이동해도 같은 자료를 같은 것으로
   추적할 수 있어야 한다.
+- 현재 builder의 안정 식별자는 `namespace:localValue`로 만들고 URL·저장소 locator
+  namespace와 명백한 경로 표현을 거부한다. DOI, 특허 family와 공급사 revision처럼 `/`가
+  식별자 자체의 일부인 표준 값은 명시적인 namespace 아래에서 보존한다.
 - 날짜는 달력 날짜 `YYYY-MM-DD`로 저장한다. 시각이 증거의 일부라면 UTC offset이 있는
   별도 timestamp를 함께 보존한다.
 - 원천에 공개일이 있으면 입수일보다 늦을 수 없다. 공개일이 없으면 임의 날짜를 채우지
@@ -76,6 +79,10 @@ SourceMetadata
 ├─ contentSha256
 ├─ redistributionPermission
 ├─ licenseNote
+├─ redistributionReview: value | MissingReason
+│  ├─ evidenceText
+│  ├─ reviewer
+│  └─ reviewedDate
 └─ extraction
    ├─ method
    ├─ extractorVersion
@@ -88,6 +95,8 @@ SourceMetadata
 - public URL과 내부 문서 참조 중 정확히 하나를 가진다.
 - 재배포 상태는 `ALLOWED`, `RESTRICTED`, `UNKNOWN` 중 하나다. `UNKNOWN`은 허용으로
   해석하지 않는다.
+- `ALLOWED`는 근거 문구, 검수자와 검수일을 가진 `redistributionReview`가 반드시 있어야
+  한다. 다른 상태에서도 검수 결과가 없다면 임의 값을 채우지 않고 결측 이유를 남긴다.
 - normalized corpus에 넣을 observation은 저장 여부와 무관하게 실제로 읽은 원문 byte
   stream의 SHA-256을 필수로 기록한다. 저장이 금지된 웹 자료도 추출 중 digest는 계산한다.
   불변 snapshot이나 content digest를 얻을 수 없는 동적 원천은 다시 실행했을 때 같은
@@ -221,9 +230,9 @@ MarketProductObservation
 
 ```text
 IngredientResolution
-├─ Resolved(canonicalIngredientId, matchRule)
-├─ Unresolved(reason)
-└─ Ambiguous(candidateIngredientIds, reason)
+├─ Resolved(canonicalIngredientId, matchRule, resolverVersion)
+├─ Unresolved(reason, resolverVersion)
+└─ Ambiguous(candidateIngredientIds, reason, resolverVersion)
 ```
 
 - 원문 순서와 중복을 그대로 보존한다. 중복을 수집 단계에서 자동 제거하지 않는다.
@@ -439,6 +448,24 @@ byte-identical normalized output을 만들어야 한다.
 런타임은 normalized observation을 직접 읽지 않는다. 이후 빌더가 생성할
 `IngredientSensoryProfiles`, `CategoryFormulationPriors`와 모델 파라미터만 별도 버전으로
 검증해 배포한다.
+
+현재 이 계약에서 코드화한 공통 provenance, 정확 수치, 복합원료와 성분 해석 타입은
+`offlineTools` source set에만 있다. 성분 resolver v1은 canonical ID 직접 참조를 먼저
+확인하고, 그다음 Unicode NFC·공백·대소문자만 정규화한 한글명·영문명·별칭 exact match를
+사용한다. 후보가 여러 개면 최소 ID를 고르지 않고 결정적으로 정렬한 `Ambiguous`를
+반환한다.
+
+현재 catalog의 `english_name`은 복수 공식 표기를 쉼표로 연결할 수 있다. resolver v1은
+숫자 locant(`1,2-`)와 ASCII letter/prime locant(`N,N-`, `C,C'-`)의 쉼표를 이름 내부에
+보존하고, 그 밖의 catalog 쉼표만 복수 표기 경계로 해석한다. `/`는 길이나 위치와 무관하게
+항상 공식 성분명 내부 문자로 보존하며 분리 기준으로 사용하지 않는다.
+
+`aliases` 배열은 upstream producer가 locant 쉼표나 지원하지 않는 `^`에서 이미 잘라 놓은
+파편을 포함할 수 있다. 원형을 확정할 수 없으므로 resolver는 이를 추측해 재결합하거나
+정상 alias로 인덱싱하지 않는다. 확인된 파편은 원문 그대로 immutable diagnostic에 남기고
+quarantine한다. readiness report에 기록한 22,013개 성분 snapshot에서는 이 규칙으로
+diagnostic 36건(의심 locant 분리 30건, 지원하지 않는 separator 6건)을 보존했으며, 정상
+한글명·영문명·별칭 해석과 별개로 후속 원천 정제 대상으로 다룬다.
 
 ## 아직 코드화하지 않는 부분
 

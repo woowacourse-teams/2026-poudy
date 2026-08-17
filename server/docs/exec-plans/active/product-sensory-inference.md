@@ -1098,6 +1098,8 @@ ProductSensoryOverride
 - [x] `SensoryConfidence`를 만든다.
 - [x] `SensoryModelVersion`을 만든다.
 - [x] `ProductSensory`를 만든다.
+- [x] `ApplicationType`과 `FormulaArchetype`을 만든다.
+- [x] `FormulaArchetypeProbabilities`를 만든다.
 - [x] `SensoryEffectChannel`을 만든다.
 - [ ] `ConcentrationResponse`를 만든다.
 - [ ] `EstimatedPhaseComposition`을 만든다.
@@ -1256,6 +1258,17 @@ ProductSensoryOverride
   중복 제거를 `sensory-source-data-contract-v1`로 정의했다. 결정적 normalized output의
   manifest에는 원문뿐 아니라 mapping·판정 규칙·vocabulary·수동 override와 evidence
   assessment의 content hash까지 포함한다.
+- 2026-08-17: 공통 원천 provenance, 정확 질량 백분율·복합원료와 성분 identity 해석을
+  런타임과 분리된 `offlineTools` 타입으로 구현했다. 재배포 `ALLOWED`에는 구조화된 검수
+  근거가 필요하고, resolver v1은 ID 직접 참조와 정규화 exact match만 사용하며 모호한
+  후보를 자동 선택하지 않는다.
+- 2026-08-17: catalog의 복수 영문명은 locant 쉼표를 보존한 뒤 남은 쉼표만 경계로
+  해석하고 `/`는 절대 분리하지 않는다. producer가 이미 잘라 놓은 alias는 추측 복원하지
+  않고 diagnostic으로 격리한다. 22,013개 성분 snapshot에서 의심 locant 분리 30건과
+  지원하지 않는 `^` separator 6건을 격리했으며, 정상 이름과 alias만 exact index에 넣었다.
+- 2026-08-17: 제형 확률은 아홉 `FormulaArchetype`을 모두 명시한 불변 분포로 보관하고,
+  각 값은 `0~1`, 전체 합은 정확히 `1`로 검증한다. 누락된 유형을 암묵적인 0으로 바꾸지
+  않는다.
 
 ## 아직 확정하지 않은 사항
 
