@@ -7,6 +7,7 @@
 - 대상 브랜치: `product-sensory-inference`
 - 소유 도메인: `product`
 - 완료 시 이동 위치: `docs/exec-plans/completed/product-sensory-inference.md`
+- 최근 진행: 0단계 목표·프로토콜 완료, 6단계 기초 결과 값 5종 완료
 
 이 문서는 제품별 `moisture_level`, `oil_level`을 원천 JSON에 사람이 미리 라벨링하는
 방식을 대체한다. 정확한 함량이 공개된 화장품 배합, 시판 제품 전성분, 성분 물성 및
@@ -999,11 +1000,12 @@ ProductSensoryOverride
 
 ### 0. 목표 정의와 프로토콜
 
-- [ ] 수분감과 유분감의 소비자 문구를 확정한다.
-- [ ] 5분 after-feel을 초기 목표 시점으로 확정하거나 근거와 함께 변경한다.
-- [ ] 초기 대상과 제외 카테고리를 확정한다.
-- [ ] leave-on/rinse-off를 표현할 원천 계약을 정한다.
-- [ ] 관능평가 프로토콜 초안과 단계별 기준 제품 선정 원칙을 작성한다.
+- [x] 수분감과 유분감의 소비자 문구를 확정한다.
+- [x] 5분 after-feel을 초기 목표 시점으로 확정하거나 근거와 함께 변경한다.
+- [x] 초기 대상과 제외 카테고리를 확정한다.
+- [x] leave-on/rinse-off를 표현할 원천 계약을 정한다.
+- [x] [관능평가 프로토콜 초안](../../product/sensory-assessment-protocol.md)과 단계별 기준 제품
+  선정 원칙을 작성한다.
 
 ### 1. 현재 카탈로그 데이터 감사
 
@@ -1077,11 +1079,11 @@ ProductSensoryOverride
 
 ### 6. Domain 값과 컬렉션
 
-- [ ] `MoistureLevel`을 만든다.
-- [ ] `OilLevel`을 만든다.
-- [ ] `SensoryConfidence`를 만든다.
-- [ ] `SensoryModelVersion`을 만든다.
-- [ ] `ProductSensory`를 만든다.
+- [x] `MoistureLevel`을 만든다.
+- [x] `OilLevel`을 만든다.
+- [x] `SensoryConfidence`를 만든다.
+- [x] `SensoryModelVersion`을 만든다.
+- [x] `ProductSensory`를 만든다.
 - [ ] `SensoryEffectChannel`과 `ConcentrationResponse`를 만든다.
 - [ ] `EstimatedPhaseComposition`을 만든다.
 - [ ] `EstimatedDryDown`을 만든다.
@@ -1213,6 +1215,15 @@ ProductSensoryOverride
   숨기지 않고 시나리오 범위와 신뢰도에 반영하기로 했다.
 - 2026-08-17: 휘발성은 수상·유상과 배타적인 상이 아니므로 합계 100%의 질량 분할과
   직교하는 드라이다운 추정을 별도 타입으로 계산하기로 했다.
+- 2026-08-17: 초기 공개 문구와 훈련 패널의 목표를 도포 5분 후 독립된 수분감·유분감
+  `0~3` 순서형 단계로 확정하고 `0.1-draft` 관능평가 프로토콜에 기록했다. 정확한 도포량,
+  부위, 환경과 기준 제품은 파일럿 뒤 새 프로토콜 버전으로 승인한다.
+- 2026-08-17: `application_type`은 5분 평가 시점이 아니라 공식 정상 사용 절차의 제거
+  여부로 판정한다. 복수 공식 절차는 `usage_variant`별 관찰로 보존하되 동일 제품과 처방을
+  독립 표본으로 중복 집계하지 않는다.
+- 2026-08-17: 공개 레벨을 `MoistureLevel`과 `OilLevel`로 분리하고, 내부 신뢰도는
+  `0~1`의 정규화된 `SensoryConfidence`로 표현한다. 최종 모델 버전은 성분 프로필,
+  카테고리 사전분포, 레벨 모델, 평가 프로토콜과 데이터 빌더의 다섯 버전을 함께 보관한다.
 
 ## 아직 확정하지 않은 사항
 
