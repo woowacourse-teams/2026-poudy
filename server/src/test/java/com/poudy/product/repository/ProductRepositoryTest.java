@@ -12,6 +12,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -149,7 +150,7 @@ class ProductRepositoryTest {
                 brands(),
                 categories(),
                 new Ingredients(List.of()),
-                new HeuristicProductSensoryEstimator());
+                new ProductFactory(new HeuristicProductSensoryEstimator()));
     }
 
     private static Brands brands() {

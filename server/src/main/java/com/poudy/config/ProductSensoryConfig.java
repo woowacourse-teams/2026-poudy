@@ -1,5 +1,6 @@
 package com.poudy.config;
 
+import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import com.poudy.product.domain.sensory.ProductSensoryEstimator;
 import org.springframework.context.annotation.Bean;
@@ -11,5 +12,10 @@ public class ProductSensoryConfig {
     @Bean
     public ProductSensoryEstimator productSensoryEstimator() {
         return new HeuristicProductSensoryEstimator();
+    }
+
+    @Bean
+    public ProductFactory productFactory(ProductSensoryEstimator sensoryEstimator) {
+        return new ProductFactory(sensoryEstimator);
     }
 }

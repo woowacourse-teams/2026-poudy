@@ -7,10 +7,10 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
-import com.poudy.product.domain.sensory.ProductSensoryEstimator;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -51,19 +51,19 @@ public class ProductRepository {
             Brands brands,
             Categories categories,
             Ingredients ingredients,
-            ProductSensoryEstimator sensoryEstimator) {
+            ProductFactory productFactory) {
         this.products = new Products(
                 jsonDataReader.readList(
                         PRODUCTS_FILE_NAME,
                         Product.class,
-                        resolvedWith(brands, categories, ingredients, sensoryEstimator)));
+                        resolvedWith(brands, categories, ingredients, productFactory)));
     }
 
     private static JacksonModule resolvedWith(
             Brands brands,
             Categories categories,
             Ingredients ingredients,
-            ProductSensoryEstimator sensoryEstimator) {
+            ProductFactory productFactory) {
         SimpleModule resolution = new SimpleModule("제품 참조 해석");
         resolution.addDeserializer(Product.class, new ValueDeserializer<Product>() {
 
@@ -73,7 +73,7 @@ public class ProductRepository {
                 Category category = categoryOf(product, categories, context);
                 Ingredients productIngredients = ingredientsOf(product, ingredients, context);
 
-                return new Product(
+                return productFactory.create(
                         idOf(product, ID_FIELD, context),
                         requiredTextOf(product, PRODUCT_NAME_FIELD, context),
                         brandOf(product, brands, context),
@@ -81,7 +81,6 @@ public class ProductRepository {
                         productIngredients,
                         requiredTextOf(product, IMAGE_URL_FIELD, context),
                         variantsOf(product, context),
-                        sensoryEstimator.estimate(category, productIngredients),
                         updatedAtOf(product, context));
             }
         });
