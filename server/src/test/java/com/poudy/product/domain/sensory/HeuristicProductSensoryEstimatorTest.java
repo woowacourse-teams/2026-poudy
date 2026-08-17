@@ -32,6 +32,7 @@ class HeuristicProductSensoryEstimatorTest {
         ProductSensory second = estimator.estimate(toner, ingredients);
 
         assertThat(first).isEqualTo(second);
+        assertThat(estimator.modelVersion()).isEqualTo(first.modelVersion());
         assertThat(first.modelVersion())
                 .isEqualTo(
                         new SensoryModelVersion(

@@ -31,11 +31,13 @@ public class CatalogSensoryReadinessReportWriterTest {
         assertThat(firstJson).isEqualTo(secondJson).endsWith("\n").doesNotContain("\r");
         assertThat(firstMarkdown).isEqualTo(secondMarkdown).endsWith("\n").doesNotContain("\r");
         assertThat(firstJson)
-                .contains("\"schemaVersion\" : \"catalog-sensory-readiness-v1\"")
-                .contains("\"toolVersion\" : \"catalog-sensory-readiness-tool-v1\"");
+                .contains("\"schemaVersion\" : \"catalog-sensory-readiness-v2\"")
+                .contains("\"toolVersion\" : \"catalog-sensory-readiness-tool-v2\"")
+                .contains("\"inferredProducts\" : 2");
         assertThat(firstMarkdown)
                 .contains("같은 스키마·도구 버전과 같은 입력이면 같은 결과")
                 .contains("외부 원문을 대조하지 않으므로 공식 전성분의 순서와 완전성은 검증하지 않았다")
+                .contains("v0 inferred sensory distribution")
                 .contains("스킨케어/스킨/토너");
     }
 

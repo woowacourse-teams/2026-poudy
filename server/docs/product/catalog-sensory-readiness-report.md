@@ -1,8 +1,8 @@
 # Catalog sensory readiness report
 
-Schema: `catalog-sensory-readiness-v1`
+Schema: `catalog-sensory-readiness-v2`
 
-Tool: `catalog-sensory-readiness-tool-v1`
+Tool: `catalog-sensory-readiness-tool-v2`
 
 이 보고서는 입력 파일명과 내용 해시만 기록하며 실행 시각과 절대 경로를 기록하지 않는다. 같은 스키마·도구 버전과 같은 입력이면 같은 결과를 생성한다. 계산 규칙이 바뀌면 도구 버전을 올린다.
 
@@ -48,6 +48,67 @@ Tool: `catalog-sensory-readiness-tool-v1`
 | --- | ---: | ---: | ---: | ---: |
 | `moisture_level` | 199 | 0 | 0 | 0 |
 | `oil_level` | 199 | 0 | 0 | 0 |
+
+## v0 inferred sensory distribution
+
+수동 레벨을 읽지 않고 runtime과 같은 estimator로 계산한 baseline이다. 관능 정답이나 임상 효능이 아니며, 해석과 보완 기준은 [감각 추론 v0 기준과 한계](sensory-inference-v0.md)에 있다. 초기 leave-on 범위 밖 category는 낮은 confidence의 탐색 결과일 뿐 검증 표본으로 세지 않는다.
+
+- Candidate products: 199
+- Inferred products: 199
+- Skipped products: 0
+- Ingredient profile version: `ingredient-role-profile-v0.1`
+- Category prior version: `category-sensory-prior-v0.1`
+- Level model version: `ordinal-level-model-v0.1`
+- Assessment protocol version: `sensory-assessment-protocol-0.1-draft`
+- Data builder version: `product-sensory-builder-v0.1`
+
+### Overall levels
+
+| Axis | Level 0 | Level 1 | Level 2 | Level 3 |
+| --- | ---: | ---: | ---: | ---: |
+| Moisture | 0 | 15 | 136 | 48 |
+| Oil | 40 | 67 | 74 | 18 |
+
+### Level pairs
+
+| Moisture | Oil | Products |
+| ---: | ---: | ---: |
+| 1 | 0 | 3 |
+| 1 | 1 | 1 |
+| 1 | 2 | 8 |
+| 1 | 3 | 3 |
+| 2 | 0 | 26 |
+| 2 | 1 | 52 |
+| 2 | 2 | 45 |
+| 2 | 3 | 13 |
+| 3 | 0 | 11 |
+| 3 | 1 | 14 |
+| 3 | 2 | 21 |
+| 3 | 3 | 2 |
+
+### Confidence
+
+내부 confidence는 실제 정답 확률로 보정되지 않은 상대적 근거 부족 신호다.
+
+| Minimum | P25 | Median | P75 | Maximum | Mean |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.25 | 0.46 | 0.49 | 0.52 | 0.55 | 0.4765 |
+
+### Category inference
+
+| ID | Path | Products | Moisture 0/1/2/3 | Oil 0/1/2/3 | Mean confidence |
+| ---: | --- | ---: | --- | --- | ---: |
+| 2 | 스킨케어/스킨/토너 | 31 | 0/0/26/5 | 25/6/0/0 | 0.4887 |
+| 3 | 스킨케어/에센스/세럼/앰플 | 57 | 0/0/45/12 | 0/55/2/0 | 0.4930 |
+| 4 | 스킨케어/크림 | 46 | 0/0/25/21 | 0/0/31/15 | 0.5209 |
+| 5 | 스킨케어/로션 | 9 | 0/0/7/2 | 0/0/9/0 | 0.5289 |
+| 7 | 마스크팩/시트팩 | 10 | 0/0/2/8 | 7/3/0/0 | 0.3340 |
+| 8 | 마스크팩/패드 | 5 | 0/0/5/0 | 4/1/0/0 | 0.3480 |
+| 9 | 마스크팩/패치 | 2 | 0/0/2/0 | 1/1/0/0 | 0.3250 |
+| 11 | 클렌징/클렌징폼/젤 | 4 | 0/4/0/0 | 3/1/0/0 | 0.2800 |
+| 12 | 클렌징/오일/밤 | 1 | 0/1/0/0 | 0/0/0/1 | 0.3500 |
+| 14 | 선케어/선크림 | 32 | 0/8/24/0 | 0/0/32/0 | 0.4688 |
+| 15 | 선케어/선스틱 | 2 | 0/2/0/0 | 0/0/0/2 | 0.3300 |
 
 ## Ingredient list quality
 

@@ -89,6 +89,11 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
                 MODEL_VERSION);
     }
 
+    @Override
+    public SensoryModelVersion modelVersion() {
+        return MODEL_VERSION;
+    }
+
     private static IngredientSignals signalsOf(List<Ingredient> ingredients) {
         int moistureBoost = 0;
         int oilBoost = 0;

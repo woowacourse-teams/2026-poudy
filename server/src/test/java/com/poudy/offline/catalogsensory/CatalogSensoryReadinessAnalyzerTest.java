@@ -29,7 +29,7 @@ public class CatalogSensoryReadinessAnalyzerTest {
                         CatalogSensoryReadinessReport.CategoryCount::products)
                 .containsExactly(
                         tuple(2L, 1L, "스킨케어/스킨/토너", 1L),
-                        tuple(3L, 1L, "스킨케어/크림", 1L));
+                        tuple(4L, 1L, "스킨케어/크림", 1L));
 
         assertThat(report.levels().moistureLevel())
                 .isEqualTo(new CatalogSensoryReadinessReport.LevelStatus(1, 1, 0, 0));
@@ -39,6 +39,32 @@ public class CatalogSensoryReadinessAnalyzerTest {
         assertThat(report.ingredientCountDistribution().median()).isEqualTo(2);
         assertThat(report.ingredientCountDistribution().maximum()).isEqualTo(3);
         assertThat(report.ingredientCountDistribution().mean()).isEqualByComparingTo("2.50");
+    }
+
+    @Test
+    @DisplayName("runtime과 같은 v0 estimator로 레벨·confidence·category 분포를 만든다")
+    public void summarizesRuntimeInferenceWithoutReadingManualLevels() throws Exception {
+        CatalogSensoryReadinessReport report = analyzer.analyze(fixture("valid"));
+
+        assertThat(report.inference().candidateProducts()).isEqualTo(2);
+        assertThat(report.inference().inferredProducts()).isEqualTo(2);
+        assertThat(report.inference().skippedProducts()).isZero();
+        assertThat(report.inference().moistureLevels())
+                .isEqualTo(new CatalogSensoryReadinessReport.LevelDistribution(0, 0, 2, 0));
+        assertThat(report.inference().oilLevels())
+                .isEqualTo(new CatalogSensoryReadinessReport.LevelDistribution(1, 0, 1, 0));
+        assertThat(report.inference().levelPairs())
+                .containsExactly(
+                        new CatalogSensoryReadinessReport.LevelPairCount(2, 0, 1),
+                        new CatalogSensoryReadinessReport.LevelPairCount(2, 2, 1));
+        assertThat(report.inference().confidence().minimum()).isEqualByComparingTo("0.35");
+        assertThat(report.inference().confidence().maximum()).isEqualByComparingTo("0.43");
+        assertThat(report.inference().confidence().mean()).isEqualByComparingTo("0.3900");
+        assertThat(report.inference().modelVersion().dataBuilderVersion())
+                .isEqualTo("product-sensory-builder-v0.1");
+        assertThat(report.inference().categories())
+                .extracting(CatalogSensoryReadinessReport.CategoryInference::id)
+                .containsExactly(2L, 4L);
     }
 
     @Test
@@ -103,6 +129,9 @@ public class CatalogSensoryReadinessAnalyzerTest {
                 .isEqualTo(new CatalogSensoryReadinessReport.LevelStatus(1, 0, 1, 1));
         assertThat(report.levels().oilLevel())
                 .isEqualTo(new CatalogSensoryReadinessReport.LevelStatus(1, 1, 0, 1));
+        assertThat(report.inference().candidateProducts()).isEqualTo(4);
+        assertThat(report.inference().inferredProducts()).isZero();
+        assertThat(report.inference().skippedProducts()).isEqualTo(4);
     }
 
     @Test

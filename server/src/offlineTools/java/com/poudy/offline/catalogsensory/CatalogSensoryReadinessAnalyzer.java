@@ -1,20 +1,34 @@
 package com.poudy.offline.catalogsensory;
 
+import com.poudy.category.domain.Category;
+import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.IngredientTag;
+import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CatalogSummary;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryCount;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryInference;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.ConfidenceDistribution;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.Coverage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.DisclosedAmountSummary;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.DuplicateIngredientReference;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.InferenceSummary;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.IngredientCountDistribution;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.IngredientFrequency;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.IngredientListQuality;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.InputFile;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelDistribution;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelFields;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelPairCount;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelStatus;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.RoleCoverage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.RoleUsage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.SourceFieldPresence;
+import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
+import com.poudy.product.domain.sensory.ProductSensory;
+import com.poudy.product.domain.sensory.ProductSensoryEstimator;
+import com.poudy.product.domain.sensory.SensoryModelVersion;
 import com.poudy.tag.domain.FormulationRole;
+import com.poudy.tag.domain.TagCategory;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -55,6 +69,16 @@ public final class CatalogSensoryReadinessAnalyzer {
             FormulationRole.MOISTURISING.name(),
             FormulationRole.VISCOSITY_CONTROLLING.name());
 
+    private final ProductSensoryEstimator sensoryEstimator;
+
+    public CatalogSensoryReadinessAnalyzer() {
+        this(new HeuristicProductSensoryEstimator());
+    }
+
+    CatalogSensoryReadinessAnalyzer(ProductSensoryEstimator sensoryEstimator) {
+        this.sensoryEstimator = sensoryEstimator;
+    }
+
     public CatalogSensoryReadinessReport analyze(Path catalogDirectory) throws IOException, JacksonException {
         Path productsFile = catalogDirectory.resolve(PRODUCTS_FILE);
         Path ingredientsFile = catalogDirectory.resolve(INGREDIENTS_FILE);
@@ -72,7 +96,8 @@ public final class CatalogSensoryReadinessAnalyzer {
         ProductInspection productInspection = inspectProducts(
                 products,
                 ingredientCatalog.values(),
-                categoryCatalog.values());
+                categoryCatalog.values(),
+                sensoryEstimator);
 
         CatalogSummary catalogSummary = new CatalogSummary(
                 products.size(),
@@ -96,6 +121,7 @@ public final class CatalogSensoryReadinessAnalyzer {
                 catalogSummary,
                 productInspection.categoryCounts(categoryCatalog.values()),
                 new LevelFields(productInspection.moisture.toReport(), productInspection.oil.toReport()),
+                productInspection.inference.toReport(sensoryEstimator.modelVersion()),
                 productInspection.ingredientListQuality(ingredientCatalog.values()),
                 distributionOf(productInspection.ingredientCounts),
                 productInspection.roleCoverage(ingredientCatalog.values()),
@@ -239,7 +265,8 @@ public final class CatalogSensoryReadinessAnalyzer {
     private static ProductInspection inspectProducts(
             JsonNode products,
             Map<Long, IngredientInfo> ingredients,
-            Map<Long, CategoryInfo> categories) {
+            Map<Long, CategoryInfo> categories,
+            ProductSensoryEstimator sensoryEstimator) {
         ProductInspection inspection = new ProductInspection();
         Set<Long> productIds = new HashSet<>();
         int productIndex = 0;
@@ -248,6 +275,7 @@ public final class CatalogSensoryReadinessAnalyzer {
             productIndex++;
             if (!product.isObject()) {
                 inspection.malformedProducts++;
+                inspection.inference.skip();
                 continue;
             }
 
@@ -261,8 +289,17 @@ public final class CatalogSensoryReadinessAnalyzer {
             inspection.moisture.accept(product, "moisture_level");
             inspection.oil.accept(product, "oil_level");
             inspection.sourceFields.accept(product);
-            inspection.acceptCategory(product, categories);
-            inspection.acceptIngredients(product, productId, productIndex, ingredients);
+            Long categoryId = inspection.acceptCategory(product, categories);
+            Ingredients productIngredients = inspection.acceptIngredients(
+                    product,
+                    productId,
+                    productIndex,
+                    ingredients);
+            inspection.acceptInference(
+                    categoryId,
+                    productIngredients,
+                    categories,
+                    sensoryEstimator);
         }
 
         return inspection;
@@ -352,9 +389,35 @@ public final class CatalogSensoryReadinessAnalyzer {
     }
 
     private record CategoryInfo(Long parentId, String name) {
+
+        Category toDomain(Long id) {
+            return new Category(id, parentId, name, parentId == null ? 0 : 1, null, null);
+        }
     }
 
     private record IngredientInfo(String name, Set<String> formulationRoles, Set<String> sensoryRoles) {
+
+        Ingredient toDomain(Long id) {
+            List<IngredientTag> tags = formulationRoles.stream()
+                    .sorted()
+                    .map(
+                            role -> new IngredientTag(
+                                    role,
+                                    TagCategory.FUNCTION,
+                                    "catalog tag mapping"))
+                    .toList();
+            return new Ingredient(
+                    id,
+                    name,
+                    "",
+                    "",
+                    "",
+                    "",
+                    List.of(),
+                    tags,
+                    null,
+                    null);
+        }
     }
 
     private record RoleInspection(
@@ -477,6 +540,131 @@ public final class CatalogSensoryReadinessAnalyzer {
         }
     }
 
+    private static final class InferenceInspection {
+
+        private final int[] moistureLevels = new int[4];
+        private final int[] oilLevels = new int[4];
+        private final int[][] levelPairs = new int[4][4];
+        private final List<BigDecimal> confidences = new ArrayList<>();
+        private final Map<Long, CategoryInferenceInspection> categories = new TreeMap<>();
+        private int candidateProducts;
+        private int inferredProducts;
+        private int skippedProducts;
+
+        private void accept(Long categoryId, String categoryPath, ProductSensory sensory) {
+            candidateProducts++;
+            inferredProducts++;
+            int moistureLevel = sensory.moisture().value();
+            int oilLevel = sensory.oil().value();
+            moistureLevels[moistureLevel]++;
+            oilLevels[oilLevel]++;
+            levelPairs[moistureLevel][oilLevel]++;
+            confidences.add(sensory.confidence().value());
+            categories
+                    .computeIfAbsent(
+                            categoryId,
+                            ignored -> new CategoryInferenceInspection(categoryId, categoryPath))
+                    .accept(sensory);
+        }
+
+        private void skip() {
+            candidateProducts++;
+            skippedProducts++;
+        }
+
+        private InferenceSummary toReport(SensoryModelVersion modelVersion) {
+            List<LevelPairCount> pairs = new ArrayList<>();
+            for (int moistureLevel = 0; moistureLevel < levelPairs.length; moistureLevel++) {
+                for (int oilLevel = 0; oilLevel < levelPairs[moistureLevel].length; oilLevel++) {
+                    int products = levelPairs[moistureLevel][oilLevel];
+                    if (products > 0) {
+                        pairs.add(new LevelPairCount(moistureLevel, oilLevel, products));
+                    }
+                }
+            }
+
+            return new InferenceSummary(
+                    modelVersion,
+                    candidateProducts,
+                    inferredProducts,
+                    skippedProducts,
+                    levelDistributionOf(moistureLevels),
+                    levelDistributionOf(oilLevels),
+                    List.copyOf(pairs),
+                    confidenceDistributionOf(confidences),
+                    categories.values().stream()
+                            .map(CategoryInferenceInspection::toReport)
+                            .toList());
+        }
+
+        private static LevelDistribution levelDistributionOf(int[] levels) {
+            return new LevelDistribution(levels[0], levels[1], levels[2], levels[3]);
+        }
+
+        private static ConfidenceDistribution confidenceDistributionOf(List<BigDecimal> values) {
+            if (values.isEmpty()) {
+                return new ConfidenceDistribution(
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO.setScale(4));
+            }
+
+            List<BigDecimal> sorted = values.stream()
+                    .sorted(BigDecimal::compareTo)
+                    .toList();
+            return new ConfidenceDistribution(
+                    sorted.getFirst(),
+                    percentile(sorted, 25),
+                    percentile(sorted, 50),
+                    percentile(sorted, 75),
+                    sorted.getLast(),
+                    meanOf(sorted));
+        }
+
+        private static BigDecimal percentile(List<BigDecimal> sorted, int percentage) {
+            int index = Math.floorDiv((sorted.size() - 1) * percentage, 100);
+            return sorted.get(index);
+        }
+
+        private static BigDecimal meanOf(List<BigDecimal> values) {
+            BigDecimal sum = values.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+            return sum.divide(BigDecimal.valueOf(values.size()), 4, RoundingMode.HALF_UP);
+        }
+    }
+
+    private static final class CategoryInferenceInspection {
+
+        private final Long categoryId;
+        private final String categoryPath;
+        private final int[] moistureLevels = new int[4];
+        private final int[] oilLevels = new int[4];
+        private final List<BigDecimal> confidences = new ArrayList<>();
+
+        private CategoryInferenceInspection(Long categoryId, String categoryPath) {
+            this.categoryId = categoryId;
+            this.categoryPath = categoryPath;
+        }
+
+        private void accept(ProductSensory sensory) {
+            moistureLevels[sensory.moisture().value()]++;
+            oilLevels[sensory.oil().value()]++;
+            confidences.add(sensory.confidence().value());
+        }
+
+        private CategoryInference toReport() {
+            return new CategoryInference(
+                    categoryId,
+                    categoryPath,
+                    confidences.size(),
+                    InferenceInspection.levelDistributionOf(moistureLevels),
+                    InferenceInspection.levelDistributionOf(oilLevels),
+                    InferenceInspection.meanOf(confidences));
+        }
+    }
+
     private static final class FrequencyInspection {
 
         private final Set<Integer> productIndexes = new HashSet<>();
@@ -494,6 +682,7 @@ public final class CatalogSensoryReadinessAnalyzer {
         private final LevelInspection oil = new LevelInspection();
         private final DisclosedAmountInspection disclosedAmounts = new DisclosedAmountInspection();
         private final SourceFieldInspection sourceFields = new SourceFieldInspection();
+        private final InferenceInspection inference = new InferenceInspection();
         private final Map<Long, Long> categoryProducts = new TreeMap<>();
         private final Map<Long, FrequencyInspection> ingredientFrequencies = new HashMap<>();
         private final Set<Long> referencedIngredientIds = new HashSet<>();
@@ -510,20 +699,22 @@ public final class CatalogSensoryReadinessAnalyzer {
         private int resolvedReferences;
         private int malformedReferences;
 
-        private void acceptCategory(JsonNode product, Map<Long, CategoryInfo> categories) {
+        private Long acceptCategory(JsonNode product, Map<Long, CategoryInfo> categories) {
             Long categoryId = positiveLongOf(product, "category_id");
             if (categoryId == null) {
                 unknownCategoryReferences++;
-                return;
+                return null;
             }
 
             categoryProducts.merge(categoryId, 1L, Long::sum);
             if (!categories.containsKey(categoryId)) {
                 unknownCategoryReferences++;
+                return null;
             }
+            return categoryId;
         }
 
-        private void acceptIngredients(
+        private Ingredients acceptIngredients(
                 JsonNode product,
                 Long productId,
                 int productIndex,
@@ -531,7 +722,7 @@ public final class CatalogSensoryReadinessAnalyzer {
             JsonNode ingredientList = product.get("ingredients");
             if (ingredientList == null || !ingredientList.isArray()) {
                 invalidArrays++;
-                return;
+                return null;
             }
 
             orderedArrays++;
@@ -541,12 +732,15 @@ public final class CatalogSensoryReadinessAnalyzer {
             }
 
             Map<Long, Integer> firstPositions = new HashMap<>();
+            List<Ingredient> inferenceIngredients = new ArrayList<>();
+            boolean inferable = true;
             int position = 0;
             for (JsonNode reference : ingredientList) {
                 position++;
                 references++;
                 if (!reference.isObject()) {
                     malformedReferences++;
+                    inferable = false;
                     continue;
                 }
 
@@ -554,6 +748,7 @@ public final class CatalogSensoryReadinessAnalyzer {
                 Long ingredientId = positiveLongOf(reference, "ingredient_id");
                 if (ingredientId == null) {
                     malformedReferences++;
+                    inferable = false;
                     continue;
                 }
 
@@ -565,8 +760,10 @@ public final class CatalogSensoryReadinessAnalyzer {
                 IngredientInfo ingredient = ingredients.get(ingredientId);
                 if (ingredient == null) {
                     unresolvedIngredientIds.add(ingredientId);
+                    inferable = false;
                 } else {
                     resolvedReferences++;
+                    inferenceIngredients.add(ingredient.toDomain(ingredientId));
                 }
 
                 Integer firstPosition = firstPositions.putIfAbsent(ingredientId, position);
@@ -581,6 +778,25 @@ public final class CatalogSensoryReadinessAnalyzer {
                                     position));
                 }
             }
+            return inferable ? new Ingredients(inferenceIngredients) : null;
+        }
+
+        private void acceptInference(
+                Long categoryId,
+                Ingredients ingredients,
+                Map<Long, CategoryInfo> categories,
+                ProductSensoryEstimator sensoryEstimator) {
+            if (categoryId == null || ingredients == null) {
+                inference.skip();
+                return;
+            }
+
+            CategoryInfo category = categories.get(categoryId);
+            ProductSensory sensory = sensoryEstimator.estimate(category.toDomain(categoryId), ingredients);
+            inference.accept(
+                    categoryId,
+                    categoryPathOf(categoryId, categories, new HashSet<>()),
+                    sensory);
         }
 
         private List<CategoryCount> categoryCounts(Map<Long, CategoryInfo> categories) {

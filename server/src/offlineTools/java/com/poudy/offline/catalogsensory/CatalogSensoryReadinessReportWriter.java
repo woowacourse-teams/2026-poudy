@@ -1,12 +1,18 @@
 package com.poudy.offline.catalogsensory;
 
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryCount;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.CategoryInference;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.ConfidenceDistribution;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.Coverage;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.DuplicateIngredientReference;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.InferenceSummary;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.IngredientFrequency;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.InputFile;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelDistribution;
+import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelPairCount;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.LevelStatus;
 import com.poudy.offline.catalogsensory.CatalogSensoryReadinessReport.RoleUsage;
+import com.poudy.product.domain.sensory.SensoryModelVersion;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -62,6 +68,7 @@ public final class CatalogSensoryReadinessReportWriter {
         appendCatalog(markdown, report);
         appendCategories(markdown, report.categories());
         appendLevels(markdown, report);
+        appendInference(markdown, report.inference());
         appendIngredientQuality(markdown, report);
         appendRoleCoverage(markdown, report);
         appendRoleUsage(markdown, report.roleUsage());
@@ -138,6 +145,90 @@ public final class CatalogSensoryReadinessReportWriter {
                 .append(status.explicitNull()).append(" | ")
                 .append(status.valid()).append(" | ")
                 .append(status.invalid()).append(" |\n");
+    }
+
+    private static void appendInference(StringBuilder markdown, InferenceSummary inference) {
+        SensoryModelVersion version = inference.modelVersion();
+        markdown.append("## v0 inferred sensory distribution\n\n");
+        markdown.append("수동 레벨을 읽지 않고 runtime과 같은 estimator로 계산한 baseline이다. ")
+                .append("관능 정답이나 임상 효능이 아니며, 해석과 보완 기준은 ")
+                .append("[감각 추론 v0 기준과 한계](sensory-inference-v0.md)에 있다. ")
+                .append("초기 leave-on 범위 밖 category는 낮은 confidence의 탐색 결과일 뿐 ")
+                .append("검증 표본으로 세지 않는다.\n\n");
+        markdown.append("- Candidate products: ").append(inference.candidateProducts()).append('\n');
+        markdown.append("- Inferred products: ").append(inference.inferredProducts()).append('\n');
+        markdown.append("- Skipped products: ").append(inference.skippedProducts()).append('\n');
+        markdown.append("- Ingredient profile version: `")
+                .append(version.ingredientProfileVersion()).append("`\n");
+        markdown.append("- Category prior version: `")
+                .append(version.categoryPriorVersion()).append("`\n");
+        markdown.append("- Level model version: `")
+                .append(version.levelModelVersion()).append("`\n");
+        markdown.append("- Assessment protocol version: `")
+                .append(version.assessmentProtocolVersion()).append("`\n");
+        markdown.append("- Data builder version: `")
+                .append(version.dataBuilderVersion()).append("`\n\n");
+
+        markdown.append("### Overall levels\n\n");
+        markdown.append("| Axis | Level 0 | Level 1 | Level 2 | Level 3 |\n");
+        markdown.append("| --- | ---: | ---: | ---: | ---: |\n");
+        appendLevelDistribution(markdown, "Moisture", inference.moistureLevels());
+        appendLevelDistribution(markdown, "Oil", inference.oilLevels());
+        markdown.append('\n');
+
+        markdown.append("### Level pairs\n\n");
+        markdown.append("| Moisture | Oil | Products |\n");
+        markdown.append("| ---: | ---: | ---: |\n");
+        for (LevelPairCount pair : inference.levelPairs()) {
+            markdown.append("| ").append(pair.moistureLevel())
+                    .append(" | ").append(pair.oilLevel())
+                    .append(" | ").append(pair.products()).append(" |\n");
+        }
+        markdown.append('\n');
+
+        ConfidenceDistribution confidence = inference.confidence();
+        markdown.append("### Confidence\n\n");
+        markdown.append("내부 confidence는 실제 정답 확률로 보정되지 않은 상대적 근거 부족 신호다.\n\n");
+        markdown.append("| Minimum | P25 | Median | P75 | Maximum | Mean |\n");
+        markdown.append("| ---: | ---: | ---: | ---: | ---: | ---: |\n");
+        markdown.append("| ").append(confidence.minimum())
+                .append(" | ").append(confidence.percentile25())
+                .append(" | ").append(confidence.median())
+                .append(" | ").append(confidence.percentile75())
+                .append(" | ").append(confidence.maximum())
+                .append(" | ").append(confidence.mean()).append(" |\n\n");
+
+        markdown.append("### Category inference\n\n");
+        markdown.append("| ID | Path | Products | Moisture 0/1/2/3 | Oil 0/1/2/3 | Mean confidence |\n");
+        markdown.append("| ---: | --- | ---: | --- | --- | ---: |\n");
+        for (CategoryInference category : inference.categories()) {
+            markdown.append("| ").append(category.id())
+                    .append(" | ").append(escape(category.path()))
+                    .append(" | ").append(category.products())
+                    .append(" | ").append(levels(category.moistureLevels()))
+                    .append(" | ").append(levels(category.oilLevels()))
+                    .append(" | ").append(category.meanConfidence()).append(" |\n");
+        }
+        markdown.append('\n');
+    }
+
+    private static void appendLevelDistribution(
+            StringBuilder markdown,
+            String name,
+            LevelDistribution levels) {
+        markdown.append("| ").append(name)
+                .append(" | ").append(levels.level0())
+                .append(" | ").append(levels.level1())
+                .append(" | ").append(levels.level2())
+                .append(" | ").append(levels.level3()).append(" |\n");
+    }
+
+    private static String levels(LevelDistribution levels) {
+        return "%d/%d/%d/%d".formatted(
+                levels.level0(),
+                levels.level1(),
+                levels.level2(),
+                levels.level3());
     }
 
     private static void appendIngredientQuality(

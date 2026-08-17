@@ -1,5 +1,6 @@
 package com.poudy.offline.catalogsensory;
 
+import com.poudy.product.domain.sensory.SensoryModelVersion;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ public record CatalogSensoryReadinessReport(
         CatalogSummary catalog,
         List<CategoryCount> categories,
         LevelFields levels,
+        InferenceSummary inference,
         IngredientListQuality ingredientLists,
         IngredientCountDistribution ingredientCountDistribution,
         RoleCoverage roleCoverage,
@@ -21,8 +23,8 @@ public record CatalogSensoryReadinessReport(
         List<IngredientFrequency> sensoryRoleCandidates,
         List<IngredientFrequency> frequentWithoutSensoryRole) {
 
-    public static final String SCHEMA_VERSION = "catalog-sensory-readiness-v1";
-    public static final String TOOL_VERSION = "catalog-sensory-readiness-tool-v1";
+    public static final String SCHEMA_VERSION = "catalog-sensory-readiness-v2";
+    public static final String TOOL_VERSION = "catalog-sensory-readiness-tool-v2";
 
     public record InputFile(String name, long bytes, String sha256) {
     }
@@ -50,6 +52,42 @@ public record CatalogSensoryReadinessReport(
     }
 
     public record LevelStatus(int absent, int explicitNull, int valid, int invalid) {
+    }
+
+    public record InferenceSummary(
+            SensoryModelVersion modelVersion,
+            int candidateProducts,
+            int inferredProducts,
+            int skippedProducts,
+            LevelDistribution moistureLevels,
+            LevelDistribution oilLevels,
+            List<LevelPairCount> levelPairs,
+            ConfidenceDistribution confidence,
+            List<CategoryInference> categories) {
+    }
+
+    public record LevelDistribution(int level0, int level1, int level2, int level3) {
+    }
+
+    public record LevelPairCount(int moistureLevel, int oilLevel, int products) {
+    }
+
+    public record ConfidenceDistribution(
+            BigDecimal minimum,
+            BigDecimal percentile25,
+            BigDecimal median,
+            BigDecimal percentile75,
+            BigDecimal maximum,
+            BigDecimal mean) {
+    }
+
+    public record CategoryInference(
+            Long id,
+            String path,
+            int products,
+            LevelDistribution moistureLevels,
+            LevelDistribution oilLevels,
+            BigDecimal meanConfidence) {
     }
 
     public record IngredientListQuality(
