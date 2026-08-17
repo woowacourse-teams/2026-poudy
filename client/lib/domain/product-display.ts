@@ -1,6 +1,6 @@
 import { firstOf, keepIf, pick } from "./optional";
 
-/** 수분감·유분감 0~3 단계의 표시 이름. 디자인의 유수분 시트와 같다. */
+/** 유수분(수분감·유분감) 0~3 단계의 표시 이름. 디자인의 유수분 시트와 같다. */
 export const LEVEL_LABELS = ["없음", "낮음", "보통", "높음"] as const;
 
 export type Volume = {
@@ -30,6 +30,6 @@ export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string
 
 export const levelLabel = (level: number): string => pick(level in LEVEL_LABELS, LEVEL_LABELS[level], LEVEL_LABELS[0]);
 
-/** 물방울 3 칸의 채움 여부. 0 단계면 모두 빈 칸이다. */
+/** 유수분 레벨을 물방울 아이콘 3 칸의 채움 여부로 바꾼다. 0 단계면 모두 빈 칸이다. */
 export const dropletFills = (level: number, total = 3): readonly boolean[] =>
   Array.from({ length: total }, (_, index) => index < level);
