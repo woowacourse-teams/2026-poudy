@@ -1,0 +1,764 @@
+{
+  "schemaVersion" : "catalog-sensory-readiness-v1",
+  "toolVersion" : "catalog-sensory-readiness-tool-v1",
+  "inputs" : [ {
+    "name" : "products.json",
+    "bytes" : 552924,
+    "sha256" : "4aecabf77663ab94b64de03c6dfc80d3a15e8164e859baec5a4ec8b89d42a843"
+  }, {
+    "name" : "ingredients.json",
+    "bytes" : 31441501,
+    "sha256" : "f5d771e588d13d86161b06a46d4c35245e92f5ab21b62ab79a64a205d82a5c7d"
+  }, {
+    "name" : "categories.json",
+    "bytes" : 2817,
+    "sha256" : "e04e269a77b38bcda66b037b3a2d3482034671c90a595fd29d508bc637a06fc2"
+  } ],
+  "catalog" : {
+    "products" : 199,
+    "ingredients" : 22013,
+    "categories" : 15,
+    "referencedUniqueIngredients" : 1009,
+    "malformedProducts" : 0,
+    "malformedIngredients" : 0,
+    "malformedCategories" : 0,
+    "duplicateProductIds" : 0,
+    "duplicateIngredientIds" : 0,
+    "duplicateCategoryIds" : 0,
+    "unknownCategoryReferences" : 0,
+    "malformedTagMappings" : 0,
+    "unrecognizedFormulationRoles" : 0
+  },
+  "categories" : [ {
+    "id" : 2,
+    "parentId" : 1,
+    "path" : "스킨케어/스킨/토너",
+    "products" : 31
+  }, {
+    "id" : 3,
+    "parentId" : 1,
+    "path" : "스킨케어/에센스/세럼/앰플",
+    "products" : 57
+  }, {
+    "id" : 4,
+    "parentId" : 1,
+    "path" : "스킨케어/크림",
+    "products" : 46
+  }, {
+    "id" : 5,
+    "parentId" : 1,
+    "path" : "스킨케어/로션",
+    "products" : 9
+  }, {
+    "id" : 7,
+    "parentId" : 6,
+    "path" : "마스크팩/시트팩",
+    "products" : 10
+  }, {
+    "id" : 8,
+    "parentId" : 6,
+    "path" : "마스크팩/패드",
+    "products" : 5
+  }, {
+    "id" : 9,
+    "parentId" : 6,
+    "path" : "마스크팩/패치",
+    "products" : 2
+  }, {
+    "id" : 11,
+    "parentId" : 10,
+    "path" : "클렌징/클렌징폼/젤",
+    "products" : 4
+  }, {
+    "id" : 12,
+    "parentId" : 10,
+    "path" : "클렌징/오일/밤",
+    "products" : 1
+  }, {
+    "id" : 14,
+    "parentId" : 13,
+    "path" : "선케어/선크림",
+    "products" : 32
+  }, {
+    "id" : 15,
+    "parentId" : 13,
+    "path" : "선케어/선스틱",
+    "products" : 2
+  } ],
+  "levels" : {
+    "moistureLevel" : {
+      "absent" : 199,
+      "explicitNull" : 0,
+      "valid" : 0,
+      "invalid" : 0
+    },
+    "oilLevel" : {
+      "absent" : 199,
+      "explicitNull" : 0,
+      "valid" : 0,
+      "invalid" : 0
+    }
+  },
+  "ingredientLists" : {
+    "orderedArrays" : 199,
+    "missingOrInvalidArrays" : 0,
+    "emptyArrays" : 0,
+    "references" : 7623,
+    "resolvedReferences" : 7623,
+    "unresolvedReferences" : 0,
+    "malformedReferences" : 0,
+    "duplicateReferences" : 2,
+    "unresolvedIngredientIds" : [ ],
+    "duplicates" : [ {
+      "productId" : 93,
+      "productName" : "더마UV365 레드진정 톤업 선크림",
+      "ingredientId" : 3435,
+      "ingredientName" : "티타늄디옥사이드",
+      "firstPosition" : 9,
+      "duplicatePosition" : 13
+    }, {
+      "productId" : 118,
+      "productName" : "블루빈 B5-PDRN 마일드 크림",
+      "ingredientId" : 393,
+      "ingredientName" : "바실러스발효물",
+      "firstPosition" : 11,
+      "duplicatePosition" : 48
+    } ]
+  },
+  "ingredientCountDistribution" : {
+    "samples" : 199,
+    "minimum" : 5,
+    "percentile25" : 29,
+    "median" : 38,
+    "percentile75" : 47,
+    "percentile90" : 56,
+    "maximum" : 76,
+    "mean" : 38.31
+  },
+  "roleCoverage" : {
+    "recognizedFormulationRole" : {
+      "coveredUniqueIngredients" : 734,
+      "referencedUniqueIngredients" : 1009,
+      "coveredOccurrences" : 4889,
+      "validIngredientOccurrences" : 7623
+    },
+    "sensoryScreeningRole" : {
+      "coveredUniqueIngredients" : 278,
+      "referencedUniqueIngredients" : 1009,
+      "coveredOccurrences" : 2480,
+      "validIngredientOccurrences" : 7623
+    }
+  },
+  "roleUsage" : [ {
+    "role" : "ABRASIVE",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 69,
+    "products" : 157,
+    "occurrences" : 377
+  }, {
+    "role" : "ABSORBENT",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 0,
+    "products" : 0,
+    "occurrences" : 0
+  }, {
+    "role" : "ANTICAKING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 0,
+    "products" : 0,
+    "occurrences" : 0
+  }, {
+    "role" : "ANTIMICROBIAL",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 1,
+    "products" : 2,
+    "occurrences" : 2
+  }, {
+    "role" : "ANTIOXIDANT",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 2,
+    "products" : 2,
+    "occurrences" : 2
+  }, {
+    "role" : "ANTISEBORRHEIC",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 1,
+    "products" : 2,
+    "occurrences" : 2
+  }, {
+    "role" : "ANTISTATIC",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 1,
+    "products" : 1,
+    "occurrences" : 1
+  }, {
+    "role" : "BINDING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 4,
+    "products" : 16,
+    "occurrences" : 16
+  }, {
+    "role" : "BUFFERING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 67,
+    "products" : 171,
+    "occurrences" : 492
+  }, {
+    "role" : "BULKING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 1,
+    "products" : 6,
+    "occurrences" : 6
+  }, {
+    "role" : "CLEANSING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 4,
+    "products" : 13,
+    "occurrences" : 13
+  }, {
+    "role" : "COLORANT",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 11,
+    "products" : 31,
+    "occurrences" : 69
+  }, {
+    "role" : "EMOLLIENT",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 149,
+    "products" : 160,
+    "occurrences" : 780
+  }, {
+    "role" : "EMULSION_STABILISING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 14,
+    "products" : 75,
+    "occurrences" : 93
+  }, {
+    "role" : "FILM_FORMING",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 41,
+    "products" : 175,
+    "occurrences" : 429
+  }, {
+    "role" : "FRAGRANCE_FUNCTIONAL",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 0,
+    "products" : 0,
+    "occurrences" : 0
+  }, {
+    "role" : "HAIR_CONDITIONING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 8,
+    "products" : 62,
+    "occurrences" : 67
+  }, {
+    "role" : "HUMECTANT",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 3,
+    "products" : 82,
+    "occurrences" : 128
+  }, {
+    "role" : "KERATOLYTIC",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 0,
+    "products" : 0,
+    "occurrences" : 0
+  }, {
+    "role" : "MOISTURISING",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 211,
+    "products" : 198,
+    "occurrences" : 1871
+  }, {
+    "role" : "OPACIFYING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 0,
+    "products" : 0,
+    "occurrences" : 0
+  }, {
+    "role" : "PERFUMING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 4,
+    "products" : 53,
+    "occurrences" : 61
+  }, {
+    "role" : "PRESERVATIVE",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 3,
+    "products" : 14,
+    "occurrences" : 15
+  }, {
+    "role" : "SKIN_CONDITIONING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 367,
+    "products" : 198,
+    "occurrences" : 1955
+  }, {
+    "role" : "SOLVENT",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 1,
+    "products" : 1,
+    "occurrences" : 1
+  }, {
+    "role" : "SURFACTANT",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 10,
+    "products" : 64,
+    "occurrences" : 70
+  }, {
+    "role" : "SURFACTANT_FOAM_BOOSTING",
+    "sensoryScreeningRole" : false,
+    "referencedUniqueIngredients" : 4,
+    "products" : 13,
+    "occurrences" : 13
+  }, {
+    "role" : "VISCOSITY_CONTROLLING",
+    "sensoryScreeningRole" : true,
+    "referencedUniqueIngredients" : 41,
+    "products" : 169,
+    "occurrences" : 361
+  } ],
+  "disclosedAmounts" : {
+    "products" : 72,
+    "references" : 230,
+    "malformed" : 0,
+    "types" : {
+      "exact" : 230
+    },
+    "units" : {
+      "percent" : 25,
+      "ppb" : 50,
+      "ppm" : 155
+    }
+  },
+  "sourceFields" : {
+    "applicationTypeProducts" : 0,
+    "usageVariantProducts" : 0,
+    "formulaArchetypeProducts" : 0,
+    "sourceUrlProducts" : 0,
+    "officialIngredientOrderVerified" : false
+  },
+  "topFrequentIngredients" : [ {
+    "ingredientId" : 2681,
+    "ingredientName" : "정제수",
+    "products" : 194,
+    "occurrences" : 194,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 4840,
+    "ingredientName" : "1,2-헥산다이올",
+    "products" : 179,
+    "occurrences" : 179,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1012,
+    "ingredientName" : "글리세린",
+    "products" : 175,
+    "occurrences" : 175,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 586,
+    "ingredientName" : "부틸렌글라이콜",
+    "products" : 166,
+    "occurrences" : 166,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2070,
+    "ingredientName" : "에틸헥실글리세린",
+    "products" : 148,
+    "occurrences" : 148,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 1938,
+    "ingredientName" : "나이아신아마이드",
+    "products" : 121,
+    "occurrences" : 121,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1264,
+    "ingredientName" : "소듐하이알루로네이트",
+    "products" : 118,
+    "occurrences" : 118,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 3500,
+    "ingredientName" : "판테놀",
+    "products" : 106,
+    "occurrences" : 106,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1612,
+    "ingredientName" : "아데노신",
+    "products" : 101,
+    "occurrences" : 101,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3260,
+    "ingredientName" : "토코페롤",
+    "products" : 101,
+    "occurrences" : 101,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3953,
+    "ingredientName" : "프로판다이올",
+    "products" : 96,
+    "occurrences" : 96,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2631,
+    "ingredientName" : "잔탄검",
+    "products" : 94,
+    "occurrences" : 94,
+    "formulationRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ],
+    "sensoryScreeningRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ]
+  }, {
+    "ingredientId" : 4510,
+    "ingredientName" : "하이드로제네이티드레시틴",
+    "products" : 90,
+    "occurrences" : 90,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1824,
+    "ingredientName" : "알란토인",
+    "products" : 84,
+    "occurrences" : 84,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3605,
+    "ingredientName" : "펜틸렌글라이콜",
+    "products" : 82,
+    "occurrences" : 82,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2896,
+    "ingredientName" : "카프릴릭/카프릭트라이글리세라이드",
+    "products" : 78,
+    "occurrences" : 78,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 7130,
+    "ingredientName" : "세라마이드엔피",
+    "products" : 78,
+    "occurrences" : 78,
+    "formulationRoles" : [ "EMOLLIENT", "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT" ]
+  }, {
+    "ingredientId" : 3289,
+    "ingredientName" : "트로메타민",
+    "products" : 74,
+    "occurrences" : 74,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2859,
+    "ingredientName" : "카보머",
+    "products" : 72,
+    "occurrences" : 72,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 5079,
+    "ingredientName" : "다이소듐이디티에이",
+    "products" : 71,
+    "occurrences" : 71,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  } ],
+  "sensoryRoleCandidates" : [ {
+    "ingredientId" : 1012,
+    "ingredientName" : "글리세린",
+    "products" : 175,
+    "occurrences" : 175,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 2070,
+    "ingredientName" : "에틸헥실글리세린",
+    "products" : 148,
+    "occurrences" : 148,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 1264,
+    "ingredientName" : "소듐하이알루로네이트",
+    "products" : 118,
+    "occurrences" : 118,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 2631,
+    "ingredientName" : "잔탄검",
+    "products" : 94,
+    "occurrences" : 94,
+    "formulationRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ],
+    "sensoryScreeningRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ]
+  }, {
+    "ingredientId" : 2896,
+    "ingredientName" : "카프릴릭/카프릭트라이글리세라이드",
+    "products" : 78,
+    "occurrences" : 78,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 7130,
+    "ingredientName" : "세라마이드엔피",
+    "products" : 78,
+    "occurrences" : 78,
+    "formulationRoles" : [ "EMOLLIENT", "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT" ]
+  }, {
+    "ingredientId" : 5611,
+    "ingredientName" : "하이드롤라이즈드하이알루로닉애씨드",
+    "products" : 60,
+    "occurrences" : 60,
+    "formulationRoles" : [ "BUFFERING", "HUMECTANT", "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "HUMECTANT", "MOISTURISING" ]
+  }, {
+    "ingredientId" : 1775,
+    "ingredientName" : "아크릴레이트/C10-30알킬아크릴레이트크로스폴리머",
+    "products" : 55,
+    "occurrences" : 55,
+    "formulationRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ],
+    "sensoryScreeningRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ]
+  }, {
+    "ingredientId" : 973,
+    "ingredientName" : "세테아릴알코올",
+    "products" : 50,
+    "occurrences" : 50,
+    "formulationRoles" : [ "EMOLLIENT", "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT", "MOISTURISING" ]
+  }, {
+    "ingredientId" : 4785,
+    "ingredientName" : "하이알루로닉애씨드",
+    "products" : 49,
+    "occurrences" : 49,
+    "formulationRoles" : [ "BUFFERING", "HUMECTANT", "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "HUMECTANT", "MOISTURISING" ]
+  }, {
+    "ingredientId" : 1401,
+    "ingredientName" : "스쿠알란",
+    "products" : 47,
+    "occurrences" : 47,
+    "formulationRoles" : [ "EMOLLIENT", "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT", "MOISTURISING" ]
+  }, {
+    "ingredientId" : 7587,
+    "ingredientName" : "글리세릴스테아레이트",
+    "products" : 46,
+    "occurrences" : 46,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 221,
+    "ingredientName" : "메틸프로판다이올",
+    "products" : 42,
+    "occurrences" : 42,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 1267,
+    "ingredientName" : "소듐하이알루로네이트크로스폴리머",
+    "products" : 40,
+    "occurrences" : 40,
+    "formulationRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ],
+    "sensoryScreeningRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ]
+  }, {
+    "ingredientId" : 1944,
+    "ingredientName" : "암모늄아크릴로일다이메틸타우레이트/브이피코폴리머",
+    "products" : 39,
+    "occurrences" : 39,
+    "formulationRoles" : [ "EMULSION_STABILISING", "FILM_FORMING", "VISCOSITY_CONTROLLING" ],
+    "sensoryScreeningRoles" : [ "FILM_FORMING", "VISCOSITY_CONTROLLING" ]
+  }, {
+    "ingredientId" : 473,
+    "ingredientName" : "베타-글루칸",
+    "products" : 37,
+    "occurrences" : 37,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 3061,
+    "ingredientName" : "콜레스테롤",
+    "products" : 37,
+    "occurrences" : 37,
+    "formulationRoles" : [ "EMOLLIENT", "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT" ]
+  }, {
+    "ingredientId" : 1149,
+    "ingredientName" : "소듐아세틸레이티드하이알루로네이트",
+    "products" : 35,
+    "occurrences" : 35,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 3731,
+    "ingredientName" : "폴리글리세릴-10라우레이트",
+    "products" : 30,
+    "occurrences" : 30,
+    "formulationRoles" : [ "MOISTURISING" ],
+    "sensoryScreeningRoles" : [ "MOISTURISING" ]
+  }, {
+    "ingredientId" : 4476,
+    "ingredientName" : "다이메티콘",
+    "products" : 30,
+    "occurrences" : 30,
+    "formulationRoles" : [ "EMOLLIENT", "FILM_FORMING" ],
+    "sensoryScreeningRoles" : [ "EMOLLIENT", "FILM_FORMING" ]
+  } ],
+  "frequentWithoutSensoryRole" : [ {
+    "ingredientId" : 2681,
+    "ingredientName" : "정제수",
+    "products" : 194,
+    "occurrences" : 194,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 4840,
+    "ingredientName" : "1,2-헥산다이올",
+    "products" : 179,
+    "occurrences" : 179,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 586,
+    "ingredientName" : "부틸렌글라이콜",
+    "products" : 166,
+    "occurrences" : 166,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1938,
+    "ingredientName" : "나이아신아마이드",
+    "products" : 121,
+    "occurrences" : 121,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3500,
+    "ingredientName" : "판테놀",
+    "products" : 106,
+    "occurrences" : 106,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1612,
+    "ingredientName" : "아데노신",
+    "products" : 101,
+    "occurrences" : 101,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3260,
+    "ingredientName" : "토코페롤",
+    "products" : 101,
+    "occurrences" : 101,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3953,
+    "ingredientName" : "프로판다이올",
+    "products" : 96,
+    "occurrences" : 96,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 4510,
+    "ingredientName" : "하이드로제네이티드레시틴",
+    "products" : 90,
+    "occurrences" : 90,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1824,
+    "ingredientName" : "알란토인",
+    "products" : 84,
+    "occurrences" : 84,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3605,
+    "ingredientName" : "펜틸렌글라이콜",
+    "products" : 82,
+    "occurrences" : 82,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 3289,
+    "ingredientName" : "트로메타민",
+    "products" : 74,
+    "occurrences" : 74,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2859,
+    "ingredientName" : "카보머",
+    "products" : 72,
+    "occurrences" : 72,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 5079,
+    "ingredientName" : "다이소듐이디티에이",
+    "products" : 71,
+    "occurrences" : 71,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 5218,
+    "ingredientName" : "다이프로필렌글라이콜",
+    "products" : 67,
+    "occurrences" : 67,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 2898,
+    "ingredientName" : "카프릴릴글라이콜",
+    "products" : 59,
+    "occurrences" : 59,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 540,
+    "ingredientName" : "병풀추출물",
+    "products" : 57,
+    "occurrences" : 57,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 475,
+    "ingredientName" : "베타인",
+    "products" : 52,
+    "occurrences" : 52,
+    "formulationRoles" : [ ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1880,
+    "ingredientName" : "알지닌",
+    "products" : 46,
+    "occurrences" : 46,
+    "formulationRoles" : [ "SKIN_CONDITIONING" ],
+    "sensoryScreeningRoles" : [ ]
+  }, {
+    "ingredientId" : 1463,
+    "ingredientName" : "스테아릭애씨드",
+    "products" : 40,
+    "occurrences" : 40,
+    "formulationRoles" : [ "ABRASIVE", "BUFFERING" ],
+    "sensoryScreeningRoles" : [ ]
+  } ]
+}

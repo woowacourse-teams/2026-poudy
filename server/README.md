@@ -28,6 +28,37 @@ MVP 의 데이터는 `src/main/resources` 의 JSON 에서 읽습니다. 오프�
 파일이 없으면 기동 시점에 `데이터 파일을 읽지 못했습니다: <파일명>` 으로 실패합니다. 조회
 시점이 아니라 기동 시점에 실패시켜 준비되지 않은 환경을 바로 알 수 있게 한 것입니다.
 
+### 카탈로그 감각 준비도 감사
+
+실제 카탈로그를 저장소나 런타임 classpath에 복사하지 않고 외부 디렉터리에서 읽어 감각
+추론 준비 상태를 감사할 수 있습니다.
+
+```bash
+./gradlew catalogSensoryReadinessReport \
+  -PcatalogDir=/absolute/path/to/catalog
+```
+
+입력 디렉터리에는 `products.json`, `ingredients.json`, `categories.json`이 있어야 합니다.
+기본 출력은 `build/reports/catalog-sensory-readiness/`의 JSON과 Markdown 두 파일입니다.
+검수 후 저장소 문서 위치에 재현하려면 출력 디렉터리를 명시합니다.
+
+```bash
+./gradlew catalogSensoryReadinessReport \
+  -PcatalogDir=/absolute/path/to/catalog \
+  -PcatalogReportDir=docs/product
+```
+
+보고서는 입력 파일명·크기·SHA-256, 집계 결과와 결함 검수에 필요한 레코드 식별자만 남기고
+절대 경로와 실행 시각은 남기지 않습니다. 누락 파일, JSON 파싱 실패와 잘못된 최상위 구조는
+작업을 실패시키고 기존 보고서 쌍을 보존합니다. 중복 성분, 미해결 참조와 낮은 태그
+커버리지는 숨기지 않고 정상 보고서의 품질 발견 사항으로 남깁니다.
+
+외부 데이터가 없는 CI에서 이 보고서 생성을 강제하지는 않습니다. 대신 보고서 도구의
+컴파일, fixture 테스트, Spotless와 Checkstyle은 일반 `build`가 검증합니다.
+
+현재 검수한 snapshot의 결과는
+[카탈로그 감각 준비도 보고서](docs/product/catalog-sensory-readiness-report.md)에 있습니다.
+
 ## 실행
 
 ```bash

@@ -101,8 +101,19 @@
 
 - 제품, 카테고리, 성분과 성분 태그처럼 현재 Domain에 적재되는 원천 값 외에는
   유수분 추론용 데이터가 없다.
-- 운영 JSON은 저장소에 커밋되지 않으므로 실제 카탈로그의 null 비율과 성분 커버리지는
-  구현 시작 시 운영 데이터로 다시 감사해야 한다.
+- 외부 카탈로그 snapshot은 저장소와 runtime classpath에 복사하지 않고
+  [감각 준비도 보고서](../../product/catalog-sensory-readiness-report.md) 생성기에 경로로만
+  전달한다. 보고서는 입력 hash와 집계·검수 식별자만 보존한다.
+- 감사한 snapshot은 제품 199개, 성분 참조 7,623개이며 원천 `moisture_level`과
+  `oil_level`은 전 제품에서 null이 아니라 필드 자체가 없다. 미해결 성분 참조는 0개지만
+  제품 내부 중복 참조가 2개 있다.
+- 초기 감각 역할 6종의 커버리지는 참조 고유 성분 기준 278/1,009(27.55%), 출현 기준
+  2,480/7,623(32.53%)다. `ABSORBENT` 참조는 0건이고 `HUMECTANT`는 고유 성분 3개뿐이라
+  기존 역할 태그를 감각 프로필로 간주할 수 없다.
+- 카테고리만 보면 초기 범위 후보는 175개지만 `application_type`, `usage_variant`, 공식
+  제형과 source URL이 모두 0건이다. 공식 사용법에 근거해 `LEAVE_ON`으로 확정한 제품은
+  아직 0개이며 카테고리나 제품명으로 값을 채우지 않는다. 전성분 배열의 구조와 내부
+  참조는 감사했지만 공식 원문이 없어 순서·누락·완전성 대조는 아직 하지 못했다.
 - 현재 `Product`는 `Integer moistureLevel`, `Integer oilLevel`을 갖고 null과 범위 밖 값을
   거부한다.
 - 현재 `ProductRepository`는 `products.json`에서 두 필드를 정수로 직접 읽는다.
@@ -1009,26 +1020,29 @@ ProductSensoryOverride
 
 ### 1. 현재 카탈로그 데이터 감사
 
-- [ ] 운영 제품 수와 카테고리별 분포를 집계한다.
-- [ ] 유수분 null과 기존 임시값 상태를 확인한다.
-- [ ] 공식 전성분의 순서·누락·중복 품질을 확인한다.
-- [ ] 제품별 성분 수 분포를 확인한다.
-- [ ] 기존 성분 역할 태그 커버리지를 계산한다.
-- [ ] 상위 빈출 성분과 유수분 고영향 후보를 분리한다.
-- [ ] 공개 함량과 공식 제형 데이터의 존재 여부를 확인한다.
-- [ ] `catalog-sensory-readiness-report`를 남긴다.
+- [x] 운영 제품 수와 카테고리별 분포를 집계한다.
+- [x] 유수분 null과 기존 임시값 상태를 확인한다.
+- [x] 카탈로그 JSON의 전성분 배열·빈 목록·중복·미해결 참조 품질을 확인한다.
+- [ ] 공식 원문과 대조해 전성분 순서·누락·완전성을 검증한다.
+- [x] 제품별 성분 수 분포를 확인한다.
+- [x] 기존 성분 역할 태그 커버리지를 계산한다.
+- [x] 상위 빈출 성분과 유수분 고영향 후보를 분리한다.
+- [x] 공개 함량과 공식 제형 데이터의 존재 여부를 확인한다.
+- [x] [catalog-sensory-readiness-report](../../product/catalog-sensory-readiness-report.md)를
+  남긴다.
 
 ### 2. 수집 스키마와 출처 관리
 
-- [ ] `SourceMetadata` 계약을 정의한다.
-- [ ] `FormulaObservation` 계약을 정의한다.
-- [ ] `MarketProductObservation` 계약을 정의한다.
-- [ ] 런타임 감각 입력과 분리된 `EfficacyEvidenceObservation` 계약을 정의한다.
-- [ ] 복합원료와 미상 구성비의 표현을 정의한다.
-- [ ] 카테고리와 제형 canonical 매핑을 정의한다.
-- [ ] 성분 ID·한글명·영문명·별칭 해석 규칙을 재사용한다.
-- [ ] 원천 자료의 라이선스와 재배포 가능 여부 기록 절차를 정한다.
-- [ ] 유사 처방과 특허 패밀리의 중복 제거 기준을 정한다.
+- [x] [감각 원천 데이터 계약](../../product/sensory-source-data-contract.md)에
+  `SourceMetadata` 계약을 정의한다.
+- [x] `FormulaObservation` 계약을 정의한다.
+- [x] `MarketProductObservation` 계약을 정의한다.
+- [x] 런타임 감각 입력과 분리된 `EfficacyEvidenceObservation` 계약을 정의한다.
+- [x] 복합원료와 미상 구성비의 표현을 정의한다.
+- [x] 카테고리와 제형 canonical 매핑을 정의한다.
+- [x] 성분 ID·한글명·영문명·별칭 해석 규칙을 재사용한다.
+- [x] 원천 자료의 라이선스와 재배포 가능 여부 기록 절차를 정한다.
+- [x] 유사 처방과 특허 패밀리의 중복 제거 기준을 정한다.
 
 ### 3. 초기 원천 데이터 수집
 
@@ -1084,7 +1098,8 @@ ProductSensoryOverride
 - [x] `SensoryConfidence`를 만든다.
 - [x] `SensoryModelVersion`을 만든다.
 - [x] `ProductSensory`를 만든다.
-- [ ] `SensoryEffectChannel`과 `ConcentrationResponse`를 만든다.
+- [x] `SensoryEffectChannel`을 만든다.
+- [ ] `ConcentrationResponse`를 만든다.
 - [ ] `EstimatedPhaseComposition`을 만든다.
 - [ ] `EstimatedDryDown`을 만든다.
 - [ ] `FormulationModifiers`를 만든다.
@@ -1224,6 +1239,23 @@ ProductSensoryOverride
 - 2026-08-17: 공개 레벨을 `MoistureLevel`과 `OilLevel`로 분리하고, 내부 신뢰도는
   `0~1`의 정규화된 `SensoryConfidence`로 표현한다. 최종 모델 버전은 성분 프로필,
   카테고리 사전분포, 레벨 모델, 평가 프로토콜과 데이터 빌더의 다섯 버전을 함께 보관한다.
+- 2026-08-17: 외부 카탈로그 원본은 저장소나 runtime classpath에 복사하지 않고 명시적인
+  오프라인 감사 입력으로만 읽는다. 보고서 schema·도구 버전, 입력 SHA-256과 결정적 집계를
+  커밋해 같은 snapshot의 결과를 재현한다.
+- 2026-08-17: canonical 감사 입력은 배포 산출물인 `products.json`, `ingredients.json`,
+  `categories.json`으로 제한했다. 보조 감사한 `.pipeline-state.json`
+  (`1f51dced7070d57a5c4dcfed11e98eccdeb53df5d1ddb89a2f6b4a1151c886a8`)에서는 legacy
+  `hydration_level`과 `oiliness_level`이 199건 모두 null이었고, `conversion-report.json`
+  (`913c3f2bc74d126902dddec513730944194a292e3e61039555100e6d42ff686c`)은 parser version
+  13, 성공 199건, 실패·경고 0건이었다. 내부 pipeline cache 계약은 서버 감사 도구에
+  결합하지 않는다.
+- 2026-08-17: 제품 사용 방식, 물리적 제형과 감각 효과 채널을 각각 `ApplicationType`,
+  `FormulaArchetype`, `SensoryEffectChannel` enum으로 고정했다. 농도 반응의 단위·계수와
+  불확실성 표현은 근거 없이 선결정하지 않는다.
+- 2026-08-17: 원천 observation, 임상 효능 분리, 복합원료, canonical 해석, 라이선스와
+  중복 제거를 `sensory-source-data-contract-v1`로 정의했다. 결정적 normalized output의
+  manifest에는 원문뿐 아니라 mapping·판정 규칙·vocabulary·수동 override와 evidence
+  assessment의 content hash까지 포함한다.
 
 ## 아직 확정하지 않은 사항
 

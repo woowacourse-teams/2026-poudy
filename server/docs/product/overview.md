@@ -26,6 +26,11 @@
 
 - 첨부 Excel은 DB 구조를 파악하기 위한 참고 자료이며 구현 계약이 아니다.
 - 런타임에서는 Excel을 읽지 않고, 오프라인에서 변환한 JSON을 메모리에 적재한다.
+- 감각 근거의 원문과 normalized observation은
+  [감각 원천 데이터 계약](sensory-source-data-contract.md)에 따라 런타임 classpath와
+  저장소 밖에서 수집·검수하고, 서버에는 검증된 파생 참조 데이터만 전달한다.
+- 현재 외부 카탈로그의 구조·태그 커버리지와 원천 계약 공백은
+  [감각 준비도 보고서](catalog-sensory-readiness-report.md)를 기준으로 한다.
 - 데이터 접근 경계는 이후 DB 저장 방식으로 교체할 수 있어야 한다.
 
 ## Deferred decisions

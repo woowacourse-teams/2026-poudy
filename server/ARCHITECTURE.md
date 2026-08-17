@@ -357,6 +357,33 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 - 요청한 ID 순서를 그대로 유지한다. 보관함의 정렬은 브라우저가 정한다.
 - 찾지 못한 ID는 오류가 아니라 결과에서 빠진다. 브라우저에 남은 목록이 서버 데이터와 어긋날 수 있다.
 
+## Offline catalog audit boundary
+
+`src/offlineTools/java`는 서버 애플리케이션과 분리된 Gradle source set이다. 여기의 도구는
+외부 카탈로그를 읽어 품질·커버리지 보고서를 만들지만 `main` source set이나 Boot artifact에
+포함되지 않는다. 런타임 Repository의 fail-fast 역직렬화를 감사에 재사용하지 않는다. 감사
+대상은 바로 그 역직렬화 계약에 맞지 않는 누락·중복·미해결 원천 레코드를 중단하지 않고
+누적해야 하기 때문이다.
+
+`catalogSensoryReadinessReport`는 명시한 외부 디렉터리의 `products.json`,
+`ingredients.json`, `categories.json`만 읽는다. 원본을 저장소나 runtime classpath로 복사하지
+않고 다음 두 파생 보고서만 만든다.
+
+```text
+catalog-sensory-readiness-report.json
+catalog-sensory-readiness-report.md
+```
+
+보고서에는 입력 내용의 SHA-256, 보고서 schema·도구 버전과 결정적으로 정렬된 집계를 넣고,
+절대 경로와 현재 시각은 넣지 않는다. 같은 byte 입력과 같은 버전이면 byte-identical 출력이어야
+한다. 데이터 품질 결함은 보고할 대상이므로 정상 종료하고, 필수 파일 누락·파싱 실패·최상위
+계약 위반은 기존 출력 쌍을 보존한 채 실패한다.
+
+실데이터가 없는 CI는 보고서 실행을 요구하지 않는다. `offlineTools` 컴파일과 fixture 기반
+테스트·정적 검사는 일반 `build`에 포함해 도구 자체의 드리프트는 CI에서 잡는다. 감각 원천
+문서와 normalized observation의 별도 경계는
+[`sensory-source-data-contract.md`](docs/product/sensory-source-data-contract.md)가 소유한다.
+
 ## Layer responsibilities
 
 ### Controller
@@ -517,3 +544,5 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 18. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
 19. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
 20. 접근 제어자를 생략하지 않는다. 기본 접근에 기대는 대신 `public` 또는 `private`을 적는다.
+21. `offlineTools`는 명시한 외부 입력만 읽고 Boot artifact에 포함하지 않는다. 원본을
+    runtime classpath로 복사하지 않으며, 같은 입력·도구 버전의 보고서는 결정적이어야 한다.
