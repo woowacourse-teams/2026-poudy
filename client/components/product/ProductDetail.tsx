@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SaveProductButton } from "./SaveProductButton";
 
+import { TrackView } from "@/components/analytics/TrackView";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
@@ -13,6 +14,10 @@ export function ProductDetail({ product }: { readonly product: ProductDetailResp
   return (
     <>
       <TopBar title="제품 상세" variant="sub" />
+      <TrackView
+        event="product_viewed"
+        properties={{ product_id: product.id, category: product.categories[0]?.name }}
+      />
 
       <main className="flex-1 pb-10">
         <CategoryPath categories={product.categories} />
