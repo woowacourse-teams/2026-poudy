@@ -34,7 +34,17 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - `/etc/poudy/frontend.env` 생성
 - `poudy-frontend.service` 설치 및 enable
 - `ec2-nginx.conf`와 `ec2-frontend.conf` 설치
+- 백엔드 프록시 기본 설정 설치
 - Nginx 설정 검증 및 enable/start
+
+프론트 EC2에서 백엔드 EC2의 사설 IP를 설정합니다.
+
+```bash
+cd /opt/poudy/repository
+sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
+```
+
+이 명령은 `/api/*` 요청의 전달 대상을 변경하고 Nginx를 reload합니다.
 
 ## 실행 시점
 

@@ -5,8 +5,12 @@
 MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다.
 
 - 프론트엔드: Nginx `:80` → Next.js standalone `127.0.0.1:3000`
-- 백엔드: Spring Boot JAR `127.0.0.1:8080` → systemd
+- 프론트엔드 Nginx: `/api/*` → 백엔드 EC2 사설 IP `:8080`
+- 백엔드: Spring Boot JAR `:8080` → systemd
 - 데이터: `/opt/poudy/data`에 S3 JSON을 다운로드
+
+현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
+사용하고, 백엔드 요청은 VPC 내부의 백엔드 EC2로 전달합니다.
 
 배포 산출물은 다음 스크립트로 생성합니다. 출력 디렉터리는 새로 만들어져야 합니다.
 
@@ -30,12 +34,21 @@ EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고�
 프론트 EC2에서는 Nginx를 호스트에 설치하고 `nginx/ec2-frontend.conf`를 설정 파일로
 사용합니다. Next.js standalone 프로세스는 `127.0.0.1:3000`에만 바인딩합니다.
 
-ALB 라우팅은 다음 규칙을 사용합니다.
+Nginx 라우팅은 다음 규칙을 사용합니다.
 
-- `/api/*` → 백엔드 Target Group → 백엔드 EC2 `8080`
-- 그 외 요청 → 프론트 Target Group → 프론트 EC2 `80`
-- 프론트 health check → `/nginx-health`
-- 백엔드 health check → `/actuator/health`
+- `/api/*` → 백엔드 EC2 사설 IP `8080`
+- 그 외 요청 → 프론트 Next.js `3000`
+- 프론트 호스트 확인 → `/nginx-health`
+- 백엔드 호스트 확인 → `/actuator/health`
+
+프론트 EC2 초기화 후 백엔드의 사설 IP를 전달해 프록시 대상을 설정합니다.
+
+```bash
+sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
+```
+
+백엔드의 `8080`은 인터넷 전체에 공개하지 않고, 가능하면 프론트 EC2의 보안 그룹
+또는 VPC 내부 트래픽만 허용합니다.
 
 ## 보안 실행 기준
 
