@@ -21,9 +21,18 @@ export function LevelTag({ kind, level }: LevelTagProps) {
 
   return (
     <span className="inline-flex items-center gap-1">
-      <span className="inline-flex gap-0.5" aria-hidden="true">
+      <span className="inline-flex items-center" aria-hidden="true">
         {dropletFills(level).map((isFilled, index) => (
-          <Icon key={index} name="droplet" size={10} filled={isFilled} className={isFilled ? filled : empty} />
+          <Icon
+            key={index}
+            name="droplet"
+            width={13}
+            height={16}
+            preserveRatio
+            strokeWidth={2.5}
+            filled={isFilled}
+            className={isFilled ? filled : empty}
+          />
         ))}
       </span>
       <span className={`text-[12px] font-semibold ${filled}`}>{label}</span>

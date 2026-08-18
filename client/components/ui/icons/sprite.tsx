@@ -124,8 +124,13 @@ export function IconSprite() {
           <path d="M7 4v16" />
         </symbol>
 
-        {/* Lucide · droplet */}
-        <symbol id="icon-droplet" viewBox="0 0 24 24">
+        {/*
+          Lucide · droplet
+          다른 아이콘과 달리 viewBox 를 물방울 경계(5 3 14 19)에 맞춘다.
+          24x24 그대로 두면 여백 때문에 지정한 높이보다 작게 보인다.
+          선 굵기의 절반과 약간의 숨 쉴 공간을 사방에 남긴다.
+        */}
+        <symbol id="icon-droplet" viewBox="1.5 -0.5 21 26">
           <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
         </symbol>
       </defs>
