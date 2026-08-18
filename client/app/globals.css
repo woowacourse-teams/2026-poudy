@@ -51,4 +51,8 @@ body {
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+  /* 한국어는 기본적으로 글자 단위로 끊긴다. 단어 중간에서 줄이 바뀌지 않게 한다. */
+  word-break: keep-all;
+  /* 단어 하나가 줄보다 길면 그때만 글자 단위로 끊는다. */
+  overflow-wrap: break-word;
 }
