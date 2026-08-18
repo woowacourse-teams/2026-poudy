@@ -86,7 +86,7 @@ export function ProductList({
     <>
       <FilterSummary filter={filter} />
 
-      <div className="sticky top-0 z-10 bg-white px-4 pt-2">
+      <div className="bg-white px-4">
         <FilterChipBar
           chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
           onOpen={(id) => setOpenSheet(id as SheetKind)}
@@ -96,9 +96,7 @@ export function ProductList({
 
       <main className="flex-1 px-4">
         {items.length === 0 && !loading ? (
-          <p className="py-16 text-center text-[14px] text-text-secondary">
-            조건에 맞는 제품이 없어요. 조건을 줄여 보세요.
-          </p>
+          <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
           <ul className="divide-y divide-border">
             {items.map((product) => (
