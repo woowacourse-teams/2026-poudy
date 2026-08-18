@@ -230,7 +230,7 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
         브랜드 공식 전성분을 기준으로 정리했어요. 제품 리뉴얼에 따라 실제 표기와 다를 수 있어요.
       </p>
       <p className="mt-2 text-[10px] text-text-secondary">정보 업데이트 · {date}</p>
-      <p className="mt-2 text-[11px] font-semibold text-text-secondary">정보 수정 제안 ›</p>
+      {/* 정보 수정 제안은 받을 곳이 아직 없어 화면에서 감춘다. */}
     </section>
   );
 }
