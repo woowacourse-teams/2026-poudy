@@ -66,15 +66,16 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
 
   return (
     <nav aria-label="카테고리 경로">
+      {/* 경로가 여럿이면 세로로 쌓고, 한 경로 안에서는 한 줄로 이어 적는다. */}
       <ol className="flex flex-col gap-[3px]">
         {categories.map((path) => (
-          <li key={path.id} className="flex flex-col gap-[3px]">
-            <span className="flex items-center gap-[5px] text-[12px] text-text-secondary">
-              {path.name}
-              {path.child ? <Icon name="chevron-right" size={12} /> : null}
-            </span>
+          <li key={path.id} className="flex items-center gap-[5px] text-[12px] text-text-secondary">
+            <span>{path.name}</span>
             {path.child ? (
-              <span className="text-[12px] font-semibold text-text-secondary">{path.child.name}</span>
+              <>
+                <Icon name="chevron-right" size={12} />
+                <span className="font-semibold">{path.child.name}</span>
+              </>
             ) : null}
           </li>
         ))}
