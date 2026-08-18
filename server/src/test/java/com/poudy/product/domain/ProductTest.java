@@ -63,6 +63,26 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("대분류만으로는 만들 수 없다")
+    void rejectsParentCategory() {
+        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
+
+        assertThatThrownBy(
+                () -> new Product(
+                        1L,
+                        "제품",
+                        brand,
+                        parent,
+                        ingredients,
+                        "image",
+                        variants,
+                        sensory(1, 1),
+                        updatedAt))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("제품은 소분류 카테고리를 가져야 합니다.");
+    }
+
+    @Test
     @DisplayName("같은 피부 작용을 가진 성분을 하나의 그룹으로 묶는다")
     void groupsIngredientsBySkinEffect() {
         Ingredient first = ingredient(10L, "HYDRATION_RELATED");

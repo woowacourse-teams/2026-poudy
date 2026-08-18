@@ -5,6 +5,8 @@ import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.IngredientFilter;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import java.util.List;
+import java.util.Objects;
 
 public class ConflictingIngredientFilterValidator
         implements
@@ -18,6 +20,12 @@ public class ConflictingIngredientFilterValidator
 
     @Override
     public boolean isValid(ProductFilterRequest request, ConstraintValidatorContext context) {
+        if (containsNull(request.includeIngredientIds())
+                || containsNull(request.excludeIngredientIds())
+                || containsNull(request.excludeCodes())) {
+            return true;
+        }
+
         try {
             IngredientFilter.of(
                     request.includeIngredientIds(),
@@ -28,5 +36,9 @@ public class ConflictingIngredientFilterValidator
         } catch (ConflictingIngredientFilterException exception) {
             return false;
         }
+    }
+
+    private static boolean containsNull(List<?> values) {
+        return values.stream().anyMatch(Objects::isNull);
     }
 }

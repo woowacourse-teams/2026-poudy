@@ -1,6 +1,7 @@
 package com.poudy.brand.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +52,14 @@ class BrandsTest {
         Brands brands = new Brands(List.of(brand(1L, "닥터지")));
 
         assertThat(brands.findById(999L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("같은 ID의 브랜드는 허용하지 않는다")
+    void rejectsDuplicateIds() {
+        assertThatThrownBy(() -> new Brands(List.of(brand(1L, "닥터지"), brand(1L, "메디큐브"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("브랜드 ID는 중복될 수 없습니다.");
     }
 
     private static Brand brand(Long id, String koreanName) {

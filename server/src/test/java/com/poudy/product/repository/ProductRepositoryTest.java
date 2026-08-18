@@ -136,6 +136,13 @@ class ProductRepositoryTest {
                 .isInstanceOf(InfrastructureException.class);
     }
 
+    @Test
+    @DisplayName("대분류를 제품 카테고리로 참조하면 로딩에 실패한다")
+    void rejectsParentCategoryReference() {
+        assertThatThrownBy(() -> repositoryReading(1L, 1L, ""))
+                .isInstanceOf(InfrastructureException.class);
+    }
+
     private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
         return repositoryReading(brandId, categoryId, ingredientReferences, "\"https://example.com/product.png\"");
     }

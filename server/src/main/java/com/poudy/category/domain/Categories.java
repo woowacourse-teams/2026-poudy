@@ -14,8 +14,7 @@ public class Categories {
 
     public Categories(List<Category> values) {
         this.values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-        this.byId = this.values.stream()
-                .collect(Collectors.toUnmodifiableMap(Category::id, Function.identity(), (first, second) -> first));
+        this.byId = uniqueIndexOf(this.values);
 
         validateChildrenBelongToParent();
         validateEveryParentHasChild();
@@ -64,6 +63,14 @@ public class Categories {
         boolean hasParentWithoutChild = parents().stream().anyMatch(parent -> childrenOf(parent).isEmpty());
         if (hasParentWithoutChild) {
             throw new IllegalArgumentException("대분류는 하나 이상의 소분류를 가져야 합니다.");
+        }
+    }
+
+    private static Map<Long, Category> uniqueIndexOf(List<Category> values) {
+        try {
+            return values.stream().collect(Collectors.toUnmodifiableMap(Category::id, Function.identity()));
+        } catch (IllegalStateException exception) {
+            throw new IllegalArgumentException("카테고리 ID는 중복될 수 없습니다.", exception);
         }
     }
 }

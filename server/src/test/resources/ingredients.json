@@ -1851,172 +1851,240 @@
     {
       "id": 2647,
       "korean_name": "적색103호의(1)",
-      "english_name": "Eosine YS,CI 45380"
+      "english_name": "Eosine YS,CI 45380",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 2648,
       "korean_name": "적색104호의(1)",
-      "english_name": "Phloxine B,CI 45410"
+      "english_name": "Phloxine B,CI 45410",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 2649,
       "korean_name": "적색104호의(2)",
-      "english_name": "Phloxine BK,CI 45410"
+      "english_name": "Phloxine BK,CI 45410",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 2669,
       "korean_name": "적색230호의(2)",
-      "english_name": "Eosine Y나,CI 45380"
+      "english_name": "Eosine Y나,CI 45380",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 4936,
       "korean_name": "황색202호의(1)",
-      "english_name": "Uranine,CI 45350"
+      "english_name": "Uranine,CI 45350",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 4937,
       "korean_name": "황색202호의(2)",
-      "english_name": "Uranine K,CI 45350"
+      "english_name": "Uranine K,CI 45350",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 4941,
       "korean_name": "황색403호의(1)",
-      "english_name": "Naphthol Yellow S,CI 10316"
+      "english_name": "Naphthol Yellow S,CI 10316",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10020,
       "korean_name": "에이치씨청색16호",
-      "english_name": "HC Blue No.16"
+      "english_name": "HC Blue No.16",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 10021,
       "korean_name": "에이치씨청색15호",
-      "english_name": "HC Blue No. 15"
+      "english_name": "HC Blue No. 15",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 10022,
       "korean_name": "에이치씨청색12호",
-      "english_name": "HC Blue No. 12"
+      "english_name": "HC Blue No. 12",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 10023,
       "korean_name": "염기성황색87호",
-      "english_name": "Basic Yellow 87"
+      "english_name": "Basic Yellow 87",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10024,
       "korean_name": "염기성황색57호",
-      "english_name": "CI 12719,Basic Yellow 57"
+      "english_name": "CI 12719,Basic Yellow 57",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10025,
       "korean_name": "염기성적색76호",
-      "english_name": "Basic Red 76,CI 12245"
+      "english_name": "Basic Red 76,CI 12245",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10026,
       "korean_name": "염기성적색51호",
-      "english_name": "Basic Red 51"
+      "english_name": "Basic Red 51",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10027,
       "korean_name": "염기성등색31호",
-      "english_name": "Basic Orange 31"
+      "english_name": "Basic Orange 31",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10028,
       "korean_name": "염기성갈색16호",
-      "english_name": "Basic Brown 16,CI 12250"
+      "english_name": "Basic Brown 16,CI 12250",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10029,
       "korean_name": "염기성갈색17호",
-      "english_name": "Basic Brown 17,CI 12251"
+      "english_name": "Basic Brown 17,CI 12251",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10030,
       "korean_name": "염기성청색99호",
-      "english_name": "Basic Blue 99,CI 56059"
+      "english_name": "Basic Blue 99,CI 56059",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 10325,
       "korean_name": "염기성자색2호",
-      "english_name": "Basic Violet 2,CI 42520"
+      "english_name": "Basic Violet 2,CI 42520",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18491,
       "korean_name": "에치씨황색17호",
-      "english_name": "HC Yellow No. 17"
+      "english_name": "HC Yellow No. 17",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 18492,
       "korean_name": "분산청색377호",
-      "english_name": "Disperse Blue 377"
+      "english_name": "Disperse Blue 377",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18495,
       "korean_name": "에치씨황색7호",
-      "english_name": "HC Yellow No. 7"
+      "english_name": "HC Yellow No. 7",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 18496,
       "korean_name": "분산자색1호",
-      "english_name": "Disperse Violet 1,CI 61100"
+      "english_name": "Disperse Violet 1,CI 61100",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18497,
       "korean_name": "에치씨적색1호",
-      "english_name": "HC Red No. 1"
+      "english_name": "HC Red No. 1",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 18499,
       "korean_name": "분산흑색9호",
-      "english_name": "Disperse Black 9"
+      "english_name": "Disperse Black 9",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18500,
       "korean_name": "산성적색52호",
-      "english_name": "Acid Red 52,CI 45100"
+      "english_name": "Acid Red 52,CI 45100",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18501,
       "korean_name": "산성적색92호",
-      "english_name": "Acid Red 92"
+      "english_name": "Acid Red 92",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 18502,
       "korean_name": "에치씨청색17호",
-      "english_name": "HC Blue No. 17"
+      "english_name": "HC Blue No. 17",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 18503,
       "korean_name": "에치씨등색1호",
-      "english_name": "HC Orange No. 1"
+      "english_name": "HC Orange No. 1",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 19063,
       "korean_name": "에치씨적색10호",
-      "english_name": "HC Red No.10"
+      "english_name": "HC Red No.10",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 19064,
       "korean_name": "에치씨적색11호",
-      "english_name": "HC Red No.11"
+      "english_name": "HC Red No.11",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-17T03:38:49.446Z"
     },
     {
       "id": 19284,
       "korean_name": "피그먼트적색5호",
-      "english_name": "Pigment Red 5"
+      "english_name": "Pigment Red 5",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 19600,
       "korean_name": "피그먼트자색23호",
-      "english_name": "Pigment Violet 23"
+      "english_name": "Pigment Violet 23",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     },
     {
       "id": 19601,
       "korean_name": "피그먼트녹색7호",
-      "english_name": "Pigment Green 7"
+      "english_name": "Pigment Green 7",
+      "description": "합성 색소 테스트 설명",
+      "updated_at": "2026-08-15T12:29:40.49Z"
     }
   ]
 }
