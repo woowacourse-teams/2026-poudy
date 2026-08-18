@@ -57,8 +57,7 @@ echo "[pre-commit] 코드 규칙 검사 중..."
 if ! (cd server && ./gradlew checkstyleMain checkstyleTest --quiet) 2>&1; then
     echo
     echo "[pre-commit] 코드 규칙 위반이 있습니다. 위 내용을 고친 뒤 다시 커밋하세요."
-    echo "  상세 보고서 디렉터리: server/build/reports/checkstyle/"
-    echo "  확인 대상: offlineTools.html, main.html, test.html"
+    echo "  상세 보고서: server/build/reports/checkstyle/main.html"
     echo
     exit 1
 fi

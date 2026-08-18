@@ -1,4 +1,0 @@
-# 이 생성물과 fixture byte는 보고서·행동 hash의 입력이므로 OS와 무관하게 LF로 고정한다.
-/docs/product/catalog-sensory-readiness-report.json text eol=lf
-/docs/product/catalog-sensory-readiness-report.md text eol=lf
-/src/test/resources/catalog-sensory-readiness/** text eol=lf

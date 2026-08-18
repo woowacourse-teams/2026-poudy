@@ -55,8 +55,8 @@ class ProductRepositoryTest {
                 .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
-        assertThat(product.sensory().modelVersion().dataBuilderVersion())
-                .isEqualTo("product-sensory-builder-v0.1");
+        assertThat(product.sensory().modelVersion().ingredientProfileVersion())
+                .isEqualTo("ingredient-role-profile-v0.2");
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))

@@ -20,10 +20,6 @@ public final class HeuristicIngredientSensoryProfiles {
             3260L,
             4510L,
             7587L);
-    private static final Set<Long> DEFERRED_CONCENTRATION_IDS = Set.of(
-            2898L,
-            4840L);
-
     private HeuristicIngredientSensoryProfiles() {
     }
 
@@ -37,21 +33,6 @@ public final class HeuristicIngredientSensoryProfiles {
             return Optional.empty();
         }
         return Optional.of(new Signal(moisture, oil));
-    }
-
-    public static Optional<ReviewDisposition> reviewDisposition(Long ingredientId) {
-        if (findSignal(ingredientId).isPresent()) {
-            return Optional.of(ReviewDisposition.AXIS_SIGNAL);
-        }
-        if (ingredientId != null && DEFERRED_CONCENTRATION_IDS.contains(ingredientId)) {
-            return Optional.of(ReviewDisposition.DEFERRED_CONCENTRATION);
-        }
-        return Optional.empty();
-    }
-
-    public enum ReviewDisposition {
-        AXIS_SIGNAL,
-        DEFERRED_CONCENTRATION
     }
 
     public record Signal(boolean moisture, boolean oil) {

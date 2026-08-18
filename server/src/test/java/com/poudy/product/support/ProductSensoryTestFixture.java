@@ -12,9 +12,7 @@ public final class ProductSensoryTestFixture {
     private static final SensoryModelVersion TEST_VERSION = new SensoryModelVersion(
             "test-ingredient-profile",
             "test-category-prior",
-            "test-level-model",
-            "test-assessment-protocol",
-            "test-data-builder");
+            "test-level-model");
 
     private ProductSensoryTestFixture() {
     }

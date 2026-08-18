@@ -16,9 +16,7 @@ public class ProductSensoryTest {
     private static final SensoryModelVersion MODEL_VERSION = new SensoryModelVersion(
             "ingredient-1",
             "category-1",
-            "level-1",
-            "protocol-1",
-            "builder-1");
+            "level-1");
 
     @Test
     @DisplayName("수분감과 유분감을 서로 독립된 축으로 보관한다")

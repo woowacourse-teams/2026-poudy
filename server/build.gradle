@@ -28,19 +28,6 @@ ext {
     isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
 }
 
-sourceSets {
-    offlineTools {
-        java.srcDir 'src/offlineTools/java'
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += output + compileClasspath
-    }
-}
-
-configurations {
-    offlineToolsImplementation.extendsFrom implementation
-    offlineToolsRuntimeOnly.extendsFrom runtimeOnly
-}
-
 dependencies {
     implementation platform(SpringBootPlugin.BOM_COORDINATES)
 
@@ -52,7 +39,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-    testImplementation sourceSets.offlineTools.output
 }
 
 spotless {
@@ -78,139 +64,14 @@ checkstyle {
     maxWarnings = 0
 }
 
-// 서버 pre-commit 훅은 checkstyleMain 과 checkstyleTest 를 호출한다. 별도 source set도
-// 커밋 시점에 같은 피드백을 받게 해 CI 에서 뒤늦게 실패하지 않게 한다.
-tasks.named('checkstyleMain') {
-    dependsOn tasks.named('checkstyleOfflineTools')
-}
-
 tasks.named('jar') {
     enabled = false
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-    inputs.files(
-            layout.projectDirectory.file('docs/product/catalog-sensory-readiness-report.json'),
-            layout.projectDirectory.file('docs/product/catalog-sensory-readiness-report.md')
-    ).withPathSensitivity(PathSensitivity.RELATIVE)
     testLogging {
         events 'passed', 'skipped', 'failed'
-    }
-}
-
-def catalogDirectoryPath = providers.gradleProperty('catalogDir')
-def catalogReportDirectoryPath = providers.gradleProperty('catalogReportDir')
-def catalogModelSnapshotDirectoryPath = providers.gradleProperty('catalogModelSnapshotDir')
-def catalogModelBaselinePath = providers.gradleProperty('catalogModelBaseline')
-def catalogModelDiffDirectoryPath = providers.gradleProperty('catalogModelDiffDir')
-def catalogReportDirectory = providers.provider {
-    if (catalogReportDirectoryPath.isPresent()) {
-        return file(catalogReportDirectoryPath.get())
-    }
-    return layout.buildDirectory.dir('reports/catalog-sensory-readiness').get().asFile
-}
-def catalogJsonReport = catalogReportDirectory.map { directory ->
-    new File(directory, 'catalog-sensory-readiness-report.json')
-}
-def catalogMarkdownReport = catalogReportDirectory.map { directory ->
-    new File(directory, 'catalog-sensory-readiness-report.md')
-}
-def catalogModelSnapshotDirectory = providers.provider {
-    if (catalogModelSnapshotDirectoryPath.isPresent()) {
-        return file(catalogModelSnapshotDirectoryPath.get())
-    }
-    return layout.buildDirectory.dir('reports/catalog-sensory-model-snapshot').get().asFile
-}
-def catalogModelDiffDirectory = providers.provider {
-    if (catalogModelDiffDirectoryPath.isPresent()) {
-        return file(catalogModelDiffDirectoryPath.get())
-    }
-    return layout.buildDirectory.dir('reports/catalog-sensory-model-diff').get().asFile
-}
-
-tasks.register('catalogSensoryReadinessReport', JavaExec) {
-    group = 'verification'
-    description = 'Audits external catalog JSON without adding it to the runtime classpath'
-
-    classpath = sourceSets.offlineTools.runtimeClasspath
-    mainClass = 'com.poudy.offline.catalogsensory.CatalogSensoryReadinessMain'
-
-    inputs.files(catalogDirectoryPath.map { directory ->
-        ['products.json', 'ingredients.json', 'categories.json']
-                .collect { file("${directory}/${it}") }
-    }).withPathSensitivity(PathSensitivity.NAME_ONLY).optional()
-    outputs.files(catalogJsonReport, catalogMarkdownReport)
-    outputs.upToDateWhen { catalogDirectoryPath.isPresent() }
-
-    doFirst {
-        if (!catalogDirectoryPath.isPresent()) {
-            throw new GradleException(
-                    "catalogDir is required: -PcatalogDir=<directory containing catalog JSON>")
-        }
-
-        args file(catalogDirectoryPath.get()).absolutePath, catalogReportDirectory.get().absolutePath
-    }
-}
-
-tasks.register('catalogSensoryModelSnapshot', JavaExec) {
-    group = 'verification'
-    description = 'Writes an external-only product inference snapshot for later model comparison'
-
-    classpath = sourceSets.offlineTools.runtimeClasspath
-    mainClass = 'com.poudy.offline.catalogsensory.CatalogSensoryModelSnapshotMain'
-
-    inputs.files(catalogDirectoryPath.map { directory ->
-        ['products.json', 'ingredients.json', 'categories.json']
-                .collect { file("${directory}/${it}") }
-    }).withPathSensitivity(PathSensitivity.NAME_ONLY).optional()
-    outputs.file(catalogModelSnapshotDirectory.map { directory ->
-        new File(directory, 'catalog-sensory-model-snapshot.json')
-    })
-
-    doFirst {
-        if (!catalogDirectoryPath.isPresent()) {
-            throw new GradleException(
-                    'catalogDir is required: -PcatalogDir=<catalog> '
-                            + '[-PcatalogModelSnapshotDir=<external output>]')
-        }
-
-        args file(catalogDirectoryPath.get()).absolutePath,
-                catalogModelSnapshotDirectory.get().absolutePath
-    }
-}
-
-tasks.register('catalogSensoryModelDiff', JavaExec) {
-    group = 'verification'
-    description = 'Compares the current estimator with an external model snapshot on identical catalog bytes'
-
-    classpath = sourceSets.offlineTools.runtimeClasspath
-    mainClass = 'com.poudy.offline.catalogsensory.CatalogSensoryModelDiffMain'
-
-    inputs.files(catalogDirectoryPath.map { directory ->
-        ['products.json', 'ingredients.json', 'categories.json']
-                .collect { file("${directory}/${it}") }
-    }).withPathSensitivity(PathSensitivity.NAME_ONLY).optional()
-    inputs.file(catalogModelBaselinePath).withPathSensitivity(PathSensitivity.NONE).optional()
-    outputs.files(catalogModelDiffDirectory.map { directory ->
-        [
-            new File(directory, 'catalog-sensory-model-diff.json'),
-            new File(directory, 'catalog-sensory-model-diff.md')
-        ]
-    })
-
-    doFirst {
-        if (!catalogDirectoryPath.isPresent()
-                || !catalogModelBaselinePath.isPresent()) {
-            throw new GradleException(
-                    'catalogDir and catalogModelBaseline are required: '
-                            + '-PcatalogDir=<catalog> -PcatalogModelBaseline=<snapshot.json> '
-                            + '[-PcatalogModelDiffDir=<external output>]')
-        }
-
-        args file(catalogModelBaselinePath.get()).absolutePath,
-                file(catalogDirectoryPath.get()).absolutePath,
-                catalogModelDiffDirectory.get().absolutePath
     }
 }
 

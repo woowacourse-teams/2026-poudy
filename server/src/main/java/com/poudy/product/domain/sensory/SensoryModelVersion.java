@@ -3,16 +3,12 @@ package com.poudy.product.domain.sensory;
 public record SensoryModelVersion(
         String ingredientProfileVersion,
         String categoryPriorVersion,
-        String levelModelVersion,
-        String assessmentProtocolVersion,
-        String dataBuilderVersion) {
+        String levelModelVersion) {
 
     public SensoryModelVersion {
         ingredientProfileVersion = requireNonBlank(ingredientProfileVersion, "성분 감각 프로필");
         categoryPriorVersion = requireNonBlank(categoryPriorVersion, "카테고리 배합 사전분포");
         levelModelVersion = requireNonBlank(levelModelVersion, "감각 레벨 모델");
-        assessmentProtocolVersion = requireNonBlank(assessmentProtocolVersion, "관능평가 프로토콜");
-        dataBuilderVersion = requireNonBlank(dataBuilderVersion, "데이터 빌더");
     }
 
     private static String requireNonBlank(String version, String name) {

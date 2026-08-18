@@ -16,8 +16,6 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     public static final String INGREDIENT_PROFILE_VERSION = HeuristicIngredientSensoryProfiles.VERSION;
     public static final String CATEGORY_PRIOR_VERSION = "category-sensory-prior-v0.1";
     public static final String LEVEL_MODEL_VERSION = "ordinal-level-model-v0.1";
-    public static final String ASSESSMENT_PROTOCOL_VERSION = "sensory-assessment-protocol-0.1-draft";
-    public static final String DATA_BUILDER_VERSION = "product-sensory-builder-v0.1";
 
     private static final int MAX_LEVEL_CENTI = 300;
     private static final int MAX_MOISTURE_BOOST = 75;
@@ -41,9 +39,7 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     private static final SensoryModelVersion MODEL_VERSION = new SensoryModelVersion(
             INGREDIENT_PROFILE_VERSION,
             CATEGORY_PRIOR_VERSION,
-            LEVEL_MODEL_VERSION,
-            ASSESSMENT_PROTOCOL_VERSION,
-            DATA_BUILDER_VERSION);
+            LEVEL_MODEL_VERSION);
 
     @Override
     public ProductSensory estimate(Category category, Ingredients ingredients) {

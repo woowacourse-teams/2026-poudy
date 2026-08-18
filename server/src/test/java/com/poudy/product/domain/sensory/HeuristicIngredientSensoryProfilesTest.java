@@ -18,22 +18,11 @@ class HeuristicIngredientSensoryProfilesTest {
     }
 
     @Test
-    @DisplayName("빈출 glycol은 공개 함량 없이는 축 신호와 confidence 근거로 쓰지 않는다")
-    void defersFrequentGlycolsWithoutConcentrationEvidence() {
+    @DisplayName("프로필에 없는 성분은 축 신호로 사용하지 않는다")
+    void ignoresIngredientsWithoutProfileEvidence() {
         assertThat(HeuristicIngredientSensoryProfiles.findSignal(4840L)).isEmpty();
         assertThat(HeuristicIngredientSensoryProfiles.findSignal(2898L)).isEmpty();
-        assertThat(HeuristicIngredientSensoryProfiles.reviewDisposition(4840L))
-                .contains(HeuristicIngredientSensoryProfiles.ReviewDisposition.DEFERRED_CONCENTRATION);
-        assertThat(HeuristicIngredientSensoryProfiles.reviewDisposition(2898L))
-                .contains(HeuristicIngredientSensoryProfiles.ReviewDisposition.DEFERRED_CONCENTRATION);
-    }
-
-    @Test
-    @DisplayName("물과 active와 레올로지 성분은 근거 없이 유수분 신호로 만들지 않는다")
-    void leavesUnsupportedFrequentIngredientsUnclassified() {
-        assertThat(HeuristicIngredientSensoryProfiles.reviewDisposition(2681L)).isEmpty();
-        assertThat(HeuristicIngredientSensoryProfiles.reviewDisposition(1938L)).isEmpty();
-        assertThat(HeuristicIngredientSensoryProfiles.reviewDisposition(2859L)).isEmpty();
+        assertThat(HeuristicIngredientSensoryProfiles.findSignal(null)).isEmpty();
     }
 
     @Test

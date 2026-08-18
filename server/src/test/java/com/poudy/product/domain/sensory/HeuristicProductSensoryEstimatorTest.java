@@ -38,9 +38,7 @@ class HeuristicProductSensoryEstimatorTest {
                         new SensoryModelVersion(
                                 "ingredient-role-profile-v0.2",
                                 "category-sensory-prior-v0.1",
-                                "ordinal-level-model-v0.1",
-                                "sensory-assessment-protocol-0.1-draft",
-                                "product-sensory-builder-v0.1"));
+                                "ordinal-level-model-v0.1"));
     }
 
     @Test

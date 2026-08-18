@@ -18,15 +18,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class SensoryModelVersionTest {
 
     @Test
-    @DisplayName("서로 독립된 다섯 버전을 보관한다")
+    @DisplayName("v0 계산에 사용한 세 버전을 보관한다")
     public void keepsEveryVersion() {
         SensoryModelVersion version = versionWith(-1, null);
 
         assertThat(version.ingredientProfileVersion()).isEqualTo("ingredient-1");
         assertThat(version.categoryPriorVersion()).isEqualTo("category-2");
         assertThat(version.levelModelVersion()).isEqualTo("level-3");
-        assertThat(version.assessmentProtocolVersion()).isEqualTo("protocol-4");
-        assertThat(version.dataBuilderVersion()).isEqualTo("builder-5");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -42,9 +40,7 @@ public class SensoryModelVersionTest {
         List<String> names = List.of(
                 "성분 감각 프로필",
                 "카테고리 배합 사전분포",
-                "감각 레벨 모델",
-                "관능평가 프로토콜",
-                "데이터 빌더");
+                "감각 레벨 모델");
         List<String> invalidValues = Arrays.asList(null, "", " ");
 
         return IntStream.range(0, names.size())
@@ -55,7 +51,7 @@ public class SensoryModelVersionTest {
     }
 
     private static SensoryModelVersion versionWith(int invalidIndex, String invalidVersion) {
-        String[] versions = {"ingredient-1", "category-2", "level-3", "protocol-4", "builder-5"};
+        String[] versions = {"ingredient-1", "category-2", "level-3"};
         if (invalidIndex >= 0) {
             versions[invalidIndex] = invalidVersion;
         }
@@ -63,8 +59,6 @@ public class SensoryModelVersionTest {
         return new SensoryModelVersion(
                 versions[0],
                 versions[1],
-                versions[2],
-                versions[3],
-                versions[4]);
+                versions[2]);
     }
 }
