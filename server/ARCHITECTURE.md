@@ -4,162 +4,53 @@
 
 Poudy 백엔드는 Spring Web MVC 구조를 사용한다.
 
-`brand`, `category`, `ingredient`, `tag`, `product`, `excludecode`를 각각 기능 모듈로 나누고, 각 모듈 아래에 MVC 구조가 존재하도록 구성한다. Controller와 Service는 얇게 유지하고, 제품 탐색과 같은 문제 해결은 가능한 한 Domain 객체가 담당한다.
+`brand`, `category`, `ingredient`, `tag`, `product`, `excludecode`를 각각 기능 모듈로 나누고,
+필요한 역할을 모듈 아래의 `controller`, `service`, `domain`, `repository` 계층에 둔다.
+Controller와 Service는 얇게 유지하고, 제품 탐색과 같은 문제 해결은 가능한 한 Domain 객체가
+담당한다.
 
 MVP의 데이터는 JSON 파일에서 읽는다. Repository는 JSON 파일이라는 저장 방식이 Controller, Service, Domain에 노출되지 않도록 한다. 이후 데이터베이스를 사용하게 되더라도 Repository 부분을 교체할 수 있는 구조를 유지한다.
 
 ## Package structure
 
+실제 클래스와 패키지의 권위 원천은 `src/main/java/com/poudy`다. 현재 구조는 다음 명령으로
+확인한다.
+
+```bash
+rg --files src/main/java/com/poudy
+```
+
+이 문서는 클래스 목록을 복제하지 않고, 코드만 보고는 알기 어려운 안정적인 패키지 경계와
+의존 방향을 기록한다. 기본 형태는 다음과 같다.
+
 ```text
 com.poudy
-├── brand
+├── <feature>
 │   ├── controller
-│   │   ├── BrandController
 │   │   └── dto
-│   │       ├── BrandResponse
-│   │       ├── BrandDetailResponse
-│   │       ├── BrandListItemResponse
-│   │       └── BrandListResponse
 │   ├── service
-│   │   └── BrandService
 │   ├── domain
-│   │   ├── Brand
-│   │   └── Brands
+│   │   └── <subdomain>
 │   └── repository
-│       └── BrandRepository
-├── category
-│   ├── controller
-│   │   ├── CategoryController
-│   │   └── dto
-│   │       ├── CategoryResponse
-│   │       ├── CategoryChildResponse
-│   │       ├── CategoryListResponse
-│   │       └── CategorySummaryResponse
-│   ├── service
-│   │   └── CategoryService
-│   ├── domain
-│   │   ├── Category
-│   │   └── Categories
-│   └── repository
-│       └── CategoryRepository
-├── ingredient
-│   ├── controller
-│   │   ├── IngredientController
-│   │   └── dto
-│   │       ├── IngredientResponse
-│   │       ├── IngredientListResponse
-│   │       ├── IngredientDetailResponse
-│   │       └── IngredientSummaryResponse
-│   ├── service
-│   │   └── IngredientService
-│   ├── domain
-│   │   ├── Ingredient
-│   │   ├── Ingredients
-│   │   ├── IngredientTag
-│   │   └── IngredientTags
-│   └── repository
-│       └── IngredientRepository
-├── tag
-│   ├── controller
-│   │   ├── TagController
-│   │   └── dto
-│   │       ├── FormulationRoleResponse
-│   │       └── SkinEffectResponse
-│   ├── service
-│   │   └── TagService
-│   ├── domain
-│   │   ├── FormulationRole
-│   │   ├── SkinEffect
-│   │   └── TagCategory
-│   └── repository
-│       └── TagRepository
-├── product
-│   ├── controller
-│   │   ├── ProductController
-│   │   └── dto
-│   │       ├── ProductFilterRequest
-│   │       ├── ProductSortRequest
-│   │       ├── ProductPageResponse
-│   │       ├── ProductCountResponse
-│   │       ├── ProductSuggestionResponse
-│   │       ├── ProductSuggestionListResponse
-│   │       ├── ProductResponse
-│   │       ├── ProductDetailResponse
-│   │       ├── ProductIngredientResponse
-│   │       └── SkinEffectGroupResponse
-│   ├── service
-│   │   └── ProductService
-│   ├── domain
-│   │   ├── Product
-│   │   ├── ProductFactory
-│   │   ├── Products
-│   │   ├── ProductDetail
-│   │   ├── ProductFilter
-│   │   ├── ProductPage
-│   │   ├── ProductSort
-│   │   ├── ProductVariant
-│   │   ├── ProductVariants
-│   │   ├── SkinEffectGroup
-│   │   ├── IngredientFilter
-│   │   └── sensory
-│   │       ├── ProductSensory
-│   │       ├── ProductSensoryEstimator
-│   │       ├── HeuristicProductSensoryEstimator
-│   │       ├── MoistureLevel
-│   │       ├── OilLevel
-│   │       ├── SensoryConfidence
-│   │       └── SensoryModelVersion
-│   └── repository
-│       └── ProductRepository
-├── excludecode
-│   ├── controller
-│   │   ├── ExcludeCodeController
-│   │   └── dto
-│   │       ├── ExcludeCodeResponse
-│   │       └── ExcludeCodeListResponse
-│   ├── domain
-│   │   ├── ExcludeCode
-│   │   ├── ExcludeCodeMapping
-│   │   ├── ExcludeCodeIngredient
-│   │   ├── ExcludeCodeIngredients
-│   │   └── ResolvedExcludeCode
-│   └── repository
-│       └── ExcludeCodeRepository
 ├── storage
 │   ├── controller
-│   │   ├── StorageController
-│   │   └── StorageResponse
 │   └── service
-│       └── StorageService
 ├── common
 │   ├── domain
-│   │   └── SearchKeyword
 │   ├── dto
-│   │   ├── KeywordRequest
-│   │   ├── PaginationRequest
-│   │   └── PaginationResponse
 │   └── json
-│       └── JsonDataReader
 ├── config
-│   ├── OpenApiConfig
-│   ├── ExcludeCodeConfig
-│   ├── ErrorResponseConfig
-│   ├── ErrorResponseCodes
-│   └── ProblemDetailResponses
 └── exception
-    ├── ErrorCode
-    ├── GlobalExceptionHandler
-    ├── InvalidRequestException
-    ├── ResourceNotFoundException
-    └── InfrastructureException
 ```
 
 패키지 구성 규칙은 다음과 같다.
 
-- 기능 모듈은 `controller`, `service`, `domain`, `repository`로 나눈다.
+- 기능 모듈의 역할은 `controller`, `service`, `domain`, `repository`로 나누되 필요하지 않은
+  계층은 만들지 않는다.
 - `storage`처럼 자기 데이터를 갖지 않고 다른 기능의 데이터를 모아 주기만 하는 모듈은 `domain`과 `repository`를 두지 않는다.
 - 한 계층에서 DTO가 여러 개 사용되면 해당 계층 아래에 `dto` 디렉터리를 만들고 DTO들을 모은다.
-- 실제 구현 중 필요하지 않은 DTO나 Domain 클래스는 만들지 않는다. 위 구조의 이름은 API를 구현할 때 사용할 경계를 보여준다.
+- 실제 구현 중 필요하지 않은 DTO나 Domain 클래스는 만들지 않는다. 위 구조는 사용할 수 있는
+  경계를 보여줄 뿐, 모든 기능에 빈 계층을 미리 만들라는 뜻이 아니다.
 - 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 - 다른 기능의 응답에 중첩되는 DTO는 그 개념을 정의하는 기능이 소유하며 다른 기능이 재사용한다. 제품 응답은 `brand.controller.dto.BrandResponse`를 사용한다.
 - 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
@@ -438,51 +329,11 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
 
-## Data flow
+## API decisions
 
-### List and count
-
-```text
-Request DTO
-    ↓
-Service가 Repository에서 Products 조회
-    ↓
-Products가 동일한 조건으로 목록 또는 개수 계산
-    ↓
-Response DTO
-```
-
-제품 목록 조회와 제품 필터 결과 개수 조회가 서로 다른 필터 구현을 갖지 않도록 한다.
-
-### Detail
-
-```text
-Path Parameter
-    ↓
-Service가 Repository 조회 메서드 호출
-    ↓
-Product, Brand 또는 Ingredient 반환
-    ↓
-Detail Response DTO
-```
-
-## External interfaces
-
-Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 같다.
-
-| Module | Method | Endpoint | Description |
-| --- | --- | --- | --- |
-| product | GET | `/api/products` | 제품 조회 (검색 또는 필터) |
-| product | GET | `/api/products/count` | 제품 조회 결과 개수 조회 |
-| product | GET | `/api/products/suggestions` | 제품 검색 제안 조회 |
-| product | GET | `/api/products/{productId}` | 제품 상세 조회 |
-| storage | GET | `/api/storage` | 보관함 제품 조회 |
-| excludecode | GET | `/api/exclude-codes` | 제외 성분군 조회 (빠른 필터) |
-| category | GET | `/api/categories` | 카테고리 조회 |
-| brand | GET | `/api/brands` | 브랜드 조회 |
-| brand | GET | `/api/brands/{brandId}` | 브랜드 상세 조회 (제품 카테고리 포함) |
-| ingredient | GET | `/api/ingredients` | 성분 검색 |
-| ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
+현재 엔드포인트와 스키마의 권위 원천은 Controller, DTO와 OpenAPI 설정 코드다. 생성된
+OpenAPI 문서는 확인·소비용 파생물이므로 직접 수정하지 않는다. 이 절에는 코드만으로
+복구하기 어려운 경로와 표현의 결정 이유만 기록한다.
 
 제품 하나만 조회하는 엔드포인트는 상세 조회뿐이다. 목록 항목과 같은 `ProductResponse`가 필요한 곳은 필터 조회, 검색, 보관함이며 셋 다 여러 건을 한 번에 반환한다.
 
@@ -501,41 +352,3 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 `/api/products/count`와 `/api/products/suggestions`는 `/api/products/{productId}`와 같은 자리를 쓴다. 고정 문자열이 경로 변수보다 먼저 매칭되고 두 이름 모두 제품 ID로 올 수 없으므로 문제가 없다. 제품 아래에 고정 경로를 더 만들 때는 그 이름이 제품 ID로 올 수 없는지 확인한다.
 
 제품 검색 제안은 `/api/products`와 경로를 나눈다. 같은 검색어를 받지만 돌려주는 표현이 다르기 때문이다. 목록은 페이지와 브랜드를 포함한 `ProductResponse`를 주고, 제안은 입력 중 띄울 후보라 ID와 이름, 이미지, 브랜드 이름만 준다. 한 경로에서 표현을 파라미터로 가르면 응답 타입이 요청에 따라 달라져 생성된 타입이 둘을 구분하지 못한다.
-
-### API contract generation
-
-Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `./gradlew generateApiArtifacts`가 다음 생성물을 갱신한다.
-
-| Output | Role |
-| --- | --- |
-| `server/openapi.json` | OpenAPI 문서 |
-| `common/api.zod.ts` | 프론트엔드용 Zod 스키마와 타입 |
-| `common/api.zod.types.d.ts` | 생성 타입 선언 |
-
-생성물은 직접 수정하지 않는다. 계약이 바뀌면 생성 작업을 실행해 함께 커밋한다.
-
-## Architecture rules
-
-1. `brand`, `category`, `ingredient`, `tag`, `product`, `excludecode` 각각에 MVC 구조를 둔다. `storage`는 자기 데이터가 없어 Domain과 Repository를 두지 않는다.
-2. Controller와 Service는 얇게 유지한다.
-3. 문제 해결은 가능한 한 Domain 객체가 담당한다.
-4. `Products`는 `List<Product>`를 갖는 일급 컬렉션이다.
-5. `Product`는 Brand, Category, Ingredient의 ID만 갖지 않고 객체를 직접 갖는다.
-6. 제품 조회와 count 조회는 같은 필터 규칙을 사용한다. 둘 다 검색어와 필터를 함께 받는다.
-7. Repository는 JSON을 읽어 Domain 객체를 생성한다.
-8. 저장 방식은 Repository 밖으로 노출하지 않는다.
-9. DTO가 여러 개 존재하는 계층에만 `dto` 디렉터리를 둔다.
-10. `Ingredient`는 여러 `IngredientTag`를 가지며, 여러 태그는 `IngredientTags`로 관리한다. 태그는 배합 목적과 피부 작용 두 축으로 나누어 싣는다.
-11. 외부 API의 기본 경로는 `/api`다.
-12. 제품 조회와 보관함은 같은 `ProductResponse`를 쓴다. 제품 상세와 검색 제안만 별도 엔드포인트와 응답 DTO를 사용한다.
-13. 검색과 필터는 경로도 Controller 메서드도 나누지 않는다. 검색어는 다른 필터와 함께 보낼 수 있고 AND로 결합한다.
-14. 요청 규칙은 `@ModelAttribute` 바인딩에서 끝낸다. Controller는 검사 메서드를 호출하지 않고, 횡단 필터나 인터셉터도 두지 않는다. 값 하나로 끝나는 규칙은 Bean Validation 애노테이션에, 여러 값을 함께 봐야 하는 규칙은 클래스 레벨 커스텀 제약에 둔다. `ConflictingIngredientFilter`가 후자이며 `ExcludeCodeIngredients`를 주입받아 판정을 도메인에 넘긴다.
-15. 바인딩 검증 실패는 모두 400이라 상태만으로 구분되지 않는다. 전용 코드가 필요한 커스텀 제약은 `message`에 `ErrorCode` 이름을 적고, `GlobalExceptionHandler`가 위반 문구에서 그 이름으로 코드를 되찾는다. 이름이 없으면 `INVALID_QUERY_PARAMETER`다. 이 방식이라야 `exception` 패키지가 기능 패키지를 참조하지 않는다.
-16. 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
-17. 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에, 여러 기능이 공유하는 도메인 값은 `common.domain`에 둔다.
-18. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
-19. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
-20. 접근 제어자를 생략하지 않는다. 기본 접근에 기대는 대신 `public` 또는 `private`을 적는다.
-21. 제품 감각은 원천 JSON의 완성 레벨이 아니라 기동 시 `ProductFactory`가 계산한다. 런타임
-    `Product`는 버전과 confidence를 포함한 `ProductSensory`를 소유하고 API는 기존 정수 레벨을
-    유지한다.
