@@ -61,6 +61,7 @@ jobs:
               ['Format', results.format],
               ['Lint', results.lint],
               ['Type check', results.typecheck],
+              ['Test', results.test],
               ['Build', results.build],
               ['Lighthouse', results.lighthouse],
             ];

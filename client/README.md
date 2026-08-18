@@ -27,6 +27,19 @@ Node.js 22 이상, pnpm 11.21.0.
 pnpm install
 ```
 
+## 환경 변수
+
+`.env.example`을 복사해 `.env.local`을 만듭니다. 이 파일이 없으면 API 목 서버가 켜지지 않아 화면에 데이터가 나오지 않습니다.
+
+```bash
+cp .env.example .env.local
+```
+
+| 변수                       | 설명                                                                  |
+| -------------------------- | --------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_MOCKING`  | `enabled`일 때만 MSW 목 서버를 켭니다. 실제 API에 붙일 때는 비웁니다. |
+| `NEXT_PUBLIC_API_BASE_URL` | API 서버 주소. 목을 쓰는 동안에는 비워 둡니다.                        |
+
 ## 실행
 
 ```bash
@@ -34,6 +47,18 @@ pnpm dev
 ```
 
 개발 서버가 실행되면 [http://localhost:3000](http://localhost:3000)에서 확인합니다.
+
+## API 목 서버
+
+실제 API 서버 없이 화면을 개발할 수 있도록 [MSW](https://mswjs.io)로 응답을 가로챕니다. 브라우저 워커와 Node 서버를 함께 띄우므로 서버 렌더링 중의 요청도 목으로 처리합니다.
+
+핸들러와 데이터는 `mocks/`에 있고, 데이터 값은 `design/v1.pen`의 화면에 적힌 것을 옮겼습니다.
+
+`public/mockServiceWorker.js`는 MSW가 만드는 파일이라 직접 고치지 않습니다. MSW 버전을 올린 뒤에는 워커를 다시 만듭니다.
+
+```bash
+pnpm run msw:init
+```
 
 ## 검사
 
@@ -74,7 +99,13 @@ pnpm run check
 
 ## API 타입
 
-`common/api.d.ts`는 Server의 OpenAPI 문서에서 생성합니다. Client에서 API 타입이 필요할 때 생성된 타입을 그대로 import합니다.
+`common/api.zod.ts`는 Server의 OpenAPI 문서에서 생성합니다. Client에서 API 타입이 필요할 때 생성된 타입을 그대로 import합니다.
+
+```ts
+import type { ProductResponse } from "@poudy/api/api.zod";
+```
+
+`@poudy/api/*`는 저장소 루트의 `common/`을 가리키는 경로 별칭입니다.
 
 API 타입 생성 방법은 [Server README](../server/README.md#api-타입-생성)를 참고하세요.
 
@@ -83,6 +114,10 @@ API 타입 생성 방법은 [Server README](../server/README.md#api-타입-생�
 | 경로     | 내용                         |
 | -------- | ---------------------------- |
 | `app`    | App Router 페이지와 레이아웃 |
+| `lib`    | API 요청과 도메인 로직       |
+| `mocks`  | MSW 핸들러와 목 데이터       |
+| `design` | 디자인 파일 (추적하지 않음)  |
+| `docs`   | 실행 계획 문서               |
 | `public` | 정적 파일                    |
 
 ## 배포용 실행

@@ -10,12 +10,16 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm run lint && pnpm run format:check && pnpm exec next typegen && pnpm run typecheck && pnpm run build"
+    "msw:init": "msw init public --save",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm run lint && pnpm run format:check && pnpm exec next typegen && pnpm run typecheck && pnpm run test && pnpm run build"
   },
   "dependencies": {
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9",
@@ -30,10 +34,13 @@
     "eslint-plugin-functional": "^10",
     "eslint-plugin-import": "^2",
     "globals": "^16",
+    "jsdom": "^30.0.1",
     "lint-staged": "^17.3.0",
+    "msw": "^2.15.0",
     "prettier": "^3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@11.21.0",
   "lint-staged": {
@@ -43,6 +50,11 @@
     ],
     "*.{css,json,md}": [
       "prettier --write"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
     ]
   }
 }
