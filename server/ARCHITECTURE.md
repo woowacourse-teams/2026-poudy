@@ -481,7 +481,7 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 | category | GET | `/api/categories` | 카테고리 조회 |
 | brand | GET | `/api/brands` | 브랜드 조회 |
 | brand | GET | `/api/brands/{brandId}` | 브랜드 상세 조회 (제품 카테고리 포함) |
-| ingredient | GET | `/api/ingredients` | 성분 검색 |
+| ingredient | GET | `/api/ingredients` | 검색어 또는 성분 ID 목록으로 성분 조회 |
 | ingredient | GET | `/api/ingredients/{ingredientId}` | 성분 상세 조회 |
 
 제품 하나만 조회하는 엔드포인트는 상세 조회뿐이다. 목록 항목과 같은 `ProductResponse`가 필요한 곳은 필터 조회, 검색, 보관함이며 셋 다 여러 건을 한 번에 반환한다.
@@ -497,6 +497,11 @@ Controller와 생성된 OpenAPI 문서가 제공하는 조회 API는 다음과 �
 - `/api/products`는 검색어와 필터 조건으로 고른 `ProductResponse` 목록을 페이지 단위로 반환하고, 조건에 해당하는 제품 전체의 브랜드를 함께 싣는다.
 - `/api/storage`는 콤마로 구분해 받은 `productIds`에 해당하는 `ProductResponse` 목록을 페이지 없이 전부 반환한다.
 - `/api/products/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
+
+`/api/ingredients`는 `keyword` 또는 콤마로 구분한 `ingredientIds` 중 하나를 받는다. 둘을
+함께 보내거나 둘 다 보내지 않으면 잘못된 요청으로 거절한다. `ingredientIds`로 조회하면
+`IngredientResponse` 목록을 요청한 ID 순서대로 반환하고, 서버 데이터에 없는 ID는 결과에서
+제외한다.
 
 `/api/products/count`와 `/api/products/suggestions`는 `/api/products/{productId}`와 같은 자리를 쓴다. 고정 문자열이 경로 변수보다 먼저 매칭되고 두 이름 모두 제품 ID로 올 수 없으므로 문제가 없다. 제품 아래에 고정 경로를 더 만들 때는 그 이름이 제품 ID로 올 수 없는지 확인한다.
 
