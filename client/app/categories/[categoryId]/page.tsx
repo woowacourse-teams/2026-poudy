@@ -31,7 +31,9 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
   const name = child?.name ?? parent?.name;
   if (!name) notFound();
 
-  const trackItems = owner?.children ?? parent?.children ?? [];
+  // 소분류를 보는 중에도 대분류 전체로 돌아올 수 있도록 맨 앞에 `전체` 를 둔다.
+  const top = owner ?? parent;
+  const trackItems = top ? [{ id: top.id, name: "전체" }, ...top.children] : [];
   const categoryIds = child ? [child.id] : (parent?.children ?? []).map((item) => item.id);
 
   return (
