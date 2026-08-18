@@ -13,6 +13,7 @@ import { fetchProducts } from "@/lib/api/products";
 import type { Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
 type ProductListProps = {
@@ -135,6 +136,8 @@ export function ProductList({
 
 /** 디자인의 `탐색 조건` 요약. 지금 걸린 조건을 읽기 전용으로 보여 준다. */
 function FilterSummary({ filter }: { readonly filter: Filter }) {
+  // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다.
+  const names = useIngredientNames([...filter.includeIngredientIds, ...filter.excludeIngredientIds]);
   const count = countConditions(filter);
   if (count === 0) return null;
 
@@ -144,7 +147,7 @@ function FilterSummary({ filter }: { readonly filter: Filter }) {
         <h2 className="text-[13px] font-bold text-[#212124]">탐색 조건</h2>
         <span className="rounded-full bg-[#F2F3F6] px-[7px] text-[11px] font-bold text-[#555D68]">{count}</span>
       </div>
-      <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter)}</p>
+      <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter, names)}</p>
     </section>
   );
 }
