@@ -49,7 +49,7 @@ describe("저장함", () => {
     render(<SavedScreen />);
 
     const link = await screen.findByRole("link", { name: /저장할 제품 더 찾기/ });
-    expect(link).toHaveAttribute("href", "/search");
+    expect(link).toHaveAttribute("href", "/search/products");
   });
 
   it("저장한 제품이 있으면 목록을 채운다", async () => {

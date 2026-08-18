@@ -14,7 +14,7 @@ const TABS = [
     match: (path: string) => path.startsWith("/categor") || path.startsWith("/brands"),
   },
   {
-    href: "/search",
+    href: "/search/products",
     label: "탐색",
     icon: "search",
     match: (path: string) => path.startsWith("/search") || path.startsWith("/products"),

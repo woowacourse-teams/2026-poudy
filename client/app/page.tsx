@@ -14,14 +14,14 @@ import { EXCLUDE_CODES } from "@/lib/domain/filter";
 
 const ACTIONS = [
   {
-    href: "/search?mode=product",
+    href: "/search/products",
     icon: "search",
     label: "제품명·브랜드로 찾기",
     detail: "이름을 알 때 가장 빠르게",
     tone: "dark",
   },
   {
-    href: "/search?mode=ingredient",
+    href: "/search/ingredients",
     icon: "sliders",
     label: "성분·조건으로 찾기",
     detail: "원하는 조건을 골라 탐색",

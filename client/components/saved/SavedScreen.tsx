@@ -155,7 +155,7 @@ export function SavedScreen() {
         <p className="py-10 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
       ) : null}
 
-      <Link href="/search" className="mt-2 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
+      <Link href="/search/products" className="mt-2 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background">
           <Icon name="plus" size={20} className="text-text-secondary" />
         </span>
