@@ -10,7 +10,7 @@ import { SortHeader } from "@/components/ui/SortHeader";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
-import type { Filter } from "@/lib/domain/filter";
+import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
@@ -85,7 +85,8 @@ export function ProductList({
 
   return (
     <>
-      <FilterSummary filter={filter} />
+      {/* 화면이 고정한 조건은 제목과 탭이 이미 알려 주므로 요약에서 뺀다(디자인 S09·S11). */}
+      <FilterSummary filter={{ ...filter, ...blankFilter(fixedFilter) }} />
 
       <div className="bg-white px-4">
         <FilterChipBar
@@ -133,6 +134,13 @@ export function ProductList({
     </>
   );
 }
+
+/**
+ * 화면이 고정한 조건만 빈 값으로 되돌린다.
+ * 사용자가 고른 조건이 아니라서 `탐색 조건` 요약에 세지 않는다.
+ */
+const blankFilter = (fixed: Partial<Filter> = {}): Partial<Filter> =>
+  Object.fromEntries(Object.keys(fixed).map((key) => [key, EMPTY_FILTER[key as keyof Filter]]));
 
 /** 디자인의 `탐색 조건` 요약. 지금 걸린 조건을 읽기 전용으로 보여 준다. */
 function FilterSummary({ filter }: { readonly filter: Filter }) {
