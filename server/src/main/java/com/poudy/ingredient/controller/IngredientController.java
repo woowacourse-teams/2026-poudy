@@ -27,7 +27,7 @@ public class IngredientController {
     }
 
     @Operation(summary = "성분 조회", description = "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. "
-            + "성분 ID 로 조회하면 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.")
+            + "두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 성분 ID 로만 조회하면 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.")
     @GetMapping
     public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute IngredientQueryRequest query) {
         return ResponseEntity.ok(IngredientListResponse.from(ingredientService.find(query)));

@@ -39,7 +39,7 @@ public class IngredientService {
 
     public List<Ingredient> find(IngredientQueryRequest query) {
         if (query.queriesByIds()) {
-            return ingredientRepository.findByIds(query.ingredientIds());
+            return ingredientRepository.findByIds(query.ingredientIds(), query.keyword());
         }
         return ingredientRepository.search(query.keyword());
     }

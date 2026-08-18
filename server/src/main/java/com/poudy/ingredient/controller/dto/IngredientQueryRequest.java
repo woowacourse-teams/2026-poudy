@@ -23,7 +23,7 @@ public record IngredientQueryRequest(
     @AssertTrue(message = "INVALID_QUERY_PARAMETER")
     @Schema(hidden = true)
     public boolean isQueryConditionValid() {
-        return keyword != null ^ !ingredientIds.isEmpty();
+        return keyword != null || !ingredientIds.isEmpty();
     }
 
     public boolean queriesByIds() {
