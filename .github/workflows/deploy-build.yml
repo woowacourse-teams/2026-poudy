@@ -56,6 +56,14 @@ jobs:
       - name: Package artifacts
         env:
           GITHUB_SHA: ${{ github.sha }}
+          # NEXT_PUBLIC_* 는 빌드 시점에 번들에 새겨진다. 여기서 넘기지 않으면
+          # 배포 뒤에 런타임 환경 변수를 넣어도 반영되지 않는다.
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_ENVIRONMENT: production
+          # 목 서버는 운영에서 쓰지 않는다. 빈 값이어야 꺼진다.
+          NEXT_PUBLIC_API_MOCKING: ""
+          # ALB 가 /api/* 를 백엔드로 보내므로 같은 출처의 상대 경로로 요청한다.
+          NEXT_PUBLIC_API_BASE_URL: ""
         run: ./deploy/scripts/package-artifacts.sh "$RUNNER_TEMP/poudy-artifacts"
 
       - name: Upload deployment artifacts
