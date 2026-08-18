@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
+import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { fetchIngredients } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
@@ -127,8 +128,8 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
             <ul className="grid grid-cols-2 gap-2">
               {filter.includeIngredientIds.map((id) => (
                 <li key={`in-${id}`}>
-                  <SelectedChip
-                    kind="포함"
+                  <SelectedIngredientChip
+                    kind="include"
                     name={names.get(id) ?? `성분 ${id}`}
                     onRemove={() => remove("includeIngredientIds", id)}
                   />
@@ -136,8 +137,8 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
               ))}
               {filter.excludeIngredientIds.map((id) => (
                 <li key={`ex-${id}`}>
-                  <SelectedChip
-                    kind="제외"
+                  <SelectedIngredientChip
+                    kind="exclude"
                     name={names.get(id) ?? `성분 ${id}`}
                     onRemove={() => remove("excludeIngredientIds", id)}
                   />
@@ -200,24 +201,3 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
 }
 
 /** 디자인의 포함·제외 버튼. 고른 쪽만 채워진다. */
-
-/** 디자인의 포함·제외 pill. 40 높이에 둥근 모서리를 쓴다. */
-function SelectedChip({
-  kind,
-  name,
-  onRemove,
-}: {
-  readonly kind: "포함" | "제외";
-  readonly name: string;
-  readonly onRemove: () => void;
-}) {
-  return (
-    <span className="flex h-10 items-center gap-[7px] rounded-[20px] border border-border bg-white px-3">
-      <span className="text-[10px] font-bold text-[#868B94]">{kind}</span>
-      <span className="flex-1 truncate text-[12px] font-semibold text-[#212124]">{name}</span>
-      <button type="button" onClick={onRemove} aria-label={`${name} ${kind} 조건 삭제`} className="shrink-0">
-        <Icon name="x" size={16} className="text-[#868B94]" />
-      </button>
-    </span>
-  );
-}

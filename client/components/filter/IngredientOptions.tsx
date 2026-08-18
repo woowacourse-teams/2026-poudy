@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
+import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { fetchIngredients } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
@@ -108,8 +109,8 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeIngredientIds.map((id) => (
                   <li key={`in-${id}`}>
-                    <SelectedChip
-                      kind="포함"
+                    <SelectedIngredientChip
+                      kind="include"
                       name={names.get(id) ?? `성분 ${id}`}
                       onRemove={() => removeIngredient("includeIngredientIds", id)}
                     />
@@ -117,8 +118,8 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                 ))}
                 {draft.excludeIngredientIds.map((id) => (
                   <li key={`ex-${id}`}>
-                    <SelectedChip
-                      kind="제외"
+                    <SelectedIngredientChip
+                      kind="exclude"
                       name={names.get(id) ?? `성분 ${id}`}
                       onRemove={() => removeIngredient("excludeIngredientIds", id)}
                     />
@@ -170,25 +171,5 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         </>
       )}
     </>
-  );
-}
-
-function SelectedChip({
-  kind,
-  name,
-  onRemove,
-}: {
-  readonly kind: "포함" | "제외";
-  readonly name: string;
-  readonly onRemove: () => void;
-}) {
-  return (
-    <span className="flex h-10 items-center gap-[7px] rounded-[20px] border border-border bg-white px-3">
-      <span className="text-[10px] font-bold text-[#868B94]">{kind}</span>
-      <span className="flex-1 truncate text-[12px] font-semibold text-[#212124]">{name}</span>
-      <button type="button" onClick={onRemove} aria-label={`${name} ${kind} 조건 삭제`} className="shrink-0">
-        <Icon name="x" size={16} className="text-[#868B94]" />
-      </button>
-    </span>
   );
 }
