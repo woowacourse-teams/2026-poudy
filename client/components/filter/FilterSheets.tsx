@@ -1,11 +1,6 @@
 "use client";
 
-import type {
-  BrandListItemResponse,
-  CategoryResponse,
-  ExcludeCodeResponse,
-  IngredientResponse,
-} from "@poudy/api/api.zod";
+import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
@@ -15,6 +10,7 @@ import { LevelRange } from "./LevelRangeOptions";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { Filter } from "@/lib/domain/filter";
+import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductCount } from "@/lib/hooks/useProductCount";
 
 export type SheetKind = "ingredient" | "category" | "brand" | "level";
@@ -62,15 +58,10 @@ function SheetBody({
   excludeCodes,
 }: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
   const [draft, setDraft] = useState<Filter>(filter);
-  const [names, setNames] = useState<ReadonlyMap<number, string>>(new Map());
   const count = useProductCount(draft);
 
-  const learnNames = (ingredients: readonly IngredientResponse[]) =>
-    setNames((previous) => {
-      const next = new Map(previous);
-      for (const item of ingredients) next.set(item.id, item.koreanName);
-      return next;
-    });
+  // 담긴 성분의 이름은 서버에서 가져온다.
+  const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
 
   // 유수분만 디자인 문구가 다르다.
   const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
@@ -137,13 +128,7 @@ function SheetBody({
       ) : null}
 
       {kind === "ingredient" ? (
-        <IngredientOptions
-          draft={draft}
-          setDraft={setDraft}
-          excludeCodes={excludeCodes}
-          names={names}
-          onLearnNames={learnNames}
-        />
+        <IngredientOptions draft={draft} setDraft={setDraft} excludeCodes={excludeCodes} names={names} />
       ) : null}
     </BottomSheet>
   );

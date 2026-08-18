@@ -11,7 +11,7 @@ import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
-  const response = await fetchIngredients(keyword);
+  const response = await fetchIngredients({ keyword });
   return response.items;
 };
 
@@ -20,11 +20,10 @@ type IngredientOptionsProps = {
   readonly setDraft: (filter: Filter) => void;
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   readonly names: ReadonlyMap<number, string>;
-  readonly onLearnNames: (ingredients: readonly IngredientResponse[]) => void;
 };
 
 /** 디자인의 성분 시트. 검색하면 자동완성이 선택 목록 자리를 대신한다. */
-export function IngredientOptions({ draft, setDraft, excludeCodes, names, onLearnNames }: IngredientOptionsProps) {
+export function IngredientOptions({ draft, setDraft, excludeCodes, names }: IngredientOptionsProps) {
   const [keyword, setKeyword] = useState("");
   const { items } = useSuggestions(keyword, fetcher);
   const typing = keyword.trim().length > 0;
@@ -33,7 +32,6 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names, onLear
 
   /** 포함과 제외는 한쪽만 걸린다. */
   const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
-    onLearnNames([item]);
     const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
 
     setDraft({

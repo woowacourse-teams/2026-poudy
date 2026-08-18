@@ -12,7 +12,7 @@ import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
-  const response = await fetchIngredients(keyword);
+  const response = await fetchIngredients({ keyword });
   return response.items;
 };
 
@@ -22,17 +22,10 @@ type IngredientSearchPanelProps = {
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 화면에 이름을 보여 주기 위해 검색으로 만난 성분을 기억한다. */
   readonly names: ReadonlyMap<number, string>;
-  readonly onLearnNames: (ingredients: readonly IngredientResponse[]) => void;
 };
 
 /** S03 성분 필터링 탭. 문구와 생김새는 design/v1.pen 을 따른다. */
-export function IngredientSearchPanel({
-  filter,
-  onChange,
-  excludeCodes,
-  names,
-  onLearnNames,
-}: IngredientSearchPanelProps) {
+export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }: IngredientSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const { items } = useSuggestions(keyword, fetcher);
   const typing = keyword.trim().length > 0;
@@ -49,7 +42,6 @@ export function IngredientSearchPanel({
    * 이미 눌린 것을 다시 누르면 조건에서 뺀다.
    */
   const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
-    onLearnNames([item]);
     const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
 
     onChange({

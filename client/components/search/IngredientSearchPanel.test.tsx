@@ -27,7 +27,6 @@ const setup = (filter: Filter = EMPTY_FILTER) => {
       onChange={onChange}
       excludeCodes={excludeCodes}
       names={new Map([[6, "판테놀"]])}
-      onLearnNames={() => {}}
     />,
   );
   return { onChange };
