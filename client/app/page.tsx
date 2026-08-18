@@ -8,7 +8,8 @@ import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODES } from "@/lib/domain/filter";
 
 /*
- * S01 홈. 문구와 구조는 design/v1.pen 을 그대로 따른다.
+ * S01 홈. 구조는 design/v1.pen 을 그대로 따른다.
+ * 서비스 안내 문구만 말투를 다듬어 디자인과 다르다.
  * 최근 검색과 저장 제품만 브라우저에서 채운다.
  */
 
@@ -31,22 +32,22 @@ const ACTIONS = [
 
 const TRUST = [
   {
-    title: "출처 있는 설명",
-    detail: "근거를 함께 표기",
+    title: "출처가 있어요",
+    detail: "근거를 함께 적어요",
     icon: "badge-check",
     bg: "bg-brand-soft",
     tint: "text-brand",
   },
   {
-    title: "과장 없는 설명",
-    detail: "효과 단정 없음",
+    title: "과장하지 않아요",
+    detail: "좋다고 말하지 않아요",
     icon: "info",
     bg: "bg-info-soft",
     tint: "text-info",
   },
   {
-    title: "직접 고른 조건",
-    detail: "일치 제품만 노출",
+    title: "조건은 직접 골라요",
+    detail: "딱 맞는 것만 골라요",
     icon: "sliders",
     bg: "bg-success-soft",
     tint: "text-success",
