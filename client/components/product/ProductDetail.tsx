@@ -241,7 +241,7 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
   return (
     <section className="flex gap-3 rounded-xl bg-[#F4F5F6] p-4">
       <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
-        <Icon name="check" size={16} className="text-[#2C9A72]" />
+        <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
       </span>
 
       <span className="flex flex-1 flex-col gap-2.5">

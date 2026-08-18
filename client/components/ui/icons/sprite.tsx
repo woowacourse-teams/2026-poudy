@@ -15,6 +15,7 @@ export const ICON_IDS = [
   "chevron-left",
   "check",
   "badge-check",
+  "sparkles",
   "info",
   "x",
   "plus",
@@ -82,6 +83,14 @@ export function IconSprite() {
         <symbol id="icon-badge-check" viewBox="0 0 24 24">
           <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
           <path d="m9 12 2 2 4-4" />
+        </symbol>
+
+        {/* Lucide · sparkles */}
+        <symbol id="icon-sparkles" viewBox="0 0 24 24">
+          <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+          <path d="M20 2v4" />
+          <path d="M22 4h-4" />
+          <circle cx="4" cy="20" r="2" />
         </symbol>
 
         {/* Lucide · info */}
