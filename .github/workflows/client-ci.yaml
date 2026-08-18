@@ -74,28 +74,40 @@ jobs:
         continue-on-error: true
         uses: browser-actions/setup-chrome@v2
 
+      # 설정은 client/lighthouserc.json 에 있다.
+      # 서버 실행과 대기, 여러 번 재기, 중간값 고르기를 lhci 가 맡는다.
       - name: Lighthouse
         id: lighthouse
         if: steps.build.outcome == 'success' && steps.chrome.outcome == 'success'
         continue-on-error: true
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+
+      # 뒤 단계가 읽는 자리로 중간값 보고서를 옮긴다.
+      - name: Collect Lighthouse median report
+        id: median
+        if: steps.lighthouse.outcome == 'success'
+        continue-on-error: true
         run: |
-          pnpm start --hostname 127.0.0.1 --port 3000 >/tmp/client-preview.log 2>&1 &
-          preview_pid=$!
-          trap 'kill "$preview_pid" || true' EXIT
+          node <<'NODE'
+          const fs = require('node:fs');
 
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:3000 >/dev/null; then
-              break
-            fi
-            sleep 2
-          done
+          const manifest = JSON.parse(
+            fs.readFileSync('./.lighthouseci-report/manifest.json', 'utf8'),
+          );
 
-          curl -fsS http://127.0.0.1:3000 >/dev/null
-          pnpm dlx lighthouse http://127.0.0.1:3000 \
-            --output=json \
-            --output-path=./lighthouse-report.json \
-            --quiet \
-            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+          // lhci 가 여러 실행 중 대표로 고른 것이 중간값 실행이다.
+          const median = manifest.find((entry) => entry.isRepresentativeRun);
+          if (!median) {
+            throw new Error('중간값으로 뽑힌 Lighthouse 실행이 없습니다.');
+          }
+
+          const scores = manifest.map((entry) => Math.round(entry.summary.performance * 100));
+          console.log(
+            `Performance ${scores.join(' / ')} → 중간값 ${Math.round(median.summary.performance * 100)}`,
+          );
+
+          fs.copyFileSync(median.jsonPath, './lighthouse-report.json');
+          NODE
 
       - name: Save check results
         if: always()
@@ -146,8 +158,9 @@ jobs:
           path: |
             client/client-ci-results.json
             client/lighthouse-report.json
+            client/.lighthouseci-report/
           if-no-files-found: error
 
       - name: Fail if any check failed
-        if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.chrome.outcome == 'failure' || steps.lighthouse.outcome == 'failure'
+        if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.chrome.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
         run: exit 1
