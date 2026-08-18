@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# server 와 client 의 pre-push 검사를 각각 실행한다.
+# server, client, mobile 의 pre-push 검사를 각각 실행한다.
 
 set -e
 
@@ -8,8 +8,9 @@ root=$(git rev-parse --show-toplevel)
 input=$(mktemp)
 trap 'rm -f "$input"' EXIT
 
-# pre-push 입력은 한 번만 읽을 수 있으므로 두 하위 hook에 같은 내용을 전달한다.
+# pre-push 입력은 한 번만 읽을 수 있으므로 각 하위 hook에 같은 내용을 전달한다.
 cat > "$input"
 
 "$root/.githooks/server/pre-push" < "$input"
 "$root/.githooks/client/pre-push" < "$input"
+"$root/.githooks/mobile/pre-push" < "$input"

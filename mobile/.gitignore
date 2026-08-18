@@ -1,0 +1,19 @@
+node_modules/
+.expo/
+dist/
+coverage/
+
+# Continuous Native Generation 결과물
+android/
+ios/
+
+# 로컬 환경 변수와 서명 파일
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.mobileprovision
+*.p8
+*.p12
+*.key
