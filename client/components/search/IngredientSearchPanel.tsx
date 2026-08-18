@@ -43,10 +43,18 @@ export function IngredientSearchPanel({
 
   const selectedCount = filter.includeIngredientIds.length + filter.excludeIngredientIds.length;
 
-  const add = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
+  /**
+   * 같은 성분을 포함과 제외에 함께 넣으면 결과가 반드시 비므로 한쪽만 남긴다.
+   * 이미 눌린 것을 다시 누르면 조건에서 뺀다.
+   */
+  const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
     onLearnNames([item]);
-    if (filter[key].includes(item.id)) return;
-    onChange({ [key]: [...filter[key], item.id] });
+    const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
+
+    onChange({
+      [key]: filter[key].includes(item.id) ? filter[key].filter((id) => id !== item.id) : [...filter[key], item.id],
+      [other]: filter[other].filter((id) => id !== item.id),
+    });
   };
 
   const remove = (key: "includeIngredientIds" | "excludeIngredientIds", id: number) => {
@@ -86,33 +94,39 @@ export function IngredientSearchPanel({
             <span className="text-[12px] font-medium text-[#868B94]">{items.length}개</span>
           </h2>
 
-          <ul className="divide-y divide-border">
-            {items.map((item) => (
-              <li key={item.id} className="flex items-center gap-2 py-3">
-                <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
-                  <span className="text-[10px] text-[#868B94]">
-                    {item.skinEffects.map((effect) => effect.name).join(" · ")}
+          <ul>
+            {items.map((item) => {
+              const included = filter.includeIngredientIds.includes(item.id);
+              const excluded = filter.excludeIngredientIds.includes(item.id);
+
+              return (
+                <li key={item.id} className="flex h-[58px] items-center gap-2.5 border-b border-[#EEF0F3]">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F2ECFF]">
+                    <Icon name="droplet" width={16} height={18} preserveRatio className="text-[#7B61C9]" />
                   </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => add("includeIngredientIds", item)}
-                  aria-pressed={filter.includeIngredientIds.includes(item.id)}
-                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-bold text-[#212124]"
-                >
-                  포함
-                </button>
-                <button
-                  type="button"
-                  onClick={() => add("excludeIngredientIds", item)}
-                  aria-pressed={filter.excludeIngredientIds.includes(item.id)}
-                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-semibold text-[#212124]"
-                >
-                  제외
-                </button>
-              </li>
-            ))}
+
+                  <span className="flex flex-1 flex-col gap-0.5">
+                    <span className="text-[12px] font-semibold text-text-primary">{item.koreanName}</span>
+                    <span className="text-[10px] text-text-secondary">
+                      {item.skinEffects.map((effect) => effect.name).join(" · ")}
+                    </span>
+                  </span>
+
+                  <ConditionButton
+                    label="포함"
+                    active={included}
+                    activeClass="border-[#212124] bg-[#212124]"
+                    onClick={() => toggleIngredient("includeIngredientIds", item)}
+                  />
+                  <ConditionButton
+                    label="제외"
+                    active={excluded}
+                    activeClass="border-[#D93B5C] bg-[#D93B5C]"
+                    onClick={() => toggleIngredient("excludeIngredientIds", item)}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
@@ -197,6 +211,32 @@ export function IngredientSearchPanel({
         성분 {selectedCount}개 · 빠른 필터 {filter.excludeCodes.length}개 적용
       </p>
     </div>
+  );
+}
+
+/** 디자인의 포함·제외 버튼. 고른 쪽만 채워진다. */
+function ConditionButton({
+  label,
+  active,
+  activeClass,
+  onClick,
+}: {
+  readonly label: string;
+  readonly active: boolean;
+  readonly activeClass: string;
+  readonly onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`h-8 shrink-0 rounded-2xl border px-3 text-[12px] ${
+        active ? `${activeClass} font-bold text-white` : "border-[#B9BDC5] bg-white font-semibold text-[#212124]"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
