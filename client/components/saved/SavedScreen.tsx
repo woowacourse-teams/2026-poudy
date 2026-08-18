@@ -69,19 +69,36 @@ export function SavedScreen() {
 
   return (
     <main className="flex-1 px-4">
-      <div className="flex flex-col gap-1 py-3">
+      <div className="flex items-center justify-between py-3">
         <p className="flex items-center gap-1 text-[11px] text-text-secondary">
-          <Icon name="bookmark" size={12} />이 브라우저에 저장돼요
+          <Icon name="info" size={13} />이 브라우저에 저장돼요
         </p>
         <p className="text-[13px] font-bold text-text-primary">총 {current.items.length}개</p>
       </div>
 
       {current.items.length > 0 ? (
-        <div className="flex flex-col gap-2 pb-2">
-          <SearchField value={keyword} onChange={setKeyword} placeholder="저장한 제품 검색" label="저장한 제품 검색" />
-          <p className="flex items-center gap-1 self-end text-[12px] font-semibold text-text-secondary">
+        <div className="flex items-center gap-2 pb-2">
+          <div className="flex-1">
+            <SearchField
+              value={keyword}
+              onChange={setKeyword}
+              placeholder="저장한 제품 검색"
+              label="저장한 제품 검색"
+            />
+          </div>
+          <p className="flex h-12 shrink-0 items-center gap-1 rounded-xl bg-surface px-3.5 text-[13px] font-semibold text-text-primary">
             최근 저장순
-            <Icon name="chevron-down" size={12} />
+            <Icon name="chevron-down" size={14} className="text-text-secondary" />
+          </p>
+        </div>
+      ) : null}
+
+      {current.items.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 px-4 py-14">
+          <Icon name="bookmark" size={28} className="text-text-secondary" />
+          <p className="text-[15px] font-bold text-text-primary">저장한 제품이 없어요</p>
+          <p className="text-center text-[12px] text-text-secondary">
+            마음에 드는 제품을 저장해 두면 여기에서 모아 볼 수 있어요
           </p>
         </div>
       ) : null}
@@ -98,9 +115,9 @@ export function SavedScreen() {
         <p className="py-10 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
       ) : null}
 
-      <Link href="/search" className="mt-4 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-background">
-          <Icon name="search" size={20} className="text-text-primary" />
+      <Link href="/search" className="mt-2 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background">
+          <Icon name="plus" size={20} className="text-text-secondary" />
         </span>
         <span className="flex flex-1 flex-col gap-0.5">
           <span className="text-[14px] font-bold text-text-primary">저장할 제품 더 찾기</span>

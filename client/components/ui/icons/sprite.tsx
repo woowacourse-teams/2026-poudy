@@ -17,6 +17,7 @@ export const ICON_IDS = [
   "badge-check",
   "info",
   "x",
+  "plus",
   "sliders",
   "arrow-up-down",
   "droplet",
@@ -94,6 +95,12 @@ export function IconSprite() {
         <symbol id="icon-x" viewBox="0 0 24 24">
           <path d="M18 6 6 18" />
           <path d="m6 6 12 12" />
+        </symbol>
+
+        {/* Lucide · plus */}
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
         </symbol>
 
         {/* Lucide · sliders-horizontal */}
