@@ -30,9 +30,27 @@ const ACTIONS = [
 ] as const;
 
 const TRUST = [
-  { title: "출처 있는 설명", detail: "근거를 함께 표기", bg: "bg-brand-soft", icon: "text-brand" },
-  { title: "과장 없는 설명", detail: "효과 단정 없음", bg: "bg-info-soft", icon: "text-info" },
-  { title: "직접 고른 조건", detail: "일치 제품만 노출", bg: "bg-success-soft", icon: "text-success" },
+  {
+    title: "출처 있는 설명",
+    detail: "근거를 함께 표기",
+    icon: "badge-check",
+    bg: "bg-brand-soft",
+    tint: "text-brand",
+  },
+  {
+    title: "과장 없는 설명",
+    detail: "효과 단정 없음",
+    icon: "info",
+    bg: "bg-info-soft",
+    tint: "text-info",
+  },
+  {
+    title: "직접 고른 조건",
+    detail: "일치 제품만 노출",
+    icon: "sliders",
+    bg: "bg-success-soft",
+    tint: "text-success",
+  },
 ] as const;
 
 /** 디자인의 빠른 필터 메뉴. 라벨이 뜻을 전하므로 그림에는 대체 텍스트를 비운다. */
@@ -88,9 +106,9 @@ export default function Home() {
           <h2 className="sr-only">서비스 안내</h2>
           <ul className="grid grid-cols-3 gap-2">
             {TRUST.map((item) => (
-              <li key={item.title} className={`flex flex-col gap-[3px] rounded-xl p-2 ${item.bg}`}>
+              <li key={item.title} className={`flex flex-col items-center gap-[3px] rounded-xl p-2 ${item.bg}`}>
                 <span className="flex items-center gap-1">
-                  <Icon name="check" size={14} className={item.icon} />
+                  <Icon name={item.icon} size={14} className={item.tint} />
                   <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 </span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
