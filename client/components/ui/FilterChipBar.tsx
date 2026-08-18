@@ -19,13 +19,7 @@ export function FilterChipBar({ chips, onOpen }: FilterChipBarProps) {
     <div className="-mx-4 overflow-x-auto px-4">
       <div className="flex gap-1.5">
         {chips.map((chip) => (
-          <FilterChip
-            key={chip.id}
-            label={chip.label}
-            selected={chip.count > 0}
-            count={chip.count > 0 ? chip.count : undefined}
-            onClick={() => onOpen(chip.id)}
-          />
+          <FilterChip key={chip.id} label={chip.label} selected={chip.count > 0} onClick={() => onOpen(chip.id)} />
         ))}
       </div>
     </div>

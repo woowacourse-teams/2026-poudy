@@ -43,16 +43,21 @@ describe("SearchField", () => {
 
 describe("FilterChip", () => {
   it("조건이 걸리면 눌린 상태로 표시한다", () => {
-    render(<FilterChip label="브랜드" selected count={2} />);
+    render(<FilterChip label="브랜드" selected />);
 
-    const chip = screen.getByRole("button", { name: /브랜드 2/ });
-    expect(chip).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "브랜드" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("조건이 없으면 개수를 붙이지 않는다", () => {
+  it("조건이 없으면 눌리지 않은 상태다", () => {
     render(<FilterChip label="브랜드" />);
 
     expect(screen.getByRole("button", { name: "브랜드" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("디자인대로 라벨만 보여 준다. 개수는 붙이지 않는다", () => {
+    render(<FilterChip label="브랜드" selected />);
+
+    expect(screen.getByRole("button", { name: "브랜드" }).textContent?.trim()).toBe("브랜드");
   });
 });
 
