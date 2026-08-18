@@ -26,20 +26,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Poudy",
   description: "성분을 기준으로 화장품을 탐색합니다.",
+  // 로고는 배경이 비어 있어 밝은 화면과 어두운 화면에서 같은 그림을 쓴다.
   icons: {
     icon: [
-      {
-        url: "/favicon-light.png",
-        media: "(prefers-color-scheme: light)",
-        type: "image/png",
-        sizes: "256x256",
-      },
-      {
-        url: "/favicon-dark.png",
-        media: "(prefers-color-scheme: dark)",
-        type: "image/png",
-        sizes: "256x256",
-      },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "256x256" },
     ],
   },
 };
