@@ -1,6 +1,6 @@
 # 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
-# 배포 전에 S3에서 JSON을 내려받아 이 디렉터리에 마운트한다.
+# 배포 전에 S3에서 JSON을 내려받아 이 디렉터리에 저장한다.
 poudy:
   data-dir: ${POUDY_DATA_DIR:/app/data}
 

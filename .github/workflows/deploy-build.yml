@@ -21,7 +21,8 @@ concurrency:
 jobs:
   build:
     name: Build deployment artifacts
-    runs-on: ubuntu-latest
+    # t4g EC2 런타임과 동일한 ARM64 환경에서 네이티브 의존성을 빌드한다.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 25
 
     steps:
@@ -48,6 +49,9 @@ jobs:
           node-version: "22"
           cache: pnpm
           cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Verify ARM64 runner
+        run: test "$(uname -m)" = "aarch64"
 
       - name: Package artifacts
         env:
