@@ -11,10 +11,16 @@ import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
+/**
+ * 저장함이 가질 수 있는 상태.
+ * 실패를 빈 목록과 구분해야 사용자가 다시 시도할 수 있다.
+ */
+type Status = "loading" | "error" | "ready";
+
 type State = {
   readonly key: string;
+  readonly status: Status;
   readonly items: readonly ProductResponse[];
-  readonly loading: boolean;
 };
 
 /** S07 저장함. 목록은 브라우저가 들고 표시 정보만 서버에서 채운다. */
@@ -23,9 +29,17 @@ export function SavedScreen() {
   const key = savedIds.join(",");
   const [keyword, setKeyword] = useState("");
 
-  // 저장 목록이 비면 요청할 것이 없으므로 처음부터 끝난 상태로 둔다.
-  const [state, setState] = useState<State>({ key, items: [], loading: Boolean(key) });
-  const current = state.key === key ? state : { key, items: key ? state.items : [], loading: Boolean(key) };
+  // 저장 목록이 비면 부를 API 가 없으므로 곧바로 끝난 상태로 둔다.
+  const initial = (id: string): State => ({
+    key: id,
+    status: id ? "loading" : "ready",
+    items: [],
+  });
+
+  const [state, setState] = useState<State>(() => initial(key));
+  const [retry, setRetry] = useState(0);
+
+  const current = state.key === key ? state : initial(key);
   if (state.key !== key) setState(current);
 
   useEffect(() => {
@@ -37,16 +51,16 @@ export function SavedScreen() {
       .then((response) => {
         if (controller.signal.aborted) return;
         setState((previous) =>
-          previous.key === key ? { ...previous, items: response.items, loading: false } : previous,
+          previous.key === key ? { ...previous, status: "ready", items: response.items } : previous,
         );
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        setState((previous) => (previous.key === key ? { ...previous, loading: false } : previous));
+        setState((previous) => (previous.key === key ? { ...previous, status: "error" } : previous));
       });
 
     return () => controller.abort();
-  }, [key]);
+  }, [key, retry]);
 
   const onToggleSave = (productId: number) => {
     toggle(productId);
@@ -63,8 +77,34 @@ export function SavedScreen() {
       )
     : current.items;
 
-  if (current.loading) {
-    return <p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>;
+  if (current.status === "loading") {
+    return (
+      <main className="flex-1 px-4">
+        <p className="py-14 text-center text-[13px] text-text-secondary">불러오는 중…</p>
+      </main>
+    );
+  }
+
+  if (current.status === "error") {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
+        <Icon name="info" size={28} className="text-text-secondary" />
+        <p className="text-[15px] font-bold text-text-primary">저장한 제품을 불러오지 못했어요</p>
+        <p className="text-center text-[12px] text-text-secondary">
+          잠시 후 다시 시도해 주세요. 저장한 목록은 그대로 있어요.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setState({ key, status: "loading", items: [] });
+            setRetry((previous) => previous + 1);
+          }}
+          className="mt-2 h-11 rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
+        >
+          다시 시도
+        </button>
+      </main>
+    );
   }
 
   return (
