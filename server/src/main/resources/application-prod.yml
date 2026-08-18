@@ -1,5 +1,9 @@
 # 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
+# 배포 전에 S3에서 JSON을 내려받아 이 디렉터리에 마운트한다.
+poudy:
+  data-dir: ${POUDY_DATA_DIR:/app/data}
+
 # API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
 # /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
 springdoc:

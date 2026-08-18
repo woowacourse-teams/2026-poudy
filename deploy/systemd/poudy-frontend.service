@@ -1,0 +1,33 @@
+[Unit]
+Description=Poudy Next.js frontend
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=poudy
+Group=poudy
+WorkingDirectory=/opt/poudy/frontend
+EnvironmentFile=-/etc/poudy/frontend.env
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=3000
+Environment=NODE_OPTIONS=--max-old-space-size=512
+ExecStart=/usr/bin/node /opt/poudy/frontend/server.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=20s
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+MemoryMax=768M
+CPUQuota=100%
+TasksMax=128
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
