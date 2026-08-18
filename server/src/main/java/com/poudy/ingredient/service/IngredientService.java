@@ -3,6 +3,7 @@ package com.poudy.ingredient.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.ingredient.controller.dto.IngredientQueryRequest;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.repository.IngredientRepository;
@@ -36,7 +37,10 @@ public class IngredientService {
                 productRepository.countContaining(ingredientId));
     }
 
-    public List<Ingredient> search(String keyword) {
-        return ingredientRepository.search(keyword);
+    public List<Ingredient> find(IngredientQueryRequest query) {
+        if (query.queriesByIds()) {
+            return ingredientRepository.findByIds(query.ingredientIds(), query.keyword());
+        }
+        return ingredientRepository.search(query.keyword());
     }
 }

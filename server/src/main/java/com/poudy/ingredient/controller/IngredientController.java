@@ -1,8 +1,8 @@
 package com.poudy.ingredient.controller;
 
-import com.poudy.common.dto.KeywordRequest;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
 import com.poudy.ingredient.controller.dto.IngredientListResponse;
+import com.poudy.ingredient.controller.dto.IngredientQueryRequest;
 import com.poudy.ingredient.service.IngredientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,11 +26,11 @@ public class IngredientController {
         this.ingredientService = ingredientService;
     }
 
-    @Operation(summary = "성분 검색", description = "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다.")
-    @Parameter(name = "keyword", example = "글리")
+    @Operation(summary = "성분 조회", description = "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. "
+            + "두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 성분 ID 로만 조회하면 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.")
     @GetMapping
-    public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute KeywordRequest search) {
-        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.search(search.keyword())));
+    public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute IngredientQueryRequest query) {
+        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.find(query)));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")

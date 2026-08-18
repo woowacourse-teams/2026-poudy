@@ -252,7 +252,7 @@ export type IngredientResponse = {
 }
 export type IngredientListResponse = {
   /**
-   * 검색어에 해당하는 성분
+   * 조회된 성분
    */
   items: Array<IngredientResponse>;
 }
@@ -476,7 +476,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다.
+ * 검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. 두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 성분 ID 로만 조회하면 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.
  */
 export type get_FindIngredients = {
       method: "GET",
@@ -484,12 +484,13 @@ export type get_FindIngredients = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query:  {
+            query?:  Partial<{
   /**
    * 검색어
    */
   keyword: string;
-},
+  ingredientIds: Array<number>;
+}>,
 
           }
       responses: {200: Schemas.IngredientListResponse,
