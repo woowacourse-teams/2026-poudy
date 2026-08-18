@@ -1,0 +1,4 @@
+interface:
+  display_name: "백엔드 설계 다듬기"
+  short_description: "객체지향 설계를 진단하고 동작을 보존하며 리팩터링"
+  default_prompt: "Use $refine-backend-design to assess the current backend change's object-oriented design and report only justified improvements, if any."
