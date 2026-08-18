@@ -53,6 +53,17 @@ install_systemd_unit \
     "${REPOSITORY_ROOT}/deploy/systemd/poudy-frontend.service" \
     /etc/systemd/system/poudy-frontend.service
 
+if [[ ! -e /etc/nginx/nginx.conf.poudy-default ]]; then
+    mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.poudy-default
+fi
+
+install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "${REPOSITORY_ROOT}/deploy/nginx/ec2-nginx.conf" \
+    /etc/nginx/nginx.conf
+
 install \
     -o root \
     -g root \
@@ -66,7 +77,7 @@ fi
 
 nginx -t
 systemctl enable nginx
-systemctl start nginx
+systemctl restart nginx
 
 systemctl daemon-reload
 systemctl enable poudy-frontend.service

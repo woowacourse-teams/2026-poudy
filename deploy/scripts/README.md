@@ -33,7 +33,7 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - `poudy` system user 및 `/opt/poudy/frontend` 생성
 - `/etc/poudy/frontend.env` 생성
 - `poudy-frontend.service` 설치 및 enable
-- `ec2-frontend.conf` 설치
+- `ec2-nginx.conf`와 `ec2-frontend.conf` 설치
 - Nginx 설정 검증 및 enable/start
 
 ## 실행 시점
