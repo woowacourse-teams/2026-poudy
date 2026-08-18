@@ -102,6 +102,54 @@ jobs:
               return `🔴 ${score}`;
             };
 
+            // 점수가 크게 벌어지면 코드가 아니라 러너 상태를 의심해야 한다.
+            const SPREAD_WARNING_THRESHOLD = 10;
+            const runs = Array.isArray(results.lighthouseRuns)
+              ? results.lighthouseRuns.filter((entry) =>
+                  Number.isFinite(entry?.performance),
+                )
+              : [];
+            const performances = runs.map((entry) => entry.performance);
+            const spread =
+              performances.length > 1
+                ? Math.max(...performances) - Math.min(...performances)
+                : 0;
+
+            const runDetails =
+              runs.length > 1
+                ? [
+                    '',
+                    '<details>',
+                    `<summary>${runs.length}회 측정값</summary>`,
+                    '',
+                    '| 회차 | Performance | Accessibility | Best Practices | SEO |',
+                    '| --- | --- | --- | --- | --- |',
+                    ...runs.map((entry, index) => {
+                      const cells = [
+                        entry.performance,
+                        entry.accessibility,
+                        entry.bestPractices,
+                        entry.seo,
+                      ].map((score) => (Number.isFinite(score) ? score : '-'));
+                      const label = entry.median
+                        ? `${index + 1}회 (중간값)`
+                        : `${index + 1}회`;
+                      return `| ${label} | ${cells.join(' | ')} |`;
+                    }),
+                    '',
+                    '</details>',
+                  ]
+                : [];
+
+            const spreadWarning =
+              spread > SPREAD_WARNING_THRESHOLD
+                ? [
+                    '',
+                    `> ⚠️ Performance 측정값이 ${Math.min(...performances)} ~ ${Math.max(...performances)} 로 벌어졌습니다.`,
+                    '> 코드 변경보다 러너 상태를 먼저 의심해 보세요.',
+                  ]
+                : [];
+
             const body = [
               `## Client CI 결과 ${allPassed ? '✅' : '⚠️'}`,
               '',
@@ -125,6 +173,8 @@ jobs:
               `| SEO | ${formatLighthouseScore('seo')} |`,
               '',
               '> 점수 기준: 🟢 90-100 / 🟡 50-89 / 🔴 0-49',
+              ...spreadWarning,
+              ...runDetails,
               '',
               `[Workflow 실행 결과 보기](${run.html_url})`,
             ].join('\n');
