@@ -1,0 +1,59 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: mobile
+
+jobs:
+  check:
+    name: Mobile checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # 검증 산출물은 배포하지 않으므로 실제 서비스 주소 대신 예약 도메인을 사용한다.
+      EXPO_PUBLIC_WEB_URL: https://example.invalid
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: mobile/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Generate native projects
+        run: pnpm exec expo prebuild --clean --no-install
+
+      - name: Export bundles
+        run: pnpm exec expo export --platform all --output-dir "$RUNNER_TEMP/mobile-export"
