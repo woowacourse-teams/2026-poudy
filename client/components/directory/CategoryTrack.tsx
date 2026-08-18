@@ -19,8 +19,9 @@ export function CategoryTrack({
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="같은 분류의 카테고리" className="-mx-4 overflow-x-auto px-4 py-2">
-      <ul className="flex gap-2">
+    <nav aria-label="같은 분류의 카테고리" className="-mx-4 overflow-x-auto py-2">
+      {/* 넘칠 때 컨테이너의 오른쪽 padding 은 잘리므로 여백을 목록 안쪽에 준다. */}
+      <ul className="flex w-max gap-2 px-4">
         {items.map((item) => {
           const selected = item.id === selectedId;
 
