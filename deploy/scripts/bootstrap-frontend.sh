@@ -17,7 +17,7 @@ log '프론트엔드 호스트 초기화를 시작합니다.'
 
 dnf install -y curl-minimal nginx xz
 
-node_install_dir="/opt/node-v${NODE_VERSION}"
+node_install_dir="/opt/node-v${NODE_VERSION}-linux-arm64"
 if [[ ! -x "${node_install_dir}/bin/node" ]]; then
     temporary_dir="$(mktemp -d)"
     trap 'rm -rf "${temporary_dir}"' EXIT
