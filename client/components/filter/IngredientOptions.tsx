@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
+import { SearchField } from "@/components/ui/SearchField";
 import { fetchIngredients } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
@@ -55,17 +56,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names, onLear
 
   return (
     <>
-      <label className="flex h-11 items-center gap-2.5 rounded-[10px] bg-[#F3F4F5] px-3">
-        <Icon name="search" size={18} className="text-text-secondary" />
-        <input
-          type="search"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="성분명 검색"
-          aria-label="성분명 검색"
-          className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-[#868B94] [&::-webkit-search-cancel-button]:appearance-none"
-        />
-      </label>
+      <SearchField value={keyword} onChange={setKeyword} placeholder="성분명 검색" label="성분명 검색" />
 
       {typing ? (
         <section className="pt-3">

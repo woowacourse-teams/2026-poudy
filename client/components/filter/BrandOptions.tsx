@@ -4,6 +4,7 @@ import type { BrandListItemResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
+import { SearchField } from "@/components/ui/SearchField";
 
 type BrandOptionsProps = {
   readonly brands: readonly BrandListItemResponse[];
@@ -24,17 +25,7 @@ export function BrandOptions({ brands, selectedIds, onToggle }: BrandOptionsProp
 
   return (
     <>
-      <label className="flex h-11 items-center gap-2.5 rounded-[10px] bg-[#F3F4F5] px-3">
-        <Icon name="search" size={18} className="text-text-secondary" />
-        <input
-          type="search"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="브랜드명 검색"
-          aria-label="브랜드명 검색"
-          className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-text-secondary [&::-webkit-search-cancel-button]:appearance-none"
-        />
-      </label>
+      <SearchField value={keyword} onChange={setKeyword} placeholder="브랜드명 검색" label="브랜드명 검색" />
 
       <ul className="pt-2">
         {shown.map((brand) => {

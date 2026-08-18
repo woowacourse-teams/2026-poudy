@@ -72,13 +72,7 @@ export function IngredientSearchPanel({
   return (
     <div className="flex flex-col px-4 pt-3 pb-5">
       <section className="flex flex-col gap-2 pb-4">
-        <SearchField
-          variant="outlined"
-          value={keyword}
-          onChange={setKeyword}
-          placeholder="성분명을 입력해 주세요"
-          label="성분 검색"
-        />
+        <SearchField value={keyword} onChange={setKeyword} placeholder="성분명을 입력해 주세요" label="성분 검색" />
         <p className="text-[12px] text-[#72747A]">검색한 성분을 포함 또는 제외 조건으로 추가할 수 있어요.</p>
       </section>
 

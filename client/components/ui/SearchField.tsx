@@ -3,11 +3,6 @@
 import { Icon } from "./icons/Icon";
 
 type SearchFieldProps = {
-  /**
-   * outlined 는 탐색 조건 화면의 흰 배경 테두리 필드,
-   * filled 는 저장함과 시트에서 쓰는 회색 필드다.
-   */
-  readonly variant?: "filled" | "outlined";
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly placeholder: string;
@@ -15,8 +10,13 @@ type SearchFieldProps = {
   readonly onSubmit?: () => void;
 };
 
-/** 디자인 C06. 지우기 버튼은 입력이 있을 때만 보인다. */
-export function SearchField({ value, onChange, placeholder, label, onSubmit, variant = "filled" }: SearchFieldProps) {
+/**
+ * 디자인 C06. 검색 입력은 화면마다 같은 모양을 쓴다.
+ *
+ * 평소에는 회색으로 조용히 있다가 입력할 때 흰 배경과 테두리로 또렷해진다.
+ * 지우기 버튼은 입력이 있을 때만 보인다.
+ */
+export function SearchField({ value, onChange, placeholder, label, onSubmit }: SearchFieldProps) {
   return (
     <form
       role="search"
@@ -24,11 +24,7 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit, var
         event.preventDefault();
         onSubmit?.();
       }}
-      className={`flex items-center gap-2.5 ${
-        variant === "outlined"
-          ? "h-12 rounded-lg border border-[#D1D3D8] bg-white px-3 focus-within:border-[#212124]"
-          : "h-12 rounded-xl bg-surface px-3.5"
-      }`}
+      className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-[#F3F4F5] px-3.5 transition-colors focus-within:border-[#212124] focus-within:bg-white"
     >
       <Icon name="search" size={18} className="text-[#8B8D94]" />
 
@@ -39,7 +35,7 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit, var
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         // 브라우저 기본 지우기 버튼을 숨기고 디자인의 버튼만 쓴다.
-        className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-text-secondary [&::-webkit-search-cancel-button]:appearance-none"
+        className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-[#868B94] [&::-webkit-search-cancel-button]:appearance-none"
       />
 
       {value ? (
