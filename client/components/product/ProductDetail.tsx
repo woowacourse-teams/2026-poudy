@@ -23,31 +23,34 @@ export function ProductDetail({ product }: { readonly product: ProductDetailResp
       />
 
       <main className="flex-1 pb-10">
-        <CategoryPath categories={product.categories} />
+        <div className="flex flex-col gap-4 px-4 pt-4 pb-3">
+          <CategoryPath categories={product.categories} />
+        </div>
 
-        <section className="flex flex-col items-center gap-3 px-4 pb-5">
+        <section className="flex flex-col items-center gap-4 px-4 pt-2 pb-5">
           <Image
             src={product.imageUrl || PRODUCT_PLACEHOLDER}
             alt=""
-            width={140}
-            height={140}
-            className="size-[140px] rounded-2xl bg-surface object-contain"
+            width={184}
+            height={184}
+            className="size-[184px] object-contain"
             priority
           />
-          <p className="text-[12px] font-medium text-text-secondary">{product.brand.name}</p>
-          <h2 className="text-center text-[22px] font-bold text-text-primary">{product.name}</h2>
 
-          <div className="flex gap-3">
-            <LevelTag kind="moisture" level={product.moistureLevel} />
-            <LevelTag kind="oil" level={product.oilLevel} />
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[12px] font-medium text-text-secondary">{product.brand.name}</p>
+            <h2 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h2>
+
+            <div className="flex gap-2">
+              <LevelTag kind="moisture" level={product.moistureLevel} variant="pill" />
+              <LevelTag kind="oil" level={product.oilLevel} variant="pill" />
+            </div>
           </div>
-        </section>
 
-        <Variants variants={product.variants} />
+          <Variants variants={product.variants} />
 
-        <div className="px-4 py-4">
           <SaveProductButton productId={product.id} productName={product.name} />
-        </div>
+        </section>
 
         <SkinEffectGroups product={product} />
         <IngredientSummary product={product} />
@@ -62,16 +65,16 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
   if (categories.length === 0) return null;
 
   return (
-    <nav aria-label="카테고리 경로" className="px-4 py-3">
-      <ol className="flex flex-wrap items-center gap-1 text-[12px]">
+    <nav aria-label="카테고리 경로">
+      <ol className="flex flex-col gap-[3px]">
         {categories.map((path) => (
-          <li key={path.id} className="flex items-center gap-1">
-            <span className="text-text-secondary">{path.name}</span>
+          <li key={path.id} className="flex flex-col gap-[3px]">
+            <span className="flex items-center gap-[5px] text-[12px] text-text-secondary">
+              {path.name}
+              {path.child ? <Icon name="chevron-right" size={12} /> : null}
+            </span>
             {path.child ? (
-              <>
-                <Icon name="chevron-right" size={12} className="text-text-secondary" />
-                <span className="font-semibold text-text-primary">{path.child.name}</span>
-              </>
+              <span className="text-[12px] font-semibold text-text-secondary">{path.child.name}</span>
             ) : null}
           </li>
         ))}
@@ -84,21 +87,21 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
   if (variants.length === 0) return null;
 
   return (
-    <section className="px-4">
+    <section className="w-60">
       <h3 className="sr-only">용량별 가격</h3>
-      <ul className="divide-y divide-border rounded-xl border border-border">
+      <ul className="divide-y divide-[#E8E9EC]">
         {variants.map((variant) => {
           const perUnit = unitPrice(variant.price, variant);
           return (
-            <li key={variant.id} className="flex items-center justify-between px-4 py-3">
-              <span className="text-[13px] font-bold text-text-primary">
+            <li key={variant.id} className="flex h-10 items-center justify-between">
+              <span className="text-[13px] font-bold text-[#212124]">
                 {variant.volumeValue}
                 {variant.volumeUnit}
               </span>
-              <span className="flex flex-col items-end gap-0.5">
-                <span className="text-[12px] font-medium text-text-primary">정가 {formatPrice(variant.price)}</span>
+              <span className="flex flex-col items-end gap-px">
+                <span className="text-[12px] font-medium text-[#54575C]">정가 {formatPrice(variant.price)}</span>
                 {perUnit === undefined ? null : (
-                  <span className="text-[10px] text-text-secondary">
+                  <span className="text-[10px] text-[#868B94]">
                     정가 기준 {perUnit.toLocaleString("ko-KR")}원/{variant.volumeUnit}
                   </span>
                 )}
