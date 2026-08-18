@@ -7,10 +7,13 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.DefaultResourceLoader;
 
 @DisplayName("JSON 데이터 읽기")
@@ -19,6 +22,9 @@ class JsonDataReaderTest {
     private static final String SAMPLE_FILE = "json-data-reader-sample.json";
 
     private final JsonDataReader jsonDataReader = new JsonDataReader(new DefaultResourceLoader());
+
+    @TempDir
+    Path dataDirectory;
 
     record Sample(Long id, String koreanName, List<Tag> tagMappings, OffsetDateTime createdAt) {
 
@@ -95,5 +101,23 @@ class JsonDataReaderTest {
     void wrapsRootFieldNotNamedAfterFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-wrong-root.json", Sample.class))
                 .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-wrong-root");
+    }
+
+    @Test
+    @DisplayName("외부 데이터 디렉터리가 설정되면 classpath 대신 그곳에서 읽는다")
+    void readsFromExternalDataDirectory() throws IOException {
+        Files.writeString(dataDirectory.resolve(SAMPLE_FILE), """
+                {
+                  "json-data-reader-sample": [
+                    {"id": 3, "korean_name": "외부 데이터"}
+                  ]
+                }
+                """);
+
+        JsonDataReader externalReader = new JsonDataReader(new DefaultResourceLoader(), dataDirectory);
+
+        assertThat(externalReader.readList(SAMPLE_FILE, Sample.class))
+                .extracting(Sample::id, Sample::koreanName)
+                .containsExactly(tuple(3L, "외부 데이터"));
     }
 }
