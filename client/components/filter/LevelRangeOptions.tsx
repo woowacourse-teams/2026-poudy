@@ -9,25 +9,21 @@ type LevelRangeProps = {
   readonly onChange: (levels: readonly number[]) => void;
 };
 
+const MAX_LEVEL = LEVEL_LABELS.length - 1;
+
 /**
- * 디자인의 유수분 범위 선택. 최소와 최대를 골라 그 사이를 모두 담는다.
+ * 디자인의 유수분 범위 선택. 최소와 최대 손잡이를 각각 움직여 범위를 정한다.
  * 아무것도 고르지 않으면 상관없음이다.
  */
 export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
   const anyLevel = levels.length === 0;
-  const min = anyLevel ? undefined : Math.min(...levels);
-  const max = anyLevel ? undefined : Math.max(...levels);
+  const min = anyLevel ? 0 : Math.min(...levels);
+  const max = anyLevel ? MAX_LEVEL : Math.max(...levels);
 
-  /** 단계를 누르면 가까운 쪽 끝을 그 자리로 옮긴다. */
-  const pick = (level: number) => {
-    if (min === undefined || max === undefined) {
-      onChange([level]);
-      return;
-    }
-    if (level < min) return onChange(range(level, max));
-    if (level > max) return onChange(range(min, level));
-    // 안쪽을 누르면 더 가까운 끝을 당긴다.
-    return onChange(level - min <= max - level ? range(level, max) : range(min, level));
+  /** 한쪽 손잡이를 움직인다. 서로를 넘어가지 않게 막는다. */
+  const move = (edge: "min" | "max", value: number) => {
+    const next = edge === "min" ? [Math.min(value, max), max] : [min, Math.max(value, min)];
+    onChange(range(next[0], next[1]));
   };
 
   return (
@@ -39,7 +35,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           <input
             type="checkbox"
             checked={anyLevel}
-            onChange={() => onChange([])}
+            onChange={() => onChange(anyLevel ? range(0, MAX_LEVEL) : [])}
             className="size-[18px] rounded border-[#C4C7CC] accent-[#212124]"
           />
           <span className="text-[13px] font-medium text-text-secondary">상관없음</span>
@@ -51,45 +47,28 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
         <span className="text-[13px] font-bold text-text-primary">{anyLevel ? "상관없음" : rangeLabel(min, max)}</span>
       </p>
 
-      <div role="group" aria-label={`${label} 범위`} className="flex items-center pt-2">
-        {LEVEL_LABELS.map((name, level) => {
-          const inRange = !anyLevel && min !== undefined && max !== undefined && level >= min && level <= max;
-          const isEnd = level === min || level === max;
+      {/* 두 손잡이를 겹쳐 두고 트랙은 그 아래에 그린다. */}
+      <div className="relative h-6 pt-2">
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-2.5 top-1/2 h-[3px] -translate-y-1/2 rounded-sm bg-border"
+        />
+        <span
+          aria-hidden="true"
+          className={`absolute top-1/2 h-[3px] -translate-y-1/2 rounded-sm ${anyLevel ? "bg-border" : "bg-brand"}`}
+          style={{
+            left: `calc(10px + ${(min / MAX_LEVEL) * 100}% - ${(min / MAX_LEVEL) * 20}px)`,
+            right: `calc(10px + ${((MAX_LEVEL - max) / MAX_LEVEL) * 100}% - ${((MAX_LEVEL - max) / MAX_LEVEL) * 20}px)`,
+          }}
+        />
 
-          return (
-            <div key={name} className="flex flex-1 items-center last:flex-none">
-              <button
-                type="button"
-                aria-pressed={inRange}
-                aria-label={`${label} ${name}`}
-                onClick={() => pick(level)}
-                className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
-                  isEnd ? "border-brand bg-white" : "border-transparent"
-                }`}
-              >
-                <span
-                  className={`rounded-full ${isEnd ? "size-1.5 bg-brand" : inRange ? "size-2 bg-brand" : "size-2 bg-border"}`}
-                />
-              </button>
-
-              {level < LEVEL_LABELS.length - 1 ? (
-                <span
-                  aria-hidden="true"
-                  className={`h-[3px] flex-1 rounded-sm ${
-                    !anyLevel && min !== undefined && max !== undefined && level >= min && level < max
-                      ? "bg-brand"
-                      : "bg-border"
-                  }`}
-                />
-              ) : null}
-            </div>
-          );
-        })}
+        <RangeInput label={`${label} 최소`} value={min} onChange={(value) => move("min", value)} dimmed={anyLevel} />
+        <RangeInput label={`${label} 최대`} value={max} onChange={(value) => move("max", value)} dimmed={anyLevel} />
       </div>
 
       <div className="flex pt-1">
         {LEVEL_LABELS.map((name, level) => {
-          const inRange = !anyLevel && min !== undefined && max !== undefined && level >= min && level <= max;
+          const inRange = !anyLevel && level >= min && level <= max;
           return (
             <span
               key={name}
@@ -106,10 +85,46 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
   );
 }
 
+/**
+ * 겹쳐 둔 두 개의 range 입력 중 하나.
+ * 트랙은 따로 그리므로 입력 자체는 손잡이만 보이게 한다.
+ */
+function RangeInput({
+  label,
+  value,
+  onChange,
+  dimmed,
+}: {
+  readonly label: string;
+  readonly value: number;
+  readonly onChange: (value: number) => void;
+  readonly dimmed: boolean;
+}) {
+  return (
+    <input
+      type="range"
+      min={0}
+      max={MAX_LEVEL}
+      step={1}
+      value={value}
+      aria-label={label}
+      aria-valuetext={LEVEL_LABELS[value]}
+      onChange={(event) => onChange(Number(event.target.value))}
+      className={`absolute inset-x-0 top-2 h-5 w-full appearance-none bg-transparent
+        [&::-webkit-slider-runnable-track]:h-5 [&::-webkit-slider-runnable-track]:bg-transparent
+        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5
+        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full
+        [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:bg-white
+        [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full
+        [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:bg-white
+        ${dimmed ? "[&::-webkit-slider-thumb]:border-border [&::-moz-range-thumb]:border-border" : "[&::-webkit-slider-thumb]:border-brand [&::-moz-range-thumb]:border-brand"}`}
+      style={{ pointerEvents: "none" }}
+    />
+  );
+}
+
 const range = (from: number, to: number): readonly number[] =>
   Array.from({ length: to - from + 1 }, (_, index) => from + index);
 
-const rangeLabel = (min?: number, max?: number): string => {
-  if (min === undefined || max === undefined) return "상관없음";
-  return min === max ? LEVEL_LABELS[min] : `${LEVEL_LABELS[min]}–${LEVEL_LABELS[max]}`;
-};
+const rangeLabel = (min: number, max: number): string =>
+  min === max ? LEVEL_LABELS[min] : `${LEVEL_LABELS[min]}–${LEVEL_LABELS[max]}`;
