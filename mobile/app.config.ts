@@ -25,7 +25,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     scheme: APP_SLUG,
     userInterfaceStyle: 'light',
     ios: {
-      buildNumber: '1',
       bundleIdentifier,
       supportsTablet: false,
     },
@@ -40,7 +39,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
       package: bundleIdentifier,
-      versionCode: 1,
     },
     plugins: [
       [
