@@ -38,11 +38,21 @@ log '프론트엔드 standalone 산출물을 빌드합니다.'
     pnpm build
 )
 
-[[ -f "${REPOSITORY_ROOT}/client/.next/standalone/server.js" ]] || fail 'Next.js standalone server.js를 찾을 수 없습니다.'
+standalone_dir="${REPOSITORY_ROOT}/client/.next/standalone"
+if [[ -f "${standalone_dir}/server.js" ]]; then
+    standalone_source="${standalone_dir}"
+elif [[ -f "${standalone_dir}/client/server.js" ]]; then
+    # outputFileTracingRoot가 저장소 루트로 설정되면 Next.js가 앱 산출물을
+    # standalone/client 아래에 생성한다.
+    standalone_source="${standalone_dir}/client"
+else
+    fail 'Next.js standalone server.js를 찾을 수 없습니다.'
+fi
+
 # pnpm standalone 산출물의 중첩 심볼릭 링크까지 실제 파일로 복사해야 GitHub
 # 아티팩트와 EC2 배포 후에도 node_modules 의존성을 찾을 수 있다.
 node "${SCRIPT_DIR}/copy-tree.js" \
-    "${REPOSITORY_ROOT}/client/.next/standalone" \
+    "${standalone_source}" \
     "${output_dir}/frontend"
 mkdir -p "${output_dir}/frontend/.next"
 cp -R "${REPOSITORY_ROOT}/client/.next/static" "${output_dir}/frontend/.next/static"
