@@ -82,13 +82,13 @@ export default function Home() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className={`flex flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
+                  className={`flex h-full flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
                 >
                   <span className="flex items-center justify-between">
                     <Icon name={action.icon} size={28} className={dark ? "text-action-text" : "text-text-primary"} />
                     <Icon name="chevron-right" size={18} className={dark ? "text-white/60" : "text-text-secondary"} />
                   </span>
-                  <span className="flex flex-col gap-[3px]">
+                  <span className="flex flex-1 flex-col justify-between gap-2">
                     <span className={`text-[15px] font-bold ${dark ? "text-action-text" : "text-text-primary"}`}>
                       {action.label}
                     </span>
