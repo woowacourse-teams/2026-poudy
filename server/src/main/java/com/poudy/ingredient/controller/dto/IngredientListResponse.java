@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-public record IngredientListResponse(@NotNull @Schema(description = "검색어에 해당하는 성분") List<IngredientResponse> items) {
+public record IngredientListResponse(@NotNull @Schema(description = "조회된 성분") List<IngredientResponse> items) {
 
     public static IngredientListResponse from(List<Ingredient> ingredients) {
         return new IngredientListResponse(

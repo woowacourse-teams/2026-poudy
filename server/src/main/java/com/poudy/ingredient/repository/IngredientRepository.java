@@ -29,4 +29,8 @@ public class IngredientRepository {
     public Optional<Ingredient> findById(Long id) {
         return ingredients.findById(id);
     }
+
+    public List<Ingredient> findByIds(List<Long> ids) {
+        return ingredients.findAllById(ids).values();
+    }
 }
