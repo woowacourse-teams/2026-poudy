@@ -12,7 +12,14 @@ let starting: Promise<unknown> | undefined;
 
 const startWorker = () => {
   // 목을 끈 빌드에 MSW 가 딸려 들어가지 않도록 동적으로 불러온다.
-  starting ??= import("./browser").then(({ worker }) => worker.start({ onUnhandledRequest: "bypass" }));
+  starting ??= import("./browser").then(({ worker }) =>
+    worker.start({
+      // 페이지가 부르는 청크와 그림까지 워커를 거친다. API 만 골라 알린다.
+      onUnhandledRequest: (request, print) => {
+        if (new URL(request.url).pathname.startsWith("/api/")) print.warning();
+      },
+    }),
+  );
   return starting;
 };
 
