@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
+import { Icon } from "./icons/Icon";
+
 type TopBarProps = {
   readonly title: string;
   /** 루트는 제목만, 하위는 뒤로가기와 제목을 보여 준다. */
@@ -33,15 +35,7 @@ export function TopBar({ title, variant, right }: TopBarProps) {
         aria-label="뒤로 가기"
         className="flex size-11 items-center justify-center"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path
-            d="M12.5 4 6.5 10l6 6"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="chevron-left" size={20} />
       </button>
 
       <h1 className="flex-1 text-center text-[16px] font-semibold text-text-primary">{title}</h1>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { RecentFilters, SavedPreview } from "@/components/home/PersonalSections";
@@ -23,6 +24,16 @@ const ACTIONS = [
     detail: "피하고 싶은 성분으로 좁혀 보세요",
   },
 ] as const;
+
+/** 빠른 필터 그림. 라벨이 뜻을 전하므로 이미지에는 대체 텍스트를 비운다. */
+const QUICK_FILTER_IMAGES: Record<(typeof EXCLUDE_CODES)[number], string> = {
+  FRAGRANCE_ALLERGENS: "/images/quick-filters/fragrance-allergens.png",
+  DRYING_ALCOHOLS: "/images/quick-filters/drying-alcohols.png",
+  HARSH_PRESERVATIVES: "/images/quick-filters/harsh-preservatives.png",
+  SULFATES: "/images/quick-filters/sulfates.png",
+  CYCLIC_SILICONES: "/images/quick-filters/cyclic-silicones.png",
+  SYNTHETIC_COLORANTS: "/images/quick-filters/synthetic-colorants.png",
+};
 
 const TRUST = [
   { title: "공식 전성분", detail: "브랜드가 공개한 성분표를 그대로 정리했어요" },
@@ -67,6 +78,7 @@ export default function Home() {
                   href={`/products?excludeCodes=${code}`}
                   className="flex h-full flex-col items-center gap-2 rounded-xl bg-surface p-3 text-center"
                 >
+                  <Image src={QUICK_FILTER_IMAGES[code]} alt="" width={64} height={64} className="size-16" />
                   <span className="text-[12px] font-medium text-text-primary">
                     {EXCLUDE_CODE_LABELS[code].replace(" 제외", "")}
                   </span>

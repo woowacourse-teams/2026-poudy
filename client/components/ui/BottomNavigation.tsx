@@ -3,19 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Icon } from "./icons/Icon";
+
 const TABS = [
-  { href: "/", label: "홈", match: (path: string) => path === "/" },
+  { href: "/", label: "홈", icon: "home", match: (path: string) => path === "/" },
   {
     href: "/categories",
     label: "카테고리",
+    icon: "grid",
     match: (path: string) => path.startsWith("/categor") || path.startsWith("/brands"),
   },
   {
     href: "/search",
     label: "탐색",
+    icon: "search",
     match: (path: string) => path.startsWith("/search") || path.startsWith("/products"),
   },
-  { href: "/saved", label: "저장", match: (path: string) => path.startsWith("/saved") },
+  { href: "/saved", label: "저장", icon: "bookmark", match: (path: string) => path.startsWith("/saved") },
 ] as const;
 
 /** 디자인 C01·C02. 활성 탭은 경로에서 정한다. */
@@ -37,7 +41,7 @@ export function BottomNavigation() {
                   active ? "font-bold text-brand" : "font-medium text-text-secondary",
                 ].join(" ")}
               >
-                <TabIcon name={tab.label} active={active} />
+                <Icon name={tab.icon} size={20} filled={active} />
                 {tab.label}
               </Link>
             </li>
@@ -45,20 +49,5 @@ export function BottomNavigation() {
         })}
       </ul>
     </nav>
-  );
-}
-
-function TabIcon({ name, active }: { readonly name: string; readonly active: boolean }) {
-  const paths: Record<string, string> = {
-    홈: "M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-3v-4H7v4H4a1 1 0 0 1-1-1V9.5Z",
-    카테고리: "M3 4h6v6H3V4Zm8 0h6v6h-6V4ZM3 12h6v4H3v-4Zm8 0h6v4h-6v-4Z",
-    탐색: "M9 3a6 6 0 1 1 0 12A6 6 0 0 1 9 3Zm4.5 10.5L17 17",
-    저장: "M5 3.5h10a1 1 0 0 1 1 1V17l-6-3.5L4 17V4.5a1 1 0 0 1 1-1Z",
-  };
-
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill={active ? "currentColor" : "none"} aria-hidden="true">
-      <path d={paths[name]} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

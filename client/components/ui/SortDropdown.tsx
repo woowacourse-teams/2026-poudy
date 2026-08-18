@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Icon } from "./icons/Icon";
+
 import type { Sort } from "@/lib/domain/filter";
 
 export const SORT_LABELS: Record<Sort, string> = {
@@ -52,15 +54,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         className="flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C]"
       >
         {SORT_LABELS[value]}
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-          <path
-            d="M3 4.5 6 7.5 9 4.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="chevron-down" size={12} />
       </button>
 
       {open ? (
@@ -85,26 +79,12 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
                 ].join(" ")}
               >
                 {SORT_LABELS[sort]}
-                {sort === value ? <Check /> : null}
+                {sort === value ? <Icon name="check" size={14} /> : null}
               </button>
             </li>
           ))}
         </ul>
       ) : null}
     </div>
-  );
-}
-
-function Check() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path
-        d="M3 7.5 6 10.5 11 4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

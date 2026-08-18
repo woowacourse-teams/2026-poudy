@@ -1,3 +1,5 @@
+import { Icon } from "./icons/Icon";
+
 import { dropletFills, levelLabel } from "@/lib/domain/product-display";
 
 type LevelTagProps = {
@@ -21,19 +23,11 @@ export function LevelTag({ kind, level }: LevelTagProps) {
     <span className="inline-flex items-center gap-1">
       <span className="inline-flex gap-0.5" aria-hidden="true">
         {dropletFills(level).map((isFilled, index) => (
-          <Droplet key={index} className={isFilled ? filled : empty} />
+          <Icon key={index} name="droplet" size={10} filled={isFilled} className={isFilled ? filled : empty} />
         ))}
       </span>
       <span className={`text-[12px] font-semibold ${filled}`}>{label}</span>
       <span className="sr-only">{levelLabel(level)}</span>
     </span>
-  );
-}
-
-function Droplet({ className }: { readonly className?: string }) {
-  return (
-    <svg className={className} width="8" height="10" viewBox="0 0 8 10" aria-hidden="true">
-      <path d="M4 0C4 0 0 4.2 0 6.4A4 4 0 0 0 8 6.4C8 4.2 4 0 4 0Z" fill="currentColor" />
-    </svg>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon } from "./icons/Icon";
+
 type SaveButtonProps = {
   readonly productName: string;
   readonly saved: boolean;
@@ -21,7 +23,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         className="flex h-13 w-full items-center justify-center gap-2 rounded-button bg-action text-[15px] font-bold text-action-text"
       >
         {saved ? "저장됨" : "제품 저장"}
-        <Bookmark filled={saved} />
+        <Icon name="bookmark" size={20} filled={saved} />
       </button>
     );
   }
@@ -34,27 +36,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       aria-label={label}
       className="flex size-11 items-center justify-center rounded-full"
     >
-      <Bookmark filled={saved} className={saved ? "text-brand" : "text-text-secondary"} />
+      <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-brand" : "text-text-secondary"} />
     </button>
-  );
-}
-
-function Bookmark({ filled, className }: { readonly filled: boolean; readonly className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill={filled ? "currentColor" : "none"}
-      aria-hidden="true"
-    >
-      <path
-        d="M5 3.5h10a1 1 0 0 1 1 1V17l-6-3.5L4 17V4.5a1 1 0 0 1 1-1Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

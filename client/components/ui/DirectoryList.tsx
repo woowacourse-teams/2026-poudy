@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { Icon } from "./icons/Icon";
+
 type DirectoryRailItem = {
   readonly id: string;
   readonly label: string;
@@ -91,15 +93,7 @@ function DirectoryRow({ label, count, href }: DirectoryRowItem) {
           <span className="text-[12px] text-[#8B8D94]">{count.toLocaleString("ko-KR")}개</span>
         )}
       </span>
-      <ChevronRight />
+      <Icon name="chevron-right" size={16} className="text-[#8B8D94]" />
     </Link>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M6 4l4 4-4 4" stroke="#8B8D94" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
