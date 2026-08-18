@@ -6,7 +6,13 @@ const APP_SCHEME = 'poudy:';
 const URL_PATTERN = /https?:\/\/[^\s<>"']+/giu;
 const TRAILING_PUNCTUATION = /[),.\]}!?;:]+$/u;
 
-function getSameOriginUrl(text: string, webBaseUrl: string): string | null {
+interface ExternalEntryOptions {
+  readonly onNavigate: (url: string) => void;
+  readonly onUnsupportedShare: () => void;
+  readonly webBaseUrl: string;
+}
+
+const getSameOriginUrl = (text: string, webBaseUrl: string): string | null => {
   const match = text.match(URL_PATTERN)?.[0];
   if (!match) {
     return null;
@@ -20,9 +26,9 @@ function getSameOriginUrl(text: string, webBaseUrl: string): string | null {
   } catch {
     return null;
   }
-}
+};
 
-function getDeepLinkUrl(value: string, webBaseUrl: string): string | null {
+const getDeepLinkUrl = (value: string, webBaseUrl: string): string | null => {
   try {
     const deepLink = new URL(value);
     if (deepLink.protocol !== APP_SCHEME || deepLink.hostname === 'expo-sharing') {
@@ -34,15 +40,9 @@ function getDeepLinkUrl(value: string, webBaseUrl: string): string | null {
   } catch {
     return null;
   }
-}
+};
 
-export function useExternalEntry(
-  options: Readonly<{
-    onNavigate(url: string): void;
-    onUnsupportedShare(): void;
-    webBaseUrl: string;
-  }>,
-) {
+export const useExternalEntry = (options: ExternalEntryOptions) => {
   const { clearSharedPayloads, refreshSharePayloads, sharedPayloads } = useIncomingShare();
   const lastShare = useRef<string | null>(null);
 
@@ -92,4 +92,4 @@ export function useExternalEntry(
 
     return () => subscription.remove();
   }, [options]);
-}
+};

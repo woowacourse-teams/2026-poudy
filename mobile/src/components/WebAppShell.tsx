@@ -6,12 +6,20 @@ import type { WebViewNavigation } from 'react-native-webview';
 
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 
-type NavigationState = Readonly<{
-  key: number;
-  url: string;
-}>;
+interface NavigationState {
+  readonly key: number;
+  readonly url: string;
+}
 
-export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
+interface NavigationRequest {
+  readonly url: string;
+}
+
+interface WebAppShellProps {
+  readonly webBaseUrl: string;
+}
+
+export default function WebAppShell({ webBaseUrl }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
   const canGoBack = useRef(false);
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
@@ -58,7 +66,7 @@ export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
   }, []);
 
   const handleShouldStartLoad = useCallback(
-    (request: Readonly<{ url: string }>) => {
+    (request: NavigationRequest) => {
       if (request.url === 'about:blank') {
         return true;
       }

@@ -1,1 +1,1 @@
-export { RootApp as default } from '@/application/RootApp';
+export { default } from '@/application/RootApp';

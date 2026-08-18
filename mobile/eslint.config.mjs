@@ -31,9 +31,18 @@ export default [
           selector: "VariableDeclaration[kind='let']",
           message: 'let 사용 금지: const를 사용하세요.',
         },
+        {
+          selector: "FunctionDeclaration:not([parent.type='ExportDefaultDeclaration'])",
+          message: '일반 함수는 화살표 함수로 작성하세요.',
+        },
+        {
+          selector: 'ExportDefaultDeclaration > FunctionDeclaration[id.name!=/^[A-Z]/]',
+          message: 'default function은 React 컴포넌트에만 사용하세요.',
+        },
       ],
       'no-shadow': 'off',
       'prefer-const': 'error',
+      'ts/consistent-type-definitions': ['error', 'interface'],
       'ts/no-shadow': 'error',
       'ts/no-unused-vars': [
         'error',
