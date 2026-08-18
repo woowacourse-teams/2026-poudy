@@ -7,6 +7,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
@@ -39,8 +40,6 @@ public class ProductRepository {
     private static final String VOLUME_VALUE_FIELD = "volume_value";
     private static final String VOLUME_UNIT_FIELD = "volume_unit";
     private static final String STATUS_FIELD = "status";
-    private static final String MOISTURE_LEVEL_FIELD = "moisture_level";
-    private static final String OIL_LEVEL_FIELD = "oil_level";
     private static final String UPDATED_AT_FIELD = "updated_at";
     private static final String INGREDIENTS_FIELD = "ingredients";
     private static final String INGREDIENT_ID_FIELD = "ingredient_id";
@@ -51,32 +50,37 @@ public class ProductRepository {
             JsonDataReader jsonDataReader,
             Brands brands,
             Categories categories,
-            Ingredients ingredients) {
+            Ingredients ingredients,
+            ProductFactory productFactory) {
         this.products = new Products(
                 jsonDataReader.readList(
                         PRODUCTS_FILE_NAME,
                         Product.class,
-                        resolvedWith(brands, categories, ingredients)));
+                        resolvedWith(brands, categories, ingredients, productFactory)));
     }
 
-    private static JacksonModule resolvedWith(Brands brands, Categories categories, Ingredients ingredients) {
+    private static JacksonModule resolvedWith(
+            Brands brands,
+            Categories categories,
+            Ingredients ingredients,
+            ProductFactory productFactory) {
         SimpleModule resolution = new SimpleModule("제품 참조 해석");
         resolution.addDeserializer(Product.class, new ValueDeserializer<Product>() {
 
             @Override
             public Product deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
                 JsonNode product = context.readTree(parser);
+                Category category = categoryOf(product, categories, context);
+                Ingredients productIngredients = ingredientsOf(product, ingredients, context);
 
-                return new Product(
+                return productFactory.create(
                         idOf(product, ID_FIELD, context),
                         requiredTextOf(product, PRODUCT_NAME_FIELD, context),
                         brandOf(product, brands, context),
-                        categoryOf(product, categories, context),
-                        ingredientsOf(product, ingredients, context),
-                        requiredTextOf(product, IMAGE_URL_FIELD, context),
+                        category,
+                        productIngredients,
+                        nullableTextOf(product, IMAGE_URL_FIELD, context),
                         variantsOf(product, context),
-                        integerOf(product, MOISTURE_LEVEL_FIELD, context),
-                        integerOf(product, OIL_LEVEL_FIELD, context),
                         updatedAtOf(product, context));
             }
         });
@@ -175,16 +179,6 @@ public class ProductRepository {
         return id.asLong();
     }
 
-    private static Integer integerOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
-        JsonNode number = value.get(field);
-        if (number == null || !number.isIntegralNumber()) {
-            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 정수여야 합니다.", field);
-        }
-
-        return number.asInt();
-    }
-
     private static BigDecimal decimalOf(JsonNode value, String field, DeserializationContext context)
             throws JacksonException {
         JsonNode number = value.get(field);
@@ -203,6 +197,22 @@ public class ProductRepository {
         }
 
         return text;
+    }
+
+    private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
+            throws JacksonException {
+        JsonNode text = value.get(field);
+        if (text == null || text.isNull()) {
+            return null;
+        }
+        if (!text.isTextual()) {
+            return context.reportInputMismatch(
+                    Product.class,
+                    "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
+                    field);
+        }
+
+        return text.asText();
     }
 
     private static String textOf(JsonNode value, String field) {

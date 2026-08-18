@@ -91,6 +91,7 @@ com.poudy
 │   │   └── ProductService
 │   ├── domain
 │   │   ├── Product
+│   │   ├── ProductFactory
 │   │   ├── Products
 │   │   ├── ProductDetail
 │   │   ├── ProductFilter
@@ -99,7 +100,15 @@ com.poudy
 │   │   ├── ProductVariant
 │   │   ├── ProductVariants
 │   │   ├── SkinEffectGroup
-│   │   └── IngredientFilter
+│   │   ├── IngredientFilter
+│   │   └── sensory
+│   │       ├── ProductSensory
+│   │       ├── ProductSensoryEstimator
+│   │       ├── HeuristicProductSensoryEstimator
+│   │       ├── MoistureLevel
+│   │       ├── OilLevel
+│   │       ├── SensoryConfidence
+│   │       └── SensoryModelVersion
 │   └── repository
 │       └── ProductRepository
 ├── excludecode
@@ -288,11 +297,21 @@ Product
 ├── image
 ├── ProductVariants 일급 컬렉션
 │   └── ProductVariant (price, volume, status)
-├── moisture level
-└── oil level
+└── ProductSensory
+    ├── MoistureLevel
+    ├── OilLevel
+    ├── SensoryConfidence
+    └── SensoryModelVersion
 ```
 
 제품 하나에 관한 판단은 `Product`가 담당한다. 예를 들어 특정 브랜드나 카테고리에 해당하는지, 특정 성분을 포함하는지, 제외 대상 성분을 포함하는지를 `Product`에 물어보는 형태로 구현한다.
+
+`products.json`에는 `moisture_level`, `oil_level`을 두지 않는다. `ProductFactory`가 해석된
+`Category`와 순서가 보존된 `Ingredients`를 `ProductSensoryEstimator`에 전달해 서버 기동 시
+한 번 계산하고, 완성된 `ProductSensory`를 `Product`에 넣는다. 목록·상세·filter·count는 모두
+그 값을 사용하며 응답 DTO 경계에서만 기존 정수 `0~3` 계약으로 바꾼다. 현재 v0의 근거와
+의도적으로 남긴 한계는
+[`sensory-inference-v0.md`](docs/product/sensory-inference-v0.md)가 소유한다.
 
 전성분은 `List<Ingredient>`가 아니라 `ingredient.domain`의 `Ingredients`로 갖는다. 여러 성분을 대상으로 하는 문제는 이미 그 일급 컬렉션이 담당하므로, 제품이 성분 목록을 다시 훑는 코드를 갖지 않는다.
 
@@ -403,7 +422,7 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 
 형식만 옮기는 중간 타입은 두지 않는다. 파일 모양과 도메인 모양이 다를 때도 마찬가지다. `Product`는 `Brand`, `Category`, `Ingredients`를 갖는데 `products.json`은 이들을 ID로 적는다. 이때 파일 모양을 받는 타입을 새로 만들지 않고, `readList`에 역직렬화 규칙을 함께 넘겨 Jackson이 읽으면서 ID를 도메인 객체로 바꾸게 한다. 데이터베이스에서 조인이 매핑 단계에서 끝나고 애플리케이션이 행 타입을 따로 갖지 않는 것과 같다.
 
-그 규칙은 `ProductRepository`가 주입받은 `Brands`, `Categories`, `Ingredients`를 그대로 써서 저장소 안에서 만든다. 새 타입을 두지 않으며, `JsonDataReader`는 규칙을 받기만 하므로 어느 기능의 도메인도 알지 않는다. 각 참조를 찾는 규칙은 해당 일급 컬렉션이 갖는다.
+그 규칙은 `ProductRepository`가 주입받은 `Brands`, `Categories`, `Ingredients`를 그대로 써서 저장소 안에서 만든다. 새 파일 모양 타입을 두지 않으며, `JsonDataReader`는 규칙을 받기만 하므로 어느 기능의 도메인도 알지 않는다. 각 참조를 찾는 규칙은 해당 일급 컬렉션이 갖는다. 참조 해석이 끝나면 Repository가 주입받은 `ProductFactory`에 완전한 제품 생성을 위임한다. Factory는 순수 Domain 서비스이며 Repository나 JSON을 알지 않는다.
 
 기본 매핑은 Jackson이 도메인 레코드를 직접 만들기 때문에 도메인 필드 이름이 파일과의 계약이 된다. 파일 모양과 도메인 모양이 다른 `Product`는 `ProductRepository`의 전용 역직렬화 규칙이 JSON 필드와 조립 과정을 명시한다. 어느 방식이든 필드 계약 변경은 컴파일로 잡히지 않을 수 있으므로, 각 데이터 파일은 `src/test/resources`의 작은 픽스처로 매핑을 검증한다.
 
@@ -517,3 +536,6 @@ Controller, DTO와 OpenAPI 설정 코드가 API 계약의 권위 원천이다. `
 18. 오류 응답은 `ProblemDetail`로 반환하며 `HttpStatus` 매핑은 `GlobalExceptionHandler`에만 둔다.
 19. API 계약이 바뀌면 OpenAPI와 TypeScript 생성물을 함께 갱신한다.
 20. 접근 제어자를 생략하지 않는다. 기본 접근에 기대는 대신 `public` 또는 `private`을 적는다.
+21. 제품 감각은 원천 JSON의 완성 레벨이 아니라 기동 시 `ProductFactory`가 계산한다. 런타임
+    `Product`는 버전과 confidence를 포함한 `ProductSensory`를 소유하고 API는 기존 정수 레벨을
+    유지한다.

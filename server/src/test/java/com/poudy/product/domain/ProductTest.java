@@ -1,5 +1,6 @@
 package com.poudy.product.domain;
 
+import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,8 +38,7 @@ class ProductTest {
                         ingredients,
                         "image",
                         variants,
-                        1,
-                        1,
+                        sensory(1, 1),
                         updatedAt))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("제품은 브랜드를 가져야 합니다.");
@@ -56,8 +56,7 @@ class ProductTest {
                         ingredients,
                         "image",
                         variants,
-                        1,
-                        1,
+                        sensory(1, 1),
                         updatedAt))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("제품은 카테고리를 가져야 합니다.");
@@ -76,8 +75,7 @@ class ProductTest {
                 new Ingredients(List.of(first, second)),
                 "image",
                 variants,
-                1,
-                1,
+                sensory(1, 1),
                 updatedAt);
 
         assertThat(product.skinEffectGroups()).singleElement()
@@ -85,6 +83,24 @@ class ProductTest {
                     assertThat(group.effect().id()).isEqualTo(108L);
                     assertThat(group.ingredientIds()).containsExactly(10L, 20L);
                 });
+    }
+
+    @Test
+    @DisplayName("감각 추론 결과가 없으면 만들 수 없다")
+    void rejectsMissingSensory() {
+        assertThatThrownBy(
+                () -> new Product(
+                        1L,
+                        "제품",
+                        brand,
+                        category,
+                        ingredients,
+                        "image",
+                        variants,
+                        null,
+                        updatedAt))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("제품 감각 추론 결과가 필요합니다.");
     }
 
     private static Ingredient ingredient(Long id, String effect) {

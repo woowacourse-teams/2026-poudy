@@ -1,13 +1,15 @@
 package com.poudy.product.domain;
 
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import java.util.List;
 
 public record ProductFilter(
         String keyword,
         List<Long> categoryIds,
         List<Long> brandIds,
-        List<Integer> moistureLevels,
-        List<Integer> oilLevels,
+        List<MoistureLevel> moistureLevels,
+        List<OilLevel> oilLevels,
         IngredientFilter ingredientFilter) {
 
     public ProductFilter {

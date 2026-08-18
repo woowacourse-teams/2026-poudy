@@ -4,6 +4,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -19,8 +20,7 @@ public record Product(
         Ingredients ingredients,
         String imageUrl,
         ProductVariants variants,
-        Integer moistureLevel,
-        Integer oilLevel,
+        ProductSensory sensory,
         OffsetDateTime updatedAt) {
 
     public Product {
@@ -42,8 +42,9 @@ public record Product(
         if (variants == null) {
             throw new IllegalArgumentException("제품은 용량 옵션을 가져야 합니다.");
         }
-        validateLevel(moistureLevel, "수분감");
-        validateLevel(oilLevel, "유분감");
+        if (sensory == null) {
+            throw new IllegalArgumentException("제품 감각 추론 결과가 필요합니다.");
+        }
         if (updatedAt == null) {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
         }
@@ -60,10 +61,18 @@ public record Product(
     public boolean matches(ProductFilter filter) {
         return matchesCategory(filter.categoryIds())
                 && matchesAny(filter.brandIds(), brand.id())
-                && matchesAny(filter.moistureLevels(), moistureLevel)
-                && matchesAny(filter.oilLevels(), oilLevel)
+                && matchesAny(filter.moistureLevels(), sensory.moisture())
+                && matchesAny(filter.oilLevels(), sensory.oil())
                 && ingredients.containsAll(filter.ingredientFilter().includedIds())
                 && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
+    }
+
+    public Integer moistureLevel() {
+        return sensory.moisture().value();
+    }
+
+    public Integer oilLevel() {
+        return sensory.oil().value();
     }
 
     public ProductVariant representativeVariant() {
@@ -93,9 +102,4 @@ public record Product(
         return candidates.isEmpty() || candidates.contains(value);
     }
 
-    private static void validateLevel(Integer level, String name) {
-        if (level == null || level < 0 || level > 3) {
-            throw new IllegalArgumentException("제품 " + name + " 단계는 0부터 3까지여야 합니다.");
-        }
-    }
 }

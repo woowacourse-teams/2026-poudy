@@ -12,6 +12,8 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductFactory;
+import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -51,14 +53,34 @@ class ProductRepositoryTest {
         assertThat(product.representativeVariant())
                 .extracting("price", "volumeValue", "volumeUnit", "status")
                 .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
-        assertThat(product.moistureLevel()).isEqualTo(3);
-        assertThat(product.oilLevel()).isEqualTo(1);
+        assertThat(product.moistureLevel()).isEqualTo(2);
+        assertThat(product.oilLevel()).isZero();
+        assertThat(product.sensory().modelVersion().ingredientProfileVersion())
+                .isEqualTo("ingredient-role-profile-v0.2");
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
                 .get()
                 .extracting(Ingredient::koreanName)
                 .isEqualTo("향료");
+    }
+
+    @Test
+    @DisplayName("대표 이미지가 없으면 빈 URL로 제품을 로딩한다")
+    void loadsProductWithoutImage() {
+        Product product = repositoryReading(1L, 2L, "", "null")
+                .findAll()
+                .findById(1L)
+                .orElseThrow();
+
+        assertThat(product.imageUrl()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("대표 이미지가 null이나 문자열이 아니면 로딩에 실패한다")
+    void rejectsInvalidProductImage() {
+        assertThatThrownBy(() -> repositoryReading(1L, 2L, "", "123"))
+                .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
@@ -115,13 +137,21 @@ class ProductRepositoryTest {
     }
 
     private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
+        return repositoryReading(brandId, categoryId, ingredientReferences, "\"https://example.com/product.png\"");
+    }
+
+    private static ProductRepository repositoryReading(
+            Long brandId,
+            Long categoryId,
+            String ingredientReferences,
+            String imageUrl) {
         String productData = """
                 {"products":[{
                   "id":1,
                   "brand_id":%d,
                   "category_id":%d,
                   "product_name":"제품",
-                  "image_url":"https://example.com/product.png",
+                  "image_url":%s,
                   "variants":[{
                     "id":1,
                     "price":10000,
@@ -129,12 +159,10 @@ class ProductRepositoryTest {
                     "volume_unit":"ml",
                     "status":"active"
                   }],
-                  "moisture_level":1,
-                  "oil_level":1,
                   "updated_at":"2026-08-01T00:00:00Z",
                   "ingredients":[%s]
                 }]}
-                """.formatted(brandId, categoryId, ingredientReferences);
+                """.formatted(brandId, categoryId, imageUrl, ingredientReferences);
         DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
 
             @Override
@@ -147,7 +175,8 @@ class ProductRepositoryTest {
                 new JsonDataReader(resourceLoader),
                 brands(),
                 categories(),
-                new Ingredients(List.of()));
+                new Ingredients(List.of()),
+                new ProductFactory(new HeuristicProductSensoryEstimator()));
     }
 
     private static Brands brands() {

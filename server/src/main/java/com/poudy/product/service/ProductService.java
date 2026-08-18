@@ -13,6 +13,8 @@ import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.Products;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -76,8 +78,8 @@ public class ProductService {
                 request.keyword(),
                 request.categoryIds(),
                 request.brandIds(),
-                request.moistureLevel(),
-                request.oilLevel(),
+                request.moistureLevel().stream().map(MoistureLevel::new).toList(),
+                request.oilLevel().stream().map(OilLevel::new).toList(),
                 ingredientFilter);
     }
 }

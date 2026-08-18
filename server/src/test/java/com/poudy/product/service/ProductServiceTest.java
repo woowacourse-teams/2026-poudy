@@ -1,5 +1,6 @@
 package com.poudy.product.service;
 
+import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -112,8 +113,7 @@ class ProductServiceTest {
                 new Ingredients(List.of()),
                 "https://example.com/product.png",
                 new ProductVariants(List.of(variant)),
-                1,
-                1,
+                sensory(1, 1),
                 OffsetDateTime.parse("2026-08-01T00:00:00Z"));
     }
 
