@@ -33,6 +33,9 @@ public record Product(
         if (category == null) {
             throw new IllegalArgumentException("제품은 카테고리를 가져야 합니다.");
         }
+        if (category.isParent()) {
+            throw new IllegalArgumentException("제품은 소분류 카테고리를 가져야 합니다.");
+        }
         if (ingredients == null) {
             ingredients = new Ingredients(List.of());
         }

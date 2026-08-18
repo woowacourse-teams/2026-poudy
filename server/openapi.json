@@ -1226,10 +1226,11 @@
           },
           "child": {
             "$ref": "#/components/schemas/CategorySummaryResponse",
-            "description": "소분류. 대분류만 지정된 제품은 비어 있다"
+            "description": "제품이 속한 소분류"
           }
         },
         "required": [
+          "child",
           "id",
           "name"
         ]

@@ -23,7 +23,7 @@ export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResp
 export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
 
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
-export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse.optional() });
+export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
 
 export type DisclosedAmountResponse = __TypedOpenapi.Schemas.DisclosedAmountResponse;
 export const DisclosedAmountResponse = z.object({ type: z.string(), value: z.number(), unit: z.string() });
