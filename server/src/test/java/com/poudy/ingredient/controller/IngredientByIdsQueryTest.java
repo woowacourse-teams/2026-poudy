@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DisplayName("성분 일괄 조회")
+@DisplayName("성분 ID 목록 조회")
 class IngredientByIdsQueryTest {
 
     @Autowired
@@ -43,10 +43,11 @@ class IngredientByIdsQueryTest {
     }
 
     @Test
-    @DisplayName("검색어와 성분 ID를 함께 보내면 잘못된 요청으로 응답한다")
-    void rejectsKeywordWithIngredientIds() throws Exception {
-        mockMvc.perform(get("/api/ingredients").param("keyword", "리날룰").param("ingredientIds", "9"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    @DisplayName("검색어와 성분 ID를 함께 보내면 두 조건을 모두 만족하는 성분을 반환한다")
+    void findsIngredientsMatchingKeywordAndIds() throws Exception {
+        mockMvc.perform(get("/api/ingredients").param("keyword", "가지").param("ingredientIds", "9,2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(2L));
     }
 }
