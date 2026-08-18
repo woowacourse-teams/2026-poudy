@@ -36,11 +36,13 @@ const relativeTime = (usedAt: number, now = Date.now()): string => {
 export function RecentFilters() {
   const recent = useSyncExternalStore(subscribeRecentFilters, getRecentFiltersSnapshot, getRecentFiltersServerSnapshot);
 
-  if (recent.length === 0) return null;
-
   return (
     <section className="flex flex-col gap-2.5">
       <h2 className="text-[15px] font-bold text-text-primary">최근 검색</h2>
+
+      {recent.length === 0 ? (
+        <EmptyNotice icon="search" title="최근 검색이 없어요" detail="제품이나 성분을 찾아보면 여기에 남아요" />
+      ) : null}
 
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
         {recent.map((item) => (
@@ -72,6 +74,25 @@ export function RecentFilters() {
   );
 }
 
+/** 아직 쌓인 것이 없을 때도 자리를 남겨 무엇이 채워질지 알려 준다. */
+function EmptyNotice({
+  icon,
+  title,
+  detail,
+}: {
+  readonly icon: "search" | "bookmark";
+  readonly title: string;
+  readonly detail: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-surface px-4 py-6">
+      <Icon name={icon} size={20} className="text-text-secondary" />
+      <p className="text-[13px] font-semibold text-text-primary">{title}</p>
+      <p className="text-[11px] text-text-secondary">{detail}</p>
+    </div>
+  );
+}
+
 export function SavedPreview() {
   const { savedIds, isSaved, toggle } = useSavedProducts();
   const key = savedIds.slice(0, 3).join(",");
@@ -98,17 +119,25 @@ export function SavedPreview() {
     return () => controller.abort();
   }, [key]);
 
-  if (savedIds.length === 0) return null;
-
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-bold text-text-primary">저장 제품</h2>
-        <Link href="/saved" className="flex items-center gap-1">
-          <span className="text-[13px] font-medium text-text-secondary">전체 보기</span>
-          <Icon name="chevron-right" size={16} className="text-text-secondary" />
-        </Link>
+        {savedIds.length > 0 ? (
+          <Link href="/saved" className="flex items-center gap-1">
+            <span className="text-[13px] font-medium text-text-secondary">전체 보기</span>
+            <Icon name="chevron-right" size={16} className="text-text-secondary" />
+          </Link>
+        ) : null}
       </div>
+
+      {savedIds.length === 0 ? (
+        <EmptyNotice
+          icon="bookmark"
+          title="저장한 제품이 없어요"
+          detail="마음에 드는 제품을 저장해 두면 여기에 모여요"
+        />
+      ) : null}
 
       <ul className="divide-y divide-border">
         {items.map((product) => (

@@ -106,11 +106,9 @@ export default function Home() {
           <h2 className="sr-only">서비스 안내</h2>
           <ul className="grid grid-cols-3 gap-2">
             {TRUST.map((item) => (
-              <li key={item.title} className={`flex flex-col items-center gap-[3px] rounded-xl p-2 ${item.bg}`}>
-                <span className="flex items-center gap-1">
-                  <Icon name={item.icon} size={14} className={item.tint} />
-                  <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
-                </span>
+              <li key={item.title} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 ${item.bg}`}>
+                <Icon name={item.icon} size={18} className={item.tint} />
+                <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
               </li>
             ))}
