@@ -63,5 +63,6 @@ jobs:
         with:
           name: poudy-deployment-${{ github.sha }}
           path: ${{ runner.temp }}/poudy-artifacts
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
