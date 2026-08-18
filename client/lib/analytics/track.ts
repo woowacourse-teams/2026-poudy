@@ -14,7 +14,11 @@ declare global {
 }
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+/**
+ * 같은 출처의 프록시 경로로 보낸다. PostHog 도메인으로 바로 보내면
+ * 광고 차단기가 막아 이벤트가 유실된다. 넘기는 곳은 next.config.ts 가 정한다.
+ */
+const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "/ingest";
 
 /** 개발 환경의 이벤트가 운영 지표에 섞이지 않게 구분한다. */
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
@@ -37,6 +41,8 @@ export const initAnalytics = async (): Promise<void> => {
   const { default: posthog } = await import("posthog-js");
   posthog.init(key as string, {
     api_host: host,
+    // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
+    ui_host: "https://us.posthog.com",
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: true,
