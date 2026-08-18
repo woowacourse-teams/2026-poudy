@@ -3,6 +3,11 @@
 import { Icon } from "./icons/Icon";
 
 type SearchFieldProps = {
+  /**
+   * outlined 는 탐색 조건 화면의 흰 배경 테두리 필드,
+   * filled 는 저장함과 시트에서 쓰는 회색 필드다.
+   */
+  readonly variant?: "filled" | "outlined";
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly placeholder: string;
@@ -11,7 +16,7 @@ type SearchFieldProps = {
 };
 
 /** 디자인 C06. 지우기 버튼은 입력이 있을 때만 보인다. */
-export function SearchField({ value, onChange, placeholder, label, onSubmit }: SearchFieldProps) {
+export function SearchField({ value, onChange, placeholder, label, onSubmit, variant = "filled" }: SearchFieldProps) {
   return (
     <form
       role="search"
@@ -19,7 +24,11 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
         event.preventDefault();
         onSubmit?.();
       }}
-      className="flex h-12 items-center gap-2 rounded-xl bg-surface px-3.5"
+      className={`flex items-center gap-2.5 ${
+        variant === "outlined"
+          ? "h-12 rounded-lg border border-[#D1D3D8] bg-white px-3 focus-within:border-[#212124]"
+          : "h-12 rounded-xl bg-surface px-3.5"
+      }`}
     >
       <Icon name="search" size={18} className="text-[#8B8D94]" />
 

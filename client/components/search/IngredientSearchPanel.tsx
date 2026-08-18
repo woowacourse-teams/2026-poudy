@@ -3,7 +3,7 @@
 import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
-import { CheckboxRow } from "@/components/filter/CheckboxRow";
+import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { fetchIngredients } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
@@ -24,7 +24,7 @@ type IngredientSearchPanelProps = {
   readonly onLearnNames: (ingredients: readonly IngredientResponse[]) => void;
 };
 
-/** S03 성분 필터링 탭. 문구는 design/v1.pen 을 따른다. */
+/** S03 성분 필터링 탭. 문구와 생김새는 design/v1.pen 을 따른다. */
 export function IngredientSearchPanel({
   filter,
   onChange,
@@ -61,31 +61,37 @@ export function IngredientSearchPanel({
     });
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex flex-col gap-2">
-        <SearchField value={keyword} onChange={setKeyword} placeholder="성분명을 입력해 주세요" label="성분 검색" />
-        <p className="text-[12px] text-text-secondary">검색한 성분을 포함 또는 제외 조건으로 추가할 수 있어요.</p>
-      </div>
+    <div className="flex flex-col px-4 pt-3 pb-5">
+      <section className="flex flex-col gap-2 pb-4">
+        <SearchField
+          variant="outlined"
+          value={keyword}
+          onChange={setKeyword}
+          placeholder="성분명을 입력해 주세요"
+          label="성분 검색"
+        />
+        <p className="text-[12px] text-[#72747A]">검색한 성분을 포함 또는 제외 조건으로 추가할 수 있어요.</p>
+      </section>
 
       {conflicts.length > 0 ? (
-        <p role="alert" className="rounded-lg bg-brand-soft px-3 py-2 text-[12px] text-brand">
+        <p role="alert" className="mb-4 rounded-lg bg-brand-soft px-3 py-2 text-[12px] text-brand">
           제외한 성분군에 속한 성분을 포함 조건으로 골랐어요. 조건을 다시 확인해 주세요.
         </p>
       ) : null}
 
       {typing ? (
-        <section>
+        <section className="pb-5">
           <h2 className="flex items-center gap-1.5 pb-2">
-            <span className="text-[14px] font-bold text-text-primary">‘{keyword.trim()}’이 포함된 성분</span>
-            <span className="text-[12px] font-medium text-text-secondary">{items.length}개</span>
+            <span className="text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
+            <span className="text-[12px] font-medium text-[#868B94]">{items.length}개</span>
           </h2>
 
           <ul className="divide-y divide-border">
             {items.map((item) => (
               <li key={item.id} className="flex items-center gap-2 py-3">
                 <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-[12px] font-semibold text-text-primary">{item.koreanName}</span>
-                  <span className="text-[10px] text-text-secondary">
+                  <span className="text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
+                  <span className="text-[10px] text-[#868B94]">
                     {item.skinEffects.map((effect) => effect.name).join(" · ")}
                   </span>
                 </span>
@@ -93,7 +99,7 @@ export function IngredientSearchPanel({
                   type="button"
                   onClick={() => add("includeIngredientIds", item)}
                   aria-pressed={filter.includeIngredientIds.includes(item.id)}
-                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-bold text-text-primary"
+                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-bold text-[#212124]"
                 >
                   포함
                 </button>
@@ -101,7 +107,7 @@ export function IngredientSearchPanel({
                   type="button"
                   onClick={() => add("excludeIngredientIds", item)}
                   aria-pressed={filter.excludeIngredientIds.includes(item.id)}
-                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-semibold text-text-primary"
+                  className="h-8 rounded-lg border border-border px-3 text-[12px] font-semibold text-[#212124]"
                 >
                   제외
                 </button>
@@ -112,67 +118,89 @@ export function IngredientSearchPanel({
       ) : null}
 
       {selectedCount > 0 ? (
-        <section>
-          <h2 className="flex items-center gap-1.5 pb-2">
-            <span className="text-[15px] font-bold text-text-primary">선택한 성분</span>
-            <span className="text-[12px] font-medium text-text-secondary">{selectedCount}개</span>
-          </h2>
+        <>
+          <section className="flex flex-col gap-2.5 py-5">
+            <div className="flex items-center gap-1.5 px-0.5">
+              <h2 className="text-[15px] font-bold text-[#212124]">선택한 성분</h2>
+              <span className="text-[12px] font-medium text-[#868B94]">{selectedCount}개</span>
+            </div>
 
-          <ul className="flex flex-wrap gap-1.5">
-            {filter.includeIngredientIds.map((id) => (
-              <li key={`in-${id}`}>
-                <SelectedChip
-                  kind="포함"
-                  name={names.get(id) ?? `성분 ${id}`}
-                  onRemove={() => remove("includeIngredientIds", id)}
-                />
-              </li>
-            ))}
-            {filter.excludeIngredientIds.map((id) => (
-              <li key={`ex-${id}`}>
-                <SelectedChip
-                  kind="제외"
-                  name={names.get(id) ?? `성분 ${id}`}
-                  onRemove={() => remove("excludeIngredientIds", id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
+            <ul className="grid grid-cols-2 gap-2">
+              {filter.includeIngredientIds.map((id) => (
+                <li key={`in-${id}`}>
+                  <SelectedChip
+                    kind="포함"
+                    name={names.get(id) ?? `성분 ${id}`}
+                    onRemove={() => remove("includeIngredientIds", id)}
+                  />
+                </li>
+              ))}
+              {filter.excludeIngredientIds.map((id) => (
+                <li key={`ex-${id}`}>
+                  <SelectedChip
+                    kind="제외"
+                    name={names.get(id) ?? `성분 ${id}`}
+                    onRemove={() => remove("excludeIngredientIds", id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <hr className="border-0 border-t border-[#F2F3F6]" />
+        </>
       ) : null}
 
-      <section>
-        <h2 className="flex items-center gap-1.5 pb-2">
-          <span className="text-[15px] font-bold text-text-primary">빠른 필터</span>
+      <section className="flex flex-col gap-2.5 py-5">
+        <div className="flex items-center gap-1.5 px-0.5">
+          <h2 className="text-[15px] font-bold text-[#212124]">빠른 필터</h2>
           {filter.excludeCodes.length > 0 ? (
-            <span className="text-[12px] font-medium text-text-secondary">{filter.excludeCodes.length}개 선택</span>
+            <span className="text-[12px] font-medium text-[#868B94]">{filter.excludeCodes.length}개 선택</span>
           ) : null}
-        </h2>
+        </div>
 
-        <ul>
-          {excludeCodes.map((code) => (
-            <li key={code.code}>
-              <CheckboxRow
-                label={code.name}
-                detail={code.description}
-                checked={filter.excludeCodes.includes(code.code)}
-                onToggle={() => toggleCode(code.code)}
-              />
-            </li>
-          ))}
+        <ul className="grid grid-cols-2 gap-2">
+          {excludeCodes.map((code) => {
+            const checked = filter.excludeCodes.includes(code.code);
+            return (
+              <li key={code.code}>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => toggleCode(code.code)}
+                  className={`flex h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 text-left ${
+                    checked ? "border-transparent bg-[#F2F3F5]" : "border-[#DDE0E4] bg-[#F7F7F8]"
+                  }`}
+                >
+                  <span className={`flex-1 text-[11px] text-[#4D5159] ${checked ? "font-bold" : "font-semibold"}`}>
+                    {code.name}
+                  </span>
+                  <span
+                    className={`flex size-[18px] shrink-0 items-center justify-center rounded border ${
+                      checked ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
+                    }`}
+                  >
+                    {checked ? <Icon name="check" size={12} className="text-white" /> : null}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
-      {selectedCount > 0 || filter.excludeCodes.length > 0 ? (
-        <p className="text-[11px] text-text-secondary">
-          성분 {selectedCount}개 · 빠른 필터 {filter.excludeCodes.length}개 적용
-        </p>
-      ) : null}
+      <hr className="border-0 border-t border-[#F2F3F6]" />
+
+      <p className="flex items-center gap-2 pt-3 text-[11px] text-[#868B94]">
+        <Icon name="info" size={16} />
+        성분 {selectedCount}개 · 빠른 필터 {filter.excludeCodes.length}개 적용
+      </p>
     </div>
   );
 }
 
-/** 디자인의 포함·제외 칩. 어떤 조건으로 담았는지 라벨로 구분한다. */
+/** 디자인의 포함·제외 pill. 40 높이에 둥근 모서리를 쓴다. */
 function SelectedChip({
   kind,
   name,
@@ -182,20 +210,12 @@ function SelectedChip({
   readonly name: string;
   readonly onRemove: () => void;
 }) {
-  const include = kind === "포함";
-
   return (
-    <span
-      className={`inline-flex h-8 items-center gap-1.5 rounded-2xl border px-2.5 ${
-        include ? "border-brand/30 bg-brand-soft" : "border-border bg-surface"
-      }`}
-    >
-      <span className={`text-[10px] font-bold ${include ? "text-brand" : "text-text-secondary"}`}>{kind}</span>
-      <span className="text-[12px] font-semibold text-text-primary">{name}</span>
-      <button type="button" onClick={onRemove} aria-label={`${name} ${kind} 조건 삭제`}>
-        <span aria-hidden="true" className="text-text-secondary">
-          ✕
-        </span>
+    <span className="flex h-10 items-center gap-[7px] rounded-[20px] border border-border bg-white px-3">
+      <span className="text-[10px] font-bold text-[#868B94]">{kind}</span>
+      <span className="flex-1 truncate text-[12px] font-semibold text-[#212124]">{name}</span>
+      <button type="button" onClick={onRemove} aria-label={`${name} ${kind} 조건 삭제`} className="shrink-0">
+        <Icon name="x" size={16} className="text-[#868B94]" />
       </button>
     </span>
   );
