@@ -10,7 +10,10 @@ import type {
 /*
  * 값은 client/design/v1.pen 의 화면에 적힌 것을 그대로 옮겼다.
  * 목 데이터로 띄운 화면을 디자인과 바로 대조할 수 있게 하기 위함이다.
+ *
+ * 제품 그림은 디자인에 있는 것만 채운다. 비어 있으면 화면이 기본 공병 그림을 쓴다.
  */
+const ROUNDLAB_TONER_IMAGE = "/images/products/roundlab-1025-toner.png";
 
 export const brands: BrandListItemResponse[] = [
   { id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 48 },
@@ -36,7 +39,7 @@ export const products: ProductResponse[] = [
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
-    imageUrl: "",
+    imageUrl: ROUNDLAB_TONER_IMAGE,
     price: 18000,
     volumeValue: 200,
     volumeUnit: "ml",
@@ -162,7 +165,7 @@ export const productDetails: ProductDetailResponse[] = [
     name: "1025 독도 토너",
     brand: brandOf(1),
     categories: [{ id: 1, name: "스킨케어", child: { id: 11, name: "스킨/토너" } }],
-    imageUrl: "",
+    imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },
       { id: 2, price: 32000, volumeValue: 500, volumeUnit: "ml", status: "SALE" },

@@ -1,4 +1,5 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import Image from "next/image";
 import Link from "next/link";
 
 import { SaveProductButton } from "./SaveProductButton";
@@ -6,6 +7,7 @@ import { SaveProductButton } from "./SaveProductButton";
 import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
+import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
@@ -24,7 +26,14 @@ export function ProductDetail({ product }: { readonly product: ProductDetailResp
         <CategoryPath categories={product.categories} />
 
         <section className="flex flex-col items-center gap-3 px-4 pb-5">
-          <div className="size-[140px] rounded-2xl bg-surface" />
+          <Image
+            src={product.imageUrl || PRODUCT_PLACEHOLDER}
+            alt=""
+            width={140}
+            height={140}
+            className="size-[140px] rounded-2xl bg-surface object-contain"
+            priority
+          />
           <p className="text-[12px] font-medium text-text-secondary">{product.brand.name}</p>
           <h2 className="text-center text-[22px] font-bold text-text-primary">{product.name}</h2>
 

@@ -46,23 +46,20 @@ export function ProductCard({ product, saved, onToggleSave }: ProductCardProps) 
   );
 }
 
-/** 제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다. */
+/**
+ * 제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다.
+ * 그림이 없는 제품은 디자인의 기본 공병 그림으로 자리를 채운다.
+ *
+ * 서버가 외부 주소를 주기 시작하면 next.config 의 images.remotePatterns 를 함께 연다.
+ */
 function ProductThumbnail({ imageUrl }: { readonly imageUrl: string }) {
-  // 이미지가 없는 제품이 많아 디자인의 기본 공병 그림으로 자리를 채운다.
-  if (!imageUrl) {
-    return (
-      <Image
-        src={PRODUCT_PLACEHOLDER}
-        alt=""
-        width={80}
-        height={80}
-        className="size-20 shrink-0 rounded-lg bg-surface object-contain"
-      />
-    );
-  }
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- 외부 이미지 도메인이 정해지지 않아 next/image 설정을 미룬다.
-    <img src={imageUrl} alt="" className="size-20 shrink-0 rounded-lg object-cover" />
+    <Image
+      src={imageUrl || PRODUCT_PLACEHOLDER}
+      alt=""
+      width={80}
+      height={80}
+      className="size-20 shrink-0 rounded-lg bg-surface object-contain"
+    />
   );
 }
