@@ -33,7 +33,7 @@ export function LevelTag({ kind, level, variant = "plain" }: LevelTagProps) {
           : "inline-flex items-center gap-1"
       }
     >
-      <span className="inline-flex items-center gap-[3px]" aria-hidden="true">
+      <span className="inline-flex items-center" aria-hidden="true">
         {dropletFills(level).map((isFilled, index) => (
           <Icon
             key={index}
