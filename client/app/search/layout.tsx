@@ -6,7 +6,7 @@ import { TopBar } from "@/components/ui/TopBar";
 export default function SearchLayout({ children }: LayoutProps<"/search">) {
   return (
     <>
-      <TopBar title="탐색 조건 설정" variant="sub" />
+      <TopBar title="탐색" variant="root" />
       <SearchTabs />
       {children}
       <BottomNavigation />
