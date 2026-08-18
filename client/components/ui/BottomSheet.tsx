@@ -70,14 +70,15 @@ export function BottomSheet({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
+      {/* 하단 내비게이션이 sticky 라 시트가 그 위에 오도록 z-index 를 올린다. */}
+      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden="true" />
 
       <div
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-x-0 bottom-0 flex max-h-[80vh] flex-col rounded-t-3xl bg-white"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80vh] flex-col rounded-t-3xl bg-white"
       >
         <div className="px-5 pt-5 pb-2">
           <h2 id={titleId} className="text-[17px] font-bold text-text-primary">

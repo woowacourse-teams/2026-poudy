@@ -6,10 +6,18 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createLocalStore, isNumberArray } from "./local-store";
-import { isSaved, readSavedProductIds, saveProduct, toggleSaved, unsaveProduct } from "./saved-products";
+import {
+  isSaved,
+  readSavedProductIds,
+  refreshSavedProducts,
+  saveProduct,
+  toggleSaved,
+  unsaveProduct,
+} from "./saved-products";
 
 beforeEach(() => {
   window.localStorage.clear();
+  refreshSavedProducts();
 });
 
 describe("createLocalStore", () => {
