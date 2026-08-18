@@ -8,8 +8,10 @@ on:
 permissions:
   actions: read
   contents: read
+  # PR 댓글은 /issues/{n}/comments 로 달지만, 대상이 PR 이면
+  # GitHub 가 pull-requests 쓰기 권한도 함께 요구한다.
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   comment:
