@@ -50,4 +50,12 @@ class IngredientByIdsQueryTest {
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].id").value(2L));
     }
+
+    @Test
+    @DisplayName("성분 ID 목록에 빈 요소가 섞이면 잘못된 요청으로 응답한다")
+    void rejectsNullIngredientId() throws Exception {
+        mockMvc.perform(get("/api/ingredients").param("ingredientIds", "9", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
 }
