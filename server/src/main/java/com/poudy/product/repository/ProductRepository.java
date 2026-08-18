@@ -79,7 +79,7 @@ public class ProductRepository {
                         brandOf(product, brands, context),
                         category,
                         productIngredients,
-                        requiredTextOf(product, IMAGE_URL_FIELD, context),
+                        nullableTextOf(product, IMAGE_URL_FIELD, context),
                         variantsOf(product, context),
                         updatedAtOf(product, context));
             }
@@ -197,6 +197,22 @@ public class ProductRepository {
         }
 
         return text;
+    }
+
+    private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
+            throws JacksonException {
+        JsonNode text = value.get(field);
+        if (text == null || text.isNull()) {
+            return null;
+        }
+        if (!text.isTextual()) {
+            return context.reportInputMismatch(
+                    Product.class,
+                    "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
+                    field);
+        }
+
+        return text.asText();
     }
 
     private static String textOf(JsonNode value, String field) {

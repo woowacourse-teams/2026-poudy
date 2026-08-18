@@ -66,6 +66,24 @@ class ProductRepositoryTest {
     }
 
     @Test
+    @DisplayName("대표 이미지가 없으면 빈 URL로 제품을 로딩한다")
+    void loadsProductWithoutImage() {
+        Product product = repositoryReading(1L, 2L, "", "null")
+                .findAll()
+                .findById(1L)
+                .orElseThrow();
+
+        assertThat(product.imageUrl()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("대표 이미지가 null이나 문자열이 아니면 로딩에 실패한다")
+    void rejectsInvalidProductImage() {
+        assertThatThrownBy(() -> repositoryReading(1L, 2L, "", "123"))
+                .isInstanceOf(InfrastructureException.class);
+    }
+
+    @Test
     @DisplayName("성분을 포함한 제품 수는 조립된 성분으로 센다")
     void countsWithResolvedIngredients() {
         assertThat(productRepository.countContaining(4815L)).isPositive();
@@ -119,13 +137,21 @@ class ProductRepositoryTest {
     }
 
     private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
+        return repositoryReading(brandId, categoryId, ingredientReferences, "\"https://example.com/product.png\"");
+    }
+
+    private static ProductRepository repositoryReading(
+            Long brandId,
+            Long categoryId,
+            String ingredientReferences,
+            String imageUrl) {
         String productData = """
                 {"products":[{
                   "id":1,
                   "brand_id":%d,
                   "category_id":%d,
                   "product_name":"제품",
-                  "image_url":"https://example.com/product.png",
+                  "image_url":%s,
                   "variants":[{
                     "id":1,
                     "price":10000,
@@ -136,7 +162,7 @@ class ProductRepositoryTest {
                   "updated_at":"2026-08-01T00:00:00Z",
                   "ingredients":[%s]
                 }]}
-                """.formatted(brandId, categoryId, ingredientReferences);
+                """.formatted(brandId, categoryId, imageUrl, ingredientReferences);
         DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
 
             @Override
