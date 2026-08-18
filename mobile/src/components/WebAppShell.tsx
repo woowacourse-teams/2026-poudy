@@ -14,6 +14,7 @@ type NavigationState = Readonly<{
 export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
   const webViewRef = useRef<WebView>(null);
   const canGoBack = useRef(false);
+  const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
   const [navigation, setNavigation] = useState<NavigationState>({
     key: 0,
     url: webBaseUrl,
@@ -27,7 +28,7 @@ export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
   }, []);
 
   const showUnsupportedShare = useCallback(() => {
-    Alert.alert('링크를 열 수 없어요', '외부 상품 링크를 Poudy 상품으로 연결하는 기능이 필요합니다.');
+    Alert.alert('아직 준비 중이에요', '올리브영 상품 공유는 추후 지원할 예정이에요.');
   }, []);
 
   const externalEntryOptions = useMemo(
@@ -56,25 +57,28 @@ export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
     canGoBack.current = state.canGoBack;
   }, []);
 
-  const handleShouldStartLoad = useCallback((request: Readonly<{ url: string }>) => {
-    if (request.url === 'about:blank') {
-      return true;
-    }
-
-    try {
-      const requestedUrl = new URL(request.url);
-      if (requestedUrl.protocol === 'http:' || requestedUrl.protocol === 'https:') {
+  const handleShouldStartLoad = useCallback(
+    (request: Readonly<{ url: string }>) => {
+      if (request.url === 'about:blank') {
         return true;
       }
-    } catch {
-      // Non-web schemes are delegated to the operating system below.
-    }
 
-    void Linking.openURL(request.url).catch(() => {
-      Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
-    });
-    return false;
-  }, []);
+      try {
+        const requestedUrl = new URL(request.url);
+        if (requestedUrl.origin === webOrigin) {
+          return true;
+        }
+      } catch {
+        // Non-web schemes are delegated to the operating system below.
+      }
+
+      void Linking.openURL(request.url).catch(() => {
+        Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
+      });
+      return false;
+    },
+    [webOrigin],
+  );
 
   const retry = useCallback(() => {
     setHasError(false);
@@ -105,7 +109,7 @@ export function WebAppShell({ webBaseUrl }: Readonly<{ webBaseUrl: string }>) {
         }}
         onNavigationStateChange={handleNavigationChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
-        originWhitelist={['http://*', 'https://*']}
+        originWhitelist={[`${webOrigin}/*`]}
         setSupportMultipleWindows={false}
         sharedCookiesEnabled
         source={{ uri: navigation.url }}
