@@ -7,6 +7,8 @@ import { createLocalStore } from "./local-store";
 export type RecentFilter = {
   readonly query: string;
   readonly summary: string;
+  /** 디자인의 카테고리 칩. 어느 탭에서 담은 조건인지 보여 준다. */
+  readonly mode: "product" | "ingredient";
   readonly usedAt: number;
 };
 
@@ -20,6 +22,7 @@ const isRecentFilters = (value: unknown): value is RecentFilter[] =>
       item !== null &&
       typeof (item as RecentFilter).query === "string" &&
       typeof (item as RecentFilter).summary === "string" &&
+      ((item as RecentFilter).mode === "product" || (item as RecentFilter).mode === "ingredient") &&
       typeof (item as RecentFilter).usedAt === "number",
   );
 

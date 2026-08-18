@@ -40,7 +40,7 @@ export function SearchScreen({ excludeCodes }: { readonly excludeCodes: readonly
           <p className="pb-2 text-[12px] text-text-secondary">{summary}</p>
           <Link
             href={`/products?${serializeFilter(filter).toString()}`}
-            onClick={() => addRecentFilter({ query: serializeFilter(filter).toString(), summary })}
+            onClick={() => addRecentFilter({ query: serializeFilter(filter).toString(), summary, mode })}
           >
             <Button>조건에 맞는 제품 보기</Button>
           </Link>
