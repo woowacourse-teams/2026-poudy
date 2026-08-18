@@ -38,6 +38,7 @@ export function ProductSearchPanel() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-col gap-2">
         <SearchField
+          variant="outlined"
           value={keyword}
           onChange={setKeyword}
           placeholder="브랜드 또는 제품명을 입력해 주세요"

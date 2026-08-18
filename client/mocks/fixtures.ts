@@ -273,4 +273,17 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     effectSources: ["대한피부과학회 자료"],
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
+  {
+    id: 9,
+    koreanName: "판토텐산",
+    englishName: "Pantothenic Acid",
+    description: "비타민 B5 로도 불리며 피부 장벽을 돕는 성분으로 알려져 있습니다.",
+    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 42,
+    infoSources: ["식품의약품안전처 화장품 성분 사전"],
+    effectSources: ["대한피부과학회 자료"],
+    updatedAt: "2026-08-12T00:00:00+09:00",
+  },
 ];

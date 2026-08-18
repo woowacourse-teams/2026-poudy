@@ -94,36 +94,34 @@ export function IngredientSearchPanel({
             <span className="text-[12px] font-medium text-[#868B94]">{items.length}개</span>
           </h2>
 
-          <ul>
+          <ul aria-label="성분 검색 결과">
             {items.map((item) => {
               const included = filter.includeIngredientIds.includes(item.id);
               const excluded = filter.excludeIngredientIds.includes(item.id);
 
               return (
-                <li key={item.id} className="flex h-[58px] items-center gap-2.5 border-b border-[#EEF0F3]">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F2ECFF]">
-                    <Icon name="droplet" width={16} height={18} preserveRatio className="text-[#7B61C9]" />
-                  </span>
-
-                  <span className="flex flex-1 flex-col gap-0.5">
+                <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
+                  <span className="flex flex-1 flex-col gap-[3px]">
                     <span className="text-[12px] font-semibold text-text-primary">{item.koreanName}</span>
                     <span className="text-[10px] text-text-secondary">
                       {item.skinEffects.map((effect) => effect.name).join(" · ")}
                     </span>
                   </span>
 
-                  <ConditionButton
-                    label="포함"
-                    active={included}
-                    activeClass="border-[#212124] bg-[#212124]"
-                    onClick={() => toggleIngredient("includeIngredientIds", item)}
-                  />
-                  <ConditionButton
-                    label="제외"
-                    active={excluded}
-                    activeClass="border-[#D93B5C] bg-[#D93B5C]"
-                    onClick={() => toggleIngredient("excludeIngredientIds", item)}
-                  />
+                  <span className="flex shrink-0 gap-1.5">
+                    <ConditionButton
+                      label="포함"
+                      active={included}
+                      activeClass="border-[#212124] bg-[#212124]"
+                      onClick={() => toggleIngredient("includeIngredientIds", item)}
+                    />
+                    <ConditionButton
+                      label="제외"
+                      active={excluded}
+                      activeClass="border-[#D93B5C] bg-[#D93B5C]"
+                      onClick={() => toggleIngredient("excludeIngredientIds", item)}
+                    />
+                  </span>
                 </li>
               );
             })}

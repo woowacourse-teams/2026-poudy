@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -33,16 +33,29 @@ const setup = (filter: Filter = EMPTY_FILTER) => {
   return { onChange };
 };
 
-/** 자동완성 결과가 나오도록 검색어를 넣는다. 목 서버가 판테놀(6)을 돌려준다. */
-const search = async () => {
+/**
+ * 자동완성 결과가 나오도록 검색어를 넣는다.
+ * 결과가 여러 개라 성분 이름으로 행을 특정한 뒤 그 안의 버튼을 찾는다.
+ */
+const search = async (name = "판테놀") => {
   await userEvent.type(screen.getByRole("searchbox"), "판");
-  return screen.findByRole("button", { name: "포함" });
+
+  // 목 응답이 도착해 행이 그려질 때까지 기다린다.
+  const row = await waitFor(() => {
+    const list = screen.getByRole("list", { name: "성분 검색 결과" });
+    const found = within(list).getByText(name).closest("li");
+    if (!found) throw new Error(`${name} 행을 찾지 못했습니다`);
+    return found;
+  });
+
+  return within(row);
 };
 
 describe("IngredientSearchPanel", () => {
   it("포함을 고르면 포함 조건에 담는다", async () => {
     const { onChange } = setup();
-    await userEvent.click(await search());
+    const row = await search();
+    await userEvent.click(row.getByRole("button", { name: "포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [6],
@@ -53,9 +66,9 @@ describe("IngredientSearchPanel", () => {
   it("제외를 고르면 이미 담긴 포함 조건에서 뺀다", async () => {
     // 판테놀이 포함 조건에 있는 상태에서 제외를 누른다.
     const { onChange } = setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
-    await search();
+    const row = await search();
 
-    await userEvent.click(screen.getByRole("button", { name: "제외" }));
+    await userEvent.click(row.getByRole("button", { name: "제외" }));
 
     expect(onChange).toHaveBeenCalledWith({
       excludeIngredientIds: [6],
@@ -65,8 +78,9 @@ describe("IngredientSearchPanel", () => {
 
   it("포함을 고르면 이미 담긴 제외 조건에서 뺀다", async () => {
     const { onChange } = setup({ ...EMPTY_FILTER, excludeIngredientIds: [6] });
+    const row = await search();
 
-    await userEvent.click(await search());
+    await userEvent.click(row.getByRole("button", { name: "포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [6],
@@ -76,8 +90,9 @@ describe("IngredientSearchPanel", () => {
 
   it("이미 고른 조건을 다시 누르면 뺀다", async () => {
     const { onChange } = setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
+    const row = await search();
 
-    await userEvent.click(await search());
+    await userEvent.click(row.getByRole("button", { name: "포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [],
@@ -87,10 +102,10 @@ describe("IngredientSearchPanel", () => {
 
   it("고른 조건만 눌린 상태로 보여 준다", async () => {
     setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
-    await search();
+    const row = await search();
 
-    expect(screen.getByRole("button", { name: "포함" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "제외" })).toHaveAttribute("aria-pressed", "false");
+    expect(row.getByRole("button", { name: "포함" })).toHaveAttribute("aria-pressed", "true");
+    expect(row.getByRole("button", { name: "제외" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("빠른 필터는 설명 없이 라벨만 보여 준다", () => {
