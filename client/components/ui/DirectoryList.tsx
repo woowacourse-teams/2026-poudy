@@ -45,7 +45,7 @@ export function DirectoryList({
   railLabel,
 }: DirectoryListProps) {
   return (
-    <div className="flex flex-1 bg-white">
+    <div className="flex flex-1 overflow-hidden rounded-xl bg-white">
       <nav aria-label={railLabel} className="w-[92px] shrink-0 border-r border-border bg-[#F5F6F7] px-1.5 py-2">
         <ul className="flex flex-col gap-1">
           {rail.map((item) => {

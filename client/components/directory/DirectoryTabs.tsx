@@ -11,7 +11,7 @@ const TABS = [
  */
 export function DirectoryTabs({ current }: { readonly current: "category" | "brand" }) {
   return (
-    <nav aria-label="탐색 방식" className="mx-4 my-2 flex h-11 gap-0.5 rounded-xl bg-[#F2F3F5] p-[3px]">
+    <nav aria-label="탐색 방식" className="flex h-11 gap-0.5 rounded-xl bg-[#F2F3F5] p-[3px]">
       {TABS.map((tab) => {
         const selected = tab.key === current;
 
