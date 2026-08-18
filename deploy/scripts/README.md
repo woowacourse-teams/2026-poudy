@@ -29,7 +29,7 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 
 구성 내용:
 
-- Node.js 22 이상과 Nginx 설치
+- Node.js 22.22.1 ARM64 런타임과 Nginx 설치
 - `poudy` system user 및 `/opt/poudy/frontend` 생성
 - `/etc/poudy/frontend.env` 생성
 - `poudy-frontend.service` 설치 및 enable
