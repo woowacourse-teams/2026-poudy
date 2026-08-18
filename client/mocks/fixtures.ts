@@ -10,7 +10,10 @@ import type {
 /*
  * 값은 client/design/v1.pen 의 화면에 적힌 것을 그대로 옮겼다.
  * 목 데이터로 띄운 화면을 디자인과 바로 대조할 수 있게 하기 위함이다.
+ *
+ * 제품 그림은 디자인에 있는 것만 채운다. 비어 있으면 화면이 기본 공병 그림을 쓴다.
  */
+const ROUNDLAB_TONER_IMAGE = "/images/products/roundlab-1025-toner.png";
 
 export const brands: BrandListItemResponse[] = [
   { id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 48 },
@@ -36,7 +39,7 @@ export const products: ProductResponse[] = [
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
-    imageUrl: "",
+    imageUrl: ROUNDLAB_TONER_IMAGE,
     price: 18000,
     volumeValue: 200,
     volumeUnit: "ml",
@@ -162,7 +165,7 @@ export const productDetails: ProductDetailResponse[] = [
     name: "1025 독도 토너",
     brand: brandOf(1),
     categories: [{ id: 1, name: "스킨케어", child: { id: 11, name: "스킨/토너" } }],
-    imageUrl: "",
+    imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },
       { id: 2, price: 32000, volumeValue: 500, volumeUnit: "ml", status: "SALE" },
@@ -256,18 +259,139 @@ export const productDetails: ProductDetailResponse[] = [
   },
 ];
 
+/** S06 화면의 출처 문구. 성분마다 같은 자료를 본다. */
+const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
+const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
+
 export const ingredientDetails: IngredientDetailResponse[] = [
+  {
+    id: 1,
+    koreanName: "정제수",
+    englishName: "Water",
+    description: "화장품의 기본 용매로, 다른 성분을 녹여 제형을 만드는 데 쓰입니다.",
+    formulationRoles: [
+      { id: 1, name: "피부 컨디셔닝" },
+      { id: 2, name: "용제" },
+    ],
+    skinEffects: [],
+    groupCodes: [],
+    productCount: 1420,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 2,
+    koreanName: "부틸렌글라이콜",
+    englishName: "Butylene Glycol",
+    description: "수분을 끌어당기는 보습제이자 다른 성분을 녹이는 용제로 함께 쓰입니다.",
+    formulationRoles: [
+      { id: 3, name: "보습제" },
+      { id: 2, name: "용제" },
+    ],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 612,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 3,
+    koreanName: "글리세린",
+    englishName: "Glycerin",
+    description: "공기 중 수분을 끌어와 각질층에 붙잡아 두는 대표적인 보습 성분입니다.",
+    formulationRoles: [{ id: 3, name: "보습제" }],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 984,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 4,
+    koreanName: "펜틸렌글라이콜",
+    englishName: "Pentylene Glycol",
+    description: "피부를 매끄럽게 정돈하는 용제로, 제형의 사용감을 가볍게 만드는 데 쓰입니다.",
+    formulationRoles: [
+      { id: 1, name: "피부 컨디셔닝" },
+      { id: 2, name: "용제" },
+    ],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 356,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 5,
+    koreanName: "프로판다이올",
+    englishName: "Propanediol",
+    description: "옥수수 유래 용제로, 보습 성분이 피부에 잘 퍼지도록 돕는 역할을 합니다.",
+    formulationRoles: [
+      { id: 2, name: "용제" },
+      { id: 4, name: "보습 보조" },
+    ],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 274,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
   {
     id: 6,
     koreanName: "판테놀",
     englishName: "Panthenol",
-    description: "판토텐산의 전구체로, 피부에서 수분을 잡아 두고 자극받은 피부를 진정시키는 데 쓰입니다.",
+    description:
+      "수분 손실을 줄이는 보습 성분으로 활용되며, 피부 장벽이 건조하거나 예민해졌을 때 편안한 사용감을 더해요.",
     formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
     skinEffects: [보습, 진정],
     groupCodes: [],
     productCount: 128,
-    infoSources: ["식품의약품안전처 화장품 성분 사전"],
-    effectSources: ["대한피부과학회 자료"],
-    updatedAt: "2026-08-12T00:00:00+09:00",
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 7,
+    koreanName: "아이리쉬모스추출물",
+    englishName: "Chondrus Crispus Extract",
+    description: "홍조류에서 얻은 추출물로, 피부를 부드럽게 정돈하는 데 쓰입니다.",
+    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    skinEffects: [진정],
+    groupCodes: [],
+    productCount: 63,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 8,
+    koreanName: "프로테아제",
+    englishName: "Protease",
+    description: "단백질을 분해하는 효소로, 쌓인 각질을 부드럽게 정돈하는 데 쓰입니다.",
+    formulationRoles: [{ id: 5, name: "각질 관리" }],
+    skinEffects: [각질케어],
+    groupCodes: [],
+    productCount: 37,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  },
+  {
+    id: 9,
+    koreanName: "판토텐산",
+    englishName: "Pantothenic Acid",
+    description: "비타민 B5 로도 불리며 피부 장벽을 돕는 성분으로 알려져 있습니다.",
+    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    skinEffects: [보습],
+    groupCodes: [],
+    productCount: 42,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];

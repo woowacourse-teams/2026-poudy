@@ -20,8 +20,11 @@ export default async function CategoriesPage() {
   return (
     <>
       <TopBar title="카테고리" variant="root" />
-      <DirectoryTabs current="category" />
-      <CategoryDirectory categories={categories.items} />
+      {/* 디자인의 본문 여백. 탭과 디렉터리를 함께 감싼다. */}
+      <div className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-4">
+        <DirectoryTabs current="category" />
+        <CategoryDirectory categories={categories.items} />
+      </div>
       <BottomNavigation />
     </>
   );

@@ -19,21 +19,15 @@ export function CategoryDirectory({ categories }: { readonly categories: readonl
       title={selected?.name ?? ""}
       description="원하는 제품 유형을 선택하세요"
       rows={[
+        // 전체는 대분류 자신의 화면으로, 소분류는 각자의 화면으로 보낸다.
         ...(selected
-          ? [
-              {
-                id: "all",
-                label: "전체",
-                count: selected.productCount,
-                href: `/products?categoryIds=${selected.children.map((child) => child.id).join(",")}`,
-              },
-            ]
+          ? [{ id: "all", label: "전체", count: selected.productCount, href: `/categories/${selected.id}` }]
           : []),
         ...(selected?.children ?? []).map((child) => ({
           id: String(child.id),
           label: child.name,
           count: child.productCount,
-          href: `/products?categoryIds=${child.id}`,
+          href: `/categories/${child.id}`,
         })),
       ]}
     />

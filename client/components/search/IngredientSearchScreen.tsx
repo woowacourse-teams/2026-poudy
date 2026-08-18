@@ -2,37 +2,30 @@
 
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 import { IngredientSearchPanel } from "./IngredientSearchPanel";
-import { ProductSearchPanel } from "./ProductSearchPanel";
-import { type SearchMode, SearchTabs } from "./SearchTabs";
 
 import { Button } from "@/components/ui/Button";
 import { serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
-/** S02·S03 탐색 조건 설정. 탭이 바뀌어도 조건은 URL 에 남아 이어진다. */
-export function SearchScreen({ excludeCodes }: { readonly excludeCodes: readonly ExcludeCodeResponse[] }) {
-  const searchParams = useSearchParams();
-  const { filter, setCondition } = useFilterQuery("/search");
+/** S03 성분 필터링. 조건은 이 화면의 URL 에 담는다. */
+export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes: readonly ExcludeCodeResponse[] }) {
+  const { filter, setCondition } = useFilterQuery("/search/ingredients");
 
-  const mode: SearchMode = searchParams.get("mode") === "ingredient" ? "ingredient" : "product";
+  // 조건에는 ID 만 남으므로 이름은 서버에서 가져온다. 링크로 들어와도 이름이 보인다.
+  const names = useIngredientNames([...filter.includeIngredientIds, ...filter.excludeIngredientIds]);
+
   const total = countConditions(filter);
-  const summary = summarizeFilter(filter);
+  const summary = summarizeFilter(filter, names);
 
   return (
     <>
-      <SearchTabs mode={mode} query={searchParams.toString()} />
-
       <main className="flex-1">
-        {mode === "product" ? (
-          <ProductSearchPanel />
-        ) : (
-          <IngredientSearchPanel filter={filter} onChange={setCondition} excludeCodes={excludeCodes} />
-        )}
+        <IngredientSearchPanel filter={filter} onChange={setCondition} excludeCodes={excludeCodes} names={names} />
       </main>
 
       {total > 0 ? (
@@ -40,7 +33,13 @@ export function SearchScreen({ excludeCodes }: { readonly excludeCodes: readonly
           <p className="pb-2 text-[12px] text-text-secondary">{summary}</p>
           <Link
             href={`/products?${serializeFilter(filter).toString()}`}
-            onClick={() => addRecentFilter({ query: serializeFilter(filter).toString(), summary })}
+            onClick={() =>
+              addRecentFilter({
+                query: serializeFilter(filter).toString(),
+                summary,
+                mode: "ingredient",
+              })
+            }
           >
             <Button>조건에 맞는 제품 보기</Button>
           </Link>

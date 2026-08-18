@@ -60,12 +60,22 @@ describe("BottomSheet", () => {
 
   it("열리면 시트 안으로 초점을 옮긴다", () => {
     renderSheet();
-    expect(screen.getByRole("button", { name: "라운드랩" })).toHaveFocus();
+    // 시트에서 가장 먼저 나오는 조작 요소는 닫기 버튼이다.
+    expect(screen.getByRole("button", { name: "닫기" })).toHaveFocus();
+  });
+
+  it("닫기 버튼으로 닫는다", async () => {
+    const { props } = renderSheet();
+
+    await userEvent.click(screen.getByRole("button", { name: "닫기" }));
+
+    expect(props.onClose).toHaveBeenCalled();
   });
 
   it("Tab 을 눌러도 초점이 시트 밖으로 나가지 않는다", async () => {
     renderSheet();
     const inside = [
+      screen.getByRole("button", { name: "닫기" }),
       screen.getByRole("button", { name: "라운드랩" }),
       screen.getByRole("button", { name: "초기화" }),
       screen.getByRole("button", { name: "3개 제품 보기" }),

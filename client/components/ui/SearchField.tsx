@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon } from "./icons/Icon";
+
 type SearchFieldProps = {
   readonly value: string;
   readonly onChange: (value: string) => void;
@@ -8,7 +10,12 @@ type SearchFieldProps = {
   readonly onSubmit?: () => void;
 };
 
-/** 디자인 C06. 지우기 버튼은 입력이 있을 때만 보인다. */
+/**
+ * 디자인 C06. 검색 입력은 화면마다 같은 모양을 쓴다.
+ *
+ * 평소에는 회색으로 조용히 있다가 입력할 때 흰 배경과 테두리로 또렷해진다.
+ * 지우기 버튼은 입력이 있을 때만 보인다.
+ */
 export function SearchField({ value, onChange, placeholder, label, onSubmit }: SearchFieldProps) {
   return (
     <form
@@ -17,9 +24,9 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
         event.preventDefault();
         onSubmit?.();
       }}
-      className="flex h-12 items-center gap-2 rounded-xl bg-surface px-3.5"
+      className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-[#F3F4F5] px-3.5 transition-colors focus-within:border-[#212124] focus-within:bg-white"
     >
-      <SearchIcon />
+      <Icon name="search" size={18} className="text-[#8B8D94]" />
 
       <input
         type="search"
@@ -28,7 +35,7 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         // 브라우저 기본 지우기 버튼을 숨기고 디자인의 버튼만 쓴다.
-        className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-text-secondary [&::-webkit-search-cancel-button]:appearance-none"
+        className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-[#868B94] [&::-webkit-search-cancel-button]:appearance-none"
       />
 
       {value ? (
@@ -38,21 +45,9 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
           aria-label="검색어 지우기"
           className="flex size-8 items-center justify-center"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="7" fill="#C7C9CE" />
-            <path d="M5.5 5.5l5 5m0-5-5 5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <Icon name="x" size={16} className="text-[#8B8D94]" />
         </button>
       ) : null}
     </form>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="5.25" stroke="#8B8D94" strokeWidth="1.5" />
-      <path d="M12 12l3.5 3.5" stroke="#8B8D94" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }

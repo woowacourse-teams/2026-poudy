@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useRef } from "react";
 
+import { Icon } from "./icons/Icon";
+
 type BottomSheetProps = {
   readonly open: boolean;
   readonly title: string;
@@ -78,23 +80,38 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80vh] flex-col rounded-t-3xl bg-white"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-3xl bg-white"
       >
-        <div className="px-5 pt-5 pb-2">
-          <h2 id={titleId} className="text-[17px] font-bold text-text-primary">
-            {title}
-          </h2>
-          {description ? <p className="mt-1 text-[13px] text-text-secondary">{description}</p> : null}
+        <div className="flex h-5 shrink-0 items-center justify-center">
+          <span className="h-1 w-9 rounded-sm bg-[#C9CDD2]" aria-hidden="true" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-2">{children}</div>
+        <div className="flex items-start justify-between px-5 pt-3 pb-5">
+          <span className="flex flex-col gap-1">
+            <h2 id={titleId} className="text-[18px] font-bold text-[#212124]">
+              {title}
+            </h2>
+            {description ? <p className="text-[12px] text-[#868B94]">{description}</p> : null}
+          </span>
 
-        <div className="flex gap-2 px-5 pt-2 pb-6">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full"
+          >
+            <Icon name="x" size={18} className="text-[#555D68]" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5">{children}</div>
+
+        <div className="flex gap-2 px-4 pt-3 pb-4">
           {onReset ? (
             <button
               type="button"
               onClick={onReset}
-              className="h-13 rounded-button border border-border px-5 text-[15px] font-bold text-text-primary"
+              className="h-12 w-[72px] shrink-0 rounded-[10px] bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
             >
               초기화
             </button>
@@ -102,7 +119,7 @@ export function BottomSheet({
           <button
             type="button"
             onClick={onSubmit}
-            className="h-13 flex-1 rounded-button bg-action text-[15px] font-bold text-action-text"
+            className="h-12 flex-1 rounded-[10px] bg-[#212124] text-[14px] font-bold text-white"
           >
             {submitLabel}
           </button>

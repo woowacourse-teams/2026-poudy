@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { CategoryTrack } from "@/components/directory/CategoryTrack";
 import { ProductList } from "@/components/product/ProductList";
 import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 // 조건 조합이 붙는 목록이라 미리 만들지 않는다.
 export const dynamic = "force-dynamic";
 
+/** S09 카테고리 상품. 같은 대분류의 소분류를 가로로 오간다. */
 export default async function CategoryProductsPage(props: PageProps<"/categories/[categoryId]">) {
   const { categoryId } = await props.params;
   const id = Number(categoryId);
@@ -21,20 +23,31 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
 
   const [categories, brands, excludeCodes] = await Promise.all([fetchCategories(), fetchBrands(), fetchExcludeCodes()]);
 
-  const child = categories.items.flatMap((category) => category.children).find((candidate) => candidate.id === id);
+  // 대분류를 고르면 그 아래 소분류를 모두 담고, 소분류를 고르면 형제들을 가로로 보여 준다.
   const parent = categories.items.find((category) => category.id === id);
-  const name = child?.name ?? parent?.name;
+  const owner = categories.items.find((category) => category.children.some((child) => child.id === id));
+  const child = owner?.children.find((candidate) => candidate.id === id);
 
+  const name = child?.name ?? parent?.name;
   if (!name) notFound();
+
+  // 소분류를 보는 중에도 대분류 전체로 돌아올 수 있도록 맨 앞에 `전체` 를 둔다.
+  const top = owner ?? parent;
+  const trackItems = top ? [{ id: top.id, name: "전체" }, ...top.children] : [];
+  const categoryIds = child ? [child.id] : (parent?.children ?? []).map((item) => item.id);
 
   return (
     <>
-      <TopBar title={name} variant="sub" />
+      <TopBar title={name} variant="root" showBack />
+
+      <div className="px-4">
+        <CategoryTrack items={trackItems} selectedId={id} />
+      </div>
 
       <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
         <ProductList
           basePath={`/categories/${id}`}
-          fixedFilter={{ categoryIds: [id] }}
+          fixedFilter={{ categoryIds }}
           hiddenChips={["category"]}
           categories={categories.items}
           brands={brands.items}

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { ProductList } from "@/components/product/ProductList";
 import { BottomNavigation } from "@/components/ui/BottomNavigation";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes } from "@/lib/api/products";
@@ -37,15 +38,21 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
   const { brandId } = await props.params;
   const [brand, brands, excludeCodes] = await Promise.all([load(brandId), fetchBrands(), fetchExcludeCodes()]);
 
+  // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
+  const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
+
   return (
     <>
       <TopBar title={brand.name} variant="sub" />
 
       <section className="flex items-center gap-3 px-4 py-4">
-        <span className="size-14 shrink-0 rounded-full bg-surface" />
-        <span className="flex flex-col">
-          <span className="text-[16px] font-bold text-text-primary">{brand.name}</span>
-          <span className="text-[12px] text-text-secondary">{brand.englishName}</span>
+        <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
+          <span className="text-[11px] font-medium text-text-secondary">
+            {brand.englishName}
+            {productCount === undefined ? "" : `  ·  제품 ${productCount.toLocaleString("ko-KR")}개`}
+          </span>
         </span>
       </section>
 

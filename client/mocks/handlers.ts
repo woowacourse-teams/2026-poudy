@@ -116,16 +116,30 @@ export const handlers = [
   http.get("*/api/ingredients", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
-    const items = ingredientDetails
-      .filter((ingredient) => `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword))
-      .map(({ id, koreanName, englishName, skinEffects }) => ({
-        id,
-        koreanName,
-        englishName,
-        skinEffects,
-      }));
+    const ids = numbers(url, "ingredientIds");
 
-    return HttpResponse.json({ items });
+    const summary = ({ id, koreanName, englishName, skinEffects }: (typeof ingredientDetails)[number]) => ({
+      id,
+      koreanName,
+      englishName,
+      skinEffects,
+    });
+
+    const matchesKeyword = (ingredient: (typeof ingredientDetails)[number]) =>
+      `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword);
+
+    // ID 로만 조회하면 요청한 순서를 지키고 없는 ID 는 뺀다.
+    if (ids.length > 0) {
+      const items = ids
+        .map((id) => ingredientDetails.find((ingredient) => ingredient.id === id))
+        .filter((ingredient) => ingredient !== undefined)
+        .filter((ingredient) => !keyword || matchesKeyword(ingredient))
+        .map(summary);
+
+      return HttpResponse.json({ items });
+    }
+
+    return HttpResponse.json({ items: ingredientDetails.filter(matchesKeyword).map(summary) });
   }),
 
   http.get("*/api/ingredients/:ingredientId", ({ params }) => {

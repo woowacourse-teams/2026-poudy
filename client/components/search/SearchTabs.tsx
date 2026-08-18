@@ -1,44 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export type SearchMode = "product" | "ingredient";
+const TABS = [
+  { href: "/search/products", label: "제품명 검색" },
+  { href: "/search/ingredients", label: "성분 필터링" },
+] as const;
 
-type SearchTabsProps = {
-  readonly mode: SearchMode;
-  /** 탭을 옮겨도 조건은 그대로 이어진다. */
-  readonly query: string;
-};
+/** 두 검색 화면을 오가는 탭. 라우트가 달라 조건은 이어지지 않는다. */
+export function SearchTabs() {
+  const pathname = usePathname();
 
-const TABS: readonly { readonly mode: SearchMode; readonly label: string }[] = [
-  { mode: "product", label: "제품명 검색" },
-  { mode: "ingredient", label: "성분 필터링" },
-];
-
-export function SearchTabs({ mode, query }: SearchTabsProps) {
   return (
-    <div role="tablist" aria-label="검색 방식" className="flex border-b border-border">
+    <nav aria-label="검색 방식" className="flex border-b border-border">
       {TABS.map((tab) => {
-        const params = new URLSearchParams(query);
-        params.set("mode", tab.mode);
-        const selected = tab.mode === mode;
+        const selected = pathname.startsWith(tab.href);
 
         return (
           <Link
-            key={tab.mode}
-            role="tab"
-            aria-selected={selected}
-            href={`/search?${params.toString()}`}
-            scroll={false}
+            key={tab.href}
+            href={tab.href}
+            aria-current={selected ? "page" : undefined}
             className={[
               "flex-1 py-3 text-center text-[14px]",
-              selected ? "border-b-2 border-text-primary font-bold text-text-primary" : "text-text-secondary",
+              selected ? "border-b-2 border-[#212124] font-bold text-[#212124]" : "font-medium text-[#868B94]",
             ].join(" ")}
           >
             {tab.label}
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

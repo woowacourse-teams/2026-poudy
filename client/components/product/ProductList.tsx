@@ -10,8 +10,10 @@ import { SortHeader } from "@/components/ui/SortHeader";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
-import type { Filter } from "@/lib/domain/filter";
+import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
+import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
 type ProductListProps = {
@@ -83,7 +85,10 @@ export function ProductList({
 
   return (
     <>
-      <div className="sticky top-0 z-10 bg-white px-4 pt-2">
+      {/* 화면이 고정한 조건은 제목과 탭이 이미 알려 주므로 요약에서 뺀다(디자인 S09·S11). */}
+      <FilterSummary filter={{ ...filter, ...blankFilter(fixedFilter) }} />
+
+      <div className="bg-white px-4">
         <FilterChipBar
           chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
           onOpen={(id) => setOpenSheet(id as SheetKind)}
@@ -93,9 +98,7 @@ export function ProductList({
 
       <main className="flex-1 px-4">
         {items.length === 0 && !loading ? (
-          <p className="py-16 text-center text-[14px] text-text-secondary">
-            조건에 맞는 제품이 없어요. 조건을 줄여 보세요.
-          </p>
+          <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
           <ul className="divide-y divide-border">
             {items.map((product) => (
@@ -129,6 +132,31 @@ export function ProductList({
         excludeCodes={excludeCodes}
       />
     </>
+  );
+}
+
+/**
+ * 화면이 고정한 조건만 빈 값으로 되돌린다.
+ * 사용자가 고른 조건이 아니라서 `탐색 조건` 요약에 세지 않는다.
+ */
+const blankFilter = (fixed: Partial<Filter> = {}): Partial<Filter> =>
+  Object.fromEntries(Object.keys(fixed).map((key) => [key, EMPTY_FILTER[key as keyof Filter]]));
+
+/** 디자인의 `탐색 조건` 요약. 지금 걸린 조건을 읽기 전용으로 보여 준다. */
+function FilterSummary({ filter }: { readonly filter: Filter }) {
+  // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다.
+  const names = useIngredientNames([...filter.includeIngredientIds, ...filter.excludeIngredientIds]);
+  const count = countConditions(filter);
+  if (count === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-1 px-4 py-2">
+      <div className="flex items-center gap-1.5">
+        <h2 className="text-[13px] font-bold text-[#212124]">탐색 조건</h2>
+        <span className="rounded-full bg-[#F2F3F6] px-[7px] text-[11px] font-bold text-[#555D68]">{count}</span>
+      </div>
+      <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter, names)}</p>
+    </section>
   );
 }
 

@@ -1,14 +1,19 @@
 "use client";
 
+import { Icon } from "./icons/Icon";
+
 type SaveButtonProps = {
   readonly productName: string;
   readonly saved: boolean;
   readonly onToggle: () => void;
-  /** 와이드는 제품 상세(S05)에서 쓰는 글자 있는 형태다. */
+  /** 와이드는 제품 상세에서 쓰는 글자 있는 형태다(디자인 C05). */
   readonly variant?: "icon" | "wide";
 };
 
-/** 저장 버튼. 아이콘만 있는 형태는 이름을 읽을 수 없으므로 접근 가능한 이름을 붙인다. */
+/**
+ * 저장 버튼. 아이콘만 있는 형태는 이름을 읽을 수 없으므로 접근 가능한 이름을 붙인다.
+ * 저장 전과 저장됨의 생김새가 다르다.
+ */
 export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
 
@@ -18,10 +23,13 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         type="button"
         onClick={onToggle}
         aria-pressed={saved}
-        className="flex h-13 w-full items-center justify-center gap-2 rounded-button bg-action text-[15px] font-bold text-action-text"
+        aria-label={label}
+        className={`flex h-13 w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-bold ${
+          saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-[15px] text-action-text"
+        }`}
       >
         {saved ? "저장됨" : "제품 저장"}
-        <Bookmark filled={saved} />
+        <Icon name="bookmark" size={18} filled={saved} />
       </button>
     );
   }
@@ -32,29 +40,9 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       onClick={onToggle}
       aria-pressed={saved}
       aria-label={label}
-      className="flex size-11 items-center justify-center rounded-full"
+      className="flex size-11 items-center justify-center rounded-[10px]"
     >
-      <Bookmark filled={saved} className={saved ? "text-brand" : "text-text-secondary"} />
+      <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
     </button>
-  );
-}
-
-function Bookmark({ filled, className }: { readonly filled: boolean; readonly className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill={filled ? "currentColor" : "none"}
-      aria-hidden="true"
-    >
-      <path
-        d="M5 3.5h10a1 1 0 0 1 1 1V17l-6-3.5L4 17V4.5a1 1 0 0 1 1-1Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

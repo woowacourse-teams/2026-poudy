@@ -29,8 +29,19 @@ export const fetchProductDetail = (productId: number): Promise<ProductDetailResp
 export const fetchProductSuggestions = (keyword: string): Promise<ProductSuggestionListResponse> =>
   apiGet("/api/products/suggestions", new URLSearchParams({ keyword }));
 
-export const fetchIngredients = (keyword: string): Promise<IngredientListResponse> =>
-  apiGet("/api/ingredients", new URLSearchParams({ keyword }));
+/**
+ * 검색어나 성분 ID 로 조회한다. 둘을 함께 보내면 모두 만족하는 성분만 돌려준다.
+ * ID 로만 조회하면 요청한 순서를 지킨다.
+ */
+export const fetchIngredients = (query: {
+  readonly keyword?: string;
+  readonly ingredientIds?: readonly number[];
+}): Promise<IngredientListResponse> => {
+  const params = new URLSearchParams();
+  if (query.keyword) params.set("keyword", query.keyword);
+  for (const id of query.ingredientIds ?? []) params.append("ingredientIds", String(id));
+  return apiGet("/api/ingredients", params);
+};
 
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
   apiGet(`/api/ingredients/${ingredientId}`);
