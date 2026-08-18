@@ -13,6 +13,10 @@ type DirectoryRowItem = {
   readonly id: string;
   readonly label: string;
   readonly count?: number;
+  /** 개수 앞에 붙이는 말. 브랜드는 `제품 48개` 처럼 적는다. */
+  readonly countPrefix?: string;
+  /** 이름 앞의 동그라미 글자. 브랜드 목록에서 쓴다. */
+  readonly initial?: string;
   readonly href: string;
 };
 
@@ -84,15 +88,25 @@ export function DirectoryList({
 }
 
 /** `이름 + 개수 + 화살표` 행. 카테고리 소분류와 브랜드 목록이 같은 모양을 쓴다. */
-function DirectoryRow({ label, count, href }: DirectoryRowItem) {
+function DirectoryRow({ label, count, countPrefix, initial, href }: DirectoryRowItem) {
   return (
-    <Link href={href} className="flex items-center justify-between px-4 py-3.5">
-      <span className="flex items-baseline gap-1.5">
-        <span className="text-[14px] text-text-primary">{label}</span>
+    <Link href={href} className="flex items-center gap-2.5 px-4 py-3.5">
+      {initial ? (
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-bold text-text-secondary">
+          {initial}
+        </span>
+      ) : null}
+
+      <span className="flex flex-1 items-baseline gap-1.5">
+        <span className="text-[14px] font-semibold text-text-primary">{label}</span>
         {count === undefined ? null : (
-          <span className="text-[12px] text-[#8B8D94]">{count.toLocaleString("ko-KR")}개</span>
+          <span className="text-[11px] text-[#8B8D94]">
+            {countPrefix ? `${countPrefix} ` : ""}
+            {count.toLocaleString("ko-KR")}개
+          </span>
         )}
       </span>
+
       <Icon name="chevron-right" size={16} className="text-[#8B8D94]" />
     </Link>
   );

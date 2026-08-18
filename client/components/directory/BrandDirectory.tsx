@@ -26,6 +26,8 @@ export function BrandDirectory({ brands }: { readonly brands: readonly BrandList
         id: String(brand.id),
         label: brand.name,
         count: brand.productCount,
+        countPrefix: "제품",
+        initial: brand.name.trim().charAt(0),
         href: `/brands/${brand.id}`,
       }))}
     />

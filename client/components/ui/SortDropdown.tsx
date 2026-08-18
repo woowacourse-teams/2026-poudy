@@ -74,8 +74,8 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
                   setOpen(false);
                 }}
                 className={[
-                  "flex w-full items-center justify-between px-4 py-3 text-left text-[13px]",
-                  sort === value ? "font-semibold text-text-primary" : "text-text-secondary",
+                  "flex w-full items-center justify-between px-3.5 py-3 text-left text-[14px] text-[#3C4043]",
+                  sort === value ? "bg-[#F2F3F5] font-semibold" : "bg-white",
                 ].join(" ")}
               >
                 {SORT_LABELS[sort]}

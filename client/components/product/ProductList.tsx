@@ -11,6 +11,7 @@ import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
 import type { Filter } from "@/lib/domain/filter";
+import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
@@ -83,6 +84,8 @@ export function ProductList({
 
   return (
     <>
+      <FilterSummary filter={filter} />
+
       <div className="sticky top-0 z-10 bg-white px-4 pt-2">
         <FilterChipBar
           chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
@@ -129,6 +132,22 @@ export function ProductList({
         excludeCodes={excludeCodes}
       />
     </>
+  );
+}
+
+/** 디자인의 `탐색 조건` 요약. 지금 걸린 조건을 읽기 전용으로 보여 준다. */
+function FilterSummary({ filter }: { readonly filter: Filter }) {
+  const count = countConditions(filter);
+  if (count === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-1 px-4 py-2">
+      <div className="flex items-center gap-1.5">
+        <h2 className="text-[13px] font-bold text-[#212124]">탐색 조건</h2>
+        <span className="rounded-full bg-[#F2F3F6] px-[7px] text-[11px] font-bold text-[#555D68]">{count}</span>
+      </div>
+      <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter)}</p>
+    </section>
   );
 }
 

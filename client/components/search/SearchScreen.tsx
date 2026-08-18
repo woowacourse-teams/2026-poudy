@@ -1,8 +1,9 @@
 "use client";
 
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 import { IngredientSearchPanel } from "./IngredientSearchPanel";
 import { ProductSearchPanel } from "./ProductSearchPanel";
@@ -19,9 +20,20 @@ export function SearchScreen({ excludeCodes }: { readonly excludeCodes: readonly
   const searchParams = useSearchParams();
   const { filter, setCondition } = useFilterQuery("/search");
 
+  // 조건은 ID 만 URL 에 남는다. 화면에 이름을 보여 주려고 만난 성분을 기억해 둔다.
+  const [names, setNames] = useState<ReadonlyMap<number, string>>(new Map());
+
+  const learnNames = (ingredients: readonly IngredientResponse[]) => {
+    setNames((previous) => {
+      const next = new Map(previous);
+      for (const item of ingredients) next.set(item.id, item.koreanName);
+      return next;
+    });
+  };
+
   const mode: SearchMode = searchParams.get("mode") === "ingredient" ? "ingredient" : "product";
   const total = countConditions(filter);
-  const summary = summarizeFilter(filter);
+  const summary = summarizeFilter(filter, names);
 
   return (
     <>
@@ -31,7 +43,13 @@ export function SearchScreen({ excludeCodes }: { readonly excludeCodes: readonly
         {mode === "product" ? (
           <ProductSearchPanel />
         ) : (
-          <IngredientSearchPanel filter={filter} onChange={setCondition} excludeCodes={excludeCodes} />
+          <IngredientSearchPanel
+            filter={filter}
+            onChange={setCondition}
+            excludeCodes={excludeCodes}
+            names={names}
+            onLearnNames={learnNames}
+          />
         )}
       </main>
 
