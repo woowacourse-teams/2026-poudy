@@ -3,6 +3,7 @@
 import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
+import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
 import { fetchIngredients } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
@@ -89,15 +90,15 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names, onLear
 
                   <span className="flex shrink-0 gap-1.5">
                     <ConditionButton
-                      label="포함"
+                      kind="include"
                       active={included}
-                      activeClass="border-[#212124] bg-[#212124]"
+                      ingredientName={item.koreanName}
                       onClick={() => toggleIngredient("includeIngredientIds", item)}
                     />
                     <ConditionButton
-                      label="제외"
+                      kind="exclude"
                       active={excluded}
-                      activeClass="border-[#D93B5C] bg-[#D93B5C]"
+                      ingredientName={item.koreanName}
                       onClick={() => toggleIngredient("excludeIngredientIds", item)}
                     />
                   </span>
@@ -180,31 +181,6 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names, onLear
         </>
       )}
     </>
-  );
-}
-
-function ConditionButton({
-  label,
-  active,
-  activeClass,
-  onClick,
-}: {
-  readonly label: string;
-  readonly active: boolean;
-  readonly activeClass: string;
-  readonly onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`h-8 w-12 shrink-0 rounded-2xl border text-[12px] ${
-        active ? `${activeClass} font-bold text-white` : "border-[#B9BDC5] bg-white font-semibold text-[#212124]"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 

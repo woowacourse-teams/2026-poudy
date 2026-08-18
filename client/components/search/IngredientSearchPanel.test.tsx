@@ -55,7 +55,7 @@ describe("IngredientSearchPanel", () => {
   it("포함을 고르면 포함 조건에 담는다", async () => {
     const { onChange } = setup();
     const row = await search();
-    await userEvent.click(row.getByRole("button", { name: "포함" }));
+    await userEvent.click(row.getByRole("button", { name: "판테놀 포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [6],
@@ -68,7 +68,7 @@ describe("IngredientSearchPanel", () => {
     const { onChange } = setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
     const row = await search();
 
-    await userEvent.click(row.getByRole("button", { name: "제외" }));
+    await userEvent.click(row.getByRole("button", { name: "판테놀 제외" }));
 
     expect(onChange).toHaveBeenCalledWith({
       excludeIngredientIds: [6],
@@ -80,7 +80,7 @@ describe("IngredientSearchPanel", () => {
     const { onChange } = setup({ ...EMPTY_FILTER, excludeIngredientIds: [6] });
     const row = await search();
 
-    await userEvent.click(row.getByRole("button", { name: "포함" }));
+    await userEvent.click(row.getByRole("button", { name: "판테놀 포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [6],
@@ -92,7 +92,7 @@ describe("IngredientSearchPanel", () => {
     const { onChange } = setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
     const row = await search();
 
-    await userEvent.click(row.getByRole("button", { name: "포함" }));
+    await userEvent.click(row.getByRole("button", { name: "판테놀 포함" }));
 
     expect(onChange).toHaveBeenCalledWith({
       includeIngredientIds: [],
@@ -104,8 +104,8 @@ describe("IngredientSearchPanel", () => {
     setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
     const row = await search();
 
-    expect(row.getByRole("button", { name: "포함" })).toHaveAttribute("aria-pressed", "true");
-    expect(row.getByRole("button", { name: "제외" })).toHaveAttribute("aria-pressed", "false");
+    expect(row.getByRole("button", { name: "판테놀 포함" })).toHaveAttribute("aria-pressed", "true");
+    expect(row.getByRole("button", { name: "판테놀 제외" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("빠른 필터는 설명 없이 라벨만 보여 준다", () => {
