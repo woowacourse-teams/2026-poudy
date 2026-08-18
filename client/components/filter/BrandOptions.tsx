@@ -1,0 +1,73 @@
+"use client";
+
+import type { BrandListItemResponse } from "@poudy/api/api.zod";
+import { useState } from "react";
+
+import { Icon } from "@/components/ui/icons/Icon";
+
+type BrandOptionsProps = {
+  readonly brands: readonly BrandListItemResponse[];
+  readonly selectedIds: readonly number[];
+  readonly onToggle: (brandId: number) => void;
+};
+
+/** 디자인의 브랜드 시트. 검색으로 좁히고 여러 개를 고른다. */
+export function BrandOptions({ brands, selectedIds, onToggle }: BrandOptionsProps) {
+  const [keyword, setKeyword] = useState("");
+
+  // 목록이 이미 손에 있으므로 서버에 다시 묻지 않는다.
+  const shown = keyword.trim()
+    ? brands.filter((brand) =>
+        `${brand.name} ${brand.englishName}`.toLowerCase().includes(keyword.trim().toLowerCase()),
+      )
+    : brands;
+
+  return (
+    <>
+      <label className="flex h-11 items-center gap-2.5 rounded-[10px] bg-[#F3F4F5] px-3">
+        <Icon name="search" size={18} className="text-text-secondary" />
+        <input
+          type="search"
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+          placeholder="브랜드명 검색"
+          aria-label="브랜드명 검색"
+          className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-text-secondary [&::-webkit-search-cancel-button]:appearance-none"
+        />
+      </label>
+
+      <ul className="pt-2">
+        {shown.map((brand) => {
+          const selected = selectedIds.includes(brand.id);
+
+          return (
+            <li key={brand.id}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={selected}
+                onClick={() => onToggle(brand.id)}
+                className="flex h-12 w-full items-center gap-2.5 border-b border-border px-1 text-left"
+              >
+                <span
+                  className={`flex size-5 shrink-0 items-center justify-center rounded border ${
+                    selected ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
+                  }`}
+                >
+                  {selected ? <Icon name="check" size={14} className="text-white" /> : null}
+                </span>
+                <span className={`text-[15px] text-[#212124] ${selected ? "font-semibold" : "font-normal"}`}>
+                  {brand.name}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {shown.length === 0 ? (
+        <p className="py-8 text-center text-[13px] text-text-secondary">찾는 브랜드가 없어요.</p>
+      ) : null}
+    </>
+  );
+}
