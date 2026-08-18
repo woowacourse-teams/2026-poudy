@@ -77,7 +77,7 @@ export type CategoryPathResponse = {
    * 대분류 이름
    */
   name: string;
-  child?: CategorySummaryResponse;
+  child: CategorySummaryResponse;
 }
 export type DisclosedAmountResponse = {
   /**

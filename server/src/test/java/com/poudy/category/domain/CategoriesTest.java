@@ -97,6 +97,17 @@ class CategoriesTest {
         assertThat(categories.pathOf(skinCare)).containsExactly(skinCare);
     }
 
+    @Test
+    @DisplayName("같은 ID의 카테고리는 허용하지 않는다")
+    void rejectsDuplicateIds() {
+        Category skinCare = parent(1L, "스킨케어");
+        Category duplicate = parent(1L, "클렌징");
+
+        assertThatThrownBy(() -> new Categories(List.of(skinCare, duplicate)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("카테고리 ID는 중복될 수 없습니다.");
+    }
+
     private static Category parent(Long id, String name) {
         return new Category(id, null, name, 0, null, null);
     }

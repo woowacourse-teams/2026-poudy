@@ -112,6 +112,12 @@ public class ProductRepository {
                     "제품이 존재하지 않는 카테고리 ID를 참조합니다: %d",
                     categoryId);
         }
+        if (category.isParent()) {
+            return context.reportInputMismatch(
+                    Product.class,
+                    "제품은 소분류 카테고리 ID를 참조해야 합니다: %d",
+                    categoryId);
+        }
 
         return category;
     }

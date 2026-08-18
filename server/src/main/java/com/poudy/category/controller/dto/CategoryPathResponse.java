@@ -8,13 +8,11 @@ import java.util.List;
 public record CategoryPathResponse(
         @NotNull @Schema(description = "대분류 ID", example = "1") Long id,
         @NotNull @Schema(description = "대분류 이름", example = "스킨케어") String name,
-        @Schema(description = "소분류. 대분류만 지정된 제품은 비어 있다") CategorySummaryResponse child) {
+        @NotNull @Schema(description = "제품이 속한 소분류") CategorySummaryResponse child) {
 
     public static List<CategoryPathResponse> from(List<Category> path) {
         Category parent = path.getFirst();
-        CategorySummaryResponse child = path.size() == 1
-                ? null
-                : new CategorySummaryResponse(path.get(1).id(), path.get(1).name());
+        CategorySummaryResponse child = new CategorySummaryResponse(path.get(1).id(), path.get(1).name());
 
         return List.of(new CategoryPathResponse(parent.id(), parent.name(), child));
     }
