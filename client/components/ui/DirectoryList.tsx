@@ -46,20 +46,20 @@ export function DirectoryList({
 }: DirectoryListProps) {
   return (
     <div className="flex flex-1 bg-white">
-      <nav aria-label={railLabel} className="w-[104px] shrink-0 bg-[#F5F6F7]">
-        <ul>
+      <nav aria-label={railLabel} className="w-[92px] shrink-0 border-r border-border bg-[#F5F6F7] px-1.5 py-2">
+        <ul className="flex flex-col gap-1">
           {rail.map((item) => {
             const selected = item.id === selectedRailId;
+
             return (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => onSelectRail(item.id)}
                   aria-current={selected ? "true" : undefined}
-                  className={[
-                    "w-full px-4 py-3.5 text-left text-[14px]",
-                    selected ? "bg-brand-soft font-semibold text-[#F04465]" : "text-text-secondary",
-                  ].join(" ")}
+                  className={`flex h-11 w-full items-center rounded-[10px] px-3 text-left text-[13px] ${
+                    selected ? "bg-[#FFF0F4] font-bold text-[#F04465]" : "font-medium text-[#72747A]"
+                  }`}
                 >
                   {item.label}
                 </button>
@@ -69,10 +69,10 @@ export function DirectoryList({
         </ul>
       </nav>
 
-      <div className="flex-1">
-        <div className="px-4 pt-4 pb-2">
-          <h2 className="text-[15px] font-semibold text-text-primary">{title}</h2>
-          {description ? <p className="mt-1 text-[12px] text-text-secondary">{description}</p> : null}
+      <div className="flex-1 pt-5">
+        <div className="flex flex-col gap-1 px-4 pb-2">
+          <h2 className="text-[17px] font-bold text-[#202124]">{title}</h2>
+          {description ? <p className="text-[11px] text-[#72747A]">{description}</p> : null}
         </div>
 
         <ul>
@@ -90,15 +90,15 @@ export function DirectoryList({
 /** `이름 + 개수 + 화살표` 행. 카테고리 소분류와 브랜드 목록이 같은 모양을 쓴다. */
 function DirectoryRow({ label, count, countPrefix, initial, href }: DirectoryRowItem) {
   return (
-    <Link href={href} className="flex items-center gap-2.5 px-4 py-3.5">
+    <Link href={href} className="flex h-14 items-center gap-2.5 border-b border-[#ECEDEF] px-4">
       {initial ? (
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-bold text-text-secondary">
           {initial}
         </span>
       ) : null}
 
-      <span className="flex flex-1 items-baseline gap-1.5">
-        <span className="text-[14px] font-semibold text-text-primary">{label}</span>
+      <span className="flex flex-1 items-baseline gap-[7px]">
+        <span className="text-[14px] font-semibold text-[#202124]">{label}</span>
         {count === undefined ? null : (
           <span className="text-[11px] text-[#8B8D94]">
             {countPrefix ? `${countPrefix} ` : ""}
