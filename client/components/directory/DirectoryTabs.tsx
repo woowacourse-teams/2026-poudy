@@ -5,21 +5,24 @@ const TABS = [
   { key: "brand", label: "브랜드", href: "/brands" },
 ] as const;
 
-/** 디자인의 카테고리·브랜드 탐색 전환. 두 목록은 성격이 달라 라우트를 나눈다. */
+/**
+ * 디자인의 카테고리·브랜드 탐색 전환.
+ * 회색 바탕 위에서 고른 쪽만 흰 알약으로 떠오른다.
+ */
 export function DirectoryTabs({ current }: { readonly current: "category" | "brand" }) {
   return (
-    <nav aria-label="탐색 방식" className="flex border-b border-border">
+    <nav aria-label="탐색 방식" className="mx-4 my-2 flex h-11 gap-0.5 rounded-xl bg-[#F2F3F5] p-[3px]">
       {TABS.map((tab) => {
         const selected = tab.key === current;
+
         return (
           <Link
             key={tab.key}
             href={tab.href}
             aria-current={selected ? "page" : undefined}
-            className={[
-              "flex-1 py-3 text-center text-[14px]",
-              selected ? "border-b-2 border-text-primary font-bold text-text-primary" : "text-text-secondary",
-            ].join(" ")}
+            className={`flex flex-1 items-center justify-center rounded-[9px] text-[13px] ${
+              selected ? "bg-background font-bold text-[#E83D61]" : "font-medium text-[#72747A]"
+            }`}
           >
             {tab.label}
           </Link>
