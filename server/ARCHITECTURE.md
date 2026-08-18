@@ -349,6 +349,11 @@ OpenAPI 문서는 확인·소비용 파생물이므로 직접 수정하지 않�
 - `/api/storage`는 콤마로 구분해 받은 `productIds`에 해당하는 `ProductResponse` 목록을 페이지 없이 전부 반환한다.
 - `/api/products/{productId}`는 카테고리, 효능과 전체 성분을 포함하는 `ProductDetailResponse`를 반환한다.
 
+`/api/ingredients`는 `keyword`와 콤마로 구분한 `ingredientIds` 중 하나 이상을 받는다. 둘을
+함께 보내면 두 조건을 AND로 결합하고, 둘 다 보내지 않으면 잘못된 요청으로 거절한다.
+`ingredientIds`만으로 조회하면 `IngredientResponse` 목록을 요청한 ID 순서대로 반환하고,
+서버 데이터에 없는 ID는 결과에서 제외한다.
+
 `/api/products/count`와 `/api/products/suggestions`는 `/api/products/{productId}`와 같은 자리를 쓴다. 고정 문자열이 경로 변수보다 먼저 매칭되고 두 이름 모두 제품 ID로 올 수 없으므로 문제가 없다. 제품 아래에 고정 경로를 더 만들 때는 그 이름이 제품 ID로 올 수 없는지 확인한다.
 
 제품 검색 제안은 `/api/products`와 경로를 나눈다. 같은 검색어를 받지만 돌려주는 표현이 다르기 때문이다. 목록은 페이지와 브랜드를 포함한 `ProductResponse`를 주고, 제안은 입력 중 띄울 후보라 ID와 이름, 이미지, 브랜드 이름만 준다. 한 경로에서 표현을 파라미터로 가르면 응답 타입이 요청에 따라 달라져 생성된 타입이 둘을 구분하지 못한다.
