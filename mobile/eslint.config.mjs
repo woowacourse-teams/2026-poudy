@@ -39,6 +39,10 @@ export default [
           selector: 'ExportDefaultDeclaration > FunctionDeclaration[id.name!=/^[A-Z]/]',
           message: 'default function은 React 컴포넌트에만 사용하세요.',
         },
+        {
+          selector: 'ForStatement, ForInStatement, ForOfStatement',
+          message: 'for문 사용 금지: 배열 메서드나 재귀를 사용하세요.',
+        },
       ],
       'no-shadow': 'off',
       'prefer-const': 'error',

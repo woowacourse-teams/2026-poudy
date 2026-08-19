@@ -12,18 +12,17 @@ export const getSharedValues = (payloads: readonly SharedPayload[]): string[] =>
 
 export const getShareSignature = (values: readonly string[]): string => values.join(SIGNATURE_SEPARATOR);
 
+const findMatchedUrl = async (values: readonly string[], webBaseUrl: string): Promise<string | null> => {
+  const matches = await Promise.all(values.map((value) => getShareMatch(value, webBaseUrl)));
+
+  return matches.map((match) => getMatchedUrl(match, webBaseUrl)).find((matchedUrl) => matchedUrl !== null) ?? null;
+};
+
 export const resolveSharedUrl = async (values: readonly string[], webBaseUrl: string): Promise<string | null> => {
   const sameOriginUrl = values.map((value) => getSameOriginUrl(value, webBaseUrl)).find((value) => value !== null);
   if (sameOriginUrl) {
     return sameOriginUrl;
   }
 
-  for (const value of values) {
-    const matchedUrl = getMatchedUrl(await getShareMatch(value, webBaseUrl), webBaseUrl);
-    if (matchedUrl) {
-      return matchedUrl;
-    }
-  }
-
-  return null;
+  return findMatchedUrl(values, webBaseUrl);
 };

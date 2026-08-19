@@ -19,11 +19,11 @@ export const createTtlCache = <T>({ ttlMs, maxEntries }: TtlCacheOptions): TtlCa
   const prune = () => {
     const now = Date.now();
 
-    for (const [key, entry] of entries) {
+    entries.forEach((entry, key) => {
       if (entry.expiresAt <= now) {
         entries.delete(key);
       }
-    }
+    });
   };
 
   const get = (key: string): T | null => {
