@@ -2,6 +2,7 @@ package com.poudy.share.domain;
 
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
@@ -14,6 +15,7 @@ import com.poudy.product.domain.Products;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -153,6 +155,17 @@ class ShareMatchTest {
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
         assertThat(matched.productId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("확정 여부와 제품이 어긋나는 결과는 만들 수 없다")
+    void rejectsInconsistentResult() {
+        Product product = product(1L, DOCTOR_G, "레드 블레미쉬 클리어 토너");
+
+        assertThatThrownBy(() -> new ShareMatch(ShareMatchStatus.MATCHED, Optional.empty(), ""))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new ShareMatch(ShareMatchStatus.NOT_FOUND, Optional.of(product), "토너"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

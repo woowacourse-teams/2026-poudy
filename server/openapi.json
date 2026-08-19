@@ -516,7 +516,7 @@
             "schema": {
               "type": "string",
               "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc",
-              "maxLength": 1000,
+              "maxLength": 500,
               "minLength": 0
             },
             "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc"

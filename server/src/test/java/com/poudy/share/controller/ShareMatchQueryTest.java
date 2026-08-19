@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.share.controller.dto.ShareTextRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +71,16 @@ class ShareMatchQueryTest {
     @DisplayName("정제 후 제품명이 남지 않으면 거절한다")
     void rejectsShareWithoutProductName() throws Exception {
         mockMvc.perform(get(PATH).param("text", "https://oy.run/9ADBye4bKEJUpl"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+    }
+
+    @Test
+    @DisplayName("상한을 넘는 텍스트를 거절한다")
+    void rejectsTooLongText() throws Exception {
+        String text = "다 브랜드 " + "가".repeat(ShareTextRequest.MAX_LENGTH) + TAIL;
+
+        mockMvc.perform(get(PATH).param("text", text))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
