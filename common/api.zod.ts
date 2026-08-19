@@ -52,6 +52,9 @@ export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: 
 export type ProductSuggestionListResponse = __TypedOpenapi.Schemas.ProductSuggestionListResponse;
 export const ProductSuggestionListResponse = z.object({ items: z.array(ProductSuggestionResponse) });
 
+export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
+export const ShareMatchResponse = z.object({ status: z.enum(["MATCHED", "NOT_FOUND"]), productId: z.number().int().optional(), keyword: z.string().optional() });
+
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 
