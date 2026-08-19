@@ -25,7 +25,6 @@ public class SharedProductNames {
         return values.isEmpty();
     }
 
-    // 넓은 후보부터 맞춰 보고, 모두 실패하면 가장 좁힌 후보의 검색어를 넘긴다.
     public ShareMatch matchIn(Products products) {
         ShareMatch unmatched = ShareMatch.notFound("");
 

@@ -13,7 +13,6 @@ import java.util.stream.IntStream;
 public record SharedProductName(Optional<Brand> brand, String keyword) {
 
     private static final String UNKNOWN_BRAND = "미상";
-    // 더 줄이면 남은 낱말이 제품을 가리키지 못한다.
     private static final int MINIMUM_WORDS = 2;
     private static final int MINIMUM_LETTERS = 4;
 
@@ -25,7 +24,6 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
     public static SharedProductName of(String productPhrase, Brands brands) {
         List<String> words = ShareWords.of(productPhrase);
 
-        // 브랜드 이름에 공백이 들어갈 수 있어 가장 긴 접두부터 맞춘다.
         for (int size = words.size(); size > 0; size--) {
             Optional<Brand> found = brands.findByName(ShareWords.join(words.subList(0, size)));
 
@@ -52,7 +50,6 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
             return ShareMatch.matched(confirmed.get());
         }
 
-        // 낱말 하나만 덜어 내도 다른 제품 이름에 들어맞아 확정에는 쓰지 않는다. 넘길 검색어만 고른다.
         for (String shortened : shortenedKeywords()) {
             if (!candidatesIn(products, shortened).isEmpty()) {
                 return ShareMatch.notFound(shortened);
@@ -71,7 +68,6 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
                 .toList();
     }
 
-    // 다른 브랜드의 비슷한 이름을 집으면 사용자가 알아채지 못한다.
     private List<Product> candidatesIn(Products products, String searched) {
         List<Product> found = products.search(searched);
 
