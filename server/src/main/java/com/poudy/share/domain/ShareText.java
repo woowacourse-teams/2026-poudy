@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 public record ShareText(String value) {
 
     private static final Pattern LINK = Pattern.compile("https?://\\S+", Pattern.CASE_INSENSITIVE);
-    // 제품명에 "올리브영"은 오지 않아 이 뒤는 통째로 버린다.
     private static final Pattern SERVICE_PHRASE = Pattern.compile("올리브영에서.*", Pattern.DOTALL);
     private static final Pattern PROMOTION_TAG = Pattern.compile("\\[[^\\]]*\\]");
     private static final Pattern PLAN_NOTE = Pattern.compile("\\([^)]*\\)");
@@ -45,7 +44,7 @@ public record ShareText(String value) {
         return productPhrases().getLast();
     }
 
-    // "어성초 크림 카밍 튜브"처럼 제품명이 기획 낱말로 끝날 수 있어, 털어 내기 전 구절도 후보로 남긴다.
+    // "어성초 크림 카밍 튜브"처럼 제품명이 기획 낱말로 끝날 수 있어 털기 전 구절도 남긴다.
     public List<String> productPhrases() {
         String phrase = SERVICE_PHRASE.matcher(value).replaceAll(SPACE);
         phrase = LINK.matcher(phrase).replaceAll(SPACE);
@@ -65,7 +64,7 @@ public record ShareText(String value) {
         return volume.find() ? phrase.substring(0, volume.start()) : phrase;
     }
 
-    // "더블기획" 처럼 한 낱말로 붙어 오는 형태가 있다. 카탈로그 제품명에는 "기획" 이 한 건도 없다.
+    // "더블기획" 처럼 한 낱말로 붙어 온다. 카탈로그 제품명에는 "기획" 이 없다.
     private static boolean isPlanWord(String word) {
         return PLAN_WORDS.contains(word) || word.endsWith("기획");
     }

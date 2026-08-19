@@ -7,9 +7,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-/**
- * 카탈로그 제품명에는 브랜드가 없어 공유 텍스트에서 둘을 갈라 둔다. 취급하지 않는 브랜드면 {@code brand} 가 비어 있다.
- */
 public record SharedProductName(Optional<Brand> brand, String keyword) {
 
     // 더 줄이면 남은 낱말이 제품을 가리키지 못한다.
