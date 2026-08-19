@@ -3,8 +3,9 @@
 set -Eeuo pipefail
 
 readonly REGION="${AWS_REGION:-ap-northeast-2}"
+readonly AGENT_VERSION="${CODEDEPLOY_AGENT_VERSION:-1.8.1}"
 readonly INSTALLER_URL="https://aws-codedeploy-${REGION}.s3.${REGION}.amazonaws.com/latest/install"
-readonly INSTALLER_PATH="/tmp/poudy-codedeploy-install"
+readonly RELEASE_PATH="releases/codedeploy-agent-${AGENT_VERSION}.noarch.rpm"
 
 require_root() {
     if [[ "${EUID}" -ne 0 ]]; then
@@ -21,17 +22,29 @@ require_root
 
 if systemctl is-active --quiet codedeploy-agent; then
     log 'CodeDeploy Agent가 이미 실행 중입니다.'
-    systemctl is-enabled codedeploy-agent || true
+    systemctl enable --now codedeploy-agent
+    systemctl is-enabled --quiet codedeploy-agent || {
+        systemctl status codedeploy-agent --no-pager -l || true
+        exit 1
+    }
     exit 0
 fi
+
+[[ "${AGENT_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    printf '[poudy-codedeploy] ERROR: CodeDeploy Agent 버전 형식이 올바르지 않습니다: %s\n' "${AGENT_VERSION}" >&2
+    exit 1
+}
 
 log "CodeDeploy Agent 설치를 시작합니다. 리전: ${REGION}"
 dnf install -y ruby wget
 
-wget --https-only --quiet --show-progress "${INSTALLER_URL}" -O "${INSTALLER_PATH}"
-chmod 0755 "${INSTALLER_PATH}"
-"${INSTALLER_PATH}" auto
-rm -f "${INSTALLER_PATH}"
+installer_dir="$(mktemp -d -p /var/tmp poudy-codedeploy.XXXXXX)"
+installer_path="${installer_dir}/install"
+trap 'rm -rf -- "${installer_dir}"' EXIT
+
+wget --https-only --quiet --show-progress "${INSTALLER_URL}" -O "${installer_path}"
+chmod 0755 "${installer_path}"
+"${installer_path}" auto -v "${RELEASE_PATH}"
 
 systemctl enable --now codedeploy-agent
 systemctl is-active --quiet codedeploy-agent || {
@@ -40,4 +53,4 @@ systemctl is-active --quiet codedeploy-agent || {
 }
 
 log 'CodeDeploy Agent 설치 및 실행이 완료됐습니다.'
-systemctl is-enabled codedeploy-agent
+systemctl is-enabled --quiet codedeploy-agent

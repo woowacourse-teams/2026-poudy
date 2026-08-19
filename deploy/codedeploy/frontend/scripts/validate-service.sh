@@ -6,7 +6,9 @@ for attempt in {1..24}; do
     if curl --fail --silent --show-error --max-time 3 \
         http://127.0.0.1/nginx-health >/dev/null \
         && curl --fail --silent --show-error --max-time 3 \
-        http://127.0.0.1/ >/dev/null; then
+        http://127.0.0.1/ >/dev/null \
+        && curl --fail --silent --show-error --max-time 3 \
+        http://127.0.0.1/api/categories >/dev/null; then
         exit 0
     fi
     sleep 5

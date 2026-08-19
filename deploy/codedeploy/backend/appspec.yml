@@ -1,10 +1,10 @@
 version: 0.0
 os: linux
+file_exists_behavior: OVERWRITE
 
 files:
   - source: app
     destination: /opt/poudy/backend
-    overwrite: true
 
 hooks:
   BeforeInstall:
@@ -21,5 +21,5 @@ hooks:
       runas: root
   ValidateService:
     - location: scripts/validate-service.sh
-      timeout: 120
+      timeout: 240
       runas: root
