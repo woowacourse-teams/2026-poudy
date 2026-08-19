@@ -45,10 +45,17 @@ export function RecentFilters() {
       ) : null}
 
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
-        {recent.map((item) => (
+        {recent.map((item, index) => (
           <li key={item.query} className="shrink-0">
             <Link
               href={`/products?${item.query}`}
+              onClick={() =>
+                track("recent_filter_used", {
+                  mode: item.mode,
+                  position: index,
+                  age_minutes: Math.max(0, Math.floor((Date.now() - item.usedAt) / 60000)),
+                })
+              }
               className="flex w-[250px] flex-col gap-1.5 rounded-[10px] border border-border bg-background p-2.5"
             >
               <span className="flex items-center">

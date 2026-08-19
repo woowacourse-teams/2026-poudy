@@ -7,6 +7,7 @@ import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
+import { track } from "@/lib/analytics/track";
 import { fetchIngredients } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
@@ -26,7 +27,7 @@ type IngredientOptionsProps = {
 /** 디자인의 성분 시트. 검색하면 자동완성이 선택 목록 자리를 대신한다. */
 export function IngredientOptions({ draft, setDraft, excludeCodes, names }: IngredientOptionsProps) {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher);
+  const { items } = useSuggestions(keyword, fetcher, "ingredient");
   const typing = keyword.trim().length > 0;
 
   const selectedCount = draft.includeIngredientIds.length + draft.excludeIngredientIds.length;
@@ -34,10 +35,28 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
   /** 포함과 제외는 한쪽만 걸린다. */
   const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
     const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
+    const had = draft[key].includes(item.id);
+
+    track("ingredient_condition_toggled", {
+      ingredient_id: item.id,
+      condition: key === "includeIngredientIds" ? "include" : "exclude",
+      action: had ? "remove" : "add",
+      surface: "filter_sheet",
+    });
+
+    // 새로 담는 경우만 자동완성에서 고른 것으로 본다. 빼는 동작은 검색 결과 선택이 아니다.
+    if (!had && typing) {
+      track("search_suggestion_selected", {
+        mode: "ingredient",
+        query: keyword.trim(),
+        position: items.findIndex((found) => found.id === item.id),
+        ingredient_id: item.id,
+      });
+    }
 
     setDraft({
       ...draft,
-      [key]: draft[key].includes(item.id) ? draft[key].filter((id) => id !== item.id) : [...draft[key], item.id],
+      [key]: had ? draft[key].filter((id) => id !== item.id) : [...draft[key], item.id],
       [other]: draft[other].filter((id) => id !== item.id),
     });
   };

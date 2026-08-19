@@ -47,6 +47,7 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
       <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
         <ProductList
           basePath={`/categories/${id}`}
+          surface="category"
           fixedFilter={{ categoryIds }}
           hiddenChips={["category"]}
           categories={categories.items}

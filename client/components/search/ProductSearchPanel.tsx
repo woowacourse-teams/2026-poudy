@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
+import { track } from "@/lib/analytics/track";
 import { fetchProductSuggestions } from "@/lib/api/products";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 import {
@@ -25,7 +26,7 @@ const fetcher = async (keyword: string): Promise<readonly ProductSuggestionRespo
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 export function ProductSearchPanel() {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher);
+  const { items } = useSuggestions(keyword, fetcher, "product");
   const typing = keyword.trim().length > 0;
 
   const recent = useSyncExternalStore(
@@ -54,6 +55,9 @@ export function ProductSearchPanel() {
         <>
           <Link
             href={`/products?keyword=${encodeURIComponent(keyword.trim())}`}
+            onClick={() =>
+              track("search_submitted", { mode: "product", query: keyword.trim(), result_count: items.length })
+            }
             className="flex items-center gap-3 rounded-xl bg-surface p-3"
           >
             <Icon name="search" size={18} className="text-text-secondary" />
@@ -71,17 +75,23 @@ export function ProductSearchPanel() {
             </h2>
 
             <ul className="divide-y divide-border">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <li key={item.id}>
                   <Link
                     href={`/products/${item.id}`}
-                    onClick={() =>
+                    onClick={() => {
+                      track("search_suggestion_selected", {
+                        mode: "product",
+                        query: keyword.trim(),
+                        position: index,
+                        product_id: item.id,
+                      });
                       addRecentSearch({
                         productId: item.id,
                         name: item.name,
                         brandName: item.brandName,
-                      })
-                    }
+                      });
+                    }}
                     className="flex items-center gap-3 py-3"
                   >
                     <span className="size-10 shrink-0 rounded-lg bg-surface" />
@@ -126,9 +136,13 @@ function RecentSearches({
         </div>
 
         <ul className="divide-y divide-border">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <li key={item.productId} className="flex items-center gap-2 py-3">
-              <Link href={`/products/${item.productId}`} className="flex flex-1 flex-col gap-0.5">
+              <Link
+                href={`/products/${item.productId}`}
+                onClick={() => track("recent_search_used", { position: index, product_id: item.productId })}
+                className="flex flex-1 flex-col gap-0.5"
+              >
                 <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
                 <span className="text-[11px] text-text-secondary">{item.brandName}</span>
               </Link>

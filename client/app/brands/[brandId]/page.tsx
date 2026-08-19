@@ -60,6 +60,7 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
       <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
         <ProductList
           basePath={`/brands/${brand.id}`}
+          surface="brand"
           fixedFilter={{ brandIds: [brand.id] }}
           hiddenChips={["brand"]}
           categories={brand.categories}
