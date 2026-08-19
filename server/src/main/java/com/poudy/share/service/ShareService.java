@@ -50,9 +50,7 @@ public class ShareService {
         return match;
     }
 
-    /**
-     * 어떤 제품을 먼저 등록해야 하는지 판단할 근거로 남긴다. 원문은 공유 링크를 품고 있어 정제한 이름만 남긴다.
-     */
+    // 제품 등록 우선순위 판단에 쓴다. 원문은 공유 링크를 품고 있어 정제한 이름만 남긴다.
     private static void logUnmatched(SharedProductName name) {
         log.info(
                 "공유 텍스트로 제품을 찾지 못했습니다. brand={}, keyword={}",
