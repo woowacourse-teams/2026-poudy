@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
@@ -23,7 +23,7 @@ type FilterSheetsProps = {
   readonly filter: Filter;
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandListItemResponse[];
+  readonly brands: readonly BrandResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
 };
 
