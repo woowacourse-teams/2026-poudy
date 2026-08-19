@@ -172,7 +172,9 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
 
-`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다. `tag.domain`에는 두 축의 태그 이름을 정의하는 `FormulationRole`, `SkinEffect`와 원천 데이터의 태그 구분인 `TagCategory`를 둔다.
+`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다.
+
+태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `FormulationRole`과 `SkinEffect`는 enum 상수에 값을 중복하지 않고, 해석된 `Tag`에서 각각 `FUNCTION`과 `BIOLOGICAL_EFFECT` 응답 값을 만든다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
 
 ### Product
 
