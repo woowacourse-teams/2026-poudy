@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.ingredient.domain.Ingredient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,14 +85,6 @@ class JsonDataReaderTest {
     void wrapsMalformedFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-broken.json", Sample.class))
                 .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-broken.json");
-    }
-
-    @Test
-    @DisplayName("두 번째 이후 근거가 태그 보류면 로딩에 실패한다")
-    void rejectsDeferredTagEvidenceAfterValidEvidence() {
-        assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-deferred-tags.json", Ingredient.class))
-                .isInstanceOf(InfrastructureException.class)
-                .hasMessageContaining("json-data-reader-deferred-tags.json");
     }
 
     @Test

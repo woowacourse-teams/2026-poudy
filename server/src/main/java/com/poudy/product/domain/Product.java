@@ -10,9 +10,10 @@ import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public record Product(
         Long id,
@@ -93,7 +94,7 @@ public record Product(
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<SkinEffect, List<Long>> ingredientIds = new EnumMap<>(SkinEffect.class);
+        Map<SkinEffect, List<Long>> ingredientIds = new TreeMap<>(Comparator.comparing(SkinEffect::id));
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
                 ingredientIds.computeIfAbsent(effect, key -> new ArrayList<>()).add(ingredient.id());

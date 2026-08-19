@@ -9,6 +9,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -100,9 +101,30 @@ class ProductTest {
 
         assertThat(product.skinEffectGroups()).singleElement()
                 .satisfies(group -> {
-                    assertThat(group.effect().id()).isEqualTo(108L);
+                    assertThat(group.effect().id()).isEqualTo(57L);
                     assertThat(group.ingredientIds()).containsExactly(10L, 20L);
                 });
+    }
+
+    @Test
+    @DisplayName("피부 작용 그룹은 성분 등장 순서와 관계없이 태그 ID 순서로 정렬한다")
+    void ordersSkinEffectGroupsByTagId() {
+        Ingredient hydration = ingredient(10L, 57L, "HYDRATION_RELATED");
+        Ingredient barrier = ingredient(20L, 48L, "BARRIER_SUPPORT_RELATED");
+        Product product = new Product(
+                1L,
+                "제품",
+                brand,
+                category,
+                new Ingredients(List.of(hydration, barrier)),
+                "image",
+                variants,
+                sensory(1, 1),
+                updatedAt);
+
+        assertThat(product.skinEffectGroups())
+                .extracting(group -> group.effect().id())
+                .containsExactly(48L, 57L);
     }
 
     @Test
@@ -124,7 +146,13 @@ class ProductTest {
     }
 
     private static Ingredient ingredient(Long id, String effect) {
-        IngredientTag tag = new IngredientTag(effect, TagCategory.BIOLOGICAL_EFFECT, "확인된 근거");
+        return ingredient(id, 57L, effect);
+    }
+
+    private static Ingredient ingredient(Long id, Long tagId, String effect) {
+        IngredientTag tag = new IngredientTag(
+                new Tag(tagId, TagCategory.BIOLOGICAL_EFFECT, effect, "피부 작용"),
+                "확인된 근거");
         return new Ingredient(id, "성분 " + id, null, null, null, null, null, List.of(tag), null, null);
     }
 }

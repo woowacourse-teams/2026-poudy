@@ -28,7 +28,7 @@ class IngredientSearchTest {
                 .andExpect(jsonPath("$.items[0].id").value(2))
                 .andExpect(jsonPath("$.items[0].koreanName").value("가지열매추출물"))
                 .andExpect(jsonPath("$.items[0].englishName").value("Solanum Melongena (Eggplant) Fruit Extract"))
-                .andExpect(jsonPath("$.items[0].skinEffects[0].id").value(104))
+                .andExpect(jsonPath("$.items[0].skinEffects[0].id").value(47))
                 .andExpect(jsonPath("$.items[0].skinEffects[0].name").value("항산화 관련"));
     }
 }

@@ -6,5 +6,6 @@ public enum TagCategory {
     BIOLOGICAL_EFFECT,
     INGREDIENT_CLASS,
     ALLERGEN,
+    REGULATORY,
     SKIN_REACTION
 }

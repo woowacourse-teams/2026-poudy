@@ -7,7 +7,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.tag.domain.FormulationRole;
+import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,8 +25,8 @@ class HeuristicProductSensoryEstimatorTest {
     void estimatesDeterministicallyWithVersionedParameters() {
         Category toner = category(2L, "스킨/토너");
         Ingredients ingredients = ingredients(
-                ingredient(100L, FormulationRole.HUMECTANT),
-                ingredient(101L, FormulationRole.EMOLLIENT));
+                ingredient(100L, "HUMECTANT"),
+                ingredient(101L, "EMOLLIENT"));
 
         ProductSensory first = estimator.estimate(toner, ingredients);
         ProductSensory second = estimator.estimate(toner, ingredients);
@@ -48,10 +48,10 @@ class HeuristicProductSensoryEstimatorTest {
         ProductSensory baseline = estimator.estimate(cream, ingredients());
         ProductSensory moistureRich = estimator.estimate(
                 cream,
-                repeatedRoleIngredients(100L, 10, FormulationRole.HUMECTANT));
+                repeatedRoleIngredients(100L, 10, "HUMECTANT"));
         ProductSensory oilRich = estimator.estimate(
                 cream,
-                repeatedRoleIngredients(200L, 10, FormulationRole.EMOLLIENT));
+                repeatedRoleIngredients(200L, 10, "EMOLLIENT"));
 
         assertThat(baseline.moisture().value()).isEqualTo(2);
         assertThat(baseline.oil().value()).isEqualTo(2);
@@ -65,13 +65,13 @@ class HeuristicProductSensoryEstimatorTest {
     @DisplayName("같은 역할도 전성분 앞쪽에 있을 때만 더 큰 보정 근거가 된다")
     void weightsEarlierIngredientPositionsMoreHeavily() {
         Category unknownCategory = category(999L, "미등록 제형");
-        Ingredients early = repeatedRoleIngredients(100L, 5, FormulationRole.HUMECTANT);
+        Ingredients early = repeatedRoleIngredients(100L, 5, "HUMECTANT");
         List<Ingredient> lateValues = new ArrayList<>();
         for (long id = 1; id <= 20; id++) {
             lateValues.add(ingredient(id));
         }
         for (long id = 100; id < 105; id++) {
-            lateValues.add(ingredient(id, FormulationRole.HUMECTANT));
+            lateValues.add(ingredient(id, "HUMECTANT"));
         }
 
         ProductSensory earlyResult = estimator.estimate(unknownCategory, early);
@@ -112,7 +112,7 @@ class HeuristicProductSensoryEstimatorTest {
     void lowersConfidenceForUnclassifiedIngredients() {
         Category serum = category(3L, "에센스/세럼/앰플");
         Ingredients unclassified = repeatedRoleIngredients(100L, 10, null);
-        Ingredients classified = repeatedRoleIngredients(200L, 10, FormulationRole.HUMECTANT);
+        Ingredients classified = repeatedRoleIngredients(200L, 10, "HUMECTANT");
 
         ProductSensory unclassifiedResult = estimator.estimate(serum, unclassified);
         ProductSensory classifiedResult = estimator.estimate(serum, classified);
@@ -126,7 +126,7 @@ class HeuristicProductSensoryEstimatorTest {
     @Test
     @DisplayName("초기 범위 밖 category는 결과를 만들되 confidence가 더 낮다")
     void usesLowConfidenceFallbackForUnknownCategory() {
-        Ingredients ingredients = repeatedRoleIngredients(100L, 10, FormulationRole.HUMECTANT);
+        Ingredients ingredients = repeatedRoleIngredients(100L, 10, "HUMECTANT");
 
         ProductSensory known = estimator.estimate(category(3L, "에센스/세럼/앰플"), ingredients);
         ProductSensory fallback = estimator.estimate(category(999L, "미등록 제형"), ingredients);
@@ -140,7 +140,7 @@ class HeuristicProductSensoryEstimatorTest {
     @DisplayName("중복 성분 참조는 점수를 두 번 올리지 않고 confidence만 낮춘다")
     void doesNotDoubleCountDuplicateIngredientReferences() {
         Category cream = category(4L, "크림");
-        Ingredient humectant = ingredient(100L, FormulationRole.HUMECTANT);
+        Ingredient humectant = ingredient(100L, "HUMECTANT");
         ProductSensory single = estimator.estimate(cream, ingredients(humectant));
         ProductSensory duplicate = estimator.estimate(cream, ingredients(humectant, humectant));
 
@@ -161,7 +161,7 @@ class HeuristicProductSensoryEstimatorTest {
     private static Ingredients repeatedRoleIngredients(
             long firstId,
             int count,
-            FormulationRole role) {
+            String role) {
         List<Ingredient> values = new ArrayList<>();
         for (int index = 0; index < count; index++) {
             values.add(
@@ -176,12 +176,11 @@ class HeuristicProductSensoryEstimatorTest {
         return new Ingredients(List.of(values));
     }
 
-    private static Ingredient ingredient(Long id, FormulationRole... roles) {
+    private static Ingredient ingredient(Long id, String... roles) {
         List<IngredientTag> tags = java.util.Arrays.stream(roles)
                 .map(
                         role -> new IngredientTag(
-                                role.name(),
-                                TagCategory.FUNCTION,
+                                new Tag(1L, TagCategory.FUNCTION, role, role),
                                 "v0 estimator test evidence"))
                 .toList();
         return new Ingredient(
