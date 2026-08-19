@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
@@ -23,8 +23,10 @@ type FilterSheetsProps = {
   readonly filter: Filter;
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandListItemResponse[];
+  readonly brands: readonly BrandResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
+  /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
+  readonly initialCount?: number;
 };
 
 const TITLES: Record<SheetKind, string> = {
@@ -66,9 +68,10 @@ function SheetBody({
   categories,
   brands,
   excludeCodes,
+  initialCount,
 }: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
   const [draft, setDraft] = useState<Filter>(filter);
-  const count = useProductCount(draft);
+  const count = useProductCount(draft, initialCount);
 
   // 담긴 성분의 이름은 서버에서 가져온다.
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);

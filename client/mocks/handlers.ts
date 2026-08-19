@@ -66,12 +66,10 @@ export const handlers = [
         totalPages: Math.max(1, Math.ceil(matched.length / size)),
         hasNext: start + size < matched.length,
       },
-      brands: brands.map(({ id, name, englishName, imageUrl }) => ({
-        id,
-        name,
-        englishName,
-        imageUrl,
-      })),
+      // 조건에 걸린 제품 전체의 브랜드다. 페이지가 아니라 matched 를 기준으로 한다.
+      brands: brands
+        .filter((brand) => matched.some((product) => product.brand.id === brand.id))
+        .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
     });
   }),
 

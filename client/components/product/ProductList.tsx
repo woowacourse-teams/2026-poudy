@@ -1,6 +1,12 @@
 "use client";
 
-import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse, ProductResponse } from "@poudy/api/api.zod";
+import type {
+  BrandListItemResponse,
+  BrandResponse,
+  CategoryResponse,
+  ExcludeCodeResponse,
+  ProductResponse,
+} from "@poudy/api/api.zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
@@ -75,11 +81,17 @@ export function ProductList({
   // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
   const filter = { ...urlFilter, ...fixedFilter };
 
-  const { items, total, page, hasNext, loadNext, loading } = useProductPages(filter);
+  const { items, brands: matchedBrands, total, page, hasNext, loadNext, loading } = useProductPages(filter);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
 
   const empty = items.length === 0 && !loading;
   const conditionCount = countConditions(filter);
+
+  /**
+   * 지금 조건에 걸린 브랜드만 고르게 한다. 결과가 0 건인 브랜드가 목록에서 빠진다.
+   * 첫 응답 전에는 걸린 브랜드를 모르므로 그때만 전체 목록을 보여 준다.
+   */
+  const selectableBrands = matchedBrands.length > 0 ? matchedBrands : brands;
 
   // 첫 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {
@@ -137,8 +149,9 @@ export function ProductList({
           }
         }}
         categories={categories}
-        brands={brands}
+        brands={selectableBrands}
         excludeCodes={excludeCodes}
+        initialCount={total}
       />
     </>
   );
@@ -173,6 +186,8 @@ type PageState = {
   readonly key: string;
   readonly page: number;
   readonly items: readonly ProductResponse[];
+  /** 지금 조건에 걸린 제품 전체의 브랜드. 페이지에 걸리지 않는다. */
+  readonly brands: readonly BrandResponse[];
   readonly total: number;
   readonly hasNext: boolean;
   readonly loading: boolean;
@@ -181,6 +196,7 @@ type PageState = {
 const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   page: 0,
   items: [],
+  brands: [],
   total: 0,
   hasNext: false,
   loading: true,
@@ -209,6 +225,8 @@ function useProductPages(filter: Filter) {
             ...previous,
             // 첫 페이지는 갈아 끼우고 다음 페이지는 이어 붙인다.
             items: page === 0 ? response.items : [...previous.items, ...response.items],
+            // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
+            brands: response.brands,
             total: response.pagination.totalElements,
             hasNext: response.pagination.hasNext,
             loading: false,
