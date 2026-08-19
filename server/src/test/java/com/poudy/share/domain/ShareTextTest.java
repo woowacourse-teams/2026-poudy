@@ -67,6 +67,19 @@ class ShareTextTest {
         assertThat(new ShareText(shared).productPhrases()).containsExactly("메디큐브 PDRN 핑크 시카 수딩 토너");
     }
 
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', value = {
+            "[수분진정/세럼증정] 닥터지 레드블레미쉬 클리어 수딩크림 EX 70ml기획 (+30ml+세럼10ml*2ea)"
+                    + "|닥터지 레드블레미쉬 클리어 수딩크림 EX",
+            "[온라인단독/대용량] 에스트라 아토베리어365 크림 80mlX3 한정기획|에스트라 아토베리어365 크림",
+            "[온라인 단독기획]바이오더마 하이드라비오 세럼 더블기획|바이오더마 하이드라비오 세럼",
+            "[8월올영픽]브링그린 징크테카 트러블 세럼 대용량 기획|브링그린 징크테카 트러블 세럼",
+            "[약산성저자극] 아비브 아크네 폼 클렌저 어성초 폼 대용량 250ml|아비브 아크네 폼 클렌저 어성초 폼"})
+    @DisplayName("용량과 기획 낱말이 붙어 와도 제품명만 남긴다")
+    void keepsProductPhraseWithAttachedPlanTokens(String shared, String expected) {
+        assertThat(new ShareText(shared + TAIL).productPhrase()).isEqualTo(expected);
+    }
+
     @Test
     @DisplayName("링크만 공유하면 제품명이 남지 않는다")
     void keepsNothingForLinkOnlyShare() {

@@ -15,7 +15,7 @@ public record ShareText(String value) {
     private static final Pattern PLAN_NOTE = Pattern.compile("\\([^)]*\\)");
     // 카탈로그 제품명에는 용량 표기가 한 건도 없다. 용량 뒤는 전부 기획 문구다.
     private static final Pattern VOLUME = Pattern.compile(
-            "\\d+(\\.\\d+)?\\s*(ml|g|ea|매|정|개|입|팩)(?![가-힣A-Za-z])",
+            "\\d+(\\.\\d+)?\\s*(ml|g|ea|매|정|개|입|팩)([Xx*]\\s*\\d+)?(?![A-Za-z])",
             Pattern.CASE_INSENSITIVE);
     private static final Set<String> PLAN_WORDS = Set.of(
             "기획",
@@ -27,6 +27,7 @@ public record ShareText(String value) {
             "더블",
             "튜브",
             "한정",
+            "대용량",
             "본품",
             "구성",
             "패키지");
@@ -64,11 +65,16 @@ public record ShareText(String value) {
         return volume.find() ? phrase.substring(0, volume.start()) : phrase;
     }
 
+    // "더블기획" 처럼 한 낱말로 붙어 오는 형태가 있다. 카탈로그 제품명에는 "기획" 이 한 건도 없다.
+    private static boolean isPlanWord(String word) {
+        return PLAN_WORDS.contains(word) || word.endsWith("기획");
+    }
+
     private static String withoutTrailingPlanWords(String phrase) {
         List<String> words = ShareWords.of(phrase);
         int end = words.size();
 
-        while (end > 0 && PLAN_WORDS.contains(words.get(end - 1))) {
+        while (end > 0 && isPlanWord(words.get(end - 1))) {
             end--;
         }
 
