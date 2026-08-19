@@ -38,16 +38,11 @@ class ShareMatchTest {
     }
 
     private static ShareMatch match(String productPhrase, Products products) {
-        return ShareMatch.of(SharedProductName.of(productPhrase, BRANDS), products);
+        return SharedProductName.of(productPhrase, BRANDS).matchIn(products);
     }
 
     private static ShareMatch matchShared(String shared, Products products) {
-        return ShareMatch.of(
-                new ShareText(shared).productPhrases().stream()
-                        .map(phrase -> SharedProductName.of(phrase, BRANDS))
-                        .filter(name -> !name.isEmpty())
-                        .toList(),
-                products);
+        return SharedProductNames.of(new ShareText(shared), BRANDS).matchIn(products);
     }
 
     @Test
@@ -61,7 +56,7 @@ class ShareMatchTest {
         ShareMatch matched = match("닥터지 레드 블레미쉬 클리어 수딩크림 EX", products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
-        assertThat(matched.product()).map(Product::id).contains(1L);
+        assertThat(matched.productId()).isEqualTo(1L);
     }
 
     @Test
@@ -71,7 +66,7 @@ class ShareMatchTest {
 
         ShareMatch matched = match("메디큐브 PDRN 핑크 시카 수딩 토너", products);
 
-        assertThat(matched.product()).map(Product::id).contains(1L);
+        assertThat(matched.productId()).isEqualTo(1L);
     }
 
     @Test
@@ -116,7 +111,7 @@ class ShareMatchTest {
         ShareMatch matched = match("닥터지 레드 블레미쉬 클리어 히알 시카 수딩 세럼", products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
-        assertThat(matched.product()).isEmpty();
+        assertThat(matched.productId()).isNull();
         assertThat(matched.keyword()).isEqualTo("레드 블레미쉬 클리어");
     }
 
@@ -144,7 +139,7 @@ class ShareMatchTest {
                 products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
-        assertThat(matched.product()).map(Product::id).contains(1L);
+        assertThat(matched.productId()).isEqualTo(1L);
     }
 
     @Test
@@ -157,7 +152,7 @@ class ShareMatchTest {
                 products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
-        assertThat(matched.product()).map(Product::id).contains(1L);
+        assertThat(matched.productId()).isEqualTo(1L);
     }
 
     @Test

@@ -25,4 +25,8 @@ final class ShareWords {
     static String join(List<String> words) {
         return String.join(SPACE, words);
     }
+
+    static int letterCount(String phrase) {
+        return phrase.replace(SPACE, "").length();
+    }
 }

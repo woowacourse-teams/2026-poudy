@@ -1,6 +1,5 @@
 package com.poudy.share.controller.dto;
 
-import com.poudy.product.domain.Product;
 import com.poudy.share.domain.ShareMatch;
 import com.poudy.share.domain.ShareMatchStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,9 +15,6 @@ public record ShareMatchResponse(
             return new ShareMatchResponse(ShareMatchStatus.NOT_FOUND, null, match.keyword());
         }
 
-        return new ShareMatchResponse(
-                ShareMatchStatus.MATCHED,
-                match.product().map(Product::id).orElseThrow(),
-                null);
+        return new ShareMatchResponse(ShareMatchStatus.MATCHED, match.productId(), null);
     }
 }

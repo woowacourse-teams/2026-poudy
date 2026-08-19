@@ -2,6 +2,8 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
+import com.poudy.common.domain.NameMatch;
+import com.poudy.common.domain.SearchKeyword;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
@@ -59,6 +61,14 @@ public record Product(
         }
 
         return ingredients.findById(ingredientId).isPresent();
+    }
+
+    public boolean hasBrand(Brand other) {
+        return other != null && brand.id().equals(other.id());
+    }
+
+    public boolean hasExactName(SearchKeyword keyword) {
+        return keyword.match(name) == NameMatch.EXACT;
     }
 
     public boolean matches(ProductFilter filter) {
