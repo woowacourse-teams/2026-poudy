@@ -71,6 +71,13 @@ install \
     "${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend.conf" \
     /etc/nginx/conf.d/poudy-frontend.conf
 
+install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "${REPOSITORY_ROOT}/deploy/nginx/poudy-backend-upstream.conf" \
+    /etc/nginx/conf.d/poudy-backend-upstream.conf
+
 if [[ -f /etc/nginx/conf.d/default.conf ]]; then
     mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled
 fi
