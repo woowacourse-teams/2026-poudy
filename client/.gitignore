@@ -17,9 +17,8 @@
 /.next/
 /out/
 /design/
-# 실행 계획만 추적하고 나머지 로컬 조사 문서는 제외한다.
-/docs/*
-!/docs/exec-plans/
+# 로컬 조사·계획 문서는 저장소에 두지 않는다.
+/docs/
 
 # production
 /build
