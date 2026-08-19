@@ -56,4 +56,16 @@ sudo systemctl restart poudy-backend
 sudo systemctl restart poudy-frontend
 ```
 
+## CodeDeploy Agent
+
+CodeDeploy 배포 그룹에 EC2를 등록하기 전에 각 인스턴스에서 한 번 실행합니다.
+
+```bash
+cd /opt/poudy/repository
+sudo ./deploy/scripts/bootstrap-codedeploy-agent.sh
+```
+
+기본 리전은 `ap-northeast-2`이며, 다른 리전을 사용할 때만 `AWS_REGION`을 지정합니다.
+설치 스크립트에는 AWS 자격 증명을 포함하지 않습니다.
+
 스크립트에는 AWS 자격 증명, API 키, 데이터 파일을 포함하지 않습니다.

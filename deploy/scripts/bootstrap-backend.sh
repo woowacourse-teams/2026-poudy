@@ -12,7 +12,7 @@ require_root
 
 log '백엔드 호스트 초기화를 시작합니다.'
 
-dnf install -y java-21-amazon-corretto-headless
+dnf install -y curl-minimal java-21-amazon-corretto-headless
 
 java_major="$(java -version 2>&1 | sed -n 's/.*version "\([0-9][0-9]*\).*/\1/p' | head -n 1)"
 [[ "${java_major}" == '21' ]] || fail "Java 21을 확인하지 못했습니다. 현재 major: ${java_major:-unknown}"
