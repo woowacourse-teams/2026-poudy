@@ -4,6 +4,7 @@ import type { EventMap, EventName } from "./events";
 
 type Posthog = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
+  captureException: (error: unknown, properties?: Record<string, unknown>) => void;
   init: (key: string, options: Record<string, unknown>) => void;
 };
 
@@ -46,6 +47,10 @@ export const initAnalytics = async (): Promise<void> => {
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: true,
+
+    // 잡히지 않은 예외와 거부된 프로미스를 자동으로 보낸다. 오류 화면은
+    // reportBoundaryError 가 따로 남기고, 이쪽은 그 밖의 예외를 받는다.
+    capture_exceptions: true,
 
     // 화면 녹화. 이벤트만으로는 왜 그렇게 눌렀는지 알 수 없어 초기 사용성 관찰에 쓴다.
     disable_session_recording: false,

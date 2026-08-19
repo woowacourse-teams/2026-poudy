@@ -20,7 +20,7 @@ const capture = vi.fn();
 
 beforeEach(() => {
   capture.mockClear();
-  window.posthog = { capture, init: vi.fn() };
+  window.posthog = { capture, captureException: vi.fn(), init: vi.fn() };
 });
 
 afterEach(() => {
