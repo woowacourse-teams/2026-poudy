@@ -74,12 +74,8 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
         {categories.map((path) => (
           <li key={path.id} className="flex items-center gap-[5px] text-[12px] text-text-secondary">
             <span>{path.name}</span>
-            {path.child ? (
-              <>
-                <Icon name="chevron-right" size={12} />
-                <span className="font-semibold">{path.child.name}</span>
-              </>
-            ) : null}
+            <Icon name="chevron-right" size={12} />
+            <span className="font-semibold">{path.child.name}</span>
           </li>
         ))}
       </ol>
