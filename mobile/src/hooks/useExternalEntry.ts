@@ -7,11 +7,17 @@ import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/ext
 
 interface ExternalEntryOptions {
   readonly onNavigate: (url: string) => void;
+  readonly onShareFailure: () => void;
   readonly onUnsupportedShare: () => void;
   readonly webBaseUrl: string;
 }
 
-export const useExternalEntry = (options: ExternalEntryOptions) => {
+export const useExternalEntry = ({
+  onNavigate,
+  onShareFailure,
+  onUnsupportedShare,
+  webBaseUrl,
+}: ExternalEntryOptions) => {
   const { clearSharedPayloads, refreshSharePayloads, sharedPayloads } = useIncomingShare();
   const lastShare = useRef<string | null>(null);
 
@@ -31,27 +37,39 @@ export const useExternalEntry = (options: ExternalEntryOptions) => {
     const pending = { cancelled: false };
 
     const navigate = async () => {
-      const targetUrl = await resolveSharedUrl(values, options.webBaseUrl);
+      const targetUrl = await resolveSharedUrl(values, webBaseUrl);
       if (pending.cancelled) {
         return;
       }
 
       if (targetUrl) {
-        options.onNavigate(targetUrl);
+        onNavigate(targetUrl);
         return;
       }
 
-      options.onUnsupportedShare();
+      onUnsupportedShare();
     };
 
-    void navigate();
+    void navigate().catch(() => {
+      if (!pending.cancelled) {
+        onShareFailure();
+      }
+    });
     clearSharedPayloads();
     void refreshSharePayloads();
 
     return () => {
       pending.cancelled = true;
     };
-  }, [clearSharedPayloads, options, refreshSharePayloads, sharedPayloads]);
+  }, [
+    clearSharedPayloads,
+    onNavigate,
+    onShareFailure,
+    onUnsupportedShare,
+    refreshSharePayloads,
+    sharedPayloads,
+    webBaseUrl,
+  ]);
 
   useEffect(() => {
     const handleUrl = (value: string | null) => {
@@ -59,9 +77,9 @@ export const useExternalEntry = (options: ExternalEntryOptions) => {
         return;
       }
 
-      const targetUrl = getDeepLinkUrl(value, options.webBaseUrl);
+      const targetUrl = getDeepLinkUrl(value, webBaseUrl);
       if (targetUrl) {
-        options.onNavigate(targetUrl);
+        onNavigate(targetUrl);
       }
     };
 
@@ -71,5 +89,5 @@ export const useExternalEntry = (options: ExternalEntryOptions) => {
       .catch(() => undefined);
 
     return () => subscription.remove();
-  }, [options]);
+  }, [onNavigate, webBaseUrl]);
 };

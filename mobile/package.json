@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.101.4",
     "expo": "~57.0.3",
     "expo-dev-client": "~57.0.13",
     "expo-quick-actions": "6.0.2",

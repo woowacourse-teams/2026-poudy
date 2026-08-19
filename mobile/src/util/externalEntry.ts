@@ -1,7 +1,9 @@
+import { requestShareMatch } from '@/api/shareMatch';
+import { queryClient } from '@/lib/queryClient';
 import { getMatchedUrl, getSameOriginUrl } from '@/util/entryUrl';
-import { getShareMatch } from '@/util/shareMatchCache';
 
 const SIGNATURE_SEPARATOR = '\u0000';
+const SHARE_MATCH_KEY = 'share-match';
 
 interface SharedPayload {
   readonly value?: string | null;
@@ -13,7 +15,15 @@ export const getSharedValues = (payloads: readonly SharedPayload[]): string[] =>
 export const getShareSignature = (values: readonly string[]): string => values.join(SIGNATURE_SEPARATOR);
 
 const findMatchedUrl = async (values: readonly string[], webBaseUrl: string): Promise<string | null> => {
-  const matches = await Promise.all(values.map((value) => getShareMatch(value, webBaseUrl)));
+  const texts = values.map((value) => value.trim());
+  const matches = await Promise.all(
+    texts.map((text) =>
+      queryClient.fetchQuery({
+        queryKey: [SHARE_MATCH_KEY, webBaseUrl, text],
+        queryFn: () => requestShareMatch(text, webBaseUrl),
+      }),
+    ),
+  );
 
   return matches.map((match) => getMatchedUrl(match, webBaseUrl)).find((matchedUrl) => matchedUrl !== null) ?? null;
 };

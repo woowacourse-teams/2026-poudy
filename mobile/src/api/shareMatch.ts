@@ -18,12 +18,12 @@ export const requestShareMatch = async (text: string, baseUrl: string): Promise<
   try {
     const response = await fetch(url.toString(), { signal: controller.signal });
     if (!response.ok) {
-      return null;
+      throw new Error(`공유 텍스트 식별 요청이 ${response.status} 로 실패했습니다.`);
     }
 
-    return ShareMatchResponse.parse(await response.json());
-  } catch {
-    return null;
+    const data = await response.json();
+
+    return ShareMatchResponse.parse(data);
   } finally {
     clearTimeout(timer);
   }
