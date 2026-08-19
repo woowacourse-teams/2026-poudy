@@ -10,19 +10,19 @@ interface QuickActionOptions {
 }
 
 export const useQuickActions = ({ onNavigate, webBaseUrl }: QuickActionOptions) => {
+  const handleQuickAction = useCallback(
+    (action: QuickActions.Action) => {
+      const targetUrl = getQuickActionUrl(action.id, webBaseUrl);
+      if (targetUrl) {
+        onNavigate(targetUrl);
+      }
+    },
+    [onNavigate, webBaseUrl],
+  );
+
   useEffect(() => {
     void QuickActions.setItems(getQuickActionItems()).catch(() => undefined);
   }, []);
 
-  useQuickActionCallback(
-    useCallback(
-      (action: QuickActions.Action) => {
-        const targetUrl = getQuickActionUrl(action.id, webBaseUrl);
-        if (targetUrl) {
-          onNavigate(targetUrl);
-        }
-      },
-      [onNavigate, webBaseUrl],
-    ),
-  );
+  useQuickActionCallback(handleQuickAction);
 };
