@@ -1,14 +1,6 @@
 name: Deployment Build
 
 on:
-  push:
-    branches: [dev]
-    paths:
-      - "client/**"
-      - "server/**"
-      - "common/**"
-      - "deploy/**"
-      - ".github/workflows/deploy-build.yml"
   workflow_dispatch:
 
 permissions:
