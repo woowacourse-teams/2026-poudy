@@ -231,20 +231,7 @@ export type ProductSuggestionListResponse = {
    */
   items: Array<ProductSuggestionResponse>;
 }
-export type ShareMatchResponse = {
-  /**
-   * 제품 확정 여부
-   */
-  status: ("MATCHED" | "NOT_FOUND");
-  /**
-   * 확정한 제품 ID. MATCHED 일 때만 있다
-   */
-  productId?: number;
-  /**
-   * 검색에 넘길 검색어. NOT_FOUND 일 때만 있다
-   */
-  keyword?: string;
-}
+export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: number, keyword?: string }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
@@ -472,7 +459,7 @@ export type get_SuggestProducts = {
 
     }
 /**
- * 올리브영 공유 텍스트 원문을 받아 제품 하나로 확정한다. 확정하면 productId 를, 확정하지 못하면 검색으로 이어 갈 keyword 를 돌려준다. 링크가 없거나 정제 후 제품명이 남지 않으면 잘못된 요청으로 거절한다.
+ * 올리브영 공유 텍스트 원문을 가공 없이 받아 제품 하나로 확정한다. MATCHED 면 productId 를, NOT_FOUND 면 검색으로 이어 갈 keyword 를 싣는다. 링크가 없거나 정제 후 제품명이 남지 않으면 거절한다.
  */
 export type get_MatchSharedProduct = {
       method: "GET",
@@ -480,12 +467,7 @@ export type get_MatchSharedProduct = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query:  {
-  /**
-   * 공유받은 텍스트 원문. 가공하지 않고 그대로 보낸다
-   */
-  text: string;
-},
+            query:  { text: string },
 
           }
       responses: {200: Schemas.ShareMatchResponse,

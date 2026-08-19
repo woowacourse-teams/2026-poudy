@@ -23,9 +23,9 @@ public class ShareController {
         this.shareService = shareService;
     }
 
-    @Operation(summary = "공유 텍스트로 제품 식별", description = "올리브영 공유 텍스트 원문을 받아 제품 하나로 확정한다. "
-            + "확정하면 productId 를, 확정하지 못하면 검색으로 이어 갈 keyword 를 돌려준다. "
-            + "링크가 없거나 정제 후 제품명이 남지 않으면 잘못된 요청으로 거절한다.")
+    @Operation(summary = "공유 텍스트로 제품 식별", description = "올리브영 공유 텍스트 원문을 가공 없이 받아 제품 하나로 확정한다. "
+            + "MATCHED 면 productId 를, NOT_FOUND 면 검색으로 이어 갈 keyword 를 싣는다. "
+            + "링크가 없거나 정제 후 제품명이 남지 않으면 거절한다.")
     @GetMapping
     public ResponseEntity<ShareMatchResponse> matchSharedProduct(@Valid @ModelAttribute ShareTextRequest request) {
         return ResponseEntity.ok(ShareMatchResponse.from(shareService.match(request.text())));
