@@ -8,6 +8,17 @@ const nextConfig: NextConfig = {
   // 올리지 않으면 빌드 산출물에서 common 이 빠진다.
   outputFileTracingRoot: path.join(__dirname, ".."),
 
+  // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "techcourse-project-2026.s3.ap-northeast-2.amazonaws.com",
+        pathname: "/poudy/**",
+      },
+    ],
+  },
+
   // PostHog 로 바로 보내면 광고 차단기가 요청을 막아 이벤트가 유실된다.
   // 같은 출처의 /ingest 로 받아 넘기면 차단 목록에 걸리지 않는다.
   async rewrites() {
