@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 
 import { useDebouncedValue } from "./useDebouncedValue";
 
+import { track } from "@/lib/analytics/track";
+
+const trackSearch = (mode: "product" | "ingredient", query: string, resultCount: number): void => {
+  track("search_used", { mode, query, query_length: query.length, result_count: resultCount });
+};
+
 type State<T> = {
   readonly keyword: string;
   readonly items: readonly T[];
@@ -16,6 +22,8 @@ type State<T> = {
 export const useSuggestions = <T>(
   keyword: string,
   fetcher: (keyword: string, signal: AbortSignal) => Promise<readonly T[]>,
+  /** 검색 이벤트를 남길 화면. 없으면 남기지 않는다. */
+  mode?: "product" | "ingredient",
 ) => {
   const debounced = useDebouncedValue(keyword.trim());
   const [state, setState] = useState<State<T>>({ keyword: debounced, items: [] });
@@ -33,6 +41,9 @@ export const useSuggestions = <T>(
       .then((next) => {
         if (controller.signal.aborted) return;
         setState((previous) => (previous.keyword === debounced ? { ...previous, items: next } : previous));
+
+        // 검색어가 멈춘 뒤 한 번만 남긴다. 글자마다 보내면 이벤트가 검색어 길이만큼 부풀어 오른다.
+        if (mode) trackSearch(mode, debounced, next.length);
       })
       .catch(() => {
         if (controller.signal.aborted) return;
@@ -40,7 +51,7 @@ export const useSuggestions = <T>(
       });
 
     return () => controller.abort();
-  }, [debounced, fetcher]);
+  }, [debounced, fetcher, mode]);
 
   return { items: current.items, keyword: debounced };
 };

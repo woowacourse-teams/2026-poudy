@@ -143,7 +143,8 @@ export function SavedScreen() {
         </div>
       ) : null}
 
-      <ul className="divide-y divide-border">
+      {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
+      <ul data-private className="divide-y divide-border">
         {shown.map((product) => (
           <li key={product.id}>
             <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />

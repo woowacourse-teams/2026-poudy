@@ -202,7 +202,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
           return (
             <li key={ingredient.id}>
               <Link
-                href={`/ingredients/${ingredient.id}`}
+                href={`/ingredients/${ingredient.id}?from=product_detail`}
                 className="flex h-[60px] items-center gap-2.5 border-b border-border"
               >
                 <span className="w-6 shrink-0 font-data text-[10px] text-[#8B8D94]">

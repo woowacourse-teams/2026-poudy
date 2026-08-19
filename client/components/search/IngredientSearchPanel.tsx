@@ -1,12 +1,13 @@
 "use client";
 
 import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
+import { track } from "@/lib/analytics/track";
 import { fetchIngredients } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
@@ -28,7 +29,7 @@ type IngredientSearchPanelProps = {
 /** S03 성분 필터링 탭. 문구와 생김새는 design/v1.pen 을 따른다. */
 export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }: IngredientSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher);
+  const { items } = useSuggestions(keyword, fetcher, "ingredient");
   const typing = keyword.trim().length > 0;
 
   const codeIngredients: ExcludeCodeIngredients = new Map(
@@ -38,15 +39,46 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
 
   const selectedCount = filter.includeIngredientIds.length + filter.excludeIngredientIds.length;
 
+  // 경고가 떠 있는 동안 다시 그려도 한 번만 남도록 걸린 성분으로 묶는다.
+  const conflictKey = conflicts.flatMap((conflict) => conflict.ingredientIds).join(",");
+
+  useEffect(() => {
+    if (!conflictKey) return;
+    track("filter_conflict_shown", {
+      conflict_count: conflicts.length,
+      ingredient_count: conflictKey.split(",").length,
+    });
+    // conflicts 는 렌더링마다 새로 만들어진다. 걸린 성분이 같으면 다시 보내지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conflictKey]);
+
   /**
    * 같은 성분을 포함과 제외에 함께 넣으면 결과가 반드시 비므로 한쪽만 남긴다.
    * 이미 눌린 것을 다시 누르면 조건에서 뺀다.
    */
   const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
     const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
+    const had = filter[key].includes(item.id);
+
+    track("ingredient_condition_toggled", {
+      ingredient_id: item.id,
+      condition: key === "includeIngredientIds" ? "include" : "exclude",
+      action: had ? "remove" : "add",
+      surface: "ingredient_search",
+    });
+
+    // 새로 담는 경우만 자동완성에서 고른 것으로 본다. 빼는 동작은 검색 결과 선택이 아니다.
+    if (!had && typing) {
+      track("search_suggestion_selected", {
+        mode: "ingredient",
+        query: keyword.trim(),
+        position: items.findIndex((found) => found.id === item.id),
+        ingredient_id: item.id,
+      });
+    }
 
     onChange({
-      [key]: filter[key].includes(item.id) ? filter[key].filter((id) => id !== item.id) : [...filter[key], item.id],
+      [key]: had ? filter[key].filter((id) => id !== item.id) : [...filter[key], item.id],
       [other]: filter[other].filter((id) => id !== item.id),
     });
   };
