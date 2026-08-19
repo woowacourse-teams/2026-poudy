@@ -231,6 +231,7 @@ export type ProductSuggestionListResponse = {
    */
   items: Array<ProductSuggestionResponse>;
 }
+export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: number, keyword?: string }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
@@ -458,6 +459,24 @@ export type get_SuggestProducts = {
 
     }
 /**
+ * 올리브영 공유 텍스트 원문을 가공 없이 받아 제품 하나로 확정한다. MATCHED 면 productId 를, NOT_FOUND 면 검색으로 이어 갈 keyword 를 싣는다. 링크가 없거나 정제 후 제품명이 남지 않으면 거절한다.
+ */
+export type get_MatchSharedProduct = {
+      method: "GET",
+      path: "/api/products/share-matches",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { text: string },
+
+          }
+      responses: {200: Schemas.ShareMatchResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.
  */
 export type get_CountProducts = {
@@ -590,6 +609,7 @@ export type get_FindBrand = {
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
+"/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,

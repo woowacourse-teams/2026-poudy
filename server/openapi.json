@@ -32,6 +32,10 @@
       "description": "브랜드 조회 API"
     },
     {
+      "name": "공유",
+      "description": "공유 텍스트 기반 제품 식별 API"
+    },
+    {
       "name": "제품",
       "description": "제품 조회 API"
     },
@@ -457,6 +461,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductSuggestionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/share-matches": {
+      "get": {
+        "tags": [
+          "공유"
+        ],
+        "summary": "공유 텍스트로 제품 식별",
+        "description": "올리브영 공유 텍스트 원문을 가공 없이 받아 제품 하나로 확정한다. MATCHED 면 productId 를, NOT_FOUND 면 검색으로 이어 갈 keyword 를 싣는다. 링크가 없거나 정제 후 제품명이 남지 않으면 거절한다.",
+        "operationId": "matchSharedProduct",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc",
+              "maxLength": 500,
+              "minLength": 0
+            },
+            "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareMatchResponse"
                 }
               }
             }
@@ -1609,6 +1681,30 @@
           "id",
           "imageUrl",
           "name"
+        ]
+      },
+      "ShareMatchResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "NOT_FOUND"
+            ]
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 8
+          },
+          "keyword": {
+            "type": "string",
+            "example": "레드 블레미쉬 클리어"
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "ProductCountResponse": {
