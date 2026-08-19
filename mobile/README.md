@@ -70,6 +70,20 @@ adb shell am start \
   com.poudy.app
 ```
 
+## 앱 아이콘 퀵 액션
+
+홈 화면에서 앱 아이콘을 길게 누르면 나오는 메뉴입니다. 각 항목은 WebView를 해당 경로로 다시 엽니다.
+
+| 항목        | 경로                  |
+| ----------- | --------------------- |
+| 성분 검색   | `/search/ingredients` |
+| 비교함      | `/compare`            |
+| 저장한 제품 | `/saved`              |
+
+항목 정의와 경로 변환은 `src/util/quickAction.ts`에, 등록과 실행 처리는 `src/hooks/useQuickActions.ts`에 있습니다. 정적 선언 대신 앱 실행 시 `setItems`로 등록하므로 iOS와 Android 모두 설치 후 앱을 한 번 실행해야 메뉴가 나타납니다.
+
+`/compare`는 웹 클라이언트에 아직 없는 경로입니다. 비교함 화면이 추가되기 전까지 이 항목은 빈 페이지로 이동합니다.
+
 ## 코드 별칭과 타입 검사
 
 `tsconfig.json`의 `@/* -> src/*` 별칭을 사용합니다.
