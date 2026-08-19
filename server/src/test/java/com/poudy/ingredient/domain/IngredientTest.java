@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
+import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -50,14 +51,14 @@ class IngredientTest {
                 "Glycerin",
                 "유래",
                 List.of(
-                        new IngredientTag("HUMECTANT", TagCategory.FUNCTION, "출처"),
-                        new IngredientTag("SKIN_CONDITIONING", TagCategory.FUNCTION, "출처"),
-                        new IngredientTag("BARRIER_SUPPORT_RELATED", TagCategory.BIOLOGICAL_EFFECT, "출처"),
-                        new IngredientTag("BOTANICAL_EXTRACT", TagCategory.INGREDIENT_CLASS, "출처")));
+                        tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "출처"),
+                        tag(18L, "SKIN_CONDITIONING", "피부 컨디셔닝제", TagCategory.FUNCTION, "출처"),
+                        tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, "출처"),
+                        tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, "출처")));
 
-        assertThat(ingredient.formulationRoles()).extracting(Enum::name)
+        assertThat(ingredient.formulationRoles()).extracting(FormulationRole::code)
                 .containsExactly("HUMECTANT", "SKIN_CONDITIONING");
-        assertThat(ingredient.skinEffects()).extracting(Enum::name).containsExactly("BARRIER_SUPPORT_RELATED");
+        assertThat(ingredient.skinEffects()).extracting(SkinEffect::code).containsExactly("BARRIER_SUPPORT_RELATED");
     }
 
     @Test
@@ -67,25 +68,30 @@ class IngredientTest {
                 "Glycerin",
                 "유래",
                 List.of(
-                        new IngredientTag("HUMECTANT", TagCategory.FUNCTION, "출처"),
-                        new IngredientTag("BARRIER_SUPPORT_RELATED", TagCategory.BIOLOGICAL_EFFECT, "출처")));
+                        tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "출처"),
+                        tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, "출처")));
 
         assertThat(ingredient.formulationRoles()).extracting(FormulationRole::id, FormulationRole::displayName)
-                .containsExactly(tuple(18L, "습윤제"));
+                .containsExactly(tuple(13L, "습윤제"));
         assertThat(ingredient.skinEffects()).extracting(SkinEffect::id, SkinEffect::displayName)
-                .containsExactly(tuple(105L, "피부 장벽 관련"));
+                .containsExactly(tuple(48L, "피부 장벽 관련"));
     }
 
     @Test
-    @DisplayName("아직 enum 에 없는 태그 이름은 응답에서 빠진다")
-    void skipsUnknownTagNames() {
+    @DisplayName("JSON에 추가된 태그도 코드 변경 없이 응답에 포함한다")
+    void includesNewTagDefinitions() {
         Ingredient ingredient = ingredient(
                 "Glycerin",
                 "유래",
-                List.of(new IngredientTag("NOT_IN_ENUM", TagCategory.FUNCTION, "출처")));
+                List.of(
+                        tag(75L, "BULKING", "벌킹제", TagCategory.FUNCTION, "출처"),
+                        tag(51L, "ELASTICITY_RELATED", "탄력 관련", TagCategory.BIOLOGICAL_EFFECT, "출처")));
 
-        assertThat(ingredient.tagMappings()).hasSize(1);
-        assertThat(ingredient.formulationRoles()).isEmpty();
+        assertThat(ingredient.tagMappings()).hasSize(2);
+        assertThat(ingredient.formulationRoles()).extracting(FormulationRole::id, FormulationRole::displayName)
+                .containsExactly(tuple(75L, "벌킹제"));
+        assertThat(ingredient.skinEffects()).extracting(SkinEffect::id, SkinEffect::displayName)
+                .containsExactly(tuple(51L, "탄력 관련"));
     }
 
     @Test
@@ -108,13 +114,20 @@ class IngredientTest {
         Ingredient ingredient = withEvidenceAndTags(
                 "설명 근거",
                 List.of(
-                        new IngredientTag("HUMECTANT", TagCategory.FUNCTION, "배합 목적 근거"),
-                        new IngredientTag(
+                        tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "배합 목적 근거"),
+                        tag(
+                                48L,
                                 "BARRIER_SUPPORT_RELATED",
+                                "피부 장벽 관련",
                                 TagCategory.BIOLOGICAL_EFFECT,
                                 "피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025); 공통 근거"),
-                        new IngredientTag("HYDRATION_RELATED", TagCategory.BIOLOGICAL_EFFECT, "공통 근거; 수분 공급 연구"),
-                        new IngredientTag("NOT_IN_ENUM", TagCategory.BIOLOGICAL_EFFECT, "노출되지 않는 태그 근거")));
+                        tag(
+                                57L,
+                                "HYDRATION_RELATED",
+                                "피부 수분 관련",
+                                TagCategory.BIOLOGICAL_EFFECT,
+                                "공통 근거; 수분 공급 연구"),
+                        tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, "노출되지 않는 태그 근거")));
 
         assertThat(ingredient.effectSources())
                 .containsExactly("피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025)", "공통 근거", "수분 공급 연구");
@@ -126,8 +139,10 @@ class IngredientTest {
         Ingredient ingredient = withEvidenceAndTags(
                 "설명 근거",
                 List.of(
-                        new IngredientTag(
+                        tag(
+                                48L,
                                 "BARRIER_SUPPORT_RELATED",
+                                "피부 장벽 관련",
                                 TagCategory.BIOLOGICAL_EFFECT,
                                 "피부 장벽 연구\n보습 연구")));
 
@@ -171,5 +186,14 @@ class IngredientTest {
 
         assertThat(ingredient.aliases()).isEmpty();
         assertThat(ingredient.tagMappings()).isUnmodifiable();
+    }
+
+    private static IngredientTag tag(
+            Long id,
+            String code,
+            String name,
+            TagCategory category,
+            String source) {
+        return new IngredientTag(new Tag(id, category, code, name), source);
     }
 }

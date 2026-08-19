@@ -24,13 +24,11 @@
       ],
       "tag_mappings": [
         {
-          "name": "BOTANICAL_EXTRACT",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 41,
           "source": "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2); Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)"
         },
         {
-          "name": "ANTIOXIDANT_RELATED",
-          "category": "BIOLOGICAL_EFFECT",
+          "tag_id": 47,
           "source": "Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014); Enhanced Antioxidant and Protective Effects of Fermented Solanum melongena L. Peel Extracts Against Ultraviolet B-Induced Skin Damage (Lee et al., 2025)"
         }
       ],
@@ -47,18 +45,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "PERFUMING",
-          "category": "FUNCTION",
+          "tag_id": 15,
           "source": "SCCS, Opinion on Fragrance Allergens in Cosmetic Products (2012); COSMILE Europe ‘Linalool’"
         },
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "SCCS, Opinion on Fragrance Allergens in Cosmetic Products (2012); Contact Allergens Formed on Air Exposure of Linalool (Sköld et al., 2004); Air-Oxidized Linalool: A Frequent Cause of Fragrance Contact Allergy (Bråred Christensson et al., 2012)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "Air-oxidized linalool: a frequent cause of fragrance contact allergy (Bråred Christensson et al., 2012; 산화 생성물 첩포시험)"
         }
       ],
@@ -75,18 +70,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "PERFUMING",
-          "category": "FUNCTION",
+          "tag_id": 15,
           "source": "COSMILE Europe ‘Limonene’; SCCS Opinion on Fragrance Allergens in Cosmetic Products (2012)"
         },
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "SCCS Opinion on Fragrance Allergens in Cosmetic Products (2012); Not only oxidized R-(+)- but also S-(-)-limonene is a common cause of contact allergy in dermatitis patients in Europe (Matura et al., 2006)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "Contact Allergy to Hydroperoxides of Linalool and D-Limonene in a US Population (2017; 산화 생성물 첩포시험)"
         }
       ],
@@ -105,18 +97,15 @@
       ],
       "tag_mappings": [
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
         }
       ],
@@ -133,18 +122,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         },
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -187,18 +173,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ANTIMICROBIAL",
-          "category": "FUNCTION",
+          "tag_id": 3,
           "source": "항균 기능이 명시적으로 확인됨"
         },
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         }
       ],
@@ -217,13 +200,11 @@
       ],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -266,8 +247,7 @@
       ],
       "tag_mappings": [
         {
-          "name": "SILICONE",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 31,
           "source": "실리콘·실록산계 원료 정보"
         }
       ],
@@ -286,8 +266,7 @@
       ],
       "tag_mappings": [
         {
-          "name": "SILICONE",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 31,
           "source": "실리콘·실록산계 원료 정보"
         }
       ],
@@ -306,8 +285,7 @@
       ],
       "tag_mappings": [
         {
-          "name": "SILICONE",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 31,
           "source": "실리콘·실록산계 원료 정보"
         }
       ],
@@ -326,8 +304,7 @@
       ],
       "tag_mappings": [
         {
-          "name": "SILICONE",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 31,
           "source": "실리콘·실록산계 원료 정보"
         }
       ],
@@ -344,13 +321,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "HAIR_CONDITIONING",
-          "category": "FUNCTION",
+          "tag_id": 71,
           "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT",
-          "category": "FUNCTION",
+          "tag_id": 22,
           "source": "계면활성제 기능이 설명·근거에 명시됨"
         }
       ],
@@ -367,28 +342,23 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CLEANSING",
-          "category": "FUNCTION",
+          "tag_id": 8,
           "source": "세정 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT_FOAM_BOOSTING",
-          "category": "FUNCTION",
+          "tag_id": 72,
           "source": "거품 증진 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT",
-          "category": "FUNCTION",
+          "tag_id": 22,
           "source": "계면활성제 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BARRIER_IMPAIRMENT_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 82,
           "source": "Profile of irritant patch testing with detergents: sodium lauryl sulfate, sodium laureth sulfate and alkyl polyglucoside (Löffler & Happle, 2003; 사람 피부 첩포시험에서 TEWL·피부 혈류 평가, SLS보다 경미한 반응)"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Profile of irritant patch testing with detergents: sodium lauryl sulfate, sodium laureth sulfate and alkyl polyglucoside (Löffler & Happle, 2003; 사람 피부 첩포시험에서 TEWL·피부 혈류 평가, SLS보다 경미한 반응)"
         }
       ],
@@ -405,28 +375,23 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CLEANSING",
-          "category": "FUNCTION",
+          "tag_id": 8,
           "source": "세정 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT_FOAM_BOOSTING",
-          "category": "FUNCTION",
+          "tag_id": 72,
           "source": "거품 증진 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT",
-          "category": "FUNCTION",
+          "tag_id": 22,
           "source": "계면활성제 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BARRIER_IMPAIRMENT_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 82,
           "source": "Sodium lauryl sulphate for irritant patch testing—A dose-response study using bioengineering methods for determination of skin irritation (Agner & Serup, 1990; 사람 12명 피부 첩포시험에서 TEWL·홍반·부종 평가)"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Sodium lauryl sulphate for irritant patch testing—A dose-response study using bioengineering methods for determination of skin irritation (Agner & Serup, 1990; 사람 12명 피부 첩포시험에서 TEWL·홍반·부종 평가)"
         }
       ],
@@ -443,13 +408,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -468,13 +431,11 @@
       ],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -491,13 +452,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -516,23 +475,19 @@
       ],
       "tag_mappings": [
         {
-          "name": "ABRASIVE",
-          "category": "FUNCTION",
+          "tag_id": 1,
           "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BUFFERING",
-          "category": "FUNCTION",
+          "tag_id": 6,
           "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -549,23 +504,19 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CLEANSING",
-          "category": "FUNCTION",
+          "tag_id": 8,
           "source": "세정 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "HAIR_CONDITIONING",
-          "category": "FUNCTION",
+          "tag_id": 71,
           "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT",
-          "category": "FUNCTION",
+          "tag_id": 22,
           "source": "계면활성제 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT_FOAM_BOOSTING",
-          "category": "FUNCTION",
+          "tag_id": 72,
           "source": "거품 증진 기능이 설명·근거에 명시됨"
         }
       ],
@@ -582,23 +533,19 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CLEANSING",
-          "category": "FUNCTION",
+          "tag_id": 8,
           "source": "세정 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "HAIR_CONDITIONING",
-          "category": "FUNCTION",
+          "tag_id": 71,
           "source": "모발 컨디셔닝 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT",
-          "category": "FUNCTION",
+          "tag_id": 22,
           "source": "계면활성제 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SURFACTANT_FOAM_BOOSTING",
-          "category": "FUNCTION",
+          "tag_id": 72,
           "source": "거품 증진 기능이 설명·근거에 명시됨"
         }
       ],
@@ -617,18 +564,15 @@
       ],
       "tag_mappings": [
         {
-          "name": "ANTIMICROBIAL",
-          "category": "FUNCTION",
+          "tag_id": 3,
           "source": "항균 기능이 명시적으로 확인됨"
         },
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         }
       ],
@@ -659,18 +603,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "PERFUMING",
-          "category": "FUNCTION",
+          "tag_id": 15,
           "source": "향 부여 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -689,18 +630,15 @@
       ],
       "tag_mappings": [
         {
-          "name": "ANTIMICROBIAL",
-          "category": "FUNCTION",
+          "tag_id": 3,
           "source": "항균 기능이 명시적으로 확인됨"
         },
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         }
       ],
@@ -733,18 +671,15 @@
       ],
       "tag_mappings": [
         {
-          "name": "ANTIMICROBIAL",
-          "category": "FUNCTION",
+          "tag_id": 3,
           "source": "항균 기능이 명시적으로 확인됨"
         },
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         }
       ],
@@ -761,8 +696,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -779,8 +713,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -797,8 +730,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -815,8 +747,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -833,8 +764,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -851,8 +781,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -869,8 +798,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -887,8 +815,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -905,8 +832,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -923,18 +849,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ABRASIVE",
-          "category": "FUNCTION",
+          "tag_id": 1,
           "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BUFFERING",
-          "category": "FUNCTION",
+          "tag_id": 6,
           "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -951,8 +874,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -969,8 +891,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -987,8 +908,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1005,8 +925,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1023,8 +942,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1041,8 +959,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1059,8 +976,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1077,8 +993,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1095,8 +1010,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1113,8 +1027,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1131,8 +1044,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1149,8 +1061,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1167,8 +1078,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1185,8 +1095,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1203,18 +1112,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ABRASIVE",
-          "category": "FUNCTION",
+          "tag_id": 1,
           "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BUFFERING",
-          "category": "FUNCTION",
+          "tag_id": 6,
           "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1231,8 +1137,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1249,8 +1154,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1267,8 +1171,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1285,8 +1188,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1303,8 +1205,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1321,13 +1222,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -1344,8 +1243,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1362,8 +1260,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1380,8 +1277,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1398,8 +1294,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1416,18 +1311,15 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ABRASIVE",
-          "category": "FUNCTION",
+          "tag_id": 1,
           "source": "물리적 표면 정돈 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "BUFFERING",
-          "category": "FUNCTION",
+          "tag_id": 6,
           "source": "pH·산도 조절 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1444,8 +1336,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1462,13 +1353,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -1485,13 +1374,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "Contact dermatitis associated with preservatives: Retrospective analysis of North American Contact Dermatitis Group data, 1994 through 2016 (Atwater et al., 2021; 사람 50,799명 첩포시험)"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
         }
       ],
@@ -1508,23 +1395,19 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "ANTIMICROBIAL",
-          "category": "FUNCTION",
+          "tag_id": 3,
           "source": "항균 기능이 명시적으로 확인됨"
         },
         {
-          "name": "PRESERVATIVE",
-          "category": "FUNCTION",
+          "tag_id": 16,
           "source": "보존 기능이 명시적으로 확인됨"
         },
         {
-          "name": "ESTER",
-          "category": "INGREDIENT_CLASS",
+          "tag_id": 30,
           "source": "에스터 구조 또는 에스터계 원료 정보"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
         }
       ],
@@ -1541,8 +1424,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1559,8 +1441,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1577,8 +1458,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1595,8 +1475,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1613,8 +1492,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1631,8 +1509,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "PERFUMING",
-          "category": "FUNCTION",
+          "tag_id": 15,
           "source": "향 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1651,13 +1528,11 @@
       ],
       "tag_mappings": [
         {
-          "name": "FRAGRANCE_ALLERGEN",
-          "category": "ALLERGEN",
+          "tag_id": 44,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         },
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "유럽연합 소비자안전과학위원회(SCCS) 「Opinion on Fragrance Allergens in Cosmetic Products」 Table 13-1 (2012; 사람 임상자료로 확립된 접촉 알레르겐 분류)"
         }
       ],
@@ -1674,8 +1549,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1692,8 +1566,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1710,8 +1583,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1728,13 +1600,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         },
         {
-          "name": "SKIN_CONDITIONING",
-          "category": "FUNCTION",
+          "tag_id": 18,
           "source": "피부 컨디셔닝 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1751,8 +1621,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1769,8 +1638,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1787,8 +1655,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1805,8 +1672,7 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "COLORANT",
-          "category": "FUNCTION",
+          "tag_id": 9,
           "source": "착색·색상 부여 기능이 설명·근거에 명시됨"
         }
       ],
@@ -1823,13 +1689,11 @@
       "aliases": [],
       "tag_mappings": [
         {
-          "name": "CONTACT_ALLERGY_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 83,
           "source": "Contact allergy to and allergic contact dermatitis from formaldehyde and formaldehyde releasers: A clinical review and update (Goossens & Aerts, 2022; 사람 접촉피부염 및 첩포시험 자료 검토)"
         },
         {
-          "name": "IRRITATION_REPORTED",
-          "category": "SKIN_REACTION",
+          "tag_id": 81,
           "source": "Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)"
         }
       ],

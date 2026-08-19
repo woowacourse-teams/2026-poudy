@@ -26,7 +26,7 @@ class IngredientDetailTest {
     void findsIngredientDetail() throws Exception {
         mockMvc.perform(get("/api/ingredients/9")).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(9))
                 .andExpect(jsonPath("$.koreanName").value("리날룰")).andExpect(jsonPath("$.englishName").value("Linalool"))
-                .andExpect(jsonPath("$.formulationRoles[0].id").value(22))
+                .andExpect(jsonPath("$.formulationRoles[0].id").value(15))
                 .andExpect(jsonPath("$.formulationRoles[0].name").value("향료"))
                 .andExpect(jsonPath("$.skinEffects").isEmpty())
                 .andExpect(jsonPath("$.groupCodes[0]").value(ExcludeCode.FRAGRANCE_ALLERGENS.name()))
@@ -41,7 +41,7 @@ class IngredientDetailTest {
     void findsSkinEffectsAndEmptyRelations() throws Exception {
         mockMvc.perform(get("/api/ingredients/2")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.formulationRoles").isEmpty())
-                .andExpect(jsonPath("$.skinEffects[0].id").value(104))
+                .andExpect(jsonPath("$.skinEffects[0].id").value(47))
                 .andExpect(jsonPath("$.skinEffects[0].name").value("항산화 관련"))
                 .andExpect(jsonPath("$.groupCodes").isEmpty()).andExpect(jsonPath("$.productCount").value(0))
                 .andExpect(jsonPath("$.infoSources.length()").value(3))

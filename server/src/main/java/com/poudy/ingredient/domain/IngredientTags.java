@@ -5,8 +5,6 @@ import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.TagCategory;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 public record IngredientTags(List<IngredientTag> values) {
 
@@ -15,16 +13,16 @@ public record IngredientTags(List<IngredientTag> values) {
     }
 
     public List<FormulationRole> formulationRoles() {
-        return namesOf(TagCategory.FUNCTION)
-                .map(FormulationRole::from)
-                .flatMap(Optional::stream)
+        return values.stream()
+                .filter(tag -> tag.isOf(TagCategory.FUNCTION))
+                .map(IngredientTag::formulationRole)
                 .toList();
     }
 
     public List<SkinEffect> skinEffects() {
-        return namesOf(TagCategory.BIOLOGICAL_EFFECT)
-                .map(SkinEffect::from)
-                .flatMap(Optional::stream)
+        return values.stream()
+                .filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
+                .map(IngredientTag::skinEffect)
                 .toList();
     }
 
@@ -36,9 +34,4 @@ public record IngredientTags(List<IngredientTag> values) {
                 .toList();
     }
 
-    private Stream<String> namesOf(TagCategory category) {
-        return values.stream()
-                .filter(tag -> tag.isOf(category))
-                .map(IngredientTag::name);
-    }
 }

@@ -1372,7 +1372,7 @@
             "type": "integer",
             "format": "int64",
             "description": "배합 목적 ID",
-            "example": 20
+            "example": 14
           },
           "name": {
             "type": "string",
@@ -1594,12 +1594,12 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 108
+            "example": 57
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "수분 공급 관련"
+            "example": "피부 수분 관련"
           },
           "ingredientIds": {
             "type": "array",
@@ -1623,12 +1623,12 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 108
+            "example": 57
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "수분 공급 관련"
+            "example": "피부 수분 관련"
           }
         },
         "required": [

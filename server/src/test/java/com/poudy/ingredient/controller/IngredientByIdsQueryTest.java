@@ -31,7 +31,7 @@ class IngredientByIdsQueryTest {
                 .andExpect(jsonPath("$.items[0].englishName").value("Linalool"))
                 .andExpect(jsonPath("$.items[1].id").value(2L))
                 .andExpect(jsonPath("$.items[1].koreanName").value("가지열매추출물"))
-                .andExpect(jsonPath("$.items[1].skinEffects[0].id").value(104));
+                .andExpect(jsonPath("$.items[1].skinEffects[0].id").value(47));
     }
 
     @Test
