@@ -27,12 +27,16 @@ phases:
       - cp -R deploy/codedeploy/backend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
+      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
 
 artifacts:
+  files:
+    - .artifacts/build-metadata.txt
+  discard-paths: yes
   secondary-artifacts:
     backend:
       base-directory: .artifacts/backend

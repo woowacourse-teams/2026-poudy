@@ -20,7 +20,8 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 - frontend: "s3://techcourse-project-2026/poudy/frontend/"
 
 현재 buildspec은 두 산출물을 같은 빌드에서 생성하지만, CodeBuild 프로젝트 설정에서
-각 산출물의 S3 위치를 분리해야 합니다.
+각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상
+필요한 빌드 식별 marker만 담으며, 실제 배포에는 사용하지 않습니다.
 
 ## CodeDeploy
 
