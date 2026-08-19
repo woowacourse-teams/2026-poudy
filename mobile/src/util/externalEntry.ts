@@ -1,5 +1,6 @@
+import type { QueryClient } from '@tanstack/react-query';
+
 import { requestShareMatch } from '@/api/shareMatch';
-import { queryClient } from '@/lib/queryClient';
 import { getMatchedUrl, getSameOriginUrl } from '@/util/entryUrl';
 
 const SIGNATURE_SEPARATOR = '\u0000';
@@ -14,7 +15,11 @@ export const getSharedValues = (payloads: readonly SharedPayload[]): string[] =>
 
 export const getShareSignature = (values: readonly string[]): string => values.join(SIGNATURE_SEPARATOR);
 
-const findMatchedUrl = async (values: readonly string[], webBaseUrl: string): Promise<string | null> => {
+const findMatchedUrl = async (
+  values: readonly string[],
+  webBaseUrl: string,
+  queryClient: QueryClient,
+): Promise<string | null> => {
   const texts = values.map((value) => value.trim());
   const matches = await Promise.all(
     texts.map((text) =>
@@ -28,11 +33,15 @@ const findMatchedUrl = async (values: readonly string[], webBaseUrl: string): Pr
   return matches.map((match) => getMatchedUrl(match, webBaseUrl)).find((matchedUrl) => matchedUrl !== null) ?? null;
 };
 
-export const resolveSharedUrl = async (values: readonly string[], webBaseUrl: string): Promise<string | null> => {
+export const resolveSharedUrl = async (
+  values: readonly string[],
+  webBaseUrl: string,
+  queryClient: QueryClient,
+): Promise<string | null> => {
   const sameOriginUrl = values.map((value) => getSameOriginUrl(value, webBaseUrl)).find((value) => value !== null);
   if (sameOriginUrl) {
     return sameOriginUrl;
   }
 
-  return findMatchedUrl(values, webBaseUrl);
+  return findMatchedUrl(values, webBaseUrl, queryClient);
 };

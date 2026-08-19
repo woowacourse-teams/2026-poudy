@@ -1,4 +1,3 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { Alert, StatusBar } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -7,7 +6,6 @@ import WebAppShell from '@/components/WebAppShell';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
-import { queryClient } from '@/lib/queryClient';
 
 const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL!;
 
@@ -32,11 +30,9 @@ export default function RootApp() {
   useQuickActions({ onNavigate: navigation.navigate, webBaseUrl });
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StatusBar barStyle='dark-content' />
-        <WebAppShell webBaseUrl={webBaseUrl} navigation={navigation} />
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <StatusBar barStyle='dark-content' />
+      <WebAppShell webBaseUrl={webBaseUrl} navigation={navigation} />
+    </SafeAreaProvider>
   );
 }

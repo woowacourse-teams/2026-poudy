@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useIncomingShare } from 'expo-sharing';
 import { useEffect, useRef } from 'react';
 import { Linking } from 'react-native';
@@ -18,6 +19,7 @@ export const useExternalEntry = ({
   onUnsupportedShare,
   webBaseUrl,
 }: ExternalEntryOptions) => {
+  const queryClient = useQueryClient();
   const { clearSharedPayloads, refreshSharePayloads, sharedPayloads } = useIncomingShare();
   const lastShare = useRef<string | null>(null);
 
@@ -37,7 +39,7 @@ export const useExternalEntry = ({
     const pending = { cancelled: false };
 
     const navigate = async () => {
-      const targetUrl = await resolveSharedUrl(values, webBaseUrl);
+      const targetUrl = await resolveSharedUrl(values, webBaseUrl, queryClient);
       if (pending.cancelled) {
         return;
       }
@@ -66,6 +68,7 @@ export const useExternalEntry = ({
     onNavigate,
     onShareFailure,
     onUnsupportedShare,
+    queryClient,
     refreshSharePayloads,
     sharedPayloads,
     webBaseUrl,
