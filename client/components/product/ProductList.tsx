@@ -151,6 +151,7 @@ export function ProductList({
         categories={categories}
         brands={selectableBrands}
         excludeCodes={excludeCodes}
+        initialCount={total}
       />
     </>
   );
