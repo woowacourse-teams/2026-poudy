@@ -30,9 +30,6 @@ public class Brands {
         return Optional.ofNullable(byId.get(id));
     }
 
-    /**
-     * 이름이 정확히 같은 브랜드를 찾는다. 공유 텍스트에서 브랜드를 떼어 낼 때 쓰므로 부분 일치를 허용하지 않는다.
-     */
     public Optional<Brand> findByName(String name) {
         SearchKeyword keyword = new SearchKeyword(name);
 
