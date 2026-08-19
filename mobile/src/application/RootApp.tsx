@@ -4,6 +4,7 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 
 import WebAppShell from '@/components/WebAppShell';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
+import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 
 const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL!;
@@ -24,6 +25,8 @@ export default function RootApp() {
     [navigation.navigate, showUnsupportedShare],
   );
   useExternalEntry(externalEntryOptions);
+
+  useQuickActions({ onNavigate: navigation.navigate, webBaseUrl });
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
