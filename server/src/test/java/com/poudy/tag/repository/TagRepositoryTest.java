@@ -22,8 +22,8 @@ class TagRepositoryTest {
     void findsTagById() {
         TagRepository repository = new TagRepository(new JsonDataReader(new DefaultResourceLoader()));
 
-        assertThat(repository.findAll().findById(57L))
-                .contains(new Tag(57L, TagCategory.BIOLOGICAL_EFFECT, "HYDRATION_RELATED", "피부 수분 관련"));
+        assertThat(repository.findAll().findById(47L))
+                .contains(new Tag(47L, TagCategory.BIOLOGICAL_EFFECT, "ANTIOXIDANT_RELATED", "항산화 관련"));
     }
 
     @Test

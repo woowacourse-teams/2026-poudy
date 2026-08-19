@@ -1,0 +1,118 @@
+{
+  "tags": [
+    {
+      "id": 1,
+      "category": "FUNCTION",
+      "code": "ABRASIVE",
+      "name": "연마제"
+    },
+    {
+      "id": 3,
+      "category": "FUNCTION",
+      "code": "ANTIMICROBIAL",
+      "name": "항균제"
+    },
+    {
+      "id": 6,
+      "category": "FUNCTION",
+      "code": "BUFFERING",
+      "name": "완충제"
+    },
+    {
+      "id": 8,
+      "category": "FUNCTION",
+      "code": "CLEANSING",
+      "name": "세정제"
+    },
+    {
+      "id": 9,
+      "category": "FUNCTION",
+      "code": "COLORANT",
+      "name": "착색제"
+    },
+    {
+      "id": 15,
+      "category": "FUNCTION",
+      "code": "PERFUMING",
+      "name": "향료"
+    },
+    {
+      "id": 16,
+      "category": "FUNCTION",
+      "code": "PRESERVATIVE",
+      "name": "보존제"
+    },
+    {
+      "id": 18,
+      "category": "FUNCTION",
+      "code": "SKIN_CONDITIONING",
+      "name": "피부 컨디셔닝제"
+    },
+    {
+      "id": 22,
+      "category": "FUNCTION",
+      "code": "SURFACTANT",
+      "name": "계면활성제"
+    },
+    {
+      "id": 30,
+      "category": "INGREDIENT_CLASS",
+      "code": "ESTER",
+      "name": "에스터류"
+    },
+    {
+      "id": 31,
+      "category": "INGREDIENT_CLASS",
+      "code": "SILICONE",
+      "name": "실리콘류"
+    },
+    {
+      "id": 41,
+      "category": "INGREDIENT_CLASS",
+      "code": "BOTANICAL_EXTRACT",
+      "name": "식물 추출물"
+    },
+    {
+      "id": 44,
+      "category": "ALLERGEN",
+      "code": "FRAGRANCE_ALLERGEN",
+      "name": "향료 알레르겐"
+    },
+    {
+      "id": 47,
+      "category": "BIOLOGICAL_EFFECT",
+      "code": "ANTIOXIDANT_RELATED",
+      "name": "항산화 관련"
+    },
+    {
+      "id": 71,
+      "category": "FUNCTION",
+      "code": "HAIR_CONDITIONING",
+      "name": "모발 컨디셔닝제"
+    },
+    {
+      "id": 72,
+      "category": "FUNCTION",
+      "code": "SURFACTANT_FOAM_BOOSTING",
+      "name": "거품 증진제"
+    },
+    {
+      "id": 81,
+      "category": "SKIN_REACTION",
+      "code": "IRRITATION_REPORTED",
+      "name": "피부 자극 반응 보고"
+    },
+    {
+      "id": 82,
+      "category": "SKIN_REACTION",
+      "code": "BARRIER_IMPAIRMENT_REPORTED",
+      "name": "피부 장벽 저하 보고"
+    },
+    {
+      "id": 83,
+      "category": "SKIN_REACTION",
+      "code": "CONTACT_ALLERGY_REPORTED",
+      "name": "접촉 알레르기 보고"
+    }
+  ]
+}
