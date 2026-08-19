@@ -11,15 +11,7 @@ interface QuickActionOptions {
 
 export const useQuickActions = ({ onNavigate, webBaseUrl }: QuickActionOptions) => {
   useEffect(() => {
-    const register = async () => {
-      if (!(await QuickActions.isSupported())) {
-        return;
-      }
-
-      await QuickActions.setItems(getQuickActionItems());
-    };
-
-    void register().catch(() => undefined);
+    void QuickActions.setItems(getQuickActionItems()).catch(() => undefined);
   }, []);
 
   useQuickActionCallback(
