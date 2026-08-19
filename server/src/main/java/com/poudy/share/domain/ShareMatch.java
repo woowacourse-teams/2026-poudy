@@ -26,21 +26,39 @@ public record ShareMatch(ShareMatchStatus status, Optional<Product> product, Str
     }
 
     public static ShareMatch of(SharedProductName name, Products products) {
+        return of(List.of(name), products);
+    }
+
+    /**
+     * 이름 후보를 넓은 것부터 시도한다. 앞선 후보로 확정하지 못하면 다음 후보로 넘어가고, 모두 실패하면 가장 좁힌 후보의 검색어를 넘긴다.
+     */
+    public static ShareMatch of(List<SharedProductName> names, Products products) {
+        ShareMatch unmatched = notFound("");
+
+        for (SharedProductName name : names) {
+            ShareMatch match = confirmOne(name, products);
+
+            if (!match.isNotFound()) {
+                return match;
+            }
+            unmatched = match;
+        }
+
+        return unmatched;
+    }
+
+    private static ShareMatch confirmOne(SharedProductName name, Products products) {
         Optional<Product> confirmed = confirm(candidatesOf(name, products, name.keyword()), name.keyword());
 
         if (confirmed.isPresent()) {
             return matched(confirmed.get());
         }
 
+        // 축약한 검색어로는 확정하지 않는다. 낱말 하나만 덜어 내도 다른 제품의 이름에 그대로 들어맞아,
+        // 카탈로그에 없는 제품을 공유했을 때 형제 제품으로 확정된다. 화면이 빈 결과를 보여주지 않도록
+        // 결과가 있는 검색어를 고르는 데만 쓴다.
         for (String shortened : name.shortenedKeywords()) {
-            List<Product> candidates = candidatesOf(name, products, shortened);
-            Optional<Product> found = confirm(candidates, shortened);
-
-            if (found.isPresent()) {
-                return matched(found.get());
-            }
-            // 여러 건이면 확정하지 않는다. 대신 화면이 빈 결과를 보여주지 않도록 이 검색어를 넘긴다.
-            if (!candidates.isEmpty()) {
+            if (!candidatesOf(name, products, shortened).isEmpty()) {
                 return notFound(shortened);
             }
         }

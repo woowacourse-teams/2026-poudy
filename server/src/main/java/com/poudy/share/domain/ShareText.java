@@ -51,13 +51,26 @@ public record ShareText(String value) {
      * 제품명만 남기고 공유 텍스트의 나머지를 걷어낸다. 브랜드는 아직 붙어 있다.
      */
     public String productPhrase() {
+        return productPhrases().getLast();
+    }
+
+    /**
+     * 제품을 찾아 볼 제품명 구절을 넓은 것부터 준다.
+     *
+     * <p>기획 낱말은 카탈로그의 제품명에도 쓰인다. "어성초 크림 카밍 튜브"처럼 제품명이 기획 낱말로 끝나면 꼬리를 털어 낸 구절은
+     * 제품명과 정확히 같아지지 않아 이름이 정확히 같은 제품을 놓친다. 털어 내기 전 구절을 먼저 맞춰 보고, 맞지 않을 때만 털어 낸 구절을 쓴다.
+     */
+    public List<String> productPhrases() {
         String phrase = SERVICE_PHRASE.matcher(value).replaceAll(SPACE);
         phrase = LINK.matcher(phrase).replaceAll(SPACE);
         phrase = PROMOTION_TAG.matcher(phrase).replaceAll(SPACE);
         // 괄호 안의 기획 구성에도 용량이 들어 있어 용량 절단보다 먼저 지운다.
         phrase = PLAN_NOTE.matcher(phrase).replaceAll(SPACE);
 
-        return withoutTrailingPlanWords(truncatedAtVolume(phrase));
+        String truncated = ShareWords.join(ShareWords.of(truncatedAtVolume(phrase)));
+        String trimmed = withoutTrailingPlanWords(truncated);
+
+        return truncated.equals(trimmed) ? List.of(trimmed) : List.of(truncated, trimmed);
     }
 
     private static String truncatedAtVolume(String phrase) {

@@ -35,14 +35,15 @@ class ShareMatchQueryTest {
     }
 
     @Test
-    @DisplayName("기획명이 붙어 바로 찾지 못해도 축약 재검색으로 확정한다")
-    void matchesAfterShortening() throws Exception {
+    @DisplayName("축약해야 걸리는 공유는 확정하지 않고 그 검색어를 반환한다")
+    void returnsShortenedKeywordInsteadOfConfirming() throws Exception {
         String text = "[1+1] 다 브랜드 블랙스네일 레티놀 콜라겐 마스크 100ml 기획" + TAIL;
 
         mockMvc.perform(get(PATH).param("text", text))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("MATCHED"))
-                .andExpect(jsonPath("$.productId").value(7L));
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.keyword").value("블랙스네일 레티놀 콜라겐"))
+                .andExpect(jsonPath("$.productId").doesNotExist());
     }
 
     @Test

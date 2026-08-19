@@ -7,6 +7,7 @@ import com.poudy.product.repository.ProductRepository;
 import com.poudy.share.domain.ShareMatch;
 import com.poudy.share.domain.ShareText;
 import com.poudy.share.domain.SharedProductName;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,16 +32,19 @@ public class ShareService {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
 
-        SharedProductName name = SharedProductName.of(shareText.productPhrase(), brands);
+        List<SharedProductName> names = shareText.productPhrases().stream()
+                .map(phrase -> SharedProductName.of(phrase, brands))
+                .filter(name -> !name.isEmpty())
+                .toList();
 
-        if (name.isEmpty()) {
+        if (names.isEmpty()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
 
-        ShareMatch match = ShareMatch.of(name, productRepository.findAll());
+        ShareMatch match = ShareMatch.of(names, productRepository.findAll());
 
         if (match.isNotFound()) {
-            logUnmatched(name);
+            logUnmatched(names.getLast());
         }
 
         return match;

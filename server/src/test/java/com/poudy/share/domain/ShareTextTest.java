@@ -51,6 +51,23 @@ class ShareTextTest {
     }
 
     @Test
+    @DisplayName("기획 낱말을 털어 내기 전 구절도 후보로 남긴다")
+    void keepsPhraseBeforeTrimmingPlanWords() {
+        String shared = "[단독] 아비브 어성초 크림 카밍 튜브 기획" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrases())
+                .containsExactly("아비브 어성초 크림 카밍 튜브 기획", "아비브 어성초 크림 카밍");
+    }
+
+    @Test
+    @DisplayName("털어 낼 기획 낱말이 없으면 후보는 하나다")
+    void keepsSinglePhraseWithoutPlanWords() {
+        String shared = "[단독] 메디큐브 PDRN 핑크 시카 수딩 토너 250ml" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrases()).containsExactly("메디큐브 PDRN 핑크 시카 수딩 토너");
+    }
+
+    @Test
     @DisplayName("링크만 공유하면 제품명이 남지 않는다")
     void keepsNothingForLinkOnlyShare() {
         assertThat(new ShareText("https://oy.run/9ADBye4bKEJUpl").productPhrase()).isEmpty();

@@ -41,6 +41,15 @@ class ShareMatchTest {
         return ShareMatch.of(SharedProductName.of(productPhrase, BRANDS), products);
     }
 
+    private static ShareMatch matchShared(String shared, Products products) {
+        return ShareMatch.of(
+                new ShareText(shared).productPhrases().stream()
+                        .map(phrase -> SharedProductName.of(phrase, BRANDS))
+                        .filter(name -> !name.isEmpty())
+                        .toList(),
+                products);
+    }
+
     @Test
     @DisplayName("이름이 정확히 같은 제품 하나면 확정한다")
     void confirmsSingleExactName() {
@@ -78,14 +87,22 @@ class ShareMatchTest {
     }
 
     @Test
-    @DisplayName("기획명이 뒤에 붙어 못 찾으면 축약 재검색으로 확정한다")
-    void confirmsAfterShortening() {
+    @DisplayName("축약한 검색어로는 확정하지 않는다")
+    void doesNotConfirmFromShortenedKeyword() {
         Products products = new Products(List.of(product(7L, DOCTOR_G, "블랙스네일 레티놀 콜라겐 세럼 인텐스")));
 
         ShareMatch matched = match("닥터지 블랙스네일 레티놀 콜라겐 마스크", products);
 
-        assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
-        assertThat(matched.product()).map(Product::id).contains(7L);
+        assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
+        assertThat(matched.keyword()).isEqualTo("블랙스네일 레티놀 콜라겐");
+    }
+
+    @Test
+    @DisplayName("카탈로그에 없는 형제 제품을 공유해도 확정하지 않는다")
+    void doesNotConfirmAbsentSiblingProduct() {
+        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+
+        assertThat(match("닥터지 블랙 스네일 토너 라이트", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
 
     @Test
@@ -112,6 +129,35 @@ class ShareMatchTest {
                         product(2L, DOCTOR_G, "레드 블레미쉬 클리어 토너")));
 
         assertThat(match("닥터지 레드 블레미쉬 클리어 토너", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("제품명이 기획 낱말로 끝나면 낱말을 털어 내기 전 이름으로 확정한다")
+    void confirmsNameEndingWithPlanWord() {
+        Products products = new Products(
+                List.of(
+                        product(1L, DOCTOR_G, "어성초 크림 카밍 튜브"),
+                        product(2L, DOCTOR_G, "어성초 크림 카밍 앰플")));
+
+        ShareMatch matched = matchShared(
+                "[단독] 닥터지 어성초 크림 카밍 튜브 75ml 튜브 기획 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/abc",
+                products);
+
+        assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
+        assertThat(matched.product()).map(Product::id).contains(1L);
+    }
+
+    @Test
+    @DisplayName("제품명에 없는 기획 낱말은 털어 내고 확정한다")
+    void confirmsAfterTrimmingPlanWord() {
+        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+
+        ShareMatch matched = matchShared(
+                "[단독] 닥터지 블랙 스네일 토너 기획 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/abc",
+                products);
+
+        assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
+        assertThat(matched.product()).map(Product::id).contains(1L);
     }
 
     @Test
