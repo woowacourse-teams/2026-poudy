@@ -362,6 +362,25 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
 
+### CORS
+
+브라우저가 다른 오리진에서 API 를 부를 때만 필요한 설정이므로 `config.CorsConfig` 하나가
+`/api/**` 에만 건다. 허용할 오리진은 코드나 `application.yml` 이 아니라 `CLIENT_DOMAIN` 환경
+변수가 갖고, 로컬은 `server/.env` 가, 배포는 systemd 환경 변수가 그 값을 준다. 예시는
+`server/.env.example` 에 있다. 클라이언트 도메인은 환경마다 다르고 배포 중에도 바뀌므로
+코드에 박으면 도메인이 바뀔 때마다 서버를 다시 빌드해야 한다.
+
+도메인이 여럿이면 `CLIENT_DOMAIN` 에 쉼표로 잇는다. 값마다 오리진 전체를 적어야 하며,
+`https://*.example.com` 처럼 와일드카드도 쓸 수 있다. `allowedOrigins` 가 아니라
+`allowedOriginPatterns` 를 쓰는 이유가 이것이다.
+
+값을 비워 두면 CORS 를 아예 열지 않는다. 운영은 nginx 가 같은 오리진에서 `/api` 를 프록시하므로
+열 이유가 없고, 기본값을 열어 두면 배포 환경에서 잊고 그대로 열려 있게 된다.
+
+허용 메서드는 `GET`, `HEAD`, `OPTIONS` 로 둔다. 현재 API 는 전부 조회다. 자격 증명은 허용하지
+않는다. API 가 쿠키나 인증 헤더를 쓰지 않으므로 열 이유가 없다.
+
+
 ## API decisions
 
 현재 엔드포인트와 스키마의 권위 원천은 Controller, DTO와 OpenAPI 설정 코드다. 생성된

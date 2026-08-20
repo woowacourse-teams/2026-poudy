@@ -3,6 +3,10 @@
 # 배포 전에 S3에서 JSON을 내려받아 이 디렉터리에 저장한다.
 poudy:
   data-dir: ${POUDY_DATA_DIR:/app/data}
+  # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
+  # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.
+  cors:
+    allowed-origins: ${CLIENT_DOMAIN:}
 
 # API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
 # /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
