@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
 
-import { ChipSearchField, type SearchChip } from "@/components/ui/ChipSearchField";
 import { Icon } from "@/components/ui/icons/Icon";
+import { SearchField } from "@/components/ui/SearchField";
+import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredients } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
@@ -109,22 +110,6 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
     });
   };
 
-  // 담은 순서대로 입력 안에 늘어놓는다.
-  const chips: readonly SearchChip[] = [
-    ...filter.includeIngredientIds.map((id) => ({
-      key: `in-${id}`,
-      kind: "include" as const,
-      name: names.get(id) ?? `성분 ${id}`,
-      onRemove: () => remove("includeIngredientIds", id),
-    })),
-    ...filter.excludeIngredientIds.map((id) => ({
-      key: `ex-${id}`,
-      kind: "exclude" as const,
-      name: names.get(id) ?? `성분 ${id}`,
-      onRemove: () => remove("excludeIngredientIds", id),
-    })),
-  ];
-
   const toggleCode = (code: ExcludeCode) =>
     onChange({
       excludeCodes: filter.excludeCodes.includes(code)
@@ -137,14 +122,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
       <section className="flex flex-col gap-2 pb-4">
         {/* 자동완성이 입력에 붙어 뜨도록 둘을 같은 자리에 담는다. */}
         <div ref={searchRef} className="relative">
-          <ChipSearchField
-            value={keyword}
-            onChange={setKeyword}
-            placeholder="성분명을 입력해 주세요"
-            label="성분 검색"
-            chips={chips}
-            onBackspaceEmpty={() => chips.at(-1)?.onRemove()}
-          />
+          <SearchField value={keyword} onChange={setKeyword} placeholder="성분명을 입력해 주세요" label="성분 검색" />
 
           {typing ? (
             <IngredientSuggestions
@@ -159,6 +137,38 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
         </div>
 
         <p className="text-[12px] text-[#72747A]">검색한 성분을 포함 또는 제외 조건으로 추가할 수 있어요.</p>
+      </section>
+
+      <section className="flex flex-col gap-2.5 pb-5">
+        <div className="flex items-center gap-1.5 px-0.5">
+          <h2 className="text-[15px] font-bold text-[#212124]">선택한 성분</h2>
+          {selectedCount > 0 ? <span className="text-[12px] font-medium text-[#868B94]">{selectedCount}개</span> : null}
+        </div>
+
+        {selectedCount === 0 ? (
+          <p className="flex min-h-25 items-center justify-center text-[13px] text-text-secondary">선택한 성분 없음</p>
+        ) : (
+          <ul className="grid grid-cols-2 gap-2">
+            {filter.includeIngredientIds.map((id) => (
+              <li key={`in-${id}`}>
+                <SelectedIngredientChip
+                  kind="include"
+                  name={names.get(id) ?? `성분 ${id}`}
+                  onRemove={() => remove("includeIngredientIds", id)}
+                />
+              </li>
+            ))}
+            {filter.excludeIngredientIds.map((id) => (
+              <li key={`ex-${id}`}>
+                <SelectedIngredientChip
+                  kind="exclude"
+                  name={names.get(id) ?? `성분 ${id}`}
+                  onRemove={() => remove("excludeIngredientIds", id)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {conflicts.length > 0 ? (
