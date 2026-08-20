@@ -57,7 +57,7 @@ function ProductThumbnail({ imageUrl }: { readonly imageUrl: string }) {
       alt=""
       width={80}
       height={80}
-      className="size-20 shrink-0 rounded-lg bg-surface object-contain"
+      className="size-20 shrink-0 rounded-lg bg-transparent object-contain"
     />
   );
 }
