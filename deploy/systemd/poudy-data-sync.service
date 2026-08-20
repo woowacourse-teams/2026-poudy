@@ -1,0 +1,23 @@
+[Unit]
+Description=Synchronize Poudy backend JSON data from S3
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=-/etc/poudy/backend-data.env
+ExecStart=/usr/local/sbin/poudy-sync-backend-data
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUQuota=30%
+MemoryMax=512M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/opt/poudy /var/lib/poudy /run
+TimeoutStartSec=180
+StandardOutput=journal
+StandardError=journal
