@@ -48,6 +48,9 @@
 }
 
 body {
+  /* 모바일 전용 화면이라 넓은 화면에서는 폭을 제한하고 가운데 둔다. */
+  max-width: var(--container-md);
+  margin-inline: auto;
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
