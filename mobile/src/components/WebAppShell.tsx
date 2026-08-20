@@ -36,7 +36,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   );
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
       <WebView
         key={navigation.key}
         ref={webViewRef}
