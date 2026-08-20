@@ -234,7 +234,7 @@ export type ProductSuggestionListResponse = {
    */
   items: Array<ProductSuggestionResponse>;
 }
-export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: number, keyword?: string }
+export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
