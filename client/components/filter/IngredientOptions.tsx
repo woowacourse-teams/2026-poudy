@@ -127,13 +127,17 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         </section>
       ) : (
         <>
-          {selectedCount > 0 ? (
-            <section className="pt-4">
-              <h3 className="flex h-6 items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#212124]">선택한 성분</span>
+          <section className="pt-4">
+            <h3 className="flex h-6 items-center gap-1.5">
+              <span className="text-[15px] font-bold text-[#212124]">선택한 성분</span>
+              {selectedCount > 0 ? (
                 <span className="text-[12px] font-medium text-[#868B94]">{selectedCount}개</span>
-              </h3>
+              ) : null}
+            </h3>
 
+            {selectedCount === 0 ? (
+              <p className="flex min-h-25 items-center justify-center text-[13px] text-[#868B94]">선택한 성분 없음</p>
+            ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeIngredientIds.map((id) => (
                   <li key={`in-${id}`}>
@@ -154,8 +158,8 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                   </li>
                 ))}
               </ul>
-            </section>
-          ) : null}
+            )}
+          </section>
 
           <section className="pt-4">
             <h3 className="flex h-6 items-center gap-1.5">
