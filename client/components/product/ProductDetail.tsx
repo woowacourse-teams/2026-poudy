@@ -1,7 +1,7 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
-import Link from "next/link";
 
+import { IngredientList } from "./IngredientList";
 import { SaveProductButton } from "./SaveProductButton";
 
 import { TrackView } from "@/components/analytics/TrackView";
@@ -190,40 +190,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
         <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>
       </div>
 
-      <ol>
-        {ingredients.map((ingredient, index) => {
-          const effect = ingredient.skinEffects[0];
-          const color = effectColor(effect?.code);
-
-          return (
-            <li key={ingredient.id}>
-              <Link
-                href={`/ingredients/${ingredient.id}?from=product_detail`}
-                className="flex h-[60px] items-center gap-2.5 border-b border-border"
-              >
-                <span className="w-6 shrink-0 font-data text-[10px] text-[#8B8D94]">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-
-                <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-[13px] font-semibold text-text-primary">{ingredient.koreanName}</span>
-                  <span className="text-[10px] text-text-secondary">
-                    {ingredient.formulationRoles.map((role) => role.name).join(" · ")}
-                  </span>
-                </span>
-
-                <span
-                  className={`flex h-[22px] shrink-0 items-center rounded-[11px] px-2 text-[10px] font-semibold ${color.bg} ${color.text}`}
-                >
-                  {effect?.name ?? "일반"}
-                </span>
-
-                <Icon name="chevron-right" size={16} className="text-text-secondary" />
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
+      <IngredientList ingredients={ingredients} />
     </section>
   );
 }
