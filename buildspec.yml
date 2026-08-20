@@ -25,13 +25,14 @@ phases:
     commands:
       - ./deploy/scripts/package-artifacts.sh "${CODEBUILD_SRC_DIR}/.poudy-package"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx"
       - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/app.jar" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
       - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/"
       - cp deploy/codedeploy/backend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/backend/appspec.yml"
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/frontend/appspec.yml"
       - cp -R deploy/codedeploy/backend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
+      - cp deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
       - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
@@ -56,5 +57,6 @@ artifacts:
       files:
         - appspec.yml
         - scripts/**/*
+        - nginx/**/*
         - app/**/*
       name: poudy-frontend-$CODEBUILD_RESOLVED_SOURCE_VERSION

@@ -4,7 +4,8 @@
 
 MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다.
 
-- 프론트엔드: Nginx `:80` → Next.js standalone `127.0.0.1:3000`
+- 프론트엔드: Nginx `:443` → Next.js standalone `127.0.0.1:3000`
+- HTTP `:80` → HTTPS `:443` 리다이렉트
 - 프론트엔드 Nginx: `/api/*` → 백엔드 EC2 사설 IP `:8080`
 - 백엔드: Spring Boot JAR `:8080` → systemd
 - 데이터: `/opt/poudy/data`에 S3 JSON을 다운로드
@@ -40,12 +41,79 @@ EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고�
 프론트 EC2에서는 Nginx를 호스트에 설치하고 `nginx/ec2-frontend.conf`를 설정 파일로
 사용합니다. Next.js standalone 프로세스는 `127.0.0.1:3000`에만 바인딩합니다.
 
+초기화 시 `/etc/letsencrypt/live/poudy.site/fullchain.pem`과
+`privkey.pem`이 모두 없으면 HTTP bootstrap 설정을 사용합니다. 이 상태에서는
+인증서 발급을 위해 HTTP-01 challenge와 기존 HTTP 프록시를 유지하며, 인증서가 없는
+설정에 `ssl_certificate` 경로를 넣지 않습니다. 인증서가 발급되면
+`nginx/ec2-frontend-https.conf`로 전환하고 일반 HTTP 요청을 HTTPS로 리다이렉트합니다.
+
+### Certbot 최초 발급
+
+프론트 EC2의 보안 그룹에서 먼저 TCP `443`을 인터넷에 개방한 뒤, 프론트 EC2에서
+다음 명령을 순서대로 실행합니다. `poudy.site`의 DNS A 레코드는 프론트 EIP
+`54.116.229.77`을 가리켜야 합니다.
+
+AWS CLI를 실행할 권한이 있는 환경에서 보안 그룹 ID를 확인하고 443을 추가합니다.
+
+```bash
+aws ec2 describe-instances \
+  --region ap-northeast-2 \
+  --instance-ids <FRONTEND_INSTANCE_ID> \
+  --query 'Reservations[0].Instances[0].SecurityGroups[*].GroupId' \
+  --output text
+
+aws ec2 authorize-security-group-ingress \
+  --region ap-northeast-2 \
+  --group-id <FRONTEND_SECURITY_GROUP_ID> \
+  --protocol tcp \
+  --port 443 \
+  --cidr 0.0.0.0/0
+```
+
+```bash
+sudo dnf install -y certbot
+sudo install -d -o root -g root -m 0755 /var/www/letsencrypt
+sudo certbot certonly --webroot \
+  --webroot-path /var/www/letsencrypt \
+  --domain poudy.site \
+  --email <운영_이메일> \
+  --agree-tos \
+  --no-eff-email
+
+cd /opt/poudy/repository
+sudo ./deploy/scripts/enable-frontend-https.sh
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+갱신 성공 시에도 동일한 전환 스크립트를 deploy hook으로 사용합니다.
+
+```bash
+sudo certbot renew --deploy-hook \
+  /opt/poudy/repository/deploy/scripts/enable-frontend-https.sh
+```
+
+인증서 파일은 저장소에 커밋하지 않으며, Nginx는 다음 런타임 경로만 참조합니다.
+
+```text
+/etc/letsencrypt/live/poudy.site/fullchain.pem
+/etc/letsencrypt/live/poudy.site/privkey.pem
+```
+
 Nginx 라우팅은 다음 규칙을 사용합니다.
 
 - `/api/*` → 백엔드 EC2 사설 IP `8080`
 - 그 외 요청 → 프론트 Next.js `3000`
 - 프론트 호스트 확인 → `/nginx-health`
 - 백엔드 호스트 확인 → `/actuator/health`
+
+HTTPS 활성화 후 로컬 검증:
+
+```bash
+curl -I http://poudy.site
+curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/nginx-health
+curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/api/categories
+```
 
 프론트 EC2 초기화 후 백엔드의 사설 IP를 전달해 프록시 대상을 설정합니다.
 
