@@ -48,7 +48,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         onLoadEnd={navigation.handleLoadEnd}
         onNavigationStateChange={handleNavigationChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
-        originWhitelist={[`${webOrigin}/*`]}
+        originWhitelist={[webOrigin]}
         setSupportMultipleWindows={false}
         sharedCookiesEnabled
         source={{ uri: navigation.url }}
