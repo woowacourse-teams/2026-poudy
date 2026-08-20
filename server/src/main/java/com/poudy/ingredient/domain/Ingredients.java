@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 public class Ingredients {
 
+    public static final int SEARCH_RESULT_LIMIT = 5;
+
     private final List<SearchableIngredient> searchable;
     private final Map<Long, SearchableIngredient> byId;
 
@@ -35,6 +37,7 @@ public class Ingredients {
                 .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
                 .filter(MatchedIngredient::isFound)
                 .sorted(MatchedIngredient.order())
+                .limit(SEARCH_RESULT_LIMIT)
                 .map(MatchedIngredient::ingredient)
                 .toList();
     }

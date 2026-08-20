@@ -2,6 +2,8 @@ import { http, HttpResponse } from "msw";
 
 import { brands, categories, excludeCodes, ingredientDetails, productDetails, products } from "./fixtures";
 
+import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
+
 const numbers = (url: URL, key: string) =>
   url.searchParams
     .getAll(key)
@@ -126,6 +128,9 @@ export const handlers = [
     const matchesKeyword = (ingredient: (typeof ingredientDetails)[number]) =>
       `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword);
 
+    // 상한은 검색에만 걸고 순위는 흉내 내지 않는다.
+    const limited = <T>(items: readonly T[]) => (keyword ? items.slice(0, INGREDIENT_SEARCH_LIMIT) : [...items]);
+
     // ID 로만 조회하면 요청한 순서를 지키고 없는 ID 는 뺀다.
     if (ids.length > 0) {
       const items = ids
@@ -134,10 +139,10 @@ export const handlers = [
         .filter((ingredient) => !keyword || matchesKeyword(ingredient))
         .map(summary);
 
-      return HttpResponse.json({ items });
+      return HttpResponse.json({ items: limited(items) });
     }
 
-    return HttpResponse.json({ items: ingredientDetails.filter(matchesKeyword).map(summary) });
+    return HttpResponse.json({ items: limited(ingredientDetails.filter(matchesKeyword).map(summary)) });
   }),
 
   http.get("*/api/ingredients/:ingredientId", ({ params }) => {

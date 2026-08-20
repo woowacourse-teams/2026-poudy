@@ -10,6 +10,7 @@ import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredients } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
@@ -80,7 +81,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         <section className="pt-3">
           <h3 className="flex h-10 items-center gap-1.5">
             <span className="text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
-            <span className="text-[12px] font-medium text-[#868B94]">{items.length}개</span>
+            <span className="text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
           </h3>
 
           <ul aria-label="성분 검색 결과">
