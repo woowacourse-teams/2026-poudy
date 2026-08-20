@@ -15,8 +15,9 @@ export const dynamic = "force-dynamic";
 export default async function IngredientSearchPage() {
   const excludeCodes = await fetchExcludeCodes();
 
+  // 기다리는 동안에도 자리를 채워 둔다. 비워 두면 하단 바가 본문 아래로 올라왔다 내려간다.
   return (
-    <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
+    <Suspense fallback={<main className="flex-1 p-4 text-[13px] text-text-secondary">불러오는 중…</main>}>
       <IngredientSearchScreen excludeCodes={excludeCodes.items} />
     </Suspense>
   );
