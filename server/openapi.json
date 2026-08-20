@@ -1709,12 +1709,18 @@
             ]
           },
           "productId": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "example": 8
           },
           "keyword": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "레드 블레미쉬 클리어"
           }
         },

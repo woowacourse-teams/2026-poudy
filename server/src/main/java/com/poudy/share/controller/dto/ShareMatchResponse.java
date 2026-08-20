@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotNull;
 
 public record ShareMatchResponse(
         @NotNull ShareMatchStatus status,
-        @Schema(example = "8") Long productId,
-        @Schema(example = "레드 블레미쉬 클리어") String keyword) {
+        @Schema(example = "8", nullable = true) Long productId,
+        @Schema(example = "레드 블레미쉬 클리어", nullable = true) String keyword) {
 
     public static ShareMatchResponse from(ShareMatch match) {
         if (match.isNotFound()) {

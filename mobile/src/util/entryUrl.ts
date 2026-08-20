@@ -42,7 +42,7 @@ export const getMatchedUrl = (match: ShareMatchResponse | null, webBaseUrl: stri
     return null;
   }
 
-  if (match.status === 'MATCHED' && match.productId !== undefined) {
+  if (match.status === 'MATCHED' && typeof match.productId === 'number') {
     return new URL(`${PRODUCT_PATH}/${match.productId}`, webBaseUrl).toString();
   }
 
