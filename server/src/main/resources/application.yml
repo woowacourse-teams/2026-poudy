@@ -1,6 +1,12 @@
 spring:
   application:
     name: poudy
+  # 로컬 값은 server/.env 에서 읽는다. 예시는 server/.env.example 에 있다.
+  # 실행 위치가 server 인지 레포 루트인지에 따라 상대 경로가 달라지므로 둘 다 본다.
+  config:
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:./server/.env[.properties]
   # 프로필을 지정하지 않고 실행하면 로컬 개발용 dev 로 뜬다.
   # 운영은 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
   profiles:
@@ -34,3 +40,9 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
+# 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
+poudy:
+  cors:
+    allowed-origins: ${CLIENT_DOMAIN:}

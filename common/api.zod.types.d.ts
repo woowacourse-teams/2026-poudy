@@ -98,6 +98,7 @@ export type FormulationRoleResponse = {
    * 배합 목적 ID
    */
   id: number;
+  code: string;
   /**
    * 배합 목적 이름 (CosIng Function)
    */
@@ -130,6 +131,7 @@ export type SkinEffectGroupResponse = {
    * 피부 작용 ID
    */
   id: number;
+  code: string;
   /**
    * 피부 작용 이름
    */
@@ -141,6 +143,7 @@ export type SkinEffectResponse = {
    * 피부 작용 ID
    */
   id: number;
+  code: string;
   /**
    * 피부 작용 이름
    */
@@ -191,7 +194,7 @@ export type ProductDetailResponse = {
    */
   oilLevel: number;
   /**
-   * 피부 작용별 성분 그룹
+   * 연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)
    */
   skinEffectGroups: Array<SkinEffectGroupResponse>;
   /**

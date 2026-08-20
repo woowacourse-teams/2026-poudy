@@ -10,7 +10,8 @@ import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,8 @@ public record Product(
         ProductVariants variants,
         ProductSensory sensory,
         OffsetDateTime updatedAt) {
+
+    private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
     public Product {
         if (name == null || name.isBlank()) {
@@ -93,7 +96,7 @@ public record Product(
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<SkinEffect, List<Long>> ingredientIds = new EnumMap<>(SkinEffect.class);
+        Map<SkinEffect, List<Long>> ingredientIds = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
                 ingredientIds.computeIfAbsent(effect, key -> new ArrayList<>()).add(ingredient.id());
@@ -102,6 +105,11 @@ public record Product(
 
         return ingredientIds.entrySet().stream()
                 .map(entry -> new SkinEffectGroup(entry.getKey(), entry.getValue()))
+                .sorted(
+                        Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
+                                .reversed()
+                                .thenComparing(group -> group.effect().id()))
+                .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
                 .toList();
     }
 

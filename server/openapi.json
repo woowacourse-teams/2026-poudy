@@ -1372,7 +1372,11 @@
             "type": "integer",
             "format": "int64",
             "description": "배합 목적 ID",
-            "example": 20
+            "example": 14
+          },
+          "code": {
+            "type": "string",
+            "example": "MOISTURISING"
           },
           "name": {
             "type": "string",
@@ -1381,6 +1385,7 @@
           }
         },
         "required": [
+          "code",
           "id",
           "name"
         ]
@@ -1456,7 +1461,7 @@
           },
           "skinEffectGroups": {
             "type": "array",
-            "description": "피부 작용별 성분 그룹",
+            "description": "연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)",
             "items": {
               "$ref": "#/components/schemas/SkinEffectGroupResponse"
             }
@@ -1594,12 +1599,16 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 108
+            "example": 57
+          },
+          "code": {
+            "type": "string",
+            "example": "HYDRATION_RELATED"
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "수분 공급 관련"
+            "example": "피부 수분 관련"
           },
           "ingredientIds": {
             "type": "array",
@@ -1611,6 +1620,7 @@
           }
         },
         "required": [
+          "code",
           "id",
           "ingredientIds",
           "name"
@@ -1623,15 +1633,20 @@
             "type": "integer",
             "format": "int64",
             "description": "피부 작용 ID",
-            "example": 108
+            "example": 57
+          },
+          "code": {
+            "type": "string",
+            "example": "HYDRATION_RELATED"
           },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
-            "example": "수분 공급 관련"
+            "example": "피부 수분 관련"
           }
         },
         "required": [
+          "code",
           "id",
           "name"
         ]

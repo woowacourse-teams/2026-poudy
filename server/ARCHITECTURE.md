@@ -171,8 +171,12 @@ Domain 객체는 Service와 Repository가 사용한다.
 응답 필드를 `functions`로 부르지 않는다. `FUNCTION`은 배합 목적인데 우리말로 "기능"이라 옮기면 피부 작용 쪽으로 읽혀 두 축이 뒤집힌다. 문서와 화면 문구에서도 피부 작용을 "기능"이라 부르지 않는다.
 
 제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
+연관 성분 수가 많은 순서로 최대 3개를 제공하며, 성분 수가 같으면 태그 ID가 작은 그룹을
+먼저 제공한다.
 
-`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다. `tag.domain`에는 두 축의 태그 이름을 정의하는 `FormulationRole`, `SkinEffect`와 원천 데이터의 태그 구분인 `TagCategory`를 둔다.
+`IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다.
+
+태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `FormulationRole`과 `SkinEffect`는 enum 상수에 값을 중복하지 않고, 해석된 `Tag`에서 각각 `FUNCTION`과 `BIOLOGICAL_EFFECT` 응답 값을 만든다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
 
 ### Product
 
@@ -359,6 +363,25 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 - 대상이 제품인지 브랜드인지 성분인지는 예외 타입이 아니라 예외가 들고 있는 `ErrorCode`가 구분한다.
 - `HttpStatus`는 `GlobalExceptionHandler`에만 둔다. 커스텀 예외와 `ErrorCode`는 상태를 모른다.
 - `InfrastructureException`의 원인 메시지는 로그로만 남기고 응답에 싣지 않는다.
+
+### CORS
+
+브라우저가 다른 오리진에서 API 를 부를 때만 필요한 설정이므로 `config.CorsConfig` 하나가
+`/api/**` 에만 건다. 허용할 오리진은 코드나 `application.yml` 이 아니라 `CLIENT_DOMAIN` 환경
+변수가 갖고, 로컬은 `server/.env` 가, 배포는 systemd 환경 변수가 그 값을 준다. 예시는
+`server/.env.example` 에 있다. 클라이언트 도메인은 환경마다 다르고 배포 중에도 바뀌므로
+코드에 박으면 도메인이 바뀔 때마다 서버를 다시 빌드해야 한다.
+
+도메인이 여럿이면 `CLIENT_DOMAIN` 에 쉼표로 잇는다. 값마다 오리진 전체를 적어야 하며,
+`https://*.example.com` 처럼 와일드카드도 쓸 수 있다. `allowedOrigins` 가 아니라
+`allowedOriginPatterns` 를 쓰는 이유가 이것이다.
+
+값을 비워 두면 CORS 를 아예 열지 않는다. 운영은 nginx 가 같은 오리진에서 `/api` 를 프록시하므로
+열 이유가 없고, 기본값을 열어 두면 배포 환경에서 잊고 그대로 열려 있게 된다.
+
+허용 메서드는 `GET`, `HEAD`, `OPTIONS` 로 둔다. 현재 API 는 전부 조회다. 자격 증명은 허용하지
+않는다. API 가 쿠키나 인증 헤더를 쓰지 않으므로 열 이유가 없다.
+
 
 ## API decisions
 

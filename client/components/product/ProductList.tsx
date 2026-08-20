@@ -1,13 +1,19 @@
 "use client";
 
-import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse, ProductResponse } from "@poudy/api/api.zod";
+import type {
+  BrandListItemResponse,
+  BrandResponse,
+  CategoryResponse,
+  ExcludeCodeResponse,
+  ProductResponse,
+} from "@poudy/api/api.zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
+import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar, type FilterChipItem } from "@/components/ui/FilterChipBar";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
-import type { FilterType } from "@/lib/analytics/events";
+import type { ListSurface } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
@@ -26,14 +32,8 @@ type ProductListProps = {
   readonly fixedFilter?: Partial<Filter>;
   /** 고정한 조건에 해당하는 칩은 숨긴다. */
   readonly hiddenChips?: readonly string[];
-};
-
-/** 칩 id 를 분석 이벤트의 filter_type 으로 옮긴다. */
-const FILTER_TYPES: Record<SheetKind, FilterType> = {
-  ingredient: "ingredient",
-  category: "category",
-  brand: "brand",
-  level: "moisture_oil",
+  /** 같은 목록을 여러 화면이 쓰므로 분석 이벤트에 어디인지 남긴다. */
+  readonly surface?: ListSurface;
 };
 
 const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
@@ -59,6 +59,7 @@ export function ProductList({
   basePath = "/products",
   fixedFilter,
   hiddenChips = [],
+  surface = "product_list",
 }: ProductListProps) {
   const { filter: urlFilter, setCondition, setSort } = useFilterQuery(basePath);
   const { isSaved, toggle } = useSavedProducts();
@@ -80,8 +81,28 @@ export function ProductList({
   // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
   const filter = { ...urlFilter, ...fixedFilter };
 
-  const { items, total, hasNext, loadNext, loading } = useProductPages(filter);
+  const { items, brands: matchedBrands, total, page, hasNext, loadNext, loading } = useProductPages(filter);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
+
+  const empty = items.length === 0 && !loading;
+  const conditionCount = countConditions(filter);
+
+  /**
+   * 지금 조건에 걸린 브랜드만 고르게 한다. 결과가 0 건인 브랜드가 목록에서 빠진다.
+   * 첫 응답 전에는 걸린 브랜드를 모르므로 그때만 전체 목록을 보여 준다.
+   */
+  const selectableBrands = matchedBrands.length > 0 ? matchedBrands : brands;
+
+  // 첫 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
+  useEffect(() => {
+    if (page > 0 && !loading) track("product_list_scrolled", { surface, page, loaded_count: items.length });
+    // 장이 늘었을 때만 남긴다. 같은 장에서 다시 그려도 보내지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, loading]);
+
+  useEffect(() => {
+    if (empty) track("empty_result_shown", { surface, condition_count: conditionCount });
+  }, [empty, surface, conditionCount]);
 
   return (
     <>
@@ -97,7 +118,7 @@ export function ProductList({
       </div>
 
       <main className="flex-1 px-4">
-        {items.length === 0 && !loading ? (
+        {empty ? (
           <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
           <ul className="divide-y divide-border">
@@ -128,8 +149,9 @@ export function ProductList({
           }
         }}
         categories={categories}
-        brands={brands}
+        brands={selectableBrands}
         excludeCodes={excludeCodes}
+        initialCount={total}
       />
     </>
   );
@@ -164,6 +186,8 @@ type PageState = {
   readonly key: string;
   readonly page: number;
   readonly items: readonly ProductResponse[];
+  /** 지금 조건에 걸린 제품 전체의 브랜드. 페이지에 걸리지 않는다. */
+  readonly brands: readonly BrandResponse[];
   readonly total: number;
   readonly hasNext: boolean;
   readonly loading: boolean;
@@ -172,6 +196,7 @@ type PageState = {
 const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   page: 0,
   items: [],
+  brands: [],
   total: 0,
   hasNext: false,
   loading: true,
@@ -200,6 +225,8 @@ function useProductPages(filter: Filter) {
             ...previous,
             // 첫 페이지는 갈아 끼우고 다음 페이지는 이어 붙인다.
             items: page === 0 ? response.items : [...previous.items, ...response.items],
+            // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
+            brands: response.brands,
             total: response.pagination.totalElements,
             hasNext: response.pagination.hasNext,
             loading: false,

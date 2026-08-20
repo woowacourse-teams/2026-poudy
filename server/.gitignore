@@ -29,3 +29,8 @@ out/
 **/resources/**/*.json
 # 테스트 픽스처는 예외다. 막아 두면 데이터를 읽는 코드를 CI 에서 검증할 방법이 없다.
 !src/test/resources/**
+
+### 환경 변수 ###
+# .env 는 로컬 값이므로 올리지 않는다. 예시는 .env.example 이 갖는다.
+.env
+!.env.example

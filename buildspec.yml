@@ -1,0 +1,60 @@
+version: 0.2
+
+env:
+  variables:
+    PNPM_VERSION: "11.21.0"
+    # Next.js의 NEXT_PUBLIC_* 값은 빌드 결과물에 포함되므로 CodeBuild에서 지정합니다.
+    # 프론트와 백엔드는 같은 외부 origin을 사용하고, Nginx가 /api/*를 백엔드
+    # 사설 IP로 중계하므로 API base URL은 비워 둡니다.
+    NEXT_PUBLIC_API_MOCKING: ""
+    NEXT_PUBLIC_API_BASE_URL: ""
+    NEXT_PUBLIC_ENVIRONMENT: "production"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+      nodejs: 22
+    commands:
+      - npm install --global "pnpm@${PNPM_VERSION}"
+  pre_build:
+    commands:
+      - test "$(uname -m)" = "aarch64"
+      - rm -rf "${CODEBUILD_SRC_DIR}/.poudy-package" "${CODEBUILD_SRC_DIR}/.artifacts"
+  build:
+    commands:
+      - ./deploy/scripts/package-artifacts.sh "${CODEBUILD_SRC_DIR}/.poudy-package"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts"
+      - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/app.jar" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
+      - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/"
+      - cp deploy/codedeploy/backend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/backend/appspec.yml"
+      - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/frontend/appspec.yml"
+      - cp -R deploy/codedeploy/backend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"
+      - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
+      - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
+      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
+  post_build:
+    commands:
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
+
+artifacts:
+  files:
+    - .artifacts/build-metadata.txt
+  discard-paths: yes
+  secondary-artifacts:
+    backend:
+      base-directory: .artifacts/backend
+      files:
+        - appspec.yml
+        - scripts/**/*
+        - app/**/*
+      name: poudy-backend-$CODEBUILD_RESOLVED_SOURCE_VERSION
+    frontend:
+      base-directory: .artifacts/frontend
+      files:
+        - appspec.yml
+        - scripts/**/*
+        - app/**/*
+      name: poudy-frontend-$CODEBUILD_RESOLVED_SOURCE_VERSION

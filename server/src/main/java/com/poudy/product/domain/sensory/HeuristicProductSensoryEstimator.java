@@ -13,6 +13,11 @@ import java.util.Set;
 
 public final class HeuristicProductSensoryEstimator implements ProductSensoryEstimator {
 
+    private static final String ABSORBENT = "ABSORBENT";
+    private static final String EMOLLIENT = "EMOLLIENT";
+    private static final String HUMECTANT = "HUMECTANT";
+    private static final String MOISTURISING = "MOISTURISING";
+
     public static final String INGREDIENT_PROFILE_VERSION = HeuristicIngredientSensoryProfiles.VERSION;
     public static final String CATEGORY_PRIOR_VERSION = "category-sensory-prior-v0.1";
     public static final String LEVEL_MODEL_VERSION = "ordinal-level-model-v0.1";
@@ -124,13 +129,17 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
         Set<FormulationRole> roles = Set.copyOf(ingredient.formulationRoles());
         Optional<HeuristicIngredientSensoryProfiles.Signal> explicitSignal = HeuristicIngredientSensoryProfiles
                 .findSignal(ingredient.id());
-        boolean oil = roles.contains(FormulationRole.EMOLLIENT)
+        boolean oil = hasRole(roles, EMOLLIENT)
                 || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::oil).orElse(false);
-        boolean moisture = roles.contains(FormulationRole.HUMECTANT)
+        boolean moisture = hasRole(roles, HUMECTANT)
                 || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::moisture).orElse(false)
-                || roles.contains(FormulationRole.MOISTURISING) && !oil;
-        boolean absorbent = roles.contains(FormulationRole.ABSORBENT);
+                || hasRole(roles, MOISTURISING) && !oil;
+        boolean absorbent = hasRole(roles, ABSORBENT);
         return new IngredientSignal(moisture, oil, absorbent);
+    }
+
+    private static boolean hasRole(Set<FormulationRole> roles, String code) {
+        return roles.stream().anyMatch(role -> role.hasCode(code));
     }
 
     private static BigDecimal confidence(CategoryPrior prior, IngredientSignals signals) {

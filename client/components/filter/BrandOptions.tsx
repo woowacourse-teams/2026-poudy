@@ -1,13 +1,13 @@
 "use client";
 
-import type { BrandListItemResponse } from "@poudy/api/api.zod";
+import type { BrandResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 
 type BrandOptionsProps = {
-  readonly brands: readonly BrandListItemResponse[];
+  readonly brands: readonly BrandResponse[];
   readonly selectedIds: readonly number[];
   readonly onToggle: (brandId: number) => void;
 };

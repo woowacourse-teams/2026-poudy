@@ -9,6 +9,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -100,9 +101,47 @@ class ProductTest {
 
         assertThat(product.skinEffectGroups()).singleElement()
                 .satisfies(group -> {
-                    assertThat(group.effect().id()).isEqualTo(108L);
+                    assertThat(group.effect().id()).isEqualTo(57L);
                     assertThat(group.ingredientIds()).containsExactly(10L, 20L);
                 });
+    }
+
+    @Test
+    @DisplayName("연관 성분이 많은 피부 작용 그룹을 태그 ID 동률 순서로 최대 3개 반환한다")
+    void returnsTopThreeSkinEffectGroupsByIngredientCount() {
+        Product product = new Product(
+                1L,
+                "제품",
+                brand,
+                category,
+                new Ingredients(
+                        List.of(
+                                ingredient(1L, 20L, "MOST_RELATED"),
+                                ingredient(2L, 20L, "MOST_RELATED"),
+                                ingredient(3L, 20L, "MOST_RELATED"),
+                                ingredient(4L, 30L, "SECOND_RELATED"),
+                                ingredient(5L, 30L, "SECOND_RELATED"),
+                                ingredient(6L, 40L, "TIED_RELATED"),
+                                ingredient(7L, 10L, "TIED_EARLIER_RELATED"))),
+                "image",
+                variants,
+                sensory(1, 1),
+                updatedAt);
+
+        assertThat(product.skinEffectGroups())
+                .satisfiesExactly(
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(20L);
+                            assertThat(group.ingredientIds()).containsExactly(1L, 2L, 3L);
+                        },
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(30L);
+                            assertThat(group.ingredientIds()).containsExactly(4L, 5L);
+                        },
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(10L);
+                            assertThat(group.ingredientIds()).containsExactly(7L);
+                        });
     }
 
     @Test
@@ -124,7 +163,13 @@ class ProductTest {
     }
 
     private static Ingredient ingredient(Long id, String effect) {
-        IngredientTag tag = new IngredientTag(effect, TagCategory.BIOLOGICAL_EFFECT, "확인된 근거");
+        return ingredient(id, 57L, effect);
+    }
+
+    private static Ingredient ingredient(Long id, Long tagId, String effect) {
+        IngredientTag tag = new IngredientTag(
+                new Tag(tagId, TagCategory.BIOLOGICAL_EFFECT, effect, "피부 작용"),
+                "확인된 근거");
         return new Ingredient(id, "성분 " + id, null, null, null, null, null, List.of(tag), null, null);
     }
 }

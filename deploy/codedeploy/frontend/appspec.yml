@@ -1,0 +1,25 @@
+version: 0.0
+os: linux
+file_exists_behavior: OVERWRITE
+
+files:
+  - source: app
+    destination: /opt/poudy/frontend
+
+hooks:
+  BeforeInstall:
+    - location: scripts/before-install.sh
+      timeout: 60
+      runas: root
+  AfterInstall:
+    - location: scripts/after-install.sh
+      timeout: 60
+      runas: root
+  ApplicationStart:
+    - location: scripts/application-start.sh
+      timeout: 60
+      runas: root
+  ValidateService:
+    - location: scripts/validate-service.sh
+      timeout: 240
+      runas: root

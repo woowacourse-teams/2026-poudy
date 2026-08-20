@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
-import { TrackView } from "@/components/analytics/TrackView";
+import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
@@ -49,10 +50,10 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
   return (
     <>
       <TopBar title="성분 설명" variant="sub" />
-      <TrackView
-        event="ingredient_viewed"
-        properties={{ ingredient_id: ingredient.id, entry_point: "product_detail" }}
-      />
+      {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
+      <Suspense fallback={null}>
+        <TrackIngredientView ingredientId={ingredient.id} />
+      </Suspense>
 
       {/* 디자인 S06 은 본문을 좌우 32px 안쪽으로 넣는다. */}
       <main className="flex-1 px-8">
@@ -63,7 +64,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           {ingredient.skinEffects.length > 0 ? (
             <ul className="flex h-[26px] items-center gap-1.5">
               {ingredient.skinEffects.map((effect) => {
-                const color = effectColor(effect.name);
+                const color = effectColor(effect.code);
 
                 return (
                   <li

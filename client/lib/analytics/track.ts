@@ -4,6 +4,7 @@ import type { EventMap, EventName } from "./events";
 
 type Posthog = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
+  captureException: (error: unknown, properties?: Record<string, unknown>) => void;
   init: (key: string, options: Record<string, unknown>) => void;
 };
 
@@ -46,6 +47,24 @@ export const initAnalytics = async (): Promise<void> => {
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: true,
+
+    // 잡히지 않은 예외와 거부된 프로미스를 자동으로 보낸다. 오류 화면은
+    // reportBoundaryError 가 따로 남기고, 이쪽은 그 밖의 예외를 받는다.
+    capture_exceptions: true,
+
+    // 화면 녹화. 이벤트만으로는 왜 그렇게 눌렀는지 알 수 없어 초기 사용성 관찰에 쓴다.
+    disable_session_recording: false,
+    session_recording: {
+      /**
+       * 입력값은 기본으로 가리고 검색창만 연다. 검색 자동완성이 잘 뜨는지 보려면
+       * 무엇을 치는지 보여야 하고, 검색어는 search_used 로 이미 남기고 있다.
+       * SearchField 만 type="search" 라 이 한 줄이 검색창에만 걸린다.
+       */
+      maskAllInputs: true,
+      maskInputOptions: { search: false },
+      /** 저장함 목록은 그 사람의 관심사라 관찰 대상이 아니다. 화면에서 가린다. */
+      maskTextSelector: "[data-private]",
+    },
   });
   window.posthog = posthog as unknown as Posthog;
 };

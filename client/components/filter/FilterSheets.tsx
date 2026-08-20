@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandListItemResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
@@ -9,6 +9,8 @@ import { IngredientOptions } from "./IngredientOptions";
 import { LevelRange } from "./LevelRangeOptions";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import type { FilterType } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductCount } from "@/lib/hooks/useProductCount";
@@ -21,8 +23,10 @@ type FilterSheetsProps = {
   readonly filter: Filter;
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandListItemResponse[];
+  readonly brands: readonly BrandResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
+  /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
+  readonly initialCount?: number;
 };
 
 const TITLES: Record<SheetKind, string> = {
@@ -30,6 +34,14 @@ const TITLES: Record<SheetKind, string> = {
   category: "카테고리",
   brand: "브랜드",
   level: "유수분 범위",
+};
+
+/** 시트 종류를 분석 이벤트의 filter_type 으로 옮긴다. */
+export const FILTER_TYPES: Record<SheetKind, FilterType> = {
+  ingredient: "ingredient",
+  category: "category",
+  brand: "brand",
+  level: "moisture_oil",
 };
 
 const DESCRIPTIONS: Record<SheetKind, string> = {
@@ -56,9 +68,10 @@ function SheetBody({
   categories,
   brands,
   excludeCodes,
+  initialCount,
 }: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
   const [draft, setDraft] = useState<Filter>(filter);
-  const count = useProductCount(draft);
+  const count = useProductCount(draft, initialCount);
 
   // 담긴 성분의 이름은 서버에서 가져온다.
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
@@ -67,7 +80,9 @@ function SheetBody({
   const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
   const submitLabel = kind === "level" ? `선택한 범위로 ${countLabel}보기` : `${countLabel}제품 보기`;
 
-  const reset = () =>
+  const reset = () => {
+    track("filter_reset", { filter_type: FILTER_TYPES[kind] });
+
     setDraft({
       ...draft,
       ...(kind === "category" ? { categoryIds: [] } : {}),
@@ -75,6 +90,7 @@ function SheetBody({
       ...(kind === "level" ? { moistureLevel: [], oilLevel: [] } : {}),
       ...(kind === "ingredient" ? { excludeCodes: [], excludeIngredientIds: [], includeIngredientIds: [] } : {}),
     });
+  };
 
   return (
     <BottomSheet

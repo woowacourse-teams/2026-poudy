@@ -6,11 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record SkinEffectResponse(
-        @NotNull @Schema(description = "피부 작용 ID", example = "108") Long id,
-        @NotNull @Schema(description = "피부 작용 이름", example = "수분 공급 관련") String name) {
+        @NotNull @Schema(description = "피부 작용 ID", example = "57") Long id,
+        @NotNull @Schema(example = "HYDRATION_RELATED") String code,
+        @NotNull @Schema(description = "피부 작용 이름", example = "피부 수분 관련") String name) {
 
     public static SkinEffectResponse from(SkinEffect effect) {
-        return new SkinEffectResponse(effect.id(), effect.displayName());
+        return new SkinEffectResponse(effect.id(), effect.code(), effect.displayName());
     }
 
     public static List<SkinEffectResponse> from(List<SkinEffect> effects) {
