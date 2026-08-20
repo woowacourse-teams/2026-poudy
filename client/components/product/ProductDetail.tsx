@@ -128,7 +128,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 
       <ul>
         {product.skinEffectGroups.map((group) => {
-          const color = effectColor(group.name);
+          const color = effectColor(group.code);
 
           return (
             <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
@@ -192,8 +192,8 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
 
       <ol>
         {ingredients.map((ingredient, index) => {
-          const effect = ingredient.skinEffects[0]?.name ?? "일반";
-          const color = effectColor(effect);
+          const effect = ingredient.skinEffects[0];
+          const color = effectColor(effect?.code);
 
           return (
             <li key={ingredient.id}>
@@ -215,7 +215,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
                 <span
                   className={`flex h-[22px] shrink-0 items-center rounded-[11px] px-2 text-[10px] font-semibold ${color.bg} ${color.text}`}
                 >
-                  {effect}
+                  {effect?.name ?? "일반"}
                 </span>
 
                 <Icon name="chevron-right" size={16} className="text-text-secondary" />
