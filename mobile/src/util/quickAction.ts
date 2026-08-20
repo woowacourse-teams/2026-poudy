@@ -1,5 +1,6 @@
 import type { Action } from 'expo-quick-actions';
 
+/** icon 은 두 플랫폼이 함께 쓴다. 안드로이드 리소스 이름 규칙 때문에 밑줄만 쓸 수 있다. */
 interface QuickActionEntry {
   readonly id: string;
   readonly title: string;
@@ -8,9 +9,14 @@ interface QuickActionEntry {
 }
 
 const QUICK_ACTION_ENTRIES: readonly QuickActionEntry[] = [
-  { id: 'ingredient-search', title: '성분 검색', icon: 'search', path: '/search/ingredients' },
-  { id: 'compare', title: '비교함', icon: 'symbol:square.on.square', path: '/compare' },
-  { id: 'saved', title: '저장한 제품', icon: 'bookmark', path: '/saved' },
+  { id: 'product-search', title: '제품 검색', icon: 'asset:quick_action_product_search', path: '/search/products' },
+  {
+    id: 'ingredient-search',
+    title: '성분 검색',
+    icon: 'asset:quick_action_ingredient_search',
+    path: '/search/ingredients',
+  },
+  { id: 'saved', title: '보관함', icon: 'asset:quick_action_saved', path: '/saved' },
 ];
 
 export const getQuickActionItems = (): Action[] =>
