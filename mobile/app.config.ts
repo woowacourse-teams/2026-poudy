@@ -29,9 +29,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: false,
     },
     android: {
+      // 루트 icon 은 iOS 가 쓴다. 안드로이드는 여백을 둔 그림이라야 잘리지 않는다.
+      icon: './assets/poudy-adaptive-icon.png',
       adaptiveIcon: {
         backgroundColor: '#ffffff',
-        foregroundImage: './assets/poudy-mark.png',
+        foregroundImage: './assets/poudy-adaptive-icon.png',
       },
       blockedPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
