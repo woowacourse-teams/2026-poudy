@@ -1,9 +1,11 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function WebViewLoading() {
   return (
     <View pointerEvents='none' style={styles.overlay}>
-      <ActivityIndicator color='#191919' size='large' />
+      <LoadingIndicator />
     </View>
   );
 }
