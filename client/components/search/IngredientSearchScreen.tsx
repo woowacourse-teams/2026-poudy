@@ -10,6 +10,7 @@ import { serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
+import { useProductCount } from "@/lib/hooks/useProductCount";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
 /** S03 성분 필터링. 조건은 이 화면의 URL 에 담는다. */
@@ -21,6 +22,10 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
 
   const total = countConditions(filter);
   const summary = summarizeFilter(filter, names);
+
+  // 바텀시트와 같은 문구를 쓴다. 조건을 바꾸면 개수가 따라 바뀐다.
+  const count = useProductCount(filter);
+  const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
 
   return (
     <>
@@ -41,7 +46,7 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
               })
             }
           >
-            <Button>조건에 맞는 제품 보기</Button>
+            <Button>{countLabel}조건에 맞는 제품 보기</Button>
           </Link>
         </div>
       ) : null}
