@@ -40,17 +40,37 @@
   /* 타이포 */
   --font-sans: var(--font-noto-sans-kr), sans-serif;
   --font-data: var(--font-geist-mono), monospace;
+  /* 헤더의 서비스 이름에만 쓴다. 굵기를 조절할 수 있는 글꼴이다. */
+  --font-brand: var(--font-foldit), sans-serif;
   --text-body: 14px;
 
   /* 형태 */
   --radius-button: 14px;
   --font-weight-button: 700;
+
+  /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
+  --color-app-canvas: #f2f3f5;
+  --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
+
+  /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
+  --animate-spark-burst: spark-burst 520ms ease-out forwards;
+  --animate-save-pop: save-pop 380ms ease-out;
+}
+
+/*
+ * 넓은 화면에서는 본문 밖이 드러난다. 그 바탕을 옅은 회색으로 깔아
+ * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
+ */
+html {
+  background: var(--color-app-canvas);
 }
 
 body {
   /* 모바일 전용 화면이라 넓은 화면에서는 폭을 제한하고 가운데 둔다. */
   max-width: var(--container-md);
   margin-inline: auto;
+  /* 바탕과 본문을 가르는 그림자. 폭이 좁아 본문이 화면을 다 채우면 보이지 않는다. */
+  box-shadow: var(--shadow-app-frame);
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
@@ -58,4 +78,40 @@ body {
   word-break: keep-all;
   /* 단어 하나가 줄보다 길면 그때만 글자 단위로 끊는다. */
   overflow-wrap: break-word;
+}
+
+/*
+ * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
+ * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
+ */
+@keyframes spark-burst {
+  from {
+    opacity: 1;
+    transform: rotate(var(--spark-angle)) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateY(-18px) scale(0.3);
+  }
+}
+
+/* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
+@keyframes save-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spark-burst,
+  .animate-save-pop {
+    animation: none;
+  }
 }
