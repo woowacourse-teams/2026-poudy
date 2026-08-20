@@ -77,6 +77,41 @@ class ProductQueryTest {
     }
 
     @Test
+    @DisplayName("제품명 검색 제안을 페이지 단위로 반환하고 전체 개수를 함께 싣는다")
+    void suggestsProductPage() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "0").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.pagination.page").value(0))
+                .andExpect(jsonPath("$.pagination.size").value(2))
+                .andExpect(jsonPath("$.pagination.totalElements").value(3))
+                .andExpect(jsonPath("$.pagination.totalPages").value(2))
+                .andExpect(jsonPath("$.pagination.hasNext").value(true));
+    }
+
+    @Test
+    @DisplayName("제품명 검색 제안의 마지막 페이지는 남은 제품만 담고 다음 페이지가 없다")
+    void suggestsLastProductPage() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "1").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.pagination.totalElements").value(3))
+                .andExpect(jsonPath("$.pagination.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("제품명 검색 제안의 페이지를 나눠도 목록과 같은 순서를 유지한다")
+    void keepsSuggestionOrderAcrossPages() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(1));
+
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "2").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(10));
+    }
+
+    @Test
     @DisplayName("브랜드명 검색 제안도 해당 브랜드의 제품으로 반환한다")
     void suggestsProductsByBrandName() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))

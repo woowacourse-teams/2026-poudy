@@ -14,6 +14,23 @@ const numbers = (url: URL, key: string) =>
 const notFound = (detail: string, code: string) =>
   HttpResponse.json({ title: "Not Found", status: 404, detail, code }, { status: 404 });
 
+const paginate = <T>(matched: readonly T[], url: URL) => {
+  const page = Number(url.searchParams.get("page") ?? 0);
+  const size = Number(url.searchParams.get("size") ?? 20);
+  const start = page * size;
+
+  return {
+    items: matched.slice(start, start + size),
+    pagination: {
+      page,
+      size,
+      totalElements: matched.length,
+      totalPages: Math.ceil(matched.length / size),
+      hasNext: start + size < matched.length,
+    },
+  };
+};
+
 /*
  * 실제 서버의 필터 규칙을 그대로 재현하지 않는다. 화면이 요청을 보내고 응답을
  * 그리는 흐름을 확인할 정도만 맞춘다. 검증은 서버 연동 시점에 다시 한다.
@@ -53,21 +70,10 @@ const sortProducts = (items: typeof products, sort: string | null) => {
 export const handlers = [
   http.get("*/api/products", ({ request }) => {
     const url = new URL(request.url);
-    const page = Number(url.searchParams.get("page") ?? 0);
-    const size = Number(url.searchParams.get("size") ?? 20);
     const matched = sortProducts(filterProducts(url), url.searchParams.get("sort"));
-    const start = page * size;
-    const items = matched.slice(start, start + size);
 
     return HttpResponse.json({
-      items,
-      pagination: {
-        page,
-        size,
-        totalElements: matched.length,
-        totalPages: Math.max(1, Math.ceil(matched.length / size)),
-        hasNext: start + size < matched.length,
-      },
+      ...paginate(matched, url),
       // 조건에 걸린 제품 전체의 브랜드다. 페이지가 아니라 matched 를 기준으로 한다.
       brands: brands
         .filter((brand) => matched.some((product) => product.brand.id === brand.id))
@@ -83,7 +89,7 @@ export const handlers = [
   http.get("*/api/products/suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
-    const items = products
+    const matched = products
       .filter((product) => `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword))
       .map((product) => ({
         id: product.id,
@@ -92,7 +98,7 @@ export const handlers = [
         brandName: product.brand.name,
       }));
 
-    return HttpResponse.json({ items });
+    return HttpResponse.json(paginate(matched, url));
   }),
 
   http.get("*/api/products/:productId", ({ params }) => {

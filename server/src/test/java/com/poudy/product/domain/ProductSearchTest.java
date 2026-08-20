@@ -2,6 +2,7 @@ package com.poudy.product.domain;
 
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
@@ -12,7 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("제품 검색")
+@DisplayName("제품 검색과 검색 제안 페이지")
 class ProductSearchTest {
 
     private static Product product(Long id, String name) {
@@ -131,5 +132,46 @@ class ProductSearchTest {
         Products products = new Products(List.of(product(1L, "블랙 스네일 토너")));
 
         assertThat(products.search("에센스")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("검색 제안은 요청한 페이지의 제품만 담고 전체 개수를 함께 센다")
+    void suggestsRequestedPage() {
+        Products products = suggestionProducts();
+
+        ProductSuggestionPage page = products.suggest("토너", 1, 2);
+
+        assertThat(names(page.items())).containsExactly("토너 3");
+        assertThat(page.totalElements()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("검색 제안은 페이지를 나눠도 검색 순서를 유지한다")
+    void keepsSearchOrderAcrossSuggestionPages() {
+        Products products = suggestionProducts();
+
+        assertThat(names(products.suggest("토너", 0, 2).items())).containsExactly("토너", "토너 2");
+    }
+
+    @Test
+    @DisplayName("검색 제안에서 결과를 넘어선 페이지는 비어 있고 전체 개수는 그대로다")
+    void suggestsEmptyPageBeyondResult() {
+        ProductSuggestionPage page = suggestionProducts().suggest("토너", 5, 2);
+
+        assertThat(page.items()).isEmpty();
+        assertThat(page.totalElements()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("검색 제안은 페이지 조건이 올바르지 않으면 거절한다")
+    void rejectsInvalidSuggestionPageCondition() {
+        Products products = suggestionProducts();
+
+        assertThatThrownBy(() -> products.suggest("토너", -1, 2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> products.suggest("토너", 0, 0)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private static Products suggestionProducts() {
+        return new Products(List.of(product(1L, "토너"), product(2L, "토너 2"), product(3L, "토너 3")));
     }
 }

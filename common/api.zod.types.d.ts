@@ -228,11 +228,12 @@ export type ProductSuggestionResponse = {
    */
   brandName: string;
 }
-export type ProductSuggestionListResponse = {
+export type ProductSuggestionPageResponse = {
   /**
    * 제품명 또는 브랜드명 검색어에 해당하는 제품
    */
   items: Array<ProductSuggestionResponse>;
+  pagination: PaginationResponse;
 }
 export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
 export type ProductCountResponse = { count: number }
@@ -442,7 +443,7 @@ export type get_FindProductDetail = {
 
     }
 /**
- * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.
+ * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
  */
 export type get_SuggestProducts = {
       method: "GET",
@@ -455,10 +456,18 @@ export type get_SuggestProducts = {
    * 검색어
    */
   keyword: string;
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page?: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size?: number;
 },
 
           }
-      responses: {200: Schemas.ProductSuggestionListResponse,
+      responses: {200: Schemas.ProductSuggestionPageResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },

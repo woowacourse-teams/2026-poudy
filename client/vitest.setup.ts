@@ -5,6 +5,18 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { server } from "./mocks/server";
 
+// jsdom 에 없어 무한 스크롤 화면이 렌더링 중에 터진다.
+if (!("IntersectionObserver" in globalThis)) {
+  globalThis.IntersectionObserver = class {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+    takeRecords() {
+      return [];
+    }
+  } as unknown as typeof IntersectionObserver;
+}
+
 // 테스트도 화면과 같은 목 서버를 쓴다. 핸들러가 한 벌이라 응답이 어긋나지 않는다.
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
