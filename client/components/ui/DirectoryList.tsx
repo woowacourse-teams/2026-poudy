@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { BrandLogo } from "./BrandLogo";
 import { Icon } from "./icons/Icon";
 
 type DirectoryRailItem = {
@@ -17,6 +18,8 @@ type DirectoryRowItem = {
   readonly countPrefix?: string;
   /** 이름 앞의 동그라미 글자. 브랜드 목록에서 쓴다. */
   readonly initial?: string;
+  /** 브랜드 로고. 없으면 initial 을 대신 보여 준다. */
+  readonly imageUrl?: string;
   readonly href: string;
 };
 
@@ -88,10 +91,13 @@ export function DirectoryList({
 }
 
 /** `이름 + 개수 + 화살표` 행. 카테고리 소분류와 브랜드 목록이 같은 모양을 쓴다. */
-function DirectoryRow({ label, count, countPrefix, initial, href }: DirectoryRowItem) {
+function DirectoryRow({ label, count, countPrefix, initial, imageUrl, href }: DirectoryRowItem) {
   return (
     <Link href={href} className="flex h-14 items-center gap-2.5 border-b border-[#ECEDEF] px-4">
-      {initial ? (
+      {/* 로고가 있으면 그림으로, 없으면 이름 첫 글자로 자리를 채운다. */}
+      {imageUrl ? <BrandLogo name={label} imageUrl={imageUrl} size={32} /> : null}
+
+      {!imageUrl && initial ? (
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-bold text-text-secondary">
           {initial}
         </span>
