@@ -39,7 +39,8 @@ const trackSearch = (query: string, resultCount: number): void => {
 };
 
 export const useProductSuggestions = (keyword: string) => {
-  const debounced = useDebouncedValue(keyword.trim());
+  const trimmed = keyword.trim();
+  const debounced = useDebouncedValue(trimmed);
   const [state, setState] = useState<State>(() => initial(debounced));
 
   // effect 에서 비우면 한 번 더 그린다.
@@ -71,5 +72,5 @@ export const useProductSuggestions = (keyword: string) => {
     setState((previous) => ({ ...previous, page: previous.page + 1, loading: true }));
   }, []);
 
-  return { ...current, keyword: debounced, loadNext };
+  return { ...current, keyword: debounced, loading: current.loading || trimmed !== debounced, loadNext };
 };

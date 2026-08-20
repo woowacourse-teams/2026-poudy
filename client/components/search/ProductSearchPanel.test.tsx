@@ -116,7 +116,7 @@ describe("ProductSearchPanel", () => {
     expect(screen.queryByText("제품 바로가기")).not.toBeInTheDocument();
   });
 
-  it("응답이 오기 전에는 없다고 단정하지 않는다", async () => {
+  it("응답이 오기 전에는 검색하는 중으로 보여 준다", async () => {
     server.use(
       http.get("*/api/products/suggestions", async () => {
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -130,9 +130,10 @@ describe("ProductSearchPanel", () => {
     render(<ProductSearchPanel />);
     await type("독");
 
-    await waitFor(() => expect(screen.getByText("제품 바로가기")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("검색하는 중…")).toBeInTheDocument());
     expect(screen.queryByText(/검색 결과가 없어요$/)).not.toBeInTheDocument();
     expect(screen.queryByText(/에 대한 검색 결과가 없어요$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/개$/)).not.toBeInTheDocument();
   });
 
   it("개수를 세는 요청을 따로 보내지 않는다", async () => {

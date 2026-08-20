@@ -28,7 +28,7 @@ type IngredientOptionsProps = {
 /** 디자인의 성분 시트. 검색하면 자동완성이 선택 목록 자리를 대신한다. */
 export function IngredientOptions({ draft, setDraft, excludeCodes, names }: IngredientOptionsProps) {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher, "ingredient");
+  const { items, loading } = useSuggestions(keyword, fetcher, "ingredient");
   const typing = keyword.trim().length > 0;
 
   const selectedCount = draft.includeIngredientIds.length + draft.excludeIngredientIds.length;
@@ -81,41 +81,47 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         <section className="pt-3">
           <h3 className="flex h-10 items-center gap-1.5">
             <span className="text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
-            <span className="text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
+            {loading ? null : (
+              <span className="text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
+            )}
           </h3>
 
-          <ul aria-label="성분 검색 결과">
-            {items.map((item) => {
-              const included = draft.includeIngredientIds.includes(item.id);
-              const excluded = draft.excludeIngredientIds.includes(item.id);
+          {loading ? (
+            <p className="flex min-h-50 items-center justify-center text-[13px] text-[#868B94]">검색하는 중…</p>
+          ) : (
+            <ul aria-label="성분 검색 결과">
+              {items.map((item) => {
+                const included = draft.includeIngredientIds.includes(item.id);
+                const excluded = draft.excludeIngredientIds.includes(item.id);
 
-              return (
-                <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
-                  <span className="flex flex-1 flex-col gap-[3px]">
-                    <span className="text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
-                    <span className="text-[10px] text-[#868B94]">
-                      {item.skinEffects.map((effect) => effect.name).join(" · ")}
+                return (
+                  <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
+                    <span className="flex flex-1 flex-col gap-[3px]">
+                      <span className="text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
+                      <span className="text-[10px] text-[#868B94]">
+                        {item.skinEffects.map((effect) => effect.name).join(" · ")}
+                      </span>
                     </span>
-                  </span>
 
-                  <span className="flex shrink-0 gap-1.5">
-                    <ConditionButton
-                      kind="include"
-                      active={included}
-                      ingredientName={item.koreanName}
-                      onClick={() => toggleIngredient("includeIngredientIds", item)}
-                    />
-                    <ConditionButton
-                      kind="exclude"
-                      active={excluded}
-                      ingredientName={item.koreanName}
-                      onClick={() => toggleIngredient("excludeIngredientIds", item)}
-                    />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+                    <span className="flex shrink-0 gap-1.5">
+                      <ConditionButton
+                        kind="include"
+                        active={included}
+                        ingredientName={item.koreanName}
+                        onClick={() => toggleIngredient("includeIngredientIds", item)}
+                      />
+                      <ConditionButton
+                        kind="exclude"
+                        active={excluded}
+                        ingredientName={item.koreanName}
+                        onClick={() => toggleIngredient("excludeIngredientIds", item)}
+                      />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       ) : (
         <>

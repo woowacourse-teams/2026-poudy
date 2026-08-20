@@ -31,7 +31,7 @@ type IngredientSearchPanelProps = {
 /** S03 성분 필터링 탭. 문구와 생김새는 design/v1.pen 을 따른다. */
 export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }: IngredientSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher, "ingredient");
+  const { items, loading } = useSuggestions(keyword, fetcher, "ingredient");
   const typing = keyword.trim().length > 0;
 
   // 바깥을 누르면 자동완성을 닫는다. 입력과 목록을 함께 감싼 자리를 기준으로 삼는다.
@@ -150,6 +150,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
             <IngredientSuggestions
               keyword={keyword.trim()}
               items={items}
+              loading={loading}
               includedIds={filter.includeIngredientIds}
               excludedIds={filter.excludeIngredientIds}
               onToggle={toggleIngredient}

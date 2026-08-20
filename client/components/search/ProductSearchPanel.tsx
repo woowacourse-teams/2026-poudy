@@ -28,6 +28,7 @@ export function ProductSearchPanel() {
 
   const trimmed = keyword.trim();
   const empty = total === 0;
+  const searching = loading && items.length === 0;
 
   const recent = useSyncExternalStore(
     subscribeRecentSearches,
@@ -51,7 +52,9 @@ export function ProductSearchPanel() {
         </p>
       </div>
 
-      {typing ? (
+      {typing && searching ? (
+        <p className="flex min-h-60 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
+      ) : typing ? (
         <>
           {empty ? (
             <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
