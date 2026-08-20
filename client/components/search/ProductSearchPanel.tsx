@@ -10,6 +10,8 @@ import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
 import { fetchProductSuggestions } from "@/lib/api/products";
+import { EMPTY_FILTER } from "@/lib/domain/filter";
+import { useProductCount } from "@/lib/hooks/useProductCount";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 import {
   addRecentSearch,
@@ -30,6 +32,15 @@ export function ProductSearchPanel() {
   const [keyword, setKeyword] = useState("");
   const { items } = useSuggestions(keyword, fetcher, "product");
   const typing = keyword.trim().length > 0;
+
+  /*
+   * 목록으로 넘어갔을 때 몇 개가 나오는지는 목록과 같은 count 로 센다.
+   * 자동완성은 제품명만 맞춰 보므로 그 수를 그대로 쓰면 목록과 어긋난다.
+   */
+  const trimmed = keyword.trim();
+  const count = useProductCount({ ...EMPTY_FILTER, keyword: trimmed || undefined });
+  // 응답이 오기 전에는 없다고 단정하지 않는다.
+  const empty = count === 0;
 
   const recent = useSyncExternalStore(
     subscribeRecentSearches,
@@ -55,69 +66,81 @@ export function ProductSearchPanel() {
 
       {typing ? (
         <>
-          <Link
-            href={`/products?keyword=${encodeURIComponent(keyword.trim())}`}
-            onClick={() =>
-              track("search_submitted", { mode: "product", query: keyword.trim(), result_count: items.length })
-            }
-            className="flex items-center gap-3 rounded-xl bg-surface p-3"
-          >
-            <Icon name="search" size={18} className="text-text-secondary" />
-            <span className="flex flex-1 flex-col gap-0.5">
-              <span className="text-[14px] font-semibold text-text-primary">‘{keyword.trim()}’가 포함된 제품 검색</span>
-              <span className="text-[11px] text-text-secondary">검색 결과 전체 보기</span>
-            </span>
-            <Icon name="chevron-right" size={16} className="text-text-secondary" />
-          </Link>
+          {empty ? (
+            <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
+              ‘{trimmed}’에 대한 검색 결과가 없어요
+            </p>
+          ) : (
+            <Link
+              href={`/products?keyword=${encodeURIComponent(trimmed)}`}
+              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: count ?? 0 })}
+              className="flex items-center gap-3 rounded-xl bg-surface p-3"
+            >
+              <Icon name="search" size={18} className="text-text-secondary" />
+              <span className="flex flex-1 flex-col gap-0.5">
+                <span className="text-[14px] font-semibold text-text-primary">‘{trimmed}’가 포함된 제품 검색</span>
+                <span className="text-[11px] text-text-secondary">
+                  {count === undefined
+                    ? "검색 결과 전체 보기"
+                    : `검색 결과 ${count.toLocaleString("ko-KR")}개 전체 보기`}
+                </span>
+              </span>
+              <Icon name="chevron-right" size={16} className="text-text-secondary" />
+            </Link>
+          )}
 
-          <section>
-            <h2 className="flex items-center gap-1.5 pb-2">
-              <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
-              <span className="text-[12px] font-medium text-text-secondary">{items.length}개</span>
-            </h2>
+          {empty ? null : (
+            <section>
+              <h2 className="flex items-center gap-1.5 pb-2">
+                <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
+                <span className="text-[12px] font-medium text-text-secondary">{items.length}개</span>
+              </h2>
 
-            <ul className="divide-y divide-border">
-              {items.map((item, index) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/products/${item.id}`}
-                    onClick={() => {
-                      track("search_suggestion_selected", {
-                        mode: "product",
-                        query: keyword.trim(),
-                        position: index,
-                        product_id: item.id,
-                      });
-                      addRecentSearch({
-                        productId: item.id,
-                        name: item.name,
-                        brandName: item.brandName,
-                      });
-                    }}
-                    className="flex items-center gap-3 py-3"
-                  >
-                    <Image
-                      src={item.imageUrl || PRODUCT_PLACEHOLDER}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="size-10 shrink-0 rounded-lg bg-surface object-contain"
-                    />
-                    <span className="flex flex-1 flex-col gap-0.5">
-                      <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
-                      <span className="text-[11px] text-text-secondary">{item.brandName}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              <ul className="divide-y divide-border">
+                {items.map((item, index) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/products/${item.id}`}
+                      onClick={() => {
+                        track("search_suggestion_selected", {
+                          mode: "product",
+                          query: keyword.trim(),
+                          position: index,
+                          product_id: item.id,
+                        });
+                        addRecentSearch({
+                          productId: item.id,
+                          name: item.name,
+                          brandName: item.brandName,
+                        });
+                      }}
+                      className="flex items-center gap-3 py-3"
+                    >
+                      <Image
+                        src={item.imageUrl || PRODUCT_PLACEHOLDER}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
+                      />
+                      <span className="flex flex-1 flex-col gap-0.5">
+                        <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
+                        <span className="text-[11px] text-text-secondary">{item.brandName}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
 
-            {items.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
-            ) : null}
-          </section>
+              {items.length === 0 ? (
+                <p className="py-8 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
+              ) : null}
+            </section>
+          )}
 
-          <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
+          {empty ? null : (
+            <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
+          )}
         </>
       ) : (
         <RecentSearches items={recent} />
