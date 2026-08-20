@@ -64,7 +64,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           {ingredient.skinEffects.length > 0 ? (
             <ul className="flex h-[26px] items-center gap-1.5">
               {ingredient.skinEffects.map((effect) => {
-                const color = effectColor(effect.name);
+                const color = effectColor(effect.code);
 
                 return (
                   <li
