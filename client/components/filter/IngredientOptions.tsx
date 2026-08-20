@@ -136,7 +136,9 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             </h3>
 
             {selectedCount === 0 ? (
-              <p className="flex min-h-25 items-center justify-center text-[13px] text-[#868B94]">선택한 성분 없음</p>
+              <p className="flex min-h-25 items-center justify-center text-[13px] text-text-secondary">
+                선택한 성분 없음
+              </p>
             ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeIngredientIds.map((id) => (
