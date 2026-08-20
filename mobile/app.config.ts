@@ -43,6 +43,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: bundleIdentifier,
     },
     plugins: [
+      './plugins/withQuickActionIcons',
+      [
+        'expo-dev-client',
+        {
+          launchMode: 'most-recent',
+          skipOnboarding: true,
+          showMenuAtLaunch: false,
+          toolsButton: false,
+        },
+      ],
       [
         'expo-splash-screen',
         {
