@@ -24,9 +24,6 @@ jobs:
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.url }}
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -66,8 +63,10 @@ jobs:
       - name: Install Vercel CLI
         run: pnpm add --global vercel
 
+      # staging 주소를 고정하려고 이 프로젝트의 production 으로 올린다.
+      # preview 로 올리면 배포마다 주소가 바뀌어 서버 CORS 에 등록할 수 없다.
       - name: Pull Vercel project settings
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
         env:
@@ -76,12 +75,12 @@ jobs:
           NEXT_PUBLIC_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
           NEXT_PUBLIC_ENVIRONMENT: staging
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.STAGING_POSTHOG_KEY }}
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "### staging 배포 완료" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
