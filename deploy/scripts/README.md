@@ -95,4 +95,13 @@ sudo ./deploy/scripts/bootstrap-codedeploy-agent.sh
 기본 리전은 `ap-northeast-2`이며, 다른 리전을 사용할 때만 `AWS_REGION`을 지정합니다.
 설치 스크립트에는 AWS 자격 증명을 포함하지 않습니다.
 
+기본 동작은 AWS 공식 설치 프로그램이 제공하는 최신 CodeDeploy Agent 패키지를 설치하는 것입니다.
+특정 버전이 꼭 필요한 경우에만 해당 리전의 S3에 실제로 존재하는 버전을 지정합니다.
+
+```bash
+cd /opt/poudy/repository
+sudo env CODEDEPLOY_AGENT_VERSION=<버전> \
+  ./deploy/scripts/bootstrap-codedeploy-agent.sh
+```
+
 스크립트에는 AWS 자격 증명, API 키, 데이터 파일을 포함하지 않습니다.
