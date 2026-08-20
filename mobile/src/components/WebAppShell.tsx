@@ -46,7 +46,6 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         onError={navigation.handleFailure}
         onHttpError={navigation.handleFailure}
         onLoadEnd={navigation.handleLoadEnd}
-        onLoadStart={navigation.handleLoadStart}
         onNavigationStateChange={handleNavigationChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
         originWhitelist={[`${webOrigin}/*`]}

@@ -12,7 +12,6 @@ export interface WebViewNavigation {
   readonly hasError: boolean;
   readonly navigate: (url: string) => void;
   readonly reload: () => void;
-  readonly handleLoadStart: () => void;
   readonly handleLoadEnd: () => void;
   readonly handleFailure: () => void;
 }
@@ -24,6 +23,7 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
 
   const navigate = useCallback((url: string) => {
     setHasError(false);
+    setIsLoading(true);
     setSource((current) => ({ key: current.key + 1, url }));
   }, []);
 
@@ -31,11 +31,6 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
     setHasError(false);
     setIsLoading(true);
     setSource((current) => ({ ...current, key: current.key + 1 }));
-  }, []);
-
-  const handleLoadStart = useCallback(() => {
-    setHasError(false);
-    setIsLoading(true);
   }, []);
 
   const handleLoadEnd = useCallback(() => {
@@ -54,7 +49,6 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
     hasError,
     navigate,
     reload,
-    handleLoadStart,
     handleLoadEnd,
     handleFailure,
   };
