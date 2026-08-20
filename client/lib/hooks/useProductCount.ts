@@ -5,23 +5,24 @@ import { useEffect, useState } from "react";
 import { useDebouncedValue } from "./useDebouncedValue";
 
 import { fetchProductCount } from "@/lib/api/products";
-import type { Filter } from "@/lib/domain/filter";
+import { parseFilter, serializeFilter, type Filter } from "@/lib/domain/filter";
 
 /**
  * 바텀시트에서 조건을 고르는 동안 결과 개수를 미리 보여 준다.
  * 조건은 아직 URL 에 넣지 않고, 적용 버튼을 눌렀을 때만 커밋한다.
  */
 export const useProductCount = (filter: Filter, initialCount?: number) => {
-  const debounced = useDebouncedValue(filter);
-  // 시트를 연 직후에는 아직 응답이 없다. 이미 아는 개수를 먼저 보여 주고 응답이 오면 바꾼다.
+  // 객체는 값이 같아도 렌더링마다 새로 만들어져 그대로 디바운스하면 요청이 끝없이 이어진다.
+  const key = serializeFilter(filter).toString();
+  const debouncedKey = useDebouncedValue(key);
+
   const [count, setCount] = useState<number | undefined>(initialCount);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchProductCount(debounced)
+    fetchProductCount(parseFilter(new URLSearchParams(debouncedKey)))
       .then((response) => {
-        // 뒤늦게 도착한 응답이 최신 값을 덮어쓰지 않게 한다.
         if (!controller.signal.aborted) setCount(response.count);
       })
       .catch(() => {
@@ -29,7 +30,7 @@ export const useProductCount = (filter: Filter, initialCount?: number) => {
       });
 
     return () => controller.abort();
-  }, [debounced]);
+  }, [debouncedKey]);
 
   return count;
 };
