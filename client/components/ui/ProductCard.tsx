@@ -49,8 +49,6 @@ export function ProductCard({ product, saved, onToggleSave }: ProductCardProps) 
 /**
  * 제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다.
  * 그림이 없는 제품은 디자인의 기본 공병 그림으로 자리를 채운다.
- *
- * 서버가 외부 주소를 주기 시작하면 next.config 의 images.remotePatterns 를 함께 연다.
  */
 function ProductThumbnail({ imageUrl }: { readonly imageUrl: string }) {
   return (

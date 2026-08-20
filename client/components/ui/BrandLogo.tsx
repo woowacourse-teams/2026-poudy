@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type BrandLogoProps = {
   readonly name: string;
   readonly imageUrl?: string;
@@ -18,8 +20,7 @@ export function BrandLogo({ name, imageUrl, size = 40 }: BrandLogoProps) {
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-white font-bold text-text-secondary"
     >
       {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 브랜드 로고 도메인이 정해지지 않아 next/image 설정을 미룬다.
-        <img src={imageUrl} alt="" className="size-full object-cover" />
+        <Image src={imageUrl} alt="" width={size} height={size} className="size-full object-cover" />
       ) : (
         initial
       )}
