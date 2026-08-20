@@ -36,6 +36,24 @@ jobs:
             const repo = context.repo.repo;
 
             let pullRequest = run.pull_requests?.[0];
+
+            // 포크에서 온 PR 은 run.pull_requests 가 늘 비어 있다. 커밋으로 되찾는 방법도
+            // 그 커밋이 포크에만 있어 이 저장소에서는 찾지 못한다.
+            // 그래서 PR 을 보낸 저장소와 브랜치로 찾는다.
+            if (!pullRequest) {
+              const headOwner = run.head_repository?.owner?.login;
+              const { data: openPullRequests } = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+                base: 'dev',
+                head: headOwner ? `${headOwner}:${run.head_branch}` : undefined,
+                per_page: 100,
+              });
+              pullRequest = openPullRequests[0];
+            }
+
+            // 이미 닫힌 PR 은 위에서 찾지 못한다. 마지막으로 커밋을 짚어 본다.
             if (!pullRequest) {
               const { data: associatedPullRequests } =
                 await github.rest.repos.listPullRequestsAssociatedWithCommit({
