@@ -32,8 +32,9 @@ const setup = (filter: Filter = EMPTY_FILTER) =>
     />,
   );
 
+/** 자동완성 결과에서 판테놀 행을 찾는다. */
 const searchRow = async () => {
-  await userEvent.type(screen.getByRole("searchbox"), "판");
+  await userEvent.type(screen.getByRole("textbox", { name: "성분 검색" }), "판");
 
   const row = await waitFor(() => {
     const list = screen.getByRole("list", { name: "성분 검색 결과" });
@@ -120,7 +121,7 @@ describe("IngredientSearchPanel 분석", () => {
   it("모순이 없으면 경고를 남기지 않는다", async () => {
     setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
 
-    await waitFor(() => expect(screen.getByRole("searchbox")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("빠른 필터")).toBeInTheDocument());
     expect(track).not.toHaveBeenCalledWith("filter_conflict_shown", expect.anything());
   });
 });
