@@ -12,7 +12,6 @@ type State = {
   readonly keyword: string;
   readonly page: number;
   readonly items: readonly ProductSuggestionResponse[];
-  /** 첫 응답 전에는 모르는 값이라 0 으로 두지 않는다. */
   readonly total: number | undefined;
   readonly hasNext: boolean;
   readonly loading: boolean;
@@ -43,7 +42,7 @@ export const useProductSuggestions = (keyword: string) => {
   const debounced = useDebouncedValue(keyword.trim());
   const [state, setState] = useState<State>(() => initial(debounced));
 
-  // effect 에서 비우면 한 번 더 그리므로 렌더링 중에 비운다.
+  // effect 에서 비우면 한 번 더 그린다.
   const current = state.keyword === debounced ? state : initial(debounced);
   if (state.keyword !== debounced) setState(current);
 

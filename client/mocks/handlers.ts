@@ -134,7 +134,6 @@ export const handlers = [
     const matchesKeyword = (ingredient: (typeof ingredientDetails)[number]) =>
       `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword);
 
-    // 상한은 검색에만 걸고 순위는 흉내 내지 않는다.
     const limited = <T>(items: readonly T[]) => (keyword ? items.slice(0, INGREDIENT_SEARCH_LIMIT) : [...items]);
 
     // ID 로만 조회하면 요청한 순서를 지키고 없는 ID 는 뺀다.

@@ -24,7 +24,6 @@ export type EventMap = {
   /**
    * 검색어를 그대로 남긴다. 무엇을 찾는지 알아야 어떤 제품·성분을 채울지 정할 수 있다.
    * 길이도 함께 남겨 검색어 없이도 집계할 수 있게 둔다.
-   * 성분 검색의 result_count 는 서버 상한(5)에서 잘린 수다.
    */
   search_used: { mode: "product" | "ingredient"; query: string; query_length: number; result_count: number };
   /** 어떤 검색어에서 무엇을 골랐는지 남겨야 자동완성이 쓸모 있는지 알 수 있다. */

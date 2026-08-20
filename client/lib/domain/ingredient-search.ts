@@ -1,6 +1,6 @@
 import { pick } from "./optional";
 
-/** 서버 `Ingredients.SEARCH_RESULT_LIMIT` 의 사본. 응답에 실려 오지 않는다. */
+/** 서버 `Ingredients.SEARCH_RESULT_LIMIT` 의 사본. */
 export const INGREDIENT_SEARCH_LIMIT = 5;
 
 export const ingredientCountLabel = (shown: number): string =>

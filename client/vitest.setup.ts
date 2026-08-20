@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { server } from "./mocks/server";
 
-// jsdom 에 없어 무한 스크롤 화면이 렌더링 중에 터진다.
+// jsdom 에 없다.
 if (!("IntersectionObserver" in globalThis)) {
   globalThis.IntersectionObserver = class {
     observe() {}
