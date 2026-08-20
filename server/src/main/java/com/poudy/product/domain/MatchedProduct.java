@@ -14,7 +14,7 @@ public record MatchedProduct(Product product, NameRank match) {
     }
 
     public static MatchedProduct ofProductName(SearchableProduct searchable, SearchKeyword keyword) {
-        return new MatchedProduct(searchable.product(), searchable.matchProductName(keyword));
+        return new MatchedProduct(searchable.product(), searchable.matchName(keyword, searchable.productName()));
     }
 
     public static Comparator<MatchedProduct> order() {

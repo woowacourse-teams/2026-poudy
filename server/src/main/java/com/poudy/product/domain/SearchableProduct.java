@@ -14,17 +14,16 @@ public record SearchableProduct(Product product, SearchableText productName, Sea
     }
 
     public NameRank match(SearchKeyword keyword) {
-        NameRank productNameMatch = match(keyword, productName);
-        NameRank brandNameMatch = match(keyword, brandName);
+        NameRank productNameMatch = matchName(keyword, productName);
+        NameRank brandNameMatch = matchName(keyword, brandName);
 
-        return productNameMatch.compareTo(brandNameMatch) <= 0 ? productNameMatch : brandNameMatch;
+        if (brandNameMatch.isBetterThan(productNameMatch)) {
+            return brandNameMatch;
+        }
+        return productNameMatch;
     }
 
-    public NameRank matchProductName(SearchKeyword keyword) {
-        return match(keyword, productName);
-    }
-
-    private static NameRank match(SearchKeyword keyword, SearchableText name) {
+    NameRank matchName(SearchKeyword keyword, SearchableText name) {
         return NameRank.of(keyword.match(name), name);
     }
 }
