@@ -40,6 +40,8 @@
   /* 타이포 */
   --font-sans: var(--font-noto-sans-kr), sans-serif;
   --font-data: var(--font-geist-mono), monospace;
+  /* 헤더의 서비스 이름에만 쓴다. 굵기를 조절할 수 있는 글꼴이다. */
+  --font-brand: var(--font-foldit), sans-serif;
   --text-body: 14px;
 
   /* 형태 */

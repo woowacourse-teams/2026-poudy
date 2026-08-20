@@ -67,7 +67,7 @@ const QUICK_FILTERS: Record<(typeof EXCLUDE_CODES)[number], { label: string; ima
 export default function Home() {
   return (
     <>
-      <TopBar title="홈" variant="root" />
+      <TopBar title="oudy" variant="root" showLogo />
 
       <main className="flex flex-1 flex-col gap-[18px] px-4 pt-4 pb-3.5">
         <section className="flex flex-col gap-3">
