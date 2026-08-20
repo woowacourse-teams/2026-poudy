@@ -25,9 +25,9 @@ export function IngredientSuggestions({
   return (
     <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-[#E8E9EC] bg-white shadow-lg">
       <h3 className="flex items-center gap-1.5 border-b border-[#F2F3F6] px-3.5 py-2.5">
-        <span className="text-[12px] font-bold text-[#212124]">‘{keyword}’이 포함된 성분</span>
+        <span className="truncate text-[12px] font-bold text-[#212124]">‘{keyword}’이 포함된 성분</span>
         {loading ? null : (
-          <span className="text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
+          <span className="shrink-0 text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
         )}
       </h3>
 
@@ -42,9 +42,9 @@ export function IngredientSuggestions({
               key={item.id}
               className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] px-3.5 last:border-b-0"
             >
-              <span className="flex flex-1 flex-col gap-[3px]">
-                <span className="text-[12px] font-semibold text-text-primary">{item.koreanName}</span>
-                <span className="text-[10px] text-text-secondary">
+              <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                <span className="truncate text-[12px] font-semibold text-text-primary">{item.koreanName}</span>
+                <span className="truncate text-[10px] text-text-secondary">
                   {item.skinEffects.map((effect) => effect.name).join(" · ")}
                 </span>
               </span>

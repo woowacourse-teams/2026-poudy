@@ -80,9 +80,11 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
       {typing ? (
         <section className="pt-3">
           <h3 className="flex h-10 items-center gap-1.5">
-            <span className="text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
+            <span className="truncate text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
             {loading ? null : (
-              <span className="text-[12px] font-medium text-[#868B94]">{ingredientCountLabel(items.length)}</span>
+              <span className="shrink-0 text-[12px] font-medium text-[#868B94]">
+                {ingredientCountLabel(items.length)}
+              </span>
             )}
           </h3>
 
@@ -96,9 +98,9 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
 
                 return (
                   <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
-                    <span className="flex flex-1 flex-col gap-[3px]">
-                      <span className="text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
-                      <span className="text-[10px] text-[#868B94]">
+                    <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                      <span className="truncate text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
+                      <span className="truncate text-[10px] text-[#868B94]">
                         {item.skinEffects.map((effect) => effect.name).join(" · ")}
                       </span>
                     </span>
