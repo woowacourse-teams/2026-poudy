@@ -100,9 +100,13 @@ function EmptyNotice({
   );
 }
 
+/** 홈에서 미리 보여 줄 저장 제품 수. 저장한 순서대로 앞에서 자른다. */
+const SAVED_PREVIEW_COUNT = 2;
+
 export function SavedPreview() {
   const { savedIds, isSaved, toggle } = useSavedProducts();
-  const key = savedIds.slice(0, 3).join(",");
+  // 홈은 맛보기 자리라 최근 저장한 둘만 보여 준다. 나머지는 전체 보기로 간다.
+  const key = savedIds.slice(0, SAVED_PREVIEW_COUNT).join(",");
 
   const onToggleSave = (productId: number) => {
     toggle(productId);
@@ -148,7 +152,8 @@ export function SavedPreview() {
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
       <ul data-private className="divide-y divide-border">
-        {items.map((product) => (
+        {/* 응답이 더 오더라도 홈에서는 정한 수만큼만 보여 준다. */}
+        {items.slice(0, SAVED_PREVIEW_COUNT).map((product) => (
           <li key={product.id}>
             <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />
           </li>
