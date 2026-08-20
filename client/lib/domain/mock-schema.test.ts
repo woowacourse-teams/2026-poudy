@@ -9,7 +9,7 @@ import {
   ProductCountResponse,
   ProductDetailResponse,
   ProductPageResponse,
-  ProductSuggestionListResponse,
+  ProductSuggestionPageResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
@@ -58,7 +58,7 @@ const get = async (path: string) => {
 const cases = [
   ["제품 목록", "/products", ProductPageResponse],
   ["제품 수", "/products/count", ProductCountResponse],
-  ["제품 제안", "/products/suggestions?keyword=", ProductSuggestionListResponse],
+  ["제품 제안", "/products/suggestions?keyword=", ProductSuggestionPageResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
   ["저장함", "/storage?productIds=1,2", StorageResponse],
   ["성분 목록", "/ingredients", IngredientListResponse],

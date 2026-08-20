@@ -37,7 +37,7 @@ const setup = (filter: Filter = EMPTY_FILTER) => {
  * 결과가 여러 개라 성분 이름으로 행을 특정한 뒤 그 안의 버튼을 찾는다.
  */
 const search = async (name = "판테놀") => {
-  await userEvent.type(screen.getByRole("textbox", { name: "성분 검색" }), "판");
+  await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "판");
 
   const row = await waitFor(() => {
     const list = screen.getByRole("list", { name: "성분 검색 결과" });
@@ -136,13 +136,13 @@ describe("IngredientSearchPanel", () => {
     expect(row.getByRole("button", { name: "판테놀 제외" })).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("담은 조건을 입력 안에 chip 으로 보여 준다", () => {
+  it("담은 조건을 선택한 성분 영역에 보여 준다", () => {
     setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
 
     expect(screen.getByRole("button", { name: "판테놀 포함 조건 삭제" })).toBeInTheDocument();
   });
 
-  it("chip 의 삭제를 누르면 그 조건만 뺀다", async () => {
+  it("선택한 성분의 삭제를 누르면 그 조건만 뺀다", async () => {
     const { onChange } = setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
 
     await userEvent.click(screen.getByRole("button", { name: "판테놀 포함 조건 삭제" }));

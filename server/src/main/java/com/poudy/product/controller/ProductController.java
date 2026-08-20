@@ -7,7 +7,7 @@ import com.poudy.product.controller.dto.ProductDetailResponse;
 import com.poudy.product.controller.dto.ProductFilterRequest;
 import com.poudy.product.controller.dto.ProductPageResponse;
 import com.poudy.product.controller.dto.ProductSortRequest;
-import com.poudy.product.controller.dto.ProductSuggestionListResponse;
+import com.poudy.product.controller.dto.ProductSuggestionPageResponse;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,11 +49,17 @@ public class ProductController {
         return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter)));
     }
 
-    @Operation(summary = "제품 검색 제안 조회", description = "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.")
+    @Operation(summary = "제품 검색 제안 조회", description = "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 "
+            + "페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.")
     @Parameter(name = "keyword", example = "토너")
     @GetMapping("/suggestions")
-    public ResponseEntity<ProductSuggestionListResponse> suggestProducts(@Valid @ModelAttribute KeywordRequest search) {
-        return ResponseEntity.ok(ProductSuggestionListResponse.from(productService.suggestProducts(search.keyword())));
+    public ResponseEntity<ProductSuggestionPageResponse> suggestProducts(
+            @Valid @ModelAttribute KeywordRequest search,
+            @Valid @ModelAttribute PaginationRequest pagination) {
+        return ResponseEntity.ok(
+                ProductSuggestionPageResponse.from(
+                        productService.suggestProducts(search.keyword(), pagination),
+                        pagination));
     }
 
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")

@@ -3,10 +3,11 @@ package com.poudy.ingredient.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("성분 검색 순서")
+@DisplayName("성분 검색 순서와 상한")
 class IngredientSearchOrderTest {
 
     @Test
@@ -68,6 +69,41 @@ class IngredientSearchOrderTest {
         Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "판테놀"), ingredient(20L, "판테닐에틸에터", "판테닐에터")));
 
         assertThat(names(ingredients.search("판"))).containsExactly("판테놀", "판테닐에틸에터");
+    }
+
+    @Test
+    @DisplayName("걸린 성분이 많아도 최대 5건만 담는다")
+    void limitsSearchResult() {
+        Ingredients ingredients = new Ingredients(
+                IntStream.rangeClosed(1, 20)
+                        .mapToObj(index -> ingredient((long) index, "판테놀" + index))
+                        .toList());
+
+        assertThat(ingredients.search("판테놀")).hasSize(Ingredients.SEARCH_RESULT_LIMIT);
+    }
+
+    @Test
+    @DisplayName("상한은 정렬한 뒤에 걸어 가장 잘 맞는 성분부터 남긴다")
+    void keepsBestMatchesWithinLimit() {
+        Ingredients ingredients = new Ingredients(
+                List.of(
+                        ingredient(10L, "메틸판테놀에스터"),
+                        ingredient(20L, "다이판테놀"),
+                        ingredient(30L, "하이드록시판테놀"),
+                        ingredient(40L, "아세틸판테놀"),
+                        ingredient(50L, "소듐판테놀포스페이트"),
+                        ingredient(60L, "판테놀")));
+
+        assertThat(names(ingredients.search("판테놀")))
+                .containsExactly("판테놀", "메틸판테놀에스터", "다이판테놀", "하이드록시판테놀", "아세틸판테놀");
+    }
+
+    @Test
+    @DisplayName("걸린 성분이 상한보다 적으면 걸린 만큼만 담는다")
+    void keepsEveryMatchBelowLimit() {
+        Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "판테놀"), ingredient(20L, "다이판테놀")));
+
+        assertThat(ingredients.search("판테놀")).hasSize(2);
     }
 
     private static List<String> names(List<Ingredient> found) {

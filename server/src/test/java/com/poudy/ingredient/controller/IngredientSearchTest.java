@@ -4,7 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.ingredient.domain.Ingredients;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +32,24 @@ class IngredientSearchTest {
                 .andExpect(jsonPath("$.items[0].englishName").value("Solanum Melongena (Eggplant) Fruit Extract"))
                 .andExpect(jsonPath("$.items[0].skinEffects[0].id").value(47))
                 .andExpect(jsonPath("$.items[0].skinEffects[0].name").value("항산화 관련"));
+    }
+
+    @Test
+    @DisplayName("걸린 성분이 많아도 검색어에 잘 맞는 순서로 최대 5 건만 반환한다")
+    void limitsSearchResult() throws Exception {
+        mockMvc.perform(get("/api/ingredients").param("keyword", "적색"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(Ingredients.SEARCH_RESULT_LIMIT))
+                .andExpect(jsonPath("$.items[0].id").value(2645))
+                .andExpect(jsonPath("$.items[0].koreanName").value("적색2호"));
+    }
+
+    @Test
+    @DisplayName("상한 안에서도 이름이 검색어와 같은 성분을 먼저 반환한다")
+    void keepsExactMatchWithinLimit() throws Exception {
+        mockMvc.perform(get("/api/ingredients").param("keyword", "적색201호"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(2653))
+                .andExpect(jsonPath("$.items[0].koreanName").value("적색201호"));
     }
 }

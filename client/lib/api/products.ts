@@ -8,7 +8,7 @@ import type {
   ProductCountResponse,
   ProductDetailResponse,
   ProductPageResponse,
-  ProductSuggestionListResponse,
+  ProductSuggestionPageResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
 
@@ -26,8 +26,8 @@ export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse>
 export const fetchProductDetail = (productId: number): Promise<ProductDetailResponse> =>
   apiGet(`/api/products/${productId}`);
 
-export const fetchProductSuggestions = (keyword: string): Promise<ProductSuggestionListResponse> =>
-  apiGet("/api/products/suggestions", new URLSearchParams({ keyword }));
+export const fetchProductSuggestions = (keyword: string, page = 0): Promise<ProductSuggestionPageResponse> =>
+  apiGet("/api/products/suggestions", new URLSearchParams({ keyword, page: String(page) }));
 
 /**
  * 검색어나 성분 ID 로 조회한다. 둘을 함께 보내면 모두 만족하는 성분만 돌려준다.

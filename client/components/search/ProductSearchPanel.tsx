@@ -1,6 +1,5 @@
 "use client";
 
-import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
@@ -9,10 +8,8 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
-import { fetchProductSuggestions } from "@/lib/api/products";
-import { EMPTY_FILTER } from "@/lib/domain/filter";
-import { useProductCount } from "@/lib/hooks/useProductCount";
-import { useSuggestions } from "@/lib/hooks/useSuggestions";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
+import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -22,25 +19,16 @@ import {
   subscribeRecentSearches,
 } from "@/lib/storage/recent-searches";
 
-const fetcher = async (keyword: string): Promise<readonly ProductSuggestionResponse[]> => {
-  const response = await fetchProductSuggestions(keyword);
-  return response.items;
-};
-
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 export function ProductSearchPanel() {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher, "product");
+  const { items, total, hasNext, loading, loadNext } = useProductSuggestions(keyword);
+  const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
   const typing = keyword.trim().length > 0;
 
-  /*
-   * 목록으로 넘어갔을 때 몇 개가 나오는지는 목록과 같은 count 로 센다.
-   * 자동완성은 제품명만 맞춰 보므로 그 수를 그대로 쓰면 목록과 어긋난다.
-   */
   const trimmed = keyword.trim();
-  const count = useProductCount({ ...EMPTY_FILTER, keyword: trimmed || undefined });
-  // 응답이 오기 전에는 없다고 단정하지 않는다.
-  const empty = count === 0;
+  const empty = total === 0;
+  const searching = loading && items.length === 0;
 
   const recent = useSyncExternalStore(
     subscribeRecentSearches,
@@ -64,7 +52,9 @@ export function ProductSearchPanel() {
         </p>
       </div>
 
-      {typing ? (
+      {typing && searching ? (
+        <p className="flex min-h-60 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
+      ) : typing ? (
         <>
           {empty ? (
             <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
@@ -73,16 +63,16 @@ export function ProductSearchPanel() {
           ) : (
             <Link
               href={`/products?keyword=${encodeURIComponent(trimmed)}`}
-              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: count ?? 0 })}
+              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 })}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
             >
               <Icon name="search" size={18} className="text-text-secondary" />
               <span className="flex flex-1 flex-col gap-0.5">
                 <span className="text-[14px] font-semibold text-text-primary">‘{trimmed}’가 포함된 제품 검색</span>
                 <span className="text-[11px] text-text-secondary">
-                  {count === undefined
+                  {total === undefined
                     ? "검색 결과 전체 보기"
-                    : `검색 결과 ${count.toLocaleString("ko-KR")}개 전체 보기`}
+                    : `검색 결과 ${total.toLocaleString("ko-KR")}개 전체 보기`}
                 </span>
               </span>
               <Icon name="chevron-right" size={16} className="text-text-secondary" />
@@ -93,7 +83,9 @@ export function ProductSearchPanel() {
             <section>
               <h2 className="flex items-center gap-1.5 pb-2">
                 <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
-                <span className="text-[12px] font-medium text-text-secondary">{items.length}개</span>
+                {total === undefined ? null : (
+                  <span className="text-[12px] font-medium text-text-secondary">{total.toLocaleString("ko-KR")}개</span>
+                )}
               </h2>
 
               <ul className="divide-y divide-border">
@@ -132,7 +124,11 @@ export function ProductSearchPanel() {
                 ))}
               </ul>
 
-              {items.length === 0 ? (
+              <div ref={sentinel} className="h-6" />
+
+              {loading ? <p className="pb-2 text-center text-[13px] text-text-secondary">불러오는 중…</p> : null}
+
+              {items.length === 0 && !loading ? (
                 <p className="py-8 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
               ) : null}
             </section>
