@@ -36,11 +36,11 @@ export const useExternalEntry = ({
     }
     lastShare.current = signature;
 
-    const pending = { cancelled: false };
+    const isLatestShare = () => lastShare.current === signature;
 
     const navigate = async () => {
       const targetUrl = await resolveSharedUrl(values, webBaseUrl, queryClient);
-      if (pending.cancelled) {
+      if (!isLatestShare()) {
         return;
       }
 
@@ -52,17 +52,16 @@ export const useExternalEntry = ({
       onUnsupportedShare();
     };
 
-    void navigate().catch(() => {
-      if (!pending.cancelled) {
-        onShareFailure();
-      }
-    });
-    clearSharedPayloads();
-    void refreshSharePayloads();
-
-    return () => {
-      pending.cancelled = true;
-    };
+    void navigate()
+      .catch(() => {
+        if (isLatestShare()) {
+          onShareFailure();
+        }
+      })
+      .finally(() => {
+        clearSharedPayloads();
+        void refreshSharePayloads();
+      });
   }, [
     clearSharedPayloads,
     onNavigate,
