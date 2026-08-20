@@ -1,26 +1,58 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * 디자인 토큰은 client/design/v1.pen 의 변수를 옮긴 것이다.
+ * 값을 바꿀 때는 디자인 파일과 함께 고친다.
+ *
+ * v1.pen 의 mobile-* 토큰은 ui-* 를 가리키는 별칭이라 옮기지 않았다.
+ * 디자인에서 mobile-text 가 쓰인 자리는 ui-text-primary 와 같은 값이다.
+ */
+@theme {
+  /* 배경과 표면 */
+  --color-background: #ffffff;
+  --color-surface: #f7f7f8;
+  --color-border: #e8e9ec;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* 본문 */
+  --color-text-primary: #202124;
+  --color-text-secondary: #72747a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* 강조 */
+  --color-brand: #f46a8d;
+  --color-brand-soft: #fff0f4;
+
+  /* 동작 */
+  --color-action: #202124;
+  --color-action-text: #ffffff;
+
+  /* 상태 */
+  --color-info: #38a6dd;
+  --color-info-soft: #eaf5fb;
+  --color-success: #17a47a;
+  --color-success-soft: #e7f6f0;
+
+  /* 수분·유분 물방울 */
+  --color-droplet-moisture: #24779d;
+  --color-droplet-empty: #a9c8d6;
+  --color-droplet-oil: #854c2c;
+  --color-droplet-empty-oil: #d9c1b5;
+
+  /* 타이포 */
+  --font-sans: var(--font-noto-sans-kr), sans-serif;
+  --font-data: var(--font-geist-mono), monospace;
+  --text-body: 14px;
+
+  /* 형태 */
+  --radius-button: 14px;
+  --font-weight-button: 700;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  /* 한국어는 기본적으로 글자 단위로 끊긴다. 단어 중간에서 줄이 바뀌지 않게 한다. */
+  word-break: keep-all;
+  /* 단어 하나가 줄보다 길면 그때만 글자 단위로 끊는다. */
+  overflow-wrap: break-word;
 }

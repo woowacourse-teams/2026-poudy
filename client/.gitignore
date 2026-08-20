@@ -16,6 +16,9 @@
 # next.js
 /.next/
 /out/
+/design/
+# 로컬 조사·계획 문서는 저장소에 두지 않는다.
+/docs/
 
 # production
 /build
@@ -26,9 +29,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# env
+.env
+.env.local
+.env.*.local
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Lighthouse CI 실행 결과
+.lighthouseci/
+.lighthouseci-report/

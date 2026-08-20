@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
   우아한테크코스 IntelliJ 코드 스타일(WootecoStyle.xml)을 Eclipse 포매터로 옮긴 것.
-  원본에 없는 항목은 적지 않아 Eclipse 기본값을 따른다.
+  원본에 없는 항목은 적지 않아 Eclipse 기본값을 따른다. 다만 두 IDE 의 기본값이
+  서로 반대인 항목은 원본에 없어도 적는다. 적지 않으면 원본과 반대로 동작한다.
   IntelliJ 사용자는 원본 파일을 그대로 import 하면 된다.
 -->
 <profiles version="21">
@@ -17,6 +18,15 @@
     <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
+    <!--
+      나눠 둔 줄을 합치지 않는다. 위에서 말한 "기본값이 반대인 항목" 이 이것이다.
+      원본에는 대응 항목(KEEP_LINE_BREAKS)이 없지만 IntelliJ 기본값이 "유지" 라
+      원본은 줄바꿈을 보존한다. Eclipse 기본값은 그 반대여서, 적지 않으면 스트림
+      체인이 다시 한 줄로 접히고 그 자리마다 포매터를 꺼야 했다.
+      120 칸을 넘는 줄의 분할은 그대로 강제되고 그 안쪽 줄바꿈만 작성자가 정한다.
+      포매터가 교정하지 않으므로 줄바꿈은 도구가 아니라 작성자가 소유한다.
+    -->
+    <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="false"/>
 
     <!-- ============ 주석 ============ -->
     <!--
@@ -79,19 +89,22 @@
 
     <!-- ============ 줄 나눔 ============ -->
     <!-- 원본의 WRAP=1(필요할 때만)에 해당하는 Eclipse 값이 16 이다. -->
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_parameters_in_constructor_declaration" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_record_components" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_parameters_in_constructor_declaration" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call" value="48"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_superclass_in_type_declaration" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_type_declaration" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_method_declaration" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_type_declaration" value="48"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_method_declaration" value="48"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation" value="16"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_binary_expression" value="16"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression" value="16"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_for_loop_header" value="16"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer" value="48"/>
+    <!-- enum 상수는 한 줄에 하나씩 둔다. -->
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="49"/>
     <!-- 연산자를 다음 줄 앞에 둔다. -->
     <setting id="org.eclipse.jdt.core.formatter.wrap_before_binary_operator" value="true"/>
     <setting id="org.eclipse.jdt.core.formatter.wrap_before_conditional_operator" value="true"/>

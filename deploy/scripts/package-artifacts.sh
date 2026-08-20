@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly REPOSITORY_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
+
+log() {
+    printf '[poudy-package] %s\n' "$*"
+}
+
+fail() {
+    printf '[poudy-package] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+output_dir="${1:-}"
+[[ -n "${output_dir}" ]] || fail "사용법: $0 <출력 디렉터리>"
+[[ ! -e "${output_dir}" ]] || fail "출력 디렉터리가 이미 존재합니다: ${output_dir}"
+
+mkdir -p "${output_dir}/backend" "${output_dir}/frontend"
+
+log '백엔드 JAR를 빌드합니다.'
+(
+    cd "${REPOSITORY_ROOT}/server"
+    ./gradlew bootJar
+)
+
+shopt -s nullglob
+backend_jars=("${REPOSITORY_ROOT}"/server/build/libs/*.jar)
+[[ "${#backend_jars[@]}" -eq 1 ]] || fail "백엔드 JAR를 하나로 확인할 수 없습니다. 발견 수: ${#backend_jars[@]}"
+cp "${backend_jars[0]}" "${output_dir}/backend/app.jar"
+
+log '프론트엔드 standalone 산출물을 빌드합니다.'
+(
+    cd "${REPOSITORY_ROOT}/client"
+    pnpm install --frozen-lockfile
+    pnpm build
+)
+
+standalone_dir="${REPOSITORY_ROOT}/client/.next/standalone"
+if [[ -f "${standalone_dir}/server.js" ]]; then
+    standalone_source="${standalone_dir}"
+elif [[ -f "${standalone_dir}/client/server.js" ]]; then
+    # outputFileTracingRoot가 저장소 루트로 설정되면 Next.js가 앱 산출물을
+    # standalone/client 아래에 생성한다.
+    standalone_source="${standalone_dir}/client"
+else
+    fail 'Next.js standalone server.js를 찾을 수 없습니다.'
+fi
+
+# pnpm standalone 산출물의 중첩 심볼릭 링크까지 실제 파일로 복사해야 GitHub
+# 아티팩트와 EC2 배포 후에도 node_modules 의존성을 찾을 수 있다.
+node "${SCRIPT_DIR}/copy-tree.js" \
+    "${standalone_source}" \
+    "${output_dir}/frontend"
+mkdir -p "${output_dir}/frontend/.next"
+cp -R "${REPOSITORY_ROOT}/client/.next/static" "${output_dir}/frontend/.next/static"
+
+if [[ -d "${REPOSITORY_ROOT}/client/public" ]]; then
+    cp -R "${REPOSITORY_ROOT}/client/public" "${output_dir}/frontend/public"
+fi
+
+log "배포 산출물을 생성했습니다: ${output_dir}"
+find "${output_dir}" -maxdepth 2 -type f -print | sort

@@ -10,9 +10,15 @@ permissions:
   issues: write
   pull-requests: write
 
+# 수동 실행이 스케줄과 겹치면 같은 항목에 안내가 두 번 달린다.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   stale:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/stale@v11
         with:
@@ -32,10 +38,15 @@ jobs:
           close-issue-message: 활동이 없어 닫습니다. 필요하면 다시 열어 주세요.
           close-pr-message: 활동이 없어 닫습니다. 필요하면 다시 열어 주세요.
 
-          # 긴급 건과 논의 중인 항목은 대상에서 뺀다.
-          exempt-issue-labels: hotfix,question
-          exempt-pr-labels: hotfix
+          # 긴급 건과 논의 중인 항목만 뺀다. 작성자가 직접 만들고 머지하므로
+          # 담당자 지정은 진행 중을 뜻하지 않고, 마일스톤은 쓰지 않는다.
+          # feat 은 백로그로 미리 만들어 두는 이슈라 무활동이 방치를 뜻하지 않는다.
+          exempt-issue-labels: hotfix,question,feat
+          exempt-pr-labels: hotfix,question
 
-          # 마일스톤이나 담당자가 있으면 진행 중으로 본다.
-          exempt-all-milestones: true
-          exempt-all-assignees: true
+          # 드래프트는 작성자가 준비 중이라고 스스로 표시한 상태다.
+          exempt-draft-pr: true
+
+          # 기본값 30 은 항목이 쌓이면 부족하다. 한도에 걸리면 오래된 것부터 본다.
+          operations-per-run: 100
+          ascending: true

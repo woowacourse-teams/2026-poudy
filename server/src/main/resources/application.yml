@@ -1,26 +1,17 @@
 spring:
   application:
     name: poudy
+  # 로컬 값은 server/.env 에서 읽는다. 예시는 server/.env.example 에 있다.
+  # 실행 위치가 server 인지 레포 루트인지에 따라 상대 경로가 달라지므로 둘 다 본다.
+  config:
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:./server/.env[.properties]
   # 프로필을 지정하지 않고 실행하면 로컬 개발용 dev 로 뜬다.
-  # 운영은 Dockerfile 이 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
+  # 운영은 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
   profiles:
     default: dev
-  # 접속 정보는 여기 두지 않는다. dev 와 prod 가 같은 설정을 공유하면
-  # 접속 대상이 환경 변수 값 하나로만 갈려서, 로컬에서 운영 DB 에 붙어도
-  # 막을 수단이 없다. 프로필별 파일에서 각자 정의한다.
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
-  # dev 와 prod 가 같은 방식으로 스키마를 관리한다. 로컬에서 마이그레이션이
-  # 실제로 적용되어야 운영에서 처음 도는 SQL 이 생기지 않는다.
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-  # 롤링 배포로 컨테이너가 교체될 때 처리 중이던 요청을 끊지 않는다.
+  # 배포 중 인스턴스가 교체될 때 처리 중이던 요청을 끊지 않는다.
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
@@ -38,11 +29,20 @@ management:
         enabled: true
 
 springdoc:
-  # 키를 사전순으로 정렬해 문서를 만든다. 정렬하지 않으면 클래스패스 스캔 순서가
-  # 그대로 반영되는데, 그 순서는 파일 시스템에 따라 달라진다. 로컬(macOS)과
-  # CI(Linux)에서 순서만 다른 문서가 나오면 멀쩡한 커밋이 최신이 아닌 것으로 잡힌다.
-  writer-with-order-by-keys: true
+  # 응답 필드를 DTO 선언 순서 그대로 문서에 싣는다. 사전순으로 정렬하면
+  # children 같은 필드가 앞으로 올라와 실제 응답과 읽는 순서가 어긋난다.
+  writer-with-order-by-keys: false
+  # produces 를 적지 않으면 문서에 */* 로 올라가, 생성된 타입도 content['*/*'] 가 된다.
+  default-produces-media-type: application/json
+  # @ModelAttribute 로 묶은 쿼리 파라미터를 개별 파라미터로 편다. 안 펴면 문서가 실제 요청과 어긋난다.
+  default-flat-param-object: true
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
+# 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
+poudy:
+  cors:
+    allowed-origins: ${CLIENT_DOMAIN:}

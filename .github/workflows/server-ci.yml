@@ -1,108 +1,119 @@
 name: Server CI
 
+# dev 도 감시한다. PR 이 각각 통과해도 머지 결과는 다를 수 있다.
+# 워크플로 수준 paths 는 쓰지 않는다. 실행 자체가 안 되면 필수 체크가
+# Expected 로 남아 머지가 막힌다. changes 로 판단하고 gate 가 항상 보고한다.
 on:
   push:
-    branches: [main]
-    paths:
-      - 'server/**'
-      - 'common/api.d.ts'
-      - '.github/workflows/server-ci.yml'
+    branches: [main, dev]
   pull_request:
-    paths:
-      - 'server/**'
-      - 'common/api.d.ts'
-      - '.github/workflows/server-ci.yml'
 
 # 워크플로가 저장소를 읽기만 하면 되므로 토큰 권한을 최소로 제한한다.
 permissions:
   contents: read
 
-# 같은 브랜치에 연속으로 push 하면 이전 실행을 취소한다.
+# 통합 브랜치는 취소하지 않는다. 그 커밋의 통과 기록이 사라진다.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: server
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  # 서버와 관련된 변경이 있는지만 판단한다. 이 잡은 항상 돈다.
+  changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+    steps:
+      - uses: actions/checkout@v7
 
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_DB: poudy
-          POSTGRES_USER: poudy
-          POSTGRES_PASSWORD: poudy
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U poudy -d poudy"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          # 기본값이 저장소 기본 브랜치라, 그 설정이 바뀌면 관계없는 push 도 걸린다.
+          base: ${{ github.ref_name }}
+          filters: |
+            server:
+              - 'server/**'
+              - 'common/**'
+              - '.github/workflows/server-ci.yml'
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    # 생성 태스크는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: server
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
+      # --no-daemon 을 쓰지 않는다. setup-gradle 이 데몬 재사용을 전제로 캐시를 관리한다.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
+      # v5 부터 packageManager 를 보고 캐시를 켠다. 여기선 npx 만 쓰므로
+      # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패한다.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
 
-      # 커밋 훅을 우회했거나 훅이 설치되지 않은 채로 올라온 변경을 잡는다.
-      # 다시 생성해서 커밋된 것과 다르면 실패시킨다.
+      # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiTypes --no-daemon
+        run: ./gradlew generateApiArtifacts
 
+      # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
         working-directory: .
+        env:
+          ARTIFACTS: server/openapi.json common/api.zod.ts common/api.zod.types.d.ts
         run: |
-          if ! git diff --exit-code -- server/openapi.json common/api.d.ts; then
-            echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiTypes' 실행 후 커밋하세요."
+          if [ -n "$(git status --porcelain -- $ARTIFACTS)" ]; then
+            echo "::error::OpenAPI 생성물이 최신이 아닙니다. './gradlew generateApiArtifacts' 실행 후 커밋하세요."
+            git --no-pager diff -- $ARTIFACTS
             exit 1
           fi
 
       - name: Build and test
-        run: ./gradlew -Dspring.profiles.active=integration build --no-daemon
-        env:
-          DB_URL: jdbc:postgresql://localhost:5432/poudy
-          DB_USERNAME: poudy
-          DB_PASSWORD: poudy
+        id: test
+        run: ./gradlew build
 
-      - name: Upload test report
-        if: failure()
-        uses: actions/upload-artifact@v4
+      # build 는 spotless 와 checkstyle 도 돌리므로 reports 를 통째로 올린다.
+      - name: Upload reports
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
         with:
-          name: test-report
-          path: server/build/reports/tests/test
+          name: server-reports
+          path: server/build/reports
 
-  # Dockerfile 은 build/libs 에 jar 가 하나뿐이라는 것과 jarmode 추출 레이아웃에
-  # 기대고 있다. 여기서 빌드하지 않으면 그 전제가 깨져도 배포 시점까지 모른다.
-  docker:
+  # 필수 체크로 걸 잡. 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록한다.
+  # !cancelled() 는 취소 시 skipped 가 되고 브랜치 보호가 이를 통과로 본다.
+  gate:
+    needs: [changes, build]
+    if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        with:
-          context: server
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Check results
+        run: |
+          for r in '${{ needs.changes.result }}' \
+                   '${{ needs.build.result }}'; do
+            case "$r" in
+              success | skipped) ;;
+              *) echo "::error::선행 잡이 $r 로 끝났습니다."; exit 1 ;;
+            esac
+          done
+          echo "Server CI 통과"

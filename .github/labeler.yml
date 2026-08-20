@@ -1,5 +1,7 @@
-# PR 의 변경 경로를 보고 영역 레이블을 붙인다.
-# 여기 적힌 레이블은 저장소에 미리 만들어져 있어야 한다.
+# PR 의 변경 경로를 보고 영역 레이블을 붙인다. 레이블이 없으면 액션이 실패한다.
+#
+# 영역을 바꿀 때는 세 곳을 함께 고친다. 한 곳만 고치면 조용히 무시된다.
+#   이 파일 / ISSUE_TEMPLATE 의 영역 드롭다운 / issue-area-label.yml 의 areas
 
 server:
   - changed-files:
@@ -13,9 +15,19 @@ common:
   - changed-files:
       - any-glob-to-any-file: ['common/**']
 
+# 워크플로와 저장소 설정. 루트 Git 설정만 고친 PR 도 레이블을 받게 한다.
+# 배포 인프라(infra/**)도 여기에 넣는다. 전용 레이블을 만들 만큼 자주 바뀌지 않고,
+# 레이블 없이 두면 그 PR 만 영역 구분에서 빠진다.
 ci:
   - changed-files:
-      - any-glob-to-any-file: ['.github/**', '.githooks/**']
+      - any-glob-to-any-file:
+          - '.github/**'
+          - '.githooks/**'
+          - 'infra/**'
+          - '.gitattributes'
+          - '.gitignore'
+          - '.gitmessage.txt'
+          - 'setup-git.sh'
 
 documentation:
   - changed-files:

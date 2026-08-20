@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# push 대상 커밋에 mobile/ 변경이 있으면 ESLint를 실행한다.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+mobile_watched="mobile"
+
+is_zero() {
+    case "$1" in
+        *[!0]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+mobile_relevant=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "$local_sha" ] && continue
+    is_zero "$local_sha" && continue
+
+    if is_zero "$remote_sha"; then
+        mobile_touched=$(git log --format= --name-only "$local_sha" --not --remotes \
+            -- "$mobile_watched" | head -1)
+    else
+        mobile_touched=$(git log --format= --name-only "$remote_sha..$local_sha" \
+            -- "$mobile_watched" | head -1)
+    fi
+
+    [ -n "$mobile_touched" ] && mobile_relevant=1
+done
+
+[ "$mobile_relevant" -eq 0 ] && exit 0
+
+echo "[pre-push] 모바일 ESLint 검사 중..."
+if ! (cd "$root/mobile" && pnpm run lint); then
+    echo "[pre-push] 모바일 ESLint 검사에 실패했습니다."
+    exit 1
+fi

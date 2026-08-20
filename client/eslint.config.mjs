@@ -7,6 +7,9 @@ import functional from "eslint-plugin-functional";
 import globals from "globals";
 
 const projectFiles = ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.ts"];
+const testFiles = ["**/*.test.ts", "**/*.test.tsx"];
+// 테스트는 검증 대상이 아니라 검증하는 쪽이다. expect 호출 자체가 표현식 문이라
+// 함수형 규칙을 그대로 적용할 수 없다.
 const domainFiles = ["lib/domain/**/*.ts"];
 
 const eslintConfig = defineConfig([
@@ -83,9 +86,20 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: testFiles,
+    rules: {
+      "functional/no-let": "off",
+      "functional/immutable-data": "off",
+      "functional/no-expression-statements": "off",
+      "no-ternary": "off",
+      "max-lines-per-function": "off",
+    },
+  },
   eslintConfigPrettier,
   // Override the default ignores from eslint-config-next.
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // mockServiceWorker.js 는 msw 가 생성하는 파일이라 직접 고치지 않는다.
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "public/mockServiceWorker.js"]),
 ]);
 
 export default eslintConfig;

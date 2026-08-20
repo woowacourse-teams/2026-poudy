@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# push 대상 커밋에 client/ 변경이 있으면 client 전체 검사를 실행한다.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+client_watched="client"
+
+is_zero() {
+    case "$1" in
+        *[!0]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+client_relevant=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "$local_sha" ] && continue
+    is_zero "$local_sha" && continue      # 브랜치 삭제
+
+    if is_zero "$remote_sha"; then
+        # 원격에 없는 새 브랜치는 원격에 아직 없는 커밋을 검사한다.
+        client_touched=$(git log --format= --name-only "$local_sha" --not --remotes \
+            -- "$client_watched" | head -1)
+    else
+        client_touched=$(git log --format= --name-only "$remote_sha..$local_sha" \
+            -- "$client_watched" | head -1)
+    fi
+
+    [ -n "$client_touched" ] && client_relevant=1
+done
+
+[ "$client_relevant" -eq 0 ] && exit 0
+
+echo "[pre-push] 프론트엔드 검사 중..."
+if ! (cd "$root/client" && pnpm run check); then
+    echo "[pre-push] 프론트엔드 검사에 실패했습니다."
+    exit 1
+fi

@@ -1,0 +1,22 @@
+{
+  "brands": [
+    {
+      "id": 1,
+      "korean_name": "다 브랜드",
+      "english_name": null,
+      "image_url": null
+    },
+    {
+      "id": 3,
+      "korean_name": "나 브랜드",
+      "english_name": null,
+      "image_url": null
+    },
+    {
+      "id": 2,
+      "korean_name": "가 브랜드",
+      "english_name": null,
+      "image_url": null
+    }
+  ]
+}

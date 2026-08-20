@@ -1,0 +1,194 @@
+name: Client CI
+
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - "client/**"
+      - ".github/workflows/client-ci.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: client
+
+jobs:
+  check:
+    name: Client checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      # setup-node 의 pnpm cache가 store 경로를 찾을 수 있도록 pnpm을 먼저 설치한다.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Next.js types
+        run: pnpm exec next typegen
+
+      - name: Format
+        id: format
+        continue-on-error: true
+        run: pnpm run format:check
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: pnpm run lint
+
+      - name: Type check
+        id: typecheck
+        continue-on-error: true
+        run: pnpm run typecheck
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: pnpm run test
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: pnpm run build
+
+      - name: Setup Chrome
+        id: chrome
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        uses: browser-actions/setup-chrome@v2
+
+      # 설정은 client/lighthouserc.json 에 있다.
+      # 서버 실행과 대기, 여러 번 재기, 중간값 고르기를 lhci 가 맡는다.
+      - name: Lighthouse
+        id: lighthouse
+        if: steps.build.outcome == 'success' && steps.chrome.outcome == 'success'
+        continue-on-error: true
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+
+      # 뒤 단계가 읽는 자리로 중간값 보고서를 옮긴다.
+      - name: Collect Lighthouse median report
+        id: median
+        if: steps.lighthouse.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const manifest = JSON.parse(
+            fs.readFileSync('./.lighthouseci-report/manifest.json', 'utf8'),
+          );
+
+          // lhci 가 여러 실행 중 대표로 고른 것이 중간값 실행이다.
+          const median = manifest.find((entry) => entry.isRepresentativeRun);
+          if (!median) {
+            throw new Error('중간값으로 뽑힌 Lighthouse 실행이 없습니다.');
+          }
+
+          const percent = (value) =>
+            typeof value === 'number' ? Math.round(value * 100) : null;
+
+          // 실행 순서대로 둔다. manifest 는 중간값을 마지막에 쓰므로 정렬이 흐트러져 있다.
+          const runs = manifest
+            .map((entry) => ({
+              performance: percent(entry.summary.performance),
+              accessibility: percent(entry.summary.accessibility),
+              bestPractices: percent(entry.summary['best-practices']),
+              seo: percent(entry.summary.seo),
+              median: entry === median,
+            }))
+            .sort((a, b) => a.performance - b.performance);
+
+          console.log(
+            `Performance ${runs.map((run) => run.performance).join(' / ')} → 중간값 ${percent(median.summary.performance)}`,
+          );
+
+          fs.writeFileSync('lighthouse-runs.json', JSON.stringify(runs));
+          fs.copyFileSync(median.jsonPath, './lighthouse-report.json');
+          NODE
+
+      - name: Save check results
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const results = {
+            format: '${{ steps.format.outcome }}',
+            lint: '${{ steps.lint.outcome }}',
+            typecheck: '${{ steps.typecheck.outcome }}',
+            test: '${{ steps.test.outcome }}',
+            build: '${{ steps.build.outcome }}',
+            lighthouse: '${{ steps.lighthouse.outcome }}',
+          };
+
+          if (fs.existsSync('lighthouse-report.json')) {
+            try {
+              const report = JSON.parse(
+                fs.readFileSync('lighthouse-report.json', 'utf8'),
+              );
+              const score = (key) => {
+                const value = report.categories?.[key]?.score;
+                return typeof value === 'number' ? Math.round(value * 100) : null;
+              };
+
+              results.lighthouseScores = {
+                performance: score('performance'),
+                accessibility: score('accessibility'),
+                bestPractices: score('best-practices'),
+                seo: score('seo'),
+              };
+            } catch {
+              results.lighthouseScores = null;
+            }
+          } else {
+            results.lighthouseScores = null;
+          }
+
+          // 회차별 점수는 편차를 보여 주는 용도라 없어도 나머지 결과는 그대로 쓴다.
+          if (fs.existsSync('lighthouse-runs.json')) {
+            try {
+              results.lighthouseRuns = JSON.parse(
+                fs.readFileSync('lighthouse-runs.json', 'utf8'),
+              );
+            } catch {
+              results.lighthouseRuns = null;
+            }
+          } else {
+            results.lighthouseRuns = null;
+          }
+
+          fs.writeFileSync('client-ci-results.json', JSON.stringify(results));
+          NODE
+
+      - name: Upload check results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-results
+          path: |
+            client/client-ci-results.json
+            client/lighthouse-report.json
+            client/lighthouse-runs.json
+            client/.lighthouseci-report/
+          if-no-files-found: error
+
+      - name: Fail if any check failed
+        if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.chrome.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
+        run: exit 1

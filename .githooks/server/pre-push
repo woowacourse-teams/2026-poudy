@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+# OpenAPI 생성물이 최신인지 push 직전에 확인한다.
+#
+# OpenAPI 생성은 앱을 한 번 띄워야 해서 pre-commit 이 아니라 pre-push 에서 실행한다.
+# push 는 여러 커밋을 묶어 한 번만 검사하므로 커밋마다 실행하는 것보다 비용이 적다.
+#
+# OpenAPI 생성물이 낡으면 갱신된 파일을 자동 커밋하고 현재 push 를 중단한다.
+# 생성물 커밋까지 포함하려면 안내에 따라 다시 push 해야 한다.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+openapi_inputs="server/src/main server/build.gradle server/settings.gradle"
+openapi_outputs="server/openapi.json common/api.zod.ts common/api.zod.types.d.ts"
+openapi_watched="$openapi_inputs $openapi_outputs"
+
+# 생성물 자체가 바뀐 push 도 검사한다. 생성 입력만 보면, 손으로 고친 생성물이
+# 검사 없이 통과한다. 그 경우 훅은 넘어가고 CI 에서야 잡혀 왕복이 한 번 늘어난다.
+is_zero() {
+    case "$1" in
+        *[!0]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+head_sha=$(git rev-parse HEAD)
+
+openapi_relevant=0
+mismatched=''
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "$local_sha" ] && continue
+    is_zero "$local_sha" && continue      # 브랜치 삭제
+
+    if is_zero "$remote_sha"; then
+        # 원격에 없는 새 브랜치. 다른 원격 브랜치에 없는 커밋만 검사 대상으로 삼는다.
+        touched=$(git log --format= --name-only "$local_sha" --not --remotes \
+            -- $openapi_watched | head -1)
+    else
+        touched=$(git log --format= --name-only "$remote_sha..$local_sha" \
+            -- $openapi_watched | head -1)
+    fi
+
+    if [ -n "$touched" ]; then
+        openapi_relevant=1
+        # 생성기는 커밋이 아니라 작업 트리를 읽고, 아래 자동 커밋도 HEAD 에 쌓인다.
+        # HEAD 가 아닌 ref 를 밀면 검사 대상과 push 대상이 어긋나고,
+        # 갱신 커밋이 의도하지 않은 브랜치에 생긴다.
+        [ "$local_sha" = "$head_sha" ] || mismatched="$mismatched $local_ref"
+    fi
+done
+
+[ "$openapi_relevant" -eq 0 ] && exit 0
+
+if [ -n "$mismatched" ]; then
+    echo "[pre-push] HEAD 가 아닌 ref 를 밀고 있어 생성물을 검증할 수 없습니다."
+    for ref in $mismatched; do
+        echo "  $ref"
+    done
+    echo
+    echo "  해당 브랜치로 옮긴 뒤 다시 push 하세요."
+    exit 1
+fi
+
+# 생성기는 커밋이 아니라 작업 트리를 읽는다. 생성 입력에 커밋하지 않은 변경이
+# 있으면 push 되는 커밋과 다른 결과가 나오므로 판단을 보류한다.
+if ! git diff --quiet HEAD -- $openapi_inputs ||
+    [ -n "$(git ls-files --others --exclude-standard -- $openapi_inputs)" ]; then
+    echo "[pre-push] 커밋하지 않은 변경이 있어 생성물을 검증할 수 없습니다."
+    echo "  관련 변경을 커밋하거나 stash 한 뒤 다시 push 하세요."
+    exit 1
+fi
+
+# 검사 중에는 기존 생성물을 백업한다. 생성 결과가 최신이면 원래대로 되돌리고,
+# 생성물이 낡았으면 갱신본을 작업 트리에 남겨 자동 커밋한다.
+# basename 으로 백업하므로 openapi_outputs 의 파일명은 서로 달라야 한다.
+backup=$(mktemp -d)
+restore_backup() {
+    for file in $openapi_outputs; do
+        cp "$backup/$(basename "$file")" "$file" 2>/dev/null || true
+    done
+    rm -rf "$backup"
+}
+trap restore_backup EXIT
+
+for file in $openapi_outputs; do
+    cp "$file" "$backup/$(basename "$file")" 2>/dev/null || true
+done
+
+echo "[pre-push] OpenAPI 생성물 확인 중..."
+
+# 빌드 로그는 실패했을 때만 보여준다. 성공 경로에서는 훅 메시지만 남긴다.
+log="$backup/gradle.log"
+if ! (cd server && ./gradlew generateApiArtifacts --quiet) > "$log" 2>&1; then
+    echo "[pre-push] 생성에 실패했습니다. Node.js 가 설치돼 있는지 확인해 보세요."
+    echo
+    sed 's/^/  /' "$log"
+    exit 1
+fi
+
+stale=0
+for file in $openapi_outputs; do
+    cmp -s "$file" "$backup/$(basename "$file")" || stale=1
+done
+
+if [ "$stale" -eq 0 ]; then
+    echo "[pre-push] 최신입니다."
+    exit 0
+fi
+
+# 갱신본을 그대로 커밋한다. 여기서 되돌리면 커밋 내용과 작업 트리가 어긋난다.
+trap - EXIT
+rm -rf "$backup"
+
+# 새로 생긴 생성물은 추적되지 않아 경로 지정 커밋이 통째로 실패한다. 먼저 인덱스에 올린다.
+if ! git add -- $openapi_outputs; then
+    echo "[pre-push] 생성물 스테이징에 실패했습니다."
+    exit 1
+fi
+
+# 경로를 지정해 다른 스테이징 변경이 함께 커밋되지 않게 한다.
+if ! git commit -q -m "refactor : OpenAPI 생성물 갱신" -- $openapi_outputs; then
+    echo "[pre-push] 생성물 커밋에 실패했습니다."
+    exit 1
+fi
+
+echo
+echo "[pre-push] 생성물이 낡아 자동으로 커밋했습니다."
+git --no-pager log --format="  %h %s" -1
+echo
+echo "  이 커밋까지 보내려면 다시 push 하세요."
+echo
+
+# push 대상 SHA 는 훅 실행 전에 확정되어 방금 만든 커밋이 포함되지 않는다.
+# 그래서 이번 push 는 중단하고 다시 실행하게 한다.
+exit 1

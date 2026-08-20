@@ -1,6 +1,6 @@
 name: 리팩토링
 description: 동작 변경 없는 코드 개선
-title: "[REFACT] "
+title: "[REFACTOR] "
 labels: [refactor]
 body:
   - type: dropdown
@@ -11,6 +11,7 @@ body:
         - server
         - client
         - common
+        - ci
     validations:
       required: true
 

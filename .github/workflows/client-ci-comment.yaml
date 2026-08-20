@@ -1,0 +1,211 @@
+name: Client CI Comment
+
+on:
+  workflow_run:
+    workflows: [Client CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  # PR 댓글은 /issues/{n}/comments 로 달지만, 대상이 PR 이면
+  # GitHub 가 pull-requests 쓰기 권한도 함께 요구한다.
+  issues: write
+  pull-requests: write
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download check results
+        uses: actions/download-artifact@v8
+        with:
+          name: client-ci-results
+          path: client-ci-results
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Update PR comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('node:fs');
+            const run = context.payload.workflow_run;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            let pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) {
+              const { data: associatedPullRequests } =
+                await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner,
+                  repo,
+                  commit_sha: run.head_sha,
+                });
+              pullRequest = associatedPullRequests.find((pull) =>
+                pull.base.ref === 'dev',
+              );
+            }
+
+            if (!pullRequest || pullRequest.base.ref !== 'dev') {
+              core.info('dev 대상 PR을 찾지 못해 댓글을 건너뜁니다.');
+              return;
+            }
+
+            const results = JSON.parse(
+              fs.readFileSync(
+                'client-ci-results/client-ci-results.json',
+                'utf8',
+              ),
+            );
+            const checks = [
+              ['Format', results.format],
+              ['Lint', results.lint],
+              ['Type check', results.typecheck],
+              ['Test', results.test],
+              ['Build', results.build],
+              ['Lighthouse', results.lighthouse],
+            ];
+
+            const formatResult = (result) => {
+              if (result === 'success') return '✅ 통과';
+              if (result === 'skipped') return '⏭️ 건너뜀';
+              if (result === 'failure') return '❌ 실패';
+              if (result === 'cancelled') return '⏹️ 취소';
+              return `⏳ ${result ?? '확인 중'}`;
+            };
+
+            const lighthouseScores = results.lighthouseScores ?? {};
+            const lighthousePassed =
+              results.lighthouse === 'success' &&
+              Object.values(lighthouseScores).length === 4 &&
+              Object.values(lighthouseScores).every((score) =>
+                Number.isFinite(score),
+              );
+            const allPassed =
+              checks
+                .filter(([name]) => name !== 'Lighthouse')
+                .every(([, result]) => result === 'success') &&
+              lighthousePassed;
+
+            const formatLighthouseScore = (key) => {
+              if (results.lighthouse === 'skipped') return '⏭️ 건너뜀';
+              if (results.lighthouse !== 'success') {
+                return formatResult(results.lighthouse);
+              }
+
+              const score = lighthouseScores[key];
+              if (!Number.isFinite(score)) return '❌ 리포트 없음';
+              if (score >= 90) return `🟢 ${score}`;
+              if (score >= 50) return `🟡 ${score}`;
+              return `🔴 ${score}`;
+            };
+
+            // 점수가 크게 벌어지면 코드가 아니라 러너 상태를 의심해야 한다.
+            const SPREAD_WARNING_THRESHOLD = 10;
+            const runs = Array.isArray(results.lighthouseRuns)
+              ? results.lighthouseRuns.filter((entry) =>
+                  Number.isFinite(entry?.performance),
+                )
+              : [];
+            const performances = runs.map((entry) => entry.performance);
+            const spread =
+              performances.length > 1
+                ? Math.max(...performances) - Math.min(...performances)
+                : 0;
+
+            const runDetails =
+              runs.length > 1
+                ? [
+                    '',
+                    '<details>',
+                    `<summary>${runs.length}회 측정값</summary>`,
+                    '',
+                    '| 회차 | Performance | Accessibility | Best Practices | SEO |',
+                    '| --- | --- | --- | --- | --- |',
+                    ...runs.map((entry, index) => {
+                      const cells = [
+                        entry.performance,
+                        entry.accessibility,
+                        entry.bestPractices,
+                        entry.seo,
+                      ].map((score) => (Number.isFinite(score) ? score : '-'));
+                      const label = entry.median
+                        ? `${index + 1}회 (중간값)`
+                        : `${index + 1}회`;
+                      return `| ${label} | ${cells.join(' | ')} |`;
+                    }),
+                    '',
+                    '</details>',
+                  ]
+                : [];
+
+            const spreadWarning =
+              spread > SPREAD_WARNING_THRESHOLD
+                ? [
+                    '',
+                    `> ⚠️ Performance 측정값이 ${Math.min(...performances)} ~ ${Math.max(...performances)} 로 벌어졌습니다.`,
+                    '> 코드 변경보다 러너 상태를 먼저 의심해 보세요.',
+                  ]
+                : [];
+
+            const body = [
+              `## Client CI 결과 ${allPassed ? '✅' : '⚠️'}`,
+              '',
+              '| 검사 항목 | 결과 |',
+              '| --- | --- |',
+              ...checks.map(
+                ([name, result]) => `| ${name} | ${formatResult(result)} |`,
+              ),
+              '',
+              allPassed
+                ? '모든 Client 검사를 통과했습니다.'
+                : '실패한 검사의 로그를 확인해주세요.',
+              '',
+              '## Lighthouse 결과',
+              '',
+              '| 검사 항목 | 점수 |',
+              '| --- | --- |',
+              `| Performance | ${formatLighthouseScore('performance')} |`,
+              `| Accessibility | ${formatLighthouseScore('accessibility')} |`,
+              `| Best Practices | ${formatLighthouseScore('bestPractices')} |`,
+              `| SEO | ${formatLighthouseScore('seo')} |`,
+              '',
+              '> 점수 기준: 🟢 90-100 / 🟡 50-89 / 🔴 0-49',
+              ...spreadWarning,
+              ...runDetails,
+              '',
+              `[Workflow 실행 결과 보기](${run.html_url})`,
+            ].join('\n');
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                per_page: 100,
+              },
+            );
+            const existingComment = comments.find(
+              (comment) =>
+                comment.user?.type === 'Bot' &&
+                comment.body?.includes('## Client CI 결과'),
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                body,
+              });
+            }
