@@ -2,11 +2,21 @@ import path from "node:path";
 
 import type { NextConfig } from "next";
 
+/*
+ * EC2 는 standalone 산출물을 그대로 띄우지만, Vercel 은 자체 산출물을 만든다.
+ * 두 곳의 방식이 달라 배포 대상에 따라 갈라 준다.
+ */
+const isVercel = Boolean(process.env.VERCEL);
+
 const nextConfig: NextConfig = {
-  output: "standalone",
-  // 공유 API 스키마가 client/ 밖의 common/ 에 있다. 추적 기준을 저장소 루트로
-  // 올리지 않으면 빌드 산출물에서 common 이 빠진다.
-  outputFileTracingRoot: path.join(__dirname, ".."),
+  ...(isVercel
+    ? {}
+    : {
+        output: "standalone" as const,
+        // 공유 API 스키마가 client/ 밖의 common/ 에 있다. 추적 기준을 저장소 루트로
+        // 올리지 않으면 빌드 산출물에서 common 이 빠진다.
+        outputFileTracingRoot: path.join(__dirname, ".."),
+      }),
 
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
