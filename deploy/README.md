@@ -133,3 +133,6 @@ sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
 - systemd에 `NoNewPrivileges`, 파일 시스템 보호, CPU·메모리·프로세스 제한을 적용합니다.
 - 백엔드 데이터 디렉터리는 systemd에서 읽기 전용으로 설정합니다.
 - AWS 자격 증명과 환경별 비밀 값은 저장소와 배포 산출물에 포함하지 않습니다.
+
+인프라 로그 위치, journald 보존, CloudWatch Agent와 최소 알람 적용 절차는
+[`deploy/monitoring/README.md`](monitoring/README.md)에 정리합니다.
