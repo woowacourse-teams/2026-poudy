@@ -122,8 +122,8 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
   return (
     <section className="flex flex-col gap-3 pt-5 pb-2">
       <div className="flex flex-col gap-1">
-        <h3 className="text-[18px] font-bold text-text-primary">주요 기능</h3>
-        <p className="text-[12px] text-text-secondary">효과별로 관련 성분을 묶어 보여드려요</p>
+        <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
+        <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
       </div>
 
       <ul>
