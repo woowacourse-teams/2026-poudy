@@ -5,6 +5,8 @@ file_exists_behavior: OVERWRITE
 files:
   - source: app
     destination: /opt/poudy/frontend
+  - source: nginx
+    destination: /opt/poudy/frontend-nginx
 
 hooks:
   BeforeInstall:

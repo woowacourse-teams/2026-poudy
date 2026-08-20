@@ -4,5 +4,6 @@ set -Eeuo pipefail
 
 systemctl daemon-reload
 systemctl enable nginx.service poudy-frontend.service
+"$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/reconcile-nginx.sh"
 systemctl restart poudy-frontend.service
 systemctl restart nginx.service

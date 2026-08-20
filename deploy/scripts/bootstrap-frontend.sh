@@ -47,6 +47,7 @@ node_major="$("${node_bin}" --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p')"
 ensure_poudy_user
 ensure_config_directory
 ensure_directory "${POUDY_ROOT}/frontend" 0750
+install -d -o root -g root -m 0755 /var/www/letsencrypt
 ensure_environment_file "${POUDY_CONFIG_DIR}/frontend.env"
 
 install_systemd_unit \
@@ -70,6 +71,20 @@ install \
     -m 0644 \
     "${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend.conf" \
     /etc/nginx/conf.d/poudy-frontend.conf
+
+# Certbot이 아직 인증서를 발급하지 않은 초기 상태에서는 HTTP 설정을
+# 유지합니다. 이미 인증서가 있는 호스트를 재초기화하는 경우에만 HTTPS
+# 설정을 활성화하며, 인증서가 없을 때는 절대 인증서 경로를 nginx에 넣지
+# 않습니다.
+if [[ -s /etc/letsencrypt/live/poudy.site/fullchain.pem \
+    && -s /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+    install \
+        -o root \
+        -g root \
+        -m 0644 \
+        "${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend-https.conf" \
+        /etc/nginx/conf.d/poudy-frontend.conf
+fi
 
 install \
     -o root \

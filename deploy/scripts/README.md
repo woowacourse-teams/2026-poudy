@@ -36,8 +36,13 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - `/etc/poudy/frontend.env` 생성
 - `poudy-frontend.service` 설치 및 enable
 - `ec2-nginx.conf`와 `ec2-frontend.conf` 설치
+- `/var/www/letsencrypt` ACME webroot 생성
 - 백엔드 프록시 기본 설정 설치
 - Nginx 설정 검증 및 enable/start
+
+인증서가 이미 발급된 호스트를 재초기화하면 `ec2-frontend-https.conf`를 활성화합니다.
+인증서가 없으면 HTTP bootstrap 설정만 사용하므로 초기화와 CodeDeploy 재배포가
+`nginx -t`에서 실패하지 않습니다.
 
 프론트 EC2에서 백엔드 EC2의 사설 IP를 설정합니다.
 
@@ -47,6 +52,25 @@ sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
 ```
 
 이 명령은 `/api/*` 요청의 전달 대상을 변경하고 Nginx를 reload합니다.
+
+## HTTPS와 인증서
+
+최초 발급 전에는 프론트 보안 그룹의 TCP `443`을 열고 DNS가 프론트 EIP를 가리키는지
+확인합니다. Certbot은 EC2에서 별도로 설치·실행합니다.
+
+```bash
+sudo dnf install -y certbot
+sudo certbot certonly --webroot \
+  --webroot-path /var/www/letsencrypt \
+  --domain poudy.site \
+  --email <운영_이메일> \
+  --agree-tos \
+  --no-eff-email
+sudo ./deploy/scripts/enable-frontend-https.sh
+```
+
+`enable-frontend-https.sh`는 인증서가 없으면 실패하고, 설정 검증이나 reload가
+실패하면 기존 Nginx 설정으로 복구합니다. 인증서는 저장소에 복사하지 않습니다.
 
 ## 실행 시점
 

@@ -31,6 +31,23 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 백엔드 EC2의 사설 IP로 전달합니다. `NEXT_PUBLIC_POSTHOG_KEY`처럼 값이 필요한 비밀·환경값은
 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager 연동으로 주입합니다.
 
+프론트엔드 secondary artifact에는 `nginx/` 설정 템플릿도 포함됩니다. CodeDeploy
+`ApplicationStart` 훅은 인증서 두 파일이 모두 존재할 때만 HTTPS 템플릿을 활성화하고,
+그 외에는 HTTP bootstrap 템플릿을 활성화합니다. 따라서 인증서가 아직 없는 신규
+인스턴스나 인증서가 제거된 인스턴스에 재배포해도 `nginx -t`가 존재하지 않는
+`/etc/letsencrypt/live/poudy.site` 경로 때문에 실패하지 않습니다.
+
+인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
+
+```bash
+cd /opt/poudy/repository
+sudo ./deploy/scripts/enable-frontend-https.sh
+```
+
+이후 HTTP `:80`은 ACME challenge를 제외하고 HTTPS `:443`으로 리다이렉트하며,
+HTTPS 서버의 `/api/*`와 `/` 프록시 경로는 각각 기존 백엔드 사설 IP와 Next.js
+standalone을 유지합니다.
+
 ## CodeDeploy
 
 프론트엔드와 백엔드는 배포 대상과 재시작 서비스가 다르므로 배포 그룹을 분리합니다.
