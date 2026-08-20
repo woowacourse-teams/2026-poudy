@@ -27,7 +27,9 @@ cleaned=$(
 subject=$(printf '%s\n' "$cleaned" | sed -n '1p')
 
 if ! printf '%s\n' "$subject" | grep -Eq \
-    '^(feat|fix|docs|style|refactor|rename|remove) : [^[:space:]].+$'; then
+    '^(build|ci|docs|feat|fix|perf|refactor|style|rename|remove|test) : [^[:space:]].+$' &&
+    ! printf '%s\n' "$subject" | grep -Eq \
+    '^\[FIX\] [^[:space:]].+$'; then
     echo "[commit-msg] 제목 형식이 올바르지 않습니다."
     echo "  예: feat : 회원 가입 API 추가"
     exit 1
