@@ -1,6 +1,7 @@
 package com.poudy.product.controller;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,6 +74,7 @@ class ProductQueryTest {
                 .andExpect(jsonPath("$.variants[0].price").value(15000L))
                 .andExpect(jsonPath("$.variants[1].price").value(23000L))
                 .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
+                .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
                 .andExpect(
                         jsonPath("$.freeOfCodes").value(
                                 org.hamcrest.Matchers.not(

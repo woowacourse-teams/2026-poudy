@@ -1374,6 +1374,10 @@
             "description": "배합 목적 ID",
             "example": 14
           },
+          "code": {
+            "type": "string",
+            "example": "MOISTURISING"
+          },
           "name": {
             "type": "string",
             "description": "배합 목적 이름 (CosIng Function)",
@@ -1381,6 +1385,7 @@
           }
         },
         "required": [
+          "code",
           "id",
           "name"
         ]
@@ -1596,6 +1601,10 @@
             "description": "피부 작용 ID",
             "example": 57
           },
+          "code": {
+            "type": "string",
+            "example": "HYDRATION_RELATED"
+          },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
@@ -1611,6 +1620,7 @@
           }
         },
         "required": [
+          "code",
           "id",
           "ingredientIds",
           "name"
@@ -1625,6 +1635,10 @@
             "description": "피부 작용 ID",
             "example": 57
           },
+          "code": {
+            "type": "string",
+            "example": "HYDRATION_RELATED"
+          },
           "name": {
             "type": "string",
             "description": "피부 작용 이름",
@@ -1632,6 +1646,7 @@
           }
         },
         "required": [
+          "code",
           "id",
           "name"
         ]
