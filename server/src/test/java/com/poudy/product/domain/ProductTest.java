@@ -107,24 +107,41 @@ class ProductTest {
     }
 
     @Test
-    @DisplayName("피부 작용 그룹은 성분 등장 순서와 관계없이 태그 ID 순서로 정렬한다")
-    void ordersSkinEffectGroupsByTagId() {
-        Ingredient hydration = ingredient(10L, 57L, "HYDRATION_RELATED");
-        Ingredient barrier = ingredient(20L, 48L, "BARRIER_SUPPORT_RELATED");
+    @DisplayName("연관 성분이 많은 피부 작용 그룹을 태그 ID 동률 순서로 최대 3개 반환한다")
+    void returnsTopThreeSkinEffectGroupsByIngredientCount() {
         Product product = new Product(
                 1L,
                 "제품",
                 brand,
                 category,
-                new Ingredients(List.of(hydration, barrier)),
+                new Ingredients(
+                        List.of(
+                                ingredient(1L, 20L, "MOST_RELATED"),
+                                ingredient(2L, 20L, "MOST_RELATED"),
+                                ingredient(3L, 20L, "MOST_RELATED"),
+                                ingredient(4L, 30L, "SECOND_RELATED"),
+                                ingredient(5L, 30L, "SECOND_RELATED"),
+                                ingredient(6L, 40L, "TIED_RELATED"),
+                                ingredient(7L, 10L, "TIED_EARLIER_RELATED"))),
                 "image",
                 variants,
                 sensory(1, 1),
                 updatedAt);
 
         assertThat(product.skinEffectGroups())
-                .extracting(group -> group.effect().id())
-                .containsExactly(48L, 57L);
+                .satisfiesExactly(
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(20L);
+                            assertThat(group.ingredientIds()).containsExactly(1L, 2L, 3L);
+                        },
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(30L);
+                            assertThat(group.ingredientIds()).containsExactly(4L, 5L);
+                        },
+                        group -> {
+                            assertThat(group.effect().id()).isEqualTo(10L);
+                            assertThat(group.ingredientIds()).containsExactly(7L);
+                        });
     }
 
     @Test

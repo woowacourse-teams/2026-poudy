@@ -194,7 +194,7 @@ export type ProductDetailResponse = {
    */
   oilLevel: number;
   /**
-   * 피부 작용별 성분 그룹
+   * 연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)
    */
   skinEffectGroups: Array<SkinEffectGroupResponse>;
   /**
