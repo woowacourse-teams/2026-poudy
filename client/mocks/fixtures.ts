@@ -155,9 +155,9 @@ export const excludeCodes: ExcludeCodeResponse[] = [
   },
 ];
 
-const 보습 = { id: 1, name: "보습" };
-const 진정 = { id: 2, name: "진정" };
-const 각질케어 = { id: 3, name: "각질 케어" };
+const 보습 = { id: 1, code: "HYDRATION_RELATED", name: "보습" };
+const 진정 = { id: 2, code: "SOOTHING_RELATED", name: "진정" };
+const 각질케어 = { id: 3, code: "EXFOLIATION_RELATED", name: "각질 케어" };
 
 export const productDetails: ProductDetailResponse[] = [
   {
@@ -173,9 +173,9 @@ export const productDetails: ProductDetailResponse[] = [
     moistureLevel: 3,
     oilLevel: 1,
     skinEffectGroups: [
-      { id: 1, name: "보습", ingredientIds: [2, 6] },
-      { id: 2, name: "진정", ingredientIds: [7, 6] },
-      { id: 3, name: "각질 케어", ingredientIds: [8] },
+      { id: 1, code: "HYDRATION_RELATED", name: "보습", ingredientIds: [2, 6] },
+      { id: 2, code: "SOOTHING_RELATED", name: "진정", ingredientIds: [7, 6] },
+      { id: 3, code: "EXFOLIATION_RELATED", name: "각질 케어", ingredientIds: [8] },
     ],
     ingredients: [
       {
@@ -183,8 +183,8 @@ export const productDetails: ProductDetailResponse[] = [
         koreanName: "정제수",
         englishName: "Water",
         formulationRoles: [
-          { id: 1, name: "피부 컨디셔닝" },
-          { id: 2, name: "용제" },
+          { id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+          { id: 2, code: "SOLVENT", name: "용제" },
         ],
         skinEffects: [],
       },
@@ -193,8 +193,8 @@ export const productDetails: ProductDetailResponse[] = [
         koreanName: "부틸렌글라이콜",
         englishName: "Butylene Glycol",
         formulationRoles: [
-          { id: 3, name: "보습제" },
-          { id: 2, name: "용제" },
+          { id: 3, code: "MOISTURISING", name: "보습제" },
+          { id: 2, code: "SOLVENT", name: "용제" },
         ],
         skinEffects: [보습],
       },
@@ -202,7 +202,7 @@ export const productDetails: ProductDetailResponse[] = [
         id: 3,
         koreanName: "글리세린",
         englishName: "Glycerin",
-        formulationRoles: [{ id: 3, name: "보습제" }],
+        formulationRoles: [{ id: 3, code: "MOISTURISING", name: "보습제" }],
         skinEffects: [보습],
       },
       {
@@ -210,8 +210,8 @@ export const productDetails: ProductDetailResponse[] = [
         koreanName: "펜틸렌글라이콜",
         englishName: "Pentylene Glycol",
         formulationRoles: [
-          { id: 1, name: "피부 컨디셔닝" },
-          { id: 2, name: "용제" },
+          { id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+          { id: 2, code: "SOLVENT", name: "용제" },
         ],
         skinEffects: [보습],
       },
@@ -220,8 +220,8 @@ export const productDetails: ProductDetailResponse[] = [
         koreanName: "프로판다이올",
         englishName: "Propanediol",
         formulationRoles: [
-          { id: 2, name: "용제" },
-          { id: 4, name: "보습 보조" },
+          { id: 2, code: "SOLVENT", name: "용제" },
+          { id: 4, code: "HUMECTANT", name: "보습 보조" },
         ],
         skinEffects: [보습],
       },
@@ -229,21 +229,21 @@ export const productDetails: ProductDetailResponse[] = [
         id: 6,
         koreanName: "판테놀",
         englishName: "Panthenol",
-        formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+        formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
         skinEffects: [보습, 진정],
       },
       {
         id: 7,
         koreanName: "아이리쉬모스추출물",
         englishName: "Chondrus Crispus Extract",
-        formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+        formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
         skinEffects: [진정],
       },
       {
         id: 8,
         koreanName: "프로테아제",
         englishName: "Protease",
-        formulationRoles: [{ id: 5, name: "각질 관리" }],
+        formulationRoles: [{ id: 5, code: "KERATOLYTIC", name: "각질 관리" }],
         skinEffects: [각질케어],
       },
     ],
@@ -270,8 +270,8 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     englishName: "Water",
     description: "화장품의 기본 용매로, 다른 성분을 녹여 제형을 만드는 데 쓰입니다.",
     formulationRoles: [
-      { id: 1, name: "피부 컨디셔닝" },
-      { id: 2, name: "용제" },
+      { id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+      { id: 2, code: "SOLVENT", name: "용제" },
     ],
     skinEffects: [],
     groupCodes: [],
@@ -286,8 +286,8 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     englishName: "Butylene Glycol",
     description: "수분을 끌어당기는 보습제이자 다른 성분을 녹이는 용제로 함께 쓰입니다.",
     formulationRoles: [
-      { id: 3, name: "보습제" },
-      { id: 2, name: "용제" },
+      { id: 3, code: "MOISTURISING", name: "보습제" },
+      { id: 2, code: "SOLVENT", name: "용제" },
     ],
     skinEffects: [보습],
     groupCodes: [],
@@ -301,7 +301,7 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     koreanName: "글리세린",
     englishName: "Glycerin",
     description: "공기 중 수분을 끌어와 각질층에 붙잡아 두는 대표적인 보습 성분입니다.",
-    formulationRoles: [{ id: 3, name: "보습제" }],
+    formulationRoles: [{ id: 3, code: "MOISTURISING", name: "보습제" }],
     skinEffects: [보습],
     groupCodes: [],
     productCount: 984,
@@ -315,8 +315,8 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     englishName: "Pentylene Glycol",
     description: "피부를 매끄럽게 정돈하는 용제로, 제형의 사용감을 가볍게 만드는 데 쓰입니다.",
     formulationRoles: [
-      { id: 1, name: "피부 컨디셔닝" },
-      { id: 2, name: "용제" },
+      { id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+      { id: 2, code: "SOLVENT", name: "용제" },
     ],
     skinEffects: [보습],
     groupCodes: [],
@@ -331,8 +331,8 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     englishName: "Propanediol",
     description: "옥수수 유래 용제로, 보습 성분이 피부에 잘 퍼지도록 돕는 역할을 합니다.",
     formulationRoles: [
-      { id: 2, name: "용제" },
-      { id: 4, name: "보습 보조" },
+      { id: 2, code: "SOLVENT", name: "용제" },
+      { id: 4, code: "HUMECTANT", name: "보습 보조" },
     ],
     skinEffects: [보습],
     groupCodes: [],
@@ -347,7 +347,7 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     englishName: "Panthenol",
     description:
       "수분 손실을 줄이는 보습 성분으로 활용되며, 피부 장벽이 건조하거나 예민해졌을 때 편안한 사용감을 더해요.",
-    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
     skinEffects: [보습, 진정],
     groupCodes: [],
     productCount: 128,
@@ -360,7 +360,7 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     koreanName: "아이리쉬모스추출물",
     englishName: "Chondrus Crispus Extract",
     description: "홍조류에서 얻은 추출물로, 피부를 부드럽게 정돈하는 데 쓰입니다.",
-    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
     skinEffects: [진정],
     groupCodes: [],
     productCount: 63,
@@ -373,7 +373,7 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     koreanName: "프로테아제",
     englishName: "Protease",
     description: "단백질을 분해하는 효소로, 쌓인 각질을 부드럽게 정돈하는 데 쓰입니다.",
-    formulationRoles: [{ id: 5, name: "각질 관리" }],
+    formulationRoles: [{ id: 5, code: "KERATOLYTIC", name: "각질 관리" }],
     skinEffects: [각질케어],
     groupCodes: [],
     productCount: 37,
@@ -386,7 +386,7 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     koreanName: "판토텐산",
     englishName: "Pantothenic Acid",
     description: "비타민 B5 로도 불리며 피부 장벽을 돕는 성분으로 알려져 있습니다.",
-    formulationRoles: [{ id: 1, name: "피부 컨디셔닝" }],
+    formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
     skinEffects: [보습],
     groupCodes: [],
     productCount: 42,
