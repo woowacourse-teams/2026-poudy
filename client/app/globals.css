@@ -45,12 +45,26 @@
   /* 형태 */
   --radius-button: 14px;
   --font-weight-button: 700;
+
+  /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
+  --color-app-canvas: #f2f3f5;
+  --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
+}
+
+/*
+ * 넓은 화면에서는 본문 밖이 드러난다. 그 바탕을 옅은 회색으로 깔아
+ * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
+ */
+html {
+  background: var(--color-app-canvas);
 }
 
 body {
   /* 모바일 전용 화면이라 넓은 화면에서는 폭을 제한하고 가운데 둔다. */
   max-width: var(--container-md);
   margin-inline: auto;
+  /* 바탕과 본문을 가르는 그림자. 폭이 좁아 본문이 화면을 다 채우면 보이지 않는다. */
+  box-shadow: var(--shadow-app-frame);
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
