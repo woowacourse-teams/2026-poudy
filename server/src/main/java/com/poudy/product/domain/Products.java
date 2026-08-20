@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class Products {
@@ -37,10 +38,20 @@ public class Products {
     }
 
     public List<Product> search(String keyword) {
+        return search(keyword, MatchedProduct::of);
+    }
+
+    public List<Product> searchByProductName(String keyword) {
+        return search(keyword, MatchedProduct::ofProductName);
+    }
+
+    private List<Product> search(
+            String keyword,
+            BiFunction<SearchableProduct, SearchKeyword, MatchedProduct> match) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
-                .map(product -> MatchedProduct.of(product, searchKeyword))
+                .map(product -> match.apply(product, searchKeyword))
                 .filter(MatchedProduct::isFound)
                 .sorted(MatchedProduct.order())
                 .map(MatchedProduct::product)

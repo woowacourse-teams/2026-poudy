@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record ProductSuggestionListResponse(
-        @NotNull @Schema(description = "검색어에 해당하는 제품") List<ProductSuggestionResponse> items) {
+        @NotNull @Schema(description = "제품명 또는 브랜드명 검색어에 해당하는 제품") List<ProductSuggestionResponse> items) {
 
     public static ProductSuggestionListResponse from(List<Product> products) {
         return new ProductSuggestionListResponse(

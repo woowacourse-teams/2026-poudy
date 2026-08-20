@@ -32,7 +32,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @Operation(summary = "제품 조회", description = "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
+    @Operation(summary = "제품 조회", description = "제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
             + "keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. " + "sort 와 페이지 조건도 함께 쓴다.")
     @GetMapping
     public ResponseEntity<ProductPageResponse> findProducts(
@@ -49,7 +49,7 @@ public class ProductController {
         return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter)));
     }
 
-    @Operation(summary = "제품 검색 제안 조회", description = "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.")
+    @Operation(summary = "제품 검색 제안 조회", description = "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.")
     @Parameter(name = "keyword", example = "토너")
     @GetMapping("/suggestions")
     public ResponseEntity<ProductSuggestionListResponse> suggestProducts(@Valid @ModelAttribute KeywordRequest search) {

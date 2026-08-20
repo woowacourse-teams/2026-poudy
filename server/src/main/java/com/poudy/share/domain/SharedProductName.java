@@ -69,7 +69,7 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
     }
 
     private List<Product> candidatesIn(Products products, String searched) {
-        List<Product> found = products.search(searched);
+        List<Product> found = products.searchByProductName(searched);
 
         return brand.map(owner -> found.stream().filter(product -> product.hasBrand(owner)).toList())
                 .orElse(found);

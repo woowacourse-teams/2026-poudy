@@ -16,7 +16,10 @@ import org.junit.jupiter.api.Test;
 class ProductSearchTest {
 
     private static Product product(Long id, String name) {
-        Brand brand = new Brand(1L, "브랜드", null, null);
+        return product(id, name, new Brand(1L, "브랜드", null, null));
+    }
+
+    private static Product product(Long id, String name, Brand brand) {
         Category category = new Category(1L, 100L, "카테고리", 1, null, null);
 
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
@@ -45,6 +48,40 @@ class ProductSearchTest {
         Products products = new Products(List.of(product(1L, "블랙 스네일 토너"), product(2L, "수분 크림")));
 
         assertThat(names(products.search("토너"))).containsExactly("블랙 스네일 토너");
+    }
+
+    @Test
+    @DisplayName("브랜드명이 걸리면 그 브랜드의 제품을 반환한다")
+    void findsProductsByBrandName() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Brand torriden = new Brand(2L, "토리든", null, null);
+        Products products = new Products(
+                List.of(
+                        product(1L, "1025 독도 토너", roundLab),
+                        product(2L, "자작나무 수분 크림", roundLab),
+                        product(3L, "다이브인 세럼", torriden)));
+
+        assertThat(names(products.search("라운드")))
+                .containsExactly("1025 독도 토너", "자작나무 수분 크림");
+    }
+
+    @Test
+    @DisplayName("브랜드명도 공백을 지우고 초성으로 맞춘다")
+    void normalizesBrandName() {
+        Brand brand = new Brand(1L, "다 브랜드", null, null);
+        Products products = new Products(List.of(product(1L, "블랙 스네일 토너", brand)));
+
+        assertThat(names(products.search("다브랜드"))).containsExactly("블랙 스네일 토너");
+        assertThat(names(products.search("ㄷㅂㄹㄷ"))).containsExactly("블랙 스네일 토너");
+    }
+
+    @Test
+    @DisplayName("제품명 전용 검색에서는 브랜드명을 맞추지 않는다")
+    void searchesOnlyProductNameWhenRequested() {
+        Brand brand = new Brand(1L, "라운드랩", null, null);
+        Products products = new Products(List.of(product(1L, "1025 독도 토너", brand)));
+
+        assertThat(products.searchByProductName("라운드랩")).isEmpty();
     }
 
     @Test

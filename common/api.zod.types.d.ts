@@ -230,7 +230,7 @@ export type ProductSuggestionResponse = {
 }
 export type ProductSuggestionListResponse = {
   /**
-   * 검색어에 해당하는 제품
+   * 제품명 또는 브랜드명 검색어에 해당하는 제품
    */
   items: Array<ProductSuggestionResponse>;
 }
@@ -380,7 +380,7 @@ export type get_FindStorageProducts = {
 
     }
 /**
- * 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
+ * 제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
  */
 export type get_FindProducts = {
       method: "GET",
@@ -389,6 +389,9 @@ export type get_FindProducts = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{
+  /**
+   * 제품명 또는 브랜드명 검색어
+   */
   keyword: string;
   categoryIds: Array<number>;
   brandIds: Array<number>;
@@ -439,7 +442,7 @@ export type get_FindProductDetail = {
 
     }
 /**
- * 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.
+ * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.
  */
 export type get_SuggestProducts = {
       method: "GET",
@@ -488,7 +491,19 @@ export type get_CountProducts = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ keyword: string, categoryIds: Array<number>, brandIds: Array<number>, moistureLevel: Array<number>, oilLevel: Array<number>, includeIngredientIds: Array<number>, excludeIngredientIds: Array<number>, excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")> }>,
+            query?:  Partial<{
+  /**
+   * 제품명 또는 브랜드명 검색어
+   */
+  keyword: string;
+  categoryIds: Array<number>;
+  brandIds: Array<number>;
+  moistureLevel: Array<number>;
+  oilLevel: Array<number>;
+  includeIngredientIds: Array<number>;
+  excludeIngredientIds: Array<number>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+}>,
 
           }
       responses: {200: Schemas.ProductCountResponse,
