@@ -1,10 +1,12 @@
 "use client";
 
 import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
 import { fetchProductSuggestions } from "@/lib/api/products";
@@ -94,7 +96,13 @@ export function ProductSearchPanel() {
                     }}
                     className="flex items-center gap-3 py-3"
                   >
-                    <span className="size-10 shrink-0 rounded-lg bg-surface" />
+                    <Image
+                      src={item.imageUrl || PRODUCT_PLACEHOLDER}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="size-10 shrink-0 rounded-lg bg-surface object-contain"
+                    />
                     <span className="flex flex-1 flex-col gap-0.5">
                       <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
                       <span className="text-[11px] text-text-secondary">{item.brandName}</span>
