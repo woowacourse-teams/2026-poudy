@@ -90,6 +90,23 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             </div>
 
             <p className="text-[14px] leading-[1.55] text-[#5F6268]">{ingredient.description}</p>
+
+            {/*
+              제형에서 맡는 배합 목적이다. 피부에 주는 효과(skinEffects)와 다른 축이라
+              머리말 옆 태그와 섞지 않고 설명 아래에 따로 둔다.
+            */}
+            {ingredient.formulationRoles.length > 0 ? (
+              <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {ingredient.formulationRoles.map((role) => (
+                  <li
+                    key={role.id}
+                    className="flex h-[26px] items-center rounded-[13px] bg-[#F2F3F5] px-2.5 text-[11px] font-semibold text-[#4D5159]"
+                  >
+                    {role.name}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-[#DDEAF0] bg-[#F4F8FA] px-4 py-[14px]">
