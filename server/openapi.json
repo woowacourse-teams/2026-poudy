@@ -124,15 +124,17 @@
           "제품"
         ],
         "summary": "제품 조회",
-        "description": "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.",
+        "description": "제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.",
         "operationId": "findProducts",
         "parameters": [
           {
             "name": "keyword",
             "in": "query",
+            "description": "제품명 또는 브랜드명 검색어",
             "required": false,
             "schema": {
               "type": "string",
+              "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
               "pattern": ".*\\S.*"
             },
@@ -439,7 +441,7 @@
           "제품"
         ],
         "summary": "제품 검색 제안 조회",
-        "description": "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.",
+        "description": "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.",
         "operationId": "suggestProducts",
         "parameters": [
           {
@@ -580,9 +582,11 @@
           {
             "name": "keyword",
             "in": "query",
+            "description": "제품명 또는 브랜드명 검색어",
             "required": false,
             "schema": {
               "type": "string",
+              "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
               "pattern": ".*\\S.*"
             },
@@ -1656,7 +1660,7 @@
         "properties": {
           "items": {
             "type": "array",
-            "description": "검색어에 해당하는 제품",
+            "description": "제품명 또는 브랜드명 검색어에 해당하는 제품",
             "items": {
               "$ref": "#/components/schemas/ProductSuggestionResponse"
             }

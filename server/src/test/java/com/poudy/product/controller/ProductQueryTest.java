@@ -53,12 +53,38 @@ class ProductQueryTest {
     }
 
     @Test
+    @DisplayName("브랜드명 검색은 그 브랜드의 제품과 개수를 반환한다")
+    void findsProductsAndCountByBrandName() throws Exception {
+        mockMvc.perform(get("/api/products").param("keyword", "다브랜"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+                .andExpect(jsonPath("$.pagination.totalElements").value(3L))
+                .andExpect(jsonPath("$.brands.length()").value(1))
+                .andExpect(jsonPath("$.brands[0].id").value(1L));
+
+        mockMvc.perform(get("/api/products/count").param("keyword", "다브랜"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(3L));
+    }
+
+    @Test
     @DisplayName("제품명 검색 제안을 실제 제품으로 반환한다")
     void suggestsProducts() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
                 .andExpect(jsonPath("$.items[0].brandName").value("다 브랜드"));
+    }
+
+    @Test
+    @DisplayName("브랜드명 검색 제안도 해당 브랜드의 제품으로 반환한다")
+    void suggestsProductsByBrandName() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+                .andExpect(
+                        jsonPath("$.items[*].brandName")
+                                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드"))));
     }
 
     @Test
