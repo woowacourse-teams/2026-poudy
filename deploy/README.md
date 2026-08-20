@@ -8,7 +8,7 @@ MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다
 - HTTP `:80` → HTTPS `:443` 리다이렉트
 - 프론트엔드 Nginx: `/api/*` → 백엔드 EC2 사설 IP `:8080`
 - 백엔드: Spring Boot JAR `:8080` → systemd
-- 데이터: `/opt/poudy/data`에 S3 JSON을 다운로드
+- 데이터: S3 JSON을 `/opt/poudy/data`에 주기적으로 동기화
 
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
 사용하고, 백엔드 요청은 백엔드 EC2의 안정적인 사설 IP로 전달합니다. Nginx는
@@ -35,6 +35,49 @@ HTTPS 통신을 위해 유지할 수 있지만, 프론트 프록시·DNS·외부
 EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고합니다. 초기화
 스크립트는 Java·Node.js·Nginx 설치와 systemd 등록만 수행하고 애플리케이션 산출물은
 배포하지 않습니다.
+
+백엔드 초기화 스크립트는 `s3://techcourse-project-2026/poudy/data/`를 확인하는
+`poudy-data-sync.timer`도 등록합니다. 기본 주기는 부팅 2분 후 최초 실행하고, 이후
+약 5분마다입니다. S3 데이터 변경이 있을 때만 staging 검증과 백엔드 재시작을 수행하며,
+변경이 없으면 S3 목록 확인 후 종료합니다.
+
+초기화 후 첫 동기화와 상태 확인:
+
+```bash
+sudo systemctl start poudy-data-sync.service
+sudo systemctl status poudy-data-sync.timer --no-pager
+sudo journalctl -u poudy-data-sync.service -n 100 --no-pager
+sudo systemctl list-timers poudy-data-sync.timer
+```
+
+이미 초기화가 끝난 백엔드 EC2에만 적용할 때는 다음 순서로 실행합니다.
+
+```bash
+cd /opt/poudy/repository
+sudo dnf install -y awscli-2 jq
+sudo install -d -o root -g root -m 0755 /var/lib/poudy/backend-data
+sudo install -D -o root -g poudy -m 0640 \
+  deploy/config/backend-data.env \
+  /etc/poudy/backend-data.env
+sudo install -o root -g root -m 0750 \
+  deploy/scripts/sync-backend-data.sh \
+  /usr/local/sbin/poudy-sync-backend-data
+sudo install -o root -g root -m 0644 \
+  deploy/systemd/poudy-data-sync.service \
+  /etc/systemd/system/poudy-data-sync.service
+sudo install -o root -g root -m 0644 \
+  deploy/systemd/poudy-data-sync.timer \
+  /etc/systemd/system/poudy-data-sync.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now poudy-data-sync.timer
+sudo systemctl start poudy-data-sync.service
+```
+
+동기화 스크립트는 필수 JSON 파일과 각 파일의 최상위 배열을 검증한 뒤
+`/opt/poudy/data`를 교체합니다. 백엔드 health check가 실패하면 이전 데이터로
+복구합니다. S3에 파일을 여러 개 올릴 때는 모든 JSON 업로드가 끝난 뒤 더 이상 해당
+prefix를 수정하지 않는 방식으로 배포해야 합니다. 장기적으로는 versioned prefix와
+`_READY` marker를 두고 marker가 생긴 데이터만 동기화하는 방식이 더 안전합니다.
 
 ## EC2 프론트 구성
 

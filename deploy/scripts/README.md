@@ -17,9 +17,11 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 구성 내용:
 
 - Java 21 설치
+- AWS CLI v2 및 jq 설치
 - `poudy` system user 및 `/opt/poudy/backend`, `/opt/poudy/data` 생성
 - `/etc/poudy/backend.env` 생성
 - `poudy-backend.service` 설치 및 enable
+- `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
 - JSON 데이터 디렉터리의 기본 권한 설정
 
 ## 프론트엔드 EC2
