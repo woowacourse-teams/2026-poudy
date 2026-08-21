@@ -70,8 +70,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'expo-splash-screen',
         {
           backgroundColor: '#ffffff',
-          image: './assets/poudy-mark.png',
-          resizeMode: 'contain',
         },
       ],
       [
