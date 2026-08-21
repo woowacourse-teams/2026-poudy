@@ -39,6 +39,16 @@ pnpm android
 | `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app` |
 | `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다             |
 
+## EAS CLI
+
+`eas` 명령은 설정을 읽으려고 `expo config`를 먼저 실행합니다. 이 단계는 `.env` 주입보다
+앞서므로 `.env`에 값이 있어도 `EXPO_PUBLIC_WEB_URL`이 없다고 판단해 중단합니다. 명령 앞에
+값을 붙여 실행합니다.
+
+```bash
+EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest credentials --platform android
+```
+
 ## EAS Build
 
 `eas.json`은 development, preview, production 환경을 각각 같은 이름의 EAS Environment와 연결합니다. 각 환경에 공개값인 `EXPO_PUBLIC_WEB_URL`을 plaintext로 등록해야 하며, 처음 사용할 때 EAS 프로젝트 연결과 서명 자격 증명 설정이 필요합니다.
