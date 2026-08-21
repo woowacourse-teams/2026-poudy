@@ -36,6 +36,12 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 `.github/workflows/release-tag.yml`이 만듭니다. 브랜치 push를 빌드 트리거로 쓰면 태그가
 만들어지기 전에 빌드가 시작될 수 있으므로, 트리거는 태그 push를 기준으로 둡니다.
 
+무엇을 언제 내보냈는지는 GitHub Release가 기록합니다. 배포 이력을 위한 별도 파일이나
+엔드포인트를 두지 않습니다. 다만 릴리스는 "냈다"의 기록이지 "떠 있다"의 기록이 아니므로,
+배포가 실패하면 릴리스와 실제가 어긋납니다. 트리거를 태그 push로 두어야 릴리스와 배포
+시도가 1:1로 붙고, 어긋났을 때 대조할 근거는 배포된 `app.jar` 매니페스트의
+`Implementation-Version`입니다.
+
 `buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. `NEXT_PUBLIC_API_BASE_URL`은
 비워 두어 브라우저가 현재 프론트 origin을 사용하게 하며, 프론트 EC2 Nginx가 `/api/*`를
 백엔드 EC2의 사설 IP로 전달합니다. `NEXT_PUBLIC_POSTHOG_KEY`처럼 값이 필요한 비밀·환경값은
