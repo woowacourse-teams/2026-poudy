@@ -48,6 +48,10 @@ export const initAnalytics = async (): Promise<void> => {
     capture_pageview: false,
     capture_pageleave: true,
 
+    // 처리방침이 안내하는 거부 방법이다. 자사 도메인으로 받아 넘기는 탓에
+    // 추적 차단기가 걸리지 않으므로, 브라우저가 보낸 거부 신호는 직접 지킨다.
+    respect_dnt: true,
+
     // 잡히지 않은 예외와 거부된 프로미스를 자동으로 보낸다. 오류 화면은
     // reportBoundaryError 가 따로 남기고, 이쪽은 그 밖의 예외를 받는다.
     capture_exceptions: true,
