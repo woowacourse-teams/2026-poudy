@@ -25,5 +25,13 @@
         "buildType": "apk"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production"
+      }
+    }
   }
 }
