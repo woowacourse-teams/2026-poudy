@@ -4,7 +4,8 @@ const APP_NAME = 'Poudy';
 const APP_SLUG = 'poudy';
 const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
 const DEFAULT_APP_VERSION = '0.1.0';
-const EAS_PROJECT_ID = '6a5a057a-a6b0-4dc0-ad4e-fce1898733c8';
+const EAS_ACCOUNT = 'poudys-team';
+const EAS_PROJECT_ID = '25e0967e-a114-4253-ad7a-a39063fce314';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
 
@@ -30,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_NAME,
     slug: APP_SLUG,
+    owner: EAS_ACCOUNT,
     version: APP_VERSION ?? DEFAULT_APP_VERSION,
     icon: './assets/poudy-mark.png',
     orientation: 'portrait',
