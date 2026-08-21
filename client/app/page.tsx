@@ -150,10 +150,12 @@ export default function Home() {
         <footer className="flex flex-col gap-1.5 border-t border-border pt-4 text-[11px] text-text-secondary">
           <p>{OPERATOR.name}</p>
           <p className="flex gap-3">
-            <Link href="/privacy" className="font-semibold text-text-primary">
+            <Link href="/privacy" className="underline">
               개인정보 처리방침
             </Link>
-            <Link href="/terms">이용약관</Link>
+            <Link href="/terms" className="underline">
+              이용약관
+            </Link>
           </p>
         </footer>
       </main>
