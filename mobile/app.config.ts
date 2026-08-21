@@ -5,6 +5,7 @@ const APP_SLUG = 'poudy';
 const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
 const DEFAULT_APP_VERSION = '0.1.0';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
+const APP_VERSION = process.env.POUDY_APP_VERSION;
 
 if (!WEB_BASE_URL) {
   throw new Error('EXPO_PUBLIC_WEB_URL is required.');
@@ -14,13 +15,21 @@ if (!['http:', 'https:'].includes(new URL(WEB_BASE_URL).protocol)) {
   throw new Error('EXPO_PUBLIC_WEB_URL must use http or https.');
 }
 
+if (process.env.EAS_BUILD_PROFILE === 'production' && !APP_VERSION) {
+  throw new Error('POUDY_APP_VERSION is required for production builds.');
+}
+
+if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
+  throw new Error('POUDY_APP_VERSION must be x.y.z.');
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
   return {
     ...config,
     name: APP_NAME,
     slug: APP_SLUG,
-    version: process.env.POUDY_APP_VERSION ?? DEFAULT_APP_VERSION,
+    version: APP_VERSION ?? DEFAULT_APP_VERSION,
     icon: './assets/poudy-mark.png',
     orientation: 'portrait',
     scheme: APP_SLUG,
