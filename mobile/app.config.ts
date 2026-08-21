@@ -68,12 +68,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           toolsButton: false,
         },
       ],
+      './plugins/withAndroidLoadingSplashStyles.ts',
       [
         'expo-splash-screen',
         {
           backgroundColor: '#ffffff',
         },
       ],
+      './plugins/withAndroidLoadingSplash.ts',
       [
         'expo-sharing',
         {

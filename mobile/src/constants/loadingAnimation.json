@@ -1,0 +1,49 @@
+{
+  "viewBoxSize": 256,
+  "edgeOpacityStart": 0.68,
+  "timing": {
+    "foldDuration": 253,
+    "facetStagger": 184,
+    "completeHold": 575,
+    "restartPause": 330
+  },
+  "easing": {
+    "unfold": [0.22, 0.8, 0.3, 1],
+    "refold": [0.7, 0, 0.78, 0.2]
+  },
+  "easingSampleCount": 12,
+  "facets": [
+    {
+      "color": "#F5698C",
+      "points": "89 27 156 27 101 82 50 133 50 68",
+      "hinge": [122.5, 27],
+      "axisRotation": 0,
+      "counterRotation": 0,
+      "angle": 90
+    },
+    {
+      "color": "#F894AD",
+      "points": "101 82 101 178 50 229 50 133",
+      "hinge": [75.5, 107.5],
+      "axisRotation": -45,
+      "counterRotation": 45,
+      "angle": -90
+    },
+    {
+      "color": "#FBC3D1",
+      "points": "158 27 204 73 204 130 129 56",
+      "hinge": [143.5, 41.5],
+      "axisRotation": -45,
+      "counterRotation": 45,
+      "angle": 90
+    },
+    {
+      "color": "#DC4F73",
+      "points": "175 102 204 131 160 178 104 178",
+      "hinge": [189.5, 116.5],
+      "axisRotation": 45,
+      "counterRotation": -45,
+      "angle": 90
+    }
+  ]
+}

@@ -2,10 +2,14 @@ import { StyleSheet, View } from 'react-native';
 
 import LoadingIndicator from '@/components/LoadingIndicator';
 
-export default function WebViewLoading() {
+interface WebViewLoadingProps {
+  readonly continuesFromSplash?: boolean;
+}
+
+export default function WebViewLoading({ continuesFromSplash = false }: WebViewLoadingProps) {
   return (
     <View pointerEvents='none' style={styles.overlay}>
-      <LoadingIndicator />
+      <LoadingIndicator continuesFromSplash={continuesFromSplash} />
     </View>
   );
 }
