@@ -14,6 +14,17 @@ export const shouldLoadInWebView = (url: string, webOrigin: string): boolean => 
   }
 };
 
+export const isHomeUrl = (url: string, webBaseUrl: string): boolean => {
+  try {
+    const current = new URL(url);
+    const home = new URL(webBaseUrl);
+
+    return current.origin === home.origin && current.pathname === home.pathname;
+  } catch {
+    return false;
+  }
+};
+
 export const openExternalUrl = (url: string) => {
   void Linking.openURL(url).catch(() => {
     Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');

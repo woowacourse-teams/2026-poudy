@@ -24,7 +24,11 @@ const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
-  const handleNavigationChange = useHardwareBack(webViewRef);
+  const handleNavigationChange = useHardwareBack({
+    onNavigate: navigation.navigate,
+    webBaseUrl,
+    webViewRef,
+  });
 
   const handleShouldStartLoad = useCallback(
     (request: NavigationRequest) => {
