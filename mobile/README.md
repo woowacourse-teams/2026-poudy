@@ -59,6 +59,23 @@ production 빌드는 EAS 원격 버전을 기준으로 iOS build number와 Andro
 
 스토어에 노출되는 버전은 production EAS Environment에 등록한 `POUDY_APP_VERSION`이 정합니다. 릴리스할 때 이 값만 올리면 되고, build number와 version code는 EAS가 알아서 증가시킵니다. production 빌드에서 값이 없으면 Expo 설정 평가 단계에서 빌드를 중단하므로 예전 버전이 그대로 스토어에 올라가지 않습니다.
 
+## EAS Submit
+
+`eas.json`의 `submit.production`이 Play Store 트랙과 서비스 계정 키 위치를 정합니다. 키 파일은 저장소에 두지 않고 각자 `mobile/google-service-account.json`으로 놓습니다.
+
+```bash
+EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest submit --platform android --profile production --latest
+```
+
+다음 단계는 API로 대신할 수 없어 Play Console에서 직접 합니다.
+
+1. 개발자 계정 등록(일회성 $25)과 앱 생성(`com.poudy.app`)
+2. 스토어 등록정보, 콘텐츠 등급, 데이터 보안 설문 작성
+3. 첫 AAB 업로드. Google Play Developer API는 앱에 기존 릴리스가 있어야 트랙에 올릴 수 있어 첫 릴리스만 수동입니다
+4. Google Cloud 서비스 계정 생성과 JSON 키 발급, Play Console에서 권한 연결
+
+개인 개발자 계정은 정식 출시 전에 비공개 테스트(테스터 12명·20일)를 요구합니다. 조직 계정은 해당하지 않으므로 계정 유형을 먼저 확인하고 첫 트랙을 정합니다.
+
 ## 공유 링크 흐름
 
 1. 올리브영에서 상품 URL을 Poudy로 공유합니다.

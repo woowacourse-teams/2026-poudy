@@ -20,7 +20,14 @@ export function BrandLogo({ name, imageUrl, size = 40 }: BrandLogoProps) {
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-white font-bold text-text-secondary"
     >
       {imageUrl ? (
-        <Image src={imageUrl} alt="" width={size} height={size} className="size-full object-cover" />
+        <Image
+          src={imageUrl}
+          alt=""
+          width={size}
+          height={size}
+          // 로고는 가로로 긴 것이 많다. 채우면 좌우가 잘리므로 전체가 들어오게 맞춘다.
+          className="size-full object-contain p-1"
+        />
       ) : (
         initial
       )}

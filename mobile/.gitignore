@@ -18,3 +18,4 @@ ios/
 *.p12
 *.key
 credentials.json
+google-service-account.json

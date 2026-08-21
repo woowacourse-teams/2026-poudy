@@ -131,7 +131,7 @@ export default function Home() {
                     alt=""
                     width={60}
                     height={60}
-                    className="size-[60px] rounded-[18px] object-cover"
+                    className="rounded-[18px] object-cover"
                   />
                   <span className="text-center text-[11px] font-semibold text-text-primary">
                     {QUICK_FILTERS[code].label}
@@ -145,6 +145,20 @@ export default function Home() {
         <RecentFilters />
         <SavedPreview />
       </main>
+
+      {/* 법정 문서는 이용자가 쉽게 찾을 수 있어야 한다. 본문의 꼬리말이 아니라 화면 전체의 꼬리말이라 main 밖에 둔다. */}
+      <footer className="border-t border-border px-4 py-4 text-center text-[11px] text-text-secondary">
+        {/* 두 링크의 길이가 달라 사이만 띄우면 한쪽으로 쏠려 보인다. 가운뎃점으로 묶어 한 줄로 읽히게 한다. */}
+        <p className="flex items-center justify-center gap-2">
+          <Link href="/privacy" className="underline">
+            개인정보 처리방침
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/terms" className="underline">
+            이용약관
+          </Link>
+        </p>
+      </footer>
 
       <BottomNavigation />
     </>

@@ -115,3 +115,17 @@ body {
     animation: none;
   }
 }
+
+/*
+ * Foldit 은 글자마다 색이 박힌 글꼴이라 color 로는 칠할 수 없다.
+ * 팔레트를 덮어써 로고와 같은 핑크로 맞춘다.
+ *
+ * 이 글꼴은 접힌 면의 밝은 쪽과 어두운 쪽 두 자리만 쓴다.
+ * 로고도 진한 핑크와 연한 핑크로 이뤄져 있어 같은 방식으로 칠한다.
+ */
+@font-palette-values --brand-fold {
+  font-family: Foldit;
+  override-colors:
+    0 #de4c77,
+    1 #f9a8c0;
+}
