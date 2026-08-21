@@ -38,25 +38,21 @@ jobs:
         env:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: |
-          mapfile -t picked < <(printf '%s' "$LABELS" \
+          picked=$(printf '%s' "$LABELS" \
             | jq -r '.[] | select(. == "major" or . == "minor" or . == "patch")')
+          count=$(printf '%s' "$picked" | grep -c . || true)
 
-          if [ "${#picked[@]}" -eq 0 ]; then
-            echo "major/minor/patch 레이블이 없어 릴리스를 만들지 않습니다."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "${#picked[@]}" -gt 1 ]; then
-            echo "::error::증가 단위 레이블은 하나만 붙일 수 있습니다: ${picked[*]}"
+          # main 으로 가는 PR 은 릴리스 PR 뿐이라 레이블은 예외 없이 하나여야 한다.
+          # 없다고 그냥 넘어가면 에러 없이 릴리스만 빠져서 알아채기 어렵다.
+          if [ "$count" -ne 1 ]; then
+            echo "::error::major/minor/patch 레이블을 정확히 하나 붙여야 합니다. 현재: ${picked:-(없음)}"
             exit 1
           fi
 
-          echo "level=${picked[0]}" >> "$GITHUB_OUTPUT"
+          echo "level=$picked" >> "$GITHUB_OUTPUT"
 
       - name: 다음 버전 계산
         id: version
-        if: steps.bump.outputs.skip != 'true'
         env:
           LEVEL: ${{ steps.bump.outputs.level }}
         run: |
@@ -94,7 +90,6 @@ jobs:
           echo "$current -> $next ($LEVEL)"
 
       - name: 태그 push 와 릴리스 발행
-        if: steps.bump.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           NEXT: ${{ steps.version.outputs.next }}
