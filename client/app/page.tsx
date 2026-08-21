@@ -131,7 +131,7 @@ export default function Home() {
                     alt=""
                     width={60}
                     height={60}
-                    className="size-[60px] rounded-[18px] object-cover"
+                    className="rounded-[18px] object-cover"
                   />
                   <span className="text-center text-[11px] font-semibold text-text-primary">
                     {QUICK_FILTERS[code].label}

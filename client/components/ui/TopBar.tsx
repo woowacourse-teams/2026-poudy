@@ -62,12 +62,12 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
           사이를 띄우지 않고 전용 글꼴을 쓴다.
           아래를 기준으로 맞추되 헤더 바닥에 닿지 않도록 둘 다 같은 만큼 띄운다.
 
-          Foldit 은 글자에 색이 박힌 글꼴이라 색을 따로 지정하지 않는다.
+          Foldit 은 글자에 색이 박힌 글꼴이라 color 대신 팔레트로 색을 맞춘다.
         */}
         <h1
           className={
             showLogo
-              ? "font-brand -ml-1 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto]"
+              ? "font-brand -ml-1.5 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
               : `flex-1 text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
           }
         >
