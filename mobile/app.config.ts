@@ -3,7 +3,11 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 const APP_NAME = 'Poudy';
 const APP_SLUG = 'poudy';
 const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
+const DEFAULT_APP_VERSION = '0.1.0';
+const EAS_ACCOUNT = 'poudys-team';
+const EAS_PROJECT_ID = '25e0967e-a114-4253-ad7a-a39063fce314';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
+const APP_VERSION = process.env.POUDY_APP_VERSION;
 
 if (!WEB_BASE_URL) {
   throw new Error('EXPO_PUBLIC_WEB_URL is required.');
@@ -13,13 +17,22 @@ if (!['http:', 'https:'].includes(new URL(WEB_BASE_URL).protocol)) {
   throw new Error('EXPO_PUBLIC_WEB_URL must use http or https.');
 }
 
+if (process.env.EAS_BUILD_PROFILE === 'production' && !APP_VERSION) {
+  throw new Error('POUDY_APP_VERSION is required for production builds.');
+}
+
+if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
+  throw new Error('POUDY_APP_VERSION must be x.y.z.');
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
   return {
     ...config,
     name: APP_NAME,
     slug: APP_SLUG,
-    version: '0.1.0',
+    owner: EAS_ACCOUNT,
+    version: APP_VERSION ?? DEFAULT_APP_VERSION,
     icon: './assets/poudy-mark.png',
     orientation: 'portrait',
     scheme: APP_SLUG,
@@ -82,5 +95,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
     ],
+    extra: {
+      ...config.extra,
+      eas: {
+        ...config.extra?.eas,
+        projectId: EAS_PROJECT_ID,
+      },
+    },
   };
 };

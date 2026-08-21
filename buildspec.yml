@@ -23,6 +23,17 @@ phases:
       - rm -rf "${CODEBUILD_SRC_DIR}/.poudy-package" "${CODEBUILD_SRC_DIR}/.artifacts"
   build:
     commands:
+      # 배포 산출물의 버전은 main 에 붙은 릴리스 태그에서 온다. 같은 phase 에서 export 해야
+      # 아래 패키징 스크립트가 실행하는 Gradle 까지 값이 전달된다.
+      - |
+        described=$(git describe --tags --match 'v[0-9]*' 2>/dev/null || true)
+        if [ -n "$described" ]; then
+          export APP_VERSION="${described#v}"
+        else
+          export APP_VERSION="0.0.0-${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+          echo "릴리스 태그를 찾지 못해 커밋으로 대체합니다. CodeBuild 의 git clone depth 가 얕으면 태그가 내려오지 않습니다."
+        fi
+        echo "APP_VERSION=${APP_VERSION}"
       - ./deploy/scripts/package-artifacts.sh "${CODEBUILD_SRC_DIR}/.poudy-package"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx"
@@ -34,7 +45,7 @@ phases:
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
       - cp deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
-      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
+      - printf 'commit=%s\nversion=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" "${APP_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"

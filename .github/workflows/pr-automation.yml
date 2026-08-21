@@ -39,11 +39,24 @@ jobs:
       - uses: actions/github-script@v9
         with:
           script: |
-            const types = ['build', 'ci', 'docs', 'feat', 'fix', 'perf', 'refactor', 'test'];
+            // 제목 타입과 저장소 레이블 이름이 어긋나 있다. fix 는 bug, docs 는 documentation 이다.
+            // build, perf, test 는 대응하는 레이블이 없어 뺐다. 새로 만들지 않는다.
+            const typeLabels = {
+              ci: 'ci',
+              docs: 'documentation',
+              feat: 'feat',
+              fix: 'bug',
+              refactor: 'refactor',
+            };
+
+            // 제목이 바뀌면 떼는 대상은 타입 말고 다른 뜻이 없는 레이블로 한정한다.
+            // ci 와 documentation 은 labeler 가 경로를 보고 붙이는 영역 레이블이기도 해서,
+            // 여기서 떼면 두 워크플로가 같은 레이블을 서로 붙였다 뗐다 한다.
+            const exclusive = ['bug', 'feat', 'refactor'];
 
             const title = context.payload.pull_request.title || '';
             const match = title.match(/^([a-z]+)\s*:/);
-            const picked = match && types.includes(match[1]) ? match[1] : null;
+            const picked = match ? typeLabels[match[1]] ?? null : null;
 
             if (!picked) {
               core.info(`제목에서 타입을 읽지 못했습니다: ${title}`);
@@ -68,7 +81,7 @@ jobs:
 
             const current = context.payload.pull_request.labels.map(l => l.name);
 
-            for (const stale of types.filter(t => t !== picked && current.includes(t))) {
+            for (const stale of exclusive.filter(l => l !== picked && current.includes(l))) {
               await github.rest.issues.removeLabel({ ...pr, name: stale });
               core.info(`${stale} 레이블 제거`);
             }

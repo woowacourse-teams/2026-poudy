@@ -1,0 +1,108 @@
+name: Release Tag
+
+# dev -> main PR 이 머지되면 major/minor/patch 레이블을 읽어 태그와 릴리스를 만든다.
+# 레이블이 없는 머지는 그냥 지나간다. 배포는 CodePipeline 이 따로 잡으므로
+# 이 워크플로는 버전 번호와 릴리스 노트만 책임진다.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+# 태그 번호는 직전 태그를 읽어 정한다. 두 릴리스가 겹쳐 돌면 같은 번호를 계산하므로
+# 취소하지 않고 순서대로 흘린다.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 태그와 릴리스 생성
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 직전 태그를 찾아야 해서 전체 히스토리와 태그가 필요하다.
+          fetch-depth: 0
+          # 이벤트 이후 main 에 다른 커밋이 얹혀도 릴리스가 그 커밋까지 삼키지 않게
+          # 머지 커밋을 정확히 집는다.
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: 레이블에서 증가 단위 읽기
+        id: bump
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          picked=$(printf '%s' "$LABELS" \
+            | jq -r '.[] | select(. == "major" or . == "minor" or . == "patch")')
+          count=$(printf '%s' "$picked" | grep -c . || true)
+
+          # main 으로 가는 PR 은 릴리스 PR 뿐이라 레이블은 예외 없이 하나여야 한다.
+          # 없다고 그냥 넘어가면 에러 없이 릴리스만 빠져서 알아채기 어렵다.
+          if [ "$count" -ne 1 ]; then
+            echo "::error::major/minor/patch 레이블을 정확히 하나 붙여야 합니다. 현재: ${picked:-(없음)}"
+            exit 1
+          fi
+
+          echo "level=$picked" >> "$GITHUB_OUTPUT"
+
+      - name: 다음 버전 계산
+        id: version
+        env:
+          LEVEL: ${{ steps.bump.outputs.level }}
+        run: |
+          # mobile-v* 와 backup-* 이 섞이지 않게 v<숫자> 로 시작하는 태그만 고른다.
+          current=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n 1)
+
+          if [ -z "$current" ]; then
+            current=v0.0.0
+            echo "기준 태그가 없어 $current 에서 시작합니다."
+          fi
+
+          if ! [[ "${current#v}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::기준 태그가 v<major>.<minor>.<patch> 형식이 아닙니다: $current"
+            exit 1
+          fi
+
+          major=${BASH_REMATCH[1]}
+          minor=${BASH_REMATCH[2]}
+          patch=${BASH_REMATCH[3]}
+
+          case "$LEVEL" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          next="v${major}.${minor}.${patch}"
+
+          if git rev-parse -q --verify "refs/tags/$next" >/dev/null; then
+            echo "::error::$next 태그가 이미 있습니다. 레이블을 확인하세요."
+            exit 1
+          fi
+
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+          echo "$current -> $next ($LEVEL)"
+
+      - name: 태그 push 와 릴리스 발행
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT: ${{ steps.version.outputs.next }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$NEXT" "$SHA" -m "$NEXT"
+          git push origin "refs/tags/$NEXT"
+
+          # --verify-tag 로 태그 push 가 실패한 채 빈 릴리스가 생기는 것을 막는다.
+          gh release create "$NEXT" \
+            --target "$SHA" \
+            --title "$NEXT" \
+            --generate-notes \
+            --verify-tag

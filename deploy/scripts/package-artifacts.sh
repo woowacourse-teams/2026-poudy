@@ -23,7 +23,7 @@ mkdir -p "${output_dir}/backend" "${output_dir}/frontend"
 log '백엔드 JAR를 빌드합니다.'
 (
     cd "${REPOSITORY_ROOT}/server"
-    ./gradlew bootJar
+    ./gradlew clean bootJar
 )
 
 shopt -s nullglob
