@@ -146,8 +146,8 @@ export default function Home() {
         <SavedPreview />
 
         {/* 법정 문서는 이용자가 쉽게 찾을 수 있어야 한다. 모든 화면이 홈으로 돌아온다. */}
-        <footer className="border-t border-border pt-4 text-[11px] text-text-secondary">
-          <p className="flex gap-3">
+        <footer className="-mx-4 -mb-3.5 bg-surface px-4 py-4 text-center text-[11px] text-text-secondary">
+          <p className="flex justify-center gap-3">
             <Link href="/privacy" className="underline">
               개인정보 처리방침
             </Link>
