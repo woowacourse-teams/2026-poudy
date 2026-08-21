@@ -3,6 +3,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 const APP_NAME = 'Poudy';
 const APP_SLUG = 'poudy';
 const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
+const DEFAULT_APP_VERSION = '0.1.0';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
 
 if (!WEB_BASE_URL) {
@@ -19,7 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_NAME,
     slug: APP_SLUG,
-    version: '0.1.0',
+    version: process.env.POUDY_APP_VERSION ?? DEFAULT_APP_VERSION,
     icon: './assets/poudy-mark.png',
     orientation: 'portrait',
     scheme: APP_SLUG,
