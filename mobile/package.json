@@ -15,6 +15,7 @@
     "@tanstack/react-query": "^5.101.4",
     "expo": "~57.0.3",
     "expo-dev-client": "~57.0.13",
+    "expo-haptics": "~57.0.1",
     "expo-quick-actions": "6.0.2",
     "expo-sharing": "~57.0.13",
     "expo-splash-screen": "~57.0.7",

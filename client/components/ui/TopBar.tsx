@@ -22,6 +22,14 @@ type TopBarProps = {
  */
 export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.replace("/");
+  };
 
   if (variant === "root") {
     return (
@@ -29,7 +37,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         {showBack ? (
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={handleBack}
             aria-label="뒤로 가기"
             className="flex size-11 shrink-0 items-center justify-center"
           >
@@ -74,7 +82,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
     <header className="flex h-[44px] items-center px-1">
       <button
         type="button"
-        onClick={() => router.back()}
+        onClick={handleBack}
         aria-label="뒤로 가기"
         className="flex size-11 items-center justify-center"
       >

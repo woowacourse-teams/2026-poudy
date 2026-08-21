@@ -1,7 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
@@ -17,6 +18,8 @@ interface WebAppShellProps {
   readonly webBaseUrl: string;
   readonly navigation: WebViewNavigation;
 }
+
+const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
@@ -35,6 +38,12 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
     [webOrigin],
   );
 
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
+    if (event.nativeEvent.data === HAPTIC_SELECTION_MESSAGE) {
+      void Haptics.selectionAsync().catch(() => undefined);
+    }
+  }, []);
+
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
       <WebView
@@ -46,6 +55,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         onError={navigation.handleFailure}
         onHttpError={navigation.handleFailure}
         onLoadEnd={navigation.handleLoadEnd}
+        onMessage={handleMessage}
         onNavigationStateChange={handleNavigationChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
         originWhitelist={[webOrigin]}
