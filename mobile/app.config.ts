@@ -1,3 +1,5 @@
+import 'tsx/cjs';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 const APP_NAME = 'Poudy';
