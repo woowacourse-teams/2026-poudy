@@ -50,8 +50,8 @@ jobs:
             };
 
             // 제목이 바뀌면 떼는 대상은 타입 말고 다른 뜻이 없는 레이블로 한정한다.
-            // ci 는 labeler 가 붙이는 영역 레이블이라 서로 붙였다 뗐다 하고,
-            // documentation 은 feat 과 함께 다는 표시라 떼면 사람이 붙인 뜻이 사라진다.
+            // ci 와 documentation 은 labeler 가 경로를 보고 붙이는 영역 레이블이기도 해서,
+            // 여기서 떼면 두 워크플로가 같은 레이블을 서로 붙였다 뗐다 한다.
             const exclusive = ['bug', 'feat', 'refactor'];
 
             const title = context.payload.pull_request.title || '';
