@@ -4,6 +4,7 @@ const APP_NAME = 'Poudy';
 const APP_SLUG = 'poudy';
 const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
 const DEFAULT_APP_VERSION = '0.1.0';
+const EAS_PROJECT_ID = '6a5a057a-a6b0-4dc0-ad4e-fce1898733c8';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
 
@@ -92,5 +93,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
     ],
+    extra: {
+      ...config.extra,
+      eas: {
+        ...config.extra?.eas,
+        projectId: EAS_PROJECT_ID,
+      },
+    },
   };
 };
