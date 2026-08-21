@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class Products {
@@ -37,10 +38,20 @@ public class Products {
     }
 
     public List<Product> search(String keyword) {
+        return search(keyword, MatchedProduct::of);
+    }
+
+    public List<Product> searchByProductName(String keyword) {
+        return search(keyword, MatchedProduct::ofProductName);
+    }
+
+    private List<Product> search(
+            String keyword,
+            BiFunction<SearchableProduct, SearchKeyword, MatchedProduct> match) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
-                .map(product -> MatchedProduct.of(product, searchKeyword))
+                .map(product -> match.apply(product, searchKeyword))
                 .filter(MatchedProduct::isFound)
                 .sorted(MatchedProduct.order())
                 .map(MatchedProduct::product)
@@ -58,21 +69,35 @@ public class Products {
     }
 
     public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size) {
-        if (page < 0 || size < 1) {
-            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
-        }
+        requireValidPageCondition(page, size);
 
         List<Product> matched = matchedBy(filter);
         List<Product> sorted = matched.stream()
                 .sorted(ProductSort.orDefault(sort).comparator())
                 .toList();
-        long offset = (long) page * size;
-        List<Product> items = sorted.stream()
-                .skip(offset)
+
+        return new ProductPage(pageOf(sorted, page, size), matched.size(), brandsOf(matched));
+    }
+
+    public ProductSuggestionPage suggest(String keyword, int page, int size) {
+        requireValidPageCondition(page, size);
+
+        List<Product> found = search(keyword);
+
+        return new ProductSuggestionPage(pageOf(found, page, size), found.size());
+    }
+
+    private static void requireValidPageCondition(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
+        }
+    }
+
+    private static List<Product> pageOf(List<Product> values, int page, int size) {
+        return values.stream()
+                .skip((long) page * size)
                 .limit(size)
                 .toList();
-
-        return new ProductPage(items, matched.size(), brandsOf(matched));
     }
 
     public long count(ProductFilter filter) {

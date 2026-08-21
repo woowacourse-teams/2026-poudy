@@ -11,6 +11,7 @@ export const ICON_IDS = [
   "search",
   "bookmark",
   "chevron-down",
+  "chevron-up",
   "chevron-right",
   "chevron-left",
   "check",
@@ -62,6 +63,11 @@ export function IconSprite() {
         {/* Lucide · chevron-down */}
         <symbol id="icon-chevron-down" viewBox="0 0 24 24">
           <path d="m6 9 6 6 6-6" />
+        </symbol>
+
+        {/* Lucide · chevron-up */}
+        <symbol id="icon-chevron-up" viewBox="0 0 24 24">
+          <path d="m18 15-6-6-6 6" />
         </symbol>
 
         {/* Lucide · chevron-right */}

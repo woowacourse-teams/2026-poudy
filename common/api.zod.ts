@@ -49,11 +49,11 @@ export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.st
 export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
 export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string(), brandName: z.string() });
 
-export type ProductSuggestionListResponse = __TypedOpenapi.Schemas.ProductSuggestionListResponse;
-export const ProductSuggestionListResponse = z.object({ items: z.array(ProductSuggestionResponse) });
+export type ProductSuggestionPageResponse = __TypedOpenapi.Schemas.ProductSuggestionPageResponse;
+export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSuggestionResponse), pagination: PaginationResponse });
 
 export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
-export const ShareMatchResponse = z.object({ status: z.enum(["MATCHED", "NOT_FOUND"]), productId: z.number().int().optional(), keyword: z.string().optional() });
+export const ShareMatchResponse = z.object({ status: z.enum(["MATCHED", "NOT_FOUND"]), productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });

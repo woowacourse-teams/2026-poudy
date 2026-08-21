@@ -1,0 +1,33 @@
+# gh release create --generate-notes 가 PR 을 묶는 기준이다.
+#
+# ci 는 제목 타입 레이블이면서 영역 레이블이기도 하다. .github/ 를 함께 고친 feat PR 은
+# 두 레이블을 다 받으므로, 먼저 선언한 칸이 이긴다는 점을 이용해 타입을 위에 둔다.
+changelog:
+  exclude:
+    labels:
+      - stale
+      - question
+      # 증가 단위 레이블은 릴리스 PR 자신에게만 붙는다. 자기 노트에 자기가 실리지 않게 뺀다.
+      - major
+      - minor
+      - patch
+  categories:
+    - title: 새 기능
+      labels:
+        - feat
+    - title: 버그 수정
+      labels:
+        - hotfix
+        - bug
+    - title: 개선
+      labels:
+        - refactor
+    - title: 문서
+      labels:
+        - documentation
+    - title: 빌드와 CI
+      labels:
+        - ci
+    - title: 그 밖의 변경
+      labels:
+        - "*"

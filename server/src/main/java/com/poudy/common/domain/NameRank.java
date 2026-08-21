@@ -12,6 +12,10 @@ public record NameRank(NameMatch match, boolean combined) implements Comparable<
         return match.isFound();
     }
 
+    public boolean isBetterThan(NameRank other) {
+        return compareTo(other) < 0;
+    }
+
     @Override
     public int compareTo(NameRank other) {
         int byMatch = match.compareTo(other.match);

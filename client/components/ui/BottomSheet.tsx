@@ -80,7 +80,7 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-3xl bg-white"
+        className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-white"
       >
         <div className="flex h-5 shrink-0 items-center justify-center">
           <span className="h-1 w-9 rounded-sm bg-[#C9CDD2]" aria-hidden="true" />

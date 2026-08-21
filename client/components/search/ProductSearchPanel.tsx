@@ -1,6 +1,5 @@
 "use client";
 
-import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
@@ -9,8 +8,8 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
-import { fetchProductSuggestions } from "@/lib/api/products";
-import { useSuggestions } from "@/lib/hooks/useSuggestions";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
+import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -20,16 +19,16 @@ import {
   subscribeRecentSearches,
 } from "@/lib/storage/recent-searches";
 
-const fetcher = async (keyword: string): Promise<readonly ProductSuggestionResponse[]> => {
-  const response = await fetchProductSuggestions(keyword);
-  return response.items;
-};
-
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 export function ProductSearchPanel() {
   const [keyword, setKeyword] = useState("");
-  const { items } = useSuggestions(keyword, fetcher, "product");
+  const { items, total, hasNext, loading, loadNext } = useProductSuggestions(keyword);
+  const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
   const typing = keyword.trim().length > 0;
+
+  const trimmed = keyword.trim();
+  const empty = total === 0;
+  const searching = loading && items.length === 0;
 
   const recent = useSyncExternalStore(
     subscribeRecentSearches,
@@ -53,71 +52,91 @@ export function ProductSearchPanel() {
         </p>
       </div>
 
-      {typing ? (
+      {typing && searching ? (
+        <p className="flex min-h-60 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
+      ) : typing ? (
         <>
-          <Link
-            href={`/products?keyword=${encodeURIComponent(keyword.trim())}`}
-            onClick={() =>
-              track("search_submitted", { mode: "product", query: keyword.trim(), result_count: items.length })
-            }
-            className="flex items-center gap-3 rounded-xl bg-surface p-3"
-          >
-            <Icon name="search" size={18} className="text-text-secondary" />
-            <span className="flex flex-1 flex-col gap-0.5">
-              <span className="text-[14px] font-semibold text-text-primary">‘{keyword.trim()}’가 포함된 제품 검색</span>
-              <span className="text-[11px] text-text-secondary">검색 결과 전체 보기</span>
-            </span>
-            <Icon name="chevron-right" size={16} className="text-text-secondary" />
-          </Link>
+          {empty ? (
+            <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
+              ‘{trimmed}’에 대한 검색 결과가 없어요
+            </p>
+          ) : (
+            <Link
+              href={`/products?keyword=${encodeURIComponent(trimmed)}`}
+              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 })}
+              className="flex items-center gap-3 rounded-xl bg-surface p-3"
+            >
+              <Icon name="search" size={18} className="text-text-secondary" />
+              <span className="flex flex-1 flex-col gap-0.5">
+                <span className="text-[14px] font-semibold text-text-primary">‘{trimmed}’가 포함된 제품 검색</span>
+                <span className="text-[11px] text-text-secondary">
+                  {total === undefined
+                    ? "검색 결과 전체 보기"
+                    : `검색 결과 ${total.toLocaleString("ko-KR")}개 전체 보기`}
+                </span>
+              </span>
+              <Icon name="chevron-right" size={16} className="text-text-secondary" />
+            </Link>
+          )}
 
-          <section>
-            <h2 className="flex items-center gap-1.5 pb-2">
-              <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
-              <span className="text-[12px] font-medium text-text-secondary">{items.length}개</span>
-            </h2>
+          {empty ? null : (
+            <section>
+              <h2 className="flex items-center gap-1.5 pb-2">
+                <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
+                {total === undefined ? null : (
+                  <span className="text-[12px] font-medium text-text-secondary">{total.toLocaleString("ko-KR")}개</span>
+                )}
+              </h2>
 
-            <ul className="divide-y divide-border">
-              {items.map((item, index) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/products/${item.id}`}
-                    onClick={() => {
-                      track("search_suggestion_selected", {
-                        mode: "product",
-                        query: keyword.trim(),
-                        position: index,
-                        product_id: item.id,
-                      });
-                      addRecentSearch({
-                        productId: item.id,
-                        name: item.name,
-                        brandName: item.brandName,
-                      });
-                    }}
-                    className="flex items-center gap-3 py-3"
-                  >
-                    <Image
-                      src={item.imageUrl || PRODUCT_PLACEHOLDER}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="size-10 shrink-0 rounded-lg bg-surface object-contain"
-                    />
-                    <span className="flex flex-1 flex-col gap-0.5">
-                      <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
-                      <span className="text-[11px] text-text-secondary">{item.brandName}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              <ul className="divide-y divide-border">
+                {items.map((item, index) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/products/${item.id}`}
+                      onClick={() => {
+                        track("search_suggestion_selected", {
+                          mode: "product",
+                          query: keyword.trim(),
+                          position: index,
+                          product_id: item.id,
+                        });
+                        addRecentSearch({
+                          productId: item.id,
+                          name: item.name,
+                          brandName: item.brandName,
+                        });
+                      }}
+                      className="flex items-center gap-3 py-3"
+                    >
+                      <Image
+                        src={item.imageUrl || PRODUCT_PLACEHOLDER}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
+                      />
+                      <span className="flex flex-1 flex-col gap-0.5">
+                        <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
+                        <span className="text-[11px] text-text-secondary">{item.brandName}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
 
-            {items.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
-            ) : null}
-          </section>
+              <div ref={sentinel} className="h-6" />
 
-          <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
+              {loading ? <p className="pb-2 text-center text-[13px] text-text-secondary">불러오는 중…</p> : null}
+
+              {items.length === 0 && !loading ? (
+                <p className="py-8 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
+              ) : null}
+            </section>
+          )}
+
+          {empty ? null : (
+            <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
+          )}
         </>
       ) : (
         <RecentSearches items={recent} />

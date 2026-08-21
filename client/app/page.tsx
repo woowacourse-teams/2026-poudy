@@ -67,7 +67,7 @@ const QUICK_FILTERS: Record<(typeof EXCLUDE_CODES)[number], { label: string; ima
 export default function Home() {
   return (
     <>
-      <TopBar title="홈" variant="root" />
+      <TopBar title="oudy" variant="root" showLogo />
 
       <main className="flex flex-1 flex-col gap-[18px] px-4 pt-4 pb-3.5">
         <section className="flex flex-col gap-3">
@@ -107,7 +107,11 @@ export default function Home() {
           <h2 className="sr-only">서비스 안내</h2>
           <ul className="grid grid-cols-3 gap-2">
             {TRUST.map((item) => (
-              <li key={item.title} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 ${item.bg}`}>
+              <li
+                key={item.title}
+                // 문구가 길면 줄이 넘어간다. 넘어간 줄까지 가운데로 맞춘다.
+                className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center ${item.bg}`}
+              >
                 <Icon name={item.icon} size={18} className={item.tint} />
                 <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>

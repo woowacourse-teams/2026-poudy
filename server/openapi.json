@@ -124,15 +124,17 @@
           "제품"
         ],
         "summary": "제품 조회",
-        "description": "검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.",
+        "description": "제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.",
         "operationId": "findProducts",
         "parameters": [
           {
             "name": "keyword",
             "in": "query",
+            "description": "제품명 또는 브랜드명 검색어",
             "required": false,
             "schema": {
               "type": "string",
+              "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
               "pattern": ".*\\S.*"
             },
@@ -439,7 +441,7 @@
           "제품"
         ],
         "summary": "제품 검색 제안 조회",
-        "description": "검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 조회한다.",
+        "description": "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.",
         "operationId": "suggestProducts",
         "parameters": [
           {
@@ -452,6 +454,33 @@
               "minLength": 1
             },
             "example": "토너"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (0부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "description": "조회할 페이지 번호 (0부터 시작)",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
           }
         ],
         "responses": {
@@ -460,7 +489,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProductSuggestionListResponse"
+                  "$ref": "#/components/schemas/ProductSuggestionPageResponse"
                 }
               }
             }
@@ -580,9 +609,11 @@
           {
             "name": "keyword",
             "in": "query",
+            "description": "제품명 또는 브랜드명 검색어",
             "required": false,
             "schema": {
               "type": "string",
+              "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
               "pattern": ".*\\S.*"
             },
@@ -763,7 +794,7 @@
           "성분"
         ],
         "summary": "성분 조회",
-        "description": "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. 두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 성분 ID 로만 조회하면 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.",
+        "description": "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. 두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 검색어로 조회하면 검색어에 잘 맞는 순서로 최대 5 건만 반환한다. 성분 ID 로만 조회하면 상한 없이 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.",
         "operationId": "findIngredients",
         "parameters": [
           {
@@ -1651,19 +1682,23 @@
           "name"
         ]
       },
-      "ProductSuggestionListResponse": {
+      "ProductSuggestionPageResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
-            "description": "검색어에 해당하는 제품",
+            "description": "제품명 또는 브랜드명 검색어에 해당하는 제품",
             "items": {
               "$ref": "#/components/schemas/ProductSuggestionResponse"
             }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
           }
         },
         "required": [
-          "items"
+          "items",
+          "pagination"
         ]
       },
       "ProductSuggestionResponse": {
@@ -1709,12 +1744,18 @@
             ]
           },
           "productId": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "example": 8
           },
           "keyword": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "레드 블레미쉬 클리어"
           }
         },

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
+import { Foldit, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
@@ -23,6 +23,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+// 헤더의 서비스 이름에만 쓴다. 굵기를 조절할 수 있는 글꼴이라 쓰는 굵기만 받는다.
+const foldit = Foldit({
+  variable: "--font-foldit",
+  subsets: ["latin"],
+  weight: "700",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Poudy",
   description: "성분을 기준으로 화장품을 탐색합니다.",
@@ -37,7 +45,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <IconSprite />
         <Suspense>

@@ -13,6 +13,10 @@ public record MatchedProduct(Product product, NameRank match) {
         return new MatchedProduct(searchable.product(), searchable.match(keyword));
     }
 
+    public static MatchedProduct ofProductName(SearchableProduct searchable, SearchKeyword keyword) {
+        return new MatchedProduct(searchable.product(), searchable.matchName(keyword, searchable.productName()));
+    }
+
     public static Comparator<MatchedProduct> order() {
         return ORDER;
     }

@@ -33,16 +33,31 @@ pnpm android
 
 ## 환경 변수
 
-| 변수                      | 필수    | 용도                                                             |
-| ------------------------- | ------- | ---------------------------------------------------------------- |
-| `EXPO_PUBLIC_WEB_URL`     | 예      | WebView가 표시할 Poudy 웹 클라이언트 기준 URL                    |
-| `POUDY_BUNDLE_IDENTIFIER` | 빌드 시 | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app` |
+| 변수                      | 필수       | 용도                                                             |
+| ------------------------- | ---------- | ---------------------------------------------------------------- |
+| `EXPO_PUBLIC_WEB_URL`     | 예         | WebView가 표시할 Poudy 웹 클라이언트 기준 URL                    |
+| `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app` |
+| `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다             |
+
+## EAS CLI
+
+`eas` 명령은 설정을 읽으려고 `expo config`를 먼저 실행합니다. 이 단계는 `.env` 주입보다
+앞서므로 `.env`에 값이 있어도 `EXPO_PUBLIC_WEB_URL`이 없다고 판단해 중단합니다. 명령 앞에
+값을 붙여 실행합니다.
+
+```bash
+EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest credentials --platform android
+```
 
 ## EAS Build
 
 `eas.json`은 development, preview, production 환경을 각각 같은 이름의 EAS Environment와 연결합니다. 각 환경에 공개값인 `EXPO_PUBLIC_WEB_URL`을 plaintext로 등록해야 하며, 처음 사용할 때 EAS 프로젝트 연결과 서명 자격 증명 설정이 필요합니다.
 
 production 빌드는 EAS 원격 버전을 기준으로 iOS build number와 Android version code를 자동 증가시킵니다.
+
+앱 버전은 서버·웹 릴리스 태그(`v*`)와 분리해서 관리합니다. 서버와 웹은 한 파이프라인에서 함께 배포되지만 앱은 스토어 심사를 거쳐 사용자가 각자 업데이트하므로 두 번호가 같은 시점을 가리키지 않습니다. 앱과 서버의 호환 여부는 릴리스 버전 비교가 아니라 API 계약 버전으로 판단합니다.
+
+스토어에 노출되는 버전은 production EAS Environment에 등록한 `POUDY_APP_VERSION`이 정합니다. 릴리스할 때 이 값만 올리면 되고, build number와 version code는 EAS가 알아서 증가시킵니다. production 빌드에서 값이 없으면 Expo 설정 평가 단계에서 빌드를 중단하므로 예전 버전이 그대로 스토어에 올라가지 않습니다.
 
 ## 공유 링크 흐름
 
@@ -69,6 +84,20 @@ adb shell am start \
   --es android.intent.extra.TEXT "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000000001" \
   com.poudy.app
 ```
+
+## 앱 아이콘 퀵 액션
+
+홈 화면에서 앱 아이콘을 길게 누르면 나오는 메뉴입니다. 각 항목은 WebView를 해당 경로로 다시 엽니다.
+
+| 항목        | 경로                  |
+| ----------- | --------------------- |
+| 성분 검색   | `/search/ingredients` |
+| 비교함      | `/compare`            |
+| 저장한 제품 | `/saved`              |
+
+항목 정의와 경로 변환은 `src/util/quickAction.ts`에, 등록과 실행 처리는 `src/hooks/useQuickActions.ts`에 있습니다. 정적 선언 대신 앱 실행 시 `setItems`로 등록하므로 iOS와 Android 모두 설치 후 앱을 한 번 실행해야 메뉴가 나타납니다.
+
+`/compare`는 웹 클라이언트에 아직 없는 경로입니다. 비교함 화면이 추가되기 전까지 이 항목은 빈 페이지로 이동합니다.
 
 ## 코드 별칭과 타입 검사
 

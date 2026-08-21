@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@poudy/api/*": ["../common/*"]
     }
   },
   "include": ["App.tsx", "app.config.ts", "index.ts", "src/**/*.ts", "src/**/*.tsx"]

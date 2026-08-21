@@ -1,6 +1,6 @@
 # CodeBuild·CodeDeploy 배포 구성
 
-운영 배포 흐름은 GitHub dev → CodeBuild ARM64 → backend/frontend secondary
+운영 배포 흐름은 GitHub main → CodeBuild ARM64 → backend/frontend secondary
 artifacts → S3 → CodeDeploy 배포 그룹 → EC2 파일 교체 및 systemd 재시작입니다.
 
 > 배포용 GitHub Actions 워크플로는 사용하지 않습니다. GitHub Actions에는 PR 검증만
@@ -10,7 +10,8 @@ artifacts → S3 → CodeDeploy 배포 그룹 → EC2 파일 교체 및 systemd 
 
 CodeBuild 프로젝트는 다음 기준으로 생성합니다.
 
-- 소스: GitHub 버전 1, "dev" 브랜치
+- 소스: GitHub 버전 1, "main" 브랜치
+- git clone depth: 릴리스 태그를 읽어야 하므로 전체 클론
 - 환경: 관리형 이미지, ARM64, Java 21·Node.js 22 지원 이미지
 - 서비스 역할: 제공된 "codebuild-project"
 - 로그 그룹: "/aws/codebuild/project-2026"
@@ -25,6 +26,21 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 현재 buildspec은 두 산출물을 같은 빌드에서 생성하지만, CodeBuild 프로젝트 설정에서
 각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상
 필요한 빌드 식별 marker만 담으며, 실제 배포에는 사용하지 않습니다.
+
+산출물의 버전은 `main`에 붙은 릴리스 태그에서 옵니다. `buildspec.yml`이 `git describe`로
+태그를 읽어 `APP_VERSION`으로 넘기고, 서버 JAR 버전과 `build-metadata.txt`의 `version`에
+같은 값이 들어갑니다. 태그를 찾지 못하면 커밋 SHA로 대체하고 그 사실을 빌드 로그에
+남기므로, 버전이 커밋으로 찍혀 있다면 clone depth부터 확인합니다.
+
+버전 태그는 `dev` → `main` PR에 붙인 `major`·`minor`·`patch` 레이블을 보고
+`.github/workflows/release-tag.yml`이 만듭니다. 브랜치 push를 빌드 트리거로 쓰면 태그가
+만들어지기 전에 빌드가 시작될 수 있으므로, 트리거는 태그 push를 기준으로 둡니다.
+
+무엇을 언제 내보냈는지는 GitHub Release가 기록합니다. 배포 이력을 위한 별도 파일이나
+엔드포인트를 두지 않습니다. 다만 릴리스는 "냈다"의 기록이지 "떠 있다"의 기록이 아니므로,
+배포가 실패하면 릴리스와 실제가 어긋납니다. 트리거를 태그 push로 두어야 릴리스와 배포
+시도가 1:1로 붙고, 어긋났을 때 대조할 근거는 배포된 `app.jar` 매니페스트의
+`Implementation-Version`입니다.
 
 `buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. `NEXT_PUBLIC_API_BASE_URL`은
 비워 두어 브라우저가 현재 프론트 origin을 사용하게 하며, 프론트 EC2 Nginx가 `/api/*`를

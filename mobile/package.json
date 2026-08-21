@@ -1,6 +1,5 @@
 {
   "name": "poudy-mobile",
-  "version": "0.1.0",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -13,15 +12,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.101.4",
     "expo": "~57.0.3",
     "expo-dev-client": "~57.0.13",
+    "expo-haptics": "~57.0.1",
+    "expo-quick-actions": "6.0.2",
     "expo-sharing": "~57.0.13",
     "expo-splash-screen": "~57.0.7",
     "expo-system-ui": "~57.0.2",
     "react": "19.2.3",
     "react-native": "0.86.2",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-webview": "13.16.1"
+    "react-native-svg": "15.15.4",
+    "react-native-webview": "13.16.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

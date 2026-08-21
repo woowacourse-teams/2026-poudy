@@ -13,7 +13,15 @@ const trackSearch = (mode: "product" | "ingredient", query: string, resultCount:
 type State<T> = {
   readonly keyword: string;
   readonly items: readonly T[];
+  readonly loading: boolean;
 };
+
+const initial = <T>(keyword: string): State<T> => ({ keyword, items: [], loading: Boolean(keyword) });
+
+const settled =
+  <T>(keyword: string, items: readonly T[]) =>
+  (previous: State<T>) =>
+    previous.keyword === keyword ? { ...previous, items, loading: false } : previous;
 
 /**
  * 검색어가 멈춘 뒤에만 조회한다.
@@ -25,11 +33,12 @@ export const useSuggestions = <T>(
   /** 검색 이벤트를 남길 화면. 없으면 남기지 않는다. */
   mode?: "product" | "ingredient",
 ) => {
-  const debounced = useDebouncedValue(keyword.trim());
-  const [state, setState] = useState<State<T>>({ keyword: debounced, items: [] });
+  const trimmed = keyword.trim();
+  const debounced = useDebouncedValue(trimmed);
+  const [state, setState] = useState<State<T>>(() => initial(debounced));
 
   // 검색어가 바뀌면 렌더링 중에 결과를 비운다. 이전 검색어의 결과가 잠깐 보이지 않게 한다.
-  const current = state.keyword === debounced ? state : { keyword: debounced, items: [] };
+  const current = state.keyword === debounced ? state : initial<T>(debounced);
   if (state.keyword !== debounced) setState(current);
 
   useEffect(() => {
@@ -40,18 +49,18 @@ export const useSuggestions = <T>(
     fetcher(debounced, controller.signal)
       .then((next) => {
         if (controller.signal.aborted) return;
-        setState((previous) => (previous.keyword === debounced ? { ...previous, items: next } : previous));
+        setState(settled(debounced, next));
 
         // 검색어가 멈춘 뒤 한 번만 남긴다. 글자마다 보내면 이벤트가 검색어 길이만큼 부풀어 오른다.
         if (mode) trackSearch(mode, debounced, next.length);
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        setState((previous) => (previous.keyword === debounced ? { ...previous, items: [] } : previous));
+        setState(settled<T>(debounced, []));
       });
 
     return () => controller.abort();
   }, [debounced, fetcher, mode]);
 
-  return { items: current.items, keyword: debounced };
+  return { items: current.items, keyword: debounced, loading: current.loading || trimmed !== debounced };
 };

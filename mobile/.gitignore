@@ -17,3 +17,4 @@ ios/
 *.p8
 *.p12
 *.key
+credentials.json

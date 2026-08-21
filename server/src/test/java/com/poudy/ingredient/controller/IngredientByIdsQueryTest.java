@@ -35,6 +35,14 @@ class IngredientByIdsQueryTest {
     }
 
     @Test
+    @DisplayName("성분 ID 로만 조회하면 검색 건수 상한을 넘겨도 요청한 만큼 모두 반환한다")
+    void keepsEveryRequestedIngredient() throws Exception {
+        mockMvc.perform(get("/api/ingredients").param("ingredientIds", "1,2,9,20,213,523,532"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(7));
+    }
+
+    @Test
     @DisplayName("성분 ID 파라미터가 없으면 잘못된 요청으로 응답한다")
     void rejectsMissingIngredientIds() throws Exception {
         mockMvc.perform(get("/api/ingredients"))

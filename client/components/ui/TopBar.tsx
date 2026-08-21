@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { Icon } from "./icons/Icon";
@@ -10,6 +11,8 @@ type TopBarProps = {
   readonly variant: "root" | "sub";
   /** 루트 제목에 뒤로가기를 함께 두는 화면이 있다(디자인 S09·S11). */
   readonly showBack?: boolean;
+  /** 제목 앞에 로고를 둘지. 홈처럼 서비스를 대표하는 화면에서 쓴다. */
+  readonly showLogo?: boolean;
   readonly right?: React.ReactNode;
 };
 
@@ -17,8 +20,16 @@ type TopBarProps = {
  * 디자인의 상단 영역. 이름은 8 가지였지만 구조는 두 종류뿐이다.
  * 하위 화면은 좌우 균형을 맞춰 제목을 가운데 둔다.
  */
-export function TopBar({ title, variant, right, showBack = false }: TopBarProps) {
+export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.replace("/");
+  };
 
   if (variant === "root") {
     return (
@@ -26,7 +37,7 @@ export function TopBar({ title, variant, right, showBack = false }: TopBarProps)
         {showBack ? (
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={handleBack}
             aria-label="뒤로 가기"
             className="flex size-11 shrink-0 items-center justify-center"
           >
@@ -34,7 +45,34 @@ export function TopBar({ title, variant, right, showBack = false }: TopBarProps)
           </button>
         ) : null}
 
-        <h1 className={`flex-1 text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`}>{title}</h1>
+        {/* 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다. */}
+        {showLogo ? (
+          <Image
+            src="/logo.png"
+            alt=""
+            width={26}
+            height={29}
+            priority
+            className="ml-3 mb-1.5 self-end h-[29px] w-[26px]"
+          />
+        ) : null}
+
+        {/*
+          로고가 첫 글자 p 를 대신한다. 로고에 바로 이어 붙어 한 낱말로 읽히도록
+          사이를 띄우지 않고 전용 글꼴을 쓴다.
+          아래를 기준으로 맞추되 헤더 바닥에 닿지 않도록 둘 다 같은 만큼 띄운다.
+
+          Foldit 은 글자에 색이 박힌 글꼴이라 색을 따로 지정하지 않는다.
+        */}
+        <h1
+          className={
+            showLogo
+              ? "font-brand -ml-1 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto]"
+              : `flex-1 text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
+          }
+        >
+          {title}
+        </h1>
         {right}
       </header>
     );
@@ -44,7 +82,7 @@ export function TopBar({ title, variant, right, showBack = false }: TopBarProps)
     <header className="flex h-[44px] items-center px-1">
       <button
         type="button"
-        onClick={() => router.back()}
+        onClick={handleBack}
         aria-label="뒤로 가기"
         className="flex size-11 items-center justify-center"
       >

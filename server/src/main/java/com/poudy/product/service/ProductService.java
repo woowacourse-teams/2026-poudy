@@ -12,11 +12,11 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductSuggestionPage;
 import com.poudy.product.domain.Products;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.repository.ProductRepository;
-import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,8 +50,8 @@ public class ProductService {
         return products().count(filterOf(request));
     }
 
-    public List<Product> suggestProducts(String keyword) {
-        return products().search(keyword);
+    public ProductSuggestionPage suggestProducts(String keyword, PaginationRequest pagination) {
+        return products().suggest(keyword, pagination.page(), pagination.size());
     }
 
     public ProductDetail findDetail(Long productId) {

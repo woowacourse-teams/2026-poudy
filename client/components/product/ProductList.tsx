@@ -7,7 +7,7 @@ import type {
   ExcludeCodeResponse,
   ProductResponse,
 } from "@poudy/api/api.zod";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar, type FilterChipItem } from "@/components/ui/FilterChipBar";
@@ -19,6 +19,7 @@ import { fetchProducts } from "@/lib/api/products";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
@@ -246,23 +247,4 @@ function useProductPages(filter: Filter) {
   }, []);
 
   return { ...current, loadNext };
-}
-
-/** 목록 끝이 보이면 다음 페이지를 부른다. */
-function useInfiniteScroll(enabled: boolean, onReach: () => void) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const target = ref.current;
-    if (!target || !enabled) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) onReach();
-    });
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [enabled, onReach]);
-
-  return ref;
 }

@@ -84,6 +84,14 @@ class ShareMatchTest {
     }
 
     @Test
+    @DisplayName("제품명 자리에 남은 브랜드명만으로 제품을 확정하지 않는다")
+    void doesNotConfirmByBrandNameInProductNamePosition() {
+        Products products = new Products(List.of(product(1L, DOCTOR_G, "레드 블레미쉬 클리어 토너")));
+
+        assertThat(match("닥터지 닥터지", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("축약한 검색어로는 확정하지 않는다")
     void doesNotConfirmFromShortenedKeyword() {
         Products products = new Products(List.of(product(7L, DOCTOR_G, "블랙스네일 레티놀 콜라겐 세럼 인텐스")));
