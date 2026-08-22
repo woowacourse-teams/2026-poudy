@@ -13,6 +13,14 @@ import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
+export const ingredientSummary = (ingredientCount: number, effectNames: readonly string[]): string => {
+  const effects = [...new Set(effectNames)].slice(0, 2).map((name) => `${name} 성분`);
+
+  if (effects.length === 0) return `${ingredientCount}개 전성분으로 이루어진 제품이에요.`;
+  if (effects.length === 1) return `${ingredientCount}개 전성분을 기준으로, ${effects[0]}을 담은 구성입니다.`;
+  return `${ingredientCount}개 전성분을 기준으로, ${effects.join("과 ")}을 함께 담은 구성입니다.`;
+};
+
 /** S05 제품 성분 상세. 문구와 구조는 design/v1.pen 을 따른다. */
 export function ProductDetail({ product }: { readonly product: ProductDetailResponse }) {
   return (
@@ -150,14 +158,15 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
-  const effects = [...new Set(product.skinEffectGroups.slice(0, 2).map((group) => `${group.name} 성분`))].join("과 ");
-
   return (
     <section className="flex flex-col gap-3 rounded-xl bg-[#F7F8F9] p-4">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-[12px] text-[#72747A]">
-          {product.ingredients.length}개 전성분을 기준으로, {effects}을 함께 담은 구성입니다.
+          {ingredientSummary(
+            product.ingredients.length,
+            product.skinEffectGroups.map((group) => group.name),
+          )}
         </p>
       </div>
 
