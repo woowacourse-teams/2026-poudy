@@ -159,6 +159,35 @@ const 보습 = { id: 1, code: "HYDRATION_RELATED", name: "보습" };
 const 진정 = { id: 2, code: "SOOTHING_RELATED", name: "진정" };
 const 각질케어 = { id: 3, code: "EXFOLIATION_RELATED", name: "각질 케어" };
 
+const sunscreenIngredientNames = [
+  "정제수",
+  "징크옥사이드",
+  "프로필헵틸카프릴레이트",
+  "C12-15알킬벤조에이트",
+  "부틸렌글라이콜",
+] as const;
+
+export const untaggedProductDetail: ProductDetailResponse = {
+  id: 6,
+  name: "더마 릴리프 썬스크린",
+  brand: { id: 6, name: "셀퓨전씨", englishName: "Cell Fusion C", imageUrl: "" },
+  categories: [{ id: 2, name: "선케어", child: { id: 21, name: "선크림" } }],
+  imageUrl: "",
+  variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
+  moistureLevel: 1,
+  oilLevel: 2,
+  skinEffectGroups: [],
+  ingredients: Array.from({ length: 24 }, (_, index) => ({
+    id: 1001 + index,
+    koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
+    englishName: `Ingredient ${index + 1}`,
+    formulationRoles: [],
+    skinEffects: [],
+  })),
+  freeOfCodes: ["DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"],
+  updatedAt: "2026-08-20T00:00:00+09:00",
+};
+
 export const productDetails: ProductDetailResponse[] = [
   {
     id: 1,
@@ -257,6 +286,7 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
+  untaggedProductDetail,
 ];
 
 /** S06 화면의 출처 문구. 성분마다 같은 자료를 본다. */

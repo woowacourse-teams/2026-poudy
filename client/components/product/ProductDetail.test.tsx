@@ -1,6 +1,16 @@
-import { describe, expect, it } from "vitest";
+/**
+ * @vitest-environment jsdom
+ */
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-import { ingredientSummary } from "./ProductDetail";
+import { ingredientSummary, ProductDetail } from "./ProductDetail";
+
+import { untaggedProductDetail } from "@/mocks/fixtures";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+}));
 
 describe("제품 성분 요약", () => {
   it("피부 작용 태그가 없으면 전성분 수만 안내한다", () => {
@@ -15,5 +25,13 @@ describe("제품 성분 요약", () => {
     expect(ingredientSummary(24, ["수분", "진정", "미백"])).toBe(
       "24개 전성분을 기준으로, 수분 성분과 진정 성분을 함께 담은 구성입니다.",
     );
+  });
+
+  it("피부 작용 태그가 없는 24개 전성분 제품을 깨진 조사 없이 보여 준다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { name: "더마 릴리프 썬스크린" })).toBeInTheDocument();
+    expect(screen.getByText("24개 전성분으로 이루어진 제품이에요.")).toBeInTheDocument();
+    expect(screen.queryByText(/기준으로,\s*을/)).not.toBeInTheDocument();
   });
 });
