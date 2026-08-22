@@ -63,6 +63,16 @@ describe("저장함", () => {
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
   });
 
+  it("브라우저 저장 안내를 숨기고 제품 수를 오른쪽에 둔다", async () => {
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    const count = await screen.findByText("총 1개");
+
+    expect(screen.queryByText("이 브라우저에 저장돼요")).not.toBeInTheDocument();
+    expect(count.parentElement).toHaveClass("justify-end");
+  });
+
   it("최근에 저장한 제품을 앞에 둔다", async () => {
     saveProduct(3);
     saveProduct(1);
