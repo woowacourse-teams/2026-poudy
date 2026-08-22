@@ -109,10 +109,7 @@ export function SavedScreen() {
 
   return (
     <main className="flex-1 px-4">
-      <div className="flex items-center justify-between py-3">
-        <p className="flex items-center gap-1 text-[11px] text-text-secondary">
-          <Icon name="info" size={13} />이 브라우저에 저장돼요
-        </p>
+      <div className="flex items-center justify-end py-3">
         <p className="text-[13px] font-bold text-text-primary">총 {current.items.length}개</p>
       </div>
 
