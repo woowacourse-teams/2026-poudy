@@ -47,6 +47,6 @@ public class ErrorResponseConfig {
     private boolean hasInput(Operation operation) {
         List<Parameter> parameters = operation.getParameters();
 
-        return parameters != null && !parameters.isEmpty();
+        return operation.getRequestBody() != null || parameters != null && !parameters.isEmpty();
     }
 }

@@ -1,5 +1,6 @@
 package com.poudy.exception;
 
+import com.poudy.feedback.domain.InvalidFeedbackException;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ProblemDetail> handleInvalidRequestException(InvalidRequestException exception) {
         return problem(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidFeedbackException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidFeedbackException(InvalidFeedbackException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_QUERY_PARAMETER,
+                ErrorCode.INVALID_QUERY_PARAMETER.message());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
