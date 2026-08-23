@@ -23,6 +23,7 @@ repositories {
 
 ext {
     springdocVersion = '3.1.0'
+    awsSdkVersion = '2.41.33'
     openApiDocPort = 8099
     // Exec 는 PATH 에서 실행 파일을 그대로 찾아 Windows 에서 'npx' 를 찾지 못한다.
     isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
@@ -30,11 +31,13 @@ ext {
 
 dependencies {
     implementation platform(SpringBootPlugin.BOM_COORDINATES)
+    implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+    implementation 'software.amazon.awssdk:s3'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
