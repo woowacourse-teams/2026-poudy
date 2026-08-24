@@ -48,10 +48,8 @@
   --radius-button: 14px;
   --font-weight-button: 700;
 
-  --transition-duration-press: 100ms;
   --transition-duration-control-state: 160ms;
   --transition-duration-disclosure: 200ms;
-  --ease-standard: cubic-bezier(0, 0, 0.2, 1);
 
   /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
   --color-app-canvas: #f2f3f5;
@@ -89,7 +87,7 @@ body {
   transform-origin: top right;
   transition-property: opacity, transform;
   transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-standard);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
 }
 
 .sort-dropdown-menu[data-open="false"] {
@@ -107,14 +105,15 @@ body {
 .sort-dropdown-option {
   transition-property: background-color, color, transform;
   transition-duration:
-    var(--transition-duration-control-state), var(--transition-duration-control-state), var(--transition-duration-press);
-  transition-timing-function: var(--ease-standard);
+    var(--transition-duration-control-state), var(--transition-duration-control-state),
+    var(--transition-duration-press, 100ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
 }
 
 @media (hover: hover) and (pointer: fine) {
   .sort-dropdown-trigger:hover,
   .sort-dropdown-option[data-selected="false"]:hover {
-    transition-duration: 0s, 0s, var(--transition-duration-press);
+    transition-duration: 0s, 0s, var(--transition-duration-press, 100ms);
   }
 
   .sort-dropdown-trigger:hover {
@@ -128,7 +127,7 @@ body {
 }
 
 .sort-dropdown-chevron {
-  transition: transform var(--transition-duration-control-state) var(--ease-standard);
+  transition: transform var(--transition-duration-control-state) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
 }
 
 .sort-dropdown-chevron[data-open="true"] {
