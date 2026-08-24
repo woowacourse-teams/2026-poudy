@@ -1,6 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useNetworkState } from 'expo-network';
+import { useCallback, useEffect, useState } from 'react';
 
-import type { WebViewNavigation } from '@/types/webView';
+import type { WebViewFailure, WebViewNavigation } from '@/types/webView';
+
+const LOAD_TIMEOUT_MS = 10_000;
 
 interface WebViewSource {
   readonly key: number;
@@ -10,37 +13,58 @@ interface WebViewSource {
 export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
   const [source, setSource] = useState<WebViewSource>({ key: 0, url: initialUrl });
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [failure, setFailure] = useState<WebViewFailure | null>(null);
+
+  const { isConnected } = useNetworkState();
+
+  const fail = useCallback(
+    (reason: WebViewFailure) => {
+      setFailure(isConnected === false ? 'offline' : reason);
+      setIsLoading(false);
+    },
+    [isConnected],
+  );
 
   const navigate = useCallback((url: string) => {
-    setHasError(false);
+    setFailure(null);
     setIsLoading(true);
     setSource((current) => ({ key: current.key + 1, url }));
   }, []);
 
   const reload = useCallback(() => {
-    setHasError(false);
+    setFailure(null);
     setIsLoading(true);
     setSource((current) => ({ ...current, key: current.key + 1 }));
+  }, []);
+
+  const handleLoad = useCallback(() => {
+    setFailure(null);
+    setIsLoading(false);
   }, []);
 
   const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
   }, []);
 
-  const handleFailure = useCallback(() => {
-    setHasError(true);
-    setIsLoading(false);
-  }, []);
+  useEffect(() => {
+    if (!isLoading) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => fail('timeout'), LOAD_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [fail, isLoading, source.key]);
 
   return {
     key: source.key,
     url: source.url,
     isLoading,
-    hasError,
+    failure,
     navigate,
     reload,
+    handleLoad,
     handleLoadEnd,
-    handleFailure,
+    fail,
   };
 };
