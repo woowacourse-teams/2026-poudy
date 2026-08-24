@@ -67,8 +67,8 @@ describe("IngredientSearchScreen", () => {
 
     const button = await screen.findByRole("button", { name: "0개 조건에 맞는 제품 보기" });
     expect(button).toBeDisabled();
-    // 링크로 감싸면 버튼을 막아도 눌러서 넘어간다. 0 개일 때는 링크 자체를 걸지 않는다.
-    expect(button.closest("a")).toBeNull();
+    // 감싼 링크는 그대로 두되 눌러도 넘어가지 않아야 한다.
+    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("개수를 세는 동안에는 버튼을 누를 수 없다", () => {
@@ -80,7 +80,7 @@ describe("IngredientSearchScreen", () => {
 
     const button = screen.getByRole("button", { name: "조건에 맞는 제품 보기" });
     expect(button).toBeDisabled();
-    expect(button.closest("a")).toBeNull();
+    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("조건을 바꾸면 새 개수가 들어오기 전까지 이전 개수로 넘어가지 못한다", async () => {
@@ -97,7 +97,7 @@ describe("IngredientSearchScreen", () => {
 
     const button = screen.getByRole("button", { name: "7개 조건에 맞는 제품 보기" });
     expect(button).toBeDisabled();
-    expect(button.closest("a")).toBeNull();
+    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("개수가 바뀌어도 낭독기에는 완성된 문구 하나만 전한다", async () => {

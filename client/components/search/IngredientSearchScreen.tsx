@@ -64,22 +64,29 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
       {total > 0 ? (
         <div className="sticky bottom-18 border-t border-border bg-white p-4">
           <p className="pb-2 text-[12px] text-text-secondary">{summary}</p>
-          {blocked ? (
-            button
-          ) : (
-            <Link
-              href={`/products?${serializeFilter(filter).toString()}`}
-              onClick={() =>
-                addRecentFilter({
-                  query: serializeFilter(filter).toString(),
-                  summary,
-                  mode: "ingredient",
-                })
+          {/*
+            막을 때도 Link 를 걷어 내지 않는다. 감싸는 것이 바뀌면 React 가 안쪽을 새로
+            만들어, 새 개수가 도착하는 그 순간 다이얼이 다시 태어나 구르지 못한다.
+            대신 넘어가지 못하게 눌림을 막는다.
+          */}
+          <Link
+            href={`/products?${serializeFilter(filter).toString()}`}
+            aria-disabled={blocked}
+            tabIndex={blocked ? -1 : undefined}
+            onClick={(event) => {
+              if (blocked) {
+                event.preventDefault();
+                return;
               }
-            >
-              {button}
-            </Link>
-          )}
+              addRecentFilter({
+                query: serializeFilter(filter).toString(),
+                summary,
+                mode: "ingredient",
+              });
+            }}
+          >
+            {button}
+          </Link>
         </div>
       ) : null}
     </main>
