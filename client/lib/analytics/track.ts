@@ -1,16 +1,19 @@
 "use client";
 
+import { readAppInfo } from "./app-info";
 import type { EventMap, EventName } from "./events";
 
 type Posthog = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
   captureException: (error: unknown, properties?: Record<string, unknown>) => void;
   init: (key: string, options: Record<string, unknown>) => void;
+  register: (properties: Record<string, unknown>) => void;
 };
 
 declare global {
   interface Window {
     posthog?: Posthog;
+    __POUDY_APP__?: unknown;
   }
 }
 
@@ -70,5 +73,8 @@ export const initAnalytics = async (): Promise<void> => {
       maskTextSelector: "[data-private]",
     },
   });
+
+  posthog.register(readAppInfo(window.__POUDY_APP__));
+
   window.posthog = posthog as unknown as Posthog;
 };

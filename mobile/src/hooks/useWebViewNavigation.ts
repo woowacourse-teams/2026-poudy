@@ -1,19 +1,10 @@
 import { useCallback, useState } from 'react';
 
+import type { WebViewNavigation } from '@/types/webView';
+
 interface WebViewSource {
   readonly key: number;
   readonly url: string;
-}
-
-export interface WebViewNavigation {
-  readonly key: number;
-  readonly url: string;
-  readonly isLoading: boolean;
-  readonly hasError: boolean;
-  readonly navigate: (url: string) => void;
-  readonly reload: () => void;
-  readonly handleLoadEnd: () => void;
-  readonly handleFailure: () => void;
 }
 
 export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {

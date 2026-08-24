@@ -13,7 +13,7 @@ const captureException = vi.fn();
 beforeEach(() => {
   vi.mocked(track).mockClear();
   captureException.mockClear();
-  window.posthog = { capture: vi.fn(), captureException, init: vi.fn() };
+  window.posthog = { capture: vi.fn(), captureException, init: vi.fn(), register: vi.fn() };
 });
 
 describe("reportBoundaryError", () => {
