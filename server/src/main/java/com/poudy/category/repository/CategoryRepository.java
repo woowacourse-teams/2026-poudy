@@ -13,7 +13,7 @@ public class CategoryRepository {
     private final Categories categories;
 
     public CategoryRepository(JsonDataReader jsonDataReader) {
-        this.categories = new Categories(jsonDataReader.readList(CATEGORIES_FILE_NAME, Category.class));
+        this.categories = Categories.from(jsonDataReader.readList(CATEGORIES_FILE_NAME, Category.class));
     }
 
     public Categories findAll() {

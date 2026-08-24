@@ -91,7 +91,7 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of()));
         ProductService service = new ProductService(
                 repository,
-                new Categories(List.of(parent, child)),
+                Categories.from(List.of(parent, child)),
                 excludeCodeIngredients);
 
         assertThatThrownBy(() -> service.findDetail(999L))
@@ -119,6 +119,6 @@ class ProductServiceTest {
 
     private static Categories categories(Category child) {
         Category parent = new Category(child.parentId(), null, "스킨케어", 0);
-        return new Categories(List.of(parent, child));
+        return Categories.from(List.of(parent, child));
     }
 }

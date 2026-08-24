@@ -25,7 +25,7 @@ class CategoryControllerTest {
     void findsCategories() {
         Category skinCare = new Category(1L, null, "스킨케어", 0);
         Category toner = new Category(2L, 1L, "토너", 1);
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(1L);
         given(productCounts.countOf(toner)).willReturn(1L);

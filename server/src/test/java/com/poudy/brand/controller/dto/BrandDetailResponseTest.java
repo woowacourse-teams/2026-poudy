@@ -25,7 +25,7 @@ class BrandDetailResponseTest {
         Category skinCare = new Category(1L, null, "스킨케어", 0);
         Category toner = new Category(2L, 1L, "토너", 1);
         Category serum = new Category(3L, 1L, "세럼", 1);
-        Categories categories = new Categories(List.of(skinCare, toner, serum));
+        Categories categories = Categories.from(List.of(skinCare, toner, serum));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(2L);
         given(productCounts.countOf(toner)).willReturn(2L);

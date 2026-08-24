@@ -82,7 +82,7 @@ class BrandServiceTest {
         Category skinCare = new Category(1L, null, "스킨케어", 0);
         Category toner = new Category(2L, 1L, "토너", 1);
         Category serum = new Category(3L, 1L, "세럼", 1);
-        Categories categories = new Categories(List.of(skinCare, toner, serum));
+        Categories categories = Categories.from(List.of(skinCare, toner, serum));
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
@@ -114,7 +114,7 @@ class BrandServiceTest {
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
         given(categoryRepository.findAll()).willReturn(categories);
         Products products = mock(Products.class);
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);

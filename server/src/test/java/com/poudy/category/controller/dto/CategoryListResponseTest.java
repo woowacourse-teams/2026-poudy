@@ -22,7 +22,7 @@ class CategoryListResponseTest {
         Category serum = new Category(3L, 1L, "세럼", 1);
         Category cleansing = new Category(4L, null, "클렌징", 0);
         Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1);
-        Categories categories = new Categories(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
+        Categories categories = Categories.from(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(3L);
         given(productCounts.countOf(toner)).willReturn(2L);

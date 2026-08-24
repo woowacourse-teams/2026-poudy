@@ -23,7 +23,7 @@ class BrandDetailTest {
         Category serum = child(3L, 1L, "세럼");
         Category sunCare = parent(4L, "선케어");
         Category sunCream = child(5L, 4L, "선크림");
-        Categories categories = new Categories(List.of(skinCare, toner, serum, sunCare, sunCream));
+        Categories categories = Categories.from(List.of(skinCare, toner, serum, sunCare, sunCream));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(3L);
         given(productCounts.countOf(toner)).willReturn(2L);
@@ -43,7 +43,7 @@ class BrandDetailTest {
     void returnsEmptyCategoriesForBrandWithoutProducts() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         BrandDetail detail = new BrandDetail(new Brand(1L, "닥터지", null, null), categories, productCounts);
 

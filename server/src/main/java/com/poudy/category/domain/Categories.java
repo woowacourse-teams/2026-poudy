@@ -12,16 +12,25 @@ public class Categories {
 
     private final Map<Long, Category> categories;
 
-    public Categories(List<Category> values) {
-        List<Category> categories = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-        this.categories = indexById(categories);
+    private Categories(Map<Long, Category> categories) {
+        this.categories = categories;
+    }
 
-        validateChildrenBelongToParent();
-        validateEveryParentHasChild();
+    public static Categories from(List<Category> categories) {
+        List<Category> copiedCategories = List.copyOf(Objects.requireNonNullElse(categories, List.of()));
+        Map<Long, Category> indexedCategories = indexById(copiedCategories);
+
+        validateChildrenBelongToParent(indexedCategories);
+        validateEveryParentHasChild(indexedCategories);
+
+        return new Categories(indexedCategories);
     }
 
     public List<Category> parents() {
-        return categories.values().stream().filter(Category::isParent).toList();
+        return categories.values()
+                .stream()
+                .filter(Category::isParent)
+                .toList();
     }
 
     public List<Category> childrenOf(Category parent) {
@@ -53,24 +62,27 @@ public class Categories {
         return Stream.concat(pathFromRoot(parent).stream(), Stream.of(category)).toList();
     }
 
-    private void validateChildrenBelongToParent() {
+    private static void validateChildrenBelongToParent(Map<Long, Category> categories) {
         categories.values().stream()
                 .filter(category -> !category.isParent())
-                .forEach(this::validateChildBelongsToParent);
+                .forEach(category -> validateChildBelongsToParent(category, categories));
     }
 
-    private void validateChildBelongsToParent(Category child) {
+    private static void validateChildBelongsToParent(
+            Category child,
+            Map<Long, Category> categories) {
         Category parent = categories.get(child.parentId());
         if (parent == null || !child.isChildOf(parent)) {
             throw new IllegalArgumentException("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
         }
     }
 
-    private void validateEveryParentHasChild() {
-        boolean hasParentWithoutChild = parents().stream()
+    private static void validateEveryParentHasChild(Map<Long, Category> categories) {
+        boolean hasParentWithoutChild = categories.values().stream()
+                .filter(Category::isParent)
                 .anyMatch(
-                        parent -> childrenOf(parent)
-                                .isEmpty());
+                        parent -> categories.values().stream()
+                                .noneMatch(category -> category.isChildOf(parent)));
 
         if (hasParentWithoutChild) {
             throw new IllegalArgumentException("대분류는 하나 이상의 소분류를 가져야 합니다.");

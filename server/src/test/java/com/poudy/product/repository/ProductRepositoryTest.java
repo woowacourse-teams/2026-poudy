@@ -187,6 +187,6 @@ class ProductRepositoryTest {
         Category parent = new Category(1L, null, "스킨케어", 0);
         Category child = new Category(2L, 1L, "스킨/토너", 1);
 
-        return new Categories(List.of(parent, child));
+        return Categories.from(List.of(parent, child));
     }
 }

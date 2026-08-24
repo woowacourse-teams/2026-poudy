@@ -17,7 +17,7 @@ class CategoriesTest {
         Category toner = child(2L, 1L, "토너");
         Category cleansing = parent(3L, "클렌징");
         Category cleansingFoam = child(4L, 3L, "클렌징폼");
-        Categories categories = new Categories(List.of(skinCare, toner, cleansing, cleansingFoam));
+        Categories categories = Categories.from(List.of(skinCare, toner, cleansing, cleansingFoam));
 
         assertThat(categories.parents()).containsExactly(skinCare, cleansing);
     }
@@ -30,7 +30,7 @@ class CategoriesTest {
         Category serum = child(3L, 1L, "세럼");
         Category cleansing = parent(4L, "클렌징");
         Category cleansingFoam = child(5L, 4L, "클렌징폼");
-        Categories categories = new Categories(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
+        Categories categories = Categories.from(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
 
         assertThat(categories.childrenOf(skinCare)).containsExactly(toner, serum);
     }
@@ -40,7 +40,8 @@ class CategoriesTest {
     void rejectsParentWithoutChild() {
         Category skinCare = parent(1L, "스킨케어");
 
-        assertThatThrownBy(() -> new Categories(List.of(skinCare))).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> Categories.from(List.of(skinCare)))
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("대분류는 하나 이상의 소분류를 가져야 합니다.");
     }
 
@@ -49,7 +50,7 @@ class CategoriesTest {
     void rejectsChildWithoutParent() {
         Category toner = child(2L, 1L, "토너");
 
-        assertThatThrownBy(() -> new Categories(List.of(toner))).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> Categories.from(List.of(toner))).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
     }
 
@@ -60,7 +61,7 @@ class CategoriesTest {
         Category toner = child(2L, 1L, "토너");
         Category moisturizingToner = child(3L, 2L, "보습 토너");
 
-        assertThatThrownBy(() -> new Categories(List.of(skinCare, toner, moisturizingToner)))
+        assertThatThrownBy(() -> Categories.from(List.of(skinCare, toner, moisturizingToner)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
     }
 
@@ -69,7 +70,7 @@ class CategoriesTest {
     void returnsEmptyChildrenOfChild() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
 
         assertThat(categories.childrenOf(toner)).isEmpty();
     }
@@ -79,7 +80,7 @@ class CategoriesTest {
     void findsCategoryById() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
 
         assertThat(categories.findById(2L)).contains(toner);
         assertThat(categories.findById(999L)).isEmpty();
@@ -90,7 +91,7 @@ class CategoriesTest {
     void findsCategoryPath() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
-        Categories categories = new Categories(List.of(skinCare, toner));
+        Categories categories = Categories.from(List.of(skinCare, toner));
 
         assertThat(categories.pathOf(toner)).containsExactly(skinCare, toner);
         assertThat(categories.pathOf(skinCare)).containsExactly(skinCare);
@@ -102,7 +103,7 @@ class CategoriesTest {
         Category skinCare = parent(1L, "스킨케어");
         Category duplicate = parent(1L, "클렌징");
 
-        assertThatThrownBy(() -> new Categories(List.of(skinCare, duplicate)))
+        assertThatThrownBy(() -> Categories.from(List.of(skinCare, duplicate)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("카테고리 ID는 중복될 수 없습니다.");
     }
