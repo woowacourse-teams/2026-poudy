@@ -53,6 +53,10 @@ jobs:
           [ -n "${{ secrets.STAGING_API_BASE_URL }}" ] || missing="$missing STAGING_API_BASE_URL"
           # 키가 없으면 분석 이벤트를 조용히 버린다. 배포는 성공해 알아채기 어렵다.
           [ -n "${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" ] || missing="$missing NEXT_PUBLIC_POSTHOG_KEY"
+          # 소스맵 업로드 자격 증명은 없어도 배포가 성립한다. 막지 않고 경고만 남긴다.
+          if [ -z "${{ secrets.POSTHOG_CLI_API_KEY }}" ] || [ -z "${{ secrets.POSTHOG_CLI_PROJECT_ID }}" ]; then
+            echo "::warning::POSTHOG_CLI_API_KEY 또는 POSTHOG_CLI_PROJECT_ID 가 없어 소스맵을 올리지 않습니다. 오류 스택이 minify 된 채로 남습니다."
+          fi
           if [ -n "$missing" ]; then
             echo "::error::다음 secret 이 비어 있습니다:$missing"
             exit 1
@@ -78,6 +82,15 @@ jobs:
           NEXT_PUBLIC_ENVIRONMENT: staging
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      # 소스맵이 .vercel/output 에 남으면 그대로 배포되어 원본 코드가 공개된다.
+      # 올리고 지우는 일을 한 스크립트가 맡아 운영 빌드(buildspec.yml)와 규칙을 맞춘다.
+      - name: Upload source maps to PostHog
+        working-directory: .
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_CLI_PROJECT_ID }}
+        run: ./deploy/scripts/upload-sourcemaps.sh client/.vercel/output/static "$GITHUB_SHA"
 
       - name: Deploy
         id: deploy
