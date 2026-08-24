@@ -9,6 +9,9 @@ env:
     NEXT_PUBLIC_API_MOCKING: ""
     NEXT_PUBLIC_API_BASE_URL: ""
     NEXT_PUBLIC_ENVIRONMENT: "production"
+    # 소스맵 업로드 자격 증명(POSTHOG_CLI_API_KEY, POSTHOG_CLI_PROJECT_ID)은 여기 적지 않는다.
+    # CodeBuild 프로젝트의 환경 변수로 Parameter Store 값을 연결해 넣는다. 두 값이 없으면
+    # 업로드만 건너뛰고 빌드는 그대로 진행하며, 소스맵은 산출물에서 지워진다.
 
 phases:
   install:
@@ -35,6 +38,9 @@ phases:
         fi
         echo "APP_VERSION=${APP_VERSION}"
       - ./deploy/scripts/package-artifacts.sh "${CODEBUILD_SRC_DIR}/.poudy-package"
+      # 산출물을 옮기기 전에 소스맵을 올리고 지운다. 커밋 SHA 를 릴리스 버전으로 넘겨
+      # PostHog 에 쌓인 오류가 어느 배포에서 났는지 갈리게 한다.
+      - ./deploy/scripts/upload-sourcemaps.sh "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/.next/static" "${CODEBUILD_RESOLVED_SOURCE_VERSION}"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx"
       - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/app.jar" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
@@ -50,6 +56,8 @@ phases:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
+      # 브라우저가 받아 가는 자리에 소스맵이 남으면 원본 코드가 그대로 공개된다.
+      - test -z "$(find "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/.next/static" -name '*.map' -print -quit)"
 
 artifacts:
   files:
