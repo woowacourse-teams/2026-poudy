@@ -7,8 +7,9 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
-import type { WebViewNavigation } from '@/types/webView';
+import type { WebViewErrorEvent, WebViewNavigation } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
+import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
 interface NavigationRequest {
@@ -43,6 +44,19 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
     [webOrigin],
   );
 
+  const { fail } = navigation;
+
+  const handleError = useCallback(
+    (event: WebViewErrorEvent) => {
+      fail(failureOf(event.nativeEvent));
+    },
+    [fail],
+  );
+
+  const handleHttpError = useCallback(() => {
+    fail('server');
+  }, [fail]);
+
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     if (event.nativeEvent.data === HAPTIC_SELECTION_MESSAGE) {
       void Haptics.selectionAsync().catch(() => undefined);
@@ -59,8 +73,9 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         injectedJavaScriptBeforeContentLoaded={APP_INFO_SCRIPT}
         javaScriptCanOpenWindowsAutomatically={false}
         mixedContentMode='never'
-        onError={navigation.handleFailure}
-        onHttpError={navigation.handleFailure}
+        onError={handleError}
+        onHttpError={handleHttpError}
+        onLoad={navigation.handleLoad}
         onLoadEnd={navigation.handleLoadEnd}
         onMessage={handleMessage}
         onNavigationStateChange={handleNavigationChange}
@@ -72,10 +87,10 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         style={styles.webView}
       />
 
-      {navigation.isLoading && !navigation.hasError ? (
+      {navigation.isLoading && navigation.failure === null ? (
         <WebViewLoading continuesFromSplash={navigation.key === 0} />
       ) : null}
-      {navigation.hasError ? <WebViewError onRetry={navigation.reload} /> : null}
+      {navigation.failure ? <WebViewError reason={navigation.failure} onRetry={navigation.reload} /> : null}
     </SafeAreaView>
   );
 }
