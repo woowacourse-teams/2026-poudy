@@ -36,13 +36,13 @@ class CategoriesTest {
     }
 
     @Test
-    @DisplayName("하위 카테고리가 없는 대분류는 허용하지 않는다")
-    void rejectsParentWithoutChild() {
+    @DisplayName("하위 카테고리가 없는 대분류도 허용한다")
+    void allowsParentWithoutChild() {
         Category skinCare = parent(1L, "스킨케어");
+        Categories categories = Categories.from(List.of(skinCare));
 
-        assertThatThrownBy(() -> Categories.from(List.of(skinCare)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("대분류는 하나 이상의 소분류를 가져야 합니다.");
+        assertThat(categories.parents()).containsExactly(skinCare);
+        assertThat(categories.childrenOf(skinCare)).isEmpty();
     }
 
     @Test

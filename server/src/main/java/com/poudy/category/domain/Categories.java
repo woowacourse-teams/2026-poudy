@@ -21,7 +21,6 @@ public class Categories {
         Map<Long, Category> indexedCategories = indexById(copiedCategories);
 
         validateChildrenBelongToParent(indexedCategories);
-        validateEveryParentHasChild(indexedCategories);
 
         return new Categories(indexedCategories);
     }
@@ -74,18 +73,6 @@ public class Categories {
         Category parent = categories.get(child.parentId());
         if (parent == null || !child.isChildOf(parent)) {
             throw new IllegalArgumentException("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
-        }
-    }
-
-    private static void validateEveryParentHasChild(Map<Long, Category> categories) {
-        boolean hasParentWithoutChild = categories.values().stream()
-                .filter(Category::isParent)
-                .anyMatch(
-                        parent -> categories.values().stream()
-                                .noneMatch(category -> category.isChildOf(parent)));
-
-        if (hasParentWithoutChild) {
-            throw new IllegalArgumentException("대분류는 하나 이상의 소분류를 가져야 합니다.");
         }
     }
 
