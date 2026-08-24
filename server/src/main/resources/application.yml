@@ -46,3 +46,13 @@ springdoc:
 poudy:
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
+  product-request:
+    s3:
+      bucket: ${PRODUCT_REQUEST_S3_BUCKET:}
+      prefix: ${PRODUCT_REQUEST_S3_PREFIX:product-requests}
+      region: ${PRODUCT_REQUEST_S3_REGION:ap-northeast-2}
+    discord:
+      webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
+    rate-limit:
+      max-requests: 5
+      window: PT1H

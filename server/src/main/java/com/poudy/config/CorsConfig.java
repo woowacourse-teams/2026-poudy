@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CorsConfig implements WebMvcConfigurer {
 
     private static final String API_PATH_PATTERN = "/api/**";
-    private static final String[] ALLOWED_METHODS = {"GET", "HEAD", "OPTIONS"};
+    private static final String[] ALLOWED_METHODS = {"GET", "HEAD", "POST", "OPTIONS"};
     private static final long PREFLIGHT_MAX_AGE_SECONDS = 3600;
 
     private final List<String> allowedOrigins;

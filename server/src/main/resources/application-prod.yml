@@ -8,6 +8,10 @@ poudy:
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
 
+# 같은 인스턴스의 nginx가 전달한 X-Forwarded-For를 원격 주소로 복원해 요청 제한에 사용한다.
+server:
+  forward-headers-strategy: native
+
 # API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
 # /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
 springdoc:
