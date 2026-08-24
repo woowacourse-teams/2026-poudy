@@ -31,7 +31,7 @@ class ShareMatchTest {
                 id,
                 name,
                 brand,
-                new Category(1L, 100L, "토너", 1, null, null),
+                new Category(1L, 100L, "토너", 1),
                 new Ingredients(List.of()),
                 "",
                 new ProductVariants(List.of(new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active"))),

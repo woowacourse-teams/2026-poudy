@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 class ProductTest {
 
     private final Brand brand = new Brand(1L, "브랜드", null, null);
-    private final Category category = new Category(2L, 1L, "카테고리", 1, null, null);
+    private final Category category = new Category(2L, 1L, "카테고리", 1);
     private final Ingredients ingredients = new Ingredients(List.of());
     private final ProductVariants variants = new ProductVariants(
             List.of(new ProductVariant(1L, 10000L, new BigDecimal("100"), "ml", "active")));
@@ -66,7 +66,7 @@ class ProductTest {
     @Test
     @DisplayName("대분류만으로는 만들 수 없다")
     void rejectsParentCategory() {
-        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
+        Category parent = new Category(1L, null, "스킨케어", 0);
 
         assertThatThrownBy(
                 () -> new Product(

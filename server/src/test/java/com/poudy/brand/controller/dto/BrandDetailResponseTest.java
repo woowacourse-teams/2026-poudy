@@ -22,9 +22,9 @@ class BrandDetailResponseTest {
     @DisplayName("브랜드와 관련 카테고리 계층을 응답으로 변환한다")
     void convertsBrandDetail() {
         Brand brand = new Brand(1L, "닥터지", null, null);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
-        Category serum = new Category(3L, 1L, "세럼", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
+        Category serum = new Category(3L, 1L, "세럼", 1);
         Categories categories = new Categories(List.of(skinCare, toner, serum));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(2L);

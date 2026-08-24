@@ -79,9 +79,9 @@ class BrandServiceTest {
     @DisplayName("브랜드 정보와 제품이 속한 카테고리 계층을 조회한다")
     void findsBrandDetailWithCategories() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
-        Category serum = new Category(3L, 1L, "세럼", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
+        Category serum = new Category(3L, 1L, "세럼", 1);
         Categories categories = new Categories(List.of(skinCare, toner, serum));
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
@@ -108,8 +108,8 @@ class BrandServiceTest {
     @DisplayName("브랜드 제품이 없으면 빈 카테고리 목록을 조회한다")
     void findsEmptyCategoriesForBrandWithoutProducts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);

@@ -87,7 +87,7 @@ class ProductsTest {
     @Test
     @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
     void countsProductsByCategoryIdWithinBrand() {
-        Category parent = new Category(100L, null, "대분류", 0, null, null);
+        Category parent = new Category(100L, null, "대분류", 0);
         Category firstChild = category(2L);
         Category secondChild = category(3L);
         Category emptyChild = category(4L);
@@ -134,6 +134,6 @@ class ProductsTest {
     }
 
     private static Category category(Long id) {
-        return new Category(id, 100L, "카테고리 " + id, 1, null, null);
+        return new Category(id, 100L, "카테고리 " + id, 1);
     }
 }

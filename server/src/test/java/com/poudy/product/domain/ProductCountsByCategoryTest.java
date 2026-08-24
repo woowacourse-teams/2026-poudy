@@ -29,6 +29,6 @@ class ProductCountsByCategoryTest {
     }
 
     private static Category category(Long id) {
-        return new Category(id, 1L, "카테고리 " + id, 1, null, null);
+        return new Category(id, 1L, "카테고리 " + id, 1);
     }
 }

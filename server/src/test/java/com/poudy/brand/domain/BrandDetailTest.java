@@ -51,10 +51,10 @@ class BrandDetailTest {
     }
 
     private static Category parent(Long id, String name) {
-        return new Category(id, null, name, 0, null, null);
+        return new Category(id, null, name, 0);
     }
 
     private static Category child(Long id, Long parentId, String name) {
-        return new Category(id, parentId, name, 1, null, null);
+        return new Category(id, parentId, name, 1);
     }
 }

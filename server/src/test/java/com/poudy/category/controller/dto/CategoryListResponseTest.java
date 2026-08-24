@@ -17,11 +17,11 @@ class CategoryListResponseTest {
     @Test
     @DisplayName("대분류와 소분류를 제품 수와 함께 계층 응답으로 변환한다")
     void convertsCategoriesAndProductCounts() {
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
-        Category serum = new Category(3L, 1L, "세럼", 1, null, null);
-        Category cleansing = new Category(4L, null, "클렌징", 0, null, null);
-        Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
+        Category serum = new Category(3L, 1L, "세럼", 1);
+        Category cleansing = new Category(4L, null, "클렌징", 0);
+        Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1);
         Categories categories = new Categories(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
         ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
         given(productCounts.countOf(skinCare)).willReturn(3L);
