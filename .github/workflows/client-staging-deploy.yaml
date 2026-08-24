@@ -51,6 +51,7 @@ jobs:
           [ -n "${{ secrets.VERCEL_ORG_ID }}" ] || missing="$missing VERCEL_ORG_ID"
           [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ] || missing="$missing VERCEL_PROJECT_ID"
           [ -n "${{ secrets.STAGING_API_BASE_URL }}" ] || missing="$missing STAGING_API_BASE_URL"
+          [ -n "${{ secrets.STAGING_SITE_URL }}" ] || missing="$missing STAGING_SITE_URL"
           # 키가 없으면 분석 이벤트를 조용히 버린다. 배포는 성공해 알아채기 어렵다.
           [ -n "${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" ] || missing="$missing NEXT_PUBLIC_POSTHOG_KEY"
           if [ -n "$missing" ]; then
@@ -76,6 +77,7 @@ jobs:
           NEXT_PUBLIC_API_MOCKING: ""
           NEXT_PUBLIC_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
           NEXT_PUBLIC_ENVIRONMENT: staging
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.STAGING_SITE_URL }}
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
