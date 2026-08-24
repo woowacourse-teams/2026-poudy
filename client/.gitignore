@@ -44,3 +44,7 @@ next-env.d.ts
 # Lighthouse CI 실행 결과
 .lighthouseci/
 .lighthouseci-report/
+
+# 파이프라인에서 옮긴 목 데이터. 원본이 기밀이라 저장소에 두지 않는다.
+# mocks/pipeline-data.ts 는 형태만 정한 빈 파일이고, 실제 값은 이 이름으로 각자 로컬에 둔다.
+/mocks/pipeline-data.local.ts
