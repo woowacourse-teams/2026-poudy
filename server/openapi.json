@@ -20,6 +20,10 @@
       "description": "보관함 조회 API"
     },
     {
+      "name": "피드백",
+      "description": "사용자 피드백 등록 API"
+    },
+    {
       "name": "카테고리",
       "description": "카테고리 조회 API"
     },
@@ -70,6 +74,79 @@
         "responses": {
           "202": {
             "description": "요청을 보관함"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 본문 값이 올바르지 않습니다.",
+                  "code": "INVALID_REQUEST_BODY"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 제한 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                  "code": "TOO_MANY_REQUESTS"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "피드백"
+        ],
+        "summary": "의견 등록",
+        "description": "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.",
+        "operationId": "submit_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "의견 등록 완료"
           },
           "400": {
             "description": "잘못된 요청",
@@ -1251,6 +1328,40 @@
         },
         "required": [
           "productName"
+        ]
+      },
+      "FeedbackRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "의견 유형",
+            "enum": [
+              "BUG_REPORT",
+              "DATA_CORRECTION",
+              "IMPROVEMENT",
+              "OTHER"
+            ],
+            "example": "DATA_CORRECTION"
+          },
+          "content": {
+            "type": "string",
+            "example": "제품 정보가 실제 패키지와 달라요.",
+            "maxLength": 2000,
+            "minLength": 10
+          },
+          "path": {
+            "type": "string",
+            "description": "의견을 작성한 화면 경로",
+            "example": "/products/12345",
+            "maxLength": 500,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "content",
+          "path",
+          "type"
         ]
       },
       "BrandResponse": {

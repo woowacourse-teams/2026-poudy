@@ -9,6 +9,17 @@
    */
   brandName?: (string | null);
 }
+export type FeedbackRequest = {
+  /**
+   * 의견 유형
+   */
+  type: ("BUG_REPORT" | "DATA_CORRECTION" | "IMPROVEMENT" | "OTHER");
+  content: string;
+  /**
+   * 의견을 작성한 화면 경로
+   */
+  path: string;
+}
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -392,6 +403,25 @@ export type post_Submit = {
 
     }
 /**
+ * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
+ */
+export type post_Submit_1 = {
+      method: "POST",
+      path: "/api/feedback",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.FeedbackRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. 받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.
  */
 export type get_FindStorageProducts = {
@@ -661,7 +691,8 @@ export type get_FindBrand = {
 
      export type EndpointByMethod = {
      post: {
-           "/api/product-requests": Endpoints.post_Submit
+           "/api/product-requests": Endpoints.post_Submit,
+"/api/feedback": Endpoints.post_Submit_1
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,

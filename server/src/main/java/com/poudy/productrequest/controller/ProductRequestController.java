@@ -1,5 +1,6 @@
 package com.poudy.productrequest.controller;
 
+import com.poudy.common.web.ClientAddressResolver;
 import com.poudy.productrequest.controller.dto.ProductRegistrationRequest;
 import com.poudy.productrequest.service.ProductRequestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,7 @@ public class ProductRequestController {
     public ResponseEntity<Void> submit(
             @Valid @RequestBody ProductRegistrationRequest request,
             HttpServletRequest httpRequest) {
-        productRequestService.submit(request, httpRequest.getRemoteAddr());
+        productRequestService.submit(request, ClientAddressResolver.resolve(httpRequest));
         return ResponseEntity.accepted().build();
     }
 }

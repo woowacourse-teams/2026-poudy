@@ -3,6 +3,7 @@ package com.poudy.productrequest.repository;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
 import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -22,7 +23,7 @@ public class S3ProductRequestRepository {
     private final String prefix;
 
     public S3ProductRequestRepository(
-            S3Client s3Client,
+            @Qualifier("productRequestS3Client") S3Client s3Client,
             ObjectMapper objectMapper,
             @Value("${poudy.product-request.s3.bucket:}") String bucket,
             @Value("${poudy.product-request.s3.prefix:product-requests}") String prefix) {
