@@ -54,5 +54,5 @@ poudy:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
     rate-limit:
-      max-requests: ${PRODUCT_REQUEST_RATE_LIMIT_MAX_REQUESTS:5}
-      window: ${PRODUCT_REQUEST_RATE_LIMIT_WINDOW:PT1H}
+      max-requests: 5
+      window: PT1H
