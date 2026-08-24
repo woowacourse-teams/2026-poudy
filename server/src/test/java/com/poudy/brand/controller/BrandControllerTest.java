@@ -6,7 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.poudy.brand.controller.dto.BrandDetailResponse;
-import com.poudy.brand.controller.dto.BrandListResponse;
+import com.poudy.brand.controller.dto.BrandOverviewResponse;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandDetail;
@@ -34,10 +34,10 @@ class BrandControllerTest {
         given(brandService.findBrands()).willReturn(brandCounts);
         BrandController controller = new BrandController(brandService);
 
-        ResponseEntity<BrandListResponse> response = controller.findBrands();
+        ResponseEntity<BrandOverviewResponse> response = controller.findBrands();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(BrandListResponse.from(brandCounts));
+        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brandCounts));
         verify(brandService).findBrands();
     }
 
