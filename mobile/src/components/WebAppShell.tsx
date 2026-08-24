@@ -8,6 +8,7 @@ import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
 import type { WebViewNavigation } from '@/hooks/useWebViewNavigation';
+import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
 interface NavigationRequest {
@@ -54,6 +55,8 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
         key={navigation.key}
         ref={webViewRef}
         allowsBackForwardNavigationGestures
+        applicationNameForUserAgent={APPLICATION_NAME}
+        injectedJavaScriptBeforeContentLoaded={APP_INFO_SCRIPT}
         javaScriptCanOpenWindowsAutomatically={false}
         mixedContentMode='never'
         onError={navigation.handleFailure}
