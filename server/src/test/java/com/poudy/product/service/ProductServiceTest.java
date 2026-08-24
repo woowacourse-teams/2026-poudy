@@ -124,9 +124,12 @@ class ProductServiceTest {
 
         BrandDetail detail = service.findBrandDetail(product.brand().id());
 
-        assertThat(detail.brand()).isEqualTo(product.brand());
-        assertThat(detail.categories()).isSameAs(categories);
-        assertThat(detail.productCountsByCategory().countOf(product.category())).isEqualTo(1L);
+        Category parent = categories.parents().getFirst();
+        assertThat(detail.id()).isEqualTo(product.brand().id());
+        assertThat(detail.koreanName()).isEqualTo(product.brand().koreanName());
+        assertThat(detail.categories()).containsExactly(parent);
+        assertThat(detail.childrenOf(parent)).containsExactly(product.category());
+        assertThat(detail.productCountOf(product.category())).isEqualTo(1L);
     }
 
     @Test

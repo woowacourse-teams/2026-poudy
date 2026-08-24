@@ -1,5 +1,6 @@
 package com.poudy.category.controller.dto;
 
+import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.product.domain.ProductCountsByCategory;
@@ -22,6 +23,19 @@ public record CategoryResponse(
                 .map(child -> CategoryChildResponse.from(child, productCounts))
                 .toList();
         long productCount = productCounts.countOf(parentCategory);
+
+        return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
+    }
+
+    public static CategoryResponse from(Category parentCategory, BrandDetail brandDetail) {
+        List<CategoryChildResponse> childResponses = brandDetail.childrenOf(parentCategory).stream()
+                .map(
+                        child -> new CategoryChildResponse(
+                                child.id(),
+                                child.name(),
+                                brandDetail.productCountOf(child)))
+                .toList();
+        long productCount = brandDetail.productCountOf(parentCategory);
 
         return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
     }
