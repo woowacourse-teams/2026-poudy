@@ -18,9 +18,6 @@ const SPARK_COUNT = 5;
 const FULL_CIRCLE_DEGREES = 360;
 const SPARK_SECTOR_DEGREES = FULL_CIRCLE_DEGREES / SPARK_COUNT;
 
-/** 불꽃이 사라지는 데 걸리는 시간. globals.css 의 spark-burst 와 맞춘다. */
-const BURST_MS = 520;
-
 const randomSparkAngles = (): readonly number[] =>
   Array.from(
     { length: SPARK_COUNT },
@@ -48,13 +45,23 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
   const handleClick = () => {
     requestSelectionHaptic();
 
-    if (!saved) {
+    if (!saved && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
       if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
-      setSparkAngles(randomSparkAngles());
-      burstTimeout.current = window.setTimeout(() => {
+      const durationValue = window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue("--transition-duration-celebration")
+        .trim();
+      const duration = Number.parseFloat(durationValue) * (durationValue.endsWith("ms") ? 1 : 1000);
+      if (Number.isFinite(duration)) {
+        setSparkAngles(randomSparkAngles());
+        burstTimeout.current = window.setTimeout(() => {
+          setSparkAngles([]);
+          burstTimeout.current = undefined;
+        }, duration);
+      } else {
         setSparkAngles([]);
         burstTimeout.current = undefined;
-      }, BURST_MS);
+      }
     } else {
       if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
       setSparkAngles([]);
@@ -70,7 +77,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         onClick={handleClick}
         aria-pressed={saved}
         aria-label={label}
-        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-100 ${saved ? "" : "active:scale-[0.97]"} ${
+        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
           saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
         }`}
       >
@@ -103,7 +110,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       onClick={handleClick}
       aria-pressed={saved}
       aria-label={label}
-      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-100 ${saved ? "" : "active:scale-90"}`}
+      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
       <Icon
         name="bookmark"

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,13 +12,20 @@ const postMessage = vi.fn();
 
 beforeEach(() => {
   postMessage.mockClear();
+  document.documentElement.style.setProperty("--transition-duration-celebration", "520ms");
   Object.defineProperty(window, "ReactNativeWebView", {
     configurable: true,
     value: { postMessage },
   });
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: vi.fn(() => mediaQuery(false)),
+  });
 });
 
 afterEach(() => {
+  document.documentElement.style.removeProperty("--transition-duration-celebration");
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -47,6 +54,34 @@ describe("SaveButton 저장 인터랙션", () => {
     const button = screen.getByRole("button", { name: "테스트 제품 저장" });
     expect(sparkAngles()).toHaveLength(0);
     expect(button.querySelector("svg")).not.toHaveClass("animate-save-pop");
+  });
+
+  it("공통 모션 토큰의 지속 시간이 지나면 효과를 정리한다", () => {
+    vi.useFakeTimers();
+    document.documentElement.style.setProperty("--transition-duration-celebration", "0.24s");
+    render(<ControlledSaveButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    expect(sparkAngles()).toHaveLength(5);
+
+    act(() => vi.advanceTimersByTime(239));
+    expect(sparkAngles()).toHaveLength(5);
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(sparkAngles()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector("svg")).not.toHaveClass(
+      "animate-save-pop",
+    );
+  });
+
+  it("움직임 줄이기 환경에서는 상태만 저장하고 효과를 실행하지 않는다", async () => {
+    vi.mocked(window.matchMedia).mockReturnValue(mediaQuery(true));
+    render(<ControlledSaveButton />);
+
+    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+
+    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" })).toHaveAttribute("aria-pressed", "true");
+    expect(sparkAngles()).toHaveLength(0);
   });
 
   it("저장할 때마다 불꽃이 서로 다른 각도로 퍼진다", async () => {
@@ -102,4 +137,17 @@ function sparkAngles() {
   return [...document.querySelectorAll<HTMLElement>(".animate-spark-burst")].map((spark) =>
     spark.style.getPropertyValue("--spark-angle"),
   );
+}
+
+function mediaQuery(matches: boolean): MediaQueryList {
+  return {
+    matches,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  };
 }
