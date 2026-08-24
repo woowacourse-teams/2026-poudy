@@ -3,11 +3,13 @@
  */
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "./ProductList";
 
 import { brands, categories, excludeCodes } from "@/mocks/fixtures";
+import { server } from "@/mocks/server";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
@@ -31,10 +33,24 @@ const openBrandSheet = async () => {
 
 describe("ProductList 브랜드 시트", () => {
   it("조건에 걸린 브랜드만 고를 수 있다", async () => {
+    /*
+     * 목록 응답이 돌려준 브랜드만 시트에 오른다. 어느 브랜드가 남는지는 목 데이터에
+     * 달렸으므로 이름을 박아 두지 않고, 시트의 브랜드가 모두 응답에 있었는지로 본다.
+     */
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: [],
+          pagination: { page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+          brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
+        }),
+      ),
+    );
+
     const sheet = await openBrandSheet();
 
-    // 닥터지(id 5)는 픽스처에 제품이 없어 목록에서 빠진다.
     await waitFor(() => expect(sheet.getByText("라운드랩")).toBeInTheDocument());
-    expect(sheet.queryByText("닥터지")).not.toBeInTheDocument();
+    // 응답에 없던 브랜드는 고를 수 없다.
+    expect(sheet.queryByText("토리든")).not.toBeInTheDocument();
   });
 });

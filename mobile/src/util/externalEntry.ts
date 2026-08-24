@@ -1,14 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 
 import { requestShareMatch } from '@/api/shareMatch';
+import type { SharedPayload } from '@/types/externalEntry';
 import { getMatchedUrl, getSameOriginUrl } from '@/util/entryUrl';
 
 const SIGNATURE_SEPARATOR = '\u0000';
 const SHARE_MATCH_KEY = 'share-match';
-
-interface SharedPayload {
-  readonly value?: string | null;
-}
 
 export const getSharedValues = (payloads: readonly SharedPayload[]): string[] =>
   payloads.flatMap((payload) => (payload.value ? [payload.value] : []));

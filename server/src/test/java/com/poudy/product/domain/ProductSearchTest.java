@@ -21,7 +21,7 @@ class ProductSearchTest {
     }
 
     private static Product product(Long id, String name, Brand brand) {
-        Category category = new Category(1L, 100L, "카테고리", 1, null, null);
+        Category category = new Category(1L, 100L, "카테고리", 1);
 
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 

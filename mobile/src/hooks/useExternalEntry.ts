@@ -3,15 +3,9 @@ import { useIncomingShare } from 'expo-sharing';
 import { useEffect, useRef } from 'react';
 import { Linking } from 'react-native';
 
+import type { ExternalEntryOptions } from '@/types/externalEntry';
 import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
-
-interface ExternalEntryOptions {
-  readonly onNavigate: (url: string) => void;
-  readonly onShareFailure: () => void;
-  readonly onUnsupportedShare: () => void;
-  readonly webBaseUrl: string;
-}
 
 export const useExternalEntry = ({
   onNavigate,

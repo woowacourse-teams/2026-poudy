@@ -6,12 +6,24 @@ const { withDangerousMod, IOSConfig } = require('expo/config-plugins');
 const SOURCE_DIR = path.join('assets', 'quick-actions');
 // 가장 큰 밀도에만 둔다. 낮은 밀도는 안드로이드가 줄여 쓴다.
 const ANDROID_DRAWABLE_DIR = path.join('app', 'src', 'main', 'res', 'drawable-xxxhdpi');
+const ANDROID_KEEP_FILE = path.join('app', 'src', 'main', 'res', 'raw', 'keep.xml');
 
 const readIconNames = (projectRoot) =>
   fs
     .readdirSync(path.join(projectRoot, SOURCE_DIR))
     .filter((entry) => entry.endsWith('.png'))
     .map((entry) => path.basename(entry, '.png'));
+
+const writeAndroidKeepRules = (platformProjectRoot, names) => {
+  const target = path.join(platformProjectRoot, ANDROID_KEEP_FILE);
+  const keep = names.map((name) => `@drawable/${name}`).join(',');
+
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(
+    target,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="${keep}" />\n`,
+  );
+};
 
 const copyIcon = (projectRoot, name, targetDir) => {
   fs.mkdirSync(targetDir, { recursive: true });
@@ -23,9 +35,12 @@ const withAndroidQuickActionIcons = (config) =>
     'android',
     (modConfig) => {
       const { projectRoot, platformProjectRoot } = modConfig.modRequest;
-      readIconNames(projectRoot).forEach((name) => {
+      const names = readIconNames(projectRoot);
+
+      names.forEach((name) => {
         copyIcon(projectRoot, name, path.join(platformProjectRoot, ANDROID_DRAWABLE_DIR));
       });
+      writeAndroidKeepRules(platformProjectRoot, names);
 
       return modConfig;
     },

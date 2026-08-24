@@ -2,6 +2,7 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
+import com.poudy.category.domain.Category;
 import com.poudy.common.domain.SearchKeyword;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Products {
 
@@ -137,19 +139,33 @@ public class Products {
                 .toList();
     }
 
-    public Map<Long, Long> countByCategoryId() {
-        return products.stream()
-                .collect(Collectors.toUnmodifiableMap(product -> product.category().id(), product -> 1L, Long::sum));
+    public ProductCountsByCategory countsByCategory() {
+        return countsByCategory(products);
     }
 
-    public Map<Long, Long> countByCategoryIdInBrand(Long brandId) {
-        return products.stream()
+    public ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
+        List<Product> productsInBrand = products.stream()
                 .filter(product -> product.hasBrandId(brandId))
-                .collect(Collectors.toUnmodifiableMap(product -> product.category().id(), product -> 1L, Long::sum));
+                .toList();
+
+        return countsByCategory(productsInBrand);
     }
 
     public BrandCounts brandCounts() {
         return brandCounts;
+    }
+
+    private static ProductCountsByCategory countsByCategory(List<Product> products) {
+        Map<Long, Long> countsByCategoryId = products.stream()
+                .flatMap(product -> categoryIdsOf(product.category()))
+                .collect(Collectors.toUnmodifiableMap(categoryId -> categoryId, categoryId -> 1L, Long::sum));
+
+        return new ProductCountsByCategory(countsByCategoryId);
+    }
+
+    private static Stream<Long> categoryIdsOf(Category category) {
+        return Stream.of(category.id(), category.parentId())
+                .filter(Objects::nonNull);
     }
 
     private static BrandCounts brandCountsOf(List<Product> products) {

@@ -104,21 +104,42 @@ public record Product(
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<SkinEffect, List<Long>> ingredientIds = new HashMap<>();
+        Map<Long, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
-                ingredientIds.computeIfAbsent(effect, key -> new ArrayList<>()).add(ingredient.id());
+                SkinEffectGroupAccumulator group = groups.computeIfAbsent(
+                        effect.id(),
+                        ignored -> new SkinEffectGroupAccumulator(effect));
+                group.add(ingredient.id());
             }
         }
 
-        return ingredientIds.entrySet().stream()
-                .map(entry -> new SkinEffectGroup(entry.getKey(), entry.getValue()))
+        return groups.values().stream()
+                .map(SkinEffectGroupAccumulator::toGroup)
                 .sorted(
                         Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
                                 .reversed()
                                 .thenComparing(group -> group.effect().id()))
                 .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
                 .toList();
+    }
+
+    private static class SkinEffectGroupAccumulator {
+
+        private final SkinEffect effect;
+        private final List<Long> ingredientIds = new ArrayList<>();
+
+        private SkinEffectGroupAccumulator(SkinEffect effect) {
+            this.effect = effect;
+        }
+
+        private void add(Long ingredientId) {
+            ingredientIds.add(ingredientId);
+        }
+
+        private SkinEffectGroup toGroup() {
+            return new SkinEffectGroup(effect, ingredientIds);
+        }
     }
 
     private boolean matchesCategory(List<Long> categoryIds) {

@@ -86,12 +86,12 @@ class ProductServiceTest {
     void rejectsUnknownProduct() {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
-        Category child = new Category(2L, 1L, "토너", 1, null, null);
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "토너", 1);
         given(repository.findAll()).willReturn(new Products(List.of()));
         ProductService service = new ProductService(
                 repository,
-                new Categories(List.of(parent, child)),
+                Categories.from(List.of(parent, child)),
                 excludeCodeIngredients);
 
         assertThatThrownBy(() -> service.findDetail(999L))
@@ -102,7 +102,7 @@ class ProductServiceTest {
 
     private static Product product(Long id) {
         Brand brand = new Brand(1L, "브랜드", null, null);
-        Category category = new Category(2L, 1L, "토너", 1, null, null);
+        Category category = new Category(2L, 1L, "토너", 1);
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
         return new Product(
@@ -118,7 +118,7 @@ class ProductServiceTest {
     }
 
     private static Categories categories(Category child) {
-        Category parent = new Category(child.parentId(), null, "스킨케어", 0, null, null);
-        return new Categories(List.of(parent, child));
+        Category parent = new Category(child.parentId(), null, "스킨케어", 0);
+        return Categories.from(List.of(parent, child));
     }
 }

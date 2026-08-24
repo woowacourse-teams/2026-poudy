@@ -15,6 +15,8 @@ import com.poudy.category.domain.Category;
 import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
@@ -75,16 +77,21 @@ class BrandServiceTest {
     @DisplayName("브랜드 정보와 제품이 속한 카테고리 계층을 조회한다")
     void findsBrandDetailWithCategories() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
-        Category serum = new Category(3L, 1L, "세럼", 1, null, null);
-        Categories categories = new Categories(List.of(skinCare, toner, serum));
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
+        Category serum = new Category(3L, 1L, "세럼", 1);
+        Categories categories = Categories.from(List.of(skinCare, toner, serum));
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
         given(categoryRepository.findAll()).willReturn(categories);
-        given(productRepository.countByCategoryIdInBrand(1L)).willReturn(Map.of(2L, 2L));
+        Products products = mock(Products.class);
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        given(productCounts.countOf(skinCare)).willReturn(2L);
+        given(productCounts.countOf(toner)).willReturn(2L);
+        given(productRepository.findAll()).willReturn(products);
+        given(products.countsByCategoryInBrand(1L)).willReturn(productCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository, categoryRepository);
 
         BrandDetail detail = brandService.findDetail(1L);
@@ -99,14 +106,18 @@ class BrandServiceTest {
     @DisplayName("브랜드 제품이 없으면 빈 카테고리 목록을 조회한다")
     void findsEmptyCategoriesForBrandWithoutProducts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
-        given(categoryRepository.findAll()).willReturn(new Categories(List.of(skinCare, toner)));
-        given(productRepository.countByCategoryIdInBrand(1L)).willReturn(Map.of());
+        Categories categories = Categories.from(List.of(skinCare, toner));
+        given(categoryRepository.findAll()).willReturn(categories);
+        Products products = mock(Products.class);
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        given(productRepository.findAll()).willReturn(products);
+        given(products.countsByCategoryInBrand(1L)).willReturn(productCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository, categoryRepository);
 
         assertThat(brandService.findDetail(1L).categories()).isEmpty();

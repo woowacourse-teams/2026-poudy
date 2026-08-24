@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -96,13 +95,6 @@ class ProductRepositoryTest {
         assertThat(productRepository.findBrandCounts().countOf(1L)).isEqualTo(3L);
         assertThat(productRepository.findBrandCounts().countOf(3L)).isEqualTo(2L);
         assertThat(productRepository.findBrandCounts().countOf(999L)).isZero();
-    }
-
-    @Test
-    @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
-    void countsProductsByCategoryIdWithinBrand() {
-        assertThat(productRepository.countByCategoryIdInBrand(1L)).isEqualTo(Map.of(2L, 1L, 3L, 1L, 14L, 1L));
-        assertThat(productRepository.countByCategoryIdInBrand(3L)).isEqualTo(Map.of(2L, 2L));
     }
 
     @ParameterizedTest
@@ -193,9 +185,9 @@ class ProductRepositoryTest {
     }
 
     private static Categories categories() {
-        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
-        Category child = new Category(2L, 1L, "스킨/토너", 1, null, null);
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "스킨/토너", 1);
 
-        return new Categories(List.of(parent, child));
+        return Categories.from(List.of(parent, child));
     }
 }

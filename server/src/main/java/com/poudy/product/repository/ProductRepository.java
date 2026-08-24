@@ -17,7 +17,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -257,14 +256,6 @@ public class ProductRepository {
 
     public long countContaining(Long ingredientId) {
         return products.countContaining(ingredientId);
-    }
-
-    public Map<Long, Long> countByCategoryId() {
-        return products.countByCategoryId();
-    }
-
-    public Map<Long, Long> countByCategoryIdInBrand(Long brandId) {
-        return products.countByCategoryIdInBrand(brandId);
     }
 
     public BrandCounts findBrandCounts() {
