@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         outputFileTracingRoot: path.join(__dirname, ".."),
       }),
 
+  // 운영 번들은 minify 되어 PostHog 에 남는 스택 추적을 읽을 수 없다. 소스맵을 만들어 두면
+  // 배포 파이프라인이 PostHog 로 올린 뒤 산출물에서 지운다. 배포된 서버는 .map 을 주지 않는다.
+  productionBrowserSourceMaps: true,
+
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
     remotePatterns: [
