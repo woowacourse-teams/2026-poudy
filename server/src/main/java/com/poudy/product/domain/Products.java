@@ -158,7 +158,7 @@ public class Products {
     }
 
     public BrandDetail brandDetailOf(Brand brand, Categories categories) {
-        return new BrandDetail(brand, categories, countsByCategoryInBrand(brand.id()));
+        return new BrandDetail(brand, countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories));
     }
 
     private static ProductCountsByCategory countsByCategory(List<Product> products) {

@@ -15,7 +15,7 @@ public record BrandDetailResponse(
 
     public static BrandDetailResponse from(BrandDetail brandDetail) {
         List<CategoryResponse> categories = brandDetail.categories().stream()
-                .map(category -> CategoryResponse.from(category, brandDetail))
+                .map(CategoryResponse::from)
                 .toList();
 
         return new BrandDetailResponse(

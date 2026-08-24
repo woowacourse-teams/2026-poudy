@@ -3,6 +3,7 @@ package com.poudy.product.service;
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -11,6 +12,7 @@ import com.poudy.brand.domain.BrandDetail;
 import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CountedCategory;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
@@ -127,9 +129,12 @@ class ProductServiceTest {
         Category parent = categories.parents().getFirst();
         assertThat(detail.id()).isEqualTo(product.brand().id());
         assertThat(detail.koreanName()).isEqualTo(product.brand().koreanName());
-        assertThat(detail.categories()).containsExactly(parent);
-        assertThat(detail.childrenOf(parent)).containsExactly(product.category());
-        assertThat(detail.productCountOf(product.category())).isEqualTo(1L);
+        assertThat(detail.categories())
+                .extracting(CountedCategory::id, CountedCategory::productCount)
+                .containsExactly(tuple(parent.id(), 1L));
+        assertThat(detail.categories().getFirst().children())
+                .extracting(CountedCategory::id, CountedCategory::productCount)
+                .containsExactly(tuple(product.category().id(), 1L));
     }
 
     @Test

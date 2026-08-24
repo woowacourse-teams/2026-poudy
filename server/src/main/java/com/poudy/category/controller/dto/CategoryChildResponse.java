@@ -1,6 +1,7 @@
 package com.poudy.category.controller.dto;
 
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CountedCategory;
 import com.poudy.product.domain.ProductCountsByCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -14,5 +15,12 @@ public record CategoryChildResponse(
         long productCount = productCounts.countOf(childCategory);
 
         return new CategoryChildResponse(childCategory.id(), childCategory.name(), productCount);
+    }
+
+    public static CategoryChildResponse from(CountedCategory countedCategory) {
+        return new CategoryChildResponse(
+                countedCategory.id(),
+                countedCategory.name(),
+                countedCategory.productCount());
     }
 }

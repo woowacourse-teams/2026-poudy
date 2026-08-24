@@ -1,8 +1,8 @@
 package com.poudy.category.controller.dto;
 
-import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CountedCategory;
 import com.poudy.product.domain.ProductCountsByCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -27,16 +27,15 @@ public record CategoryResponse(
         return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
     }
 
-    public static CategoryResponse from(Category parentCategory, BrandDetail brandDetail) {
-        List<CategoryChildResponse> childResponses = brandDetail.childrenOf(parentCategory).stream()
-                .map(
-                        child -> new CategoryChildResponse(
-                                child.id(),
-                                child.name(),
-                                brandDetail.productCountOf(child)))
+    public static CategoryResponse from(CountedCategory countedCategory) {
+        List<CategoryChildResponse> childResponses = countedCategory.children().stream()
+                .map(CategoryChildResponse::from)
                 .toList();
-        long productCount = brandDetail.productCountOf(parentCategory);
 
-        return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
+        return new CategoryResponse(
+                countedCategory.id(),
+                countedCategory.name(),
+                childResponses,
+                countedCategory.productCount());
     }
 }
