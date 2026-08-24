@@ -1,21 +1,27 @@
 package com.poudy.feedback.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.InfrastructureException;
+import com.poudy.exception.TooManyRequestsException;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.feedback.service.FeedbackRateLimiter;
+import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,11 +42,15 @@ class FeedbackRegistrationTest {
     @MockitoBean
     private FeedbackNotifier feedbackNotifier;
 
+    @MockitoBean
+    private FeedbackRateLimiter rateLimiter;
+
     @Test
     @DisplayName("유효한 의견을 등록하면 본문 없이 204를 반환한다")
     void submitsFeedback() throws Exception {
         mockMvc.perform(
                 post(PATH)
+                        .header("X-Real-IP", "203.0.113.7")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -53,6 +63,7 @@ class FeedbackRegistrationTest {
 
         verify(feedbackRepository).save(any());
         verify(feedbackNotifier).notify(any());
+        verify(rateLimiter).requireAllowed("203.0.113.7");
     }
 
     @Test
@@ -130,5 +141,30 @@ class FeedbackRegistrationTest {
                                 }
                                 """))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("요청 제한을 넘으면 외부 호출 없이 429와 Retry-After를 반환한다")
+    void rejectsTooManyRequests() throws Exception {
+        willThrow(new TooManyRequestsException(Duration.ofSeconds(30)))
+                .given(rateLimiter)
+                .requireAllowed(anyString());
+
+        mockMvc.perform(
+                post(PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "OTHER",
+                                  "content": "검색 결과를 더 빠르게 보고 싶어요.",
+                                  "path": "/products"
+                                }
+                                """))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string(HttpHeaders.RETRY_AFTER, "30"))
+                .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"));
+
+        verify(feedbackRepository, never()).save(any());
+        verify(feedbackNotifier, never()).notify(any());
     }
 }

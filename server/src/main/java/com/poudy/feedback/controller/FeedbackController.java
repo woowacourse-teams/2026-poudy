@@ -1,10 +1,12 @@
 package com.poudy.feedback.controller;
 
+import com.poudy.common.web.ClientAddressResolver;
 import com.poudy.feedback.controller.dto.FeedbackRequest;
 import com.poudy.feedback.service.FeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +28,14 @@ public class FeedbackController {
     @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "의견 등록 완료")
     @PostMapping
-    public ResponseEntity<Void> submit(@Valid @RequestBody FeedbackRequest request) {
-        feedbackService.submit(request.type(), request.content(), request.path());
+    public ResponseEntity<Void> submit(
+            @Valid @RequestBody FeedbackRequest request,
+            HttpServletRequest httpRequest) {
+        feedbackService.submit(
+                request.type(),
+                request.content(),
+                request.path(),
+                ClientAddressResolver.resolve(httpRequest));
 
         return ResponseEntity.noContent().build();
     }

@@ -37,7 +37,12 @@ class FeedbackServiceTest {
 
     private final S3FeedbackRepository feedbackRepository = mock(S3FeedbackRepository.class);
     private final FeedbackNotifier feedbackNotifier = mock(FeedbackNotifier.class);
-    private final FeedbackService feedbackService = new FeedbackService(feedbackRepository, feedbackNotifier, CLOCK);
+    private final FeedbackRateLimiter rateLimiter = mock(FeedbackRateLimiter.class);
+    private final FeedbackService feedbackService = new FeedbackService(
+            feedbackRepository,
+            feedbackNotifier,
+            rateLimiter,
+            CLOCK);
 
     @Test
     @DisplayName("원본을 저장한 뒤 같은 의견으로 Discord 알림을 전송한다")
@@ -45,10 +50,12 @@ class FeedbackServiceTest {
         feedbackService.submit(
                 FeedbackType.DATA_CORRECTION,
                 "제품 정보가 실제 패키지와 달라요.",
-                "/products/12345");
+                "/products/12345",
+                "client-a");
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
-        InOrder order = inOrder(feedbackRepository, feedbackNotifier);
+        InOrder order = inOrder(rateLimiter, feedbackRepository, feedbackNotifier);
+        order.verify(rateLimiter).requireAllowed("client-a");
         order.verify(feedbackRepository).save(feedbackCaptor.capture());
         order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
         assertThat(feedbackCaptor.getValue().receivedAt())
@@ -64,7 +71,8 @@ class FeedbackServiceTest {
                 () -> feedbackService.submit(
                         FeedbackType.BUG_REPORT,
                         "기능 버튼을 눌러도 화면이 바뀌지 않아요.",
-                        "/products"))
+                        "/products",
+                        "client-a"))
                 .isInstanceOf(InfrastructureException.class);
         verify(feedbackNotifier, never()).notify(any());
     }
@@ -77,7 +85,7 @@ class FeedbackServiceTest {
                 .given(feedbackNotifier)
                 .notify(any());
 
-        assertThatCode(() -> feedbackService.submit(FeedbackType.OTHER, content, "/"))
+        assertThatCode(() -> feedbackService.submit(FeedbackType.OTHER, content, "/", "client-a"))
                 .doesNotThrowAnyException();
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);

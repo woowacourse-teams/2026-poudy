@@ -164,6 +164,22 @@
               }
             }
           },
+          "429": {
+            "description": "요청 제한 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                  "code": "TOO_MANY_REQUESTS"
+                }
+              }
+            }
+          },
           "500": {
             "description": "서버 오류",
             "content": {

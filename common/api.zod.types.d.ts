@@ -416,6 +416,7 @@ export type post_Submit_1 = {
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 

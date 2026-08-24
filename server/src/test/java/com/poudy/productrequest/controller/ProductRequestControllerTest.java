@@ -44,6 +44,7 @@ class ProductRequestControllerTest {
     void acceptsNormalizedRequestWithEmptyBody() throws Exception {
         mockMvc.perform(
                 post(PATH)
+                        .header("X-Real-IP", "203.0.113.8")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"productName":"  제품 이름  ","brandName":" 브랜드 이름 "}
@@ -52,9 +53,11 @@ class ProductRequestControllerTest {
                 .andExpect(content().string(""));
 
         ArgumentCaptor<ProductRegistrationRequest> body = ArgumentCaptor.forClass(ProductRegistrationRequest.class);
-        verify(productRequestService).submit(body.capture(), anyString());
+        ArgumentCaptor<String> clientAddress = ArgumentCaptor.forClass(String.class);
+        verify(productRequestService).submit(body.capture(), clientAddress.capture());
         org.assertj.core.api.Assertions.assertThat(body.getValue().productName()).isEqualTo("제품 이름");
         org.assertj.core.api.Assertions.assertThat(body.getValue().brandName()).isEqualTo("브랜드 이름");
+        org.assertj.core.api.Assertions.assertThat(clientAddress.getValue()).isEqualTo("203.0.113.8");
     }
 
     @Test

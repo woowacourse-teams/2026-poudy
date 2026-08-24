@@ -17,19 +17,23 @@ public class FeedbackService {
 
     private final S3FeedbackRepository feedbackRepository;
     private final FeedbackNotifier feedbackNotifier;
+    private final FeedbackRateLimiter rateLimiter;
     private final Clock clock;
 
     public FeedbackService(
             S3FeedbackRepository feedbackRepository,
             FeedbackNotifier feedbackNotifier,
+            FeedbackRateLimiter rateLimiter,
             @Qualifier("feedbackClock") Clock clock) {
         this.feedbackRepository = feedbackRepository;
         this.feedbackNotifier = feedbackNotifier;
+        this.rateLimiter = rateLimiter;
         this.clock = clock;
     }
 
-    public void submit(FeedbackType type, String content, String path) {
+    public void submit(FeedbackType type, String content, String path, String clientId) {
         Feedback feedback = Feedback.register(type, content, path, clock);
+        rateLimiter.requireAllowed(clientId);
         feedbackRepository.save(feedback);
 
         try {

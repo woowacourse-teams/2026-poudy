@@ -35,7 +35,7 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean rateLimited(String path) {
-        return PRODUCT_REQUESTS_PATH.equals(path);
+        return PRODUCT_REQUESTS_PATH.equals(path) || FEEDBACK_PATH.equals(path);
     }
 
     public static Optional<ErrorCode> notFound(String path) {
