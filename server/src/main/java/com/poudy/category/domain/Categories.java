@@ -1,68 +1,67 @@
 package com.poudy.category.domain;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Categories {
 
-    private final List<Category> values;
-    private final Map<Long, Category> byId;
+    private final Map<Long, Category> categories;
 
     public Categories(List<Category> values) {
         List<Category> categories = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-
-        this.values = categories;
-        this.byId = uniqueIndexOf(categories);
+        this.categories = indexById(categories);
 
         validateChildrenBelongToParent();
         validateEveryParentHasChild();
     }
 
     public List<Category> parents() {
-        return values.stream().filter(Category::isParent).toList();
+        return categories.values().stream().filter(Category::isParent).toList();
     }
 
     public List<Category> childrenOf(Category parent) {
-        if (!parent.isParent()) {
-            throw new IllegalArgumentException("대분류의 소분류만 조회할 수 있습니다.");
-        }
-
-        return values.stream()
+        return categories.values().stream()
                 .filter(category -> category.isChildOf(parent))
                 .toList();
     }
 
     public Optional<Category> findById(Long id) {
-        Category category = byId.get(id);
-
-        return Optional.ofNullable(category);
+        return Optional.ofNullable(categories.get(id));
     }
 
     public List<Category> pathOf(Category category) {
-        Category found = byId.get(category.id());
+        Category found = categories.get(category.id());
         if (found == null) {
             throw new IllegalArgumentException("존재하는 카테고리의 경로만 조회할 수 있습니다.");
         }
-        if (found.isParent()) {
-            return List.of(found);
+
+        return pathFromRoot(found);
+    }
+
+    private List<Category> pathFromRoot(Category category) {
+        if (category.isParent()) {
+            return List.of(category);
         }
 
-        return List.of(byId.get(found.parentId()), found);
+        Category parent = categories.get(category.parentId());
+
+        return Stream.concat(pathFromRoot(parent).stream(), Stream.of(category)).toList();
     }
 
     private void validateChildrenBelongToParent() {
-        values.stream()
+        categories.values().stream()
                 .filter(category -> !category.isParent())
                 .forEach(this::validateChildBelongsToParent);
     }
 
     private void validateChildBelongsToParent(Category child) {
-        Category parent = byId.get(child.parentId());
-        if (parent == null || !parent.isParent()) {
+        Category parent = categories.get(child.parentId());
+        if (parent == null || !child.isChildOf(parent)) {
             throw new IllegalArgumentException("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
         }
     }
@@ -78,12 +77,14 @@ public class Categories {
         }
     }
 
-    private static Map<Long, Category> uniqueIndexOf(List<Category> values) {
-        try {
-            return values.stream()
-                    .collect(Collectors.toUnmodifiableMap(Category::id, Function.identity()));
-        } catch (IllegalStateException exception) {
-            throw new IllegalArgumentException("카테고리 ID는 중복될 수 없습니다.", exception);
+    private static Map<Long, Category> indexById(List<Category> categories) {
+        Map<Long, Category> indexed = new LinkedHashMap<>();
+        for (Category category : categories) {
+            if (indexed.putIfAbsent(category.id(), category) != null) {
+                throw new IllegalArgumentException("카테고리 ID는 중복될 수 없습니다.");
+            }
         }
+
+        return Collections.unmodifiableMap(indexed);
     }
 }

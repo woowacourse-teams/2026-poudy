@@ -65,14 +65,13 @@ class CategoriesTest {
     }
 
     @Test
-    @DisplayName("소분류를 기준으로 하위 목록을 조회할 수 없다")
-    void rejectsFindingChildrenOfChild() {
+    @DisplayName("소분류는 하위 카테고리를 갖지 않는다")
+    void returnsEmptyChildrenOfChild() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
         Categories categories = new Categories(List.of(skinCare, toner));
 
-        assertThatThrownBy(() -> categories.childrenOf(toner)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("대분류의 소분류만 조회할 수 있습니다.");
+        assertThat(categories.childrenOf(toner)).isEmpty();
     }
 
     @Test
