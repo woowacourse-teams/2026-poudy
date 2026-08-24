@@ -31,12 +31,12 @@ export function ProductDetail({ product }: { readonly product: ProductDetailResp
         properties={{ product_id: product.id, category: product.categories[0]?.name }}
       />
 
-      <main className="flex-1 pb-10">
-        <div className="flex flex-col gap-4 px-4 pt-4 pb-3">
+      <main className="flex-1 px-4 pb-10">
+        <div className="flex flex-col gap-4 pt-4 pb-3">
           <CategoryPath categories={product.categories} />
         </div>
 
-        <section className="flex flex-col items-center gap-4 px-4 pt-2 pb-5">
+        <section className="flex flex-col items-center gap-4 pt-2 pb-5">
           <Image
             src={product.imageUrl || PRODUCT_PLACEHOLDER}
             alt=""
@@ -159,7 +159,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <section className="flex flex-col gap-3 rounded-xl bg-[#F7F8F9] p-4">
+    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-[#F7F8F9] before:content-['']">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-[12px] text-[#72747A]">
@@ -211,7 +211,7 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
     .replace(/\. /g, ".");
 
   return (
-    <section className="flex gap-3 rounded-xl bg-[#F4F5F6] p-4">
+    <section className="relative isolate flex gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-[#F4F5F6] before:content-['']">
       <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
         <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
       </span>
