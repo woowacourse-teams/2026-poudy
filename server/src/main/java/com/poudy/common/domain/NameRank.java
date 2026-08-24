@@ -4,6 +4,10 @@ public record NameRank(NameMatch match, boolean combined) implements Comparable<
 
     public static final NameRank NONE = new NameRank(NameMatch.NONE, false);
 
+    public static NameRank of(SearchKeyword keyword, SearchableText name) {
+        return of(keyword.match(name), name);
+    }
+
     public static NameRank of(NameMatch match, SearchableText name) {
         return new NameRank(match, name.combined());
     }

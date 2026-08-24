@@ -1,8 +1,6 @@
 package com.poudy.brand.domain;
 
-import com.poudy.common.domain.NameMatch;
 import com.poudy.common.domain.SearchKeyword;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +20,7 @@ public class Brands {
 
     public List<Brand> sortedByName() {
         return values.stream()
-                .sorted(Comparator.comparing(Brand::koreanName).thenComparing(Brand::id))
+                .sorted(Brand::compareOrderByName)
                 .toList();
     }
 
@@ -34,13 +32,8 @@ public class Brands {
         SearchKeyword keyword = new SearchKeyword(name);
 
         return values.stream()
-                .filter(brand -> matches(keyword, brand))
+                .filter(brand -> brand.matchesNameExactly(keyword))
                 .findFirst();
-    }
-
-    private static boolean matches(SearchKeyword keyword, Brand brand) {
-        return keyword.match(brand.koreanName()) == NameMatch.EXACT
-                || keyword.match(brand.englishName()) == NameMatch.EXACT;
     }
 
     private static Map<Long, Brand> uniqueIndexOf(List<Brand> values) {

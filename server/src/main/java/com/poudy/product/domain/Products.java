@@ -2,7 +2,6 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.common.domain.SearchKeyword;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +130,7 @@ public class Products {
         return products.stream()
                 .map(Product::brand)
                 .distinct()
-                .sorted(Comparator.comparing(Brand::koreanName).thenComparing(Brand::id))
+                .sorted(Brand::compareOrderByName)
                 .toList();
     }
 
@@ -142,7 +141,7 @@ public class Products {
 
     public Map<Long, Long> countByCategoryIdInBrand(Long brandId) {
         return products.stream()
-                .filter(product -> Objects.equals(product.brand().id(), brandId))
+                .filter(product -> product.hasBrandId(brandId))
                 .collect(Collectors.toUnmodifiableMap(product -> product.category().id(), product -> 1L, Long::sum));
     }
 

@@ -13,6 +13,15 @@ public record SearchKeyword(String value) {
         return match(candidate).isFound();
     }
 
+    public boolean matchesExactly(String... candidates) {
+        for (String candidate : candidates) {
+            if (match(candidate) == NameMatch.EXACT) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public NameMatch match(String candidate) {
         if (candidate == null) {
             return NameMatch.NONE;

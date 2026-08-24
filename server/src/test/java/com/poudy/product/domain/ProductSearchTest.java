@@ -67,6 +67,15 @@ class ProductSearchTest {
     }
 
     @Test
+    @DisplayName("브랜드 영문명으로 제품을 찾는다")
+    void findsProductsByEnglishBrandName() {
+        Brand brand = new Brand(1L, "닥터지", "Dr.G", null);
+        Products products = new Products(List.of(product(1L, "레드 블레미쉬 크림", brand)));
+
+        assertThat(names(products.search("dr.g"))).containsExactly("레드 블레미쉬 크림");
+    }
+
+    @Test
     @DisplayName("브랜드명도 공백을 지우고 초성으로 맞춘다")
     void normalizesBrandName() {
         Brand brand = new Brand(1L, "다 브랜드", null, null);
