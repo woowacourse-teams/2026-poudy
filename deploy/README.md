@@ -30,6 +30,37 @@ HTTPS 통신을 위해 유지할 수 있지만, 프론트 프록시·DNS·외부
 - `backend/app.jar`
 - `frontend/server.js`, `.next/`, `public/`
 
+## 브라우저 소스맵
+
+운영 번들은 minify 되어 있어 PostHog 에 쌓인 오류의 스택 추적을 읽을 수 없습니다.
+`client/next.config.ts` 가 소스맵을 만들고, CodeBuild 가 산출물을 옮기기 전에 다음
+스크립트로 PostHog 에 올린 뒤 지웁니다.
+
+```bash
+./deploy/scripts/upload-sourcemaps.sh <번들 디렉터리> <릴리스 버전>
+```
+
+릴리스 버전은 커밋 SHA 입니다. 어느 배포에서 난 오류인지 이 값으로 갈립니다.
+
+업로드에는 다음 두 값이 필요합니다. `buildspec.yml` 에 적지 않고 CodeBuild 프로젝트의
+환경 변수로 Parameter Store 값을 연결합니다. 산출물과 빌드 로그에 남기지 않습니다.
+
+| 환경 변수 | 값 |
+| --- | --- |
+| `POSTHOG_CLI_API_KEY` | PostHog personal API key |
+| `POSTHOG_CLI_PROJECT_ID` | PostHog 프로젝트 ID |
+
+두 값이 없으면 업로드만 건너뛰고 빌드는 그대로 진행합니다. 분석 도구가 빠지는 것과
+서비스가 나가지 못하는 것은 무게가 다릅니다. 다만 올렸는지와 무관하게 소스맵은 산출물에서
+지웁니다. 소스맵이 배포되면 원본 코드가 그대로 공개되기 때문입니다. `buildspec.yml` 의
+`post_build` 가 `.next/static` 에 `.map` 이 남지 않았는지 다시 확인합니다.
+
+배포 후 소스맵이 받아지지 않는지 확인합니다. 404 여야 합니다.
+
+```bash
+curl -o /dev/null -w '%{http_code}\n' https://poudy.site/_next/static/chunks/main-app-<해시>.js.map
+```
+
 ## EC2 초기화
 
 EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고합니다. 초기화

@@ -129,6 +129,27 @@ pnpm build
 pnpm start
 ```
 
+## 오류 추적 소스맵
+
+`productionBrowserSourceMaps` 를 켜 운영 빌드에서 브라우저 소스맵을 만듭니다. 소스맵이
+없으면 PostHog 에 남는 스택 추적이 `chunks/794-4b03.js:1:28471` 처럼 minify 된 자리만
+가리켜 원인을 찾는 데 쓸 수 없습니다.
+
+소스맵은 배포하지 않습니다. 두 배포 경로가 모두 `deploy/scripts/upload-sourcemaps.sh` 로
+PostHog 에 올린 뒤 산출물에서 지웁니다.
+
+| 배포            | 빌드                                           | 올리는 곳               |
+| --------------- | ---------------------------------------------- | ----------------------- |
+| 운영(EC2)       | `buildspec.yml`                                | `.next/static`          |
+| staging(Vercel) | `.github/workflows/client-staging-deploy.yaml` | `.vercel/output/static` |
+
+릴리스는 커밋 SHA 로 구분합니다. PostHog 의 Error tracking → Configuration → Symbol sets
+에서 올라간 심볼셋을 확인합니다.
+
+`POSTHOG_CLI_API_KEY` 와 `POSTHOG_CLI_PROJECT_ID` 가 없으면 업로드만 건너뛰고 배포는
+그대로 진행합니다. 이때도 소스맵은 산출물에서 지우므로 원본 코드가 공개되지 않습니다.
+운영 쪽 설정은 [deploy/README.md](../deploy/README.md#브라우저-소스맵) 를 참고하세요.
+
 ## 법정 문서
 
 `/privacy` 개인정보 처리방침과 `/terms` 이용약관을 정적 페이지로 둡니다. Play Console 앱 콘텐츠에
