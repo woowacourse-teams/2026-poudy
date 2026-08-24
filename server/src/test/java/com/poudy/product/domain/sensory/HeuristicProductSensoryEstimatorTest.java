@@ -197,6 +197,6 @@ class HeuristicProductSensoryEstimatorTest {
     }
 
     private static Category category(Long id, String name) {
-        return new Category(id, 1L, name, 1, null, null);
+        return new Category(id, 1L, name, 1);
     }
 }

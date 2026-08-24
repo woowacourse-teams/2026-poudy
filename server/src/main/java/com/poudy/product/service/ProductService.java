@@ -9,6 +9,7 @@ import com.poudy.product.controller.dto.ProductFilterRequest;
 import com.poudy.product.controller.dto.ProductSortRequest;
 import com.poudy.product.domain.IngredientFilter;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCountsByCategory;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
@@ -52,6 +53,10 @@ public class ProductService {
 
     public ProductSuggestionPage suggestProducts(String keyword, PaginationRequest pagination) {
         return products().suggest(keyword, pagination.page(), pagination.size());
+    }
+
+    public ProductCountsByCategory countsByCategory() {
+        return products().countsByCategory();
     }
 
     public ProductDetail findDetail(Long productId) {

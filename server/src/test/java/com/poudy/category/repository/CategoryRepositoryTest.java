@@ -18,8 +18,8 @@ class CategoryRepositoryTest {
     @DisplayName("카테고리 JSON을 계층 도메인으로 조회한다")
     void findsAllCategories() {
         JsonDataReader jsonDataReader = mock(JsonDataReader.class);
-        Category skinCare = new Category(1L, null, "스킨케어", 0, null, null);
-        Category toner = new Category(2L, 1L, "토너", 1, null, null);
+        Category skinCare = new Category(1L, null, "스킨케어", 0);
+        Category toner = new Category(2L, 1L, "토너", 1);
         given(jsonDataReader.readList("categories.json", Category.class)).willReturn(List.of(skinCare, toner));
 
         Categories categories = new CategoryRepository(jsonDataReader).findAll();

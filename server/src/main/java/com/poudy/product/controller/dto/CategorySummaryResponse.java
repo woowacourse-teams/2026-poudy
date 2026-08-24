@@ -1,4 +1,4 @@
-package com.poudy.category.controller.dto;
+package com.poudy.product.controller.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;

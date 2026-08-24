@@ -87,6 +87,10 @@ class ProductsTest {
     @Test
     @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
     void countsProductsByCategoryIdWithinBrand() {
+        Category parent = new Category(100L, null, "대분류", 0);
+        Category firstChild = category(2L);
+        Category secondChild = category(3L);
+        Category emptyChild = category(4L);
         Products products = new Products(
                 List.of(
                         productOfBrandAndCategory(1L, 1L, 2L),
@@ -94,7 +98,12 @@ class ProductsTest {
                         productOfBrandAndCategory(3L, 1L, 3L),
                         productOfBrandAndCategory(4L, 2L, 2L)));
 
-        assertThat(products.countByCategoryIdInBrand(1L)).isEqualTo(Map.of(2L, 2L, 3L, 1L));
+        ProductCountsByCategory counts = products.countsByCategoryInBrand(1L);
+
+        assertThat(counts.countOf(parent)).isEqualTo(3L);
+        assertThat(counts.countOf(firstChild)).isEqualTo(2L);
+        assertThat(counts.countOf(secondChild)).isEqualTo(1L);
+        assertThat(counts.countOf(emptyChild)).isZero();
     }
 
     private static Product productOfBrand(Long id, Long brandId) {
@@ -125,6 +134,6 @@ class ProductsTest {
     }
 
     private static Category category(Long id) {
-        return new Category(id, 100L, "카테고리 " + id, 1, null, null);
+        return new Category(id, 100L, "카테고리 " + id, 1);
     }
 }

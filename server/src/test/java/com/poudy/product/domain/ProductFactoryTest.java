@@ -26,7 +26,7 @@ class ProductFactoryTest {
     void estimatesSensoryOnceWhileCreatingProduct() {
         ProductSensoryEstimator estimator = mock(ProductSensoryEstimator.class);
         ProductSensory sensory = sensory(2, 1);
-        Category category = new Category(2L, 1L, "스킨/토너", 1, null, null);
+        Category category = new Category(2L, 1L, "스킨/토너", 1);
         Ingredients ingredients = new Ingredients(List.of());
         given(estimator.estimate(category, ingredients)).willReturn(sensory);
         ProductFactory factory = new ProductFactory(estimator);

@@ -96,13 +96,6 @@ class ProductRepositoryTest {
         assertThat(productRepository.countByBrandId()).isEqualTo(Map.of(1L, 3L, 3L, 2L));
     }
 
-    @Test
-    @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
-    void countsProductsByCategoryIdWithinBrand() {
-        assertThat(productRepository.countByCategoryIdInBrand(1L)).isEqualTo(Map.of(2L, 1L, 3L, 1L, 14L, 1L));
-        assertThat(productRepository.countByCategoryIdInBrand(3L)).isEqualTo(Map.of(2L, 2L));
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {
             "{}",
@@ -191,9 +184,9 @@ class ProductRepositoryTest {
     }
 
     private static Categories categories() {
-        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
-        Category child = new Category(2L, 1L, "스킨/토너", 1, null, null);
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "스킨/토너", 1);
 
-        return new Categories(List.of(parent, child));
+        return Categories.from(List.of(parent, child));
     }
 }
