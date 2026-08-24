@@ -18,9 +18,10 @@ class BrandOverviewResponseTest {
     void convertsBrandCounts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         Brand medicube = new Brand(2L, "메디큐브", "MEDICUBE", "https://cdn.example.com/brands/2/image.png");
-        BrandCounts brandCounts = new BrandCounts(new Brands(List.of(medicube, drG)), Map.of(1L, 3L));
+        Brands brands = new Brands(List.of(medicube, drG));
+        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
 
-        BrandOverviewResponse response = BrandOverviewResponse.from(brandCounts);
+        BrandOverviewResponse response = BrandOverviewResponse.from(brands, brandCounts);
 
         assertThat(response.items()).containsExactly(
                 new BrandSummaryResponse(1L, "닥터지", null, null, 3L),

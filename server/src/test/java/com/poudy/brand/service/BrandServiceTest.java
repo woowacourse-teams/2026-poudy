@@ -34,15 +34,13 @@ class BrandServiceTest {
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
+        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
         given(brandRepository.findAll()).willReturn(brands);
-        given(productRepository.countByBrandId()).willReturn(Map.of(1L, 3L));
+        given(productRepository.findBrandCounts()).willReturn(brandCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository, categoryRepository);
 
-        BrandCounts brandCounts = brandService.findBrands();
-
-        assertThat(brandCounts.brands()).containsExactly(drG, medicube);
-        assertThat(brandCounts.productCountOf(drG)).isEqualTo(3L);
-        assertThat(brandCounts.productCountOf(medicube)).isZero();
+        assertThat(brandService.findBrands()).isSameAs(brands);
+        assertThat(brandService.findBrandCounts()).isSameAs(brandCounts);
     }
 
     @Test

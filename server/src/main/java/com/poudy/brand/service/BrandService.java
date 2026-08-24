@@ -3,6 +3,7 @@ package com.poudy.brand.service;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandDetail;
+import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.CategoryCounts;
 import com.poudy.category.repository.CategoryRepository;
@@ -27,8 +28,12 @@ public class BrandService {
         this.categoryRepository = categoryRepository;
     }
 
-    public BrandCounts findBrands() {
-        return new BrandCounts(brandRepository.findAll(), productRepository.countByBrandId());
+    public Brands findBrands() {
+        return brandRepository.findAll();
+    }
+
+    public BrandCounts findBrandCounts() {
+        return productRepository.findBrandCounts();
     }
 
     public Brand findBrand(Long brandId) {

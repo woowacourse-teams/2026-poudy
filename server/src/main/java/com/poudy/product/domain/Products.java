@@ -1,6 +1,7 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandCounts;
 import com.poudy.common.domain.SearchKeyword;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ public class Products {
     private final List<Product> products;
     private final List<SearchableProduct> searchable;
     private final Map<Long, Product> byId;
+    private final BrandCounts brandCounts;
 
     public Products(List<Product> products) {
         this.products = List.copyOf(Objects.requireNonNullElse(products, List.of()));
@@ -22,6 +24,7 @@ public class Products {
                 .map(SearchableProduct::of)
                 .toList();
         this.byId = indexById(this.products);
+        this.brandCounts = brandCountsOf(this.products);
     }
 
     private static Map<Long, Product> indexById(List<Product> products) {
@@ -145,8 +148,13 @@ public class Products {
                 .collect(Collectors.toUnmodifiableMap(product -> product.category().id(), product -> 1L, Long::sum));
     }
 
-    public Map<Long, Long> countByBrandId() {
-        return products.stream()
+    public BrandCounts brandCounts() {
+        return brandCounts;
+    }
+
+    private static BrandCounts brandCountsOf(List<Product> products) {
+        Map<Long, Long> countsByBrandId = products.stream()
                 .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
+        return new BrandCounts(countsByBrandId);
     }
 }

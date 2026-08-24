@@ -29,16 +29,19 @@ class BrandControllerTest {
     @DisplayName("서비스에서 조회한 브랜드를 200 응답으로 반환한다")
     void findsBrands() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        BrandCounts brandCounts = new BrandCounts(new Brands(List.of(drG)), Map.of(1L, 3L));
+        Brands brands = new Brands(List.of(drG));
+        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
         BrandService brandService = mock(BrandService.class);
-        given(brandService.findBrands()).willReturn(brandCounts);
+        given(brandService.findBrands()).willReturn(brands);
+        given(brandService.findBrandCounts()).willReturn(brandCounts);
         BrandController controller = new BrandController(brandService);
 
         ResponseEntity<BrandOverviewResponse> response = controller.findBrands();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brandCounts));
+        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brands, brandCounts));
         verify(brandService).findBrands();
+        verify(brandService).findBrandCounts();
     }
 
     @Test

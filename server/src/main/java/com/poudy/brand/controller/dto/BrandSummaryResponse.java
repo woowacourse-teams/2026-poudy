@@ -18,6 +18,6 @@ public record BrandSummaryResponse(
                 brand.koreanName(),
                 brand.englishName(),
                 brand.imageUrl(),
-                brandCounts.productCountOf(brand));
+                brandCounts.countOf(brand.id()));
     }
 }

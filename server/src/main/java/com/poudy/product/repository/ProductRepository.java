@@ -1,6 +1,7 @@
 package com.poudy.product.repository;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
@@ -266,7 +267,7 @@ public class ProductRepository {
         return products.countByCategoryIdInBrand(brandId);
     }
 
-    public Map<Long, Long> countByBrandId() {
-        return products.countByBrandId();
+    public BrandCounts findBrandCounts() {
+        return products.brandCounts();
     }
 }

@@ -92,8 +92,10 @@ class ProductRepositoryTest {
 
     @Test
     @DisplayName("브랜드별 제품 수를 센다")
-    void countsProductsByBrandId() {
-        assertThat(productRepository.countByBrandId()).isEqualTo(Map.of(1L, 3L, 3L, 2L));
+    void countsProductsByBrand() {
+        assertThat(productRepository.findBrandCounts().countOf(1L)).isEqualTo(3L);
+        assertThat(productRepository.findBrandCounts().countOf(3L)).isEqualTo(2L);
+        assertThat(productRepository.findBrandCounts().countOf(999L)).isZero();
     }
 
     @Test
