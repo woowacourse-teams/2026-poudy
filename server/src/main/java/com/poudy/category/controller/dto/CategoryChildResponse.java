@@ -10,7 +10,9 @@ public record CategoryChildResponse(
         @NotNull @Schema(example = "스킨/토너") String name,
         @NotNull @Schema(example = "30") Long productCount) {
 
-    public static CategoryChildResponse from(Category child, CategoryCounts categoryCounts) {
-        return new CategoryChildResponse(child.id(), child.name(), categoryCounts.productCountOf(child));
+    public static CategoryChildResponse from(Category childCategory, CategoryCounts categoryCounts) {
+        long productCount = categoryCounts.productCountOf(childCategory);
+
+        return new CategoryChildResponse(childCategory.id(), childCategory.name(), productCount);
     }
 }

@@ -13,8 +13,10 @@ public class Categories {
     private final Map<Long, Category> byId;
 
     public Categories(List<Category> values) {
-        this.values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
-        this.byId = uniqueIndexOf(this.values);
+        List<Category> categories = List.copyOf(Objects.requireNonNullElse(values, List.of()));
+
+        this.values = categories;
+        this.byId = uniqueIndexOf(categories);
 
         validateChildrenBelongToParent();
         validateEveryParentHasChild();
@@ -29,11 +31,15 @@ public class Categories {
             throw new IllegalArgumentException("대분류의 소분류만 조회할 수 있습니다.");
         }
 
-        return values.stream().filter(category -> category.isChildOf(parent)).toList();
+        return values.stream()
+                .filter(category -> category.isChildOf(parent))
+                .toList();
     }
 
     public Optional<Category> findById(Long id) {
-        return Optional.ofNullable(byId.get(id));
+        Category category = byId.get(id);
+
+        return Optional.ofNullable(category);
     }
 
     public List<Category> pathOf(Category category) {
@@ -49,7 +55,9 @@ public class Categories {
     }
 
     private void validateChildrenBelongToParent() {
-        values.stream().filter(category -> !category.isParent()).forEach(this::validateChildBelongsToParent);
+        values.stream()
+                .filter(category -> !category.isParent())
+                .forEach(this::validateChildBelongsToParent);
     }
 
     private void validateChildBelongsToParent(Category child) {
@@ -60,7 +68,11 @@ public class Categories {
     }
 
     private void validateEveryParentHasChild() {
-        boolean hasParentWithoutChild = parents().stream().anyMatch(parent -> childrenOf(parent).isEmpty());
+        boolean hasParentWithoutChild = parents().stream()
+                .anyMatch(
+                        parent -> childrenOf(parent)
+                                .isEmpty());
+
         if (hasParentWithoutChild) {
             throw new IllegalArgumentException("대분류는 하나 이상의 소분류를 가져야 합니다.");
         }
@@ -68,7 +80,8 @@ public class Categories {
 
     private static Map<Long, Category> uniqueIndexOf(List<Category> values) {
         try {
-            return values.stream().collect(Collectors.toUnmodifiableMap(Category::id, Function.identity()));
+            return values.stream()
+                    .collect(Collectors.toUnmodifiableMap(Category::id, Function.identity()));
         } catch (IllegalStateException exception) {
             throw new IllegalArgumentException("카테고리 ID는 중복될 수 없습니다.", exception);
         }

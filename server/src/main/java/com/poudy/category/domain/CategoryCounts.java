@@ -30,27 +30,32 @@ public class CategoryCounts {
     }
 
     private Map<Long, Long> aggregateProductCounts(Map<Long, Long> countsByCategoryId) {
-        Map<Long, Long> childCounts = Map.copyOf(Objects.requireNonNullElse(countsByCategoryId, Map.of()));
-        validateProductCountsBelongToChildren(childCounts);
+        Map<Long, Long> productCountsByChildCategoryId = Map
+                .copyOf(Objects.requireNonNullElse(countsByCategoryId, Map.of()));
+        validateProductCountsBelongToChildren(productCountsByChildCategoryId);
 
-        Map<Long, Long> aggregatedCounts = new HashMap<>();
+        Map<Long, Long> productCountsByCategoryId = new HashMap<>();
         for (Category parent : parents()) {
-            List<Category> children = childrenOf(parent);
-            for (Category child : children) {
-                aggregatedCounts.put(child.id(), childCounts.getOrDefault(child.id(), 0L));
+            List<Category> childCategories = childrenOf(parent);
+            for (Category child : childCategories) {
+                productCountsByCategoryId.put(
+                        child.id(),
+                        productCountsByChildCategoryId.getOrDefault(child.id(), 0L));
             }
-            long parentCount = children.stream().mapToLong(child -> aggregatedCounts.get(child.id())).sum();
-            aggregatedCounts.put(parent.id(), parentCount);
+            long parentProductCount = childCategories.stream()
+                    .mapToLong(child -> productCountsByCategoryId.get(child.id()))
+                    .sum();
+            productCountsByCategoryId.put(parent.id(), parentProductCount);
         }
-        return Map.copyOf(aggregatedCounts);
+        return Map.copyOf(productCountsByCategoryId);
     }
 
     private void validateProductCountsBelongToChildren(Map<Long, Long> countsByCategoryId) {
-        Set<Long> childIds = parents().stream()
+        Set<Long> childCategoryIds = parents().stream()
                 .flatMap(parent -> childrenOf(parent).stream())
                 .map(Category::id)
                 .collect(Collectors.toUnmodifiableSet());
-        if (!childIds.containsAll(countsByCategoryId.keySet())) {
+        if (!childCategoryIds.containsAll(countsByCategoryId.keySet())) {
             throw new IllegalArgumentException("제품은 존재하는 소분류에 속해야 합니다.");
         }
     }

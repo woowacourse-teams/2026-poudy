@@ -1,6 +1,7 @@
 package com.poudy.category.controller;
 
 import com.poudy.category.controller.dto.CategoryListResponse;
+import com.poudy.category.domain.CategoryCounts;
 import com.poudy.category.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,9 @@ public class CategoryController {
     @Operation(summary = "카테고리 조회", description = "제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.")
     @GetMapping
     public ResponseEntity<CategoryListResponse> findCategories() {
-        return ResponseEntity.ok(CategoryListResponse.from(categoryService.findCategories()));
+        CategoryCounts categoryCounts = categoryService.findCategories();
+        CategoryListResponse categoryListResponse = CategoryListResponse.from(categoryCounts);
+
+        return ResponseEntity.ok(categoryListResponse);
     }
 }

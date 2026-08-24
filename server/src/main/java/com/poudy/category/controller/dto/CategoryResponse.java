@@ -12,11 +12,13 @@ public record CategoryResponse(
         @NotNull List<CategoryChildResponse> children,
         @NotNull @Schema(example = "51") Long productCount) {
 
-    public static CategoryResponse from(Category parent, CategoryCounts categoryCounts) {
-        List<CategoryChildResponse> children = categoryCounts.childrenOf(parent).stream()
+    public static CategoryResponse from(Category parentCategory, CategoryCounts categoryCounts) {
+        List<Category> childCategories = categoryCounts.childrenOf(parentCategory);
+        List<CategoryChildResponse> childResponses = childCategories.stream()
                 .map(child -> CategoryChildResponse.from(child, categoryCounts))
                 .toList();
+        long productCount = categoryCounts.productCountOf(parentCategory);
 
-        return new CategoryResponse(parent.id(), parent.name(), children, categoryCounts.productCountOf(parent));
+        return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
     }
 }
