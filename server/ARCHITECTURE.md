@@ -168,7 +168,9 @@ Map에서 바로 찾고, 제품 카테고리의 전체 경로는 부모를 재�
 
 ### Tag
 
-`Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
+`Tag`, `FormulationRole`, `SkinEffect`는 상태를 `private final`로 보관하며 생성자에서
+입력값을 검증하는 불변 클래스다. `Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의
+`Ingredient`에는 여러 `Tag`가 붙을 수 있다.
 
 태그는 성격이 다른 두 축으로 나뉘며 응답에서도 따로 싣는다.
 
@@ -181,13 +183,13 @@ Map에서 바로 찾고, 제품 카테고리의 전체 경로는 부모를 재�
 
 응답 필드를 `functions`로 부르지 않는다. `FUNCTION`은 배합 목적인데 우리말로 "기능"이라 옮기면 피부 작용 쪽으로 읽혀 두 축이 뒤집힌다. 문서와 화면 문구에서도 피부 작용을 "기능"이라 부르지 않는다.
 
-제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
+제품 상세의 `skinEffectGroups`는 피부 작용 태그 ID를 기준으로 그 제품의 성분을 묶은 것이다.
 연관 성분 수가 많은 순서로 최대 3개를 제공하며, 성분 수가 같으면 태그 ID가 작은 그룹을
 먼저 제공한다.
 
 `IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다.
 
-태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `FormulationRole`과 `SkinEffect`는 enum 상수에 값을 중복하지 않고, 해석된 `Tag`에서 각각 `FUNCTION`과 `BIOLOGICAL_EFFECT` 응답 값을 만든다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
+태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `IngredientTag`는 해석된 `Tag`의 구분을 확인하고 각각 `FormulationRole`과 `SkinEffect`로 변환한다. 두 객체는 enum 상수에 응답 값을 중복하지 않는다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
 
 ### Product
 
