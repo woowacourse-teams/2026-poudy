@@ -1,5 +1,6 @@
 package com.poudy.exception;
 
+import com.poudy.feedback.domain.InvalidFeedbackException;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,9 +29,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());
     }
 
+    @ExceptionHandler(InvalidFeedbackException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidFeedbackException(InvalidFeedbackException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_REQUEST_BODY,
+                ErrorCode.INVALID_REQUEST_BODY.message());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ProblemDetail> handleTooManyRequestsException(TooManyRequestsException exception) {
+        long retryAfterSeconds = exception.retryAfter().getSeconds();
+        if (exception.retryAfter().getNano() > 0) {
+            retryAfterSeconds++;
+        }
+        retryAfterSeconds = Math.max(1, retryAfterSeconds);
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
+                .body(problemDetail(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.TOO_MANY_REQUESTS, exception.getMessage()));
     }
 
     @ExceptionHandler(InfrastructureException.class)
@@ -80,6 +103,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private ErrorCode bindingCode(Exception exception) {
+        if (exception instanceof HttpMessageNotReadableException) {
+            return ErrorCode.INVALID_REQUEST_BODY;
+        }
+
         if (exception instanceof BindException bindException) {
             return bindException.getAllErrors().stream().map(ObjectError::getDefaultMessage)
                     .flatMap(message -> ErrorCode.from(message).stream()).findFirst()
@@ -97,9 +124,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatusCode status, ErrorCode code, String detail) {
+        return ResponseEntity.status(status).body(problemDetail(status, code, detail));
+    }
+
+    private ProblemDetail problemDetail(HttpStatusCode status, ErrorCode code, String detail) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setProperty(CODE_PROPERTY, code);
-
-        return ResponseEntity.status(status).body(problemDetail);
+        return problemDetail;
     }
 }

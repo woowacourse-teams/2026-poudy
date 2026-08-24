@@ -1,5 +1,26 @@
   export namespace Schemas {
-  export type BrandResponse = {
+  export type ProductRegistrationRequest = {
+  /**
+   * 등록을 요청할 제품명
+   */
+  productName: string;
+  /**
+   * 브랜드명. 알 수 없으면 생략한다.
+   */
+  brandName?: (string | null);
+}
+export type FeedbackRequest = {
+  /**
+   * 의견 유형
+   */
+  type: ("BUG_REPORT" | "DATA_CORRECTION" | "IMPROVEMENT" | "OTHER");
+  content: string;
+  /**
+   * 의견을 작성한 화면 경로
+   */
+  path: string;
+}
+export type BrandResponse = {
   /**
    * 브랜드 ID
    */
@@ -356,13 +377,51 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "CONFLICTING_INGREDIENT_FILTER" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "CONFLICTING_INGREDIENT_FILTER" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
   export namespace Endpoints {
 
   /**
+ * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
+ */
+export type post_Submit = {
+      method: "POST",
+      path: "/api/product-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.ProductRegistrationRequest,
+          }
+      responses: {202: unknown,
+400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
+ */
+export type post_Submit_1 = {
+      method: "POST",
+      path: "/api/feedback",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.FeedbackRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. 받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.
  */
 export type get_FindStorageProducts = {
@@ -631,7 +690,11 @@ export type get_FindBrand = {
   }
 
      export type EndpointByMethod = {
-     get: {
+     post: {
+           "/api/product-requests": Endpoints.post_Submit,
+"/api/feedback": Endpoints.post_Submit_1
+         },
+get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
@@ -647,4 +710,5 @@ export type get_FindBrand = {
          }
      }
 
-    export type GetEndpoints = EndpointByMethod["get"]
+    export type PostEndpoints = EndpointByMethod["post"]
+export type GetEndpoints = EndpointByMethod["get"]

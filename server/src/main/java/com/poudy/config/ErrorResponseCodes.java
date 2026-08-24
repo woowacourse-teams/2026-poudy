@@ -9,6 +9,8 @@ public final class ErrorResponseCodes {
 
     private static final String PRODUCTS_PATH = "/api/products";
     private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
+    private static final String PRODUCT_REQUESTS_PATH = "/api/product-requests";
+    private static final String FEEDBACK_PATH = "/api/feedback";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
             "brands",
@@ -22,11 +24,18 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> badRequest(String path) {
+        if (PRODUCT_REQUESTS_PATH.equals(path) || FEEDBACK_PATH.equals(path)) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY);
+        }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
         }
 
         return List.of(ErrorCode.INVALID_QUERY_PARAMETER);
+    }
+
+    public static boolean rateLimited(String path) {
+        return PRODUCT_REQUESTS_PATH.equals(path) || FEEDBACK_PATH.equals(path);
     }
 
     public static Optional<ErrorCode> notFound(String path) {

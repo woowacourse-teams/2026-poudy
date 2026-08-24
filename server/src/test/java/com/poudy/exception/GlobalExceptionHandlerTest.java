@@ -2,8 +2,11 @@ package com.poudy.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.feedback.domain.InvalidFeedbackException;
+import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,29 @@ class GlobalExceptionHandlerTest {
                         new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
+        assertProblem(
+                handler.handleInvalidFeedbackException(new InvalidFeedbackException("의견 내용 오류")),
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_REQUEST_BODY);
+    }
+
+    @Test
+    @DisplayName("요청 제한 예외를 429와 Retry-After로 변환한다")
+    void mapsRateLimitException() {
+        ResponseEntity<ProblemDetail> response = handler
+                .handleTooManyRequestsException(new TooManyRequestsException(Duration.ofSeconds(12)));
+
+        assertProblem(response, HttpStatus.TOO_MANY_REQUESTS, ErrorCode.TOO_MANY_REQUESTS);
+        assertThat(response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("12");
+    }
+
+    @Test
+    @DisplayName("Retry-After는 남은 제한 시간을 초 단위로 올림한다")
+    void roundsRetryAfterUp() {
+        ResponseEntity<ProblemDetail> response = handler
+                .handleTooManyRequestsException(new TooManyRequestsException(Duration.ofMillis(9_800)));
+
+        assertThat(response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("10");
     }
 
     @Test
