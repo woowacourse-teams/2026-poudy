@@ -1,6 +1,18 @@
 import { http, HttpResponse } from "msw";
 
-import { brands, categories, excludeCodes, ingredientDetails, productDetails, products } from "./fixtures";
+import {
+  allBrands,
+  allProducts,
+  brands,
+  categories,
+  excludeCodeIngredientIds,
+  excludeCodes,
+  ingredientDetails,
+  pipelineIngredientSummaries,
+  pipelineProductIngredients,
+  productDetails,
+  products,
+} from "./fixtures";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -31,17 +43,38 @@ const paginate = <T>(matched: readonly T[], url: URL) => {
   };
 };
 
+const strings = (url: URL, key: string) =>
+  url.searchParams
+    .getAll(key)
+    .flatMap((value) => value.split(","))
+    .filter(Boolean);
+
+/** 제품이 가진 성분. 손으로 적은 다섯 개는 성분을 따로 두지 않아 빈 집합이 된다. */
+const ingredientsOf = (productId: number) => pipelineProductIngredients.get(productId) ?? new Set<number>();
+
 /*
  * 실제 서버의 필터 규칙을 그대로 재현하지 않는다. 화면이 요청을 보내고 응답을
  * 그리는 흐름을 확인할 정도만 맞춘다. 검증은 서버 연동 시점에 다시 한다.
+ *
+ * 다만 조건을 걸 때 개수가 실제로 움직이는지 보려면 성분 조건은 걸려야 한다.
+ * 빠른 필터와 성분 포함·제외는 파이프라인 데이터를 기준으로 가른다.
  */
 const filterProducts = (url: URL) => {
   const keyword = url.searchParams.get("keyword")?.trim().toLowerCase();
   const brandIds = numbers(url, "brandIds");
   const moisture = numbers(url, "moistureLevel");
   const oil = numbers(url, "oilLevel");
+  const codes = strings(url, "excludeCodes");
+  const include = numbers(url, "includeIngredientIds");
+  const exclude = numbers(url, "excludeIngredientIds");
 
-  return products.filter((product) => {
+  // 빠른 필터가 걸러 내는 성분을 한 덩어리로 모은다.
+  const blockedByCode = new Set<number>();
+  for (const code of codes) {
+    for (const id of excludeCodeIngredientIds.get(code) ?? []) blockedByCode.add(id);
+  }
+
+  return allProducts.filter((product) => {
     if (keyword) {
       const haystack = `${product.name} ${product.brand.name}`.toLowerCase();
       if (!haystack.includes(keyword)) return false;
@@ -49,6 +82,13 @@ const filterProducts = (url: URL) => {
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
     if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
     if (oil.length && !oil.includes(product.oilLevel)) return false;
+
+    const has = ingredientsOf(product.id);
+    // 제외 조건은 하나라도 들어 있으면 뺀다.
+    if (blockedByCode.size && [...blockedByCode].some((id) => has.has(id))) return false;
+    if (exclude.length && exclude.some((id) => has.has(id))) return false;
+    // 포함 조건은 모두 들어 있어야 남는다.
+    if (include.length && !include.every((id) => has.has(id))) return false;
     return true;
   });
 };
@@ -75,7 +115,7 @@ export const handlers = [
     return HttpResponse.json({
       ...paginate(matched, url),
       // 조건에 걸린 제품 전체의 브랜드다. 페이지가 아니라 matched 를 기준으로 한다.
-      brands: brands
+      brands: allBrands
         .filter((brand) => matched.some((product) => product.brand.id === brand.id))
         .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
     });
@@ -89,7 +129,7 @@ export const handlers = [
   http.get("*/api/products/suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
-    const matched = products
+    const matched = allProducts
       .filter((product) => `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword))
       .map((product) => ({
         id: product.id,
@@ -124,14 +164,22 @@ export const handlers = [
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const ids = numbers(url, "ingredientIds");
 
-    const summary = ({ id, koreanName, englishName, skinEffects }: (typeof ingredientDetails)[number]) => ({
-      id,
-      koreanName,
-      englishName,
-      skinEffects,
-    });
+    /*
+     * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
+     * 성분이 먼저 잡혀야 눌렀을 때 빈 화면을 만나지 않는다.
+     */
+    const detailIds = new Set(ingredientDetails.map((ingredient) => ingredient.id));
+    const searchable = [
+      ...ingredientDetails.map(({ id, koreanName, englishName, skinEffects }) => ({
+        id,
+        koreanName,
+        englishName,
+        skinEffects,
+      })),
+      ...pipelineIngredientSummaries.filter((ingredient) => !detailIds.has(ingredient.id)),
+    ];
 
-    const matchesKeyword = (ingredient: (typeof ingredientDetails)[number]) =>
+    const matchesKeyword = (ingredient: (typeof searchable)[number]) =>
       `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword);
 
     const limited = <T>(items: readonly T[]) => (keyword ? items.slice(0, INGREDIENT_SEARCH_LIMIT) : [...items]);
@@ -139,15 +187,14 @@ export const handlers = [
     // ID 로만 조회하면 요청한 순서를 지키고 없는 ID 는 뺀다.
     if (ids.length > 0) {
       const items = ids
-        .map((id) => ingredientDetails.find((ingredient) => ingredient.id === id))
+        .map((id) => searchable.find((ingredient) => ingredient.id === id))
         .filter((ingredient) => ingredient !== undefined)
-        .filter((ingredient) => !keyword || matchesKeyword(ingredient))
-        .map(summary);
+        .filter((ingredient) => !keyword || matchesKeyword(ingredient));
 
       return HttpResponse.json({ items: limited(items) });
     }
 
-    return HttpResponse.json({ items: limited(ingredientDetails.filter(matchesKeyword).map(summary)) });
+    return HttpResponse.json({ items: limited(searchable.filter(matchesKeyword)) });
   }),
 
   http.get("*/api/ingredients/:ingredientId", ({ params }) => {
@@ -161,7 +208,7 @@ export const handlers = [
 
   http.get("*/api/categories", () => HttpResponse.json({ items: categories })),
 
-  http.get("*/api/brands", () => HttpResponse.json({ items: brands })),
+  http.get("*/api/brands", () => HttpResponse.json({ items: allBrands })),
 
   http.get("*/api/brands/:brandId", ({ params }) => {
     const id = Number(params.brandId);
