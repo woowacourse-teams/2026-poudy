@@ -43,7 +43,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 - **Structure**: listbox 트리거, 항상 마운트된 옵션 목록, 단일 선택 옵션 4개
 - **States**: 닫힘, 열림, hover, 눌림, 선택됨, 키보드 포커스
 - **Accessibility**: 트리거의 `aria-expanded`·`aria-controls`, 목록의 `aria-hidden`·`inert`, 옵션의 `aria-selected`, Escape와 바깥 클릭 닫기, `--color-action`을 쓰는 3:1 이상 키보드 포커스 표시
-- **Motion**: 목록은 위쪽에서 4px 이동하며 opacity와 scale만 전환하고, 화살표는 180도 회전한다. fine pointer hover는 진입 시 즉시 표면색을 바꾸고, 이탈 시 `--motion-duration-state` 동안 원래 색으로 돌아온다. 실제 값이 바뀌는 옵션 선택은 짧은 scale 반응과 선택 햅틱을 사용한다.
+- **Motion**: 목록은 위쪽에서 4px 이동하며 opacity와 scale만 전환하고, 화살표는 180도 회전한다. fine pointer hover는 진입 시 즉시 표면색을 바꾸고, 이탈 시 `--transition-duration-control-state` 동안 원래 색으로 돌아온다. 실제 값이 바뀌는 옵션 선택은 짧은 scale 반응과 선택 햅틱을 사용한다.
 - **Layout**: 트리거 오른쪽 아래에 붙는 절대 위치 popover. 필터 selector와 같은 조밀한 인상을 유지하도록 메뉴는 156px 폭, 옵션은 36px 높이·12px 글자를 사용한다.
 
 ### Shared UI primitives
@@ -54,13 +54,13 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 
 ## 6. Motion & Interaction
 
-| Token                          | Duration | Easing                   | Usage              |
-| ------------------------------ | -------- | ------------------------ | ------------------ |
-| `--motion-duration-press`      | 100ms    | `--motion-ease-standard` | 선택·눌림 반응     |
-| `--motion-duration-state`      | 160ms    | `--motion-ease-standard` | 아이콘과 상태 전환 |
-| `--motion-duration-disclosure` | 200ms    | `--motion-ease-standard` | 메뉴 열림·닫힘     |
+| Token                                 | Duration | Easing            | Usage                   |
+| ------------------------------------- | -------- | ----------------- | ----------------------- |
+| `--transition-duration-press`         | 100ms    | `--ease-standard` | 선택·눌림 반응          |
+| `--transition-duration-control-state` | 160ms    | `--ease-standard` | 컨트롤 아이콘·색상 전환 |
+| `--transition-duration-disclosure`    | 200ms    | `--ease-standard` | 메뉴 열림·닫힘          |
 
-- `--motion-ease-standard`는 `cubic-bezier(0.2, 0, 0, 1)`이다.
+- `--ease-standard`는 `cubic-bezier(0, 0, 0.2, 1)`이다.
 - 메뉴가 열리고 닫히는 공간 모션은 transform과 opacity만 애니메이션하고, 컨트롤의 상태 색상은 레이아웃에 영향을 주지 않는 color 전환만 사용한다.
 - 공간 이동은 즉시 다시 열거나 닫아도 현재 상태에서 새 상태로 이어져야 한다.
 - `prefers-reduced-motion: reduce`에서는 전환 시간을 제거하고 상태와 기능은 그대로 유지한다.
