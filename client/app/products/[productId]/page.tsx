@@ -28,9 +28,15 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
   // 없는 제품 판정은 페이지 컴포넌트가 맡는다.
   try {
     const product = await fetchProductDetail(Number(productId));
+    const title = `${product.brand.name} ${product.name} 전성분`;
+    const description = `${product.name}의 전체 성분과 기능별 성분을 확인합니다.`;
+    const image = product.imageUrl || "/opengraph-image";
     return {
-      title: `${product.brand.name} ${product.name} 전성분`,
-      description: `${product.name}의 전체 성분과 기능별 성분을 확인합니다.`,
+      title,
+      description,
+      alternates: { canonical: `/products/${productId}` },
+      openGraph: { title, description, type: "website", images: [image] },
+      twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
     return {};
@@ -40,6 +46,23 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 export default async function ProductDetailPage(props: PageProps<"/products/[productId]">) {
   const { productId } = await props.params;
   const product = await load(productId);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    brand: { "@type": "Brand", name: product.brand.name },
+    ...(product.imageUrl ? { image: product.imageUrl } : {}),
+    additionalProperty: {
+      "@type": "PropertyValue",
+      name: "전성분 수",
+      value: product.ingredients.length,
+    },
+  };
 
-  return <ProductDetail product={product} />;
+  return (
+    <>
+      <script type="application/ld+json">{JSON.stringify(structuredData).replace(/</g, "\\u003c")}</script>
+      <ProductDetail product={product} />
+    </>
+  );
 }
