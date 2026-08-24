@@ -34,6 +34,14 @@ public class ErrorResponseConfig {
                     "400",
                     ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path)));
         }
+        if (ErrorResponseCodes.rateLimited(path)) {
+            responses.addApiResponse(
+                    "429",
+                    ProblemDetailResponses.of(
+                            "요청 제한 초과",
+                            HttpStatus.TOO_MANY_REQUESTS,
+                            ErrorCode.TOO_MANY_REQUESTS));
+        }
         ErrorResponseCodes.notFound(path)
                 .ifPresent(
                         code -> responses.addApiResponse(
@@ -47,6 +55,6 @@ public class ErrorResponseConfig {
     private boolean hasInput(Operation operation) {
         List<Parameter> parameters = operation.getParameters();
 
-        return parameters != null && !parameters.isEmpty();
+        return (parameters != null && !parameters.isEmpty()) || operation.getRequestBody() != null;
     }
 }
