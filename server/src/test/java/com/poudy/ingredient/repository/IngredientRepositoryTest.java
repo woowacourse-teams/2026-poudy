@@ -25,7 +25,7 @@ import org.springframework.core.io.Resource;
 class IngredientRepositoryTest {
 
     private static final OffsetDateTime UPDATED_AT = OffsetDateTime.parse("2026-08-01T00:00:00Z");
-    private static final Tags TAGS = new Tags(
+    private static final Tags TAGS = Tags.from(
             List.of(new Tag(13L, TagCategory.FUNCTION, "HUMECTANT", "습윤제")));
 
     @Test
