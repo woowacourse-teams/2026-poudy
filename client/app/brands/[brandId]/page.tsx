@@ -40,6 +40,12 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
 
   // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
   const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
+  const brandDescription = [
+    brand.englishName,
+    productCount === undefined ? null : `제품 ${productCount.toLocaleString("ko-KR")}개`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <>
@@ -49,10 +55,7 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
         <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
         <span className="flex flex-col gap-0.5">
           <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
-          <span className="text-[11px] font-medium text-text-secondary">
-            {brand.englishName}
-            {productCount === undefined ? "" : `  ·  제품 ${productCount.toLocaleString("ko-KR")}개`}
-          </span>
+          <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
         </span>
       </section>
 

@@ -1196,7 +1196,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrandListResponse"
+                  "$ref": "#/components/schemas/BrandOverviewResponse"
                 }
               }
             }
@@ -1379,12 +1379,18 @@
             "example": "브랜드 이름"
           },
           "englishName": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 영문명",
             "example": "BRAND NAME"
           },
           "imageUrl": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 이미지 URL",
             "example": "https://cdn.example.com/brands/12/image.png"
           }
@@ -2274,7 +2280,21 @@
           "productCount"
         ]
       },
-      "BrandListItemResponse": {
+      "BrandOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrandSummaryResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "BrandSummaryResponse": {
         "type": "object",
         "properties": {
           "id": {
@@ -2289,12 +2309,18 @@
             "example": "브랜드 이름"
           },
           "englishName": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 영문명",
             "example": "BRAND NAME"
           },
           "imageUrl": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 이미지 URL",
             "example": "https://cdn.example.com/brands/12/image.png"
           },
@@ -2313,20 +2339,6 @@
           "productCount"
         ]
       },
-      "BrandListResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BrandListItemResponse"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ]
-      },
       "BrandDetailResponse": {
         "type": "object",
         "properties": {
@@ -2342,12 +2354,18 @@
             "example": "브랜드 이름"
           },
           "englishName": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 영문명",
             "example": "BRAND NAME"
           },
           "imageUrl": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "브랜드 이미지 URL",
             "example": "https://cdn.example.com/brands/12/image.png"
           },

@@ -2,7 +2,7 @@ import Image from "next/image";
 
 type BrandLogoProps = {
   readonly name: string;
-  readonly imageUrl?: string;
+  readonly imageUrl?: string | null;
   readonly size?: number;
 };
 

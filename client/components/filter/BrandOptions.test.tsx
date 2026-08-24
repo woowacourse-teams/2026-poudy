@@ -11,8 +11,8 @@ import { BrandOptions } from "./BrandOptions";
 const brand = (id: number, name: string): BrandResponse => ({
   id,
   name,
-  englishName: "",
-  imageUrl: "",
+  englishName: null,
+  imageUrl: null,
 });
 
 const brands = [brand(1, "라운드랩"), brand(2, "토리든")];
@@ -47,5 +47,13 @@ describe("BrandOptions", () => {
 
     expect(screen.getByText("토리든")).toBeInTheDocument();
     expect(screen.queryByText("라운드랩")).not.toBeInTheDocument();
+  });
+
+  it("영문명이 없으면 null 문자열로 검색되지 않는다", async () => {
+    render(<BrandOptions brands={brands} selectedIds={[]} onToggle={vi.fn()} />);
+
+    await userEvent.type(screen.getByRole("searchbox"), "null");
+
+    expect(screen.getByText("찾는 브랜드가 없어요.")).toBeInTheDocument();
   });
 });

@@ -11,7 +11,7 @@ export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
 export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "DATA_CORRECTION", "IMPROVEMENT", "OTHER"]), content: z.string().min(10).max(2000), path: z.string().min(1).max(500) });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
-export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string(), imageUrl: z.string() });
+export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
 
 export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
 export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
@@ -91,14 +91,14 @@ export const CategoryResponse = z.object({ id: z.number().int(), name: z.string(
 export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
 export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });
 
-export type BrandListItemResponse = __TypedOpenapi.Schemas.BrandListItemResponse;
-export const BrandListItemResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string(), imageUrl: z.string(), productCount: z.number().int() });
+export type BrandSummaryResponse = __TypedOpenapi.Schemas.BrandSummaryResponse;
+export const BrandSummaryResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), productCount: z.number().int() });
 
-export type BrandListResponse = __TypedOpenapi.Schemas.BrandListResponse;
-export const BrandListResponse = z.object({ items: z.array(BrandListItemResponse) });
+export type BrandOverviewResponse = __TypedOpenapi.Schemas.BrandOverviewResponse;
+export const BrandOverviewResponse = z.object({ items: z.array(BrandSummaryResponse) });
 
 export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
-export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string(), imageUrl: z.string(), categories: z.array(CategoryResponse) });
+export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "CONFLICTING_INGREDIENT_FILTER", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });

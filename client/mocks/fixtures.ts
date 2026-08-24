@@ -1,5 +1,5 @@
 import type {
-  BrandListItemResponse,
+  BrandSummaryResponse,
   CategoryResponse,
   ExcludeCodeResponse,
   IngredientDetailResponse,
@@ -15,12 +15,12 @@ import type {
  */
 const ROUNDLAB_TONER_IMAGE = "/images/products/roundlab-1025-toner.png";
 
-export const brands: BrandListItemResponse[] = [
+export const brands: BrandSummaryResponse[] = [
   { id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 48 },
   { id: 2, name: "토리든", englishName: "TORRIDEN", imageUrl: "", productCount: 21 },
   { id: 3, name: "아누아", englishName: "ANUA", imageUrl: "", productCount: 17 },
   { id: 4, name: "에스트라", englishName: "AESTURA", imageUrl: "", productCount: 12 },
-  { id: 5, name: "닥터지", englishName: "Dr.G", imageUrl: "", productCount: 9 },
+  { id: 5, name: "닥터지", englishName: null, imageUrl: null, productCount: 9 },
 ];
 
 const brandOf = (id: number) => {

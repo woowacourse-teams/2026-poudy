@@ -19,7 +19,7 @@ export function BrandOptions({ brands, selectedIds, onToggle }: BrandOptionsProp
   // 목록이 이미 손에 있으므로 서버에 다시 묻지 않는다.
   const shown = keyword.trim()
     ? brands.filter((brand) =>
-        `${brand.name} ${brand.englishName}`.toLowerCase().includes(keyword.trim().toLowerCase()),
+        `${brand.name} ${brand.englishName ?? ""}`.toLowerCase().includes(keyword.trim().toLowerCase()),
       )
     : brands;
 

@@ -1,8 +1,8 @@
 "use client";
 
 import type {
-  BrandListItemResponse,
   BrandResponse,
+  BrandSummaryResponse,
   CategoryResponse,
   ExcludeCodeResponse,
   ProductResponse,
@@ -25,7 +25,7 @@ import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
 type ProductListProps = {
   readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandListItemResponse[];
+  readonly brands: readonly BrandSummaryResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
   readonly basePath?: string;
