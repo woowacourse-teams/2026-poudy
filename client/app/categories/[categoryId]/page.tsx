@@ -8,9 +8,10 @@ import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
 
-export const metadata: Metadata = {
-  title: "카테고리 제품",
-};
+export async function generateMetadata(props: PageProps<"/categories/[categoryId]">): Promise<Metadata> {
+  const { categoryId } = await props.params;
+  return { title: "카테고리 제품", alternates: { canonical: `/categories/${categoryId}` } };
+}
 
 // 조건 조합이 붙는 목록이라 미리 만들지 않는다.
 export const dynamic = "force-dynamic";
