@@ -58,4 +58,55 @@ describe("IngredientSearchScreen", () => {
 
     expect(await screen.findByRole("button", { name: "3개 조건에 맞는 제품 보기" })).toBeInTheDocument();
   });
+
+  it("조건에 맞는 제품이 없으면 버튼을 누를 수 없다", async () => {
+    countIs(0);
+    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+
+    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+
+    const button = await screen.findByRole("button", { name: "0개 조건에 맞는 제품 보기" });
+    expect(button).toBeDisabled();
+    // 링크로 감싸면 버튼을 막아도 눌러서 넘어간다. 0 개일 때는 링크 자체를 걸지 않는다.
+    expect(button.closest("a")).toBeNull();
+  });
+
+  it("개수를 세는 동안에는 버튼을 누를 수 없다", () => {
+    // 응답을 주지 않아 세는 중인 상태로 둔다.
+    server.use(http.get("*/api/products/count", () => new Promise(() => {})));
+    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+
+    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+
+    const button = screen.getByRole("button", { name: "조건에 맞는 제품 보기" });
+    expect(button).toBeDisabled();
+    expect(button.closest("a")).toBeNull();
+  });
+
+  it("조건을 바꾸면 새 개수가 들어오기 전까지 이전 개수로 넘어가지 못한다", async () => {
+    countIs(7);
+    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+
+    const { rerender } = render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+    expect(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" })).toBeEnabled();
+
+    // 새 조건의 개수는 아직 오지 않는다. 화면의 7개는 이미 지난 조건의 값이다.
+    server.use(http.get("*/api/products/count", () => new Promise(() => {})));
+    searchParams.current = new URLSearchParams("includeIngredientIds=6&excludeIngredientIds=8");
+    rerender(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+
+    const button = screen.getByRole("button", { name: "7개 조건에 맞는 제품 보기" });
+    expect(button).toBeDisabled();
+    expect(button.closest("a")).toBeNull();
+  });
+
+  it("개수가 바뀌어도 낭독기에는 완성된 문구 하나만 전한다", async () => {
+    countIs(1234);
+    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+
+    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+
+    // 다이얼은 자리마다 0-9 를 모두 그린다. 그 숫자가 이름에 섞이면 뜻이 되지 않는다.
+    expect(await screen.findByRole("button", { name: "1,234개 조건에 맞는 제품 보기" })).toBeInTheDocument();
+  });
 });
