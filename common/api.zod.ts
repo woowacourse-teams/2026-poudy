@@ -7,6 +7,9 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
 export type ProductRegistrationRequest = __TypedOpenapi.Schemas.ProductRegistrationRequest;
 export const ProductRegistrationRequest = z.object({ productName: z.string().min(1).max(200), brandName: z.string().min(0).max(100).nullable().optional() });
 
+export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
+export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "DATA_CORRECTION", "IMPROVEMENT", "OTHER"]), content: z.string().min(10).max(2000), path: z.string().min(1).max(500) });
+
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string(), imageUrl: z.string() });
 

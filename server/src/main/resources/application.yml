@@ -46,6 +46,12 @@ springdoc:
 poudy:
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
+  feedback:
+    s3:
+      bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
+      region: ${AWS_REGION:ap-northeast-2}
+    discord:
+      webhook-url: ${POUDY_DISCORD_FEEDBACK_WEBHOOK_URL:}
   product-request:
     s3:
       bucket: ${PRODUCT_REQUEST_S3_BUCKET:}

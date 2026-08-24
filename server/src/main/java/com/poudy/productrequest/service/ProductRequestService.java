@@ -8,6 +8,7 @@ import com.poudy.productrequest.repository.S3ProductRequestRepository;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,7 +25,7 @@ public class ProductRequestService {
             S3ProductRequestRepository repository,
             DiscordProductRequestNotifier notifier,
             ProductRequestRateLimiter rateLimiter,
-            Clock clock) {
+            @Qualifier("productRequestClock") Clock clock) {
         this.repository = repository;
         this.notifier = notifier;
         this.rateLimiter = rateLimiter;

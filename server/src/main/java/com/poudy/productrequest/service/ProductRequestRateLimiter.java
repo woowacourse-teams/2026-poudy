@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +32,7 @@ public class ProductRequestRateLimiter {
     public ProductRequestRateLimiter(
             @Value("${poudy.product-request.rate-limit.max-requests}") int maxRequests,
             @Value("${poudy.product-request.rate-limit.window}") Duration window,
-            Clock clock) {
+            @Qualifier("productRequestClock") Clock clock) {
         this(maxRequests, window, DEFAULT_MAX_TRACKED_CLIENTS, DEFAULT_PRUNE_INTERVAL, clock);
     }
 

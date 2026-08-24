@@ -2,6 +2,7 @@ package com.poudy.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.feedback.domain.InvalidFeedbackException;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,10 @@ class GlobalExceptionHandlerTest {
                         new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
+        assertProblem(
+                handler.handleInvalidFeedbackException(new InvalidFeedbackException("의견 내용 오류")),
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_REQUEST_BODY);
     }
 
     @Test
