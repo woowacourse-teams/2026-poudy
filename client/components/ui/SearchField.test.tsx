@@ -39,6 +39,13 @@ describe("SearchField", () => {
 
     expect(onChange).toHaveBeenCalledWith("토");
   });
+
+  it("글자를 16px 로 두어 iOS Safari 가 화면을 키우지 않게 한다", () => {
+    render(<SearchField value="" onChange={() => {}} placeholder="검색" label="제품 검색" />);
+
+    // 16px 보다 작으면 초점이 갈 때 화면이 저절로 커진다. 값을 줄이지 않도록 못을 박는다.
+    expect(screen.getByRole("searchbox", { name: "제품 검색" })).toHaveClass("text-[16px]");
+  });
 });
 
 describe("FilterChip", () => {
