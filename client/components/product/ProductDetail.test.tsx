@@ -34,4 +34,12 @@ describe("제품 성분 요약", () => {
     expect(screen.getByText("24개 전성분으로 이루어진 제품이에요.")).toBeInTheDocument();
     expect(screen.queryByText(/기준으로,\s*을/)).not.toBeInTheDocument();
   });
+
+  it("전성분 펼쳐보기 버튼 배경을 Callout과 같은 surface 너비로 확장한다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const toggle = screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" });
+
+    expect(toggle).toHaveClass("bg-transparent", "before:-inset-x-4", "before:bg-[#F4F5F6]");
+  });
 });
