@@ -10,6 +10,7 @@ import com.poudy.brand.controller.dto.BrandOverviewResponse;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandDetail;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.service.BrandService;
 import com.poudy.category.domain.Categories;
@@ -30,20 +31,18 @@ class BrandControllerTest {
     @DisplayName("서비스에서 조회한 브랜드를 200 응답으로 반환한다")
     void findsBrands() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        Brands brands = new Brands(List.of(drG));
         BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
+        List<BrandSummary> brandSummaries = new Brands(List.of(drG)).summariesWith(brandCounts);
         BrandService brandService = mock(BrandService.class);
         ProductService productService = mock(ProductService.class);
-        given(brandService.findBrands()).willReturn(brands);
-        given(brandService.findBrandCounts()).willReturn(brandCounts);
+        given(brandService.findBrands()).willReturn(brandSummaries);
         BrandController controller = new BrandController(brandService, productService);
 
         ResponseEntity<BrandOverviewResponse> response = controller.findBrands();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brands, brandCounts));
+        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brandSummaries));
         verify(brandService).findBrands();
-        verify(brandService).findBrandCounts();
     }
 
     @Test

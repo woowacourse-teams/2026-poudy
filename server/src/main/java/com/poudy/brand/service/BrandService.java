@@ -2,11 +2,13 @@ package com.poudy.brand.service;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.product.repository.ProductRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,17 +22,14 @@ public class BrandService {
         this.productRepository = productRepository;
     }
 
-    public Brands findBrands() {
-        return brandRepository.findAll();
-    }
-
-    public BrandCounts findBrandCounts() {
-        return productRepository.findBrandCounts();
+    public List<BrandSummary> findBrands() {
+        Brands brands = brandRepository.findAll();
+        BrandCounts brandCounts = productRepository.findBrandCounts();
+        return brands.summariesWith(brandCounts);
     }
 
     public Brand findBrand(Long brandId) {
         return brandRepository.findById(brandId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
     }
-
 }

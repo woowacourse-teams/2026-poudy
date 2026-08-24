@@ -2,11 +2,13 @@ package com.poudy.brand.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.exception.ErrorCode;
@@ -34,8 +36,9 @@ class BrandServiceTest {
         given(productRepository.findBrandCounts()).willReturn(brandCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository);
 
-        assertThat(brandService.findBrands()).isSameAs(brands);
-        assertThat(brandService.findBrandCounts()).isSameAs(brandCounts);
+        assertThat(brandService.findBrands())
+                .extracting(BrandSummary::id, BrandSummary::productCount)
+                .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
     }
 
     @Test

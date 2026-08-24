@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +19,10 @@ class BrandOverviewResponseTest {
     void convertsBrandCounts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         Brand medicube = new Brand(2L, "메디큐브", "MEDICUBE", "https://cdn.example.com/brands/2/image.png");
-        Brands brands = new Brands(List.of(medicube, drG));
         BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
+        List<BrandSummary> brandSummaries = new Brands(List.of(drG, medicube)).summariesWith(brandCounts);
 
-        BrandOverviewResponse response = BrandOverviewResponse.from(brands, brandCounts);
+        BrandOverviewResponse response = BrandOverviewResponse.from(brandSummaries);
 
         assertThat(response.items()).containsExactly(
                 new BrandSummaryResponse(1L, "닥터지", null, null, 3L),
