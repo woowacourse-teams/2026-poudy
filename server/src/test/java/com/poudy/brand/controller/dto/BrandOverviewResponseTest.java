@@ -23,7 +23,7 @@ class BrandOverviewResponseTest {
         BrandOverviewResponse response = BrandOverviewResponse.from(brandCounts);
 
         assertThat(response.items()).containsExactly(
-                new BrandSummaryResponse(1L, "닥터지", "", "", 3L),
+                new BrandSummaryResponse(1L, "닥터지", null, null, 3L),
                 new BrandSummaryResponse(
                         2L,
                         "메디큐브",

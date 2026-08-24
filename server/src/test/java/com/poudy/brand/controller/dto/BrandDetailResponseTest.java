@@ -35,8 +35,8 @@ class BrandDetailResponseTest {
                 new BrandDetailResponse(
                         1L,
                         "닥터지",
-                        "",
-                        "",
+                        null,
+                        null,
                         List.of(
                                 new CategoryResponse(
                                         1L,
