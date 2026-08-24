@@ -15,6 +15,8 @@ import com.poudy.category.domain.Category;
 import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +88,12 @@ class BrandServiceTest {
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
         given(categoryRepository.findAll()).willReturn(categories);
-        given(productRepository.countByCategoryIdInBrand(1L)).willReturn(Map.of(2L, 2L));
+        Products products = mock(Products.class);
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        given(productCounts.countOf(skinCare)).willReturn(2L);
+        given(productCounts.countOf(toner)).willReturn(2L);
+        given(productRepository.findAll()).willReturn(products);
+        given(products.countsByCategoryInBrand(1L)).willReturn(productCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository, categoryRepository);
 
         BrandDetail detail = brandService.findDetail(1L);
@@ -107,8 +114,12 @@ class BrandServiceTest {
         ProductRepository productRepository = mock(ProductRepository.class);
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
-        given(categoryRepository.findAll()).willReturn(new Categories(List.of(skinCare, toner)));
-        given(productRepository.countByCategoryIdInBrand(1L)).willReturn(Map.of());
+        Categories categories = new Categories(List.of(skinCare, toner));
+        given(categoryRepository.findAll()).willReturn(categories);
+        Products products = mock(Products.class);
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        given(productRepository.findAll()).willReturn(products);
+        given(products.countsByCategoryInBrand(1L)).willReturn(productCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository, categoryRepository);
 
         assertThat(brandService.findDetail(1L).categories()).isEmpty();

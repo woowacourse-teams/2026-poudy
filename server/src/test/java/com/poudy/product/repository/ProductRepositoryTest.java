@@ -96,13 +96,6 @@ class ProductRepositoryTest {
         assertThat(productRepository.countByBrandId()).isEqualTo(Map.of(1L, 3L, 3L, 2L));
     }
 
-    @Test
-    @DisplayName("지정한 브랜드 제품만 카테고리별로 센다")
-    void countsProductsByCategoryIdWithinBrand() {
-        assertThat(productRepository.countByCategoryIdInBrand(1L)).isEqualTo(Map.of(2L, 1L, 3L, 1L, 14L, 1L));
-        assertThat(productRepository.countByCategoryIdInBrand(3L)).isEqualTo(Map.of(2L, 2L));
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {
             "{}",

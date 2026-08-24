@@ -1,18 +1,21 @@
 package com.poudy.brand.domain;
 
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CategoryCounts;
+import com.poudy.product.domain.ProductCountsByCategory;
 import java.util.List;
 import java.util.Objects;
 
 public class BrandDetail {
 
     private final Brand brand;
-    private final CategoryCounts categoryCounts;
+    private final Categories categories;
+    private final ProductCountsByCategory productCounts;
 
-    public BrandDetail(Brand brand, CategoryCounts categoryCounts) {
+    public BrandDetail(Brand brand, Categories categories, ProductCountsByCategory productCounts) {
         this.brand = Objects.requireNonNull(brand);
-        this.categoryCounts = Objects.requireNonNull(categoryCounts);
+        this.categories = Objects.requireNonNull(categories);
+        this.productCounts = Objects.requireNonNull(productCounts);
     }
 
     public Brand brand() {
@@ -20,18 +23,18 @@ public class BrandDetail {
     }
 
     public List<Category> categories() {
-        return categoryCounts.parents().stream()
-                .filter(category -> categoryCounts.productCountOf(category) > 0)
+        return categories.parents().stream()
+                .filter(category -> productCounts.countOf(category) > 0)
                 .toList();
     }
 
     public List<Category> childrenOf(Category category) {
-        return categoryCounts.childrenOf(category).stream()
-                .filter(child -> categoryCounts.productCountOf(child) > 0)
+        return categories.childrenOf(category).stream()
+                .filter(child -> productCounts.countOf(child) > 0)
                 .toList();
     }
 
     public long productCountOf(Category category) {
-        return categoryCounts.productCountOf(category);
+        return productCounts.countOf(category);
     }
 }

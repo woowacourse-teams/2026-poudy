@@ -1,12 +1,13 @@
 package com.poudy.brand.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CategoryCounts;
+import com.poudy.product.domain.ProductCountsByCategory;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +24,11 @@ class BrandDetailTest {
         Category sunCare = parent(4L, "선케어");
         Category sunCream = child(5L, 4L, "선크림");
         Categories categories = new Categories(List.of(skinCare, toner, serum, sunCare, sunCream));
-        CategoryCounts categoryCounts = new CategoryCounts(categories, Map.of(2L, 2L, 3L, 1L));
-        BrandDetail detail = new BrandDetail(brand, categoryCounts);
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        given(productCounts.countOf(skinCare)).willReturn(3L);
+        given(productCounts.countOf(toner)).willReturn(2L);
+        given(productCounts.countOf(serum)).willReturn(1L);
+        BrandDetail detail = new BrandDetail(brand, categories, productCounts);
 
         assertThat(detail.brand()).isEqualTo(brand);
         assertThat(detail.categories()).containsExactly(skinCare);
@@ -39,8 +43,9 @@ class BrandDetailTest {
     void returnsEmptyCategoriesForBrandWithoutProducts() {
         Category skinCare = parent(1L, "스킨케어");
         Category toner = child(2L, 1L, "토너");
-        CategoryCounts categoryCounts = new CategoryCounts(new Categories(List.of(skinCare, toner)), Map.of());
-        BrandDetail detail = new BrandDetail(new Brand(1L, "닥터지", null, null), categoryCounts);
+        Categories categories = new Categories(List.of(skinCare, toner));
+        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
+        BrandDetail detail = new BrandDetail(new Brand(1L, "닥터지", null, null), categories, productCounts);
 
         assertThat(detail.categories()).isEmpty();
     }
