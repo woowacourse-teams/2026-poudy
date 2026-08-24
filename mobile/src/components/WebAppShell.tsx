@@ -7,7 +7,7 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
-import type { WebViewNavigation } from '@/hooks/useWebViewNavigation';
+import type { WebViewNavigation } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
