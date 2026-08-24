@@ -1,5 +1,8 @@
 package com.poudy.product.service;
 
+import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandDetail;
+import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.exception.ErrorCode;
@@ -24,14 +27,17 @@ import org.springframework.stereotype.Service;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final Brands brands;
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
 
     public ProductService(
             ProductRepository productRepository,
+            Brands brands,
             Categories categories,
             ExcludeCodeIngredients excludeCodeIngredients) {
         this.productRepository = productRepository;
+        this.brands = brands;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
     }
@@ -57,6 +63,13 @@ public class ProductService {
 
     public ProductCountsByCategory countsByCategory() {
         return products().countsByCategory();
+    }
+
+    public BrandDetail findBrandDetail(Long brandId) {
+        Brand brand = brands.findById(brandId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+
+        return products().brandDetailOf(brand, categories);
     }
 
     public ProductDetail findDetail(Long productId) {

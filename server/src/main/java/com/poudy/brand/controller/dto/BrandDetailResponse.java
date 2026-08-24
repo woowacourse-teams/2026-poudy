@@ -4,7 +4,9 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.controller.dto.CategoryChildResponse;
 import com.poudy.category.controller.dto.CategoryResponse;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.product.domain.ProductCountsByCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -18,8 +20,11 @@ public record BrandDetailResponse(
 
     public static BrandDetailResponse from(BrandDetail brandDetail) {
         Brand brand = brandDetail.brand();
-        List<CategoryResponse> categories = brandDetail.categories().stream()
-                .map(category -> categoryFrom(category, brandDetail))
+        Categories categories = brandDetail.categories();
+        ProductCountsByCategory productCounts = brandDetail.productCountsByCategory();
+        List<CategoryResponse> categoryResponses = categories.parents().stream()
+                .filter(category -> productCounts.countOf(category) > 0)
+                .map(category -> categoryFrom(category, categories, productCounts))
                 .toList();
 
         return new BrandDetailResponse(
@@ -27,22 +32,26 @@ public record BrandDetailResponse(
                 brand.koreanName(),
                 brand.englishName(),
                 brand.imageUrl(),
-                categories);
+                categoryResponses);
     }
 
-    private static CategoryResponse categoryFrom(Category category, BrandDetail brandDetail) {
-        List<CategoryChildResponse> children = brandDetail.childrenOf(category).stream()
+    private static CategoryResponse categoryFrom(
+            Category category,
+            Categories categories,
+            ProductCountsByCategory productCounts) {
+        List<CategoryChildResponse> children = categories.childrenOf(category).stream()
+                .filter(child -> productCounts.countOf(child) > 0)
                 .map(
                         child -> new CategoryChildResponse(
                                 child.id(),
                                 child.name(),
-                                brandDetail.productCountOf(child)))
+                                productCounts.countOf(child)))
                 .toList();
 
         return new CategoryResponse(
                 category.id(),
                 category.name(),
                 children,
-                brandDetail.productCountOf(category));
+                productCounts.countOf(category));
     }
 }

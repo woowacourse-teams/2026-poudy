@@ -7,6 +7,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandDetail;
+import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.common.dto.PaginationRequest;
@@ -44,7 +46,11 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
                 .willReturn(Set.of(999L));
-        ProductService service = new ProductService(repository, categories(product.category()), excludeCodeIngredients);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of(product.brand())),
+                categories(product.category()),
+                excludeCodeIngredients);
         ProductFilterRequest filter = new ProductFilterRequest(
                 null,
                 null,
@@ -72,7 +78,11 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.freeCodesOf(product.ingredients()))
                 .willReturn(List.of(ExcludeCode.SULFATES));
-        ProductService service = new ProductService(repository, categories(product.category()), excludeCodeIngredients);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of(product.brand())),
+                categories(product.category()),
+                excludeCodeIngredients);
 
         ProductDetail detail = service.findDetail(1L);
 
@@ -91,6 +101,7 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of()));
         ProductService service = new ProductService(
                 repository,
+                new Brands(List.of()),
                 Categories.from(List.of(parent, child)),
                 excludeCodeIngredients);
 
@@ -98,6 +109,41 @@ class ProductServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .extracting(exception -> ((ResourceNotFoundException) exception).code())
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("브랜드와 해당 제품의 카테고리별 개수를 상세 정보로 조회한다")
+    void findsBrandDetail() {
+        Product product = product(1L);
+        Brands brands = new Brands(List.of(product.brand()));
+        Categories categories = categories(product.category());
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        ProductService service = new ProductService(repository, brands, categories, excludeCodeIngredients);
+
+        BrandDetail detail = service.findBrandDetail(product.brand().id());
+
+        assertThat(detail.brand()).isEqualTo(product.brand());
+        assertThat(detail.categories()).isSameAs(categories);
+        assertThat(detail.productCountsByCategory().countOf(product.category())).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("브랜드를 찾지 못하면 브랜드 없음 예외를 던진다")
+    void rejectsUnknownBrand() {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of()),
+                Categories.from(List.of()),
+                excludeCodeIngredients);
+
+        assertThatThrownBy(() -> service.findBrandDetail(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .extracting(exception -> ((ResourceNotFoundException) exception).code())
+                .isEqualTo(ErrorCode.BRAND_NOT_FOUND);
     }
 
     private static Product product(Long id) {

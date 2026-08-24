@@ -15,6 +15,7 @@ import com.poudy.brand.service.BrandService;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.service.ProductService;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -32,9 +33,10 @@ class BrandControllerTest {
         Brands brands = new Brands(List.of(drG));
         BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
         BrandService brandService = mock(BrandService.class);
+        ProductService productService = mock(ProductService.class);
         given(brandService.findBrands()).willReturn(brands);
         given(brandService.findBrandCounts()).willReturn(brandCounts);
-        BrandController controller = new BrandController(brandService);
+        BrandController controller = new BrandController(brandService, productService);
 
         ResponseEntity<BrandOverviewResponse> response = controller.findBrands();
 
@@ -56,13 +58,14 @@ class BrandControllerTest {
         given(productCounts.countOf(toner)).willReturn(3L);
         BrandDetail brandDetail = new BrandDetail(drG, categories, productCounts);
         BrandService brandService = mock(BrandService.class);
-        given(brandService.findDetail(1L)).willReturn(brandDetail);
-        BrandController controller = new BrandController(brandService);
+        ProductService productService = mock(ProductService.class);
+        given(productService.findBrandDetail(1L)).willReturn(brandDetail);
+        BrandController controller = new BrandController(brandService, productService);
 
         ResponseEntity<BrandDetailResponse> response = controller.findBrand(1L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(BrandDetailResponse.from(brandDetail));
-        verify(brandService).findDetail(1L);
+        verify(productService).findBrandDetail(1L);
     }
 }

@@ -2,6 +2,8 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandCounts;
+import com.poudy.brand.domain.BrandDetail;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.common.domain.SearchKeyword;
 import java.util.HashMap;
@@ -153,6 +155,10 @@ public class Products {
 
     public BrandCounts brandCounts() {
         return brandCounts;
+    }
+
+    public BrandDetail brandDetailOf(Brand brand, Categories categories) {
+        return new BrandDetail(brand, categories, countsByCategoryInBrand(brand.id()));
     }
 
     private static ProductCountsByCategory countsByCategory(List<Product> products) {
