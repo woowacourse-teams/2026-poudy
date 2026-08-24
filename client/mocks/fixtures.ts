@@ -475,7 +475,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
 /** 손으로 적은 다섯 개 뒤에 파이프라인 제품을 잇는다. */
 export const allProducts: ProductResponse[] = [...products, ...pipelineProductList];
 
-export const allBrands: BrandListItemResponse[] = [
+export const allBrands: BrandSummaryResponse[] = [
   ...brands,
   ...pipelineBrands
     .filter((brand) => brand.productCount > 0)
