@@ -87,7 +87,7 @@ class ProductTest {
     @DisplayName("같은 피부 작용을 가진 성분을 하나의 그룹으로 묶는다")
     void groupsIngredientsBySkinEffect() {
         Ingredient first = ingredient(10L, "HYDRATION_RELATED");
-        Ingredient second = ingredient(20L, "HYDRATION_RELATED");
+        Ingredient second = ingredient(20L, "MOISTURE_RELATED");
         Product product = new Product(
                 1L,
                 "제품",
