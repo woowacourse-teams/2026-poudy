@@ -1,7 +1,6 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
-import com.poudy.category.controller.dto.CategoryPathResponse;
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;

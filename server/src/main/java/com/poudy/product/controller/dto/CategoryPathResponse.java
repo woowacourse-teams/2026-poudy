@@ -1,4 +1,4 @@
-package com.poudy.category.controller.dto;
+package com.poudy.product.controller.dto;
 
 import com.poudy.category.domain.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
