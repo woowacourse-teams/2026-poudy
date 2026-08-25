@@ -44,14 +44,14 @@ jobs:
           cache-dependency-path: client/pnpm-lock.yaml
 
       # 값이 없으면 목을 켠 채로 배포되거나 빈 주소로 요청이 나간다. 먼저 막는다.
-      - name: Check required secrets
+      - name: Check required settings
         run: |
           missing=""
           [ -n "${{ secrets.VERCEL_TOKEN }}" ] || missing="$missing VERCEL_TOKEN"
           [ -n "${{ secrets.VERCEL_ORG_ID }}" ] || missing="$missing VERCEL_ORG_ID"
           [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ] || missing="$missing VERCEL_PROJECT_ID"
-          [ -n "${{ secrets.STAGING_API_BASE_URL }}" ] || missing="$missing STAGING_API_BASE_URL"
-          [ -n "${{ secrets.STAGING_SITE_URL }}" ] || missing="$missing STAGING_SITE_URL"
+          [ -n "${{ vars.STAGING_API_BASE_URL }}" ] || missing="$missing STAGING_API_BASE_URL"
+          [ -n "${{ vars.STAGING_SITE_URL }}" ] || missing="$missing STAGING_SITE_URL"
           # 키가 없으면 분석 이벤트를 조용히 버린다. 배포는 성공해 알아채기 어렵다.
           [ -n "${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" ] || missing="$missing NEXT_PUBLIC_POSTHOG_KEY"
           if [ -n "$missing" ]; then
@@ -75,9 +75,9 @@ jobs:
         env:
           # staging 은 목이 아니라 실제 API 를 본다.
           NEXT_PUBLIC_API_MOCKING: ""
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
           NEXT_PUBLIC_ENVIRONMENT: staging
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.STAGING_SITE_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.STAGING_SITE_URL }}
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
