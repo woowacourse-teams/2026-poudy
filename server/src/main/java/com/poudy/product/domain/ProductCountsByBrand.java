@@ -17,7 +17,7 @@ public class ProductCountsByBrand {
         this.countsByBrandId = Map.copyOf(countsByBrandId);
     }
 
-    public long countOf(Long brandId) {
+    private long countOf(Long brandId) {
         return countsByBrandId.getOrDefault(brandId, 0L);
     }
 

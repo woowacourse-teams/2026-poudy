@@ -15,39 +15,37 @@ import org.junit.jupiter.api.Test;
 class ProductCountsByBrandTest {
 
     @Test
-    @DisplayName("브랜드 ID에 해당하는 제품 수를 반환한다")
-    void returnsCountByBrandId() {
-        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
-
-        assertThat(productCounts.countOf(1L)).isEqualTo(3L);
-    }
-
-    @Test
-    @DisplayName("집계되지 않은 브랜드의 제품 수는 0이다")
-    void returnsZeroForUnknownBrandId() {
-        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of());
-
-        assertThat(productCounts.countOf(999L)).isZero();
-    }
-
-    @Test
-    @DisplayName("집계 결과가 없으면 모든 브랜드의 제품 수는 0이다")
-    void returnsZeroForMissingCounts() {
-        ProductCountsByBrand productCounts = new ProductCountsByBrand(null);
-
-        assertThat(productCounts.countOf(1L)).isZero();
-    }
-
-    @Test
-    @DisplayName("브랜드를 이름순으로 제품 수와 결합한다")
+    @DisplayName("브랜드를 받은 순서대로 제품 수와 결합한다")
     void summarizesBrandsWithProductCounts() {
-        Brand drG = new Brand(1L, "닥터지", null, null);
-        Brand medicube = new Brand(2L, "메디큐브", null, null);
-        Brands brands = new Brands(List.of(medicube, drG));
+        Brands brands = new Brands(List.of(brand(2L, "메디큐브"), brand(1L, "닥터지")));
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
         assertThat(productCounts.summariesOf(brands.sortedByName()))
                 .extracting(BrandSummary::id, BrandSummary::productCount)
                 .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
+    }
+
+    @Test
+    @DisplayName("집계되지 않은 브랜드의 제품 수는 0이다")
+    void summarizesUncountedBrandWithZero() {
+        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
+
+        assertThat(productCounts.summariesOf(List.of(brand(999L, "없는 브랜드"))))
+                .extracting(BrandSummary::productCount)
+                .containsExactly(0L);
+    }
+
+    @Test
+    @DisplayName("집계 결과가 없으면 모든 브랜드의 제품 수는 0이다")
+    void summarizesEveryBrandWithZeroForMissingCounts() {
+        ProductCountsByBrand productCounts = new ProductCountsByBrand(null);
+
+        assertThat(productCounts.summariesOf(List.of(brand(1L, "닥터지"), brand(2L, "메디큐브"))))
+                .extracting(BrandSummary::productCount)
+                .containsExactly(0L, 0L);
+    }
+
+    private static Brand brand(Long id, String koreanName) {
+        return new Brand(id, koreanName, null, null);
     }
 }

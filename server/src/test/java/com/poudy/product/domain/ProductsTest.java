@@ -3,8 +3,10 @@ package com.poudy.product.domain;
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
@@ -82,9 +84,9 @@ class ProductsTest {
 
         ProductCountsByBrand productCounts = products.productCountsByBrand();
 
-        assertThat(productCounts.countOf(1L)).isEqualTo(2L);
-        assertThat(productCounts.countOf(2L)).isEqualTo(1L);
-        assertThat(productCounts.countOf(999L)).isZero();
+        assertThat(productCounts.summariesOf(List.of(brand(1L), brand(2L), brand(999L))))
+                .extracting(BrandSummary::id, BrandSummary::productCount)
+                .containsExactly(tuple(1L, 2L), tuple(2L, 1L), tuple(999L, 0L));
     }
 
     @Test
