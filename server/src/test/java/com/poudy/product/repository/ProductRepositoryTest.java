@@ -2,8 +2,10 @@ package com.poudy.product.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
@@ -18,7 +20,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -92,8 +93,15 @@ class ProductRepositoryTest {
 
     @Test
     @DisplayName("브랜드별 제품 수를 센다")
-    void countsProductsByBrandId() {
-        assertThat(productRepository.countByBrandId()).isEqualTo(Map.of(1L, 3L, 3L, 2L));
+    void countsProductsByBrand() {
+        List<Brand> brands = List.of(
+                new Brand(1L, "다 브랜드", null, null),
+                new Brand(3L, "가 브랜드", null, null),
+                new Brand(999L, "없는 브랜드", null, null));
+
+        assertThat(productRepository.findProductCountsByBrand().summariesOf(brands))
+                .extracting(BrandSummary::id, BrandSummary::productCount)
+                .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
     }
 
     @ParameterizedTest

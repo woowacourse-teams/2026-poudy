@@ -1,23 +1,19 @@
 package com.poudy.brand.domain;
 
-import com.poudy.category.domain.CountedCategory;
-import java.util.List;
-import java.util.Objects;
-
-public class BrandDetail {
+public class BrandSummary {
 
     private final Long id;
     private final String koreanName;
     private final String englishName;
     private final String imageUrl;
-    private final List<CountedCategory> categories;
+    private final long productCount;
 
-    public BrandDetail(Brand brand, List<CountedCategory> categories) {
+    public BrandSummary(Brand brand, long productCount) {
         this.id = brand.id();
         this.koreanName = brand.koreanName();
         this.englishName = brand.englishName();
         this.imageUrl = brand.imageUrl();
-        this.categories = List.copyOf(Objects.requireNonNullElse(categories, List.of()));
+        this.productCount = productCount;
     }
 
     public Long id() {
@@ -36,7 +32,7 @@ public class BrandDetail {
         return imageUrl;
     }
 
-    public List<CountedCategory> categories() {
-        return categories;
+    public long productCount() {
+        return productCount;
     }
 }

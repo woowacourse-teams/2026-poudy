@@ -1,18 +1,18 @@
 /**
  * @vitest-environment jsdom
  */
-import type { BrandListItemResponse } from "@poudy/api/api.zod";
+import type { BrandSummaryResponse } from "@poudy/api/api.zod";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { BrandDirectory } from "./BrandDirectory";
 
-const brand = (id: number, name: string): BrandListItemResponse => ({
+const brand = (id: number, name: string): BrandSummaryResponse => ({
   id,
   name,
-  englishName: "",
-  imageUrl: "",
+  englishName: null,
+  imageUrl: null,
   productCount: 10,
 });
 

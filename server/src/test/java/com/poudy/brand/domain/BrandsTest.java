@@ -59,7 +59,7 @@ class BrandsTest {
     void rejectsDuplicateIds() {
         assertThatThrownBy(() -> new Brands(List.of(brand(1L, "닥터지"), brand(1L, "메디큐브"))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("브랜드 ID는 중복될 수 없습니다.");
+                .hasMessage("브랜드 ID는 중복될 수 없습니다: 1");
     }
 
     private static Brand brand(Long id, String koreanName) {

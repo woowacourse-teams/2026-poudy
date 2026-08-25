@@ -7,6 +7,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCountsByBrand;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
@@ -16,7 +17,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -154,7 +154,7 @@ public class ProductRepository {
     private static ProductVariants variantsOf(JsonNode product, DeserializationContext context)
             throws JacksonException {
         JsonNode variants = product.get(VARIANTS_FIELD);
-        if (variants == null || !variants.isArray() || variants.size() == 0) {
+        if (variants == null || !variants.isArray() || variants.isEmpty()) {
             return context.reportInputMismatch(ProductVariants.class, "제품 용량 옵션은 하나 이상이어야 합니다.");
         }
 
@@ -192,7 +192,7 @@ public class ProductRepository {
             return context.reportInputMismatch(ProductVariant.class, "제품 용량 옵션의 \"%s\" 필드는 숫자여야 합니다.", field);
         }
 
-        return new BigDecimal(number.asText());
+        return new BigDecimal(number.asString());
     }
 
     private static String requiredTextOf(JsonNode value, String field, DeserializationContext context)
@@ -211,23 +211,23 @@ public class ProductRepository {
         if (text == null || text.isNull()) {
             return null;
         }
-        if (!text.isTextual()) {
+        if (!text.isString()) {
             return context.reportInputMismatch(
                     Product.class,
                     "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
                     field);
         }
 
-        return text.asText();
+        return text.asString();
     }
 
     private static String textOf(JsonNode value, String field) {
         JsonNode text = value.get(field);
-        if (text == null || !text.isTextual()) {
+        if (text == null || !text.isString()) {
             return null;
         }
 
-        return text.asText();
+        return text.asString();
     }
 
     private static OffsetDateTime updatedAtOf(JsonNode product, DeserializationContext context)
@@ -258,7 +258,7 @@ public class ProductRepository {
         return products.countContaining(ingredientId);
     }
 
-    public Map<Long, Long> countByBrandId() {
-        return products.countByBrandId();
+    public ProductCountsByBrand findProductCountsByBrand() {
+        return products.productCountsByBrand();
     }
 }

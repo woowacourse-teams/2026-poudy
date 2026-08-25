@@ -32,11 +32,11 @@ export type BrandResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
 }
 export type ProductResponse = {
   /**
@@ -332,7 +332,7 @@ export type ExcludeCodeListResponse = {
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
-export type BrandListItemResponse = {
+export type BrandSummaryResponse = {
   /**
    * 브랜드 ID
    */
@@ -344,17 +344,17 @@ export type BrandListItemResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
   /**
    * 이 브랜드의 제품 수. 전체 카탈로그 기준이며 제품 조회 필터와 무관하다
    */
   productCount: number;
 }
-export type BrandListResponse = { items: Array<BrandListItemResponse> }
+export type BrandOverviewResponse = { items: Array<BrandSummaryResponse> }
 export type BrandDetailResponse = {
   /**
    * 브랜드 ID
@@ -367,11 +367,11 @@ export type BrandDetailResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
   /**
    * 이 브랜드 제품이 속한 카테고리를 대분류와 소분류로 표시한다. productCount 는 이 브랜드 안에서 센 값이다
    */
@@ -661,7 +661,7 @@ export type get_FindBrands = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
-      responses: {200: Schemas.BrandListResponse,
+      responses: {200: Schemas.BrandOverviewResponse,
 500: Schemas.ProblemDetail,
 },
 
