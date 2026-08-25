@@ -1,5 +1,6 @@
 package com.poudy.feedback.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -28,10 +29,53 @@ class FeedbackRateLimiterTest {
 
         limiter.requireAllowed("client-a");
         limiter.requireAllowed("client-a");
+        clock.advance(Duration.ofMinutes(2));
 
         assertThatThrownBy(() -> limiter.requireAllowed("client-a"))
-                .isInstanceOf(TooManyRequestsException.class);
+                .isInstanceOf(TooManyRequestsException.class)
+                .satisfies(
+                        exception -> assertThat(((TooManyRequestsException) exception).retryAfter())
+                                .isEqualTo(Duration.ofMinutes(8)));
         assertThatNoException().isThrownBy(() -> limiter.requireAllowed("client-b"));
+    }
+
+    @Test
+    @DisplayName("의견 등록 정책의 설정 오류 문구를 유지한다")
+    void validatesFeedbackPolicy() {
+        MutableClock clock = new MutableClock();
+
+        assertThatThrownBy(
+                () -> new FeedbackRateLimiter(
+                        0,
+                        Duration.ofMinutes(10),
+                        100,
+                        Duration.ofMinutes(1),
+                        clock))
+                .hasMessage("의견 등록 제한 횟수는 양수여야 합니다.");
+        assertThatThrownBy(
+                () -> new FeedbackRateLimiter(
+                        1,
+                        Duration.ZERO,
+                        100,
+                        Duration.ofMinutes(1),
+                        clock))
+                .hasMessage("의견 등록 제한 시간 창은 양수여야 합니다.");
+        assertThatThrownBy(
+                () -> new FeedbackRateLimiter(
+                        1,
+                        Duration.ofMinutes(10),
+                        0,
+                        Duration.ofMinutes(1),
+                        clock))
+                .hasMessage("의견 등록 추적 대상 수는 양수여야 합니다.");
+        assertThatThrownBy(
+                () -> new FeedbackRateLimiter(
+                        1,
+                        Duration.ofMinutes(10),
+                        100,
+                        Duration.ZERO,
+                        clock))
+                .hasMessage("의견 등록 제한 정리 주기는 양수여야 합니다.");
     }
 
     @Test
