@@ -1,8 +1,8 @@
 package com.poudy.product.domain;
 
-import com.poudy.common.domain.NameRank;
-import com.poudy.common.domain.SearchKeyword;
-import com.poudy.common.domain.SearchableText;
+import com.poudy.search.domain.NameRank;
+import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.domain.SearchableText;
 
 public record SearchableProduct(Product product, SearchableText productName) {
 

@@ -1,4 +1,4 @@
-package com.poudy.common.domain;
+package com.poudy.search.domain;
 
 import java.text.Normalizer;
 import java.util.Locale;

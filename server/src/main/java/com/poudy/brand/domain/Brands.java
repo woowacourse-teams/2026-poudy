@@ -1,6 +1,6 @@
 package com.poudy.brand.domain;
 
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;

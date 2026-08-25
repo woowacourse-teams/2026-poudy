@@ -4,7 +4,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

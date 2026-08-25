@@ -2,9 +2,9 @@ package com.poudy.brand.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.common.domain.NameMatch;
-import com.poudy.common.domain.NameRank;
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.NameMatch;
+import com.poudy.search.domain.NameRank;
+import com.poudy.search.domain.SearchKeyword;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
