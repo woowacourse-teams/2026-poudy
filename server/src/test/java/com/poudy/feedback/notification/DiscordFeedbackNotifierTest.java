@@ -1,19 +1,29 @@
 package com.poudy.feedback.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
+import com.poudy.infrastructure.discord.DiscordWebhookClient;
+import com.poudy.infrastructure.discord.RestClientDiscordWebhookTransport;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -43,13 +53,15 @@ class DiscordFeedbackNotifierTest {
 
         try {
             String webhookUrl = "http://localhost:" + server.getAddress().getPort() + "/webhook";
-            DiscordFeedbackNotifier notifier = new DiscordFeedbackNotifier(RestClient.builder().build(), webhookUrl);
-            Feedback feedback = new Feedback(
-                    UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3"),
-                    FeedbackType.DATA_CORRECTION,
-                    new FeedbackContent("@everyone " + "가".repeat(1990)),
-                    new FeedbackPath("/products/12345"),
-                    OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+            requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+            requestFactory.setReadTimeout(Duration.ofSeconds(3));
+            DiscordWebhookClient webhookClient = new DiscordWebhookClient(
+                    new RestClientDiscordWebhookTransport(
+                            RestClient.builder().requestFactory(requestFactory).build()),
+                    objectMapper);
+            DiscordFeedbackNotifier notifier = new DiscordFeedbackNotifier(webhookClient, webhookUrl);
+            Feedback feedback = feedback("@everyone " + "가".repeat(1990));
 
             notifier.notify(feedback);
 
@@ -62,5 +74,37 @@ class DiscordFeedbackNotifierTest {
         } finally {
             server.stop(0);
         }
+    }
+
+    @Test
+    @DisplayName("Discord 리다이렉션 응답은 성공으로 처리한다")
+    void acceptsRedirectResponse() {
+        DiscordWebhookClient webhookClient = mock(DiscordWebhookClient.class);
+        given(webhookClient.post(any(URI.class), any())).willReturn(302);
+
+        new DiscordFeedbackNotifier(webhookClient, "https://discord.example/webhook")
+                .notify(feedback("유효한 사용자 의견입니다"));
+    }
+
+    @Test
+    @DisplayName("Discord 4xx와 5xx 응답은 실패로 처리한다")
+    void rejectsErrorResponse() {
+        DiscordWebhookClient webhookClient = mock(DiscordWebhookClient.class);
+        given(webhookClient.post(any(URI.class), any())).willReturn(400);
+
+        assertThatThrownBy(
+                () -> new DiscordFeedbackNotifier(webhookClient, "https://discord.example/webhook")
+                        .notify(feedback("유효한 사용자 의견입니다")))
+                .isInstanceOf(InfrastructureException.class)
+                .hasMessage("Discord 의견 알림 전송에 실패했습니다. status=400");
+    }
+
+    private static Feedback feedback(String content) {
+        return new Feedback(
+                UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3"),
+                FeedbackType.DATA_CORRECTION,
+                new FeedbackContent(content),
+                new FeedbackPath("/products/12345"),
+                OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
     }
 }
