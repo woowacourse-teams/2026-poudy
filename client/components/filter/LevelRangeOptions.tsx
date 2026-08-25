@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { CheckMark } from "@/components/ui/CheckMark";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
@@ -165,13 +166,15 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           </span>
         </p>
 
-        <label className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={anyLevel}
-            onChange={toggleAnyLevel}
-            className="size-[18px] rounded border-[1.5px] border-[#C4C7CC] accent-[#212124]"
-          />
+        {/*
+          네모는 CheckMark 가 그리고, 누르고 초점을 받는 일은 감춘 input 이 맡는다.
+          input 을 지우면 키보드로 켤 수 없고 낭독기도 체크 상태를 알지 못한다.
+        */}
+        <label className="flex cursor-pointer items-center gap-1.5">
+          <input type="checkbox" checked={anyLevel} onChange={toggleAnyLevel} className="peer sr-only" />
+          <span className="peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#212124]">
+            <CheckMark checked={anyLevel} />
+          </span>
           <span className="text-[13px] font-medium text-text-secondary">상관없음</span>
         </label>
       </div>
