@@ -100,6 +100,8 @@ function SheetBody({
       onClose={onClose}
       onReset={reset}
       submitLabel={submitLabel}
+      // 아직 세지 못한 것과 0 개는 다르다. 세는 동안에는 막지 않는다.
+      submitDisabled={count === 0}
       onSubmit={() => {
         onApply(draft);
         onClose();
