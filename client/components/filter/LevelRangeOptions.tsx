@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
@@ -69,16 +69,26 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
    */
   const handledByPointer = useRef(false);
 
-  /** 손가락이 놓인 가로 위치에서 단계를 읽는다. */
-  const levelAt = (clientX: number): number | null => {
+  /** 지금 끌고 있는지. 끄는 사이에는 색을 곧바로 칠한다. */
+  const [isDragging, setIsDragging] = useState(false);
+
+  /*
+   * 끄는 동안에는 색 전환을 끊는다.
+   *
+   * 칸을 빠르게 지나가면 160ms 짜리 색 전환이 끝나기 전에 다음 칸으로 넘어가, 색이 늘
+   * 중간에 머물러 번진다. 끄는 사이에는 곧바로 칠하고, 놓은 뒤에만 부드럽게 바꾼다.
+   */
+  const dragStyle = isDragging ? { transitionDuration: "0s" } : undefined;
+
+  /** 손가락이 놓인 가로 위치를 트랙 안 비율(0-1)로 읽는다. */
+  const ratioAt = (clientX: number): number | null => {
     const track = trackRef.current;
     if (!track) return null;
 
     const { left, width } = track.getBoundingClientRect();
     if (width === 0) return null;
 
-    const ratio = (clientX - left) / width;
-    return Math.min(MAX_LEVEL, Math.max(0, Math.round(ratio * MAX_LEVEL)));
+    return Math.min(1, Math.max(0, (clientX - left) / width));
   };
 
   const applyDrag = (level: number) => {
@@ -100,11 +110,13 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    const level = levelAt(event.clientX);
-    if (level === null) return;
+    const ratio = ratioAt(event.clientX);
+    if (ratio === null) return;
 
+    const level = Math.round(ratio * MAX_LEVEL);
     event.currentTarget.setPointerCapture(event.pointerId);
     handledByPointer.current = true;
+    setIsDragging(true);
 
     if (anyLevel) {
       // 상관없음에서 잡으면 없음부터 그 자리까지 잡는다. 없음 쪽이 고정 자리가 된다.
@@ -125,13 +137,17 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (dragging.current === null) return;
 
-    const level = levelAt(event.clientX);
-    if (level !== null) applyDrag(level);
+    const ratio = ratioAt(event.clientX);
+    if (ratio === null) return;
+
+    setIsDragging(true);
+    applyDrag(Math.round(ratio * MAX_LEVEL));
   };
 
   const endDrag = () => {
     dragging.current = null;
     lastNotified.current = null;
+    setIsDragging(false);
   };
 
   return (
@@ -187,6 +203,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                   }
                   pick(level);
                 }}
+                style={dragStyle}
                 className={`flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-[transform,border-color,background-color] duration-control-state ease-standard motion-reduce:transition-none active:scale-90 motion-reduce:active:scale-100 ${
                   isHandle ? "border-brand bg-background" : "border-transparent"
                 }`}
@@ -196,6 +213,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                   다시 잡히므로 한 크기로 두고 scale 로 줄인다.
                 */}
                 <span
+                  style={dragStyle}
                   className={`size-2 rounded-full transition-[transform,background-color] duration-control-state ease-standard motion-reduce:transition-none ${
                     isHandle ? "scale-75 bg-brand" : inRange ? "bg-brand" : "bg-border"
                   }`}
@@ -205,6 +223,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
               {level < MAX_LEVEL ? (
                 <span
                   aria-hidden="true"
+                  style={dragStyle}
                   className={`h-[3px] flex-1 rounded-sm transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
                     !anyLevel && level >= min && level < max ? "bg-brand" : "bg-border"
                   }`}
