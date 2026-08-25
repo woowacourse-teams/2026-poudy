@@ -142,7 +142,8 @@ function SheetBody({
             />
           </section>
 
-          <section className="pt-4">
+          {/* 두 범위는 서로 다른 조건이라 사이를 넉넉히 띄워 한 덩어리로 보이지 않게 한다. */}
+          <section className="pt-8">
             <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">유분감</h3>
             <LevelRange
               label="유분감"

@@ -19,7 +19,8 @@ export function CheckMark({ checked }: CheckMarkProps) {
         checked ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
       }`}
     >
-      {checked ? <Icon name="check" size={11} strokeWidth={1.5} className="text-white" /> : null}
+      {/* 작게 그리는 그림이라 획을 굵혀야 또렷하다. */}
+      {checked ? <Icon name="check" size={11} strokeWidth={4} className="text-white" /> : null}
     </span>
   );
 }
