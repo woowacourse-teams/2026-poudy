@@ -1,6 +1,7 @@
 "use client";
 
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
+import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 type LevelRangeProps = {
   readonly label: string;
@@ -22,10 +23,24 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
 
   /** 누른 자리에서 가까운 쪽 끝을 옮긴다. */
   const pick = (level: number) => {
-    if (anyLevel) return onChange([level]);
-    if (level < min) return onChange(range(level, max));
-    if (level > max) return onChange(range(min, level));
-    return onChange(level - min <= max - level ? range(level, max) : range(min, level));
+    const next = anyLevel
+      ? [level]
+      : level < min
+        ? range(level, max)
+        : level > max
+          ? range(min, level)
+          : level - min <= max - level
+            ? range(level, max)
+            : range(min, level);
+
+    // 범위가 그대로면 떨지 않는다. 같은 손잡이를 다시 눌러도 아무것도 옮겨지지 않는다.
+    if (!isSameRange(levels, next)) requestSelectionHaptic();
+    onChange(next);
+  };
+
+  const toggleAnyLevel = () => {
+    requestSelectionHaptic();
+    onChange(anyLevel ? range(0, MAX_LEVEL) : []);
   };
 
   return (
@@ -37,7 +52,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           <input
             type="checkbox"
             checked={anyLevel}
-            onChange={() => onChange(anyLevel ? range(0, MAX_LEVEL) : [])}
+            onChange={toggleAnyLevel}
             className="size-[18px] rounded border-[1.5px] border-[#C4C7CC] accent-[#212124]"
           />
           <span className="text-[13px] font-medium text-text-secondary">상관없음</span>
@@ -61,13 +76,17 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                 aria-pressed={inRange}
                 aria-label={`${label} ${name}`}
                 onClick={() => pick(level)}
-                className={`flex size-5 shrink-0 items-center justify-center rounded-full ${
-                  isHandle ? "border-2 border-brand bg-background" : ""
+                className={`flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-[transform,border-color,background-color] duration-control-state ease-standard motion-reduce:transition-none active:scale-90 motion-reduce:active:scale-100 ${
+                  isHandle ? "border-brand bg-background" : "border-transparent"
                 }`}
               >
+                {/*
+                  손잡이는 작은 점, 범위 안은 큰 점이다. 크기를 size 로 바꾸면 자리가
+                  다시 잡히므로 한 크기로 두고 scale 로 줄인다.
+                */}
                 <span
-                  className={`rounded-full ${
-                    isHandle ? "size-1.5 bg-brand" : inRange ? "size-2 bg-brand" : "size-2 bg-border"
+                  className={`size-2 rounded-full transition-[transform,background-color] duration-control-state ease-standard motion-reduce:transition-none ${
+                    isHandle ? "scale-75 bg-brand" : inRange ? "bg-brand" : "bg-border"
                   }`}
                 />
               </button>
@@ -75,7 +94,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
               {level < MAX_LEVEL ? (
                 <span
                   aria-hidden="true"
-                  className={`h-[3px] flex-1 rounded-sm ${
+                  className={`h-[3px] flex-1 rounded-sm transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
                     !anyLevel && level >= min && level < max ? "bg-brand" : "bg-border"
                   }`}
                 />
@@ -93,7 +112,9 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           return (
             <span
               key={name}
-              className={`text-[12px] ${level < MAX_LEVEL ? "flex-1" : ""} ${
+              className={`text-[12px] transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
+                level < MAX_LEVEL ? "flex-1" : ""
+              } ${
                 isHandle
                   ? "font-bold text-text-primary"
                   : inRange
@@ -112,6 +133,10 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
 
 const range = (from: number, to: number): readonly number[] =>
   Array.from({ length: to - from + 1 }, (_, index) => from + index);
+
+/** 두 범위가 같은 단계를 담는지. 눌러도 범위가 그대로면 손끝에 알릴 것이 없다. */
+const isSameRange = (a: readonly number[], b: readonly number[]): boolean =>
+  a.length === b.length && a.every((level, index) => level === b[index]);
 
 const rangeLabel = (min: number, max: number): string =>
   min === max ? LEVEL_LABELS[min] : `${LEVEL_LABELS[min]}–${LEVEL_LABELS[max]}`;
