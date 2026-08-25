@@ -1,9 +1,14 @@
 package com.poudy.feedback.service;
 
 import com.poudy.exception.TooManyRequestsException;
-import com.poudy.ratelimit.FixedWindowRateLimiter;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +20,13 @@ public class FeedbackRateLimiter {
     private static final int DEFAULT_MAX_TRACKED_CLIENTS = 100_000;
     private static final Duration DEFAULT_PRUNE_INTERVAL = Duration.ofMinutes(1);
 
-    private final FixedWindowRateLimiter rateLimiter;
+    private final int maxRequests;
+    private final Duration window;
+    private final Clock clock;
+    private final int maxTrackedClients;
+    private final Duration pruneInterval;
+    private final ConcurrentMap<String, Window> windows = new ConcurrentHashMap<>();
+    private final AtomicLong nextPruneAtMillis = new AtomicLong(Long.MIN_VALUE);
 
     @Autowired
     public FeedbackRateLimiter(
@@ -43,17 +54,57 @@ public class FeedbackRateLimiter {
         if (pruneInterval.isZero() || pruneInterval.isNegative()) {
             throw new IllegalArgumentException("의견 등록 제한 정리 주기는 양수여야 합니다.");
         }
-        this.rateLimiter = new FixedWindowRateLimiter(
-                maxRequests,
-                window,
-                maxTrackedClients,
-                pruneInterval,
-                clock);
+        this.maxRequests = maxRequests;
+        this.window = window;
+        this.maxTrackedClients = maxTrackedClients;
+        this.pruneInterval = pruneInterval;
+        this.clock = clock;
     }
 
     public void requireAllowed(String clientId) {
-        rateLimiter.acquire(clientId).ifPresent(retryAfter -> {
-            throw new TooManyRequestsException(retryAfter);
+        Instant now = clock.instant();
+        pruneExpiredWindows(now);
+
+        AtomicReference<Duration> retryAfter = new AtomicReference<>();
+        AtomicBoolean capacityExceeded = new AtomicBoolean();
+        String key = clientId == null || clientId.isBlank() ? "unknown" : clientId;
+
+        windows.compute(key, (ignored, current) -> {
+            if (current == null && windows.size() >= maxTrackedClients) {
+                capacityExceeded.set(true);
+                return null;
+            }
+            if (current == null || !now.isBefore(current.startedAt().plus(window))) {
+                return new Window(now, 1);
+            }
+            if (current.count() >= maxRequests) {
+                retryAfter.set(Duration.between(now, current.startedAt().plus(window)));
+                return current;
+            }
+            return new Window(current.startedAt(), current.count() + 1);
         });
+
+        if (capacityExceeded.get()) {
+            throw new TooManyRequestsException(window);
+        }
+        if (retryAfter.get() != null) {
+            throw new TooManyRequestsException(retryAfter.get());
+        }
+    }
+
+    private void pruneExpiredWindows(Instant now) {
+        long nowMillis = now.toEpochMilli();
+        long scheduledMillis = nextPruneAtMillis.get();
+        if (nowMillis < scheduledMillis) {
+            return;
+        }
+
+        long nextMillis = now.plus(pruneInterval).toEpochMilli();
+        if (nextPruneAtMillis.compareAndSet(scheduledMillis, nextMillis)) {
+            windows.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().startedAt().plus(window)));
+        }
+    }
+
+    private record Window(Instant startedAt, int count) {
     }
 }

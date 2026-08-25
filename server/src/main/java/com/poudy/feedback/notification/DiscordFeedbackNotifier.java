@@ -1,16 +1,15 @@
 package com.poudy.feedback.notification;
 
-import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
-import com.poudy.infrastructure.discord.DiscordWebhookClient;
 import java.net.URI;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 @Component
 public class DiscordFeedbackNotifier implements FeedbackNotifier {
@@ -18,22 +17,24 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
     private static final int DISCORD_CONTENT_MAX_LENGTH = 2000;
     private static final DateTimeFormatter RECEIVED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    private final DiscordWebhookClient webhookClient;
+    private final RestClient restClient;
     private final String webhookUrl;
 
     public DiscordFeedbackNotifier(
-            @Qualifier("feedbackDiscordWebhookClient") DiscordWebhookClient webhookClient,
+            RestClient feedbackDiscordRestClient,
             @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl) {
-        this.webhookClient = webhookClient;
+        this.restClient = feedbackDiscordRestClient;
         this.webhookUrl = webhookUrl;
     }
 
     @Override
     public void notify(Feedback feedback) {
-        int status = webhookClient.post(URI.create(webhookUrl + "?wait=true"), payloadOf(feedback));
-        if (status >= 400) {
-            throw new InfrastructureException("Discord 의견 알림 전송에 실패했습니다. status=" + status);
-        }
+        restClient.post()
+                .uri(URI.create(webhookUrl + "?wait=true"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(payloadOf(feedback))
+                .retrieve()
+                .toBodilessEntity();
     }
 
     private static Map<String, Object> payloadOf(Feedback feedback) {
