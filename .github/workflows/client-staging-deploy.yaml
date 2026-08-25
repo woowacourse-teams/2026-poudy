@@ -74,7 +74,6 @@ jobs:
       - name: Build
         env:
           # staging 은 목이 아니라 실제 API 를 본다.
-          NEXT_PUBLIC_API_MOCKING: ""
           NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
           NEXT_PUBLIC_ENVIRONMENT: staging
           NEXT_PUBLIC_SITE_URL: ${{ vars.STAGING_SITE_URL }}
