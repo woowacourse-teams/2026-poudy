@@ -50,14 +50,23 @@ describe("LevelRange", () => {
     expect(requestSelectionHaptic).toHaveBeenCalledTimes(1);
   });
 
-  it("상관없음에서 단계를 고르면 그 단계만 남는다", async () => {
+  it("상관없음에서 처음 고르면 없음부터 그 자리까지 잡는다", async () => {
     const onChange = vi.fn();
     render(<LevelRange label="수분" levels={[]} onChange={onChange} />);
 
-    await userEvent.click(step("낮음"));
+    await userEvent.click(step("보통"));
 
-    expect(onChange).toHaveBeenCalledWith([1]);
+    expect(onChange).toHaveBeenCalledWith([0, 1, 2]);
     expect(requestSelectionHaptic).toHaveBeenCalledTimes(1);
+  });
+
+  it("상관없음에서 없음을 고르면 없음만 남는다", async () => {
+    const onChange = vi.fn();
+    render(<LevelRange label="수분" levels={[]} onChange={onChange} />);
+
+    await userEvent.click(step("없음"));
+
+    expect(onChange).toHaveBeenCalledWith([0]);
   });
 
   it("키보드로 옮겨도 똑같이 동작한다", async () => {

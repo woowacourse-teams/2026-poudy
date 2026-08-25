@@ -24,7 +24,9 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
   /** 누른 자리에서 가까운 쪽 끝을 옮긴다. */
   const pick = (level: number) => {
     const next = anyLevel
-      ? [level]
+      ? // 상관없음에서 처음 고를 때는 없음부터 그 자리까지 잡는다. 한 단계만 남기면
+        // 그 단계에 딱 맞는 제품만 남아, 조건을 좁히려던 것보다 크게 좁혀진다.
+        range(0, level)
       : level < min
         ? range(level, max)
         : level > max
