@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import { Icon } from "./icons/Icon";
+
+import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 type SaveButtonProps = {
   readonly productName: string;
@@ -12,11 +14,15 @@ type SaveButtonProps = {
   readonly variant?: "icon" | "wide";
 };
 
-/** 불꽃 조각이 퍼지는 방향. 고르게 흩어지도록 여덟 갈래로 나눈다. */
-const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
+const SPARK_COUNT = 5;
+const FULL_CIRCLE_DEGREES = 360;
+const SPARK_SECTOR_DEGREES = FULL_CIRCLE_DEGREES / SPARK_COUNT;
 
-/** 불꽃이 사라지는 데 걸리는 시간. globals.css 의 spark-burst 와 맞춘다. */
-const BURST_MS = 520;
+const randomSparkAngles = (): readonly number[] =>
+  Array.from(
+    { length: SPARK_COUNT },
+    (_, index) => index * SPARK_SECTOR_DEGREES + Math.random() * SPARK_SECTOR_DEGREES,
+  );
 
 /**
  * 저장 버튼. 아이콘만 있는 형태는 이름을 읽을 수 없으므로 접근 가능한 이름을 붙인다.
@@ -26,14 +32,40 @@ const BURST_MS = 520;
  */
 export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
-  const [bursting, setBursting] = useState(false);
+  const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
+  const burstTimeout = useRef<number | undefined>(undefined);
+
+  useEffect(
+    () => () => {
+      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
+    },
+    [],
+  );
 
   const handleClick = () => {
-    if (!saved) {
-      // 연달아 누르면 애니메이션을 처음부터 다시 시작한다.
-      setBursting(false);
-      requestAnimationFrame(() => setBursting(true));
-      window.setTimeout(() => setBursting(false), BURST_MS);
+    requestSelectionHaptic();
+
+    if (!saved && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
+      const durationValue = window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue("--transition-duration-celebration")
+        .trim();
+      const duration = Number.parseFloat(durationValue) * (durationValue.endsWith("ms") ? 1 : 1000);
+      if (Number.isFinite(duration)) {
+        setSparkAngles(randomSparkAngles());
+        burstTimeout.current = window.setTimeout(() => {
+          setSparkAngles([]);
+          burstTimeout.current = undefined;
+        }, duration);
+      } else {
+        setSparkAngles([]);
+        burstTimeout.current = undefined;
+      }
+    } else {
+      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
+      setSparkAngles([]);
+      burstTimeout.current = undefined;
     }
     onToggle();
   };
@@ -45,7 +77,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         onClick={handleClick}
         aria-pressed={saved}
         aria-label={label}
-        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-100 active:scale-[0.97] ${
+        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
           saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
         }`}
       >
@@ -60,8 +92,13 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
           <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
         </span>
         <span className="relative inline-flex">
-          <Icon name="bookmark" size={18} filled={saved} className={bursting ? "animate-save-pop" : undefined} />
-          <SparkBurst active={bursting} />
+          <Icon
+            name="bookmark"
+            size={18}
+            filled={saved}
+            className={sparkAngles.length > 0 ? "animate-save-pop" : undefined}
+          />
+          <SparkBurst angles={sparkAngles} />
         </span>
       </button>
     );
@@ -73,15 +110,15 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       onClick={handleClick}
       aria-pressed={saved}
       aria-label={label}
-      className="relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-100 active:scale-90"
+      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
       <Icon
         name="bookmark"
         size={20}
         filled={saved}
-        className={`${saved ? "text-[#F04465]" : "text-text-secondary"} ${bursting ? "animate-save-pop" : ""}`}
+        className={`${saved ? "text-[#F04465]" : "text-text-secondary"} ${sparkAngles.length > 0 ? "animate-save-pop" : ""}`}
       />
-      <SparkBurst active={bursting} />
+      <SparkBurst angles={sparkAngles} />
     </button>
   );
 }
@@ -90,18 +127,20 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
  * 버튼 둘레로 퍼지는 불꽃. 자리를 차지하지 않도록 버튼 위에 겹쳐 둔다.
  * 뜻을 전하지 않는 장식이므로 보조 기술에서 감춘다.
  */
-function SparkBurst({ active }: { readonly active: boolean }) {
-  if (!active) return null;
+function SparkBurst({ angles }: { readonly angles: readonly number[] }) {
+  if (angles.length === 0) return null;
 
   return (
     <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      {SPARK_ANGLES.map((angle) => (
-        <span
-          key={angle}
-          style={{ "--spark-angle": `${angle}deg` } as React.CSSProperties}
-          className="animate-spark-burst absolute size-1 rounded-full bg-[#F04465]"
-        />
-      ))}
+      {angles.map((angle) => {
+        const style: CSSProperties & { readonly "--spark-angle": string } = {
+          "--spark-angle": `${angle}deg`,
+        };
+
+        return (
+          <span key={angle} style={style} className="animate-spark-burst absolute size-1.5 rounded-full bg-[#F04465]" />
+        );
+      })}
     </span>
   );
 }

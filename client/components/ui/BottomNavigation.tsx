@@ -38,7 +38,7 @@ export function BottomNavigation() {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                onClick={requestSelectionHaptic}
+                onClick={active ? undefined : requestSelectionHaptic}
                 className={[
                   "flex flex-col items-center gap-1 py-1 text-[11px]",
                   active ? "font-bold text-brand" : "font-medium text-text-secondary",
