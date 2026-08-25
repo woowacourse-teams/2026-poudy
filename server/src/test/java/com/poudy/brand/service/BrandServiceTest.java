@@ -7,12 +7,12 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.product.domain.ProductCountsByBrand;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +31,9 @@ class BrandServiceTest {
         Brands brands = new Brands(List.of(medicube, drG));
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
-        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
+        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
         given(brandRepository.findAll()).willReturn(brands);
-        given(productRepository.findBrandCounts()).willReturn(brandCounts);
+        given(productRepository.findProductCountsByBrand()).willReturn(productCounts);
         BrandService brandService = new BrandService(brandRepository, productRepository);
 
         assertThat(brandService.findBrands())

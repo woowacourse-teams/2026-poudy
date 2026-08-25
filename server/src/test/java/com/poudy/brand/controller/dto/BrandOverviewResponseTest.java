@@ -3,9 +3,9 @@ package com.poudy.brand.controller.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
+import com.poudy.product.domain.ProductCountsByBrand;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +19,9 @@ class BrandOverviewResponseTest {
     void convertsBrandCounts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         Brand medicube = new Brand(2L, "메디큐브", "MEDICUBE", "https://cdn.example.com/brands/2/image.png");
-        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
-        List<BrandSummary> brandSummaries = new Brands(List.of(drG, medicube)).summariesWith(brandCounts);
+        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
+        List<BrandSummary> brandSummaries = productCounts
+                .summariesOf(new Brands(List.of(drG, medicube)).sortedByName());
 
         BrandOverviewResponse response = BrandOverviewResponse.from(brandSummaries);
 

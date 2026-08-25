@@ -1,7 +1,6 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
@@ -20,7 +19,7 @@ public class Products {
     private final List<Product> products;
     private final List<SearchableProduct> searchable;
     private final Map<Long, Product> byId;
-    private final BrandCounts brandCounts;
+    private final ProductCountsByBrand productCountsByBrand;
 
     public Products(List<Product> products) {
         this.products = List.copyOf(Objects.requireNonNullElse(products, List.of()));
@@ -28,7 +27,7 @@ public class Products {
                 .map(SearchableProduct::of)
                 .toList();
         this.byId = indexById(this.products);
-        this.brandCounts = brandCountsOf(this.products);
+        this.productCountsByBrand = productCountsByBrandOf(this.products);
     }
 
     private static Map<Long, Product> indexById(List<Product> products) {
@@ -153,8 +152,8 @@ public class Products {
         return countsByCategory(productsInBrand);
     }
 
-    public BrandCounts brandCounts() {
-        return brandCounts;
+    public ProductCountsByBrand productCountsByBrand() {
+        return productCountsByBrand;
     }
 
     public BrandDetail brandDetailOf(Brand brand, Categories categories) {
@@ -174,9 +173,9 @@ public class Products {
                 .filter(Objects::nonNull);
     }
 
-    private static BrandCounts brandCountsOf(List<Product> products) {
+    private static ProductCountsByBrand productCountsByBrandOf(List<Product> products) {
         Map<Long, Long> countsByBrandId = products.stream()
                 .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
-        return new BrandCounts(countsByBrandId);
+        return new ProductCountsByBrand(countsByBrandId);
     }
 }

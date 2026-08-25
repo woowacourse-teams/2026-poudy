@@ -92,9 +92,9 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("브랜드별 제품 수를 센다")
     void countsProductsByBrand() {
-        assertThat(productRepository.findBrandCounts().countOf(1L)).isEqualTo(3L);
-        assertThat(productRepository.findBrandCounts().countOf(3L)).isEqualTo(2L);
-        assertThat(productRepository.findBrandCounts().countOf(999L)).isZero();
+        assertThat(productRepository.findProductCountsByBrand().countOf(1L)).isEqualTo(3L);
+        assertThat(productRepository.findProductCountsByBrand().countOf(3L)).isEqualTo(2L);
+        assertThat(productRepository.findProductCountsByBrand().countOf(999L)).isZero();
     }
 
     @ParameterizedTest

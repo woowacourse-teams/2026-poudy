@@ -8,7 +8,7 @@ public class BrandSummary {
     private final String imageUrl;
     private final long productCount;
 
-    BrandSummary(Brand brand, long productCount) {
+    public BrandSummary(Brand brand, long productCount) {
         this.id = brand.id();
         this.koreanName = brand.koreanName();
         this.englishName = brand.englishName();

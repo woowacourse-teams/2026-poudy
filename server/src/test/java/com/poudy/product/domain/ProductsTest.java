@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandCounts;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
@@ -81,11 +80,11 @@ class ProductsTest {
         Products products = new Products(
                 List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L)));
 
-        BrandCounts brandCounts = products.brandCounts();
+        ProductCountsByBrand productCounts = products.productCountsByBrand();
 
-        assertThat(brandCounts.countOf(1L)).isEqualTo(2L);
-        assertThat(brandCounts.countOf(2L)).isEqualTo(1L);
-        assertThat(brandCounts.countOf(999L)).isZero();
+        assertThat(productCounts.countOf(1L)).isEqualTo(2L);
+        assertThat(productCounts.countOf(2L)).isEqualTo(1L);
+        assertThat(productCounts.countOf(999L)).isZero();
     }
 
     @Test

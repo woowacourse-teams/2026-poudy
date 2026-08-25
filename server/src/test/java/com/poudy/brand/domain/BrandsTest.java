@@ -2,10 +2,8 @@ package com.poudy.brand.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,19 +29,6 @@ class BrandsTest {
         Brands brands = new Brands(List.of(second, first));
 
         assertThat(brands.sortedByName()).containsExactly(first, second);
-    }
-
-    @Test
-    @DisplayName("브랜드를 이름순으로 제품 수와 결합한다")
-    void summarizesBrandsWithProductCounts() {
-        Brand drG = brand(1L, "닥터지");
-        Brand medicube = brand(2L, "메디큐브");
-        Brands brands = new Brands(List.of(medicube, drG));
-        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
-
-        assertThat(brands.summariesWith(brandCounts))
-                .extracting(BrandSummary::id, BrandSummary::productCount)
-                .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
     }
 
     @Test

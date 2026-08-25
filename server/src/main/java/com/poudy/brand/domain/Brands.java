@@ -22,12 +22,6 @@ public class Brands {
                 .toList();
     }
 
-    public List<BrandSummary> summariesWith(BrandCounts brandCounts) {
-        return sortedByName().stream()
-                .map(brand -> new BrandSummary(brand, brandCounts.countOf(brand.id())))
-                .toList();
-    }
-
     public Optional<Brand> findById(Long id) {
         return Optional.ofNullable(brandsById.get(id));
     }

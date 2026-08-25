@@ -8,13 +8,13 @@ import static org.mockito.Mockito.verify;
 import com.poudy.brand.controller.dto.BrandDetailResponse;
 import com.poudy.brand.controller.dto.BrandOverviewResponse;
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandCounts;
 import com.poudy.brand.domain.BrandDetail;
 import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.service.BrandService;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CountedCategory;
+import com.poudy.product.domain.ProductCountsByBrand;
 import com.poudy.product.service.ProductService;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +30,8 @@ class BrandControllerTest {
     @DisplayName("서비스에서 조회한 브랜드를 200 응답으로 반환한다")
     void findsBrands() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        BrandCounts brandCounts = new BrandCounts(Map.of(1L, 3L));
-        List<BrandSummary> brandSummaries = new Brands(List.of(drG)).summariesWith(brandCounts);
+        ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
+        List<BrandSummary> brandSummaries = productCounts.summariesOf(new Brands(List.of(drG)).sortedByName());
         BrandService brandService = mock(BrandService.class);
         ProductService productService = mock(ProductService.class);
         given(brandService.findBrands()).willReturn(brandSummaries);
