@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
@@ -45,6 +47,93 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
     onChange(anyLevel ? range(0, MAX_LEVEL) : []);
   };
 
+  /*
+   * 손가락으로 끌어 범위를 잡는다. 점을 하나씩 누르는 것보다 빠르고, 잡아끄는 동안
+   * 단계를 지날 때마다 떨어 몇 칸을 옮겼는지 손끝으로 알 수 있다.
+   */
+  const trackRef = useRef<HTMLDivElement>(null);
+  /*
+   * 끄는 동안의 상태. 렌더 때의 levels·min·max 를 보면 안 된다. 끄는 사이에 값이
+   * 바뀌어도 이미 만들어진 함수는 옛 값을 들고 있어 엉뚱한 자리를 기준으로 삼는다.
+   *
+   * - anchor: 잡지 않은 쪽 끝. 놓을 때까지 그대로다.
+   * - sent: 마지막으로 넘긴 범위. 같은 값을 두 번 넘기지 않으려고 둔다.
+   */
+  const dragging = useRef<{ readonly anchor: number; sent: readonly number[] } | null>(null);
+  /** 직전에 알린 단계. 같은 칸 안에서 손가락이 흔들려도 다시 떨지 않으려고 둔다. */
+  const lastNotified = useRef<number | null>(null);
+  /*
+   * 포인터로 이미 옮겼는지. 트랙이 pointerdown 에서 범위를 잡으므로 뒤이어 오는
+   * 버튼 click 까지 처리하면 한 번 누른 것이 두 번 반영된다. 키보드로 누른 click 은
+   * 앞선 pointerdown 이 없으므로 이 표가 서지 않아 그대로 지나간다.
+   */
+  const handledByPointer = useRef(false);
+
+  /** 손가락이 놓인 가로 위치에서 단계를 읽는다. */
+  const levelAt = (clientX: number): number | null => {
+    const track = trackRef.current;
+    if (!track) return null;
+
+    const { left, width } = track.getBoundingClientRect();
+    if (width === 0) return null;
+
+    const ratio = (clientX - left) / width;
+    return Math.min(MAX_LEVEL, Math.max(0, Math.round(ratio * MAX_LEVEL)));
+  };
+
+  const applyDrag = (level: number) => {
+    const drag = dragging.current;
+    if (drag === null) return;
+
+    // 잡은 손잡이가 반대쪽을 넘어가면 둘이 자리를 바꾼다. 작은 쪽이 늘 앞이다.
+    const next = level <= drag.anchor ? range(level, drag.anchor) : range(drag.anchor, level);
+
+    if (lastNotified.current !== level) {
+      requestSelectionHaptic();
+      lastNotified.current = level;
+    }
+
+    if (!isSameRange(drag.sent, next)) {
+      drag.sent = next;
+      onChange(next);
+    }
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const level = levelAt(event.clientX);
+    if (level === null) return;
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    handledByPointer.current = true;
+
+    if (anyLevel) {
+      // 상관없음에서 잡으면 없음부터 그 자리까지 잡는다. 없음 쪽이 고정 자리가 된다.
+      const next = range(0, level);
+      dragging.current = { anchor: 0, sent: next };
+      lastNotified.current = level;
+      requestSelectionHaptic();
+      onChange(next);
+      return;
+    }
+
+    // 가까운 손잡이를 잡고, 반대쪽 끝을 고정 자리로 삼는다.
+    dragging.current = { anchor: level - min <= max - level ? max : min, sent: levels };
+    lastNotified.current = null;
+    applyDrag(level);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragging.current === null) return;
+
+    const level = levelAt(event.clientX);
+    if (level !== null) applyDrag(level);
+  };
+
+  const endDrag = () => {
+    dragging.current = null;
+    lastNotified.current = null;
+  };
+
   return (
     <section className="py-3">
       <div className="flex h-[30px] items-center justify-between">
@@ -66,7 +155,20 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
         <span className="text-[13px] font-bold text-text-primary">{anyLevel ? "상관없음" : rangeLabel(min, max)}</span>
       </p>
 
-      <div role="group" aria-label={`${label} 범위`} className="flex h-6 items-center">
+      {/*
+        touch-none 이 있어야 손가락으로 끌 때 화면이 함께 스크롤되지 않는다.
+        점 하나하나는 여전히 눌러서도 고를 수 있다.
+      */}
+      <div
+        ref={trackRef}
+        role="group"
+        aria-label={`${label} 범위`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        className="flex h-6 touch-none items-center"
+      >
         {LEVEL_LABELS.map((name, level) => {
           const isHandle = !anyLevel && (level === min || level === max);
           const inRange = !anyLevel && level >= min && level <= max;
@@ -77,7 +179,14 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                 type="button"
                 aria-pressed={inRange}
                 aria-label={`${label} ${name}`}
-                onClick={() => pick(level)}
+                onClick={() => {
+                  // 포인터가 이미 옮겼으면 그 클릭은 흘려보낸다.
+                  if (handledByPointer.current) {
+                    handledByPointer.current = false;
+                    return;
+                  }
+                  pick(level);
+                }}
                 className={`flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-[transform,border-color,background-color] duration-control-state ease-standard motion-reduce:transition-none active:scale-90 motion-reduce:active:scale-100 ${
                   isHandle ? "border-brand bg-background" : "border-transparent"
                 }`}
