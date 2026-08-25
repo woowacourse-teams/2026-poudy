@@ -1,6 +1,7 @@
 package com.poudy.brand.domain;
 
 import com.poudy.common.domain.SearchKeyword;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +40,14 @@ public class Brands {
             return Map.of();
         }
 
-        return brands.stream()
-                .collect(
-                        Collectors.toMap(
-                                Brand::id,
-                                Function.identity(),
-                                Brands::rejectDuplicateId,
-                                LinkedHashMap::new));
+        return Collections.unmodifiableMap(
+                brands.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Brand::id,
+                                        Function.identity(),
+                                        Brands::rejectDuplicateId,
+                                        LinkedHashMap::new)));
     }
 
     private static Brand rejectDuplicateId(Brand existingBrand, Brand duplicateBrand) {
