@@ -43,7 +43,7 @@ export const initAnalytics = (): void => {
     // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
     ui_host: "https://us.posthog.com",
     autocapture: false,
-    capture_pageview: false,
+    capture_pageview: "history_change",
     capture_pageleave: true,
 
     // 처리방침이 안내하는 거부 방법이다. 자사 도메인으로 받아 넘기는 탓에

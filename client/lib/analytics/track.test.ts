@@ -97,7 +97,7 @@ describe("initAnalytics", () => {
     });
   });
 
-  it("빈 호스트는 프록시 경로를 쓰고 자동 수집은 끈다", async () => {
+  it("빈 호스트는 프록시 경로를 쓰고 경로 변경 페이지뷰를 수집한다", async () => {
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
     const { initAnalytics } = await load("production", "phc_test");
 
@@ -109,7 +109,7 @@ describe("initAnalytics", () => {
         api_host: "/ingest",
         autocapture: false,
         capture_pageleave: true,
-        capture_pageview: false,
+        capture_pageview: "history_change",
       }),
     );
   });
