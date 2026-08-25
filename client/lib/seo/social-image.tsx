@@ -13,33 +13,48 @@ const BACKGROUND_PATH = "/images/og-background/K9joN.png";
 const TITLE_FONT_PATH = "/fonts/NotoSansKR-Black.ttf";
 
 /*
- * 그림과 글꼴은 배포된 주소에서 받아 온다.
+ * 그림과 글꼴을 가져오는 길이 두 갈래다.
  *
- * `public/` 은 CDN 이 내주는 정적 자산이라 서버리스 함수의 파일 시스템에는 없다.
- * `readFile` 로 디스크를 뒤지면 함수 안에서 파일을 찾지 못해 무너진다. 이 파일을
- * 가져다 쓰는 화면까지 함께 무너지므로 OG 그림과 상관없는 화면도 열리지 않았다.
+ * 빌드하며 미리 그릴 때는 `public/` 이 디스크에 있으므로 그대로 읽는다. 이때는 서버가
+ * 떠 있지 않아 자기 주소로 받아 올 수 없다.
  *
- * 한 번 받은 것은 들고 있는다. 같은 함수 인스턴스가 살아 있는 동안 다시 받지 않는다.
+ * 배포된 뒤 함수 안에서는 반대다. `public/` 은 CDN 이 내주는 자산이라 함수의 파일
+ * 시스템에 담기지 않는다. 그래서 배포된 주소에서 받아 온다.
+ *
+ * 한 번 얻은 것은 들고 있는다. 같은 함수 인스턴스가 살아 있는 동안 다시 얻지 않는다.
  */
 const cache = new Map<string, Promise<ArrayBuffer>>();
 
-const fetchAsset = (path: string): Promise<ArrayBuffer> => {
+const readFromDisk = async (path: string): Promise<ArrayBuffer> => {
+  const { readFile } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const buffer = await readFile(join(process.cwd(), "public", path));
+
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+};
+
+const fetchFromCdn = async (path: string): Promise<ArrayBuffer> => {
+  const response = await fetch(absoluteUrl(path));
+  if (!response.ok) {
+    throw new Error(`OG 자산을 받지 못했습니다: ${path} (${response.status})`);
+  }
+
+  return response.arrayBuffer();
+};
+
+const loadAsset = (path: string): Promise<ArrayBuffer> => {
   const cached = cache.get(path);
   if (cached) return cached;
 
-  const pending = fetch(absoluteUrl(path)).then((response) => {
-    if (!response.ok) {
-      throw new Error(`OG 자산을 받지 못했습니다: ${path} (${response.status})`);
-    }
-    return response.arrayBuffer();
-  });
+  // 디스크에 있으면 그것을 쓰고, 없으면 배포된 주소에서 받아 온다.
+  const pending = readFromDisk(path).catch(() => fetchFromCdn(path));
 
   cache.set(path, pending);
   return pending;
 };
 
 const toDataUrl = async (path: string): Promise<string> => {
-  const buffer = await fetchAsset(path);
+  const buffer = await loadAsset(path);
   return `data:image/png;base64,${Buffer.from(buffer).toString("base64")}`;
 };
 
@@ -73,7 +88,7 @@ const truncateTitleLine = (line: string): string => {
 export const socialImage = async ({ title, logoSrc, cacheControl }: SocialImageContent): Promise<ImageResponse> => {
   const displayTitle = title.split("\n").slice(0, 2).map(truncateTitleLine).join("\n");
   const displayLines = displayTitle.split("\n");
-  const [backgroundBuffer, titleFont] = await Promise.all([fetchAsset(BACKGROUND_PATH), fetchAsset(TITLE_FONT_PATH)]);
+  const [backgroundBuffer, titleFont] = await Promise.all([loadAsset(BACKGROUND_PATH), loadAsset(TITLE_FONT_PATH)]);
   const backgroundSrc = `data:image/png;base64,${Buffer.from(backgroundBuffer).toString("base64")}`;
 
   return new ImageResponse(
