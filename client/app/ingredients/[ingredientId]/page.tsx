@@ -32,7 +32,16 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
   // 여기서 notFound() 를 부르면 렌더링 경로 밖이라 404 상태가 전해지지 않는다.
   try {
     const ingredient = await fetchIngredientDetail(Number(ingredientId));
-    return { title: `${ingredient.koreanName} 성분 정보`, description: ingredient.description };
+    const title = `${ingredient.koreanName} 성분 정보`;
+    const description = ingredient.description;
+    const image = `/ingredients/${ingredientId}/opengraph-image`;
+    return {
+      title,
+      description,
+      alternates: { canonical: `/ingredients/${ingredientId}` },
+      openGraph: { title, description, type: "website", images: [image] },
+      twitter: { card: "summary_large_image", title, description, images: [image] },
+    };
   } catch {
     return {};
   }

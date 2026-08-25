@@ -8,6 +8,7 @@ import { fetchBrands } from "@/lib/api/products";
 
 export const metadata: Metadata = {
   title: "브랜드",
+  alternates: { canonical: "/brands" },
 };
 
 // 고정 URL 이라 원래는 ISR 대상이다. 다만 목 서버는 빌드 시점에 뜨지 않아

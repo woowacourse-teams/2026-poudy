@@ -28,7 +28,16 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
 
   try {
     const brand = await fetchBrand(Number(brandId));
-    return { title: `${brand.name} 제품`, description: `${brand.name}의 제품을 성분으로 살펴봅니다.` };
+    const title = `${brand.name} 제품`;
+    const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
+    const image = `/brands/${brandId}/opengraph-image`;
+    return {
+      title,
+      description,
+      alternates: { canonical: `/brands/${brandId}` },
+      openGraph: { title, description, type: "website", images: [image] },
+      twitter: { card: "summary_large_image", title, description, images: [image] },
+    };
   } catch {
     return {};
   }

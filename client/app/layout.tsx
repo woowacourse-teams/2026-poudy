@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { IconSprite } from "@/components/ui/icons/sprite";
+import { indexingEnabled, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
 
 import "./globals.css";
@@ -32,8 +33,25 @@ const foldit = Foldit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: siteUrl(),
   title: "Poudy",
-  description: "성분을 기준으로 화장품을 탐색합니다.",
+  description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Poudy",
+    description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "Poudy",
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Poudy",
+    description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
+    images: ["/opengraph-image"],
+  },
+  ...(indexingEnabled() ? {} : { robots: { index: false, follow: false } }),
   // 로고는 배경이 비어 있어 밝은 화면과 어두운 화면에서 같은 그림을 쓴다.
   icons: {
     icon: [
