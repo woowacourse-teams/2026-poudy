@@ -3,8 +3,8 @@ package com.poudy.brand.controller.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
+import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.ProductCountsByBrand;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +20,10 @@ class BrandOverviewResponseTest {
         Brand drG = new Brand(1L, "닥터지", null, null);
         Brand medicube = new Brand(2L, "메디큐브", "MEDICUBE", "https://cdn.example.com/brands/2/image.png");
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
-        List<BrandSummary> brandSummaries = productCounts
-                .summariesOf(new Brands(List.of(drG, medicube)).sortedByName());
+        List<BrandProductCount> brandProductCounts = productCounts
+                .countsOf(new Brands(List.of(drG, medicube)).sortedByName());
 
-        BrandOverviewResponse response = BrandOverviewResponse.from(brandSummaries);
+        BrandOverviewResponse response = BrandOverviewResponse.from(brandProductCounts);
 
         assertThat(response.items()).containsExactly(
                 new BrandSummaryResponse(1L, "닥터지", null, null, 3L),

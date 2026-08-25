@@ -12,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.productrequest.controller.dto.ProductRegistrationRequest;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.repository.S3ProductRequestRepository;
@@ -34,11 +33,19 @@ class ProductRequestServiceTest {
     private final ProductRequestService service = new ProductRequestService(repository, notifier, rateLimiter, clock);
 
     @Test
+    @DisplayName("잘못된 이름은 요청 제한이나 외부 저장을 호출하기 전에 거절한다")
+    void rejectsInvalidNamesBeforeExternalFlow() {
+        assertThatThrownBy(() -> service.submit("   ", null, "client-a"))
+                .isInstanceOf(com.poudy.productrequest.domain.InvalidProductRequestException.class);
+        verify(rateLimiter, never()).requireAllowed(org.mockito.ArgumentMatchers.anyString());
+        verify(repository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(notifier, never()).notify(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     @DisplayName("요청 제한 확인 후 저장하고 Discord에 알린다")
     void storesThenNotifies() {
-        ProductRegistrationRequest body = new ProductRegistrationRequest(" 제품 ", " 브랜드 ");
-
-        service.submit(body, "client-a");
+        service.submit(" 제품 ", " 브랜드 ", "client-a");
 
         ArgumentCaptor<ProductRequest> stored = ArgumentCaptor.forClass(ProductRequest.class);
         InOrder order = inOrder(rateLimiter, repository, notifier);
@@ -53,10 +60,8 @@ class ProductRequestServiceTest {
     @Test
     @DisplayName("중복 내용도 서로 다른 요청 ID로 저장한다")
     void storesDuplicateContentIndependently() {
-        ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
-
-        service.submit(body, "client-a");
-        service.submit(body, "client-a");
+        service.submit("제품", null, "client-a");
+        service.submit("제품", null, "client-a");
 
         ArgumentCaptor<ProductRequest> requests = ArgumentCaptor.forClass(ProductRequest.class);
         verify(repository, times(2)).save(requests.capture());
@@ -66,11 +71,10 @@ class ProductRequestServiceTest {
     @Test
     @DisplayName("S3 저장이 실패하면 Discord를 호출하지 않고 실패를 반환한다")
     void stopsWhenStorageFails() {
-        ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willThrow(new InfrastructureException("storage failed")).given(repository)
                 .save(org.mockito.ArgumentMatchers.any());
 
-        assertThatThrownBy(() -> service.submit(body, "client-a"))
+        assertThatThrownBy(() -> service.submit("제품", null, "client-a"))
                 .isInstanceOf(InfrastructureException.class);
         verify(notifier, never()).notify(org.mockito.ArgumentMatchers.any());
     }
@@ -78,13 +82,12 @@ class ProductRequestServiceTest {
     @Test
     @DisplayName("S3 저장 후 Discord만 실패하면 재시도 없이 접수 성공을 유지한다")
     void acceptsWithoutRetryWhenOnlyNotificationFails() {
-        ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willDoNothing().given(repository).save(org.mockito.ArgumentMatchers.any());
         willThrow(new InfrastructureException("notification failed"))
                 .given(notifier)
                 .notify(org.mockito.ArgumentMatchers.any());
 
-        assertThatNoException().isThrownBy(() -> service.submit(body, "client-a"));
+        assertThatNoException().isThrownBy(() -> service.submit("제품", null, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());
         verify(notifier, times(1)).notify(org.mockito.ArgumentMatchers.any());
     }
@@ -92,12 +95,11 @@ class ProductRequestServiceTest {
     @Test
     @DisplayName("S3 저장 후 예기치 않은 Discord 오류도 접수 성공을 바꾸지 않는다")
     void acceptsWhenNotificationThrowsUnexpectedFailure() {
-        ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willThrow(new IllegalArgumentException("webhook-secret"))
                 .given(notifier)
                 .notify(org.mockito.ArgumentMatchers.any());
 
-        assertThatNoException().isThrownBy(() -> service.submit(body, "client-a"));
+        assertThatNoException().isThrownBy(() -> service.submit("제품", null, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());
     }
 }

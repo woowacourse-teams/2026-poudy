@@ -1,7 +1,6 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandDetail;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.search.domain.SearchKeyword;
@@ -140,11 +139,11 @@ public class Products {
                 .toList();
     }
 
-    public ProductCountsByCategory countsByCategory() {
-        return countsByCategory(products);
+    public List<CategoryProductCount> productCountsByCategory(Categories categories) {
+        return countsByCategory(products).categoriesOf(categories);
     }
 
-    public ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
+    private ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
         List<Product> productsInBrand = products.stream()
                 .filter(product -> product.hasBrandId(brandId))
                 .toList();
@@ -152,12 +151,14 @@ public class Products {
         return countsByCategory(productsInBrand);
     }
 
-    public ProductCountsByBrand productCountsByBrand() {
-        return productCountsByBrand;
+    public List<BrandProductCount> productCountsByBrand(List<Brand> brands) {
+        return productCountsByBrand.countsOf(brands);
     }
 
-    public BrandDetail brandDetailOf(Brand brand, Categories categories) {
-        return new BrandDetail(brand, countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories));
+    public BrandProductCounts brandProductCountsOf(Brand brand, Categories categories) {
+        return new BrandProductCounts(
+                brand,
+                countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories));
     }
 
     private static ProductCountsByCategory countsByCategory(List<Product> products) {

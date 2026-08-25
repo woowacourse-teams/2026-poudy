@@ -3,6 +3,8 @@ package com.poudy.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.InvalidFeedbackException;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
+import com.poudy.productrequest.domain.InvalidProductRequestException;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,12 +30,15 @@ class GlobalExceptionHandlerTest {
                 HttpStatus.NOT_FOUND,
                 ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(
-                handler.handleInvalidRequestException(
-                        new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
+                handler.handleConflictingIngredientFilterException(new ConflictingIngredientFilterException()),
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
         assertProblem(
                 handler.handleInvalidFeedbackException(new InvalidFeedbackException("의견 내용 오류")),
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_REQUEST_BODY);
+        assertProblem(
+                handler.handleInvalidProductRequestException(new InvalidProductRequestException("제품명 오류")),
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.INVALID_REQUEST_BODY);
     }

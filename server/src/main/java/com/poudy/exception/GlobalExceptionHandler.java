@@ -1,6 +1,8 @@
 package com.poudy.exception;
 
 import com.poudy.feedback.domain.InvalidFeedbackException;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
+import com.poudy.productrequest.domain.InvalidProductRequestException;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.INVALID_REQUEST_BODY,
                 ErrorCode.INVALID_REQUEST_BODY.message());
+    }
+
+    @ExceptionHandler(InvalidProductRequestException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidProductRequestException(
+            InvalidProductRequestException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_REQUEST_BODY,
+                ErrorCode.INVALID_REQUEST_BODY.message());
+    }
+
+    @ExceptionHandler(ConflictingIngredientFilterException.class)
+    public ResponseEntity<ProblemDetail> handleConflictingIngredientFilterException(
+            ConflictingIngredientFilterException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.CONFLICTING_INGREDIENT_FILTER,
+                ErrorCode.CONFLICTING_INGREDIENT_FILTER.message());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

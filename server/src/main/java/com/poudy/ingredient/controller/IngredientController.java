@@ -31,7 +31,7 @@ public class IngredientController {
             + "성분 ID 로만 조회하면 상한 없이 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.")
     @GetMapping
     public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute IngredientQueryRequest query) {
-        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.find(query)));
+        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.find(query.toQuery())));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")

@@ -13,6 +13,10 @@ public record SearchKeyword(String value) {
         return match(candidate).isFound();
     }
 
+    public boolean isEmpty() {
+        return value.isEmpty();
+    }
+
     public boolean matchesExactly(String... candidates) {
         for (String candidate : candidates) {
             if (match(candidate) == NameMatch.EXACT) {
@@ -71,7 +75,7 @@ public record SearchKeyword(String value) {
         return value.length() == 1 && !Chosung.isDouble(value);
     }
 
-    public static String withoutSpaces(String text) {
+    private static String withoutSpaces(String text) {
         StringBuilder compact = new StringBuilder(text.length());
 
         for (int index = 0; index < text.length(); index++) {
