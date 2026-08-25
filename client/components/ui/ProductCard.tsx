@@ -24,13 +24,18 @@ export function ProductCard({ product, saved, onToggleSave }: ProductCardProps) 
       <Link href={`/products/${id}`} className="flex flex-1 items-center gap-3">
         <ProductThumbnail imageUrl={product.imageUrl} />
 
-        <div className="flex flex-1 flex-col gap-1.5">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] font-medium text-text-secondary">{brand.name}</span>
-            <span className="text-[14px] text-text-primary">{name}</span>
-          </div>
+        {/*
+          줄 높이를 좁힌 대신 줄 사이는 넉넉히 벌려, 한 줄씩 또렷하게 끊어 읽히게 한다.
 
-          <p className="text-[11px] text-text-secondary">
+          브랜드명과 제품명만 한 덩어리로 붙여 둔다. 둘은 같은 제품을 가리키는 이름이라
+          가격·유수분처럼 따로 읽는 정보와 같은 간격으로 떨어뜨리면 흩어져 보인다.
+          gap 은 컨테이너 전체에 걸리므로 이 한 자리만 margin 으로 좁힌다.
+        */}
+        <div className="flex flex-1 flex-col gap-2">
+          <span className="mb-[-4px] text-[12px] leading-tight font-medium text-text-secondary">{brand.name}</span>
+          <span className="text-[14px] leading-tight text-text-primary">{name}</span>
+
+          <p className="text-[11px] leading-tight text-text-secondary">
             {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}
           </p>
 

@@ -131,7 +131,7 @@ export function ProductSearchPanel() {
                 )}
               </h2>
 
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-divider">
                 {items.map((item, index) => (
                   <li key={item.id}>
                     <Link
@@ -205,7 +205,7 @@ function RecentSearches({
           </button>
         </div>
 
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-divider">
           {items.map((item, index) => (
             <li key={item.productId} className="flex items-center gap-2 py-3">
               <Link

@@ -31,11 +31,35 @@
   --color-success: #17a47a;
   --color-success-soft: #e7f6f0;
 
-  /* 수분·유분 물방울 */
-  --color-droplet-moisture: #24779d;
-  --color-droplet-empty: #a9c8d6;
-  --color-droplet-oil: #854c2c;
-  --color-droplet-empty-oil: #d9c1b5;
+  /*
+   * 수분·유분 물방울.
+   * 수분은 Tailwind sky, 유분은 TDS(tossmini-docs.toss.im/tds-react-native) orange 를 쓴다.
+   * TDS 는 Tailwind 팔레트에 없으므로 값을 그대로 적어 둔다.
+   *
+   * 물방울은 도형이라 밝은 색을 그대로 쓰지만, 옆의 `수분`·`유분` 글자까지 같은 색으로
+   * 두면 흰 배경에서 읽히지 않는다(sky-300 은 1.67:1, TDS orange400 은 1.92:1).
+   * 글자는 대비 4.5:1 을 넘는 진한 색을 따로 둔다. TDS orange 는 가장 진한 orange900
+   * 도 3.73:1 에 그쳐 글자로 쓸 수 없어, 같은 계열의 더 어두운 색을 쓴다.
+   */
+  /*
+   * 네 값은 디자인 시안에서 그대로 뽑았다. 팔레트에서 계산해 낸 값이 아니라
+   * 고른 색 자체가 기준이므로 hex 로 적어 둔다.
+   *
+   * 빈 물방울은 면이 아니라 테두리라 같은 값이라도 채운 쪽보다 약하게 읽힌다.
+   */
+  --color-droplet-moisture: #6aabd6;
+  --color-droplet-empty: #b8defa;
+  --color-droplet-oil: #c69e69;
+  --color-droplet-empty-oil: #f2ddb6;
+
+  --color-level-moisture-text: oklch(50% 0.08 242.749);
+  --color-level-oil-text: oklch(50.1% 0.077 52.531);
+
+  /*
+   * 목록에서 카드 사이를 가르는 선. `--color-border` 보다 연하다.
+   * 버튼 테두리와 탭 밑줄은 또렷해야 하므로 그쪽 토큰과 나눠 둔다.
+   */
+  --color-divider: #f1f2f4;
 
   /* 타이포 */
   --font-sans: var(--font-noto-sans-kr), sans-serif;
