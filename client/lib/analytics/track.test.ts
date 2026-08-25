@@ -97,7 +97,7 @@ describe("initAnalytics", () => {
     });
   });
 
-  it("Web Analytics 자동 수집을 켠다", async () => {
+  it("빈 호스트는 프록시 경로를 쓰고 자동 수집은 끈다", async () => {
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
     const { initAnalytics } = await load("production", "phc_test");
 
@@ -107,9 +107,9 @@ describe("initAnalytics", () => {
       "phc_test",
       expect.objectContaining({
         api_host: "/ingest",
-        autocapture: true,
+        autocapture: false,
         capture_pageleave: true,
-        capture_pageview: "history_change",
+        capture_pageview: false,
       }),
     );
   });
