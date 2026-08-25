@@ -2,7 +2,7 @@ import { fetchBrand } from "@/lib/api/products";
 import {
   SOCIAL_IMAGE_CACHE_CONTROL,
   SOCIAL_IMAGE_CONTENT_TYPE,
-  SOCIAL_IMAGE_LOGO_SRC,
+  socialImageLogoSrc,
   SOCIAL_IMAGE_SIZE,
   socialImage,
 } from "@/lib/seo/social-image";
@@ -19,13 +19,13 @@ export default async function BrandOpenGraphImage(props: { readonly params: Prom
     const brand = await fetchBrand(Number(brandId));
     return socialImage({
       title: brand.name,
-      logoSrc: SOCIAL_IMAGE_LOGO_SRC,
+      logoSrc: await socialImageLogoSrc(),
       cacheControl: SOCIAL_IMAGE_CACHE_CONTROL,
     });
   } catch {
     return socialImage({
       title: "Poudy",
-      logoSrc: SOCIAL_IMAGE_LOGO_SRC,
+      logoSrc: await socialImageLogoSrc(),
       cacheControl: SOCIAL_IMAGE_CACHE_CONTROL,
     });
   }

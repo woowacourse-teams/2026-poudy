@@ -19,6 +19,8 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
 vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/seo/social-image")>()),
   socialImage: seo.socialImage,
+  // 로고는 배포된 주소에서 받아 온다. 여기서는 무엇을 넘겼는지만 보므로 받지 않는다.
+  socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
 vi.mock("next/font/google", () => ({
   Foldit: () => ({ variable: "--font-foldit" }),
@@ -139,8 +141,8 @@ describe("공유 메타데이터", () => {
     await Promise.all([
       IngredientOpenGraphImage({ params: Promise.resolve({ ingredientId: "12" }) }),
       BrandOpenGraphImage({ params: Promise.resolve({ brandId: "7" }) }),
+      OpenGraphImage(),
     ]);
-    OpenGraphImage();
 
     const contents = seo.socialImage.mock.calls.map(([content]) => content);
     expect(contents).toContainEqual({
