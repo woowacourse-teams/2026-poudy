@@ -132,16 +132,24 @@ function SheetBody({
 
       {kind === "level" ? (
         <>
-          <LevelRange
-            label="수분감"
-            levels={draft.moistureLevel}
-            onChange={(moistureLevel) => setDraft({ ...draft, moistureLevel })}
-          />
-          <LevelRange
-            label="유분감"
-            levels={draft.oilLevel}
-            onChange={(oilLevel) => setDraft({ ...draft, oilLevel })}
-          />
+          {/* 소제목은 시트가 그린다. 슬라이더는 값과 상관없음만 담는다. */}
+          <section className="pt-3">
+            <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">수분감</h3>
+            <LevelRange
+              label="수분감"
+              levels={draft.moistureLevel}
+              onChange={(moistureLevel) => setDraft({ ...draft, moistureLevel })}
+            />
+          </section>
+
+          <section className="pt-4">
+            <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">유분감</h3>
+            <LevelRange
+              label="유분감"
+              levels={draft.oilLevel}
+              onChange={(oilLevel) => setDraft({ ...draft, oilLevel })}
+            />
+          </section>
         </>
       ) : null}
 

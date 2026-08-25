@@ -6,6 +6,10 @@ import { LEVEL_LABELS } from "@/lib/domain/product-display";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 type LevelRangeProps = {
+  /*
+   * 무엇의 범위인지. 화면에는 그리지 않고 낭독기에만 전한다. 눈에 보이는 소제목은
+   * 시트가 그리므로, 여기까지 적으면 같은 말이 두 번 나온다.
+   */
   readonly label: string;
   /** 고른 단계. 비어 있으면 상관없음이다. */
   readonly levels: readonly number[];
@@ -152,8 +156,14 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
 
   return (
     <section className="py-3">
+      {/* 왼쪽에 지금 고른 범위, 오른쪽에 상관없음을 둔다. 소제목은 시트가 그린다. */}
       <div className="flex h-[30px] items-center justify-between">
-        <h3 className="text-[14px] font-bold text-text-primary">{label}</h3>
+        <p className="flex items-center gap-1.5">
+          <span className="text-[12px] font-medium text-text-secondary">현재 범위</span>
+          <span className="text-[13px] font-bold text-text-primary">
+            {anyLevel ? "상관없음" : rangeLabel(min, max)}
+          </span>
+        </p>
 
         <label className="flex items-center gap-1.5">
           <input
@@ -165,11 +175,6 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           <span className="text-[13px] font-medium text-text-secondary">상관없음</span>
         </label>
       </div>
-
-      <p className="flex h-5 items-center gap-1.5">
-        <span className="text-[12px] font-medium text-text-secondary">현재 범위</span>
-        <span className="text-[13px] font-bold text-text-primary">{anyLevel ? "상관없음" : rangeLabel(min, max)}</span>
-      </p>
 
       {/*
         touch-none 이 있어야 손가락으로 끌 때 화면이 함께 스크롤되지 않는다.
