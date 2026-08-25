@@ -21,7 +21,7 @@ const pageOf = (pathname: string): PageName | undefined => {
 
 /**
  * App Router 는 라우트가 바뀌어도 문서를 다시 읽지 않는다.
- * Web Analytics 의 $pageview 와 별개로 제품 화면 이름을 직접 기록한다.
+ * 자동 수집 대신 경로가 바뀔 때마다 제품 화면 이름을 직접 기록한다.
  */
 export function AnalyticsProvider() {
   const pathname = usePathname();
