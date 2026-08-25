@@ -5,17 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Icon } from "./icons/Icon";
 
-const HAPTIC_SELECTION_MESSAGE = "poudy:haptic:selection";
-
-interface NativeWebViewWindow extends Window {
-  readonly ReactNativeWebView?: {
-    readonly postMessage: (message: string) => void;
-  };
-}
-
-const requestSelectionHaptic = () => {
-  (window as NativeWebViewWindow).ReactNativeWebView?.postMessage(HAPTIC_SELECTION_MESSAGE);
-};
+import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 const TABS = [
   { href: "/", label: "홈", icon: "home", match: (path: string) => path === "/" },

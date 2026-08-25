@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Icon } from "./icons/Icon";
 
 import type { Sort } from "@/lib/domain/filter";
+import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 export const SORT_LABELS: Record<Sort, string> = {
   NAME_ASC: "제품명 오름차순",
@@ -24,16 +25,25 @@ type SortDropdownProps = {
 /** 디자인 C07. 정렬 4 종은 API 의 sort 와 1:1 로 맞는다. */
 export function SortDropdown({ value, onChange }: SortDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(() => ORDER.indexOf(value));
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const menuId = useId();
 
   useEffect(() => {
     if (!open) return;
 
+    optionRefs.current[focusedIndex]?.focus();
+
     const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+      if (event.target instanceof Node && !containerRef.current?.contains(event.target)) setOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        triggerRef.current?.focus();
+        setOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", onPointerDown);
@@ -42,49 +52,97 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [focusedIndex, open]);
+
+  const focusOption = (index: number) => {
+    setFocusedIndex(index);
+    optionRefs.current[index]?.focus();
+  };
+
+  const selectOption = (sort: Sort) => {
+    if (sort !== value) {
+      requestSelectionHaptic();
+      onChange(sort);
+    }
+    triggerRef.current?.focus();
+    setOpen(false);
+  };
 
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen((previous) => !previous)}
+        onClick={() => {
+          setFocusedIndex(ORDER.indexOf(value));
+          setOpen((previous) => !previous);
+        }}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            event.preventDefault();
+            setFocusedIndex(ORDER.indexOf(value));
+            setOpen(true);
+          }
+        }}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C]"
+        aria-controls={menuId}
+        className="sort-dropdown-trigger flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
       >
         {SORT_LABELS[value]}
-        <Icon name="chevron-down" size={12} />
+        <span className="sort-dropdown-chevron" data-open={open} aria-hidden="true">
+          <Icon name="chevron-down" size={12} />
+        </span>
       </button>
 
-      {open ? (
-        <ul
-          role="listbox"
-          aria-label="정렬 기준"
-          className="absolute right-0 z-10 mt-1 w-[180px] rounded-xl border border-border bg-white py-1 shadow-lg"
-        >
-          {ORDER.map((sort) => (
-            <li key={sort}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={sort === value}
-                onClick={() => {
-                  onChange(sort);
-                  setOpen(false);
-                }}
-                className={[
-                  "flex w-full items-center justify-between px-3.5 py-3 text-left text-[14px] text-[#3C4043]",
-                  sort === value ? "bg-[#F2F3F5] font-semibold" : "bg-white",
-                ].join(" ")}
-              >
-                {SORT_LABELS[sort]}
-                {sort === value ? <Icon name="check" size={14} /> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <div
+        id={menuId}
+        role="listbox"
+        aria-label="정렬 기준"
+        aria-hidden={!open}
+        inert={!open}
+        data-open={open}
+        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-[156px] rounded-[10px] border border-border bg-white py-1 shadow-lg"
+      >
+        {ORDER.map((sort, index) => (
+          <button
+            key={sort}
+            ref={(element) => {
+              optionRefs.current[index] = element;
+            }}
+            type="button"
+            role="option"
+            aria-selected={sort === value}
+            data-selected={sort === value}
+            tabIndex={index === focusedIndex ? 0 : -1}
+            onClick={() => selectOption(sort)}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                focusOption((index + 1) % ORDER.length);
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                focusOption((index - 1 + ORDER.length) % ORDER.length);
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                focusOption(0);
+              } else if (event.key === "End") {
+                event.preventDefault();
+                focusOption(ORDER.length - 1);
+              } else if (event.key === "Tab") {
+                setOpen(false);
+              }
+            }}
+            className={[
+              "sort-dropdown-option flex h-9 w-full items-center justify-between px-3 text-left text-[12px] text-[#3C4043] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action",
+              sort === value ? "bg-[#F2F3F5] font-semibold" : "bg-white",
+            ].join(" ")}
+          >
+            {SORT_LABELS[sort]}
+            {sort === value ? <Icon name="check" size={12} /> : null}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

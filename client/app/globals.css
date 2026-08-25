@@ -48,6 +48,9 @@
   --radius-button: 14px;
   --font-weight-button: 700;
 
+  --transition-duration-control-state: 160ms;
+  --transition-duration-disclosure: 200ms;
+
   /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
@@ -78,6 +81,61 @@ body {
   word-break: keep-all;
   /* 단어 하나가 줄보다 길면 그때만 글자 단위로 끊는다. */
   overflow-wrap: break-word;
+}
+
+.sort-dropdown-menu {
+  transform-origin: top right;
+  transition-property: opacity, transform;
+  transition-duration: var(--transition-duration-disclosure);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+.sort-dropdown-menu[data-open="false"] {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.sort-dropdown-menu[data-open="true"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.sort-dropdown-trigger,
+.sort-dropdown-option {
+  transition-property: background-color, color, transform;
+  transition-duration:
+    var(--transition-duration-control-state), var(--transition-duration-control-state),
+    var(--transition-duration-press, 100ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sort-dropdown-trigger:hover,
+  .sort-dropdown-option[data-selected="false"]:hover {
+    transition-duration: 0s, 0s, var(--transition-duration-press, 100ms);
+  }
+
+  .sort-dropdown-trigger:hover {
+    background-color: var(--color-border);
+  }
+
+  .sort-dropdown-option[data-selected="false"]:hover {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+}
+
+.sort-dropdown-chevron {
+  transition: transform var(--transition-duration-control-state) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+.sort-dropdown-chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+.sort-dropdown-option:active {
+  transform: scale(0.98);
 }
 
 /*
@@ -113,6 +171,17 @@ body {
   .animate-spark-burst,
   .animate-save-pop {
     animation: none;
+  }
+
+  .sort-dropdown-menu,
+  .sort-dropdown-trigger,
+  .sort-dropdown-chevron,
+  .sort-dropdown-option {
+    transition-duration: 0s;
+  }
+
+  .sort-dropdown-option:active {
+    transform: none;
   }
 }
 
