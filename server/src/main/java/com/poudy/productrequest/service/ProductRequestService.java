@@ -1,6 +1,7 @@
 package com.poudy.productrequest.service;
 
 import com.poudy.exception.InfrastructureException;
+import com.poudy.productrequest.controller.dto.ProductRegistrationRequest;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.repository.S3ProductRequestRepository;
@@ -31,9 +32,9 @@ public class ProductRequestService {
         this.clock = clock;
     }
 
-    public void submit(String productName, String brandName, String clientId) {
-        ProductRequest request = ProductRequest.create(productName, brandName, clock);
+    public void submit(ProductRegistrationRequest body, String clientId) {
         rateLimiter.requireAllowed(clientId);
+        ProductRequest request = ProductRequest.create(body.productName(), body.brandName(), clock);
         repository.save(request);
 
         try {

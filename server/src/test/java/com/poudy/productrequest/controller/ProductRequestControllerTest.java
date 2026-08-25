@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.TooManyRequestsException;
-import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.controller.dto.ProductRegistrationRequest;
 import com.poudy.productrequest.service.ProductRequestService;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
@@ -52,12 +52,11 @@ class ProductRequestControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(content().string(""));
 
-        ArgumentCaptor<String> productName = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> brandName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<ProductRegistrationRequest> body = ArgumentCaptor.forClass(ProductRegistrationRequest.class);
         ArgumentCaptor<String> clientAddress = ArgumentCaptor.forClass(String.class);
-        verify(productRequestService).submit(productName.capture(), brandName.capture(), clientAddress.capture());
-        org.assertj.core.api.Assertions.assertThat(productName.getValue()).isEqualTo("  제품 이름  ");
-        org.assertj.core.api.Assertions.assertThat(brandName.getValue()).isEqualTo(" 브랜드 이름 ");
+        verify(productRequestService).submit(body.capture(), clientAddress.capture());
+        org.assertj.core.api.Assertions.assertThat(body.getValue().productName()).isEqualTo("제품 이름");
+        org.assertj.core.api.Assertions.assertThat(body.getValue().brandName()).isEqualTo("브랜드 이름");
         org.assertj.core.api.Assertions.assertThat(clientAddress.getValue()).isEqualTo("203.0.113.8");
     }
 
@@ -85,7 +84,7 @@ class ProductRequestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
 
-        verify(productRequestService, never()).submit(anyString(), any(), anyString());
+        verify(productRequestService, never()).submit(any(), anyString());
     }
 
     @Test
@@ -94,8 +93,8 @@ class ProductRequestControllerTest {
         String body = """
                 {"productName":"%s","brandName":"%s"}
                 """.formatted(
-                "가".repeat(ProductRequest.MAX_PRODUCT_NAME_LENGTH + 1),
-                "나".repeat(ProductRequest.MAX_BRAND_NAME_LENGTH + 1));
+                "가".repeat(ProductRegistrationRequest.MAX_PRODUCT_NAME_LENGTH + 1),
+                "나".repeat(ProductRegistrationRequest.MAX_BRAND_NAME_LENGTH + 1));
 
         mockMvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest())
@@ -115,7 +114,7 @@ class ProductRequestControllerTest {
     void rejectsTooManyRequests() throws Exception {
         willThrow(new TooManyRequestsException(Duration.ofSeconds(30)))
                 .given(productRequestService)
-                .submit(anyString(), any(), anyString());
+                .submit(any(), anyString());
 
         mockMvc.perform(
                 post(PATH)

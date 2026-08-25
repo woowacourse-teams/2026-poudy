@@ -31,10 +31,7 @@ public class ProductRequestController {
     public ResponseEntity<Void> submit(
             @Valid @RequestBody ProductRegistrationRequest request,
             HttpServletRequest httpRequest) {
-        productRequestService.submit(
-                request.productName(),
-                request.brandName(),
-                ClientAddressResolver.resolve(httpRequest));
+        productRequestService.submit(request, ClientAddressResolver.resolve(httpRequest));
         return ResponseEntity.accepted().build();
     }
 }
