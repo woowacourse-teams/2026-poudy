@@ -110,11 +110,12 @@ export function BottomSheet({
         <div className="flex-1 overflow-y-auto px-5">{children}</div>
 
         <div className="flex gap-2 px-4 pt-3 pb-4">
+          {/* 초기화가 1, 적용이 2 를 차지한다. 되돌리는 일보다 적용하는 일이 잦다. */}
           {onReset ? (
             <button
               type="button"
               onClick={onReset}
-              className="h-12 w-[72px] shrink-0 rounded-[10px] bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
+              className="h-12 flex-1 rounded-[10px] bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
             >
               초기화
             </button>
@@ -123,7 +124,7 @@ export function BottomSheet({
             type="button"
             onClick={onSubmit}
             disabled={submitDisabled}
-            className="h-12 flex-1 rounded-[10px] bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-12 flex-2 rounded-[10px] bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitLabel}
           </button>
