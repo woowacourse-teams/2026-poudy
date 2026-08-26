@@ -102,7 +102,12 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         aria-hidden={!open}
         inert={!open}
         data-open={open}
-        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-[156px] rounded-[10px] border border-border bg-white py-1 shadow-lg"
+        /*
+          위아래 여백을 두면 hover 배경이 옵션에만 깔리고 그 바깥으로 흰 띠가 남아
+          어색하다. 여백을 없애 첫 옵션과 마지막 옵션이 모서리까지 닿게 한다.
+          모서리를 넘어 칠해지지 않도록 넘치는 부분은 잘라 낸다.
+        */
+        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-[156px] overflow-hidden rounded-[10px] border border-border bg-white shadow-lg"
       >
         {ORDER.map((sort, index) => (
           <button

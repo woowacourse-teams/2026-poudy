@@ -212,7 +212,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                   pick(level);
                 }}
                 style={dragStyle}
-                className={`flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-[transform,border-color,background-color] duration-control-state ease-standard motion-reduce:transition-none active:scale-90 motion-reduce:active:scale-100 ${
+                className={`flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-[transform,border-color,background-color] duration-control-state ease-out motion-reduce:transition-none active:scale-90 motion-reduce:active:scale-100 ${
                   isHandle ? "border-brand bg-background" : "border-transparent"
                 }`}
               >
@@ -222,7 +222,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                 */}
                 <span
                   style={dragStyle}
-                  className={`size-2 rounded-full transition-[transform,background-color] duration-control-state ease-standard motion-reduce:transition-none ${
+                  className={`size-2 rounded-full transition-[transform,background-color] duration-control-state ease-out motion-reduce:transition-none ${
                     isHandle ? "scale-75 bg-brand" : inRange ? "bg-brand" : "bg-border"
                   }`}
                 />
@@ -232,7 +232,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                 <span
                   aria-hidden="true"
                   style={dragStyle}
-                  className={`h-[3px] flex-1 rounded-sm transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
+                  className={`h-[3px] flex-1 rounded-sm transition-colors duration-control-state ease-out motion-reduce:transition-none ${
                     !anyLevel && level >= min && level < max ? "bg-brand" : "bg-border"
                   }`}
                 />
@@ -250,7 +250,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
           return (
             <span
               key={name}
-              className={`text-[12px] transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
+              className={`text-[12px] transition-colors duration-control-state ease-out motion-reduce:transition-none ${
                 level < MAX_LEVEL ? "flex-1" : ""
               } ${
                 isHandle
