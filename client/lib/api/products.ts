@@ -18,6 +18,8 @@ import { apiGet } from "./client";
 import type { Filter } from "@/lib/domain/filter";
 import { serializeFilter } from "@/lib/domain/filter";
 
+const INGREDIENT_PAGE_SIZE = 100;
+
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
   apiGet("/api/products", serializeFilter(filter));
 
@@ -40,6 +42,24 @@ export const fetchIngredients = (query: {
   if (query.page !== undefined) params.set("page", String(query.page));
   if (query.size !== undefined) params.set("size", String(query.size));
   return apiGet("/api/ingredients", params);
+};
+
+/** ID 조건에 해당하는 성분을 마지막 페이지까지 조회해 하나의 목록으로 합친다. */
+export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): Promise<IngredientListResponse> => {
+  if (ingredientIds.length === 0) return { items: [] };
+
+  const items: IngredientListResponse["items"] = [];
+  let page = 0;
+  let hasNext = true;
+
+  while (hasNext) {
+    const response = await fetchIngredients({ ingredientIds, page, size: INGREDIENT_PAGE_SIZE });
+    items.push(...response.items);
+    hasNext = response.pagination.hasNext;
+    page += 1;
+  }
+
+  return { items };
 };
 
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
