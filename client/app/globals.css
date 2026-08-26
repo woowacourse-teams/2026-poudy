@@ -155,6 +155,31 @@ body {
   }
 }
 
+/*
+ * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
+ * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
+ */
+.filter-chip {
+  transition-property: background-color, border-color, color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+/*
+ * 가로로 흐르는 줄에서 스크롤막대를 감춘다. 칩 줄은 손가락으로 밀어 보는 곳이라
+ * 막대가 칩 아래를 가로질러 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다.
+ *
+ * Tailwind 코어에는 이 유틸리티가 없다. 규칙 하나 때문에 플러그인을 들이지 않는다.
+ */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .sort-dropdown-chevron {
   transition: transform var(--transition-duration-control-state) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
 }

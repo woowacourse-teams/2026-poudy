@@ -37,11 +37,26 @@ type ProductListProps = {
   readonly surface?: ListSurface;
 };
 
-const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
+/**
+ * 성분 칩의 숫자. 빠른 필터는 성분을 묶어 둔 것이라 묶음 하나가 아니라 그 안의 성분 수로 센다.
+ * 낱개로 고른 성분과 겹칠 수 있으므로 한 번만 세도록 모아서 헤아린다.
+ */
+const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): number => {
+  const picked = new Set<number>(filter.excludeIngredientIds);
+
+  for (const code of excludeCodes) {
+    if (!filter.excludeCodes.includes(code.code)) continue;
+    for (const ingredient of code.ingredients) picked.add(ingredient.id);
+  }
+
+  return picked.size;
+};
+
+const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): readonly FilterChipItem[] => [
   {
     id: "ingredient",
     label: "성분",
-    count: filter.excludeCodes.length + filter.excludeIngredientIds.length,
+    count: countIngredients(filter, excludeCodes),
   },
   { id: "category", label: "카테고리", count: filter.categoryIds.length },
   { id: "brand", label: "브랜드", count: filter.brandIds.length },
@@ -112,7 +127,7 @@ export function ProductList({
 
       <div className="bg-white px-4">
         <FilterChipBar
-          chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
+          chips={chipsOf(filter, excludeCodes).filter((chip) => !hiddenChips.includes(chip.id))}
           onOpen={(id) => setOpenSheet(id as SheetKind)}
         />
         <SortHeader total={total} sort={filter.sort} onChangeSort={onChangeSort} />
@@ -144,7 +159,8 @@ export function ProductList({
           if (openSheet) {
             track("filter_applied", {
               filter_type: FILTER_TYPES[openSheet],
-              filter_value_count: chipsOf({ ...filter, ...changed }).find((chip) => chip.id === openSheet)?.count ?? 0,
+              filter_value_count:
+                chipsOf({ ...filter, ...changed }, excludeCodes).find((chip) => chip.id === openSheet)?.count ?? 0,
               result_count: total,
             });
           }
