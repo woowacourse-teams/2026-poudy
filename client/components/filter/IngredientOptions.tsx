@@ -114,10 +114,11 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                 const excluded = draft.excludeIngredientIds.includes(item.id);
 
                 return (
-                  <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
+                  <li key={item.id} className="flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] py-2">
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                      {/* 자동완성과 같다. 긴 이름은 두 줄까지 보이고 거기서 줄인다. */}
                       <IngredientName name={item.koreanName} keyword={keyword.trim()} />
-                      <span className="truncate text-[10px] text-[#868B94]">
+                      <span className="truncate text-[12px] text-[#868B94]">
                         {item.skinEffects.map((effect) => effect.name).join(" · ")}
                       </span>
                     </span>
@@ -199,14 +200,16 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                       role="checkbox"
                       aria-checked={checked}
                       onClick={() => toggleCode(code.code)}
-                      className={`flex h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 text-left ${
-                        checked ? "border-transparent bg-[#F2F3F5]" : "border-[#DDE0E4] bg-[#F7F7F8]"
+                      className={`quick-filter-toggle flex min-h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left ${
+                        checked ? "border-red-200 bg-red-50" : "border-[#DDE0E4] bg-[#F7F7F8]"
                       }`}
                     >
-                      <span className={`flex-1 text-[11px] text-[#4D5159] ${checked ? "font-bold" : "font-semibold"}`}>
+                      <span
+                        className={`flex-1 text-[13px] ${checked ? "font-bold text-red-700" : "font-semibold text-[#4D5159]"}`}
+                      >
                         {code.name}
                       </span>
-                      <CheckMark checked={checked} />
+                      <CheckMark checked={checked} tone="exclude" />
                     </button>
                   </li>
                 );
@@ -224,11 +227,11 @@ function IngredientName({ name, keyword }: { readonly name: string; readonly key
   const parts = splitByKeyword(name, keyword);
 
   if (!hasMatch(parts)) {
-    return <span className="truncate text-[12px] font-semibold text-[#212124]">{name}</span>;
+    return <span className="line-clamp-2 text-[14px] font-semibold text-[#212124]">{name}</span>;
   }
 
   return (
-    <span className="truncate text-[12px] text-[#72747A]">
+    <span className="line-clamp-2 text-[14px] text-[#72747A]">
       {/* 낭독기와 검사 도구에는 온전한 이름 하나로 남긴다. 토막은 눈으로 보는 결에만 쓴다. */}
       <span className="sr-only">{name}</span>
       {parts.map((part, at) => (
