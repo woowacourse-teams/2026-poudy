@@ -148,12 +148,13 @@ body {
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .sort-dropdown-trigger:hover,
-  .sort-dropdown-option[data-selected="false"]:hover {
-    transition-duration: 0s, 0s, var(--transition-duration-press, 100ms);
-  }
+/* 눌리면 살짝 들어간다. 트리거와 옵션이 같은 느낌으로 반응해야 한 덩어리로 읽힌다. */
+.sort-dropdown-trigger:active,
+.sort-dropdown-option:active {
+  transform: scale(0.98);
+}
 
+@media (hover: hover) and (pointer: fine) {
   .sort-dropdown-trigger:hover {
     background-color: var(--color-border);
   }
@@ -195,10 +196,6 @@ body {
 
 .sort-dropdown-chevron[data-open="true"] {
   transform: rotate(180deg);
-}
-
-.sort-dropdown-option:active {
-  transform: scale(0.98);
 }
 
 /*
@@ -254,6 +251,7 @@ body {
   }
 
   .sort-dropdown-chevron,
+  .sort-dropdown-trigger:active,
   .sort-dropdown-option:active {
     transform: none;
   }
