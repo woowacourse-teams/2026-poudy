@@ -30,9 +30,10 @@ export function FilterChipBar({ chips, onOpen }: FilterChipBarProps) {
       data-axis="horizontal"
       data-start={edges.start}
       data-end={edges.end}
-      className="edge-fade scrollbar-none -mx-4 overflow-x-auto pb-2 pl-4"
+      className="edge-fade scrollbar-none -mx-4 overflow-x-auto pb-2"
     >
-      <div className="flex w-max gap-1.5 pr-4">
+      {/* 좌우 여백을 목록 안쪽에 함께 둔다. 한쪽만 바깥에 두면 흐림이 걸리는 자리가 어긋난다. */}
+      <div className="flex w-max gap-1.5 px-4">
         {chips.map((chip) => (
           <FilterChip
             key={chip.id}
