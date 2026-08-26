@@ -56,7 +56,7 @@ export function RecentFilters() {
                   age_minutes: Math.max(0, Math.floor((Date.now() - item.usedAt) / 60000)),
                 })
               }
-              className="flex w-[250px] flex-col gap-1.5 rounded-[10px] border border-border bg-background p-2.5"
+              className="flex h-full w-[250px] flex-col gap-1.5 rounded-[10px] border border-border bg-background p-2.5"
             >
               <span className="flex items-center">
                 <span className="inline-flex h-[22px] items-center gap-1 rounded-[11px] bg-surface px-[7px]">
@@ -67,9 +67,17 @@ export function RecentFilters() {
                 </span>
               </span>
 
-              <span className="text-[13px] font-semibold text-text-primary">{item.summary || "전체 제품"}</span>
+              {/*
+                조건이 길면 두 줄, `전체 제품` 처럼 짧으면 한 줄이 되어 카드마다 높이가
+                달라진다. 가로로 늘어놓는 목록이라 아래가 들쭉날쭉하게 보인다.
+                두 줄 자리를 늘 잡아 두어 요약 길이와 무관하게 높이를 맞춘다.
+              */}
+              <span className="line-clamp-2 min-h-[38px] text-[13px] font-semibold text-text-primary">
+                {item.summary || "전체 제품"}
+              </span>
 
-              <span className="flex items-center justify-between">
+              {/* 시각과 화살표는 카드 아래에 붙는다. 위 요약이 짧아도 자리가 밀리지 않는다. */}
+              <span className="mt-auto flex items-center justify-between">
                 <span className="text-[10px] text-text-secondary">{relativeTime(item.usedAt)}</span>
                 <Icon name="chevron-right" size={16} className="text-text-secondary" />
               </span>
@@ -92,7 +100,14 @@ function EmptyNotice({
   readonly detail: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-surface px-4 py-6">
+    /*
+     * 채운 회색은 카드처럼 보여 무언가 담긴 자리로 읽힌다. 실제로는 비어 있다는 뜻이므로
+     * 배경을 비우고 점선 테두리만 둘러 안이 비었다는 것을 모양으로 드러낸다.
+     *
+     * 선이 끊겨 있어 같은 색이라도 이어진 선보다 흐리게 읽힌다.
+     * `--color-border`(1.21:1) 로는 거의 보이지 않아 칩 테두리와 같은 값을 쓴다.
+     */
+    <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-[#D1D3D8] px-4 py-6">
       <Icon name={icon} size={20} className="text-text-secondary" />
       <p className="text-[13px] font-semibold text-text-primary">{title}</p>
       <p className="text-[11px] text-text-secondary">{detail}</p>
@@ -115,26 +130,50 @@ export function SavedPreview() {
       save_source: "home",
     });
   };
-  const [items, setItems] = useState<readonly ProductResponse[]>([]);
+  /*
+   * 어느 조건으로 받은 응답인지 함께 들고 있는다. `items` 만 보면 아직 안 받은 것과
+   * 받았는데 빈 것을 가릴 수 없어, 빈 안내를 띄울 때를 정하지 못한다.
+   */
+  const [loaded, setLoaded] = useState<{ readonly key: string; readonly items: readonly ProductResponse[] }>({
+    key: "",
+    items: [],
+  });
 
   useEffect(() => {
+    // 저장이 비면 불러올 것이 없다. 남아 있는 것은 아래에서 걸러 내므로 그대로 둔다.
     if (!key) return;
 
     const controller = new AbortController();
     fetchStorage(key.split(",").map(Number))
       .then((response) => {
-        if (!controller.signal.aborted) setItems(response.items);
+        if (!controller.signal.aborted) setLoaded({ key, items: response.items });
       })
       .catch(() => {});
 
     return () => controller.abort();
   }, [key]);
 
+  const items = loaded.items;
+
+  /*
+   * 저장을 지우면 `savedIds` 는 그 자리에서 줄지만 `items` 는 다시 불러온 뒤에야 줄어든다.
+   * 그 사이에 지운 카드가 화면에 남으므로, 지금 저장된 것만 남겨 걸러 낸다.
+   * 마지막 하나를 지웠을 때는 다시 불러오지도 않으니 이 걸름이 카드를 지우는 유일한 길이다.
+   */
+  const visible = items.filter((product) => savedIds.includes(product.id)).slice(0, SAVED_PREVIEW_COUNT);
+
+  /*
+   * 저장해 둔 ID 는 있는데 아직 그 조건의 응답을 받지 못한 동안이다.
+   * 이때 `저장한 제품이 없어요` 를 보여 주면 곧 카드가 뜨면서 문구가 번쩍인다.
+   * 응답이 온 뒤에는 그 안이 비어 있어도(지워진 제품 등) 빈 상태로 정리된다.
+   */
+  const loading = key !== "" && loaded.key !== key;
+
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-bold text-text-primary">저장 제품</h2>
-        {savedIds.length > 0 ? (
+        {visible.length > 0 ? (
           <Link href="/saved" className="flex items-center gap-1">
             <span className="text-[13px] font-medium text-text-secondary">전체 보기</span>
             <Icon name="chevron-right" size={16} className="text-text-secondary" />
@@ -142,7 +181,7 @@ export function SavedPreview() {
         ) : null}
       </div>
 
-      {savedIds.length === 0 ? (
+      {visible.length === 0 && !loading ? (
         <EmptyNotice
           icon="bookmark"
           title="저장한 제품이 없어요"
@@ -152,8 +191,7 @@ export function SavedPreview() {
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
       <ul data-private className="divide-y divide-divider">
-        {/* 응답이 더 오더라도 홈에서는 정한 수만큼만 보여 준다. */}
-        {items.slice(0, SAVED_PREVIEW_COUNT).map((product) => (
+        {visible.map((product) => (
           <li key={product.id}>
             <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} entryPoint="home" />
           </li>
