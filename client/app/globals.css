@@ -292,6 +292,46 @@ body {
 }
 
 /*
+ * 홈의 빠른 필터 아이콘. 여섯 개가 한 화면에 늘 떠 있어 자주 스치는 자리라,
+ * 눈에 걸리지 않을 만큼만 움직인다. 1px 뜨고 그림자가 옅게 지는 정도다.
+ *
+ * 크게 키우거나 빛나게 하면 여섯 개가 번갈아 반응할 때 화면이 소란해진다.
+ */
+.quick-filter-tile {
+  transition-property: transform, box-shadow;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .quick-filter-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
+  }
+}
+
+/*
+ * 누름은 hover 와 반대로 가라앉는다. 마우스가 없는 환경에도 남겨 두어
+ * 손가락으로도 눌린 것이 보이게 한다.
+ */
+.quick-filter-tile:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
+.quick-filter-link:focus-visible {
+  outline: none;
+}
+
+.quick-filter-link:focus-visible .quick-filter-tile {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/*
  * 가로로 흐르는 줄에서 스크롤막대를 감춘다. 칩 줄은 손가락으로 밀어 보는 곳이라
  * 막대가 칩 아래를 가로질러 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다.
  *
@@ -372,6 +412,19 @@ body {
   }
 
   .sort-dropdown-chevron {
+    transform: none;
+  }
+
+  /*
+   * 자리를 옮기는 움직임만 걷어 낸다. 그림자는 남겨 두어 어디에 손이 올라가 있는지는
+   * 그대로 알 수 있게 한다.
+   */
+  .quick-filter-tile {
+    transition-duration: 0s;
+  }
+
+  .quick-filter-tile:hover,
+  .quick-filter-tile:active {
     transform: none;
   }
 }
