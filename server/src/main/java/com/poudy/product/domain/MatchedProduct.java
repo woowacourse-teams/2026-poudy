@@ -1,7 +1,7 @@
 package com.poudy.product.domain;
 
-import com.poudy.common.domain.NameRank;
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.NameRank;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Comparator;
 
 public record MatchedProduct(Product product, NameRank match) {

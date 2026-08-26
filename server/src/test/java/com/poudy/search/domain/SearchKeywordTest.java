@@ -1,4 +1,4 @@
-package com.poudy.common.domain;
+package com.poudy.search.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -7,20 +7,33 @@ import { describe, expect, it, vi } from "vitest";
 
 import { BottomSheet } from "./BottomSheet";
 
-const renderSheet = (overrides: Partial<Parameters<typeof BottomSheet>[0]> = {}) => {
-  const props = {
-    open: true,
-    title: "브랜드",
-    description: "원하는 브랜드를 선택해 주세요",
-    onClose: vi.fn(),
-    onReset: vi.fn(),
-    submitLabel: "3개 제품 보기",
-    onSubmit: vi.fn(),
-    children: <button type="button">라운드랩</button>,
-    ...overrides,
-  };
+type Options = {
+  readonly open?: boolean;
+  readonly submitLabel?: string;
+  readonly submitDisabled?: boolean;
+};
 
-  return { props, ...render(<BottomSheet {...props} />) };
+/** 네 필터 시트가 쌓는 것과 같은 차림. */
+const renderSheet = ({ open = true, submitLabel = "3개 제품 보기", submitDisabled }: Options = {}) => {
+  const props = { onClose: vi.fn(), onReset: vi.fn(), onSubmit: vi.fn() };
+
+  return {
+    props,
+    ...render(
+      <BottomSheet open={open} onClose={props.onClose}>
+        <BottomSheet.Header title="브랜드" description="원하는 브랜드를 선택해 주세요" />
+        <BottomSheet.Body>
+          <button type="button">라운드랩</button>
+        </BottomSheet.Body>
+        <BottomSheet.Footer>
+          <BottomSheet.ResetButton onClick={props.onReset} />
+          <BottomSheet.SubmitButton onClick={props.onSubmit} disabled={submitDisabled}>
+            {submitLabel}
+          </BottomSheet.SubmitButton>
+        </BottomSheet.Footer>
+      </BottomSheet>,
+    ),
+  };
 };
 
 describe("BottomSheet", () => {
@@ -60,14 +73,14 @@ describe("BottomSheet", () => {
 
   it("열리면 시트 안으로 초점을 옮긴다", () => {
     renderSheet();
-    // 시트에서 가장 먼저 나오는 조작 요소는 닫기 버튼이다.
-    expect(screen.getByRole("button", { name: "닫기" })).toHaveFocus();
+    // 머리 부분에는 조작 요소가 없어 내용의 첫 요소가 받는다.
+    expect(screen.getByRole("button", { name: "라운드랩" })).toHaveFocus();
   });
 
-  it("닫기 버튼으로 닫는다", async () => {
+  it("딤을 누르면 닫는다", async () => {
     const { props } = renderSheet();
 
-    await userEvent.click(screen.getByRole("button", { name: "닫기" }));
+    await userEvent.click(document.querySelector(".bottom-sheet-dim") as HTMLElement);
 
     expect(props.onClose).toHaveBeenCalled();
   });
@@ -75,7 +88,6 @@ describe("BottomSheet", () => {
   it("Tab 을 눌러도 초점이 시트 밖으로 나가지 않는다", async () => {
     renderSheet();
     const inside = [
-      screen.getByRole("button", { name: "닫기" }),
       screen.getByRole("button", { name: "라운드랩" }),
       screen.getByRole("button", { name: "초기화" }),
       screen.getByRole("button", { name: "3개 제품 보기" }),

@@ -1,7 +1,6 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandSummary;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +20,9 @@ public class ProductCountsByBrand {
         return countsByBrandId.getOrDefault(brandId, 0L);
     }
 
-    public List<BrandSummary> summariesOf(List<Brand> brands) {
+    public List<BrandProductCount> countsOf(List<Brand> brands) {
         return brands.stream()
-                .map(brand -> new BrandSummary(brand, countOf(brand.id())))
+                .map(brand -> new BrandProductCount(brand, countOf(brand.id())))
                 .toList();
     }
 }

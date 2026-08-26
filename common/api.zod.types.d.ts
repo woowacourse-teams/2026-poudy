@@ -286,11 +286,12 @@ export type IngredientResponse = {
    */
   skinEffects: Array<SkinEffectResponse>;
 }
-export type IngredientListResponse = {
+export type IngredientPageResponse = {
   /**
    * 조회된 성분
    */
   items: Array<IngredientResponse>;
+  pagination: PaginationResponse;
 }
 export type IngredientDetailResponse = {
   id: number;
@@ -313,6 +314,12 @@ export type IngredientDetailResponse = {
   infoSources: Array<string>;
   effectSources: Array<string>;
   updatedAt: string;
+}
+export type IngredientListResponse = {
+  /**
+   * 조회된 성분
+   */
+  items: Array<IngredientResponse>;
 }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
@@ -611,7 +618,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. 두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 검색어로 조회하면 검색어에 잘 맞는 순서로 최대 5 건만 반환한다. 성분 ID 로만 조회하면 상한 없이 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.
+ * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.
  */
 export type get_FindIngredients = {
       method: "GET",
@@ -620,15 +627,19 @@ export type get_FindIngredients = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{
-  /**
-   * 검색어
-   */
-  keyword: string;
   ingredientIds: Array<number>;
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
 }>,
 
           }
-      responses: {200: Schemas.IngredientListResponse,
+      responses: {200: Schemas.IngredientPageResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -650,6 +661,29 @@ export type get_FindIngredientDetail = {
       responses: {200: Schemas.IngredientDetailResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다.
+ */
+export type get_SuggestIngredients = {
+      method: "GET",
+      path: "/api/ingredients/suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+},
+
+          }
+      responses: {200: Schemas.IngredientListResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -734,6 +768,7 @@ get: {
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
+"/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,

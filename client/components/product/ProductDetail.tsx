@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { TopBar } from "@/components/ui/TopBar";
+import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
@@ -22,13 +23,19 @@ export const ingredientSummary = (ingredientCount: number, effectNames: readonly
 };
 
 /** S05 제품 성분 상세. 문구와 구조는 design/v1.pen 을 따른다. */
-export function ProductDetail({ product }: { readonly product: ProductDetailResponse }) {
+export function ProductDetail({
+  product,
+  entryPoint = "direct",
+}: {
+  readonly product: ProductDetailResponse;
+  readonly entryPoint?: ProductEntryPoint;
+}) {
   return (
     <>
       <TopBar title="제품 상세" variant="sub" />
       <TrackView
         event="product_viewed"
-        properties={{ product_id: product.id, category: product.categories[0]?.name }}
+        properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
       />
 
       <main className="flex-1 px-4 pb-10">

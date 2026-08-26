@@ -7,6 +7,9 @@ import static org.mockito.Mockito.mock;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.category.repository.CategoryRepository;
+import com.poudy.product.domain.CategoryProductCount;
+import com.poudy.product.domain.Products;
+import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,12 +24,19 @@ class CategoryServiceTest {
         Category toner = new Category(2L, 1L, "토너", 1);
         Category serum = new Category(3L, 1L, "세럼", 1);
         Categories categories = Categories.from(List.of(skinCare, toner, serum));
+        CategoryProductCount tonerCount = new CategoryProductCount(toner, 2L, List.of());
+        List<CategoryProductCount> productCounts = List.of(
+                new CategoryProductCount(skinCare, 2L, List.of(tonerCount)));
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
+        ProductRepository productRepository = mock(ProductRepository.class);
+        Products products = mock(Products.class);
         given(categoryRepository.findAll()).willReturn(categories);
-        CategoryService categoryService = new CategoryService(categoryRepository);
+        given(productRepository.findAll()).willReturn(products);
+        given(products.productCountsByCategory(categories)).willReturn(productCounts);
+        CategoryService categoryService = new CategoryService(categoryRepository, productRepository);
 
-        Categories found = categoryService.findCategories();
+        List<CategoryProductCount> found = categoryService.findCategories();
 
-        assertThat(found).isSameAs(categories);
+        assertThat(found).isSameAs(productCounts);
     }
 }

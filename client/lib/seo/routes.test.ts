@@ -59,10 +59,12 @@ describe("sitemap", () => {
       items: [{ id: 30 }],
       pagination: { hasNext: false },
     });
-    api.fetchIngredients.mockImplementation(({ ingredientIds }: { readonly ingredientIds: readonly number[] }) => {
-      if (ingredientIds[0] === 1) return Promise.resolve({ items: [{ id: 40 }] });
-      return Promise.resolve({ items: ingredientIds[0] === 5001 ? [{ id: 5001 }] : [] });
-    });
+    api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
+      Promise.resolve({
+        items: page === 0 ? [{ id: 40 }] : [{ id: 5001 }],
+        pagination: { hasNext: page === 0 },
+      }),
+    );
 
     const entries = await sitemap();
 
@@ -78,7 +80,7 @@ describe("sitemap", () => {
         "https://poudy.site/ingredients/5001",
       ]),
     );
-    expect(api.fetchIngredients).toHaveBeenCalledTimes(100);
+    expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchProducts).toHaveBeenCalledTimes(1);
   });
 
@@ -107,13 +109,40 @@ describe("sitemap", () => {
     await expect(sitemap()).resolves.toHaveLength(3);
   });
 
-  it("일부 성분 배치가 실패해도 성공한 성분 주소는 유지한다", async () => {
+  /*
+   * 예전에는 제품 10 페이지·성분 ID 10000 번에서 끊겨 그 뒤가 조용히 빠졌다.
+   * 이제 상한은 색인 범위가 아니라 안전장치라, 그 자리를 넘겨도 계속 따라가야 한다.
+   */
+  it("예전 상한을 넘겨도 hasNext 를 따라 계속 싣는다", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
+    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
+    api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
+    api.fetchProducts.mockImplementation(({ page }: { readonly page: number }) =>
+      Promise.resolve({ items: [{ id: 1000 + page }], pagination: { hasNext: page < 20 } }),
+    );
+    api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
+      Promise.resolve({ items: [{ id: 2000 + page }], pagination: { hasNext: page < 120 } }),
+    );
+
+    const urls = (await sitemap()).map(({ url }) => url);
+
+    // 제품 11 번째 페이지는 예전 상한(10 페이지) 밖이다.
+    expect(api.fetchProducts).toHaveBeenCalledTimes(21);
+    expect(urls).toContain("https://poudy.site/products/1020");
+    // 성분 101 번째 페이지는 예전 상한(ID 10000) 밖이다.
+    expect(api.fetchIngredients).toHaveBeenCalledTimes(121);
+    expect(urls).toContain("https://poudy.site/ingredients/2120");
+  });
+
+  it("뒤쪽 성분 페이지가 실패해도 앞에서 찾은 성분 주소는 유지한다", async () => {
     api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
     api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
     api.fetchProducts.mockRejectedValue(new Error("products unavailable"));
-    api.fetchIngredients.mockImplementation(({ ingredientIds }: { readonly ingredientIds: readonly number[] }) => {
-      if (ingredientIds[0] === 1) return Promise.reject(new Error("first batch unavailable"));
-      return Promise.resolve({ items: ingredientIds[0] === 101 ? [{ id: 40 }] : [] });
+    api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) => {
+      if (page === 0) {
+        return Promise.resolve({ items: [{ id: 40 }], pagination: { hasNext: true } });
+      }
+      return Promise.reject(new Error("second ingredient page unavailable"));
     });
 
     const entries = await sitemap();

@@ -1,7 +1,10 @@
 package com.poudy.ingredient.controller;
 
+import com.poudy.common.dto.KeywordRequest;
+import com.poudy.common.dto.PaginationRequest;
 import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
 import com.poudy.ingredient.controller.dto.IngredientListResponse;
+import com.poudy.ingredient.controller.dto.IngredientPageResponse;
 import com.poudy.ingredient.controller.dto.IngredientQueryRequest;
 import com.poudy.ingredient.service.IngredientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,12 +29,26 @@ public class IngredientController {
         this.ingredientService = ingredientService;
     }
 
-    @Operation(summary = "성분 조회", description = "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. "
-            + "두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 검색어로 조회하면 검색어에 잘 맞는 순서로 최대 5 건만 반환한다. "
-            + "성분 ID 로만 조회하면 상한 없이 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.")
+    @Operation(summary = "성분 조회", description = "성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. "
+            + "ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. "
+            + "존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.")
     @GetMapping
-    public ResponseEntity<IngredientListResponse> findIngredients(@Valid @ModelAttribute IngredientQueryRequest query) {
-        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.find(query)));
+    public ResponseEntity<IngredientPageResponse> findIngredients(
+            @Valid @ModelAttribute IngredientQueryRequest query,
+            @Valid @ModelAttribute PaginationRequest pagination) {
+        return ResponseEntity.ok(
+                IngredientPageResponse.from(
+                        ingredientService.find(query.toQuery(), pagination.page(), pagination.size()),
+                        pagination));
+    }
+
+    @Operation(summary = "성분 검색 제안 조회", description = "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 "
+            + "검색어에 잘 맞는 순서로 최대 5 건 반환한다.")
+    @Parameter(name = "keyword", example = "글리")
+    @GetMapping("/suggestions")
+    public ResponseEntity<IngredientListResponse> suggestIngredients(
+            @Valid @ModelAttribute KeywordRequest search) {
+        return ResponseEntity.ok(IngredientListResponse.from(ingredientService.suggest(search.keyword())));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")

@@ -4,19 +4,22 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "./ProductList";
 
-import { brands, categories, excludeCodes } from "@/mocks/fixtures";
+import { track } from "@/lib/analytics/track";
+import { brands, categories, excludeCodes, products } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
+const { searchParams } = vi.hoisted(() => ({ searchParams: { current: new URLSearchParams() } }));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/products",
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => searchParams.current,
 }));
 
 const openBrandSheet = async () => {
@@ -32,6 +35,11 @@ const openBrandSheet = async () => {
 };
 
 describe("ProductList 브랜드 시트", () => {
+  beforeEach(() => {
+    searchParams.current = new URLSearchParams();
+    vi.mocked(track).mockClear();
+  });
+
   it("조건에 걸린 브랜드만 고를 수 있다", async () => {
     /*
      * 목록 응답이 돌려준 브랜드만 시트에 오른다. 어느 브랜드가 남는지는 목 데이터에
@@ -52,5 +60,32 @@ describe("ProductList 브랜드 시트", () => {
     await waitFor(() => expect(sheet.getByText("라운드랩")).toBeInTheDocument());
     // 응답에 없던 브랜드는 고를 수 없다.
     expect(sheet.queryByText("토리든")).not.toBeInTheDocument();
+  });
+
+  it("제품명 검색 결과가 렌더링되면 결과 수를 남긴다", async () => {
+    searchParams.current = new URLSearchParams("keyword=독도");
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        }),
+      ),
+    );
+
+    render(<ProductList categories={categories} brands={brands} excludeCodes={excludeCodes} />);
+
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith("search_results_viewed", {
+        mode: "product",
+        query: "독도",
+        result_count: 2,
+        include_count: 0,
+        exclude_count: 0,
+        exclude_group_count: 0,
+      }),
+    );
+    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=search_results");
   });
 });

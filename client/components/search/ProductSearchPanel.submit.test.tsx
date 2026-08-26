@@ -45,6 +45,17 @@ beforeEach(() => {
 });
 
 describe("ProductSearchPanel 엔터 검색", () => {
+  it("첫 유효 입력에서 제품 검색 시작을 한 번만 남긴다", async () => {
+    suggestionsAre(3);
+
+    render(<ProductSearchPanel />);
+    await userEvent.type(field(), "독도");
+
+    expect(vi.mocked(track).mock.calls.filter(([event]) => event === "search_started")).toEqual([
+      ["search_started", { mode: "product" }],
+    ]);
+  });
+
   it("엔터를 누르면 검색어의 결과 목록으로 보낸다", async () => {
     suggestionsAre(3);
 
@@ -91,6 +102,14 @@ describe("ProductSearchPanel 엔터 검색", () => {
 
     await waitFor(() => expect(push).not.toHaveBeenCalled());
     expect(track).not.toHaveBeenCalledWith("search_submitted", expect.anything());
+    expect(track).toHaveBeenCalledWith("search_results_viewed", {
+      mode: "product",
+      query: "없는제품",
+      result_count: 0,
+      include_count: 0,
+      exclude_count: 0,
+      exclude_group_count: 0,
+    });
   });
 
   it("검색어가 공백뿐이면 아무 일도 하지 않는다", async () => {

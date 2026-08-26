@@ -111,7 +111,7 @@ public class S3FeedbackRepository {
     }
 
     private static String keyOf(Feedback feedback) {
-        return KEY_PREFIX + feedback.id() + ".json";
+        return KEY_PREFIX + feedback.id() + "/feedback.json";
     }
 
     private static Map<String, Object> documentOf(Feedback feedback) {

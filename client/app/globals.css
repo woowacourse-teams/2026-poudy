@@ -31,11 +31,35 @@
   --color-success: #17a47a;
   --color-success-soft: #e7f6f0;
 
-  /* 수분·유분 물방울 */
-  --color-droplet-moisture: #24779d;
-  --color-droplet-empty: #a9c8d6;
-  --color-droplet-oil: #854c2c;
-  --color-droplet-empty-oil: #d9c1b5;
+  /*
+   * 수분·유분 물방울.
+   * 수분은 Tailwind sky, 유분은 TDS(tossmini-docs.toss.im/tds-react-native) orange 를 쓴다.
+   * TDS 는 Tailwind 팔레트에 없으므로 값을 그대로 적어 둔다.
+   *
+   * 물방울은 도형이라 밝은 색을 그대로 쓰지만, 옆의 `수분`·`유분` 글자까지 같은 색으로
+   * 두면 흰 배경에서 읽히지 않는다(sky-300 은 1.67:1, TDS orange400 은 1.92:1).
+   * 글자는 대비 4.5:1 을 넘는 진한 색을 따로 둔다. TDS orange 는 가장 진한 orange900
+   * 도 3.73:1 에 그쳐 글자로 쓸 수 없어, 같은 계열의 더 어두운 색을 쓴다.
+   */
+  /*
+   * 네 값은 디자인 시안에서 그대로 뽑았다. 팔레트에서 계산해 낸 값이 아니라
+   * 고른 색 자체가 기준이므로 hex 로 적어 둔다.
+   *
+   * 빈 물방울은 면이 아니라 테두리라 같은 값이라도 채운 쪽보다 약하게 읽힌다.
+   */
+  --color-droplet-moisture: #6aabd6;
+  --color-droplet-empty: #b8defa;
+  --color-droplet-oil: #c69e69;
+  --color-droplet-empty-oil: #f2ddb6;
+
+  --color-level-moisture-text: oklch(50% 0.08 242.749);
+  --color-level-oil-text: oklch(50.1% 0.077 52.531);
+
+  /*
+   * 목록에서 카드 사이를 가르는 선. `--color-border` 보다 연하다.
+   * 버튼 테두리와 탭 밑줄은 또렷해야 하므로 그쪽 토큰과 나눠 둔다.
+   */
+  --color-divider: #f1f2f4;
 
   /* 타이포 */
   --font-sans: var(--font-noto-sans-kr), sans-serif;
@@ -55,14 +79,23 @@
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
+  /*
+   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
+   * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
+   */
+  --transition-duration-drawer: 320ms;
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --transition-duration-press: 100ms;
-  --transition-duration-state: 380ms;
   --transition-duration-celebration: 520ms;
-  --ease-standard: cubic-bezier(0, 0, 0.2, 1);
+  /*
+   * 움직이는 것은 모두 이 커브를 쓴다. 예전에 쓰던 cubic-bezier(0, 0, 0.2, 1) 은
+   * 끝이 흐리게 끌려, 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다.
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
-  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-standard) forwards;
-  --animate-save-pop: save-pop var(--transition-duration-state) var(--ease-standard);
+  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
 }
 
 /*
@@ -92,13 +125,17 @@ body {
   transform-origin: top right;
   transition-property: opacity, transform;
   transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
+/*
+ * 메뉴는 트리거 아래에 뜬다. 위에서 내려오면 어디서 나왔는지 어긋나므로
+ * 트리거 쪽에서 자라 나오게 한다. transform-origin 도 그쪽을 가리킨다.
+ */
 .sort-dropdown-menu[data-open="false"] {
   pointer-events: none;
   opacity: 0;
-  transform: translateY(-4px) scale(0.98);
+  transform: translateY(4px) scale(0.98);
 }
 
 .sort-dropdown-menu[data-open="true"] {
@@ -106,21 +143,18 @@ body {
   transform: translateY(0) scale(1);
 }
 
+/*
+ * 눌림에 크기를 줄이지 않는다. 고르면 배경색이 크게 바뀌어 눌린 것이 이미 보이고,
+ * 필터 칩도 같은 이유로 색만 쓴다. 서로 다른 물성으로 반응하면 한 화면으로 읽히지 않는다.
+ */
 .sort-dropdown-trigger,
 .sort-dropdown-option {
-  transition-property: background-color, color, transform;
-  transition-duration:
-    var(--transition-duration-control-state), var(--transition-duration-control-state),
-    var(--transition-duration-press, 100ms);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-property: background-color, color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .sort-dropdown-trigger:hover,
-  .sort-dropdown-option[data-selected="false"]:hover {
-    transition-duration: 0s, 0s, var(--transition-duration-press, 100ms);
-  }
-
   .sort-dropdown-trigger:hover {
     background-color: var(--color-border);
   }
@@ -131,16 +165,255 @@ body {
   }
 }
 
+/*
+ * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
+ * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
+ */
+/*
+ * 시트와 딤은 `fixed` 라 뷰포트를 기준으로 자리를 잡는다. 스크롤을 잠그며 html 에
+ * 막대만큼 여백을 주면 본문은 그만큼 좁아진 영역의 가운데로 가는데, 이쪽은 그대로
+ * 남아 둘의 가운데가 어긋난다.
+ *
+ * 안쪽 여백으로는 상자만 좁아질 뿐 자리가 옮겨지지 않는다. 오른쪽 끝을 막대만큼
+ * 당겨 본문과 같은 영역 안에서 가운데를 잡게 한다.
+ */
+.bottom-sheet,
+.bottom-sheet-dim {
+  right: var(--scrollbar-width, 0px);
+}
+
+.bottom-sheet {
+  transform: translateY(100%);
+  transition: transform var(--transition-duration-drawer) var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.bottom-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+/*
+ * 끄는 동안에는 손가락을 그대로 따라와야 한다. 전환이 걸려 있으면 한 박자 늦게 따라와
+ * 붙잡고 있는 느낌이 사라진다. 놓는 순간 다시 전환이 살아나 제자리로 돌아간다.
+ */
+.bottom-sheet[data-dragging="true"] {
+  transition: none;
+}
+
+/*
+ * 딤은 시트보다 조금 빨리 자리를 잡는다. 같이 끌면 배경이 늦게 어두워져 시트만 떠 보인다.
+ */
+.bottom-sheet-dim {
+  opacity: 0;
+  transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.bottom-sheet-dim[data-open="true"] {
+  opacity: 1;
+}
+
+/*
+ * 줄이기를 켠 사용자에게는 자리를 옮기는 움직임만 걷어낸다. 아주 없애는 것이 아니라
+ * 옅어지고 짙어지는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+ *
+ * 시트도 전환을 지우지는 않는다. 지우면 끝났다는 신호가 오지 않아 DOM 에 남는다.
+ * 자리는 처음부터 제자리에 두고 opacity 만 잇는다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet {
+    transform: translateY(0);
+    opacity: 0;
+    transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  }
+
+  .bottom-sheet[data-open="true"] {
+    opacity: 1;
+  }
+
+  /*
+   * 끌어도 따라오지 않는다. 자리를 옮기지 않기로 했으므로 손가락도 따르지 않는다.
+   * 끄는 동안에는 인라인 transform 이 붙으므로 그것까지 눌러야 자리가 고정된다.
+   */
+  .bottom-sheet[data-dragging="true"],
+  .bottom-sheet[style] {
+    transform: translateY(0) !important;
+  }
+}
+
+/*
+ * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
+ * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
+ *
+ * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
+ * 없게 되고, 바탕이 흰색이 아닌 곳에서는 색도 맞지 않는다.
+ *
+ * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 밀어 놓고도 마지막 줄이 흐려 읽기 나쁘다.
+ */
+.edge-fade {
+  --fade-size: 24px;
+  --fade-start: 0px;
+  --fade-end: 0px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent 100%
+  );
+}
+
+/* 가로로 흐르는 줄은 지우는 방향도 가로다. */
+.edge-fade[data-axis="horizontal"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent 100%
+  );
+}
+
+.edge-fade[data-start="true"] {
+  --fade-start: var(--fade-size);
+}
+
+.edge-fade[data-end="true"] {
+  --fade-end: var(--fade-size);
+}
+
+/*
+ * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
+ * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
+ */
+.filter-chip {
+  transition-property: background-color, border-color, color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/*
+ * 홈 맨 위의 두 갈래 입구. 화면에서 가장 큰 누를 거리이고 한 번 들어가면 나가는 곳이라,
+ * 빠른 필터보다는 조금 더 또렷하게 답한다. 그래도 자리를 옮기는 폭은 1px 로 같다.
+ *
+ * 화살표는 이미 `여기로 간다` 를 뜻하고 있다. hover 에 그 화살표만 살짝 밀어
+ * 카드가 말하던 것을 그대로 확인해 준다.
+ */
+.action-card {
+  transition-property: transform, box-shadow, filter;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.action-card-arrow {
+  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  }
+
+  /*
+   * 어두운 카드는 검은 그림자가 카드에 묻혀 뜬 것이 보이지 않는다.
+   * 같은 자리에 더 진하게 깔아 밝은 카드와 같은 만큼 떠 보이게 한다.
+   */
+  .action-card[data-tone="dark"]:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.24);
+  }
+
+  .action-card:hover .action-card-arrow {
+    transform: translateX(2px);
+  }
+}
+
+/*
+ * 눌림은 카드를 줄이지 않고 살짝 어둡게만 한다.
+ * 줄이면 안에 든 화살표까지 함께 줄어 안쪽으로 딸려 들어가 보인다.
+ * 카드가 커서 조금만 줄여도 눈에 띄는 자리라, 밝기로 답하는 편이 조용하다.
+ */
+.action-card:active {
+  transform: translateY(0);
+  box-shadow: none;
+  filter: brightness(0.97);
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/*
+ * 어두운 카드는 어둡게 해도 눈에 잡히지 않는다(#202124 는 3% 낮춰야 한 단계 움직인다).
+ * 검은 바탕에서는 밝히는 쪽이 눌린 것으로 읽힌다.
+ */
+.action-card[data-tone="dark"]:active {
+  filter: brightness(1.35);
+}
+
+/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
+.action-card:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * 홈의 빠른 필터 아이콘. 여섯 개가 한 화면에 늘 떠 있어 자주 스치는 자리라,
+ * 눈에 걸리지 않을 만큼만 움직인다. 1px 뜨고 그림자가 옅게 지는 정도다.
+ *
+ * 크게 키우거나 빛나게 하면 여섯 개가 번갈아 반응할 때 화면이 소란해진다.
+ */
+.quick-filter-tile {
+  transition-property: transform, box-shadow;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .quick-filter-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
+  }
+}
+
+/*
+ * 누름은 hover 와 반대로 가라앉는다. 마우스가 없는 환경에도 남겨 두어
+ * 손가락으로도 눌린 것이 보이게 한다.
+ */
+.quick-filter-tile:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
+.quick-filter-link:focus-visible {
+  outline: none;
+}
+
+.quick-filter-link:focus-visible .quick-filter-tile {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * 가로로 흐르는 줄에서 스크롤막대를 감춘다. 칩 줄은 손가락으로 밀어 보는 곳이라
+ * 막대가 칩 아래를 가로질러 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다.
+ *
+ * Tailwind 코어에는 이 유틸리티가 없다. 규칙 하나 때문에 플러그인을 들이지 않는다.
+ */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .sort-dropdown-chevron {
-  transition: transform var(--transition-duration-control-state) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 .sort-dropdown-chevron[data-open="true"] {
   transform: rotate(180deg);
-}
-
-.sort-dropdown-option:active {
-  transform: scale(0.98);
 }
 
 /*
@@ -159,33 +432,73 @@ body {
 }
 
 /* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
-@keyframes save-pop {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.25);
-  }
-  100% {
-    transform: scale(1);
-  }
+/*
+ * 담기는 순간 아이콘이 살짝 부푼다.
+ *
+ * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
+ * 다시 눌리면 0 부터 다시 시작해 튄다. 전환은 지금 크기에서 이어진다.
+ *
+ * 부푼 자리에 머무르지 않고 곧바로 제자리로 돌아온다. 커지는 쪽만 짧게 두어
+ * 눌린 순간이 또렷하고, 돌아오는 쪽은 조금 길게 두어 갑자기 꺼지지 않는다.
+ */
+.save-pop {
+  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.save-pop[data-popped="true"] {
+  transform: scale(1.12);
+  transition-duration: var(--transition-duration-press, 100ms);
 }
 
 /* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-spark-burst,
-  .animate-save-pop {
+  .animate-spark-burst {
     animation: none;
   }
 
-  .sort-dropdown-menu,
-  .sort-dropdown-trigger,
-  .sort-dropdown-chevron,
-  .sort-dropdown-option {
+  /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
+  .save-pop[data-popped="true"] {
+    transform: none;
+  }
+
+  /*
+   * 줄이기는 아주 없애는 것이 아니라 덜고 부드럽게 하는 것이다. 자리를 옮기는 움직임만
+   * 걷어내고 색이 바뀌는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+   */
+  .sort-dropdown-menu {
+    transition-property: opacity;
+  }
+
+  .sort-dropdown-menu[data-open="false"] {
+    transform: none;
+  }
+
+  .sort-dropdown-chevron {
+    transform: none;
+  }
+
+  /*
+   * 자리를 옮기는 움직임만 걷어 낸다. 그림자는 남겨 두어 어디에 손이 올라가 있는지는
+   * 그대로 알 수 있게 한다.
+   */
+  .quick-filter-tile {
     transition-duration: 0s;
   }
 
-  .sort-dropdown-option:active {
+  .quick-filter-tile:hover,
+  .quick-filter-tile:active {
+    transform: none;
+  }
+
+  /* 두 입구도 같다. 그림자는 남기고 자리를 옮기는 것만 걷어낸다. */
+  .action-card,
+  .action-card-arrow {
+    transition-duration: 0s;
+  }
+
+  .action-card:hover,
+  .action-card:active,
+  .action-card:hover .action-card-arrow {
     transform: none;
   }
 }

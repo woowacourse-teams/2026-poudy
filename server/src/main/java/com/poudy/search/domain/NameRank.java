@@ -1,4 +1,4 @@
-package com.poudy.common.domain;
+package com.poudy.search.domain;
 
 public record NameRank(NameMatch match, boolean combined) implements Comparable<NameRank> {
 

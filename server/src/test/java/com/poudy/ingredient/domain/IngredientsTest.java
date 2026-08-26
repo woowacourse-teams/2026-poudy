@@ -1,6 +1,7 @@
 package com.poudy.ingredient.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -64,6 +65,30 @@ class IngredientsTest {
 
         assertThat(found.search("글리")).map(Ingredient::id).containsExactly(10L);
         assertThat(found.search("향료")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("요청한 페이지의 성분과 전체 개수를 함께 반환한다")
+    void pagesIngredients() {
+        Ingredients ingredients = new Ingredients(
+                List.of(
+                        ingredient(10L, "글리세린", "Glycerin"),
+                        ingredient(20L, "향료", "Fragrance"),
+                        ingredient(30L, "정제수", "Water")));
+
+        IngredientPage page = ingredients.page(1, 2);
+
+        assertThat(page.items()).map(Ingredient::id).containsExactly(30L);
+        assertThat(page.totalElements()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("페이지 조건이 올바르지 않으면 거절한다")
+    void rejectsInvalidPageCondition() {
+        Ingredients ingredients = new Ingredients(List.of());
+
+        assertThatThrownBy(() -> ingredients.page(-1, 20)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ingredients.page(0, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

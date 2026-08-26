@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { fetchIngredients } from "@/lib/api/products";
+import { fetchIngredientsByIds } from "@/lib/api/products";
 
 /**
  * 조건에 담긴 성분 ID 의 이름을 가져온다.
@@ -17,7 +17,9 @@ export const useIngredientNames = (ids: readonly number[]): ReadonlyMap<number, 
 
     const controller = new AbortController();
 
-    fetchIngredients({ ingredientIds: key.split(",").map(Number) })
+    const ingredientIds = key.split(",").map(Number);
+
+    fetchIngredientsByIds(ingredientIds)
       .then((response) => {
         if (controller.signal.aborted) return;
         setNames(new Map(response.items.map((item) => [item.id, item.koreanName])));

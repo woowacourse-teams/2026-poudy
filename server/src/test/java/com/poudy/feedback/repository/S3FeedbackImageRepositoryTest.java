@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -307,15 +309,18 @@ class S3FeedbackImageRepositoryTest {
         }
     }
 
-    @Test
-    @DisplayName("오래된 claim의 JSON hash가 일치하면 pending을 소비하고 claim을 정리한다")
-    void reconcilesCommittedClaim() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName("현재 및 배포 전에 저장된 JSON을 오래된 claim의 commit으로 인식한다")
+    void reconcilesCommittedClaim(boolean legacyKey) throws Exception {
         UUID feedbackId = UUID.randomUUID();
         UUID imageId = UUID.randomUUID();
         byte[] feedbackDocument = "{\"feedbackId\":\"committed\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         String feedbackSha = S3FeedbackObjectStore.sha256(feedbackDocument);
         String claimKey = "poudy/feedback/claims/" + imageId + ".json";
-        String feedbackKey = "poudy/feedback/" + feedbackId + ".json";
+        String feedbackKey = legacyKey
+                ? "poudy/feedback/" + feedbackId + ".json"
+                : "poudy/feedback/" + feedbackId + "/feedback.json";
         byte[] claimDocument = objectMapper.writeValueAsBytes(
                 java.util.Map.of(
                         "feedbackId",
@@ -366,11 +371,15 @@ class S3FeedbackImageRepositoryTest {
     @DisplayName("고아 이미지 정리는 전체 목록에서 의견 문서를 함께 판정한다")
     void cleansOrphanedImagesWithoutPerImageListRequests() {
         UUID existingFeedbackId = UUID.randomUUID();
+        UUID legacyFeedbackId = UUID.randomUUID();
         UUID orphanedFeedbackId = UUID.randomUUID();
         UUID existingImageId = UUID.randomUUID();
+        UUID legacyImageId = UUID.randomUUID();
         UUID orphanedImageId = UUID.randomUUID();
-        String existingFeedbackKey = "poudy/feedback/" + existingFeedbackId + ".json";
+        String existingFeedbackKey = "poudy/feedback/" + existingFeedbackId + "/feedback.json";
+        String legacyFeedbackKey = "poudy/feedback/" + legacyFeedbackId + ".json";
         String existingImageKey = "poudy/feedback/" + existingFeedbackId + "/images/" + existingImageId + ".png";
+        String legacyImageKey = "poudy/feedback/" + legacyFeedbackId + "/images/" + legacyImageId + ".jpg";
         String orphanedImageKey = "poudy/feedback/" + orphanedFeedbackId + "/images/" + orphanedImageId + ".jpg";
         Instant old = NOW.minus(S3FeedbackImageRepository.CLAIM_GRACE_PERIOD).minusSeconds(1);
 
@@ -383,7 +392,9 @@ class S3FeedbackImageRepositoryTest {
                 return ListObjectsV2Response.builder()
                         .contents(
                                 S3Object.builder().key(existingFeedbackKey).lastModified(old).build(),
+                                S3Object.builder().key(legacyFeedbackKey).lastModified(old).build(),
                                 S3Object.builder().key(existingImageKey).lastModified(old).build(),
+                                S3Object.builder().key(legacyImageKey).lastModified(old).build(),
                                 S3Object.builder().key(orphanedImageKey).lastModified(old).build())
                         .build();
             }
@@ -397,6 +408,8 @@ class S3FeedbackImageRepositoryTest {
                 argThat((DeleteObjectRequest request) -> orphanedImageKey.equals(request.key())));
         verify(s3Client, never()).deleteObject(
                 argThat((DeleteObjectRequest request) -> existingImageKey.equals(request.key())));
+        verify(s3Client, never()).deleteObject(
+                argThat((DeleteObjectRequest request) -> legacyImageKey.equals(request.key())));
         verify(s3Client, times(1)).listObjectsV2(
                 argThat((ListObjectsV2Request request) -> "poudy/feedback/".equals(request.prefix())));
     }

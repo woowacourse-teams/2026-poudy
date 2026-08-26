@@ -7,13 +7,13 @@ import type {
   ExcludeCodeResponse,
   ProductResponse,
 } from "@poudy/api/api.zod";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar, type FilterChipItem } from "@/components/ui/FilterChipBar";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
-import type { ListSurface } from "@/lib/analytics/events";
+import type { ListSurface, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { fetchProducts } from "@/lib/api/products";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
@@ -37,11 +37,26 @@ type ProductListProps = {
   readonly surface?: ListSurface;
 };
 
-const chipsOf = (filter: Filter): readonly FilterChipItem[] => [
+/**
+ * 성분 칩의 숫자. 빠른 필터는 성분을 묶어 둔 것이라 묶음 하나가 아니라 그 안의 성분 수로 센다.
+ * 낱개로 고른 성분과 겹칠 수 있으므로 한 번만 세도록 모아서 헤아린다.
+ */
+const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): number => {
+  const picked = new Set<number>(filter.excludeIngredientIds);
+
+  for (const code of excludeCodes) {
+    if (!filter.excludeCodes.includes(code.code)) continue;
+    for (const ingredient of code.ingredients) picked.add(ingredient.id);
+  }
+
+  return picked.size;
+};
+
+const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): readonly FilterChipItem[] => [
   {
     id: "ingredient",
     label: "성분",
-    count: filter.excludeCodes.length + filter.excludeIngredientIds.length,
+    count: countIngredients(filter, excludeCodes),
   },
   { id: "category", label: "카테고리", count: filter.categoryIds.length },
   { id: "brand", label: "브랜드", count: filter.brandIds.length },
@@ -80,13 +95,45 @@ export function ProductList({
   };
 
   // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
-  const filter = { ...urlFilter, ...fixedFilter };
+  const filter = useMemo(() => ({ ...urlFilter, ...fixedFilter }), [fixedFilter, urlFilter]);
 
-  const { items, brands: matchedBrands, total, page, hasNext, loadNext, loading } = useProductPages(filter);
+  const {
+    key,
+    items,
+    brands: matchedBrands,
+    total,
+    page,
+    hasNext,
+    loadNext,
+    loading,
+    loaded,
+  } = useProductPages(filter);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
 
   const empty = items.length === 0 && !loading;
   const conditionCount = countConditions(filter);
+  const ingredientConditionCount =
+    filter.includeIngredientIds.length + filter.excludeIngredientIds.length + filter.excludeCodes.length;
+  const searchMode: SearchMode | undefined = filter.keyword
+    ? "product"
+    : ingredientConditionCount > 0
+      ? "ingredient"
+      : undefined;
+  const trackedResultKey = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!searchMode || !loaded || loading || page !== 0 || trackedResultKey.current === key) return;
+    trackedResultKey.current = key;
+
+    track("search_results_viewed", {
+      mode: searchMode,
+      ...(filter.keyword ? { query: filter.keyword } : {}),
+      result_count: total,
+      include_count: filter.includeIngredientIds.length,
+      exclude_count: filter.excludeIngredientIds.length,
+      exclude_group_count: filter.excludeCodes.length,
+    });
+  }, [filter, key, loaded, loading, page, searchMode, total]);
 
   /**
    * 지금 조건에 걸린 브랜드만 고르게 한다. 결과가 0 건인 브랜드가 목록에서 빠진다.
@@ -112,7 +159,7 @@ export function ProductList({
 
       <div className="bg-white px-4">
         <FilterChipBar
-          chips={chipsOf(filter).filter((chip) => !hiddenChips.includes(chip.id))}
+          chips={chipsOf(filter, excludeCodes).filter((chip) => !hiddenChips.includes(chip.id))}
           onOpen={(id) => setOpenSheet(id as SheetKind)}
         />
         <SortHeader total={total} sort={filter.sort} onChangeSort={onChangeSort} />
@@ -122,10 +169,15 @@ export function ProductList({
         {empty ? (
           <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-divider">
             {items.map((product) => (
               <li key={product.id}>
-                <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />
+                <ProductCard
+                  product={product}
+                  saved={isSaved(product.id)}
+                  onToggleSave={onToggleSave}
+                  entryPoint={searchMode ? "search_results" : undefined}
+                />
               </li>
             ))}
           </ul>
@@ -144,8 +196,8 @@ export function ProductList({
           if (openSheet) {
             track("filter_applied", {
               filter_type: FILTER_TYPES[openSheet],
-              filter_value_count: chipsOf({ ...filter, ...changed }).find((chip) => chip.id === openSheet)?.count ?? 0,
-              result_count: total,
+              filter_value_count:
+                chipsOf({ ...filter, ...changed }, excludeCodes).find((chip) => chip.id === openSheet)?.count ?? 0,
             });
           }
         }}
@@ -173,13 +225,24 @@ function FilterSummary({ filter }: { readonly filter: Filter }) {
   if (count === 0) return null;
 
   return (
-    <section className="flex flex-col gap-1 px-4 py-2">
-      <div className="flex items-center gap-1.5">
-        <h2 className="text-[13px] font-bold text-[#212124]">탐색 조건</h2>
-        <span className="rounded-full bg-[#F2F3F6] px-[7px] text-[11px] font-bold text-[#555D68]">{count}</span>
-      </div>
-      <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter, names)}</p>
-    </section>
+    <>
+      <section className="flex flex-col gap-1 px-4 py-2">
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-[13px] font-bold text-[#212124]">탐색 조건</h2>
+          <span className="rounded-full bg-[#F2F3F6] px-[7px] text-[11px] font-bold text-[#555D68]">{count}</span>
+        </div>
+        <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter, names)}</p>
+      </section>
+
+      {/*
+        조건 요약과 칩 줄은 하는 일이 달라 선 하나로는 덜 갈린다. 좌우 끝까지 깔리는
+        띠로 나눈다. 요약이 없으면 나눌 것도 없으므로 여기에 함께 둔다.
+        뜻을 전하지 않는 장식이라 보조 기술에서는 감춘다.
+      */}
+      <div className="h-2 bg-surface" aria-hidden="true" />
+      {/* 띠와 칩 줄이 붙지 않게 아래로 한 칸 띄운다. */}
+      <div className="h-2" aria-hidden="true" />
+    </>
   );
 }
 
@@ -192,6 +255,8 @@ type PageState = {
   readonly total: number;
   readonly hasNext: boolean;
   readonly loading: boolean;
+  /** 현재 조건의 API 응답을 성공적으로 받은 적이 있는지. 실패를 0건으로 기록하지 않는다. */
+  readonly loaded: boolean;
 };
 
 const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
@@ -201,6 +266,7 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   total: 0,
   hasNext: false,
   loading: true,
+  loaded: false,
 };
 
 /** 조건이 바뀌면 목록을 처음부터 다시 쌓는다. */
@@ -231,6 +297,7 @@ function useProductPages(filter: Filter) {
             total: response.pagination.totalElements,
             hasNext: response.pagination.hasNext,
             loading: false,
+            loaded: true,
           };
         });
       })

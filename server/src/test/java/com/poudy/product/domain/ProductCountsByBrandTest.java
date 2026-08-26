@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +19,8 @@ class ProductCountsByBrandTest {
         Brands brands = new Brands(List.of(brand(2L, "메디큐브"), brand(1L, "닥터지")));
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
-        assertThat(productCounts.summariesOf(brands.sortedByName()))
-                .extracting(BrandSummary::id, BrandSummary::productCount)
+        assertThat(productCounts.countsOf(brands.sortedByName()))
+                .extracting(BrandProductCount::id, BrandProductCount::productCount)
                 .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
     }
 
@@ -30,8 +29,8 @@ class ProductCountsByBrandTest {
     void summarizesUncountedBrandWithZero() {
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
-        assertThat(productCounts.summariesOf(List.of(brand(999L, "없는 브랜드"))))
-                .extracting(BrandSummary::productCount)
+        assertThat(productCounts.countsOf(List.of(brand(999L, "없는 브랜드"))))
+                .extracting(BrandProductCount::productCount)
                 .containsExactly(0L);
     }
 
@@ -40,8 +39,8 @@ class ProductCountsByBrandTest {
     void summarizesEveryBrandWithZeroForMissingCounts() {
         ProductCountsByBrand productCounts = new ProductCountsByBrand(null);
 
-        assertThat(productCounts.summariesOf(List.of(brand(1L, "닥터지"), brand(2L, "메디큐브"))))
-                .extracting(BrandSummary::productCount)
+        assertThat(productCounts.countsOf(List.of(brand(1L, "닥터지"), brand(2L, "메디큐브"))))
+                .extracting(BrandProductCount::productCount)
                 .containsExactly(0L, 0L);
     }
 

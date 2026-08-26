@@ -135,7 +135,7 @@ nginx가 먼저 차단한 413은 Spring 예외 처리기를 거치지 않으므�
 poudy/feedback/pending/{imageId}.jpg|png
 poudy/feedback/claims/{imageId}.json
 poudy/feedback/{feedbackId}/images/{imageId}.jpg|png
-poudy/feedback/{feedbackId}.json
+poudy/feedback/{feedbackId}/feedback.json
 ```
 
 - pending 이미지의 `Last-Modified + 24h`를 논리적 만료 시각으로 사용한다. 만료된 객체는
@@ -189,7 +189,7 @@ poudy/feedback/{feedbackId}.json
 - 프로세스 종료나 보상 S3 장애에 대비해 claim을 즉시 지우지 않는다. 각 S3 호출의 15초
   timeout과 5장 등록·보상의 제한된 순차 호출 수보다 충분히 긴 10분이 지난 claim만 주기적으로
   조정한다. 나이는 앱 시계가 아니라 claim 객체의 S3 `Last-Modified`로 판정한다.
-- claim 조정기는 기본 1분 주기로 exact-prefix list에서 피드백 JSON의 존재를 확인하고 GET한 문서의 SHA-256이 claim과
+- claim 조정기는 기본 5분 주기로 exact-prefix list에서 피드백 JSON의 존재를 확인하고 GET한 문서의 SHA-256이 claim과
   같은 경우에만 commit으로 판정한다. commit이면 pending 부재를 확인한 뒤 claim을 지우고,
   JSON 부재가 확인되면 최종 객체를 제거한 뒤 claim을 지운다. `AccessDenied`, timeout, hash
   불일치에서는 아무것도 삭제하지 않고 다음 주기로 넘긴다. 작업은 중복 실행해도 같은 결과가
@@ -268,8 +268,9 @@ lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 
 수동 삭제는 최소 주 1회 실행한다. 실행일 사이의 최대 7일을 고려해 피드백 JSON의 S3
 `Last-Modified`가 83일 이상인 접수를 대상으로 삼고, 같은 `feedbackId`의
-`poudy/feedback/{feedbackId}/images/` 객체와 `poudy/feedback/{feedbackId}.json`을 모두
-삭제한다. 이 기준은 접수일로부터 90일을 넘기지 않게 한다. 버전 관리가 비활성화되어 일반
+`poudy/feedback/{feedbackId}/` prefix의 객체를 모두 삭제한다. 구조 변경 전에 저장된
+`poudy/feedback/{feedbackId}.json`이 있으면 함께 삭제한다. 이 기준은 접수일로부터 90일을
+넘기지 않게 한다. 버전 관리가 비활성화되어 일반
 삭제가 곧 영구 삭제이며 이전 버전과 delete marker를 따로 정리하지 않는다. 구체적인 실행·검증
 절차와 기록 항목은 `deploy/README.md`를 권위 원천으로 둔다.
 

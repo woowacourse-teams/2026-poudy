@@ -1,9 +1,6 @@
 package com.poudy.category.controller.dto;
 
-import com.poudy.category.domain.Categories;
-import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CountedCategory;
-import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.domain.CategoryProductCount;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -14,28 +11,15 @@ public record CategoryResponse(
         @NotNull List<CategoryChildResponse> children,
         @NotNull @Schema(example = "51") Long productCount) {
 
-    public static CategoryResponse from(
-            Category parentCategory,
-            Categories categories,
-            ProductCountsByCategory productCounts) {
-        List<Category> childCategories = categories.childrenOf(parentCategory);
-        List<CategoryChildResponse> childResponses = childCategories.stream()
-                .map(child -> CategoryChildResponse.from(child, productCounts))
-                .toList();
-        long productCount = productCounts.countOf(parentCategory);
-
-        return new CategoryResponse(parentCategory.id(), parentCategory.name(), childResponses, productCount);
-    }
-
-    public static CategoryResponse from(CountedCategory countedCategory) {
-        List<CategoryChildResponse> childResponses = countedCategory.children().stream()
+    public static CategoryResponse from(CategoryProductCount categoryProductCount) {
+        List<CategoryChildResponse> childResponses = categoryProductCount.children().stream()
                 .map(CategoryChildResponse::from)
                 .toList();
 
         return new CategoryResponse(
-                countedCategory.id(),
-                countedCategory.name(),
+                categoryProductCount.id(),
+                categoryProductCount.name(),
                 childResponses,
-                countedCategory.productCount());
+                categoryProductCount.productCount());
     }
 }

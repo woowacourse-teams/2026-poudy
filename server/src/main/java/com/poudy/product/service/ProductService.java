@@ -1,21 +1,15 @@
 package com.poudy.product.service;
 
-import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandDetail;
-import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
-import com.poudy.common.dto.PaginationRequest;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
-import com.poudy.product.controller.dto.ProductFilterRequest;
-import com.poudy.product.controller.dto.ProductSortRequest;
 import com.poudy.product.domain.IngredientFilter;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.ProductCountsByCategory;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestionPage;
 import com.poudy.product.domain.Products;
 import com.poudy.product.domain.sensory.MoistureLevel;
@@ -27,49 +21,36 @@ import org.springframework.stereotype.Service;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final Brands brands;
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
 
     public ProductService(
             ProductRepository productRepository,
-            Brands brands,
             Categories categories,
             ExcludeCodeIngredients excludeCodeIngredients) {
         this.productRepository = productRepository;
-        this.brands = brands;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
     }
 
     public ProductPage findProducts(
-            ProductFilterRequest request,
-            ProductSortRequest sort,
-            PaginationRequest pagination) {
+            ProductQuery query,
+            ProductSort sort,
+            int page,
+            int size) {
         return products().find(
-                filterOf(request),
-                sort.sort(),
-                pagination.page(),
-                pagination.size());
+                filterOf(query),
+                sort,
+                page,
+                size);
     }
 
-    public long countProducts(ProductFilterRequest request) {
-        return products().count(filterOf(request));
+    public long countProducts(ProductQuery query) {
+        return products().count(filterOf(query));
     }
 
-    public ProductSuggestionPage suggestProducts(String keyword, PaginationRequest pagination) {
-        return products().suggest(keyword, pagination.page(), pagination.size());
-    }
-
-    public ProductCountsByCategory countsByCategory() {
-        return products().countsByCategory();
-    }
-
-    public BrandDetail findBrandDetail(Long brandId) {
-        Brand brand = brands.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
-
-        return products().brandDetailOf(brand, categories);
+    public ProductSuggestionPage suggestProducts(String keyword, int page, int size) {
+        return products().suggest(keyword, page, size);
     }
 
     public ProductDetail findDetail(Long productId) {
@@ -86,18 +67,18 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    private ProductFilter filterOf(ProductFilterRequest request) {
+    private ProductFilter filterOf(ProductQuery query) {
         IngredientFilter ingredientFilter = IngredientFilter.of(
-                request.includeIngredientIds(),
-                request.excludeIngredientIds(),
-                excludeCodeIngredients.idsOf(request.excludeCodes()));
+                query.includeIngredientIds(),
+                query.excludeIngredientIds(),
+                excludeCodeIngredients.idsOf(query.excludeCodes()));
 
         return new ProductFilter(
-                request.keyword(),
-                request.categoryIds(),
-                request.brandIds(),
-                request.moistureLevel().stream().map(MoistureLevel::new).toList(),
-                request.oilLevel().stream().map(OilLevel::new).toList(),
+                query.keyword(),
+                query.categoryIds(),
+                query.brandIds(),
+                query.moistureLevels().stream().map(MoistureLevel::new).toList(),
+                query.oilLevels().stream().map(OilLevel::new).toList(),
                 ingredientFilter);
     }
 }

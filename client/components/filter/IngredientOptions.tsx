@@ -8,13 +8,13 @@ import { ConditionButton } from "@/components/ui/ConditionButton";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
-import { fetchIngredients } from "@/lib/api/products";
+import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
-  const response = await fetchIngredients({ keyword });
+  const response = await fetchIngredientSuggestions(keyword);
   return response.items;
 };
 
@@ -39,6 +39,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
     const had = draft[key].includes(item.id);
 
     track("ingredient_condition_toggled", {
+      target_type: "ingredient",
       ingredient_id: item.id,
       condition: key === "includeIngredientIds" ? "include" : "exclude",
       action: had ? "remove" : "add",
@@ -62,16 +63,31 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
     });
   };
 
-  const removeIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", id: number) =>
+  const removeIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", id: number) => {
+    track("ingredient_condition_toggled", {
+      target_type: "ingredient",
+      ingredient_id: id,
+      condition: key === "includeIngredientIds" ? "include" : "exclude",
+      action: "remove",
+      surface: "filter_sheet",
+    });
     setDraft({ ...draft, [key]: draft[key].filter((value) => value !== id) });
+  };
 
-  const toggleCode = (code: ExcludeCode) =>
+  const toggleCode = (code: ExcludeCode) => {
+    const had = draft.excludeCodes.includes(code);
+    track("ingredient_condition_toggled", {
+      target_type: "exclude_group",
+      exclude_code: code,
+      condition: "exclude",
+      action: had ? "remove" : "add",
+      surface: "filter_sheet",
+    });
     setDraft({
       ...draft,
-      excludeCodes: draft.excludeCodes.includes(code)
-        ? draft.excludeCodes.filter((item) => item !== code)
-        : [...draft.excludeCodes, code],
+      excludeCodes: had ? draft.excludeCodes.filter((item) => item !== code) : [...draft.excludeCodes, code],
     });
+  };
 
   return (
     <>

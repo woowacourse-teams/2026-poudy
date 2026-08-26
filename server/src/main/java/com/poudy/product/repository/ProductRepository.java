@@ -7,7 +7,6 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.ProductCountsByBrand;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
@@ -258,7 +257,4 @@ public class ProductRepository {
         return products.countContaining(ingredientId);
     }
 
-    public ProductCountsByBrand findProductCountsByBrand() {
-        return products.productCountsByBrand();
-    }
 }

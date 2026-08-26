@@ -2,10 +2,10 @@ package com.poudy.product.domain;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CountedCategory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class ProductCountsByCategory {
 
@@ -19,19 +19,32 @@ public class ProductCountsByCategory {
         return countsByCategoryId.getOrDefault(category.id(), 0L);
     }
 
-    public List<CountedCategory> nonEmptyCategoriesOf(Categories categories) {
+    public List<CategoryProductCount> categoriesOf(Categories categories) {
+        return categoriesOf(categories, category -> true);
+    }
+
+    public List<CategoryProductCount> nonEmptyCategoriesOf(Categories categories) {
+        return categoriesOf(categories, category -> countOf(category) > 0);
+    }
+
+    private List<CategoryProductCount> categoriesOf(
+            Categories categories,
+            Predicate<Category> included) {
         return categories.parents().stream()
-                .filter(parent -> countOf(parent) > 0)
-                .map(parent -> countedOf(parent, categories))
+                .filter(included)
+                .map(parent -> countedOf(parent, categories, included))
                 .toList();
     }
 
-    private CountedCategory countedOf(Category parent, Categories categories) {
-        List<CountedCategory> children = categories.childrenOf(parent).stream()
-                .filter(child -> countOf(child) > 0)
-                .map(child -> new CountedCategory(child, countOf(child), List.of()))
+    private CategoryProductCount countedOf(
+            Category parent,
+            Categories categories,
+            Predicate<Category> included) {
+        List<CategoryProductCount> children = categories.childrenOf(parent).stream()
+                .filter(included)
+                .map(child -> new CategoryProductCount(child, countOf(child), List.of()))
                 .toList();
 
-        return new CountedCategory(parent, countOf(parent), children);
+        return new CategoryProductCount(parent, countOf(parent), children);
     }
 }

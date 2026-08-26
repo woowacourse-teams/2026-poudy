@@ -1,6 +1,6 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -59,6 +59,20 @@ public class Ingredients {
         return searchable.stream()
                 .map(SearchableIngredient::ingredient)
                 .toList();
+    }
+
+    public IngredientPage page(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
+        }
+
+        List<Ingredient> items = searchable.stream()
+                .skip((long) page * size)
+                .limit(size)
+                .map(SearchableIngredient::ingredient)
+                .toList();
+
+        return new IngredientPage(items, searchable.size());
     }
 
     public Ingredients findAllById(Collection<Long> ids) {

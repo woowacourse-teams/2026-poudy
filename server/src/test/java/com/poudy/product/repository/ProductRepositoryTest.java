@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
@@ -13,6 +12,7 @@ import com.poudy.common.json.JsonDataReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
@@ -99,8 +99,8 @@ class ProductRepositoryTest {
                 new Brand(3L, "가 브랜드", null, null),
                 new Brand(999L, "없는 브랜드", null, null));
 
-        assertThat(productRepository.findProductCountsByBrand().summariesOf(brands))
-                .extracting(BrandSummary::id, BrandSummary::productCount)
+        assertThat(productRepository.findAll().productCountsByBrand(brands))
+                .extracting(BrandProductCount::id, BrandProductCount::productCount)
                 .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
     }
 

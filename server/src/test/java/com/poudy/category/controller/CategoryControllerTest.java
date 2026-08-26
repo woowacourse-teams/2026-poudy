@@ -6,11 +6,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.poudy.category.controller.dto.CategoryListResponse;
-import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.category.service.CategoryService;
-import com.poudy.product.domain.ProductCountsByCategory;
-import com.poudy.product.service.ProductService;
+import com.poudy.product.domain.CategoryProductCount;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,21 +23,17 @@ class CategoryControllerTest {
     void findsCategories() {
         Category skinCare = new Category(1L, null, "스킨케어", 0);
         Category toner = new Category(2L, 1L, "토너", 1);
-        Categories categories = Categories.from(List.of(skinCare, toner));
-        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
-        given(productCounts.countOf(skinCare)).willReturn(1L);
-        given(productCounts.countOf(toner)).willReturn(1L);
+        CategoryProductCount tonerCount = new CategoryProductCount(toner, 1L, List.of());
+        List<CategoryProductCount> productCounts = List.of(
+                new CategoryProductCount(skinCare, 1L, List.of(tonerCount)));
         CategoryService categoryService = mock(CategoryService.class);
-        ProductService productService = mock(ProductService.class);
-        given(categoryService.findCategories()).willReturn(categories);
-        given(productService.countsByCategory()).willReturn(productCounts);
-        CategoryController controller = new CategoryController(categoryService, productService);
+        given(categoryService.findCategories()).willReturn(productCounts);
+        CategoryController controller = new CategoryController(categoryService);
 
         ResponseEntity<CategoryListResponse> response = controller.findCategories();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(CategoryListResponse.from(categories, productCounts));
+        assertThat(response.getBody()).isEqualTo(CategoryListResponse.from(productCounts));
         verify(categoryService).findCategories();
-        verify(productService).countsByCategory();
     }
 }

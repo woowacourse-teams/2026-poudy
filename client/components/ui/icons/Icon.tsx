@@ -19,6 +19,12 @@ type IconProps = {
  * 스프라이트의 아이콘을 참조한다.
  * 뜻은 옆의 글자나 버튼 이름이 전하므로 그림 자체는 보조 기술에서 감춘다.
  */
+/**
+ * 물방울은 테두리까지 path 안에 담겨 있어 선으로 그리지 않는다.
+ * 선을 함께 그리면 이미 그려진 테두리 위에 한 겹이 더 얹혀 뭉개진다.
+ */
+const FILL_ONLY: ReadonlySet<IconId> = new Set(["droplet", "droplet-solid"]);
+
 export function Icon({
   name,
   size = 20,
@@ -29,6 +35,8 @@ export function Icon({
   strokeWidth = 1.5,
   className,
 }: IconProps) {
+  const fillOnly = FILL_ONLY.has(name);
+
   return (
     <svg
       width={width ?? size}
@@ -38,11 +46,11 @@ export function Icon({
       className={className}
       aria-hidden="true"
       focusable="false"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill={fillOnly || filled ? "currentColor" : "none"}
+      stroke={fillOnly ? undefined : "currentColor"}
+      strokeWidth={fillOnly ? undefined : strokeWidth}
+      strokeLinecap={fillOnly ? undefined : "round"}
+      strokeLinejoin={fillOnly ? undefined : "round"}
     >
       <use href={`#icon-${name}`} />
     </svg>

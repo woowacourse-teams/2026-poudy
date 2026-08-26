@@ -39,14 +39,18 @@ public class ProductController {
             @Valid @ModelAttribute ProductFilterRequest filter,
             @Valid @ModelAttribute ProductSortRequest sort,
             @Valid @ModelAttribute PaginationRequest pagination) {
-        ProductPage products = productService.findProducts(filter, sort, pagination);
+        ProductPage products = productService.findProducts(
+                filter.toQuery(),
+                sort.sort(),
+                pagination.page(),
+                pagination.size());
         return ResponseEntity.ok(ProductPageResponse.from(products, pagination));
     }
 
     @Operation(summary = "제품 조회 결과 개수 조회", description = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.")
     @GetMapping("/count")
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter)));
+        return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter.toQuery())));
     }
 
     @Operation(summary = "제품 검색 제안 조회", description = "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 "
@@ -58,7 +62,10 @@ public class ProductController {
             @Valid @ModelAttribute PaginationRequest pagination) {
         return ResponseEntity.ok(
                 ProductSuggestionPageResponse.from(
-                        productService.suggestProducts(search.keyword(), pagination),
+                        productService.suggestProducts(
+                                search.keyword(),
+                                pagination.page(),
+                                pagination.size()),
                         pagination));
     }
 
