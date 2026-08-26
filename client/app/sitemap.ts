@@ -41,7 +41,7 @@ const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
     const responses = await Promise.allSettled(
       batches
         .slice(index, index + INGREDIENT_BATCH_CONCURRENCY)
-        .map((ingredientIds) => fetchIngredients({ ingredientIds })),
+        .map((ingredientIds) => fetchIngredients({ ingredientIds, size: INGREDIENT_BATCH_SIZE })),
     );
 
     entries.push(

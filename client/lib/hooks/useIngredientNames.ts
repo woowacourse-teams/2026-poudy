@@ -17,7 +17,9 @@ export const useIngredientNames = (ids: readonly number[]): ReadonlyMap<number, 
 
     const controller = new AbortController();
 
-    fetchIngredients({ ingredientIds: key.split(",").map(Number) })
+    const ingredientIds = key.split(",").map(Number);
+
+    fetchIngredients({ ingredientIds, size: Math.min(ingredientIds.length, 100) })
       .then((response) => {
         if (controller.signal.aborted) return;
         setNames(new Map(response.items.map((item) => [item.id, item.koreanName])));

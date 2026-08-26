@@ -5,6 +5,7 @@ import type {
   ExcludeCodeListResponse,
   IngredientDetailResponse,
   IngredientListResponse,
+  IngredientPageResponse,
   ProductCountResponse,
   ProductDetailResponse,
   ProductPageResponse,
@@ -29,19 +30,20 @@ export const fetchProductDetail = (productId: number): Promise<ProductDetailResp
 export const fetchProductSuggestions = (keyword: string, page = 0): Promise<ProductSuggestionPageResponse> =>
   apiGet("/api/products/suggestions", new URLSearchParams({ keyword, page: String(page) }));
 
-/**
- * 검색어나 성분 ID 로 조회한다. 둘을 함께 보내면 모두 만족하는 성분만 돌려준다.
- * ID 로만 조회하면 요청한 순서를 지킨다.
- */
 export const fetchIngredients = (query: {
-  readonly keyword?: string;
   readonly ingredientIds?: readonly number[];
-}): Promise<IngredientListResponse> => {
+  readonly page?: number;
+  readonly size?: number;
+}): Promise<IngredientPageResponse> => {
   const params = new URLSearchParams();
-  if (query.keyword) params.set("keyword", query.keyword);
   for (const id of query.ingredientIds ?? []) params.append("ingredientIds", String(id));
+  if (query.page !== undefined) params.set("page", String(query.page));
+  if (query.size !== undefined) params.set("size", String(query.size));
   return apiGet("/api/ingredients", params);
 };
+
+export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
+  apiGet("/api/ingredients/suggestions", new URLSearchParams({ keyword }));
 
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
   apiGet(`/api/ingredients/${ingredientId}`);
