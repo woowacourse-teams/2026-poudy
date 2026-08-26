@@ -1069,7 +1069,7 @@
           "성분"
         ],
         "summary": "성분 조회",
-        "description": "여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 요청한 순서대로 조회한다. 존재하지 않는 ID 는 결과에서 제외한다.",
+        "description": "성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.",
         "operationId": "findIngredients",
         "parameters": [
           {
@@ -1084,6 +1084,33 @@
               },
               "uniqueItems": true
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (0부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "description": "조회할 페이지 번호 (0부터 시작)",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
           }
         ],
         "responses": {
@@ -1092,7 +1119,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngredientListResponse"
+                  "$ref": "#/components/schemas/IngredientPageResponse"
                 }
               }
             }
@@ -2201,7 +2228,7 @@
           "count"
         ]
       },
-      "IngredientListResponse": {
+      "IngredientPageResponse": {
         "type": "object",
         "properties": {
           "items": {
@@ -2210,10 +2237,14 @@
             "items": {
               "$ref": "#/components/schemas/IngredientResponse"
             }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
           }
         },
         "required": [
-          "items"
+          "items",
+          "pagination"
         ]
       },
       "IngredientResponse": {
@@ -2336,6 +2367,21 @@
           "productCount",
           "skinEffects",
           "updatedAt"
+        ]
+      },
+      "IngredientListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "조회된 성분",
+            "items": {
+              "$ref": "#/components/schemas/IngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "ExcludeCodeListResponse": {

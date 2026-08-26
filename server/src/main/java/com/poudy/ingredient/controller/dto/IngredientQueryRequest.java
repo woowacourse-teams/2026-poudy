@@ -3,7 +3,6 @@ package com.poudy.ingredient.controller.dto;
 import com.poudy.ingredient.service.IngredientQuery;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -14,12 +13,6 @@ public record IngredientQueryRequest(
 
     public IngredientQueryRequest {
         ingredientIds = Objects.requireNonNullElse(ingredientIds, List.of());
-    }
-
-    @AssertTrue(message = "INVALID_QUERY_PARAMETER")
-    @Schema(hidden = true)
-    public boolean isQueryConditionValid() {
-        return !ingredientIds.isEmpty();
     }
 
     public IngredientQuery toQuery() {
