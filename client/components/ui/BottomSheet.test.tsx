@@ -87,4 +87,22 @@ describe("BottomSheet", () => {
 
     expect(inside).toContain(document.activeElement);
   });
+
+  it("볼 것이 없으면 적용 버튼을 누를 수 없다", async () => {
+    const { props } = renderSheet({ submitDisabled: true, submitLabel: "0개 제품 보기" });
+    const submit = screen.getByRole("button", { name: "0개 제품 보기" });
+
+    expect(submit).toBeDisabled();
+
+    await userEvent.click(submit);
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("막지 않으면 적용 버튼을 누를 수 있다", async () => {
+    const { props } = renderSheet();
+
+    await userEvent.click(screen.getByRole("button", { name: "3개 제품 보기" }));
+
+    expect(props.onSubmit).toHaveBeenCalled();
+  });
 });

@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
+import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +28,7 @@ class DiscordFeedbackNotifierTest {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Test
-    @DisplayName("멘션을 차단하고 Discord 길이 안에서 의견을 알린다")
+    @DisplayName("첨부 개수를 알리고 멘션과 Discord 길이를 제한한다")
     void sendsNotificationWithoutMentions() throws Exception {
         AtomicReference<String> query = new AtomicReference<>();
         AtomicReference<String> requestBody = new AtomicReference<>();
@@ -49,14 +52,17 @@ class DiscordFeedbackNotifierTest {
                     FeedbackType.DATA_CORRECTION,
                     new FeedbackContent("@everyone " + "가".repeat(1990)),
                     new FeedbackPath("/products/12345"),
-                    OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+                    OffsetDateTime.parse("2026-08-23T16:20:30+09:00"),
+                    List.of(
+                            new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG),
+                            new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG)));
 
             notifier.notify(feedback);
 
             JsonNode payload = objectMapper.readTree(requestBody.get());
             String message = payload.get("content").asText();
             assertThat(query.get()).isEqualTo("wait=true");
-            assertThat(message).contains("정보가 잘못됐어요", "/products/12345", "@everyone");
+            assertThat(message).contains("정보가 잘못됐어요", "/products/12345", "첨부 이미지: 2장", "@everyone");
             assertThat(message.codePointCount(0, message.length())).isLessThanOrEqualTo(2000);
             assertThat(payload.get("allowed_mentions").get("parse").size()).isZero();
         } finally {

@@ -1,14 +1,11 @@
 "use client";
 
+import posthog, { type PostHog } from "posthog-js";
+
 import { readAppInfo } from "./app-info";
 import type { EventMap, EventName } from "./events";
 
-type Posthog = {
-  capture: (event: string, properties?: Record<string, unknown>) => void;
-  captureException: (error: unknown, properties?: Record<string, unknown>) => void;
-  init: (key: string, options: Record<string, unknown>) => void;
-  register: (properties: Record<string, unknown>) => void;
-};
+type Posthog = Pick<PostHog, "capture" | "captureException">;
 
 declare global {
   interface Window {
@@ -22,12 +19,12 @@ const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
  * 같은 출처의 프록시 경로로 보낸다. PostHog 도메인으로 바로 보내면
  * 광고 차단기가 막아 이벤트가 유실된다. 넘기는 곳은 next.config.ts 가 정한다.
  */
-const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "/ingest";
+const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
 
 /** 개발 환경의 이벤트가 운영 지표에 섞이지 않게 구분한다. */
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
-const enabled = Boolean(key) && environment !== "development";
+const enabled = key !== undefined && key !== "" && environment !== "development";
 
 /**
  * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
@@ -38,17 +35,15 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T]): v
   window.posthog?.capture(event, { ...properties, environment });
 };
 
-export const initAnalytics = async (): Promise<void> => {
-  if (!enabled || typeof window === "undefined" || window.posthog) return;
+export const initAnalytics = (): void => {
+  if (!enabled || key === undefined || key === "" || typeof window === "undefined" || window.posthog) return;
 
-  // 정의한 이벤트만 보낸다. 자동 수집은 이름이 제각각이라 퍼널을 만들기 어렵다.
-  const { default: posthog } = await import("posthog-js");
-  posthog.init(key as string, {
+  posthog.init(key, {
     api_host: host,
     // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
     ui_host: "https://us.posthog.com",
     autocapture: false,
-    capture_pageview: false,
+    capture_pageview: "history_change",
     capture_pageleave: true,
 
     // 처리방침이 안내하는 거부 방법이다. 자사 도메인으로 받아 넘기는 탓에
@@ -76,5 +71,5 @@ export const initAnalytics = async (): Promise<void> => {
 
   posthog.register(readAppInfo(window.__POUDY_APP__));
 
-  window.posthog = posthog as unknown as Posthog;
+  window.posthog = posthog;
 };

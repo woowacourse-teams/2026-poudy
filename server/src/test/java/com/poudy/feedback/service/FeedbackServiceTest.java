@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -12,6 +14,8 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackRepository;
@@ -19,6 +23,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,5 +98,26 @@ class FeedbackServiceTest {
         verify(feedbackRepository).save(feedbackCaptor.capture());
         assertThat(output).contains(feedbackCaptor.getValue().id().toString());
         assertThat(output).doesNotContain(content).doesNotContain("webhook secret");
+    }
+
+    @Test
+    @DisplayName("이미지 저장 절차를 저장소에 위임하고 귀속된 의견으로 알린다")
+    void delegatesImageStorageAndNotifiesAttachedFeedback() {
+        UUID imageId = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
+        FeedbackImage image = new FeedbackImage(imageId, FeedbackImageFormat.PNG);
+        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId)), any()))
+                .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
+
+        feedbackService.submit(
+                FeedbackType.DATA_CORRECTION,
+                "제품 정보가 실제 패키지와 달라요.",
+                "/products/12345",
+                List.of(imageId),
+                "client-a");
+
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)), any());
+        Feedback attached = feedbackCaptor.getValue().attachImages(List.of(image));
+        verify(feedbackNotifier).notify(attached);
     }
 }

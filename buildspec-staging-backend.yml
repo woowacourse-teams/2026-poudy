@@ -1,0 +1,43 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  pre_build:
+    commands:
+      # 백엔드 JAR는 JVM 바이트코드이므로 x86_64 CodeBuild에서도 ARM64 EC2에 배포할 수 있습니다.
+      - rm -rf "${CODEBUILD_SRC_DIR}/.artifacts"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts"
+  build:
+    commands:
+      - cd "${CODEBUILD_SRC_DIR}/server" && ./gradlew bootJar --no-daemon
+      - |
+        mapfile -t backend_jars < <(
+          find "${CODEBUILD_SRC_DIR}/server/build/libs" \
+            -maxdepth 1 \
+            -type f \
+            -name '*.jar' \
+            ! -name '*-plain.jar' \
+            -print
+        )
+        test "${#backend_jars[@]}" -eq 1
+        cp "${backend_jars[0]}" "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
+      - cp "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/appspec.yml" "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+      - cp -R "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/scripts/." "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
+      - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"*.sh
+      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
+  post_build:
+    commands:
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/application-start.sh"
+
+artifacts:
+  base-directory: .artifacts
+  files:
+    - appspec.yml
+    - scripts/**/*
+    - app/**/*
+    - build-metadata.txt
+  discard-paths: no

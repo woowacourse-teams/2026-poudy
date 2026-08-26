@@ -1,4 +1,4 @@
-package com.poudy.feedback.service;
+package com.poudy.common.ratelimit;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,19 +12,14 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("의견 등록 제한")
-class FeedbackRateLimiterTest {
+@DisplayName("메모리 fixed-window 요청 제한")
+class FixedWindowRateLimiterTest {
 
     @Test
     @DisplayName("같은 주소가 시간 창의 제한을 넘으면 거절한다")
     void rejectsOverLimitForSameClient() {
         MutableClock clock = new MutableClock();
-        FeedbackRateLimiter limiter = new FeedbackRateLimiter(
-                2,
-                Duration.ofMinutes(10),
-                100,
-                Duration.ofMinutes(1),
-                clock);
+        FixedWindowRateLimiter limiter = limiter(2, Duration.ofMinutes(10), 100, clock);
 
         limiter.requireAllowed("client-a");
         limiter.requireAllowed("client-a");
@@ -38,12 +33,7 @@ class FeedbackRateLimiterTest {
     @DisplayName("시간 창이 지나면 다시 요청할 수 있다")
     void resetsAfterWindow() {
         MutableClock clock = new MutableClock();
-        FeedbackRateLimiter limiter = new FeedbackRateLimiter(
-                1,
-                Duration.ofMinutes(10),
-                100,
-                Duration.ofMinutes(1),
-                clock);
+        FixedWindowRateLimiter limiter = limiter(1, Duration.ofMinutes(10), 100, clock);
         limiter.requireAllowed("client-a");
 
         clock.advance(Duration.ofMinutes(10));
@@ -55,12 +45,7 @@ class FeedbackRateLimiterTest {
     @DisplayName("추적 대상 상한을 넘는 새 주소는 거절한다")
     void rejectsNewClientWhenTrackingCapacityIsFull() {
         MutableClock clock = new MutableClock();
-        FeedbackRateLimiter limiter = new FeedbackRateLimiter(
-                2,
-                Duration.ofMinutes(10),
-                2,
-                Duration.ofMinutes(1),
-                clock);
+        FixedWindowRateLimiter limiter = limiter(2, Duration.ofMinutes(10), 2, clock);
         limiter.requireAllowed("client-a");
         limiter.requireAllowed("client-b");
 
@@ -73,12 +58,7 @@ class FeedbackRateLimiterTest {
     @DisplayName("정리 주기가 지나면 만료된 주소를 제거해 새 주소를 추적한다")
     void prunesExpiredClientsPeriodically() {
         MutableClock clock = new MutableClock();
-        FeedbackRateLimiter limiter = new FeedbackRateLimiter(
-                1,
-                Duration.ofMinutes(10),
-                2,
-                Duration.ofMinutes(1),
-                clock);
+        FixedWindowRateLimiter limiter = limiter(1, Duration.ofMinutes(10), 2, clock);
         limiter.requireAllowed("client-a");
         limiter.requireAllowed("client-b");
 
@@ -86,6 +66,19 @@ class FeedbackRateLimiterTest {
 
         assertThatNoException().isThrownBy(() -> limiter.requireAllowed("client-c"));
         assertThatNoException().isThrownBy(() -> limiter.requireAllowed("client-d"));
+    }
+
+    private static FixedWindowRateLimiter limiter(
+            int maxRequests,
+            Duration window,
+            int maxTrackedClients,
+            Clock clock) {
+        return new FixedWindowRateLimiter(
+                maxRequests,
+                window,
+                maxTrackedClients,
+                Duration.ofMinutes(1),
+                clock);
     }
 
     private static final class MutableClock extends Clock {

@@ -3,7 +3,7 @@
 import type { BrandResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
-import { Icon } from "@/components/ui/icons/Icon";
+import { CheckMark } from "@/components/ui/CheckMark";
 import { SearchField } from "@/components/ui/SearchField";
 
 type BrandOptionsProps = {
@@ -40,13 +40,7 @@ export function BrandOptions({ brands, selectedIds, onToggle }: BrandOptionsProp
                 onClick={() => onToggle(brand.id)}
                 className="flex h-12 w-full items-center gap-2.5 border-b border-border px-1 text-left"
               >
-                <span
-                  className={`flex size-5 shrink-0 items-center justify-center rounded border ${
-                    selected ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
-                  }`}
-                >
-                  {selected ? <Icon name="check" size={14} className="text-white" /> : null}
-                </span>
+                <CheckMark checked={selected} />
                 <span className={`text-[15px] text-[#212124] ${selected ? "font-semibold" : "font-normal"}`}>
                   {brand.name}
                 </span>

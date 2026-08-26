@@ -8,6 +8,8 @@ import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/produ
 
 export const metadata: Metadata = {
   title: "조건 일치 제품",
+  alternates: { canonical: "/products" },
+  robots: { index: false, follow: true },
 };
 
 // 조건 조합이 사실상 무한해서 미리 만들지 않는다. 색인 대상도 아니다.

@@ -19,6 +19,16 @@ export type FeedbackRequest = {
    * 의견을 작성한 화면 경로
    */
   path: string;
+  /**
+   * 미리 업로드한 선택적 이미지 ID 목록
+   */
+  imageIds?: (Array<string> | null);
+}
+export type FeedbackImageUploadResponse = {
+  /**
+   * 요청한 이미지 순서의 일회성 ID
+   */
+  imageIds: Array<string>;
 }
 export type BrandResponse = {
   /**
@@ -377,7 +387,7 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "CONFLICTING_INGREDIENT_FILTER" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -416,6 +426,26 @@ export type post_Submit_1 = {
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다.
+ */
+export type post_UploadImages = {
+      method: "POST",
+      path: "/api/feedback/images",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { images: Array<Blob> },
+          }
+      responses: {201: Schemas.FeedbackImageUploadResponse,
+400: Schemas.ProblemDetail,
+413: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -692,7 +722,8 @@ export type get_FindBrand = {
      export type EndpointByMethod = {
      post: {
            "/api/product-requests": Endpoints.post_Submit,
-"/api/feedback": Endpoints.post_Submit_1
+"/api/feedback": Endpoints.post_Submit_1,
+"/api/feedback/images": Endpoints.post_UploadImages
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,

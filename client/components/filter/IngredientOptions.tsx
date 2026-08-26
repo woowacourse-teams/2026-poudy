@@ -3,8 +3,8 @@
 import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
+import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
-import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
@@ -189,13 +189,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                       <span className={`flex-1 text-[11px] text-[#4D5159] ${checked ? "font-bold" : "font-semibold"}`}>
                         {code.name}
                       </span>
-                      <span
-                        className={`flex size-[18px] shrink-0 items-center justify-center rounded border ${
-                          checked ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
-                        }`}
-                      >
-                        {checked ? <Icon name="check" size={12} className="text-white" /> : null}
-                      </span>
+                      <CheckMark checked={checked} />
                     </button>
                   </li>
                 );
