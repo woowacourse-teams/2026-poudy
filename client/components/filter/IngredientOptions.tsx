@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
+import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
@@ -156,9 +157,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             </h3>
 
             {selectedCount === 0 ? (
-              <p className="flex min-h-25 items-center justify-center text-[13px] text-text-secondary">
-                선택한 성분 없음
-              </p>
+              <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
             ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeIngredientIds.map((id) => (

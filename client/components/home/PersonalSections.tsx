@@ -4,6 +4,7 @@ import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
+import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { track } from "@/lib/analytics/track";
@@ -86,32 +87,6 @@ export function RecentFilters() {
         ))}
       </ul>
     </section>
-  );
-}
-
-/** 아직 쌓인 것이 없을 때도 자리를 남겨 무엇이 채워질지 알려 준다. */
-function EmptyNotice({
-  icon,
-  title,
-  detail,
-}: {
-  readonly icon: "search" | "bookmark";
-  readonly title: string;
-  readonly detail: string;
-}) {
-  return (
-    /*
-     * 채운 회색은 카드처럼 보여 무언가 담긴 자리로 읽힌다. 실제로는 비어 있다는 뜻이므로
-     * 배경을 비우고 점선 테두리만 둘러 안이 비었다는 것을 모양으로 드러낸다.
-     *
-     * 선이 끊겨 있어 같은 색이라도 이어진 선보다 흐리게 읽힌다.
-     * `--color-border`(1.21:1) 로는 거의 보이지 않아 칩 테두리와 같은 값을 쓴다.
-     */
-    <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-[#D1D3D8] px-4 py-6">
-      <Icon name={icon} size={20} className="text-text-secondary" />
-      <p className="text-[13px] font-semibold text-text-primary">{title}</p>
-      <p className="text-[11px] text-text-secondary">{detail}</p>
-    </div>
   );
 }
 
