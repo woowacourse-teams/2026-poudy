@@ -25,7 +25,7 @@ public class FeedbackImageReconciler {
         this.clock = clock;
     }
 
-    @Scheduled(fixedDelayString = "${poudy.feedback.image-reconciliation.claim-interval:PT1M}", initialDelayString = "${poudy.feedback.image-reconciliation.claim-initial-delay:PT1M}")
+    @Scheduled(fixedDelayString = "${poudy.feedback.image-reconciliation.claim-interval:PT5M}", initialDelayString = "${poudy.feedback.image-reconciliation.claim-initial-delay:PT1M}")
     public void reconcileClaims() {
         run("claim", () -> imageRepository.reconcileClaims(clock.instant()));
     }

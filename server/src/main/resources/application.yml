@@ -65,7 +65,7 @@ poudy:
     image-processing:
       max-concurrency: 1
     image-reconciliation:
-      claim-interval: PT1M
+      claim-interval: PT5M
       claim-initial-delay: PT1M
       cleanup-interval: PT1H
       cleanup-initial-delay: PT1H
