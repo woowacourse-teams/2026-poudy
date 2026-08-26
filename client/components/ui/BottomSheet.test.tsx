@@ -7,20 +7,33 @@ import { describe, expect, it, vi } from "vitest";
 
 import { BottomSheet } from "./BottomSheet";
 
-const renderSheet = (overrides: Partial<Parameters<typeof BottomSheet>[0]> = {}) => {
-  const props = {
-    open: true,
-    title: "브랜드",
-    description: "원하는 브랜드를 선택해 주세요",
-    onClose: vi.fn(),
-    onReset: vi.fn(),
-    submitLabel: "3개 제품 보기",
-    onSubmit: vi.fn(),
-    children: <button type="button">라운드랩</button>,
-    ...overrides,
-  };
+type Options = {
+  readonly open?: boolean;
+  readonly submitLabel?: string;
+  readonly submitDisabled?: boolean;
+};
 
-  return { props, ...render(<BottomSheet {...props} />) };
+/** 네 필터 시트가 쌓는 것과 같은 차림. */
+const renderSheet = ({ open = true, submitLabel = "3개 제품 보기", submitDisabled }: Options = {}) => {
+  const props = { onClose: vi.fn(), onReset: vi.fn(), onSubmit: vi.fn() };
+
+  return {
+    props,
+    ...render(
+      <BottomSheet open={open} onClose={props.onClose}>
+        <BottomSheet.Header title="브랜드" description="원하는 브랜드를 선택해 주세요" />
+        <BottomSheet.Body>
+          <button type="button">라운드랩</button>
+        </BottomSheet.Body>
+        <BottomSheet.Footer>
+          <BottomSheet.ResetButton onClick={props.onReset} />
+          <BottomSheet.SubmitButton onClick={props.onSubmit} disabled={submitDisabled}>
+            {submitLabel}
+          </BottomSheet.SubmitButton>
+        </BottomSheet.Footer>
+      </BottomSheet>,
+    ),
+  };
 };
 
 describe("BottomSheet", () => {

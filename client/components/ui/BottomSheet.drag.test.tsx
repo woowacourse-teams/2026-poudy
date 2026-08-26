@@ -15,8 +15,11 @@ beforeAll(() => {
 const setup = () => {
   const onClose = vi.fn();
   render(
-    <BottomSheet open title="카테고리" submitLabel="3개 제품 보기" onClose={onClose} onSubmit={vi.fn()}>
-      <button type="button">내용</button>
+    <BottomSheet open onClose={onClose}>
+      <BottomSheet.Header title="카테고리" />
+      <BottomSheet.Body>
+        <button type="button">내용</button>
+      </BottomSheet.Body>
     </BottomSheet>,
   );
   const sheet = screen.getByRole("dialog");

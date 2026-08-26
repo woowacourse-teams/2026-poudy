@@ -103,70 +103,75 @@ function SheetBody({
   };
 
   return (
-    <BottomSheet
-      open={open}
-      title={TITLES[kind]}
-      description={DESCRIPTIONS[kind]}
-      onClose={onClose}
-      onReset={reset}
-      submitLabel={submitLabel}
-      // 아직 세지 못한 것과 0 개는 다르다. 세는 동안에는 막지 않는다.
-      submitDisabled={count === 0}
-      onSubmit={() => {
-        onApply(draft);
-        onClose();
-      }}
-    >
-      {kind === "category" ? (
-        <CategoryOptions
-          categories={categories}
-          selectedIds={draft.categoryIds}
-          onSelect={(categoryIds) => setDraft({ ...draft, categoryIds })}
-        />
-      ) : null}
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Header title={TITLES[kind]} description={DESCRIPTIONS[kind]} />
 
-      {kind === "brand" ? (
-        <BrandOptions
-          brands={brands}
-          selectedIds={draft.brandIds}
-          onToggle={(brandId) =>
-            setDraft({
-              ...draft,
-              brandIds: draft.brandIds.includes(brandId)
-                ? draft.brandIds.filter((id) => id !== brandId)
-                : [...draft.brandIds, brandId],
-            })
-          }
-        />
-      ) : null}
+      <BottomSheet.Body>
+        {kind === "category" ? (
+          <CategoryOptions
+            categories={categories}
+            selectedIds={draft.categoryIds}
+            onSelect={(categoryIds) => setDraft({ ...draft, categoryIds })}
+          />
+        ) : null}
 
-      {kind === "level" ? (
-        <>
-          {/* 소제목은 시트가 그린다. 슬라이더는 값과 상관없음만 담는다. */}
-          <section className="pt-3">
-            <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">수분감</h3>
-            <LevelRange
-              label="수분감"
-              levels={draft.moistureLevel}
-              onChange={(moistureLevel) => setDraft({ ...draft, moistureLevel })}
-            />
-          </section>
+        {kind === "brand" ? (
+          <BrandOptions
+            brands={brands}
+            selectedIds={draft.brandIds}
+            onToggle={(brandId) =>
+              setDraft({
+                ...draft,
+                brandIds: draft.brandIds.includes(brandId)
+                  ? draft.brandIds.filter((id) => id !== brandId)
+                  : [...draft.brandIds, brandId],
+              })
+            }
+          />
+        ) : null}
 
-          {/* 두 범위는 서로 다른 조건이라 사이를 넉넉히 띄워 한 덩어리로 보이지 않게 한다. */}
-          <section className="pt-8">
-            <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">유분감</h3>
-            <LevelRange
-              label="유분감"
-              levels={draft.oilLevel}
-              onChange={(oilLevel) => setDraft({ ...draft, oilLevel })}
-            />
-          </section>
-        </>
-      ) : null}
+        {kind === "level" ? (
+          <>
+            {/* 소제목은 시트가 그린다. 슬라이더는 값과 상관없음만 담는다. */}
+            <section className="pt-3">
+              <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">수분감</h3>
+              <LevelRange
+                label="수분감"
+                levels={draft.moistureLevel}
+                onChange={(moistureLevel) => setDraft({ ...draft, moistureLevel })}
+              />
+            </section>
 
-      {kind === "ingredient" ? (
-        <IngredientOptions draft={draft} setDraft={setDraft} excludeCodes={excludeCodes} names={names} />
-      ) : null}
+            {/* 두 범위는 서로 다른 조건이라 사이를 넉넉히 띄워 한 덩어리로 보이지 않게 한다. */}
+            <section className="pt-8">
+              <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">유분감</h3>
+              <LevelRange
+                label="유분감"
+                levels={draft.oilLevel}
+                onChange={(oilLevel) => setDraft({ ...draft, oilLevel })}
+              />
+            </section>
+          </>
+        ) : null}
+
+        {kind === "ingredient" ? (
+          <IngredientOptions draft={draft} setDraft={setDraft} excludeCodes={excludeCodes} names={names} />
+        ) : null}
+      </BottomSheet.Body>
+
+      <BottomSheet.Footer>
+        <BottomSheet.ResetButton onClick={reset} />
+        {/* 아직 세지 못한 것과 0 개는 다르다. 세는 동안에는 막지 않는다. */}
+        <BottomSheet.SubmitButton
+          disabled={count === 0}
+          onClick={() => {
+            onApply(draft);
+            onClose();
+          }}
+        >
+          {submitLabel}
+        </BottomSheet.SubmitButton>
+      </BottomSheet.Footer>
     </BottomSheet>
   );
 }
