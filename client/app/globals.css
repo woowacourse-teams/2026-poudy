@@ -79,6 +79,15 @@
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
+  /*
+   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
+   * ease-standard 는 짧은 상태 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
+   */
+  --transition-duration-drawer: 320ms;
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* 들고 나는 것에 쓰는 강한 ease-out. 브라우저 기본은 끝이 흐리게 끌린다. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
   --transition-duration-press: 100ms;
   --transition-duration-celebration: 520ms;
   /*
@@ -164,7 +173,7 @@ body {
  */
 .bottom-sheet {
   transform: translateY(100%);
-  transition: transform var(--transition-duration-disclosure) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition: transform var(--transition-duration-drawer) var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
 }
 
 .bottom-sheet[data-open="true"] {
@@ -179,9 +188,12 @@ body {
   transition: none;
 }
 
+/*
+ * 딤은 시트보다 조금 빨리 자리를 잡는다. 같이 끌면 배경이 늦게 어두워져 시트만 떠 보인다.
+ */
 .bottom-sheet-dim {
   opacity: 0;
-  transition: opacity var(--transition-duration-disclosure) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 .bottom-sheet-dim[data-open="true"] {
@@ -189,17 +201,30 @@ body {
 }
 
 /*
- * 줄이기를 켠 사용자에게는 움직임을 없앤다. 다만 전환 자체를 지우면 끝났다는 신호가
- * 오지 않아 시트가 DOM 에 남는다. 아주 짧게 남겨 신호는 오게 한다.
+ * 줄이기를 켠 사용자에게는 자리를 옮기는 움직임만 걷어낸다. 아주 없애는 것이 아니라
+ * 옅어지고 짙어지는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+ *
+ * 시트도 전환을 지우지는 않는다. 지우면 끝났다는 신호가 오지 않아 DOM 에 남는다.
+ * 자리는 처음부터 제자리에 두고 opacity 만 잇는다.
  */
 @media (prefers-reduced-motion: reduce) {
-  .bottom-sheet,
-  .bottom-sheet-dim {
-    transition-duration: 1ms;
-  }
-
   .bottom-sheet {
     transform: translateY(0);
+    opacity: 0;
+    transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  }
+
+  .bottom-sheet[data-open="true"] {
+    opacity: 1;
+  }
+
+  /*
+   * 끌어도 따라오지 않는다. 자리를 옮기지 않기로 했으므로 손가락도 따르지 않는다.
+   * 끄는 동안에는 인라인 transform 이 붙으므로 그것까지 눌러야 자리가 고정된다.
+   */
+  .bottom-sheet[data-dragging="true"],
+  .bottom-sheet[style] {
+    transform: translateY(0) !important;
   }
 }
 
