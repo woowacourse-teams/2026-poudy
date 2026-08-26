@@ -30,7 +30,7 @@ OpenAPI 문서다. 구현이 끝나면 복구하기 어려운 결정만 `ARCHITE
 - 이미지 업로드 API와 기존 의견 등록 API의 선택적 `imageIds`
 - JPEG/PNG 판별, 제한 검사, 단일 프레임 확인과 재인코딩
 - S3 임시 저장, 조건부 claim, 최종 귀속, 보상 처리와 만료 판정
-- 피드백 JSON의 첨부 이미지 목록과 기존 Discord 알림 형식 유지
+- 피드백 JSON의 첨부 이미지 목록과 Discord 알림의 첨부 개수
 - 오류 계약, 설정, OpenAPI와 공통 API 생성물, 테스트와 아키텍처 기록
 
 다음은 완료에 필요하지만 `server/AGENTS.md`의 수정 경계 밖이다. 서버 구현과 같은 변경으로
@@ -206,8 +206,9 @@ poudy/feedback/{feedbackId}.json
 
 S3는 여러 키에 대한 원자적 트랜잭션을 제공하지 않으므로 즉시 보상, 결과 불명 보존,
 durable claim·고아 조정을 함께 둔다. 각 S3 호출은 기존 15초 API 호출 timeout과 5초 시도
-timeout을 그대로 사용한다. nginx 응답 제한과의 정합성은 별도 배포 경계에서 실측하고
-조정해야 한다.
+timeout을 그대로 사용한다. nginx는 일반 API의 30초 제한을 늘리지 않고 두 피드백 쓰기
+엔드포인트만 upstream 응답 대기를 180초로 두며, 운영 경로에서 처리 시간과 504 여부를
+실측한다.
 
 ## 피드백 JSON, Discord와 로그
 
@@ -225,8 +226,8 @@ timeout을 그대로 사용한다. nginx 응답 제한과의 정합성은 별도
 ```
 
 이미지가 없는 기존 요청도 `images: []`를 저장해 새 문서 모양을 하나로 유지한다. Discord
-메시지는 기존과 같이 유형, 화면, 접수 시각, 접수 ID와 의견 본문을 2,000자 안으로 보내며
-`allowed_mentions.parse=[]`로 멘션 해석을 차단한다.
+메시지는 유형, 화면, 접수 시각, 접수 ID, 첨부 이미지 개수와 의견 본문을 2,000자 안으로
+보내며 `allowed_mentions.parse=[]`로 멘션 해석을 차단한다.
 
 애플리케이션 로그에는 content/path 같은 사용자 입력, 원본·재인코딩 바이트, 파일명,
 `imageId`, S3 키와 URL을 남기지 않는다. 보상·정리 실패 로그는 작업 종류, `feedbackId`, 개수,
@@ -284,7 +285,7 @@ lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 3. S3 이미지 저장소에 pending 저장/정리, 조건부 claim, copy, rollback, commit 정리를 구현한다.
 4. 이미지 업로드 서비스와 기존 `FeedbackService`에 두 유스케이스를 연결한다.
 5. 결과 불명 commit 확인, 오래된 claim·고아 최종 이미지 조정과 pending 만료 정리를 추가한다.
-6. 피드백 JSON의 images를 반영하고 기존 Discord 알림 형식을 유지한다.
+6. 피드백 JSON의 images와 Discord 알림의 첨부 이미지 개수를 반영한다.
 7. multipart 상한, 이미지 업로드 요청 제한과 S3 설정을 추가한다.
 8. Controller·DTO를 권위 원천으로 OpenAPI와 공통 Zod 생성물을 갱신한다.
 9. `ARCHITECTURE.md`에는 API 분리 이유, claim/commit point와 부분 실패 정책만 반영한다.
@@ -318,7 +319,7 @@ lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 - bulk pending 삭제의 일부 키 실패 시 성공한 ID의 claim만 지우고 실패한 ID의 claim은 유지함
 - claim이 없는 고아 최종 이미지를 JSON 확정 부재일 때만 삭제함
 - 정확히 24시간 경계의 논리적 만료와 진행 중 claim을 건너뛰는 pending 정리
-- 피드백 JSON 이미지 순서와 기존 Discord 메시지 형식·2,000자 제한·멘션 차단
+- 피드백 JSON 이미지 순서와 Discord 첨부 개수·2,000자 제한·멘션 차단
 - 로그에 사용자 입력, 파일명, `imageId`, S3 키·URL과 SDK 예외 메시지가 없음
 
 ### 계약과 완료 검증
@@ -355,3 +356,6 @@ lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 - 2026-08-26: 운영 계정에 lifecycle 설정 권한이 없고 버킷 버전 관리가 비활성화된 조건을
   확인했다. pending·claim·고아 이미지는 기존 애플리케이션 정리가 담당하고, 확정 피드백
   JSON과 최종 이미지는 주 1회 83일 기준으로 수동 삭제해 90일 이내 보유를 집행하기로 했다.
+- 2026-08-26: Discord 알림에 첨부 이미지 개수를 추가하고 multipart 배열의 1~5개 제약을
+  OpenAPI에 명시했다. 순차 S3 호출이 일반 API의 30초 프록시 제한에 먼저 끊기지 않도록 두
+  피드백 쓰기 엔드포인트만 `proxy_read_timeout 180s`를 적용했다.
