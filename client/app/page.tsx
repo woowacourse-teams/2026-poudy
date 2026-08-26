@@ -97,11 +97,17 @@ export default function Home() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className={`flex h-full flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
+                  // 어두운 카드는 그림자를 더 진하게 깐다. 그 구분을 CSS 가 읽을 수 있게 남긴다.
+                  data-tone={action.tone}
+                  className={`action-card flex h-full flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
                 >
                   <span className="flex items-center justify-between">
                     <Icon name={action.icon} size={28} className={dark ? "text-action-text" : "text-text-primary"} />
-                    <Icon name="chevron-right" size={18} className={dark ? "text-white/60" : "text-text-secondary"} />
+                    <Icon
+                      name="chevron-right"
+                      size={18}
+                      className={`action-card-arrow ${dark ? "text-white/60" : "text-text-secondary"}`}
+                    />
                   </span>
                   <span className="flex flex-1 flex-col justify-between gap-2">
                     <span className={`text-[15px] font-bold ${dark ? "text-action-text" : "text-text-primary"}`}>
@@ -123,11 +129,16 @@ export default function Home() {
             {TRUST.map((item) => (
               <li
                 key={item.title}
-                // 문구가 길면 줄이 넘어간다. 넘어간 줄까지 가운데로 맞춘다.
+                // 넘어간 줄까지 가운데로 맞춘다. 카드 높이는 격자가 서로 맞춰 준다.
                 className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center ${item.bg}`}
               >
                 <Icon name={item.icon} size={18} className={item.tint} />
-                <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
+                {/*
+                  좁은 화면에서는 `조건은 직접 골라요` 만 제목이 두 줄로 넘어간다.
+                  그러면 그 카드만 설명이 한 줄 아래에서 시작해 셋이 어긋나 보인다.
+                  제목 자리를 늘 두 줄로 잡아 두어 설명이 같은 높이에 서게 한다.
+                */}
+                <span className="min-h-[2lh] text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
               </li>
             ))}
