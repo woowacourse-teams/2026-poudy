@@ -35,6 +35,12 @@ describe("ProductCard", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1");
   });
 
+  it("상세 진입 경로를 링크에 남긴다", () => {
+    render(<ProductCard product={product} saved={false} onToggleSave={() => {}} entryPoint="search_results" />);
+
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1?from=search_results");
+  });
+
   it("저장 버튼에 제품 이름이 담긴 이름을 준다", () => {
     render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
 

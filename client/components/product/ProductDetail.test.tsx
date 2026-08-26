@@ -6,13 +6,28 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ingredientSummary, ProductDetail } from "./ProductDetail";
 
+import { track } from "@/lib/analytics/track";
 import { untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
 }));
 
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
 describe("제품 성분 요약", () => {
+  it("제품 조회에 상세 진입 경로를 남긴다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} entryPoint="saved" />);
+
+    await vi.waitFor(() =>
+      expect(track).toHaveBeenCalledWith("product_viewed", {
+        product_id: untaggedProductDetail.id,
+        category: untaggedProductDetail.categories[0]?.name,
+        entry_point: "saved",
+      }),
+    );
+  });
+
   it("피부 작용 태그가 없으면 전성분 수만 안내한다", () => {
     expect(ingredientSummary(24, [])).toBe("24개 전성분으로 이루어진 제품이에요.");
   });

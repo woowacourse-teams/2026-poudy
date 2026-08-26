@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IngredientSearchScreen } from "./IngredientSearchScreen";
 
+import { track } from "@/lib/analytics/track";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
@@ -20,12 +21,15 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams.current,
 }));
 
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
 /** 조건에 걸린 제품 수를 정해 둔다. */
 const countIs = (count: number) => server.use(http.get("*/api/products/count", () => HttpResponse.json({ count })));
 
 describe("IngredientSearchScreen", () => {
   beforeEach(() => {
     searchParams.current = new URLSearchParams();
+    vi.mocked(track).mockClear();
   });
 
   it("조건이 없으면 버튼을 보여 주지 않는다", () => {
@@ -69,6 +73,13 @@ describe("IngredientSearchScreen", () => {
     expect(button).toBeDisabled();
     // 감싼 링크는 그대로 두되 눌러도 넘어가지 않아야 한다.
     expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
+    expect(track).toHaveBeenCalledWith("search_results_viewed", {
+      mode: "ingredient",
+      result_count: 0,
+      include_count: 1,
+      exclude_count: 0,
+      exclude_group_count: 0,
+    });
   });
 
   it("개수를 세는 동안에는 버튼을 누를 수 없다", () => {
