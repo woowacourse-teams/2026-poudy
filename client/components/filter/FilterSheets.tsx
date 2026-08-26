@@ -56,8 +56,17 @@ const DESCRIPTIONS: Record<SheetKind, string> = {
  * 적용을 눌렀을 때만 URL 에 반영해 취소하면 원래 조건이 남게 한다.
  */
 export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
-  if (!openSheet) return null;
-  return <SheetBody key={openSheet} kind={openSheet} {...rest} />;
+  /*
+   * 닫힌 뒤에도 나가는 전환이 끝날 때까지 시트가 남아야 한다. 여기서 곧바로 지우면
+   * BottomSheet 가 아무리 기다려도 이미 트리에서 빠진 뒤라 내려가는 모습이 보이지 않는다.
+   * 마지막으로 열었던 종류를 기억해 두고 그 내용을 그대로 그린다.
+   */
+  const [lastKind, setLastKind] = useState(openSheet);
+
+  if (openSheet && openSheet !== lastKind) setLastKind(openSheet);
+  if (!lastKind) return null;
+
+  return <SheetBody key={lastKind} kind={lastKind} open={Boolean(openSheet)} {...rest} />;
 }
 
 function SheetBody({
@@ -69,7 +78,8 @@ function SheetBody({
   brands,
   excludeCodes,
   initialCount,
-}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
+  open,
+}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind; readonly open: boolean }) {
   const [draft, setDraft] = useState<Filter>(filter);
   const count = useProductCount(draft, initialCount);
 
@@ -94,7 +104,7 @@ function SheetBody({
 
   return (
     <BottomSheet
-      open
+      open={open}
       title={TITLES[kind]}
       description={DESCRIPTIONS[kind]}
       onClose={onClose}

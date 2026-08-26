@@ -159,6 +159,51 @@ body {
 }
 
 /*
+ * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
+ * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
+ */
+.bottom-sheet {
+  transform: translateY(100%);
+  transition: transform var(--transition-duration-disclosure) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+.bottom-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+/*
+ * 끄는 동안에는 손가락을 그대로 따라와야 한다. 전환이 걸려 있으면 한 박자 늦게 따라와
+ * 붙잡고 있는 느낌이 사라진다. 놓는 순간 다시 전환이 살아나 제자리로 돌아간다.
+ */
+.bottom-sheet[data-dragging="true"] {
+  transition: none;
+}
+
+.bottom-sheet-dim {
+  opacity: 0;
+  transition: opacity var(--transition-duration-disclosure) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+}
+
+.bottom-sheet-dim[data-open="true"] {
+  opacity: 1;
+}
+
+/*
+ * 줄이기를 켠 사용자에게는 움직임을 없앤다. 다만 전환 자체를 지우면 끝났다는 신호가
+ * 오지 않아 시트가 DOM 에 남는다. 아주 짧게 남겨 신호는 오게 한다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet,
+  .bottom-sheet-dim {
+    transition-duration: 1ms;
+  }
+
+  .bottom-sheet {
+    transform: translateY(0);
+  }
+}
+
+/*
  * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
  * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
  */
