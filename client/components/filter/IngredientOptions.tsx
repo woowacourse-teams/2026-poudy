@@ -12,7 +12,11 @@ import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { hasMatch, splitByKeyword } from "@/lib/domain/highlight";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
+import { effectColor } from "@/lib/domain/skin-effect-colors";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
+
+/** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
+const VISIBLE_EFFECTS = 3;
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
   const response = await fetchIngredientSuggestions(keyword);
@@ -118,9 +122,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       {/* 자동완성과 같다. 긴 이름은 두 줄까지 보이고 거기서 줄인다. */}
                       <IngredientName name={item.koreanName} keyword={keyword.trim()} />
-                      <span className="truncate text-[12px] text-[#868B94]">
-                        {item.skinEffects.map((effect) => effect.name).join(" · ")}
-                      </span>
+                      <EffectTags effects={item.skinEffects} />
                     </span>
 
                     <span className="flex shrink-0 gap-1.5">
@@ -239,6 +241,38 @@ function IngredientName({ name, keyword }: { readonly name: string; readonly key
           {part.text}
         </span>
       ))}
+    </span>
+  );
+}
+
+/** 자동완성과 같다. 성분이 하는 일을 이름과 다른 생김새의 배지로 가른다. */
+function EffectTags({ effects }: { readonly effects: IngredientResponse["skinEffects"] }) {
+  if (effects.length === 0) return null;
+
+  const shown = effects.slice(0, VISIBLE_EFFECTS);
+  const rest = effects.length - shown.length;
+
+  return (
+    <span className="flex items-center gap-1 overflow-hidden">
+      {shown.map((effect) => {
+        const color = effectColor(effect.code);
+
+        return (
+          <span
+            key={effect.code}
+            className={`flex h-[18px] shrink-0 items-center rounded-[9px] px-1.5 text-[10px] font-semibold ${color.bg} ${color.text}`}
+          >
+            {effect.name}
+          </span>
+        );
+      })}
+
+      {rest > 0 ? (
+        <span className="shrink-0 text-[10px] font-semibold text-text-secondary">
+          <span aria-hidden="true">+{rest}</span>
+          <span className="sr-only">외 {rest}개</span>
+        </span>
+      ) : null}
     </span>
   );
 }
