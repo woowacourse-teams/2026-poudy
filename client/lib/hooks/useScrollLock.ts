@@ -16,6 +16,9 @@ import { useEffect } from "react";
  * 폭 계산이 달라져 무너진다. `overflow: hidden` 만 걸면 보던 자리는 그대로 남는다.
  *
  * 막대가 사라지며 생기는 폭 차이는 그만큼 안쪽 여백으로 메워 화면이 흔들리지 않게 한다.
+ * 그 폭을 `--scrollbar-width` 로도 남긴다. `position: fixed` 로 뷰포트에 붙는 것들은
+ * 이 여백 바깥에 있어 저 혼자 제자리에 남는다. 그것들이 본문과 가운데를 맞추려면
+ * 같은 폭만큼 함께 밀어야 한다.
  */
 export const useScrollLock = (locked: boolean) => {
   useEffect(() => {
@@ -32,11 +35,13 @@ export const useScrollLock = (locked: boolean) => {
     if (barWidth > 0) {
       const current = Number.parseFloat(window.getComputedStyle(root).paddingRight) || 0;
       root.style.paddingRight = `${current + barWidth}px`;
+      root.style.setProperty("--scrollbar-width", `${barWidth}px`);
     }
 
     return () => {
       root.style.overflow = previousOverflow;
       root.style.paddingRight = previousPadding;
+      root.style.removeProperty("--scrollbar-width");
     };
   }, [locked]);
 };

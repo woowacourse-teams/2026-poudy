@@ -149,7 +149,7 @@ function Body({ children }: { readonly children: React.ReactNode }) {
 
 /** 시트의 발. 담긴 버튼을 가로로 늘어놓는다. */
 function Footer({ children }: { readonly children: React.ReactNode }) {
-  return <div className="flex gap-2 px-4 pt-3 pb-4">{children}</div>;
+  return <div className="flex gap-2 px-4 py-4">{children}</div>;
 }
 
 /** 발에 두는 되돌리기 버튼. 적용보다 좁게 둔다. */

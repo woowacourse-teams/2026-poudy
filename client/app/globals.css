@@ -171,6 +171,19 @@ body {
  * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
  * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
  */
+/*
+ * 시트와 딤은 `fixed` 라 뷰포트를 기준으로 자리를 잡는다. 스크롤을 잠그며 html 에
+ * 막대만큼 여백을 주면 본문은 그만큼 좁아진 영역의 가운데로 가는데, 이쪽은 그대로
+ * 남아 둘의 가운데가 어긋난다.
+ *
+ * 안쪽 여백으로는 상자만 좁아질 뿐 자리가 옮겨지지 않는다. 오른쪽 끝을 막대만큼
+ * 당겨 본문과 같은 영역 안에서 가운데를 잡게 한다.
+ */
+.bottom-sheet,
+.bottom-sheet-dim {
+  right: var(--scrollbar-width, 0px);
+}
+
 .bottom-sheet {
   transform: translateY(100%);
   transition: transform var(--transition-duration-drawer) var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
