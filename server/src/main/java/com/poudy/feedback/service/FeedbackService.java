@@ -5,6 +5,8 @@ import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackRepository;
 import java.time.Clock;
+import java.util.List;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,10 +34,29 @@ public class FeedbackService {
     }
 
     public void submit(FeedbackType type, String content, String path, String clientId) {
-        Feedback feedback = Feedback.register(type, content, path, clock);
-        rateLimiter.requireAllowed(clientId);
-        feedbackRepository.save(feedback);
+        submit(type, content, path, List.of(), clientId);
+    }
 
+    public void submit(
+            FeedbackType type,
+            String content,
+            String path,
+            List<UUID> imageIds,
+            String clientId) {
+        Feedback feedback = Feedback.register(type, content, path, clock);
+        List<UUID> normalizedImageIds = Feedback.normalizeImageIds(imageIds);
+        rateLimiter.requireAllowed(clientId);
+        Feedback saved;
+        if (normalizedImageIds.isEmpty()) {
+            feedbackRepository.save(feedback);
+            saved = feedback;
+        } else {
+            saved = feedbackRepository.save(feedback, normalizedImageIds, clock);
+        }
+        notifySafely(saved);
+    }
+
+    private void notifySafely(Feedback feedback) {
         try {
             feedbackNotifier.notify(feedback);
         } catch (RuntimeException exception) {

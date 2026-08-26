@@ -2,9 +2,11 @@ package com.poudy.feedback.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,9 +15,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.TooManyRequestsException;
 import com.poudy.feedback.notification.FeedbackNotifier;
+import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.feedback.service.FeedbackImageUploadService;
 import com.poudy.feedback.service.FeedbackRateLimiter;
 import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +29,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DisplayName("의견 등록")
-class FeedbackRegistrationTest {
+@DisplayName("의견 API")
+class FeedbackControllerTest {
 
     private static final String PATH = "/api/feedback";
 
@@ -40,10 +47,16 @@ class FeedbackRegistrationTest {
     private S3FeedbackRepository feedbackRepository;
 
     @MockitoBean
+    private S3FeedbackImageRepository imageRepository;
+
+    @MockitoBean
     private FeedbackNotifier feedbackNotifier;
 
     @MockitoBean
     private FeedbackRateLimiter rateLimiter;
+
+    @MockitoBean
+    private FeedbackImageUploadService imageUploadService;
 
     @Test
     @DisplayName("유효한 의견을 등록하면 본문 없이 204를 반환한다")
@@ -67,6 +80,41 @@ class FeedbackRegistrationTest {
     }
 
     @Test
+    @DisplayName("유효한 이미지 배치를 업로드하면 요청 순서의 ID와 201을 반환한다")
+    void uploadsFeedbackImages() throws Exception {
+        UUID first = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
+        UUID second = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
+        given(
+                imageUploadService
+                        .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyString()))
+                .willReturn(List.of(first, second));
+        MockMultipartFile firstFile = new MockMultipartFile("images", "first.png", "image/png", new byte[] {1});
+        MockMultipartFile secondFile = new MockMultipartFile("images", "second.jpg", "image/jpeg", new byte[] {2});
+
+        mockMvc.perform(
+                multipart(PATH + "/images")
+                        .file(firstFile)
+                        .file(secondFile)
+                        .header("X-Real-IP", "203.0.113.7"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.imageIds[0]").value(first.toString()))
+                .andExpect(jsonPath("$.imageIds[1]").value(second.toString()));
+
+        verify(imageUploadService)
+                .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.eq("203.0.113.7"));
+    }
+
+    @Test
+    @DisplayName("이미지 파트가 없는 업로드 요청을 거절한다")
+    void rejectsMissingImagePart() throws Exception {
+        mockMvc.perform(multipart(PATH + "/images"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE"));
+
+        verify(imageUploadService, never()).upload(any(), anyString());
+    }
+
+    @Test
     @DisplayName("정의하지 않은 의견 유형을 거절한다")
     void rejectsUnknownType() throws Exception {
         mockMvc.perform(
@@ -83,6 +131,69 @@ class FeedbackRegistrationTest {
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
 
         verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("중복 이미지 ID를 외부 저장소 호출 전에 거절한다")
+    void rejectsDuplicateImageIds() throws Exception {
+        String imageId = "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf";
+
+        mockMvc.perform(
+                post(PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "OTHER",
+                                  "content": "중복 이미지 ID를 거절하는 충분히 긴 의견입니다.",
+                                  "path": "/",
+                                  "imageIds": ["%s", "%s"]
+                                }
+                                """.formatted(imageId, imageId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
+
+        verify(imageRepository, never()).resolve(any(), any());
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("형식이 잘못된 이미지 ID를 이미지 ID 오류로 거절한다")
+    void rejectsMalformedImageId() throws Exception {
+        mockMvc.perform(
+                post(PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "OTHER",
+                                  "content": "형식이 잘못된 이미지 ID를 거절하는 의견입니다.",
+                                  "path": "/",
+                                  "imageIds": ["not-a-uuid"]
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
+
+        verify(imageRepository, never()).resolve(any(), any());
+    }
+
+    @Test
+    @DisplayName("null 이미지 ID를 이미지 ID 오류로 거절한다")
+    void rejectsNullImageId() throws Exception {
+        mockMvc.perform(
+                post(PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "OTHER",
+                                  "content": "null 이미지 ID를 거절하는 충분히 긴 의견입니다.",
+                                  "path": "/",
+                                  "imageIds": [null]
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
+
+        verify(imageRepository, never()).resolve(any(), any());
     }
 
     @Test

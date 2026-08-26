@@ -42,6 +42,14 @@ public class ErrorResponseConfig {
                             HttpStatus.TOO_MANY_REQUESTS,
                             ErrorCode.TOO_MANY_REQUESTS));
         }
+        if (ErrorResponseCodes.payloadLimited(path)) {
+            responses.addApiResponse(
+                    "413",
+                    ProblemDetailResponses.of(
+                            "요청 본문 크기 초과",
+                            HttpStatus.PAYLOAD_TOO_LARGE,
+                            ErrorCode.PAYLOAD_TOO_LARGE));
+        }
         ErrorResponseCodes.notFound(path)
                 .ifPresent(
                         code -> responses.addApiResponse(

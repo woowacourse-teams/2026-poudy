@@ -1,4 +1,4 @@
-package com.poudy.productrequest.service;
+package com.poudy.feedback.service;
 
 import com.poudy.common.ratelimit.FixedWindowRateLimiter;
 import java.time.Clock;
@@ -8,14 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProductRequestRateLimiter {
+public class FeedbackImageUploadRateLimiter {
 
     private final FixedWindowRateLimiter delegate;
 
-    public ProductRequestRateLimiter(
-            @Value("${poudy.product-request.rate-limit.max-requests}") int maxRequests,
-            @Value("${poudy.product-request.rate-limit.window}") Duration window,
-            @Qualifier("productRequestClock") Clock clock) {
+    public FeedbackImageUploadRateLimiter(
+            @Value("${poudy.feedback.image-upload-rate-limit.max-requests}") int maxRequests,
+            @Value("${poudy.feedback.image-upload-rate-limit.window}") Duration window,
+            @Qualifier("feedbackClock") Clock clock) {
         delegate = new FixedWindowRateLimiter(maxRequests, window, clock);
     }
 
