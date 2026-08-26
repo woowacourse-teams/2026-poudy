@@ -189,7 +189,7 @@ poudy/feedback/{feedbackId}.json
 - 프로세스 종료나 보상 S3 장애에 대비해 claim을 즉시 지우지 않는다. 각 S3 호출의 15초
   timeout과 5장 등록·보상의 제한된 순차 호출 수보다 충분히 긴 10분이 지난 claim만 주기적으로
   조정한다. 나이는 앱 시계가 아니라 claim 객체의 S3 `Last-Modified`로 판정한다.
-- claim 조정기는 기본 1분 주기로 exact-prefix list에서 피드백 JSON의 존재를 확인하고 GET한 문서의 SHA-256이 claim과
+- claim 조정기는 기본 5분 주기로 exact-prefix list에서 피드백 JSON의 존재를 확인하고 GET한 문서의 SHA-256이 claim과
   같은 경우에만 commit으로 판정한다. commit이면 pending 부재를 확인한 뒤 claim을 지우고,
   JSON 부재가 확인되면 최종 객체를 제거한 뒤 claim을 지운다. `AccessDenied`, timeout, hash
   불일치에서는 아무것도 삭제하지 않고 다음 주기로 넘긴다. 작업은 중복 실행해도 같은 결과가
