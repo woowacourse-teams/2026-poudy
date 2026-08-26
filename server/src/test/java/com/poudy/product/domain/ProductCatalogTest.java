@@ -158,6 +158,6 @@ class ProductCatalogTest {
     }
 
     private static Category category(Long id, Long parentId) {
-        return new Category(id, parentId, "카테고리 " + id, 1, null, null);
+        return new Category(id, parentId, "카테고리 " + id, 1);
     }
 }

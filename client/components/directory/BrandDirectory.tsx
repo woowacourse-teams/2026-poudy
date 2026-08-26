@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandListItemResponse } from "@poudy/api/api.zod";
+import type { BrandSummaryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { DirectoryList } from "@/components/ui/DirectoryList";
@@ -11,7 +11,7 @@ const ALL = "전체";
 const ETC = "기타";
 
 /** S10 브랜드 디렉터리. 초성으로 골라 본다. */
-export function BrandDirectory({ brands }: { readonly brands: readonly BrandListItemResponse[] }) {
+export function BrandDirectory({ brands }: { readonly brands: readonly BrandSummaryResponse[] }) {
   const [selected, setSelected] = useState(ALL);
 
   // 브랜드가 없는 초성은 눌러도 빈 목록이라 레일에 두지 않는다.

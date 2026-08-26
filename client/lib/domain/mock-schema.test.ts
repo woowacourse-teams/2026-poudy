@@ -1,6 +1,6 @@
 import {
   BrandDetailResponse,
-  BrandListResponse,
+  BrandOverviewResponse,
   CategoryListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
@@ -66,7 +66,7 @@ const cases = [
   ["성분 상세", "/ingredients/1", IngredientDetailResponse],
   ["제외 성분군", "/exclude-codes", ExcludeCodeListResponse],
   ["카테고리", "/categories", CategoryListResponse],
-  ["브랜드 목록", "/brands", BrandListResponse],
+  ["브랜드 목록", "/brands", BrandOverviewResponse],
   ["브랜드 상세", "/brands/1", BrandDetailResponse],
 ] as const;
 

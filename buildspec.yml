@@ -4,11 +4,12 @@ env:
   variables:
     PNPM_VERSION: "11.21.0"
     # Next.js의 NEXT_PUBLIC_* 값은 빌드 결과물에 포함되므로 CodeBuild에서 지정합니다.
-    # 프론트와 백엔드는 같은 외부 origin을 사용하고, Nginx가 /api/*를 백엔드
-    # 사설 IP로 중계하므로 API base URL은 비워 둡니다.
+    # sitemap.xml은 빌드 중 API 데이터를 읽어 정적으로 생성합니다. 외부 origin을
+    # 지정해 빌드 환경에서도 Nginx의 /api/* 중계를 이용합니다.
     NEXT_PUBLIC_API_MOCKING: ""
-    NEXT_PUBLIC_API_BASE_URL: ""
+    NEXT_PUBLIC_API_BASE_URL: "https://poudy.site"
     NEXT_PUBLIC_ENVIRONMENT: "production"
+    NEXT_PUBLIC_SITE_URL: "https://poudy.site"
 
 phases:
   install:

@@ -8,6 +8,7 @@ import { fetchCategories } from "@/lib/api/products";
 
 export const metadata: Metadata = {
   title: "카테고리",
+  alternates: { canonical: "/categories" },
 };
 
 // 제품 수가 늘면 값이 바뀌므로 원래는 ISR 대상이다. 다만 목 서버는 빌드 시점에

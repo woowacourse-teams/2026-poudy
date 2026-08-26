@@ -22,10 +22,19 @@ beforeEach(() => {
 });
 
 describe("BottomNavigation 앱 햅틱", () => {
-  it("하단 메뉴를 누르면 앱에 선택 햅틱을 요청한다", async () => {
+  it("현재 탭을 다시 누르면 선택 햅틱을 요청하지 않는다", async () => {
     render(<BottomNavigation />);
 
     await userEvent.click(screen.getByRole("link", { name: "홈" }));
+
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it("다른 탭을 누르면 앱에 선택 햅틱을 요청한다", async () => {
+    render(<BottomNavigation />);
+    screen.getByRole("link", { name: "카테고리" }).addEventListener("click", (event) => event.preventDefault());
+
+    await userEvent.click(screen.getByRole("link", { name: "카테고리" }));
 
     expect(postMessage).toHaveBeenCalledWith("poudy:haptic:selection");
   });

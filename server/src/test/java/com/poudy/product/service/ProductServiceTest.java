@@ -3,12 +3,16 @@ package com.poudy.product.service;
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandDetail;
+import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CountedCategory;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
@@ -44,7 +48,11 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
                 .willReturn(Set.of(999L));
-        ProductService service = new ProductService(repository, categories(product.category()), excludeCodeIngredients);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of(product.brand())),
+                categories(product.category()),
+                excludeCodeIngredients);
         ProductFilterRequest filter = new ProductFilterRequest(
                 null,
                 null,
@@ -72,7 +80,11 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.freeCodesOf(product.ingredients()))
                 .willReturn(List.of(ExcludeCode.SULFATES));
-        ProductService service = new ProductService(repository, categories(product.category()), excludeCodeIngredients);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of(product.brand())),
+                categories(product.category()),
+                excludeCodeIngredients);
 
         ProductDetail detail = service.findDetail(1L);
 
@@ -86,12 +98,13 @@ class ProductServiceTest {
     void rejectsUnknownProduct() {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        Category parent = new Category(1L, null, "스킨케어", 0, null, null);
-        Category child = new Category(2L, 1L, "토너", 1, null, null);
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "토너", 1);
         given(repository.findAll()).willReturn(new Products(List.of()));
         ProductService service = new ProductService(
                 repository,
-                new Categories(List.of(parent, child)),
+                new Brands(List.of()),
+                Categories.from(List.of(parent, child)),
                 excludeCodeIngredients);
 
         assertThatThrownBy(() -> service.findDetail(999L))
@@ -100,9 +113,50 @@ class ProductServiceTest {
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
+    @Test
+    @DisplayName("브랜드와 해당 제품의 카테고리별 개수를 상세 정보로 조회한다")
+    void findsBrandDetail() {
+        Product product = product(1L);
+        Brands brands = new Brands(List.of(product.brand()));
+        Categories categories = categories(product.category());
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        ProductService service = new ProductService(repository, brands, categories, excludeCodeIngredients);
+
+        BrandDetail detail = service.findBrandDetail(product.brand().id());
+
+        Category parent = categories.parents().getFirst();
+        assertThat(detail.id()).isEqualTo(product.brand().id());
+        assertThat(detail.koreanName()).isEqualTo(product.brand().koreanName());
+        assertThat(detail.categories())
+                .extracting(CountedCategory::id, CountedCategory::productCount)
+                .containsExactly(tuple(parent.id(), 1L));
+        assertThat(detail.categories().getFirst().children())
+                .extracting(CountedCategory::id, CountedCategory::productCount)
+                .containsExactly(tuple(product.category().id(), 1L));
+    }
+
+    @Test
+    @DisplayName("브랜드를 찾지 못하면 브랜드 없음 예외를 던진다")
+    void rejectsUnknownBrand() {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        ProductService service = new ProductService(
+                repository,
+                new Brands(List.of()),
+                Categories.from(List.of()),
+                excludeCodeIngredients);
+
+        assertThatThrownBy(() -> service.findBrandDetail(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .extracting(exception -> ((ResourceNotFoundException) exception).code())
+                .isEqualTo(ErrorCode.BRAND_NOT_FOUND);
+    }
+
     private static Product product(Long id) {
         Brand brand = new Brand(1L, "브랜드", null, null);
-        Category category = new Category(2L, 1L, "토너", 1, null, null);
+        Category category = new Category(2L, 1L, "토너", 1);
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
         return new Product(
@@ -118,7 +172,7 @@ class ProductServiceTest {
     }
 
     private static Categories categories(Category child) {
-        Category parent = new Category(child.parentId(), null, "스킨케어", 0, null, null);
-        return new Categories(List.of(parent, child));
+        Category parent = new Category(child.parentId(), null, "스킨케어", 0);
+        return Categories.from(List.of(parent, child));
     }
 }

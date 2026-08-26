@@ -6,6 +6,10 @@ import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
   title: "저장함",
+  alternates: { canonical: "/saved" },
+  robots: { index: false, follow: false },
+  openGraph: null,
+  twitter: null,
 };
 
 export default function SavedPage() {

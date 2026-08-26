@@ -21,7 +21,7 @@ class ProductSearchTest {
     }
 
     private static Product product(Long id, String name, Brand brand) {
-        Category category = new Category(1L, 100L, "카테고리", 1, null, null);
+        Category category = new Category(1L, 100L, "카테고리", 1);
 
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
@@ -64,6 +64,15 @@ class ProductSearchTest {
 
         assertThat(names(products.search("라운드")))
                 .containsExactly("1025 독도 토너", "자작나무 수분 크림");
+    }
+
+    @Test
+    @DisplayName("브랜드 영문명으로 제품을 찾는다")
+    void findsProductsByEnglishBrandName() {
+        Brand brand = new Brand(1L, "닥터지", "Dr.G", null);
+        Products products = new Products(List.of(product(1L, "레드 블레미쉬 크림", brand)));
+
+        assertThat(names(products.search("dr.g"))).containsExactly("레드 블레미쉬 크림");
     }
 
     @Test

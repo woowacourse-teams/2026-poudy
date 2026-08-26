@@ -12,7 +12,7 @@ export function Button({ variant = "primary", children, className, ...rest }: Bu
     <button
       type="button"
       {...rest}
-      className={`flex h-13 w-full items-center justify-center rounded-button text-[15px] font-bold ${styles} ${className ?? ""}`}
+      className={`flex h-13 w-full items-center justify-center rounded-button text-[15px] font-bold disabled:cursor-not-allowed disabled:opacity-40 ${styles} ${className ?? ""}`}
     >
       {children}
     </button>

@@ -19,7 +19,7 @@ type DirectoryRowItem = {
   /** 이름 앞의 동그라미 글자. 브랜드 목록에서 쓴다. */
   readonly initial?: string;
   /** 브랜드 로고. 없으면 initial 을 대신 보여 준다. */
-  readonly imageUrl?: string;
+  readonly imageUrl?: string | null;
   readonly href: string;
 };
 

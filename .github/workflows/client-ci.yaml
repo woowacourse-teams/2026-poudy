@@ -66,6 +66,9 @@ jobs:
       - name: Build
         id: build
         continue-on-error: true
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: production
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
         run: pnpm run build
 
       - name: Setup Chrome
@@ -80,6 +83,9 @@ jobs:
         id: lighthouse
         if: steps.build.outcome == 'success' && steps.chrome.outcome == 'success'
         continue-on-error: true
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: production
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
         run: pnpm dlx @lhci/cli@0.15.1 autorun
 
       # 뒤 단계가 읽는 자리로 중간값 보고서를 옮긴다.

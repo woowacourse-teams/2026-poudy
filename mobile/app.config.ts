@@ -58,6 +58,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: bundleIdentifier,
     },
     plugins: [
+      [
+        'expo-build-properties',
+        {
+          android: {
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+          },
+        },
+      ],
       './plugins/withQuickActionIcons',
       [
         'expo-dev-client',

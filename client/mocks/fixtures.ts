@@ -1,5 +1,7 @@
+import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pipelineProducts } from "./pipeline-data";
+
 import type {
-  BrandListItemResponse,
+  BrandSummaryResponse,
   CategoryResponse,
   ExcludeCodeResponse,
   IngredientDetailResponse,
@@ -15,12 +17,12 @@ import type {
  */
 const ROUNDLAB_TONER_IMAGE = "/images/products/roundlab-1025-toner.png";
 
-export const brands: BrandListItemResponse[] = [
+export const brands: BrandSummaryResponse[] = [
   { id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 48 },
   { id: 2, name: "토리든", englishName: "TORRIDEN", imageUrl: "", productCount: 21 },
   { id: 3, name: "아누아", englishName: "ANUA", imageUrl: "", productCount: 17 },
   { id: 4, name: "에스트라", englishName: "AESTURA", imageUrl: "", productCount: 12 },
-  { id: 5, name: "닥터지", englishName: "Dr.G", imageUrl: "", productCount: 9 },
+  { id: 5, name: "닥터지", englishName: null, imageUrl: null, productCount: 9 },
 ];
 
 const brandOf = (id: number) => {
@@ -425,3 +427,71 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];
+
+/*
+ * 여기서부터는 poudy-data-pipeline 에서 옮긴 실제 데이터다.
+ *
+ * 위의 목 데이터는 디자인과 화면을 대조하려고 손으로 적은 것이라 다섯 개뿐이다.
+ * 조건을 걸 때 개수가 실제로 움직이는지 보려면 데이터가 더 있어야 해서 함께 싣는다.
+ *
+ * 손으로 적은 제품과 ID 가 겹치지 않게 PIPELINE_ID_OFFSET 을 더한다.
+ */
+const PIPELINE_ID_OFFSET = 1000;
+
+const pipelineBrandById = new Map(pipelineBrands.map((brand) => [brand.id, brand]));
+
+/** 파이프라인 제품이 쓰는 성분 ID. 빠른 필터가 실제로 걸리는지 이 값으로 가른다. */
+export const pipelineProductIngredients = new Map(
+  pipelineProducts.map((product) => [product.id + PIPELINE_ID_OFFSET, new Set<number>(product.ingredientIds)]),
+);
+
+/** 제외 코드가 걸러 내는 성분 ID. */
+export const excludeCodeIngredientIds = new Map(
+  pipelineExcludeCodeIngredients.map((code) => [code.code, new Set<number>(code.ingredientIds)]),
+);
+
+const pipelineBrandOf = (id: number) => {
+  const found = pipelineBrandById.get(id);
+  return {
+    id: (found?.id ?? 0) + PIPELINE_ID_OFFSET,
+    name: found?.name ?? "알 수 없는 브랜드",
+    englishName: found?.englishName ?? "",
+    imageUrl: "",
+  };
+};
+
+const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) => ({
+  id: product.id + PIPELINE_ID_OFFSET,
+  name: product.name,
+  brand: pipelineBrandOf(product.brandId),
+  imageUrl: "",
+  price: product.price,
+  volumeValue: product.volumeValue,
+  volumeUnit: product.volumeUnit,
+  moistureLevel: product.moistureLevel,
+  oilLevel: product.oilLevel,
+}));
+
+/** 손으로 적은 다섯 개 뒤에 파이프라인 제품을 잇는다. */
+export const allProducts: ProductResponse[] = [...products, ...pipelineProductList];
+
+export const allBrands: BrandSummaryResponse[] = [
+  ...brands,
+  ...pipelineBrands
+    .filter((brand) => brand.productCount > 0)
+    .map((brand) => ({
+      id: brand.id + PIPELINE_ID_OFFSET,
+      name: brand.name,
+      englishName: brand.englishName,
+      imageUrl: "",
+      productCount: brand.productCount,
+    })),
+];
+
+/** 자동완성과 조건 칩에 쓸 성분 이름. 상세는 ingredientDetails 가 맡는다. */
+export const pipelineIngredientSummaries = pipelineIngredients.map((ingredient) => ({
+  id: ingredient.id,
+  koreanName: ingredient.koreanName,
+  englishName: ingredient.englishName,
+  skinEffects: [] as { id: number; code: string; name: string }[],
+}));

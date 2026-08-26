@@ -52,7 +52,7 @@ com.poudy
 - 실제 구현 중 필요하지 않은 DTO나 Domain 클래스는 만들지 않는다. 위 구조는 사용할 수 있는
   경계를 보여줄 뿐, 모든 기능에 빈 계층을 미리 만들라는 뜻이 아니다.
 - 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
-- 다른 기능의 응답에 중첩되는 DTO는 그 개념을 정의하는 기능이 소유하며 다른 기능이 재사용한다. 제품 응답은 `brand.controller.dto.BrandResponse`를 사용한다.
+- 여러 기능이 같은 응답 계약을 공유하면 그 개념을 정의하는 기능이 DTO를 소유하고 다른 기능이 재사용한다. 제품 응답의 브랜드 정보는 `brand.controller.dto.BrandResponse`를 사용한다. 한 엔드포인트에서만 사용하는 투영은 해당 엔드포인트를 소유한 기능에 둔다.
 - 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
 - 검색어처럼 어느 기능의 개념도 아닌 도메인 값은 `common.domain`에 둔다. 성분과 제품이 같은 검색어 규칙을 쓰는데 한쪽 기능의 `domain`에 두면 다른 기능이 그 기능을 참조하게 되어 의존이 한 방향으로 서지 않는다.
 - 공통 예외 처리는 `exception`에, OpenAPI 설정은 `config`에 둔다.
@@ -88,13 +88,21 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 브랜드 목록만 `BrandListItemResponse`로 제품 수를 더해 내려보낸다. `BrandResponse`에 제품 수를 넣으면 제품 카드마다 쓰지 않는 값이 실리고, `ProductPageResponse.brands`에서는 그 수가 결과 기준인지 전체 기준인지 읽는 쪽이 알 수 없다. 목록 항목의 제품 수는 전체 카탈로그 기준이며 제품 조회 필터와 무관하다.
 
+`BrandDetail`은 브랜드 정보와 `CountedCategory` 목록만 갖는다. 계층과 집계를 각각 들고 조회 시점에 조합하면 응답 경계가 도메인에 카테고리를 넘겨 제품 수를 되묻는 모양이 되고, 같은 필터링을 조회할 때마다 다시 한다. 브랜드도 집계도 생성 이후에 바뀌지 않으므로 조립된 결과 하나만 갖는다.
+
 `Brands`는 `List<Brand>`를 가지는 일급 컬렉션이다. 여러 브랜드를 대상으로 하는 문제를 담당한다.
 
 ### Category
 
-`Category`는 제품 카테고리를 표현한다. 카테고리 조회 응답은 하위 카테고리를 포함할 수 있다.
+`Category`는 모든 상태를 `private final`로 보관하는 불변 클래스로 제품 카테고리 하나의
+깊이와 부모 관계를 판단한다. 카테고리 조회 응답은 하위 카테고리를 포함할 수 있다.
 
-`Categories`는 `List<Category>`를 가지는 일급 컬렉션이다. 여러 카테고리를 대상으로 하는 문제를 담당한다.
+`Categories`는 ID를 키로 한 `Map<Long, Category>` 하나를 가지는 일급 컬렉션이다. ID는
+Map에서 바로 찾고, 제품 카테고리의 전체 경로는 부모를 재귀적으로 따라가며 만든다. 여러
+카테고리를 대상으로 하는 문제를 담당한다.
+카테고리 계층과 카테고리 ID의 정합성만 관리하며, 카테고리별 제품 수는 관리하지 않는다.
+
+`CountedCategory`는 카테고리 하나와 그 안에서 센 제품 수, 하위 카테고리를 함께 갖는 값이다. 제품 수를 세는 일은 `Products`가 하지만 "제품 수가 붙은 카테고리 계층"은 카테고리 개념이므로 `category.domain`이 소유한다. 이 값을 `product.domain`에 두면 이를 사용하는 브랜드 상세가 제품 도메인을 참조하게 되고, 제품 도메인이 브랜드 상세를 조립하는 방향과 겹쳐 의존이 한 방향으로 서지 않는다.
 
 ### Ingredient
 
@@ -164,7 +172,12 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 ### Tag
 
-`Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의 `Ingredient`에는 여러 `Tag`가 붙을 수 있다.
+`Tag`, `FormulationRole`, `SkinEffect`는 상태를 `private final`로 보관하며 생성자에서
+입력값을 검증하는 불변 클래스다. `Tag`는 성분에 붙는 태그 하나를 표현한다. 하나의
+`Ingredient`에는 여러 `Tag`가 붙을 수 있다.
+
+`Tags`는 ID를 키로 한 `Map<Long, Tag>` 하나를 가지는 일급 컬렉션이다. 태그 ID의
+유일성은 `Tags`가 보장하며, `TagRepository`는 저장소에서 읽은 태그를 전달하는 역할만 한다.
 
 태그는 성격이 다른 두 축으로 나뉘며 응답에서도 따로 싣는다.
 
@@ -177,13 +190,13 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 응답 필드를 `functions`로 부르지 않는다. `FUNCTION`은 배합 목적인데 우리말로 "기능"이라 옮기면 피부 작용 쪽으로 읽혀 두 축이 뒤집힌다. 문서와 화면 문구에서도 피부 작용을 "기능"이라 부르지 않는다.
 
-제품 상세의 `skinEffectGroups`는 같은 피부 작용을 기준으로 그 제품의 성분을 묶은 것이다.
+제품 상세의 `skinEffectGroups`는 피부 작용 태그 ID를 기준으로 그 제품의 성분을 묶은 것이다.
 연관 성분 수가 많은 순서로 최대 3개를 제공하며, 성분 수가 같으면 태그 ID가 작은 그룹을
 먼저 제공한다.
 
 `IngredientTags`는 `List<IngredientTag>`를 가지는 일급 컬렉션이다. 한 성분에 붙은 여러 태그를 관리하며 두 축으로 가르는 일과 피부 작용 근거를 모으는 일을 담당한다. 성분에 붙은 태그 목록이므로 `tag`가 아니라 `ingredient.domain`이 소유한다.
 
-태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `FormulationRole`과 `SkinEffect`는 enum 상수에 값을 중복하지 않고, 해석된 `Tag`에서 각각 `FUNCTION`과 `BIOLOGICAL_EFFECT` 응답 값을 만든다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
+태그 ID, 코드와 표시 이름의 원천은 `tags.json`이다. `TagRepository`가 이를 `Tag`와 `Tags`로 읽고, `IngredientRepository`는 `ingredients.json`의 `tag_mappings[].tag_id`를 `Tags`에서 찾아 `IngredientTag`를 만든다. 존재하지 않는 태그 ID를 참조하면 기동 시점에 실패한다. `IngredientTag`는 해석된 `Tag`의 구분을 확인하고 각각 `FormulationRole`과 `SkinEffect`로 변환한다. 두 객체는 enum 상수에 응답 값을 중복하지 않는다. `TagCategory`는 원천 데이터의 태그 구분을 표현한다.
 
 ### Product
 
@@ -230,6 +243,13 @@ Product
 무시한 부분 일치와 초성 검색을 지원한다.
 
 제품 목록 전체에 적용되는 검색, 필터링, 정렬, 개수 계산과 결과 브랜드 수집은 `Products`가 담당한다. 검색어는 다른 필터와 함께 올 수 있으며 같은 `Products`가 한 번에 처리한다. 제품 필터 조회와 제품 개수 조회는 같은 필터 규칙을 사용해야 한다. 목록 응답의 `brands`도 개수와 마찬가지로 페이지가 아니라 조건에 해당하는 결과 전체에서 구한다.
+
+카테고리별 제품 수 집계도 제품 목록을 대상으로 하는 계산이므로 `Products`가 담당한다.
+`ProductCountsByCategory`는 실제 제품이 있는 카테고리 ID의 집계값만 `Map` 하나로 보관하고,
+집계값이 없는 카테고리는 조회할 때 0으로 해석한다. 카테고리 계층 탐색은 `Categories`에 남겨 둔다.
+전체 카테고리 응답은 응답 경계에서 두 객체를 함께 사용하고, 브랜드 상세는 `nonEmptyCategoriesOf`가
+두 객체를 `CountedCategory` 계층 하나로 접어 준다. 제품이 없는 카테고리를 빼는 판단도 제품 수에서
+나오므로 이 메서드가 함께 끝낸다.
 
 API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
@@ -399,14 +419,51 @@ test runtime classpath로 실행된다. 실제 서버 실행은 계속 main reso
 OpenAPI 문서는 확인·소비용 파생물이므로 직접 수정하지 않는다. 이 절에는 코드만으로
 복구하기 어려운 경로와 표현의 결정 이유만 기록한다.
 
-피드백은 `/api/feedback`에 `POST`한다. 성공은 원본이 S3에 보관됐다는 뜻이며 본문 없는
-`204 No Content`로 응답한다. S3 저장 후 Discord 알림만 실패하면 원본은 운영에서 확인할 수
-있으므로 성공을 유지한다.
+피드백은 `/api/feedback`에 `POST`한다. 선택적인 이미지는 먼저
+`POST /api/feedback/images`의 multipart `images` 파트로 1~5장을 올려 일회용 `imageIds`를
+받고, 피드백 JSON의 `imageIds`로 연결한다. 업로드와 등록을 나눈 이유는 이미지 검증·재인코딩과
+피드백 등록의 실패 경계를 분리하면서 이미지가 없는 기존 요청과 `204 No Content` 응답을
+유지하기 위해서다.
+
+이미지는 서버가 JPEG/PNG 단일 프레임, 5 MiB/장·25 MiB/요청, 4,096 px/축·16 MP를 검증한 뒤
+metadata 없이 재인코딩한다. 큰 래스터가 동시에 힙을 점유하지 않도록 이미지 처리는 설정된
+전역 동시성 상한 안에서 실행하며 슬롯이 없으면 요청 스레드를 대기시키지 않고 429로 거절한다.
+pending 객체는 24시간 동안만 논리적으로 유효하다. 등록 시
+조건부 claim을 만든 뒤 최종 경로로 복사하고, 이미지 목록을 포함한 피드백 JSON 저장을 commit
+point로 삼는다. JSON 저장 결과가 불명확하면 claim과 최종 이미지를 보존하고, 10분 유예 뒤
+조정 작업이 JSON의 정확한 키와 SHA-256을 확인해 commit 또는 rollback한다. 이 경로는 여러
+S3 키에 대한 원자적 트랜잭션이 없을 때 동시 귀속과 잘못된 보상 삭제를 피하기 위한 것이다.
+claim 복구는 1분 주기로 실행하고 전체 객체 목록이 필요한 만료·고아 정리는 기본 1시간 주기로
+분리해 정상 보관 데이터에 대한 반복 조회를 제한한다.
+
+애플리케이션 정리는 pending, claim과 JSON이 없는 고아 최종 이미지까지만 소유한다. 운영
+버킷은 lifecycle 설정 권한이 없고 버전 관리가 비활성화되어 있으므로, 접수된 피드백 JSON과
+연결된 최종 이미지는 `deploy/README.md`의 절차에 따라 운영자가 접수일로부터 90일 이내에
+수동으로 함께 삭제한다. 애플리케이션은 버킷 lifecycle이나 버전 관리 설정을 조회·변경하지
+않는다.
+
+`Feedback`은 첨부 이미지 목록과 최대 개수·중복 ID 불변식을 소유한다. `FeedbackService`는
+S3 ETag, claim 문서, 직렬화 바이트와 저장 결과 판정을 알지 않고 접수·요청 제한·저장·알림만
+연결한다. 여러 S3 객체의 저장 순서와 보상은 `S3FeedbackRepository`가 저장 경계 안에서
+조정하고, `S3FeedbackImageRepository`는 pending·claim·최종 이미지의 S3 프로토콜과 그
+내부 상태에 대한 오래된 claim 조정, pending·고아 객체 정리를 함께 맡는다. 스케줄러는 저장소
+내부 표현을 알지 않고 실행 시점과 결과 로깅만 담당한다.
+`S3FeedbackObjectStore`는 피드백 기능 내부에서만 공유하며 버킷·암호화·S3 요청 생성,
+페이지네이션과 SDK 실패 분류를 감춘다. 이미지 상태 전이와 피드백 commit 판정은 이 계층으로
+내리지 않는다. 제품 등록 요청처럼 클라이언트와 실패 정책이 다른 기능까지 같은 객체 저장소로
+일반화하지 않는다.
+처리 완료 이미지, pending, claim과 JSON 저장 결과처럼 저장 단계에서만 쓰는 값은 각 구현의
+내부 타입으로 두어 기능 계층의 공개 모델로 확산하지 않는다.
+
+피드백 JSON 저장 후 pending/claim 정리나 Discord 알림만 실패하면 원본은 운영에서 확인할 수
+있으므로 성공을 유지한다. Discord 알림은 유형·화면·접수 시각·접수 ID, 첨부 이미지 개수와
+의견 본문을 싣되 2,000자 안으로 자르고 멘션 해석을 차단한다.
 
 피드백 등록은 nginx가 덮어쓰는 `X-Real-IP`를 우선하고 직접 실행 환경에서는 연결 원격 주소를
 사용해 클라이언트별 고정 시간 창으로 제한한다. 기본 정책은 시간당 5회이며 초과 응답은
-`Retry-After`를 포함한 `429 TOO_MANY_REQUESTS`다. S3 전체 호출은 15초, 개별 시도는 5초로
-제한해 nginx의 30초 응답 제한보다 먼저 실패한다.
+`Retry-After`를 포함한 `429 TOO_MANY_REQUESTS`다. 이미지 업로드는 별도의 기본 시간당 5회
+제한을 사용해 업로드만 반복하는 비용을 제한한다. 각 S3 API 호출은 15초, 개별 시도는 5초로
+제한한다.
 
 제품 등록 요청은 `/api/product-requests`에 `POST`한다. 성공은 카탈로그 등록 완료가 아니라
 운영 검토 대상이 보관됐다는 뜻이므로 본문 없는 `202 Accepted`로 응답한다. 제품명과 선택적인

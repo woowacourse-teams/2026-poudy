@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
+import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
 import {
@@ -21,6 +23,7 @@ import {
 
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 export function ProductSearchPanel() {
+  const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const { items, total, hasNext, loading, loadNext } = useProductSuggestions(keyword);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
@@ -29,6 +32,43 @@ export function ProductSearchPanel() {
   const trimmed = keyword.trim();
   const empty = total === 0;
   const searching = loading && items.length === 0;
+
+  /**
+   * 엔터는 자동완성 첫 제품이 아니라 검색 결과 목록으로 보낸다. 고르지 않은 제품을
+   * 대신 고르지 않는다. 아직 세는 중이면 다 센 뒤에 그 결과를 따른다.
+   */
+  const counted = trimmed.length > 0 && total !== undefined && !loading;
+
+  /**
+   * 보내고 나서도 화면은 잠시 그대로 있다. 그 사이 엔터를 또 누르면 같은 곳으로
+   * 두 번 가고 기록도 두 번 남는다. 어느 검색어로 보냈는지 기억해 두고 막는다.
+   */
+  const sent = useRef<string | undefined>(undefined);
+
+  const go = useCallback(() => {
+    if (total === undefined || total === 0 || sent.current === trimmed) return;
+
+    sent.current = trimmed;
+    track("search_submitted", { mode: "product", query: trimmed, result_count: total });
+    router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
+  }, [router, total, trimmed]);
+
+  const { waiting, submit, cancel } = useDeferredSubmit(counted, go);
+
+  /** 검색어가 바뀌면 다시 보낼 수 있다. 비우면 기다리던 엔터도 없던 일이 된다. */
+  const changeKeyword = useCallback(
+    (next: string) => {
+      setKeyword(next);
+      sent.current = undefined;
+      if (next.trim().length === 0) cancel();
+    },
+    [cancel],
+  );
+
+  const handleSubmit = () => {
+    if (trimmed.length === 0) return;
+    submit();
+  };
 
   const recent = useSyncExternalStore(
     subscribeRecentSearches,
@@ -41,14 +81,17 @@ export function ProductSearchPanel() {
       <div className="flex flex-col gap-2">
         <SearchField
           value={keyword}
-          onChange={setKeyword}
+          onChange={changeKeyword}
           placeholder="브랜드 또는 제품명을 입력해 주세요"
           label="제품명 검색"
+          onSubmit={handleSubmit}
         />
-        <p className="text-[12px] text-text-secondary">
-          {typing
-            ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
-            : "제품명을 입력하면 일치하는 제품을 바로 보여드려요."}
+        <p aria-live="polite" className="text-[12px] text-text-secondary">
+          {waiting
+            ? "검색 결과를 확인하고 있어요…"
+            : typing
+              ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
+              : "제품명을 입력하면 일치하는 제품을 바로 보여드려요."}
         </p>
       </div>
 

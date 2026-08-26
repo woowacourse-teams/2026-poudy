@@ -7,6 +7,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -59,5 +61,21 @@ class FeedbackTest {
                         "/" + "a".repeat(500),
                         CLOCK))
                 .isInstanceOf(InvalidFeedbackException.class);
+    }
+
+    @Test
+    @DisplayName("첨부 이미지 ID의 개수와 중복 규칙을 의견이 검증한다")
+    void validatesImageIds() {
+        UUID imageId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> Feedback.normalizeImageIds(List.of(imageId, imageId)))
+                .isInstanceOf(InvalidFeedbackImageIdException.class);
+        assertThatThrownBy(
+                () -> Feedback.normalizeImageIds(
+                        java.util.stream.IntStream.range(0, Feedback.MAX_IMAGE_COUNT + 1)
+                                .mapToObj(ignored -> UUID.randomUUID())
+                                .toList()))
+                .isInstanceOf(InvalidFeedbackImageIdException.class);
+        assertThat(Feedback.normalizeImageIds(null)).isEmpty();
     }
 }

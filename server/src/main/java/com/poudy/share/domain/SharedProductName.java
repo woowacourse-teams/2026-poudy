@@ -78,7 +78,7 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
     private static Optional<Product> confirm(List<Product> candidates, String searched) {
         SearchKeyword searchKeyword = new SearchKeyword(searched);
         List<Product> exact = candidates.stream()
-                .filter(product -> product.hasExactName(searchKeyword))
+                .filter(product -> product.matchesNameExactly(searchKeyword))
                 .toList();
 
         if (exact.size() == 1) {

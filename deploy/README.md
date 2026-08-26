@@ -179,3 +179,41 @@ sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
 
 인프라 로그 위치, journald 보존, CloudWatch Agent와 최소 알람 적용 절차는
 [`deploy/monitoring/README.md`](monitoring/README.md)에 정리합니다.
+
+## 피드백 S3 수동 보유 기간 관리
+
+피드백 버킷은 버전 관리가 비활성화되어 있고 운영 계정에는 S3 lifecycle 설정 권한이 없다고
+가정합니다. 애플리케이션은 버킷 설정을 바꾸지 않습니다. 대신 서버의 정기 정리 작업이 24시간
+지난 pending 이미지와 피드백 JSON이 없는 고아 최종 이미지를 정리하고, 10분 이상 지난
+claim을 commit 또는 rollback으로 조정합니다.
+
+접수된 피드백 JSON과 연결된 최종 이미지는 운영자가 AWS S3 콘솔에서 최소 주 1회 다음과 같이
+삭제합니다. 주간 실행 사이의 최대 7일을 고려해 접수일로부터 83일 이상 지난 항목을 삭제하면
+개인정보 처리방침의 90일 이내 보유 기준을 지킬 수 있습니다.
+
+1. `poudy/feedback/`에서 `pending/`, `claims/`와 `*/images/`를 제외한
+   `{feedbackId}.json` 객체를 확인합니다.
+2. S3 `Last modified`가 실행 시각 기준 83일 이상 지난 JSON의 `feedbackId`를 기록합니다.
+3. 각 ID의 `poudy/feedback/{feedbackId}/images/` 아래 객체와
+   `poudy/feedback/{feedbackId}.json`을 모두 삭제합니다.
+4. 같은 ID로 검색해 JSON과 이미지 객체가 하나도 남지 않았는지 확인합니다. 일부 삭제가
+   실패하면 해당 ID 전체를 즉시 다시 확인하고 남은 객체를 삭제합니다.
+5. 실행 시각, 83일 기준 시각, 대상 feedback ID, 삭제 객체 수, 실패와 재확인 결과를 운영
+   기록에 남깁니다.
+
+같은 주간 작업에서 `pending/`의 24시간 초과 객체와 `claims/`의 7일 초과 객체도 확인합니다.
+정상 상태라면 서버가 이미 정리했어야 하므로 남은 객체는 스케줄러 장애, S3 권한 오류 또는
+commit 판정 불명 신호입니다. claim의 `feedbackId`에 해당하는 피드백 JSON과 서버 로그를
+확인해 다음과 같이 처리합니다.
+
+- 피드백 JSON 저장이 확정된 경우: 최종 이미지는 보존하고 해당 pending과 claim만 삭제합니다.
+- 피드백 JSON이 없는 rollback 상태가 확정된 경우: 해당 pending, 최종 이미지와 claim을 모두
+  삭제합니다.
+- 권한 오류, JSON hash 불일치 등으로 상태를 확정할 수 없는 경우: 객체를 추측으로 삭제하지
+  않고 원인을 복구한 뒤 서버 조정 작업의 성공을 확인합니다.
+
+이 점검의 대상 ID, 판정 근거, 삭제 객체와 미해결 사유도 같은 운영 기록에 남깁니다.
+
+버전 관리가 비활성화되어 있으므로 일반 삭제가 영구 삭제이며 이전 버전이나 delete marker를
+별도로 정리하지 않습니다. 주 1회 실행과 기록을 유지하기 어려우면 lifecycle 권한을 확보하거나
+별도 자동 정리를 마련하기 전까지 피드백 이미지 첨부 기능을 운영에 노출하지 않습니다.

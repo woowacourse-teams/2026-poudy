@@ -2,6 +2,7 @@ package com.poudy.product.controller;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,6 +38,8 @@ class ProductQueryTest {
                 .andExpect(jsonPath("$.items[0].id").value(15L))
                 .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"))
                 .andExpect(jsonPath("$.items[0].brand.id").value(3L))
+                .andExpect(jsonPath("$.items[0].brand.englishName").value(nullValue()))
+                .andExpect(jsonPath("$.items[0].brand.imageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.items[0].price").value(15000L))
                 .andExpect(jsonPath("$.pagination.totalElements").value(2L))
                 .andExpect(jsonPath("$.pagination.hasNext").value(true))
@@ -129,6 +132,8 @@ class ProductQueryTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(15L))
                 .andExpect(jsonPath("$.brand.id").value(3L))
+                .andExpect(jsonPath("$.brand.englishName").value(nullValue()))
+                .andExpect(jsonPath("$.brand.imageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.categories[0].id").value(1L))
                 .andExpect(jsonPath("$.categories[0].child.id").value(2L))
                 .andExpect(jsonPath("$.variants.length()").value(2))

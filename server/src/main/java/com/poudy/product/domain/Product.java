@@ -2,7 +2,7 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
-import com.poudy.common.domain.NameMatch;
+import com.poudy.common.domain.NameRank;
 import com.poudy.common.domain.SearchKeyword;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
@@ -67,16 +67,24 @@ public record Product(
     }
 
     public boolean hasBrand(Brand other) {
-        return other != null && brand.id().equals(other.id());
+        return brand.equals(other);
     }
 
-    public boolean hasExactName(SearchKeyword keyword) {
-        return keyword.match(name) == NameMatch.EXACT;
+    public boolean hasBrandId(Long brandId) {
+        return brand.hasId(brandId);
+    }
+
+    public NameRank matchBrandKeyword(SearchKeyword keyword) {
+        return brand.matchKeyword(keyword);
+    }
+
+    public boolean matchesNameExactly(SearchKeyword keyword) {
+        return keyword.matchesExactly(name);
     }
 
     public boolean matches(ProductFilter filter) {
         return matchesCategory(filter.categoryIds())
-                && matchesAny(filter.brandIds(), brand.id())
+                && matchesBrand(filter.brandIds())
                 && matchesAny(filter.moistureLevels(), sensory.moisture())
                 && matchesAny(filter.oilLevels(), sensory.oil())
                 && ingredients.containsAll(filter.ingredientFilter().includedIds())
@@ -96,15 +104,18 @@ public record Product(
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<SkinEffect, List<Long>> ingredientIds = new HashMap<>();
+        Map<Long, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
-                ingredientIds.computeIfAbsent(effect, key -> new ArrayList<>()).add(ingredient.id());
+                SkinEffectGroupAccumulator group = groups.computeIfAbsent(
+                        effect.id(),
+                        ignored -> new SkinEffectGroupAccumulator(effect));
+                group.add(ingredient.id());
             }
         }
 
-        return ingredientIds.entrySet().stream()
-                .map(entry -> new SkinEffectGroup(entry.getKey(), entry.getValue()))
+        return groups.values().stream()
+                .map(SkinEffectGroupAccumulator::toGroup)
                 .sorted(
                         Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
                                 .reversed()
@@ -113,10 +124,32 @@ public record Product(
                 .toList();
     }
 
+    private static class SkinEffectGroupAccumulator {
+
+        private final SkinEffect effect;
+        private final List<Long> ingredientIds = new ArrayList<>();
+
+        private SkinEffectGroupAccumulator(SkinEffect effect) {
+            this.effect = effect;
+        }
+
+        private void add(Long ingredientId) {
+            ingredientIds.add(ingredientId);
+        }
+
+        private SkinEffectGroup toGroup() {
+            return new SkinEffectGroup(effect, ingredientIds);
+        }
+    }
+
     private boolean matchesCategory(List<Long> categoryIds) {
         return categoryIds.isEmpty()
                 || categoryIds.contains(category.id())
                 || categoryIds.contains(category.parentId());
+    }
+
+    private boolean matchesBrand(List<Long> brandIds) {
+        return brandIds.isEmpty() || brandIds.stream().anyMatch(brand::hasId);
     }
 
     private static boolean matchesAny(List<?> candidates, Object value) {

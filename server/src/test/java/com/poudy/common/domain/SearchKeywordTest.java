@@ -69,6 +69,15 @@ class SearchKeywordTest {
     }
 
     @Test
+    @DisplayName("여러 이름 중 정확히 같은 이름이 있는지 판단한다")
+    void matchesAnyNameExactly() {
+        SearchKeyword keyword = new SearchKeyword("닥터지");
+
+        assertThat(keyword.matchesExactly("메디큐브", "닥터지", null)).isTrue();
+        assertThat(keyword.matchesExactly("닥터지랩", "Dr.G", null)).isFalse();
+    }
+
+    @Test
     @DisplayName("자모가 분해된 검색어도 찾는다")
     void matchesDecomposedKeyword() {
         String decomposed = Normalizer.normalize("글리", Normalizer.Form.NFD);

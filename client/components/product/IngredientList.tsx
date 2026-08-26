@@ -65,7 +65,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           type="button"
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
-          className="flex h-12 w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#F4F5F6] px-3.5 text-[13px] font-semibold text-[#202124]"
+          className="relative isolate flex h-12 w-full items-center justify-center gap-1.5 bg-transparent px-3.5 text-[13px] font-semibold text-[#202124] before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-[10px] before:bg-[#F4F5F6] before:content-['']"
         >
           {expanded ? "성분 목록 접기" : `나머지 ${restCount}개 성분 펼쳐보기`}
           <Icon name={expanded ? "chevron-up" : "chevron-down"} size={16} className="text-text-secondary" />

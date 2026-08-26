@@ -1,6 +1,6 @@
 import type {
   BrandDetailResponse,
-  BrandListResponse,
+  BrandOverviewResponse,
   CategoryListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
@@ -50,7 +50,7 @@ export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> => apiGet(
 
 export const fetchCategories = (): Promise<CategoryListResponse> => apiGet("/api/categories");
 
-export const fetchBrands = (): Promise<BrandListResponse> => apiGet("/api/brands");
+export const fetchBrands = (): Promise<BrandOverviewResponse> => apiGet("/api/brands");
 
 export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> => apiGet(`/api/brands/${brandId}`);
 

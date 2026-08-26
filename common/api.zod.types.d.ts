@@ -19,6 +19,16 @@ export type FeedbackRequest = {
    * 의견을 작성한 화면 경로
    */
   path: string;
+  /**
+   * 미리 업로드한 선택적 이미지 ID 목록
+   */
+  imageIds?: (Array<string> | null);
+}
+export type FeedbackImageUploadResponse = {
+  /**
+   * 요청한 이미지 순서의 일회성 ID
+   */
+  imageIds: Array<string>;
 }
 export type BrandResponse = {
   /**
@@ -32,11 +42,11 @@ export type BrandResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
 }
 export type ProductResponse = {
   /**
@@ -332,7 +342,7 @@ export type ExcludeCodeListResponse = {
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
-export type BrandListItemResponse = {
+export type BrandSummaryResponse = {
   /**
    * 브랜드 ID
    */
@@ -344,17 +354,17 @@ export type BrandListItemResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
   /**
    * 이 브랜드의 제품 수. 전체 카탈로그 기준이며 제품 조회 필터와 무관하다
    */
   productCount: number;
 }
-export type BrandListResponse = { items: Array<BrandListItemResponse> }
+export type BrandOverviewResponse = { items: Array<BrandSummaryResponse> }
 export type BrandDetailResponse = {
   /**
    * 브랜드 ID
@@ -367,17 +377,17 @@ export type BrandDetailResponse = {
   /**
    * 브랜드 영문명
    */
-  englishName: string;
+  englishName: (string | null);
   /**
    * 브랜드 이미지 URL
    */
-  imageUrl: string;
+  imageUrl: (string | null);
   /**
    * 이 브랜드 제품이 속한 카테고리를 대분류와 소분류로 표시한다. productCount 는 이 브랜드 안에서 센 값이다
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "CONFLICTING_INGREDIENT_FILTER" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -416,6 +426,26 @@ export type post_Submit_1 = {
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다.
+ */
+export type post_UploadImages = {
+      method: "POST",
+      path: "/api/feedback/images",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { images: Array<Blob> },
+          }
+      responses: {201: Schemas.FeedbackImageUploadResponse,
+400: Schemas.ProblemDetail,
+413: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -661,7 +691,7 @@ export type get_FindBrands = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
-      responses: {200: Schemas.BrandListResponse,
+      responses: {200: Schemas.BrandOverviewResponse,
 500: Schemas.ProblemDetail,
 },
 
@@ -692,7 +722,8 @@ export type get_FindBrand = {
      export type EndpointByMethod = {
      post: {
            "/api/product-requests": Endpoints.post_Submit,
-"/api/feedback": Endpoints.post_Submit_1
+"/api/feedback": Endpoints.post_Submit_1,
+"/api/feedback/images": Endpoints.post_UploadImages
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,

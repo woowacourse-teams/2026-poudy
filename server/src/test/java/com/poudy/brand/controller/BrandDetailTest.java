@@ -1,6 +1,7 @@
 package com.poudy.brand.controller;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,8 +28,8 @@ class BrandDetailTest {
         mockMvc.perform(get("/api/brands/1")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("다 브랜드"))
-                .andExpect(jsonPath("$.englishName").value(""))
-                .andExpect(jsonPath("$.imageUrl").value(""))
+                .andExpect(jsonPath("$.englishName").value(nullValue()))
+                .andExpect(jsonPath("$.imageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.categories[*].id").value(contains(1, 13)))
                 .andExpect(jsonPath("$.categories[0].name").value("스킨케어"))
                 .andExpect(jsonPath("$.categories[0].productCount").value(2))

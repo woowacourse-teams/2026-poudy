@@ -10,6 +10,10 @@ import { ProductSearchPanel } from "./ProductSearchPanel";
 
 import { server } from "@/mocks/server";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
+
 const suggestionsAre = (items: readonly { id: number; name: string; brandName: string }[]) =>
   server.use(
     http.get("*/api/products/suggestions", () =>

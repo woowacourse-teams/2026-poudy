@@ -25,11 +25,19 @@ public record IngredientTag(Tag tag, String source) {
     }
 
     public FormulationRole formulationRole() {
-        return FormulationRole.from(tag);
+        if (!isOf(TagCategory.FUNCTION)) {
+            throw new IllegalArgumentException("배합 목적은 FUNCTION 태그로 만들어야 합니다.");
+        }
+
+        return new FormulationRole(tag.id(), tag.code(), tag.name());
     }
 
     public SkinEffect skinEffect() {
-        return SkinEffect.from(tag);
+        if (!isOf(TagCategory.BIOLOGICAL_EFFECT)) {
+            throw new IllegalArgumentException("피부 작용은 BIOLOGICAL_EFFECT 태그로 만들어야 합니다.");
+        }
+
+        return new SkinEffect(tag.id(), tag.code(), tag.name());
     }
 
     public List<String> sources() {
