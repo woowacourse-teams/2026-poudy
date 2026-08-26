@@ -41,9 +41,9 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 ### SortDropdown
 
 - **Structure**: listbox 트리거, 항상 마운트된 옵션 목록, 단일 선택 옵션 4개
-- **States**: 닫힘, 열림, hover, 눌림, 선택됨, 키보드 포커스
+- **States**: 닫힘, 열림, hover, 선택됨, 키보드 포커스
 - **Accessibility**: 트리거의 `aria-expanded`·`aria-controls`, 목록의 `aria-hidden`·`inert`, 옵션의 `aria-selected`, Escape와 바깥 클릭 닫기, `--color-action`을 쓰는 3:1 이상 키보드 포커스 표시
-- **Motion**: 목록은 트리거 쪽인 아래에서 4px 자라 나오며 opacity와 scale만 전환하고, 화살표는 180도 회전한다. fine pointer hover는 진입과 이탈 모두 `--transition-duration-control-state` 동안 표면색을 바꾼다. 트리거와 옵션은 눌리면 같은 크기로 들어가고, 실제 값이 바뀌는 옵션 선택에는 선택 햅틱을 함께 쓴다.
+- **Motion**: 목록은 트리거 쪽인 아래에서 4px 자라 나오며 opacity와 scale만 전환하고, 화살표는 180도 회전한다. fine pointer hover는 진입과 이탈 모두 `--transition-duration-control-state` 동안 표면색을 바꾼다. 눌림에는 크기를 줄이지 않는다. 고르면 배경색이 크게 바뀌어 눌린 것이 이미 보이고, 필터 칩도 같은 이유로 색만 쓴다. 실제 값이 바뀌는 옵션 선택에는 선택 햅틱을 함께 쓴다.
 - **Layout**: 트리거 오른쪽 아래에 붙는 절대 위치 popover. 필터 selector와 같은 조밀한 인상을 유지하도록 메뉴는 156px 폭, 옵션은 36px 높이·12px 글자를 사용한다. 메뉴에는 위아래 여백을 두지 않는다. 여백이 있으면 hover 배경이 옵션에만 깔리고 그 바깥으로 흰 띠가 남는다. 대신 넘치는 부분을 잘라 첫 옵션과 마지막 옵션이 둥근 모서리를 넘지 않게 한다.
 
 ### Shared UI primitives
@@ -56,7 +56,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 
 | Token                                 | Duration | Easing       | Usage                   |
 | ------------------------------------- | -------- | ------------ | ----------------------- |
-| `--transition-duration-press`         | 100ms    | `--ease-out` | 눌림 반응               |
+| `--transition-duration-press`         | 100ms    | `--ease-out` | 저장 버튼 눌림 반응     |
 | `--transition-duration-control-state` | 160ms    | `--ease-out` | 컨트롤 아이콘·색상 전환 |
 | `--transition-duration-disclosure`    | 200ms    | `--ease-out` | 메뉴 열림·닫힘          |
 

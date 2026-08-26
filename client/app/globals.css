@@ -139,19 +139,15 @@ body {
   transform: translateY(0) scale(1);
 }
 
+/*
+ * 눌림에 크기를 줄이지 않는다. 고르면 배경색이 크게 바뀌어 눌린 것이 이미 보이고,
+ * 필터 칩도 같은 이유로 색만 쓴다. 서로 다른 물성으로 반응하면 한 화면으로 읽히지 않는다.
+ */
 .sort-dropdown-trigger,
 .sort-dropdown-option {
-  transition-property: background-color, color, transform;
-  transition-duration:
-    var(--transition-duration-control-state), var(--transition-duration-control-state),
-    var(--transition-duration-press, 100ms);
+  transition-property: background-color, color;
+  transition-duration: var(--transition-duration-control-state);
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 눌리면 살짝 들어간다. 트리거와 옵션이 같은 느낌으로 반응해야 한 덩어리로 읽힌다. */
-.sort-dropdown-trigger:active,
-.sort-dropdown-option:active {
-  transform: scale(0.98);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -245,14 +241,7 @@ body {
     transform: none;
   }
 
-  .sort-dropdown-trigger,
-  .sort-dropdown-option {
-    transition-property: background-color, color;
-  }
-
-  .sort-dropdown-chevron,
-  .sort-dropdown-trigger:active,
-  .sort-dropdown-option:active {
+  .sort-dropdown-chevron {
     transform: none;
   }
 }

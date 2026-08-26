@@ -77,7 +77,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         onClick={handleClick}
         aria-pressed={saved}
         aria-label={label}
-        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
+        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
           saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
         }`}
       >
@@ -110,7 +110,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       onClick={handleClick}
       aria-pressed={saved}
       aria-label={label}
-      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-standard motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
+      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
       <Icon
         name="bookmark"
