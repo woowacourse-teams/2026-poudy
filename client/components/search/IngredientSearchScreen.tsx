@@ -2,11 +2,13 @@
 
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 import { IngredientSearchPanel } from "./IngredientSearchPanel";
 
 import { Button } from "@/components/ui/Button";
 import { RollingNumber } from "@/components/ui/RollingNumber";
+import { track } from "@/lib/analytics/track";
 import { serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
@@ -27,6 +29,21 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
   // 바텀시트와 같은 문구를 쓴다. 조건을 바꾸면 개수가 따라 바뀐다.
   const { count, counting } = useCountState(filter);
   const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
+  const resultKey = serializeFilter(filter).toString();
+  const trackedEmptyResult = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (total === 0 || counting || count !== 0 || trackedEmptyResult.current === resultKey) return;
+    trackedEmptyResult.current = resultKey;
+
+    track("search_results_viewed", {
+      mode: "ingredient",
+      result_count: 0,
+      include_count: filter.includeIngredientIds.length,
+      exclude_count: filter.excludeIngredientIds.length,
+      exclude_group_count: filter.excludeCodes.length,
+    });
+  }, [count, counting, filter, resultKey, total]);
 
   /*
    * 넘어갈 수 없는 두 경우를 함께 막는다.

@@ -155,7 +155,7 @@ export function SavedPreview() {
         {/* 응답이 더 오더라도 홈에서는 정한 수만큼만 보여 준다. */}
         {items.slice(0, SAVED_PREVIEW_COUNT).map((product) => (
           <li key={product.id}>
-            <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />
+            <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} entryPoint="home" />
           </li>
         ))}
       </ul>

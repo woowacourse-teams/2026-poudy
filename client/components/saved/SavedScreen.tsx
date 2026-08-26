@@ -144,7 +144,7 @@ export function SavedScreen() {
       <ul data-private className="divide-y divide-divider">
         {shown.map((product) => (
           <li key={product.id}>
-            <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} />
+            <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} entryPoint="saved" />
           </li>
         ))}
       </ul>

@@ -51,6 +51,15 @@ beforeEach(() => {
 });
 
 describe("IngredientSearchPanel 분석", () => {
+  it("첫 유효 입력에서 성분 검색 시작을 한 번만 남긴다", async () => {
+    setup();
+    await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "판테놀");
+
+    expect(vi.mocked(track).mock.calls.filter(([event]) => event === "search_started")).toEqual([
+      ["search_started", { mode: "ingredient" }],
+    ]);
+  });
+
   it("검색 결과가 오면 검색어와 결과 수를 남긴다", async () => {
     setup();
     await searchRow();
@@ -92,6 +101,7 @@ describe("IngredientSearchPanel 분석", () => {
     await userEvent.click(row.getByRole("button", { name: "판테놀 포함" }));
 
     expect(track).toHaveBeenCalledWith("ingredient_condition_toggled", {
+      target_type: "ingredient",
       ingredient_id: 6,
       condition: "include",
       action: "add",
@@ -105,6 +115,32 @@ describe("IngredientSearchPanel 분석", () => {
     await userEvent.click(row.getByRole("button", { name: "판테놀 포함" }));
 
     expect(track).toHaveBeenCalledWith("ingredient_condition_toggled", expect.objectContaining({ action: "remove" }));
+  });
+
+  it("선택한 성분 칩을 지워도 제거 동작을 남긴다", async () => {
+    setup({ ...EMPTY_FILTER, includeIngredientIds: [6] });
+    await userEvent.click(screen.getByRole("button", { name: "판테놀 포함 조건 삭제" }));
+
+    expect(track).toHaveBeenCalledWith("ingredient_condition_toggled", {
+      target_type: "ingredient",
+      ingredient_id: 6,
+      condition: "include",
+      action: "remove",
+      surface: "ingredient_search",
+    });
+  });
+
+  it("제외 성분군을 켜면 성분군 조건으로 남긴다", async () => {
+    setup();
+    await userEvent.click(screen.getByRole("checkbox", { name: "향료/알레르기 성분 제외" }));
+
+    expect(track).toHaveBeenCalledWith("ingredient_condition_toggled", {
+      target_type: "exclude_group",
+      exclude_code: "FRAGRANCE_ALLERGENS",
+      condition: "exclude",
+      action: "add",
+      surface: "ingredient_search",
+    });
   });
 
   it("제외한 성분군의 성분을 포함으로 고른 상태면 경고를 남긴다", async () => {

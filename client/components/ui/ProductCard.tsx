@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LevelTag } from "./LevelTag";
 import { SaveButton } from "./SaveButton";
 
+import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/product-display";
 
 export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
@@ -13,15 +14,19 @@ type ProductCardProps = {
   readonly product: ProductResponse;
   readonly saved: boolean;
   readonly onToggleSave: (productId: number) => void;
+  readonly entryPoint?: ProductEntryPoint;
 };
 
 /** 디자인 C03. 홈·목록·저장함·카테고리·브랜드 화면이 함께 쓴다. */
-export function ProductCard({ product, saved, onToggleSave }: ProductCardProps) {
+export function ProductCard({ product, saved, onToggleSave, entryPoint }: ProductCardProps) {
   const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
 
   return (
     <article className="flex items-center gap-3 bg-white py-3">
-      <Link href={`/products/${id}`} className="flex flex-1 items-center gap-3">
+      <Link
+        href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
+        className="flex flex-1 items-center gap-3"
+      >
         <ProductThumbnail imageUrl={product.imageUrl} />
 
         {/*

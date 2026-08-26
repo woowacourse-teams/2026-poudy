@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
@@ -44,6 +44,8 @@ export function ProductSearchPanel() {
    * 두 번 가고 기록도 두 번 남는다. 어느 검색어로 보냈는지 기억해 두고 막는다.
    */
   const sent = useRef<string | undefined>(undefined);
+  const started = useRef(false);
+  const countedResult = useRef<string | undefined>(undefined);
 
   const go = useCallback(() => {
     if (total === undefined || total === 0 || sent.current === trimmed) return;
@@ -58,12 +60,35 @@ export function ProductSearchPanel() {
   /** 검색어가 바뀌면 다시 보낼 수 있다. 비우면 기다리던 엔터도 없던 일이 된다. */
   const changeKeyword = useCallback(
     (next: string) => {
+      if (!started.current && next.trim().length > 0) {
+        started.current = true;
+        track("search_started", { mode: "product" });
+      }
       setKeyword(next);
       sent.current = undefined;
       if (next.trim().length === 0) cancel();
     },
     [cancel],
   );
+
+  useEffect(() => {
+    if (!trimmed || loading || total === undefined) return;
+
+    const key = `${trimmed}:${total}`;
+    if (countedResult.current === key) return;
+    countedResult.current = key;
+
+    // 결과가 있으면 전체 목록 화면에서 실제 렌더링 뒤에 남긴다.
+    if (total > 0) return;
+    track("search_results_viewed", {
+      mode: "product",
+      query: trimmed,
+      result_count: 0,
+      include_count: 0,
+      exclude_count: 0,
+      exclude_group_count: 0,
+    });
+  }, [loading, total, trimmed]);
 
   const handleSubmit = () => {
     if (trimmed.length === 0) return;
@@ -135,7 +160,7 @@ export function ProductSearchPanel() {
                 {items.map((item, index) => (
                   <li key={item.id}>
                     <Link
-                      href={`/products/${item.id}`}
+                      href={`/products/${item.id}?from=suggestion`}
                       onClick={() => {
                         track("search_suggestion_selected", {
                           mode: "product",
@@ -209,7 +234,7 @@ function RecentSearches({
           {items.map((item, index) => (
             <li key={item.productId} className="flex items-center gap-2 py-3">
               <Link
-                href={`/products/${item.productId}`}
+                href={`/products/${item.productId}?from=recent_search`}
                 onClick={() => track("recent_search_used", { position: index, product_id: item.productId })}
                 className="flex flex-1 flex-col gap-0.5"
               >
