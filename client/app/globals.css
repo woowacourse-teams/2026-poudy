@@ -81,12 +81,10 @@
 
   /*
    * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
-   * ease-standard 는 짧은 상태 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
+   * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
    */
   --transition-duration-drawer: 320ms;
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-  /* 들고 나는 것에 쓰는 강한 ease-out. 브라우저 기본은 끝이 흐리게 끌린다. */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --transition-duration-press: 100ms;
   --transition-duration-celebration: 520ms;
