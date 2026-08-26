@@ -19,10 +19,9 @@ OpenAPI 문서다. 구현이 끝나면 복구하기 어려운 결정만 `ARCHITE
 1~5장을 첨부한다. 이미지는 서버가 검증하고 재인코딩한 결과만 S3에 비공개·암호화 상태로
 보관하며 원본 바이트, 원본 파일명과 저장소 URL은 보존하거나 노출하지 않는다.
 
-현재 서버는 의견 JSON 한 개를 `poudy/feedback/{feedbackId}.json`에 저장한 뒤 Discord에
-알린다. 이미지 상태 저장소, multipart 제한, 피드백 S3 lifecycle/IAM 선언과 개인정보
-처리방침의 이미지 항목은 아직 없다. 운영 nginx의 본문 상한도 현재 10 MiB라 25 MiB 이미지
-배치를 통과시키지 못한다.
+현재 서버에는 이미지 업로드·검증, pending/claim/commit 저장 경계와 정기 정리가 구현되어
+있고 운영 nginx의 이미지 경로도 26 MiB 요청을 받는다. 남은 운영 기준선은 실제 AWS 보안·IAM
+검증, 수동 보유 기간 집행과 개인정보 처리방침의 일치 여부다.
 
 ## 범위와 경계
 
@@ -38,8 +37,9 @@ OpenAPI 문서다. 구현이 끝나면 복구하기 어려운 결정만 `ARCHITE
 몰래 수정하지 않고 소유 영역의 별도 변경과 운영 적용을 선행 조건으로 추적한다.
 
 - `deploy/nginx/*`: multipart 오버헤드를 포함한 본문 상한 반영
-- AWS 버킷/IAM: Public Access Block, 암호화, lifecycle, 버전 삭제와 최소 권한 적용
-- `client/app/privacy/page.tsx`: 선택적 이미지 수집 항목과 실제 자동 보유 기간 반영
+- AWS 버킷/IAM: Public Access Block, 암호화와 최소 객체 권한 적용
+- `client/app/privacy/page.tsx`: 선택적 이미지 수집 항목과 실제 보유 기간 반영
+- `deploy/README.md`: lifecycle 권한이 없는 버킷의 수동 보유 기간 집행 절차 기록
 
 ## API 계약
 
@@ -139,7 +139,7 @@ poudy/feedback/{feedbackId}.json
 ```
 
 - pending 이미지의 `Last-Modified + 24h`를 논리적 만료 시각으로 사용한다. 만료된 객체는
-  lifecycle이 아직 물리적으로 지우지 않았어도 API에서 거절한다.
+  주기적 정리가 아직 물리적으로 지우지 않았어도 API에서 거절한다.
 - UUID만 받은 저장소는 `.jpg`와 `.png`를 조회해 정확히 한 pending 객체만 존재할 때 format을
   확정한다. 둘 다 없거나 비정상적으로 둘 다 존재하면 같은 잘못된 ID로 거절한다.
 - claim 객체는 `If-None-Match: *` 조건부 `PutObject`로 생성한다. S3의 단일 키 조건부 쓰기와
@@ -199,16 +199,15 @@ poudy/feedback/{feedbackId}.json
   경합에서 만료 이미지를 새로 소유하지 못하게 한다.
 - 최종 이미지도 같은 정리 주기에 훑어 10분보다 오래됐는데 같은 `feedbackId`의 JSON이 확정
   부재인 객체를 삭제한다. 전체 prefix 목록에 포함된 피드백 JSON으로 존재 여부를 함께 판정해
-  이미지별 추가 list 요청을 만들지 않는다. claim 자체가 유실되거나 lifecycle으로 사라져도
-  고아 최종 이미지가 전체 피드백 보유 기간까지 남지 않게 한다.
+  이미지별 추가 list 요청을 만들지 않는다. claim 자체가 유실돼도 고아 최종 이미지가 전체
+  피드백 보유 기간까지 남지 않게 한다.
 - 배치 업로드 도중 실패하면 그 배치에서 성공한 pending 키를 한 번의 bulk delete로 정리한다.
-  delete 자체가 실패한 객체는 반환된 ID가 없어 사용할 수 없고 위 만료 정리와 pending
-  lifecycle이 마지막 안전망이 된다.
+  delete 자체가 실패한 객체는 반환된 ID가 없어 사용할 수 없고 위 만료 정리가 다시 삭제한다.
 
 S3는 여러 키에 대한 원자적 트랜잭션을 제공하지 않으므로 즉시 보상, 결과 불명 보존,
-durable claim·고아 조정과 lifecycle 안전망을 함께 둔다. 각 S3 호출은 기존 15초 API 호출
-timeout과 5초 시도 timeout을 그대로 사용한다. nginx 응답 제한과의 정합성은 별도 배포 경계에서
-실측하고 조정해야 한다.
+durable claim·고아 조정을 함께 둔다. 각 S3 호출은 기존 15초 API 호출 timeout과 5초 시도
+timeout을 그대로 사용한다. nginx 응답 제한과의 정합성은 별도 배포 경계에서 실측하고
+조정해야 한다.
 
 ## 피드백 JSON, Discord와 로그
 
@@ -250,27 +249,32 @@ timeout과 5초 시도 timeout을 그대로 사용한다. nginx 응답 제한과
 실제 인스턴스 역할로 존재 객체 GET, exact-prefix list의 부재, `AccessDenied`를 각각 재현해
 부재와 권한 실패가 다른 저장 결과가 되는지 확인한다. 403을 404로 간주하지 않는다.
 
-버킷 운영 설정은 애플리케이션 시작 코드가 아니라 배포/IaC가 소유한다.
+버킷 보안 설정은 애플리케이션 시작 코드가 아니라 배포/IaC가 소유한다.
 
 - Block Public Access 전체 활성화와 HTTPS 강제
 - 기본 암호화와 요청의 명시적 SSE-S3 일치
-- `pending/`: 현재 버전은 1일 뒤 expiration 대상, 이전 버전 1일 내 영구 삭제, 만료 delete
-  marker 정리
-- `claims/`: 조정 장애를 관찰·복구할 수 있게 pending보다 긴 7일 뒤 expiration 대상. claim이
-  먼저 사라져도 고아 최종 이미지 조정이 독립적으로 정리한다.
-- `poudy/feedback/`: 확정한 피드백 보유 기간 뒤 현재 버전과 이전 버전 영구 삭제
 
-현재 개인정보 처리방침의 “처리 완료일로부터 3개월”은 서버에 처리 완료 상태가 없어 자동
-lifecycle 기준으로 구현할 수 없다. 구현 전 제품·법무 소유자와 “접수일로부터 90일”처럼
-객체 생성 시각으로 집행 가능한 기간을 확정하고, 피드백 JSON과 최종 이미지에 같은 rule을
-적용하며 개인정보 처리방침도 정확히 일치시킨다. 이 결정과 실제 AWS 설정 확인 없이는 이
-이슈를 완료로 표시하지 않는다.
+현재 운영 버킷은 버전 관리가 비활성화되어 있고 팀에 lifecycle 설정 권한이 없다. 따라서
+애플리케이션의 주기적 작업이 pending, claim과 고아 최종 이미지를 정리하고, 접수된 피드백
+JSON과 연결된 최종 이미지는 운영자가 AWS 콘솔에서 수동으로 삭제한다. 애플리케이션은 버킷
+lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 
-S3 lifecycle의 1일은 물리 삭제 완료 시점이 아니라 expiration 대상이 되는 시점이고 실제
-삭제는 비동기라 지연될 수 있다. 따라서 API의 만료 판정과 주기적 pending 정리가 24시간
-계약을 집행하고 lifecycle은 누락·장애 시 eventual cleanup을 제공하는 후방 안전망으로만
-사용한다. 개인정보 처리방침도 자동 보유 기간과 삭제 지연의 의미를 실제 설정보다 강하게
-표현하지 않는다.
+정상 정리 주기를 지나 남은 pending이나 7일이 지난 claim은 단순 만료 대상으로 보지 않고
+스케줄러 장애, 권한 오류 또는 commit 판정 불명 신호로 취급한다. 주간 운영 점검에서 관련
+피드백 JSON과 서버 로그를 확인한 뒤 commit이면 pending·claim만, rollback이면 pending·최종
+이미지·claim을 삭제한다. 원인을 판정하지 못한 객체는 추측으로 지우지 않고 권한과 장애를
+먼저 복구한다.
+
+수동 삭제는 최소 주 1회 실행한다. 실행일 사이의 최대 7일을 고려해 피드백 JSON의 S3
+`Last-Modified`가 83일 이상인 접수를 대상으로 삼고, 같은 `feedbackId`의
+`poudy/feedback/{feedbackId}/images/` 객체와 `poudy/feedback/{feedbackId}.json`을 모두
+삭제한다. 이 기준은 접수일로부터 90일을 넘기지 않게 한다. 버전 관리가 비활성화되어 일반
+삭제가 곧 영구 삭제이며 이전 버전과 delete marker를 따로 정리하지 않는다. 구체적인 실행·검증
+절차와 기록 항목은 `deploy/README.md`를 권위 원천으로 둔다.
+
+개인정보 처리방침은 자동 삭제라고 표현하지 않고 접수일로부터 90일 이내 보유한다고 알린다.
+수동 절차를 수행할 운영 책임과 기록을 유지할 수 없게 되면 lifecycle 권한 확보나 별도 자동
+정리 작업을 선행하기 전까지 이미지 첨부를 운영에 노출하지 않는다.
 
 ## 구현 단위
 
@@ -284,7 +288,7 @@ S3 lifecycle의 1일은 물리 삭제 완료 시점이 아니라 expiration 대�
 7. multipart 상한, 이미지 업로드 요청 제한과 S3 설정을 추가한다.
 8. Controller·DTO를 권위 원천으로 OpenAPI와 공통 Zod 생성물을 갱신한다.
 9. `ARCHITECTURE.md`에는 API 분리 이유, claim/commit point와 부분 실패 정책만 반영한다.
-10. nginx, AWS, 개인정보 처리방침의 별도 소유 변경과 실제 적용 결과를 확인한다.
+10. nginx, AWS, 개인정보 처리방침과 수동 삭제 절차의 별도 소유 변경과 실제 적용 결과를 확인한다.
 
 ## 테스트와 검증
 
@@ -327,8 +331,9 @@ S3 lifecycle의 1일은 물리 삭제 완료 시점이 아니라 expiration 대�
   `common/api.zod.types.d.ts` 갱신
 - `sh ./scripts/test.sh` 후 `sh ./scripts/verify.sh` 통과
 - 운영 전 이미지 업로드 전용 nginx 26 MiB 상한과 nginx 자체 413 ProblemDetail, 버킷 공개
-  차단·암호화·lifecycle·이전 버전 삭제와 IAM policy를 실제 요청·설정 조회로 확인
-- 개인정보 처리방침의 이미지 수집·보유 기간이 실제 lifecycle과 같은지 확인
+  차단·암호화·버전 관리 비활성 상태와 IAM policy를 실제 요청·설정 조회로 확인
+- 개인정보 처리방침의 이미지 수집·보유 기간과 `deploy/README.md`의 주 1회 수동 삭제 절차가
+  일치하는지 확인하고, 83일 기준 대상의 이미지·JSON이 모두 삭제되는지 운영 권한으로 검증
 
 ## 진행 기록
 
@@ -347,3 +352,6 @@ S3 lifecycle의 1일은 물리 삭제 완료 시점이 아니라 expiration 대�
   정리 주기를 분리하고, 고아 이미지 정리의 이미지별 S3 조회를 제거했으며 목록 조회 장애가
   빈 결과로 숨지 않게 했다. 저장 준비 이미지 값을 repository 계약으로 옮겨 의존 방향을
   바로잡았고, 개별 claim 조회·존재 확인·정리 삭제 장애도 스케줄러 오류로 노출한다.
+- 2026-08-26: 운영 계정에 lifecycle 설정 권한이 없고 버킷 버전 관리가 비활성화된 조건을
+  확인했다. pending·claim·고아 이미지는 기존 애플리케이션 정리가 담당하고, 확정 피드백
+  JSON과 최종 이미지는 주 1회 83일 기준으로 수동 삭제해 90일 이내 보유를 집행하기로 했다.
