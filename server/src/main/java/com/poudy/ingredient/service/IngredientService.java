@@ -37,9 +37,10 @@ public class IngredientService {
     }
 
     public List<Ingredient> find(IngredientQuery query) {
-        if (query.queriesByIds()) {
-            return ingredientRepository.findByIds(query.ingredientIds(), query.keyword());
-        }
-        return ingredientRepository.search(query.keyword());
+        return ingredientRepository.findByIds(query.ingredientIds());
+    }
+
+    public List<Ingredient> suggest(String keyword) {
+        return ingredientRepository.search(keyword);
     }
 }

@@ -177,13 +177,6 @@ public class IngredientRepository {
         return ingredients.findAllById(ids).values();
     }
 
-    public List<Ingredient> findByIds(List<Long> ids, String keyword) {
-        if (keyword == null) {
-            return findByIds(ids);
-        }
-        return ingredients.findAllById(ids).search(keyword);
-    }
-
     private static void validateDetailFields(List<Ingredient> values) {
         List<Long> invalidIds = values.stream()
                 .filter(ingredient -> ingredient.description() == null || ingredient.updatedAt() == null)
