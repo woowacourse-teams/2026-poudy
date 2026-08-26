@@ -434,6 +434,19 @@ body {
 }
 
 /*
+ * 카테고리·브랜드 탭의 흰 알약. 밑줄과 같은 길이로 미끄러진다.
+ *
+ * 두 탭 전환이 화면마다 다르게 움직이면 같은 일을 하는 자리로 읽히지 않는다.
+ */
+.directory-tab-pill {
+  transition: transform var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.directory-tab {
+  transition: color var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/*
  * 빠른 필터 칸. 고르면 테두리·바탕·글자가 함께 붉게 바뀐다.
  *
  * 옅은 바탕끼리는 아무리 골라도 서로 구분되지 않는다(고른 바탕과 안 고른 바탕의
@@ -559,6 +572,10 @@ body {
    * 되고, 글자가 진해지는 것은 자리를 옮기지 않으므로 남긴다.
    */
   .search-tab-underline {
+    transition-duration: 0s;
+  }
+
+  .directory-tab-pill {
     transition-duration: 0s;
   }
 
