@@ -46,9 +46,9 @@ const ACTIONS = [
  * 한 화면에서 같은 그림이 서로 다른 것을 가리켰다. 칸을 가르는 일은 배경색이 한다.
  */
 const TRUST = [
-  { title: "출처를 밝혀요", detail: "근거와 함께", bg: "bg-brand-soft" },
-  { title: "그대로 옮겨요", detail: "과장 없이", bg: "bg-info-soft" },
-  { title: "직접 골라요", detail: "딱 맞는 것만", bg: "bg-success-soft" },
+  { title: "출처를 밝혀요", detail: "근거와 함께", bg: "from-brand-soft to-[#FFF8FA]" },
+  { title: "그대로 옮겨요", detail: "과장 없이", bg: "from-info-soft to-[#F5FAFD]" },
+  { title: "직접 골라요", detail: "딱 맞는 것만", bg: "from-success-soft to-[#F4FAF8]" },
 ] as const;
 
 /**
@@ -113,13 +113,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section>
+        {/*
+          위 두 입구에 딸린 설명이라 그쪽으로 당겨 붙인다. 다른 영역과 같은 간격을 두면
+          높이가 셋 중 가장 낮은 이 띠가 홀로 떨어져 보인다.
+        */}
+        <section className="-mt-3.5">
           <h2 className="sr-only">서비스 안내</h2>
           <ul className="grid grid-cols-3 gap-2">
             {TRUST.map((item) => (
               <li
                 key={item.title}
-                className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3.5 text-center ${item.bg}`}
+                // 기울기는 빠른 필터 타일과 같은 좌상 -> 우하 방향으로 맞춘다.
+                className={`flex flex-col items-center gap-1 rounded-xl bg-linear-to-br px-2 py-3.5 text-center ${item.bg}`}
               >
                 <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
