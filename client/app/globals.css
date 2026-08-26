@@ -300,7 +300,7 @@ body {
 .quick-filter-tile {
   transition-property: transform, box-shadow;
   transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
