@@ -151,7 +151,7 @@ export function SavedPreview() {
       ) : null}
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
-      <ul data-private className="divide-y divide-border">
+      <ul data-private className="divide-y divide-divider">
         {/* 응답이 더 오더라도 홈에서는 정한 수만큼만 보여 준다. */}
         {items.slice(0, SAVED_PREVIEW_COUNT).map((product) => (
           <li key={product.id}>
