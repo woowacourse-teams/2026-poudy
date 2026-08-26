@@ -70,6 +70,15 @@ describe("BottomSheet 끌어 닫기", () => {
     expect(sheet.style.transform).toBe("");
   });
 
+  it("닫힐 만큼 내리고 놓아도 끌던 자리가 남지 않는다", () => {
+    const { sheet, handle } = setup();
+
+    drag(handle, 120);
+
+    // 남아 있으면 inline transform 이 내려가는 전환을 덮어써 그 자리에 멈춘다.
+    expect(sheet.style.transform).toBe("");
+  });
+
   it("조금만 내렸어도 빠르게 튕기면 닫는다", () => {
     const { onClose, handle } = setup();
 

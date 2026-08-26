@@ -54,9 +54,14 @@ export const useDragToDismiss = (onDismiss: () => void) => {
       drag.current = undefined;
       setDragging(false);
 
-      // 되돌아가는 모습은 전환이 그린다. 여기서는 목적지만 정한다.
+      /*
+       * 어느 쪽이든 끌던 자리는 놓아 준다. 남겨 두면 inline transform 이 남아
+       * 내려가는 전환을 덮어써 손을 뗀 자리에 그대로 멈춘다.
+       *
+       * 되돌아가는 모습도 내려가는 모습도 전환이 그린다. 여기서는 목적지만 정한다.
+       */
+      setOffset(0);
       if (shouldDismiss(started, event.clientY)) onDismiss();
-      else setOffset(0);
     },
     [onDismiss],
   );

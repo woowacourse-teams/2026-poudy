@@ -84,7 +84,7 @@ function SheetBody({
         onTransitionEnd={(event) => {
           if (event.target === event.currentTarget && !shown) onExited();
         }}
-        className="bottom-sheet fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-white"
+        className="bottom-sheet fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[70vh] w-full max-w-md flex-col rounded-t-3xl bg-white"
       >
         {/*
           머리 부분을 잡아 끌어내리면 닫힌다. 핸들이 4px 로 얇아 그것만 잡게 하면
