@@ -417,6 +417,51 @@ body {
 }
 
 /*
+ * 카테고리 시트의 아코디언. 대분류를 펼치면 소분류가 아래로 열린다.
+ *
+ * 소분류 개수가 대분류마다 달라 높이가 정해져 있지 않다. `height: auto` 로는 전환이
+ * 걸리지 않으므로 `grid-template-rows` 를 0fr 에서 1fr 로 옮긴다. `max-height` 로 열면
+ * 넉넉한 값을 어림잡아 두어야 하는데, 그러면 짧은 목록은 다 열린 뒤에도 시간이 남아
+ * 늦게 멎고 긴 목록은 잘린다. 0fr↔1fr 은 실제 내용 높이를 따라가 둘 다 없다.
+ *
+ * 자식은 min-height:auto 때문에 grid 행보다 작아지지 않는다. 안쪽을 overflow:hidden
+ * 으로 감싸 접히는 동안 넘치는 부분을 가린다.
+ */
+.category-disclosure {
+  display: grid;
+  transition: grid-template-rows var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.category-disclosure[data-open="false"] {
+  grid-template-rows: 0fr;
+}
+
+.category-disclosure[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+/*
+ * 접히는 동안에도 안의 버튼은 자리에 남아 있다. 눌리면 보이지 않는 것을 고르게 되므로
+ * 닫히는 쪽은 손을 받지 않는다. 초점도 들어가지 않도록 `inert` 를 함께 건다.
+ */
+.category-disclosure > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.category-disclosure[data-open="false"] > * {
+  pointer-events: none;
+}
+
+/*
+ * 화살표는 목록이 열리는 것과 같은 길이로 돈다. 둘이 어긋나면 따로 노는 것으로 보인다.
+ * 도는 각도는 컴포넌트에서 `rotate-180` 으로 준다. 여기서는 전환만 건다.
+ */
+.category-disclosure-chevron {
+  transition: transform var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/*
  * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
  * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
  */
@@ -474,6 +519,24 @@ body {
   }
 
   .sort-dropdown-chevron {
+    transform: none;
+  }
+
+  /*
+   * 아코디언도 같다. 열고 닫는 것 자체는 남기고 높이가 자라는 움직임만 걷어낸다.
+   * 목록은 그대로 나타나고 사라지며, 화살표만 돌지 않는다.
+   */
+  .category-disclosure {
+    transition-duration: 0s;
+  }
+
+  .category-disclosure-chevron {
+    transition-duration: 0s;
+    transform: none;
+  }
+
+  /* 각도는 유틸리티로 걸려 있어 그쪽도 함께 꺼야 돌지 않는다. */
+  .category-disclosure-chevron.rotate-180 {
     transform: none;
   }
 
