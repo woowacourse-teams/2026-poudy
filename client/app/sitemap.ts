@@ -4,11 +4,16 @@ import { fetchBrands, fetchCategories, fetchIngredients, fetchProducts } from "@
 import { EMPTY_FILTER } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
+/**
+ * sitemap 하나에 실을 수 있는 주소는 5 만 개까지다(sitemaps.org 규격).
+ * 아래 페이지 상한은 색인 범위가 아니라 hasNext 가 끝나지 않을 때를 막는 안전장치다.
+ * 여기에 걸리면 주소가 조용히 빠지므로 generateSitemaps 로 나누어 실어야 한다.
+ */
+const SITEMAP_URL_LIMIT = 50000;
 const PRODUCT_PAGE_SIZE = 100;
-const MAX_PRODUCT_PAGES = 10;
-const INGREDIENT_BATCH_SIZE = 100;
-const MAX_INGREDIENT_BATCHES = 100;
-const INGREDIENT_BATCH_CONCURRENCY = 5;
+const MAX_PRODUCT_PAGES = SITEMAP_URL_LIMIT / PRODUCT_PAGE_SIZE;
+const INGREDIENT_PAGE_SIZE = 100;
+const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
 
 const entry = (path: string, changeFrequency: "daily" | "weekly" | "monthly", priority: number) => ({
   url: absoluteUrl(path),
@@ -32,25 +37,15 @@ const productEntries = async (): Promise<MetadataRoute.Sitemap> => {
 };
 
 const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
-  const batches = Array.from({ length: MAX_INGREDIENT_BATCHES }, (_, batch) =>
-    Array.from({ length: INGREDIENT_BATCH_SIZE }, (_, offset) => batch * INGREDIENT_BATCH_SIZE + offset + 1),
-  );
   const entries: MetadataRoute.Sitemap = [];
 
-  for (let index = 0; index < batches.length; index += INGREDIENT_BATCH_CONCURRENCY) {
-    const responses = await Promise.allSettled(
-      batches
-        .slice(index, index + INGREDIENT_BATCH_CONCURRENCY)
-        .map((ingredientIds) => fetchIngredients({ ingredientIds, size: INGREDIENT_BATCH_SIZE })),
-    );
+  for (let page = 0; page < MAX_INGREDIENT_PAGES; page += 1) {
+    const [result] = await Promise.allSettled([fetchIngredients({ page, size: INGREDIENT_PAGE_SIZE })]);
+    if (result.status === "rejected") break;
 
-    entries.push(
-      ...responses.flatMap((response) =>
-        response.status === "fulfilled"
-          ? response.value.items.map((ingredient) => entry(`/ingredients/${ingredient.id}`, "monthly", 0.7))
-          : [],
-      ),
-    );
+    const response = result.value;
+    entries.push(...response.items.map((ingredient) => entry(`/ingredients/${ingredient.id}`, "monthly", 0.7)));
+    if (!response.pagination.hasNext) break;
   }
 
   return entries;
