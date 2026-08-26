@@ -83,6 +83,11 @@
   --transition-duration-state: 380ms;
   --transition-duration-celebration: 520ms;
   --ease-standard: cubic-bezier(0, 0, 0.2, 1);
+  /*
+   * 들고 나는 것에 쓰는 강한 ease-out. ease-standard 는 끝이 흐리게 끌려
+   * 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎어 물성이 갈린다.
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-standard) forwards;
@@ -116,13 +121,17 @@ body {
   transform-origin: top right;
   transition-property: opacity, transform;
   transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
+/*
+ * 메뉴는 트리거 아래에 뜬다. 위에서 내려오면 어디서 나왔는지 어긋나므로
+ * 트리거 쪽에서 자라 나오게 한다. transform-origin 도 그쪽을 가리킨다.
+ */
 .sort-dropdown-menu[data-open="false"] {
   pointer-events: none;
   opacity: 0;
-  transform: translateY(-4px) scale(0.98);
+  transform: translateY(4px) scale(0.98);
 }
 
 .sort-dropdown-menu[data-open="true"] {
@@ -136,7 +145,7 @@ body {
   transition-duration:
     var(--transition-duration-control-state), var(--transition-duration-control-state),
     var(--transition-duration-press, 100ms);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -162,7 +171,7 @@ body {
 .filter-chip {
   transition-property: background-color, border-color, color;
   transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /*
@@ -181,7 +190,7 @@ body {
 }
 
 .sort-dropdown-chevron {
-  transition: transform var(--transition-duration-control-state) var(--ease-standard, cubic-bezier(0, 0, 0.2, 1));
+  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 .sort-dropdown-chevron[data-open="true"] {
@@ -227,13 +236,24 @@ body {
     animation: none;
   }
 
-  .sort-dropdown-menu,
-  .sort-dropdown-trigger,
-  .sort-dropdown-chevron,
-  .sort-dropdown-option {
-    transition-duration: 0s;
+  /*
+   * 줄이기는 아주 없애는 것이 아니라 덜고 부드럽게 하는 것이다. 자리를 옮기는 움직임만
+   * 걷어내고 색이 바뀌는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+   */
+  .sort-dropdown-menu {
+    transition-property: opacity;
   }
 
+  .sort-dropdown-menu[data-open="false"] {
+    transform: none;
+  }
+
+  .sort-dropdown-trigger,
+  .sort-dropdown-option {
+    transition-property: background-color, color;
+  }
+
+  .sort-dropdown-chevron,
   .sort-dropdown-option:active {
     transform: none;
   }
