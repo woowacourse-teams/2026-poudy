@@ -22,6 +22,8 @@ export const ICON_IDS = [
   "plus",
   "sliders",
   "arrow-up-down",
+  "instagram",
+  "mail",
   "droplet",
   "droplet-solid",
 ] as const;
@@ -138,6 +140,19 @@ export function IconSprite() {
           <path d="M17 20V4" />
           <path d="m3 8 4-4 4 4" />
           <path d="M7 4v16" />
+        </symbol>
+
+        {/* Lucide · instagram */}
+        <symbol id="icon-instagram" viewBox="0 0 24 24">
+          <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+        </symbol>
+
+        {/* Lucide · mail */}
+        <symbol id="icon-mail" viewBox="0 0 24 24">
+          <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
+          <rect x="2" y="4" width="20" height="16" rx="2" />
         </symbol>
 
         {/*
