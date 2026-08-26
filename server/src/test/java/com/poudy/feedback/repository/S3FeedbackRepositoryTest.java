@@ -72,7 +72,7 @@ class S3FeedbackRepositoryTest {
 
         PutObjectRequest request = requestCaptor.getValue();
         assertThat(request.bucket()).isEqualTo(BUCKET);
-        assertThat(request.key()).isEqualTo("poudy/feedback/" + ID + ".json");
+        assertThat(request.key()).isEqualTo("poudy/feedback/" + ID + "/feedback.json");
         assertThat(request.contentType()).isEqualTo("application/json; charset=UTF-8");
         assertThat(request.serverSideEncryption()).isEqualTo(ServerSideEncryption.AES256);
         assertThat(request.ifNoneMatch()).isEqualTo("*");
@@ -110,7 +110,7 @@ class S3FeedbackRepositoryTest {
                         ListObjectsV2Response.builder()
                                 .contents(
                                         S3Object.builder()
-                                                .key("poudy/feedback/" + ID + ".json")
+                                                .key("poudy/feedback/" + ID + "/feedback.json")
                                                 .build())
                                 .build());
         given(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))

@@ -237,12 +237,18 @@ public class S3FeedbackImageRepository {
 
     private CommitPresence commitPresence(UUID feedbackId, String expectedSha256) {
         String key = feedbackKey(feedbackId);
-        if (!existsExactly(key)) {
-            return CommitPresence.ABSENT;
+        if (existsExactly(key)) {
+            return matchesSha256(key, expectedSha256)
+                    ? CommitPresence.COMMITTED
+                    : CommitPresence.UNKNOWN;
         }
-        return matchesSha256(key, expectedSha256)
-                ? CommitPresence.COMMITTED
-                : CommitPresence.UNKNOWN;
+        String legacyKey = legacyFeedbackKey(feedbackId);
+        if (existsExactly(legacyKey)) {
+            return matchesSha256(legacyKey, expectedSha256)
+                    ? CommitPresence.COMMITTED
+                    : CommitPresence.UNKNOWN;
+        }
+        return CommitPresence.ABSENT;
     }
 
     private void commitRecovered(FeedbackImage image) {
@@ -256,15 +262,23 @@ public class S3FeedbackImageRepository {
     }
 
     private static Optional<UUID> feedbackIdFromDocumentKey(String key) {
-        if (!key.startsWith(FEEDBACK_PREFIX) || !key.endsWith(".json")) {
+        if (!key.startsWith(FEEDBACK_PREFIX)) {
             return Optional.empty();
         }
-        String fileName = key.substring(FEEDBACK_PREFIX.length(), key.length() - ".json".length());
-        if (fileName.contains("/")) {
+        String relativeKey = key.substring(FEEDBACK_PREFIX.length());
+        String feedbackId;
+        if (relativeKey.endsWith("/feedback.json")) {
+            feedbackId = relativeKey.substring(0, relativeKey.length() - "/feedback.json".length());
+        } else if (relativeKey.endsWith(".json")) {
+            feedbackId = relativeKey.substring(0, relativeKey.length() - ".json".length());
+        } else {
+            return Optional.empty();
+        }
+        if (feedbackId.contains("/")) {
             return Optional.empty();
         }
         try {
-            return Optional.of(UUID.fromString(fileName));
+            return Optional.of(UUID.fromString(feedbackId));
         } catch (IllegalArgumentException exception) {
             return Optional.empty();
         }
@@ -488,6 +502,10 @@ public class S3FeedbackImageRepository {
     }
 
     private static String feedbackKey(UUID feedbackId) {
+        return FEEDBACK_PREFIX + feedbackId + "/feedback.json";
+    }
+
+    private static String legacyFeedbackKey(UUID feedbackId) {
         return FEEDBACK_PREFIX + feedbackId + ".json";
     }
 

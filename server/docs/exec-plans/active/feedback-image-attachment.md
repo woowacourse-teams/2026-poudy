@@ -135,7 +135,7 @@ nginx가 먼저 차단한 413은 Spring 예외 처리기를 거치지 않으므�
 poudy/feedback/pending/{imageId}.jpg|png
 poudy/feedback/claims/{imageId}.json
 poudy/feedback/{feedbackId}/images/{imageId}.jpg|png
-poudy/feedback/{feedbackId}.json
+poudy/feedback/{feedbackId}/feedback.json
 ```
 
 - pending 이미지의 `Last-Modified + 24h`를 논리적 만료 시각으로 사용한다. 만료된 객체는
@@ -268,8 +268,9 @@ lifecycle이나 버전 관리 상태를 조회·변경하지 않는다.
 
 수동 삭제는 최소 주 1회 실행한다. 실행일 사이의 최대 7일을 고려해 피드백 JSON의 S3
 `Last-Modified`가 83일 이상인 접수를 대상으로 삼고, 같은 `feedbackId`의
-`poudy/feedback/{feedbackId}/images/` 객체와 `poudy/feedback/{feedbackId}.json`을 모두
-삭제한다. 이 기준은 접수일로부터 90일을 넘기지 않게 한다. 버전 관리가 비활성화되어 일반
+`poudy/feedback/{feedbackId}/` prefix의 객체를 모두 삭제한다. 구조 변경 전에 저장된
+`poudy/feedback/{feedbackId}.json`이 있으면 함께 삭제한다. 이 기준은 접수일로부터 90일을
+넘기지 않게 한다. 버전 관리가 비활성화되어 일반
 삭제가 곧 영구 삭제이며 이전 버전과 delete marker를 따로 정리하지 않는다. 구체적인 실행·검증
 절차와 기록 항목은 `deploy/README.md`를 권위 원천으로 둔다.
 

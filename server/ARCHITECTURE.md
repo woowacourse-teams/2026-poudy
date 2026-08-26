@@ -435,6 +435,11 @@ OpenAPI 문서는 확인·소비용 파생물이므로 직접 수정하지 않�
 피드백 등록의 실패 경계를 분리하면서 이미지가 없는 기존 요청과 `204 No Content` 응답을
 유지하기 위해서다.
 
+접수된 피드백은 `poudy/feedback/{feedbackId}/feedback.json`, 연결된 이미지는 같은 prefix의
+`images/{imageId}.jpg|png`에 둔다. 구조 변경 전에 사용한
+`poudy/feedback/{feedbackId}.json`은 새로 쓰지 않지만, 보관 중인 객체와 배포 시점의 claim을
+고아로 오인하지 않도록 조정·정리 과정에서는 함께 인식한다.
+
 이미지는 서버가 JPEG/PNG 단일 프레임, 5 MiB/장·25 MiB/요청, 4,096 px/축·16 MP를 검증한 뒤
 metadata 없이 재인코딩한다. 큰 래스터가 동시에 힙을 점유하지 않도록 이미지 처리는 설정된
 전역 동시성 상한 안에서 실행하며 슬롯이 없으면 요청 스레드를 대기시키지 않고 429로 거절한다.
