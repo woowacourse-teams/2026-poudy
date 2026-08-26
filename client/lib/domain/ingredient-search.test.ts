@@ -8,11 +8,11 @@ describe("ingredientCountLabel", () => {
     expect(ingredientCountLabel(3)).toBe("3개");
   });
 
-  it("상한만큼 오면 더 있을 수 있으므로 단정하지 않는다", () => {
-    expect(ingredientCountLabel(INGREDIENT_SEARCH_LIMIT)).toBe(`${INGREDIENT_SEARCH_LIMIT}개 이상`);
+  it("상한만큼 오면 그 몇 개가 전부가 아니라 골라 온 것임을 말한다", () => {
+    expect(ingredientCountLabel(INGREDIENT_SEARCH_LIMIT)).toBe(`상위 ${INGREDIENT_SEARCH_LIMIT}개만`);
   });
 
   it("상한이 어긋나 더 많이 와도 눈앞의 줄 수보다 적게 말하지 않는다", () => {
-    expect(ingredientCountLabel(INGREDIENT_SEARCH_LIMIT + 5)).toBe(`${INGREDIENT_SEARCH_LIMIT + 5}개 이상`);
+    expect(ingredientCountLabel(INGREDIENT_SEARCH_LIMIT + 5)).toBe(`상위 ${INGREDIENT_SEARCH_LIMIT + 5}개만`);
   });
 });
