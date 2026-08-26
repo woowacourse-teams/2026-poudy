@@ -115,9 +115,9 @@ function SheetBody({
         <div
           ref={bodyRef}
           onScroll={onBodyScroll}
-          data-top={edges.top}
-          data-bottom={edges.bottom}
-          className="bottom-sheet-body flex-1 overflow-y-auto px-5"
+          data-start={edges.start}
+          data-end={edges.end}
+          className="edge-fade flex-1 overflow-y-auto px-5"
         >
           {children}
         </div>

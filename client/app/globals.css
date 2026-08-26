@@ -204,32 +204,45 @@ body {
 }
 
 /*
- * 시트 안의 내용이 길면 위아래 가장자리를 흐려 더 있다는 것을 알린다.
+ * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
+ * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
  *
  * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
- * 없게 되고, 시트 배경이 흰색이 아닌 곳에서는 색도 맞지 않는다.
+ * 없게 되고, 바탕이 흰색이 아닌 곳에서는 색도 맞지 않는다.
  *
- * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 내린 뒤에도 마지막 줄이 흐려 읽기 나쁘다.
+ * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 밀어 놓고도 마지막 줄이 흐려 읽기 나쁘다.
  */
-.bottom-sheet-body {
-  --fade-top: 0px;
-  --fade-bottom: 0px;
+.edge-fade {
+  --fade-size: 24px;
+  --fade-start: 0px;
+  --fade-end: 0px;
 
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 var(--fade-top),
-    #000 calc(100% - var(--fade-bottom)),
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
     transparent 100%
   );
 }
 
-.bottom-sheet-body[data-top="true"] {
-  --fade-top: 24px;
+/* 가로로 흐르는 줄은 지우는 방향도 가로다. */
+.edge-fade[data-axis="horizontal"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent 100%
+  );
 }
 
-.bottom-sheet-body[data-bottom="true"] {
-  --fade-bottom: 24px;
+.edge-fade[data-start="true"] {
+  --fade-start: var(--fade-size);
+}
+
+.edge-fade[data-end="true"] {
+  --fade-end: var(--fade-size);
 }
 
 /*
