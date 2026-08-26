@@ -15,7 +15,7 @@ type CheckMarkProps = {
 export function CheckMark({ checked }: CheckMarkProps) {
   return (
     <span
-      className={`flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors duration-control-state ease-standard motion-reduce:transition-none ${
+      className={`flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors duration-control-state ease-out motion-reduce:transition-none ${
         checked ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
       }`}
     >

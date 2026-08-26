@@ -59,7 +59,9 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | `--transition-duration-press`         | 100ms    | `--ease-out` | 저장 버튼 눌림 반응     |
 | `--transition-duration-control-state` | 160ms    | `--ease-out` | 컨트롤 아이콘·색상 전환 |
 | `--transition-duration-disclosure`    | 200ms    | `--ease-out` | 메뉴 열림·닫힘          |
+| `--transition-duration-celebration`   | 520ms    | `--ease-out` | 저장 불꽃               |
 
+- 저장 불꽃만 300ms 를 넘는다. 담기는 순간에만 터지는 드문 축하라 예산을 따로 쓴다. 나머지 전환은 모두 300ms 안에 든다.
 - 움직이는 표면은 모두 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
 - hover는 진입과 이탈의 시간을 같게 둔다. 한쪽만 즉시 바뀌면 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠져 잔상처럼 보인다.
 - 메뉴가 열리고 닫히는 공간 모션은 transform과 opacity만 애니메이션하고, 컨트롤의 상태 색상은 레이아웃에 영향을 주지 않는 color 전환만 사용한다.

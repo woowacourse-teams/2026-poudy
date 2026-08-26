@@ -80,17 +80,15 @@
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
   --transition-duration-press: 100ms;
-  --transition-duration-state: 380ms;
   --transition-duration-celebration: 520ms;
-  --ease-standard: cubic-bezier(0, 0, 0.2, 1);
   /*
-   * 들고 나는 것에 쓰는 강한 ease-out. ease-standard 는 끝이 흐리게 끌려
-   * 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎어 물성이 갈린다.
+   * 움직이는 것은 모두 이 커브를 쓴다. 예전에 쓰던 cubic-bezier(0, 0, 0.2, 1) 은
+   * 끝이 흐리게 끌려, 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다.
    */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
-  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-standard) forwards;
+  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
 }
 
 /*
