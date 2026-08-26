@@ -40,29 +40,15 @@ const ACTIONS = [
 /*
  * 세 칸이 좁아 문구가 길면 줄이 넘어간다. 어떤 칸은 제목이, 어떤 칸은 설명이 넘어가
  * 셋이 들쭉날쭉해 보였다. 뜻을 지키는 선에서 한 줄에 담기게 줄여 둔다.
+ *
+ * 그림은 두지 않는다. 문구가 이미 짧고 또렷해 그림이 뜻을 더하지 못했고,
+ * `직접 골라요` 에 쓰던 sliders 는 바로 위 `성분·조건으로 찾기` 와 같은 그림이라
+ * 한 화면에서 같은 그림이 서로 다른 것을 가리켰다. 칸을 가르는 일은 배경색이 한다.
  */
 const TRUST = [
-  {
-    title: "출처를 밝혀요",
-    detail: "근거와 함께",
-    icon: "badge-check",
-    bg: "bg-brand-soft",
-    tint: "text-brand",
-  },
-  {
-    title: "그대로 옮겨요",
-    detail: "과장 없이",
-    icon: "info",
-    bg: "bg-info-soft",
-    tint: "text-info",
-  },
-  {
-    title: "직접 골라요",
-    detail: "딱 맞는 것만",
-    icon: "sliders",
-    bg: "bg-success-soft",
-    tint: "text-success",
-  },
+  { title: "출처를 밝혀요", detail: "근거와 함께", bg: "bg-brand-soft" },
+  { title: "그대로 옮겨요", detail: "과장 없이", bg: "bg-info-soft" },
+  { title: "직접 골라요", detail: "딱 맞는 것만", bg: "bg-success-soft" },
 ] as const;
 
 /**
@@ -101,7 +87,7 @@ export default function Home() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  // 어두운 카드는 그림자를 더 진하게 깐다. 그 구분을 CSS 가 읽을 수 있게 남긴다.
+                  // 어두운 카드는 그림자를 진하게 깐다. 그 구분을 CSS 가 읽는다.
                   data-tone={action.tone}
                   className={`action-card flex h-full flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
                 >
@@ -133,10 +119,8 @@ export default function Home() {
             {TRUST.map((item) => (
               <li
                 key={item.title}
-                // 넘어간 줄까지 가운데로 맞춘다. 카드 높이는 격자가 서로 맞춰 준다.
-                className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center ${item.bg}`}
+                className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3.5 text-center ${item.bg}`}
               >
-                <Icon name={item.icon} size={18} className={item.tint} />
                 <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
               </li>
@@ -154,14 +138,9 @@ export default function Home() {
                   className="quick-filter-link flex flex-col items-center gap-1"
                 >
                   {/*
-                    그림에 배경이 없어 바탕을 여기서 깐다. 색을 코드가 쥐고 있으므로
-                    그림을 다시 그리지 않고도 바꿀 수 있다.
-
-                    안쪽 여백만큼 바탕을 키운다. `p-*` 로 안을 파면 그림이 그만큼
-                    작아져 카드 안에서 왜소해진다.
-
-                    기울기는 그림의 조명과 같은 좌상 -> 우하 방향이다. 반대로 흐르면
-                    바탕이 그림과 다른 곳에서 빛을 받는 것처럼 보인다.
+                    그림에 배경이 없어 바탕을 여기서 깐다. 기울기는 그림의 조명과 같은
+                    좌상 -> 우하 방향이다. 반대로 흐르면 바탕이 그림과 다른 곳에서
+                    빛을 받는 것처럼 보인다.
                   */}
                   <Image
                     src={QUICK_FILTERS[code].image}
@@ -183,10 +162,10 @@ export default function Home() {
         <SavedPreview />
       </main>
 
-      {/* 법정 문서는 이용자가 쉽게 찾을 수 있어야 한다. 본문의 꼬리말이 아니라 화면 전체의 꼬리말이라 main 밖에 둔다. */}
       {/*
-        배경색이 이미 본문과의 경계를 만든다. 위쪽 선까지 두면 경계가 겹쳐 보인다.
-        본문에서 눈을 뺏지 않도록 흰색에 가깝게 아주 옅은 회색만 깐다.
+        법정 문서는 이용자가 쉽게 찾을 수 있어야 한다. 본문의 꼬리말이 아니라
+        화면 전체의 꼬리말이라 main 밖에 둔다.
+        배경색이 이미 경계를 만들므로 위쪽 선은 두지 않는다.
       */}
       <footer className="flex flex-col items-center gap-2 bg-[#FAFAFB] px-4 py-9 text-center text-[11px] text-text-secondary">
         {/* 두 링크의 길이가 달라 사이만 띄우면 한쪽으로 쏠려 보인다. 가운뎃점으로 묶어 한 줄로 읽히게 한다. */}
@@ -227,7 +206,6 @@ export default function Home() {
           </li>
         </ul>
 
-        {/* 누가 만든 서비스인지 밝힌다. 연락처는 바로 위 메일 아이콘이 이미 들고 있다. */}
         {/* 하트는 꾸밈이라 뜻을 전하지 않는다. 화면 낭독기가 `분홍 하트` 라고 읽지 않게 감춘다. */}
         <p className="text-[10px]">
           당신의 피부를 생각하는 {OPERATOR.name} <span aria-hidden="true">💗</span>
