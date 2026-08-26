@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -73,13 +73,15 @@ describe("IngredientSearchScreen", () => {
     expect(button).toBeDisabled();
     // 감싼 링크는 그대로 두되 눌러도 넘어가지 않아야 한다.
     expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
-    expect(track).toHaveBeenCalledWith("search_results_viewed", {
-      mode: "ingredient",
-      result_count: 0,
-      include_count: 1,
-      exclude_count: 0,
-      exclude_group_count: 0,
-    });
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith("search_results_viewed", {
+        mode: "ingredient",
+        result_count: 0,
+        include_count: 1,
+        exclude_count: 0,
+        exclude_group_count: 0,
+      }),
+    );
   });
 
   it("개수를 세는 동안에는 버튼을 누를 수 없다", () => {
