@@ -79,6 +79,13 @@
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
+  /*
+   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
+   * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
+   */
+  --transition-duration-drawer: 320ms;
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --transition-duration-press: 100ms;
   --transition-duration-celebration: 520ms;
   /*
@@ -156,6 +163,122 @@ body {
     background-color: var(--color-surface);
     color: var(--color-text-primary);
   }
+}
+
+/*
+ * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
+ * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
+ */
+/*
+ * 시트와 딤은 `fixed` 라 뷰포트를 기준으로 자리를 잡는다. 스크롤을 잠그며 html 에
+ * 막대만큼 여백을 주면 본문은 그만큼 좁아진 영역의 가운데로 가는데, 이쪽은 그대로
+ * 남아 둘의 가운데가 어긋난다.
+ *
+ * 안쪽 여백으로는 상자만 좁아질 뿐 자리가 옮겨지지 않는다. 오른쪽 끝을 막대만큼
+ * 당겨 본문과 같은 영역 안에서 가운데를 잡게 한다.
+ */
+.bottom-sheet,
+.bottom-sheet-dim {
+  right: var(--scrollbar-width, 0px);
+}
+
+.bottom-sheet {
+  transform: translateY(100%);
+  transition: transform var(--transition-duration-drawer) var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.bottom-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+/*
+ * 끄는 동안에는 손가락을 그대로 따라와야 한다. 전환이 걸려 있으면 한 박자 늦게 따라와
+ * 붙잡고 있는 느낌이 사라진다. 놓는 순간 다시 전환이 살아나 제자리로 돌아간다.
+ */
+.bottom-sheet[data-dragging="true"] {
+  transition: none;
+}
+
+/*
+ * 딤은 시트보다 조금 빨리 자리를 잡는다. 같이 끌면 배경이 늦게 어두워져 시트만 떠 보인다.
+ */
+.bottom-sheet-dim {
+  opacity: 0;
+  transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.bottom-sheet-dim[data-open="true"] {
+  opacity: 1;
+}
+
+/*
+ * 줄이기를 켠 사용자에게는 자리를 옮기는 움직임만 걷어낸다. 아주 없애는 것이 아니라
+ * 옅어지고 짙어지는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+ *
+ * 시트도 전환을 지우지는 않는다. 지우면 끝났다는 신호가 오지 않아 DOM 에 남는다.
+ * 자리는 처음부터 제자리에 두고 opacity 만 잇는다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet {
+    transform: translateY(0);
+    opacity: 0;
+    transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  }
+
+  .bottom-sheet[data-open="true"] {
+    opacity: 1;
+  }
+
+  /*
+   * 끌어도 따라오지 않는다. 자리를 옮기지 않기로 했으므로 손가락도 따르지 않는다.
+   * 끄는 동안에는 인라인 transform 이 붙으므로 그것까지 눌러야 자리가 고정된다.
+   */
+  .bottom-sheet[data-dragging="true"],
+  .bottom-sheet[style] {
+    transform: translateY(0) !important;
+  }
+}
+
+/*
+ * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
+ * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
+ *
+ * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
+ * 없게 되고, 바탕이 흰색이 아닌 곳에서는 색도 맞지 않는다.
+ *
+ * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 밀어 놓고도 마지막 줄이 흐려 읽기 나쁘다.
+ */
+.edge-fade {
+  --fade-size: 24px;
+  --fade-start: 0px;
+  --fade-end: 0px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent 100%
+  );
+}
+
+/* 가로로 흐르는 줄은 지우는 방향도 가로다. */
+.edge-fade[data-axis="horizontal"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent 100%
+  );
+}
+
+.edge-fade[data-start="true"] {
+  --fade-start: var(--fade-size);
+}
+
+.edge-fade[data-end="true"] {
+  --fade-end: var(--fade-size);
 }
 
 /*
