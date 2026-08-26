@@ -10,6 +10,7 @@ import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import { hasMatch, splitByKeyword } from "@/lib/domain/highlight";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
@@ -115,7 +116,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                 return (
                   <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                      <span className="truncate text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
+                      <IngredientName name={item.koreanName} keyword={keyword.trim()} />
                       <span className="truncate text-[10px] text-[#868B94]">
                         {item.skinEffects.map((effect) => effect.name).join(" · ")}
                       </span>
@@ -215,5 +216,26 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         </>
       )}
     </>
+  );
+}
+
+/** 자동완성과 같다. 맞는 자리만 진하게 두고, 맞는 자리가 없으면 흐리게 하지 않는다. */
+function IngredientName({ name, keyword }: { readonly name: string; readonly keyword: string }) {
+  const parts = splitByKeyword(name, keyword);
+
+  if (!hasMatch(parts)) {
+    return <span className="truncate text-[12px] font-semibold text-[#212124]">{name}</span>;
+  }
+
+  return (
+    <span className="truncate text-[12px] text-[#72747A]">
+      {/* 낭독기와 검사 도구에는 온전한 이름 하나로 남긴다. 토막은 눈으로 보는 결에만 쓴다. */}
+      <span className="sr-only">{name}</span>
+      {parts.map((part, at) => (
+        <span key={at} aria-hidden="true" className={part.matched ? "font-bold text-[#212124]" : undefined}>
+          {part.text}
+        </span>
+      ))}
+    </span>
   );
 }
