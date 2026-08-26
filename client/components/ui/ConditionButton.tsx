@@ -20,8 +20,9 @@ type ConditionButtonProps = {
  * 나란히 놓인 대등한 선택지라, 한쪽만 미리 붉게 두면 이미 눌린 것처럼 보이고
  * 그쪽을 고르라고 미는 것으로 읽힌다.
  *
- * 그 회색은 필터 칩이 쓰는 것과 같은 값이다. 누르기 전 테두리는 여기 누를 것이
- * 있다는 윤곽일 뿐이라, 옆에 선 성분 이름보다 먼저 눈에 들어오면 안 된다.
+ * 누르기 전 테두리는 여기 누를 것이 있다는 윤곽일 뿐이라 옅게 둔다. 한 줄에 둘씩
+ * 서고 목록이 길어 테두리가 여럿 쌓이는데, 진하면 목록이 격자처럼 보여 정작 훑어야
+ * 할 성분 이름에서 시선이 흩어진다. 빠른 필터의 안 고른 칸과 같은 값을 쓴다.
  */
 export function ConditionButton({ kind, active, onClick, ingredientName }: ConditionButtonProps) {
   const label = kind === "include" ? "포함" : "제외";
@@ -34,7 +35,7 @@ export function ConditionButton({ kind, active, onClick, ingredientName }: Condi
       aria-pressed={active}
       aria-label={`${ingredientName} ${label}`}
       className={`h-8 w-12 shrink-0 rounded-2xl border text-[12px] ${
-        active ? `${activeStyle} font-bold text-white` : "border-[#D1D3D8] bg-white font-semibold text-[#212124]"
+        active ? `${activeStyle} font-bold text-white` : "border-[#DDE0E4] bg-white font-semibold text-[#212124]"
       }`}
     >
       {label}
