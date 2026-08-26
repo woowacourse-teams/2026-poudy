@@ -5,6 +5,7 @@ import { useId, useRef } from "react";
 import { useDragToDismiss } from "@/lib/hooks/useDragToDismiss";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 import { usePresence } from "@/lib/hooks/usePresence";
+import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 type BottomSheetProps = {
@@ -52,6 +53,7 @@ function SheetBody({
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const { offset, dragging, handleProps } = useDragToDismiss(onClose);
+  const { ref: bodyRef, edges, onScroll: onBodyScroll } = useScrollEdges();
 
   /*
    * 붙는 즉시 가둔다. 올라오는 전환이 시작되기를 기다리면 그 사이에 누른 Escape 가
@@ -105,7 +107,20 @@ function SheetBody({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5">{children}</div>
+        {/*
+          내용이 길면 위아래로 흐려 더 있다는 것을 알린다. 딤 위에 겹치는 층을 따로 두면
+          시트 안쪽을 가려 누르지 못하게 되므로, 칠하는 대신 가장자리를 지우는 mask 를 쓴다.
+          끝에 닿은 쪽은 지우지 않아 마지막 줄이 흐려지지 않는다.
+        */}
+        <div
+          ref={bodyRef}
+          onScroll={onBodyScroll}
+          data-top={edges.top}
+          data-bottom={edges.bottom}
+          className="bottom-sheet-body flex-1 overflow-y-auto px-5"
+        >
+          {children}
+        </div>
 
         <div className="flex gap-2 px-4 pt-3 pb-4">
           {/* 초기화가 1, 적용이 2 를 차지한다. 되돌리는 일보다 적용하는 일이 잦다. */}

@@ -204,6 +204,35 @@ body {
 }
 
 /*
+ * 시트 안의 내용이 길면 위아래 가장자리를 흐려 더 있다는 것을 알린다.
+ *
+ * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
+ * 없게 되고, 시트 배경이 흰색이 아닌 곳에서는 색도 맞지 않는다.
+ *
+ * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 내린 뒤에도 마지막 줄이 흐려 읽기 나쁘다.
+ */
+.bottom-sheet-body {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+}
+
+.bottom-sheet-body[data-top="true"] {
+  --fade-top: 24px;
+}
+
+.bottom-sheet-body[data-bottom="true"] {
+  --fade-bottom: 24px;
+}
+
+/*
  * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
  * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
  */
