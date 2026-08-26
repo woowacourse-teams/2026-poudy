@@ -32,6 +32,7 @@ type IngredientSearchPanelProps = {
 /** S03 성분 필터링 탭. 문구와 생김새는 design/v1.pen 을 따른다. */
 export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }: IngredientSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
+  const started = useRef(false);
   const { items, loading } = useSuggestions(keyword, fetcher, "ingredient");
   const typing = keyword.trim().length > 0;
 
@@ -76,7 +77,26 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
   }, [conflictKey]);
 
   const remove = (key: ConditionKey, id: number) => {
+    markStarted();
+    track("ingredient_condition_toggled", {
+      target_type: "ingredient",
+      ingredient_id: id,
+      condition: key === "includeIngredientIds" ? "include" : "exclude",
+      action: "remove",
+      surface: "ingredient_search",
+    });
     onChange({ [key]: filter[key].filter((value) => value !== id) });
+  };
+
+  const markStarted = () => {
+    if (started.current) return;
+    started.current = true;
+    track("search_started", { mode: "ingredient" });
+  };
+
+  const changeKeyword = (next: string) => {
+    if (next.trim().length > 0) markStarted();
+    setKeyword(next);
   };
 
   /**
@@ -87,7 +107,9 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
     const other: ConditionKey = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
     const had = filter[key].includes(item.id);
 
+    markStarted();
     track("ingredient_condition_toggled", {
+      target_type: "ingredient",
       ingredient_id: item.id,
       condition: key === "includeIngredientIds" ? "include" : "exclude",
       action: had ? "remove" : "add",
@@ -110,19 +132,34 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
     });
   };
 
-  const toggleCode = (code: ExcludeCode) =>
+  const toggleCode = (code: ExcludeCode) => {
+    const had = filter.excludeCodes.includes(code);
+    markStarted();
+    track("ingredient_condition_toggled", {
+      target_type: "exclude_group",
+      exclude_code: code,
+      condition: "exclude",
+      action: had ? "remove" : "add",
+      surface: "ingredient_search",
+    });
     onChange({
       excludeCodes: filter.excludeCodes.includes(code)
         ? filter.excludeCodes.filter((item) => item !== code)
         : [...filter.excludeCodes, code],
     });
+  };
 
   return (
     <div className="flex flex-col px-4 pt-3 pb-5">
       <section className="flex flex-col gap-2 pb-4">
         {/* 자동완성이 입력에 붙어 뜨도록 둘을 같은 자리에 담는다. */}
         <div ref={searchRef} className="relative">
-          <SearchField value={keyword} onChange={setKeyword} placeholder="성분명을 입력해 주세요" label="성분 검색" />
+          <SearchField
+            value={keyword}
+            onChange={changeKeyword}
+            placeholder="성분명을 입력해 주세요"
+            label="성분 검색"
+          />
 
           {typing ? (
             <IngredientSuggestions

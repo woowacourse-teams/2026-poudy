@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProductDetail } from "@/components/product/ProductDetail";
+import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
 
@@ -45,6 +46,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 
 export default async function ProductDetailPage(props: PageProps<"/products/[productId]">) {
   const { productId } = await props.params;
+  const searchParams = (await props.searchParams) ?? {};
   const product = await load(productId);
   const structuredData = {
     "@context": "https://schema.org",
@@ -62,7 +64,7 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(structuredData).replace(/</g, "\\u003c")}</script>
-      <ProductDetail product={product} />
+      <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />
     </>
   );
 }
