@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useState } from "react";
 
 import { Icon } from "./icons/Icon";
 
@@ -33,40 +33,20 @@ const randomSparkAngles = (): readonly number[] =>
 export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
-  const burstTimeout = useRef<number | undefined>(undefined);
-
-  useEffect(
-    () => () => {
-      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
-    },
-    [],
-  );
 
   const handleClick = () => {
     requestSelectionHaptic();
 
-    if (!saved && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
-      const durationValue = window
-        .getComputedStyle(document.documentElement)
-        .getPropertyValue("--transition-duration-celebration")
-        .trim();
-      const duration = Number.parseFloat(durationValue) * (durationValue.endsWith("ms") ? 1 : 1000);
-      if (Number.isFinite(duration)) {
-        setSparkAngles(randomSparkAngles());
-        burstTimeout.current = window.setTimeout(() => {
-          setSparkAngles([]);
-          burstTimeout.current = undefined;
-        }, duration);
-      } else {
-        setSparkAngles([]);
-        burstTimeout.current = undefined;
-      }
-    } else {
-      if (burstTimeout.current !== undefined) window.clearTimeout(burstTimeout.current);
-      setSparkAngles([]);
-      burstTimeout.current = undefined;
-    }
+    /*
+     * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
+     * 줄이기를 켠 사람에게는 조각을 아예 만들지 않는다. 스타일로 감추기만 하면
+     * 보이지 않는 것이 문서에 쌓인다.
+     *
+     * 끝나는 시점은 animationend 가 알려 준다. 시간을 세어 맞추려고 CSS 값을 읽으면
+     * 누를 때마다 스타일 계산을 강제하게 된다.
+     */
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    setSparkAngles(saved || reduced ? [] : randomSparkAngles());
     onToggle();
   };
 
@@ -92,13 +72,11 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
           <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
         </span>
         <span className="relative inline-flex">
-          <Icon
-            name="bookmark"
-            size={18}
-            filled={saved}
-            className={sparkAngles.length > 0 ? "animate-save-pop" : undefined}
-          />
-          <SparkBurst angles={sparkAngles} />
+          {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
+          <span className="save-pop inline-flex" data-popped={sparkAngles.length > 0}>
+            <Icon name="bookmark" size={18} filled={saved} />
+          </span>
+          <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
         </span>
       </button>
     );
@@ -112,13 +90,10 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       aria-label={label}
       className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
-      <Icon
-        name="bookmark"
-        size={20}
-        filled={saved}
-        className={`${saved ? "text-[#F04465]" : "text-text-secondary"} ${sparkAngles.length > 0 ? "animate-save-pop" : ""}`}
-      />
-      <SparkBurst angles={sparkAngles} />
+      <span className="save-pop inline-flex" data-popped={sparkAngles.length > 0}>
+        <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
+      </span>
+      <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
     </button>
   );
 }
@@ -127,18 +102,39 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
  * 버튼 둘레로 퍼지는 불꽃. 자리를 차지하지 않도록 버튼 위에 겹쳐 둔다.
  * 뜻을 전하지 않는 장식이므로 보조 기술에서 감춘다.
  */
-function SparkBurst({ angles }: { readonly angles: readonly number[] }) {
+function SparkBurst({ angles, onDone }: { readonly angles: readonly number[]; readonly onDone: () => void }) {
+  const onFirstSpark = useCallback(
+    (element: HTMLSpanElement | null) => {
+      if (!element) return;
+
+      const done = () => onDone();
+      element.addEventListener("animationend", done);
+      return () => element.removeEventListener("animationend", done);
+    },
+    [onDone],
+  );
+
   if (angles.length === 0) return null;
 
   return (
     <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      {angles.map((angle) => {
+      {angles.map((angle, index) => {
         const style: CSSProperties & { readonly "--spark-angle": string } = {
           "--spark-angle": `${angle}deg`,
         };
 
         return (
-          <span key={angle} style={style} className="animate-spark-burst absolute size-1.5 rounded-full bg-[#F04465]" />
+          <span
+            key={angle}
+            style={style}
+            /*
+             * 조각이 여럿이지만 함께 시작해 함께 끝난다. 첫 조각만 듣고 걷는다.
+             * React 의 합성 이벤트 대신 실제 요소에 직접 건다. animationend 는
+             * 합성 이벤트로 오지 않는 환경이 있다.
+             */
+            ref={index === 0 ? onFirstSpark : undefined}
+            className="animate-spark-burst absolute size-1.5 rounded-full bg-[#F04465]"
+          />
         );
       })}
     </span>

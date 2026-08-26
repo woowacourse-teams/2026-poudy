@@ -91,7 +91,6 @@
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-standard) forwards;
-  --animate-save-pop: save-pop var(--transition-duration-state) var(--ease-standard);
 }
 
 /*
@@ -210,23 +209,33 @@ body {
 }
 
 /* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
-@keyframes save-pop {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.25);
-  }
-  100% {
-    transform: scale(1);
-  }
+/*
+ * 담기는 순간 아이콘이 살짝 부푼다.
+ *
+ * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
+ * 다시 눌리면 0 부터 다시 시작해 튄다. 전환은 지금 크기에서 이어진다.
+ *
+ * 부푼 자리에 머무르지 않고 곧바로 제자리로 돌아온다. 커지는 쪽만 짧게 두어
+ * 눌린 순간이 또렷하고, 돌아오는 쪽은 조금 길게 두어 갑자기 꺼지지 않는다.
+ */
+.save-pop {
+  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.save-pop[data-popped="true"] {
+  transform: scale(1.12);
+  transition-duration: var(--transition-duration-press, 100ms);
 }
 
 /* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-spark-burst,
-  .animate-save-pop {
+  .animate-spark-burst {
     animation: none;
+  }
+
+  /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
+  .save-pop[data-popped="true"] {
+    transform: none;
   }
 
   /*

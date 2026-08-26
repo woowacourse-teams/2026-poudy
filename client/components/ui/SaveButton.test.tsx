@@ -56,21 +56,21 @@ describe("SaveButton 저장 인터랙션", () => {
     expect(button.querySelector("svg")).not.toHaveClass("animate-save-pop");
   });
 
-  it("공통 모션 토큰의 지속 시간이 지나면 효과를 정리한다", () => {
-    vi.useFakeTimers();
-    document.documentElement.style.setProperty("--transition-duration-celebration", "0.24s");
+  it("불꽃이 끝나면 스스로 걷힌다", () => {
     render(<ControlledSaveButton />);
 
     fireEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
     expect(sparkAngles()).toHaveLength(5);
 
-    act(() => vi.advanceTimersByTime(239));
-    expect(sparkAngles()).toHaveLength(5);
+    // 시간을 세지 않는다. 조각이 끝났다는 신호를 듣고 걷는다.
+    act(() => {
+      document.querySelector(".animate-spark-burst")?.dispatchEvent(new Event("animationend"));
+    });
 
-    act(() => vi.advanceTimersByTime(1));
     expect(sparkAngles()).toHaveLength(0);
-    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector("svg")).not.toHaveClass(
-      "animate-save-pop",
+    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector(".save-pop")).toHaveAttribute(
+      "data-popped",
+      "false",
     );
   });
 
