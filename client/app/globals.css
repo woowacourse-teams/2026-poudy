@@ -299,7 +299,7 @@ body {
  * 카드가 말하던 것을 그대로 확인해 준다.
  */
 .action-card {
-  transition-property: transform, box-shadow;
+  transition-property: transform, box-shadow, filter;
   transition-duration: var(--transition-duration-control-state);
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
@@ -327,10 +327,24 @@ body {
   }
 }
 
+/*
+ * 눌림은 카드를 줄이지 않고 살짝 어둡게만 한다.
+ * 줄이면 안에 든 화살표까지 함께 줄어 안쪽으로 딸려 들어가 보인다.
+ * 카드가 커서 조금만 줄여도 눈에 띄는 자리라, 밝기로 답하는 편이 조용하다.
+ */
 .action-card:active {
-  transform: translateY(0) scale(0.99);
+  transform: translateY(0);
   box-shadow: none;
+  filter: brightness(0.97);
   transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/*
+ * 어두운 카드는 어둡게 해도 눈에 잡히지 않는다(#202124 는 3% 낮춰야 한 단계 움직인다).
+ * 검은 바탕에서는 밝히는 쪽이 눌린 것으로 읽힌다.
+ */
+.action-card[data-tone="dark"]:active {
+  filter: brightness(1.35);
 }
 
 /* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */

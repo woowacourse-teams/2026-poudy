@@ -37,24 +37,28 @@ const ACTIONS = [
   },
 ] as const;
 
+/*
+ * 세 칸이 좁아 문구가 길면 줄이 넘어간다. 어떤 칸은 제목이, 어떤 칸은 설명이 넘어가
+ * 셋이 들쭉날쭉해 보였다. 뜻을 지키는 선에서 한 줄에 담기게 줄여 둔다.
+ */
 const TRUST = [
   {
-    title: "출처가 있어요",
-    detail: "근거를 함께 적어요",
+    title: "출처를 밝혀요",
+    detail: "근거와 함께",
     icon: "badge-check",
     bg: "bg-brand-soft",
     tint: "text-brand",
   },
   {
-    title: "과장하지 않아요",
-    detail: "좋다고 말하지 않아요",
+    title: "그대로 옮겨요",
+    detail: "과장 없이",
     icon: "info",
     bg: "bg-info-soft",
     tint: "text-info",
   },
   {
-    title: "조건은 직접 골라요",
-    detail: "딱 맞는 것만 골라요",
+    title: "직접 골라요",
+    detail: "딱 맞는 것만",
     icon: "sliders",
     bg: "bg-success-soft",
     tint: "text-success",
@@ -133,12 +137,7 @@ export default function Home() {
                 className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center ${item.bg}`}
               >
                 <Icon name={item.icon} size={18} className={item.tint} />
-                {/*
-                  좁은 화면에서는 `조건은 직접 골라요` 만 제목이 두 줄로 넘어간다.
-                  그러면 그 카드만 설명이 한 줄 아래에서 시작해 셋이 어긋나 보인다.
-                  제목 자리를 늘 두 줄로 잡아 두어 설명이 같은 높이에 서게 한다.
-                */}
-                <span className="min-h-[2lh] text-[12px] font-medium text-text-primary">{item.title}</span>
+                <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
                 <span className="text-[11px] text-text-secondary">{item.detail}</span>
               </li>
             ))}
