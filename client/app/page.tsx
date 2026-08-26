@@ -141,7 +141,7 @@ export default function Home() {
               <li key={code}>
                 <Link
                   href={`/products?excludeCodes=${code}`}
-                  className="quick-filter-link flex flex-col items-center gap-1.5"
+                  className="quick-filter-link flex flex-col items-center gap-1"
                 >
                   {/*
                     그림에 배경이 없어 바탕을 여기서 깐다. 색을 코드가 쥐고 있으므로
@@ -160,7 +160,7 @@ export default function Home() {
                     height={60}
                     className="quick-filter-tile size-17 rounded-[20px] bg-linear-to-br from-[#FBFBFC] to-[#EFF0F3] p-1"
                   />
-                  <span className="text-center text-[11px] font-semibold text-text-primary">
+                  <span className="text-center text-[13px] font-semibold text-text-primary">
                     {QUICK_FILTERS[code].label}
                   </span>
                 </Link>
