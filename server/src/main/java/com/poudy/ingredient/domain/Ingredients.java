@@ -61,6 +61,20 @@ public class Ingredients {
                 .toList();
     }
 
+    public IngredientPage page(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
+        }
+
+        List<Ingredient> items = searchable.stream()
+                .skip((long) page * size)
+                .limit(size)
+                .map(SearchableIngredient::ingredient)
+                .toList();
+
+        return new IngredientPage(items, searchable.size());
+    }
+
     public Ingredients findAllById(Collection<Long> ids) {
         List<SearchableIngredient> found = ids.stream()
                 .map(byId::get)

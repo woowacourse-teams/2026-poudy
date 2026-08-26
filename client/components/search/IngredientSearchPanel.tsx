@@ -9,7 +9,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
-import { fetchIngredients } from "@/lib/api/products";
+import { fetchIngredientSuggestions } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
@@ -17,7 +17,7 @@ import { useSuggestions } from "@/lib/hooks/useSuggestions";
 type ConditionKey = "includeIngredientIds" | "excludeIngredientIds";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
-  const response = await fetchIngredients({ keyword });
+  const response = await fetchIngredientSuggestions(keyword);
   return response.items;
 };
 

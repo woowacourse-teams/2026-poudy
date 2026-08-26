@@ -49,6 +49,21 @@ const strings = (url: URL, key: string) =>
     .flatMap((value) => value.split(","))
     .filter(Boolean);
 
+/*
+ * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
+ * 성분이 먼저 잡혀야 눌렀을 때 빈 화면을 만나지 않는다.
+ */
+const detailIngredientIds = new Set(ingredientDetails.map((ingredient) => ingredient.id));
+const searchableIngredients = [
+  ...ingredientDetails.map(({ id, koreanName, englishName, skinEffects }) => ({
+    id,
+    koreanName,
+    englishName,
+    skinEffects,
+  })),
+  ...pipelineIngredientSummaries.filter((ingredient) => !detailIngredientIds.has(ingredient.id)),
+];
+
 /** 제품이 가진 성분. 손으로 적은 다섯 개는 성분을 따로 두지 않아 빈 집합이 된다. */
 const ingredientsOf = (productId: number) => pipelineProductIngredients.get(productId) ?? new Set<number>();
 
@@ -161,40 +176,26 @@ export const handlers = [
 
   http.get("*/api/ingredients", ({ request }) => {
     const url = new URL(request.url);
-    const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const ids = numbers(url, "ingredientIds");
 
-    /*
-     * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
-     * 성분이 먼저 잡혀야 눌렀을 때 빈 화면을 만나지 않는다.
-     */
-    const detailIds = new Set(ingredientDetails.map((ingredient) => ingredient.id));
-    const searchable = [
-      ...ingredientDetails.map(({ id, koreanName, englishName, skinEffects }) => ({
-        id,
-        koreanName,
-        englishName,
-        skinEffects,
-      })),
-      ...pipelineIngredientSummaries.filter((ingredient) => !detailIds.has(ingredient.id)),
-    ];
+    // ID 를 보내면 요청한 순서를 지키고 없는 ID 는 뺀다. 없으면 전체를 조회한다.
+    const matched = ids.length
+      ? ids
+          .map((id) => searchableIngredients.find((ingredient) => ingredient.id === id))
+          .filter((ingredient) => ingredient !== undefined)
+      : searchableIngredients;
 
-    const matchesKeyword = (ingredient: (typeof searchable)[number]) =>
-      `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword);
+    return HttpResponse.json(paginate(matched, url));
+  }),
 
-    const limited = <T>(items: readonly T[]) => (keyword ? items.slice(0, INGREDIENT_SEARCH_LIMIT) : [...items]);
+  http.get("*/api/ingredients/suggestions", ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
+    const items = searchableIngredients
+      .filter((ingredient) => `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword))
+      .slice(0, INGREDIENT_SEARCH_LIMIT);
 
-    // ID 로만 조회하면 요청한 순서를 지키고 없는 ID 는 뺀다.
-    if (ids.length > 0) {
-      const items = ids
-        .map((id) => searchable.find((ingredient) => ingredient.id === id))
-        .filter((ingredient) => ingredient !== undefined)
-        .filter((ingredient) => !keyword || matchesKeyword(ingredient));
-
-      return HttpResponse.json({ items: limited(items) });
-    }
-
-    return HttpResponse.json({ items: limited(searchable.filter(matchesKeyword)) });
+    return HttpResponse.json({ items });
   }),
 
   http.get("*/api/ingredients/:ingredientId", ({ params }) => {

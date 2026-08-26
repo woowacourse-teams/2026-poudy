@@ -8,13 +8,13 @@ import { ConditionButton } from "@/components/ui/ConditionButton";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
-import { fetchIngredients } from "@/lib/api/products";
+import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
-  const response = await fetchIngredients({ keyword });
+  const response = await fetchIngredientSuggestions(keyword);
   return response.items;
 };
 

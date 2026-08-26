@@ -1069,22 +1069,9 @@
           "성분"
         ],
         "summary": "성분 조회",
-        "description": "검색어 또는 여러 성분 ID 에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 조회한다. 두 조건을 함께 보내면 모두 만족하는 성분을 조회한다. 검색어로 조회하면 검색어에 잘 맞는 순서로 최대 5 건만 반환한다. 성분 ID 로만 조회하면 상한 없이 요청한 순서를 유지하고 존재하지 않는 ID 는 결과에서 제외한다.",
+        "description": "성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.",
         "operationId": "findIngredients",
         "parameters": [
-          {
-            "name": "keyword",
-            "in": "query",
-            "description": "검색어",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "검색어",
-              "example": "글리",
-              "pattern": ".*\\S.*"
-            },
-            "example": "글리"
-          },
           {
             "name": "ingredientIds",
             "in": "query",
@@ -1097,6 +1084,33 @@
               },
               "uniqueItems": true
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (0부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "description": "조회할 페이지 번호 (0부터 시작)",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
           }
         ],
         "responses": {
@@ -1105,7 +1119,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngredientListResponse"
+                  "$ref": "#/components/schemas/IngredientPageResponse"
                 }
               }
             }
@@ -1204,6 +1218,73 @@
                   "status": 404,
                   "detail": "성분을 찾을 수 없습니다.",
                   "code": "INGREDIENT_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingredients/suggestions": {
+      "get": {
+        "tags": [
+          "성분"
+        ],
+        "summary": "성분 검색 제안 조회",
+        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다.",
+        "operationId": "suggestIngredients",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "검색어",
+              "minLength": 1
+            },
+            "example": "글리"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }
@@ -2147,7 +2228,7 @@
           "count"
         ]
       },
-      "IngredientListResponse": {
+      "IngredientPageResponse": {
         "type": "object",
         "properties": {
           "items": {
@@ -2156,10 +2237,14 @@
             "items": {
               "$ref": "#/components/schemas/IngredientResponse"
             }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
           }
         },
         "required": [
-          "items"
+          "items",
+          "pagination"
         ]
       },
       "IngredientResponse": {
@@ -2282,6 +2367,21 @@
           "productCount",
           "skinEffects",
           "updatedAt"
+        ]
+      },
+      "IngredientListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "조회된 성분",
+            "items": {
+              "$ref": "#/components/schemas/IngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "ExcludeCodeListResponse": {
