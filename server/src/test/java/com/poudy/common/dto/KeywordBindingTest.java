@@ -30,7 +30,7 @@ class KeywordBindingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/ingredients", "/api/products/suggestions"})
+    @ValueSource(strings = {"/api/ingredients", "/api/products", "/api/products/suggestions"})
     @DisplayName("검색어가 비어 있으면 400 을 반환한다")
     void rejectsBlankKeyword(String path) throws Exception {
         mockMvc.perform(get(path).param("keyword", "   ")).andExpect(status().isBadRequest())
@@ -38,7 +38,7 @@ class KeywordBindingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/ingredients", "/api/products/suggestions"})
+    @ValueSource(strings = {"/api/ingredients", "/api/products", "/api/products/suggestions"})
     @DisplayName("공백으로만 이뤄진 검색어는 종류를 가리지 않고 400 을 반환한다")
     void rejectsKeywordMadeOfSpaces(String path) throws Exception {
         mockMvc.perform(get(path).param("keyword", "\u00A0\u2007")).andExpect(status().isBadRequest())

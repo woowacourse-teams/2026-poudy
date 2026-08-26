@@ -1,17 +1,18 @@
-package com.poudy.product.controller.dto;
+package com.poudy.search.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(java.lang.annotation.ElementType.TYPE)
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ConflictingIngredientFilterValidator.class)
-public @interface ConflictingIngredientFilter {
+@Constraint(validatedBy = ValidSearchKeywordValidator.class)
+public @interface ValidSearchKeyword {
 
-    String message() default "CONFLICTING_INGREDIENT_FILTER";
+    String message() default "INVALID_QUERY_PARAMETER";
 
     Class<?>[] groups() default {};
 

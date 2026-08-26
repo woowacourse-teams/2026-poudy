@@ -1,15 +1,16 @@
-package com.poudy.category.domain;
+package com.poudy.product.domain;
 
+import com.poudy.category.domain.Category;
 import java.util.List;
 import java.util.Objects;
 
-public class CountedCategory {
+public class CategoryProductCount {
 
     private final Category category;
     private final long productCount;
-    private final List<CountedCategory> children;
+    private final List<CategoryProductCount> children;
 
-    public CountedCategory(Category category, long productCount, List<CountedCategory> children) {
+    public CategoryProductCount(Category category, long productCount, List<CategoryProductCount> children) {
         this.category = Objects.requireNonNull(category);
         this.productCount = productCount;
         this.children = List.copyOf(Objects.requireNonNullElse(children, List.of()));
@@ -27,7 +28,7 @@ public class CountedCategory {
         return productCount;
     }
 
-    public List<CountedCategory> children() {
+    public List<CategoryProductCount> children() {
         return children;
     }
 }

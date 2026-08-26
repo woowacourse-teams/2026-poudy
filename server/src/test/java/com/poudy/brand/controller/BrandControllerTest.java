@@ -8,14 +8,13 @@ import static org.mockito.Mockito.verify;
 import com.poudy.brand.controller.dto.BrandDetailResponse;
 import com.poudy.brand.controller.dto.BrandOverviewResponse;
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandDetail;
-import com.poudy.brand.domain.BrandSummary;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.service.BrandService;
 import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CountedCategory;
+import com.poudy.product.domain.BrandProductCount;
+import com.poudy.product.domain.BrandProductCounts;
+import com.poudy.product.domain.CategoryProductCount;
 import com.poudy.product.domain.ProductCountsByBrand;
-import com.poudy.product.service.ProductService;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -31,16 +30,15 @@ class BrandControllerTest {
     void findsBrands() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
-        List<BrandSummary> brandSummaries = productCounts.summariesOf(new Brands(List.of(drG)).sortedByName());
+        List<BrandProductCount> brandProductCounts = productCounts.countsOf(new Brands(List.of(drG)).sortedByName());
         BrandService brandService = mock(BrandService.class);
-        ProductService productService = mock(ProductService.class);
-        given(brandService.findBrands()).willReturn(brandSummaries);
-        BrandController controller = new BrandController(brandService, productService);
+        given(brandService.findBrands()).willReturn(brandProductCounts);
+        BrandController controller = new BrandController(brandService);
 
         ResponseEntity<BrandOverviewResponse> response = controller.findBrands();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brandSummaries));
+        assertThat(response.getBody()).isEqualTo(BrandOverviewResponse.from(brandProductCounts));
         verify(brandService).findBrands();
     }
 
@@ -48,21 +46,20 @@ class BrandControllerTest {
     @DisplayName("서비스에서 조회한 브랜드 상세를 200 응답으로 반환한다")
     void findsBrandDetail() {
         Brand drG = new Brand(1L, "닥터지", null, null);
-        CountedCategory toner = new CountedCategory(new Category(2L, 1L, "토너", 1), 3L, List.of());
-        CountedCategory skinCare = new CountedCategory(
+        CategoryProductCount toner = new CategoryProductCount(new Category(2L, 1L, "토너", 1), 3L, List.of());
+        CategoryProductCount skinCare = new CategoryProductCount(
                 new Category(1L, null, "스킨케어", 0),
                 3L,
                 List.of(toner));
-        BrandDetail brandDetail = new BrandDetail(drG, List.of(skinCare));
+        BrandProductCounts brandProductCounts = new BrandProductCounts(drG, List.of(skinCare));
         BrandService brandService = mock(BrandService.class);
-        ProductService productService = mock(ProductService.class);
-        given(productService.findBrandDetail(1L)).willReturn(brandDetail);
-        BrandController controller = new BrandController(brandService, productService);
+        given(brandService.findBrandDetail(1L)).willReturn(brandProductCounts);
+        BrandController controller = new BrandController(brandService);
 
         ResponseEntity<BrandDetailResponse> response = controller.findBrand(1L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(BrandDetailResponse.from(brandDetail));
-        verify(productService).findBrandDetail(1L);
+        assertThat(response.getBody()).isEqualTo(BrandDetailResponse.from(brandProductCounts));
+        verify(brandService).findBrandDetail(1L);
     }
 }

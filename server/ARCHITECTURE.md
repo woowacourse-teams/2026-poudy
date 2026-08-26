@@ -35,10 +35,13 @@ com.poudy
 ├── storage
 │   ├── controller
 │   └── service
-├── common
+├── search
 │   ├── domain
+│   └── validation
+├── common
 │   ├── dto
-│   └── json
+│   ├── json
+│   └── web
 ├── config
 └── exception
 ```
@@ -54,7 +57,8 @@ com.poudy
 - 기능 전용 요청·응답 DTO는 해당 기능의 `controller.dto`에 둔다.
 - 여러 기능이 같은 응답 계약을 공유하면 그 개념을 정의하는 기능이 DTO를 소유하고 다른 기능이 재사용한다. 제품 응답의 브랜드 정보는 `brand.controller.dto.BrandResponse`를 사용한다. 한 엔드포인트에서만 사용하는 투영은 해당 엔드포인트를 소유한 기능에 둔다.
 - 페이지네이션처럼 특정 기능에 속하지 않는 횡단 API 계약만 `common.dto`에 둔다.
-- 검색어처럼 어느 기능의 개념도 아닌 도메인 값은 `common.domain`에 둔다. 성분과 제품이 같은 검색어 규칙을 쓰는데 한쪽 기능의 `domain`에 두면 다른 기능이 그 기능을 참조하게 되어 의존이 한 방향으로 서지 않는다.
+- 검색어 정규화, 초성 변환과 이름 일치 등 검색 자체의 공통 규칙은 `search.domain`에 둔다. 성분과 제품이 같은 검색 규칙을 쓰더라도 어느 한 기능의 도메인을 참조하지 않는다. 검색 대상 필드, 결과 상한, 동점 정렬과 페이지 정책은 각 기능이 소유한다.
+- `common`에는 횡단 API 계약, JSON 읽기, 클라이언트 주소 판정처럼 별도 도메인으로 부를 규칙이 없는 코드만 둔다.
 - 공통 예외 처리는 `exception`에, OpenAPI 설정은 `config`에 둔다.
 
 ## Dependency direction
@@ -75,8 +79,8 @@ JSON
 
 Domain 객체는 Service와 Repository가 사용한다.
 
-- Controller는 HTTP 요청을 받고 응답 DTO를 반환한다.
-- Service는 Repository를 호출하고 유스케이스의 흐름만 연결한다.
+- Controller는 HTTP 요청 DTO를 서비스 입력이나 도메인 값으로 변환하고 응답 DTO를 반환한다.
+- 성분·제품 조회 Service는 Controller DTO를 참조하지 않는다. 필요한 Repository와 도메인 값을 조합해 하나의 조회 유스케이스를 완결한다.
 - Repository는 JSON을 읽어 Domain 객체를 생성하고 반환한다.
 - 제품 검색과 필터 판정은 Service나 Repository가 아니라 `Product`와 `Products`가 담당한다.
 
@@ -86,9 +90,9 @@ Domain 객체는 Service와 Repository가 사용한다.
 
 `Brand`는 브랜드 정보를 표현한다. 응답에 싣는 값은 ID, 한글명, 영문명, 이미지 URL 네 가지다. 다른 기능의 응답에 브랜드가 중첩될 때는 모두 같은 `BrandResponse`를 쓴다.
 
-브랜드 목록만 `BrandListItemResponse`로 제품 수를 더해 내려보낸다. `BrandResponse`에 제품 수를 넣으면 제품 카드마다 쓰지 않는 값이 실리고, `ProductPageResponse.brands`에서는 그 수가 결과 기준인지 전체 기준인지 읽는 쪽이 알 수 없다. 목록 항목의 제품 수는 전체 카탈로그 기준이며 제품 조회 필터와 무관하다.
+브랜드 목록만 `BrandSummaryResponse`로 제품 수를 더해 내려보낸다. `BrandResponse`에 제품 수를 넣으면 제품 카드마다 쓰지 않는 값이 실리고, `ProductPageResponse.brands`에서는 그 수가 결과 기준인지 전체 기준인지 읽는 쪽이 알 수 없다. 목록 항목의 제품 수는 전체 카탈로그 기준이며 제품 조회 필터와 무관하다.
 
-`BrandDetail`은 브랜드 정보와 `CountedCategory` 목록만 갖는다. 계층과 집계를 각각 들고 조회 시점에 조합하면 응답 경계가 도메인에 카테고리를 넘겨 제품 수를 되묻는 모양이 되고, 같은 필터링을 조회할 때마다 다시 한다. 브랜드도 집계도 생성 이후에 바뀌지 않으므로 조립된 결과 하나만 갖는다.
+브랜드별 제품 수와 브랜드 제품의 카테고리별 제품 수는 제품 목록에서 계산한 결과다. 따라서 `BrandProductCount`와 `BrandProductCounts`는 `brand.domain`이 아니라 `product.domain`이 소유한다. `BrandService`가 브랜드와 제품 Repository를 조합해 목록과 상세 조회를 각각 완결하며 Controller는 다른 Service를 함께 호출하지 않는다.
 
 `Brands`는 `List<Brand>`를 가지는 일급 컬렉션이다. 여러 브랜드를 대상으로 하는 문제를 담당한다.
 
@@ -102,7 +106,7 @@ Map에서 바로 찾고, 제품 카테고리의 전체 경로는 부모를 재�
 카테고리를 대상으로 하는 문제를 담당한다.
 카테고리 계층과 카테고리 ID의 정합성만 관리하며, 카테고리별 제품 수는 관리하지 않는다.
 
-`CountedCategory`는 카테고리 하나와 그 안에서 센 제품 수, 하위 카테고리를 함께 갖는 값이다. 제품 수를 세는 일은 `Products`가 하지만 "제품 수가 붙은 카테고리 계층"은 카테고리 개념이므로 `category.domain`이 소유한다. 이 값을 `product.domain`에 두면 이를 사용하는 브랜드 상세가 제품 도메인을 참조하게 되고, 제품 도메인이 브랜드 상세를 조립하는 방향과 겹쳐 의존이 한 방향으로 서지 않는다.
+제품 수가 붙은 카테고리 계층은 제품 집계 결과이므로 `CategoryProductCount`라는 이름으로 `product.domain`이 소유한다. `category.domain`은 카테고리 자체와 계층 정합성만 관리한다. `CategoryService`는 카테고리와 제품 Repository를 조합해 제품 수가 포함된 전체 조회 결과를 완결한다.
 
 ### Ingredient
 
@@ -247,9 +251,11 @@ Product
 카테고리별 제품 수 집계도 제품 목록을 대상으로 하는 계산이므로 `Products`가 담당한다.
 `ProductCountsByCategory`는 실제 제품이 있는 카테고리 ID의 집계값만 `Map` 하나로 보관하고,
 집계값이 없는 카테고리는 조회할 때 0으로 해석한다. 카테고리 계층 탐색은 `Categories`에 남겨 둔다.
-전체 카테고리 응답은 응답 경계에서 두 객체를 함께 사용하고, 브랜드 상세는 `nonEmptyCategoriesOf`가
-두 객체를 `CountedCategory` 계층 하나로 접어 준다. 제품이 없는 카테고리를 빼는 판단도 제품 수에서
-나오므로 이 메서드가 함께 끝낸다.
+전체 카테고리 조회는 `categoriesOf`가 제품이 없는 항목까지 `CategoryProductCount` 계층으로 만들고,
+브랜드 상세는 `nonEmptyCategoriesOf`가 제품이 있는 항목만 같은 결과 타입으로 만든다. 포함 여부가
+집계값에서 결정되므로 이 차이도 제품 집계 객체가 함께 끝낸다.
+
+`BrandProductCount`, `BrandProductCounts`, `CategoryProductCount`는 제품 목록에서 계산한 집계 산출물이다. 브랜드 목록은 제품이 없는 브랜드도 0과 함께 이름순으로 반환하고, 전체 카테고리 목록은 제품이 없는 카테고리도 입력 계층 순서대로 포함한다. 브랜드 상세에서는 해당 브랜드 제품이 있는 카테고리만 포함한다. 이 차이는 각 응답 DTO가 아니라 `Products`와 제품 집계 객체가 보장한다.
 
 API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 
@@ -339,7 +345,7 @@ API 명세에 정의된 제품 필터 규칙은 다음과 같다.
 Controller는 다음 역할만 담당한다.
 
 - HTTP 경로와 파라미터를 받는다.
-- 요청 DTO를 Service에 전달한다.
+- 요청 DTO의 검증이 끝나면 서비스 전용 입력이나 도메인 값으로 변환해 전달한다.
 - Service의 결과를 응답 DTO로 변환하여 반환한다.
 
 Controller에는 제품 검색과 필터 같은 도메인 규칙을 작성하지 않는다.
@@ -350,7 +356,11 @@ Service는 얇게 유지한다.
 
 - Repository의 조회 메서드를 호출한다.
 - 조회한 Domain 객체에 필요한 동작을 요청한다.
-- Controller에 전달할 결과를 반환한다.
+- 유스케이스에 필요한 여러 Repository가 있으면 Service가 조합하고 완성된 결과를 반환한다.
+
+성분·제품 조회 Service는 `controller.dto`를 import하지 않는다. HTTP 기본값과 Bean Validation은
+Controller 요청 DTO가, 도메인 규칙은 도메인 생성 경로가 맡으며, Service 입력은 두 계층 사이의
+유스케이스 계약이다. 제품 조회의 `ProductQuery`와 성분 조회의 `IngredientQuery`가 이 역할을 한다.
 
 MVP에서는 Repository가 생성한 Domain 객체를 조회하고 제공하는 흐름이 대부분이다. 도메인에서 해결할 수 있는 문제를 Service에 구현하지 않는다.
 
@@ -491,7 +501,13 @@ S3 저장을 먼저 성공시킨 뒤 Discord에 알린다. 저장이 실패하�
 
 검색어는 다른 필터와 같은 자격의 조건이므로 함께 보낼 수 있고, 다른 필터 종류와 마찬가지로 AND로 결합한다. Controller는 `/api/products`의 GET을 메서드 하나로 받고 `keyword` 유무로 나누지 않는다.
 
-목록은 필터 필드를 가진 `ProductFilterRequest`를 그대로 받는다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고, 조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
+목록은 필터 필드를 가진 `ProductFilterRequest` 하나로 HTTP 파라미터를 받고 `ProductQuery`로 변환해
+Service에 전달한다. 검색어만 담은 별도 DTO를 쓰면 함께 온 필터가 바인딩되지 않아 조용히 무시되고,
+조건이 걸리지 않은 결과가 걸린 결과처럼 내려간다.
+
+제외 성분군을 실제 성분 ID로 푸는 일과 포함·제외 충돌 판정은 Service가 `IngredientFilter.of`를
+호출하는 한 경로에서만 수행한다. 같은 도메인 규칙을 Bean Validation용 validator에서 다시 실행하지
+않으며, 도메인 충돌 예외를 기존 `CONFLICTING_INGREDIENT_FILTER` 400 응답으로 변환한다.
 
 `/api/products`와 `/api/products/count`는 같은 요청 DTO를 같은 순서로 검사한다. 성분 필터 모순은 `CONFLICTING_INGREDIENT_FILTER`로, 빈 검색어는 `INVALID_QUERY_PARAMETER`로 거절한다. 조건을 하나도 보내지 않은 요청은 전체 목록 조회로 받는다.
 

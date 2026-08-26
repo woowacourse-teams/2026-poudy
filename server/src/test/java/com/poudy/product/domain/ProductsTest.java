@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.BrandSummary;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
@@ -82,10 +82,8 @@ class ProductsTest {
         Products products = new Products(
                 List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L)));
 
-        ProductCountsByBrand productCounts = products.productCountsByBrand();
-
-        assertThat(productCounts.summariesOf(List.of(brand(1L), brand(2L), brand(999L))))
-                .extracting(BrandSummary::id, BrandSummary::productCount)
+        assertThat(products.productCountsByBrand(List.of(brand(1L), brand(2L), brand(999L))))
+                .extracting(BrandProductCount::id, BrandProductCount::productCount)
                 .containsExactly(tuple(1L, 2L), tuple(2L, 1L), tuple(999L, 0L));
     }
 
@@ -103,12 +101,16 @@ class ProductsTest {
                         productOfBrandAndCategory(3L, 1L, 3L),
                         productOfBrandAndCategory(4L, 2L, 2L)));
 
-        ProductCountsByCategory counts = products.countsByCategoryInBrand(1L);
+        Categories categories = Categories.from(List.of(parent, firstChild, secondChild, emptyChild));
 
-        assertThat(counts.countOf(parent)).isEqualTo(3L);
-        assertThat(counts.countOf(firstChild)).isEqualTo(2L);
-        assertThat(counts.countOf(secondChild)).isEqualTo(1L);
-        assertThat(counts.countOf(emptyChild)).isZero();
+        BrandProductCounts counts = products.brandProductCountsOf(brand(1L), categories);
+
+        assertThat(counts.categories())
+                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+                .containsExactly(tuple(parent.id(), 3L));
+        assertThat(counts.categories().getFirst().children())
+                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+                .containsExactly(tuple(firstChild.id(), 2L), tuple(secondChild.id(), 1L));
     }
 
     private static Product productOfBrand(Long id, Long brandId) {

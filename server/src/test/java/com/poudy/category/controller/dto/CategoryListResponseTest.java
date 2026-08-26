@@ -1,12 +1,9 @@
 package com.poudy.category.controller.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
-import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.domain.CategoryProductCount;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,15 +19,18 @@ class CategoryListResponseTest {
         Category serum = new Category(3L, 1L, "세럼", 1);
         Category cleansing = new Category(4L, null, "클렌징", 0);
         Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1);
-        Categories categories = Categories.from(List.of(skinCare, toner, serum, cleansing, cleansingFoam));
-        ProductCountsByCategory productCounts = mock(ProductCountsByCategory.class);
-        given(productCounts.countOf(skinCare)).willReturn(3L);
-        given(productCounts.countOf(toner)).willReturn(2L);
-        given(productCounts.countOf(serum)).willReturn(1L);
-        given(productCounts.countOf(cleansing)).willReturn(4L);
-        given(productCounts.countOf(cleansingFoam)).willReturn(4L);
+        CategoryProductCount skinCareCount = new CategoryProductCount(
+                skinCare,
+                3L,
+                List.of(
+                        new CategoryProductCount(toner, 2L, List.of()),
+                        new CategoryProductCount(serum, 1L, List.of())));
+        CategoryProductCount cleansingCount = new CategoryProductCount(
+                cleansing,
+                4L,
+                List.of(new CategoryProductCount(cleansingFoam, 4L, List.of())));
 
-        CategoryListResponse response = CategoryListResponse.from(categories, productCounts);
+        CategoryListResponse response = CategoryListResponse.from(List.of(skinCareCount, cleansingCount));
 
         assertThat(response.items()).containsExactly(
                 new CategoryResponse(

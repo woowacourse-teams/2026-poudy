@@ -2,9 +2,9 @@ package com.poudy.share.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
-import com.poudy.common.domain.SearchKeyword;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

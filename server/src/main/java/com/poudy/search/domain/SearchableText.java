@@ -1,4 +1,4 @@
-package com.poudy.common.domain;
+package com.poudy.search.domain;
 
 public record SearchableText(String normalized, String chosung, String foldedChosung, boolean combined) {
 

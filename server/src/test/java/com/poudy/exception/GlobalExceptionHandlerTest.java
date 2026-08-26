@@ -3,6 +3,7 @@ package com.poudy.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.InvalidFeedbackException;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,7 @@ class GlobalExceptionHandlerTest {
                 HttpStatus.NOT_FOUND,
                 ErrorCode.PRODUCT_NOT_FOUND);
         assertProblem(
-                handler.handleInvalidRequestException(
-                        new InvalidRequestException(ErrorCode.CONFLICTING_INGREDIENT_FILTER)),
+                handler.handleConflictingIngredientFilterException(new ConflictingIngredientFilterException()),
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.CONFLICTING_INGREDIENT_FILTER);
         assertProblem(

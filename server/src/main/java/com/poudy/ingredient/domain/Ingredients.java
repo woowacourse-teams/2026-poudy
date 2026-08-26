@@ -1,6 +1,6 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.common.domain.SearchKeyword;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;

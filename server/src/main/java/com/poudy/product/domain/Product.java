@@ -2,11 +2,11 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
-import com.poudy.common.domain.NameRank;
-import com.poudy.common.domain.SearchKeyword;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
+import com.poudy.search.domain.NameRank;
+import com.poudy.search.domain.SearchKeyword;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;

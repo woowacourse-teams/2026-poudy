@@ -1,8 +1,8 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.common.domain.NameRank;
-import com.poudy.common.domain.SearchKeyword;
-import com.poudy.common.domain.SearchableText;
+import com.poudy.search.domain.NameRank;
+import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.domain.SearchableText;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;

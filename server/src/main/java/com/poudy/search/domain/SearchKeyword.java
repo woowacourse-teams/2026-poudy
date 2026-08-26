@@ -1,4 +1,4 @@
-package com.poudy.common.domain;
+package com.poudy.search.domain;
 
 import java.text.Normalizer;
 import java.util.Locale;
@@ -11,6 +11,10 @@ public record SearchKeyword(String value) {
 
     public boolean matches(String candidate) {
         return match(candidate).isFound();
+    }
+
+    public boolean isEmpty() {
+        return value.isEmpty();
     }
 
     public boolean matchesExactly(String... candidates) {
@@ -71,7 +75,7 @@ public record SearchKeyword(String value) {
         return value.length() == 1 && !Chosung.isDouble(value);
     }
 
-    public static String withoutSpaces(String text) {
+    private static String withoutSpaces(String text) {
         StringBuilder compact = new StringBuilder(text.length());
 
         for (int index = 0; index < text.length(); index++) {

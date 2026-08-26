@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.category.domain.CountedCategory;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -42,13 +41,13 @@ class ProductCountsByCategoryTest {
                 List.of(skinCare, toner, serum, parent(4L, "선케어"), child(5L, 4L, "선크림")));
         ProductCountsByCategory productCounts = new ProductCountsByCategory(Map.of(1L, 3L, 2L, 2L, 3L, 1L));
 
-        List<CountedCategory> countedCategories = productCounts.nonEmptyCategoriesOf(categories);
+        List<CategoryProductCount> countedCategories = productCounts.nonEmptyCategoriesOf(categories);
 
         assertThat(countedCategories)
-                .extracting(CountedCategory::id, CountedCategory::name, CountedCategory::productCount)
+                .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
                 .containsExactly(tuple(skinCare.id(), "스킨케어", 3L));
         assertThat(countedCategories.getFirst().children())
-                .extracting(CountedCategory::id, CountedCategory::name, CountedCategory::productCount)
+                .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
                 .containsExactly(
                         tuple(toner.id(), "토너", 2L),
                         tuple(serum.id(), "세럼", 1L));
@@ -61,6 +60,26 @@ class ProductCountsByCategoryTest {
         ProductCountsByCategory productCounts = new ProductCountsByCategory(Map.of());
 
         assertThat(productCounts.nonEmptyCategoriesOf(categories)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("전체 카테고리 조회에는 제품이 없는 카테고리도 0과 함께 포함한다")
+    void returnsEveryCategoryIncludingEmptyCategories() {
+        Category skinCare = parent(1L, "스킨케어");
+        Category toner = child(2L, 1L, "토너");
+        Category sunCare = parent(3L, "선케어");
+        Category sunCream = child(4L, 3L, "선크림");
+        Categories categories = Categories.from(List.of(skinCare, toner, sunCare, sunCream));
+        ProductCountsByCategory productCounts = new ProductCountsByCategory(Map.of(1L, 1L, 2L, 1L));
+
+        List<CategoryProductCount> countedCategories = productCounts.categoriesOf(categories);
+
+        assertThat(countedCategories)
+                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+                .containsExactly(tuple(1L, 1L), tuple(3L, 0L));
+        assertThat(countedCategories.get(1).children())
+                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+                .containsExactly(tuple(4L, 0L));
     }
 
     private static Category category(Long id) {

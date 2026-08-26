@@ -1,6 +1,8 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.product.service.ProductQuery;
+import com.poudy.search.validation.ValidSearchKeyword;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -11,9 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import org.hibernate.validator.constraints.UniqueElements;
 
-@ConflictingIngredientFilter
 public record ProductFilterRequest(
-        @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @Schema(description = "제품명 또는 브랜드명 검색어", example = "토너") String keyword,
+        @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @ValidSearchKeyword @Schema(description = "제품명 또는 브랜드명 검색어", example = "토너") String keyword,
         @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<@NotNull Long> categoryIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "12"), uniqueItems = true) List<@NotNull Long> brandIds,
         @UniqueElements @ArraySchema(schema = @Schema(example = "3"), uniqueItems = true) List<@NotNull @Min(0) @Max(3) Integer> moistureLevel,
@@ -34,5 +35,17 @@ public record ProductFilterRequest(
 
     private static <T> List<T> emptyIfMissing(List<T> values) {
         return Objects.requireNonNullElse(values, List.of());
+    }
+
+    public ProductQuery toQuery() {
+        return new ProductQuery(
+                keyword,
+                categoryIds,
+                brandIds,
+                moistureLevel,
+                oilLevel,
+                includeIngredientIds,
+                excludeIngredientIds,
+                excludeCodes);
     }
 }
