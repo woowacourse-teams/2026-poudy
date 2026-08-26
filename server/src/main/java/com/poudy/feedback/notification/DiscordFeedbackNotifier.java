@@ -53,12 +53,14 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
                 화면: %s
                 접수 시각: %s
                 접수 ID: %s
+                첨부 이미지: %d장
 
                 """.formatted(
                 feedback.type().displayName(),
                 feedback.path().value(),
                 feedback.receivedAt().format(RECEIVED_AT_FORMAT),
-                feedback.id());
+                feedback.id(),
+                feedback.images().size());
 
         return appendWithinLimit(header, feedback.content().value());
     }

@@ -230,7 +230,9 @@
                     "items": {
                       "type": "string",
                       "format": "binary"
-                    }
+                    },
+                    "maxItems": 5,
+                    "minItems": 1
                   }
                 },
                 "required": [

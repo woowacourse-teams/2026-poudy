@@ -3,9 +3,11 @@ package com.poudy.feedback.controller;
 import com.poudy.common.web.ClientAddressResolver;
 import com.poudy.feedback.controller.dto.FeedbackImageUploadResponse;
 import com.poudy.feedback.controller.dto.FeedbackRequest;
+import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.service.FeedbackImageUploadService;
 import com.poudy.feedback.service.FeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,7 +56,7 @@ public class FeedbackController {
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
     @PostMapping(path = "/images", consumes = "multipart/form-data")
     public ResponseEntity<FeedbackImageUploadResponse> uploadImages(
-            @RequestPart("images") List<MultipartFile> images,
+            @ArraySchema(minItems = 1, maxItems = Feedback.MAX_IMAGE_COUNT) @RequestPart("images") List<MultipartFile> images,
             HttpServletRequest httpRequest) {
         List<java.util.UUID> imageIds = imageUploadService.upload(
                 images,
