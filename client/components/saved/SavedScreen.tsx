@@ -8,6 +8,7 @@ import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
+import { SortDropdown, type SortOption } from "@/components/ui/SortDropdown";
 import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
@@ -17,6 +18,35 @@ import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
  * 실패를 빈 목록과 구분해야 사용자가 다시 시도할 수 있다.
  */
 type Status = "loading" | "error" | "ready";
+
+/**
+ * 저장함의 정렬. 최근 저장순은 브라우저가 들고 있는 저장 차례라 API 의 sort 에 없다.
+ * 그래서 제품 목록의 정렬을 그대로 쓰지 않고 이 화면의 것을 따로 둔다.
+ */
+type SavedSort = "SAVED_DESC" | "NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC";
+
+const SAVED_SORT_OPTIONS: readonly SortOption<SavedSort>[] = [
+  { value: "SAVED_DESC", label: "최근 저장순" },
+  { value: "NAME_ASC", label: "이름 오름차순" },
+  { value: "NAME_DESC", label: "이름 내림차순" },
+  { value: "PRICE_ASC", label: "가격 낮은순" },
+  { value: "PRICE_DESC", label: "가격 높은순" },
+];
+
+const sortProducts = (
+  products: readonly ProductResponse[],
+  sort: SavedSort,
+  savedIds: readonly number[],
+): readonly ProductResponse[] => {
+  if (sort === "SAVED_DESC") {
+    // savedIds 는 최근에 저장한 것이 앞에 온다.
+    return products.toSorted((a, b) => savedIds.indexOf(a.id) - savedIds.indexOf(b.id));
+  }
+  if (sort === "NAME_ASC") return products.toSorted((a, b) => a.name.localeCompare(b.name, "ko-KR"));
+  if (sort === "NAME_DESC") return products.toSorted((a, b) => b.name.localeCompare(a.name, "ko-KR"));
+  if (sort === "PRICE_ASC") return products.toSorted((a, b) => a.price - b.price);
+  return products.toSorted((a, b) => b.price - a.price);
+};
 
 type State = {
   readonly key: string;
@@ -29,6 +59,7 @@ export function SavedScreen() {
   const { savedIds, isSaved, toggle } = useSavedProducts();
   const key = savedIds.join(",");
   const [keyword, setKeyword] = useState("");
+  const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
 
   // 저장 목록이 비면 부를 API 가 없으므로 곧바로 끝난 상태로 둔다.
   const initial = (id: string): State => ({
@@ -72,11 +103,12 @@ export function SavedScreen() {
   };
 
   // 저장한 제품 안에서만 찾는다. 서버에 다시 묻지 않는다.
-  const shown = keyword.trim()
+  const matched = keyword.trim()
     ? current.items.filter((product) =>
         `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.trim().toLowerCase()),
       )
     : current.items;
+  const shown = sortProducts(matched, sort, savedIds);
 
   if (current.status === "loading") {
     return (
@@ -124,15 +156,15 @@ export function SavedScreen() {
               label="저장한 제품 검색"
             />
           </div>
-          <p className="flex h-12 shrink-0 items-center gap-1 rounded-xl bg-surface px-3.5 text-[13px] font-semibold text-text-primary">
-            최근 저장순
-            <Icon name="chevron-down" size={14} className="text-text-secondary" />
-          </p>
+          <div className="shrink-0">
+            <SortDropdown value={sort} onChange={setSort} options={SAVED_SORT_OPTIONS} size="field" />
+          </div>
         </div>
       ) : null}
 
+      {/* 바탕이 이미 화면 여백을 쥐고 있어 빈 자리에는 안쪽 여백을 더하지 않는다. */}
       {current.items.length === 0 ? (
-        <div className="px-4 py-6">
+        <div className="py-6">
           <EmptyNotice
             icon="bookmark"
             size="screen"

@@ -143,4 +143,41 @@ describe("저장함", () => {
     });
     expect(screen.getByText("총 1개")).toBeInTheDocument();
   });
+  it("이름 오름차순으로 바꾸면 순서가 다시 매겨진다", async () => {
+    saveProduct(3);
+    saveProduct(1);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: /최근 저장순/ }));
+    await userEvent.click(screen.getByRole("option", { name: "이름 오름차순" }));
+
+    const names = screen.getAllByRole("article").map((card) => card.textContent ?? "");
+    expect(names[0]).toContain("1025 독도 토너");
+    expect(names.at(-1)).toContain("다이브인 저분자 히알루론산 토너");
+  });
+
+  it("정렬 목록에 저장함이 쓰는 다섯 가지를 둔다", async () => {
+    saveProduct(1);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: /최근 저장순/ }));
+
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "최근 저장순",
+      "이름 오름차순",
+      "이름 내림차순",
+      "가격 낮은순",
+      "가격 높은순",
+    ]);
+  });
+
+  it("정렬 단추를 검색창과 같은 높이로 둔다", async () => {
+    saveProduct(1);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    expect(screen.getByRole("button", { name: /최근 저장순/ })).toHaveClass("h-12");
+  });
 });
