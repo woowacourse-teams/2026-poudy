@@ -29,22 +29,24 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     private static final int MAX_CONFIDENCE_PERCENT = 55;
 
     private static final Map<Long, CategoryPrior> CATEGORY_PRIORS = Map.ofEntries(
-            Map.entry(2L, new CategoryPrior(180, 35, 35)),
-            Map.entry(3L, new CategoryPrior(180, 75, 35)),
-            Map.entry(4L, new CategoryPrior(200, 175, 35)),
-            Map.entry(5L, new CategoryPrior(185, 130, 35)),
-            Map.entry(7L, new CategoryPrior(210, 30, 20)),
-            Map.entry(8L, new CategoryPrior(170, 35, 20)),
-            Map.entry(9L, new CategoryPrior(190, 40, 20)),
-            Map.entry(11L, new CategoryPrior(60, 20, 15)),
-            Map.entry(12L, new CategoryPrior(50, 240, 15)),
-            Map.entry(14L, new CategoryPrior(120, 150, 35)),
-            Map.entry(15L, new CategoryPrior(70, 230, 20)));
+        Map.entry(2L, new CategoryPrior(180, 35, 35)),
+        Map.entry(3L, new CategoryPrior(180, 75, 35)),
+        Map.entry(4L, new CategoryPrior(200, 175, 35)),
+        Map.entry(5L, new CategoryPrior(185, 130, 35)),
+        Map.entry(7L, new CategoryPrior(210, 30, 20)),
+        Map.entry(8L, new CategoryPrior(170, 35, 20)),
+        Map.entry(9L, new CategoryPrior(190, 40, 20)),
+        Map.entry(11L, new CategoryPrior(60, 20, 15)),
+        Map.entry(12L, new CategoryPrior(50, 240, 15)),
+        Map.entry(14L, new CategoryPrior(120, 150, 35)),
+        Map.entry(15L, new CategoryPrior(70, 230, 20))
+    );
     private static final CategoryPrior FALLBACK_PRIOR = new CategoryPrior(130, 90, 10);
     private static final SensoryModelVersion MODEL_VERSION = new SensoryModelVersion(
-            INGREDIENT_PROFILE_VERSION,
-            CATEGORY_PRIOR_VERSION,
-            LEVEL_MODEL_VERSION);
+        INGREDIENT_PROFILE_VERSION,
+        CATEGORY_PRIOR_VERSION,
+        LEVEL_MODEL_VERSION
+    );
 
     @Override
     public ProductSensory estimate(Category category, Ingredients ingredients) {
@@ -58,23 +60,27 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
         CategoryPrior prior = CATEGORY_PRIORS.getOrDefault(category.id(), FALLBACK_PRIOR);
         IngredientSignals signals = signalsOf(ingredients.values());
         int moistureScore = clamp(
-                prior.moistureCenti() + Math.min(signals.moistureBoost(), MAX_MOISTURE_BOOST),
-                0,
-                MAX_LEVEL_CENTI);
+            prior.moistureCenti() + Math.min(signals.moistureBoost(), MAX_MOISTURE_BOOST),
+            0,
+            MAX_LEVEL_CENTI
+        );
         int oilAdjustment = clamp(
-                signals.oilBoost() - signals.oilReduction(),
-                -MAX_OIL_REDUCTION,
-                MAX_OIL_BOOST);
+            signals.oilBoost() - signals.oilReduction(),
+            -MAX_OIL_REDUCTION,
+            MAX_OIL_BOOST
+        );
         int oilScore = clamp(
-                prior.oilCenti() + oilAdjustment,
-                0,
-                MAX_LEVEL_CENTI);
+            prior.oilCenti() + oilAdjustment,
+            0,
+            MAX_LEVEL_CENTI
+        );
 
         return new ProductSensory(
-                new MoistureLevel(toOrdinalLevel(moistureScore)),
-                new OilLevel(toOrdinalLevel(oilScore)),
-                new SensoryConfidence(confidence(prior, signals)),
-                MODEL_VERSION);
+            new MoistureLevel(toOrdinalLevel(moistureScore)),
+            new OilLevel(toOrdinalLevel(oilScore)),
+            new SensoryConfidence(confidence(prior, signals)),
+            MODEL_VERSION
+        );
     }
 
     @Override
@@ -116,24 +122,25 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
         }
 
         return new IngredientSignals(
-                moistureBoost,
-                oilBoost,
-                oilReduction,
-                coveredRankWeight,
-                totalRankWeight,
-                seenIngredientIds.size(),
-                duplicateCount);
+            moistureBoost,
+            oilBoost,
+            oilReduction,
+            coveredRankWeight,
+            totalRankWeight,
+            seenIngredientIds.size(),
+            duplicateCount
+        );
     }
 
     private static IngredientSignal signalOf(Ingredient ingredient) {
         Set<FormulationRole> roles = Set.copyOf(ingredient.formulationRoles());
         Optional<HeuristicIngredientSensoryProfiles.Signal> explicitSignal = HeuristicIngredientSensoryProfiles
-                .findSignal(ingredient.id());
+            .findSignal(ingredient.id());
         boolean oil = hasRole(roles, EMOLLIENT)
-                || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::oil).orElse(false);
+            || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::oil).orElse(false);
         boolean moisture = hasRole(roles, HUMECTANT)
-                || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::moisture).orElse(false)
-                || hasRole(roles, MOISTURISING) && !oil;
+            || explicitSignal.map(HeuristicIngredientSensoryProfiles.Signal::moisture).orElse(false)
+            || hasRole(roles, MOISTURISING) && !oil;
         boolean absorbent = hasRole(roles, ABSORBENT);
         return new IngredientSignal(moisture, oil, absorbent);
     }
@@ -147,9 +154,10 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
         int listBonus = listBonusOf(signals);
         int duplicatePenalty = Math.min(5, signals.duplicateCount() * 2);
         int confidenceBeforeQualityPenalty = clamp(
-                prior.baseConfidencePercent() + coverageBonus + listBonus,
-                0,
-                MAX_CONFIDENCE_PERCENT);
+            prior.baseConfidencePercent() + coverageBonus + listBonus,
+            0,
+            MAX_CONFIDENCE_PERCENT
+        );
         int confidencePercent = Math.max(0, confidenceBeforeQualityPenalty - duplicatePenalty);
         return BigDecimal.valueOf(confidencePercent, 2);
     }
@@ -179,9 +187,9 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     }
 
     private record CategoryPrior(
-            int moistureCenti,
-            int oilCenti,
-            int baseConfidencePercent) {
+        int moistureCenti,
+        int oilCenti,
+        int baseConfidencePercent) {
     }
 
     private record IngredientSignal(boolean moisture, boolean oil, boolean absorbent) {
@@ -192,20 +200,20 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     }
 
     private record IngredientSignals(
-            int moistureBoost,
-            int oilBoost,
-            int oilReduction,
-            int coveredRankWeight,
-            int totalRankWeight,
-            int uniqueIngredientCount,
-            int duplicateCount) {
+        int moistureBoost,
+        int oilBoost,
+        int oilReduction,
+        int coveredRankWeight,
+        int totalRankWeight,
+        int uniqueIngredientCount,
+        int duplicateCount) {
     }
 
     private record RankWeight(
-            int coverageWeight,
-            int moistureBoost,
-            int oilBoost,
-            int oilReduction) {
+        int coverageWeight,
+        int moistureBoost,
+        int oilBoost,
+        int oilReduction) {
 
         static RankWeight at(int zeroBasedPosition) {
             if (zeroBasedPosition < 5) {

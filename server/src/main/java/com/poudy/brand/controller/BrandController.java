@@ -36,7 +36,7 @@ public class BrandController {
     }
 
     @Operation(summary = "브랜드 상세 조회", description = "브랜드 ID 에 해당하는 정보와 이 브랜드 제품이 속한 카테고리를 조회한다. "
-            + "브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.")
+        + "브랜드에 속한 제품은 제품 조회에서 brandIds 로 받는다.")
     @GetMapping("/{brandId}")
     public ResponseEntity<BrandDetailResponse> findBrand(@Parameter(example = "12") @PathVariable Long brandId) {
         BrandProductCounts brandProductCounts = brandService.findBrandDetail(brandId);

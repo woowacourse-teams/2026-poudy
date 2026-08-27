@@ -43,11 +43,13 @@ class ProductRegistrationRequestTest {
     @DisplayName("trim 이후 경계 길이 이름을 허용하고 초과하면 거절한다")
     void validatesTrimmedBoundaryLength() {
         ProductRegistrationRequest boundary = new ProductRegistrationRequest(
-                " " + "가".repeat(ProductRegistrationRequest.MAX_PRODUCT_NAME_LENGTH) + " ",
-                "나".repeat(ProductRegistrationRequest.MAX_BRAND_NAME_LENGTH));
+            " " + "가".repeat(ProductRegistrationRequest.MAX_PRODUCT_NAME_LENGTH) + " ",
+            "나".repeat(ProductRegistrationRequest.MAX_BRAND_NAME_LENGTH)
+        );
         ProductRegistrationRequest tooLong = new ProductRegistrationRequest(
-                "가".repeat(ProductRegistrationRequest.MAX_PRODUCT_NAME_LENGTH + 1),
-                "나".repeat(ProductRegistrationRequest.MAX_BRAND_NAME_LENGTH + 1));
+            "가".repeat(ProductRegistrationRequest.MAX_PRODUCT_NAME_LENGTH + 1),
+            "나".repeat(ProductRegistrationRequest.MAX_BRAND_NAME_LENGTH + 1)
+        );
 
         assertThat(validator.validate(boundary)).isEmpty();
         assertThat(validator.validate(tooLong)).hasSize(2);

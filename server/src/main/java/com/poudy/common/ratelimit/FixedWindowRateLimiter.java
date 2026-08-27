@@ -25,18 +25,20 @@ public final class FixedWindowRateLimiter {
     private final AtomicLong nextPruneAtMillis = new AtomicLong(Long.MIN_VALUE);
 
     public FixedWindowRateLimiter(
-            int maxRequests,
-            Duration window,
-            Clock clock) {
+        int maxRequests,
+        Duration window,
+        Clock clock
+    ) {
         this(maxRequests, window, DEFAULT_MAX_TRACKED_CLIENTS, DEFAULT_PRUNE_INTERVAL, clock);
     }
 
     FixedWindowRateLimiter(
-            int maxRequests,
-            Duration window,
-            int maxTrackedClients,
-            Duration pruneInterval,
-            Clock clock) {
+        int maxRequests,
+        Duration window,
+        int maxTrackedClients,
+        Duration pruneInterval,
+        Clock clock
+    ) {
         if (maxRequests <= 0) {
             throw new IllegalArgumentException("요청 제한 횟수는 양수여야 합니다.");
         }

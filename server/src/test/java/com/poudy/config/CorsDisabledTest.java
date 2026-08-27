@@ -26,16 +26,17 @@ class CorsDisabledTest {
     @DisplayName("사전 요청에 허용 헤더를 주지 않는다")
     void omitsAllowHeaderOnPreflight() throws Exception {
         mockMvc.perform(
-                options("/api/products")
-                        .header(HttpHeaders.ORIGIN, ORIGIN)
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
-                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+            options("/api/products")
+                .header(HttpHeaders.ORIGIN, ORIGIN)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+        )
+            .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 
     @Test
     @DisplayName("조회 응답에 허용 헤더를 주지 않는다")
     void omitsAllowHeader() throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, ORIGIN))
-                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+            .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 }

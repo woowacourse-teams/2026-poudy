@@ -22,7 +22,7 @@ public class MoistureLevelTest {
     @DisplayName("0부터 3까지가 아닌 단계는 거부한다")
     public void rejectsLevelOutOfRange(int value) {
         assertThatThrownBy(() -> new MoistureLevel(value))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("수분감 단계는 0부터 3까지여야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("수분감 단계는 0부터 3까지여야 합니다.");
     }
 }

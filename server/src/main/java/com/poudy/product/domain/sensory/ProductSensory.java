@@ -1,10 +1,10 @@
 package com.poudy.product.domain.sensory;
 
 public record ProductSensory(
-        MoistureLevel moisture,
-        OilLevel oil,
-        SensoryConfidence confidence,
-        SensoryModelVersion modelVersion) {
+    MoistureLevel moisture,
+    OilLevel oil,
+    SensoryConfidence confidence,
+    SensoryModelVersion modelVersion) {
 
     public ProductSensory {
         if (moisture == null) {

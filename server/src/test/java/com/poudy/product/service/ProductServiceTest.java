@@ -40,26 +40,29 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
-                .willReturn(Set.of(999L));
+            .willReturn(Set.of(999L));
         ProductService service = new ProductService(
-                repository,
-                categories(product.category()),
-                excludeCodeIngredients);
+            repository,
+            categories(product.category()),
+            excludeCodeIngredients
+        );
         ProductQuery query = new ProductQuery(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                List.of(ExcludeCode.HARSH_PRESERVATIVES));
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(ExcludeCode.HARSH_PRESERVATIVES)
+        );
 
         ProductPage found = service.findProducts(
-                query,
-                ProductSort.NAME_ASC,
-                0,
-                20);
+            query,
+            ProductSort.NAME_ASC,
+            0,
+            20
+        );
 
         assertThat(found.items()).containsExactly(product);
     }
@@ -72,11 +75,12 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(new Products(List.of(product)));
         given(excludeCodeIngredients.freeCodesOf(product.ingredients()))
-                .willReturn(List.of(ExcludeCode.SULFATES));
+            .willReturn(List.of(ExcludeCode.SULFATES));
         ProductService service = new ProductService(
-                repository,
-                categories(product.category()),
-                excludeCodeIngredients);
+            repository,
+            categories(product.category()),
+            excludeCodeIngredients
+        );
 
         ProductDetail detail = service.findDetail(1L);
 
@@ -94,14 +98,15 @@ class ProductServiceTest {
         Category child = new Category(2L, 1L, "토너", 1);
         given(repository.findAll()).willReturn(new Products(List.of()));
         ProductService service = new ProductService(
-                repository,
-                Categories.from(List.of(parent, child)),
-                excludeCodeIngredients);
+            repository,
+            Categories.from(List.of(parent, child)),
+            excludeCodeIngredients
+        );
 
         assertThatThrownBy(() -> service.findDetail(999L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .extracting(exception -> ((ResourceNotFoundException) exception).code())
-                .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting(exception -> ((ResourceNotFoundException) exception).code())
+            .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     private static Product product(Long id) {
@@ -110,15 +115,16 @@ class ProductServiceTest {
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
         return new Product(
-                id,
-                "제품",
-                brand,
-                category,
-                new Ingredients(List.of()),
-                "https://example.com/product.png",
-                new ProductVariants(List.of(variant)),
-                sensory(1, 1),
-                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
+            id,
+            "제품",
+            brand,
+            category,
+            new Ingredients(List.of()),
+            "https://example.com/product.png",
+            new ProductVariants(List.of(variant)),
+            sensory(1, 1),
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+        );
     }
 
     private static Categories categories(Category child) {

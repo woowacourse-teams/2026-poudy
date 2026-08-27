@@ -33,10 +33,11 @@ class FeedbackImageUploadServiceTest {
     private final S3FeedbackImageRepository repository = mock(S3FeedbackImageRepository.class);
     private final FeedbackImageUploadRateLimiter rateLimiter = mock(FeedbackImageUploadRateLimiter.class);
     private final FeedbackImageUploadService service = new FeedbackImageUploadService(
-            processor,
-            repository,
-            rateLimiter,
-            1);
+        processor,
+        repository,
+        rateLimiter,
+        1
+    );
 
     @Test
     @DisplayName("요청 순서대로 한 장씩 처리하고 ID를 반환한다")
@@ -77,7 +78,7 @@ class FeedbackImageUploadServiceTest {
         given(repository.savePending(secondProcessed)).willThrow(new InfrastructureException("S3 실패"));
 
         assertThatThrownBy(() -> service.upload(List.of(first, second), "client-a"))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
 
         verify(repository).cleanupPending(List.of(firstStored));
     }
@@ -103,7 +104,7 @@ class FeedbackImageUploadServiceTest {
             processingStarted.await();
 
             assertThatThrownBy(() -> service.upload(List.of(second), "client-b"))
-                    .isInstanceOf(TooManyRequestsException.class);
+                .isInstanceOf(TooManyRequestsException.class);
 
             releaseProcessing.countDown();
             assertThat(active.get()).containsExactly(stored.id());

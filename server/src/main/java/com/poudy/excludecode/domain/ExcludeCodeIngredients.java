@@ -30,9 +30,9 @@ public class ExcludeCodeIngredients {
 
     public Set<Long> idsOf(List<ExcludeCode> codes) {
         return codes.stream()
-                .flatMap(code -> of(code).stream())
-                .map(ExcludeCodeIngredient::id)
-                .collect(Collectors.toUnmodifiableSet());
+            .flatMap(code -> of(code).stream())
+            .map(ExcludeCodeIngredient::id)
+            .collect(Collectors.toUnmodifiableSet());
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
@@ -41,8 +41,8 @@ public class ExcludeCodeIngredients {
 
     public List<ExcludeCode> freeCodesOf(Ingredients productIngredients) {
         return Arrays.stream(ExcludeCode.values())
-                .filter(code -> !productIngredients.containsAny(idsOf(List.of(code))))
-                .toList();
+            .filter(code -> !productIngredients.containsAny(idsOf(List.of(code))))
+            .toList();
     }
 
     private static Map<ExcludeCode, ExcludeCodeMapping> byCode(List<ExcludeCodeMapping> mappings) {
@@ -58,8 +58,8 @@ public class ExcludeCodeIngredients {
         }
 
         List<ExcludeCode> undefined = Arrays.stream(ExcludeCode.values())
-                .filter(code -> !byCode.containsKey(code))
-                .toList();
+            .filter(code -> !byCode.containsKey(code))
+            .toList();
         if (!undefined.isEmpty()) {
             throw new InfrastructureException("제외 성분군 정의를 찾지 못했습니다: " + undefined);
         }
@@ -68,17 +68,18 @@ public class ExcludeCodeIngredients {
     }
 
     private static List<ResolvedExcludeCode> resolveAll(
-            Map<ExcludeCode, ExcludeCodeMapping> byCode,
-            Ingredients ingredients) {
+        Map<ExcludeCode, ExcludeCodeMapping> byCode,
+        Ingredients ingredients
+    ) {
         return Arrays.stream(ExcludeCode.values())
-                .map(code -> ResolvedExcludeCode.of(byCode.get(code), ingredients))
-                .toList();
+            .map(code -> ResolvedExcludeCode.of(byCode.get(code), ingredients))
+            .toList();
     }
 
     private static void requireEveryReferenceResolved(List<ResolvedExcludeCode> resolved) {
         List<String> missing = resolved.stream()
-                .flatMap(ResolvedExcludeCode::missingReferences)
-                .toList();
+            .flatMap(ResolvedExcludeCode::missingReferences)
+            .toList();
 
         if (!missing.isEmpty()) {
             throw new InfrastructureException("성분 데이터에서 제외 성분군의 성분을 찾지 못했습니다: " + missing);
@@ -87,7 +88,7 @@ public class ExcludeCodeIngredients {
 
     private static Map<ExcludeCode, List<ExcludeCodeIngredient>> index(List<ResolvedExcludeCode> resolved) {
         return resolved.stream()
-                .collect(Collectors.toUnmodifiableMap(ResolvedExcludeCode::code, ResolvedExcludeCode::found));
+            .collect(Collectors.toUnmodifiableMap(ResolvedExcludeCode::code, ResolvedExcludeCode::found));
     }
 
     private static Map<Long, List<ExcludeCode>> indexCodes(List<ResolvedExcludeCode> resolved) {

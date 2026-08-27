@@ -16,7 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = "poudy.cors.allowed-origins="
-        + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
+    + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
 @AutoConfigureMockMvc
 @DisplayName("CORS 설정")
 class CorsConfigTest {
@@ -31,12 +31,13 @@ class CorsConfigTest {
     @DisplayName("허용한 도메인의 사전 요청에 허용 헤더를 준다")
     void allowsPreflightFromAllowedOrigin(String origin) throws Exception {
         mockMvc.perform(
-                options("/api/feedback")
-                        .header(HttpHeaders.ORIGIN, origin)
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,HEAD,POST,OPTIONS"));
+            options("/api/feedback")
+                .header(HttpHeaders.ORIGIN, origin)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,HEAD,POST,OPTIONS"));
     }
 
     @ParameterizedTest
@@ -44,24 +45,25 @@ class CorsConfigTest {
     @DisplayName("허용한 도메인의 조회 응답에 허용 헤더를 준다")
     void allowsRequestFromAllowedOrigin(String origin) throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, origin))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
     }
 
     @Test
     @DisplayName("허용하지 않은 도메인의 사전 요청을 막는다")
     void rejectsPreflightFromDisallowedOrigin() throws Exception {
         mockMvc.perform(
-                options("/api/products")
-                        .header(HttpHeaders.ORIGIN, DISALLOWED_ORIGIN)
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
-                .andExpect(status().isForbidden());
+            options("/api/products")
+                .header(HttpHeaders.ORIGIN, DISALLOWED_ORIGIN)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+        )
+            .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("허용하지 않은 도메인에는 허용 헤더를 주지 않는다")
     void omitsAllowHeaderForDisallowedOrigin() throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, DISALLOWED_ORIGIN))
-                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+            .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 }

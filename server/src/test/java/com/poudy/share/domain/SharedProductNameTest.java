@@ -12,10 +12,12 @@ import org.junit.jupiter.api.Test;
 class SharedProductNameTest {
 
     private static final Brands BRANDS = new Brands(
-            List.of(
-                    new Brand(1L, "닥터지", "Dr.G", null),
-                    new Brand(2L, "메디큐브", null, null),
-                    new Brand(3L, "다 브랜드", null, null)));
+        List.of(
+            new Brand(1L, "닥터지", "Dr.G", null),
+            new Brand(2L, "메디큐브", null, null),
+            new Brand(3L, "다 브랜드", null, null)
+        )
+    );
 
     @Test
     @DisplayName("카탈로그 제품명에는 브랜드가 없으므로 브랜드를 떼어 낸다")
@@ -56,7 +58,7 @@ class SharedProductNameTest {
         SharedProductName name = SharedProductName.of("메디큐브 PDRN 핑크 시카 수딩 토너", BRANDS);
 
         assertThat(name.shortenedKeywords())
-                .containsExactly("PDRN 핑크 시카 수딩", "PDRN 핑크 시카", "PDRN 핑크");
+            .containsExactly("PDRN 핑크 시카 수딩", "PDRN 핑크 시카", "PDRN 핑크");
     }
 
     @Test

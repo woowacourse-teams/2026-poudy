@@ -16,9 +16,9 @@ class FeedbackConfigTest {
 
         try (S3Client client = config.feedbackS3Client("ap-northeast-2")) {
             assertThat(client.serviceClientConfiguration().overrideConfiguration().apiCallTimeout())
-                    .contains(FeedbackConfig.S3_API_CALL_TIMEOUT);
+                .contains(FeedbackConfig.S3_API_CALL_TIMEOUT);
             assertThat(client.serviceClientConfiguration().overrideConfiguration().apiCallAttemptTimeout())
-                    .contains(FeedbackConfig.S3_API_CALL_ATTEMPT_TIMEOUT);
+                .contains(FeedbackConfig.S3_API_CALL_ATTEMPT_TIMEOUT);
         }
     }
 }

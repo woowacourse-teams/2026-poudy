@@ -8,12 +8,12 @@ import java.util.Objects;
 import java.util.UUID;
 
 public record Feedback(
-        UUID id,
-        FeedbackType type,
-        FeedbackContent content,
-        FeedbackPath path,
-        OffsetDateTime receivedAt,
-        List<FeedbackImage> images) {
+    UUID id,
+    FeedbackType type,
+    FeedbackContent content,
+    FeedbackPath path,
+    OffsetDateTime receivedAt,
+    List<FeedbackImage> images) {
 
     public static final int MAX_IMAGE_COUNT = 5;
 
@@ -33,22 +33,24 @@ public record Feedback(
     }
 
     public Feedback(
-            UUID id,
-            FeedbackType type,
-            FeedbackContent content,
-            FeedbackPath path,
-            OffsetDateTime receivedAt) {
+        UUID id,
+        FeedbackType type,
+        FeedbackContent content,
+        FeedbackPath path,
+        OffsetDateTime receivedAt
+    ) {
         this(id, type, content, path, receivedAt, List.of());
     }
 
     public static Feedback register(FeedbackType type, String content, String path, Clock clock) {
         return new Feedback(
-                UUID.randomUUID(),
-                type,
-                new FeedbackContent(content),
-                new FeedbackPath(path),
-                OffsetDateTime.now(clock),
-                List.of());
+            UUID.randomUUID(),
+            type,
+            new FeedbackContent(content),
+            new FeedbackPath(path),
+            OffsetDateTime.now(clock),
+            List.of()
+        );
     }
 
     public Feedback attachImages(List<FeedbackImage> images) {
@@ -61,7 +63,7 @@ public record Feedback(
             normalized = List.copyOf(imageIds);
         }
         if (normalized.size() > MAX_IMAGE_COUNT
-                || new HashSet<>(normalized).size() != normalized.size()) {
+            || new HashSet<>(normalized).size() != normalized.size()) {
             throw new InvalidFeedbackImageIdException();
         }
         return normalized;

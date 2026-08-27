@@ -6,9 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record FormulationRoleResponse(
-        @NotNull @Schema(description = "배합 목적 ID", example = "14") Long id,
-        @NotNull @Schema(example = "MOISTURISING") String code,
-        @NotNull @Schema(description = "배합 목적 이름 (CosIng Function)", example = "보습제") String name) {
+    @NotNull @Schema(description = "배합 목적 ID", example = "14") Long id,
+    @NotNull @Schema(example = "MOISTURISING") String code,
+    @NotNull @Schema(description = "배합 목적 이름 (CosIng Function)", example = "보습제") String name) {
 
     public static FormulationRoleResponse from(FormulationRole role) {
         return new FormulationRoleResponse(role.id(), role.code(), role.displayName());
@@ -16,7 +16,7 @@ public record FormulationRoleResponse(
 
     public static List<FormulationRoleResponse> from(List<FormulationRole> roles) {
         return roles.stream()
-                .map(FormulationRoleResponse::from)
-                .toList();
+            .map(FormulationRoleResponse::from)
+            .toList();
     }
 }

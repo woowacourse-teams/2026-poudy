@@ -8,12 +8,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public record ExcludeCodeListResponse(
-        @NotNull @Schema(description = "빠른 필터에 쓰는 성분군 전체") List<ExcludeCodeResponse> items) {
+    @NotNull @Schema(description = "빠른 필터에 쓰는 성분군 전체") List<ExcludeCodeResponse> items) {
 
     public static ExcludeCodeListResponse from(ExcludeCodeIngredients ingredients) {
         return new ExcludeCodeListResponse(
-                Arrays.stream(ExcludeCode.values())
-                        .map(code -> ExcludeCodeResponse.from(code, ingredients))
-                        .toList());
+            Arrays.stream(ExcludeCode.values())
+                .map(code -> ExcludeCodeResponse.from(code, ingredients))
+                .toList()
+        );
     }
 }

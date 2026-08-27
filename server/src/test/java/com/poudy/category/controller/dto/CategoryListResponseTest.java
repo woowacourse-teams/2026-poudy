@@ -20,24 +20,29 @@ class CategoryListResponseTest {
         Category cleansing = new Category(4L, null, "클렌징", 0);
         Category cleansingFoam = new Category(5L, 4L, "클렌징폼", 1);
         CategoryProductCount skinCareCount = new CategoryProductCount(
-                skinCare,
-                3L,
-                List.of(
-                        new CategoryProductCount(toner, 2L, List.of()),
-                        new CategoryProductCount(serum, 1L, List.of())));
+            skinCare,
+            3L,
+            List.of(
+                new CategoryProductCount(toner, 2L, List.of()),
+                new CategoryProductCount(serum, 1L, List.of())
+            )
+        );
         CategoryProductCount cleansingCount = new CategoryProductCount(
-                cleansing,
-                4L,
-                List.of(new CategoryProductCount(cleansingFoam, 4L, List.of())));
+            cleansing,
+            4L,
+            List.of(new CategoryProductCount(cleansingFoam, 4L, List.of()))
+        );
 
         CategoryListResponse response = CategoryListResponse.from(List.of(skinCareCount, cleansingCount));
 
         assertThat(response.items()).containsExactly(
-                new CategoryResponse(
-                        1L,
-                        "스킨케어",
-                        List.of(new CategoryChildResponse(2L, "토너", 2L), new CategoryChildResponse(3L, "세럼", 1L)),
-                        3L),
-                new CategoryResponse(4L, "클렌징", List.of(new CategoryChildResponse(5L, "클렌징폼", 4L)), 4L));
+            new CategoryResponse(
+                1L,
+                "스킨케어",
+                List.of(new CategoryChildResponse(2L, "토너", 2L), new CategoryChildResponse(3L, "세럼", 1L)),
+                3L
+            ),
+            new CategoryResponse(4L, "클렌징", List.of(new CategoryChildResponse(5L, "클렌징폼", 4L)), 4L)
+        );
     }
 }

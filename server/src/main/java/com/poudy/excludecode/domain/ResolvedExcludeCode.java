@@ -18,8 +18,8 @@ public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> 
 
         for (Long ingredientId : mapping.ingredientIds()) {
             ingredients.findById(ingredientId)
-                    .map(ExcludeCodeIngredient::from)
-                    .ifPresentOrElse(found::add, () -> missing.add(ingredientId));
+                .map(ExcludeCodeIngredient::from)
+                .ifPresentOrElse(found::add, () -> missing.add(ingredientId));
         }
 
         return new ResolvedExcludeCode(mapping.code(), found, missing);
@@ -27,6 +27,6 @@ public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> 
 
     public Stream<String> missingReferences() {
         return missing.stream()
-                .map(ingredientId -> code + " 의 성분 ID " + ingredientId);
+            .map(ingredientId -> code + " 의 성분 ID " + ingredientId);
     }
 }

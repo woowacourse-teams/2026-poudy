@@ -23,10 +23,11 @@ public class S3ProductRequestRepository {
     private final String prefix;
 
     public S3ProductRequestRepository(
-            @Qualifier("productRequestS3Client") S3Client s3Client,
-            ObjectMapper objectMapper,
-            @Value("${poudy.product-request.s3.bucket:}") String bucket,
-            @Value("${poudy.product-request.s3.prefix:product-requests}") String prefix) {
+        @Qualifier("productRequestS3Client") S3Client s3Client,
+        ObjectMapper objectMapper,
+        @Value("${poudy.product-request.s3.bucket:}") String bucket,
+        @Value("${poudy.product-request.s3.prefix:product-requests}") String prefix
+    ) {
         this.s3Client = s3Client;
         this.objectMapper = objectMapper;
         this.bucket = bucket.trim();
@@ -40,11 +41,11 @@ public class S3ProductRequestRepository {
 
         byte[] body = serialize(request);
         PutObjectRequest put = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(objectKey(request))
-                .contentType("application/json")
-                .contentLength((long) body.length)
-                .build();
+            .bucket(bucket)
+            .key(objectKey(request))
+            .contentType("application/json")
+            .contentLength((long) body.length)
+            .build();
 
         try {
             s3Client.putObject(put, RequestBody.fromBytes(body));

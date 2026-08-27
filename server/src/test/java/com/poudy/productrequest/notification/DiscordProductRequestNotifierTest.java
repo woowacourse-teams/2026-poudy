@@ -46,9 +46,9 @@ class DiscordProductRequestNotifierTest {
         verify(objectMapper).writeValueAsString(payload.capture());
         assertThat(payload.getValue()).isInstanceOf(Map.class);
         assertThat(((Map<?, ?>) payload.getValue()).get("content"))
-                .isEqualTo("신규 제품 등록 요청\n제품명: 제품\n브랜드명: 브랜드");
+            .isEqualTo("신규 제품 등록 요청\n제품명: 제품\n브랜드명: 브랜드");
         assertThat(((Map<?, ?>) payload.getValue()).get("allowed_mentions"))
-                .isEqualTo(Map.of("parse", java.util.List.of()));
+            .isEqualTo(Map.of("parse", java.util.List.of()));
     }
 
     @Test
@@ -67,12 +67,12 @@ class DiscordProductRequestNotifierTest {
     @DisplayName("Discord 오류에는 webhook 비밀값을 노출하지 않는다")
     void hidesWebhookFromFailure() throws Exception {
         given(httpClient.send(any(HttpRequest.class), anyDiscardingHandler()))
-                .willThrow(new IOException("https://discord.example/webhook/secret"));
+            .willThrow(new IOException("https://discord.example/webhook/secret"));
         given(objectMapper.writeValueAsString(any())).willReturn("{}");
 
         assertThatThrownBy(() -> notifier("https://discord.example/webhook/secret").notify(request("브랜드")))
-                .isInstanceOf(InfrastructureException.class)
-                .hasMessageNotContaining("secret");
+            .isInstanceOf(InfrastructureException.class)
+            .hasMessageNotContaining("secret");
     }
 
     @SuppressWarnings("unchecked")
@@ -86,10 +86,11 @@ class DiscordProductRequestNotifierTest {
 
     private static ProductRequest request(String brandName) {
         return new ProductRequest(
-                1,
-                UUID.fromString("00000000-0000-0000-0000-000000000001"),
-                "제품",
-                brandName,
-                OffsetDateTime.parse("2026-08-23T12:34:56Z"));
+            1,
+            UUID.fromString("00000000-0000-0000-0000-000000000001"),
+            "제품",
+            brandName,
+            OffsetDateTime.parse("2026-08-23T12:34:56Z")
+        );
     }
 }

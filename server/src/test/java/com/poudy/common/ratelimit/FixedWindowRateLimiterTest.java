@@ -25,7 +25,7 @@ class FixedWindowRateLimiterTest {
         limiter.requireAllowed("client-a");
 
         assertThatThrownBy(() -> limiter.requireAllowed("client-a"))
-                .isInstanceOf(TooManyRequestsException.class);
+            .isInstanceOf(TooManyRequestsException.class);
         assertThatNoException().isThrownBy(() -> limiter.requireAllowed("client-b"));
     }
 
@@ -50,7 +50,7 @@ class FixedWindowRateLimiterTest {
         limiter.requireAllowed("client-b");
 
         assertThatThrownBy(() -> limiter.requireAllowed("client-c"))
-                .isInstanceOf(TooManyRequestsException.class);
+            .isInstanceOf(TooManyRequestsException.class);
         assertThatNoException().isThrownBy(() -> limiter.requireAllowed("client-a"));
     }
 
@@ -69,16 +69,18 @@ class FixedWindowRateLimiterTest {
     }
 
     private static FixedWindowRateLimiter limiter(
-            int maxRequests,
-            Duration window,
-            int maxTrackedClients,
-            Clock clock) {
+        int maxRequests,
+        Duration window,
+        int maxTrackedClients,
+        Clock clock
+    ) {
         return new FixedWindowRateLimiter(
-                maxRequests,
-                window,
-                maxTrackedClients,
-                Duration.ofMinutes(1),
-                clock);
+            maxRequests,
+            window,
+            maxTrackedClients,
+            Duration.ofMinutes(1),
+            clock
+        );
     }
 
     private static final class MutableClock extends Clock {

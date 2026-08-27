@@ -26,21 +26,22 @@ class ProductSearchTest {
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
         return new Product(
-                id,
-                name,
-                brand,
-                category,
-                new Ingredients(List.of()),
-                "https://example.com/" + id + ".png",
-                new ProductVariants(List.of(variant)),
-                sensory(1, 1),
-                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
+            id,
+            name,
+            brand,
+            category,
+            new Ingredients(List.of()),
+            "https://example.com/" + id + ".png",
+            new ProductVariants(List.of(variant)),
+            sensory(1, 1),
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+        );
     }
 
     private static List<String> names(List<Product> products) {
         return products.stream()
-                .map(Product::name)
-                .toList();
+            .map(Product::name)
+            .toList();
     }
 
     @Test
@@ -57,13 +58,15 @@ class ProductSearchTest {
         Brand roundLab = new Brand(1L, "라운드랩", null, null);
         Brand torriden = new Brand(2L, "토리든", null, null);
         Products products = new Products(
-                List.of(
-                        product(1L, "1025 독도 토너", roundLab),
-                        product(2L, "자작나무 수분 크림", roundLab),
-                        product(3L, "다이브인 세럼", torriden)));
+            List.of(
+                product(1L, "1025 독도 토너", roundLab),
+                product(2L, "자작나무 수분 크림", roundLab),
+                product(3L, "다이브인 세럼", torriden)
+            )
+        );
 
         assertThat(names(products.search("라운드")))
-                .containsExactly("1025 독도 토너", "자작나무 수분 크림");
+            .containsExactly("1025 독도 토너", "자작나무 수분 크림");
     }
 
     @Test

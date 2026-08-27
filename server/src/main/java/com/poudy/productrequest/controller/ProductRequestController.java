@@ -29,8 +29,9 @@ public class ProductRequestController {
     @ApiResponse(responseCode = "202", description = "요청을 보관함")
     @PostMapping
     public ResponseEntity<Void> submit(
-            @Valid @RequestBody ProductRegistrationRequest request,
-            HttpServletRequest httpRequest) {
+        @Valid @RequestBody ProductRegistrationRequest request,
+        HttpServletRequest httpRequest
+    ) {
         productRequestService.submit(request, ClientAddressResolver.resolve(httpRequest));
         return ResponseEntity.accepted().build();
     }

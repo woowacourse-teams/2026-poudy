@@ -13,9 +13,10 @@ public class ProductRequestRateLimiter {
     private final FixedWindowRateLimiter delegate;
 
     public ProductRequestRateLimiter(
-            @Value("${poudy.product-request.rate-limit.max-requests}") int maxRequests,
-            @Value("${poudy.product-request.rate-limit.window}") Duration window,
-            @Qualifier("productRequestClock") Clock clock) {
+        @Value("${poudy.product-request.rate-limit.max-requests}") int maxRequests,
+        @Value("${poudy.product-request.rate-limit.window}") Duration window,
+        @Qualifier("productRequestClock") Clock clock
+    ) {
         delegate = new FixedWindowRateLimiter(maxRequests, window, clock);
     }
 

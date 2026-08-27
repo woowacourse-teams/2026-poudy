@@ -28,9 +28,10 @@ public class S3FeedbackRepository {
     private final ObjectMapper objectMapper;
 
     public S3FeedbackRepository(
-            S3FeedbackObjectStore objectStore,
-            S3FeedbackImageRepository imageRepository,
-            ObjectMapper objectMapper) {
+        S3FeedbackObjectStore objectStore,
+        S3FeedbackImageRepository imageRepository,
+        ObjectMapper objectMapper
+    ) {
         this.objectStore = objectStore;
         this.imageRepository = imageRepository;
         this.objectMapper = objectMapper;
@@ -78,9 +79,10 @@ public class S3FeedbackRepository {
     }
 
     public Feedback save(
-            Feedback feedback,
-            List<UUID> imageIds,
-            InstantSource timeSource) {
+        Feedback feedback,
+        List<UUID> imageIds,
+        InstantSource timeSource
+    ) {
         if (imageIds.isEmpty()) {
             save(feedback);
             return feedback;
@@ -88,13 +90,14 @@ public class S3FeedbackRepository {
 
         List<S3FeedbackImageRepository.PendingImage> pending = imageRepository.resolve(imageIds, timeSource.instant());
         Feedback attached = feedback
-                .attachImages(pending.stream().map(S3FeedbackImageRepository.PendingImage::image).toList());
+            .attachImages(pending.stream().map(S3FeedbackImageRepository.PendingImage::image).toList());
         PreparedDocument document = prepare(attached);
         S3FeedbackImageRepository.Claim claim = imageRepository.claimAndCopy(
-                attached.id(),
-                pending,
-                document.sha256(),
-                timeSource);
+            attached.id(),
+            pending,
+            document.sha256(),
+            timeSource
+        );
         SaveStatus status = save(attached, document);
         if (status == SaveStatus.FAILURE) {
             imageRepository.rollback(claim);
@@ -105,9 +108,10 @@ public class S3FeedbackRepository {
         }
         if (!imageRepository.commit(claim)) {
             log.error(
-                    "의견 이미지 commit 정리를 완료하지 못했습니다. feedbackId={}, imageCount={}",
-                    attached.id(),
-                    attached.images().size());
+                "의견 이미지 commit 정리를 완료하지 못했습니다. feedbackId={}, imageCount={}",
+                attached.id(),
+                attached.images().size()
+            );
         }
         return attached;
     }

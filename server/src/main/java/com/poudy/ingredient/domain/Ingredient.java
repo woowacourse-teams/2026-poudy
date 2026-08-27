@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Objects;
 
 public record Ingredient(
-        Long id,
-        String koreanName,
-        String englishName,
-        String originDefinition,
-        String description,
-        String descriptionEvidence,
-        List<String> aliases,
-        List<IngredientTag> tagMappings,
-        OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {
+    Long id,
+    String koreanName,
+    String englishName,
+    String originDefinition,
+    String description,
+    String descriptionEvidence,
+    List<String> aliases,
+    List<IngredientTag> tagMappings,
+    OffsetDateTime createdAt,
+    OffsetDateTime updatedAt) {
 
     public Ingredient {
         englishName = Objects.requireNonNullElse(englishName, "");

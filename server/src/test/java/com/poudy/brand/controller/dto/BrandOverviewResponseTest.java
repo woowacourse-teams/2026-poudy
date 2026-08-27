@@ -21,17 +21,19 @@ class BrandOverviewResponseTest {
         Brand medicube = new Brand(2L, "메디큐브", "MEDICUBE", "https://cdn.example.com/brands/2/image.png");
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
         List<BrandProductCount> brandProductCounts = productCounts
-                .countsOf(new Brands(List.of(drG, medicube)).sortedByName());
+            .countsOf(new Brands(List.of(drG, medicube)).sortedByName());
 
         BrandOverviewResponse response = BrandOverviewResponse.from(brandProductCounts);
 
         assertThat(response.items()).containsExactly(
-                new BrandSummaryResponse(1L, "닥터지", null, null, 3L),
-                new BrandSummaryResponse(
-                        2L,
-                        "메디큐브",
-                        "MEDICUBE",
-                        "https://cdn.example.com/brands/2/image.png",
-                        0L));
+            new BrandSummaryResponse(1L, "닥터지", null, null, 3L),
+            new BrandSummaryResponse(
+                2L,
+                "메디큐브",
+                "MEDICUBE",
+                "https://cdn.example.com/brands/2/image.png",
+                0L
+            )
+        );
     }
 }

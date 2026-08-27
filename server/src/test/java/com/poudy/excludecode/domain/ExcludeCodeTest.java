@@ -10,12 +10,13 @@ class ExcludeCodeTest {
     @Test
     void 빠른_제외_성분군은_승인한_여섯_개를_선언_순서대로_가진다() {
         assertThat(ExcludeCode.values()).containsExactly(
-                ExcludeCode.FRAGRANCE_ALLERGENS,
-                ExcludeCode.DRYING_ALCOHOLS,
-                ExcludeCode.HARSH_PRESERVATIVES,
-                ExcludeCode.SULFATES,
-                ExcludeCode.CYCLIC_SILICONES,
-                ExcludeCode.SYNTHETIC_COLORANTS);
+            ExcludeCode.FRAGRANCE_ALLERGENS,
+            ExcludeCode.DRYING_ALCOHOLS,
+            ExcludeCode.HARSH_PRESERVATIVES,
+            ExcludeCode.SULFATES,
+            ExcludeCode.CYCLIC_SILICONES,
+            ExcludeCode.SYNTHETIC_COLORANTS
+        );
     }
 
     @Test

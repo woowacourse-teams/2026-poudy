@@ -1,9 +1,9 @@
 package com.poudy.product.domain.sensory;
 
 public record SensoryModelVersion(
-        String ingredientProfileVersion,
-        String categoryPriorVersion,
-        String levelModelVersion) {
+    String ingredientProfileVersion,
+    String categoryPriorVersion,
+    String levelModelVersion) {
 
     public SensoryModelVersion {
         ingredientProfileVersion = requireNonBlank(ingredientProfileVersion, "성분 감각 프로필");

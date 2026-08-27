@@ -26,14 +26,15 @@ class ProductsTest {
 
     private static Product product(Long id, Long... ingredientIds) {
         List<Ingredient> ingredients = Arrays.stream(ingredientIds)
-                .map(ProductsTest::ingredient)
-                .toList();
+            .map(ProductsTest::ingredient)
+            .toList();
 
         return product(id, brand(1L), category(1L), new Ingredients(ingredients));
     }
 
     private final Products products = new Products(
-            List.of(product(1L, 100L, 200L), product(2L, 200L, 300L), product(3L, 300L)));
+        List.of(product(1L, 100L, 200L), product(2L, 200L, 300L), product(3L, 300L))
+    );
 
     @Test
     @DisplayName("성분을 포함한 제품 수를 센다")
@@ -46,16 +47,16 @@ class ProductsTest {
     @DisplayName("요청한 ID 순서로 존재하는 제품만 찾는다")
     void findsProductsInRequestedOrder() {
         assertThat(products.findAllById(List.of(3L, 999L, 1L)))
-                .extracting(Product::id)
-                .containsExactly(3L, 1L);
+            .extracting(Product::id)
+            .containsExactly(3L, 1L);
     }
 
     @Test
     @DisplayName("제품 ID가 중복되면 목록을 만들 수 없다")
     void rejectsDuplicateProductIds() {
         assertThatThrownBy(() -> new Products(List.of(product(1L), product(1L))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("1");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("1");
     }
 
     @Test
@@ -80,11 +81,12 @@ class ProductsTest {
     @DisplayName("브랜드별 제품 수를 센다")
     void countsProductsByBrand() {
         Products products = new Products(
-                List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L)));
+            List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L))
+        );
 
         assertThat(products.productCountsByBrand(List.of(brand(1L), brand(2L), brand(999L))))
-                .extracting(BrandProductCount::id, BrandProductCount::productCount)
-                .containsExactly(tuple(1L, 2L), tuple(2L, 1L), tuple(999L, 0L));
+            .extracting(BrandProductCount::id, BrandProductCount::productCount)
+            .containsExactly(tuple(1L, 2L), tuple(2L, 1L), tuple(999L, 0L));
     }
 
     @Test
@@ -95,22 +97,24 @@ class ProductsTest {
         Category secondChild = category(3L);
         Category emptyChild = category(4L);
         Products products = new Products(
-                List.of(
-                        productOfBrandAndCategory(1L, 1L, 2L),
-                        productOfBrandAndCategory(2L, 1L, 2L),
-                        productOfBrandAndCategory(3L, 1L, 3L),
-                        productOfBrandAndCategory(4L, 2L, 2L)));
+            List.of(
+                productOfBrandAndCategory(1L, 1L, 2L),
+                productOfBrandAndCategory(2L, 1L, 2L),
+                productOfBrandAndCategory(3L, 1L, 3L),
+                productOfBrandAndCategory(4L, 2L, 2L)
+            )
+        );
 
         Categories categories = Categories.from(List.of(parent, firstChild, secondChild, emptyChild));
 
         BrandProductCounts counts = products.brandProductCountsOf(brand(1L), categories);
 
         assertThat(counts.categories())
-                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
-                .containsExactly(tuple(parent.id(), 3L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+            .containsExactly(tuple(parent.id(), 3L));
         assertThat(counts.categories().getFirst().children())
-                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
-                .containsExactly(tuple(firstChild.id(), 2L), tuple(secondChild.id(), 1L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+            .containsExactly(tuple(firstChild.id(), 2L), tuple(secondChild.id(), 1L));
     }
 
     private static Product productOfBrand(Long id, Long brandId) {
@@ -125,15 +129,16 @@ class ProductsTest {
         ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
 
         return new Product(
-                id,
-                "제품 " + id,
-                brand,
-                category,
-                ingredients,
-                "https://example.com/" + id + ".png",
-                new ProductVariants(List.of(variant)),
-                sensory(1, 1),
-                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
+            id,
+            "제품 " + id,
+            brand,
+            category,
+            ingredients,
+            "https://example.com/" + id + ".png",
+            new ProductVariants(List.of(variant)),
+            sensory(1, 1),
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+        );
     }
 
     private static Brand brand(Long id) {

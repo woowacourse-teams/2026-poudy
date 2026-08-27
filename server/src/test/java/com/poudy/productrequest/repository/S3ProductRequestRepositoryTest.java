@@ -32,10 +32,11 @@ class S3ProductRequestRepositoryTest {
     void storesEachRequestAsUniqueJsonObject() {
         given(objectMapper.writeValueAsString(any(ProductRequest.class))).willReturn("{}");
         S3ProductRequestRepository repository = new S3ProductRequestRepository(
-                s3Client,
-                objectMapper,
-                "requests-bucket",
-                "/incoming/product-requests/");
+            s3Client,
+            objectMapper,
+            "requests-bucket",
+            "/incoming/product-requests/"
+        );
         ProductRequest first = request("00000000-0000-0000-0000-000000000001");
         ProductRequest second = request("00000000-0000-0000-0000-000000000002");
 
@@ -45,13 +46,14 @@ class S3ProductRequestRepositoryTest {
         ArgumentCaptor<PutObjectRequest> puts = ArgumentCaptor.forClass(PutObjectRequest.class);
         verify(s3Client, times(2)).putObject(puts.capture(), any(RequestBody.class));
         assertThat(puts.getAllValues()).extracting(PutObjectRequest::bucket)
-                .containsOnly("requests-bucket");
+            .containsOnly("requests-bucket");
         assertThat(puts.getAllValues()).extracting(PutObjectRequest::contentType)
-                .containsOnly("application/json");
+            .containsOnly("application/json");
         assertThat(puts.getAllValues()).extracting(PutObjectRequest::key)
-                .containsExactly(
-                        "incoming/product-requests/00000000-0000-0000-0000-000000000001.json",
-                        "incoming/product-requests/00000000-0000-0000-0000-000000000002.json");
+            .containsExactly(
+                "incoming/product-requests/00000000-0000-0000-0000-000000000001.json",
+                "incoming/product-requests/00000000-0000-0000-0000-000000000002.json"
+            );
     }
 
     @Test
@@ -59,16 +61,17 @@ class S3ProductRequestRepositoryTest {
     void wrapsS3Failure() {
         given(objectMapper.writeValueAsString(any(ProductRequest.class))).willReturn("{}");
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(S3Exception.builder().message("secret detail").build());
+            .willThrow(S3Exception.builder().message("secret detail").build());
         S3ProductRequestRepository repository = new S3ProductRequestRepository(
-                s3Client,
-                objectMapper,
-                "requests-bucket",
-                "requests");
+            s3Client,
+            objectMapper,
+            "requests-bucket",
+            "requests"
+        );
 
         assertThatThrownBy(() -> repository.save(request("00000000-0000-0000-0000-000000000001")))
-                .isInstanceOf(InfrastructureException.class)
-                .hasMessage("제품 등록 요청을 S3에 저장하지 못했습니다.");
+            .isInstanceOf(InfrastructureException.class)
+            .hasMessage("제품 등록 요청을 S3에 저장하지 못했습니다.");
     }
 
     @Test
@@ -77,16 +80,17 @@ class S3ProductRequestRepositoryTest {
         S3ProductRequestRepository repository = new S3ProductRequestRepository(s3Client, objectMapper, " ", "requests");
 
         assertThatThrownBy(() -> repository.save(request("00000000-0000-0000-0000-000000000001")))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
         verify(s3Client, times(0)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
     private static ProductRequest request(String id) {
         return new ProductRequest(
-                1,
-                UUID.fromString(id),
-                "제품",
-                "브랜드",
-                OffsetDateTime.parse("2026-08-23T12:34:56Z"));
+            1,
+            UUID.fromString(id),
+            "제품",
+            "브랜드",
+            OffsetDateTime.parse("2026-08-23T12:34:56Z")
+        );
     }
 }

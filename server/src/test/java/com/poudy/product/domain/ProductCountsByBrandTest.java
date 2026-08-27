@@ -20,8 +20,8 @@ class ProductCountsByBrandTest {
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
         assertThat(productCounts.countsOf(brands.sortedByName()))
-                .extracting(BrandProductCount::id, BrandProductCount::productCount)
-                .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
+            .extracting(BrandProductCount::id, BrandProductCount::productCount)
+            .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
     }
 
     @Test
@@ -30,8 +30,8 @@ class ProductCountsByBrandTest {
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
         assertThat(productCounts.countsOf(List.of(brand(999L, "없는 브랜드"))))
-                .extracting(BrandProductCount::productCount)
-                .containsExactly(0L);
+            .extracting(BrandProductCount::productCount)
+            .containsExactly(0L);
     }
 
     @Test
@@ -40,8 +40,8 @@ class ProductCountsByBrandTest {
         ProductCountsByBrand productCounts = new ProductCountsByBrand(null);
 
         assertThat(productCounts.countsOf(List.of(brand(1L, "닥터지"), brand(2L, "메디큐브"))))
-                .extracting(BrandProductCount::productCount)
-                .containsExactly(0L, 0L);
+            .extracting(BrandProductCount::productCount)
+            .containsExactly(0L, 0L);
     }
 
     private static Brand brand(Long id, String koreanName) {

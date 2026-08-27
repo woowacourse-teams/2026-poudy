@@ -68,10 +68,10 @@ class ProductRequestServiceTest {
     void stopsWhenStorageFails() {
         ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willThrow(new InfrastructureException("storage failed")).given(repository)
-                .save(org.mockito.ArgumentMatchers.any());
+            .save(org.mockito.ArgumentMatchers.any());
 
         assertThatThrownBy(() -> service.submit(body, "client-a"))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
         verify(notifier, never()).notify(org.mockito.ArgumentMatchers.any());
     }
 
@@ -81,8 +81,8 @@ class ProductRequestServiceTest {
         ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willDoNothing().given(repository).save(org.mockito.ArgumentMatchers.any());
         willThrow(new InfrastructureException("notification failed"))
-                .given(notifier)
-                .notify(org.mockito.ArgumentMatchers.any());
+            .given(notifier)
+            .notify(org.mockito.ArgumentMatchers.any());
 
         assertThatNoException().isThrownBy(() -> service.submit(body, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());
@@ -94,8 +94,8 @@ class ProductRequestServiceTest {
     void acceptsWhenNotificationThrowsUnexpectedFailure() {
         ProductRegistrationRequest body = new ProductRegistrationRequest("제품", null);
         willThrow(new IllegalArgumentException("webhook-secret"))
-                .given(notifier)
-                .notify(org.mockito.ArgumentMatchers.any());
+            .given(notifier)
+            .notify(org.mockito.ArgumentMatchers.any());
 
         assertThatNoException().isThrownBy(() -> service.submit(body, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());

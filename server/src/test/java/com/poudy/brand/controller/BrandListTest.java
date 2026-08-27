@@ -26,15 +26,15 @@ class BrandListTest {
     @DisplayName("전체 브랜드를 이름순으로 제품 수와 함께 조회한다")
     void findsBrandsWithProductCounts() throws Exception {
         mockMvc.perform(get("/api/brands")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(3))
-                .andExpect(jsonPath("$.items[*].name").value(contains("가 브랜드", "나 브랜드", "다 브랜드")))
-                .andExpect(jsonPath("$.items[*].englishName").value(contains(null, null, "DA BRAND")))
-                .andExpect(jsonPath("$.items[*].imageUrl").value(everyItem(nullValue())))
-                .andExpect(jsonPath("$.items[0].id").value(2))
-                .andExpect(jsonPath("$.items[0].productCount").value(0))
-                .andExpect(jsonPath("$.items[1].id").value(3))
-                .andExpect(jsonPath("$.items[1].productCount").value(2))
-                .andExpect(jsonPath("$.items[2].id").value(1))
-                .andExpect(jsonPath("$.items[2].productCount").value(3));
+            .andExpect(jsonPath("$.items.length()").value(3))
+            .andExpect(jsonPath("$.items[*].name").value(contains("가 브랜드", "나 브랜드", "다 브랜드")))
+            .andExpect(jsonPath("$.items[*].englishName").value(contains(null, null, "DA BRAND")))
+            .andExpect(jsonPath("$.items[*].imageUrl").value(everyItem(nullValue())))
+            .andExpect(jsonPath("$.items[0].id").value(2))
+            .andExpect(jsonPath("$.items[0].productCount").value(0))
+            .andExpect(jsonPath("$.items[1].id").value(3))
+            .andExpect(jsonPath("$.items[1].productCount").value(2))
+            .andExpect(jsonPath("$.items[2].id").value(1))
+            .andExpect(jsonPath("$.items[2].productCount").value(3));
     }
 }

@@ -8,8 +8,8 @@ public record CategoryListResponse(@NotNull List<CategoryResponse> items) {
 
     public static CategoryListResponse from(List<CategoryProductCount> categoryProductCounts) {
         List<CategoryResponse> parentCategoryResponses = categoryProductCounts.stream()
-                .map(CategoryResponse::from)
-                .toList();
+            .map(CategoryResponse::from)
+            .toList();
 
         return new CategoryListResponse(parentCategoryResponses);
     }

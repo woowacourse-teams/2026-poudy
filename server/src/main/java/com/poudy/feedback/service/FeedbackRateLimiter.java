@@ -13,9 +13,10 @@ public class FeedbackRateLimiter {
     private final FixedWindowRateLimiter delegate;
 
     public FeedbackRateLimiter(
-            @Value("${poudy.feedback.rate-limit.max-requests}") int maxRequests,
-            @Value("${poudy.feedback.rate-limit.window}") Duration window,
-            @Qualifier("feedbackClock") Clock clock) {
+        @Value("${poudy.feedback.rate-limit.max-requests}") int maxRequests,
+        @Value("${poudy.feedback.rate-limit.window}") Duration window,
+        @Qualifier("feedbackClock") Clock clock
+    ) {
         delegate = new FixedWindowRateLimiter(maxRequests, window, clock);
     }
 

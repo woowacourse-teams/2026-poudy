@@ -61,20 +61,22 @@ public class IngredientRepository {
 
                 try {
                     return new Ingredient(
-                            ingredientId,
-                            nullableTextOf(ingredient, KOREAN_NAME_FIELD, context),
-                            nullableTextOf(ingredient, ENGLISH_NAME_FIELD, context),
-                            nullableTextOf(ingredient, ORIGIN_DEFINITION_FIELD, context),
-                            nullableTextOf(ingredient, DESCRIPTION_FIELD, context),
-                            nullableTextOf(ingredient, DESCRIPTION_EVIDENCE_FIELD, context),
-                            aliasesOf(ingredient, context),
-                            tagMappingsOf(ingredient, ingredientId, tags, context),
-                            dateTimeOf(ingredient, CREATED_AT_FIELD, context),
-                            dateTimeOf(ingredient, UPDATED_AT_FIELD, context));
+                        ingredientId,
+                        nullableTextOf(ingredient, KOREAN_NAME_FIELD, context),
+                        nullableTextOf(ingredient, ENGLISH_NAME_FIELD, context),
+                        nullableTextOf(ingredient, ORIGIN_DEFINITION_FIELD, context),
+                        nullableTextOf(ingredient, DESCRIPTION_FIELD, context),
+                        nullableTextOf(ingredient, DESCRIPTION_EVIDENCE_FIELD, context),
+                        aliasesOf(ingredient, context),
+                        tagMappingsOf(ingredient, ingredientId, tags, context),
+                        dateTimeOf(ingredient, CREATED_AT_FIELD, context),
+                        dateTimeOf(ingredient, UPDATED_AT_FIELD, context)
+                    );
                 } catch (DeferredTagEvidenceException exception) {
                     throw new InfrastructureException(
-                            "성분의 태그 근거를 해석하지 못했습니다. ingredient_id=%d".formatted(ingredientId),
-                            exception);
+                        "성분의 태그 근거를 해석하지 못했습니다. ingredient_id=%d".formatted(ingredientId),
+                        exception
+                    );
                 }
             }
         });
@@ -83,7 +85,7 @@ public class IngredientRepository {
     }
 
     private static List<String> aliasesOf(JsonNode ingredient, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         JsonNode aliases = ingredient.get(ALIASES_FIELD);
         if (aliases == null || aliases.isNull()) {
             return List.of();
@@ -103,11 +105,12 @@ public class IngredientRepository {
     }
 
     private static List<IngredientTag> tagMappingsOf(
-            JsonNode ingredient,
-            Long ingredientId,
-            Tags tags,
-            DeserializationContext context)
-            throws JacksonException {
+        JsonNode ingredient,
+        Long ingredientId,
+        Tags tags,
+        DeserializationContext context
+    )
+        throws JacksonException {
         JsonNode mappings = ingredient.get(TAG_MAPPINGS_FIELD);
         if (mappings == null || mappings.isNull()) {
             return List.of();
@@ -120,9 +123,11 @@ public class IngredientRepository {
         for (JsonNode mapping : mappings) {
             Long tagId = longOf(mapping, TAG_ID_FIELD, context);
             Tag tag = tags.findById(tagId).orElseThrow(
-                    () -> new InfrastructureException(
-                            "성분이 존재하지 않는 태그 ID를 참조합니다. ingredient_id=%d, tag_id=%s"
-                                    .formatted(ingredientId, tagId)));
+                () -> new InfrastructureException(
+                    "성분이 존재하지 않는 태그 ID를 참조합니다. ingredient_id=%d, tag_id=%s"
+                        .formatted(ingredientId, tagId)
+                )
+            );
             values.add(new IngredientTag(tag, nullableTextOf(mapping, SOURCE_FIELD, context)));
         }
         return values;
@@ -137,7 +142,7 @@ public class IngredientRepository {
     }
 
     private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         JsonNode text = value.get(field);
         if (text == null || text.isNull()) {
             return null;
@@ -149,7 +154,7 @@ public class IngredientRepository {
     }
 
     private static OffsetDateTime dateTimeOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         String dateTime = nullableTextOf(value, field, context);
         if (dateTime == null) {
             return null;
@@ -175,23 +180,24 @@ public class IngredientRepository {
 
     private static void validateDetailFields(List<Ingredient> values) {
         List<Long> invalidIds = values.stream()
-                .filter(ingredient -> ingredient.description() == null || ingredient.updatedAt() == null)
-                .map(Ingredient::id)
-                .toList();
+            .filter(ingredient -> ingredient.description() == null || ingredient.updatedAt() == null)
+            .map(Ingredient::id)
+            .toList();
         if (!invalidIds.isEmpty()) {
             throw new InfrastructureException(
-                    "성분 상세 필수값(description, updated_at)이 누락되었습니다: %s".formatted(invalidIds));
+                "성분 상세 필수값(description, updated_at)이 누락되었습니다: %s".formatted(invalidIds)
+            );
         }
     }
 
     private static void validateUniqueIds(List<Ingredient> values) {
         List<Long> duplicateIds = values.stream()
-                .collect(Collectors.groupingBy(Ingredient::id, Collectors.counting()))
-                .entrySet().stream()
-                .filter(entry -> entry.getValue() > 1)
-                .map(Map.Entry::getKey)
-                .sorted()
-                .toList();
+            .collect(Collectors.groupingBy(Ingredient::id, Collectors.counting()))
+            .entrySet().stream()
+            .filter(entry -> entry.getValue() > 1)
+            .map(Map.Entry::getKey)
+            .sorted()
+            .toList();
         if (!duplicateIds.isEmpty()) {
             throw new InfrastructureException("성분 ID가 중복되었습니다: %s".formatted(duplicateIds));
         }

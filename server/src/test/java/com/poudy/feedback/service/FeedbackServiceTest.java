@@ -38,26 +38,29 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class FeedbackServiceTest {
 
     private static final Clock CLOCK = Clock.fixed(
-            Instant.parse("2026-08-23T07:20:30Z"),
-            ZoneId.of("Asia/Seoul"));
+        Instant.parse("2026-08-23T07:20:30Z"),
+        ZoneId.of("Asia/Seoul")
+    );
 
     private final S3FeedbackRepository feedbackRepository = mock(S3FeedbackRepository.class);
     private final FeedbackNotifier feedbackNotifier = mock(FeedbackNotifier.class);
     private final FeedbackRateLimiter rateLimiter = mock(FeedbackRateLimiter.class);
     private final FeedbackService feedbackService = new FeedbackService(
-            feedbackRepository,
-            feedbackNotifier,
-            rateLimiter,
-            CLOCK);
+        feedbackRepository,
+        feedbackNotifier,
+        rateLimiter,
+        CLOCK
+    );
 
     @Test
     @DisplayName("원본을 저장한 뒤 같은 의견으로 Discord 알림을 전송한다")
     void storesBeforeNotifying() {
         feedbackService.submit(
-                FeedbackType.DATA_CORRECTION,
-                "제품 정보가 실제 패키지와 달라요.",
-                "/products/12345",
-                "client-a");
+            FeedbackType.DATA_CORRECTION,
+            "제품 정보가 실제 패키지와 달라요.",
+            "/products/12345",
+            "client-a"
+        );
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         InOrder order = inOrder(rateLimiter, feedbackRepository, feedbackNotifier);
@@ -65,7 +68,7 @@ class FeedbackServiceTest {
         order.verify(feedbackRepository).save(feedbackCaptor.capture());
         order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
         assertThat(feedbackCaptor.getValue().receivedAt())
-                .isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+            .isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
     }
 
     @Test
@@ -74,12 +77,14 @@ class FeedbackServiceTest {
         willThrow(new InfrastructureException("S3 실패")).given(feedbackRepository).save(any());
 
         assertThatThrownBy(
-                () -> feedbackService.submit(
-                        FeedbackType.BUG_REPORT,
-                        "기능 버튼을 눌러도 화면이 바뀌지 않아요.",
-                        "/products",
-                        "client-a"))
-                .isInstanceOf(InfrastructureException.class);
+            () -> feedbackService.submit(
+                FeedbackType.BUG_REPORT,
+                "기능 버튼을 눌러도 화면이 바뀌지 않아요.",
+                "/products",
+                "client-a"
+            )
+        )
+            .isInstanceOf(InfrastructureException.class);
         verify(feedbackNotifier, never()).notify(any());
     }
 
@@ -88,11 +93,11 @@ class FeedbackServiceTest {
     void keepsSubmissionSuccessfulWhenNotificationFails(CapturedOutput output) {
         String content = "로그에 남으면 안 되는 사용자 의견 원문입니다.";
         willThrow(new RuntimeException("webhook secret"))
-                .given(feedbackNotifier)
-                .notify(any());
+            .given(feedbackNotifier)
+            .notify(any());
 
         assertThatCode(() -> feedbackService.submit(FeedbackType.OTHER, content, "/", "client-a"))
-                .doesNotThrowAnyException();
+            .doesNotThrowAnyException();
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture());
@@ -106,14 +111,15 @@ class FeedbackServiceTest {
         UUID imageId = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
         FeedbackImage image = new FeedbackImage(imageId, FeedbackImageFormat.PNG);
         given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId)), any()))
-                .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
+            .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
 
         feedbackService.submit(
-                FeedbackType.DATA_CORRECTION,
-                "제품 정보가 실제 패키지와 달라요.",
-                "/products/12345",
-                List.of(imageId),
-                "client-a");
+            FeedbackType.DATA_CORRECTION,
+            "제품 정보가 실제 패키지와 달라요.",
+            "/products/12345",
+            List.of(imageId),
+            "client-a"
+        );
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)), any());

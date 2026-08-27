@@ -17,7 +17,7 @@ public class SensoryConfidenceTest {
     @DisplayName("0부터 1까지의 값을 보관한다")
     public void acceptsValueInRange(String value) {
         assertThat(new SensoryConfidence(new BigDecimal(value)).value())
-                .isEqualByComparingTo(value);
+            .isEqualByComparingTo(value);
     }
 
     @ParameterizedTest
@@ -28,8 +28,8 @@ public class SensoryConfidenceTest {
         BigDecimal confidence = decimalOf(value);
 
         assertThatThrownBy(() -> new SensoryConfidence(confidence))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("감각 추론 신뢰도는 0부터 1까지여야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("감각 추론 신뢰도는 0부터 1까지여야 합니다.");
     }
 
     @ParameterizedTest
@@ -40,8 +40,8 @@ public class SensoryConfidenceTest {
         SensoryConfidence canonical = new SensoryConfidence(new BigDecimal(value).stripTrailingZeros());
 
         assertThat(confidence)
-                .isEqualTo(canonical)
-                .hasSameHashCodeAs(canonical);
+            .isEqualTo(canonical)
+            .hasSameHashCodeAs(canonical);
     }
 
     private static BigDecimal decimalOf(String value) {

@@ -21,9 +21,9 @@ public record NameRank(NameMatch match, boolean reading, boolean combined) imple
 
     public static NameRank best(List<SearchableText> names, SearchKeyword keyword) {
         return names.stream()
-                .map(name -> of(keyword, name))
-                .min(Comparator.naturalOrder())
-                .orElse(NONE);
+            .map(name -> of(keyword, name))
+            .min(Comparator.naturalOrder())
+            .orElse(NONE);
     }
 
     public boolean isFound() {

@@ -32,22 +32,24 @@ public class SensoryModelVersionTest {
     @DisplayName("각 버전은 비어 있을 수 없다")
     public void rejectsMissingOrBlankVersion(String name, int index, String invalidVersion) {
         assertThatThrownBy(() -> versionWith(index, invalidVersion))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(name);
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining(name);
     }
 
     private static Stream<Arguments> invalidVersions() {
         List<String> names = List.of(
-                "성분 감각 프로필",
-                "카테고리 배합 사전분포",
-                "감각 레벨 모델");
+            "성분 감각 프로필",
+            "카테고리 배합 사전분포",
+            "감각 레벨 모델"
+        );
         List<String> invalidValues = Arrays.asList(null, "", " ");
 
         return IntStream.range(0, names.size())
-                .boxed()
-                .flatMap(
-                        index -> invalidValues.stream()
-                                .map(value -> arguments(names.get(index), index, value)));
+            .boxed()
+            .flatMap(
+                index -> invalidValues.stream()
+                    .map(value -> arguments(names.get(index), index, value))
+            );
     }
 
     private static SensoryModelVersion versionWith(int invalidIndex, String invalidVersion) {
@@ -57,8 +59,9 @@ public class SensoryModelVersionTest {
         }
 
         return new SensoryModelVersion(
-                versions[0],
-                versions[1],
-                versions[2]);
+            versions[0],
+            versions[1],
+            versions[2]
+        );
     }
 }

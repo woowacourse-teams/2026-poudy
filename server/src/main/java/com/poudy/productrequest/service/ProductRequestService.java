@@ -22,10 +22,11 @@ public class ProductRequestService {
     private final Clock clock;
 
     public ProductRequestService(
-            S3ProductRequestRepository repository,
-            DiscordProductRequestNotifier notifier,
-            ProductRequestRateLimiter rateLimiter,
-            @Qualifier("productRequestClock") Clock clock) {
+        S3ProductRequestRepository repository,
+        DiscordProductRequestNotifier notifier,
+        ProductRequestRateLimiter rateLimiter,
+        @Qualifier("productRequestClock") Clock clock
+    ) {
         this.repository = repository;
         this.notifier = notifier;
         this.rateLimiter = rateLimiter;
@@ -41,9 +42,10 @@ public class ProductRequestService {
             notifier.notify(request);
         } catch (RuntimeException exception) {
             log.error(
-                    "Product request was stored but Discord notification failed: requestId={}, detail={}",
-                    request.requestId(),
-                    notificationFailureDetail(exception));
+                "Product request was stored but Discord notification failed: requestId={}, detail={}",
+                request.requestId(),
+                notificationFailureDetail(exception)
+            );
         }
     }
 

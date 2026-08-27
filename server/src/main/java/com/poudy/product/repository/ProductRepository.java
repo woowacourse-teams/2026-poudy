@@ -46,23 +46,27 @@ public class ProductRepository {
     private final Products products;
 
     public ProductRepository(
-            JsonDataReader jsonDataReader,
-            Brands brands,
-            Categories categories,
-            Ingredients ingredients,
-            ProductFactory productFactory) {
+        JsonDataReader jsonDataReader,
+        Brands brands,
+        Categories categories,
+        Ingredients ingredients,
+        ProductFactory productFactory
+    ) {
         this.products = new Products(
-                jsonDataReader.readList(
-                        PRODUCTS_FILE_NAME,
-                        Product.class,
-                        resolvedWith(brands, categories, ingredients, productFactory)));
+            jsonDataReader.readList(
+                PRODUCTS_FILE_NAME,
+                Product.class,
+                resolvedWith(brands, categories, ingredients, productFactory)
+            )
+        );
     }
 
     private static JacksonModule resolvedWith(
-            Brands brands,
-            Categories categories,
-            Ingredients ingredients,
-            ProductFactory productFactory) {
+        Brands brands,
+        Categories categories,
+        Ingredients ingredients,
+        ProductFactory productFactory
+    ) {
         SimpleModule resolution = new SimpleModule("제품 참조 해석");
         resolution.addDeserializer(Product.class, new ValueDeserializer<Product>() {
 
@@ -73,14 +77,15 @@ public class ProductRepository {
                 Ingredients productIngredients = ingredientsOf(product, ingredients, context);
 
                 return productFactory.create(
-                        idOf(product, ID_FIELD, context),
-                        requiredTextOf(product, PRODUCT_NAME_FIELD, context),
-                        brandOf(product, brands, context),
-                        category,
-                        productIngredients,
-                        nullableTextOf(product, IMAGE_URL_FIELD, context),
-                        variantsOf(product, context),
-                        updatedAtOf(product, context));
+                    idOf(product, ID_FIELD, context),
+                    requiredTextOf(product, PRODUCT_NAME_FIELD, context),
+                    brandOf(product, brands, context),
+                    category,
+                    productIngredients,
+                    nullableTextOf(product, IMAGE_URL_FIELD, context),
+                    variantsOf(product, context),
+                    updatedAtOf(product, context)
+                );
             }
         });
 
@@ -88,44 +93,48 @@ public class ProductRepository {
     }
 
     private static Brand brandOf(JsonNode product, Brands brands, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         Long brandId = idOf(product, BRAND_ID_FIELD, context);
         Brand brand = brands.findById(brandId).orElse(null);
         if (brand == null) {
             return context.reportInputMismatch(
-                    Product.class,
-                    "제품이 존재하지 않는 브랜드 ID를 참조합니다: %d",
-                    brandId);
+                Product.class,
+                "제품이 존재하지 않는 브랜드 ID를 참조합니다: %d",
+                brandId
+            );
         }
 
         return brand;
     }
 
     private static Category categoryOf(JsonNode product, Categories categories, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         Long categoryId = idOf(product, CATEGORY_ID_FIELD, context);
         Category category = categories.findById(categoryId).orElse(null);
         if (category == null) {
             return context.reportInputMismatch(
-                    Product.class,
-                    "제품이 존재하지 않는 카테고리 ID를 참조합니다: %d",
-                    categoryId);
+                Product.class,
+                "제품이 존재하지 않는 카테고리 ID를 참조합니다: %d",
+                categoryId
+            );
         }
         if (category.isParent()) {
             return context.reportInputMismatch(
-                    Product.class,
-                    "제품은 소분류 카테고리 ID를 참조해야 합니다: %d",
-                    categoryId);
+                Product.class,
+                "제품은 소분류 카테고리 ID를 참조해야 합니다: %d",
+                categoryId
+            );
         }
 
         return category;
     }
 
     private static Ingredients ingredientsOf(
-            JsonNode product,
-            Ingredients ingredients,
-            DeserializationContext context)
-            throws JacksonException {
+        JsonNode product,
+        Ingredients ingredients,
+        DeserializationContext context
+    )
+        throws JacksonException {
         JsonNode references = product.get(INGREDIENTS_FIELD);
         if (references == null || !references.isArray()) {
             return context.reportInputMismatch(Ingredients.class, "제품 성분 참조는 배열이어야 합니다.");
@@ -137,21 +146,22 @@ public class ProductRepository {
         }
 
         List<Long> unresolved = ids.stream()
-                .filter(id -> ingredients.findById(id).isEmpty())
-                .distinct()
-                .toList();
+            .filter(id -> ingredients.findById(id).isEmpty())
+            .distinct()
+            .toList();
         if (!unresolved.isEmpty()) {
             return context.reportInputMismatch(
-                    Ingredients.class,
-                    "제품이 존재하지 않는 성분 ID를 참조합니다: %s",
-                    unresolved);
+                Ingredients.class,
+                "제품이 존재하지 않는 성분 ID를 참조합니다: %s",
+                unresolved
+            );
         }
 
         return ingredients.findAllById(ids);
     }
 
     private static ProductVariants variantsOf(JsonNode product, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         JsonNode variants = product.get(VARIANTS_FIELD);
         if (variants == null || !variants.isArray() || variants.isEmpty()) {
             return context.reportInputMismatch(ProductVariants.class, "제품 용량 옵션은 하나 이상이어야 합니다.");
@@ -160,12 +170,14 @@ public class ProductRepository {
         List<ProductVariant> values = new ArrayList<>();
         for (JsonNode variant : variants) {
             values.add(
-                    new ProductVariant(
-                            idOf(variant, ID_FIELD, context),
-                            longOf(variant, PRICE_FIELD, context),
-                            decimalOf(variant, VOLUME_VALUE_FIELD, context),
-                            requiredTextOf(variant, VOLUME_UNIT_FIELD, context),
-                            requiredTextOf(variant, STATUS_FIELD, context)));
+                new ProductVariant(
+                    idOf(variant, ID_FIELD, context),
+                    longOf(variant, PRICE_FIELD, context),
+                    decimalOf(variant, VOLUME_VALUE_FIELD, context),
+                    requiredTextOf(variant, VOLUME_UNIT_FIELD, context),
+                    requiredTextOf(variant, STATUS_FIELD, context)
+                )
+            );
         }
 
         return new ProductVariants(values);
@@ -185,7 +197,7 @@ public class ProductRepository {
     }
 
     private static BigDecimal decimalOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         JsonNode number = value.get(field);
         if (number == null || !number.isNumber()) {
             return context.reportInputMismatch(ProductVariant.class, "제품 용량 옵션의 \"%s\" 필드는 숫자여야 합니다.", field);
@@ -195,7 +207,7 @@ public class ProductRepository {
     }
 
     private static String requiredTextOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         String text = textOf(value, field);
         if (text == null || text.isBlank()) {
             return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 문자열이어야 합니다.", field);
@@ -205,16 +217,17 @@ public class ProductRepository {
     }
 
     private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         JsonNode text = value.get(field);
         if (text == null || text.isNull()) {
             return null;
         }
         if (!text.isString()) {
             return context.reportInputMismatch(
-                    Product.class,
-                    "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
-                    field);
+                Product.class,
+                "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
+                field
+            );
         }
 
         return text.asString();
@@ -230,7 +243,7 @@ public class ProductRepository {
     }
 
     private static OffsetDateTime updatedAtOf(JsonNode product, DeserializationContext context)
-            throws JacksonException {
+        throws JacksonException {
         String updatedAt = requiredTextOf(product, UPDATED_AT_FIELD, context);
         try {
             return OffsetDateTime.parse(updatedAt);
@@ -243,7 +256,7 @@ public class ProductRepository {
         JsonNode ingredientId = reference.get(INGREDIENT_ID_FIELD);
         if (ingredientId == null || !ingredientId.isIntegralNumber()) {
             return context
-                    .reportInputMismatch(Ingredients.class, "제품 성분 참조의 \"%s\" 필드는 정수여야 합니다.", INGREDIENT_ID_FIELD);
+                .reportInputMismatch(Ingredients.class, "제품 성분 참조의 \"%s\" 필드는 정수여야 합니다.", INGREDIENT_ID_FIELD);
         }
 
         return ingredientId.asLong();

@@ -34,8 +34,9 @@ public class S3FeedbackObjectStore {
     private final String bucket;
 
     public S3FeedbackObjectStore(
-            @Qualifier("feedbackS3Client") S3Client s3Client,
-            @Value("${poudy.feedback.s3.bucket:}") String bucket) {
+        @Qualifier("feedbackS3Client") S3Client s3Client,
+        @Value("${poudy.feedback.s3.bucket:}") String bucket
+    ) {
         this.s3Client = s3Client;
         this.bucket = bucket;
     }
@@ -43,12 +44,12 @@ public class S3FeedbackObjectStore {
     void putIfAbsent(String key, String contentType, byte[] body) {
         try {
             PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .contentType(contentType)
-                    .serverSideEncryption(ServerSideEncryption.AES256)
-                    .ifNoneMatch("*")
-                    .build();
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .serverSideEncryption(ServerSideEncryption.AES256)
+                .ifNoneMatch("*")
+                .build();
             s3Client.putObject(request, RequestBody.fromBytes(body));
         } catch (SdkException exception) {
             throw failure(exception);
@@ -58,10 +59,11 @@ public class S3FeedbackObjectStore {
     Optional<ObjectMetadata> head(String key) {
         try {
             HeadObjectResponse response = s3Client.headObject(
-                    HeadObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(key)
-                            .build());
+                HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            );
             return Optional.of(new ObjectMetadata(response.eTag(), response.lastModified()));
         } catch (S3Exception exception) {
             if (exception.statusCode() == 404) {
@@ -76,11 +78,12 @@ public class S3FeedbackObjectStore {
     byte[] read(String key) {
         try {
             return s3Client.getObjectAsBytes(
-                    GetObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(key)
-                            .build())
-                    .asByteArray();
+                GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            )
+                .asByteArray();
         } catch (SdkException exception) {
             throw failure(exception);
         }
@@ -93,11 +96,12 @@ public class S3FeedbackObjectStore {
     boolean existsExactly(String key) {
         try {
             ListObjectsV2Response response = s3Client.listObjectsV2(
-                    ListObjectsV2Request.builder()
-                            .bucket(bucket)
-                            .prefix(key)
-                            .maxKeys(1)
-                            .build());
+                ListObjectsV2Request.builder()
+                    .bucket(bucket)
+                    .prefix(key)
+                    .maxKeys(1)
+                    .build()
+            );
             return response.contents().stream().anyMatch(object -> key.equals(object.key()));
         } catch (SdkException exception) {
             throw failure(exception);
@@ -110,14 +114,15 @@ public class S3FeedbackObjectStore {
         try {
             do {
                 ListObjectsV2Response response = s3Client.listObjectsV2(
-                        ListObjectsV2Request.builder()
-                                .bucket(bucket)
-                                .prefix(prefix)
-                                .continuationToken(continuationToken)
-                                .build());
+                    ListObjectsV2Request.builder()
+                        .bucket(bucket)
+                        .prefix(prefix)
+                        .continuationToken(continuationToken)
+                        .build()
+                );
                 response.contents().stream()
-                        .map(S3FeedbackObjectStore::storedObjectOf)
-                        .forEach(objects::add);
+                    .map(S3FeedbackObjectStore::storedObjectOf)
+                    .forEach(objects::add);
                 continuationToken = response.nextContinuationToken();
             } while (continuationToken != null);
             return List.copyOf(objects);
@@ -127,21 +132,23 @@ public class S3FeedbackObjectStore {
     }
 
     void copyIfAbsent(
-            String sourceKey,
-            String sourceETag,
-            String targetKey,
-            String contentType) {
+        String sourceKey,
+        String sourceETag,
+        String targetKey,
+        String contentType
+    ) {
         try {
             s3Client.copyObject(
-                    CopyObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(targetKey)
-                            .copySource(encode(bucket + "/" + sourceKey))
-                            .copySourceIfMatch(sourceETag)
-                            .ifNoneMatch("*")
-                            .contentType(contentType)
-                            .serverSideEncryption(ServerSideEncryption.AES256)
-                            .build());
+                CopyObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(targetKey)
+                    .copySource(encode(bucket + "/" + sourceKey))
+                    .copySourceIfMatch(sourceETag)
+                    .ifNoneMatch("*")
+                    .contentType(contentType)
+                    .serverSideEncryption(ServerSideEncryption.AES256)
+                    .build()
+            );
         } catch (SdkException exception) {
             throw failure(exception);
         }
@@ -161,8 +168,8 @@ public class S3FeedbackObjectStore {
 
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8)
-                .replace("+", "%20")
-                .replace("%2F", "/");
+            .replace("+", "%20")
+            .replace("%2F", "/");
     }
 
     static String sha256(byte[] bytes) {
