@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -48,6 +49,25 @@ describe("IngredientSearchScreen", () => {
     expect(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" })).toBeInTheDocument();
   });
 
+  it("조건에 맞는 제품 보기를 누르면 성분 검색 제출을 남긴다", async () => {
+    countIs(7);
+    searchParams.current = new URLSearchParams(
+      "includeIngredientIds=6&excludeIngredientIds=8&excludeCodes=FRAGRANCE_ALLERGENS",
+    );
+
+    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" }));
+
+    expect(track).toHaveBeenCalledWith("search_submitted", {
+      mode: "ingredient",
+      result_count: 7,
+      include_count: 1,
+      exclude_count: 1,
+      exclude_group_count: 1,
+    });
+  });
+
   it("조건이 바뀌면 버튼의 개수도 따라 바뀐다", async () => {
     countIs(7);
     searchParams.current = new URLSearchParams("includeIngredientIds=6");
@@ -73,6 +93,7 @@ describe("IngredientSearchScreen", () => {
     expect(button).toBeDisabled();
     // 감싼 링크는 그대로 두되 눌러도 넘어가지 않아야 한다.
     expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
+    expect(track).not.toHaveBeenCalledWith("search_submitted", expect.anything());
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith("search_results_viewed", {
         mode: "ingredient",

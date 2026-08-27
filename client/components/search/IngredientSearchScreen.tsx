@@ -91,10 +91,17 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
             aria-disabled={blocked}
             tabIndex={blocked ? -1 : undefined}
             onClick={(event) => {
-              if (blocked) {
+              if (blocked || count === undefined) {
                 event.preventDefault();
                 return;
               }
+              track("search_submitted", {
+                mode: "ingredient",
+                result_count: count,
+                include_count: filter.includeIngredientIds.length,
+                exclude_count: filter.excludeIngredientIds.length,
+                exclude_group_count: filter.excludeCodes.length,
+              });
               addRecentFilter({
                 query: serializeFilter(filter).toString(),
                 summary,

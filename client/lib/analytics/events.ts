@@ -61,8 +61,16 @@ export type EventMap = {
     product_id?: number;
     ingredient_id?: number;
   };
-  /** 자동완성을 고르지 않고 검색어로 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
-  search_submitted: { mode: "product" | "ingredient"; query: string; result_count: number };
+  /** 자동완성을 고르지 않고 검색 결과 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
+  search_submitted:
+    | { mode: "product"; query: string; result_count: number }
+    | {
+        mode: "ingredient";
+        result_count: number;
+        include_count: number;
+        exclude_count: number;
+        exclude_group_count: number;
+      };
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
   sort_applied: { sort: string };
