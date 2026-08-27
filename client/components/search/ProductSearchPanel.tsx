@@ -111,12 +111,17 @@ export function ProductSearchPanel() {
           label="제품명 검색"
           onSubmit={handleSubmit}
         />
-        <p aria-live="polite" className="text-[12px] text-text-secondary">
+        {/*
+          입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
+          자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
+          검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
+        */}
+        <p aria-live="polite" className="text-[12px] text-text-secondary empty:hidden">
           {waiting
             ? "검색 결과를 확인하고 있어요…"
             : typing
               ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
-              : "제품명을 입력하면 일치하는 제품을 바로 보여드려요."}
+              : ""}
         </p>
       </div>
 
@@ -201,10 +206,6 @@ export function ProductSearchPanel() {
               ) : null}
             </section>
           )}
-
-          {empty ? null : (
-            <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
-          )}
         </>
       ) : (
         <RecentSearches items={recent} />
@@ -253,8 +254,6 @@ function RecentSearches({
           ))}
         </ul>
       </section>
-
-      <p className="text-[11px] text-text-secondary">최근 선택한 제품을 다시 확인할 수 있어요.</p>
     </>
   );
 }
