@@ -25,14 +25,12 @@ const ACTIONS = [
     href: "/search/products",
     icon: "search",
     label: "제품명·브랜드로 찾기",
-    detail: "이름을 알 때 가장 빠르게",
     tone: "dark",
   },
   {
     href: "/search/ingredients",
     icon: "sliders",
     label: "성분·조건으로 찾기",
-    detail: "원하는 조건을 골라 탐색",
     tone: "light",
   },
 ] as const;
@@ -75,10 +73,7 @@ export default function Home() {
       {/* 영역마다 하는 이야기가 달라 한 덩어리로 읽히지 않도록 사이를 넉넉히 벌린다. */}
       <main className="flex flex-1 flex-col gap-7 px-4 pt-4 pb-3.5">
         <section className="flex flex-col gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="text-[18px] font-bold text-text-primary">궁금한 제품이나 성분이 있나요?</h2>
-            <p className="text-[12px] text-text-secondary">제품과 성분을 한 번에 찾아보세요.</p>
-          </div>
+          <h2 className="text-[18px] font-bold text-text-primary">궁금한 제품이나 성분이 있나요?</h2>
 
           <div className="grid grid-cols-2 gap-3">
             {ACTIONS.map((action) => {
@@ -89,7 +84,7 @@ export default function Home() {
                   href={action.href}
                   // 어두운 카드는 그림자를 진하게 깐다. 그 구분을 CSS 가 읽는다.
                   data-tone={action.tone}
-                  className={`action-card flex h-full flex-col gap-2.5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
+                  className={`action-card flex h-full flex-col gap-5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
                 >
                   <span className="flex items-center justify-between">
                     <Icon name={action.icon} size={28} className={dark ? "text-action-text" : "text-text-primary"} />
@@ -99,13 +94,8 @@ export default function Home() {
                       className={`action-card-arrow ${dark ? "text-white/60" : "text-text-secondary"}`}
                     />
                   </span>
-                  <span className="flex flex-1 flex-col justify-between gap-2">
-                    <span className={`text-[15px] font-bold ${dark ? "text-action-text" : "text-text-primary"}`}>
-                      {action.label}
-                    </span>
-                    <span className={`text-[11px] ${dark ? "text-white/70" : "text-text-secondary"}`}>
-                      {action.detail}
-                    </span>
+                  <span className={`text-[15px] font-bold ${dark ? "text-action-text" : "text-text-primary"}`}>
+                    {action.label}
                   </span>
                 </Link>
               );
