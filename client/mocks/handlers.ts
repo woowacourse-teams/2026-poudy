@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 
-import { matchesKeyword } from "@/lib/domain/chosung";
+import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
+import { keepIf } from "@/lib/domain/optional";
 
 import {
   allBrands,
@@ -51,6 +52,21 @@ const strings = (url: URL, key: string) =>
     .flatMap((value) => value.split(","))
     .filter(Boolean);
 
+/*
+ * 초성으로 걸린 자리를 원문 인덱스로 되돌린다.
+ *
+ * 서버 `SearchableText.rangeOf` 와 같은 규칙이다. 초성 문자열은 원문과 글자 수가
+ * 같아 자리가 그대로 겹치므로, 초성에서 찾은 자리를 그대로 쓴다.
+ *
+ * `프로판다이올` 의 초성은 `ㅍㄹㅍㄷㅇㅇ` 이라 `ㅍㄷㅇㅇ` 는 2 부터 6 까지, 곧
+ * `판다이올` 이다. 이름 전체를 맞았다고 하면 통째로 진해져 어디가 걸렸는지 알 수 없다.
+ */
+const chosungRange = (keyword: string, text: string) => {
+  const startIndex = toChosung(text).indexOf(keyword);
+
+  return keepIf(startIndex >= 0, { startIndex, endIndexExclusive: startIndex + keyword.length });
+};
+
 const suggestionMatch = <Field extends string>(
   keyword: string,
   candidates: readonly { readonly field: Field; readonly text: string }[],
@@ -66,6 +82,17 @@ const suggestionMatch = <Field extends string>(
     }
   }
 
+  /* 초성으로 걸린 줄은 초성 자리를 원문 자리로 되돌려 그 구간만 짚는다. */
+  for (const candidate of candidates) {
+    const [range] = chosungRange(keyword, candidate.text);
+    if (range) return { ...candidate, ...range };
+  }
+
+  /*
+   * 음차로만 걸린 줄이 남는다. `PDRN` 을 `피디알엔` 으로 찾은 경우라 원문에 맞는
+   * 자리를 집어 줄 수 없어 이름 전체를 짚는다. 서버도 읽은 표현에서 찾은 구간을
+   * 되돌려 주지만, 목은 그 표를 두지 않아 여기까지만 흉내 낸다.
+   */
   const transformed = candidates.find((candidate) => matchesKeyword(keyword, candidate.text));
   if (!transformed) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
 
