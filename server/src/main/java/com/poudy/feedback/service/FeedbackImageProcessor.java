@@ -186,9 +186,7 @@ public class FeedbackImageProcessor {
     }
 
     private static BufferedImage normalized(BufferedImage image, FeedbackImageFormat format) {
-        int imageType = format == FeedbackImageFormat.JPEG
-                ? BufferedImage.TYPE_INT_RGB
-                : BufferedImage.TYPE_INT_ARGB;
+        int imageType = imageTypeOf(format);
         BufferedImage normalized = new BufferedImage(image.getWidth(), image.getHeight(), imageType);
         Graphics2D graphics = normalized.createGraphics();
         try {
@@ -203,11 +201,24 @@ public class FeedbackImageProcessor {
         return normalized;
     }
 
+    private static int imageTypeOf(FeedbackImageFormat format) {
+        if (format == FeedbackImageFormat.JPEG) {
+            return BufferedImage.TYPE_INT_RGB;
+        }
+
+        return BufferedImage.TYPE_INT_ARGB;
+    }
+
+    private static String writerFormatOf(FeedbackImageFormat format) {
+        if (format == FeedbackImageFormat.JPEG) {
+            return "jpeg";
+        }
+
+        return "png";
+    }
+
     private static byte[] encode(BufferedImage image, FeedbackImageFormat format) throws IOException {
-        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(
-                format == FeedbackImageFormat.JPEG
-                        ? "jpeg"
-                        : "png");
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(writerFormatOf(format));
         if (!writers.hasNext()) {
             throw invalidImage();
         }

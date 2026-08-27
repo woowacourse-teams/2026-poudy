@@ -52,13 +52,21 @@ public record ShareText(String value) {
         String truncated = ShareWords.join(ShareWords.of(truncatedAtVolume(phrase)));
         String trimmed = withoutTrailingPlanWords(truncated);
 
-        return truncated.equals(trimmed) ? List.of(trimmed) : List.of(truncated, trimmed);
+        if (truncated.equals(trimmed)) {
+            return List.of(trimmed);
+        }
+
+        return List.of(truncated, trimmed);
     }
 
     private static String truncatedAtVolume(String phrase) {
         Matcher volume = VOLUME.matcher(phrase);
 
-        return volume.find() ? phrase.substring(0, volume.start()) : phrase;
+        if (volume.find()) {
+            return phrase.substring(0, volume.start());
+        }
+
+        return phrase;
     }
 
     private static boolean isPlanWord(String word) {

@@ -56,7 +56,10 @@ public record Feedback(
     }
 
     public static List<UUID> normalizeImageIds(List<UUID> imageIds) {
-        List<UUID> normalized = imageIds == null ? List.of() : List.copyOf(imageIds);
+        List<UUID> normalized = List.of();
+        if (imageIds != null) {
+            normalized = List.copyOf(imageIds);
+        }
         if (normalized.size() > MAX_IMAGE_COUNT
                 || new HashSet<>(normalized).size() != normalized.size()) {
             throw new InvalidFeedbackImageIdException();

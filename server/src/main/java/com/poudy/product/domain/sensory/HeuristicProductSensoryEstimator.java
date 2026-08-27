@@ -143,10 +143,8 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
     }
 
     private static BigDecimal confidence(CategoryPrior prior, IngredientSignals signals) {
-        int coverageBonus = signals.totalRankWeight() == 0
-                ? 0
-                : signals.coveredRankWeight() * 25 / signals.totalRankWeight();
-        int listBonus = signals.uniqueIngredientCount() >= 10 ? 5 : 0;
+        int coverageBonus = coverageBonusOf(signals);
+        int listBonus = listBonusOf(signals);
         int duplicatePenalty = Math.min(5, signals.duplicateCount() * 2);
         int confidenceBeforeQualityPenalty = clamp(
                 prior.baseConfidencePercent() + coverageBonus + listBonus,
@@ -154,6 +152,22 @@ public final class HeuristicProductSensoryEstimator implements ProductSensoryEst
                 MAX_CONFIDENCE_PERCENT);
         int confidencePercent = Math.max(0, confidenceBeforeQualityPenalty - duplicatePenalty);
         return BigDecimal.valueOf(confidencePercent, 2);
+    }
+
+    private static int coverageBonusOf(IngredientSignals signals) {
+        if (signals.totalRankWeight() == 0) {
+            return 0;
+        }
+
+        return signals.coveredRankWeight() * 25 / signals.totalRankWeight();
+    }
+
+    private static int listBonusOf(IngredientSignals signals) {
+        if (signals.uniqueIngredientCount() >= 10) {
+            return 5;
+        }
+
+        return 0;
     }
 
     private static int toOrdinalLevel(int centiLevel) {

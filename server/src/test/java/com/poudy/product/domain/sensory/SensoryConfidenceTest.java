@@ -25,7 +25,7 @@ public class SensoryConfidenceTest {
     @ValueSource(strings = {"-0.01", "1.01"})
     @DisplayName("값이 없거나 0부터 1까지가 아니면 거부한다")
     public void rejectsMissingOrOutOfRangeValue(String value) {
-        BigDecimal confidence = value == null ? null : new BigDecimal(value);
+        BigDecimal confidence = decimalOf(value);
 
         assertThatThrownBy(() -> new SensoryConfidence(confidence))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -42,5 +42,13 @@ public class SensoryConfidenceTest {
         assertThat(confidence)
                 .isEqualTo(canonical)
                 .hasSameHashCodeAs(canonical);
+    }
+
+    private static BigDecimal decimalOf(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        return new BigDecimal(value);
     }
 }

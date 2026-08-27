@@ -238,17 +238,21 @@ public class S3FeedbackImageRepository {
     private CommitPresence commitPresence(UUID feedbackId, String expectedSha256) {
         String key = feedbackKey(feedbackId);
         if (existsExactly(key)) {
-            return matchesSha256(key, expectedSha256)
-                    ? CommitPresence.COMMITTED
-                    : CommitPresence.UNKNOWN;
+            return presenceOf(key, expectedSha256);
         }
         String legacyKey = legacyFeedbackKey(feedbackId);
         if (existsExactly(legacyKey)) {
-            return matchesSha256(legacyKey, expectedSha256)
-                    ? CommitPresence.COMMITTED
-                    : CommitPresence.UNKNOWN;
+            return presenceOf(legacyKey, expectedSha256);
         }
         return CommitPresence.ABSENT;
+    }
+
+    private CommitPresence presenceOf(String key, String expectedSha256) {
+        if (matchesSha256(key, expectedSha256)) {
+            return CommitPresence.COMMITTED;
+        }
+
+        return CommitPresence.UNKNOWN;
     }
 
     private void commitRecovered(FeedbackImage image) {

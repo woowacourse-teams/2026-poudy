@@ -90,15 +90,20 @@ class ExcludeCodeIngredientsTest {
     @DisplayName("성분이 하나도 없는 성분군이 있으면 만들 수 없다")
     void rejectsEmptyCode() {
         List<ExcludeCodeMapping> withEmptySulfates = everyCodeWith(List.of(10L)).stream()
-                .map(
-                        mapping -> mapping.code() == ExcludeCode.SULFATES
-                                ? new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of())
-                                : mapping)
+                .map(ExcludeCodeIngredientsTest::emptiedWhenSulfates)
                 .toList();
 
         assertThatThrownBy(() -> new ExcludeCodeIngredients(withEmptySulfates, ingredientsOf(10L)))
                 .isInstanceOf(InfrastructureException.class)
                 .hasMessageContaining(ExcludeCode.SULFATES.name());
+    }
+
+    private static ExcludeCodeMapping emptiedWhenSulfates(ExcludeCodeMapping mapping) {
+        if (mapping.code() == ExcludeCode.SULFATES) {
+            return new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of());
+        }
+
+        return mapping;
     }
 
     @Test

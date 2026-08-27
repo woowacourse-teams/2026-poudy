@@ -14,6 +14,7 @@ public final class FixedWindowRateLimiter {
 
     private static final int DEFAULT_MAX_TRACKED_CLIENTS = 100_000;
     private static final Duration DEFAULT_PRUNE_INTERVAL = Duration.ofMinutes(1);
+    private static final String UNKNOWN_CLIENT = "unknown";
 
     private final int maxRequests;
     private final Duration window;
@@ -61,7 +62,7 @@ public final class FixedWindowRateLimiter {
 
         AtomicReference<Duration> retryAfter = new AtomicReference<>();
         AtomicBoolean capacityExceeded = new AtomicBoolean();
-        String key = clientId == null || clientId.isBlank() ? "unknown" : clientId;
+        String key = keyOf(clientId);
 
         windows.compute(key, (ignored, current) -> {
             if (current == null && windows.size() >= maxTrackedClients) {
@@ -84,6 +85,14 @@ public final class FixedWindowRateLimiter {
         if (retryAfter.get() != null) {
             throw new TooManyRequestsException(retryAfter.get());
         }
+    }
+
+    private static String keyOf(String clientId) {
+        if (clientId == null || clientId.isBlank()) {
+            return UNKNOWN_CLIENT;
+        }
+
+        return clientId;
     }
 
     private void pruneExpiredWindows(Instant now) {

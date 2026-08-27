@@ -61,8 +61,16 @@ public class DiscordProductRequestNotifier {
         }
     }
 
+    private static String brandLineOf(ProductRequest request) {
+        if (request.brandName() == null) {
+            return "";
+        }
+
+        return "\n브랜드명: " + request.brandName();
+    }
+
     private String payload(ProductRequest request) {
-        String brandLine = request.brandName() == null ? "" : "\n브랜드명: " + request.brandName();
+        String brandLine = brandLineOf(request);
         Map<String, Object> payload = Map.of(
                 "content",
                 "신규 제품 등록 요청\n제품명: " + request.productName() + brandLine,

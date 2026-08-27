@@ -180,9 +180,13 @@ public class S3FeedbackObjectStore {
                 case 404 -> FailureKind.NOT_FOUND;
                 case 409 -> FailureKind.CONFLICT;
                 case 412 -> FailureKind.PRECONDITION_FAILED;
-                default -> s3Exception.statusCode() >= 500
-                        ? FailureKind.RETRYABLE
-                        : FailureKind.OTHER;
+                default -> {
+                    if (s3Exception.statusCode() >= 500) {
+                        yield FailureKind.RETRYABLE;
+                    }
+
+                    yield FailureKind.OTHER;
+                }
             };
         }
         return new ObjectStoreException(kind, exception);
