@@ -58,7 +58,8 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
   return (
     <>
-      <TopBar title="성분 설명" variant="sub" />
+      {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
+      <TopBar title={ingredient.koreanName} variant="sub" />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />
