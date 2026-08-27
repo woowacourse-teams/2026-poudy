@@ -17,7 +17,11 @@ public record Chosung(String value) {
 
         for (int index = 0; index < text.length(); index++) {
             char character = text.charAt(index);
-            extracted.append(isSyllable(character) ? letterOf(character) : BREAK);
+            if (isSyllable(character)) {
+                extracted.append(letterOf(character));
+                continue;
+            }
+            extracted.append(BREAK);
         }
 
         return new Chosung(extracted.toString());
