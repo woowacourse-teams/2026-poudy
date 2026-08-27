@@ -148,7 +148,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
           return (
             <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
               <span
-                className={`flex h-[30px] w-[72px] shrink-0 items-center justify-center rounded-[15px] text-[10px] font-bold ${color.bg} ${color.text}`}
+                className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
               >
                 {group.name}
               </span>
@@ -181,8 +181,9 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         <ul className="flex flex-wrap gap-1.5">
           {product.freeOfCodes.map((code) => (
             <li key={code} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
-              <Icon name="check" size={12} className="text-[#F04465]" />
-              <span className="text-[11px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
+              {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
+              <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
+              <span className="text-[12px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
             </li>
           ))}
         </ul>
