@@ -1,8 +1,7 @@
 package com.poudy.search.domain;
 
-import java.text.Normalizer;
 import java.util.Comparator;
-import java.util.Locale;
+import java.util.Optional;
 
 public final class SearchKeyword {
 
@@ -66,10 +65,24 @@ public final class SearchKeyword {
         return NameRank.ofReading(byReading, candidate);
     }
 
-    static String normalize(String text) {
-        String composed = Normalizer.normalize(text, Normalizer.Form.NFC);
+    public Optional<TextMatch> findMatch(SearchableText candidate) {
+        NameMatch direct = match(value, candidate);
 
-        return withoutSpaces(Chosung.toCompatibilityLetters(composed)).toLowerCase(Locale.ROOT);
+        if (direct == NameMatch.EXACT || reading.equals(value)) {
+            return resultOf(value, direct, candidate, false);
+        }
+
+        NameMatch byReading = match(reading, candidate);
+
+        if (direct.compareTo(byReading) <= 0) {
+            return resultOf(value, direct, candidate, false);
+        }
+
+        return resultOf(reading, byReading, candidate, true);
+    }
+
+    static String normalize(String text) {
+        return IndexedText.normalize(text).value();
     }
 
     private static NameMatch match(String searched, SearchableText candidate) {
@@ -103,24 +116,24 @@ public final class SearchKeyword {
         return candidate.chosung();
     }
 
+    private static Optional<TextMatch> resultOf(
+        String searched,
+        NameMatch match,
+        SearchableText candidate,
+        boolean byReading
+    ) {
+        if (!match.isFound()) {
+            return Optional.empty();
+        }
+        NameRank rank = byReading ? NameRank.ofReading(match, candidate) : NameRank.of(match, candidate);
+        return Optional.of(new TextMatch(candidate.text(), rank, candidate.rangeOf(searched)));
+    }
+
     private static boolean foldsDoubleLetter(String searched) {
         return searched.length() == 1 && !Chosung.isDouble(searched);
     }
 
-    private static String withoutSpaces(String text) {
-        StringBuilder compact = new StringBuilder(text.length());
-
-        for (int index = 0; index < text.length(); index++) {
-            char character = text.charAt(index);
-            if (!isSpace(character)) {
-                compact.append(character);
-            }
-        }
-
-        return compact.toString();
-    }
-
-    private static boolean isSpace(char character) {
+    static boolean isSpace(char character) {
         return Character.isWhitespace(character) || Character.isSpaceChar(character);
     }
 }

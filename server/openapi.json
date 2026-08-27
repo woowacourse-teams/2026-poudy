@@ -716,7 +716,7 @@
           "제품"
         ],
         "summary": "제품 검색 제안 조회",
-        "description": "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.",
+        "description": "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. match 는 제품명 또는 브랜드명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.",
         "operationId": "suggestProducts",
         "parameters": [
           {
@@ -1247,7 +1247,7 @@
           "성분"
         ],
         "summary": "성분 검색 제안 조회",
-        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다.",
+        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.",
         "operationId": "suggestIngredients",
         "parameters": [
           {
@@ -2134,6 +2134,44 @@
           "name"
         ]
       },
+      "ProductSuggestionMatchResponse": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "검색어가 일치한 제품 필드",
+            "enum": [
+              "PRODUCT_NAME",
+              "BRAND_NAME"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "검색어가 일치한 원문",
+            "example": "블랙 토너"
+          },
+          "startIndex": {
+            "type": "integer",
+            "format": "int32",
+            "description": "일치 구간의 UTF-16 시작 인덱스",
+            "example": 0,
+            "minimum": 0
+          },
+          "endIndexExclusive": {
+            "type": "integer",
+            "format": "int32",
+            "description": "일치 구간의 UTF-16 종료 제외 인덱스",
+            "example": 2,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "endIndexExclusive",
+          "field",
+          "startIndex",
+          "text"
+        ]
+      },
       "ProductSuggestionPageResponse": {
         "type": "object",
         "properties": {
@@ -2176,12 +2214,17 @@
             "type": "string",
             "description": "브랜드 한글명",
             "example": "브랜드 이름"
+          },
+          "match": {
+            "$ref": "#/components/schemas/ProductSuggestionMatchResponse",
+            "description": "검색어가 실제로 일치한 필드와 원문 구간"
           }
         },
         "required": [
           "brandName",
           "id",
           "imageUrl",
+          "match",
           "name"
         ]
       },
@@ -2374,14 +2417,92 @@
         "properties": {
           "items": {
             "type": "array",
-            "description": "조회된 성분",
+            "description": "검색어에 일치한 성분",
             "items": {
-              "$ref": "#/components/schemas/IngredientResponse"
+              "$ref": "#/components/schemas/IngredientSuggestionResponse"
             }
           }
         },
         "required": [
           "items"
+        ]
+      },
+      "IngredientSuggestionMatchResponse": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "검색어가 일치한 성분 필드",
+            "enum": [
+              "KOREAN_NAME",
+              "ENGLISH_NAME",
+              "ALIAS"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "검색어가 일치한 원문",
+            "example": "가지추출물"
+          },
+          "startIndex": {
+            "type": "integer",
+            "format": "int32",
+            "description": "일치 구간의 UTF-16 시작 인덱스",
+            "example": 0,
+            "minimum": 0
+          },
+          "endIndexExclusive": {
+            "type": "integer",
+            "format": "int32",
+            "description": "일치 구간의 UTF-16 종료 제외 인덱스",
+            "example": 2,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "endIndexExclusive",
+          "field",
+          "startIndex",
+          "text"
+        ]
+      },
+      "IngredientSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "성분 ID",
+            "example": 2
+          },
+          "koreanName": {
+            "type": "string",
+            "description": "성분 한글명",
+            "example": "가지열매추출물"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "성분 영문명",
+            "example": "Solanum Melongena (Eggplant) Fruit Extract"
+          },
+          "skinEffects": {
+            "type": "array",
+            "description": "피부 작용 태그 (BIOLOGICAL_EFFECT)",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectResponse"
+            }
+          },
+          "match": {
+            "$ref": "#/components/schemas/IngredientSuggestionMatchResponse",
+            "description": "검색어가 실제로 일치한 필드와 원문 구간"
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "koreanName",
+          "match",
+          "skinEffects"
         ]
       },
       "ExcludeCodeListResponse": {

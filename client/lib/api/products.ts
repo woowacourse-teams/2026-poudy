@@ -20,6 +20,8 @@ import { serializeFilter } from "@/lib/domain/filter";
 
 const INGREDIENT_PAGE_SIZE = 100;
 
+type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
+
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
   apiGet("/api/products", serializeFilter(filter));
 
@@ -45,10 +47,10 @@ export const fetchIngredients = (query: {
 };
 
 /** ID 조건에 해당하는 성분을 마지막 페이지까지 조회해 하나의 목록으로 합친다. */
-export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): Promise<IngredientListResponse> => {
+export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): Promise<IngredientItemsResponse> => {
   if (ingredientIds.length === 0) return { items: [] };
 
-  const items: IngredientListResponse["items"] = [];
+  const items: IngredientPageResponse["items"] = [];
   let page = 0;
   let hasNext = true;
 

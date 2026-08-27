@@ -46,7 +46,8 @@ public class IngredientController {
     }
 
     @Operation(summary = "성분 검색 제안 조회", description = "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 "
-        + "검색어에 잘 맞는 순서로 최대 5 건 반환한다.")
+        + "검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 "
+        + "그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.")
     @Parameter(name = "keyword", example = "글리")
     @GetMapping("/suggestions")
     public ResponseEntity<IngredientListResponse> suggestIngredients(

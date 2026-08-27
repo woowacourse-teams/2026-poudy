@@ -56,7 +56,8 @@ public class ProductController {
     }
 
     @Operation(summary = "제품 검색 제안 조회", description = "제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 "
-        + "페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.")
+        + "페이지 단위로 조회한다. match 는 제품명 또는 브랜드명 중 실제로 일치한 원문과 그 원문을 기준으로 한 "
+        + "UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.")
     @Parameter(name = "keyword", example = "토너")
     @GetMapping("/suggestions")
     public ResponseEntity<ProductSuggestionPageResponse> suggestProducts(

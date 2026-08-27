@@ -1,14 +1,17 @@
 "use client";
 
+import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
+import { MatchedText } from "@/components/ui/MatchedText";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
+import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
@@ -22,6 +25,22 @@ import {
   removeRecentSearch,
   subscribeRecentSearches,
 } from "@/lib/storage/recent-searches";
+
+/**
+ * 제품 이름에서 맞은 자리를 토막 낸다.
+ *
+ * 브랜드로 걸린 줄은 이름에 맞은 자리가 없어 한 토막으로 둔다. 브랜드 줄에는 표시를
+ * 하지 않는다. 고르는 것은 제품이고 브랜드는 그 아래 딸린 정보라, 양쪽에 다 색을
+ * 얹으면 어느 줄을 보아야 할지 흐려진다.
+ *
+ * 짚어 준 자리가 없거나 브랜드를 가리키면 토막 내지 않는다. 계약이 어긋나도 자동완성
+ * 전체가 무너지지 않게, 표시할 자리만 잃고 이름은 그대로 읽히게 둔다.
+ */
+const nameParts = (item: ProductSuggestionResponse) => {
+  if (item.match?.field !== "PRODUCT_NAME") return [{ text: item.name, matched: false }];
+
+  return splitByRange(item.match);
+};
 
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 export function ProductSearchPanel() {
@@ -197,7 +216,18 @@ export function ProductSearchPanel() {
                         className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
                       />
                       <span className="flex flex-1 flex-col gap-0.5">
-                        <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
+                        {/*
+                          맞은 자리는 색으로만 가른다. 굵기로 가르면 이름은 이미 굵어
+                          어디가 걸렸는지 드러나지 않고, 이름 전체가 맞은 줄은 평소와
+                          똑같아 보인다. 이름의 결은 그대로 두고 색만 얹는다.
+                        */}
+                        <MatchedText
+                          label={item.name}
+                          parts={nameParts(item)}
+                          plainClassName="text-[13px] font-semibold text-text-primary"
+                          dimmedClassName="text-[13px] font-semibold text-text-primary"
+                          matchedClassName="text-brand-strong"
+                        />
                         <span className="text-[11px] text-text-secondary">{item.brandName}</span>
                       </span>
                     </Link>
