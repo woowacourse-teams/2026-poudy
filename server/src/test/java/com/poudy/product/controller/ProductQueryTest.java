@@ -158,4 +158,14 @@ class ProductQueryTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(ErrorCode.PRODUCT_NOT_FOUND.name()));
     }
+
+    @Test
+    @DisplayName("한글 음차 검색어로 라틴 두문자 제품명을 찾는다")
+    void findsProductByKoreanReadingOfLatinAcronym() throws Exception {
+        mockMvc.perform(get("/api/products").param("keyword", "피에이치"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pagination.totalElements").value(1L))
+                .andExpect(jsonPath("$.items[0].id").value(15L))
+                .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"));
+    }
 }

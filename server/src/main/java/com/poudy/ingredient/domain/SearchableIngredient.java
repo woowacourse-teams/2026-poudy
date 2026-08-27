@@ -16,8 +16,12 @@ public record SearchableIngredient(Ingredient ingredient, List<SearchableText> n
     public static SearchableIngredient of(Ingredient ingredient) {
         return new SearchableIngredient(
                 ingredient,
-                Stream.of(ingredient.koreanName(), ingredient.englishName()).map(SearchableText::of).toList(),
-                ingredient.aliases().stream().map(SearchableText::of).toList());
+                Stream.of(ingredient.koreanName(), ingredient.englishName())
+                        .flatMap(name -> SearchableText.formsOf(name).stream())
+                        .toList(),
+                ingredient.aliases().stream()
+                        .flatMap(alias -> SearchableText.formsOf(alias).stream())
+                        .toList());
     }
 
     public NameRank match(SearchKeyword keyword) {

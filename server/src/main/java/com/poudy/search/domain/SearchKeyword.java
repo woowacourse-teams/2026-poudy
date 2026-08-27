@@ -1,12 +1,21 @@
 package com.poudy.search.domain;
 
 import java.text.Normalizer;
+import java.util.Comparator;
 import java.util.Locale;
 
-public record SearchKeyword(String value) {
+public final class SearchKeyword {
 
-    public SearchKeyword {
-        value = normalize(value);
+    private final String value;
+    private final String reading;
+
+    public SearchKeyword(String keyword) {
+        this.value = normalize(keyword);
+        this.reading = LatinReading.ofKeyword(this.value);
+    }
+
+    public String value() {
+        return value;
     }
 
     public boolean matches(String candidate) {
@@ -31,27 +40,30 @@ public record SearchKeyword(String value) {
             return NameMatch.NONE;
         }
 
-        return match(SearchableText.of(candidate));
+        return SearchableText.formsOf(candidate).stream()
+                .map(this::match)
+                .min(Comparator.naturalOrder())
+                .orElse(NameMatch.NONE);
     }
 
     public NameMatch match(SearchableText candidate) {
-        if (value.isEmpty()) {
-            return NameMatch.NONE;
+        return rank(candidate).match();
+    }
+
+    public NameRank rank(SearchableText candidate) {
+        NameMatch direct = match(value, candidate);
+
+        if (direct == NameMatch.EXACT || reading.equals(value)) {
+            return NameRank.of(direct, candidate);
         }
 
-        String compared = compare(candidate);
+        NameMatch byReading = match(reading, candidate);
 
-        if (compared.equals(value)) {
-            return NameMatch.EXACT;
-        }
-        if (compared.startsWith(value)) {
-            return NameMatch.PREFIX;
-        }
-        if (compared.contains(value)) {
-            return NameMatch.PARTIAL;
+        if (direct.compareTo(byReading) <= 0) {
+            return NameRank.of(direct, candidate);
         }
 
-        return NameMatch.NONE;
+        return NameRank.ofReading(byReading, candidate);
     }
 
     static String normalize(String text) {
@@ -60,19 +72,39 @@ public record SearchKeyword(String value) {
         return withoutSpaces(Chosung.toCompatibilityLetters(composed)).toLowerCase(Locale.ROOT);
     }
 
-    private String compare(SearchableText candidate) {
-        if (!Chosung.isWrittenIn(value)) {
+    private static NameMatch match(String searched, SearchableText candidate) {
+        if (searched.isEmpty()) {
+            return NameMatch.NONE;
+        }
+
+        String compared = compare(searched, candidate);
+
+        if (compared.equals(searched)) {
+            return NameMatch.EXACT;
+        }
+        if (compared.startsWith(searched)) {
+            return NameMatch.PREFIX;
+        }
+        if (compared.contains(searched)) {
+            return NameMatch.PARTIAL;
+        }
+
+        return NameMatch.NONE;
+    }
+
+    private static String compare(String searched, SearchableText candidate) {
+        if (!Chosung.isWrittenIn(searched)) {
             return candidate.normalized();
         }
-        if (foldsDoubleLetter()) {
+        if (foldsDoubleLetter(searched)) {
             return candidate.foldedChosung();
         }
 
         return candidate.chosung();
     }
 
-    private boolean foldsDoubleLetter() {
-        return value.length() == 1 && !Chosung.isDouble(value);
+    private static boolean foldsDoubleLetter(String searched) {
+        return searched.length() == 1 && !Chosung.isDouble(searched);
     }
 
     private static String withoutSpaces(String text) {
