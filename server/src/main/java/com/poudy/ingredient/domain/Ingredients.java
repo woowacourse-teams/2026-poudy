@@ -34,17 +34,17 @@ public class Ingredients {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
-                .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
-                .filter(MatchedIngredient::isFound)
-                .sorted(MatchedIngredient.order())
-                .limit(SEARCH_RESULT_LIMIT)
-                .map(MatchedIngredient::ingredient)
-                .toList();
+            .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
+            .filter(MatchedIngredient::isFound)
+            .sorted(MatchedIngredient.order())
+            .limit(SEARCH_RESULT_LIMIT)
+            .map(MatchedIngredient::ingredient)
+            .toList();
     }
 
     public Optional<Ingredient> findById(Long id) {
         return Optional.ofNullable(byId.get(id))
-                .map(SearchableIngredient::ingredient);
+            .map(SearchableIngredient::ingredient);
     }
 
     public boolean containsAll(Collection<Long> ids) {
@@ -57,8 +57,8 @@ public class Ingredients {
 
     public List<Ingredient> values() {
         return searchable.stream()
-                .map(SearchableIngredient::ingredient)
-                .toList();
+            .map(SearchableIngredient::ingredient)
+            .toList();
     }
 
     public IngredientPage page(int page, int size) {
@@ -67,19 +67,19 @@ public class Ingredients {
         }
 
         List<Ingredient> items = searchable.stream()
-                .skip((long) page * size)
-                .limit(size)
-                .map(SearchableIngredient::ingredient)
-                .toList();
+            .skip((long) page * size)
+            .limit(size)
+            .map(SearchableIngredient::ingredient)
+            .toList();
 
         return new IngredientPage(items, searchable.size());
     }
 
     public Ingredients findAllById(Collection<Long> ids) {
         List<SearchableIngredient> found = ids.stream()
-                .map(byId::get)
-                .filter(Objects::nonNull)
-                .toList();
+            .map(byId::get)
+            .filter(Objects::nonNull)
+            .toList();
 
         return new Ingredients(found, indexOf(found));
     }
@@ -90,28 +90,30 @@ public class Ingredients {
         }
 
         return firstOf(ingredient -> ingredient.hasKoreanName(name))
-                .or(() -> firstOf(ingredient -> ingredient.hasEnglishName(name)));
+            .or(() -> firstOf(ingredient -> ingredient.hasEnglishName(name)));
     }
 
     private Optional<Ingredient> firstOf(Predicate<Ingredient> match) {
         return searchable.stream()
-                .map(SearchableIngredient::ingredient)
-                .filter(match)
-                .min(Comparator.comparing(Ingredient::id));
+            .map(SearchableIngredient::ingredient)
+            .filter(match)
+            .min(Comparator.comparing(Ingredient::id));
     }
 
     private static List<SearchableIngredient> searchableOf(List<Ingredient> values) {
         return Objects.requireNonNullElse(values, List.<Ingredient>of()).stream()
-                .map(SearchableIngredient::of)
-                .toList();
+            .map(SearchableIngredient::of)
+            .toList();
     }
 
     private static Map<Long, SearchableIngredient> indexOf(List<SearchableIngredient> searchable) {
         return searchable.stream()
-                .collect(
-                        Collectors.toUnmodifiableMap(
-                                found -> found.ingredient().id(),
-                                Function.identity(),
-                                (first, second) -> first));
+            .collect(
+                Collectors.toUnmodifiableMap(
+                    found -> found.ingredient().id(),
+                    Function.identity(),
+                    (first, second) -> first
+                )
+            );
     }
 }

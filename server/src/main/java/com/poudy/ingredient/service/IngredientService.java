@@ -20,9 +20,10 @@ public class IngredientService {
     private final ExcludeCodeIngredients excludeCodeIngredients;
 
     public IngredientService(
-            IngredientRepository ingredientRepository,
-            ProductRepository productRepository,
-            ExcludeCodeIngredients excludeCodeIngredients) {
+        IngredientRepository ingredientRepository,
+        ProductRepository productRepository,
+        ExcludeCodeIngredients excludeCodeIngredients
+    ) {
         this.ingredientRepository = ingredientRepository;
         this.productRepository = productRepository;
         this.excludeCodeIngredients = excludeCodeIngredients;
@@ -30,12 +31,13 @@ public class IngredientService {
 
     public IngredientDetail findDetail(Long ingredientId) {
         Ingredient ingredient = ingredientRepository.findById(ingredientId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
         return new IngredientDetail(
-                ingredient,
-                excludeCodeIngredients.codesOf(ingredientId),
-                productRepository.countContaining(ingredientId));
+            ingredient,
+            excludeCodeIngredients.codesOf(ingredientId),
+            productRepository.countContaining(ingredientId)
+        );
     }
 
     public IngredientPage find(IngredientQuery query, int page, int size) {

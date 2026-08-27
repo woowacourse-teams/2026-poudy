@@ -4,6 +4,7 @@ import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
@@ -131,12 +132,13 @@ export function SavedScreen() {
       ) : null}
 
       {current.items.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-14">
-          <Icon name="bookmark" size={28} className="text-text-secondary" />
-          <p className="text-[15px] font-bold text-text-primary">저장한 제품이 없어요</p>
-          <p className="text-center text-[12px] text-text-secondary">
-            마음에 드는 제품을 저장해 두면 여기에서 모아 볼 수 있어요
-          </p>
+        <div className="px-4 py-6">
+          <EmptyNotice
+            icon="bookmark"
+            size="screen"
+            title="저장한 제품이 없어요"
+            detail="마음에 드는 제품을 저장해 두면 여기에 모여요"
+          />
         </div>
       ) : null}
 

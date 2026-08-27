@@ -3,11 +3,11 @@ package com.poudy.search.domain;
 import java.util.List;
 
 public record SearchableText(
-        String normalized,
-        String chosung,
-        String foldedChosung,
-        boolean combined,
-        boolean reading) {
+    String normalized,
+    String chosung,
+    String foldedChosung,
+    boolean combined,
+    boolean reading) {
 
     private static final String COMBINATION_MARK = "/";
 
@@ -31,10 +31,11 @@ public record SearchableText(
         Chosung chosung = Chosung.of(normalized);
 
         return new SearchableText(
-                normalized,
-                chosung.value(),
-                chosung.folded().value(),
-                normalized.contains(COMBINATION_MARK),
-                reading);
+            normalized,
+            chosung.value(),
+            chosung.folded().value(),
+            normalized.contains(COMBINATION_MARK),
+            reading
+        );
     }
 }

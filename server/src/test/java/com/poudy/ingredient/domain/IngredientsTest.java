@@ -14,7 +14,8 @@ class IngredientsTest {
     @DisplayName("이름이 다른 성분의 영문명과 겹치면 한글명 일치를 고른다")
     void prefersKoreanNameOverEnglishName() {
         Ingredients ingredients = new Ingredients(
-                List.of(ingredient(10L, "정제수", "향료"), ingredient(20L, "향료", "Fragrance")));
+            List.of(ingredient(10L, "정제수", "향료"), ingredient(20L, "향료", "Fragrance"))
+        );
 
         assertThat(ingredients.findByName("향료")).map(Ingredient::id).contains(20L);
     }
@@ -31,7 +32,8 @@ class IngredientsTest {
     @DisplayName("같은 이름을 가진 성분이 여럿이면 ID 가 작은 성분을 고른다")
     void picksSmallestIdAmongSameNames() {
         Ingredients ingredients = new Ingredients(
-                List.of(ingredient(30L, "향료", "Fragrance"), ingredient(20L, "향료", "Parfum")));
+            List.of(ingredient(30L, "향료", "Fragrance"), ingredient(20L, "향료", "Parfum"))
+        );
 
         assertThat(ingredients.findByName("향료")).map(Ingredient::id).contains(20L);
     }
@@ -59,7 +61,8 @@ class IngredientsTest {
     @DisplayName("골라낸 성분 목록도 검색할 수 있다")
     void searchesWithinSelectedIngredients() {
         Ingredients ingredients = new Ingredients(
-                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+            List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance"))
+        );
 
         Ingredients found = ingredients.findAllById(List.of(10L));
 
@@ -71,10 +74,12 @@ class IngredientsTest {
     @DisplayName("요청한 페이지의 성분과 전체 개수를 함께 반환한다")
     void pagesIngredients() {
         Ingredients ingredients = new Ingredients(
-                List.of(
-                        ingredient(10L, "글리세린", "Glycerin"),
-                        ingredient(20L, "향료", "Fragrance"),
-                        ingredient(30L, "정제수", "Water")));
+            List.of(
+                ingredient(10L, "글리세린", "Glycerin"),
+                ingredient(20L, "향료", "Fragrance"),
+                ingredient(30L, "정제수", "Water")
+            )
+        );
 
         IngredientPage page = ingredients.page(1, 2);
 
@@ -95,7 +100,8 @@ class IngredientsTest {
     @DisplayName("요청한 성분을 모두 포함하는지 판단한다")
     void checksContainingAllIngredients() {
         Ingredients ingredients = new Ingredients(
-                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+            List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance"))
+        );
 
         assertThat(ingredients.containsAll(List.of(10L, 20L))).isTrue();
         assertThat(ingredients.containsAll(List.of(10L, 30L))).isFalse();
@@ -106,7 +112,8 @@ class IngredientsTest {
     @DisplayName("요청한 성분 중 하나라도 포함하는지 판단한다")
     void checksContainingAnyIngredient() {
         Ingredients ingredients = new Ingredients(
-                List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance")));
+            List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance"))
+        );
 
         assertThat(ingredients.containsAny(List.of(20L, 30L))).isTrue();
         assertThat(ingredients.containsAny(List.of(30L, 40L))).isFalse();

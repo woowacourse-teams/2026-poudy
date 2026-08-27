@@ -13,22 +13,24 @@ public record ShareText(String value) {
     private static final Pattern PROMOTION_TAG = Pattern.compile("\\[[^\\]]*\\]");
     private static final Pattern PLAN_NOTE = Pattern.compile("\\([^)]*\\)");
     private static final Pattern VOLUME = Pattern.compile(
-            "\\d+(\\.\\d+)?\\s*(ml|g|ea|매|정|개|입|팩)([Xx*]\\s*\\d+)?(?![A-Za-z])",
-            Pattern.CASE_INSENSITIVE);
+        "\\d+(\\.\\d+)?\\s*(ml|g|ea|매|정|개|입|팩)([Xx*]\\s*\\d+)?(?![A-Za-z])",
+        Pattern.CASE_INSENSITIVE
+    );
     private static final Set<String> PLAN_WORDS = Set.of(
-            "기획",
-            "기획세트",
-            "세트",
-            "리필",
-            "증정",
-            "단독",
-            "더블",
-            "튜브",
-            "한정",
-            "대용량",
-            "본품",
-            "구성",
-            "패키지");
+        "기획",
+        "기획세트",
+        "세트",
+        "리필",
+        "증정",
+        "단독",
+        "더블",
+        "튜브",
+        "한정",
+        "대용량",
+        "본품",
+        "구성",
+        "패키지"
+    );
     private static final String SPACE = " ";
 
     public ShareText {

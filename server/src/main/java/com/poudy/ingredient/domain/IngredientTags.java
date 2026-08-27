@@ -14,24 +14,24 @@ public record IngredientTags(List<IngredientTag> values) {
 
     public List<FormulationRole> formulationRoles() {
         return values.stream()
-                .filter(tag -> tag.isOf(TagCategory.FUNCTION))
-                .map(IngredientTag::formulationRole)
-                .toList();
+            .filter(tag -> tag.isOf(TagCategory.FUNCTION))
+            .map(IngredientTag::formulationRole)
+            .toList();
     }
 
     public List<SkinEffect> skinEffects() {
         return values.stream()
-                .filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
-                .map(IngredientTag::skinEffect)
-                .toList();
+            .filter(tag -> tag.isOf(TagCategory.BIOLOGICAL_EFFECT))
+            .map(IngredientTag::skinEffect)
+            .toList();
     }
 
     public List<String> effectSources() {
         return values.stream()
-                .filter(IngredientTag::isDisplayedSkinEffect)
-                .flatMap(tag -> tag.sources().stream())
-                .distinct()
-                .toList();
+            .filter(IngredientTag::isDisplayedSkinEffect)
+            .flatMap(tag -> tag.sources().stream())
+            .distinct()
+            .toList();
     }
 
 }

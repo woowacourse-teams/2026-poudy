@@ -94,9 +94,9 @@ public class FeedbackImageProcessor {
             return FeedbackImageFormat.PNG;
         }
         if (bytes.length >= 3
-                && (bytes[0] & 0xff) == 0xff
-                && (bytes[1] & 0xff) == 0xd8
-                && (bytes[2] & 0xff) == 0xff) {
+            && (bytes[0] & 0xff) == 0xff
+            && (bytes[1] & 0xff) == 0xd8
+            && (bytes[2] & 0xff) == 0xff) {
             return FeedbackImageFormat.JPEG;
         }
         throw invalidImage();
@@ -109,7 +109,7 @@ public class FeedbackImageProcessor {
         if (format == FeedbackImageFormat.JPEG) {
             JpegInspection inspection = inspectJpeg(bytes, 0);
             if (inspection.hasMpoApp2Segment()
-                    || hasFollowingJpeg(bytes, inspection.endOffset())) {
+                || hasFollowingJpeg(bytes, inspection.endOffset())) {
                 throw invalidImage();
             }
         }
@@ -125,10 +125,11 @@ public class FeedbackImageProcessor {
     }
 
     private static BufferedImage decode(
-            byte[] bytes,
-            FeedbackImageFormat expectedFormat,
-            boolean normalize)
-            throws IOException {
+        byte[] bytes,
+        FeedbackImageFormat expectedFormat,
+        boolean normalize
+    )
+        throws IOException {
         try (MemoryCacheImageInputStream input = new MemoryCacheImageInputStream(new ByteArrayInputStream(bytes))) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
@@ -177,10 +178,10 @@ public class FeedbackImageProcessor {
 
     private static void validateDimensions(int width, int height) {
         if (width <= 0
-                || height <= 0
-                || width > MAX_DIMENSION
-                || height > MAX_DIMENSION
-                || (long) width * height > MAX_PIXELS) {
+            || height <= 0
+            || width > MAX_DIMENSION
+            || height > MAX_DIMENSION
+            || (long) width * height > MAX_PIXELS) {
             throw invalidImage();
         }
     }
@@ -271,9 +272,9 @@ public class FeedbackImageProcessor {
 
     private static int readInt(byte[] bytes, int offset) {
         return (bytes[offset] & 0xff) << 24
-                | (bytes[offset + 1] & 0xff) << 16
-                | (bytes[offset + 2] & 0xff) << 8
-                | bytes[offset + 3] & 0xff;
+            | (bytes[offset + 1] & 0xff) << 16
+            | (bytes[offset + 2] & 0xff) << 8
+            | bytes[offset + 3] & 0xff;
     }
 
     private static boolean hasFollowingJpeg(byte[] bytes, int firstImageEndOffset) {
@@ -282,7 +283,7 @@ public class FeedbackImageProcessor {
         }
         for (int offset = firstImageEndOffset; offset + 2 < bytes.length; offset++) {
             if (isJpegSignatureAt(bytes, offset)
-                    && inspectJpeg(bytes, offset).endOffset() > offset) {
+                && inspectJpeg(bytes, offset).endOffset() > offset) {
                 return true;
             }
         }
@@ -360,9 +361,9 @@ public class FeedbackImageProcessor {
 
     private static boolean isJpegSignatureAt(byte[] bytes, int offset) {
         return offset + 2 < bytes.length
-                && (bytes[offset] & 0xff) == 0xff
-                && (bytes[offset + 1] & 0xff) == 0xd8
-                && (bytes[offset + 2] & 0xff) == 0xff;
+            && (bytes[offset] & 0xff) == 0xff
+            && (bytes[offset + 1] & 0xff) == 0xd8
+            && (bytes[offset + 2] & 0xff) == 0xff;
     }
 
     private static boolean startsWith(byte[] bytes, byte[] expected) {

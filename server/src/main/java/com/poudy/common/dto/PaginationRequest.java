@@ -6,8 +6,8 @@ import jakarta.validation.constraints.Min;
 import java.util.Objects;
 
 public record PaginationRequest(
-        @Schema(description = "조회할 페이지 번호 (0부터 시작)", defaultValue = DEFAULT_PAGE_TEXT) @Min(0) Integer page,
-        @Schema(description = "페이지당 항목 개수", defaultValue = DEFAULT_SIZE_TEXT) @Min(1) @Max(MAX_SIZE) Integer size) {
+    @Schema(description = "조회할 페이지 번호 (0부터 시작)", defaultValue = DEFAULT_PAGE_TEXT) @Min(0) Integer page,
+    @Schema(description = "페이지당 항목 개수", defaultValue = DEFAULT_SIZE_TEXT) @Min(1) @Max(MAX_SIZE) Integer size) {
 
     public static final int MAX_SIZE = 100;
     public static final int DEFAULT_PAGE = 0;

@@ -48,14 +48,16 @@ class DiscordFeedbackNotifierTest {
             String webhookUrl = "http://localhost:" + server.getAddress().getPort() + "/webhook";
             DiscordFeedbackNotifier notifier = new DiscordFeedbackNotifier(RestClient.builder().build(), webhookUrl);
             Feedback feedback = new Feedback(
-                    UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3"),
-                    FeedbackType.DATA_CORRECTION,
-                    new FeedbackContent("@everyone " + "가".repeat(1990)),
-                    new FeedbackPath("/products/12345"),
-                    OffsetDateTime.parse("2026-08-23T16:20:30+09:00"),
-                    List.of(
-                            new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG),
-                            new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG)));
+                UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3"),
+                FeedbackType.DATA_CORRECTION,
+                new FeedbackContent("@everyone " + "가".repeat(1990)),
+                new FeedbackPath("/products/12345"),
+                OffsetDateTime.parse("2026-08-23T16:20:30+09:00"),
+                List.of(
+                    new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG),
+                    new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG)
+                )
+            );
 
             notifier.notify(feedback);
 

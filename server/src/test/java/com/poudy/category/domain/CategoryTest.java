@@ -30,20 +30,20 @@ class CategoryTest {
     @DisplayName("대분류는 부모 카테고리를 가질 수 없다")
     void rejectsParentWithParentId() {
         assertThatThrownBy(() -> new Category(1L, 2L, "스킨케어", 0))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("대분류는 부모 카테고리를 가질 수 없습니다.");
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("대분류는 부모 카테고리를 가질 수 없습니다.");
     }
 
     @Test
     @DisplayName("소분류는 부모 카테고리를 가져야 한다")
     void rejectsChildWithoutParentId() {
         assertThatThrownBy(() -> new Category(2L, null, "토너", 1))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("소분류는 부모 카테고리를 가져야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("소분류는 부모 카테고리를 가져야 합니다.");
     }
 
     @Test
     @DisplayName("카테고리는 두 단계 깊이만 허용한다")
     void rejectsUnsupportedDepth() {
         assertThatThrownBy(() -> new Category(3L, 2L, "보습 토너", 2))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("카테고리 깊이는 0 또는 1이어야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("카테고리 깊이는 0 또는 1이어야 합니다.");
     }
 }

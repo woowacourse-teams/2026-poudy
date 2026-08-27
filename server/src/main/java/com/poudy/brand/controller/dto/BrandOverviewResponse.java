@@ -8,8 +8,9 @@ public record BrandOverviewResponse(@NotNull List<BrandSummaryResponse> items) {
 
     public static BrandOverviewResponse from(List<BrandProductCount> brandProductCounts) {
         return new BrandOverviewResponse(
-                brandProductCounts.stream()
-                        .map(BrandSummaryResponse::from)
-                        .toList());
+            brandProductCounts.stream()
+                .map(BrandSummaryResponse::from)
+                .toList()
+        );
     }
 }

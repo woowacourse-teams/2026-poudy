@@ -25,8 +25,9 @@ class HeuristicProductSensoryEstimatorTest {
     void estimatesDeterministicallyWithVersionedParameters() {
         Category toner = category(2L, "스킨/토너");
         Ingredients ingredients = ingredients(
-                ingredient(100L, "HUMECTANT"),
-                ingredient(101L, "EMOLLIENT"));
+            ingredient(100L, "HUMECTANT"),
+            ingredient(101L, "EMOLLIENT")
+        );
 
         ProductSensory first = estimator.estimate(toner, ingredients);
         ProductSensory second = estimator.estimate(toner, ingredients);
@@ -34,11 +35,13 @@ class HeuristicProductSensoryEstimatorTest {
         assertThat(first).isEqualTo(second);
         assertThat(estimator.modelVersion()).isEqualTo(first.modelVersion());
         assertThat(first.modelVersion())
-                .isEqualTo(
-                        new SensoryModelVersion(
-                                "ingredient-role-profile-v0.2",
-                                "category-sensory-prior-v0.1",
-                                "ordinal-level-model-v0.1"));
+            .isEqualTo(
+                new SensoryModelVersion(
+                    "ingredient-role-profile-v0.2",
+                    "category-sensory-prior-v0.1",
+                    "ordinal-level-model-v0.1"
+                )
+            );
     }
 
     @Test
@@ -47,11 +50,13 @@ class HeuristicProductSensoryEstimatorTest {
         Category cream = category(4L, "크림");
         ProductSensory baseline = estimator.estimate(cream, ingredients());
         ProductSensory moistureRich = estimator.estimate(
-                cream,
-                repeatedRoleIngredients(100L, 10, "HUMECTANT"));
+            cream,
+            repeatedRoleIngredients(100L, 10, "HUMECTANT")
+        );
         ProductSensory oilRich = estimator.estimate(
-                cream,
-                repeatedRoleIngredients(200L, 10, "EMOLLIENT"));
+            cream,
+            repeatedRoleIngredients(200L, 10, "EMOLLIENT")
+        );
 
         assertThat(baseline.moisture().value()).isEqualTo(2);
         assertThat(baseline.oil().value()).isEqualTo(2);
@@ -86,17 +91,19 @@ class HeuristicProductSensoryEstimatorTest {
     void appliesSmallCuratedOverridesForFrequentMissingTags() {
         Category unknownCategory = category(999L, "미등록 제형");
         Ingredients moistureOverrides = ingredients(
-                ingredient(475L),
-                ingredient(586L),
-                ingredient(3500L),
-                ingredient(3605L),
-                ingredient(3953L));
+            ingredient(475L),
+            ingredient(586L),
+            ingredient(3500L),
+            ingredient(3605L),
+            ingredient(3953L)
+        );
         Ingredients oilOverrides = ingredients(
-                ingredient(1463L),
-                ingredient(2896L),
-                ingredient(3260L),
-                ingredient(4510L),
-                ingredient(7587L));
+            ingredient(1463L),
+            ingredient(2896L),
+            ingredient(3260L),
+            ingredient(4510L),
+            ingredient(7587L)
+        );
 
         ProductSensory moisture = estimator.estimate(unknownCategory, moistureOverrides);
         ProductSensory oil = estimator.estimate(unknownCategory, oilOverrides);
@@ -118,9 +125,9 @@ class HeuristicProductSensoryEstimatorTest {
         ProductSensory classifiedResult = estimator.estimate(serum, classified);
 
         assertThat(unclassifiedResult.confidence().value())
-                .isLessThan(classifiedResult.confidence().value());
+            .isLessThan(classifiedResult.confidence().value());
         assertThat(classifiedResult.confidence().value())
-                .isLessThanOrEqualTo(new BigDecimal("0.55"));
+            .isLessThanOrEqualTo(new BigDecimal("0.55"));
     }
 
     @Test
@@ -153,15 +160,16 @@ class HeuristicProductSensoryEstimatorTest {
     @DisplayName("category와 전성분 목록이 없으면 추론하지 않는다")
     void rejectsMissingRequiredInputs() {
         assertThatThrownBy(() -> estimator.estimate(null, ingredients()))
-                .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> estimator.estimate(category(2L, "스킨/토너"), null))
-                .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     private static Ingredients repeatedRoleIngredients(
-            long firstId,
-            int count,
-            String role) {
+        long firstId,
+        int count,
+        String role
+    ) {
         List<Ingredient> values = new ArrayList<>();
         for (int index = 0; index < count; index++) {
             values.add(ingredientOf(firstId + index, role));
@@ -183,22 +191,25 @@ class HeuristicProductSensoryEstimatorTest {
 
     private static Ingredient ingredient(Long id, String... roles) {
         List<IngredientTag> tags = java.util.Arrays.stream(roles)
-                .map(
-                        role -> new IngredientTag(
-                                new Tag(1L, TagCategory.FUNCTION, role, role),
-                                "v0 estimator test evidence"))
-                .toList();
+            .map(
+                role -> new IngredientTag(
+                    new Tag(1L, TagCategory.FUNCTION, role, role),
+                    "v0 estimator test evidence"
+                )
+            )
+            .toList();
         return new Ingredient(
-                id,
-                "성분 " + id,
-                "Ingredient " + id,
-                "",
-                "",
-                "",
-                List.of(),
-                tags,
-                null,
-                null);
+            id,
+            "성분 " + id,
+            "Ingredient " + id,
+            "",
+            "",
+            "",
+            List.of(),
+            tags,
+            null,
+            null
+        );
     }
 
     private static Category category(Long id, String name) {

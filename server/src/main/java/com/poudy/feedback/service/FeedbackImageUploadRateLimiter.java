@@ -13,9 +13,10 @@ public class FeedbackImageUploadRateLimiter {
     private final FixedWindowRateLimiter delegate;
 
     public FeedbackImageUploadRateLimiter(
-            @Value("${poudy.feedback.image-upload-rate-limit.max-requests}") int maxRequests,
-            @Value("${poudy.feedback.image-upload-rate-limit.window}") Duration window,
-            @Qualifier("feedbackClock") Clock clock) {
+        @Value("${poudy.feedback.image-upload-rate-limit.max-requests}") int maxRequests,
+        @Value("${poudy.feedback.image-upload-rate-limit.window}") Duration window,
+        @Qualifier("feedbackClock") Clock clock
+    ) {
         delegate = new FixedWindowRateLimiter(maxRequests, window, clock);
     }
 

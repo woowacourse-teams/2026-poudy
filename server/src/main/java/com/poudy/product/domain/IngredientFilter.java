@@ -13,20 +13,22 @@ public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
         excludedIds = List.copyOf(Objects.requireNonNullElse(excludedIds, List.of()));
 
         if (includedIds.stream()
-                .anyMatch(excludedIds::contains)) {
+            .anyMatch(excludedIds::contains)) {
             throw new ConflictingIngredientFilterException();
         }
     }
 
     public static IngredientFilter of(
-            List<Long> includedIds,
-            List<Long> excludedIds,
-            Collection<Long> excludedCodeIngredientIds) {
+        List<Long> includedIds,
+        List<Long> excludedIds,
+        Collection<Long> excludedCodeIngredientIds
+    ) {
         List<Long> resolved = Stream.concat(
-                Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
-                Objects.requireNonNullElse(excludedCodeIngredientIds, Set.<Long>of()).stream())
-                .distinct()
-                .toList();
+            Objects.requireNonNullElse(excludedIds, List.<Long>of()).stream(),
+            Objects.requireNonNullElse(excludedCodeIngredientIds, Set.<Long>of()).stream()
+        )
+            .distinct()
+            .toList();
 
         return new IngredientFilter(includedIds, resolved);
     }

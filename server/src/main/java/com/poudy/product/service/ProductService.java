@@ -25,24 +25,27 @@ public class ProductService {
     private final ExcludeCodeIngredients excludeCodeIngredients;
 
     public ProductService(
-            ProductRepository productRepository,
-            Categories categories,
-            ExcludeCodeIngredients excludeCodeIngredients) {
+        ProductRepository productRepository,
+        Categories categories,
+        ExcludeCodeIngredients excludeCodeIngredients
+    ) {
         this.productRepository = productRepository;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
     }
 
     public ProductPage findProducts(
-            ProductQuery query,
-            ProductSort sort,
-            int page,
-            int size) {
+        ProductQuery query,
+        ProductSort sort,
+        int page,
+        int size
+    ) {
         return products().find(
-                filterOf(query),
-                sort,
-                page,
-                size);
+            filterOf(query),
+            sort,
+            page,
+            size
+        );
     }
 
     public long countProducts(ProductQuery query) {
@@ -55,12 +58,13 @@ public class ProductService {
 
     public ProductDetail findDetail(Long productId) {
         Product product = products().findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
         return new ProductDetail(
-                product,
-                categories.pathOf(product.category()),
-                excludeCodeIngredients.freeCodesOf(product.ingredients()));
+            product,
+            categories.pathOf(product.category()),
+            excludeCodeIngredients.freeCodesOf(product.ingredients())
+        );
     }
 
     private Products products() {
@@ -69,16 +73,18 @@ public class ProductService {
 
     private ProductFilter filterOf(ProductQuery query) {
         IngredientFilter ingredientFilter = IngredientFilter.of(
-                query.includeIngredientIds(),
-                query.excludeIngredientIds(),
-                excludeCodeIngredients.idsOf(query.excludeCodes()));
+            query.includeIngredientIds(),
+            query.excludeIngredientIds(),
+            excludeCodeIngredients.idsOf(query.excludeCodes())
+        );
 
         return new ProductFilter(
-                query.keyword(),
-                query.categoryIds(),
-                query.brandIds(),
-                query.moistureLevels().stream().map(MoistureLevel::new).toList(),
-                query.oilLevels().stream().map(OilLevel::new).toList(),
-                ingredientFilter);
+            query.keyword(),
+            query.categoryIds(),
+            query.brandIds(),
+            query.moistureLevels().stream().map(MoistureLevel::new).toList(),
+            query.oilLevels().stream().map(OilLevel::new).toList(),
+            ingredientFilter
+        );
     }
 }

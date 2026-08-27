@@ -28,157 +28,165 @@ class ProductQueryTest {
     @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과 브랜드와 함께 반환한다")
     void findsProductPage() throws Exception {
         mockMvc.perform(
-                get("/api/products")
-                        .param("keyword", "토너")
-                        .param("brandIds", "3")
-                        .param("sort", "PRICE_ASC")
-                        .param("page", "0")
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].id").value(15L))
-                .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"))
-                .andExpect(jsonPath("$.items[0].brand.id").value(3L))
-                .andExpect(jsonPath("$.items[0].brand.englishName").value(nullValue()))
-                .andExpect(jsonPath("$.items[0].brand.imageUrl").value(nullValue()))
-                .andExpect(jsonPath("$.items[0].price").value(15000L))
-                .andExpect(jsonPath("$.pagination.totalElements").value(2L))
-                .andExpect(jsonPath("$.pagination.hasNext").value(true))
-                .andExpect(jsonPath("$.brands.length()").value(1))
-                .andExpect(jsonPath("$.brands[0].id").value(3L));
+            get("/api/products")
+                .param("keyword", "토너")
+                .param("brandIds", "3")
+                .param("sort", "PRICE_ASC")
+                .param("page", "0")
+                .param("size", "1")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(15L))
+            .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"))
+            .andExpect(jsonPath("$.items[0].brand.id").value(3L))
+            .andExpect(jsonPath("$.items[0].brand.englishName").value(nullValue()))
+            .andExpect(jsonPath("$.items[0].brand.imageUrl").value(nullValue()))
+            .andExpect(jsonPath("$.items[0].price").value(15000L))
+            .andExpect(jsonPath("$.pagination.totalElements").value(2L))
+            .andExpect(jsonPath("$.pagination.hasNext").value(true))
+            .andExpect(jsonPath("$.brands.length()").value(1))
+            .andExpect(jsonPath("$.brands[0].id").value(3L));
     }
 
     @Test
     @DisplayName("목록과 같은 조건으로 제품 개수를 반환한다")
     void countsProducts() throws Exception {
         mockMvc.perform(get("/api/products/count").param("keyword", "토너").param("brandIds", "3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.count").value(2L));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count").value(2L));
     }
 
     @Test
     @DisplayName("브랜드명 검색은 그 브랜드의 제품과 개수를 반환한다")
     void findsProductsAndCountByBrandName() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "다브랜"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-                .andExpect(jsonPath("$.pagination.totalElements").value(3L))
-                .andExpect(jsonPath("$.brands.length()").value(1))
-                .andExpect(jsonPath("$.brands[0].id").value(1L));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3L))
+            .andExpect(jsonPath("$.brands.length()").value(1))
+            .andExpect(jsonPath("$.brands[0].id").value(1L));
 
         mockMvc.perform(get("/api/products/count").param("keyword", "다브랜"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.count").value(3L));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count").value(3L));
     }
 
     @Test
     @DisplayName("제품명 검색 제안을 실제 제품으로 반환한다")
     void suggestsProducts() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-                .andExpect(jsonPath("$.items[0].brandName").value("다 브랜드"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+            .andExpect(jsonPath("$.items[0].brandName").value("다 브랜드"));
     }
 
     @Test
     @DisplayName("제품명 검색 제안을 페이지 단위로 반환하고 전체 개수를 함께 싣는다")
     void suggestsProductPage() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "0").param("size", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(2))
-                .andExpect(jsonPath("$.pagination.page").value(0))
-                .andExpect(jsonPath("$.pagination.size").value(2))
-                .andExpect(jsonPath("$.pagination.totalElements").value(3))
-                .andExpect(jsonPath("$.pagination.totalPages").value(2))
-                .andExpect(jsonPath("$.pagination.hasNext").value(true));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.pagination.page").value(0))
+            .andExpect(jsonPath("$.pagination.size").value(2))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3))
+            .andExpect(jsonPath("$.pagination.totalPages").value(2))
+            .andExpect(jsonPath("$.pagination.hasNext").value(true));
     }
 
     @Test
     @DisplayName("제품명 검색 제안의 마지막 페이지는 남은 제품만 담고 다음 페이지가 없다")
     void suggestsLastProductPage() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "1").param("size", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(1))
-                .andExpect(jsonPath("$.pagination.totalElements").value(3))
-                .andExpect(jsonPath("$.pagination.hasNext").value(false));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3))
+            .andExpect(jsonPath("$.pagination.hasNext").value(false));
     }
 
     @Test
     @DisplayName("제품명 검색 제안의 페이지를 나눠도 목록과 같은 순서를 유지한다")
     void keepsSuggestionOrderAcrossPages() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].id").value(1));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(1));
 
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "2").param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].id").value(10));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(10));
     }
 
     @Test
     @DisplayName("브랜드명 검색 제안도 해당 브랜드의 제품으로 반환한다")
     void suggestsProductsByBrandName() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-                .andExpect(
-                        jsonPath("$.items[*].brandName")
-                                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드"))));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+            .andExpect(
+                jsonPath("$.items[*].brandName")
+                    .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드")))
+            );
     }
 
     @Test
     @DisplayName("제품 상세를 연관 도메인과 파생 정보로 반환한다")
     void findsProductDetail() throws Exception {
         mockMvc.perform(get("/api/products/15"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(15L))
-                .andExpect(jsonPath("$.brand.id").value(3L))
-                .andExpect(jsonPath("$.brand.englishName").value(nullValue()))
-                .andExpect(jsonPath("$.brand.imageUrl").value(nullValue()))
-                .andExpect(jsonPath("$.categories[0].id").value(1L))
-                .andExpect(jsonPath("$.categories[0].child.id").value(2L))
-                .andExpect(jsonPath("$.variants.length()").value(2))
-                .andExpect(jsonPath("$.variants[0].price").value(15000L))
-                .andExpect(jsonPath("$.variants[1].price").value(23000L))
-                .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
-                .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
-                .andExpect(
-                        jsonPath("$.freeOfCodes").value(
-                                org.hamcrest.Matchers.not(
-                                        org.hamcrest.Matchers.hasItem(ExcludeCode.FRAGRANCE_ALLERGENS.name()))))
-                .andExpect(
-                        jsonPath("$.freeOfCodes").value(
-                                org.hamcrest.Matchers.hasItem(ExcludeCode.SULFATES.name())))
-                .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301Z"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(15L))
+            .andExpect(jsonPath("$.brand.id").value(3L))
+            .andExpect(jsonPath("$.brand.englishName").value(nullValue()))
+            .andExpect(jsonPath("$.brand.imageUrl").value(nullValue()))
+            .andExpect(jsonPath("$.categories[0].id").value(1L))
+            .andExpect(jsonPath("$.categories[0].child.id").value(2L))
+            .andExpect(jsonPath("$.variants.length()").value(2))
+            .andExpect(jsonPath("$.variants[0].price").value(15000L))
+            .andExpect(jsonPath("$.variants[1].price").value(23000L))
+            .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
+            .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
+            .andExpect(
+                jsonPath("$.freeOfCodes").value(
+                    org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.hasItem(ExcludeCode.FRAGRANCE_ALLERGENS.name())
+                    )
+                )
+            )
+            .andExpect(
+                jsonPath("$.freeOfCodes").value(
+                    org.hamcrest.Matchers.hasItem(ExcludeCode.SULFATES.name())
+                )
+            )
+            .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301Z"));
     }
 
     @Test
     @DisplayName("존재하지 않는 제품 상세는 404를 반환한다")
     void rejectsUnknownProduct() throws Exception {
         mockMvc.perform(get("/api/products/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value(ErrorCode.PRODUCT_NOT_FOUND.name()));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value(ErrorCode.PRODUCT_NOT_FOUND.name()));
     }
 
     @Test
     @DisplayName("한글 음차 검색어로 라틴 두문자 제품명을 찾는다")
     void findsProductByKoreanReadingOfLatinAcronym() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "피에이치"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pagination.totalElements").value(1L))
-                .andExpect(jsonPath("$.items[0].id").value(15L))
-                .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.pagination.totalElements").value(1L))
+            .andExpect(jsonPath("$.items[0].id").value(15L))
+            .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"));
     }
 
     @Test
     @DisplayName("영문 브랜드명 검색은 그 브랜드의 제품을 반환한다")
     void findsProductsByEnglishBrandName() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "da brand"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pagination.totalElements").value(3L))
-                .andExpect(
-                        jsonPath("$.items[*].brand.id")
-                                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(1))))
-                .andExpect(jsonPath("$.brands.length()").value(1))
-                .andExpect(jsonPath("$.brands[0].englishName").value("DA BRAND"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.pagination.totalElements").value(3L))
+            .andExpect(
+                jsonPath("$.items[*].brand.id")
+                    .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(1)))
+            )
+            .andExpect(jsonPath("$.brands.length()").value(1))
+            .andExpect(jsonPath("$.brands[0].englishName").value("DA BRAND"));
     }
 }

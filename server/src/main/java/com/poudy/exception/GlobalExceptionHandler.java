@@ -38,35 +38,41 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidFeedbackException.class)
     public ResponseEntity<ProblemDetail> handleInvalidFeedbackException(InvalidFeedbackException exception) {
         return problem(
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.INVALID_REQUEST_BODY,
-                ErrorCode.INVALID_REQUEST_BODY.message());
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.INVALID_REQUEST_BODY,
+            ErrorCode.INVALID_REQUEST_BODY.message()
+        );
     }
 
     @ExceptionHandler(ConflictingIngredientFilterException.class)
     public ResponseEntity<ProblemDetail> handleConflictingIngredientFilterException(
-            ConflictingIngredientFilterException exception) {
+        ConflictingIngredientFilterException exception
+    ) {
         return problem(
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.CONFLICTING_INGREDIENT_FILTER,
-                ErrorCode.CONFLICTING_INGREDIENT_FILTER.message());
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.CONFLICTING_INGREDIENT_FILTER,
+            ErrorCode.CONFLICTING_INGREDIENT_FILTER.message()
+        );
     }
 
     @ExceptionHandler(InvalidFeedbackImageException.class)
     public ResponseEntity<ProblemDetail> handleInvalidFeedbackImageException(InvalidFeedbackImageException exception) {
         return problem(
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.INVALID_FEEDBACK_IMAGE,
-                ErrorCode.INVALID_FEEDBACK_IMAGE.message());
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.INVALID_FEEDBACK_IMAGE,
+            ErrorCode.INVALID_FEEDBACK_IMAGE.message()
+        );
     }
 
     @ExceptionHandler(InvalidFeedbackImageIdException.class)
     public ResponseEntity<ProblemDetail> handleInvalidFeedbackImageIdException(
-            InvalidFeedbackImageIdException exception) {
+        InvalidFeedbackImageIdException exception
+    ) {
         return problem(
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.INVALID_FEEDBACK_IMAGE_ID,
-                ErrorCode.INVALID_FEEDBACK_IMAGE_ID.message());
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.INVALID_FEEDBACK_IMAGE_ID,
+            ErrorCode.INVALID_FEEDBACK_IMAGE_ID.message()
+        );
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -83,8 +89,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         retryAfterSeconds = Math.max(1, retryAfterSeconds);
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
-                .body(problemDetail(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.TOO_MANY_REQUESTS, exception.getMessage()));
+            .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
+            .body(problemDetail(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.TOO_MANY_REQUESTS, exception.getMessage()));
     }
 
     @ExceptionHandler(InfrastructureException.class)
@@ -103,25 +109,29 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
-            @NonNull MaxUploadSizeExceededException exception,
-            @NonNull HttpHeaders headers,
-            @NonNull HttpStatusCode status,
-            @NonNull WebRequest request) {
+        @NonNull MaxUploadSizeExceededException exception,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
+    ) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(
-                        problemDetail(
-                                HttpStatus.PAYLOAD_TOO_LARGE,
-                                ErrorCode.PAYLOAD_TOO_LARGE,
-                                ErrorCode.PAYLOAD_TOO_LARGE.message()));
+            .body(
+                problemDetail(
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    ErrorCode.PAYLOAD_TOO_LARGE,
+                    ErrorCode.PAYLOAD_TOO_LARGE.message()
+                )
+            );
     }
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
-            @NonNull Exception exception,
-            Object body,
-            @NonNull HttpHeaders headers,
-            @NonNull HttpStatusCode status,
-            @NonNull WebRequest request) {
+        @NonNull Exception exception,
+        Object body,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
+    ) {
         ResponseEntity<Object> response = super.handleExceptionInternal(exception, body, headers, status, request);
 
         if (response != null && response.getBody() instanceof ProblemDetail problemDetail) {
@@ -161,8 +171,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         if (exception instanceof BindException bindException) {
             return bindException.getAllErrors().stream().map(ObjectError::getDefaultMessage)
-                    .flatMap(message -> ErrorCode.from(message).stream()).findFirst()
-                    .orElse(ErrorCode.INVALID_QUERY_PARAMETER);
+                .flatMap(message -> ErrorCode.from(message).stream()).findFirst()
+                .orElse(ErrorCode.INVALID_QUERY_PARAMETER);
         }
         if (exception instanceof MissingServletRequestPartException) {
             return ErrorCode.INVALID_FEEDBACK_IMAGE;
@@ -173,15 +183,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static boolean readsFeedbackImageId(HttpMessageNotReadableException exception) {
         return exception.getCause() instanceof JacksonException jacksonException
-                && jacksonException.getPath().stream()
-                        .anyMatch(reference -> "imageIds".equals(reference.getPropertyName()));
+            && jacksonException.getPath().stream()
+                .anyMatch(reference -> "imageIds".equals(reference.getPropertyName()));
     }
 
     private ResponseEntity<ProblemDetail> serverError() {
         return problem(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ErrorCode.INTERNAL_SERVER_ERROR,
-                ErrorCode.INTERNAL_SERVER_ERROR.message());
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            ErrorCode.INTERNAL_SERVER_ERROR,
+            ErrorCode.INTERNAL_SERVER_ERROR.message()
+        );
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatusCode status, ErrorCode code, String detail) {

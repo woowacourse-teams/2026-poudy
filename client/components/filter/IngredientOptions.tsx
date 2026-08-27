@@ -5,13 +5,19 @@ import { useState } from "react";
 
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
+import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import { hasMatch, splitByKeyword } from "@/lib/domain/highlight";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
+import { effectColor } from "@/lib/domain/skin-effect-colors";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
+
+/** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
+const VISIBLE_EFFECTS = 3;
 
 const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
   const response = await fetchIngredientSuggestions(keyword);
@@ -113,12 +119,11 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                 const excluded = draft.excludeIngredientIds.includes(item.id);
 
                 return (
-                  <li key={item.id} className="flex h-[58px] items-center gap-1.5 border-b border-[#EEF0F3]">
+                  <li key={item.id} className="flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] py-2">
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                      <span className="truncate text-[12px] font-semibold text-[#212124]">{item.koreanName}</span>
-                      <span className="truncate text-[10px] text-[#868B94]">
-                        {item.skinEffects.map((effect) => effect.name).join(" · ")}
-                      </span>
+                      {/* 자동완성과 같다. 긴 이름은 두 줄까지 보이고 거기서 줄인다. */}
+                      <IngredientName name={item.koreanName} keyword={keyword.trim()} />
+                      <EffectTags effects={item.skinEffects} />
                     </span>
 
                     <span className="flex shrink-0 gap-1.5">
@@ -152,9 +157,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             </h3>
 
             {selectedCount === 0 ? (
-              <p className="flex min-h-25 items-center justify-center text-[13px] text-text-secondary">
-                선택한 성분 없음
-              </p>
+              <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
             ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeIngredientIds.map((id) => (
@@ -198,14 +201,16 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                       role="checkbox"
                       aria-checked={checked}
                       onClick={() => toggleCode(code.code)}
-                      className={`flex h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 text-left ${
-                        checked ? "border-transparent bg-[#F2F3F5]" : "border-[#DDE0E4] bg-[#F7F7F8]"
+                      className={`quick-filter-toggle flex min-h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left ${
+                        checked ? "border-red-200 bg-red-50" : "border-[#DDE0E4] bg-[#F7F7F8]"
                       }`}
                     >
-                      <span className={`flex-1 text-[11px] text-[#4D5159] ${checked ? "font-bold" : "font-semibold"}`}>
+                      <span
+                        className={`flex-1 text-[13px] ${checked ? "font-bold text-red-700" : "font-semibold text-[#4D5159]"}`}
+                      >
                         {code.name}
                       </span>
-                      <CheckMark checked={checked} />
+                      <CheckMark checked={checked} tone="exclude" />
                     </button>
                   </li>
                 );
@@ -215,5 +220,58 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
         </>
       )}
     </>
+  );
+}
+
+/** 자동완성과 같다. 맞는 자리만 진하게 두고, 맞는 자리가 없으면 흐리게 하지 않는다. */
+function IngredientName({ name, keyword }: { readonly name: string; readonly keyword: string }) {
+  const parts = splitByKeyword(name, keyword);
+
+  if (!hasMatch(parts)) {
+    return <span className="line-clamp-2 text-[14px] font-semibold text-[#212124]">{name}</span>;
+  }
+
+  return (
+    <span className="line-clamp-2 text-[14px] text-[#72747A]">
+      {/* 낭독기와 검사 도구에는 온전한 이름 하나로 남긴다. 토막은 눈으로 보는 결에만 쓴다. */}
+      <span className="sr-only">{name}</span>
+      {parts.map((part, at) => (
+        <span key={at} aria-hidden="true" className={part.matched ? "font-bold text-[#212124]" : undefined}>
+          {part.text}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** 자동완성과 같다. 성분이 하는 일을 이름과 다른 생김새의 배지로 가른다. */
+function EffectTags({ effects }: { readonly effects: IngredientResponse["skinEffects"] }) {
+  if (effects.length === 0) return null;
+
+  const shown = effects.slice(0, VISIBLE_EFFECTS);
+  const rest = effects.length - shown.length;
+
+  return (
+    <span className="flex items-center gap-1 overflow-hidden">
+      {shown.map((effect) => {
+        const color = effectColor(effect.code);
+
+        return (
+          <span
+            key={effect.code}
+            className={`flex h-[18px] shrink-0 items-center rounded-[9px] px-1.5 text-[10px] font-semibold ${color.bg} ${color.text}`}
+          >
+            {effect.name}
+          </span>
+        );
+      })}
+
+      {rest > 0 ? (
+        <span className="shrink-0 text-[10px] font-semibold text-text-secondary">
+          <span aria-hidden="true">+{rest}</span>
+          <span className="sr-only">외 {rest}개</span>
+        </span>
+      ) : null}
+    </span>
   );
 }

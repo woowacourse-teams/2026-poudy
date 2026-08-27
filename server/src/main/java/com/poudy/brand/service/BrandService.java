@@ -21,9 +21,10 @@ public class BrandService {
     private final Categories categories;
 
     public BrandService(
-            BrandRepository brandRepository,
-            ProductRepository productRepository,
-            Categories categories) {
+        BrandRepository brandRepository,
+        ProductRepository productRepository,
+        Categories categories
+    ) {
         this.brandRepository = brandRepository;
         this.productRepository = productRepository;
         this.categories = categories;
@@ -36,7 +37,7 @@ public class BrandService {
 
     public BrandProductCounts findBrandDetail(Long brandId) {
         Brand brand = brandRepository.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
 
         return products().brandProductCountsOf(brand, categories);
     }

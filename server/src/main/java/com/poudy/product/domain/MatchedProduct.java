@@ -7,7 +7,7 @@ import java.util.Comparator;
 public record MatchedProduct(Product product, NameRank match) {
 
     private static final Comparator<MatchedProduct> ORDER = Comparator.comparing(MatchedProduct::match)
-            .thenComparing(matched -> matched.product().id());
+        .thenComparing(matched -> matched.product().id());
 
     public static MatchedProduct of(SearchableProduct searchable, SearchKeyword keyword) {
         return new MatchedProduct(searchable.product(), searchable.match(keyword));

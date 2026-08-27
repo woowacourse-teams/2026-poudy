@@ -14,8 +14,8 @@
     <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="4"/>
     <setting id="org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations" value="false"/>
     <setting id="org.eclipse.jdt.core.formatter.indent_empty_lines" value="false"/>
-    <!-- 이어지는 줄 8 칸. Eclipse 는 배수로 적는다. -->
-    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
+    <!-- 이어지는 줄 4 칸. Eclipse 는 배수로 적는다. -->
+    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="1"/>
     <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
     <!--
@@ -103,6 +103,10 @@
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression" value="16"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_for_loop_header" value="16"/>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer" value="48"/>
+    <!-- 줄바꿈된 메서드·생성자 선언은 괄호를 별도 줄에 둔다. delcaration 은 Eclipse 상수의 실제 철자다. -->
+    <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_method_delcaration" value="separate_lines_if_wrapped"/>
+    <!-- 줄바꿈된 메서드 호출은 괄호를 별도 줄에 둔다. -->
+    <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_method_invocation" value="separate_lines_if_wrapped"/>
     <!-- enum 상수는 한 줄에 하나씩 둔다. -->
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="49"/>
     <!-- 연산자를 다음 줄 앞에 둔다. -->

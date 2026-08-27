@@ -16,15 +16,15 @@ import java.util.List;
 import java.util.Map;
 
 public record Product(
-        Long id,
-        String name,
-        Brand brand,
-        Category category,
-        Ingredients ingredients,
-        String imageUrl,
-        ProductVariants variants,
-        ProductSensory sensory,
-        OffsetDateTime updatedAt) {
+    Long id,
+    String name,
+    Brand brand,
+    Category category,
+    Ingredients ingredients,
+    String imageUrl,
+    ProductVariants variants,
+    ProductSensory sensory,
+    OffsetDateTime updatedAt) {
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
@@ -84,11 +84,11 @@ public record Product(
 
     public boolean matches(ProductFilter filter) {
         return matchesCategory(filter.categoryIds())
-                && matchesBrand(filter.brandIds())
-                && matchesAny(filter.moistureLevels(), sensory.moisture())
-                && matchesAny(filter.oilLevels(), sensory.oil())
-                && ingredients.containsAll(filter.ingredientFilter().includedIds())
-                && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
+            && matchesBrand(filter.brandIds())
+            && matchesAny(filter.moistureLevels(), sensory.moisture())
+            && matchesAny(filter.oilLevels(), sensory.oil())
+            && ingredients.containsAll(filter.ingredientFilter().includedIds())
+            && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
     }
 
     public Integer moistureLevel() {
@@ -108,20 +108,22 @@ public record Product(
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
                 SkinEffectGroupAccumulator group = groups.computeIfAbsent(
-                        effect.id(),
-                        ignored -> new SkinEffectGroupAccumulator(effect));
+                    effect.id(),
+                    ignored -> new SkinEffectGroupAccumulator(effect)
+                );
                 group.add(ingredient.id());
             }
         }
 
         return groups.values().stream()
-                .map(SkinEffectGroupAccumulator::toGroup)
-                .sorted(
-                        Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
-                                .reversed()
-                                .thenComparing(group -> group.effect().id()))
-                .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
-                .toList();
+            .map(SkinEffectGroupAccumulator::toGroup)
+            .sorted(
+                Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
+                    .reversed()
+                    .thenComparing(group -> group.effect().id())
+            )
+            .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
+            .toList();
     }
 
     private static class SkinEffectGroupAccumulator {
@@ -144,8 +146,8 @@ public record Product(
 
     private boolean matchesCategory(List<Long> categoryIds) {
         return categoryIds.isEmpty()
-                || categoryIds.contains(category.id())
-                || categoryIds.contains(category.parentId());
+            || categoryIds.contains(category.id())
+            || categoryIds.contains(category.parentId());
     }
 
     private boolean matchesBrand(List<Long> brandIds) {

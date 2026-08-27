@@ -26,9 +26,10 @@ public class DiscordProductRequestNotifier {
     private final String webhookUrl;
 
     public DiscordProductRequestNotifier(
-            HttpClient httpClient,
-            ObjectMapper objectMapper,
-            @Value("${poudy.product-request.discord.webhook-url:}") String webhookUrl) {
+        HttpClient httpClient,
+        ObjectMapper objectMapper,
+        @Value("${poudy.product-request.discord.webhook-url:}") String webhookUrl
+    ) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.webhookUrl = webhookUrl.trim();
@@ -40,24 +41,26 @@ public class DiscordProductRequestNotifier {
         }
 
         HttpRequest httpRequest = HttpRequest.newBuilder(URI.create(webhookUrl))
-                .timeout(REQUEST_TIMEOUT)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(payload(request)))
-                .build();
+            .timeout(REQUEST_TIMEOUT)
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(payload(request)))
+            .build();
 
         try {
             HttpResponse<Void> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new InfrastructureException(
-                        "제품 등록 요청 Discord 알림이 실패했습니다. status=" + response.statusCode());
+                    "제품 등록 요청 Discord 알림이 실패했습니다. status=" + response.statusCode()
+                );
             }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new InfrastructureException("제품 등록 요청 Discord 알림이 중단되었습니다.");
         } catch (IOException exception) {
             throw new InfrastructureException(
-                    "제품 등록 요청 Discord 알림을 전송하지 못했습니다. cause="
-                            + exception.getClass().getSimpleName());
+                "제품 등록 요청 Discord 알림을 전송하지 못했습니다. cause="
+                    + exception.getClass().getSimpleName()
+            );
         }
     }
 
@@ -72,10 +75,11 @@ public class DiscordProductRequestNotifier {
     private String payload(ProductRequest request) {
         String brandLine = brandLineOf(request);
         Map<String, Object> payload = Map.of(
-                "content",
-                "신규 제품 등록 요청\n제품명: " + request.productName() + brandLine,
-                "allowed_mentions",
-                Map.of("parse", List.of()));
+            "content",
+            "신규 제품 등록 요청\n제품명: " + request.productName() + brandLine,
+            "allowed_mentions",
+            Map.of("parse", List.of())
+        );
 
         try {
             return objectMapper.writeValueAsString(payload);

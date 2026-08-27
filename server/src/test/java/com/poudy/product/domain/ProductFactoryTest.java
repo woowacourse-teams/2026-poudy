@@ -32,21 +32,25 @@ class ProductFactoryTest {
         ProductFactory factory = new ProductFactory(estimator);
 
         Product product = factory.create(
-                1L,
-                "제품",
-                new Brand(1L, "브랜드", null, null),
-                category,
-                ingredients,
-                "https://example.com/product.png",
-                new ProductVariants(
-                        List.of(
-                                new ProductVariant(
-                                        1L,
-                                        10000L,
-                                        new BigDecimal("100"),
-                                        "ml",
-                                        "active"))),
-                OffsetDateTime.parse("2026-08-01T00:00:00Z"));
+            1L,
+            "제품",
+            new Brand(1L, "브랜드", null, null),
+            category,
+            ingredients,
+            "https://example.com/product.png",
+            new ProductVariants(
+                List.of(
+                    new ProductVariant(
+                        1L,
+                        10000L,
+                        new BigDecimal("100"),
+                        "ml",
+                        "active"
+                    )
+                )
+            ),
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+        );
 
         assertThat(product.sensory()).isSameAs(sensory);
         verify(estimator).estimate(category, ingredients);
@@ -56,7 +60,7 @@ class ProductFactoryTest {
     @DisplayName("감각 추론기가 없으면 만들 수 없다")
     void rejectsMissingEstimator() {
         assertThatThrownBy(() -> new ProductFactory(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("제품 감각 추론기가 필요합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("제품 감각 추론기가 필요합니다.");
     }
 }

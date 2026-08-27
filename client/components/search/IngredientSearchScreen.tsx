@@ -80,7 +80,12 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
       {/* bottom-18 은 하단 네비게이션 높이다. 0 으로 두면 네비가 이 블록을 가린다. */}
       {total > 0 ? (
         <div className="sticky bottom-18 border-t border-border bg-white p-4">
-          <p className="pb-2 text-[12px] text-text-secondary">{summary}</p>
+          {/*
+            제품 목록의 `탐색 조건` 요약과 같은 글자결로 둔다. 제목과 개수 배지는 두지
+            않는다. 바로 아래 버튼이 이미 조건에 맞는 개수를 말하고 있어, 조건 수까지
+            함께 세우면 숫자 둘이 나란히 서서 어느 쪽이 결과인지 헷갈린다.
+          */}
+          <p className="pb-2 text-[12px] text-[#767B83]">{summary}</p>
           {/*
             막을 때도 Link 를 걷어 내지 않는다. 감싸는 것이 바뀌면 React 가 안쪽을 새로
             만들어, 새 개수가 도착하는 그 순간 다이얼이 다시 태어나 구르지 못한다.
@@ -91,10 +96,17 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
             aria-disabled={blocked}
             tabIndex={blocked ? -1 : undefined}
             onClick={(event) => {
-              if (blocked) {
+              if (blocked || count === undefined) {
                 event.preventDefault();
                 return;
               }
+              track("search_submitted", {
+                mode: "ingredient",
+                result_count: count,
+                include_count: filter.includeIngredientIds.length,
+                exclude_count: filter.excludeIngredientIds.length,
+                exclude_group_count: filter.excludeCodes.length,
+              });
               addRecentFilter({
                 query: serializeFilter(filter).toString(),
                 summary,

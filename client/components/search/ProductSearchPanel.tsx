@@ -17,6 +17,8 @@ import {
   clearRecentSearches,
   getRecentSearchesServerSnapshot,
   getRecentSearchesSnapshot,
+  type RecentSearch,
+  recentSearchId,
   removeRecentSearch,
   subscribeRecentSearches,
 } from "@/lib/storage/recent-searches";
@@ -52,6 +54,7 @@ export function ProductSearchPanel() {
 
     sent.current = trimmed;
     track("search_submitted", { mode: "product", query: trimmed, result_count: total });
+    addRecentSearch({ kind: "keyword", keyword: trimmed });
     router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
   }, [router, total, trimmed]);
 
@@ -102,7 +105,8 @@ export function ProductSearchPanel() {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    /* 입력 묶음과 그 아래 목록은 서로 다른 덩어리라 넉넉히 벌린다. */
+    <div className="flex flex-col gap-6 p-4">
       <div className="flex flex-col gap-2">
         <SearchField
           value={keyword}
@@ -111,12 +115,17 @@ export function ProductSearchPanel() {
           label="제품명 검색"
           onSubmit={handleSubmit}
         />
-        <p aria-live="polite" className="text-[12px] text-text-secondary">
+        {/*
+          입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
+          자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
+          검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
+        */}
+        <p aria-live="polite" className="text-[12px] text-text-secondary empty:hidden">
           {waiting
             ? "검색 결과를 확인하고 있어요…"
             : typing
               ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
-              : "제품명을 입력하면 일치하는 제품을 바로 보여드려요."}
+              : ""}
         </p>
       </div>
 
@@ -131,7 +140,10 @@ export function ProductSearchPanel() {
           ) : (
             <Link
               href={`/products?keyword=${encodeURIComponent(trimmed)}`}
-              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 })}
+              onClick={() => {
+                track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 });
+                addRecentSearch({ kind: "keyword", keyword: trimmed });
+              }}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
             >
               <Icon name="search" size={18} className="text-text-secondary" />
@@ -169,6 +181,7 @@ export function ProductSearchPanel() {
                           product_id: item.id,
                         });
                         addRecentSearch({
+                          kind: "product",
                           productId: item.id,
                           name: item.name,
                           brandName: item.brandName,
@@ -201,10 +214,6 @@ export function ProductSearchPanel() {
               ) : null}
             </section>
           )}
-
-          {empty ? null : (
-            <p className="text-[11px] text-text-secondary">검색어는 목록으로, 제품 선택은 상세 화면으로 이동해요.</p>
-          )}
         </>
       ) : (
         <RecentSearches items={recent} />
@@ -213,17 +222,14 @@ export function ProductSearchPanel() {
   );
 }
 
-function RecentSearches({
-  items,
-}: {
-  readonly items: readonly { productId: number; name: string; brandName: string }[];
-}) {
+function RecentSearches({ items }: { readonly items: readonly RecentSearch[] }) {
   if (items.length === 0) return null;
 
   return (
     <>
       <section>
-        <div className="flex items-center justify-between pb-2">
+        {/* 제목과 그 아래 목록은 한 덩어리라 바짝 붙인다. */}
+        <div className="flex items-center justify-between pb-1">
           <h2 className="text-[15px] font-bold text-text-primary">최근 검색</h2>
           <button type="button" onClick={clearRecentSearches} className="text-[12px] font-medium text-text-secondary">
             전체 삭제
@@ -231,30 +237,54 @@ function RecentSearches({
         </div>
 
         <ul className="divide-y divide-divider">
-          {items.map((item, index) => (
-            <li key={item.productId} className="flex items-center gap-2 py-3">
-              <Link
-                href={`/products/${item.productId}?from=recent_search`}
-                onClick={() => track("recent_search_used", { position: index, product_id: item.productId })}
-                className="flex flex-1 flex-col gap-0.5"
-              >
-                <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
-                <span className="text-[11px] text-text-secondary">{item.brandName}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => removeRecentSearch(item.productId)}
-                aria-label={`${item.name} 최근 검색에서 삭제`}
-                className="flex size-8 items-center justify-center"
-              >
-                <Icon name="x" size={14} className="text-text-secondary" />
-              </button>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const id = recentSearchId(item);
+            /* 제품은 그 상세로, 검색어는 그 말의 결과 목록으로 되돌아간다. */
+            const label = item.kind === "product" ? item.name : item.keyword;
+            const href =
+              item.kind === "product"
+                ? `/products/${item.productId}?from=recent_search`
+                : `/products?keyword=${encodeURIComponent(item.keyword)}`;
+
+            return (
+              <li key={id} className="flex items-center gap-2 py-3">
+                <Link
+                  href={href}
+                  onClick={() =>
+                    track(
+                      "recent_search_used",
+                      item.kind === "product"
+                        ? { target_type: "product", position: index, product_id: item.productId }
+                        : { target_type: "keyword", position: index, query: item.keyword },
+                    )
+                  }
+                  className="flex min-w-0 flex-1 items-center gap-2"
+                >
+                  {/* 검색어는 무엇으로 되돌아가는지 그림으로도 알린다. 제품은 이름과 브랜드가 그 일을 한다. */}
+                  {item.kind === "keyword" ? (
+                    <Icon name="search" size={14} className="shrink-0 text-text-secondary" />
+                  ) : null}
+
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-[13px] font-semibold text-text-primary">{label}</span>
+                    {item.kind === "product" ? (
+                      <span className="truncate text-[11px] text-text-secondary">{item.brandName}</span>
+                    ) : null}
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => removeRecentSearch(id)}
+                  aria-label={`${label} 최근 검색에서 삭제`}
+                  className="flex size-8 items-center justify-center"
+                >
+                  <Icon name="x" size={14} className="text-text-secondary" />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
-
-      <p className="text-[11px] text-text-secondary">최근 선택한 제품을 다시 확인할 수 있어요.</p>
     </>
   );
 }

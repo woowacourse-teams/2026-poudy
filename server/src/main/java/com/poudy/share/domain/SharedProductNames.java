@@ -15,10 +15,11 @@ public class SharedProductNames {
 
     public static SharedProductNames of(ShareText text, Brands brands) {
         return new SharedProductNames(
-                text.productPhrases().stream()
-                        .map(phrase -> SharedProductName.of(phrase, brands))
-                        .filter(name -> !name.isEmpty())
-                        .toList());
+            text.productPhrases().stream()
+                .map(phrase -> SharedProductName.of(phrase, brands))
+                .filter(name -> !name.isEmpty())
+                .toList()
+        );
     }
 
     public boolean isEmpty() {

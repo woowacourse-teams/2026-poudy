@@ -17,12 +17,12 @@ class TagRepositoryTest {
         TagRepository repository = new TagRepository(new JsonDataReader(new DefaultResourceLoader()));
 
         assertThat(repository.findAll().findById(47L))
-                .get()
-                .satisfies(tag -> {
-                    assertThat(tag.id()).isEqualTo(47L);
-                    assertThat(tag.isOf(TagCategory.BIOLOGICAL_EFFECT)).isTrue();
-                    assertThat(tag.code()).isEqualTo("ANTIOXIDANT_RELATED");
-                    assertThat(tag.name()).isEqualTo("항산화 관련");
-                });
+            .get()
+            .satisfies(tag -> {
+                assertThat(tag.id()).isEqualTo(47L);
+                assertThat(tag.isOf(TagCategory.BIOLOGICAL_EFFECT)).isTrue();
+                assertThat(tag.code()).isEqualTo("ANTIOXIDANT_RELATED");
+                assertThat(tag.name()).isEqualTo("항산화 관련");
+            });
     }
 }

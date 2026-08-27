@@ -1,5 +1,59 @@
 # MVP 인프라 로그·모니터링
 
+## 현재 적용 상태
+
+2026-08-27 기준 production 1차 모니터링 구성이 실제 AWS 환경에 적용되어 있습니다.
+이 문서의 아래 적용 절차는 재구성·검증·장애 대응을 위한 운영 기준으로 사용합니다.
+
+### 운영 대상
+
+- 리전: `ap-northeast-2`
+- 프론트엔드 EC2: `i-0b3254c52503db10f`
+  - Elastic IP: `54.116.229.77`
+  - Private IP: `10.0.0.57`
+- 백엔드 EC2: `i-0192ed4a2f51748fe`
+  - 현재 Public IP: `16.184.16.46` (Elastic IP 아님)
+  - Private IP: `10.0.3.84`
+- EC2 IAM role: `ec2-project`
+- Security Group: `project-public`
+
+백엔드 `:8080` 외부 접근 차단은 현재 의도적으로 보류 중입니다. 외부 모니터링과
+프론트 Nginx의 백엔드 연결은 백엔드 Public IP가 아니라 운영 도메인과 Private IP
+경로를 사용합니다.
+
+### 적용 완료 항목
+
+- 프론트·백엔드 EC2에 CloudWatch Agent 설치 및 설정 완료
+- Agent 상태: `running`, Config status: `configured`
+- 지표 namespace: `Poudy/Infra`, 수집 주기: 60초
+- 수집 지표: 메모리, 루트 디스크, 프로세스 생존 지표
+- 프론트 로그: Nginx access/error, CodeDeploy Agent/deployment, Certbot
+- 백엔드 로그: CodeDeploy Agent/deployment
+- 애플리케이션 stdout/stderr journal은 중앙 수집하지 않음
+- 로컬 journald 보존: 14일·200MB 상한
+- CloudWatch Logs 보존: 14일
+- Dashboard: `DASHBOARD-poudy-prod`
+- SNS Topic: `poudy-infra-alerts`
+  - ARN: `arn:aws:sns:ap-northeast-2:843255971531:poudy-infra-alerts`
+- Grafana Public Probe:
+  - `https://poudy.site/categories`
+  - `https://poudy.site/api/categories`
+
+### 현재 CloudWatch Alarm
+
+정상 동작까지 확인한 알람은 다음과 같습니다.
+
+- 프론트엔드 메모리: `mem_used_percent > 85%`
+- 백엔드 메모리: `mem_used_percent > 85%`
+- 프론트엔드 디스크: `used_percent > 80%`
+- 백엔드 디스크: `used_percent > 80%`
+- 프론트엔드 EC2 Status Check: `StatusCheckFailed > 0`
+- 백엔드 EC2 Status Check: `StatusCheckFailed > 0`
+
+CPU·프로세스 알람은 현재 Grafana 공개 경로 모니터링과의 중복을 고려해 구성하지
+않았습니다. CodeDeploy 배포 실패 이벤트의 SNS 연결과 Nginx 5xx metric filter도
+현재 범위에서는 구성하지 않았습니다.
+
 ## 결정
 
 단일 프론트 EC2와 백엔드 EC2의 MVP에는 APM, OpenTelemetry, 별도 로그 SaaS를 도입하지
@@ -12,7 +66,8 @@
 - 외부 경로: Grafana Cloud Synthetic Monitoring의 Public Probe로 `/categories`와
   `/api/categories`를 각각 확인하고 Grafana 알림으로 알립니다. 이 Probe는 공개 HTTPS
   엔드포인트를 호출하므로 VPC·Subnet·Security Group을 새로 선택하지 않습니다.
-- 배포 실패: CodeDeploy deployment state-change 이벤트를 SNS에 연결합니다.
+- 배포 실패: 현재는 CodeDeploy 콘솔에서 확인합니다. CodeDeploy state-change 이벤트의
+  SNS 연결은 팀 결정에 따라 구성하지 않습니다.
 
 Next.js와 Spring Boot의 stdout/stderr journal은 중앙 수집하지 않습니다. 이 범위는
 인프라 장애 대응에 필요한 신호만 남기고, 애플리케이션 로그의 개인정보·예외 내용이
@@ -23,12 +78,12 @@ CloudWatch로 퍼지는 것을 막기 위한 의도적인 선택입니다. PostH
 
 | 대상 | 위치 | 현재 보존 | MVP 처리 |
 | --- | --- | --- | --- |
-| Nginx access/error | `/var/log/nginx/access.log`, `/var/log/nginx/error.log` | 호스트 파일/배포 이미지 기본 정책 | CloudWatch Logs 14일 |
-| Next.js systemd | `journalctl -u poudy-frontend.service` | 명시적 설정 없음 | 로컬 journald 14일 |
-| Spring Boot systemd | `journalctl -u poudy-backend.service` | 명시적 설정 없음 | 로컬 journald 14일 |
+| Nginx access/error | `/var/log/nginx/access.log`, `/var/log/nginx/error.log` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
+| Next.js systemd | `journalctl -u poudy-frontend.service` | journald 14일·200MB | 중앙 수집하지 않음 |
+| Spring Boot systemd | `journalctl -u poudy-backend.service` | journald 14일·200MB | 중앙 수집하지 않음 |
 | CodeDeploy | `/var/log/aws/codedeploy-agent/`, `/opt/codedeploy-agent/deployment-root/deployment-logs/` | Agent 기본 회전·정리 | CloudWatch Logs 14일 |
-| CodeBuild | `/aws/codebuild/project-2026` | AWS 콘솔 설정 의존 | CloudWatch Logs 14일 |
-| Certbot | `/var/log/letsencrypt/`, `journalctl -u certbot.timer` | 호스트 기본 정책 | CloudWatch Logs 14일 |
+| CodeBuild | `/aws/codebuild/project-2026` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
+| Certbot | `/var/log/letsencrypt/`, `journalctl -u certbot.timer` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
 
 CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고, CodeDeploy 콘솔의
 배포 상태 이벤트를 장애 알림의 기준으로 삼습니다. CodeBuild는 이미 CloudWatch Logs를
@@ -43,25 +98,33 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 템플릿에는 애플리케이션 journal이 없습니다. 로그 그룹은 무기한 보존으로 만들어지지
 않도록 아래의 사전 생성 명령으로 14일 보존을 먼저 설정합니다.
 
-## 적용 순서
+## 적용·재검증 순서
 
-아래 명령의 `<ACCOUNT_ID>`, `<SNS_TOPIC_ARN>`, `<FRONTEND_INSTANCE_ID>`,
-`<BACKEND_INSTANCE_ID>`를 실제 값으로 치환합니다. 모든 AWS 명령은
-`ap-northeast-2`에서 실행합니다.
+아래 명령은 현재 구성을 처음 적용하거나 재검증할 때 사용합니다. 모든 AWS 명령은
+`ap-northeast-2`에서 실행합니다. 계정 ID와 production 인스턴스 ID는 현재 환경에
+맞춰 반영되어 있습니다.
 
-### 0. 백엔드 `:8080` public 접근 확인
+### 0. 백엔드 `:8080` 상태 확인
+
+현재 외부 접근 차단은 보류 중이므로 이 단계에서는 상태만 기록하고 보안 그룹을
+변경하지 않습니다. 차단을 진행할 때는 프론트 Private 경로 검증을 먼저 수행해야 합니다.
 
 보안 그룹을 바꾸기 전에 현재 연결과 SSH 세션을 보존합니다. 먼저 AWS에서 백엔드의
 보안 그룹과 `8080` 규칙을 확인합니다.
 
 ```bash
 aws ec2 describe-instances \
-  --instance-ids <BACKEND_INSTANCE_ID> \
+  --instance-ids i-0192ed4a2f51748fe \
   --query 'Reservations[0].Instances[0].SecurityGroups[*].GroupId' \
   --output text --region ap-northeast-2
 
+BACKEND_SG_ID="$(aws ec2 describe-instances \
+  --instance-ids i-0192ed4a2f51748fe \
+  --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' \
+  --output text --region ap-northeast-2)"
+
 aws ec2 describe-security-groups \
-  --group-ids <BACKEND_SECURITY_GROUP_ID> \
+  --group-ids "$BACKEND_SG_ID" \
   --query 'SecurityGroups[0].IpPermissions[?FromPort==`8080`]' \
   --output json --region ap-northeast-2
 ```
@@ -80,27 +143,23 @@ sudo nft list ruleset
 timeout/refused여야 프론트 프록시 경로만 남은 상태입니다.
 
 ```bash
-curl -i --connect-timeout 5 http://<BACKEND_PUBLIC_IPV4>:8080/actuator/health
+curl -i --connect-timeout 5 http://16.184.16.46:8080/actuator/health
 ```
 
-public 허용 규칙이 확인되면 먼저 프론트 EC2의 사설 경로가 정상인지 별도 세션에서
-검증한 뒤, 실제 `0.0.0.0/0` 규칙에 한해서만 제거합니다. SSH `22` 규칙은 건드리지
-않습니다.
+현재는 위 상태를 알려진 보류 사항으로 관리합니다. 향후 차단할 때도 SSH `22` 규칙은
+건드리지 않습니다.
 
 ```bash
 curl --fail --silent --show-error \
   --resolve poudy.site:443:127.0.0.1 \
   https://poudy.site/api/categories
 
-aws ec2 revoke-security-group-ingress \
-  --group-id <BACKEND_SECURITY_GROUP_ID> \
-  --protocol tcp --port 8080 --cidr 0.0.0.0/0 \
-  --region ap-northeast-2
 ```
 
 ### 1. IAM과 로그 그룹
 
-EC2 role `ec2-project`에 별도 inline policy를 추가합니다. `CloudWatchAgentServerPolicy`
+현재 `ec2-project` role과 로그 그룹 적용이 완료되었습니다. 새 환경이나 권한 오류가
+확인될 때만 아래 최소 권한을 기준으로 검토합니다. `CloudWatchAgentServerPolicy`
 전체 권한을 그대로 추가하는 대신, 미리 로그 그룹과 보존 정책을 만든 뒤 아래 최소 권한만
 부여합니다.
 
@@ -117,10 +176,10 @@ EC2 role `ec2-project`에 별도 inline policy를 추가합니다. `CloudWatchAg
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs:ap-northeast-2:<ACCOUNT_ID>:log-group:/poudy/prod/infra/frontend/nginx:log-stream:*",
-        "arn:aws:logs:ap-northeast-2:<ACCOUNT_ID>:log-group:/poudy/prod/infra/frontend/codedeploy:log-stream:*",
-        "arn:aws:logs:ap-northeast-2:<ACCOUNT_ID>:log-group:/poudy/prod/infra/frontend/certbot:log-stream:*",
-        "arn:aws:logs:ap-northeast-2:<ACCOUNT_ID>:log-group:/poudy/prod/infra/backend/codedeploy:log-stream:*"
+        "arn:aws:logs:ap-northeast-2:843255971531:log-group:/poudy/prod/infra/frontend/nginx:log-stream:*",
+        "arn:aws:logs:ap-northeast-2:843255971531:log-group:/poudy/prod/infra/frontend/codedeploy:log-stream:*",
+        "arn:aws:logs:ap-northeast-2:843255971531:log-group:/poudy/prod/infra/frontend/certbot:log-stream:*",
+        "arn:aws:logs:ap-northeast-2:843255971531:log-group:/poudy/prod/infra/backend/codedeploy:log-stream:*"
       ]
     },
     {
@@ -208,13 +267,16 @@ sudo journalctl -u amazon-cloudwatch-agent --since '30 minutes ago' --no-pager
 sudo tail -n 100 /opt/aws/amazon-cloudwatch-agent/logs/configuration-validation.log
 ```
 
-### 4. 알람
+### 4. 알람과 알림
 
-SNS topic을 만들고 이메일 구독 확인을 먼저 끝냅니다.
+현재 SNS topic 생성, 이메일 구독 확인, CloudWatch Alarm의 In alarm 알림 테스트까지
+완료되었습니다. 구성을 재생성할 때만 다음 절차를 사용합니다.
 
 ```bash
 aws sns create-topic --name poudy-infra-alerts --region ap-northeast-2
-aws sns subscribe --topic-arn <SNS_TOPIC_ARN> --protocol email \
+aws sns subscribe \
+  --topic-arn arn:aws:sns:ap-northeast-2:843255971531:poudy-infra-alerts \
+  --protocol email \
   --notification-endpoint <운영_알림_이메일> --region ap-northeast-2
 ```
 
@@ -224,13 +286,12 @@ aws sns subscribe --topic-arn <SNS_TOPIC_ARN> --protocol email \
 | --- | --- | --- |
 | HTTPS + Next.js | Grafana Public Probe `GET /categories`, 5분·연속 3회 실패 | 체크 실패 또는 timeout, 15분 |
 | HTTPS + Nginx + Spring Boot | Grafana Public Probe `GET /api/categories`, 5분·연속 3회 실패 | 체크 실패 또는 timeout, 15분 |
-| Nginx 5xx | `/poudy/prod/infra/frontend/nginx` metric filter | 5분 합계 `> 0` |
-| CPU | `AWS/EC2 CPUUtilization` | 평균 `> 80%`, 5분 3회 |
 | 메모리 | `Poudy/Infra mem_used_percent` | 최대 `> 85%`, 1분 5회 |
 | 디스크 | `Poudy/Infra disk_used_percent` | 최대 `> 80%`, 1분 3회 |
-| Next.js/Spring/CodeDeploy Agent | `Poudy/Infra procstat_lookup_pid_count` | 대상 프로세스 `0`, 2회 |
 | EC2 장애 | `AWS/EC2 StatusCheckFailed` | 합계 `> 0`, 2회 |
-| 배포 실패 | CodeDeploy state-change → SNS | `FAILED` 즉시 |
+
+CPU·프로세스·Nginx 5xx·CodeDeploy 실패 알람은 현재 구성하지 않았습니다. Grafana가
+공개 경로의 서비스 상태를 담당하고, CodeDeploy 실패는 콘솔에서 확인합니다.
 
 ### 외부 HTTPS 체크 설정
 
@@ -275,10 +336,9 @@ aws logs put-metric-filter \
   --region ap-northeast-2
 ```
 
-CodeDeploy 실패 알림은 각 애플리케이션의 CodeDeploy notification rule에서 `Failed`
-이벤트와 SNS topic을 선택하거나, EventBridge의 `CodeDeploy Deployment State-change
-Notification` 이벤트를 SNS target에 연결합니다. 로그의 `ERROR` 문자열을 파싱하는 것보다
-배포 실패 자체를 정확히 감지합니다.
+CodeDeploy 실패 SNS 알림은 현재 구성하지 않습니다. 필요해질 때 각 애플리케이션의
+CodeDeploy notification rule 또는 EventBridge state-change 이벤트를 기존 SNS topic에
+연결합니다.
 
 ## 보안 정책
 

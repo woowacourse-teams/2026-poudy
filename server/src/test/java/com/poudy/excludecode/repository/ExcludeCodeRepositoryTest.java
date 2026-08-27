@@ -30,7 +30,7 @@ class ExcludeCodeRepositoryTest {
         List<ExcludeCodeMapping> mappings = excludeCodeRepository.findAll();
 
         assertThat(mappings).extracting(ExcludeCodeMapping::code)
-                .containsExactlyInAnyOrder(ExcludeCode.values());
+            .containsExactlyInAnyOrder(ExcludeCode.values());
         assertThat(mappings).allSatisfy(mapping -> assertThat(mapping.ingredientIds()).isNotEmpty());
     }
 
@@ -38,16 +38,16 @@ class ExcludeCodeRepositoryTest {
     @DisplayName("모르는 성분군 코드가 있으면 로딩에 실패한다")
     void rejectsUnknownCode() {
         assertThatThrownBy(() -> load("""
-                {"exclude_codes":[{"code":"UNKNOWN_CODE","ingredient_ids":[1]}]}
-                """)).isInstanceOf(InfrastructureException.class);
+            {"exclude_codes":[{"code":"UNKNOWN_CODE","ingredient_ids":[1]}]}
+            """)).isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("성분 ID 가 비어 있으면 로딩에 실패한다")
     void rejectsNullIngredientId() {
         assertThatThrownBy(() -> load("""
-                {"exclude_codes":[{"code":"SULFATES","ingredient_ids":[1,null]}]}
-                """)).isInstanceOf(InfrastructureException.class);
+            {"exclude_codes":[{"code":"SULFATES","ingredient_ids":[1,null]}]}
+            """)).isInstanceOf(InfrastructureException.class);
     }
 
     private static ExcludeCodeRepository load(String excludeCodeData) {

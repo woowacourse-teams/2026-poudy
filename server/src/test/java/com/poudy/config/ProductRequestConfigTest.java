@@ -16,9 +16,9 @@ class ProductRequestConfigTest {
 
         try (S3Client client = config.productRequestS3Client("ap-northeast-2")) {
             assertThat(client.serviceClientConfiguration().overrideConfiguration().apiCallTimeout())
-                    .contains(ProductRequestConfig.S3_API_CALL_TIMEOUT);
+                .contains(ProductRequestConfig.S3_API_CALL_TIMEOUT);
             assertThat(client.serviceClientConfiguration().overrideConfiguration().apiCallAttemptTimeout())
-                    .contains(ProductRequestConfig.S3_API_CALL_ATTEMPT_TIMEOUT);
+                .contains(ProductRequestConfig.S3_API_CALL_ATTEMPT_TIMEOUT);
         }
     }
 }

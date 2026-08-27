@@ -46,20 +46,22 @@ class S3FeedbackRepositoryTest {
     private static final UUID ID = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
     private static final Instant NOW = Instant.parse("2026-08-23T07:20:30Z");
     private static final Feedback FEEDBACK = new Feedback(
-            ID,
-            FeedbackType.DATA_CORRECTION,
-            new FeedbackContent("제품 정보가 실제 패키지와 달라요."),
-            new FeedbackPath("/products/12345"),
-            OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+        ID,
+        FeedbackType.DATA_CORRECTION,
+        new FeedbackContent("제품 정보가 실제 패키지와 달라요."),
+        new FeedbackPath("/products/12345"),
+        OffsetDateTime.parse("2026-08-23T16:20:30+09:00")
+    );
 
     private final S3Client s3Client = mock(S3Client.class);
     private final S3FeedbackObjectStore objectStore = new S3FeedbackObjectStore(s3Client, BUCKET);
     private final S3FeedbackImageRepository imageRepository = mock(S3FeedbackImageRepository.class);
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private final S3FeedbackRepository repository = new S3FeedbackRepository(
-            objectStore,
-            imageRepository,
-            objectMapper);
+        objectStore,
+        imageRepository,
+        objectMapper
+    );
 
     @Test
     @DisplayName("접수 ID를 객체 키로 사용해 UTF-8 JSON을 저장한다")
@@ -92,9 +94,9 @@ class S3FeedbackRepositoryTest {
     @DisplayName("S3 업로드 실패를 인프라 예외로 변환한다")
     void wrapsS3Failure() {
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(SdkClientException.create("S3 실패"));
+            .willThrow(SdkClientException.create("S3 실패"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .willReturn(ListObjectsV2Response.builder().contents(java.util.List.of()).build());
+            .willReturn(ListObjectsV2Response.builder().contents(java.util.List.of()).build());
 
         assertThatThrownBy(() -> repository.save(FEEDBACK)).isInstanceOf(InfrastructureException.class);
     }
@@ -104,20 +106,24 @@ class S3FeedbackRepositoryTest {
     void confirmsCommitAfterLostPutResponse() {
         S3FeedbackRepository.PreparedDocument document = repository.prepare(FEEDBACK);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(SdkClientException.create("timeout"));
+            .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .willReturn(
-                        ListObjectsV2Response.builder()
-                                .contents(
-                                        S3Object.builder()
-                                                .key("poudy/feedback/" + ID + "/feedback.json")
-                                                .build())
-                                .build());
+            .willReturn(
+                ListObjectsV2Response.builder()
+                    .contents(
+                        S3Object.builder()
+                            .key("poudy/feedback/" + ID + "/feedback.json")
+                            .build()
+                    )
+                    .build()
+            );
         given(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
-                .willReturn(
-                        ResponseBytes.fromByteArray(
-                                GetObjectResponse.builder().build(),
-                                document.bytes()));
+            .willReturn(
+                ResponseBytes.fromByteArray(
+                    GetObjectResponse.builder().build(),
+                    document.bytes()
+                )
+            );
 
         assertThat(repository.save(FEEDBACK, document)).isEqualTo(S3FeedbackRepository.SaveStatus.SUCCESS);
     }
@@ -127,9 +133,9 @@ class S3FeedbackRepositoryTest {
     void keepsUnknownCommitOutcome() {
         S3FeedbackRepository.PreparedDocument document = repository.prepare(FEEDBACK);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(SdkClientException.create("timeout"));
+            .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .willThrow(SdkClientException.create("access denied"));
+            .willThrow(SdkClientException.create("access denied"));
 
         assertThat(repository.save(FEEDBACK, document)).isEqualTo(S3FeedbackRepository.SaveStatus.UNKNOWN);
     }
@@ -161,12 +167,12 @@ class S3FeedbackRepositoryTest {
         given(imageRepository.resolve(List.of(imageId), NOW)).willReturn(List.of(pending));
         given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any(), any())).willReturn(claim);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(SdkClientException.create("timeout"));
+            .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .willReturn(ListObjectsV2Response.builder().contents(List.of()).build());
+            .willReturn(ListObjectsV2Response.builder().contents(List.of()).build());
 
         assertThatThrownBy(() -> repository.save(FEEDBACK, List.of(imageId), () -> NOW))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
 
         verify(imageRepository).rollback(claim);
     }
@@ -181,12 +187,12 @@ class S3FeedbackRepositoryTest {
         given(imageRepository.resolve(List.of(imageId), NOW)).willReturn(List.of(pending));
         given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any(), any())).willReturn(claim);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .willThrow(SdkClientException.create("timeout"));
+            .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .willThrow(SdkClientException.create("access denied"));
+            .willThrow(SdkClientException.create("access denied"));
 
         assertThatThrownBy(() -> repository.save(FEEDBACK, List.of(imageId), () -> NOW))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
 
         verify(imageRepository, never()).rollback(any());
         verify(imageRepository, never()).commit(any());

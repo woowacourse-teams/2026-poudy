@@ -7,13 +7,14 @@ import java.util.Comparator;
 public record MatchedIngredient(Ingredient ingredient, NameRank match, NameRank aliasMatch) {
 
     private static final Comparator<MatchedIngredient> ORDER = Comparator.comparing(MatchedIngredient::match)
-            .thenComparing(MatchedIngredient::aliasRank).thenComparing(matched -> matched.ingredient().id());
+        .thenComparing(MatchedIngredient::aliasRank).thenComparing(matched -> matched.ingredient().id());
 
     public static MatchedIngredient of(SearchableIngredient searchable, SearchKeyword keyword) {
         return new MatchedIngredient(
-                searchable.ingredient(),
-                searchable.match(keyword),
-                searchable.aliasMatch(keyword));
+            searchable.ingredient(),
+            searchable.match(keyword),
+            searchable.aliasMatch(keyword)
+        );
     }
 
     public static Comparator<MatchedIngredient> order() {

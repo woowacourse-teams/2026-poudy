@@ -61,8 +61,16 @@ export type EventMap = {
     product_id?: number;
     ingredient_id?: number;
   };
-  /** 자동완성을 고르지 않고 검색어로 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
-  search_submitted: { mode: "product" | "ingredient"; query: string; result_count: number };
+  /** 자동완성을 고르지 않고 검색 결과 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
+  search_submitted:
+    | { mode: "product"; query: string; result_count: number }
+    | {
+        mode: "ingredient";
+        result_count: number;
+        include_count: number;
+        exclude_count: number;
+        exclude_group_count: number;
+      };
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
   sort_applied: { sort: string };
@@ -84,8 +92,13 @@ export type EventMap = {
   filter_conflict_shown: { conflict_count: number; ingredient_count: number };
   /** 홈의 최근 탐색 조건 카드를 다시 눌렀을 때. */
   recent_filter_used: { mode: "product" | "ingredient"; position: number; age_minutes: number };
-  /** 검색 화면의 최근 검색 항목을 다시 눌렀을 때. */
-  recent_search_used: { position: number; product_id: number };
+  /**
+   * 검색 화면의 최근 검색 항목을 다시 눌렀을 때.
+   * 고른 제품으로 되돌아가는 것과 검색어로 되돌아가는 것을 갈래로 나눈다.
+   */
+  recent_search_used:
+    | { target_type: "product"; position: number; product_id: number }
+    | { target_type: "keyword"; position: number; query: string };
   /** 성분을 포함·제외 조건으로 켜고 끌 때. 어떤 성분이 실제로 쓰이는지 본다. */
   ingredient_condition_toggled:
     | {

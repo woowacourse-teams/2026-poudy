@@ -19,8 +19,9 @@ public class FeedbackImageReconciler {
     private final Clock clock;
 
     public FeedbackImageReconciler(
-            S3FeedbackImageRepository imageRepository,
-            @Qualifier("feedbackClock") Clock clock) {
+        S3FeedbackImageRepository imageRepository,
+        @Qualifier("feedbackClock") Clock clock
+    ) {
         this.imageRepository = imageRepository;
         this.clock = clock;
     }
@@ -36,23 +37,26 @@ public class FeedbackImageReconciler {
     }
 
     private static void run(
-            String task,
-            Supplier<CleanupCounts> operation) {
+        String task,
+        Supplier<CleanupCounts> operation
+    ) {
         try {
             CleanupCounts counts = operation.get();
             if (counts.total() > 0) {
                 log.info(
-                        "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}, orphanedFinalImages={}",
-                        counts.committedClaims(),
-                        counts.rolledBackClaims(),
-                        counts.expiredPending(),
-                        counts.orphanedFinalImages());
+                    "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}, orphanedFinalImages={}",
+                    counts.committedClaims(),
+                    counts.rolledBackClaims(),
+                    counts.expiredPending(),
+                    counts.orphanedFinalImages()
+                );
             }
         } catch (RuntimeException exception) {
             log.error(
-                    "의견 이미지 정리 실행에 실패했습니다. task={}, failureType={}",
-                    task,
-                    exception.getClass().getSimpleName());
+                "의견 이미지 정리 실행에 실패했습니다. task={}, failureType={}",
+                task,
+                exception.getClass().getSimpleName()
+            );
         }
     }
 }

@@ -58,6 +58,51 @@ staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBu
 패키지 루트의 `appspec.yml`은 기존 `deploy/codedeploy/backend/appspec.yml`을 그대로
 사용합니다.
 
+## Staging 운영 상태
+
+현재 staging 백엔드 배포와 외부 접근 검증까지 완료된 상태입니다.
+
+- 실행 환경: Amazon Linux 2023 ARM64 EC2
+- 배포 Pipeline: `poudy-staging-pipeline`
+- Source: GitHub `woowacourse-teams/2026-poudy`의 `dev`
+- Build: `poudy-staging-codebuild`
+- Deploy: `poudy-codedeploy`의 `poudy-backend-staging-dg`
+- 배포 방식: CodeDeploy In-place
+- 프론트엔드: 기존 GitHub Actions를 통한 Vercel staging 배포
+- Vercel staging: `https://poudy-staging.vercel.app`
+- 백엔드 staging: `https://staging.poudy.site`
+- CORS 허용 origin: `https://poudy-staging.vercel.app`
+
+staging 백엔드는 다음 검증을 완료했습니다.
+
+- `/actuator/health` → `200 / UP`
+- `/api/categories` → `200`
+- Vercel staging에서 실제 API 호출 확인
+- Nginx HTTPS 및 Let’s Encrypt 자동 갱신 확인
+- CodeDeploy Agent 정상 실행 확인
+
+### Staging 데이터 동기화
+
+staging EC2의 `poudy-data-sync.timer`가 다음 위치의 JSON을 `/opt/poudy/data`로
+동기화합니다.
+
+```text
+s3://techcourse-project-2026/poudy/staging/
+  → /opt/poudy/data
+```
+
+운영과 staging의 피드백·제품 등록 요청 데이터는 팀 결정에 따라 별도 분리하지 않습니다.
+피드백 S3 설정은 허용된 `techcourse-project-2026` 버킷을 사용하며, 현재 애플리케이션의
+피드백 prefix도 운영과 같은 `poudy/feedback/`을 사용합니다.
+
+### Staging 보류 사항
+
+- Spring Boot `:8080` 외부 직접 접근 차단은 후순위로 보류합니다.
+- staging의 피드백 이미지 기능은 운영과 데이터를 공유하므로, 테스트 데이터도 운영
+  피드백 저장소에 남을 수 있습니다.
+- staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy를 실행하고, 프론트엔드는 Vercel
+  staging workflow가 별도로 배포합니다.
+
 현재 buildspec은 두 산출물을 같은 빌드에서 생성하지만, CodeBuild 프로젝트 설정에서
 각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상
 필요한 빌드 식별 marker만 담으며, 실제 배포에는 사용하지 않습니다.

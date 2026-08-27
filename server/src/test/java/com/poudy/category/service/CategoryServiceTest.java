@@ -26,7 +26,8 @@ class CategoryServiceTest {
         Categories categories = Categories.from(List.of(skinCare, toner, serum));
         CategoryProductCount tonerCount = new CategoryProductCount(toner, 2L, List.of());
         List<CategoryProductCount> productCounts = List.of(
-                new CategoryProductCount(skinCare, 2L, List.of(tonerCount)));
+            new CategoryProductCount(skinCare, 2L, List.of(tonerCount))
+        );
         CategoryRepository categoryRepository = mock(CategoryRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         Products products = mock(Products.class);

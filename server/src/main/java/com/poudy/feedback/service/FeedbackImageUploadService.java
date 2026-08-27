@@ -22,10 +22,11 @@ public class FeedbackImageUploadService {
     private final Semaphore processingPermits;
 
     public FeedbackImageUploadService(
-            FeedbackImageProcessor imageProcessor,
-            S3FeedbackImageRepository imageRepository,
-            FeedbackImageUploadRateLimiter rateLimiter,
-            @Value("${poudy.feedback.image-processing.max-concurrency:1}") int maxConcurrency) {
+        FeedbackImageProcessor imageProcessor,
+        S3FeedbackImageRepository imageRepository,
+        FeedbackImageUploadRateLimiter rateLimiter,
+        @Value("${poudy.feedback.image-processing.max-concurrency:1}") int maxConcurrency
+    ) {
         if (maxConcurrency < 1) {
             throw new IllegalArgumentException("이미지 처리 동시성은 1 이상이어야 합니다.");
         }

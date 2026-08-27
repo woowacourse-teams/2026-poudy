@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
 
-import { Icon } from "@/components/ui/icons/Icon";
+import { CheckMark } from "@/components/ui/CheckMark";
+import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
@@ -183,7 +184,11 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
         </div>
 
         {selectedCount === 0 ? (
-          <p className="flex min-h-25 items-center justify-center text-[13px] text-text-secondary">선택한 성분 없음</p>
+          /*
+            개수를 덧붙이지 않는다. 빠른 필터는 제 섹션에서 이미 몇 개인지 말하고 있고,
+            없다고 한 뒤에 걸려 있다고 이으면 두 문장이 서로 반박하는 것으로 읽힌다.
+          */
+          <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
         ) : (
           <ul className="grid grid-cols-2 gap-2">
             {filter.includeIngredientIds.map((id) => (
@@ -232,33 +237,22 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
                   role="checkbox"
                   aria-checked={checked}
                   onClick={() => toggleCode(code.code)}
-                  className={`flex h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 text-left ${
-                    checked ? "border-transparent bg-[#F2F3F5]" : "border-[#DDE0E4] bg-[#F7F7F8]"
+                  className={`quick-filter-toggle flex min-h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left ${
+                    checked ? "border-red-200 bg-red-50" : "border-[#DDE0E4] bg-[#F7F7F8]"
                   }`}
                 >
-                  <span className={`flex-1 text-[11px] text-[#4D5159] ${checked ? "font-bold" : "font-semibold"}`}>
+                  <span
+                    className={`flex-1 text-[13px] ${checked ? "font-bold text-red-700" : "font-semibold text-[#4D5159]"}`}
+                  >
                     {code.name}
                   </span>
-                  <span
-                    className={`flex size-[18px] shrink-0 items-center justify-center rounded border ${
-                      checked ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
-                    }`}
-                  >
-                    {checked ? <Icon name="check" size={12} className="text-white" /> : null}
-                  </span>
+                  <CheckMark checked={checked} tone="exclude" />
                 </button>
               </li>
             );
           })}
         </ul>
       </section>
-
-      <hr className="border-0 border-t border-[#F2F3F6]" />
-
-      <p className="flex items-center gap-2 pt-3 text-[11px] text-[#868B94]">
-        <Icon name="info" size={16} />
-        성분 {selectedCount}개 · 빠른 필터 {filter.excludeCodes.length}개 적용
-      </p>
     </div>
   );
 }

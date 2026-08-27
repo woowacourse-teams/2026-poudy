@@ -34,19 +34,22 @@ class FeedbackImageProcessorTest {
         byte[] original = imageBytes("png", 20, 10);
         byte[] withTrailingData = append(original, "private-metadata".getBytes(StandardCharsets.UTF_8));
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "wrong.jpg",
-                "text/plain",
-                withTrailingData);
+            "images",
+            "wrong.jpg",
+            "text/plain",
+            withTrailingData
+        );
 
         ProcessedImage processed = processor.process(file);
 
         assertThat(processed.format()).isEqualTo(FeedbackImageFormat.PNG);
         assertThat(
-                containsSequence(
-                        processed.bytes(),
-                        "private-metadata".getBytes(StandardCharsets.UTF_8)))
-                .isFalse();
+            containsSequence(
+                processed.bytes(),
+                "private-metadata".getBytes(StandardCharsets.UTF_8)
+            )
+        )
+            .isFalse();
         BufferedImage decoded = ImageIO.read(new java.io.ByteArrayInputStream(processed.bytes()));
         assertThat(decoded.getWidth()).isEqualTo(20);
         assertThat(decoded.getHeight()).isEqualTo(10);
@@ -56,10 +59,11 @@ class FeedbackImageProcessorTest {
     @DisplayName("실제 JPEG 바이트를 JPEG로 재인코딩한다")
     void processesJpeg() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.png",
-                "image/png",
-                imageBytes("jpeg", 16, 8));
+            "images",
+            "image.png",
+            "image/png",
+            imageBytes("jpeg", 16, 8)
+        );
 
         ProcessedImage processed = processor.process(file);
 
@@ -74,10 +78,11 @@ class FeedbackImageProcessorTest {
         byte[] original = imageBytes("jpeg", 16, 8);
         byte[] thumbnail = imageBytes("jpeg", 2, 2);
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.jpg",
-                "image/jpeg",
-                withExifThumbnail(original, thumbnail));
+            "images",
+            "image.jpg",
+            "image/jpeg",
+            withExifThumbnail(original, thumbnail)
+        );
 
         ProcessedImage processed = processor.process(file);
 
@@ -91,10 +96,11 @@ class FeedbackImageProcessorTest {
         byte[] jpeg = imageBytes("jpeg", 16, 8);
         byte[] withMpfComment = withJpegSegment(jpeg, 0xfe, new byte[] {'M', 'P', 'F', 0});
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.jpg",
-                "image/jpeg",
-                withMpfComment);
+            "images",
+            "image.jpg",
+            "image/jpeg",
+            withMpfComment
+        );
 
         ProcessedImage processed = processor.process(file);
 
@@ -114,10 +120,11 @@ class FeedbackImageProcessorTest {
         };
         byte[] withMisleadingComment = withJpegSegment(jpeg, 0xfe, misleadingMarkers);
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.jpg",
-                "image/jpeg",
-                withMisleadingComment);
+            "images",
+            "image.jpg",
+            "image/jpeg",
+            withMisleadingComment
+        );
 
         ProcessedImage processed = processor.process(file);
 
@@ -158,10 +165,11 @@ class FeedbackImageProcessorTest {
     @DisplayName("4,096px를 넘는 축을 거절한다")
     void rejectsOversizedDimension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.png",
-                "image/png",
-                imageBytes("png", 4_097, 1));
+            "images",
+            "image.png",
+            "image/png",
+            imageBytes("png", 4_097, 1)
+        );
 
         assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
     }
@@ -181,10 +189,11 @@ class FeedbackImageProcessorTest {
     void rejectsMultipleJpegImages() throws Exception {
         byte[] jpeg = imageBytes("jpeg", 2, 2);
         MockMultipartFile file = new MockMultipartFile(
-                "images",
-                "image.jpg",
-                "image/jpeg",
-                append(jpeg, jpeg));
+            "images",
+            "image.jpg",
+            "image/jpeg",
+            append(jpeg, jpeg)
+        );
 
         assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
     }
@@ -197,7 +206,7 @@ class FeedbackImageProcessorTest {
             tooManyFiles.add(new MockMultipartFile("images", new byte[] {1}));
         }
         assertThatThrownBy(() -> processor.validateBatch(tooManyFiles))
-                .isInstanceOf(InvalidFeedbackImageException.class);
+            .isInstanceOf(InvalidFeedbackImageException.class);
 
         MultipartFile largeA = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
         MultipartFile largeB = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
@@ -205,7 +214,7 @@ class FeedbackImageProcessorTest {
         MultipartFile largeD = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
         MultipartFile largeE = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES + 1);
         assertThatThrownBy(() -> processor.validateBatch(List.of(largeA, largeB, largeC, largeD, largeE)))
-                .isInstanceOf(InvalidFeedbackImageException.class);
+            .isInstanceOf(InvalidFeedbackImageException.class);
     }
 
     private static MultipartFile sizedFile(long size) {

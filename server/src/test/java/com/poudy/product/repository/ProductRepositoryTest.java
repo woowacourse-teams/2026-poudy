@@ -46,33 +46,33 @@ class ProductRepositoryTest {
         Product product = found.getFirst();
         assertThat(product.id()).isEqualTo(1L);
         assertThat(product.brand()).extracting(Brand::id, Brand::koreanName)
-                .containsExactly(1L, "다 브랜드");
+            .containsExactly(1L, "다 브랜드");
         assertThat(product.category()).extracting(Category::id, Category::name)
-                .containsExactly(2L, "스킨/토너");
+            .containsExactly(2L, "스킨/토너");
         assertThat(product.name()).isEqualTo("블랙 스네일 토너");
         assertThat(product.imageUrl()).isEqualTo("https://cdn.example.com/products/1.png");
         assertThat(product.representativeVariant())
-                .extracting("price", "volumeValue", "volumeUnit", "status")
-                .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
+            .extracting("price", "volumeValue", "volumeUnit", "status")
+            .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
         assertThat(product.sensory().modelVersion().ingredientProfileVersion())
-                .isEqualTo("ingredient-role-profile-v0.2");
+            .isEqualTo("ingredient-role-profile-v0.2");
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
-                .get()
-                .extracting(Ingredient::koreanName)
-                .isEqualTo("향료");
+            .get()
+            .extracting(Ingredient::koreanName)
+            .isEqualTo("향료");
     }
 
     @Test
     @DisplayName("대표 이미지가 없으면 빈 URL로 제품을 로딩한다")
     void loadsProductWithoutImage() {
         Product product = repositoryReading(1L, 2L, "", "null")
-                .findAll()
-                .findById(1L)
-                .orElseThrow();
+            .findAll()
+            .findById(1L)
+            .orElseThrow();
 
         assertThat(product.imageUrl()).isEmpty();
     }
@@ -81,7 +81,7 @@ class ProductRepositoryTest {
     @DisplayName("대표 이미지가 null이나 문자열이 아니면 로딩에 실패한다")
     void rejectsInvalidProductImage() {
         assertThatThrownBy(() -> repositoryReading(1L, 2L, "", "123"))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
@@ -95,13 +95,14 @@ class ProductRepositoryTest {
     @DisplayName("브랜드별 제품 수를 센다")
     void countsProductsByBrand() {
         List<Brand> brands = List.of(
-                new Brand(1L, "다 브랜드", null, null),
-                new Brand(3L, "가 브랜드", null, null),
-                new Brand(999L, "없는 브랜드", null, null));
+            new Brand(1L, "다 브랜드", null, null),
+            new Brand(3L, "가 브랜드", null, null),
+            new Brand(999L, "없는 브랜드", null, null)
+        );
 
         assertThat(productRepository.findAll().productCountsByBrand(brands))
-                .extracting(BrandProductCount::id, BrandProductCount::productCount)
-                .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
+            .extracting(BrandProductCount::id, BrandProductCount::productCount)
+            .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
     }
 
     @ParameterizedTest
@@ -113,35 +114,35 @@ class ProductRepositoryTest {
     @DisplayName("성분 참조의 ID 가 누락됐거나 정수가 아니면 로딩에 실패한다")
     void rejectsInvalidIngredientReference(String reference) {
         assertThatThrownBy(() -> repositoryReading(1L, 2L, reference))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 성분을 참조하면 로딩에 실패한다")
     void rejectsUnknownIngredientReference() {
         assertThatThrownBy(() -> repositoryReading(1L, 2L, "{\"ingredient_id\":999}"))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 브랜드를 참조하면 로딩에 실패한다")
     void rejectsUnknownBrandReference() {
         assertThatThrownBy(() -> repositoryReading(999L, 2L, ""))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 카테고리를 참조하면 로딩에 실패한다")
     void rejectsUnknownCategoryReference() {
         assertThatThrownBy(() -> repositoryReading(1L, 999L, ""))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     @Test
     @DisplayName("대분류를 제품 카테고리로 참조하면 로딩에 실패한다")
     void rejectsParentCategoryReference() {
         assertThatThrownBy(() -> repositoryReading(1L, 1L, ""))
-                .isInstanceOf(InfrastructureException.class);
+            .isInstanceOf(InfrastructureException.class);
     }
 
     private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
@@ -149,28 +150,29 @@ class ProductRepositoryTest {
     }
 
     private static ProductRepository repositoryReading(
-            Long brandId,
-            Long categoryId,
-            String ingredientReferences,
-            String imageUrl) {
+        Long brandId,
+        Long categoryId,
+        String ingredientReferences,
+        String imageUrl
+    ) {
         String productData = """
-                {"products":[{
-                  "id":1,
-                  "brand_id":%d,
-                  "category_id":%d,
-                  "product_name":"제품",
-                  "image_url":%s,
-                  "variants":[{
-                    "id":1,
-                    "price":10000,
-                    "volume_value":100,
-                    "volume_unit":"ml",
-                    "status":"active"
-                  }],
-                  "updated_at":"2026-08-01T00:00:00Z",
-                  "ingredients":[%s]
-                }]}
-                """.formatted(brandId, categoryId, imageUrl, ingredientReferences);
+            {"products":[{
+              "id":1,
+              "brand_id":%d,
+              "category_id":%d,
+              "product_name":"제품",
+              "image_url":%s,
+              "variants":[{
+                "id":1,
+                "price":10000,
+                "volume_value":100,
+                "volume_unit":"ml",
+                "status":"active"
+              }],
+              "updated_at":"2026-08-01T00:00:00Z",
+              "ingredients":[%s]
+            }]}
+            """.formatted(brandId, categoryId, imageUrl, ingredientReferences);
         DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
 
             @Override
@@ -180,11 +182,12 @@ class ProductRepositoryTest {
         };
 
         return new ProductRepository(
-                new JsonDataReader(resourceLoader),
-                brands(),
-                categories(),
-                new Ingredients(List.of()),
-                new ProductFactory(new HeuristicProductSensoryEstimator()));
+            new JsonDataReader(resourceLoader),
+            brands(),
+            categories(),
+            new Ingredients(List.of()),
+            new ProductFactory(new HeuristicProductSensoryEstimator())
+        );
     }
 
     private static Brands brands() {

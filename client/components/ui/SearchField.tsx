@@ -35,13 +35,12 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         /*
-         * 글자는 16px 이어야 한다. iOS Safari 는 초점이 간 입력의 글자가 그보다 작으면
-         * 읽기 좋게 화면을 저절로 키우고, 빠져나와도 키운 채로 둔다. 디자인(C06)은
-         * 14px 이지만 확대를 막으려면 이 크기를 지켜야 한다.
+         * 보이는 글자 크기는 디자인(C06)대로 14px 이지만 font-size 는 16px 이다.
+         * 까닭과 계산은 globals.css 의 `.search-field-input` 에 적어 두었다.
          *
          * 브라우저 기본 지우기 버튼은 숨기고 디자인의 버튼만 쓴다.
          */
-        className="flex-1 bg-transparent text-[16px] text-text-primary outline-none placeholder:text-[#868B94] [&::-webkit-search-cancel-button]:appearance-none"
+        className="search-field-input min-w-0 flex-1 bg-transparent text-text-primary outline-none placeholder:text-[#868B94] [&::-webkit-search-cancel-button]:appearance-none"
       />
 
       {value ? (

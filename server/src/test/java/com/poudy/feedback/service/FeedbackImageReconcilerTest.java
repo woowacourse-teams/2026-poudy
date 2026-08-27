@@ -21,14 +21,14 @@ class FeedbackImageReconcilerTest {
         Scheduled scheduled = method.getAnnotation(Scheduled.class);
 
         assertThat(scheduled.fixedDelayString())
-                .isEqualTo("${poudy.feedback.image-reconciliation.claim-interval:PT5M}");
+            .isEqualTo("${poudy.feedback.image-reconciliation.claim-interval:PT5M}");
         assertThat(scheduled.initialDelayString())
-                .isEqualTo("${poudy.feedback.image-reconciliation.claim-initial-delay:PT1M}");
+            .isEqualTo("${poudy.feedback.image-reconciliation.claim-initial-delay:PT1M}");
 
         PropertySource<?> properties = new YamlPropertySourceLoader()
-                .load("application", new ClassPathResource("application.yml"))
-                .getFirst();
+            .load("application", new ClassPathResource("application.yml"))
+            .getFirst();
         assertThat(properties.getProperty("poudy.feedback.image-reconciliation.claim-interval"))
-                .isEqualTo("PT5M");
+            .isEqualTo("PT5M");
     }
 }

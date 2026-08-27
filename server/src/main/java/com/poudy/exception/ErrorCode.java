@@ -23,7 +23,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("서버에서 요청을 처리하지 못했습니다.");
 
     private static final Map<String, ErrorCode> BY_NAME = Arrays.stream(values())
-            .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
+        .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
 
     private final String message;
 
