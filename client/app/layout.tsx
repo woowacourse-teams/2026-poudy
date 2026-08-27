@@ -3,6 +3,7 @@ import { Foldit, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Suspense>
         <MockProvider>{children}</MockProvider>
       </body>
+      <GoogleAnalyticsTag />
     </html>
   );
 }

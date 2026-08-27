@@ -4,6 +4,7 @@ import posthog, { type PostHog } from "posthog-js";
 
 import { readAppInfo } from "./app-info";
 import type { EventMap, EventName } from "./events";
+import { trackGoogleAnalytics } from "./google-analytics";
 
 type Posthog = Pick<PostHog, "capture" | "captureException">;
 
@@ -24,19 +25,19 @@ const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
 /** 개발 환경의 이벤트가 운영 지표에 섞이지 않게 구분한다. */
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
-const enabled = key !== undefined && key !== "" && environment !== "development";
+const posthogEnabled = key !== undefined && key !== "" && environment !== "development";
 
 /**
  * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
  * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
  */
 export const track = <T extends EventName>(event: T, properties: EventMap[T]): void => {
-  if (!enabled) return;
-  window.posthog?.capture(event, { ...properties, environment });
+  if (posthogEnabled) window.posthog?.capture(event, { ...properties, environment });
+  trackGoogleAnalytics(event, properties);
 };
 
 export const initAnalytics = (): void => {
-  if (!enabled || key === undefined || key === "" || typeof window === "undefined" || window.posthog) return;
+  if (!posthogEnabled || key === undefined || key === "" || typeof window === "undefined" || window.posthog) return;
 
   posthog.init(key, {
     api_host: host,

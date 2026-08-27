@@ -7,8 +7,10 @@ const init = vi.fn();
 const register = vi.fn();
 const posthogCapture = vi.fn();
 const captureException = vi.fn();
+const trackGoogleAnalytics = vi.fn();
 
 vi.mock("posthog-js", () => ({ default: { capture: posthogCapture, captureException, init, register } }));
+vi.mock("./google-analytics", () => ({ trackGoogleAnalytics }));
 
 const APP_INFO = {
   is_app: true,
@@ -24,6 +26,7 @@ const APP_INFO = {
  */
 const load = async (environment: string, key?: string) => {
   vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", environment);
+  vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
   if (key === undefined) vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
   else vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", key);
 
@@ -39,6 +42,7 @@ beforeEach(() => {
   init.mockClear();
   posthogCapture.mockClear();
   register.mockClear();
+  trackGoogleAnalytics.mockClear();
   window.posthog = { capture, captureException: vi.fn() };
 });
 
@@ -77,6 +81,18 @@ describe("track", () => {
     track("page_viewed", { page: "home" });
 
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  it("PostHog 키와 관계없이 GA4 전송을 독립적으로 호출한다", async () => {
+    const { track } = await load("production");
+
+    track("product_saved", { product_id: 42, save_source: "product_detail" });
+
+    expect(capture).not.toHaveBeenCalled();
+    expect(trackGoogleAnalytics).toHaveBeenCalledWith("product_saved", {
+      product_id: 42,
+      save_source: "product_detail",
+    });
   });
 });
 
