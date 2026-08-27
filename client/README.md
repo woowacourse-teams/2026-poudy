@@ -193,7 +193,8 @@ URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다.
 - Google 신호 데이터 수집과 광고 개인 최적화는 사용하지 않습니다.
 - 이벤트 데이터 보관 기간을 14개월 이내로 설정합니다.
 - `add_to_wishlist`를 핵심 이벤트로 지정합니다.
-- `search_mode`, `result_count`, `entry_point`, `save_source`를 이벤트 범위 맞춤 측정기준으로 등록합니다.
+- `search_mode`, `entry_point`, `save_source`를 이벤트 범위 맞춤 측정기준으로 등록합니다.
+- `result_count`를 이벤트 범위 맞춤 측정항목으로 등록합니다.
 - DebugView와 실시간 보고서에서 최초 진입과 클라이언트 라우트 이동마다 `page_view`가 한 번씩만 오는지
   확인하고, 검색·제품 조회·저장 이벤트가 각각 한 번씩 오는지 확인합니다.
 
