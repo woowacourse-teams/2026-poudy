@@ -18,7 +18,7 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
 
     public SharedProductName {
         brand = Objects.requireNonNullElse(brand, Optional.empty());
-        keyword = keyword == null ? "" : keyword.trim();
+        keyword = Objects.requireNonNullElse(keyword, "").trim();
     }
 
     public static SharedProductName of(String productPhrase, Brands brands) {

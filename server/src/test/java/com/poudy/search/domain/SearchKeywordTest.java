@@ -126,4 +126,58 @@ class SearchKeywordTest {
     void spaceOnlyKeywordMatchesNothing() {
         assertThat(new SearchKeyword("\u00A0").matches("글리세린")).isFalse();
     }
+
+    @Test
+    @DisplayName("라틴 두문자 검색어가 한글 음차 이름을 찾는다")
+    void matchesKoreanReadingByLatinKeyword() {
+        assertThat(new SearchKeyword("pdrn").matches("피디알엔 핑크 시카 수딩 토너")).isTrue();
+        assertThat(new SearchKeyword("uv").matches("유브이 365 선크림")).isTrue();
+    }
+
+    @Test
+    @DisplayName("한글 음차 검색어가 라틴 두문자 이름을 찾는다")
+    void matchesLatinAcronymByKoreanReadingKeyword() {
+        assertThat(new SearchKeyword("피디알엔").matches("PDRN 핑크 시카 수딩 토너")).isTrue();
+        assertThat(new SearchKeyword("에스피에프").matches("데일리 선크림 SPF50+ PA++++")).isTrue();
+        assertThat(new SearchKeyword("비타씨").matches("더마UV365 비타C 광채수분 선크림")).isTrue();
+    }
+
+    @Test
+    @DisplayName("낱자 읽기가 긴 영문명의 부분 일치를 밀어내지 않는다")
+    void keepsSubstringMatchOnLongEnglishName() {
+        assertThat(new SearchKeyword("pa").matches("Ethylhexyl Palmitate")).isTrue();
+        assertThat(new SearchKeyword("uv").matches("Uvinul A Plus")).isTrue();
+    }
+
+    @Test
+    @DisplayName("표기만 다른 이름은 정확히 같은 이름으로 본다")
+    void treatsReadingAsExactName() {
+        assertThat(new SearchKeyword("피에이치 컨디션 토너").matchesExactly("PH 컨디션 토너", null)).isTrue();
+        assertThat(new SearchKeyword("pdrn").matchesExactly("피디알엔", null)).isTrue();
+    }
+
+    @Test
+    @DisplayName("이름 전체가 라틴이면 낱말로 보고 음차로 맞추지 않는다")
+    void doesNotReadNameWrittenOnlyInLatin() {
+        assertThat(new SearchKeyword("피디알엔").matchesExactly("PDRN", null)).isFalse();
+        assertThat(new SearchKeyword("더블유").matches("Whey")).isFalse();
+    }
+
+    @Test
+    @DisplayName("이름으로 바로 걸린 결과가 음차로 걸린 결과보다 앞선다")
+    void ranksDirectMatchBeforeReadingMatch() {
+        SearchKeyword keyword = new SearchKeyword("씨");
+        NameRank direct = NameRank.best(SearchableText.formsOf("씨솔트"), keyword);
+        NameRank byReading = NameRank.best(SearchableText.formsOf("C20-30글라이콜아이소스테아레이트"), keyword);
+
+        assertThat(direct.match()).isEqualTo(NameMatch.PREFIX);
+        assertThat(byReading.match()).isEqualTo(NameMatch.PREFIX);
+        assertThat(direct.isBetterThan(byReading)).isTrue();
+    }
+
+    @Test
+    @DisplayName("초성 검색도 낱자 읽기까지 닿는다")
+    void matchesReadingByChosung() {
+        assertThat(new SearchKeyword("ㅍㄷㅇㅇ").matches("PDRN 핑크 시카 수딩 토너")).isTrue();
+    }
 }

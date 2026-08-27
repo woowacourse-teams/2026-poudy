@@ -60,9 +60,11 @@ public class S3FeedbackRepository {
             if (!objectStore.existsExactly(key)) {
                 return SaveStatus.FAILURE;
             }
-            return objectStore.matchesSha256(key, expected.sha256())
-                    ? SaveStatus.SUCCESS
-                    : SaveStatus.UNKNOWN;
+            if (objectStore.matchesSha256(key, expected.sha256())) {
+                return SaveStatus.SUCCESS;
+            }
+
+            return SaveStatus.UNKNOWN;
         } catch (ObjectStoreException exception) {
             return SaveStatus.UNKNOWN;
         }

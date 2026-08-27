@@ -240,7 +240,7 @@ class S3FeedbackImageRepositoryTest {
                         UUID.randomUUID(),
                         List.of(first, expiring),
                         "sha256",
-                        () -> calls.getAndIncrement() == 0 ? NOW : NOW.plusSeconds(2)))
+                        () -> nowThenLater(calls)))
                 .isInstanceOf(InvalidFeedbackImageIdException.class);
 
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -318,9 +318,7 @@ class S3FeedbackImageRepositoryTest {
         byte[] feedbackDocument = "{\"feedbackId\":\"committed\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         String feedbackSha = S3FeedbackObjectStore.sha256(feedbackDocument);
         String claimKey = "poudy/feedback/claims/" + imageId + ".json";
-        String feedbackKey = legacyKey
-                ? "poudy/feedback/" + feedbackId + ".json"
-                : "poudy/feedback/" + feedbackId + "/feedback.json";
+        String feedbackKey = feedbackKeyOf(feedbackId, legacyKey);
         byte[] claimDocument = objectMapper.writeValueAsBytes(
                 java.util.Map.of(
                         "feedbackId",
@@ -352,7 +350,10 @@ class S3FeedbackImageRepositoryTest {
         });
         given(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).willAnswer(invocation -> {
             GetObjectRequest request = invocation.getArgument(0);
-            byte[] body = claimKey.equals(request.key()) ? claimDocument : feedbackDocument;
+            byte[] body = feedbackDocument;
+            if (claimKey.equals(request.key())) {
+                body = claimDocument;
+            }
             return ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), body);
         });
 
@@ -514,6 +515,22 @@ class S3FeedbackImageRepositoryTest {
         } catch (InvalidFeedbackImageIdException exception) {
             return false;
         }
+    }
+
+    private static String feedbackKeyOf(UUID feedbackId, boolean legacyKey) {
+        if (legacyKey) {
+            return "poudy/feedback/" + feedbackId + ".json";
+        }
+
+        return "poudy/feedback/" + feedbackId + "/feedback.json";
+    }
+
+    private static Instant nowThenLater(AtomicInteger calls) {
+        if (calls.getAndIncrement() == 0) {
+            return NOW;
+        }
+
+        return NOW.plusSeconds(2);
     }
 
     private static boolean resultOf(Future<Boolean> future) throws InterruptedException, ExecutionException {

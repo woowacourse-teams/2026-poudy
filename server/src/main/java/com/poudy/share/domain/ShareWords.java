@@ -2,6 +2,7 @@ package com.poudy.share.domain;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 final class ShareWords {
@@ -13,7 +14,7 @@ final class ShareWords {
     }
 
     static List<String> of(String phrase) {
-        String trimmed = phrase == null ? "" : phrase.trim();
+        String trimmed = Objects.requireNonNullElse(phrase, "").trim();
 
         if (trimmed.isEmpty()) {
             return List.of();

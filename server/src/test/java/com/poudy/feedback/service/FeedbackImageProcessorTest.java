@@ -216,7 +216,10 @@ class FeedbackImageProcessorTest {
     }
 
     private static byte[] imageBytes(String format, int width, int height) throws Exception {
-        int type = "jpeg".equals(format) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+        int type = BufferedImage.TYPE_INT_ARGB;
+        if ("jpeg".equals(format)) {
+            type = BufferedImage.TYPE_INT_RGB;
+        }
         BufferedImage image = new BufferedImage(width, height, type);
         Graphics2D graphics = image.createGraphics();
         try {

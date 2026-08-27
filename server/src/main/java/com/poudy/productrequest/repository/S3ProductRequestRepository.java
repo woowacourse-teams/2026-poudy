@@ -55,7 +55,11 @@ public class S3ProductRequestRepository {
 
     String objectKey(ProductRequest request) {
         String relative = request.requestId() + ".json";
-        return prefix.isEmpty() ? relative : prefix + "/" + relative;
+        if (prefix.isEmpty()) {
+            return relative;
+        }
+
+        return prefix + "/" + relative;
     }
 
     private byte[] serialize(ProductRequest request) {
@@ -67,7 +71,10 @@ public class S3ProductRequestRepository {
     }
 
     private static String normalizePrefix(String prefix) {
-        String normalized = prefix == null ? "" : prefix.trim();
-        return normalized.replaceAll("^/+|/+$", "");
+        if (prefix == null) {
+            return "";
+        }
+
+        return prefix.trim().replaceAll("^/+|/+$", "");
     }
 }

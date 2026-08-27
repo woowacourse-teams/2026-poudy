@@ -153,9 +153,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private ErrorCode bindingCode(Exception exception) {
         if (exception instanceof HttpMessageNotReadableException unreadableException) {
-            return readsFeedbackImageId(unreadableException)
-                    ? ErrorCode.INVALID_FEEDBACK_IMAGE_ID
-                    : ErrorCode.INVALID_REQUEST_BODY;
+            if (readsFeedbackImageId(unreadableException)) {
+                return ErrorCode.INVALID_FEEDBACK_IMAGE_ID;
+            }
+            return ErrorCode.INVALID_REQUEST_BODY;
         }
 
         if (exception instanceof BindException bindException) {

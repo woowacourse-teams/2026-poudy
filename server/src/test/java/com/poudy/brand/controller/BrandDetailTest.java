@@ -28,7 +28,7 @@ class BrandDetailTest {
         mockMvc.perform(get("/api/brands/1")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("다 브랜드"))
-                .andExpect(jsonPath("$.englishName").value(nullValue()))
+                .andExpect(jsonPath("$.englishName").value("DA BRAND"))
                 .andExpect(jsonPath("$.imageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.categories[*].id").value(contains(1, 13)))
                 .andExpect(jsonPath("$.categories[0].name").value("스킨케어"))
