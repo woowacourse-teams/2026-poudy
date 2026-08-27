@@ -17,6 +17,8 @@ import {
   clearRecentSearches,
   getRecentSearchesServerSnapshot,
   getRecentSearchesSnapshot,
+  type RecentSearch,
+  recentSearchId,
   removeRecentSearch,
   subscribeRecentSearches,
 } from "@/lib/storage/recent-searches";
@@ -52,6 +54,7 @@ export function ProductSearchPanel() {
 
     sent.current = trimmed;
     track("search_submitted", { mode: "product", query: trimmed, result_count: total });
+    addRecentSearch({ kind: "keyword", keyword: trimmed });
     router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
   }, [router, total, trimmed]);
 
@@ -137,7 +140,10 @@ export function ProductSearchPanel() {
           ) : (
             <Link
               href={`/products?keyword=${encodeURIComponent(trimmed)}`}
-              onClick={() => track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 })}
+              onClick={() => {
+                track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 });
+                addRecentSearch({ kind: "keyword", keyword: trimmed });
+              }}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
             >
               <Icon name="search" size={18} className="text-text-secondary" />
@@ -175,6 +181,7 @@ export function ProductSearchPanel() {
                           product_id: item.id,
                         });
                         addRecentSearch({
+                          kind: "product",
                           productId: item.id,
                           name: item.name,
                           brandName: item.brandName,
@@ -215,11 +222,7 @@ export function ProductSearchPanel() {
   );
 }
 
-function RecentSearches({
-  items,
-}: {
-  readonly items: readonly { productId: number; name: string; brandName: string }[];
-}) {
+function RecentSearches({ items }: { readonly items: readonly RecentSearch[] }) {
   if (items.length === 0) return null;
 
   return (
@@ -234,26 +237,52 @@ function RecentSearches({
         </div>
 
         <ul className="divide-y divide-divider">
-          {items.map((item, index) => (
-            <li key={item.productId} className="flex items-center gap-2 py-3">
-              <Link
-                href={`/products/${item.productId}?from=recent_search`}
-                onClick={() => track("recent_search_used", { position: index, product_id: item.productId })}
-                className="flex flex-1 flex-col gap-0.5"
-              >
-                <span className="text-[13px] font-semibold text-text-primary">{item.name}</span>
-                <span className="text-[11px] text-text-secondary">{item.brandName}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => removeRecentSearch(item.productId)}
-                aria-label={`${item.name} 최근 검색에서 삭제`}
-                className="flex size-8 items-center justify-center"
-              >
-                <Icon name="x" size={14} className="text-text-secondary" />
-              </button>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const id = recentSearchId(item);
+            /* 제품은 그 상세로, 검색어는 그 말의 결과 목록으로 되돌아간다. */
+            const label = item.kind === "product" ? item.name : item.keyword;
+            const href =
+              item.kind === "product"
+                ? `/products/${item.productId}?from=recent_search`
+                : `/products?keyword=${encodeURIComponent(item.keyword)}`;
+
+            return (
+              <li key={id} className="flex items-center gap-2 py-3">
+                <Link
+                  href={href}
+                  onClick={() =>
+                    track(
+                      "recent_search_used",
+                      item.kind === "product"
+                        ? { target_type: "product", position: index, product_id: item.productId }
+                        : { target_type: "keyword", position: index, query: item.keyword },
+                    )
+                  }
+                  className="flex min-w-0 flex-1 items-center gap-2"
+                >
+                  {/* 검색어는 무엇으로 되돌아가는지 그림으로도 알린다. 제품은 이름과 브랜드가 그 일을 한다. */}
+                  {item.kind === "keyword" ? (
+                    <Icon name="search" size={14} className="shrink-0 text-text-secondary" />
+                  ) : null}
+
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-[13px] font-semibold text-text-primary">{label}</span>
+                    {item.kind === "product" ? (
+                      <span className="truncate text-[11px] text-text-secondary">{item.brandName}</span>
+                    ) : null}
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => removeRecentSearch(id)}
+                  aria-label={`${label} 최근 검색에서 삭제`}
+                  className="flex size-8 items-center justify-center"
+                >
+                  <Icon name="x" size={14} className="text-text-secondary" />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </>

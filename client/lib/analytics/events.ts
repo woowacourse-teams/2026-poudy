@@ -84,8 +84,13 @@ export type EventMap = {
   filter_conflict_shown: { conflict_count: number; ingredient_count: number };
   /** 홈의 최근 탐색 조건 카드를 다시 눌렀을 때. */
   recent_filter_used: { mode: "product" | "ingredient"; position: number; age_minutes: number };
-  /** 검색 화면의 최근 검색 항목을 다시 눌렀을 때. */
-  recent_search_used: { position: number; product_id: number };
+  /**
+   * 검색 화면의 최근 검색 항목을 다시 눌렀을 때.
+   * 고른 제품으로 되돌아가는 것과 검색어로 되돌아가는 것을 갈래로 나눈다.
+   */
+  recent_search_used:
+    | { target_type: "product"; position: number; product_id: number }
+    | { target_type: "keyword"; position: number; query: string };
   /** 성분을 포함·제외 조건으로 켜고 끌 때. 어떤 성분이 실제로 쓰이는지 본다. */
   ingredient_condition_toggled:
     | {

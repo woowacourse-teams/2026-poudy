@@ -1,27 +1,46 @@
 import { createLocalStore } from "./local-store";
 
-/** 디자인(S02)의 최근 검색 항목은 제품명과 브랜드를 함께 보여 준다. */
-export type RecentSearch = {
-  readonly productId: number;
-  readonly name: string;
-  readonly brandName: string;
-};
+/**
+ * 최근 검색 항목. 두 갈래를 함께 담는다.
+ *
+ * 자동완성에서 제품을 고르면 그 제품이(`product`), 검색어로 목록을 보면 그 말이
+ * (`keyword`) 남는다. 둘은 다시 갈 곳이 달라 한 자리에 섞어 두되 무엇인지 구분한다.
+ */
+export type RecentSearch =
+  | {
+      readonly kind: "product";
+      readonly productId: number;
+      readonly name: string;
+      readonly brandName: string;
+    }
+  | {
+      readonly kind: "keyword";
+      readonly keyword: string;
+    };
 
 const MAX = 10;
 
-const isRecentSearches = (value: unknown): value is RecentSearch[] =>
-  Array.isArray(value) &&
-  value.every(
-    (item) =>
-      typeof item === "object" &&
-      item !== null &&
-      typeof (item as RecentSearch).productId === "number" &&
-      typeof (item as RecentSearch).name === "string" &&
-      typeof (item as RecentSearch).brandName === "string",
-  );
+/** 같은 것을 다시 고르면 위로 올리기 위해 갈래마다 다른 자리로 견준다. */
+const identityOf = (item: RecentSearch): string =>
+  item.kind === "product" ? `product:${item.productId}` : `keyword:${item.keyword}`;
 
+const isRecentSearch = (value: unknown): value is RecentSearch => {
+  if (typeof value !== "object" || value === null) return false;
+
+  const item = value as Partial<RecentSearch> & Record<string, unknown>;
+  if (item.kind === "product") {
+    return typeof item.productId === "number" && typeof item.name === "string" && typeof item.brandName === "string";
+  }
+
+  return item.kind === "keyword" && typeof item.keyword === "string";
+};
+
+const isRecentSearches = (value: unknown): value is RecentSearch[] =>
+  Array.isArray(value) && value.every(isRecentSearch);
+
+/* 담는 모양이 바뀌어 버전을 올린다. 예전에 쌓인 것은 다시 만들 수 있는 값이라 버린다. */
 const store = createLocalStore<RecentSearch[]>("poudy.recent-searches.v1", {
-  version: 1,
+  version: 2,
   fallback: [],
   isValid: isRecentSearches,
 });
@@ -57,12 +76,17 @@ const commit = (next: readonly RecentSearch[]): readonly RecentSearch[] => {
 
 export const readRecentSearches = (): readonly RecentSearch[] => store.read();
 
-/** 같은 제품을 다시 고르면 위로 올린다. 오래된 것부터 밀려난다. */
-export const addRecentSearch = (search: RecentSearch): readonly RecentSearch[] =>
-  commit([search, ...snapshot.filter((item) => item.productId !== search.productId)].slice(0, MAX));
+/** 같은 것을 다시 고르면 위로 올린다. 오래된 것부터 밀려난다. */
+export const addRecentSearch = (search: RecentSearch): readonly RecentSearch[] => {
+  const id = identityOf(search);
+  return commit([search, ...snapshot.filter((item) => identityOf(item) !== id)].slice(0, MAX));
+};
 
-export const removeRecentSearch = (productId: number): readonly RecentSearch[] =>
-  commit(snapshot.filter((item) => item.productId !== productId));
+export const removeRecentSearch = (id: string): readonly RecentSearch[] =>
+  commit(snapshot.filter((item) => identityOf(item) !== id));
+
+/** 지울 때 쓰는 자리 이름. 화면에서 목록 키로도 함께 쓴다. */
+export const recentSearchId = identityOf;
 
 export const clearRecentSearches = (): void => {
   snapshot = [];
