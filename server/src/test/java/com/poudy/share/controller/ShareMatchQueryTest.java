@@ -103,4 +103,15 @@ class ShareMatchQueryTest {
                 .andExpect(jsonPath("$.status").value("MATCHED"))
                 .andExpect(jsonPath("$.productId").value(15L));
     }
+
+    @Test
+    @DisplayName("영문 브랜드명으로 시작하는 공유 텍스트도 브랜드를 떼고 확정한다")
+    void matchesSharedProductWithEnglishBrandName() throws Exception {
+        String text = "[단독기획] DA BRAND 블랙 스네일 토너 150ml 기획" + TAIL;
+
+        mockMvc.perform(get(PATH).param("text", text))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("MATCHED"))
+                .andExpect(jsonPath("$.productId").value(1L));
+    }
 }

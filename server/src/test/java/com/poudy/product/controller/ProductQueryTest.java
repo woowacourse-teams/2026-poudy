@@ -168,4 +168,17 @@ class ProductQueryTest {
                 .andExpect(jsonPath("$.items[0].id").value(15L))
                 .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"));
     }
+
+    @Test
+    @DisplayName("영문 브랜드명 검색은 그 브랜드의 제품을 반환한다")
+    void findsProductsByEnglishBrandName() throws Exception {
+        mockMvc.perform(get("/api/products").param("keyword", "da brand"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pagination.totalElements").value(3L))
+                .andExpect(
+                        jsonPath("$.items[*].brand.id")
+                                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(1))))
+                .andExpect(jsonPath("$.brands.length()").value(1))
+                .andExpect(jsonPath("$.brands[0].englishName").value("DA BRAND"));
+    }
 }
