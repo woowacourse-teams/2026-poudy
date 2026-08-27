@@ -127,7 +127,7 @@ export default function Home() {
         화면 전체의 꼬리말이라 main 밖에 둔다.
         배경색이 이미 경계를 만들므로 위쪽 선은 두지 않는다.
       */}
-      <footer className="flex flex-col items-center gap-2 bg-[#FAFAFB] px-4 py-9 text-center text-[11px] text-text-secondary">
+      <footer className="flex flex-col items-center gap-2 bg-surface-subtle px-4 py-9 text-center text-[11px] text-text-secondary">
         {/* 두 링크의 길이가 달라 사이만 띄우면 한쪽으로 쏠려 보인다. 가운뎃점으로 묶어 한 줄로 읽히게 한다. */}
         <p className="flex items-center justify-center gap-2">
           <Link href="/privacy" className="underline">

@@ -10,6 +10,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | -------------- | ------------------------ | --------- | -------------------- |
 | Background     | `--color-background`     | `#ffffff` | 앱 본문              |
 | Surface        | `--color-surface`        | `#f7f7f8` | 카드와 보조 표면     |
+| Surface subtle | `--color-surface-subtle` | `#fafafb` | 꼬리말과 출처 안내   |
 | Border         | `--color-border`         | `#e8e9ec` | 구분선과 컨트롤 외곽 |
 | Text primary   | `--color-text-primary`   | `#202124` | 제목과 본문          |
 | Text secondary | `--color-text-secondary` | `#72747a` | 설명과 보조 정보     |
