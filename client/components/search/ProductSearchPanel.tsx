@@ -102,7 +102,8 @@ export function ProductSearchPanel() {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    /* 입력 묶음과 그 아래 목록은 서로 다른 덩어리라 넉넉히 벌린다. */
+    <div className="flex flex-col gap-6 p-4">
       <div className="flex flex-col gap-2">
         <SearchField
           value={keyword}
@@ -224,7 +225,8 @@ function RecentSearches({
   return (
     <>
       <section>
-        <div className="flex items-center justify-between pb-2">
+        {/* 제목과 그 아래 목록은 한 덩어리라 바짝 붙인다. */}
+        <div className="flex items-center justify-between pb-1">
           <h2 className="text-[15px] font-bold text-text-primary">최근 검색</h2>
           <button type="button" onClick={clearRecentSearches} className="text-[12px] font-medium text-text-secondary">
             전체 삭제
