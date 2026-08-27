@@ -63,23 +63,23 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
         List<String> words = ShareWords.of(keyword);
 
         return IntStream.iterate(words.size() - 1, size -> size >= MINIMUM_WORDS, size -> size - 1)
-                .mapToObj(size -> ShareWords.join(words.subList(0, size)))
-                .filter(shortened -> ShareWords.letterCount(shortened) >= MINIMUM_LETTERS)
-                .toList();
+            .mapToObj(size -> ShareWords.join(words.subList(0, size)))
+            .filter(shortened -> ShareWords.letterCount(shortened) >= MINIMUM_LETTERS)
+            .toList();
     }
 
     private List<Product> candidatesIn(Products products, String searched) {
         List<Product> found = products.searchByProductName(searched);
 
         return brand.map(owner -> found.stream().filter(product -> product.hasBrand(owner)).toList())
-                .orElse(found);
+            .orElse(found);
     }
 
     private static Optional<Product> confirm(List<Product> candidates, String searched) {
         SearchKeyword searchKeyword = new SearchKeyword(searched);
         List<Product> exact = candidates.stream()
-                .filter(product -> product.matchesNameExactly(searchKeyword))
-                .toList();
+            .filter(product -> product.matchesNameExactly(searchKeyword))
+            .toList();
 
         if (exact.size() == 1) {
             return Optional.of(exact.getFirst());

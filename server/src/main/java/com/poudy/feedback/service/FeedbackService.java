@@ -23,10 +23,11 @@ public class FeedbackService {
     private final Clock clock;
 
     public FeedbackService(
-            S3FeedbackRepository feedbackRepository,
-            FeedbackNotifier feedbackNotifier,
-            FeedbackRateLimiter rateLimiter,
-            @Qualifier("feedbackClock") Clock clock) {
+        S3FeedbackRepository feedbackRepository,
+        FeedbackNotifier feedbackNotifier,
+        FeedbackRateLimiter rateLimiter,
+        @Qualifier("feedbackClock") Clock clock
+    ) {
         this.feedbackRepository = feedbackRepository;
         this.feedbackNotifier = feedbackNotifier;
         this.rateLimiter = rateLimiter;
@@ -38,11 +39,12 @@ public class FeedbackService {
     }
 
     public void submit(
-            FeedbackType type,
-            String content,
-            String path,
-            List<UUID> imageIds,
-            String clientId) {
+        FeedbackType type,
+        String content,
+        String path,
+        List<UUID> imageIds,
+        String clientId
+    ) {
         Feedback feedback = Feedback.register(type, content, path, clock);
         List<UUID> normalizedImageIds = Feedback.normalizeImageIds(imageIds);
         rateLimiter.requireAllowed(clientId);

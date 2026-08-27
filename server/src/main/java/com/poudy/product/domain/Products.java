@@ -23,8 +23,8 @@ public class Products {
     public Products(List<Product> products) {
         this.products = List.copyOf(Objects.requireNonNullElse(products, List.of()));
         this.searchable = this.products.stream()
-                .map(SearchableProduct::of)
-                .toList();
+            .map(SearchableProduct::of)
+            .toList();
         this.byId = indexById(this.products);
         this.productCountsByBrand = productCountsByBrandOf(this.products);
     }
@@ -50,16 +50,17 @@ public class Products {
     }
 
     private List<Product> search(
-            String keyword,
-            BiFunction<SearchableProduct, SearchKeyword, MatchedProduct> match) {
+        String keyword,
+        BiFunction<SearchableProduct, SearchKeyword, MatchedProduct> match
+    ) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
-                .map(product -> match.apply(product, searchKeyword))
-                .filter(MatchedProduct::isFound)
-                .sorted(MatchedProduct.order())
-                .map(MatchedProduct::product)
-                .toList();
+            .map(product -> match.apply(product, searchKeyword))
+            .filter(MatchedProduct::isFound)
+            .sorted(MatchedProduct.order())
+            .map(MatchedProduct::product)
+            .toList();
     }
 
     public long countContaining(Long ingredientId) {
@@ -68,8 +69,8 @@ public class Products {
         }
 
         return products.stream()
-                .filter(product -> product.contains(ingredientId))
-                .count();
+            .filter(product -> product.contains(ingredientId))
+            .count();
     }
 
     public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size) {
@@ -77,8 +78,8 @@ public class Products {
 
         List<Product> matched = matchedBy(filter);
         List<Product> sorted = matched.stream()
-                .sorted(ProductSort.orDefault(sort).comparator())
-                .toList();
+            .sorted(ProductSort.orDefault(sort).comparator())
+            .toList();
 
         return new ProductPage(pageOf(sorted, page, size), matched.size(), brandsOf(matched));
     }
@@ -99,9 +100,9 @@ public class Products {
 
     private static List<Product> pageOf(List<Product> values, int page, int size) {
         return values.stream()
-                .skip((long) page * size)
-                .limit(size)
-                .toList();
+            .skip((long) page * size)
+            .limit(size)
+            .toList();
     }
 
     public long count(ProductFilter filter) {
@@ -118,15 +119,15 @@ public class Products {
         }
 
         return ids.stream()
-                .map(byId::get)
-                .filter(Objects::nonNull)
-                .toList();
+            .map(byId::get)
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     private List<Product> matchedBy(ProductFilter filter) {
         return candidatesOf(filter).stream()
-                .filter(product -> product.matches(filter))
-                .toList();
+            .filter(product -> product.matches(filter))
+            .toList();
     }
 
     private List<Product> candidatesOf(ProductFilter filter) {
@@ -139,10 +140,10 @@ public class Products {
 
     private static List<Brand> brandsOf(List<Product> products) {
         return products.stream()
-                .map(Product::brand)
-                .distinct()
-                .sorted(Brand::compareOrderByName)
-                .toList();
+            .map(Product::brand)
+            .distinct()
+            .sorted(Brand::compareOrderByName)
+            .toList();
     }
 
     public List<CategoryProductCount> productCountsByCategory(Categories categories) {
@@ -151,8 +152,8 @@ public class Products {
 
     private ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
         List<Product> productsInBrand = products.stream()
-                .filter(product -> product.hasBrandId(brandId))
-                .toList();
+            .filter(product -> product.hasBrandId(brandId))
+            .toList();
 
         return countsByCategory(productsInBrand);
     }
@@ -163,26 +164,27 @@ public class Products {
 
     public BrandProductCounts brandProductCountsOf(Brand brand, Categories categories) {
         return new BrandProductCounts(
-                brand,
-                countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories));
+            brand,
+            countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories)
+        );
     }
 
     private static ProductCountsByCategory countsByCategory(List<Product> products) {
         Map<Long, Long> countsByCategoryId = products.stream()
-                .flatMap(product -> categoryIdsOf(product.category()))
-                .collect(Collectors.toUnmodifiableMap(categoryId -> categoryId, categoryId -> 1L, Long::sum));
+            .flatMap(product -> categoryIdsOf(product.category()))
+            .collect(Collectors.toUnmodifiableMap(categoryId -> categoryId, categoryId -> 1L, Long::sum));
 
         return new ProductCountsByCategory(countsByCategoryId);
     }
 
     private static Stream<Long> categoryIdsOf(Category category) {
         return Stream.of(category.id(), category.parentId())
-                .filter(Objects::nonNull);
+            .filter(Objects::nonNull);
     }
 
     private static ProductCountsByBrand productCountsByBrandOf(List<Product> products) {
         Map<Long, Long> countsByBrandId = products.stream()
-                .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
+            .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
         return new ProductCountsByBrand(countsByBrandId);
     }
 }

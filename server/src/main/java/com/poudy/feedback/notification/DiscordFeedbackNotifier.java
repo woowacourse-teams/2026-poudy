@@ -21,8 +21,9 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
     private final String webhookUrl;
 
     public DiscordFeedbackNotifier(
-            RestClient feedbackDiscordRestClient,
-            @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl) {
+        RestClient feedbackDiscordRestClient,
+        @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl
+    ) {
         this.restClient = feedbackDiscordRestClient;
         this.webhookUrl = webhookUrl;
     }
@@ -30,11 +31,11 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
     @Override
     public void notify(Feedback feedback) {
         restClient.post()
-                .uri(URI.create(webhookUrl + "?wait=true"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(payloadOf(feedback))
-                .retrieve()
-                .toBodilessEntity();
+            .uri(URI.create(webhookUrl + "?wait=true"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(payloadOf(feedback))
+            .retrieve()
+            .toBodilessEntity();
     }
 
     private static Map<String, Object> payloadOf(Feedback feedback) {
@@ -47,20 +48,21 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
 
     private static String messageOf(Feedback feedback) {
         String header = """
-                💬 새로운 사용자 의견
+            💬 새로운 사용자 의견
 
-                유형: %s
-                화면: %s
-                접수 시각: %s
-                접수 ID: %s
-                첨부 이미지: %d장
+            유형: %s
+            화면: %s
+            접수 시각: %s
+            접수 ID: %s
+            첨부 이미지: %d장
 
-                """.formatted(
-                feedback.type().displayName(),
-                feedback.path().value(),
-                feedback.receivedAt().format(RECEIVED_AT_FORMAT),
-                feedback.id(),
-                feedback.images().size());
+            """.formatted(
+            feedback.type().displayName(),
+            feedback.path().value(),
+            feedback.receivedAt().format(RECEIVED_AT_FORMAT),
+            feedback.id(),
+            feedback.images().size()
+        );
 
         return appendWithinLimit(header, feedback.content().value());
     }

@@ -13,11 +13,12 @@ class TagsTest {
     @DisplayName("같은 ID의 태그를 가질 수 없다")
     void rejectsDuplicateIds() {
         List<Tag> tags = List.of(
-                new Tag(1L, TagCategory.FUNCTION, "ABRASIVE", "연마제"),
-                new Tag(1L, TagCategory.FUNCTION, "ABSORBENT", "흡수제"));
+            new Tag(1L, TagCategory.FUNCTION, "ABRASIVE", "연마제"),
+            new Tag(1L, TagCategory.FUNCTION, "ABSORBENT", "흡수제")
+        );
 
         assertThatThrownBy(() -> Tags.from(tags))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("태그 ID는 중복될 수 없습니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("태그 ID는 중복될 수 없습니다.");
     }
 }

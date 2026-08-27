@@ -35,6 +35,6 @@ class ProductQueryTest {
 
         assertThat(query.categoryIds()).containsExactly(1L);
         assertThatThrownBy(() -> query.categoryIds().add(3L))
-                .isInstanceOf(UnsupportedOperationException.class);
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 }

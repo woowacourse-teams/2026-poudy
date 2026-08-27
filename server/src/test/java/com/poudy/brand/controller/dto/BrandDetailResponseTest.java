@@ -21,24 +21,29 @@ class BrandDetailResponseTest {
         Brand brand = new Brand(1L, "닥터지", null, null);
         CategoryProductCount toner = new CategoryProductCount(new Category(2L, 1L, "토너", 1), 2L, List.of());
         CategoryProductCount skinCare = new CategoryProductCount(
-                new Category(1L, null, "스킨케어", 0),
-                2L,
-                List.of(toner));
+            new Category(1L, null, "스킨케어", 0),
+            2L,
+            List.of(toner)
+        );
         BrandProductCounts brandProductCounts = new BrandProductCounts(brand, List.of(skinCare));
 
         BrandDetailResponse response = BrandDetailResponse.from(brandProductCounts);
 
         assertThat(response).isEqualTo(
-                new BrandDetailResponse(
+            new BrandDetailResponse(
+                1L,
+                "닥터지",
+                null,
+                null,
+                List.of(
+                    new CategoryResponse(
                         1L,
-                        "닥터지",
-                        null,
-                        null,
-                        List.of(
-                                new CategoryResponse(
-                                        1L,
-                                        "스킨케어",
-                                        List.of(new CategoryChildResponse(2L, "토너", 2L)),
-                                        2L))));
+                        "스킨케어",
+                        List.of(new CategoryChildResponse(2L, "토너", 2L)),
+                        2L
+                    )
+                )
+            )
+        );
     }
 }

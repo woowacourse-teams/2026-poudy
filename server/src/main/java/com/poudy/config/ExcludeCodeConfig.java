@@ -11,8 +11,9 @@ public class ExcludeCodeConfig {
 
     @Bean
     public ExcludeCodeIngredients excludeCodeIngredients(
-            ExcludeCodeRepository excludeCodeRepository,
-            Ingredients ingredients) {
+        ExcludeCodeRepository excludeCodeRepository,
+        Ingredients ingredients
+    ) {
         return new ExcludeCodeIngredients(excludeCodeRepository.findAll(), ingredients);
     }
 }

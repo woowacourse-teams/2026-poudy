@@ -7,12 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record StorageResponse(
-        @NotNull @Schema(description = "요청한 ID 순서대로 담긴 제품. 찾지 못한 ID 는 빠진다") List<ProductResponse> items) {
+    @NotNull @Schema(description = "요청한 ID 순서대로 담긴 제품. 찾지 못한 ID 는 빠진다") List<ProductResponse> items) {
 
     public static StorageResponse from(List<Product> products) {
         return new StorageResponse(
-                products.stream()
-                        .map(ProductResponse::from)
-                        .toList());
+            products.stream()
+                .map(ProductResponse::from)
+                .toList()
+        );
     }
 }

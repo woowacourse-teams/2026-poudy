@@ -10,18 +10,20 @@ import java.math.BigDecimal;
 public final class ProductSensoryTestFixture {
 
     private static final SensoryModelVersion TEST_VERSION = new SensoryModelVersion(
-            "test-ingredient-profile",
-            "test-category-prior",
-            "test-level-model");
+        "test-ingredient-profile",
+        "test-category-prior",
+        "test-level-model"
+    );
 
     private ProductSensoryTestFixture() {
     }
 
     public static ProductSensory sensory(int moistureLevel, int oilLevel) {
         return new ProductSensory(
-                new MoistureLevel(moistureLevel),
-                new OilLevel(oilLevel),
-                new SensoryConfidence(new BigDecimal("0.5")),
-                TEST_VERSION);
+            new MoistureLevel(moistureLevel),
+            new OilLevel(oilLevel),
+            new SensoryConfidence(new BigDecimal("0.5")),
+            TEST_VERSION
+        );
     }
 }

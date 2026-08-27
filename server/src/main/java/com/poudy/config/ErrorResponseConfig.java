@@ -31,33 +31,41 @@ public class ErrorResponseConfig {
 
         if (hasInput(operation)) {
             responses.addApiResponse(
-                    "400",
-                    ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path)));
+                "400",
+                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path))
+            );
         }
         if (ErrorResponseCodes.rateLimited(path)) {
             responses.addApiResponse(
-                    "429",
-                    ProblemDetailResponses.of(
-                            "요청 제한 초과",
-                            HttpStatus.TOO_MANY_REQUESTS,
-                            ErrorCode.TOO_MANY_REQUESTS));
+                "429",
+                ProblemDetailResponses.of(
+                    "요청 제한 초과",
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    ErrorCode.TOO_MANY_REQUESTS
+                )
+            );
         }
         if (ErrorResponseCodes.payloadLimited(path)) {
             responses.addApiResponse(
-                    "413",
-                    ProblemDetailResponses.of(
-                            "요청 본문 크기 초과",
-                            HttpStatus.PAYLOAD_TOO_LARGE,
-                            ErrorCode.PAYLOAD_TOO_LARGE));
+                "413",
+                ProblemDetailResponses.of(
+                    "요청 본문 크기 초과",
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    ErrorCode.PAYLOAD_TOO_LARGE
+                )
+            );
         }
         ErrorResponseCodes.notFound(path)
-                .ifPresent(
-                        code -> responses.addApiResponse(
-                                "404",
-                                ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)));
+            .ifPresent(
+                code -> responses.addApiResponse(
+                    "404",
+                    ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)
+                )
+            );
         responses.addApiResponse(
-                "500",
-                ProblemDetailResponses.of("서버 오류", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR));
+            "500",
+            ProblemDetailResponses.of("서버 오류", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR)
+        );
     }
 
     private boolean hasInput(Operation operation) {

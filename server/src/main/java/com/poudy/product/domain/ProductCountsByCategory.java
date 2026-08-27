@@ -28,22 +28,24 @@ public class ProductCountsByCategory {
     }
 
     private List<CategoryProductCount> categoriesOf(
-            Categories categories,
-            Predicate<Category> included) {
+        Categories categories,
+        Predicate<Category> included
+    ) {
         return categories.parents().stream()
-                .filter(included)
-                .map(parent -> countedOf(parent, categories, included))
-                .toList();
+            .filter(included)
+            .map(parent -> countedOf(parent, categories, included))
+            .toList();
     }
 
     private CategoryProductCount countedOf(
-            Category parent,
-            Categories categories,
-            Predicate<Category> included) {
+        Category parent,
+        Categories categories,
+        Predicate<Category> included
+    ) {
         List<CategoryProductCount> children = categories.childrenOf(parent).stream()
-                .filter(included)
-                .map(child -> new CategoryProductCount(child, countOf(child), List.of()))
-                .toList();
+            .filter(included)
+            .map(child -> new CategoryProductCount(child, countOf(child), List.of()))
+            .toList();
 
         return new CategoryProductCount(parent, countOf(parent), children);
     }

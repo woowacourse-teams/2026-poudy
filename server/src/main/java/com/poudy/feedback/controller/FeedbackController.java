@@ -30,8 +30,9 @@ public class FeedbackController {
     private final FeedbackImageUploadService imageUploadService;
 
     public FeedbackController(
-            FeedbackService feedbackService,
-            FeedbackImageUploadService imageUploadService) {
+        FeedbackService feedbackService,
+        FeedbackImageUploadService imageUploadService
+    ) {
         this.feedbackService = feedbackService;
         this.imageUploadService = imageUploadService;
     }
@@ -40,14 +41,16 @@ public class FeedbackController {
     @ApiResponse(responseCode = "204", description = "의견 등록 완료")
     @PostMapping
     public ResponseEntity<Void> submit(
-            @Valid @RequestBody FeedbackRequest request,
-            HttpServletRequest httpRequest) {
+        @Valid @RequestBody FeedbackRequest request,
+        HttpServletRequest httpRequest
+    ) {
         feedbackService.submit(
-                request.type(),
-                request.content(),
-                request.path(),
-                request.imageIds(),
-                ClientAddressResolver.resolve(httpRequest));
+            request.type(),
+            request.content(),
+            request.path(),
+            request.imageIds(),
+            ClientAddressResolver.resolve(httpRequest)
+        );
 
         return ResponseEntity.noContent().build();
     }
@@ -56,11 +59,13 @@ public class FeedbackController {
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
     @PostMapping(path = "/images", consumes = "multipart/form-data")
     public ResponseEntity<FeedbackImageUploadResponse> uploadImages(
-            @ArraySchema(minItems = 1, maxItems = Feedback.MAX_IMAGE_COUNT) @RequestPart("images") List<MultipartFile> images,
-            HttpServletRequest httpRequest) {
+        @ArraySchema(minItems = 1, maxItems = Feedback.MAX_IMAGE_COUNT) @RequestPart("images") List<MultipartFile> images,
+        HttpServletRequest httpRequest
+    ) {
         List<java.util.UUID> imageIds = imageUploadService.upload(
-                images,
-                ClientAddressResolver.resolve(httpRequest));
+            images,
+            ClientAddressResolver.resolve(httpRequest)
+        );
         return ResponseEntity.status(201).body(new FeedbackImageUploadResponse(imageIds));
     }
 }

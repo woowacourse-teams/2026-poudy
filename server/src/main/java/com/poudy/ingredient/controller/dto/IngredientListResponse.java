@@ -9,8 +9,9 @@ public record IngredientListResponse(@NotNull @Schema(description = "조회된 �
 
     public static IngredientListResponse from(List<Ingredient> ingredients) {
         return new IngredientListResponse(
-                ingredients.stream()
-                        .map(IngredientResponse::from)
-                        .toList());
+            ingredients.stream()
+                .map(IngredientResponse::from)
+                .toList()
+        );
     }
 }

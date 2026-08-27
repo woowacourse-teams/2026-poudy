@@ -38,19 +38,21 @@ class ProductCountsByCategoryTest {
         Category toner = child(2L, 1L, "토너");
         Category serum = child(3L, 1L, "세럼");
         Categories categories = Categories.from(
-                List.of(skinCare, toner, serum, parent(4L, "선케어"), child(5L, 4L, "선크림")));
+            List.of(skinCare, toner, serum, parent(4L, "선케어"), child(5L, 4L, "선크림"))
+        );
         ProductCountsByCategory productCounts = new ProductCountsByCategory(Map.of(1L, 3L, 2L, 2L, 3L, 1L));
 
         List<CategoryProductCount> countedCategories = productCounts.nonEmptyCategoriesOf(categories);
 
         assertThat(countedCategories)
-                .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
-                .containsExactly(tuple(skinCare.id(), "스킨케어", 3L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
+            .containsExactly(tuple(skinCare.id(), "스킨케어", 3L));
         assertThat(countedCategories.getFirst().children())
-                .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
-                .containsExactly(
-                        tuple(toner.id(), "토너", 2L),
-                        tuple(serum.id(), "세럼", 1L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::name, CategoryProductCount::productCount)
+            .containsExactly(
+                tuple(toner.id(), "토너", 2L),
+                tuple(serum.id(), "세럼", 1L)
+            );
     }
 
     @Test
@@ -75,11 +77,11 @@ class ProductCountsByCategoryTest {
         List<CategoryProductCount> countedCategories = productCounts.categoriesOf(categories);
 
         assertThat(countedCategories)
-                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
-                .containsExactly(tuple(1L, 1L), tuple(3L, 0L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+            .containsExactly(tuple(1L, 1L), tuple(3L, 0L));
         assertThat(countedCategories.get(1).children())
-                .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
-                .containsExactly(tuple(4L, 0L));
+            .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+            .containsExactly(tuple(4L, 0L));
     }
 
     private static Category category(Long id) {

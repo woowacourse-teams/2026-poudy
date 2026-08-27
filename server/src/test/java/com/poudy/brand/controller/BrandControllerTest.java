@@ -48,9 +48,10 @@ class BrandControllerTest {
         Brand drG = new Brand(1L, "닥터지", null, null);
         CategoryProductCount toner = new CategoryProductCount(new Category(2L, 1L, "토너", 1), 3L, List.of());
         CategoryProductCount skinCare = new CategoryProductCount(
-                new Category(1L, null, "스킨케어", 0),
-                3L,
-                List.of(toner));
+            new Category(1L, null, "스킨케어", 0),
+            3L,
+            List.of(toner)
+        );
         BrandProductCounts brandProductCounts = new BrandProductCounts(drG, List.of(skinCare));
         BrandService brandService = mock(BrandService.class);
         given(brandService.findBrandDetail(1L)).willReturn(brandProductCounts);

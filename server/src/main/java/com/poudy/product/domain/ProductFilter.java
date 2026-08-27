@@ -5,12 +5,12 @@ import com.poudy.product.domain.sensory.OilLevel;
 import java.util.List;
 
 public record ProductFilter(
-        String keyword,
-        List<Long> categoryIds,
-        List<Long> brandIds,
-        List<MoistureLevel> moistureLevels,
-        List<OilLevel> oilLevels,
-        IngredientFilter ingredientFilter) {
+    String keyword,
+    List<Long> categoryIds,
+    List<Long> brandIds,
+    List<MoistureLevel> moistureLevels,
+    List<OilLevel> oilLevels,
+    IngredientFilter ingredientFilter) {
 
     public ProductFilter {
         categoryIds = copyOf(categoryIds);

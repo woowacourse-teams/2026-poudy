@@ -16,7 +16,7 @@ class IngredientFilterTest {
     @DisplayName("같은 성분이 포함과 제외에 함께 있으면 만들 수 없다")
     void rejectsIngredientPresentInBothSides() {
         assertThatThrownBy(() -> new IngredientFilter(List.of(1001L, 1005L), List.of(1005L)))
-                .isInstanceOf(ConflictingIngredientFilterException.class);
+            .isInstanceOf(ConflictingIngredientFilterException.class);
     }
 
     @Test
@@ -40,7 +40,7 @@ class IngredientFilterTest {
     @DisplayName("포함 성분이 제외 성분군에 속하면 만들 수 없다")
     void rejectsIngredientCoveredByExcludedCode() {
         assertThatThrownBy(() -> IngredientFilter.of(List.of(3551L), null, Set.of(3551L, 213L)))
-                .isInstanceOf(ConflictingIngredientFilterException.class);
+            .isInstanceOf(ConflictingIngredientFilterException.class);
     }
 
     @Test
@@ -62,6 +62,6 @@ class IngredientFilterTest {
     @DisplayName("성분군과 성분으로 같은 제외를 중복해 보내도 한 번만 남는다")
     void deduplicatesResolvedExclusions() {
         assertThat(IngredientFilter.of(null, List.of(1079L), Set.of(1079L, 1050L)).excludedIds())
-                .filteredOn(id -> id.equals(1079L)).hasSize(1);
+            .filteredOn(id -> id.equals(1079L)).hasSize(1);
     }
 }

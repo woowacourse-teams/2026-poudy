@@ -20,7 +20,8 @@ class SkinEffectGroupResponseTest {
         List<SkinEffectGroupResponse> responses = SkinEffectGroupResponse.from(List.of(group));
 
         assertThat(responses)
-                .containsExactly(
-                        new SkinEffectGroupResponse(57L, "HYDRATION_RELATED", "피부 수분 관련", List.of(1012L, 3500L)));
+            .containsExactly(
+                new SkinEffectGroupResponse(57L, "HYDRATION_RELATED", "피부 수분 관련", List.of(1012L, 3500L))
+            );
     }
 }

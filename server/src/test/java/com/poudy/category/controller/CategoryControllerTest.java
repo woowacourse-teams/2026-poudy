@@ -25,7 +25,8 @@ class CategoryControllerTest {
         Category toner = new Category(2L, 1L, "토너", 1);
         CategoryProductCount tonerCount = new CategoryProductCount(toner, 1L, List.of());
         List<CategoryProductCount> productCounts = List.of(
-                new CategoryProductCount(skinCare, 1L, List.of(tonerCount)));
+            new CategoryProductCount(skinCare, 1L, List.of(tonerCount))
+        );
         CategoryService categoryService = mock(CategoryService.class);
         given(categoryService.findCategories()).willReturn(productCounts);
         CategoryController controller = new CategoryController(categoryService);

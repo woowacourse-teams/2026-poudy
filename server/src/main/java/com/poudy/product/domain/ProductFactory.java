@@ -19,24 +19,26 @@ public final class ProductFactory {
     }
 
     public Product create(
-            Long id,
-            String name,
-            Brand brand,
-            Category category,
-            Ingredients ingredients,
-            String imageUrl,
-            ProductVariants variants,
-            OffsetDateTime updatedAt) {
+        Long id,
+        String name,
+        Brand brand,
+        Category category,
+        Ingredients ingredients,
+        String imageUrl,
+        ProductVariants variants,
+        OffsetDateTime updatedAt
+    ) {
         ProductSensory sensory = sensoryEstimator.estimate(category, ingredients);
         return new Product(
-                id,
-                name,
-                brand,
-                category,
-                ingredients,
-                imageUrl,
-                variants,
-                sensory,
-                updatedAt);
+            id,
+            name,
+            brand,
+            category,
+            ingredients,
+            imageUrl,
+            variants,
+            sensory,
+            updatedAt
+        );
     }
 }

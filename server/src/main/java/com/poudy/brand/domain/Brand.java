@@ -77,8 +77,8 @@ public class Brand {
 
     private static List<SearchableText> searchableNamesOf(String koreanName, String englishName) {
         return Stream.of(koreanName, englishName)
-                .filter(Objects::nonNull)
-                .flatMap(name -> SearchableText.formsOf(name).stream())
-                .toList();
+            .filter(Objects::nonNull)
+            .flatMap(name -> SearchableText.formsOf(name).stream())
+            .toList();
     }
 }

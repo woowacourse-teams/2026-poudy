@@ -14,12 +14,13 @@ public final class ErrorResponseCodes {
     private static final String FEEDBACK_IMAGES_PATH = "/api/feedback/images";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
-            "brands",
-            ErrorCode.BRAND_NOT_FOUND,
-            "ingredients",
-            ErrorCode.INGREDIENT_NOT_FOUND,
-            "products",
-            ErrorCode.PRODUCT_NOT_FOUND);
+        "brands",
+        ErrorCode.BRAND_NOT_FOUND,
+        "ingredients",
+        ErrorCode.INGREDIENT_NOT_FOUND,
+        "products",
+        ErrorCode.PRODUCT_NOT_FOUND
+    );
 
     private ErrorResponseCodes() {
     }
@@ -43,8 +44,8 @@ public final class ErrorResponseCodes {
 
     public static boolean rateLimited(String path) {
         return PRODUCT_REQUESTS_PATH.equals(path)
-                || FEEDBACK_PATH.equals(path)
-                || FEEDBACK_IMAGES_PATH.equals(path);
+            || FEEDBACK_PATH.equals(path)
+            || FEEDBACK_IMAGES_PATH.equals(path);
     }
 
     public static boolean payloadLimited(String path) {

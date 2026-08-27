@@ -30,31 +30,36 @@ public class IngredientController {
     }
 
     @Operation(summary = "성분 조회", description = "성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. "
-            + "ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. "
-            + "존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.")
+        + "ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. "
+        + "존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.")
     @GetMapping
     public ResponseEntity<IngredientPageResponse> findIngredients(
-            @Valid @ModelAttribute IngredientQueryRequest query,
-            @Valid @ModelAttribute PaginationRequest pagination) {
+        @Valid @ModelAttribute IngredientQueryRequest query,
+        @Valid @ModelAttribute PaginationRequest pagination
+    ) {
         return ResponseEntity.ok(
-                IngredientPageResponse.from(
-                        ingredientService.find(query.toQuery(), pagination.page(), pagination.size()),
-                        pagination));
+            IngredientPageResponse.from(
+                ingredientService.find(query.toQuery(), pagination.page(), pagination.size()),
+                pagination
+            )
+        );
     }
 
     @Operation(summary = "성분 검색 제안 조회", description = "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 "
-            + "검색어에 잘 맞는 순서로 최대 5 건 반환한다.")
+        + "검색어에 잘 맞는 순서로 최대 5 건 반환한다.")
     @Parameter(name = "keyword", example = "글리")
     @GetMapping("/suggestions")
     public ResponseEntity<IngredientListResponse> suggestIngredients(
-            @Valid @ModelAttribute KeywordRequest search) {
+        @Valid @ModelAttribute KeywordRequest search
+    ) {
         return ResponseEntity.ok(IngredientListResponse.from(ingredientService.suggest(search.keyword())));
     }
 
     @Operation(summary = "성분 상세 조회", description = "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.")
     @GetMapping("/{ingredientId}")
     public ResponseEntity<IngredientDetailResponse> findIngredientDetail(
-            @Parameter(example = "1012") @PathVariable Long ingredientId) {
+        @Parameter(example = "1012") @PathVariable Long ingredientId
+    ) {
         return ResponseEntity.ok(IngredientDetailResponse.from(ingredientService.findDetail(ingredientId)));
     }
 

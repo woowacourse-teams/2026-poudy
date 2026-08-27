@@ -19,8 +19,8 @@ public class Brands {
 
     public List<Brand> sortedByName() {
         return brandsById.values().stream()
-                .sorted(Brand::compareOrderByName)
-                .toList();
+            .sorted(Brand::compareOrderByName)
+            .toList();
     }
 
     public Optional<Brand> findById(Long id) {
@@ -31,8 +31,8 @@ public class Brands {
         SearchKeyword keyword = new SearchKeyword(name);
 
         return brandsById.values().stream()
-                .filter(brand -> brand.matchesNameExactly(keyword))
-                .findFirst();
+            .filter(brand -> brand.matchesNameExactly(keyword))
+            .findFirst();
     }
 
     private static Map<Long, Brand> parseBrandsById(List<Brand> brands) {
@@ -41,13 +41,16 @@ public class Brands {
         }
 
         return Collections.unmodifiableMap(
-                brands.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        Brand::id,
-                                        Function.identity(),
-                                        Brands::rejectDuplicateId,
-                                        LinkedHashMap::new)));
+            brands.stream()
+                .collect(
+                    Collectors.toMap(
+                        Brand::id,
+                        Function.identity(),
+                        Brands::rejectDuplicateId,
+                        LinkedHashMap::new
+                    )
+                )
+        );
     }
 
     private static Brand rejectDuplicateId(Brand existingBrand, Brand duplicateBrand) {

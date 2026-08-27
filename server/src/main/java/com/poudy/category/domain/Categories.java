@@ -27,15 +27,15 @@ public class Categories {
 
     public List<Category> parents() {
         return categories.values()
-                .stream()
-                .filter(Category::isParent)
-                .toList();
+            .stream()
+            .filter(Category::isParent)
+            .toList();
     }
 
     public List<Category> childrenOf(Category parent) {
         return categories.values().stream()
-                .filter(category -> category.isChildOf(parent))
-                .toList();
+            .filter(category -> category.isChildOf(parent))
+            .toList();
     }
 
     public Optional<Category> findById(Long id) {
@@ -63,13 +63,14 @@ public class Categories {
 
     private static void validateChildrenBelongToParent(Map<Long, Category> categories) {
         categories.values().stream()
-                .filter(category -> !category.isParent())
-                .forEach(category -> validateChildBelongsToParent(category, categories));
+            .filter(category -> !category.isParent())
+            .forEach(category -> validateChildBelongsToParent(category, categories));
     }
 
     private static void validateChildBelongsToParent(
-            Category child,
-            Map<Long, Category> categories) {
+        Category child,
+        Map<Long, Category> categories
+    ) {
         Category parent = categories.get(child.parentId());
         if (parent == null || !child.isChildOf(parent)) {
             throw new IllegalArgumentException("소분류는 존재하는 대분류를 부모로 가져야 합니다.");

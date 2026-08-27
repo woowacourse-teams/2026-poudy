@@ -41,9 +41,9 @@ public final class SearchKeyword {
         }
 
         return SearchableText.formsOf(candidate).stream()
-                .map(this::match)
-                .min(Comparator.naturalOrder())
-                .orElse(NameMatch.NONE);
+            .map(this::match)
+            .min(Comparator.naturalOrder())
+            .orElse(NameMatch.NONE);
     }
 
     public NameMatch match(SearchableText candidate) {

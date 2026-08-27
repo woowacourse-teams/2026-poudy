@@ -17,7 +17,7 @@ public record Evidence(String source, EvidenceDelimiter delimiter) {
 
     public boolean isDeferred() {
         return sources().stream()
-                .anyMatch(evidence -> evidence.startsWith(DEFERRED_PREFIX));
+            .anyMatch(evidence -> evidence.startsWith(DEFERRED_PREFIX));
     }
 
     public List<String> sources() {

@@ -18,9 +18,9 @@ public class CorsConfig implements WebMvcConfigurer {
 
     public CorsConfig(@Value("${poudy.cors.allowed-origins:}") List<String> allowedOrigins) {
         this.allowedOrigins = allowedOrigins.stream()
-                .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
-                .toList();
+            .map(String::trim)
+            .filter(origin -> !origin.isEmpty())
+            .toList();
     }
 
     @Override
@@ -30,9 +30,9 @@ public class CorsConfig implements WebMvcConfigurer {
         }
 
         registry.addMapping(API_PATH_PATTERN)
-                .allowedOriginPatterns(allowedOrigins.toArray(String[]::new))
-                .allowedMethods(ALLOWED_METHODS)
-                .allowedHeaders(CorsConfiguration.ALL)
-                .maxAge(PREFLIGHT_MAX_AGE_SECONDS);
+            .allowedOriginPatterns(allowedOrigins.toArray(String[]::new))
+            .allowedMethods(ALLOWED_METHODS)
+            .allowedHeaders(CorsConfiguration.ALL)
+            .maxAge(PREFLIGHT_MAX_AGE_SECONDS);
     }
 }

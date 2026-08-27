@@ -22,7 +22,7 @@ public class ProductCountsByBrand {
 
     public List<BrandProductCount> countsOf(List<Brand> brands) {
         return brands.stream()
-                .map(brand -> new BrandProductCount(brand, countOf(brand.id())))
-                .toList();
+            .map(brand -> new BrandProductCount(brand, countOf(brand.id())))
+            .toList();
     }
 }

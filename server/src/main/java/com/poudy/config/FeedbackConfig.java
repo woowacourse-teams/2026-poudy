@@ -31,14 +31,14 @@ public class FeedbackConfig {
     @Bean
     public S3Client feedbackS3Client(@Value("${poudy.feedback.s3.region}") String region) {
         ClientOverrideConfiguration timeouts = ClientOverrideConfiguration.builder()
-                .apiCallTimeout(S3_API_CALL_TIMEOUT)
-                .apiCallAttemptTimeout(S3_API_CALL_ATTEMPT_TIMEOUT)
-                .build();
+            .apiCallTimeout(S3_API_CALL_TIMEOUT)
+            .apiCallAttemptTimeout(S3_API_CALL_ATTEMPT_TIMEOUT)
+            .build();
 
         return S3Client.builder()
-                .region(Region.of(region))
-                .overrideConfiguration(timeouts)
-                .build();
+            .region(Region.of(region))
+            .overrideConfiguration(timeouts)
+            .build();
     }
 
     @Bean

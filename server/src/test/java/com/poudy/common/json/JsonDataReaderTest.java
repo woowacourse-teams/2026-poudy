@@ -37,7 +37,7 @@ class JsonDataReaderTest {
         List<Sample> samples = jsonDataReader.readList(SAMPLE_FILE, Sample.class);
 
         assertThat(samples).extracting(Sample::id, Sample::koreanName)
-                .containsExactly(tuple(1L, "글리세린"), tuple(2L, "부틸렌글라이콜"));
+            .containsExactly(tuple(1L, "글리세린"), tuple(2L, "부틸렌글라이콜"));
     }
 
     @Test
@@ -62,53 +62,53 @@ class JsonDataReaderTest {
         List<Sample> samples = jsonDataReader.readList(SAMPLE_FILE, Sample.class);
 
         assertThatThrownBy(() -> samples.add(new Sample(99L, "침입", List.of(), null)))
-                .isInstanceOf(UnsupportedOperationException.class);
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
     @DisplayName("최상위 필드가 null 이면 기동 시점에 인프라 예외로 실패한다")
     void wrapsNullRootField() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-null-root.json", Sample.class))
-                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-null-root");
+            .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-null-root");
     }
 
     @Test
     @DisplayName("파일이 없으면 인프라 예외로 감싸고 어떤 파일인지 남긴다")
     void wrapsMissingFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-missing.json", Sample.class))
-                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-missing.json")
-                .hasCauseInstanceOf(IOException.class);
+            .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-missing.json")
+            .hasCauseInstanceOf(IOException.class);
     }
 
     @Test
     @DisplayName("형식이 깨졌으면 인프라 예외로 감싼다")
     void wrapsMalformedFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-broken.json", Sample.class))
-                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-broken.json");
+            .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-broken.json");
     }
 
     @Test
     @DisplayName("최상위 필드가 파일 이름과 다르면 무엇을 찾았는지 남기고 실패한다")
     void wrapsRootFieldNotNamedAfterFile() {
         assertThatThrownBy(() -> jsonDataReader.readList("json-data-reader-wrong-root.json", Sample.class))
-                .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-wrong-root");
+            .isInstanceOf(InfrastructureException.class).hasMessageContaining("json-data-reader-wrong-root");
     }
 
     @Test
     @DisplayName("외부 데이터 디렉터리가 설정되면 classpath 대신 그곳에서 읽는다")
     void readsFromExternalDataDirectory() throws IOException {
         Files.writeString(dataDirectory.resolve(SAMPLE_FILE), """
-                {
-                  "json-data-reader-sample": [
-                    {"id": 3, "korean_name": "외부 데이터"}
-                  ]
-                }
-                """);
+            {
+              "json-data-reader-sample": [
+                {"id": 3, "korean_name": "외부 데이터"}
+              ]
+            }
+            """);
 
         JsonDataReader externalReader = new JsonDataReader(new DefaultResourceLoader(), dataDirectory);
 
         assertThat(externalReader.readList(SAMPLE_FILE, Sample.class))
-                .extracting(Sample::id, Sample::koreanName)
-                .containsExactly(tuple(3L, "외부 데이터"));
+            .extracting(Sample::id, Sample::koreanName)
+            .containsExactly(tuple(3L, "외부 데이터"));
     }
 }

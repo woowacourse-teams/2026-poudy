@@ -51,7 +51,7 @@ class CategoriesTest {
         Category toner = child(2L, 1L, "토너");
 
         assertThatThrownBy(() -> Categories.from(List.of(toner))).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
+            .hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
     }
 
     @Test
@@ -62,7 +62,7 @@ class CategoriesTest {
         Category moisturizingToner = child(3L, 2L, "보습 토너");
 
         assertThatThrownBy(() -> Categories.from(List.of(skinCare, toner, moisturizingToner)))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("소분류는 존재하는 대분류를 부모로 가져야 합니다.");
     }
 
     @Test
@@ -104,8 +104,8 @@ class CategoriesTest {
         Category duplicate = parent(1L, "클렌징");
 
         assertThatThrownBy(() -> Categories.from(List.of(skinCare, duplicate)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("카테고리 ID는 중복될 수 없습니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("카테고리 ID는 중복될 수 없습니다.");
     }
 
     private static Category parent(Long id, String name) {

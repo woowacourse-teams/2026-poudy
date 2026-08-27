@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Objects;
 
 public record ProductQuery(
-        String keyword,
-        List<Long> categoryIds,
-        List<Long> brandIds,
-        List<Integer> moistureLevels,
-        List<Integer> oilLevels,
-        List<Long> includeIngredientIds,
-        List<Long> excludeIngredientIds,
-        List<ExcludeCode> excludeCodes) {
+    String keyword,
+    List<Long> categoryIds,
+    List<Long> brandIds,
+    List<Integer> moistureLevels,
+    List<Integer> oilLevels,
+    List<Long> includeIngredientIds,
+    List<Long> excludeIngredientIds,
+    List<ExcludeCode> excludeCodes) {
 
     public ProductQuery {
         categoryIds = copyOf(categoryIds);

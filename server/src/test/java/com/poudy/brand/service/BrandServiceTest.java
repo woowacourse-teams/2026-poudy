@@ -37,19 +37,21 @@ class BrandServiceTest {
         ProductRepository productRepository = mock(ProductRepository.class);
         Products products = mock(Products.class);
         List<BrandProductCount> productCounts = List.of(
-                new BrandProductCount(drG, 3L),
-                new BrandProductCount(medicube, 0L));
+            new BrandProductCount(drG, 3L),
+            new BrandProductCount(medicube, 0L)
+        );
         given(brandRepository.findAll()).willReturn(brands);
         given(productRepository.findAll()).willReturn(products);
         given(products.productCountsByBrand(brands.sortedByName())).willReturn(productCounts);
         BrandService brandService = new BrandService(
-                brandRepository,
-                productRepository,
-                Categories.from(List.of()));
+            brandRepository,
+            productRepository,
+            Categories.from(List.of())
+        );
 
         assertThat(brandService.findBrands())
-                .extracting(BrandProductCount::id, BrandProductCount::productCount)
-                .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
+            .extracting(BrandProductCount::id, BrandProductCount::productCount)
+            .containsExactly(tuple(1L, 3L), tuple(2L, 0L));
     }
 
     @Test
@@ -78,14 +80,15 @@ class BrandServiceTest {
         ProductRepository productRepository = mock(ProductRepository.class);
         given(brandRepository.findById(999L)).willReturn(Optional.empty());
         BrandService brandService = new BrandService(
-                brandRepository,
-                productRepository,
-                Categories.from(List.of()));
+            brandRepository,
+            productRepository,
+            Categories.from(List.of())
+        );
 
         assertThatThrownBy(() -> brandService.findBrandDetail(999L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .extracting(exception -> ((ResourceNotFoundException) exception).code())
-                .isEqualTo(ErrorCode.BRAND_NOT_FOUND);
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting(exception -> ((ResourceNotFoundException) exception).code())
+            .isEqualTo(ErrorCode.BRAND_NOT_FOUND);
         verifyNoInteractions(productRepository);
     }
 }

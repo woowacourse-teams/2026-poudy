@@ -45,11 +45,11 @@ class BrandTest {
         Brand brand = new Brand(1L, "닥터지", "Dr.G", null);
 
         assertThat(brand.matchKeyword(new SearchKeyword("닥터")))
-                .extracting(NameRank::match)
-                .isEqualTo(NameMatch.PREFIX);
+            .extracting(NameRank::match)
+            .isEqualTo(NameMatch.PREFIX);
         assertThat(brand.matchKeyword(new SearchKeyword("dr.g")))
-                .extracting(NameRank::match)
-                .isEqualTo(NameMatch.EXACT);
+            .extracting(NameRank::match)
+            .isEqualTo(NameMatch.EXACT);
         assertThat(brand.matchKeyword(new SearchKeyword("메디큐브"))).isEqualTo(NameRank.NONE);
     }
 }

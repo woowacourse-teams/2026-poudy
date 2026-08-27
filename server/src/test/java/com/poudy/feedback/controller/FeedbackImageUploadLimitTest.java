@@ -34,25 +34,25 @@ class FeedbackImageUploadLimitTest {
         String boundary = "poudy-boundary";
         byte[] body = multipartBody(boundary, new byte[1_100]);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + port + "/api/feedback/images"))
-                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
-                .build();
+            .uri(URI.create("http://localhost:" + port + "/api/feedback/images"))
+            .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+            .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+            .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         assertThat(response.statusCode()).isEqualTo(413);
         assertThat(response.headers().firstValue("Content-Type").orElse(""))
-                .startsWith("application/problem+json");
+            .startsWith("application/problem+json");
         assertThat(response.body()).contains("\"code\":\"PAYLOAD_TOO_LARGE\"");
     }
 
     private static byte[] multipartBody(String boundary, byte[] file) {
         byte[] header = ("--" + boundary + "\r\n"
-                + "Content-Disposition: form-data; name=\"images\"; filename=\"image.png\"\r\n"
-                + "Content-Type: image/png\r\n\r\n")
-                .getBytes(StandardCharsets.UTF_8);
+            + "Content-Disposition: form-data; name=\"images\"; filename=\"image.png\"\r\n"
+            + "Content-Type: image/png\r\n\r\n")
+            .getBytes(StandardCharsets.UTF_8);
         byte[] footer = ("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8);
         byte[] body = new byte[header.length + file.length + footer.length];
         System.arraycopy(header, 0, body, 0, header.length);

@@ -24,8 +24,8 @@ class ProductVariantsTest {
     @DisplayName("제품은 하나 이상의 용량 옵션을 가져야 한다")
     void rejectsEmptyVariants() {
         assertThatThrownBy(() -> new ProductVariants(List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("제품은 하나 이상의 용량 옵션을 가져야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("제품은 하나 이상의 용량 옵션을 가져야 합니다.");
     }
 
     private static ProductVariant variant(Long id, Long price) {
