@@ -124,11 +124,17 @@ public class Products {
     }
 
     private List<Product> matchedBy(ProductFilter filter) {
-        List<Product> candidates = filter.hasKeyword() ? search(filter.keyword()) : products;
-
-        return candidates.stream()
+        return candidatesOf(filter).stream()
                 .filter(product -> product.matches(filter))
                 .toList();
+    }
+
+    private List<Product> candidatesOf(ProductFilter filter) {
+        if (filter.hasKeyword()) {
+            return search(filter.keyword());
+        }
+
+        return products;
     }
 
     private static List<Brand> brandsOf(List<Product> products) {

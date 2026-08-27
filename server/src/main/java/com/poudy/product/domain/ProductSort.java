@@ -25,6 +25,10 @@ public enum ProductSort {
     }
 
     public static ProductSort orDefault(ProductSort sort) {
-        return sort == null ? NAME_ASC : sort;
+        if (sort == null) {
+            return NAME_ASC;
+        }
+
+        return sort;
     }
 }

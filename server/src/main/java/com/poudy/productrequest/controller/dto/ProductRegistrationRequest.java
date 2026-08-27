@@ -17,10 +17,18 @@ public record ProductRegistrationRequest(
     }
 
     private static String trim(String value) {
-        return value == null ? null : value.strip();
+        if (value == null) {
+            return null;
+        }
+
+        return value.strip();
     }
 
     private static String emptyToNull(String value) {
-        return value == null || value.isEmpty() ? null : value;
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+
+        return value;
     }
 }

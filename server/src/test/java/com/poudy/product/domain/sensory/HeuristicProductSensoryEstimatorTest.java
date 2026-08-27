@@ -164,12 +164,17 @@ class HeuristicProductSensoryEstimatorTest {
             String role) {
         List<Ingredient> values = new ArrayList<>();
         for (int index = 0; index < count; index++) {
-            values.add(
-                    role == null
-                            ? ingredient(firstId + index)
-                            : ingredient(firstId + index, role));
+            values.add(ingredientOf(firstId + index, role));
         }
         return new Ingredients(values);
+    }
+
+    private static Ingredient ingredientOf(long id, String role) {
+        if (role == null) {
+            return ingredient(id);
+        }
+
+        return ingredient(id, role);
     }
 
     private static Ingredients ingredients(Ingredient... values) {

@@ -18,8 +18,14 @@ public record FeedbackRequest(
         @Size(max = Feedback.MAX_IMAGE_COUNT, message = "INVALID_FEEDBACK_IMAGE_ID") @Schema(description = "미리 업로드한 선택적 이미지 ID 목록", nullable = true) List<@NotNull(message = "INVALID_FEEDBACK_IMAGE_ID") UUID> imageIds) {
 
     public FeedbackRequest {
-        imageIds = imageIds == null
-                ? List.of()
-                : java.util.Collections.unmodifiableList(new java.util.ArrayList<>(imageIds));
+        imageIds = copyOf(imageIds);
+    }
+
+    private static List<UUID> copyOf(List<UUID> imageIds) {
+        if (imageIds == null) {
+            return List.of();
+        }
+
+        return java.util.Collections.unmodifiableList(new java.util.ArrayList<>(imageIds));
     }
 }

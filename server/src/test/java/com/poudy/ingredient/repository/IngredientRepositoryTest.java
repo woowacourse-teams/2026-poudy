@@ -143,10 +143,22 @@ class IngredientRepositoryTest {
                   "description":%s,
                   "updated_at":%s
                 }
-                """.formatted(jsonString(description), jsonString(updatedAt == null ? null : updatedAt.toString()));
+                """.formatted(jsonString(description), jsonString(text(updatedAt)));
+    }
+
+    private static String text(OffsetDateTime value) {
+        if (value == null) {
+            return null;
+        }
+
+        return value.toString();
     }
 
     private static String jsonString(String value) {
-        return value == null ? "null" : "\"" + value + "\"";
+        if (value == null) {
+            return "null";
+        }
+
+        return "\"" + value + "\"";
     }
 }
