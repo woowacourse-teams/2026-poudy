@@ -7,6 +7,7 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.MatchedIngredient;
 import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
@@ -48,7 +49,7 @@ public class IngredientService {
         return ingredients.page(page, size);
     }
 
-    public List<Ingredient> suggest(String keyword) {
-        return ingredientRepository.search(keyword);
+    public List<MatchedIngredient> suggest(String keyword) {
+        return ingredientRepository.suggest(keyword);
     }
 }

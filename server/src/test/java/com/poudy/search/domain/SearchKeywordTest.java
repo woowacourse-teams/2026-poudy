@@ -180,4 +180,61 @@ class SearchKeywordTest {
     void matchesReadingByChosung() {
         assertThat(new SearchKeyword("ㅍㄷㅇㅇ").matches("PDRN 핑크 시카 수딩 토너")).isTrue();
     }
+
+    @Test
+    @DisplayName("일반 문자열이 일치한 원문 반열림 구간을 반환한다")
+    void findsOriginalRange() {
+        TextMatch match = matchOf("가지", "가지추출물");
+
+        assertThat(match.text()).isEqualTo("가지추출물");
+        assertThat(match.range().startIndex()).isZero();
+        assertThat(match.range().endIndexExclusive()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("공백을 제거해 비교해도 원문의 공백을 포함한 구간을 반환한다")
+    void findsRangeAcrossSpaces() {
+        TextMatch match = matchOf("스네일토너", "블랙 스네일 토너");
+
+        assertThat(match.range().startIndex()).isEqualTo(3);
+        assertThat(match.range().endIndexExclusive()).isEqualTo(9);
+        assertThat(match.text().substring(match.range().startIndex(), match.range().endIndexExclusive()))
+            .isEqualTo("스네일 토너");
+    }
+
+    @Test
+    @DisplayName("초성 검색이 일치한 한글 음절 구간을 반환한다")
+    void findsChosungRange() {
+        TextMatch match = matchOf("ㅍㅌㄴ", "메틸판테놀에스터");
+
+        assertThat(match.range().startIndex()).isEqualTo(2);
+        assertThat(match.range().endIndexExclusive()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("라틴 낱자 읽기와 그 초성이 일치한 원문 라틴 구간을 반환한다")
+    void findsLatinReadingRange() {
+        TextMatch reading = matchOf("피디알엔", "PDRN 핑크 시카");
+        TextMatch chosung = matchOf("ㅍㄷㅇㅇ", "PDRN 핑크 시카");
+
+        assertThat(reading.range().startIndex()).isZero();
+        assertThat(reading.range().endIndexExclusive()).isEqualTo(4);
+        assertThat(chosung.range().startIndex()).isZero();
+        assertThat(chosung.range().endIndexExclusive()).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("NFC 정규화 뒤에도 분해된 원문의 전체 구간을 반환한다")
+    void findsDecomposedOriginalRange() {
+        String decomposed = Normalizer.normalize("글리", Normalizer.Form.NFD);
+
+        TextMatch match = matchOf("글리", decomposed);
+
+        assertThat(match.range().startIndex()).isZero();
+        assertThat(match.range().endIndexExclusive()).isEqualTo(decomposed.length());
+    }
+
+    private static TextMatch matchOf(String keyword, String text) {
+        return TextMatch.best(SearchableText.formsOf(text), new SearchKeyword(keyword)).orElseThrow();
+    }
 }

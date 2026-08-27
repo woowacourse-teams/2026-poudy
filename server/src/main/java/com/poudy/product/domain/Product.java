@@ -7,6 +7,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.domain.TextMatch;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public record Product(
     Long id,
@@ -76,6 +78,10 @@ public record Product(
 
     public NameRank matchBrandKeyword(SearchKeyword keyword) {
         return brand.matchKeyword(keyword);
+    }
+
+    public Optional<TextMatch> findBrandMatch(SearchKeyword keyword) {
+        return brand.findMatch(keyword);
     }
 
     public boolean matchesNameExactly(SearchKeyword keyword) {

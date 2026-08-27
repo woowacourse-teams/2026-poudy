@@ -31,14 +31,19 @@ public class Ingredients {
     }
 
     public List<Ingredient> search(String keyword) {
+        return suggest(keyword).stream()
+            .map(MatchedIngredient::ingredient)
+            .toList();
+    }
+
+    public List<MatchedIngredient> suggest(String keyword) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
             .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
-            .filter(MatchedIngredient::isFound)
+            .flatMap(Optional::stream)
             .sorted(MatchedIngredient.order())
             .limit(SEARCH_RESULT_LIMIT)
-            .map(MatchedIngredient::ingredient)
             .toList();
     }
 

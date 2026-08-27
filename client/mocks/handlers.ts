@@ -51,6 +51,31 @@ const strings = (url: URL, key: string) =>
     .flatMap((value) => value.split(","))
     .filter(Boolean);
 
+const suggestionMatch = <Field extends string>(
+  keyword: string,
+  candidates: readonly { readonly field: Field; readonly text: string }[],
+) => {
+  for (const candidate of candidates) {
+    const startIndex = candidate.text.toLowerCase().indexOf(keyword);
+    if (startIndex >= 0) {
+      return {
+        ...candidate,
+        startIndex,
+        endIndexExclusive: startIndex + keyword.length,
+      };
+    }
+  }
+
+  const transformed = candidates.find((candidate) => matchesKeyword(keyword, candidate.text));
+  if (!transformed) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
+
+  return {
+    ...transformed,
+    startIndex: 0,
+    endIndexExclusive: transformed.text.length,
+  };
+};
+
 /*
  * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
  * 성분이 먼저 잡혀야 눌렀을 때 빈 화면을 만나지 않는다.
@@ -150,6 +175,10 @@ export const handlers = [
         name: product.name,
         imageUrl: product.imageUrl,
         brandName: product.brand.name,
+        match: suggestionMatch(keyword, [
+          { field: "PRODUCT_NAME", text: product.name },
+          { field: "BRAND_NAME", text: product.brand.name },
+        ]),
       }));
 
     return HttpResponse.json(paginate(matched, url));
@@ -192,7 +221,14 @@ export const handlers = [
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const items = searchableIngredients
       .filter((ingredient) => matchesKeyword(keyword, ingredient.koreanName, ingredient.englishName))
-      .slice(0, INGREDIENT_SEARCH_LIMIT);
+      .slice(0, INGREDIENT_SEARCH_LIMIT)
+      .map((ingredient) => ({
+        ...ingredient,
+        match: suggestionMatch(keyword, [
+          { field: "KOREAN_NAME", text: ingredient.koreanName },
+          { field: "ENGLISH_NAME", text: ingredient.englishName },
+        ]),
+      }));
 
     return HttpResponse.json({ items });
   }),

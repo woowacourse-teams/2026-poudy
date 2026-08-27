@@ -35,6 +35,40 @@ class IngredientSearchTest {
     }
 
     @Test
+    @DisplayName("한글명에서 일치한 원문과 반열림 구간을 반환한다")
+    void returnsKoreanNameMatch() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "가지"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].match.field").value("KOREAN_NAME"))
+            .andExpect(jsonPath("$.items[0].match.text").value("가지열매추출물"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(2));
+    }
+
+    @Test
+    @DisplayName("영문명에서 일치한 원문과 반열림 구간을 반환한다")
+    void returnsEnglishNameMatch() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "eGgPlAnT"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].match.field").value("ENGLISH_NAME"))
+            .andExpect(jsonPath("$.items[0].match.text").value("Solanum Melongena (Eggplant) Fruit Extract"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(19))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(27));
+    }
+
+    @Test
+    @DisplayName("이명에서만 일치하면 실제 이명과 그 반열림 구간을 반환한다")
+    void returnsAliasMatch() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "가지추출물"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(2))
+            .andExpect(jsonPath("$.items[0].match.field").value("ALIAS"))
+            .andExpect(jsonPath("$.items[0].match.text").value("가지추출물"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(5));
+    }
+
+    @Test
     @DisplayName("걸린 성분이 많아도 검색어에 잘 맞는 순서로 최대 5 건만 반환한다")
     void limitsSearchResult() throws Exception {
         mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "적색"))

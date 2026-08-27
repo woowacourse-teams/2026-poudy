@@ -69,11 +69,61 @@ class IngredientSearchOrderTest {
     }
 
     @Test
+    @DisplayName("같은 이명으로 걸리면 `/`로 묶이지 않은 이름을 먼저 담는다")
+    void ordersAliasMatchesByNameCombination() {
+        Ingredients ingredients = new Ingredients(
+            List.of(
+                ingredientWithEnglishName(
+                    2417L,
+                    "삼지구엽초꽃/잎/줄기추출물",
+                    "Epimedium Grandiflorum Flower/Leaf/Stem Extract",
+                    "음양곽추출물"
+                ),
+                ingredientWithEnglishName(
+                    18246L,
+                    "삼지구엽초추출물",
+                    "Epimedium Koreanum Extract",
+                    "음양곽추출물"
+                )
+            )
+        );
+
+        assertThat(names(ingredients.search("음양곽추출물")))
+            .containsExactly("삼지구엽초추출물", "삼지구엽초꽃/잎/줄기추출물");
+    }
+
+    @Test
     @DisplayName("이름으로 걸렸으면 별칭이 함께 걸려도 순서가 앞당겨지지 않는다")
     void aliasDoesNotPromoteNameMatch() {
         Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "판테놀"), ingredient(20L, "판테닐에틸에터", "판테닐에터")));
 
         assertThat(names(ingredients.search("판"))).containsExactly("판테놀", "판테닐에틸에터");
+    }
+
+    @Test
+    @DisplayName("이름과 이명이 함께 걸리면 이름 일치 정보를 보존한다")
+    void keepsNameMatchBeforeAliasMatch() {
+        Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "판테놀", "판테놀별칭")));
+
+        MatchedIngredient matched = ingredients.suggest("판테놀").getFirst();
+
+        assertThat(matched.field()).isEqualTo(IngredientMatchField.KOREAN_NAME);
+        assertThat(matched.textMatch().text()).isEqualTo("판테놀");
+        assertThat(matched.textMatch().range().startIndex()).isZero();
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("이명에서만 걸리면 실제 이명 일치 정보를 보존한다")
+    void keepsAliasMatch() {
+        Ingredients ingredients = new Ingredients(List.of(ingredient(10L, "백혈구추출물", "류코사이트추출물")));
+
+        MatchedIngredient matched = ingredients.suggest("류코").getFirst();
+
+        assertThat(matched.field()).isEqualTo(IngredientMatchField.ALIAS);
+        assertThat(matched.textMatch().text()).isEqualTo("류코사이트추출물");
+        assertThat(matched.textMatch().range().startIndex()).isZero();
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(2);
     }
 
     @Test
@@ -120,5 +170,14 @@ class IngredientSearchOrderTest {
 
     private static Ingredient ingredient(Long id, String koreanName, String... aliases) {
         return new Ingredient(id, koreanName, "", null, null, null, List.of(aliases), null, null, null);
+    }
+
+    private static Ingredient ingredientWithEnglishName(
+        Long id,
+        String koreanName,
+        String englishName,
+        String... aliases
+    ) {
+        return new Ingredient(id, koreanName, englishName, null, null, null, List.of(aliases), null, null, null);
     }
 }

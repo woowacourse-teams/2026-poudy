@@ -51,15 +51,23 @@ public class Products {
 
     private List<Product> search(
         String keyword,
-        BiFunction<SearchableProduct, SearchKeyword, MatchedProduct> match
+        BiFunction<SearchableProduct, SearchKeyword, Optional<MatchedProduct>> match
+    ) {
+        return matched(keyword, match).stream()
+            .map(MatchedProduct::product)
+            .toList();
+    }
+
+    private List<MatchedProduct> matched(
+        String keyword,
+        BiFunction<SearchableProduct, SearchKeyword, Optional<MatchedProduct>> match
     ) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
         return searchable.stream()
             .map(product -> match.apply(product, searchKeyword))
-            .filter(MatchedProduct::isFound)
+            .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
-            .map(MatchedProduct::product)
             .toList();
     }
 
@@ -87,7 +95,7 @@ public class Products {
     public ProductSuggestionPage suggest(String keyword, int page, int size) {
         requireValidPageCondition(page, size);
 
-        List<Product> found = search(keyword);
+        List<MatchedProduct> found = matched(keyword, MatchedProduct::of);
 
         return new ProductSuggestionPage(pageOf(found, page, size), found.size());
     }
@@ -98,7 +106,7 @@ public class Products {
         }
     }
 
-    private static List<Product> pageOf(List<Product> values, int page, int size) {
+    private static <T> List<T> pageOf(List<T> values, int page, int size) {
         return values.stream()
             .skip((long) page * size)
             .limit(size)

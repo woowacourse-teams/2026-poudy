@@ -241,6 +241,24 @@ export type ProductDetailResponse = {
    */
   updatedAt: string;
 }
+export type ProductSuggestionMatchResponse = {
+  /**
+   * 검색어가 일치한 제품 필드
+   */
+  field: ("PRODUCT_NAME" | "BRAND_NAME");
+  /**
+   * 검색어가 일치한 원문
+   */
+  text: string;
+  /**
+   * 일치 구간의 UTF-16 시작 인덱스
+   */
+  startIndex: number;
+  /**
+   * 일치 구간의 UTF-16 종료 제외 인덱스
+   */
+  endIndexExclusive: number;
+}
 export type ProductSuggestionResponse = {
   /**
    * 제품 ID
@@ -258,6 +276,7 @@ export type ProductSuggestionResponse = {
    * 브랜드 한글명
    */
   brandName: string;
+  match: ProductSuggestionMatchResponse;
 }
 export type ProductSuggestionPageResponse = {
   /**
@@ -315,11 +334,48 @@ export type IngredientDetailResponse = {
   effectSources: Array<string>;
   updatedAt: string;
 }
+export type IngredientSuggestionMatchResponse = {
+  /**
+   * 검색어가 일치한 성분 필드
+   */
+  field: ("KOREAN_NAME" | "ENGLISH_NAME" | "ALIAS");
+  /**
+   * 검색어가 일치한 원문
+   */
+  text: string;
+  /**
+   * 일치 구간의 UTF-16 시작 인덱스
+   */
+  startIndex: number;
+  /**
+   * 일치 구간의 UTF-16 종료 제외 인덱스
+   */
+  endIndexExclusive: number;
+}
+export type IngredientSuggestionResponse = {
+  /**
+   * 성분 ID
+   */
+  id: number;
+  /**
+   * 성분 한글명
+   */
+  koreanName: string;
+  /**
+   * 성분 영문명
+   */
+  englishName: string;
+  /**
+   * 피부 작용 태그 (BIOLOGICAL_EFFECT)
+   */
+  skinEffects: Array<SkinEffectResponse>;
+  match: IngredientSuggestionMatchResponse;
+}
 export type IngredientListResponse = {
   /**
-   * 조회된 성분
+   * 검색어에 일치한 성분
    */
-  items: Array<IngredientResponse>;
+  items: Array<IngredientSuggestionResponse>;
 }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
@@ -539,7 +595,7 @@ export type get_FindProductDetail = {
 
     }
 /**
- * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
+ * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. match 는 제품명 또는 브랜드명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
  */
 export type get_SuggestProducts = {
       method: "GET",
@@ -666,7 +722,7 @@ export type get_FindIngredientDetail = {
 
     }
 /**
- * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다.
+ * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.
  */
 export type get_SuggestIngredients = {
       method: "GET",

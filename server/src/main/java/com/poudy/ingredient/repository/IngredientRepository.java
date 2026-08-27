@@ -6,6 +6,7 @@ import com.poudy.ingredient.domain.DeferredTagEvidenceException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.MatchedIngredient;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.Tags;
 import java.time.OffsetDateTime;
@@ -170,8 +171,8 @@ public class IngredientRepository {
         return ingredients;
     }
 
-    public List<Ingredient> search(String keyword) {
-        return ingredients.search(keyword);
+    public List<MatchedIngredient> suggest(String keyword) {
+        return ingredients.suggest(keyword);
     }
 
     public Optional<Ingredient> findById(Long id) {

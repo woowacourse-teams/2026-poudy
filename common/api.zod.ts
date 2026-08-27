@@ -55,8 +55,11 @@ export const ProductIngredientResponse = z.object({ id: z.number().int(), korean
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), skinEffectGroups: z.array(SkinEffectGroupResponse), ingredients: z.array(ProductIngredientResponse), freeOfCodes: z.array(z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"])), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
+export const ProductSuggestionMatchResponse = z.object({ field: z.enum(["PRODUCT_NAME", "BRAND_NAME"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(0) });
+
 export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
-export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string(), brandName: z.string() });
+export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string(), brandName: z.string(), match: ProductSuggestionMatchResponse });
 
 export type ProductSuggestionPageResponse = __TypedOpenapi.Schemas.ProductSuggestionPageResponse;
 export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSuggestionResponse), pagination: PaginationResponse });
@@ -76,8 +79,14 @@ export const IngredientPageResponse = z.object({ items: z.array(IngredientRespon
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
 export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"])), productCount: z.number().int(), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type IngredientSuggestionMatchResponse = __TypedOpenapi.Schemas.IngredientSuggestionMatchResponse;
+export const IngredientSuggestionMatchResponse = z.object({ field: z.enum(["KOREAN_NAME", "ENGLISH_NAME", "ALIAS"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(0) });
+
+export type IngredientSuggestionResponse = __TypedOpenapi.Schemas.IngredientSuggestionResponse;
+export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse), match: IngredientSuggestionMatchResponse });
+
 export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
-export const IngredientListResponse = z.object({ items: z.array(IngredientResponse) });
+export const IngredientListResponse = z.object({ items: z.array(IngredientSuggestionResponse) });
 
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string() });
