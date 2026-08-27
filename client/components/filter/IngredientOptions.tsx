@@ -1,17 +1,18 @@
 "use client";
 
-import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
+import { MatchedText } from "@/components/ui/MatchedText";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientSuggestions } from "@/lib/api/products";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
-import { hasMatch, splitByKeyword } from "@/lib/domain/highlight";
+import { splitByRange } from "@/lib/domain/highlight";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
@@ -19,7 +20,7 @@ import { useSuggestions } from "@/lib/hooks/useSuggestions";
 /** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
 const VISIBLE_EFFECTS = 3;
 
-const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
+const fetcher = async (keyword: string): Promise<readonly IngredientSuggestionResponse[]> => {
   const response = await fetchIngredientSuggestions(keyword);
   return response.items;
 };
@@ -40,7 +41,10 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
   const selectedCount = draft.includeIngredientIds.length + draft.excludeIngredientIds.length;
 
   /** 포함과 제외는 한쪽만 걸린다. */
-  const toggleIngredient = (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => {
+  const toggleIngredient = (
+    key: "includeIngredientIds" | "excludeIngredientIds",
+    item: IngredientSuggestionResponse,
+  ) => {
     const other = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
     const had = draft[key].includes(item.id);
 
@@ -122,7 +126,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
                   <li key={item.id} className="flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] py-2">
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       {/* 자동완성과 같다. 긴 이름은 두 줄까지 보이고 거기서 줄인다. */}
-                      <IngredientName name={item.koreanName} keyword={keyword.trim()} />
+                      <IngredientName item={item} />
                       <EffectTags effects={item.skinEffects} />
                     </span>
 
@@ -223,29 +227,47 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
   );
 }
 
-/** 자동완성과 같다. 맞는 자리만 진하게 두고, 맞는 자리가 없으면 흐리게 하지 않는다. */
-function IngredientName({ name, keyword }: { readonly name: string; readonly keyword: string }) {
-  const parts = splitByKeyword(name, keyword);
+/** 자동완성과 같다. 서버가 짚어 준 자리만 진하게 두고, 그런 자리가 없으면 흐리게 하지 않는다. */
+function IngredientName({ item }: { readonly item: IngredientSuggestionResponse }) {
+  const { koreanName, match } = item;
 
-  if (!hasMatch(parts)) {
-    return <span className="line-clamp-2 text-[14px] font-semibold text-[#212124]">{name}</span>;
+  /* 짚어 준 자리가 없으면 대표 이름을 평소대로 둔다. */
+  if (!match) {
+    return <span className="line-clamp-2 text-[14px] font-semibold text-[#212124]">{koreanName}</span>;
   }
 
+  /* 한글 이름에서 걸린 줄만 그 이름 위에 토막을 낸다. 나머지는 평소대로 둔다. */
+  const parts = match.field === "KOREAN_NAME" ? splitByRange(match) : [{ text: koreanName, matched: false }];
+
   return (
-    <span className="line-clamp-2 text-[14px] text-[#72747A]">
-      {/* 낭독기와 검사 도구에는 온전한 이름 하나로 남긴다. 토막은 눈으로 보는 결에만 쓴다. */}
-      <span className="sr-only">{name}</span>
-      {parts.map((part, at) => (
-        <span key={at} aria-hidden="true" className={part.matched ? "font-bold text-[#212124]" : undefined}>
-          {part.text}
-        </span>
-      ))}
+    <span className="line-clamp-2">
+      <MatchedText
+        label={koreanName}
+        parts={parts}
+        plainClassName="text-[14px] font-semibold text-[#212124]"
+        dimmedClassName="text-[14px] font-semibold text-[#212124]"
+        matchedClassName="text-brand-strong"
+      />
+
+      {/* 한글 이름 밖에서 걸린 줄은 맞은 원문을 뒤에 덧붙여 왜 떴는지 알린다. */}
+      {match.field === "KOREAN_NAME" ? null : (
+        <>
+          <span className="text-[14px] text-[#72747A]"> · </span>
+          <MatchedText
+            label={match.text}
+            parts={splitByRange(match)}
+            plainClassName="text-[14px] text-[#72747A]"
+            dimmedClassName="text-[14px] text-[#72747A]"
+            matchedClassName="text-brand-strong"
+          />
+        </>
+      )}
     </span>
   );
 }
 
 /** 자동완성과 같다. 성분이 하는 일을 이름과 다른 생김새의 배지로 가른다. */
-function EffectTags({ effects }: { readonly effects: IngredientResponse["skinEffects"] }) {
+function EffectTags({ effects }: { readonly effects: IngredientSuggestionResponse["skinEffects"] }) {
   if (effects.length === 0) return null;
 
   const shown = effects.slice(0, VISIBLE_EFFECTS);

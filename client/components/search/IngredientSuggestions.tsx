@@ -1,26 +1,24 @@
 "use client";
 
-import type { IngredientResponse } from "@poudy/api/api.zod";
+import type { IngredientSuggestionResponse } from "@poudy/api/api.zod";
 
 import { ConditionButton } from "@/components/ui/ConditionButton";
-import { hasMatch, splitByKeyword } from "@/lib/domain/highlight";
+import { MatchedText } from "@/components/ui/MatchedText";
+import { splitByRange } from "@/lib/domain/highlight";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
 /** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
 const VISIBLE_EFFECTS = 3;
 
 type IngredientSuggestionsProps = {
-  /** 맞는 자리를 굵게 보이기 위해 받는다. */
-  readonly keyword: string;
-  readonly items: readonly IngredientResponse[];
+  readonly items: readonly IngredientSuggestionResponse[];
   readonly loading: boolean;
   readonly includedIds: readonly number[];
   readonly excludedIds: readonly number[];
-  readonly onToggle: (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientResponse) => void;
+  readonly onToggle: (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientSuggestionResponse) => void;
 };
 
 export function IngredientSuggestions({
-  keyword,
   items,
   loading,
   includedIds,
@@ -47,7 +45,7 @@ export function IngredientSuggestions({
                   성분 이름은 40자를 넘는 것이 있다. 한 줄로 자르면 앞머리가 비슷한
                   이름끼리 구분되지 않아 두 줄까지 보이고 거기서 줄인다.
                 */}
-                <IngredientName name={item.koreanName} keyword={keyword} />
+                <IngredientName item={item} />
                 <EffectTags effects={item.skinEffects} />
               </span>
 
@@ -74,28 +72,55 @@ export function IngredientSuggestions({
 }
 
 /**
- * 성분 이름. 검색어와 맞는 자리만 진하게 두고 나머지는 한 톤 흐리게 둔다.
+ * 성분 이름. 서버가 짚어 준 자리만 진하게 두고 나머지는 한 톤 흐리게 둔다.
  *
- * 맞는 자리가 없으면 흐리게 하지 않는다. 서버가 영문 이름까지 훑어 뜬 결과가 그런데,
- * 이름 전체를 흐리게 두면 왜 떴는지도 모른 채 읽기만 나빠진다.
+ * 자리를 클라이언트가 다시 찾지 않는다. 초성 `ㅍㅌㄴ` 이나 음차로 걸린 줄은 검색어
+ * 글자가 이름 안에 그대로 있지 않아, 다시 찾아 나서면 아무 자리도 진해지지 않는다.
+ *
+ * 앞에 서는 것은 언제나 대표 한글 이름이다. 한글로 쓰인 목록에서 `Glycerin` 이 먼저
+ * 오면 같은 성분이 검색어에 따라 다른 이름으로 보인다. 영문 이름이나 이명으로 걸린
+ * 줄은 그 원문을 뒤에 덧붙여, 왜 떴는지만 함께 알린다.
  */
-function IngredientName({ name, keyword }: { readonly name: string; readonly keyword: string }) {
-  const parts = splitByKeyword(name, keyword);
+function IngredientName({ item }: { readonly item: IngredientSuggestionResponse }) {
+  const { koreanName, match } = item;
 
-  if (!hasMatch(parts)) {
-    return <span className="line-clamp-2 text-[14px] font-semibold text-text-primary">{name}</span>;
+  /* 짚어 준 자리가 없으면 대표 이름을 평소대로 둔다. 자동완성이 통째로 무너지지 않게 한다. */
+  if (!match) {
+    return <span className="line-clamp-2 text-[14px] font-semibold text-text-primary">{koreanName}</span>;
   }
 
+  /*
+   * 한글 이름에서 걸린 줄은 그 이름 위에 바로 토막을 낸다. 다른 자리에서 걸린 줄은
+   * 한글 이름에 진하게 할 자리가 없으니 흐리게 하지 않고 평소대로 둔다.
+   */
+  const parts = match.field === "KOREAN_NAME" ? splitByRange(match) : [{ text: koreanName, matched: false }];
+
   return (
-    <span className="line-clamp-2 text-[14px] text-text-secondary">
-      {/* 낭독기와 검사 도구에는 온전한 이름 하나로 남긴다. 토막은 눈으로 보는 결에만 쓴다. */}
-      <span className="sr-only">{name}</span>
-      {parts.map((part, at) => (
-        // 토막은 자리로만 구분된다. 같은 글자가 되풀이될 수 있어 글자를 키로 쓰지 못한다.
-        <span key={at} aria-hidden="true" className={part.matched ? "font-bold text-text-primary" : undefined}>
-          {part.text}
-        </span>
-      ))}
+    <span className="line-clamp-2">
+      <MatchedText
+        label={koreanName}
+        parts={parts}
+        plainClassName="text-[14px] font-semibold text-text-primary"
+        dimmedClassName="text-[14px] font-semibold text-text-primary"
+        matchedClassName="text-brand-strong"
+      />
+
+      {/*
+        한글 이름 밖에서 걸린 줄은 맞은 원문을 뒤에 덧붙인다. 그 원문 안에서 맞은
+        자리를 진하게 두어야 `글리세린` 이 왜 떴는지가 보인다.
+      */}
+      {match.field === "KOREAN_NAME" ? null : (
+        <>
+          <span className="text-[14px] text-text-secondary"> · </span>
+          <MatchedText
+            label={match.text}
+            parts={splitByRange(match)}
+            plainClassName="text-[14px] text-text-secondary"
+            dimmedClassName="text-[14px] text-text-secondary"
+            matchedClassName="text-brand-strong"
+          />
+        </>
+      )}
     </span>
   );
 }
@@ -106,7 +131,7 @@ function IngredientName({ name, keyword }: { readonly name: string; readonly key
  * 예전에는 이름과 같은 결의 회색 글자라 이름의 뒷부분처럼 읽혔다. 제품 상세와 전성분
  * 목록이 이미 쓰는 색 배지를 그대로 가져와, 이름과 다른 것임을 생김새로 가른다.
  */
-function EffectTags({ effects }: { readonly effects: IngredientResponse["skinEffects"] }) {
+function EffectTags({ effects }: { readonly effects: IngredientSuggestionResponse["skinEffects"] }) {
   if (effects.length === 0) return null;
 
   const shown = effects.slice(0, VISIBLE_EFFECTS);
