@@ -16,7 +16,6 @@ const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
 
 /*
  * S01 홈. 구조는 design/v1.pen 을 그대로 따른다.
- * 서비스 안내 문구만 말투를 다듬어 디자인과 다르다.
  * 최근 검색과 저장 제품만 브라우저에서 채운다.
  */
 
@@ -33,20 +32,6 @@ const ACTIONS = [
     label: "성분·조건으로 찾기",
     tone: "light",
   },
-] as const;
-
-/*
- * 세 칸이 좁아 문구가 길면 줄이 넘어간다. 어떤 칸은 제목이, 어떤 칸은 설명이 넘어가
- * 셋이 들쭉날쭉해 보였다. 뜻을 지키는 선에서 한 줄에 담기게 줄여 둔다.
- *
- * 그림은 두지 않는다. 문구가 이미 짧고 또렷해 그림이 뜻을 더하지 못했고,
- * `직접 골라요` 에 쓰던 sliders 는 바로 위 `성분·조건으로 찾기` 와 같은 그림이라
- * 한 화면에서 같은 그림이 서로 다른 것을 가리켰다. 칸을 가르는 일은 배경색이 한다.
- */
-const TRUST = [
-  { title: "출처를 밝혀요", detail: "근거와 함께", bg: "from-brand-soft to-[#FFF8FA]" },
-  { title: "그대로 옮겨요", detail: "과장 없이", bg: "from-info-soft to-[#F5FAFD]" },
-  { title: "직접 골라요", detail: "딱 맞는 것만", bg: "from-success-soft to-[#F4FAF8]" },
 ] as const;
 
 /**
@@ -101,26 +86,6 @@ export default function Home() {
               );
             })}
           </div>
-        </section>
-
-        {/*
-          위 두 입구에 딸린 설명이라 그쪽으로 당겨 붙인다. 다른 영역과 같은 간격을 두면
-          높이가 셋 중 가장 낮은 이 띠가 홀로 떨어져 보인다.
-        */}
-        <section className="-mt-3.5">
-          <h2 className="sr-only">서비스 안내</h2>
-          <ul className="grid grid-cols-3 gap-2">
-            {TRUST.map((item) => (
-              <li
-                key={item.title}
-                // 기울기는 빠른 필터 타일과 같은 좌상 -> 우하 방향으로 맞춘다.
-                className={`flex flex-col items-center gap-1 rounded-xl bg-linear-to-br px-2 py-3.5 text-center ${item.bg}`}
-              >
-                <span className="text-[12px] font-medium text-text-primary">{item.title}</span>
-                <span className="text-[11px] text-text-secondary">{item.detail}</span>
-              </li>
-            ))}
-          </ul>
         </section>
 
         <section className="flex flex-col gap-2.5">
