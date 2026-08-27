@@ -40,11 +40,25 @@ describe("SearchField", () => {
     expect(onChange).toHaveBeenCalledWith("토");
   });
 
-  it("글자를 16px 로 두어 iOS Safari 가 화면을 키우지 않게 한다", () => {
+  it("iOS Safari 가 화면을 키우지 않게 하는 규칙을 입력에 건다", () => {
     render(<SearchField value="" onChange={() => {}} placeholder="검색" label="제품 검색" />);
 
-    // 16px 보다 작으면 초점이 갈 때 화면이 저절로 커진다. 값을 줄이지 않도록 못을 박는다.
-    expect(screen.getByRole("searchbox", { name: "제품 검색" })).toHaveClass("text-[16px]");
+    /*
+     * `.search-field-input` 은 font-size 를 16px 로 두고 scale 로 보이는 크기만
+     * 14px 로 줄인다. 이 클래스를 떼거나 규칙에서 font-size 를 내리면 #219 가
+     * 되살아난다. 실제 값은 globals.css 에 있어 jsdom 에서는 읽히지 않으므로
+     * 규칙이 걸려 있다는 사실만 확인한다.
+     */
+    expect(screen.getByRole("searchbox", { name: "제품 검색" })).toHaveClass("search-field-input");
+  });
+
+  it("확대를 막는 크기를 Tailwind 클래스로 덮어쓰지 않는다", () => {
+    render(<SearchField value="" onChange={() => {}} placeholder="검색" label="제품 검색" />);
+
+    // text-[14px] 같은 값이 붙으면 globals.css 의 16px 를 덮어써 확대가 되살아난다.
+    const className = screen.getByRole("searchbox", { name: "제품 검색" }).className;
+
+    expect(className).not.toMatch(/\btext-\[\d+px\]/);
   });
 });
 
