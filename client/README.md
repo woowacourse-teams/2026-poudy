@@ -172,6 +172,18 @@ Do Not Track 값이 `1` 또는 `yes`이면 태그 자체를 불러오지 않습�
 Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수집합니다. 수동 `page_view`를 함께 보내면
 중복되므로 추가하지 않습니다.
 
+`trackGoogleAnalytics`는 유입부터 제품 저장까지의 핵심 퍼널만 GA4에도 전송합니다. 검색어 원문은
+URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다.
+
+| Poudy 이벤트            | GA4 이벤트              | 전송 항목                        |
+| ----------------------- | ----------------------- | -------------------------------- |
+| `search_submitted`      | `search_submitted`      | 검색 방식, 결과 수, 성분 조건 수 |
+| `search_results_viewed` | `search_results_viewed` | 검색 방식, 결과 수, 성분 조건 수 |
+| `product_viewed`        | `view_item`             | 제품 ID, 카테고리, 진입 경로     |
+| `product_saved`         | `add_to_wishlist`       | 제품 ID, 저장한 화면             |
+
+필터 조작, 정렬, 자동완성 선택, 무한 스크롤, 오류와 세션 녹화는 PostHog에만 남깁니다.
+
 운영 측정 ID를 배포하기 전에 GA4 관리 화면에서 다음 설정을 확인합니다.
 
 - 웹 데이터 스트림의 Enhanced Measurement에서 페이지 조회와 브라우저 방문 기록 기반 페이지 변경을 켭니다.
@@ -180,8 +192,10 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
   사이트의 검색어가 `page_location`과 `page_referrer`에 남지 않는지 미리보기로 확인합니다.
 - Google 신호 데이터 수집과 광고 개인 최적화는 사용하지 않습니다.
 - 이벤트 데이터 보관 기간을 14개월 이내로 설정합니다.
+- `add_to_wishlist`를 핵심 이벤트로 지정합니다.
+- `search_mode`, `result_count`, `entry_point`, `save_source`를 이벤트 범위 맞춤 측정기준으로 등록합니다.
 - DebugView와 실시간 보고서에서 최초 진입과 클라이언트 라우트 이동마다 `page_view`가 한 번씩만 오는지
-  확인합니다.
+  확인하고, 검색·제품 조회·저장 이벤트가 각각 한 번씩 오는지 확인합니다.
 
 ### Play Console 데이터 보안 설문
 
