@@ -1,5 +1,7 @@
 import { http, HttpResponse } from "msw";
 
+import { matchesKeyword } from "@/lib/domain/chosung";
+
 import {
   allBrands,
   allProducts,
@@ -90,10 +92,7 @@ const filterProducts = (url: URL) => {
   }
 
   return allProducts.filter((product) => {
-    if (keyword) {
-      const haystack = `${product.name} ${product.brand.name}`.toLowerCase();
-      if (!haystack.includes(keyword)) return false;
-    }
+    if (keyword && !matchesKeyword(keyword, product.name, product.brand.name)) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
     if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
     if (oil.length && !oil.includes(product.oilLevel)) return false;
@@ -145,7 +144,7 @@ export const handlers = [
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts
-      .filter((product) => `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword))
+      .filter((product) => matchesKeyword(keyword, product.name, product.brand.name))
       .map((product) => ({
         id: product.id,
         name: product.name,
@@ -192,7 +191,7 @@ export const handlers = [
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const items = searchableIngredients
-      .filter((ingredient) => `${ingredient.koreanName} ${ingredient.englishName}`.toLowerCase().includes(keyword))
+      .filter((ingredient) => matchesKeyword(keyword, ingredient.koreanName, ingredient.englishName))
       .slice(0, INGREDIENT_SEARCH_LIMIT);
 
     return HttpResponse.json({ items });
