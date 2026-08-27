@@ -1,5 +1,8 @@
 package com.poudy.search.domain;
 
+import java.util.Comparator;
+import java.util.List;
+
 public record NameRank(NameMatch match, boolean combined) implements Comparable<NameRank> {
 
     public static final NameRank NONE = new NameRank(NameMatch.NONE, false);
@@ -10,6 +13,13 @@ public record NameRank(NameMatch match, boolean combined) implements Comparable<
 
     public static NameRank of(NameMatch match, SearchableText name) {
         return new NameRank(match, name.combined());
+    }
+
+    public static NameRank best(List<SearchableText> names, SearchKeyword keyword) {
+        return names.stream()
+                .map(name -> of(keyword, name))
+                .min(Comparator.naturalOrder())
+                .orElse(NONE);
     }
 
     public boolean isFound() {

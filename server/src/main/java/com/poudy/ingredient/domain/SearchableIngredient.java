@@ -3,7 +3,6 @@ package com.poudy.ingredient.domain;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -22,17 +21,10 @@ public record SearchableIngredient(Ingredient ingredient, List<SearchableText> n
     }
 
     public NameRank match(SearchKeyword keyword) {
-        return best(names, keyword);
+        return NameRank.best(names, keyword);
     }
 
     public NameRank aliasMatch(SearchKeyword keyword) {
-        return best(aliases, keyword);
-    }
-
-    private static NameRank best(List<SearchableText> candidates, SearchKeyword keyword) {
-        return candidates.stream()
-                .map(candidate -> NameRank.of(keyword.match(candidate), candidate))
-                .min(Comparator.naturalOrder())
-                .orElse(NameRank.NONE);
+        return NameRank.best(aliases, keyword);
     }
 }

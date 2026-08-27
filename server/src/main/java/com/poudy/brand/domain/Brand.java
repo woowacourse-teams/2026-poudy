@@ -3,7 +3,9 @@ package com.poudy.brand.domain;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class Brand {
 
@@ -11,16 +13,14 @@ public class Brand {
     private final String koreanName;
     private final String englishName;
     private final String imageUrl;
-    private final SearchableText searchableKoreanName;
-    private final SearchableText searchableEnglishName;
+    private final List<SearchableText> searchableNames;
 
     public Brand(Long id, String koreanName, String englishName, String imageUrl) {
         this.id = id;
         this.koreanName = koreanName;
         this.englishName = englishName;
         this.imageUrl = imageUrl;
-        this.searchableKoreanName = SearchableText.of(koreanName);
-        this.searchableEnglishName = searchableEnglishNameOf(englishName);
+        this.searchableNames = searchableNamesOf(koreanName, englishName);
     }
 
     public Long id() {
@@ -48,13 +48,7 @@ public class Brand {
     }
 
     public NameRank matchKeyword(SearchKeyword keyword) {
-        NameRank koreanNameMatch = matchKoreanName(keyword);
-        NameRank englishNameMatch = matchEnglishName(keyword);
-
-        if (englishNameMatch.isBetterThan(koreanNameMatch)) {
-            return englishNameMatch;
-        }
-        return koreanNameMatch;
+        return NameRank.best(searchableNames, keyword);
     }
 
     public int compareOrderByName(Brand brand) {
@@ -81,21 +75,10 @@ public class Brand {
         return Objects.hash(id);
     }
 
-    private NameRank matchKoreanName(SearchKeyword keyword) {
-        return NameRank.of(keyword, searchableKoreanName);
-    }
-
-    private NameRank matchEnglishName(SearchKeyword keyword) {
-        if (searchableEnglishName == null) {
-            return NameRank.NONE;
-        }
-        return NameRank.of(keyword, searchableEnglishName);
-    }
-
-    private static SearchableText searchableEnglishNameOf(String englishName) {
-        if (englishName == null) {
-            return null;
-        }
-        return SearchableText.of(englishName);
+    private static List<SearchableText> searchableNamesOf(String koreanName, String englishName) {
+        return Stream.of(koreanName, englishName)
+                .filter(Objects::nonNull)
+                .map(SearchableText::of)
+                .toList();
     }
 }
