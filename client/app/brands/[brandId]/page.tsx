@@ -58,9 +58,10 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
 
   return (
     <>
-      <TopBar title={brand.name} variant="sub" />
+      {/* 이름만 두면 바로 아래 큰 이름과 겹쳐 읽힌다. 어떤 화면인지 함께 밝힌다. */}
+      <TopBar title={`${brand.name} 브랜드관`} variant="sub" />
 
-      <section className="flex items-center gap-3 px-4 py-4">
+      <section className="flex items-center gap-3 px-4">
         <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
         <span className="flex flex-col gap-0.5">
           <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>

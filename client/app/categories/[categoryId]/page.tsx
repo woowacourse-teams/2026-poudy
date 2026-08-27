@@ -39,7 +39,8 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
 
   return (
     <>
-      <TopBar title={name} variant="root" showBack />
+      {/* 소분류 이름은 바로 아래 줄이 이미 밝히므로, 제목에는 대분류를 둔다. */}
+      <TopBar title={top?.name ?? name} variant="root" showBack />
 
       <div className="px-4">
         <CategoryTrack items={trackItems} selectedId={id} />
