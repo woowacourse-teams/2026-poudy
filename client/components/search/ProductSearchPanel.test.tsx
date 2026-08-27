@@ -14,11 +14,24 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
 }));
 
+/**
+ * 서버는 제안마다 어느 줄 어디가 맞았는지 함께 준다. 목도 그 계약을 지킨다.
+ *
+ * 이름 앞 두 글자만 맞은 것으로 둔다. 이름 전체를 맞았다고 하면 실제로는 거의 없는
+ * 모양이라, 화면이 이름을 토막 내 그리는지 확인하지 못한다.
+ */
+const nameMatch = (name: string) => ({
+  field: "PRODUCT_NAME" as const,
+  text: name,
+  startIndex: 0,
+  endIndexExclusive: Math.min(2, name.length),
+});
+
 const suggestionsAre = (items: readonly { id: number; name: string; brandName: string }[]) =>
   server.use(
     http.get("*/api/products/suggestions", () =>
       HttpResponse.json({
-        items: items.map((item) => ({ ...item, imageUrl: "" })),
+        items: items.map((item) => ({ ...item, imageUrl: "", match: nameMatch(item.name) })),
         pagination: {
           page: 0,
           size: 20,
@@ -40,6 +53,7 @@ const pagedSuggestionsAre = (total: number, size: number) =>
         name: `제품 ${start + index + 1}`,
         brandName: "브랜드",
         imageUrl: "",
+        match: nameMatch(`제품 ${start + index + 1}`),
       }));
 
       return HttpResponse.json({
