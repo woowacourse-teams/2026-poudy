@@ -44,6 +44,13 @@ class ProductSearchTest {
             .toList();
     }
 
+    private static List<String> matchedNames(List<MatchedProduct> products) {
+        return products.stream()
+            .map(MatchedProduct::product)
+            .map(Product::name)
+            .toList();
+    }
+
     @Test
     @DisplayName("제품명을 부분 일치시킨다")
     void findsByPartialName() {
@@ -153,8 +160,33 @@ class ProductSearchTest {
 
         ProductSuggestionPage page = products.suggest("토너", 1, 2);
 
-        assertThat(names(page.items())).containsExactly("토너 3");
+        assertThat(matchedNames(page.items())).containsExactly("토너 3");
         assertThat(page.totalElements()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("검색 제안은 제품명에서 일치한 원문과 구간을 보존한다")
+    void keepsProductNameMatch() {
+        MatchedProduct matched = suggestionProducts().suggest("토너", 0, 1).items().getFirst();
+
+        assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
+        assertThat(matched.textMatch().text()).isEqualTo("토너");
+        assertThat(matched.textMatch().range().startIndex()).isZero();
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("검색 제안은 브랜드명에서 일치한 원문과 구간을 보존한다")
+    void keepsBrandNameMatch() {
+        Brand brand = new Brand(1L, "다 브랜드", null, null);
+        Products products = new Products(List.of(product(1L, "블랙 스네일 토너", brand)));
+
+        MatchedProduct matched = products.suggest("다브랜드", 0, 1).items().getFirst();
+
+        assertThat(matched.field()).isEqualTo(ProductMatchField.BRAND_NAME);
+        assertThat(matched.textMatch().text()).isEqualTo("다 브랜드");
+        assertThat(matched.textMatch().range().startIndex()).isZero();
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(5);
     }
 
     @Test
@@ -162,7 +194,7 @@ class ProductSearchTest {
     void keepsSearchOrderAcrossSuggestionPages() {
         Products products = suggestionProducts();
 
-        assertThat(names(products.suggest("토너", 0, 2).items())).containsExactly("토너", "토너 2");
+        assertThat(matchedNames(products.suggest("토너", 0, 2).items())).containsExactly("토너", "토너 2");
     }
 
     @Test

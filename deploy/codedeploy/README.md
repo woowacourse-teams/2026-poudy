@@ -124,8 +124,9 @@ s3://techcourse-project-2026/poudy/staging/
 
 `buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. `NEXT_PUBLIC_API_BASE_URL`은
 비워 두어 브라우저가 현재 프론트 origin을 사용하게 하며, 프론트 EC2 Nginx가 `/api/*`를
-백엔드 EC2의 사설 IP로 전달합니다. `NEXT_PUBLIC_POSTHOG_KEY`처럼 값이 필요한 비밀·환경값은
-저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager 연동으로 주입합니다.
+백엔드 EC2의 사설 IP로 전달합니다. `NEXT_PUBLIC_POSTHOG_KEY`와 `NEXT_PUBLIC_GA_MEASUREMENT_ID`처럼
+값이 필요한 환경값은 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager 연동으로
+주입합니다.
 
 프론트엔드 secondary artifact에는 `nginx/` 설정 템플릿도 포함됩니다. CodeDeploy
 `ApplicationStart` 훅은 인증서 두 파일이 모두 존재할 때만 HTTPS 템플릿을 활성화하고,

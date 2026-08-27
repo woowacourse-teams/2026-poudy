@@ -77,7 +77,11 @@ class ProductQueryTest {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-            .andExpect(jsonPath("$.items[0].brandName").value("다 브랜드"));
+            .andExpect(jsonPath("$.items[0].brandName").value("다 브랜드"))
+            .andExpect(jsonPath("$.items[0].match.field").value("PRODUCT_NAME"))
+            .andExpect(jsonPath("$.items[0].match.text").value("블랙 스네일 토너"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(2));
     }
 
     @Test
@@ -124,7 +128,11 @@ class ProductQueryTest {
             .andExpect(
                 jsonPath("$.items[*].brandName")
                     .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드")))
-            );
+            )
+            .andExpect(jsonPath("$.items[0].match.field").value("BRAND_NAME"))
+            .andExpect(jsonPath("$.items[0].match.text").value("다 브랜드"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(5));
     }
 
     @Test

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse, IngredientResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
@@ -17,7 +17,7 @@ import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
 type ConditionKey = "includeIngredientIds" | "excludeIngredientIds";
 
-const fetcher = async (keyword: string): Promise<readonly IngredientResponse[]> => {
+const fetcher = async (keyword: string): Promise<readonly IngredientSuggestionResponse[]> => {
   const response = await fetchIngredientSuggestions(keyword);
   return response.items;
 };
@@ -104,7 +104,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
    * 같은 성분을 포함과 제외에 함께 넣으면 결과가 반드시 비므로 한쪽만 남긴다.
    * 이미 눌린 것을 다시 누르면 조건에서 뺀다.
    */
-  const toggleIngredient = (key: ConditionKey, item: IngredientResponse) => {
+  const toggleIngredient = (key: ConditionKey, item: IngredientSuggestionResponse) => {
     const other: ConditionKey = key === "includeIngredientIds" ? "excludeIngredientIds" : "includeIngredientIds";
     const had = filter[key].includes(item.id);
 
@@ -164,7 +164,6 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
 
           {typing ? (
             <IngredientSuggestions
-              keyword={keyword.trim()}
               items={items}
               loading={loading}
               includedIds={filter.includeIngredientIds}

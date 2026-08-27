@@ -3,8 +3,10 @@ package com.poudy.brand.domain;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
+import com.poudy.search.domain.TextMatch;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class Brand {
@@ -49,6 +51,10 @@ public class Brand {
 
     public NameRank matchKeyword(SearchKeyword keyword) {
         return NameRank.best(searchableNames, keyword);
+    }
+
+    public Optional<TextMatch> findMatch(SearchKeyword keyword) {
+        return TextMatch.best(searchableNames, keyword);
     }
 
     public int compareOrderByName(Brand brand) {
