@@ -10,6 +10,7 @@ body:
       options:
         - server
         - client
+        - mobile
         - common
         - ci
     validations:
