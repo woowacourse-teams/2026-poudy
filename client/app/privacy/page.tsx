@@ -109,6 +109,7 @@ const PROCESSOR_HEADERS = ["수탁자", "위탁 업무", "처리 국가"] as con
 const PROCESSOR_ROWS = [
   ["PostHog, Inc.", "서비스 이용 분석, 화면 조작 기록, 오류 추적", "미국"],
   ["Google LLC", "웹 트래픽, 유입 경로, 핵심 이용 행동 분석", "미국"],
+  ["Discord Inc.", "접수된 문의와 제품 정보 추가 요청을 팀에 전달", "미국"],
   ["Amazon Web Services, Inc.", "서비스 운영에 필요한 서버와 저장소 제공", "대한민국(서울 리전)"],
 ] as const;
 
@@ -233,6 +234,22 @@ export default function PrivacyPage() {
               있습니다. 거부해도 서비스 이용에는 제한이 없습니다.
             </li>
           </LegalList>
+          <p>Discord</p>
+          <LegalList>
+            <li>이전받는 자 — Discord Inc. (privacy@discord.com)</li>
+            <li>이전되는 국가 — 미국</li>
+            <li>이전 일시와 방법 — 문의나 제품 정보 추가 요청이 접수되는 시점에 정보통신망을 통해 전송</li>
+            <li>
+              이전 항목 — 문의 유형과 문의 내용, 문의를 작성한 화면 주소, 접수 시각과 접수 번호, 첨부한 이미지의 개수,
+              제품 정보 추가 요청의 제품명과 브랜드명. 첨부한 이미지 파일 자체는 이전하지 않습니다
+            </li>
+            <li>이전받는 자의 이용 목적 — 제5조에 적은 위탁 업무</li>
+            <li>이전받는 자의 보유·이용 기간 — 제3조와 같습니다</li>
+            <li>
+              거부 방법과 절차 — 문의와 제품 정보 추가 요청을 보내지 않으면 이 이전은 일어나지 않습니다. 이미 보낸
+              내용은 제8조의 접수처로 삭제를 요구하실 수 있습니다.
+            </li>
+          </LegalList>
         </LegalArticle>
 
         <LegalArticle heading="제7조 개인정보의 파기 절차 및 방법">
@@ -346,7 +363,7 @@ export default function PrivacyPage() {
             <li>{OPERATOR.effectiveDate} — 제정</li>
             <li>
               {OPERATOR.lastRevisedDate} — 문의하기와 제품 정보 추가 요청, Google Analytics 도입에 따라 수집 항목과 보유
-              기간 추가
+              기간 추가. 문의 첨부 이미지와 Discord 알림에 따라 수집 항목, 위탁과 국외 이전 추가
             </li>
           </LegalList>
         </LegalArticle>
