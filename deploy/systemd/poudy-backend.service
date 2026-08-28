@@ -2,6 +2,8 @@
 Description=Poudy Spring Boot backend
 Wants=network-online.target
 After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
