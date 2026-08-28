@@ -39,6 +39,24 @@ pnpm android
 | `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app` |
 | `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다             |
 
+## 정식 앱과 나란히 설치하기
+
+`POUDY_BUNDLE_IDENTIFIER`에 기본값이 아닌 값을 주면 다른 앱으로 설치됩니다. 이미 깔린 앱을 지우지 않고 고친 것을 확인할 때 씁니다. 기본값이 아니면 앱 이름도 `Poudy Dev`가 되어 홈 화면과 공유 시트에서 구분됩니다.
+
+식별자는 네이티브 프로젝트에 박히므로 값을 바꾼 뒤에는 반드시 다시 생성합니다. `android/`가 이미 있으면 `expo run:android`가 그대로 쓰기 때문에 이 단계를 건너뛸 수 없습니다.
+
+```bash
+cd mobile
+export POUDY_BUNDLE_IDENTIFIER=com.poudy.app.dev
+export EXPO_PUBLIC_WEB_URL=https://poudy-staging.vercel.app
+pnpm exec expo prebuild --clean --no-install
+pnpm android
+```
+
+정식 식별자로 되돌릴 때도 `--clean`으로 다시 생성합니다.
+
+두 앱은 `poudy://` 스킴과 `ACTION_SEND` 공유를 함께 등록합니다. 딥링크를 열거나 올리브영에서 공유하면 안드로이드가 어느 앱으로 보낼지 묻습니다. 이름이 달라 고를 수는 있지만 매번 묻는 것이 번거로우면 확인이 끝난 뒤 개발용 앱을 지웁니다.
+
 ## EAS CLI
 
 `eas` 명령은 설정을 읽으려고 `expo config`를 먼저 실행합니다. 이 단계는 `.env` 주입보다
@@ -53,18 +71,24 @@ EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest credentials --platform
 
 `eas.json`은 development, preview, production 환경을 각각 같은 이름의 EAS Environment와 연결합니다. 각 환경에 공개값인 `EXPO_PUBLIC_WEB_URL`을 plaintext로 등록해야 하며, 처음 사용할 때 EAS 프로젝트 연결과 서명 자격 증명 설정이 필요합니다.
 
-production 빌드는 EAS 원격 버전을 기준으로 iOS build number와 Android version code를 자동 증가시킵니다.
+`staging`은 production 프로파일을 물려받되 preview 환경을 읽습니다. 스토어에 올릴 수 있는 AAB를 같은 조건으로 만들면서 웹 주소만 staging 을 가리키게 하려는 것입니다. 두 프로파일이 서로 다른 EAS Environment 를 읽으므로 staging 값을 바꿔도 production 의 주소는 그대로입니다. 정식 배포는 되돌릴 설정 없이 `--profile production` 그대로 씁니다.
+
+```bash
+EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest build --platform android --profile staging
+```
+
+production 빌드는 EAS 원격 버전을 기준으로 iOS build number와 Android version code를 자동 증가시킵니다. staging 도 production 을 물려받아 같은 번호를 씁니다. 번호는 앱 하나에 하나뿐이라 staging 빌드가 올린 만큼 다음 production 빌드가 이어받고, Play Store 가 요구하는 version code 증가 조건도 그대로 지켜집니다.
 
 앱 버전은 서버·웹 릴리스 태그(`v*`)와 분리해서 관리합니다. 서버와 웹은 한 파이프라인에서 함께 배포되지만 앱은 스토어 심사를 거쳐 사용자가 각자 업데이트하므로 두 번호가 같은 시점을 가리키지 않습니다. 앱과 서버의 호환 여부는 릴리스 버전 비교가 아니라 API 계약 버전으로 판단합니다.
 
-스토어에 노출되는 버전은 production EAS Environment에 등록한 `POUDY_APP_VERSION`이 정합니다. 릴리스할 때 이 값만 올리면 되고, build number와 version code는 EAS가 알아서 증가시킵니다. production 빌드에서 값이 없으면 Expo 설정 평가 단계에서 빌드를 중단하므로 예전 버전이 그대로 스토어에 올라가지 않습니다.
+스토어에 노출되는 버전은 production EAS Environment에 등록한 `POUDY_APP_VERSION`이 정합니다. 릴리스할 때 이 값만 올리면 되고, build number와 version code는 EAS가 알아서 증가시킵니다. production 빌드에서 값이 없으면 Expo 설정 평가 단계에서 빌드를 중단하므로 예전 버전이 그대로 스토어에 올라가지 않습니다. 이 검사는 production 프로파일에만 걸립니다. staging 은 값이 없으면 기본값으로 만들어지므로, 테스트 트랙에서도 버전을 알아보려면 preview 환경에 `POUDY_APP_VERSION`을 함께 등록합니다.
 
 ## EAS Submit
 
-`eas.json`의 `submit.production`이 Play Store 트랙과 서비스 계정 키 위치를 정합니다. 키 파일은 저장소에 두지 않고 각자 `mobile/google-service-account.json`으로 놓습니다.
+`eas.json`의 `submit.staging`과 `submit.production`이 Play Store 트랙과 서비스 계정 키 위치를 정합니다. staging 은 비공개 테스트(`alpha`), production 은 정식 출시(`production`) 트랙입니다. 키 파일은 저장소에 두지 않고 각자 `mobile/google-service-account.json`으로 놓습니다.
 
 ```bash
-EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest submit --platform android --profile production --latest
+EXPO_PUBLIC_WEB_URL=https://poudy.site npx eas-cli@latest submit --platform android --profile staging --latest
 ```
 
 다음 단계는 API로 대신할 수 없어 Play Console에서 직접 합니다.
