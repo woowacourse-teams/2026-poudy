@@ -23,7 +23,7 @@ jobs:
       - uses: actions/github-script@v9
         with:
           script: |
-            const areas = ['server', 'client', 'common', 'ci'];
+            const areas = ['server', 'client', 'mobile', 'common', 'ci'];
             const body = context.payload.issue.body || '';
 
             // 이슈 폼은 '### 영역' 다음 줄에 선택값을 넣는다.

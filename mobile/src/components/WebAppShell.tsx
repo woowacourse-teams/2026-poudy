@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +8,7 @@ import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
 import type { WebViewErrorEvent, WebViewNavigation } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
+import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
@@ -59,7 +59,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     if (event.nativeEvent.data === HAPTIC_SELECTION_MESSAGE) {
-      void Haptics.selectionAsync().catch(() => undefined);
+      playSelectionHaptic();
     }
   }, []);
 
