@@ -134,6 +134,12 @@ s3://techcourse-project-2026/poudy/staging/
 인스턴스나 인증서가 제거된 인스턴스에 재배포해도 `nginx -t`가 존재하지 않는
 `/etc/letsencrypt/live/poudy.site` 경로 때문에 실패하지 않습니다.
 
+이번 Nginx 템플릿에는 `/_next/static/` 정적 자산 캐시와 정확히
+`GET /api/categories`에만 적용되는 30초 캐시가 포함됩니다. `Origin`은 캐시 키에
+포함되고 Cookie·Authorization 요청은 우회하므로 CORS 응답이나 사용자별 응답을
+재사용하지 않습니다. CodeDeploy의 `ApplicationStart` 훅이 새 템플릿을 설치한 뒤
+`nginx -t`와 reload를 수행하며, 배포 실패 시 기존 설정을 복구합니다.
+
 인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
 
 ```bash
