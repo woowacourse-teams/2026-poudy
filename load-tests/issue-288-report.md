@@ -50,6 +50,37 @@ CPU·메모리·CPU Credit은 현재 세션의 AWS principal(`s3-user`)에 EC2/C
 `Vary: Origin`이 있었다. 허용된 staging Vercel origin은 CORS 응답을 받았고,
 허용되지 않은 origin은 403이었다. 따라서 캐시 키에 `Origin`을 포함해야 한다.
 
+baseline 보조 측정은 2026-08-28 13:25 KST에 로컬 PC에서 실행했다. 이 값은 단일
+요청 smoke 값이며 k6 부하 결과와 섞지 않는다.
+
+| 대상 | HTTP | 전체 시간 | 응답 크기 | 본문 SHA-256 | 관찰 |
+| --- | ---: | ---: | ---: | --- | --- |
+| staging `/api/categories` | 200 | 35.66 ms | 778 B | `1d536e58d64a195681ed8e5a4062f062c345b3b1d93d0a156949890d5970a9fe` | `Cache-Control`, `X-Poudy-Cache` 없음 |
+| staging API + Vercel Origin | 200 | 31.31 ms | 778 B | 동일 | CORS 허용 origin 응답 |
+| 운영 `/api/categories` | 200 | 79.31 ms | 779 B | `a3d50e8b231d02437b93d9f010bba11dfaaa5924f75eb1f75793fa9432e5232b` | `Cache-Control`, `X-Poudy-Cache` 없음 |
+| staging Vercel `/` | 200 | 113.12 ms | 41,596 B | `05d01cc081205a3e72b91171bbf9a4ab0aec9d3d3f039014b2a04a7fc6517be8` | `server: Vercel`, `x-vercel-cache: HIT` |
+
+Vercel 페이지 행은 HTTP 문서 응답만 기록한 것이며 JavaScript 실행과 API 호출 성공을
+뜻하지 않는다. 본문 hash는 캐시 적용 후 응답 본문이 바뀌지 않았는지 비교할 때 사용한다.
+
+## 서버 지표 수집 상태
+
+현재 로컬 AWS principal은 `arn:aws:iam::211125632160:user/s3-user`다. 다음 읽기
+요청이 모두 IAM `AccessDenied`로 거부되어, 아래 값은 아직 측정값으로 채울 수 없다.
+
+| 항목 | 상태 | 필요한 권한/방법 |
+| --- | --- | --- |
+| staging CPU·메모리·디스크 | 미수집 | CloudWatch `Poudy/Infra` 조회 |
+| staging CPU Credit·Status Check | 미수집 | EC2/CloudWatch 조회 |
+| staging Nginx access/error | 미수집 | SSM 접속 후 로그 조회 |
+| backend journal | 미수집 | SSM 접속 후 `journalctl -u poudy-backend.service` |
+| Grafana Public Probe | 미수집 | Grafana 공개 Probe 결과 또는 API 접근 |
+| systemd 자동 재시작 | 미검증 | staging에서 통제된 프로세스 종료 후 journal·health 확인 |
+
+확인된 권한 오류는 `cloudwatch:ListMetrics`와
+`ssm:DescribeInstanceInformation`이다. 권한 없는 상태에서 운영·staging 서비스나
+보안 그룹을 변경하지 않았다.
+
 staging Vercel 페이지의 단순 HTTP GET은 Vercel 응답(`x-vercel-cache: HIT`)만 확인하며,
 브라우저 JavaScript 실행과 API 호출 성공을 의미하지 않는다.
 
