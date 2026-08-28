@@ -13,6 +13,10 @@
       "distribution": "internal",
       "environment": "preview"
     },
+    "staging": {
+      "extends": "production",
+      "environment": "preview"
+    },
     "production": {
       "autoIncrement": true,
       "environment": "production"
@@ -27,6 +31,12 @@
     }
   },
   "submit": {
+    "staging": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "alpha"
+      }
+    },
     "production": {
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
