@@ -27,11 +27,20 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
   throw new Error('POUDY_APP_VERSION must be x.y.z.');
 }
 
+/** 정식 앱 옆에 나란히 깔았을 때 홈 화면과 공유 시트에서 구분되게 한다. */
+const appNameOf = (bundleIdentifier: string) => {
+  if (bundleIdentifier === DEFAULT_BUNDLE_IDENTIFIER) {
+    return APP_NAME;
+  }
+
+  return `${APP_NAME} Dev`;
+};
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
   return {
     ...config,
-    name: APP_NAME,
+    name: appNameOf(bundleIdentifier),
     slug: APP_SLUG,
     owner: EAS_ACCOUNT,
     version: APP_VERSION ?? DEFAULT_APP_VERSION,
@@ -44,6 +53,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: false,
     },
     android: {
+      // 없으면 AppCompat 기본색이 스플래시와 첫 화면 사이에 비친다.
+      backgroundColor: '#ffffff',
       // 루트 icon 은 iOS 가 쓴다. 안드로이드는 여백을 둔 그림이라야 잘리지 않는다.
       icon: './assets/poudy-adaptive-icon.png',
       adaptiveIcon: {
