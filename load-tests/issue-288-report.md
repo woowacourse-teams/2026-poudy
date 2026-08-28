@@ -77,6 +77,26 @@ Vercel 페이지 행은 HTTP 문서 응답만 기록한 것이며 JavaScript 실
 | Grafana Public Probe | 미수집 | Grafana 공개 Probe 결과 또는 API 접근 |
 | systemd 자동 재시작 | 미검증 | staging에서 통제된 프로세스 종료 후 journal·health 확인 |
 
+## staging 호스트 baseline 확인
+
+2026-08-28 13:35 KST에 staging EC2의 SSM 셸에서 호스트 상태를 확인했다.
+
+- 호스트: `ip-10-0-0-185.ap-northeast-2.compute.internal`
+- Nginx·`poudy-backend.service`: `active`
+- `80/443`: Nginx listen, `8080`: Java listen
+- `GET http://127.0.0.1:8080/actuator/health`: `UP`
+- `/etc/nginx/conf.d/poudy-staging-api.conf`: staging 전용 설정 파일 확인
+- staging HTTPS `/api/categories`: `200`
+- `nginx -t`: 성공
+- 현재 backend systemd: `Restart=on-failure`, `RestartUSec=5s`,
+  `StartLimitIntervalUSec=10s`, `StartLimitBurst=5`
+- 최근 30분 backend journal: entries 없음
+
+Nginx 설정 요약에는 현재 `proxy_cache`가 나타나지 않아 #287 캐시는 아직 staging에
+적용되지 않은 것으로 판단한다. 단, 실제 적용 명령을 만들기 전
+`poudy-staging-api.conf` 전문과 현재 unit 전문을 확인한다. journal이 비어 있는 이유는
+설정 반영 후 systemd 검증 단계에서 별도로 확인한다.
+
 확인된 권한 오류는 `cloudwatch:ListMetrics`와
 `ssm:DescribeInstanceInformation`이다. 권한 없는 상태에서 운영·staging 서비스나
 보안 그룹을 변경하지 않았다.
