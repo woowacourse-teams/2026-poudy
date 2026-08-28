@@ -58,17 +58,22 @@ curl --fail --silent --show-error --max-time 10 \
 프론트 페이지는 Vercel이 JavaScript를 실행하는지 별도로 브라우저에서 확인한다. 단순한
 HTTP GET 결과만으로는 화면 렌더링이나 브라우저의 API 호출까지 확인할 수 없다.
 
-부하 중 staging EC2의 다음 값을 같은 시각 범위로 기록한다.
+부하 중 staging EC2의 다음 값을 같은 시각 범위로 기록한다. 현재 staging에는
+CloudWatch Agent가 설치되어 있지 않으므로, CPU·메모리·디스크·프로세스 값은 SSM 셸에서
+`uptime`, `free`, `vmstat`, `ps`를 실행해 수집한다.
 
-- CloudWatch Agent: CPU, 메모리, 디스크, 프로세스 지표
-- EC2 기본 지표: CPU Credit Balance, Status Check
+- staging SSM: CPU, 메모리, 디스크, backend 프로세스 지표
 - staging Nginx access/error log
 - `journalctl -u poudy-backend.service` 및 systemd 상태
 - 테스트 전후 `/api/categories`의 `X-Poudy-Cache` 값과 본문 일치 여부
 
+CloudWatch Agent와 EC2 기본 지표(CPU, CPU Credit Balance, Status Check)는 운영
+프론트·백엔드 EC2에 대해서만 확인한다. staging의 CloudWatch 값은 수집하지 않으며,
+운영 smoke test 시 Grafana Public Probe와 함께 별도로 기록한다.
+
 k6 결과 원본에는 총 요청·처리량·평균/최대/p90/p95/p99 응답시간, 오류율, HTTP 상태
 코드 그룹, timeout·transport failure, check 성공률, 연결·TLS·대기·송수신 시간과
-전송량이 저장된다. EC2 CPU·메모리·디스크·CPU Credit과 Nginx·journal·Grafana 값은
+전송량이 저장된다. staging SSM, Nginx, journal 값과 운영 CloudWatch·Grafana 값은
 k6 결과와 별도로 같은 시간 범위에서 수집해 결과 보고서에 합친다.
 
 운영은 staging 결과 확인 후 낮은 트래픽 시간에 다음 두 경로만 smoke test한다.

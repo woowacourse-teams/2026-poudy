@@ -5,8 +5,8 @@
 
 ## 실행 상태
 
-2026-08-28 13:15 KST에 #287 미적용 상태의 staging baseline을 완료했다. #287 적용 후
-동일 조건 재테스트 수치는 staging 반영 뒤 추가한다. 성능 통과 기준은 baseline을
+2026-08-28 13:15 KST에 #287 미적용 상태의 staging baseline을 완료했다. 이후
+staging에 #287 설정을 적용하고 검증했으며, 동일 조건 재테스트 수치는 추가한다. 성능 통과 기준은 baseline을
 먼저 측정한 뒤에도 임의로 확정하지 않고, 관측된 병목과 운영 요구사항을 근거로 정한다.
 
 - 리전: `ap-northeast-2`
@@ -14,7 +14,7 @@
 - 요청: `GET` only
 - 부하 생성기: 로컬 PC
 - 테스트 스크립트: [`categories.js`](categories.js)
-- 선행 설정: #287의 Nginx 캐시 및 systemd 자동 재시작(적용 예정)
+- 선행 설정: #287의 Nginx 캐시 및 systemd 자동 재시작(staging 적용·검증 완료)
 - baseline 원본: [`results/baseline.json`](results/baseline.json)
 
 ## 적용 전후 비교
@@ -35,13 +35,15 @@
 | 최대 CPU 사용률 | 미측정 | 미측정 | - |
 | 최대 메모리 사용률 | 미측정 | 미측정 | - |
 | CPU Credit 변화 | 미측정 | 미측정 | - |
-| `/api/categories` 캐시 동작 | `X-Poudy-Cache` 없음, 미적용 | 미측정 | - |
-| 프로세스 자동 재시작 | 미검증 | 미검증 | - |
-| 테스트 종료 후 회복 | 공개 GET 200 확인 | 미검증 | - |
+| `/api/categories` 캐시 동작 | `X-Poudy-Cache` 없음, 미적용 | MISS → HIT 확인 | - |
+| 프로세스 자동 재시작 | 미검증 | 새 PID·health 복구 확인 | - |
+| 테스트 종료 후 회복 | 공개 GET 200 확인 | 부하테스트 후 확인 예정 | - |
 
 \* 고정 시나리오에서 도달한 최대 단계이며 staging의 절대 최대 처리량을 의미하지 않는다.
-CPU·메모리·CPU Credit은 현재 세션의 AWS principal(`s3-user`)에 EC2/CloudWatch 조회
-권한이 없어 수집하지 못했다.
+staging에는 CloudWatch Agent가 설치되어 있지 않으므로 staging CloudWatch 지표와 CPU
+Credit은 `N/A`로 기록한다. staging EC2 자원 지표는 부하테스트와 같은 시간에 SSM에서
+직접 수집한다. 운영 EC2의 CloudWatch/Grafana 지표는 운영 smoke test에 한해 별도로
+기록한다.
 
 ## 현재 확인한 공개 smoke test
 
@@ -70,16 +72,16 @@ Vercel 페이지 행은 HTTP 문서 응답만 기록한 것이며 JavaScript 실
 
 | 항목 | 상태 | 필요한 권한/방법 |
 | --- | --- | --- |
-| staging CPU·메모리·디스크 | 미수집 | CloudWatch `Poudy/Infra` 조회 |
-| staging CPU Credit·Status Check | 미수집 | EC2/CloudWatch 조회 |
+| staging CPU·메모리·디스크 | SSM으로 수집 예정 | staging CloudWatch Agent 없음; SSM `uptime/free/vmstat/ps` |
+| staging CPU Credit·Status Check | N/A | staging에는 CloudWatch Agent가 없음; 운영 smoke에서만 확인 |
 | staging Nginx access/error | 미수집 | SSM 접속 후 로그 조회 |
 | backend journal | 미수집 | SSM 접속 후 `journalctl -u poudy-backend.service` |
-| Grafana Public Probe | 미수집 | Grafana 공개 Probe 결과 또는 API 접근 |
-| systemd 자동 재시작 | 미검증 | staging에서 통제된 프로세스 종료 후 journal·health 확인 |
+| Grafana Public Probe | 운영 smoke에서 수집 | `poudy.site` 공개 Probe만 운영 지표로 사용 |
+| systemd 자동 재시작 | 검증 완료 | staging에서 SIGKILL 후 새 PID·health 복구 확인 |
 
-## staging 호스트 baseline 확인
+## staging 호스트 #287 적용 후 확인
 
-2026-08-28 13:35 KST에 staging EC2의 SSM 셸에서 호스트 상태를 확인했다.
+2026-08-28 13:50~13:58 KST에 staging EC2의 SSM 셸에서 #287 설정 반영과 복구를 확인했다.
 
 - 호스트: `ip-10-0-0-185.ap-northeast-2.compute.internal`
 - Nginx·`poudy-backend.service`: `active`
@@ -88,18 +90,18 @@ Vercel 페이지 행은 HTTP 문서 응답만 기록한 것이며 JavaScript 실
 - `/etc/nginx/conf.d/poudy-staging-api.conf`: staging 전용 설정 파일 확인
 - staging HTTPS `/api/categories`: `200`
 - `nginx -t`: 성공
-- 현재 backend systemd: `Restart=on-failure`, `RestartUSec=5s`,
-  `StartLimitIntervalUSec=10s`, `StartLimitBurst=5`
-- 최근 30분 backend journal: entries 없음
+- backend systemd: `Restart=on-failure`, `RestartUSec=5s`,
+  `StartLimitIntervalUSec=5min`, `StartLimitBurst=5`
+- `nginx -t`: 성공
+- 일반 API 요청: 첫 요청 `X-Poudy-Cache: MISS`, 두 번째 요청 `HIT`
+- Vercel staging Origin 요청: 첫 요청 `MISS`, 두 번째 요청 `HIT`, CORS 허용
+- 각 요청 쌍의 본문 SHA-256: 동일
+- backend를 통제된 `SIGKILL`로 종료한 뒤 5초 후 systemd가 새 PID로 재시작
+- 재시작 시도 후 약 24초 뒤 health 복구; 애플리케이션 기동 자체는 약 16.2초
 
-Nginx 설정 요약에는 현재 `proxy_cache`가 나타나지 않아 #287 캐시는 아직 staging에
-적용되지 않은 것으로 판단한다. 단, 실제 적용 명령을 만들기 전
-`poudy-staging-api.conf` 전문과 현재 unit 전문을 확인한다. journal이 비어 있는 이유는
-설정 반영 후 systemd 검증 단계에서 별도로 확인한다.
-
-확인된 권한 오류는 `cloudwatch:ListMetrics`와
-`ssm:DescribeInstanceInformation`이다. 권한 없는 상태에서 운영·staging 서비스나
-보안 그룹을 변경하지 않았다.
+staging 자원 지표는 CloudWatch가 아니라 부하테스트 시점의 SSM 샘플로 기록한다.
+운영 CloudWatch 조회 권한이 현재 로컬 AWS principal(`s3-user`)에 없다는 사실은
+staging 지표 부재와 별개의 문제다.
 
 staging Vercel 페이지의 단순 HTTP GET은 Vercel 응답(`x-vercel-cache: HIT`)만 확인하며,
 브라우저 JavaScript 실행과 API 호출 성공을 의미하지 않는다.
