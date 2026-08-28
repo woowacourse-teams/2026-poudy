@@ -66,6 +66,11 @@ HTTP GET 결과만으로는 화면 렌더링이나 브라우저의 API 호출까
 - `journalctl -u poudy-backend.service` 및 systemd 상태
 - 테스트 전후 `/api/categories`의 `X-Poudy-Cache` 값과 본문 일치 여부
 
+k6 결과 원본에는 총 요청·처리량·평균/최대/p90/p95/p99 응답시간, 오류율, HTTP 상태
+코드 그룹, timeout·transport failure, check 성공률, 연결·TLS·대기·송수신 시간과
+전송량이 저장된다. EC2 CPU·메모리·디스크·CPU Credit과 Nginx·journal·Grafana 값은
+k6 결과와 별도로 같은 시간 범위에서 수집해 결과 보고서에 합친다.
+
 운영은 staging 결과 확인 후 낮은 트래픽 시간에 다음 두 경로만 smoke test한다.
 
 ```bash

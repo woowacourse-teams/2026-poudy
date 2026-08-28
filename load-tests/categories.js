@@ -1,8 +1,15 @@
 import http from "k6/http";
 import { check } from "k6";
+import { Counter } from "k6/metrics";
 
 const baseUrl = (__ENV.BASE_URL || "https://staging.poudy.site").replace(/\/$/, "");
 const resultFile = __ENV.RESULT_FILE || "summary.json";
+const status200 = new Counter("categories_status_200");
+const status4xx = new Counter("categories_status_4xx");
+const status5xx = new Counter("categories_status_5xx");
+const statusOther = new Counter("categories_status_other");
+const transportFailures = new Counter("categories_transport_failures");
+const timeouts = new Counter("categories_timeouts");
 const testStages = [
   { target: 1, duration: "30s" },
   { target: 3, duration: "60s" },
@@ -44,6 +51,13 @@ export default function () {
     timeout: "10s",
   });
 
+  if (response.status === 200) status200.add(1);
+  else if (response.status >= 400 && response.status < 500) status4xx.add(1);
+  else if (response.status >= 500) status5xx.add(1);
+  else statusOther.add(1);
+  if (response.status === 0) transportFailures.add(1);
+  if (response.error_code === 105) timeouts.add(1);
+
   check(response, {
     "categories returns 200": (res) => res.status === 200,
     "categories returns JSON": (res) =>
@@ -60,6 +74,14 @@ export function handleSummary(data) {
       generatedAt: new Date().toISOString(),
       stages: testStages,
     },
+    observations: {
+      status200: countOf(data, "categories_status_200"),
+      status4xx: countOf(data, "categories_status_4xx"),
+      status5xx: countOf(data, "categories_status_5xx"),
+      statusOther: countOf(data, "categories_status_other"),
+      transportFailures: countOf(data, "categories_transport_failures"),
+      timeouts: countOf(data, "categories_timeouts"),
+    },
     metrics: data.metrics,
   };
 
@@ -67,6 +89,10 @@ export function handleSummary(data) {
     [resultFile]: JSON.stringify(summary, null, 2),
     stdout: textSummary(data),
   };
+}
+
+function countOf(data, metricName) {
+  return data.metrics[metricName]?.values?.count ?? 0;
 }
 
 function textSummary(data) {
