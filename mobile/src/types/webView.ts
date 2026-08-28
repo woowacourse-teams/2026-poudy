@@ -25,6 +25,9 @@ export interface WebViewNavigation {
 
 export interface HardwareBackOptions {
   readonly onNavigate: (url: string) => void;
+  /** 바뀌면 WebView 를 다시 만든 것이고, 방문 기록이 비어 있다. */
+  readonly sourceKey: number;
+  readonly sourceUrl: string;
   readonly webBaseUrl: string;
   readonly webViewRef: RefObject<WebView | null>;
 }

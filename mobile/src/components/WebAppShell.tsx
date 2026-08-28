@@ -32,6 +32,8 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
   const handleNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
+    sourceKey: navigation.key,
+    sourceUrl: navigation.url,
     webBaseUrl,
     webViewRef,
   });
