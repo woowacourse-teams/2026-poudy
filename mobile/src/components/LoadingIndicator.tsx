@@ -5,8 +5,9 @@ import Svg, { Polygon } from 'react-native-svg';
 import loadingAnimation from '@/constants/loadingAnimation.json';
 
 interface LoadingIndicatorProps {
-  readonly continuesFromSplash?: boolean;
   readonly label?: string;
+  readonly onInitialFoldComplete?: () => void;
+  readonly running?: boolean;
   readonly size?: number;
   readonly style?: StyleProp<ViewStyle>;
 }
@@ -62,14 +63,14 @@ const RESTART_PAUSE = loadingAnimation.timing.restartPause;
 const LAST_FACET_INDEX = FACETS.length - 1;
 const UNFOLD_SPAN = LAST_FACET_INDEX * FACET_STAGGER + FOLD_DURATION;
 const REFOLD_BEGIN = UNFOLD_SPAN + COMPLETE_HOLD;
+const REFOLD_END = REFOLD_BEGIN + UNFOLD_SPAN;
 const CYCLE_DURATION = REFOLD_BEGIN + UNFOLD_SPAN + RESTART_PAUSE;
 
 const unfoldStartOf = (index: number) => (index * FACET_STAGGER) / CYCLE_DURATION;
 const refoldStartOf = (index: number) => (REFOLD_BEGIN + (LAST_FACET_INDEX - index) * FACET_STAGGER) / CYCLE_DURATION;
 const foldPortion = FOLD_DURATION / CYCLE_DURATION;
 
-/** 스플래시가 조각을 다 편 지점. 여기서 이어받으면 넘어오는 순간 두 화면의 그림이 같다. */
-const HANDOFF_PROGRESS = UNFOLD_SPAN / CYCLE_DURATION;
+const REFOLD_END_PROGRESS = REFOLD_END / CYCLE_DURATION;
 
 /** 네 조각이 모두 누워 있는 한복판. 동작 줄이기가 켜졌을 때 시계를 여기에 세운다. */
 const RESTING_PROGRESS = (UNFOLD_SPAN + REFOLD_BEGIN) / 2 / CYCLE_DURATION;
@@ -113,8 +114,9 @@ const FOLD_CURVES = FACETS.map((_, index) => createFoldCurve(index));
  * 한 바퀴마다 조금씩 밀리고, 오래 틀수록 조각끼리 어긋난다.
  */
 export default function LoadingIndicator({
-  continuesFromSplash = false,
   label = '불러오는 중',
+  onInitialFoldComplete,
+  running = true,
   size = 64,
   style,
 }: LoadingIndicatorProps) {
@@ -138,12 +140,17 @@ export default function LoadingIndicator({
   }, []);
 
   useEffect(() => {
-    if (reduceMotionEnabled) {
-      progress.setValue(RESTING_PROGRESS);
+    if (!running) {
+      progress.setValue(0);
       return;
     }
 
-    const startProgress = continuesFromSplash ? HANDOFF_PROGRESS : 0;
+    if (reduceMotionEnabled) {
+      progress.setValue(RESTING_PROGRESS);
+      onInitialFoldComplete?.();
+      return;
+    }
+
     const loop = Animated.loop(
       Animated.timing(progress, {
         toValue: 1,
@@ -153,29 +160,42 @@ export default function LoadingIndicator({
       }),
     );
 
-    // 이어받는 첫 바퀴만 남은 만큼 짧게 돌린다. 그래야 시작 지점을 옮겨도 속도가 같다.
-    progress.setValue(startProgress);
-    const lead = Animated.timing(progress, {
+    progress.setValue(0);
+    const initialFold = Animated.timing(progress, {
+      toValue: REFOLD_END_PROGRESS,
+      duration: REFOLD_END,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    const restartPause = Animated.timing(progress, {
       toValue: 1,
-      duration: CYCLE_DURATION * (1 - startProgress),
+      duration: RESTART_PAUSE,
       easing: Easing.linear,
       useNativeDriver: true,
     });
 
-    lead.start(({ finished }) => {
+    initialFold.start(({ finished }) => {
       if (!finished) {
         return;
       }
 
-      progress.setValue(0);
-      loop.start();
+      onInitialFoldComplete?.();
+      restartPause.start(({ finished: pauseFinished }) => {
+        if (!pauseFinished) {
+          return;
+        }
+
+        progress.setValue(0);
+        loop.start();
+      });
     });
 
     return () => {
-      lead.stop();
+      initialFold.stop();
+      restartPause.stop();
       loop.stop();
     };
-  }, [continuesFromSplash, progress, reduceMotionEnabled]);
+  }, [onInitialFoldComplete, progress, reduceMotionEnabled, running]);
 
   return (
     <View
@@ -207,6 +227,7 @@ export default function LoadingIndicator({
             key={facet.color}
             accessibilityElementsHidden
             importantForAccessibility='no-hide-descendants'
+            renderToHardwareTextureAndroid
             style={[
               styles.facet,
               {
