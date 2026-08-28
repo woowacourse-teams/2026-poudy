@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { BackHandler } from 'react-native';
+import { BackHandler, ToastAndroid } from 'react-native';
 import type { WebViewNavigation } from 'react-native-webview';
 
 import type { HardwareBackOptions } from '@/types/webView';
 import { isHomeUrl } from '@/util/webViewRequest';
+
+/** 토스트가 떠 있는 길이와 맞춘다. */
+const EXIT_CONFIRM_WINDOW_MS = 2000;
+
+const EXIT_CONFIRM_MESSAGE = '한 번 더 누르면 종료돼요';
 
 interface BackState {
   readonly canGoBack: boolean;
@@ -18,6 +23,8 @@ export const useHardwareBack = ({ onNavigate, sourceKey, sourceUrl, webBaseUrl, 
     backState.current = { canGoBack: false, url: sourceUrl };
   }, [sourceKey, sourceUrl]);
 
+  const exitPromptedAt = useRef(0);
+
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (backState.current.canGoBack) {
@@ -26,7 +33,15 @@ export const useHardwareBack = ({ onNavigate, sourceKey, sourceUrl, webBaseUrl, 
       }
 
       if (isHomeUrl(backState.current.url, webBaseUrl)) {
-        return false;
+        const now = Date.now();
+
+        if (now - exitPromptedAt.current <= EXIT_CONFIRM_WINDOW_MS) {
+          return false;
+        }
+
+        exitPromptedAt.current = now;
+        ToastAndroid.show(EXIT_CONFIRM_MESSAGE, ToastAndroid.SHORT);
+        return true;
       }
 
       onNavigate(webBaseUrl);
