@@ -183,7 +183,7 @@ export function SavedScreen() {
   }
 
   return (
-    <main className="flex-1 px-4">
+    <main className="flex flex-1 flex-col px-4">
       {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
       {current.items.length > 0 ? (
         <div className="pt-3">
@@ -198,10 +198,18 @@ export function SavedScreen() {
         </div>
       ) : null}
 
-      {/* 바탕이 이미 화면 여백을 쥐고 있어 빈 자리에는 안쪽 여백을 더하지 않는다. */}
+      {/*
+        담긴 것이 없으면 화면에 이 안내뿐이다. 남은 자리를 채워 아래 링크가 화면
+        바닥에 붙게 하고, 안내는 그 사이 한가운데에 선다.
+      */}
       {current.items.length === 0 ? (
-        <div className="py-4">
-          <EmptyNotice icon="bookmark" size="screen" title="저장한 제품이 없어요" />
+        <div className="flex flex-1 flex-col py-4">
+          <EmptyNotice
+            icon="bookmark"
+            image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
+            title="아직 저장한 제품이 없어요"
+            className="flex-1"
+          />
         </div>
       ) : null}
 

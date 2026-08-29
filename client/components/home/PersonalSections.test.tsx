@@ -91,7 +91,7 @@ describe("홈 저장 제품 미리보기", () => {
     saveProduct(99999);
     render(<SavedPreview />);
 
-    expect(await screen.findByText("저장한 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
     // 보여 줄 것이 없으면 전체 보기로 보낼 이유도 없다.
     expect(screen.queryByRole("link", { name: /전체 보기/ })).not.toBeInTheDocument();
   });
@@ -111,6 +111,6 @@ describe("홈 저장 제품 미리보기", () => {
     await waitFor(() => {
       expect(screen.queryByText("1025 독도 토너")).not.toBeInTheDocument();
     });
-    expect(screen.getByText("저장한 제품이 없어요")).toBeInTheDocument();
+    expect(screen.getByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
   });
 });

@@ -43,7 +43,7 @@ describe("저장함", () => {
   it("저장한 제품이 없으면 API 를 부르지 않고 빈 안내를 보여 준다", async () => {
     render(<SavedScreen />);
 
-    expect(await screen.findByText("저장한 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
     // 담긴 것이 없으면 검색과 정렬은 쓸 일이 없다.
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByText("최근 저장순")).not.toBeInTheDocument();
@@ -117,7 +117,7 @@ describe("저장함", () => {
 
     expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
     // 실패를 저장한 것이 없는 것으로 보여 주면 안 된다.
-    expect(screen.queryByText("저장한 제품이 없어요")).not.toBeInTheDocument();
+    expect(screen.queryByText("아직 저장한 제품이 없어요")).not.toBeInTheDocument();
   });
 
   it("실패한 뒤 다시 시도하면 목록을 보여 준다", async () => {

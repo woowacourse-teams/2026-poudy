@@ -138,7 +138,7 @@ export function SavedPreview() {
 
   /*
    * 저장해 둔 ID 는 있는데 아직 그 조건의 응답을 받지 못한 동안이다.
-   * 이때 `저장한 제품이 없어요` 를 보여 주면 곧 카드가 뜨면서 문구가 번쩍인다.
+   * 이때 `아직 저장한 제품이 없어요` 를 보여 주면 곧 카드가 뜨면서 문구가 번쩍인다.
    * 응답이 온 뒤에는 그 안이 비어 있어도(지워진 제품 등) 빈 상태로 정리된다.
    */
   const loading = key !== "" && loaded.key !== key;
@@ -156,7 +156,12 @@ export function SavedPreview() {
       </div>
 
       {visible.length === 0 && !loading ? (
-        <EmptyNotice icon="bookmark" title="저장한 제품이 없어요" className="min-h-[110px]" />
+        <EmptyNotice
+          icon="bookmark"
+          image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
+          title="아직 저장한 제품이 없어요"
+          className="min-h-[240px]"
+        />
       ) : null}
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
