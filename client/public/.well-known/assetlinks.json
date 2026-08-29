@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.poudy.app",
+      "sha256_cert_fingerprints": [
+        "00:AC:0C:1E:FD:82:D5:6D:8C:00:7D:F7:BD:A9:78:4D:1E:89:9D:51:6E:29:56:7F:60:03:3D:6B:B5:E1:BA:36"
+      ]
+    }
+  }
+]

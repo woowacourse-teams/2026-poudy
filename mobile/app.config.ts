@@ -27,6 +27,43 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
   throw new Error('POUDY_APP_VERSION must be x.y.z.');
 }
 
+/** App Links 는 https 로만 검증된다. 로컬 주소를 보는 개발 빌드에서는 걸지 않는다. */
+const appLinkHostOf = (webBaseUrl: string) => {
+  const web = new URL(webBaseUrl);
+
+  if (web.protocol !== 'https:') {
+    return null;
+  }
+
+  return web.host;
+};
+
+/** 공유한 https 주소를 앱이 받도록 한다. 없으면 브라우저가 연다. */
+const androidAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['android']>, 'intentFilters'> => {
+  if (!host) {
+    return {};
+  }
+
+  return {
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [{ scheme: 'https', host }],
+      },
+    ],
+  };
+};
+
+const iosAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['ios']>, 'associatedDomains'> => {
+  if (!host) {
+    return {};
+  }
+
+  return { associatedDomains: [`applinks:${host}`] };
+};
+
 /** 정식 앱 옆에 나란히 깔았을 때 홈 화면과 공유 시트에서 구분되게 한다. */
 const appNameOf = (bundleIdentifier: string) => {
   if (bundleIdentifier === DEFAULT_BUNDLE_IDENTIFIER) {
@@ -38,6 +75,8 @@ const appNameOf = (bundleIdentifier: string) => {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
+  const appLinkHost = appLinkHostOf(WEB_BASE_URL);
+
   return {
     ...config,
     name: appNameOf(bundleIdentifier),
@@ -51,6 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       bundleIdentifier,
       supportsTablet: false,
+      ...iosAppLinksOf(appLinkHost),
     },
     android: {
       // 없으면 AppCompat 기본색이 스플래시와 첫 화면 사이에 비친다.
@@ -67,6 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
       package: bundleIdentifier,
+      ...androidAppLinksOf(appLinkHost),
     },
     plugins: [
       [
