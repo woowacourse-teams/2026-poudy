@@ -102,11 +102,18 @@ export default function Home() {
                     좌상 -> 우하 방향이다. 반대로 흐르면 바탕이 그림과 다른 곳에서
                     빛을 받는 것처럼 보인다.
                   */}
+                  {/*
+                    그림은 60px 로 그려지지만 그 값을 그대로 적으면 next/image 가 1배와
+                    2배, 곧 64px 와 128px 사본만 만든다. 3배 화면은 180px 가 필요한데
+                    128px 를 늘려 쓰게 되어 가장자리가 뭉개진다.
+                    두 배로 적어 2배 사본이 256px 가 되게 한다. 그리는 크기는 아래
+                    className 이 정하므로 화면은 달라지지 않는다.
+                  */}
                   <Image
                     src={QUICK_FILTERS[code].image}
                     alt=""
-                    width={60}
-                    height={60}
+                    width={120}
+                    height={120}
                     className="quick-filter-tile size-17 rounded-[20px] bg-linear-to-br from-[#FBFBFC] to-[#EFF0F3] p-1"
                   />
                   <span className="text-center text-[13px] font-semibold text-text-primary">
