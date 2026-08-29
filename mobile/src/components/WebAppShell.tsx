@@ -14,7 +14,7 @@ import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
 import type { WebViewErrorEvent, WebViewNavigation } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
-import { APP_FRAME_SCRIPT, isDetailUrl } from '@/util/appFrame';
+import { APP_FRAME_SCRIPT, isDetailUrl, isWebUrl } from '@/util/appFrame';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
@@ -63,13 +63,13 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   const { navigate } = navigation;
 
   const handleBack = useCallback(() => {
-    if (page.canGoBack) {
+    if (page.canGoBack && isWebUrl(page.url, webBaseUrl)) {
       webViewRef.current?.goBack();
       return;
     }
 
     navigate(webBaseUrl);
-  }, [navigate, page.canGoBack, webBaseUrl]);
+  }, [navigate, page.canGoBack, page.url, webBaseUrl]);
 
   const handleHome = useCallback(() => {
     navigate(webBaseUrl);
