@@ -53,6 +53,13 @@ const sortProducts = (
 /** 화면에 한 번에 더 그릴 개수. 서버가 나누어 주지 않아 화면에서 끊어 보여 준다. */
 const PAGE_SIZE = 20;
 
+/** 담아 둔 번호에서 빠진 제품을 덜어 낸다. 서버에 다시 묻지 않고 가진 것만 추린다. */
+const keptFrom = (state: State, key: string, savedIds: readonly number[]): State => ({
+  key,
+  status: state.status === "error" ? "error" : "ready",
+  items: state.items.filter((product) => savedIds.includes(product.id)),
+});
+
 type State = {
   readonly key: string;
   readonly status: Status;
@@ -64,6 +71,13 @@ export function SavedScreen() {
   const { savedIds, isSaved, toggle } = useSavedProducts();
   const key = savedIds.join(",");
   const [keyword, setKeyword] = useState("");
+  /*
+   * 한글을 모으는 동안에는 거르지 않는다. `ㅅ` 이나 `수` 처럼 아직 완성되지 않은
+   * 글자로 걸러 내면 곧 사라질 결과가 잠깐씩 스쳐 목록이 어지럽다.
+   * 입력 칸에는 지금 치는 글자를 그대로 보여 주고, 거르는 데 쓰는 말만 붙잡아 둔다.
+   */
+  const [composing, setComposing] = useState(false);
+  const [settled, setSettled] = useState("");
   const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
@@ -77,11 +91,19 @@ export function SavedScreen() {
   const [state, setState] = useState<State>(() => initial(key));
   const [retry, setRetry] = useState(0);
 
-  const current = state.key === key ? state : initial(key);
+  /*
+   * 저장을 풀면 담아 둔 번호가 줄지만 그 제품의 표시 정보는 이미 갖고 있다. 목록을
+   * 버리고 다시 부르면 화면이 통째로 비었다가 돌아와 카드 하나를 뺀 것치고 요란하다.
+   * 줄어든 때는 가진 것에서 걸러 내고, 처음 보거나 번호가 늘었을 때만 서버를 부른다.
+   */
+  const known = new Set(state.items.map((product) => product.id));
+  const needsFetch = savedIds.some((id) => !known.has(id));
+
+  const current = state.key === key ? state : keptFrom(state, key, savedIds);
   if (state.key !== key) setState(current);
 
   useEffect(() => {
-    if (!key) return;
+    if (!key || !needsFetch) return;
 
     const controller = new AbortController();
 
@@ -98,7 +120,7 @@ export function SavedScreen() {
       });
 
     return () => controller.abort();
-  }, [key, retry]);
+  }, [key, needsFetch, retry]);
 
   const onToggleSave = (productId: number) => {
     toggle(productId);
@@ -109,9 +131,11 @@ export function SavedScreen() {
   };
 
   // 저장한 제품 안에서만 찾는다. 서버에 다시 묻지 않는다.
-  const matched = keyword.trim()
+  if (!composing && settled !== keyword) setSettled(keyword);
+
+  const matched = settled.trim()
     ? current.items.filter((product) =>
-        `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.trim().toLowerCase()),
+        `${product.name} ${product.brand.name}`.toLowerCase().includes(settled.trim().toLowerCase()),
       )
     : current.items;
   const ordered = sortProducts(matched, sort, savedIds);
@@ -119,9 +143,9 @@ export function SavedScreen() {
   const hasNext = shown.length < ordered.length;
 
   // 찾는 말이나 차례가 바뀌면 처음부터 다시 보여 준다.
-  const [shownKey, setShownKey] = useState(`${keyword}|${sort}`);
-  if (shownKey !== `${keyword}|${sort}`) {
-    setShownKey(`${keyword}|${sort}`);
+  const [shownKey, setShownKey] = useState(`${settled}|${sort}`);
+  if (shownKey !== `${settled}|${sort}`) {
+    setShownKey(`${settled}|${sort}`);
     setVisible(PAGE_SIZE);
   }
 
@@ -163,7 +187,13 @@ export function SavedScreen() {
       {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
       {current.items.length > 0 ? (
         <div className="pt-3">
-          <SearchField value={keyword} onChange={setKeyword} placeholder="저장한 제품 검색" label="저장한 제품 검색" />
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            onChangeComposing={setComposing}
+            placeholder="저장한 제품 검색"
+            label="저장한 제품 검색"
+          />
           <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
         </div>
       ) : null}
@@ -179,7 +209,13 @@ export function SavedScreen() {
       <ul data-private className="divide-y divide-divider">
         {shown.map((product) => (
           <li key={product.id}>
-            <ProductCard product={product} saved={isSaved(product.id)} onToggleSave={onToggleSave} entryPoint="saved" />
+            <ProductCard
+              product={product}
+              saved={isSaved(product.id)}
+              onToggleSave={onToggleSave}
+              entryPoint="saved"
+              keyword={settled}
+            />
           </li>
         ))}
       </ul>

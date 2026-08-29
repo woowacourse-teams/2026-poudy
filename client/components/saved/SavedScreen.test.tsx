@@ -3,7 +3,7 @@
  *
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -209,5 +209,82 @@ describe("저장함", () => {
     // 나머지는 목록 끝에 닿을 때 이어서 그린다.
     const drawn = screen.getAllByRole("article").length;
     expect(drawn).toBe(Math.min(PAGE_SIZE, saved.length));
+  });
+});
+
+describe("저장함 검색", () => {
+  it("한글을 모으는 동안에는 거르지 않는다", async () => {
+    saveProduct(1);
+    saveProduct(3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    const search = screen.getByRole("searchbox");
+    // 아직 완성되지 않은 글자다. 이 값으로 거르면 두 제품이 모두 사라진다.
+    fireEvent.compositionStart(search);
+    fireEvent.change(search, { target: { value: "ㄷ" } });
+
+    expect(search).toHaveValue("ㄷ");
+    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+    expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
+  });
+
+  it("조합이 끝나면 그 말로 거른다", async () => {
+    saveProduct(1);
+    saveProduct(3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    const search = screen.getByRole("searchbox");
+    fireEvent.compositionStart(search);
+    fireEvent.change(search, { target: { value: "독도" } });
+    fireEvent.compositionEnd(search, { target: { value: "독도" } });
+
+    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+    expect(screen.queryByText("다이브인 저분자 히알루론산 토너")).not.toBeInTheDocument();
+  });
+
+  it("맞는 자리를 색으로 가른다", async () => {
+    saveProduct(1);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.type(screen.getByRole("searchbox"), "독도");
+
+    const matched = document.querySelector(".text-brand-strong");
+    expect(matched).toHaveTextContent("독도");
+  });
+});
+
+describe("저장을 풀 때", () => {
+  it("서버를 다시 부르지 않고 그 카드만 덜어 낸다", async () => {
+    let calls = 0;
+    server.events.on("request:start", ({ request }) => {
+      if (new URL(request.url).pathname.endsWith("/api/storage")) calls += 1;
+    });
+
+    saveProduct(1);
+    saveProduct(3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    const before = calls;
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    // 카드는 곧바로 사라지고 남은 것은 그대로 있다.
+    await waitFor(() => expect(screen.queryByText("1025 독도 토너")).not.toBeInTheDocument());
+    expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
+    expect(calls).toBe(before);
+  });
+
+  it("불러오는 중 안내로 되돌아가지 않는다", async () => {
+    saveProduct(1);
+    saveProduct(3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    expect(screen.queryByText("불러오는 중…")).not.toBeInTheDocument();
   });
 });
