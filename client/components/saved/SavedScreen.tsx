@@ -2,15 +2,17 @@
 
 import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
-import { SortDropdown, type SortOption } from "@/components/ui/SortDropdown";
+import type { SortOption } from "@/components/ui/SortDropdown";
+import { SortHeader } from "@/components/ui/SortHeader";
 import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
 /**
@@ -48,6 +50,9 @@ const sortProducts = (
   return products.toSorted((a, b) => b.price - a.price);
 };
 
+/** 화면에 한 번에 더 그릴 개수. 서버가 나누어 주지 않아 화면에서 끊어 보여 준다. */
+const PAGE_SIZE = 20;
+
 type State = {
   readonly key: string;
   readonly status: Status;
@@ -60,6 +65,7 @@ export function SavedScreen() {
   const key = savedIds.join(",");
   const [keyword, setKeyword] = useState("");
   const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   // 저장 목록이 비면 부를 API 가 없으므로 곧바로 끝난 상태로 둔다.
   const initial = (id: string): State => ({
@@ -108,7 +114,19 @@ export function SavedScreen() {
         `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.trim().toLowerCase()),
       )
     : current.items;
-  const shown = sortProducts(matched, sort, savedIds);
+  const ordered = sortProducts(matched, sort, savedIds);
+  const shown = ordered.slice(0, visible);
+  const hasNext = shown.length < ordered.length;
+
+  // 찾는 말이나 차례가 바뀌면 처음부터 다시 보여 준다.
+  const [shownKey, setShownKey] = useState(`${keyword}|${sort}`);
+  if (shownKey !== `${keyword}|${sort}`) {
+    setShownKey(`${keyword}|${sort}`);
+    setVisible(PAGE_SIZE);
+  }
+
+  const showMore = useCallback(() => setVisible((count) => count + PAGE_SIZE), []);
+  const sentinel = useInfiniteScroll(hasNext, showMore);
 
   if (current.status === "loading") {
     return (
@@ -142,35 +160,18 @@ export function SavedScreen() {
 
   return (
     <main className="flex-1 px-4">
-      <div className="flex items-center justify-end py-3">
-        <p className="text-[13px] font-bold text-text-primary">총 {current.items.length}개</p>
-      </div>
-
+      {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
       {current.items.length > 0 ? (
-        <div className="flex items-center gap-2 pb-2">
-          <div className="flex-1">
-            <SearchField
-              value={keyword}
-              onChange={setKeyword}
-              placeholder="저장한 제품 검색"
-              label="저장한 제품 검색"
-            />
-          </div>
-          <div className="shrink-0">
-            <SortDropdown value={sort} onChange={setSort} options={SAVED_SORT_OPTIONS} size="field" />
-          </div>
+        <div className="pt-3">
+          <SearchField value={keyword} onChange={setKeyword} placeholder="저장한 제품 검색" label="저장한 제품 검색" />
+          <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
         </div>
       ) : null}
 
       {/* 바탕이 이미 화면 여백을 쥐고 있어 빈 자리에는 안쪽 여백을 더하지 않는다. */}
       {current.items.length === 0 ? (
-        <div className="py-6">
-          <EmptyNotice
-            icon="bookmark"
-            size="screen"
-            title="저장한 제품이 없어요"
-            detail="마음에 드는 제품을 저장해 두면 여기에 모여요"
-          />
+        <div className="py-4">
+          <EmptyNotice icon="bookmark" size="screen" title="저장한 제품이 없어요" />
         </div>
       ) : null}
 
@@ -182,6 +183,9 @@ export function SavedScreen() {
           </li>
         ))}
       </ul>
+
+      {/* 더 그릴 것이 있을 때만 자리를 둔다. 빈 자리 아래에 남으면 여백만 커진다. */}
+      {hasNext ? <div ref={sentinel} className="h-10" /> : null}
 
       {current.items.length > 0 && shown.length === 0 ? (
         <p className="py-10 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>

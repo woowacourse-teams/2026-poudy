@@ -11,7 +11,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { SavedScreen } from "./SavedScreen";
 
 import { refreshSavedProducts, saveProduct } from "@/lib/storage/saved-products";
+import { allProducts } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
+
+/** 저장함이 한 번에 그리는 개수. 화면 쪽 값과 같아야 한다. */
+const PAGE_SIZE = 20;
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -63,14 +67,15 @@ describe("저장함", () => {
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
   });
 
-  it("브라우저 저장 안내를 숨기고 제품 수를 오른쪽에 둔다", async () => {
+  it("브라우저 저장 안내를 숨기고 개수와 정렬을 한 줄에 둔다", async () => {
     saveProduct(1);
     render(<SavedScreen />);
 
     const count = await screen.findByText("총 1개");
 
     expect(screen.queryByText("이 브라우저에 저장돼요")).not.toBeInTheDocument();
-    expect(count.parentElement).toHaveClass("justify-end");
+    expect(count.parentElement).toHaveClass("justify-between");
+    expect(count.parentElement).toContainElement(screen.getByRole("button", { name: /최근 저장순/ }));
   });
 
   it("최근에 저장한 제품을 앞에 둔다", async () => {
@@ -173,11 +178,36 @@ describe("저장함", () => {
     ]);
   });
 
-  it("정렬 단추를 검색창과 같은 높이로 둔다", async () => {
+  it("찾는 칸을 개수와 정렬 위에 둔다", async () => {
     saveProduct(1);
     render(<SavedScreen />);
     await screen.findByText("1025 독도 토너");
 
-    expect(screen.getByRole("button", { name: /최근 저장순/ })).toHaveClass("h-12");
+    const search = screen.getByRole("searchbox");
+    const count = screen.getByText("총 1개");
+
+    // 문서 차례로 찾는 칸이 개수보다 앞선다.
+    expect(search.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it("여러 개를 저장하면 모두 보여 준다", async () => {
+    [1, 2, 3, 4, 5, 6, 7, 8].forEach(saveProduct);
+    render(<SavedScreen />);
+    await screen.findByText("총 8개");
+
+    expect(screen.getAllByRole("article")).toHaveLength(8);
+  });
+  it("담은 것이 많으면 한 번에 다 그리지 않는다", async () => {
+    /*
+     * 파이프라인 목 데이터는 원본이 기밀이라 저장소에 없다. 손으로 적은 것만 남는
+     * 환경이 있어 개수를 직접 적지 않고, 가진 만큼 담아 그중 일부만 그리는지 본다.
+     */
+    const saved = allProducts.slice(0, PAGE_SIZE + 5);
+    saved.forEach((product) => saveProduct(product.id));
+    render(<SavedScreen />);
+    await screen.findByText(`총 ${saved.length}개`);
+
+    // 나머지는 목록 끝에 닿을 때 이어서 그린다.
+    const drawn = screen.getAllByRole("article").length;
+    expect(drawn).toBe(Math.min(PAGE_SIZE, saved.length));
   });
 });

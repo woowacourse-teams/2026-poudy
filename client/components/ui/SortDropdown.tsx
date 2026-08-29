@@ -36,11 +36,6 @@ type SortDropdownProps<T extends string> = {
   readonly onChange: (sort: T) => void;
   /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 4 종이다. */
   readonly options?: readonly SortOption<T>[];
-  /**
-   * 여는 단추의 높이. 옆에 검색창이 서는 화면은 48px 로 키워 눈높이를 맞춘다.
-   * 기본은 디자인 C07 의 36px 다.
-   */
-  readonly size?: "compact" | "field";
 };
 
 /** 디자인 C07. 제품 목록에서는 정렬 4 종이 API 의 sort 와 1:1 로 맞는다. */
@@ -48,7 +43,6 @@ export function SortDropdown<T extends string = Sort>({
   value,
   onChange,
   options = PRODUCT_SORT_OPTIONS as readonly SortOption<T>[],
-  size = "compact",
 }: SortDropdownProps<T>) {
   const ORDER = options.map((option) => option.value);
   const labelOf = (sort: T) => options.find((option) => option.value === sort)?.label ?? sort;
@@ -115,9 +109,7 @@ export function SortDropdown<T extends string = Sort>({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={menuId}
-        className={`sort-dropdown-trigger flex items-center gap-1 rounded-[10px] bg-[#F2F3F5] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action ${
-          size === "field" ? "h-12 px-3.5 text-[13px]" : "h-9 px-3 text-[12px]"
-        }`}
+        className="sort-dropdown-trigger flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
       >
         {labelOf(value)}
         <span className="sort-dropdown-chevron" data-open={open} aria-hidden="true">
