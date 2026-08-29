@@ -8,6 +8,12 @@ type SearchFieldProps = {
   readonly placeholder: string;
   readonly label: string;
   readonly onSubmit?: () => void;
+  /**
+   * 한글은 자모를 모으는 동안에도 입력값이 바뀐다. `ㄷ` 과 `도` 처럼 아직 완성되지
+   * 않은 글자로 목록을 거르면 곧 사라질 결과가 잠깐씩 스친다.
+   * 조합이 끝난 값만 쓰고 싶은 화면이 이 값을 받아 판단한다.
+   */
+  readonly onChangeComposing?: (composing: boolean) => void;
 };
 
 /**
@@ -16,7 +22,7 @@ type SearchFieldProps = {
  * 평소에는 회색으로 조용히 있다가 입력할 때 흰 배경과 테두리로 또렷해진다.
  * 지우기 버튼은 입력이 있을 때만 보인다.
  */
-export function SearchField({ value, onChange, placeholder, label, onSubmit }: SearchFieldProps) {
+export function SearchField({ value, onChange, placeholder, label, onSubmit, onChangeComposing }: SearchFieldProps) {
   return (
     <form
       role="search"
@@ -34,6 +40,15 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit }: S
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
+        onCompositionStart={() => onChangeComposing?.(true)}
+        /*
+         * 조합이 끝나는 순간의 값은 이 이벤트에만 실려 온다. onChange 가 먼저 오는
+         * 브라우저가 있어 값을 함께 넘겨 두어야 마지막 글자가 빠지지 않는다.
+         */
+        onCompositionEnd={(event) => {
+          onChangeComposing?.(false);
+          onChange(event.currentTarget.value);
+        }}
         /*
          * 보이는 글자 크기는 디자인(C06)대로 14px 이지만 font-size 는 16px 이다.
          * 까닭과 계산은 globals.css 의 `.search-field-input` 에 적어 두었다.
