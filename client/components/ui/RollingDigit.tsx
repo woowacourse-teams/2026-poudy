@@ -10,7 +10,13 @@ type RollingDigitProps = {
   readonly place: number;
 };
 
-/** 다이얼 한 자리. 0-9 를 세로로 세워 두고 해당 숫자가 보이도록 밀어 올린다. */
+/**
+ * 다이얼 한 자리. 0-9 를 세로로 세워 두고 해당 숫자가 보이도록 밀어 올린다.
+ *
+ * 창 높이만 글줄에서 받고, 안쪽은 전부 그 높이의 비율로 잡는다. 칸 높이와 미는 양을
+ * 각각 `lh` 로 적으면 둘을 다른 자리에서 재게 되어, 반올림이 갈리는 화면에서 숫자가
+ * 칸 사이에 걸린다.
+ */
 export function RollingDigit({ digit, place }: RollingDigitProps) {
   const [ready, setReady] = useState(false);
   const frame = useRef<number | undefined>(undefined);
@@ -31,11 +37,11 @@ export function RollingDigit({ digit, place }: RollingDigitProps) {
       className="relative inline-block h-[1lh] w-[1ch] overflow-hidden tabular-nums"
     >
       <span
-        className={`absolute inset-x-0 top-0 flex flex-col ${ready ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out" : ""}`}
-        style={{ transform: `translateY(-${digit}lh)` }}
+        className={`absolute inset-x-0 top-0 flex h-[1000%] flex-col ${ready ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out" : ""}`}
+        style={{ transform: `translateY(-${digit * 10}%)` }}
       >
         {DIGITS.map((candidate) => (
-          <span key={candidate} className="h-[1lh] leading-[1lh]">
+          <span key={candidate} className="flex h-[10%] min-h-0 items-center justify-center">
             {candidate}
           </span>
         ))}
