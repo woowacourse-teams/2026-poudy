@@ -50,10 +50,17 @@ describe("TopBar 뒤로 가기", () => {
 
 describe("TopBar 제목", () => {
   it("로고가 첫 글자를 대신해도 제목 전체를 Poudy로 읽는다", () => {
-    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
+    render(<TopBar title="oudy" variant="root" showLogo />);
 
     expect(screen.getByRole("heading", { name: "Poudy" })).toBeInTheDocument();
+  });
+
+  it("로고 영역을 선택하거나 이미지로 끌 수 없다", () => {
+    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
+
+    expect(screen.getByRole("heading", { name: "Poudy" })).toHaveClass("cursor-default", "select-none");
     expect(container.querySelector("img")).toHaveAttribute("draggable", "false");
+    expect(container.querySelector("img")).toHaveClass("select-none");
   });
 
   // 성분·브랜드·카테고리는 이름을 그대로 넘긴다. 긴 이름이 좌우 버튼을 밀면 안 된다.

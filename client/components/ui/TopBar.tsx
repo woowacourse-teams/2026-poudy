@@ -53,7 +53,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
             height={29}
             draggable={false}
             priority
-            className="ml-3 mb-1.5 self-end h-[29px] w-[26px]"
+            className="ml-3 mb-1.5 select-none self-end h-[29px] w-[26px]"
           />
         ) : null}
 
@@ -67,7 +67,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         <h1
           className={
             showLogo
-              ? "font-brand -ml-1.5 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
+              ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
               : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
           }
         >
