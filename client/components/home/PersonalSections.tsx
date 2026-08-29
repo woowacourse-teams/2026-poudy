@@ -41,9 +41,7 @@ export function RecentFilters() {
     <section className="flex flex-col gap-2.5">
       <h2 className="text-[15px] font-bold text-text-primary">최근 검색</h2>
 
-      {recent.length === 0 ? (
-        <EmptyNotice icon="search" title="최근 검색이 없어요" detail="제품이나 성분을 찾아보면 여기에 남아요" />
-      ) : null}
+      {recent.length === 0 ? <EmptyNotice icon="search" title="최근 검색이 없어요" className="min-h-[110px]" /> : null}
 
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
         {recent.map((item, index) => (
@@ -62,7 +60,8 @@ export function RecentFilters() {
               <span className="flex items-center">
                 <span className="inline-flex h-[22px] items-center gap-1 rounded-[11px] bg-surface px-[7px]">
                   <Icon name="search" size={12} className="text-text-secondary" />
-                  <span className="text-[10px] font-semibold text-text-secondary">
+                  {/* 행간이 남으면 글자가 알약 안에서 아래로 처져 보인다. */}
+                  <span className="text-[10px] leading-none font-semibold text-text-secondary">
                     {item.mode === "ingredient" ? "성분 필터링" : "제품명 검색"}
                   </span>
                 </span>
@@ -157,11 +156,7 @@ export function SavedPreview() {
       </div>
 
       {visible.length === 0 && !loading ? (
-        <EmptyNotice
-          icon="bookmark"
-          title="저장한 제품이 없어요"
-          detail="마음에 드는 제품을 저장해 두면 여기에 모여요"
-        />
+        <EmptyNotice icon="bookmark" title="저장한 제품이 없어요" className="min-h-[110px]" />
       ) : null}
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
