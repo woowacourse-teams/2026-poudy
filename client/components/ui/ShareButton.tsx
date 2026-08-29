@@ -17,7 +17,7 @@ export function ShareButton() {
 
     const result = await sharePage(window.location.href);
 
-    if (result !== "copied") {
+    if (result !== "copied" || window.ReactNativeWebView) {
       return;
     }
 
