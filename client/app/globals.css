@@ -11,6 +11,7 @@
   /* 배경과 표면 */
   --color-background: #ffffff;
   --color-surface: #f7f7f8;
+  --color-surface-subtle: #fafafb;
   --color-border: #e8e9ec;
 
   /* 본문 */

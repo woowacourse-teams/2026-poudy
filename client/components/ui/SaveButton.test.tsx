@@ -30,6 +30,18 @@ afterEach(() => {
 });
 
 describe("SaveButton 저장 인터랙션", () => {
+  it("wide 형태는 굵은 북마크 아이콘을 글자 앞에 둔다", () => {
+    render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant="wide" />);
+
+    const button = screen.getByRole("button", { name: "테스트 제품 저장" });
+    const [icon, label] = button.children;
+
+    expect(icon?.querySelector("svg")).toHaveAttribute("stroke-width", "2.5");
+    expect(icon).toHaveClass("items-center");
+    expect(label).toHaveClass("items-center", "leading-none");
+    expect(label).toHaveTextContent("제품 저장");
+  });
+
   it.each(["icon", "wide"] as const)("%s 형태를 누르면 앱에 선택 햅틱을 요청한다", async (variant) => {
     render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant={variant} />);
 
@@ -68,10 +80,21 @@ describe("SaveButton 저장 인터랙션", () => {
     });
 
     expect(sparkAngles()).toHaveLength(0);
-    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector(".save-pop")).toHaveAttribute(
-      "data-popped",
-      "false",
-    );
+  });
+
+  it("북마크는 불꽃이 끝나기 전에 확대 상태에서 돌아온다", () => {
+    render(<ControlledSaveButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    const pop = screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector(".save-pop");
+    if (!(pop instanceof HTMLElement)) throw new TypeError("save-pop element was not rendered");
+    expect(pop).toHaveAttribute("data-popped", "true");
+    expect(sparkAngles()).toHaveLength(5);
+
+    fireEvent.transitionEnd(pop, { propertyName: "transform" });
+
+    expect(pop).toHaveAttribute("data-popped", "false");
+    expect(sparkAngles()).toHaveLength(5);
   });
 
   it("움직임 줄이기 환경에서는 상태만 저장하고 효과를 실행하지 않는다", async () => {

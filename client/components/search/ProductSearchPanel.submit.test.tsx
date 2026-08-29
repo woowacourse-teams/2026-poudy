@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSearchPanel } from "./ProductSearchPanel";
 
 import { track } from "@/lib/analytics/track";
+import { clearRecentFilters, readRecentFilters } from "@/lib/storage/recent-filters";
 import { server } from "@/mocks/server";
 
 const push = vi.fn();
@@ -209,5 +210,38 @@ describe("ProductSearchPanel 엔터 검색", () => {
     await userEvent.type(field(), "독{Enter}{Enter}{Enter}");
 
     await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe("홈의 최근 검색", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    clearRecentFilters();
+  });
+
+  it("찾은 말로 목록을 열면 제품명 검색으로 남긴다", async () => {
+    suggestionsAre(3);
+    render(<ProductSearchPanel />);
+
+    await userEvent.type(screen.getByRole("searchbox"), "토너");
+    await waitFor(() => expect(screen.getByRole("link", { name: /포함된 제품 검색/ })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("link", { name: /포함된 제품 검색/ }));
+
+    const [recent] = readRecentFilters();
+
+    expect(recent?.mode).toBe("product");
+    expect(recent?.summary).toBe("토너");
+    expect(recent?.query).toBe("keyword=%ED%86%A0%EB%84%88");
+  });
+
+  it("자동완성에서 제품을 고르면 남기지 않는다", async () => {
+    suggestionsAre(3);
+    render(<ProductSearchPanel />);
+
+    await userEvent.type(screen.getByRole("searchbox"), "토너");
+    await waitFor(() => expect(screen.getByRole("link", { name: /제품 1/ })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("link", { name: /제품 1/ }));
+
+    expect(readRecentFilters()).toEqual([]);
   });
 });

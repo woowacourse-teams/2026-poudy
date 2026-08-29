@@ -3,9 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { LevelTag } from "./LevelTag";
+import { MatchedText } from "./MatchedText";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { splitByKeyword } from "@/lib/domain/highlight";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/product-display";
 
 export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
@@ -15,10 +17,12 @@ type ProductCardProps = {
   readonly saved: boolean;
   readonly onToggleSave: (productId: number) => void;
   readonly entryPoint?: ProductEntryPoint;
+  /** 찾은 말. 주면 이름에서 맞는 자리를 색으로 가른다. */
+  readonly keyword?: string;
 };
 
 /** 디자인 C03. 홈·목록·저장함·카테고리·브랜드 화면이 함께 쓴다. */
-export function ProductCard({ product, saved, onToggleSave, entryPoint }: ProductCardProps) {
+export function ProductCard({ product, saved, onToggleSave, entryPoint, keyword = "" }: ProductCardProps) {
   const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
 
   return (
@@ -37,8 +41,24 @@ export function ProductCard({ product, saved, onToggleSave, entryPoint }: Produc
           gap 은 컨테이너 전체에 걸리므로 이 한 자리만 margin 으로 좁힌다.
         */}
         <div className="flex flex-1 flex-col gap-2">
-          <span className="mb-[-4px] text-[12px] leading-tight font-medium text-text-secondary">{brand.name}</span>
-          <span className="text-[14px] leading-tight text-text-primary">{name}</span>
+          <span className="mb-[-4px] text-[12px] leading-tight font-medium">
+            <MatchedText
+              label={brand.name}
+              parts={splitByKeyword(brand.name, keyword)}
+              plainClassName="text-text-secondary"
+              dimmedClassName="text-text-secondary"
+              matchedClassName="text-brand-strong"
+            />
+          </span>
+          <span className="text-[14px] leading-tight">
+            <MatchedText
+              label={name}
+              parts={splitByKeyword(name, keyword)}
+              plainClassName="text-text-primary"
+              dimmedClassName="text-text-primary"
+              matchedClassName="text-brand-strong"
+            />
+          </span>
 
           <p className="text-[11px] leading-tight text-text-secondary">
             {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}

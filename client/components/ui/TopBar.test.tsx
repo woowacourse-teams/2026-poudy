@@ -44,3 +44,12 @@ describe("TopBar 뒤로 가기", () => {
     expect(back).not.toHaveBeenCalled();
   });
 });
+
+describe("TopBar 제목", () => {
+  // 성분·브랜드·카테고리는 이름을 그대로 넘긴다. 긴 이름이 좌우 버튼을 밀면 안 된다.
+  it.each(["root", "sub"] as const)("%s 형태의 긴 제목은 넘치는 만큼 줄인다", (variant) => {
+    render(<TopBar title="사이클로펜타실록세인" variant={variant} />);
+
+    expect(screen.getByRole("heading", { name: "사이클로펜타실록세인" })).toHaveClass("min-w-0", "truncate");
+  });
+});

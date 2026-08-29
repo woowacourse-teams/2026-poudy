@@ -68,7 +68,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
           className={
             showLogo
               ? "font-brand -ml-1.5 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
-              : `flex-1 text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
+              : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
           }
         >
           {title}
@@ -89,7 +89,8 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         <Icon name="chevron-left" size={20} />
       </button>
 
-      <h1 className="flex-1 text-center text-[16px] font-semibold text-text-primary">{title}</h1>
+      {/* 이름을 그대로 받는 화면이 있다. 길어도 좌우 버튼을 밀지 않도록 넘치면 줄인다. */}
+      <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 
       {/* 왼쪽 버튼과 같은 크기로 오른쪽을 채워 제목을 가운데 맞춘다. */}
       <span className="flex size-11 items-center justify-center">{right}</span>

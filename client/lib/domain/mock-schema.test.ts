@@ -61,6 +61,8 @@ const cases = [
   ["제품 수", "/products/count", ProductCountResponse],
   ["제품 제안", "/products/suggestions?keyword=블랙", ProductSuggestionPageResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
+  // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
+  ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
   ["저장함", "/storage?productIds=1,2", StorageResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
@@ -89,8 +91,12 @@ describe("목 응답과 스키마", () => {
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
   it("모든 핸들러를 검사한다", () => {
-    // 성분 목록처럼 분기가 둘인 핸들러가 있어 경로에서 조회 문자열을 뗀 뒤 센다.
-    const tested = new Set(cases.map(([, path]) => path.split("?")[0]));
+    /*
+     * 성분 목록처럼 분기가 둘인 핸들러가 있어 경로에서 조회 문자열을 뗀 뒤 센다.
+     * 제품 상세처럼 한 핸들러의 갈래를 나누어 검사하는 자리도 있어, 끝에 붙는
+     * 번호는 하나로 묶어 같은 핸들러로 센다.
+     */
+    const tested = new Set(cases.map(([, path]) => path.split("?")[0].replace(/\/\d+$/, "/:id")));
 
     expect(tested.size).toBe(handlers.length);
   });

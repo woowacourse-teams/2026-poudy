@@ -68,7 +68,7 @@ export function ProductDetail({
           <SaveProductButton productId={product.id} productName={product.name} />
         </section>
 
-        <div className="flex flex-col px-4 pb-8">
+        <div className="flex flex-col gap-6 px-4 pb-8">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
@@ -135,7 +135,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
   const nameOf = (id: number) => product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName;
 
   return (
-    <section className="flex flex-col gap-3 pt-5 pb-2">
+    <section className="flex flex-col gap-3 pt-5">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
         <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
@@ -148,7 +148,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
           return (
             <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
               <span
-                className={`flex h-[30px] w-[72px] shrink-0 items-center justify-center rounded-[15px] text-[10px] font-bold ${color.bg} ${color.text}`}
+                className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
               >
                 {group.name}
               </span>
@@ -166,10 +166,10 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-[#F7F8F9] before:content-['']">
+    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
-        <p className="text-[12px] text-[#72747A]">
+        <p className="text-pretty text-[12px] text-[#72747A]">
           {ingredientSummary(
             product.ingredients.length,
             product.skinEffectGroups.map((group) => group.name),
@@ -181,8 +181,9 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         <ul className="flex flex-wrap gap-1.5">
           {product.freeOfCodes.map((code) => (
             <li key={code} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
-              <Icon name="check" size={12} className="text-[#F04465]" />
-              <span className="text-[11px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
+              {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
+              <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
+              <span className="text-[12px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
             </li>
           ))}
         </ul>
@@ -190,8 +191,8 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
 
       <p className="flex items-start gap-2 border-t border-[#E5E7EB] pt-3">
         <Icon name="info" size={16} className="shrink-0 text-[#72747A]" />
-        <span className="text-[11px] text-[#72747A]">
-          ‘없음’ 표시는 공개된 전성분표에서 해당 성분명이 확인되지 않는다는 뜻이에요.
+        <span className="text-pretty text-[11px] text-[#72747A]">
+          ‘없음’ 표시는 공개된 전성분표에서 해당 성분명이 {"확인되지\u00a0않는다는\u00a0뜻이에요."}
         </span>
       </p>
     </section>
@@ -200,7 +201,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
 
 function Ingredients({ ingredients }: { readonly ingredients: ProductDetailResponse["ingredients"] }) {
   return (
-    <section className="flex flex-col gap-3 pt-3 pb-6">
+    <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">전체 성분표</h3>
         <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>
@@ -218,15 +219,15 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
     .replace(/\. /g, ".");
 
   return (
-    <section className="relative isolate flex gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-[#F4F5F6] before:content-['']">
+    <section className="relative isolate flex gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
       <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
         <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
       </span>
 
       <span className="flex flex-1 flex-col gap-2.5">
         <span className="text-[14px] font-bold text-[#202124]">상품 정보 출처 안내</span>
-        <span className="text-[12px] text-[#5F6268]">
-          브랜드 공식 전성분을 기준으로 정리했어요. 제품 리뉴얼에 따라 실제 표기와 다를 수 있어요.
+        <span className="text-pretty text-[12px] text-[#5F6268]">
+          브랜드 공식 전성분을 기준으로 정리했어요. {"제품\u00a0리뉴얼에\u00a0따라"} 실제 표기와 다를 수 있어요.
         </span>
         <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
         {/* 정보 수정 제안은 받을 곳이 아직 없어 화면에서 감춘다. */}

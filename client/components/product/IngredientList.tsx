@@ -48,7 +48,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
                 </span>
 
                 <span
-                  className={`flex h-[22px] shrink-0 items-center rounded-[11px] px-2 text-[10px] font-semibold ${color.bg} ${color.text}`}
+                  className={`flex h-[22px] shrink-0 items-center rounded-[11px] px-2 text-[12px] font-semibold ${color.bg} ${color.text}`}
                 >
                   {effect?.name ?? "일반"}
                 </span>

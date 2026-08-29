@@ -15,15 +15,37 @@ export const SORT_LABELS: Record<Sort, string> = {
 };
 
 // 디자인의 드롭다운 순서다. API 의 열거 순서와 다르다.
-const ORDER: readonly Sort[] = ["NAME_ASC", "NAME_DESC", "PRICE_DESC", "PRICE_ASC"];
+const SORT_ORDER: readonly Sort[] = ["NAME_ASC", "NAME_DESC", "PRICE_DESC", "PRICE_ASC"];
 
-type SortDropdownProps = {
-  readonly value: Sort;
-  readonly onChange: (sort: Sort) => void;
+/**
+ * 고를 수 있는 값과 화면에 적을 이름의 짝.
+ * 저장함처럼 API 의 sort 에 없는 기준을 쓰는 화면이 있어 목록을 밖에서 받는다.
+ */
+export type SortOption<T extends string> = {
+  readonly value: T;
+  readonly label: string;
 };
 
-/** 디자인 C07. 정렬 4 종은 API 의 sort 와 1:1 로 맞는다. */
-export function SortDropdown({ value, onChange }: SortDropdownProps) {
+export const PRODUCT_SORT_OPTIONS: readonly SortOption<Sort>[] = SORT_ORDER.map((sort) => ({
+  value: sort,
+  label: SORT_LABELS[sort],
+}));
+
+type SortDropdownProps<T extends string> = {
+  readonly value: T;
+  readonly onChange: (sort: T) => void;
+  /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 4 종이다. */
+  readonly options?: readonly SortOption<T>[];
+};
+
+/** 디자인 C07. 제품 목록에서는 정렬 4 종이 API 의 sort 와 1:1 로 맞는다. */
+export function SortDropdown<T extends string = Sort>({
+  value,
+  onChange,
+  options = PRODUCT_SORT_OPTIONS as readonly SortOption<T>[],
+}: SortDropdownProps<T>) {
+  const ORDER = options.map((option) => option.value);
+  const labelOf = (sort: T) => options.find((option) => option.value === sort)?.label ?? sort;
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(() => ORDER.indexOf(value));
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +81,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
     optionRefs.current[index]?.focus();
   };
 
-  const selectOption = (sort: Sort) => {
+  const selectOption = (sort: T) => {
     if (sort !== value) {
       requestSelectionHaptic();
       onChange(sort);
@@ -89,7 +111,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         aria-controls={menuId}
         className="sort-dropdown-trigger flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
       >
-        {SORT_LABELS[value]}
+        {labelOf(value)}
         <span className="sort-dropdown-chevron" data-open={open} aria-hidden="true">
           <Icon name="chevron-down" size={12} />
         </span>
@@ -107,7 +129,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
           어색하다. 여백을 없애 첫 옵션과 마지막 옵션이 모서리까지 닿게 한다.
           모서리를 넘어 칠해지지 않도록 넘치는 부분은 잘라 낸다.
         */
-        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-[156px] overflow-hidden rounded-[10px] border border-border bg-white shadow-lg"
+        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-max min-w-[156px] overflow-hidden rounded-[10px] border border-border bg-white shadow-lg"
       >
         {ORDER.map((sort, index) => (
           <button
@@ -143,7 +165,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
               sort === value ? "bg-[#F2F3F5] font-semibold" : "bg-white",
             ].join(" ")}
           >
-            {SORT_LABELS[sort]}
+            {labelOf(sort)}
             {sort === value ? <Icon name="check" size={12} /> : null}
           </button>
         ))}

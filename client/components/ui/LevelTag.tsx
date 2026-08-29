@@ -65,12 +65,12 @@ export function LevelTag({ kind, level, variant = "plain" }: LevelTagProps) {
         ))}
       </span>
       {pill ? (
-        <span className="text-[12px] font-semibold text-[#54575C]">
+        <span className="text-[12px] leading-none font-semibold text-[#54575C]">
           {label} {levelLabel(level)}
         </span>
       ) : (
         <>
-          <span className={`text-[12px] font-semibold ${text}`}>{label}</span>
+          <span className={`text-[12px] leading-none font-semibold ${text}`}>{label}</span>
           <span className="sr-only">{levelLabel(level)}</span>
         </>
       )}
