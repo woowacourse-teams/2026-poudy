@@ -27,7 +27,7 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
   throw new Error('POUDY_APP_VERSION must be x.y.z.');
 }
 
-/** App Links 는 https 로만 검증된다. 로컬 주소를 보는 개발 빌드에서는 걸지 않는다. */
+/** App Links 는 https 로만 검증된다. */
 const appLinkHostOf = (webBaseUrl: string) => {
   const web = new URL(webBaseUrl);
 
@@ -38,7 +38,6 @@ const appLinkHostOf = (webBaseUrl: string) => {
   return web.host;
 };
 
-/** 공유한 https 주소를 앱이 받도록 한다. 없으면 브라우저가 연다. */
 const androidAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['android']>, 'intentFilters'> => {
   if (!host) {
     return {};

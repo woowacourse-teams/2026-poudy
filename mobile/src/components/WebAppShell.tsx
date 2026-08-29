@@ -24,7 +24,6 @@ interface WebAppShellProps {
 
 const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
-/** 웹이 상단바의 공유를 누르면 주소를 붙여 보낸다. WebView 에는 Web Share API 가 없다. */
 const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {

@@ -9,7 +9,6 @@ import { sharePage } from "@/lib/interaction/share";
 
 const COPIED_NOTICE_MS = 1600;
 
-/** 상단바의 공유. 지금 보고 있는 주소를 그대로 내보낸다. */
 export function ShareButton() {
   const [copied, setCopied] = useState(false);
 
@@ -37,7 +36,6 @@ export function ShareButton() {
         <Icon name="share" size={20} />
       </button>
 
-      {/* 공유 시트가 없어 주소만 복사했을 때, 무엇이 일어났는지 알린다. */}
       {copied ? (
         <span
           role="status"

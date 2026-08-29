@@ -26,7 +26,7 @@ export const getDeepLinkUrl = (value: string, webBaseUrl: string): string | null
   try {
     const deepLink = new URL(value);
 
-    // App Links 로 받은 https 주소다. 경로가 이미 웹의 것이라 그대로 연다.
+    // App Links 로 받은 주소다.
     if (deepLink.origin === new URL(webBaseUrl).origin) {
       return deepLink.toString();
     }

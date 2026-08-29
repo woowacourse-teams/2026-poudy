@@ -24,7 +24,6 @@ beforeEach(() => {
   back.mockClear();
   replace.mockClear();
   setReferrer("");
-  // 앞선 검사가 세어 둔 이동을 지운다.
   [1, 2, 3, 4, 5].forEach(() => markPop());
 });
 

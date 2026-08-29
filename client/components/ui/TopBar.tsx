@@ -25,10 +25,7 @@ type TopBarProps = {
  */
 export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
-  /*
-   * 사이트 안에서 옮겨 온 자리에서만 뒤로 간다. 검색이나 메신저에서 바로 들어온
-   * 화면에서 뒤로 가면 사이트 밖으로 나가므로, 그때는 홈으로 보낸다.
-   */
+  /* 밖에서 바로 들어온 화면에서 뒤로 가면 사이트를 벗어난다. */
   const handleBack = () => {
     if (hasInSiteHistory()) {
       router.back();
@@ -111,7 +108,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
       {/* 이름을 그대로 받는 화면이 있다. 길어도 좌우 버튼을 밀지 않도록 넘치면 줄인다. */}
       <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 
-      {/* 왼쪽 두 버튼과 같은 너비로 오른쪽을 채워 제목을 가운데 맞춘다. */}
+      {/* 왼쪽과 같은 너비로 채워 제목을 가운데 맞춘다. */}
       <div className="flex shrink-0 items-center">
         <span className="size-11" />
         <span className="flex size-11 items-center justify-center">{right}</span>
