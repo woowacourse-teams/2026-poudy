@@ -41,9 +41,7 @@ export function RecentFilters() {
     <section className="flex flex-col gap-2.5">
       <h2 className="text-[15px] font-bold text-text-primary">최근 검색</h2>
 
-      {recent.length === 0 ? (
-        <EmptyNotice icon="search" title="최근 검색이 없어요" detail="제품이나 성분을 찾아보면 여기에 남아요" />
-      ) : null}
+      {recent.length === 0 ? <EmptyNotice icon="search" title="최근 검색이 없어요" className="min-h-[110px]" /> : null}
 
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
         {recent.map((item, index) => (
@@ -62,7 +60,8 @@ export function RecentFilters() {
               <span className="flex items-center">
                 <span className="inline-flex h-[22px] items-center gap-1 rounded-[11px] bg-surface px-[7px]">
                   <Icon name="search" size={12} className="text-text-secondary" />
-                  <span className="text-[10px] font-semibold text-text-secondary">
+                  {/* 행간이 남으면 글자가 알약 안에서 아래로 처져 보인다. */}
+                  <span className="text-[10px] leading-none font-semibold text-text-secondary">
                     {item.mode === "ingredient" ? "성분 필터링" : "제품명 검색"}
                   </span>
                 </span>
@@ -139,7 +138,7 @@ export function SavedPreview() {
 
   /*
    * 저장해 둔 ID 는 있는데 아직 그 조건의 응답을 받지 못한 동안이다.
-   * 이때 `저장한 제품이 없어요` 를 보여 주면 곧 카드가 뜨면서 문구가 번쩍인다.
+   * 이때 `아직 저장한 제품이 없어요` 를 보여 주면 곧 카드가 뜨면서 문구가 번쩍인다.
    * 응답이 온 뒤에는 그 안이 비어 있어도(지워진 제품 등) 빈 상태로 정리된다.
    */
   const loading = key !== "" && loaded.key !== key;
@@ -159,8 +158,9 @@ export function SavedPreview() {
       {visible.length === 0 && !loading ? (
         <EmptyNotice
           icon="bookmark"
-          title="저장한 제품이 없어요"
-          detail="마음에 드는 제품을 저장해 두면 여기에 모여요"
+          image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
+          title="아직 저장한 제품이 없어요"
+          className="min-h-[240px]"
         />
       ) : null}
 

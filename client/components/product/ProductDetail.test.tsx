@@ -57,4 +57,16 @@ describe("제품 성분 요약", () => {
 
     expect(toggle).toHaveClass("bg-transparent", "before:-inset-x-4", "before:bg-[#F4F5F6]");
   });
+
+  it("상세 구역을 24px씩 띄우고 출처 안내에는 옅은 surface를 쓴다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const ingredientSummary = screen.getByRole("heading", { name: "성분 정보" }).closest("section");
+    const detailSections = ingredientSummary?.parentElement;
+    const source = screen.getByText("상품 정보 출처 안내").closest("section");
+
+    expect(detailSections).toHaveClass("gap-6");
+    expect(ingredientSummary).toHaveClass("before:bg-surface-subtle");
+    expect(source).toHaveClass("before:bg-surface-subtle");
+  });
 });

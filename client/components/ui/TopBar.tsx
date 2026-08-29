@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { Icon } from "./icons/Icon";
 
+import { hasInSiteHistory } from "@/lib/navigation/history-depth";
+
 type TopBarProps = {
   readonly title: string;
   /** 루트는 제목만, 하위는 뒤로가기와 제목을 보여 준다. */
@@ -16,14 +18,11 @@ type TopBarProps = {
   readonly right?: React.ReactNode;
 };
 
-/**
- * 디자인의 상단 영역. 이름은 8 가지였지만 구조는 두 종류뿐이다.
- * 하위 화면은 좌우 균형을 맞춰 제목을 가운데 둔다.
- */
 export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
+  /* 밖에서 바로 들어온 화면에서 뒤로 가면 사이트를 벗어난다. */
   const handleBack = () => {
-    if (window.history.length > 1) {
+    if (hasInSiteHistory()) {
       router.back();
       return;
     }
@@ -52,8 +51,9 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
             alt=""
             width={26}
             height={29}
+            draggable={false}
             priority
-            className="ml-3 mb-1.5 self-end h-[29px] w-[26px]"
+            className="ml-3 mb-1.5 select-none self-end h-[29px] w-[26px]"
           />
         ) : null}
 
@@ -67,10 +67,11 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         <h1
           className={
             showLogo
-              ? "font-brand -ml-1.5 flex-1 self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
-              : `flex-1 text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
+              ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
+              : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
           }
         >
+          {showLogo ? <span className="sr-only">P</span> : null}
           {title}
         </h1>
         {right}
@@ -89,9 +90,8 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         <Icon name="chevron-left" size={20} />
       </button>
 
-      <h1 className="flex-1 text-center text-[16px] font-semibold text-text-primary">{title}</h1>
+      <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 
-      {/* 왼쪽 버튼과 같은 크기로 오른쪽을 채워 제목을 가운데 맞춘다. */}
       <span className="flex size-11 items-center justify-center">{right}</span>
     </header>
   );

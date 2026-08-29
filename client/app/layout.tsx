@@ -4,8 +4,10 @@ import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
+import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
+import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { IconSprite } from "@/components/ui/icons/sprite";
-import { indexingEnabled, siteUrl } from "@/lib/seo/site";
+import { indexingEnabled, SITE_DESCRIPTION, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
 
 import "./globals.css";
@@ -36,11 +38,10 @@ const foldit = Foldit({
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: "Poudy",
-  description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
-  alternates: { canonical: "/" },
+  description: SITE_DESCRIPTION,
   openGraph: {
     title: "Poudy",
-    description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
+    description: SITE_DESCRIPTION,
     type: "website",
     locale: "ko_KR",
     siteName: "Poudy",
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Poudy",
-    description: "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy",
+    description: SITE_DESCRIPTION,
     images: ["/opengraph-image"],
   },
   ...(indexingEnabled() ? {} : { robots: { index: false, follow: false } }),
@@ -67,6 +68,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <IconSprite />
+        <HistoryDepthTracker />
+        <OpenInAppRedirect />
         <Suspense>
           <AnalyticsProvider />
         </Suspense>

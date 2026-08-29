@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useCallback, useState } from "react";
+import { useCallback, useState, type CSSProperties, type TransitionEvent } from "react";
 
 import { Icon } from "./icons/Icon";
 
@@ -33,6 +33,7 @@ const randomSparkAngles = (): readonly number[] =>
 export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
+  const [popping, setPopping] = useState(false);
 
   const handleClick = () => {
     requestSelectionHaptic();
@@ -46,8 +47,14 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
      * 누를 때마다 스타일 계산을 강제하게 된다.
      */
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    setSparkAngles(saved || reduced ? [] : randomSparkAngles());
+    const celebrate = !saved && !reduced;
+    setSparkAngles(celebrate ? randomSparkAngles() : []);
+    setPopping(celebrate);
     onToggle();
+  };
+
+  const finishPop = (event: TransitionEvent<HTMLSpanElement>) => {
+    if (event.target === event.currentTarget && event.propertyName === "transform" && popping) setPopping(false);
   };
 
   if (variant === "wide") {
@@ -65,18 +72,22 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
           `제품 저장` 과 `저장됨` 은 길이가 달라 그대로 두면 글자와 아이콘이 좌우로 밀린다.
           긴 쪽을 자리로 잡아 두고 그 안에서 글자만 바꿔 위치를 고정한다.
         */}
-        <span className="grid">
+        <span className="relative inline-flex items-center justify-center leading-none">
+          {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
+          <span
+            className="save-pop inline-flex items-center justify-center leading-none"
+            data-popped={popping}
+            onTransitionEnd={finishPop}
+          >
+            <Icon name="bookmark" size={18} filled={saved} strokeWidth={2.5} />
+          </span>
+          <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
+        </span>
+        <span className="inline-grid items-center leading-none">
           <span className="invisible col-start-1 row-start-1" aria-hidden="true">
             제품 저장
           </span>
           <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
-        </span>
-        <span className="relative inline-flex">
-          {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
-          <span className="save-pop inline-flex" data-popped={sparkAngles.length > 0}>
-            <Icon name="bookmark" size={18} filled={saved} />
-          </span>
-          <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
         </span>
       </button>
     );
@@ -90,7 +101,11 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       aria-label={label}
       className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
-      <span className="save-pop inline-flex" data-popped={sparkAngles.length > 0}>
+      <span
+        className="save-pop inline-flex items-center justify-center leading-none"
+        data-popped={popping}
+        onTransitionEnd={finishPop}
+      >
         <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
       </span>
       <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />

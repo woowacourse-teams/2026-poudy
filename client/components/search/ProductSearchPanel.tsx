@@ -15,6 +15,7 @@ import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
+import { addRecentFilter } from "@/lib/storage/recent-filters";
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -43,6 +44,19 @@ const nameParts = (item: ProductSuggestionResponse) => {
 };
 
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
+/*
+ * 홈의 최근 검색 카드에도 남긴다. 카드는 `/products?쿼리` 로 목록을 다시 열어 주므로
+ * 목록을 여는 자리에서만 적는다. 자동완성으로 제품 상세에 바로 간 것은 목록 조건이
+ * 아니라 다시 갈 곳을 만들 수 없다.
+ */
+const rememberFilter = (keyword: string) => {
+  addRecentFilter({
+    query: `keyword=${encodeURIComponent(keyword)}`,
+    summary: keyword,
+    mode: "product",
+  });
+};
+
 export function ProductSearchPanel() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
@@ -74,6 +88,7 @@ export function ProductSearchPanel() {
     sent.current = trimmed;
     track("search_submitted", { mode: "product", query: trimmed, result_count: total });
     addRecentSearch({ kind: "keyword", keyword: trimmed });
+    rememberFilter(trimmed);
     router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
   }, [router, total, trimmed]);
 
@@ -162,6 +177,7 @@ export function ProductSearchPanel() {
               onClick={() => {
                 track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 });
                 addRecentSearch({ kind: "keyword", keyword: trimmed });
+                rememberFilter(trimmed);
               }}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
             >

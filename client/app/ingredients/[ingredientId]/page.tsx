@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
+import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { Icon } from "@/components/ui/icons/Icon";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
@@ -58,17 +60,21 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
   return (
     <>
-      <TopBar title="성분 설명" variant="sub" />
+      {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
+      <TopBar title={ingredient.koreanName} variant="sub" right={<ShareButton />} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />
       </Suspense>
 
-      {/* 디자인 S06 은 본문을 좌우 32px 안쪽으로 넣는다. */}
-      <main className="flex-1 px-8">
-        <section className="flex flex-col gap-2 pt-5 pb-[18px]">
-          <h2 className="text-[24px] font-bold text-[#202124]">{ingredient.koreanName}</h2>
-          <p className="text-[13px] text-[#72747A]">{ingredient.englishName}</p>
+      {/*
+        바탕은 화면 여백인 16px 만 둔다.
+        읽을거리는 안쪽 여백을 더해 32px 로 들여 쓰고,
+        배경을 가진 덩어리만 안쪽 여백을 빼서 바탕 여백까지 넓힌다.
+      */}
+      <main className="flex-1 px-4">
+        <section className="flex flex-col gap-2 px-4 pt-4 pb-4">
+          <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 
           {ingredient.skinEffects.length > 0 ? (
             <ul className="flex h-[26px] items-center gap-1.5">
@@ -88,17 +94,17 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           ) : null}
         </section>
 
-        <div className="flex flex-col gap-8 pt-6 pb-8">
+        <div className="flex flex-col gap-6 px-4 pt-4 pb-6">
           <section className="flex flex-col gap-3">
             <div className="flex h-7 items-center justify-between">
               <h3 className="text-[18px] font-bold text-[#202124]">무슨 역할을 하나요?</h3>
               <span className="flex h-6 items-center gap-1 rounded-[12px] bg-[#F2F0FF] px-2">
                 <Icon name="sparkles" size={12} filled className="text-[#6250C5]" />
-                <span className="text-[11px] font-semibold text-[#6250C5]">AI 요약</span>
+                <span className="text-[12px] font-semibold text-[#6250C5]">AI 요약</span>
               </span>
             </div>
 
-            <p className="text-[14px] leading-[1.55] text-[#5F6268]">{ingredient.description}</p>
+            <p className="text-pretty text-[12px] text-[#72747A]">{ingredient.description}</p>
 
             {/*
               제형에서 맡는 배합 목적이다. 피부에 주는 효과(skinEffects)와 다른 축이라
@@ -118,14 +124,13 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-[#DDEAF0] bg-[#F4F8FA] px-4 py-[14px]">
-            <p className="flex items-center gap-2.5">
-              <Icon name="info" size={18} className="shrink-0 text-[#3E8FB7]" />
-              <span className="text-[13px] leading-[1.5] text-[#4F5963]">
-                실제 사용감은 배합량과 함께 사용된 성분에 따라 달라질 수 있어요.
-              </span>
-            </p>
-          </section>
+          {/* 제품 상세의 안내와 같은 결로 둔다. 색 상자 대신 윗선으로만 가른다. */}
+          <p className="flex items-start gap-2 border-t border-[#E5E7EB] pt-3">
+            <Icon name="info" size={16} className="shrink-0 text-[#72747A]" />
+            <span className="text-pretty text-[11px] text-[#72747A]">
+              실제 사용감은 배합량과 함께 사용된 {"성분에\u00a0따라\u00a0달라질\u00a0수\u00a0있어요."}
+            </span>
+          </p>
 
           {ingredient.groupCodes.length > 0 ? (
             <section className="flex flex-col gap-2.5">
@@ -143,19 +148,26 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             </section>
           ) : null}
 
-          <section className="pt-1">
+          {/* 바탕을 가진 덩어리라 둘레의 안쪽 여백을 되물려 바탕 여백인 16px 에 맞춘다. */}
+          <section className="-mx-4 pt-1">
             <Link
               href={`/products?includeIngredientIds=${ingredient.id}`}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#202124] px-4 text-[14px] leading-[1.3] font-bold text-white"
+              className="flex h-12 w-full items-center justify-center gap-1 rounded-xl bg-[#202124] px-4 text-[14px] leading-[1.3] font-bold text-white"
             >
-              {ingredient.koreanName} 포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기
+              {/*
+                이름이 길어도 단추가 한 줄을 넘지 않게 이름만 줄인다.
+                뒤따르는 개수와 화살표는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
+              */}
+              <span className="truncate">{ingredient.koreanName}</span>
+              <span className="shrink-0">포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
               <Icon name="chevron-right" size={18} className="shrink-0" />
             </Link>
           </section>
         </div>
 
+        {/* 바탕을 가진 덩어리라 안쪽 여백을 두지 않고 바탕 여백인 16px 에 맞춘다. */}
         <section className="pb-6">
-          <div className="flex gap-3 rounded-xl bg-[#F4F5F6] p-4">
+          <div className="flex gap-3 rounded-xl bg-surface-subtle p-4">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
               <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
             </span>
@@ -163,8 +175,9 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             <div className="flex flex-1 flex-col gap-3">
               <h3 className="text-[14px] font-bold text-[#202124]">정보 출처 및 안내</h3>
 
-              <p className="text-[12px] leading-[1.45] text-[#5F6268]">
-                성분의 일반적인 정보와 알려진 효과를 이해하기 위한 참고 자료예요. 개인의 피부 반응은 다를 수 있어요.
+              <p className="text-pretty text-[12px] leading-[1.45] text-[#5F6268]">
+                성분의 일반적인 정보와 알려진 효과를 {"이해하기\u00a0위한\u00a0참고\u00a0자료예요."} 개인의 피부 반응은{" "}
+                {"다를\u00a0수\u00a0있어요."}
               </p>
 
               {ingredient.infoSources.length > 0 ? (

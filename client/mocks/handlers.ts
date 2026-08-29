@@ -1,3 +1,4 @@
+import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -14,7 +15,6 @@ import {
   pipelineIngredientSummaries,
   pipelineProductIngredients,
   productDetails,
-  products,
 } from "./fixtures";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -159,7 +159,7 @@ const filterProducts = (url: URL) => {
   });
 };
 
-const sortProducts = (items: typeof products, sort: string | null) => {
+const sortProducts = (items: typeof allProducts, sort: string | null) => {
   const sorted = [...items];
   switch (sort) {
     case "NAME_DESC":
@@ -172,6 +172,33 @@ const sortProducts = (items: typeof products, sort: string | null) => {
       return sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
   }
 };
+
+/**
+ * 목록에 있는 정보만으로 제품 상세를 세운다.
+ * 성분과 분류는 목록이 들고 있지 않아 비운다.
+ */
+const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse => ({
+  id: product.id,
+  name: product.name,
+  brand: product.brand,
+  categories: [],
+  imageUrl: product.imageUrl,
+  variants: [
+    {
+      id: product.id,
+      price: product.price,
+      volumeValue: product.volumeValue,
+      volumeUnit: product.volumeUnit,
+      status: "SALE",
+    },
+  ],
+  moistureLevel: product.moistureLevel,
+  oilLevel: product.oilLevel,
+  skinEffectGroups: [],
+  ingredients: [],
+  freeOfCodes: [],
+  updatedAt: "2026-08-01T00:00:00+09:00",
+});
 
 export const handlers = [
   http.get("*/api/products", ({ request }) => {
@@ -214,8 +241,17 @@ export const handlers = [
   http.get("*/api/products/:productId", ({ params }) => {
     const id = Number(params.productId);
     const detail = productDetails.find((product) => product.id === id);
-    if (!detail) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
-    return HttpResponse.json(detail);
+    if (detail) return HttpResponse.json(detail);
+
+    /*
+     * 손으로 적은 상세는 몇 개뿐이라 나머지는 목록에 있는 정보로 상세를 세운다.
+     * 목록에서 보이는 제품을 눌렀는데 없는 제품이라고 하면 목을 쓰는 동안
+     * 화면을 확인할 수 없다.
+     */
+    const listed = allProducts.find((product) => product.id === id);
+    if (!listed) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+    return HttpResponse.json(detailOf(listed));
   }),
 
   http.get("*/api/storage", ({ request }) => {
@@ -223,8 +259,8 @@ export const handlers = [
     const ids = numbers(url, "productIds");
     // 요청한 순서를 유지하고 존재하는 제품만 돌려준다.
     const items = ids
-      .map((id) => products.find((product) => product.id === id))
-      .filter((product): product is (typeof products)[number] => Boolean(product));
+      .map((id) => allProducts.find((product) => product.id === id))
+      .filter((product): product is (typeof allProducts)[number] => Boolean(product));
 
     return HttpResponse.json({ items });
   }),

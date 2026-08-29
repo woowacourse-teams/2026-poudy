@@ -11,6 +11,10 @@ client:
   - changed-files:
       - any-glob-to-any-file: ['client/**']
 
+mobile:
+  - changed-files:
+      - any-glob-to-any-file: ['mobile/**']
+
 common:
   - changed-files:
       - any-glob-to-any-file: ['common/**']

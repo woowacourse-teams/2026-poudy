@@ -25,10 +25,11 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
     [isConnected],
   );
 
+  /** `key` 를 두어 WebView 를 다시 만들지 않는다. 새로 만들면 방문 기록이 사라진다. */
   const navigate = useCallback((url: string) => {
     setFailure(null);
     setIsLoading(true);
-    setSource((current) => ({ key: current.key + 1, url }));
+    setSource((current) => ({ ...current, url }));
   }, []);
 
   const reload = useCallback(() => {
@@ -54,7 +55,7 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
     const timer = setTimeout(() => fail('timeout'), LOAD_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
-  }, [fail, isLoading, source.key]);
+  }, [fail, isLoading, source]);
 
   return {
     key: source.key,

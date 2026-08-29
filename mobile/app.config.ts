@@ -27,11 +27,58 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
   throw new Error('POUDY_APP_VERSION must be x.y.z.');
 }
 
+/** App Links 는 https 로만 검증된다. */
+const appLinkHostOf = (webBaseUrl: string) => {
+  const web = new URL(webBaseUrl);
+
+  if (web.protocol !== 'https:') {
+    return null;
+  }
+
+  return web.host;
+};
+
+const androidAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['android']>, 'intentFilters'> => {
+  if (!host) {
+    return {};
+  }
+
+  return {
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [{ scheme: 'https', host }],
+      },
+    ],
+  };
+};
+
+const iosAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['ios']>, 'associatedDomains'> => {
+  if (!host) {
+    return {};
+  }
+
+  return { associatedDomains: [`applinks:${host}`] };
+};
+
+/** 정식 앱 옆에 나란히 깔았을 때 홈 화면과 공유 시트에서 구분되게 한다. */
+const appNameOf = (bundleIdentifier: string) => {
+  if (bundleIdentifier === DEFAULT_BUNDLE_IDENTIFIER) {
+    return APP_NAME;
+  }
+
+  return `${APP_NAME} Dev`;
+};
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
+  const appLinkHost = appLinkHostOf(WEB_BASE_URL);
+
   return {
     ...config,
-    name: APP_NAME,
+    name: appNameOf(bundleIdentifier),
     slug: APP_SLUG,
     owner: EAS_ACCOUNT,
     version: APP_VERSION ?? DEFAULT_APP_VERSION,
@@ -42,8 +89,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       bundleIdentifier,
       supportsTablet: false,
+      ...iosAppLinksOf(appLinkHost),
     },
     android: {
+      // 없으면 AppCompat 기본색이 스플래시와 첫 화면 사이에 비친다.
+      backgroundColor: '#ffffff',
       // 루트 icon 은 iOS 가 쓴다. 안드로이드는 여백을 둔 그림이라야 잘리지 않는다.
       icon: './assets/poudy-adaptive-icon.png',
       adaptiveIcon: {
@@ -51,11 +101,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         foregroundImage: './assets/poudy-adaptive-icon.png',
       },
       blockedPermissions: [
+        'android.permission.ACCESS_WIFI_STATE',
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.SYSTEM_ALERT_WINDOW',
         'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
       package: bundleIdentifier,
+      ...androidAppLinksOf(appLinkHost),
     },
     plugins: [
       [

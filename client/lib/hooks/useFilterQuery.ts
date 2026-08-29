@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import type { Filter } from "@/lib/domain/filter";
@@ -26,7 +26,6 @@ const FILTER_KEYS = new Set([
  * 화면이 조건을 따로 들고 있지 않아 여러 화면이 같은 값을 본다.
  */
 export const useFilterQuery = (path: string) => {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const filter = useMemo(() => parseFilter(new URLSearchParams(searchParams.toString())), [searchParams]);
@@ -40,12 +39,27 @@ export const useFilterQuery = (path: string) => {
     return kept.toString();
   }, [searchParams]);
 
+  /*
+   * 주소만 갈아 끼우고 서버는 부르지 않는다.
+   *
+   * `router.replace` 는 서버를 한 번 다녀온다. 두 화면 모두 force-dynamic 이라 조건을
+   * 바꿀 때마다 RSC 요청이 나가고, 그 응답이 와야 `searchParams` 가 바뀐다. 조건에서
+   * 값을 읽는 버튼은 그때까지 눌리지 않은 모양으로 남아 멈춘 것처럼 보인다.
+   * 배포 환경에서는 이 왕복이 0.5 초를 넘는다.
+   *
+   * 서버에서 받아 오는 것은 제외 성분군과 카테고리·브랜드 목록처럼 조건과 무관한
+   * 값뿐이다. 목록과 개수는 이미 클라이언트가 따로 가져오므로, 조건이 바뀌어도
+   * 서버가 새로 줄 것이 없다.
+   *
+   * App Router 는 history API 를 가로채 두어 이렇게 바꿔도 `useSearchParams` 가 곧바로
+   * 따라온다. 서버를 다녀오지 않으니 버튼도 그 자리에서 바뀐다.
+   */
   const replace = useCallback(
     (next: Filter) => {
       const query = [serializeFilter(next).toString(), extra].filter(Boolean).join("&");
-      router.replace(query ? `${path}?${query}` : path, { scroll: false });
+      window.history.replaceState(null, "", query ? `${path}?${query}` : path);
     },
-    [router, path, extra],
+    [path, extra],
   );
 
   /** 조건을 바꾸면 페이지를 처음으로 되돌린다. */
