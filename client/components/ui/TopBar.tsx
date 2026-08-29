@@ -16,8 +16,6 @@ type TopBarProps = {
   readonly showBack?: boolean;
   /** 제목 앞에 로고를 둘지. 홈처럼 서비스를 대표하는 화면에서 쓴다. */
   readonly showLogo?: boolean;
-  /** 제목 왼쪽에 홈으로 가는 버튼을 함께 둘지. 상세 화면에서 쓴다. */
-  readonly showHome?: boolean;
   readonly right?: React.ReactNode;
 };
 
@@ -25,7 +23,7 @@ type TopBarProps = {
  * 디자인의 상단 영역. 이름은 8 가지였지만 구조는 두 종류뿐이다.
  * 하위 화면은 좌우 균형을 맞춰 제목을 가운데 둔다.
  */
-export function TopBar({ title, variant, right, showBack = false, showLogo = false, showHome = false }: TopBarProps) {
+export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
   /*
    * 사이트 안에서 옮겨 온 자리에서만 뒤로 간다. 검색이나 메신저에서 바로 들어온
@@ -52,6 +50,12 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
           >
             <Icon name="chevron-left" size={22} />
           </button>
+        ) : null}
+
+        {showBack ? (
+          <Link href="/" aria-label="홈으로" className="flex size-11 shrink-0 items-center justify-center">
+            <Icon name="home" size={22} />
+          </Link>
         ) : null}
 
         {/* 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다. */}
@@ -99,19 +103,17 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
           <Icon name="chevron-left" size={20} />
         </button>
 
-        {showHome ? (
-          <Link href="/" aria-label="홈으로" className="flex size-11 items-center justify-center">
-            <Icon name="home" size={20} />
-          </Link>
-        ) : null}
+        <Link href="/" aria-label="홈으로" className="flex size-11 items-center justify-center">
+          <Icon name="home" size={20} />
+        </Link>
       </div>
 
       {/* 이름을 그대로 받는 화면이 있다. 길어도 좌우 버튼을 밀지 않도록 넘치면 줄인다. */}
       <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 
-      {/* 왼쪽 버튼과 같은 너비로 오른쪽을 채워 제목을 가운데 맞춘다. */}
+      {/* 왼쪽 두 버튼과 같은 너비로 오른쪽을 채워 제목을 가운데 맞춘다. */}
       <div className="flex shrink-0 items-center">
-        {showHome ? <span className="size-11" /> : null}
+        <span className="size-11" />
         <span className="flex size-11 items-center justify-center">{right}</span>
       </div>
     </header>

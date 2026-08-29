@@ -33,7 +33,7 @@ export function ProductDetail({
 }) {
   return (
     <>
-      <TopBar title="제품 상세" variant="sub" showHome right={<ShareButton />} />
+      <TopBar title="제품 상세" variant="sub" right={<ShareButton />} />
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}

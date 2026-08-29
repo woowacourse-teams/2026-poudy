@@ -59,14 +59,20 @@ describe("TopBar 제목", () => {
 });
 
 describe("TopBar 홈 버튼", () => {
-  it("상세 화면에서는 홈으로 가는 버튼을 함께 둔다", () => {
-    render(<TopBar title="제품 상세" variant="sub" showHome />);
+  it("뒤로 가기가 있는 화면에는 홈 버튼을 함께 둔다", () => {
+    render(<TopBar title="제품 상세" variant="sub" />);
 
     expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 
-  it("그 밖의 화면에는 두지 않는다", () => {
-    render(<TopBar title="제품 상세" variant="sub" />);
+  it("루트 화면도 뒤로 가기를 두면 홈 버튼을 함께 둔다", () => {
+    render(<TopBar title="스킨케어" variant="root" showBack />);
+
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
+  });
+
+  it("뒤로 가기가 없는 루트 화면에는 두지 않는다", () => {
+    render(<TopBar title="저장함" variant="root" />);
 
     expect(screen.queryByRole("link", { name: "홈으로" })).toBeNull();
   });
