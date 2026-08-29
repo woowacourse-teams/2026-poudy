@@ -53,3 +53,17 @@ describe("TopBar 제목", () => {
     expect(screen.getByRole("heading", { name: "사이클로펜타실록세인" })).toHaveClass("min-w-0", "truncate");
   });
 });
+
+describe("TopBar 앱 표시", () => {
+  it("앱에서 접을 헤더에는 표시를 남긴다", () => {
+    render(<TopBar title="제품 상세" variant="sub" hiddenInApp />);
+
+    expect(screen.getByRole("banner")).toHaveAttribute("data-app-hidden");
+  });
+
+  it("웹에서만 쓰는 헤더에는 표시가 없다", () => {
+    render(<TopBar title="제품 상세" variant="sub" />);
+
+    expect(screen.getByRole("banner")).not.toHaveAttribute("data-app-hidden");
+  });
+});

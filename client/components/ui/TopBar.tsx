@@ -13,6 +13,8 @@ type TopBarProps = {
   readonly showBack?: boolean;
   /** 제목 앞에 로고를 둘지. 홈처럼 서비스를 대표하는 화면에서 쓴다. */
   readonly showLogo?: boolean;
+  /** 앱에서는 네이티브 상단바가 이 자리를 대신하므로 접는다. */
+  readonly hiddenInApp?: boolean;
   readonly right?: React.ReactNode;
 };
 
@@ -20,7 +22,14 @@ type TopBarProps = {
  * 디자인의 상단 영역. 이름은 8 가지였지만 구조는 두 종류뿐이다.
  * 하위 화면은 좌우 균형을 맞춰 제목을 가운데 둔다.
  */
-export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
+export function TopBar({
+  title,
+  variant,
+  right,
+  showBack = false,
+  showLogo = false,
+  hiddenInApp = false,
+}: TopBarProps) {
   const router = useRouter();
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -79,7 +88,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
   }
 
   return (
-    <header className="flex h-[44px] items-center px-1">
+    <header data-app-hidden={hiddenInApp || undefined} className="flex h-[44px] items-center px-1">
       <button
         type="button"
         onClick={handleBack}

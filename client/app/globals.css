@@ -141,6 +141,10 @@ body {
   overflow-wrap: break-word;
 }
 
+[data-is-app="true"] [data-app-hidden] {
+  display: none;
+}
+
 .sort-dropdown-menu {
   transform-origin: top right;
   transition-property: opacity, transform;
