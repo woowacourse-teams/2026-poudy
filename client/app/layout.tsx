@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
+import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <IconSprite />
+        <HistoryDepthTracker />
         <Suspense>
           <AnalyticsProvider />
         </Suspense>

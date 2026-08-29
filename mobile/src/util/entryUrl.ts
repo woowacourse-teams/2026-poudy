@@ -25,6 +25,12 @@ export const getSameOriginUrl = (text: string, webBaseUrl: string): string | nul
 export const getDeepLinkUrl = (value: string, webBaseUrl: string): string | null => {
   try {
     const deepLink = new URL(value);
+
+    // App Links 로 받은 주소다.
+    if (deepLink.origin === new URL(webBaseUrl).origin) {
+      return deepLink.toString();
+    }
+
     if (deepLink.protocol !== APP_SCHEME || deepLink.hostname === SHARE_HOST) {
       return null;
     }
