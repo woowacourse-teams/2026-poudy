@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
+import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, SITE_DESCRIPTION, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <IconSprite />
         <HistoryDepthTracker />
+        <OpenInAppRedirect />
         <Suspense>
           <AnalyticsProvider />
         </Suspense>
