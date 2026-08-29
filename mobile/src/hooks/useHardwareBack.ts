@@ -27,11 +27,6 @@ export const useHardwareBack = ({ onNavigate, sourceKey, sourceUrl, webBaseUrl, 
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (backState.current.canGoBack) {
-        webViewRef.current?.goBack();
-        return true;
-      }
-
       if (isHomeUrl(backState.current.url, webBaseUrl)) {
         const now = Date.now();
 
@@ -44,6 +39,11 @@ export const useHardwareBack = ({ onNavigate, sourceKey, sourceUrl, webBaseUrl, 
         return true;
       }
 
+      if (backState.current.canGoBack) {
+        webViewRef.current?.goBack();
+        return true;
+      }
+
       onNavigate(webBaseUrl);
       return true;
     });
@@ -51,7 +51,14 @@ export const useHardwareBack = ({ onNavigate, sourceKey, sourceUrl, webBaseUrl, 
     return () => subscription.remove();
   }, [onNavigate, webBaseUrl, webViewRef]);
 
-  return useCallback((state: WebViewNavigation) => {
-    backState.current = { canGoBack: state.canGoBack, url: state.url };
-  }, []);
+  return useCallback(
+    (state: WebViewNavigation) => {
+      backState.current = { canGoBack: state.canGoBack, url: state.url };
+
+      if (!isHomeUrl(state.url, webBaseUrl)) {
+        exitPromptedAt.current = 0;
+      }
+    },
+    [webBaseUrl],
+  );
 };
