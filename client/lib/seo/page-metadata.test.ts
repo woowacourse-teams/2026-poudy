@@ -28,6 +28,9 @@ vi.mock("next/font/google", () => ({
   Noto_Sans_KR: () => ({ variable: "--font-noto-sans-kr" }),
 }));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
+vi.mock("@/components/home/PersonalSections", () => ({ RecentFilters: () => null, SavedPreview: () => null }));
+vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
+vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
 import BrandOpenGraphImage, { revalidate as brandImageRevalidate } from "@/app/brands/[brandId]/opengraph-image";
 import { generateMetadata as brandMetadata } from "@/app/brands/[brandId]/page";
@@ -39,10 +42,14 @@ import IngredientOpenGraphImage, {
 } from "@/app/ingredients/[ingredientId]/opengraph-image";
 import { generateMetadata as ingredientMetadata } from "@/app/ingredients/[ingredientId]/page";
 import { metadata as rootMetadata } from "@/app/layout";
-import OpenGraphImage from "@/app/opengraph-image";
+import OpenGraphImage, { alt as rootImageAlt } from "@/app/opengraph-image";
+import Home, { metadata as homeMetadata } from "@/app/page";
+import { metadata as privacyMetadata } from "@/app/privacy/page";
 import ProductDetailPage, { generateMetadata as productMetadata } from "@/app/products/[productId]/page";
 import { metadata as productsMetadata } from "@/app/products/page";
 import { metadata as savedMetadata } from "@/app/saved/page";
+import { metadata as termsMetadata } from "@/app/terms/page";
+import { SITE_DESCRIPTION } from "@/lib/seo/site";
 import { SOCIAL_IMAGE_CACHE_CONTROL } from "@/lib/seo/social-image";
 
 afterEach(() => {
@@ -53,6 +60,18 @@ describe("색인 메타데이터", () => {
   it("조건 제품과 저장함은 색인하지 않는다", () => {
     expect(productsMetadata.robots).toMatchObject({ index: false });
     expect(savedMetadata.robots).toMatchObject({ index: false, follow: false });
+  });
+
+  it("법정 문서는 따라가되 색인하지 않는다", () => {
+    expect(privacyMetadata.robots).toMatchObject({ index: false, follow: true });
+    expect(termsMetadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it("홈 canonical 을 하위 화면에 상속하지 않는다", () => {
+    expect(rootMetadata.alternates).toBeUndefined();
+    expect(homeMetadata.alternates?.canonical).toBe("/");
+    expect(privacyMetadata.alternates).toBeUndefined();
+    expect(termsMetadata.alternates).toBeUndefined();
   });
 
   it("목록 화면의 canonical 에서 쿼리스트링을 제외한다", () => {
@@ -72,12 +91,32 @@ describe("색인 메타데이터", () => {
 
 describe("공유 메타데이터", () => {
   it("루트가 절대 주소 기준과 기본 Open Graph·Twitter 값을 가진다", () => {
-    const description = "화장품 전성분 기반 성분 분석 및 맞춤형 뷰티 정보 서비스, Poudy";
-
     expect(rootMetadata.metadataBase?.toString()).toBe("http://localhost:3000/");
-    expect(rootMetadata.description).toBe(description);
-    expect(rootMetadata.openGraph).toMatchObject({ title: "Poudy", description, type: "website", locale: "ko_KR" });
-    expect(rootMetadata.twitter).toMatchObject({ card: "summary_large_image", title: "Poudy", description });
+    expect(rootMetadata.description).toBe(SITE_DESCRIPTION);
+    expect(rootMetadata.openGraph).toMatchObject({
+      title: "Poudy",
+      description: SITE_DESCRIPTION,
+      type: "website",
+      locale: "ko_KR",
+    });
+    expect(rootMetadata.twitter).toMatchObject({
+      card: "summary_large_image",
+      title: "Poudy",
+      description: SITE_DESCRIPTION,
+    });
+    expect(rootImageAlt).toBe(SITE_DESCRIPTION);
+  });
+
+  it("홈에 Poudy 사이트 이름을 구조화 데이터로 넣는다", () => {
+    const markup = renderToStaticMarkup(Home());
+
+    expect(markup).toContain('type="application/ld+json"');
+    expect(markup).toContain('"@type":"WebSite"');
+    expect(markup).toContain('"name":"Poudy"');
+    expect(markup).toContain('"alternateName":"파우디"');
+    expect(markup).toContain(`"description":"${SITE_DESCRIPTION}"`);
+    expect(markup).toContain('"url":"http://localhost:3000/"');
+    expect(markup).toContain(SITE_DESCRIPTION);
   });
 
   it("제품 사진이 있으면 제품 미리보기에 쓴다", async () => {
