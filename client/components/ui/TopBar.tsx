@@ -18,10 +18,6 @@ type TopBarProps = {
   readonly right?: React.ReactNode;
 };
 
-/**
- * 디자인의 상단 영역. 이름은 8 가지였지만 구조는 두 종류뿐이다.
- * 하위 화면은 좌우 균형을 맞춰 제목을 가운데 둔다.
- */
 export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   const router = useRouter();
   /* 밖에서 바로 들어온 화면에서 뒤로 가면 사이트를 벗어난다. */
@@ -74,6 +70,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
               : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
           }
         >
+          {showLogo ? <span className="sr-only">P</span> : null}
           {title}
         </h1>
         {right}
@@ -92,10 +89,8 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         <Icon name="chevron-left" size={20} />
       </button>
 
-      {/* 이름을 그대로 받는 화면이 있다. 길어도 좌우 버튼을 밀지 않도록 넘치면 줄인다. */}
       <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 
-      {/* 왼쪽 버튼과 같은 너비로 오른쪽을 채워 제목을 가운데 맞춘다. */}
       <span className="flex size-11 items-center justify-center">{right}</span>
     </header>
   );
