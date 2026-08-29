@@ -30,7 +30,7 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit, onC
         event.preventDefault();
         onSubmit?.();
       }}
-      className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-[#F3F4F5] px-3.5 transition-colors focus-within:border-[#212124] focus-within:bg-white"
+      className="flex h-10 items-center gap-2.5 rounded-xl border border-transparent bg-[#F3F4F5] px-3 transition-colors focus-within:border-[#212124] focus-within:bg-white"
     >
       <Icon name="search" size={18} className="text-[#8B8D94]" />
 
