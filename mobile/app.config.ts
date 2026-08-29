@@ -101,6 +101,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         foregroundImage: './assets/poudy-adaptive-icon.png',
       },
       blockedPermissions: [
+        'android.permission.ACCESS_WIFI_STATE',
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.SYSTEM_ALERT_WINDOW',
         'android.permission.WRITE_EXTERNAL_STORAGE',
