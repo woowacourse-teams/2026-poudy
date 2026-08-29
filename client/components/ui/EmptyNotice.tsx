@@ -5,7 +5,8 @@ import type { IconId } from "@/components/ui/icons/sprite";
 type EmptyNoticeProps = {
   readonly icon: IconId;
   readonly title: string;
-  readonly detail: string;
+  /** 무엇을 하면 채워지는지 덧붙인다. 제목만으로 뜻이 서면 두지 않는다. */
+  readonly detail?: string;
   /**
    * 화면 전체가 비어 있을 때는 크게 둔다.
    *
@@ -13,6 +14,11 @@ type EmptyNoticeProps = {
    * 유일하게 읽을 거리라, 섹션용 크기로 두면 넓은 여백에 파묻힌다.
    */
   readonly size?: "section" | "screen";
+  /**
+   * 옆이나 위에 선 카드와 높이를 맞춰야 하는 자리에 쓴다.
+   * 덧붙이는 말이 없으면 자리가 줄어 한쪽만 주저앉아 보인다.
+   */
+  readonly className?: string;
 };
 
 const SIZE = {
@@ -31,14 +37,17 @@ const SIZE = {
  *
  * 무엇이 없는지만 말하지 않고 무엇을 하면 채워지는지를 함께 둔다.
  */
-export function EmptyNotice({ icon, title, detail, size = "section" }: EmptyNoticeProps) {
+export function EmptyNotice({ icon, title, detail, size = "section", className = "" }: EmptyNoticeProps) {
   const shape = SIZE[size];
 
   return (
-    <div className={`flex flex-col items-center rounded-xl border border-dashed border-[#D1D3D8] ${shape.box}`}>
+    <div
+      className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-[#D1D3D8] ${shape.box} ${className}`}
+    >
       <Icon name={icon} size={shape.icon} className="text-text-secondary" />
       <p className={`font-semibold text-text-primary ${shape.title}`}>{title}</p>
-      <p className={`text-center text-text-secondary ${shape.detail}`}>{detail}</p>
+      {/* 덧붙일 말이 없으면 빈 문단이 남지 않게 아예 그리지 않는다. */}
+      {detail ? <p className={`text-center text-text-secondary ${shape.detail}`}>{detail}</p> : null}
     </div>
   );
 }
