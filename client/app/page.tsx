@@ -60,10 +60,7 @@ export default function Home() {
 
       <main className="flex flex-1 flex-col gap-7 px-4 pt-4 pb-3.5">
         <section className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-[18px] font-bold text-text-primary">궁금한 제품이나 성분이 있나요?</h2>
-            <p className="text-[12px] leading-5 text-text-secondary">{SITE_DESCRIPTION}</p>
-          </div>
+          <h2 className="text-[18px] font-bold text-text-primary">궁금한 제품이나 성분이 있나요?</h2>
 
           <div className="grid grid-cols-2 gap-3">
             {ACTIONS.map((action) => {
