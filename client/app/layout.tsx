@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
+import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
@@ -64,15 +65,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // 앱이 문서를 그리기 전에 `data-is-app` 을 달아 두므로 이 요소의 속성은 서버 것과 다르다.
-    // 이 태그 하나에만 적용되고 안쪽 검사는 그대로다.
-    <html
-      lang="ko"
-      suppressHydrationWarning
-      className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}
-    >
+    <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <IconSprite />
+        <HistoryDepthTracker />
         <Suspense>
           <AnalyticsProvider />
         </Suspense>

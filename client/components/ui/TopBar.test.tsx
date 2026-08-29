@@ -7,6 +7,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TopBar } from "./TopBar";
 
+import { markPop, markPush } from "@/lib/navigation/history-depth";
+
 const back = vi.fn();
 const replace = vi.fn();
 
@@ -14,18 +16,21 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ back, replace }),
 }));
 
-const setHistoryLength = (length: number) => {
-  Object.defineProperty(window.history, "length", { configurable: true, value: length });
+const setReferrer = (value: string) => {
+  Object.defineProperty(document, "referrer", { configurable: true, value });
 };
 
 beforeEach(() => {
   back.mockClear();
   replace.mockClear();
+  setReferrer("");
+  // 앞선 검사가 세어 둔 이동을 지운다.
+  [1, 2, 3, 4, 5].forEach(() => markPop());
 });
 
 describe("TopBar 뒤로 가기", () => {
-  it("이전 화면이 있으면 그 화면으로 돌아간다", async () => {
-    setHistoryLength(2);
+  it("사이트 안에서 옮겨 온 뒤에는 이전 화면으로 돌아간다", async () => {
+    markPush();
     render(<TopBar title="제품 상세" variant="sub" />);
 
     await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
@@ -34,8 +39,7 @@ describe("TopBar 뒤로 가기", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("공유 링크로 바로 들어와 이전 화면이 없으면 메인으로 간다", async () => {
-    setHistoryLength(1);
+  it("메신저나 검색에서 바로 들어오면 메인으로 간다", async () => {
     render(<TopBar title="제품 상세" variant="sub" />);
 
     await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
@@ -54,16 +58,37 @@ describe("TopBar 제목", () => {
   });
 });
 
-describe("TopBar 앱 표시", () => {
-  it("앱에서 접을 헤더에는 표시를 남긴다", () => {
-    render(<TopBar title="제품 상세" variant="sub" hiddenInApp />);
+describe("TopBar 홈 버튼", () => {
+  it("상세 화면에서는 홈으로 가는 버튼을 함께 둔다", () => {
+    render(<TopBar title="제품 상세" variant="sub" showHome />);
 
-    expect(screen.getByRole("banner")).toHaveAttribute("data-app-hidden");
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 
-  it("웹에서만 쓰는 헤더에는 표시가 없다", () => {
+  it("그 밖의 화면에는 두지 않는다", () => {
     render(<TopBar title="제품 상세" variant="sub" />);
 
-    expect(screen.getByRole("banner")).not.toHaveAttribute("data-app-hidden");
+    expect(screen.queryByRole("link", { name: "홈으로" })).toBeNull();
+  });
+});
+
+describe("TopBar 뒤로 가기 출처", () => {
+  it("우리 화면에서 넘어온 문서면 이전 화면으로 돌아간다", async () => {
+    setReferrer("http://localhost:3000/categories/11");
+    render(<TopBar title="제품 상세" variant="sub" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
+
+    expect(back).toHaveBeenCalledOnce();
+  });
+
+  it("다른 사이트에서 넘어온 문서면 메인으로 간다", async () => {
+    setReferrer("https://www.google.com/search?q=poudy");
+    render(<TopBar title="제품 상세" variant="sub" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
+
+    expect(replace).toHaveBeenCalledWith("/");
+    expect(back).not.toHaveBeenCalled();
   });
 });

@@ -8,6 +8,7 @@ import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
@@ -32,7 +33,7 @@ export function ProductDetail({
 }) {
   return (
     <>
-      <TopBar title="제품 상세" variant="sub" hiddenInApp />
+      <TopBar title="제품 상세" variant="sub" showHome right={<ShareButton />} />
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}

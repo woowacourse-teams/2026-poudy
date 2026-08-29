@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { Icon } from "@/components/ui/icons/Icon";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
@@ -60,7 +61,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
   return (
     <>
       {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
-      <TopBar title={ingredient.koreanName} variant="sub" hiddenInApp />
+      <TopBar title={ingredient.koreanName} variant="sub" showHome right={<ShareButton />} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />

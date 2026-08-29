@@ -2,19 +2,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  WebView,
-  type WebViewMessageEvent,
-  type WebViewNavigation as WebViewNavigationState,
-} from 'react-native-webview';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
-import AppTopBar from '@/components/AppTopBar';
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
 import type { WebViewErrorEvent, WebViewNavigation } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
-import { APP_FRAME_SCRIPT, isDetailUrl, isWebUrl } from '@/util/appFrame';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
@@ -30,54 +24,22 @@ interface WebAppShellProps {
 
 const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
-const BEFORE_CONTENT_SCRIPT = `${APP_INFO_SCRIPT ?? ''}${APP_FRAME_SCRIPT}`;
-
-interface PageState {
-  readonly canGoBack: boolean;
-  readonly url: string;
-}
+/** 웹이 상단바의 공유를 누르면 주소를 붙여 보낸다. WebView 에는 Web Share API 가 없다. */
+const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
   const [initialFoldComplete, setInitialFoldComplete] = useState(false);
   const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
   const splashTransitionStartedRef = useRef(false);
-  const [page, setPage] = useState<PageState>({ canGoBack: false, url: webBaseUrl });
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
-  const handleHardwareBackState = useHardwareBack({
+  const handleNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
     sourceKey: navigation.key,
     sourceUrl: navigation.url,
     webBaseUrl,
     webViewRef,
   });
-
-  const handleNavigationChange = useCallback(
-    (state: WebViewNavigationState) => {
-      handleHardwareBackState(state);
-      setPage({ canGoBack: state.canGoBack, url: state.url });
-    },
-    [handleHardwareBackState],
-  );
-
-  const { navigate } = navigation;
-
-  const handleBack = useCallback(() => {
-    if (page.canGoBack && isWebUrl(page.url, webBaseUrl)) {
-      webViewRef.current?.goBack();
-      return;
-    }
-
-    navigate(webBaseUrl);
-  }, [navigate, page.canGoBack, page.url, webBaseUrl]);
-
-  const handleHome = useCallback(() => {
-    navigate(webBaseUrl);
-  }, [navigate, webBaseUrl]);
-
-  const handleShare = useCallback(() => {
-    void Share.share({ message: page.url }).catch(() => undefined);
-  }, [page.url]);
 
   const handleShouldStartLoad = useCallback(
     (request: NavigationRequest) => {
@@ -105,8 +67,15 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   }, [fail]);
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
-    if (event.nativeEvent.data === HAPTIC_SELECTION_MESSAGE) {
+    const { data } = event.nativeEvent;
+
+    if (data === HAPTIC_SELECTION_MESSAGE) {
       playSelectionHaptic();
+      return;
+    }
+
+    if (data.startsWith(SHARE_MESSAGE_PREFIX)) {
+      void Share.share({ message: data.slice(SHARE_MESSAGE_PREFIX.length) }).catch(() => undefined);
     }
   }, []);
 
@@ -136,16 +105,12 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   return (
     <View onLayout={handleRootLayout} style={styles.root}>
       <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
-        {isDetailUrl(page.url, webBaseUrl) ? (
-          <AppTopBar onBack={handleBack} onHome={handleHome} onShare={handleShare} />
-        ) : null}
-
         <WebView
           key={navigation.key}
           ref={webViewRef}
           allowsBackForwardNavigationGestures
           applicationNameForUserAgent={APPLICATION_NAME}
-          injectedJavaScriptBeforeContentLoaded={BEFORE_CONTENT_SCRIPT}
+          injectedJavaScriptBeforeContentLoaded={APP_INFO_SCRIPT}
           javaScriptCanOpenWindowsAutomatically={false}
           mixedContentMode='never'
           onError={handleError}
