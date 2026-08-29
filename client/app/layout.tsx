@@ -64,7 +64,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
+    // 앱이 문서를 그리기 전에 `data-is-app` 을 달아 두므로 이 요소의 속성은 서버 것과 다르다.
+    // 이 태그 하나에만 적용되고 안쪽 검사는 그대로다.
+    <html
+      lang="ko"
+      suppressHydrationWarning
+      className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <IconSprite />
         <Suspense>
