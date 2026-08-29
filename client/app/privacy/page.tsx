@@ -16,6 +16,7 @@ import { TopBar } from "@/components/ui/TopBar";
 export const metadata: Metadata = {
   title: "개인정보 처리방침",
   description: "Poudy 가 어떤 정보를 어떻게 다루는지 알려 드립니다.",
+  robots: { index: false, follow: true },
 };
 
 const COLLECTED_HEADERS = ["구분", "항목", "수집 주체"] as const;

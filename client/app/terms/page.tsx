@@ -15,6 +15,7 @@ import { TopBar } from "@/components/ui/TopBar";
 export const metadata: Metadata = {
   title: "이용약관",
   description: "Poudy 를 이용할 때 적용되는 약관입니다.",
+  robots: { index: false, follow: true },
 };
 
 export default function TermsPage() {
