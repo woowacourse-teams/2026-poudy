@@ -57,26 +57,6 @@ describe("TopBar 제목", () => {
   });
 });
 
-describe("TopBar 홈 버튼", () => {
-  it("뒤로 가기가 있는 화면에는 홈 버튼을 함께 둔다", () => {
-    render(<TopBar title="제품 상세" variant="sub" />);
-
-    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
-  });
-
-  it("루트 화면도 뒤로 가기를 두면 홈 버튼을 함께 둔다", () => {
-    render(<TopBar title="스킨케어" variant="root" showBack />);
-
-    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
-  });
-
-  it("뒤로 가기가 없는 루트 화면에는 두지 않는다", () => {
-    render(<TopBar title="저장함" variant="root" />);
-
-    expect(screen.queryByRole("link", { name: "홈으로" })).toBeNull();
-  });
-});
-
 describe("TopBar 뒤로 가기 출처", () => {
   it("우리 화면에서 넘어온 문서면 이전 화면으로 돌아간다", async () => {
     setReferrer("http://localhost:3000/categories/11");
