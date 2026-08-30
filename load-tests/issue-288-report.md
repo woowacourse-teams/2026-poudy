@@ -1,6 +1,6 @@
 # Issue #288 결과 보고서
 
-대상 이슈: [#288](https://github.com/woowacourse-teams/2026-poudy/issues/288)  
+대상 이슈: [#288](https://github.com/woowacourse-teams/2026-poudy/issues/288)
 선행 이슈: [#287](https://github.com/woowacourse-teams/2026-poudy/issues/287)
 
 ## 실행 상태

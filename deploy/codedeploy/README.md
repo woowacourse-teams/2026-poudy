@@ -42,6 +42,12 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 - backend: "s3://techcourse-project-2026-artifacts/poudy/backend/"
 - frontend: "s3://techcourse-project-2026/poudy/frontend/"
 
+운영 artifact에는 애플리케이션과 함께 호스트 설정도 포함합니다. backend artifact는
+`poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
+HTTP·HTTPS 서버 설정, `poudy-frontend.service`와 frontend hook을 포함합니다.
+CodeDeploy hook은 파일을 각 호스트 경로에 반영한 뒤 `daemon-reload`, Nginx 검증 및
+서비스 재시작을 수행합니다.
+
 staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBuild 프로젝트를 사용합니다.
 
 - Pipeline: `poudy-staging-pipeline`
@@ -53,8 +59,8 @@ staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBu
 - Build output artifact: `BuildArtifact`
 - Deploy input artifact: `BuildArtifact`
 
-`buildspec-staging-backend.yml`은 백엔드 JAR, 백엔드 `appspec.yml`, CodeDeploy hook만
-포함하는 단일 배포 패키지를 생성합니다. CodeDeploy는 buildspec을 사용하지 않으며,
+`buildspec-staging-backend.yml`은 백엔드 JAR, systemd unit, 백엔드 `appspec.yml`,
+CodeDeploy hook을 포함하는 단일 배포 패키지를 생성합니다. CodeDeploy는 buildspec을 사용하지 않으며,
 패키지 루트의 `appspec.yml`은 기존 `deploy/codedeploy/backend/appspec.yml`을 그대로
 사용합니다.
 
@@ -128,7 +134,8 @@ s3://techcourse-project-2026/poudy/staging/
 값이 필요한 환경값은 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager 연동으로
 주입합니다.
 
-프론트엔드 secondary artifact에는 `nginx/` 설정 템플릿도 포함됩니다. CodeDeploy
+프론트엔드 secondary artifact에는 Nginx main 설정·서버 설정 템플릿과 systemd unit이
+포함됩니다. CodeDeploy
 `ApplicationStart` 훅은 인증서 두 파일이 모두 존재할 때만 HTTPS 템플릿을 활성화하고,
 그 외에는 HTTP bootstrap 템플릿을 활성화합니다. 따라서 인증서가 아직 없는 신규
 인스턴스나 인증서가 제거된 인스턴스에 재배포해도 `nginx -t`가 존재하지 않는
@@ -137,8 +144,9 @@ s3://techcourse-project-2026/poudy/staging/
 이번 Nginx 템플릿에는 `/_next/static/` 정적 자산 캐시와 정확히
 `GET /api/categories`에만 적용되는 30초 캐시가 포함됩니다. `Origin`은 캐시 키에
 포함되고 Cookie·Authorization 요청은 우회하므로 CORS 응답이나 사용자별 응답을
-재사용하지 않습니다. CodeDeploy의 `ApplicationStart` 훅이 새 템플릿을 설치한 뒤
-`nginx -t`와 reload를 수행하며, 배포 실패 시 기존 설정을 복구합니다.
+재사용하지 않습니다. CodeDeploy의 `ApplicationStart` 훅이 Nginx main 설정·서버 설정·
+캐시 디렉터리·systemd unit을 설치한 뒤 `nginx -t`와 reload를 수행하며, Nginx 검증
+실패 시 기존 설정을 복구합니다.
 
 인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
 

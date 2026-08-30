@@ -8,7 +8,7 @@ phases:
     commands:
       # 백엔드 JAR는 JVM 바이트코드이므로 x86_64 CodeBuild에서도 ARM64 EC2에 배포할 수 있습니다.
       - rm -rf "${CODEBUILD_SRC_DIR}/.artifacts"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
   build:
     commands:
       - cd "${CODEBUILD_SRC_DIR}/server" && ./gradlew bootJar --no-daemon
@@ -25,6 +25,7 @@ phases:
         cp "${backend_jars[0]}" "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
       - cp "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/appspec.yml" "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
       - cp -R "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/scripts/." "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
+      - cp "${CODEBUILD_SRC_DIR}/deploy/systemd/poudy-backend.service" "${CODEBUILD_SRC_DIR}/.artifacts/systemd/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"*.sh
       - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
@@ -32,12 +33,14 @@ phases:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/application-start.sh"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/systemd/poudy-backend.service"
 
 artifacts:
   base-directory: .artifacts
   files:
     - appspec.yml
     - scripts/**/*
+    - systemd/**/*
     - app/**/*
     - build-metadata.txt
   discard-paths: no

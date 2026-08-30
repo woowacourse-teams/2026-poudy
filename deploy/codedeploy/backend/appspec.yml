@@ -5,6 +5,8 @@ file_exists_behavior: OVERWRITE
 files:
   - source: app
     destination: /opt/poudy/backend
+  - source: systemd
+    destination: /etc/systemd/system
 
 hooks:
   BeforeInstall:

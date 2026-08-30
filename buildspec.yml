@@ -36,15 +36,17 @@ phases:
         fi
         echo "APP_VERSION=${APP_VERSION}"
       - ./deploy/scripts/package-artifacts.sh "${CODEBUILD_SRC_DIR}/.poudy-package"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/backend/systemd"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/systemd"
       - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/app.jar" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
       - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/"
       - cp deploy/codedeploy/backend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/backend/appspec.yml"
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/frontend/appspec.yml"
       - cp -R deploy/codedeploy/backend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
-      - cp deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/"
+      - cp deploy/nginx/ec2-nginx.conf deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/"
+      - cp deploy/systemd/poudy-backend.service "${CODEBUILD_SRC_DIR}/.artifacts/backend/systemd/"
+      - cp deploy/systemd/poudy-frontend.service "${CODEBUILD_SRC_DIR}/.artifacts/frontend/systemd/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
       - printf 'commit=%s\nversion=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" "${APP_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
@@ -62,6 +64,7 @@ artifacts:
       files:
         - appspec.yml
         - scripts/**/*
+        - systemd/**/*
         - app/**/*
       name: poudy-backend-$CODEBUILD_RESOLVED_SOURCE_VERSION
     frontend:
@@ -70,5 +73,6 @@ artifacts:
         - appspec.yml
         - scripts/**/*
         - nginx/**/*
+        - systemd/**/*
         - app/**/*
       name: poudy-frontend-$CODEBUILD_RESOLVED_SOURCE_VERSION
