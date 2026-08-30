@@ -8,22 +8,40 @@ import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODES } from "@/lib/domain/filter";
-import { absoluteUrl, SITE_DESCRIPTION } from "@/lib/seo/site";
+import { absoluteUrl, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
+
+const organizationId = absoluteUrl("/#organization");
 const websiteStructuredData = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Poudy",
-  alternateName: "파우디",
-  description: SITE_DESCRIPTION,
-  url: absoluteUrl("/"),
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": absoluteUrl("/#website"),
+      name: SITE_NAME,
+      alternateName: [SITE_ALTERNATE_NAME],
+      description: SITE_DESCRIPTION,
+      url: absoluteUrl("/"),
+      inLanguage: "ko-KR",
+      publisher: { "@id": organizationId },
+    },
+    {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
+      description: SITE_DESCRIPTION,
+      url: absoluteUrl("/"),
+      logo: absoluteUrl("/favicon.png"),
+      sameAs: [INSTAGRAM_URL],
+    },
+  ],
 };
-
-const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
 
 const ACTIONS = [
   {

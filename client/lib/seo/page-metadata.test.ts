@@ -48,8 +48,10 @@ import { metadata as privacyMetadata } from "@/app/privacy/page";
 import ProductDetailPage, { generateMetadata as productMetadata } from "@/app/products/[productId]/page";
 import { metadata as productsMetadata } from "@/app/products/page";
 import { metadata as savedMetadata } from "@/app/saved/page";
+import { metadata as ingredientSearchMetadata } from "@/app/search/ingredients/page";
+import { metadata as productSearchMetadata } from "@/app/search/products/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
-import { SITE_DESCRIPTION } from "@/lib/seo/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from "@/lib/seo/site";
 import { SOCIAL_IMAGE_CACHE_CONTROL } from "@/lib/seo/social-image";
 
 afterEach(() => {
@@ -57,9 +59,8 @@ afterEach(() => {
 });
 
 describe("색인 메타데이터", () => {
-  it("조건 제품과 저장함은 색인하지 않는다", () => {
+  it("조건 제품은 색인하지 않는다", () => {
     expect(productsMetadata.robots).toMatchObject({ index: false });
-    expect(savedMetadata.robots).toMatchObject({ index: false, follow: false });
   });
 
   it("법정 문서는 따라가되 색인하지 않는다", () => {
@@ -79,6 +80,34 @@ describe("색인 메타데이터", () => {
     expect(brandsMetadata.alternates?.canonical).toBe("/brands");
   });
 
+  it("사이트링크 후보는 고유 제목·설명·canonical 을 가지고 색인을 허용한다", () => {
+    expect(productSearchMetadata).toMatchObject({
+      title: "제품 검색",
+      description: "제품명이나 브랜드로 화장품과 전성분 정보를 찾아보세요.",
+      alternates: { canonical: "/search/products" },
+    });
+    expect(ingredientSearchMetadata).toMatchObject({
+      title: "성분 검색",
+      description: "포함하거나 제외할 성분을 골라 조건에 맞는 화장품을 찾아보세요.",
+      alternates: { canonical: "/search/ingredients" },
+    });
+    expect(categoriesMetadata).toMatchObject({
+      title: "카테고리",
+      description: "카테고리별 화장품과 전성분 정보를 확인해 보세요.",
+      alternates: { canonical: "/categories" },
+    });
+    expect(savedMetadata).toMatchObject({
+      title: "보관함",
+      description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
+      alternates: { canonical: "/saved" },
+    });
+
+    expect(productSearchMetadata.robots).toBeUndefined();
+    expect(ingredientSearchMetadata.robots).toBeUndefined();
+    expect(categoriesMetadata.robots).toBeUndefined();
+    expect(savedMetadata.robots).toBeUndefined();
+  });
+
   it("카테고리 상세 canonical 에 ID만 남긴다", async () => {
     const metadata = await categoryMetadata({
       params: Promise.resolve({ categoryId: "42" }),
@@ -92,7 +121,11 @@ describe("색인 메타데이터", () => {
 describe("공유 메타데이터", () => {
   it("루트가 절대 주소 기준과 기본 Open Graph·Twitter 값을 가진다", () => {
     expect(rootMetadata.metadataBase?.toString()).toBe("http://localhost:3000/");
+    expect(rootMetadata.title).toEqual({ default: SITE_TITLE, template: `%s | ${SITE_NAME}` });
     expect(rootMetadata.description).toBe(SITE_DESCRIPTION);
+    expect(rootMetadata.verification).toEqual({
+      other: { "naver-site-verification": "f61dfe971733b0d1d2e8b1a8e3cda559b5b62264" },
+    });
     expect(rootMetadata.openGraph).toMatchObject({
       title: "Poudy",
       description: SITE_DESCRIPTION,
@@ -107,13 +140,19 @@ describe("공유 메타데이터", () => {
     expect(rootImageAlt).toBe(SITE_DESCRIPTION);
   });
 
-  it("홈에 Poudy 사이트 이름을 구조화 데이터로 넣는다", () => {
+  it("홈에서 사이트와 운영 주체를 Poudy·파우디 이름으로 연결한다", () => {
     const markup = renderToStaticMarkup(Home());
 
     expect(markup).toContain('type="application/ld+json"');
     expect(markup).toContain('"@type":"WebSite"');
+    expect(markup).toContain('"@id":"http://localhost:3000/#website"');
     expect(markup).toContain('"name":"Poudy"');
-    expect(markup).toContain('"alternateName":"파우디"');
+    expect(markup).toContain('"alternateName":["파우디"]');
+    expect(markup).toContain('"inLanguage":"ko-KR"');
+    expect(markup).toContain('"@type":"Organization"');
+    expect(markup).toContain('"@id":"http://localhost:3000/#organization"');
+    expect(markup).toContain('"logo":"http://localhost:3000/favicon.png"');
+    expect(markup).toContain('"sameAs":["https://www.instagram.com/poudy.official"]');
     expect(markup).toContain(`"description":"${SITE_DESCRIPTION}"`);
     expect(markup).toContain('"url":"http://localhost:3000/"');
     expect(markup).toContain(SITE_DESCRIPTION);

@@ -5,9 +5,9 @@ import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
-  title: "저장함",
+  title: "보관함",
+  description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
   alternates: { canonical: "/saved" },
-  robots: { index: false, follow: false },
   openGraph: null,
   twitter: null,
 };

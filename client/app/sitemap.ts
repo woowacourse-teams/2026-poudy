@@ -54,7 +54,10 @@ const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixed: MetadataRoute.Sitemap = [
     entry("/", "weekly", 1),
+    entry("/search/products", "weekly", 0.9),
+    entry("/search/ingredients", "weekly", 0.9),
     entry("/categories", "weekly", 0.8),
+    entry("/saved", "monthly", 0.7),
     entry("/brands", "weekly", 0.8),
   ];
   const [categories, brands, products, ingredients] = await Promise.allSettled([
