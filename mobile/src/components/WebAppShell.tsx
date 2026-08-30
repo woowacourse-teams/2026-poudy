@@ -28,7 +28,6 @@ const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
-  const [initialFoldComplete, setInitialFoldComplete] = useState(false);
   const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
   const splashTransitionStartedRef = useRef(false);
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
@@ -78,10 +77,6 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
     }
   }, []);
 
-  const handleInitialFoldComplete = useCallback(() => {
-    setInitialFoldComplete(true);
-  }, []);
-
   const handleRootLayout = useCallback(() => {
     if (Platform.OS !== 'android' || splashTransitionStartedRef.current) {
       return;
@@ -98,8 +93,6 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
       });
     });
   }, []);
-
-  const shouldShowLoading = navigation.isLoading || (navigation.key === 0 && !initialFoldComplete);
 
   return (
     <View onLayout={handleRootLayout} style={styles.root}>
@@ -128,11 +121,8 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
 
         {navigation.failure ? <WebViewError reason={navigation.failure} onRetry={navigation.reload} /> : null}
       </SafeAreaView>
-      {shouldShowLoading && navigation.failure === null ? (
-        <WebViewLoading
-          onInitialFoldComplete={navigation.key === 0 ? handleInitialFoldComplete : undefined}
-          running={loadingAnimationRunning}
-        />
+      {navigation.isLoading && navigation.failure === null ? (
+        <WebViewLoading running={loadingAnimationRunning} />
       ) : null}
     </View>
   );
