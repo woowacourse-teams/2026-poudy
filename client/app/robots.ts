@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: ["/", "/products/"],
-      disallow: ["/products", "/search", "/saved"],
+      disallow: "/products",
     },
     sitemap: absoluteUrl("/sitemap.xml"),
     host: siteUrl().origin,
