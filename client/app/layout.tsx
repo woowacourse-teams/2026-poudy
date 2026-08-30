@@ -61,7 +61,6 @@ export const metadata: Metadata = {
     images: ["/opengraph-image"],
   },
   ...(indexingEnabled() ? {} : { robots: { index: false, follow: false } }),
-  // 로고는 배경이 비어 있어 밝은 화면과 어두운 화면에서 같은 그림을 쓴다.
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
@@ -75,12 +74,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <IconSprite />
-        <HistoryDepthTracker />
-        <OpenInAppRedirect />
-        <AnalyticsProvider />
         {children}
         <BottomNavigationSlot />
       </body>
+
+      <HistoryDepthTracker />
+      <OpenInAppRedirect />
+      <AnalyticsProvider />
       <GoogleAnalyticsTag />
     </html>
   );
