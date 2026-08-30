@@ -1,6 +1,6 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, Share, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
@@ -12,6 +12,7 @@ import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
+import { shareText } from '@/util/share';
 
 interface NavigationRequest {
   readonly url: string;
@@ -73,7 +74,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
     }
 
     if (data.startsWith(SHARE_MESSAGE_PREFIX)) {
-      void Share.share({ message: data.slice(SHARE_MESSAGE_PREFIX.length) }).catch(() => undefined);
+      void shareText(data.slice(SHARE_MESSAGE_PREFIX.length)).catch(() => undefined);
     }
   }, []);
 

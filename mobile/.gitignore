@@ -6,6 +6,11 @@ coverage/
 # Continuous Native Generation 결과물
 android/
 ios/
+!modules/poudy-share/android/
+!modules/poudy-share/android/**
+modules/poudy-share/android/.gradle/
+modules/poudy-share/android/.cxx/
+modules/poudy-share/android/build/
 
 # 로컬 환경 변수와 서명 파일
 .env
