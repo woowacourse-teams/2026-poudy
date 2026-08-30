@@ -2,7 +2,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import {
+  WebView,
+  type WebViewMessageEvent,
+  type WebViewNavigation as NativeWebViewNavigation,
+} from 'react-native-webview';
 
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
@@ -32,13 +36,21 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
   const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
   const splashTransitionStartedRef = useRef(false);
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
-  const handleNavigationChange = useHardwareBack({
+  const handleHardwareNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
     sourceKey: navigation.key,
     sourceUrl: navigation.url,
     webBaseUrl,
     webViewRef,
   });
+
+  const handleNavigationChange = useCallback(
+    (state: NativeWebViewNavigation) => {
+      navigation.handleUrlChange(state.url);
+      handleHardwareNavigationChange(state);
+    },
+    [handleHardwareNavigationChange, navigation],
+  );
 
   const handleShouldStartLoad = useCallback(
     (request: NavigationRequest) => {

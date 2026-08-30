@@ -18,6 +18,7 @@ export interface WebViewNavigation {
   readonly failure: WebViewFailure | null;
   readonly navigate: (url: string) => void;
   readonly reload: () => void;
+  readonly handleUrlChange: (url: string) => void;
   readonly handleLoad: () => void;
   readonly handleLoadEnd: () => void;
   readonly fail: (reason: WebViewFailure) => void;
