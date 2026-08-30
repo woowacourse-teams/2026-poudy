@@ -93,6 +93,10 @@ install \
     "${REPOSITORY_ROOT}/deploy/nginx/poudy-backend-upstream.conf" \
     /etc/nginx/conf.d/poudy-backend-upstream.conf
 
+install -d -o nginx -g nginx -m 0750 \
+    /var/cache/nginx/poudy_categories \
+    /var/cache/nginx/poudy_static
+
 if [[ -f /etc/nginx/conf.d/default.conf ]]; then
     mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled
 fi
