@@ -8,7 +8,6 @@ import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/seo/site";
-import { MockProvider } from "@/mocks/MockProvider";
 
 import "./globals.css";
 
@@ -79,7 +78,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <HistoryDepthTracker />
         <OpenInAppRedirect />
         <AnalyticsProvider />
-        <MockProvider>{children}</MockProvider>
+        {children}
         <BottomNavigationSlot />
       </body>
       <GoogleAnalyticsTag />
