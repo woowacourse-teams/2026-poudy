@@ -10,7 +10,7 @@ const api = vi.hoisted(() => ({
 vi.mock("@/lib/api/products", () => api);
 
 import robots from "@/app/robots";
-import sitemap from "@/app/sitemap";
+import sitemap, { revalidate as sitemapRevalidate } from "@/app/sitemap";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 
 afterEach(() => {
@@ -51,6 +51,10 @@ describe("robots", () => {
 });
 
 describe("sitemap", () => {
+  it("최신 상세 주소를 12시간 간격으로 다시 조회한다", () => {
+    expect(sitemapRevalidate).toBe(43200);
+  });
+
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });

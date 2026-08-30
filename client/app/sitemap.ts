@@ -4,6 +4,8 @@ import { fetchBrands, fetchCategories, fetchIngredients, fetchProducts } from "@
 import { EMPTY_FILTER } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
+export const revalidate = 43200;
+
 /**
  * sitemap 하나에 실을 수 있는 주소는 5 만 개까지다(sitemaps.org 규격).
  * 아래 페이지 상한은 색인 범위가 아니라 hasNext 가 끝나지 않을 때를 막는 안전장치다.
