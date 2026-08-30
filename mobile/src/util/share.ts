@@ -1,6 +1,5 @@
 import { Share } from 'react-native';
-
-import PoudyShareModule from '../../modules/poudy-share/src/PoudyShareModule';
+import PoudyShareModule from 'poudy-share';
 
 export const shareText = async (message: string): Promise<void> => {
   if (PoudyShareModule) {
