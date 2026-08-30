@@ -10,7 +10,27 @@ import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/produ
 
 export async function generateMetadata(props: PageProps<"/categories/[categoryId]">): Promise<Metadata> {
   const { categoryId } = await props.params;
-  return { title: "카테고리 제품", alternates: { canonical: `/categories/${categoryId}` } };
+  const canonical = `/categories/${categoryId}`;
+  const id = Number(categoryId);
+
+  if (!Number.isInteger(id)) return { alternates: { canonical } };
+
+  try {
+    const categories = await fetchCategories();
+    const parent = categories.items.find((category) => category.id === id);
+    const child = categories.items.flatMap((category) => category.children).find((category) => category.id === id);
+    const name = child?.name ?? parent?.name;
+
+    if (!name) return { alternates: { canonical } };
+
+    return {
+      title: `${name} 화장품`,
+      description: `${name} 카테고리의 화장품과 전성분 정보를 확인해 보세요.`,
+      alternates: { canonical },
+    };
+  } catch {
+    return { alternates: { canonical } };
+  }
 }
 
 // 조건 조합이 붙는 목록이라 미리 만들지 않는다.

@@ -8,6 +8,7 @@ import { fetchBrands } from "@/lib/api/products";
 
 export const metadata: Metadata = {
   title: "브랜드",
+  description: "브랜드별 화장품과 전성분 정보를 확인해 보세요.",
   alternates: { canonical: "/brands" },
 };
 
