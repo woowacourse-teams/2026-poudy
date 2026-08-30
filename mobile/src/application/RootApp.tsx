@@ -8,6 +8,7 @@ import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 
 const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL!;
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 export default function RootApp() {
   const navigation = useWebViewNavigation(webBaseUrl);
@@ -21,6 +22,7 @@ export default function RootApp() {
   }, []);
 
   useExternalEntry({
+    apiBaseUrl,
     onNavigate: navigation.navigate,
     onShareFailure: showShareFailure,
     onUnsupportedShare: showUnsupportedShare,

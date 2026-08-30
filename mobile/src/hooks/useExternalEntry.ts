@@ -8,6 +8,7 @@ import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
 
 export const useExternalEntry = ({
+  apiBaseUrl,
   onNavigate,
   onShareFailure,
   onUnsupportedShare,
@@ -33,7 +34,7 @@ export const useExternalEntry = ({
     const isLatestShare = () => lastShare.current === signature;
 
     const navigate = async () => {
-      const targetUrl = await resolveSharedUrl(values, webBaseUrl, queryClient);
+      const targetUrl = await resolveSharedUrl(values, webBaseUrl, apiBaseUrl, queryClient);
       if (!isLatestShare()) {
         return;
       }
@@ -58,6 +59,7 @@ export const useExternalEntry = ({
       });
   }, [
     clearSharedPayloads,
+    apiBaseUrl,
     onNavigate,
     onShareFailure,
     onUnsupportedShare,
