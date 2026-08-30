@@ -1,5 +1,7 @@
 # Mobile 코드 규칙
 
+구조와 경계는 `ARCHITECTURE.md` 에 있다.
+
 - React 컴포넌트는 `export default function ComponentName()` 형태로 작성한다.
 - 하나의 파일에는 하나의 React 컴포넌트만 작성한다.
 - 컴포넌트를 제외한 함수와 훅은 화살표 함수로 작성한다.
