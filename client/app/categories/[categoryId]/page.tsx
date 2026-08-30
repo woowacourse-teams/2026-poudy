@@ -36,7 +36,6 @@ export async function generateMetadata(props: PageProps<"/categories/[categoryId
 // 조건 조합이 붙는 목록이라 미리 만들지 않는다.
 export const dynamic = "force-dynamic";
 
-/** S09 카테고리 상품. 같은 대분류의 소분류를 가로로 오간다. */
 export default async function CategoryProductsPage(props: PageProps<"/categories/[categoryId]">) {
   const { categoryId } = await props.params;
   const id = Number(categoryId);

@@ -22,7 +22,6 @@ export default async function BrandsPage() {
   return (
     <>
       <TopBar title="브랜드" variant="root" />
-      {/* 디자인의 본문 여백. 탭과 디렉터리를 함께 감싼다. */}
       <div className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-4">
         <DirectoryTabs current="brand" />
         <BrandDirectory brands={brands.items} />
