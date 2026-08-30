@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 
-import { absoluteUrl, indexingEnabled, siteUrl } from "@/lib/seo/site";
+import { absoluteUrl, searchEnginesAllowed, siteUrl } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
-  if (!indexingEnabled()) {
+  if (!searchEnginesAllowed()) {
     return { rules: { userAgent: "*", disallow: "/" } };
   }
 

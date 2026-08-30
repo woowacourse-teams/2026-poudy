@@ -9,4 +9,5 @@ export const siteUrl = (): URL => new URL(process.env.NEXT_PUBLIC_SITE_URL || LO
 
 export const absoluteUrl = (path: string): string => new URL(path, siteUrl()).toString();
 
-export const indexingEnabled = (): boolean => process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
+/** 검색 엔진에 이 배포를 내어 줄지. staging 은 운영과 내용이 같아 색인되면 순위를 나눠 갖는다. */
+export const searchEnginesAllowed = (): boolean => process.env.NEXT_PUBLIC_ENVIRONMENT === "production";

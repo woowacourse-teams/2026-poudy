@@ -8,9 +8,12 @@ import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
-import { indexingEnabled, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/seo/site";
+import { searchEnginesAllowed, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/seo/site";
 
 import "./globals.css";
+
+/** 검색 엔진에 내어 주지 않는 배포에만 붙인다. 허용하는 배포에는 아무것도 붙이지 않는다. */
+const noIndexMetadata = (): Metadata => (searchEnginesAllowed() ? {} : { robots: { index: false, follow: false } });
 
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
@@ -38,7 +41,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: ["/opengraph-image"],
   },
-  ...(indexingEnabled() ? {} : { robots: { index: false, follow: false } }),
+  ...noIndexMetadata(),
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
