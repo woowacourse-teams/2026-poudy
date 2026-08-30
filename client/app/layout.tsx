@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Foldit, Geist_Mono, Noto_Sans_KR } from "next/font/google";
-import { Suspense } from "react";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
@@ -79,9 +78,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <IconSprite />
         <HistoryDepthTracker />
         <OpenInAppRedirect />
-        <Suspense>
-          <AnalyticsProvider />
-        </Suspense>
+        <AnalyticsProvider />
         <MockProvider>{children}</MockProvider>
         <BottomNavigationSlot />
       </body>
