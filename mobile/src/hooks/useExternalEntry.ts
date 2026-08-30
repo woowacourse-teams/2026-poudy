@@ -6,6 +6,7 @@ import { Linking } from 'react-native';
 import type { ExternalEntryOptions } from '@/types/externalEntry';
 import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
+import { shareFailureOf } from '@/util/shareFailure';
 
 export const useExternalEntry = ({
   apiBaseUrl,
@@ -48,9 +49,9 @@ export const useExternalEntry = ({
     };
 
     void navigate()
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isLatestShare()) {
-          onShareFailure();
+          onShareFailure(shareFailureOf(error));
         }
       })
       .finally(() => {
