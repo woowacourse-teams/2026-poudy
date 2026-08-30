@@ -6,8 +6,10 @@ import { Linking } from 'react-native';
 import type { ExternalEntryOptions } from '@/types/externalEntry';
 import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
+import { shareFailureOf } from '@/util/shareFailure';
 
 export const useExternalEntry = ({
+  apiBaseUrl,
   onNavigate,
   onShareFailure,
   onUnsupportedShare,
@@ -33,7 +35,7 @@ export const useExternalEntry = ({
     const isLatestShare = () => lastShare.current === signature;
 
     const navigate = async () => {
-      const targetUrl = await resolveSharedUrl(values, webBaseUrl, queryClient);
+      const targetUrl = await resolveSharedUrl(values, webBaseUrl, apiBaseUrl, queryClient);
       if (!isLatestShare()) {
         return;
       }
@@ -47,9 +49,9 @@ export const useExternalEntry = ({
     };
 
     void navigate()
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isLatestShare()) {
-          onShareFailure();
+          onShareFailure(shareFailureOf(error));
         }
       })
       .finally(() => {
@@ -58,6 +60,7 @@ export const useExternalEntry = ({
       });
   }, [
     clearSharedPayloads,
+    apiBaseUrl,
     onNavigate,
     onShareFailure,
     onUnsupportedShare,

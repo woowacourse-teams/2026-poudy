@@ -4,8 +4,13 @@ dist/
 coverage/
 
 # Continuous Native Generation 결과물
-android/
-ios/
+/android/
+/ios/
+
+# 로컬 Expo 모듈의 Gradle 산출물
+modules/*/android/.gradle/
+modules/*/android/.cxx/
+modules/*/android/build/
 
 # 로컬 환경 변수와 서명 파일
 .env

@@ -26,6 +26,7 @@ jobs:
     env:
       # 검증 산출물은 배포하지 않으므로 실제 서비스 주소 대신 예약 도메인을 사용한다.
       EXPO_PUBLIC_WEB_URL: https://example.invalid
+      EXPO_PUBLIC_API_BASE_URL: https://api.example.invalid
 
     steps:
       - uses: actions/checkout@v7

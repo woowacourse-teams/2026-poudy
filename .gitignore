@@ -10,6 +10,9 @@
 *.ipr
 .vscode/
 
+### 패키지 매니저 ###
+.pnpm-store/
+
 ### OS ###
 .DS_Store
 Thumbs.db

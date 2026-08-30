@@ -15,14 +15,15 @@ export const getShareSignature = (values: readonly string[]): string => values.j
 const findMatchedUrl = async (
   values: readonly string[],
   webBaseUrl: string,
+  apiBaseUrl: string,
   queryClient: QueryClient,
 ): Promise<string | null> => {
   const texts = values.map((value) => value.trim());
   const matches = await Promise.all(
     texts.map((text) =>
       queryClient.fetchQuery({
-        queryKey: [SHARE_MATCH_KEY, webBaseUrl, text],
-        queryFn: () => requestShareMatch(text, webBaseUrl),
+        queryKey: [SHARE_MATCH_KEY, apiBaseUrl, text],
+        queryFn: () => requestShareMatch(text, apiBaseUrl),
       }),
     ),
   );
@@ -33,6 +34,7 @@ const findMatchedUrl = async (
 export const resolveSharedUrl = async (
   values: readonly string[],
   webBaseUrl: string,
+  apiBaseUrl: string,
   queryClient: QueryClient,
 ): Promise<string | null> => {
   const sameOriginUrl = values.map((value) => getSameOriginUrl(value, webBaseUrl)).find((value) => value !== null);
@@ -40,5 +42,5 @@ export const resolveSharedUrl = async (
     return sameOriginUrl;
   }
 
-  return findMatchedUrl(values, webBaseUrl, queryClient);
+  return findMatchedUrl(values, webBaseUrl, apiBaseUrl, queryClient);
 };
