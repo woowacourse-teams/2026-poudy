@@ -36,7 +36,7 @@ describe("robots", () => {
       rules: {
         userAgent: "*",
         allow: ["/", "/products/"],
-        disallow: ["/products", "/search", "/saved"],
+        disallow: "/products",
       },
       sitemap: "https://poudy.site/sitemap.xml",
       host: "https://poudy.site",
@@ -71,7 +71,10 @@ describe("sitemap", () => {
     expect(entries.map(({ url }) => url)).toEqual(
       expect.arrayContaining([
         "https://poudy.site/",
+        "https://poudy.site/search/products",
+        "https://poudy.site/search/ingredients",
         "https://poudy.site/categories",
+        "https://poudy.site/saved",
         "https://poudy.site/categories/10",
         "https://poudy.site/categories/11",
         "https://poudy.site/brands/20",
@@ -106,7 +109,7 @@ describe("sitemap", () => {
     api.fetchProducts.mockRejectedValue(new Error("products unavailable"));
     api.fetchIngredients.mockRejectedValue(new Error("ingredients unavailable"));
 
-    await expect(sitemap()).resolves.toHaveLength(3);
+    await expect(sitemap()).resolves.toHaveLength(6);
   });
 
   /*

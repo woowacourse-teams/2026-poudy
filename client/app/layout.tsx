@@ -7,7 +7,7 @@ import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { IconSprite } from "@/components/ui/icons/sprite";
-import { indexingEnabled, SITE_DESCRIPTION, siteUrl } from "@/lib/seo/site";
+import { indexingEnabled, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
 
 import "./globals.css";
@@ -37,19 +37,27 @@ const foldit = Foldit({
 
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
-  title: "Poudy",
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: SITE_DESCRIPTION,
+  verification: {
+    other: {
+      "naver-site-verification": "f61dfe971733b0d1d2e8b1a8e3cda559b5b62264",
+    },
+  },
   openGraph: {
-    title: "Poudy",
+    title: SITE_NAME,
     description: SITE_DESCRIPTION,
     type: "website",
     locale: "ko_KR",
-    siteName: "Poudy",
+    siteName: SITE_NAME,
     images: ["/opengraph-image"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Poudy",
+    title: SITE_NAME,
     description: SITE_DESCRIPTION,
     images: ["/opengraph-image"],
   },
