@@ -10,8 +10,12 @@ const api = vi.hoisted(() => ({
 vi.mock("@/lib/api/products", () => api);
 
 import robots from "@/app/robots";
-import sitemap from "@/app/sitemap";
+import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
+import { revalidate as ingredientSitemapRevalidate } from "@/app/sitemaps/ingredients.xml/route";
+import { revalidate as pageSitemapRevalidate } from "@/app/sitemaps/pages.xml/route";
+import { revalidate as productSitemapRevalidate } from "@/app/sitemaps/products.xml/route";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
+import { ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -51,6 +55,25 @@ describe("robots", () => {
 });
 
 describe("sitemap", () => {
+  it("인덱스가 분리된 사이트맵을 절대 주소로 연결한다", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
+
+    const response = sitemapIndex();
+    const xml = await response.text();
+
+    expect(response.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
+    expect(xml).toContain("<sitemapindex");
+    expect(xml).toContain("<loc>https://poudy.site/sitemaps/pages.xml</loc>");
+    expect(xml).toContain("<loc>https://poudy.site/sitemaps/products.xml</loc>");
+    expect(xml).toContain("<loc>https://poudy.site/sitemaps/ingredients.xml</loc>");
+  });
+
+  it("제품은 12시간, 나머지 주소와 성분은 24시간 간격으로 다시 조회한다", () => {
+    expect(productSitemapRevalidate).toBe(43200);
+    expect(pageSitemapRevalidate).toBe(86400);
+    expect(ingredientSitemapRevalidate).toBe(86400);
+  });
+
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
@@ -66,7 +89,7 @@ describe("sitemap", () => {
       }),
     );
 
-    const entries = await sitemap();
+    const entries = (await Promise.all([pageEntries(), productEntries(), ingredientEntries()])).flat();
 
     expect(entries.map(({ url }) => url)).toEqual(
       expect.arrayContaining([
@@ -88,9 +111,6 @@ describe("sitemap", () => {
   });
 
   it("뒤쪽 제품 페이지가 실패해도 앞에서 찾은 제품 주소는 유지한다", async () => {
-    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
-    api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
-    api.fetchIngredients.mockRejectedValue(new Error("ingredients unavailable"));
     api.fetchProducts.mockImplementation(({ page }: { readonly page: number }) => {
       if (page === 0) {
         return Promise.resolve({ items: [{ id: 30 }], pagination: { hasNext: true } });
@@ -98,7 +118,7 @@ describe("sitemap", () => {
       return Promise.reject(new Error("second product page unavailable"));
     });
 
-    const entries = await sitemap();
+    const entries = await productEntries();
 
     expect(entries.map(({ url }) => url)).toContain("http://localhost:3000/products/30");
   });
@@ -109,7 +129,9 @@ describe("sitemap", () => {
     api.fetchProducts.mockRejectedValue(new Error("products unavailable"));
     api.fetchIngredients.mockRejectedValue(new Error("ingredients unavailable"));
 
-    await expect(sitemap()).resolves.toHaveLength(6);
+    await expect(pageEntries()).resolves.toHaveLength(6);
+    await expect(productEntries()).resolves.toHaveLength(0);
+    await expect(ingredientEntries()).resolves.toHaveLength(0);
   });
 
   /*
@@ -118,8 +140,6 @@ describe("sitemap", () => {
    */
   it("예전 상한을 넘겨도 hasNext 를 따라 계속 싣는다", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
-    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
-    api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
     api.fetchProducts.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({ items: [{ id: 1000 + page }], pagination: { hasNext: page < 20 } }),
     );
@@ -127,7 +147,7 @@ describe("sitemap", () => {
       Promise.resolve({ items: [{ id: 2000 + page }], pagination: { hasNext: page < 120 } }),
     );
 
-    const urls = (await sitemap()).map(({ url }) => url);
+    const urls = (await Promise.all([productEntries(), ingredientEntries()])).flat().map(({ url }) => url);
 
     // 제품 11 번째 페이지는 예전 상한(10 페이지) 밖이다.
     expect(api.fetchProducts).toHaveBeenCalledTimes(21);
@@ -138,9 +158,6 @@ describe("sitemap", () => {
   });
 
   it("뒤쪽 성분 페이지가 실패해도 앞에서 찾은 성분 주소는 유지한다", async () => {
-    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
-    api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
-    api.fetchProducts.mockRejectedValue(new Error("products unavailable"));
     api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) => {
       if (page === 0) {
         return Promise.resolve({ items: [{ id: 40 }], pagination: { hasNext: true } });
@@ -148,7 +165,7 @@ describe("sitemap", () => {
       return Promise.reject(new Error("second ingredient page unavailable"));
     });
 
-    const entries = await sitemap();
+    const entries = await ingredientEntries();
 
     expect(entries.map(({ url }) => url)).toContain("http://localhost:3000/ingredients/40");
   });
