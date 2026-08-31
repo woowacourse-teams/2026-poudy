@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { FilterChip } from "./FilterChip";
-import { SearchField } from "./SearchField";
+import { SEARCH_KEYWORD_MAX_LENGTH, SearchField } from "./SearchField";
 import { SortDropdown } from "./SortDropdown";
 
 describe("SearchField", () => {
@@ -38,6 +38,15 @@ describe("SearchField", () => {
     await userEvent.type(screen.getByRole("searchbox", { name: "제품 검색" }), "토");
 
     expect(onChange).toHaveBeenCalledWith("토");
+  });
+
+  it("검색어를 최대 100 자까지만 입력받는다", () => {
+    render(<SearchField value="" onChange={() => {}} placeholder="검색" label="제품 검색" />);
+
+    expect(screen.getByRole("searchbox", { name: "제품 검색" })).toHaveAttribute(
+      "maxlength",
+      String(SEARCH_KEYWORD_MAX_LENGTH),
+    );
   });
 
   it("iOS Safari 가 화면을 키우지 않게 하는 규칙을 입력에 건다", () => {

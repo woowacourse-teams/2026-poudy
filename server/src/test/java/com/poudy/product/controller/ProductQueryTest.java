@@ -136,6 +136,30 @@ class ProductQueryTest {
     }
 
     @Test
+    @DisplayName("브랜드명과 제품명에 나뉘어 일치하는 제품을 목록, 개수와 검색 제안에서 함께 반환한다")
+    void findsProductsByBrandAndProductName() throws Exception {
+        String keyword = "다브랜드 블랙";
+
+        mockMvc.perform(get("/api/products").param("keyword", keyword))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3L));
+
+        mockMvc.perform(get("/api/products/count").param("keyword", keyword))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count").value(3L));
+
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", keyword))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3L))
+            .andExpect(jsonPath("$.items[0].match.field").value("PRODUCT_NAME"))
+            .andExpect(jsonPath("$.items[0].match.text").value("블랙 스네일 토너"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(2));
+    }
+
+    @Test
     @DisplayName("제품 상세를 연관 도메인과 파생 정보로 반환한다")
     void findsProductDetail() throws Exception {
         mockMvc.perform(get("/api/products/15"))

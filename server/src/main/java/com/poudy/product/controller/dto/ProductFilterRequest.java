@@ -14,7 +14,7 @@ import java.util.Objects;
 import org.hibernate.validator.constraints.UniqueElements;
 
 public record ProductFilterRequest(
-    @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @ValidSearchKeyword @Schema(description = "제품명 또는 브랜드명 검색어", example = "토너") String keyword,
+    @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @ValidSearchKeyword @Schema(description = "제품명 또는 브랜드명 검색어", example = "토너", maxLength = ValidSearchKeyword.MAX_LENGTH) String keyword,
     @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<@NotNull Long> categoryIds,
     @UniqueElements @ArraySchema(schema = @Schema(example = "12"), uniqueItems = true) List<@NotNull Long> brandIds,
     @UniqueElements @ArraySchema(schema = @Schema(example = "3"), uniqueItems = true) List<@NotNull @Min(0) @Max(3) Integer> moistureLevel,

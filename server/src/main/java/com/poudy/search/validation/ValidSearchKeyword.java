@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = ValidSearchKeywordValidator.class)
 public @interface ValidSearchKeyword {
 
+    int MAX_LENGTH = 100;
+
     String message() default "INVALID_QUERY_PARAMETER";
 
     Class<?>[] groups() default {};

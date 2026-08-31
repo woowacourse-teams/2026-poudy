@@ -96,12 +96,81 @@ class ProductSearchTest {
     }
 
     @Test
+    @DisplayName("브랜드명과 제품명에 나뉘어 일치하는 제품을 찾는다")
+    void findsByBrandAndProductName() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Brand torriden = new Brand(2L, "토리든", null, null);
+        Products products = new Products(
+            List.of(
+                product(1L, "1025 독도 토너", roundLab),
+                product(2L, "자작나무 수분 크림", roundLab),
+                product(3L, "다이브인 저분자 히알루론산 토너", torriden)
+            )
+        );
+
+        assertThat(names(products.search("라운드랩 독도"))).containsExactly("1025 독도 토너");
+    }
+
+    @Test
+    @DisplayName("브랜드명과 제품명을 붙여 쓰거나 브랜드 접두부만 써도 찾는다")
+    void findsCombinedNameWithoutSpacesOrFullBrand() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Products products = new Products(List.of(product(1L, "1025 독도 토너", roundLab)));
+
+        assertThat(names(products.search("라운드랩독도"))).containsExactly("1025 독도 토너");
+        assertThat(names(products.search("라운드독도"))).containsExactly("1025 독도 토너");
+    }
+
+    @Test
+    @DisplayName("영문 브랜드명과 한글 제품명으로 복합 검색한다")
+    void findsByEnglishBrandAndProductName() {
+        Brand brand = new Brand(1L, "닥터지", "Dr.G", null);
+        Products products = new Products(List.of(product(1L, "레드 블레미쉬 크림", brand)));
+
+        assertThat(names(products.search("dr.g 레드"))).containsExactly("레드 블레미쉬 크림");
+    }
+
+    @Test
+    @DisplayName("브랜드명과 제품명을 초성으로 복합 검색한다")
+    void findsCombinedNameByChosung() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Products products = new Products(List.of(product(1L, "1025 독도 토너", roundLab)));
+
+        assertThat(names(products.search("ㄹㅇㄷㄹ ㄷㄷ"))).containsExactly("1025 독도 토너");
+    }
+
+    @Test
+    @DisplayName("브랜드 중간에만 걸리는 앞부분은 복합 검색의 브랜드로 보지 않는다")
+    void rejectsPartialBrandInCombinedName() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Products products = new Products(List.of(product(1L, "1025 독도 토너", roundLab)));
+
+        assertThat(products.search("운드독도")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("복합 검색에서는 정확히 맞은 브랜드의 제품을 접두 일치 브랜드보다 먼저 담는다")
+    void ordersCombinedMatchesByBrandThenProductName() {
+        Brand exact = new Brand(1L, "다", null, null);
+        Brand prefix = new Brand(2L, "다 브랜드", null, null);
+        Products products = new Products(
+            List.of(
+                product(2L, "블랙 크림", prefix),
+                product(1L, "블랙 토너", exact)
+            )
+        );
+
+        assertThat(names(products.search("다 블랙"))).containsExactly("블랙 토너", "블랙 크림");
+    }
+
+    @Test
     @DisplayName("제품명 전용 검색에서는 브랜드명을 맞추지 않는다")
     void searchesOnlyProductNameWhenRequested() {
         Brand brand = new Brand(1L, "라운드랩", null, null);
         Products products = new Products(List.of(product(1L, "1025 독도 토너", brand)));
 
         assertThat(products.searchByProductName("라운드랩")).isEmpty();
+        assertThat(products.searchByProductName("라운드랩독도")).isEmpty();
     }
 
     @Test
@@ -187,6 +256,20 @@ class ProductSearchTest {
         assertThat(matched.textMatch().text()).isEqualTo("다 브랜드");
         assertThat(matched.textMatch().range().startIndex()).isZero();
         assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("복합 검색 제안은 제품명에서 일치한 원문과 구간을 보존한다")
+    void keepsProductNameMatchForCombinedQuery() {
+        Brand brand = new Brand(1L, "다 브랜드", null, null);
+        Products products = new Products(List.of(product(1L, "블랙 스네일 토너", brand)));
+
+        MatchedProduct matched = products.suggest("다브랜드 스네일", 0, 1).items().getFirst();
+
+        assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
+        assertThat(matched.textMatch().text()).isEqualTo("블랙 스네일 토너");
+        assertThat(matched.textMatch().range().startIndex()).isEqualTo(3);
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(6);
     }
 
     @Test

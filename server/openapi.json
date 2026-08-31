@@ -411,6 +411,7 @@
               "type": "string",
               "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
+              "maxLength": 100,
               "pattern": ".*\\S.*"
             },
             "example": "토너"
@@ -726,6 +727,7 @@
             "schema": {
               "type": "string",
               "description": "검색어",
+              "maxLength": 100,
               "minLength": 1
             },
             "example": "토너"
@@ -890,6 +892,7 @@
               "type": "string",
               "description": "제품명 또는 브랜드명 검색어",
               "example": "토너",
+              "maxLength": 100,
               "pattern": ".*\\S.*"
             },
             "example": "토너"
@@ -1257,6 +1260,7 @@
             "schema": {
               "type": "string",
               "description": "검색어",
+              "maxLength": 100,
               "minLength": 1
             },
             "example": "글리"
