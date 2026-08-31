@@ -15,6 +15,7 @@
 - 요청: `GET` only
 - 부하 생성기: 로컬 PC
 - 테스트 스크립트: [`categories.js`](categories.js)
+- 용량 테스트 스크립트: [`categories-capacity.js`](categories-capacity.js)
 - 선행 설정: #287의 Nginx 캐시 및 systemd 자동 재시작(staging 적용·검증 완료)
 - baseline 원본: [`results/baseline.json`](results/baseline.json)
 - after 원본: [`results/after-287.json`](results/after-287.json)
@@ -55,7 +56,8 @@ after가 1건 적은 것은 k6 arrival-rate 실행의 요청 스케줄링 차이
 2026-08-31에 #287이 적용된 staging 공개 API를 대상으로 별도의 고정 부하 테스트를
 실행했다. 각 처리량은 `constant-arrival-rate`로 60초 동안 유지했으며, 캐시가 예열된
 동일한 `GET /api/categories` 경로를 사용했다. 1·3·5·10 req/s를 한 단계씩 실행하고
-각 단계의 k6 결과와 SSM 자원 상태를 확인한 뒤 다음 단계로 넘어갔다.
+각 단계의 k6 결과와 SSM 자원 상태를 확인한 뒤 다음 단계로 넘어갔다. 이후 warm
+20 req/s와 cold 10·20·30 req/s도 같은 60초 고정 부하로 확인했다.
 
 | 목표 처리량 | 요청 수 | 실제 처리량 | 평균 | p95 | p99 | 오류율 | 200 응답 | interrupted iterations |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -63,6 +65,7 @@ after가 1건 적은 것은 k6 arrival-rate 실행의 요청 스케줄링 차이
 | 3 req/s | 180 | 3.00 req/s | 7.95 ms | 9.90 ms | 22.49 ms | 0.00% | 180 | 0 |
 | 5 req/s | 301 | 5.02 req/s | 7.90 ms | 9.97 ms | 17.42 ms | 0.00% | 301 | 0 |
 | 10 req/s | 600 | 10.00 req/s | 7.72 ms | 9.75 ms | 13.01 ms | 0.00% | 600 | 0 |
+| 20 req/s | 1201 | 20.01 req/s | 7.85 ms | 9.85 ms | 16.56 ms | 0.00% | 1201 | 0 |
 
 모든 단계에서 4xx·5xx·transport failure·timeout은 0건이었다. `dropped_iterations`는
 k6 결과에 별도 샘플이 생성되지 않았고, 각 실행의 종료 상태가 `0 interrupted
@@ -74,12 +77,27 @@ SSM에서 확인한 5 req/s 구간은 CPU idle 98~99%, load average 0.02~0.08, b
 average 0.10~0.24, backend RSS 약 366MB, available memory 939~946MB였다. 두 구간 모두
 swap은 0이고 `NRestarts=0`, backend service는 `active`였다.
 
-따라서 현재 설정과 캐시 예열 조건의 공개 `/api/categories` 경로는 10 req/s를 60초
-동안 안정적으로 처리했으며, 이 결과는 최소 처리 용량(lower bound)을 의미한다. 캐시가
-적중된 공개 경로를 측정한 것이므로 Spring Boot backend의 절대 최대 처리량이나 서버가
-견딜 수 있는 최대 한계로 해석하지 않는다. 더 높은 한계가 필요하면 별도 승인 후 15
-req/s 이상을 한 단계씩 확인하고, backend 자체 용량은 캐시 미적중 조건으로 분리해
-측정해야 한다.
+따라서 현재 설정과 캐시 예열 조건의 공개 `/api/categories` 경로는 20 req/s를 60초
+동안 안정적으로 처리했다. 캐시 미적중 조건에서도 30 req/s를 60초 동안 안정적으로
+처리했으며, 이 결과들은 모두 최소 처리 용량(lower bound)을 의미한다. 캐시 적중·미적중
+공개 경로를 측정한 것이므로 Spring Boot backend의 절대 최대 처리량이나 서버가 견딜 수
+있는 최대 한계로 해석하지 않는다.
+
+### 캐시 미적중 용량 결과
+
+`CACHE_MODE=cold`는 테스트용 Cookie를 사용해 현재 staging Nginx의
+`proxy_cache_bypass`·`proxy_no_cache`를 통과한다. 캐시를 삭제하거나 예열 상태를
+변경하지 않고, 각 요청을 Nginx와 backend까지 전달하는 조건이다.
+
+| 목표 처리량 | 요청 수 | 실제 처리량 | 평균 | p95 | p99 | 오류율 | 200 응답 | interrupted iterations |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 req/s | 601 | 10.01 req/s | 9.46 ms | 12.26 ms | 16.50 ms | 0.00% | 601 | 0 |
+| 20 req/s | 1200 | 20.00 req/s | 9.15 ms | 11.27 ms | 15.42 ms | 0.00% | 1200 | 0 |
+| 30 req/s | 1801 | 30.01 req/s | 8.77 ms | 10.97 ms | 15.13 ms | 0.00% | 1801 | 0 |
+
+원본 결과는 [`results/capacity/`](results/capacity/) 아래에 보존했다. 최종 30 req/s
+결과는 [`after-287-cold-30rps-final.json`](results/capacity/after-287-cold-30rps-final.json)이며,
+`generatedAt`은 `2026-08-31T06:04:46.698Z`다.
 
 ## 현재 확인한 공개 smoke test
 
@@ -153,6 +171,22 @@ Grafana는 staging 전후 비교에 사용하지 않았다.
 after의 SSM sample 5는 세션 출력에 포함되지 않았으므로, 위 after 범위는 실제 확인된
 sample 1~4를 기준으로 한다.
 
+### 최종 cold 30 req/s SSM 검증
+
+최종 cold 30 req/s 결과의 생성 시각은 `2026-08-31T06:04:46.698Z`이며, SSM 모니터링은
+`06:03:35~06:06:59 UTC`에 수집되어 해당 60초 실행 구간을 포함한다. 테스트 구간과
+겹친 샘플에서 다음을 확인했다.
+
+- `vmstat` CPU idle: `87~100%` (busy 최대 13%), CPU 포화 없음
+- backend RSS: 약 `385~389MB`
+- available memory: 약 `923~929MB`
+- swap: `0`
+- backend `MainPID=286095`, `NRestarts=0`, `Result=success`, `ActiveState=active`
+- 테스트 후 `2026-08-31T06:07:00 UTC` health: `UP`
+
+따라서 최종 30 req/s cold 테스트는 처리량 결과와 자원 상태가 같은 모니터링 구간에서
+함께 확인됐고, 테스트 종료 후에도 서비스가 정상 상태를 유지했다.
+
 ## 캐시 적용 효과
 
 staging `/api/categories`에는 `GET/HEAD`만 30초 동안 캐시하고, Authorization·Cookie가
@@ -205,7 +239,7 @@ staging Vercel 페이지의 단순 HTTP GET은 Vercel 응답(`x-vercel-cache: HI
 
 ## 해석과 후속 조치
 
-- 이번 시나리오에서는 5xx·timeout·CPU 포화·swap·디스크 부족이 없고 최종 after 중
+- warm 20 req/s와 cold 30 req/s에서 5xx·timeout·CPU 포화·swap·디스크 부족이 없고
   backend 재시작도 없었다. 현재 프론트·백엔드 단일 EC2 구조를 유지한다.
 - 캐시는 정상 작동했지만 응답시간 개선은 관측되지 않았다. 더 높은 트래픽에서 효과를
   판단하려면 Nginx access log에 `$upstream_cache_status`를 추가해 hit ratio를 측정한다.

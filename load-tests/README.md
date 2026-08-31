@@ -51,7 +51,7 @@ timeout, 메모리 급증, CPU Credit 급감이 보이면 즉시 `Ctrl-C`로 중
 하나의 처리량을 일정하게 유지한다. 기존 시나리오의 `10 req/s`는 10 req/s를 30초 동안
 유지한 값이 아니므로, 이 테스트 결과로 대체해서 해석하지 않는다.
 
-staging에서 1·3·5·10 req/s를 각각 60초씩 실행한다. 각 단계가 끝난 뒤 결과와 staging
+staging에서 1·3·5·10·20 req/s를 각각 60초씩 실행한다. 각 단계가 끝난 뒤 결과와 staging
 자원을 확인하고, 5xx·timeout·transport failure·`dropped_iterations`·메모리 급증이
 없을 때만 다음 단계로 넘어간다. 아래 명령은 한 번에 하나씩 실행한다.
 
@@ -64,7 +64,7 @@ RESULT_FILE=load-tests/results/capacity/after-287-1rps.json \
 k6 run load-tests/categories-capacity.js
 ```
 
-안정적으로 끝났다면 같은 명령에서 `RATE`와 결과 파일만 `3`, `5`, `10`으로 바꿔
+안정적으로 끝났다면 같은 명령에서 `RATE`와 결과 파일만 `3`, `5`, `10`, `20`으로 바꿔
 반복한다. 한 단계에서 문제가 발생하면 반복을 중단하고 staging을 회복시킨다.
 
 이 시나리오는 동일한 공개 API 경로를 반복하므로, 캐시가 적용된 현재 staging의 공개
@@ -87,7 +87,7 @@ curl --insecure --fail --silent --show-error \
 
 `BYPASS`가 확인된 경우에만 고정 부하 테스트를 실행한다. `CACHE_MODE=cold` 결과는
 캐시 예열 공개 경로 결과와 분리해서 기록하며, 캐시 미적중 조건의 Nginx·backend 처리
-용량으로 해석한다.
+용량으로 해석한다. #288 검증에서는 10·20·30 req/s를 각각 60초씩 실행했다.
 
 ## 실행 전·후 확인
 
