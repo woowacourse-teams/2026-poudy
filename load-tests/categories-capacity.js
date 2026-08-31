@@ -98,7 +98,6 @@ export function handleSummary(data) {
       transportFailures: countOf(data, "capacity_transport_failures"),
       timeouts: countOf(data, "capacity_timeouts"),
       droppedIterations: valueOf(data, "dropped_iterations", "count"),
-      maxVUs: valueOf(data, "vus", "max"),
     },
     metrics: data.metrics,
   };
@@ -122,7 +121,6 @@ function textSummary(data) {
   const durationMetric = data.metrics.http_req_duration?.values;
   const failed = data.metrics.http_req_failed?.values;
   const droppedIterations = valueOf(data, "dropped_iterations", "count");
-  const maxVUsUsed = valueOf(data, "vus", "max");
 
   return [
     `base_url: ${baseUrl}`,
@@ -136,6 +134,5 @@ function textSummary(data) {
     `p99: ${durationMetric?.["p(99)"]?.toFixed(2) ?? "n/a"} ms`,
     `error_rate: ${((failed?.rate ?? 0) * 100).toFixed(2)}%`,
     `dropped_iterations: ${droppedIterations ?? "n/a"}`,
-    `max_vus_used: ${maxVUsUsed ?? "n/a"}`,
   ].join("\n");
 }
