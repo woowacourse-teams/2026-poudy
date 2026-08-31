@@ -22,11 +22,11 @@ const QUICK_ACTION_ENTRIES: readonly QuickActionEntry[] = [
 export const getQuickActionItems = (): Action[] =>
   QUICK_ACTION_ENTRIES.map(({ id, title, icon }) => ({ id, title, icon }));
 
-export const getQuickActionUrl = (id: string, webBaseUrl: string): string | null => {
+export const getQuickActionUrl = (id: string, serviceBaseUrl: string): string | null => {
   const entry = QUICK_ACTION_ENTRIES.find((candidate) => candidate.id === id);
   if (!entry) {
     return null;
   }
 
-  return new URL(entry.path, webBaseUrl).toString();
+  return new URL(entry.path, serviceBaseUrl).toString();
 };

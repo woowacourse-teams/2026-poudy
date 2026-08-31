@@ -23,7 +23,7 @@ interface NavigationRequest {
 }
 
 interface WebAppShellProps {
-  readonly webBaseUrl: string;
+  readonly serviceBaseUrl: string;
   readonly navigation: WebViewNavigation;
 }
 
@@ -31,16 +31,16 @@ const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
 const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
-export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
+export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
   const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
   const splashTransitionStartedRef = useRef(false);
-  const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
+  const serviceOrigin = useMemo(() => new URL(serviceBaseUrl).origin, [serviceBaseUrl]);
   const handleHardwareNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
     sourceKey: navigation.key,
     sourceUrl: navigation.url,
-    webBaseUrl,
+    serviceBaseUrl,
     webViewRef,
   });
 
@@ -54,14 +54,14 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
 
   const handleShouldStartLoad = useCallback(
     (request: NavigationRequest) => {
-      if (shouldLoadInWebView(request.url, webOrigin)) {
+      if (shouldLoadInWebView(request.url, serviceOrigin)) {
         return true;
       }
 
       openExternalUrl(request.url);
       return false;
     },
-    [webOrigin],
+    [serviceOrigin],
   );
 
   const { fail } = navigation;
@@ -125,7 +125,7 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
           onMessage={handleMessage}
           onNavigationStateChange={handleNavigationChange}
           onShouldStartLoadWithRequest={handleShouldStartLoad}
-          originWhitelist={[webOrigin]}
+          originWhitelist={[serviceOrigin]}
           setSupportMultipleWindows={false}
           sharedCookiesEnabled
           source={{ uri: navigation.url }}

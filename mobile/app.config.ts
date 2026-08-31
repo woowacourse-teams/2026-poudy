@@ -8,8 +8,7 @@ const DEFAULT_BUNDLE_IDENTIFIER = 'com.poudy.app';
 const DEFAULT_APP_VERSION = '0.1.0';
 const EAS_ACCOUNT = 'poudys-team';
 const EAS_PROJECT_ID = '25e0967e-a114-4253-ad7a-a39063fce314';
-const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+const SERVICE_BASE_URL = process.env.EXPO_PUBLIC_SERVICE_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
 
 const isHttpUrl = (value: string): boolean => {
@@ -32,8 +31,7 @@ const requiredHttpUrl = (name: string, value: string | undefined): string => {
   return value;
 };
 
-const validatedWebBaseUrl = requiredHttpUrl('EXPO_PUBLIC_WEB_URL', WEB_BASE_URL);
-requiredHttpUrl('EXPO_PUBLIC_API_BASE_URL', API_BASE_URL);
+const validatedServiceBaseUrl = requiredHttpUrl('EXPO_PUBLIC_SERVICE_URL', SERVICE_BASE_URL);
 
 if (process.env.EAS_BUILD_PROFILE === 'production' && !APP_VERSION) {
   throw new Error('POUDY_APP_VERSION is required for production builds.');
@@ -44,14 +42,14 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
 }
 
 /** App Links 는 https 로만 검증된다. */
-const appLinkHostOf = (webBaseUrl: string) => {
-  const web = new URL(webBaseUrl);
+const appLinkHostOf = (serviceBaseUrl: string) => {
+  const service = new URL(serviceBaseUrl);
 
-  if (web.protocol !== 'https:') {
+  if (service.protocol !== 'https:') {
     return null;
   }
 
-  return web.host;
+  return service.host;
 };
 
 const androidAppLinksOf = (host: string | null): Pick<NonNullable<ExpoConfig['android']>, 'intentFilters'> => {
@@ -90,7 +88,7 @@ const appNameOf = (bundleIdentifier: string) => {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
-  const appLinkHost = appLinkHostOf(validatedWebBaseUrl);
+  const appLinkHost = appLinkHostOf(validatedServiceBaseUrl);
 
   return {
     ...config,

@@ -2,22 +2,22 @@ import { Alert, Linking } from 'react-native';
 
 const BLANK_URL = 'about:blank';
 
-export const shouldLoadInWebView = (url: string, webOrigin: string): boolean => {
+export const shouldLoadInWebView = (url: string, serviceOrigin: string): boolean => {
   if (url === BLANK_URL) {
     return true;
   }
 
   try {
-    return new URL(url).origin === webOrigin;
+    return new URL(url).origin === serviceOrigin;
   } catch {
     return false;
   }
 };
 
-export const isHomeUrl = (url: string, webBaseUrl: string): boolean => {
+export const isHomeUrl = (url: string, serviceBaseUrl: string): boolean => {
   try {
     const current = new URL(url);
-    const home = new URL(webBaseUrl);
+    const home = new URL(serviceBaseUrl);
 
     return current.origin === home.origin && current.pathname === home.pathname;
   } catch {
