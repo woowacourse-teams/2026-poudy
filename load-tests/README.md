@@ -44,6 +44,34 @@ k6 run load-tests/categories.js
 timeout이 발생하면 테스트를 중단하기 위한 안전장치다. 결과를 기다리지 않고도 5xx,
 timeout, 메모리 급증, CPU Credit 급감이 보이면 즉시 `Ctrl-C`로 중단한다.
 
+## 고정 부하 용량 확인
+
+기존 `categories.js`는 #288 전후 비교를 위한 ramp-up 시나리오이므로 변경하지 않는다.
+최대 처리량을 확인할 때는 `categories-capacity.js`를 사용한다. 이 파일은 한 번 실행할 때
+하나의 처리량을 일정하게 유지한다. 기존 시나리오의 `10 req/s`는 10 req/s를 30초 동안
+유지한 값이 아니므로, 이 테스트 결과로 대체해서 해석하지 않는다.
+
+staging에서 1·3·5·10 req/s를 각각 60초씩 실행한다. 각 단계가 끝난 뒤 결과와 staging
+자원을 확인하고, 5xx·timeout·transport failure·`dropped_iterations`·메모리 급증이
+없을 때만 다음 단계로 넘어간다. 아래 명령은 한 번에 하나씩 실행한다.
+
+```bash
+mkdir -p load-tests/results/capacity
+
+BASE_URL=https://staging.poudy.site \
+RATE=1 DURATION=60s \
+RESULT_FILE=load-tests/results/capacity/after-287-1rps.json \
+k6 run load-tests/categories-capacity.js
+```
+
+안정적으로 끝났다면 같은 명령에서 `RATE`와 결과 파일만 `3`, `5`, `10`으로 바꿔
+반복한다. 한 단계에서 문제가 발생하면 반복을 중단하고 staging을 회복시킨다.
+
+이 시나리오는 동일한 공개 API 경로를 반복하므로, 캐시가 적용된 현재 staging의 공개
+진입점 용량을 측정한다. 캐시 적중 상태의 결과만으로 Spring Boot 백엔드의 최대 처리량을
+의미한다고 해석하지 않으며, 백엔드 자체의 용량이 필요하면 별도의 캐시 미적중 테스트를
+계획한다.
+
 ## 실행 전·후 확인
 
 staging API의 공개 경로가 `staging.poudy.site`의 Nginx와 백엔드를 함께 통과하는지
