@@ -35,6 +35,14 @@ class ShareTextTest {
     }
 
     @Test
+    @DisplayName("앱 공유 제목의 줄바꿈 없는 공백을 일반 공백으로 정규화한다")
+    void normalizesNonBreakingSpaces() {
+        String shared = "[9월올영픽/헬로키티]\u00A0에스네이처\u00A0아쿠아 오아시스 토너 300ml 기획" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrase()).isEqualTo("에스네이처 아쿠아 오아시스 토너");
+    }
+
+    @Test
     @DisplayName("괄호 안의 용량은 절단 기준으로 쓰지 않는다")
     void ignoresVolumeInsidePlanNote() {
         String shared = "[기획] 닥터지 브라이트닝 필링젤 (120+60+세럼2ml) 리필" + TAIL;
@@ -43,11 +51,47 @@ class ShareTextTest {
     }
 
     @Test
+    @DisplayName("괄호로 감싼 제품 버전 기호는 제품명에 남긴다")
+    void keepsParenthesizedVersionSign() {
+        String shared = "라로슈포제 에빠끌라 K(+) 토너 200ml (지성 피부)" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrases())
+            .containsExactly("라로슈포제 에빠끌라 K+ 토너", "라로슈포제 에빠끌라 K 토너");
+    }
+
+    @Test
     @DisplayName("단위가 붙지 않은 숫자는 제품명의 일부로 남긴다")
     void keepsNumberWithoutUnit() {
         String shared = "[단독] 닥터지 비타 클리어 글루타샷 10+ 흔적 세럼 30ml" + TAIL;
 
         assertThat(new ShareText(shared).productPhrase()).isEqualTo("닥터지 비타 클리어 글루타샷 10+ 흔적 세럼");
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', value = {
+            "[1+1] 메디힐 비타민씨 브라이트닝 세럼 40+40ml 더블 기획|메디힐 비타민씨 브라이트닝 세럼",
+            "[한정기획] 메디힐 마데카소사이드 수분 선세럼 흔적 리페어 50+50+15g 기획"
+                + "|메디힐 마데카소사이드 수분 선세럼 흔적 리페어"})
+    @DisplayName("합산 용량은 첫 번째 숫자부터 털어 낸다")
+    void trimsCombinedVolume(String shared, String expected) {
+        assertThat(new ShareText(shared + TAIL).productPhrase()).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("용량보다 앞에 남은 묶음 수량은 기획 낱말과 함께 털어 낸다")
+    void trimsBundleCountBeforePlanWord() {
+        String shared = "[수분생기] 라운드랩 자작나무 수분 토너 1+1 기획 (300ml+300ml)" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrase()).isEqualTo("라운드랩 자작나무 수분 토너");
+    }
+
+    @Test
+    @DisplayName("NEW가 든 선두 태그는 제품 버전 표식으로 남긴다")
+    void keepsNewProductMarker() {
+        String shared = "[NEW/단독기획] 토리든 다이브인 저분자 히알루론산 수딩 크림 100ml" + TAIL;
+
+        assertThat(new ShareText(shared).productPhrase())
+            .isEqualTo("[NEW] 토리든 다이브인 저분자 히알루론산 수딩 크림");
     }
 
     @Test

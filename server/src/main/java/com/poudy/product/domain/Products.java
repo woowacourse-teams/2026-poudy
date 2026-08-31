@@ -56,6 +56,12 @@ public class Products {
             .toList();
     }
 
+    public List<Product> findAllByBrand(Brand brand) {
+        return products.stream()
+            .filter(product -> product.hasBrand(brand))
+            .toList();
+    }
+
     private List<MatchedProduct> matched(ProductSearchQuery query) {
         return searchable.stream()
             .map(product -> product.match(query))

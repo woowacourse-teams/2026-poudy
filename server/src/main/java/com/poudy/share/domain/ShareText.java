@@ -1,5 +1,6 @@
 package com.poudy.share.domain;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -11,11 +12,15 @@ public record ShareText(String value) {
     private static final Pattern LINK = Pattern.compile("https?://\\S+", Pattern.CASE_INSENSITIVE);
     private static final Pattern SERVICE_PHRASE = Pattern.compile("올리브영에서.*", Pattern.DOTALL);
     private static final Pattern PROMOTION_TAG = Pattern.compile("\\[[^\\]]*\\]");
-    private static final Pattern PLAN_NOTE = Pattern.compile("\\([^)]*\\)");
+    private static final Pattern NEW_MARKER = Pattern
+        .compile("(^|[^A-Za-z])NEW([^A-Za-z]|$)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PARENTHESIZED = Pattern.compile("\\(([^)]*)\\)");
     private static final Pattern VOLUME = Pattern.compile(
-        "\\d+(\\.\\d+)?\\s*(ml|g|ea|매|정|개|입|팩)([Xx*]\\s*\\d+)?(?![A-Za-z])",
+        "\\d+(\\.\\d+)?(\\s*\\+\\s*\\d+(\\.\\d+)?)*\\s*(ml|g|ea|매|정|개|입|팩)"
+            + "([Xx*]\\s*\\d+)?(?![A-Za-z])",
         Pattern.CASE_INSENSITIVE
     );
+    private static final Pattern BUNDLE_COUNT = Pattern.compile("\\d+(\\s*\\+\\s*\\d+)+");
     private static final Set<String> PLAN_WORDS = Set.of(
         "기획",
         "기획세트",
@@ -42,23 +47,31 @@ public record ShareText(String value) {
     }
 
     public String productPhrase() {
-        return productPhrases().getLast();
+        List<String> phrases = productPhrases();
+        return phrases.isEmpty() ? "" : phrases.getLast();
     }
 
     public List<String> productPhrases() {
         String phrase = SERVICE_PHRASE.matcher(value).replaceAll(SPACE);
         phrase = LINK.matcher(phrase).replaceAll(SPACE);
-        phrase = PROMOTION_TAG.matcher(phrase).replaceAll(SPACE);
-        phrase = PLAN_NOTE.matcher(phrase).replaceAll(SPACE);
+        phrase = withoutPromotionTags(phrase);
 
+        LinkedHashSet<String> phrases = new LinkedHashSet<>();
+        addProductPhrases(phrases, PARENTHESIZED.matcher(phrase).replaceAll("$1"));
+        addProductPhrases(phrases, PARENTHESIZED.matcher(phrase).replaceAll(SPACE));
+        return List.copyOf(phrases);
+    }
+
+    private static void addProductPhrases(Set<String> phrases, String phrase) {
         String truncated = ShareWords.join(ShareWords.of(truncatedAtVolume(phrase)));
         String trimmed = withoutTrailingPlanWords(truncated);
 
-        if (truncated.equals(trimmed)) {
-            return List.of(trimmed);
+        if (!truncated.isEmpty()) {
+            phrases.add(truncated);
         }
-
-        return List.of(truncated, trimmed);
+        if (!trimmed.isEmpty()) {
+            phrases.add(trimmed);
+        }
     }
 
     private static String truncatedAtVolume(String phrase) {
@@ -71,8 +84,17 @@ public record ShareText(String value) {
         return phrase;
     }
 
+    private static String withoutPromotionTags(String phrase) {
+        return PROMOTION_TAG.matcher(phrase).replaceAll(result -> {
+            if (NEW_MARKER.matcher(result.group()).find()) {
+                return " [NEW] ";
+            }
+            return SPACE;
+        });
+    }
+
     private static boolean isPlanWord(String word) {
-        return PLAN_WORDS.contains(word) || word.endsWith("기획");
+        return PLAN_WORDS.contains(word) || word.endsWith("기획") || BUNDLE_COUNT.matcher(word).matches();
     }
 
     private static String withoutTrailingPlanWords(String phrase) {
