@@ -72,6 +72,23 @@ k6 run load-tests/categories-capacity.js
 의미한다고 해석하지 않으며, 백엔드 자체의 용량이 필요하면 별도의 캐시 미적중 테스트를
 계획한다.
 
+백엔드 처리 경로를 확인할 때는 `CACHE_MODE=cold`를 사용한다. 현재 staging Nginx는
+Cookie가 있는 요청을 `proxy_cache_bypass`·`proxy_no_cache` 처리하므로 테스트용 쿠키가
+있는 모든 요청이 캐시를 읽거나 쓰지 않는다. 실행 전에 다음 응답이 `X-Poudy-Cache:
+BYPASS`인지 확인한다.
+
+```bash
+curl --insecure --fail --silent --show-error \
+  -H 'Cookie: poudy-capacity-bypass=1' \
+  -D - -o /dev/null \
+  https://staging.poudy.site/api/categories \
+  | grep -iE 'HTTP/|X-Poudy-Cache'
+```
+
+`BYPASS`가 확인된 경우에만 고정 부하 테스트를 실행한다. `CACHE_MODE=cold` 결과는
+캐시 예열 공개 경로 결과와 분리해서 기록하며, 캐시 미적중 조건의 Nginx·backend 처리
+용량으로 해석한다.
+
 ## 실행 전·후 확인
 
 staging API의 공개 경로가 `staging.poudy.site`의 Nginx와 백엔드를 함께 통과하는지
