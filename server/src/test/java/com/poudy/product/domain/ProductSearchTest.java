@@ -112,6 +112,23 @@ class ProductSearchTest {
     }
 
     @Test
+    @DisplayName("제품명 다음에 브랜드명을 입력해도 복합 검색한다")
+    void findsByProductAndBrandName() {
+        Brand roundLab = new Brand(1L, "라운드랩", null, null);
+        Brand torriden = new Brand(2L, "토리든", null, null);
+        Products products = new Products(
+            List.of(
+                product(1L, "1025 독도 토너", roundLab),
+                product(2L, "자작나무 수분 크림", roundLab),
+                product(3L, "다이브인 저분자 히알루론산 토너", torriden)
+            )
+        );
+
+        assertThat(names(products.search("독도 라운드랩"))).containsExactly("1025 독도 토너");
+        assertThat(names(products.search("독도라운드"))).containsExactly("1025 독도 토너");
+    }
+
+    @Test
     @DisplayName("브랜드명과 제품명을 붙여 쓰거나 브랜드 접두부만 써도 찾는다")
     void findsCombinedNameWithoutSpacesOrFullBrand() {
         Brand roundLab = new Brand(1L, "라운드랩", null, null);
@@ -146,6 +163,7 @@ class ProductSearchTest {
         Products products = new Products(List.of(product(1L, "1025 독도 토너", roundLab)));
 
         assertThat(products.search("운드독도")).isEmpty();
+        assertThat(products.search("독도운드")).isEmpty();
     }
 
     @Test
@@ -265,6 +283,20 @@ class ProductSearchTest {
         Products products = new Products(List.of(product(1L, "블랙 스네일 토너", brand)));
 
         MatchedProduct matched = products.suggest("다브랜드 스네일", 0, 1).items().getFirst();
+
+        assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
+        assertThat(matched.textMatch().text()).isEqualTo("블랙 스네일 토너");
+        assertThat(matched.textMatch().range().startIndex()).isEqualTo(3);
+        assertThat(matched.textMatch().range().endIndexExclusive()).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("제품명과 브랜드명 순서를 바꾼 복합 검색 제안도 제품명 일치 구간을 보존한다")
+    void keepsProductNameMatchForReversedCombinedQuery() {
+        Brand brand = new Brand(1L, "다 브랜드", null, null);
+        Products products = new Products(List.of(product(1L, "블랙 스네일 토너", brand)));
+
+        MatchedProduct matched = products.suggest("스네일 다브랜드", 0, 1).items().getFirst();
 
         assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
         assertThat(matched.textMatch().text()).isEqualTo("블랙 스네일 토너");

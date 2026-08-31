@@ -27,12 +27,11 @@ final class ProductSearchQuery {
 
         for (int split = nextCodePointIndex(keyword, 0); split < keyword.length();
             split = nextCodePointIndex(keyword, split)) {
-            parts.add(
-                new Parts(
-                    new SearchKeyword(keyword.substring(0, split)),
-                    new SearchKeyword(keyword.substring(split))
-                )
-            );
+            SearchKeyword before = new SearchKeyword(keyword.substring(0, split));
+            SearchKeyword after = new SearchKeyword(keyword.substring(split));
+
+            parts.add(new Parts(before, after));
+            parts.add(new Parts(after, before));
         }
 
         return List.copyOf(parts);
