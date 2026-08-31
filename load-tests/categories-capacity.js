@@ -7,6 +7,7 @@ const rate = Number(__ENV.RATE || "1");
 const duration = __ENV.DURATION || "60s";
 const preAllocatedVUs = Number(__ENV.PREALLOCATED_VUS || "10");
 const maxVUs = Number(__ENV.MAX_VUS || "20");
+const cacheMode = __ENV.CACHE_MODE || "warm";
 const resultFile = __ENV.RESULT_FILE || `capacity-${rate}rps.json`;
 
 if (!Number.isInteger(rate) || rate <= 0) {
@@ -19,6 +20,10 @@ if (!Number.isInteger(preAllocatedVUs) || preAllocatedVUs <= 0) {
 
 if (!Number.isInteger(maxVUs) || maxVUs < preAllocatedVUs) {
   throw new Error("MAX_VUS must be an integer greater than or equal to PREALLOCATED_VUS");
+}
+
+if (cacheMode !== "warm" && cacheMode !== "cold") {
+  throw new Error('CACHE_MODE must be either "warm" or "cold"');
 }
 
 const status200 = new Counter("capacity_status_200");
@@ -55,14 +60,23 @@ export const options = {
 };
 
 export default function () {
-  const response = http.get(`${baseUrl}/api/categories`, {
+  const requestOptions = {
     tags: {
       endpoint: "categories",
       test_target: "staging-api",
       capacity_rate: String(rate),
+      cache_mode: cacheMode,
     },
     timeout: "10s",
-  });
+  };
+
+  // staging Nginx bypasses and does not write cache entries when any Cookie
+  // header is present. The synthetic cookie should be ignored by this public API.
+  if (cacheMode === "cold") {
+    requestOptions.headers = { Cookie: "poudy-capacity-bypass=1" };
+  }
+
+  const response = http.get(`${baseUrl}/api/categories`, requestOptions);
 
   if (response.status === 200) status200.add(1);
   else if (response.status >= 400 && response.status < 500) status4xx.add(1);
@@ -87,6 +101,7 @@ export function handleSummary(data) {
       generatedAt: new Date().toISOString(),
       rate,
       duration,
+      cacheMode,
       preAllocatedVUs,
       maxVUs,
     },
@@ -126,6 +141,7 @@ function textSummary(data) {
     `base_url: ${baseUrl}`,
     `target_rate: ${rate}/s`,
     `duration: ${duration}`,
+    `cache_mode: ${cacheMode}`,
     `requests: ${requests?.count ?? "n/a"}`,
     `throughput: ${requests?.rate?.toFixed(2) ?? "n/a"}/s`,
     `avg: ${durationMetric?.avg?.toFixed(2) ?? "n/a"} ms`,
