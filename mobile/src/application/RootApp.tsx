@@ -6,39 +6,29 @@ import WebAppShell from '@/components/WebAppShell';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
-import type { ShareFailure } from '@/types/externalEntry';
-import { shareFailureMessageOf } from '@/util/shareFailure';
 
-const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL!;
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL!;
+const serviceBaseUrl = process.env.EXPO_PUBLIC_SERVICE_URL!;
 
 export default function RootApp() {
-  const navigation = useWebViewNavigation(webBaseUrl);
+  const navigation = useWebViewNavigation(serviceBaseUrl);
 
+  // 공유한 내용에 열 만한 것이 없는 경우다. 제품을 찾지 못한 경우는 웹이 안내한다.
   const showUnsupportedShare = useCallback(() => {
     Alert.alert('아직 준비 중이에요', '공유한 내용에서 제품을 찾지 못했어요.');
   }, []);
 
-  const showShareFailure = useCallback((reason: ShareFailure) => {
-    const message = shareFailureMessageOf(reason);
-
-    Alert.alert(message.title, message.body);
-  }, []);
-
   useExternalEntry({
-    apiBaseUrl,
     onNavigate: navigation.navigate,
-    onShareFailure: showShareFailure,
     onUnsupportedShare: showUnsupportedShare,
-    webBaseUrl,
+    serviceBaseUrl,
   });
 
-  useQuickActions({ onNavigate: navigation.navigate, webBaseUrl });
+  useQuickActions({ onNavigate: navigation.navigate, serviceBaseUrl });
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <StatusBar barStyle='dark-content' />
-      <WebAppShell webBaseUrl={webBaseUrl} navigation={navigation} />
+      <WebAppShell serviceBaseUrl={serviceBaseUrl} navigation={navigation} />
     </SafeAreaProvider>
   );
 }
