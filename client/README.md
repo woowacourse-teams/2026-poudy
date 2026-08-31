@@ -35,14 +35,14 @@ pnpm install
 cp .env.example .env.local
 ```
 
-| 변수                            | 설명                                                                         |
-| ------------------------------- | ---------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_MOCKING`       | `enabled`일 때만 MSW 목 서버를 켭니다. 실제 API에 붙일 때는 비웁니다.        |
-| `NEXT_PUBLIC_API_BASE_URL`      | API 서버 주소. 목을 쓰는 동안에는 비워 둡니다.                               |
-| `NEXT_PUBLIC_ENVIRONMENT`       | `production`에서만 검색 노출과 Google Analytics를 켭니다.                    |
-| `NEXT_PUBLIC_POSTHOG_KEY`       | PostHog 프로젝트 키. 비우면 PostHog 이벤트를 보내지 않습니다.                |
-| `NEXT_PUBLIC_POSTHOG_HOST`      | PostHog 수집 주소. 비우면 같은 출처의 `/ingest` 프록시를 사용합니다.         |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 웹 데이터 스트림의 `G-` 측정 ID. 비우면 Google 태그를 불러오지 않습니다. |
+| 변수                            | 설명                                                                                          |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_MOCKING`       | `enabled`일 때만 MSW 목 서버를 켭니다. 실제 API에 붙일 때는 비웁니다.                         |
+| `NEXT_PUBLIC_API_BASE_URL`      | API 서버 주소. 목을 쓰는 동안에는 비워 둡니다. 사이트 주소와 다르면 `/api` 프록시가 열립니다. |
+| `NEXT_PUBLIC_ENVIRONMENT`       | `production`에서만 검색 노출과 Google Analytics를 켭니다.                                     |
+| `NEXT_PUBLIC_POSTHOG_KEY`       | PostHog 프로젝트 키. 비우면 PostHog 이벤트를 보내지 않습니다.                                 |
+| `NEXT_PUBLIC_POSTHOG_HOST`      | PostHog 수집 주소. 비우면 같은 출처의 `/ingest` 프록시를 사용합니다.                          |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 웹 데이터 스트림의 `G-` 측정 ID. 비우면 Google 태그를 불러오지 않습니다.                  |
 
 ## 실행
 
