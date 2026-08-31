@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 final class ShareWords {
 
-    private static final Pattern SPACES = Pattern.compile("\\s+");
+    private static final Pattern SPACES = Pattern.compile("[\\s\\p{Z}]+");
     private static final String SPACE = " ";
 
     private ShareWords() {
