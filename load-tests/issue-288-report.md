@@ -18,6 +18,7 @@
 - 선행 설정: #287의 Nginx 캐시 및 systemd 자동 재시작(staging 적용·검증 완료)
 - baseline 원본: [`results/baseline.json`](results/baseline.json)
 - after 원본: [`results/after-287.json`](results/after-287.json)
+- 고정 부하 용량 결과: [`results/capacity/`](results/capacity/)
 - 배포 간섭 결과: [`results/after-287-deployment-interrupted.json`](results/after-287-deployment-interrupted.json)
 
 ## 적용 전후 비교
@@ -48,6 +49,37 @@ after가 1건 적은 것은 k6 arrival-rate 실행의 요청 스케줄링 차이
 
 이번 after에서는 median이 개선됐지만 평균과 p90·p95·p99가 악화됐다. 따라서 이번
 고정 저부하 시나리오에서 캐시의 end-to-end 응답시간 개선은 확인하지 못했다.
+
+## 고정 부하 용량 확인
+
+2026-08-31에 #287이 적용된 staging 공개 API를 대상으로 별도의 고정 부하 테스트를
+실행했다. 각 처리량은 `constant-arrival-rate`로 60초 동안 유지했으며, 캐시가 예열된
+동일한 `GET /api/categories` 경로를 사용했다. 1·3·5·10 req/s를 한 단계씩 실행하고
+각 단계의 k6 결과와 SSM 자원 상태를 확인한 뒤 다음 단계로 넘어갔다.
+
+| 목표 처리량 | 요청 수 | 실제 처리량 | 평균 | p95 | p99 | 오류율 | 200 응답 | interrupted iterations |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 req/s | 61 | 1.02 req/s | 7.92 ms | 10.55 ms | 14.57 ms | 0.00% | 61 | 0 |
+| 3 req/s | 180 | 3.00 req/s | 7.95 ms | 9.90 ms | 22.49 ms | 0.00% | 180 | 0 |
+| 5 req/s | 301 | 5.02 req/s | 7.90 ms | 9.97 ms | 17.42 ms | 0.00% | 301 | 0 |
+| 10 req/s | 600 | 10.00 req/s | 7.72 ms | 9.75 ms | 13.01 ms | 0.00% | 600 | 0 |
+
+모든 단계에서 4xx·5xx·transport failure·timeout은 0건이었다. `dropped_iterations`는
+k6 결과에 별도 샘플이 생성되지 않았고, 각 실행의 종료 상태가 `0 interrupted
+iterations`였으므로 요청 누락 징후는 없었다. `preAllocatedVUs=10`, `maxVUs=20`으로
+설정했으며 모든 단계에서 VU 부족으로 테스트가 중단되지 않았다.
+
+SSM에서 확인한 5 req/s 구간은 CPU idle 98~99%, load average 0.02~0.08, backend RSS
+약 366MB, available memory 931~934MB였고, 10 req/s 구간은 CPU idle 93~99%, load
+average 0.10~0.24, backend RSS 약 366MB, available memory 939~946MB였다. 두 구간 모두
+swap은 0이고 `NRestarts=0`, backend service는 `active`였다.
+
+따라서 현재 설정과 캐시 예열 조건의 공개 `/api/categories` 경로는 10 req/s를 60초
+동안 안정적으로 처리했으며, 이 결과는 최소 처리 용량(lower bound)을 의미한다. 캐시가
+적중된 공개 경로를 측정한 것이므로 Spring Boot backend의 절대 최대 처리량이나 서버가
+견딜 수 있는 최대 한계로 해석하지 않는다. 더 높은 한계가 필요하면 별도 승인 후 15
+req/s 이상을 한 단계씩 확인하고, backend 자체 용량은 캐시 미적중 조건으로 분리해
+측정해야 한다.
 
 ## 현재 확인한 공개 smoke test
 
