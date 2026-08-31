@@ -40,7 +40,7 @@ describe("robots", () => {
       rules: {
         userAgent: "*",
         allow: ["/", "/products/"],
-        disallow: "/products",
+        disallow: ["/api/", "/products"],
       },
       sitemap: "https://poudy.site/sitemap.xml",
       host: "https://poudy.site",
