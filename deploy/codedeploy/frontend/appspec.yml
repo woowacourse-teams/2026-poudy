@@ -7,6 +7,8 @@ files:
     destination: /opt/poudy/frontend
   - source: nginx
     destination: /opt/poudy/frontend-nginx
+  - source: systemd
+    destination: /etc/systemd/system
 
 hooks:
   BeforeInstall:

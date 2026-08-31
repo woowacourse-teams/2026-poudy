@@ -8,6 +8,10 @@ public class ValidSearchKeywordValidator implements ConstraintValidator<ValidSea
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return value == null || !new SearchKeyword(value).isEmpty();
+        if (value == null) {
+            return true;
+        }
+
+        return value.length() <= ValidSearchKeyword.MAX_LENGTH && !new SearchKeyword(value).isEmpty();
     }
 }

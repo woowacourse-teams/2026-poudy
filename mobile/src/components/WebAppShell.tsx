@@ -1,8 +1,12 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, Share, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import {
+  WebView,
+  type WebViewMessageEvent,
+  type WebViewNavigation as NativeWebViewNavigation,
+} from 'react-native-webview';
 
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
@@ -12,6 +16,7 @@ import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
+import { shareText } from '@/util/share';
 
 interface NavigationRequest {
   readonly url: string;
@@ -28,17 +33,24 @@ const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
 export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps) {
   const webViewRef = useRef<WebView>(null);
-  const [initialFoldComplete, setInitialFoldComplete] = useState(false);
   const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
   const splashTransitionStartedRef = useRef(false);
   const webOrigin = useMemo(() => new URL(webBaseUrl).origin, [webBaseUrl]);
-  const handleNavigationChange = useHardwareBack({
+  const handleHardwareNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
     sourceKey: navigation.key,
     sourceUrl: navigation.url,
     webBaseUrl,
     webViewRef,
   });
+
+  const handleNavigationChange = useCallback(
+    (state: NativeWebViewNavigation) => {
+      navigation.handleUrlChange(state.url);
+      handleHardwareNavigationChange(state);
+    },
+    [handleHardwareNavigationChange, navigation],
+  );
 
   const handleShouldStartLoad = useCallback(
     (request: NavigationRequest) => {
@@ -74,12 +86,8 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
     }
 
     if (data.startsWith(SHARE_MESSAGE_PREFIX)) {
-      void Share.share({ message: data.slice(SHARE_MESSAGE_PREFIX.length) }).catch(() => undefined);
+      void shareText(data.slice(SHARE_MESSAGE_PREFIX.length)).catch(() => undefined);
     }
-  }, []);
-
-  const handleInitialFoldComplete = useCallback(() => {
-    setInitialFoldComplete(true);
   }, []);
 
   const handleRootLayout = useCallback(() => {
@@ -98,8 +106,6 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
       });
     });
   }, []);
-
-  const shouldShowLoading = navigation.isLoading || (navigation.key === 0 && !initialFoldComplete);
 
   return (
     <View onLayout={handleRootLayout} style={styles.root}>
@@ -128,11 +134,8 @@ export default function WebAppShell({ webBaseUrl, navigation }: WebAppShellProps
 
         {navigation.failure ? <WebViewError reason={navigation.failure} onRetry={navigation.reload} /> : null}
       </SafeAreaView>
-      {shouldShowLoading && navigation.failure === null ? (
-        <WebViewLoading
-          onInitialFoldComplete={navigation.key === 0 ? handleInitialFoldComplete : undefined}
-          running={loadingAnimationRunning}
-        />
+      {navigation.isLoading && navigation.failure === null ? (
+        <WebViewLoading running={loadingAnimationRunning} />
       ) : null}
     </View>
   );

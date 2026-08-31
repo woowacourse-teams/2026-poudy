@@ -6,8 +6,11 @@ import WebAppShell from '@/components/WebAppShell';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
+import type { ShareFailure } from '@/types/externalEntry';
+import { shareFailureMessageOf } from '@/util/shareFailure';
 
 const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL!;
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 export default function RootApp() {
   const navigation = useWebViewNavigation(webBaseUrl);
@@ -16,11 +19,14 @@ export default function RootApp() {
     Alert.alert('아직 준비 중이에요', '공유한 내용에서 제품을 찾지 못했어요.');
   }, []);
 
-  const showShareFailure = useCallback(() => {
-    Alert.alert('연결에 실패했어요', '네트워크 상태를 확인하고 다시 시도해 주세요.');
+  const showShareFailure = useCallback((reason: ShareFailure) => {
+    const message = shareFailureMessageOf(reason);
+
+    Alert.alert(message.title, message.body);
   }, []);
 
   useExternalEntry({
+    apiBaseUrl,
     onNavigate: navigation.navigate,
     onShareFailure: showShareFailure,
     onUnsupportedShare: showUnsupportedShare,

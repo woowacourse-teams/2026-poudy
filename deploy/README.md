@@ -150,6 +150,35 @@ Nginx 라우팅은 다음 규칙을 사용합니다.
 - 프론트 호스트 확인 → `/nginx-health`
 - 백엔드 호스트 확인 → `/actuator/health`
 
+### Nginx 캐시 정책
+
+`ec2-nginx.conf`는 Nginx 디스크 캐시 영역을 만들고, 프론트 설정은 다음 두 종류만
+캐시합니다.
+
+- `/_next/static/` 및 확장자가 명확한 정적 자산: 브라우저와 Nginx 캐시를 사용합니다.
+  Next.js content hash 자산은 1일, 공개 파일은 1시간의 Nginx TTL을 사용합니다.
+- 정확히 `GET /api/categories`: 200 응답만 30초 동안 캐시합니다. 쿼리 문자열과
+  `Origin`을 캐시 키에 포함하고, `Authorization` 또는 Cookie가 있는 요청은 캐시를
+  우회합니다. `X-Poudy-Cache: HIT|MISS|BYPASS`로 실제 경로를 확인할 수 있습니다.
+
+feedback·product request를 포함한 변경 요청과 나머지 API는 캐시 대상이 아닙니다. S3
+데이터가 갱신되면 최대 30초 동안 categories 응답이 이전 값일 수 있으므로, 더 짧은
+최신성이 필요하면 TTL을 조정하거나 해당 경로를 캐시에서 제외합니다.
+
+설정을 반영할 때는 다음 순서를 지킵니다.
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+curl --fail --silent --show-error -D - \
+  https://poudy.site/api/categories -o /dev/null
+curl --fail --silent --show-error -D - \
+  https://poudy.site/api/categories -o /dev/null
+```
+
+두 번째 요청에 `X-Poudy-Cache: HIT`가 나타나는지 확인합니다. 설정을 되돌릴 때는
+이 커밋의 Nginx 템플릿을 이전 버전으로 복원하고 `nginx -t` 성공 후 reload합니다.
+
 HTTPS 활성화 후 로컬 검증:
 
 ```bash

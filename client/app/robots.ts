@@ -11,7 +11,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: ["/", "/products/"],
-      disallow: "/products",
+      // 검색 엔진에는 공개 화면만 제공하고, 브라우저가 사용하는 원본 API는
+      // 협조적인 크롤러가 직접 순회하지 않도록 한다. robots.txt를 따르지 않는
+      // 수집기는 별도의 rate limit·탐지 정책 대상이다.
+      disallow: ["/api/", "/products"],
     },
     sitemap: absoluteUrl("/sitemap.xml"),
     host: siteUrl().origin,

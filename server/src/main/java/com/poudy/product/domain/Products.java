@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,30 +41,24 @@ public class Products {
     }
 
     public List<Product> search(String keyword) {
-        return search(keyword, MatchedProduct::of);
-    }
-
-    public List<Product> searchByProductName(String keyword) {
-        return search(keyword, MatchedProduct::ofProductName);
-    }
-
-    private List<Product> search(
-        String keyword,
-        BiFunction<SearchableProduct, SearchKeyword, Optional<MatchedProduct>> match
-    ) {
-        return matched(keyword, match).stream()
+        return matched(new ProductSearchQuery(keyword)).stream()
             .map(MatchedProduct::product)
             .toList();
     }
 
-    private List<MatchedProduct> matched(
-        String keyword,
-        BiFunction<SearchableProduct, SearchKeyword, Optional<MatchedProduct>> match
-    ) {
+    public List<Product> searchByProductName(String keyword) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
-
         return searchable.stream()
-            .map(product -> match.apply(product, searchKeyword))
+            .map(product -> MatchedProduct.ofProductName(product, searchKeyword))
+            .flatMap(Optional::stream)
+            .sorted(MatchedProduct.order())
+            .map(MatchedProduct::product)
+            .toList();
+    }
+
+    private List<MatchedProduct> matched(ProductSearchQuery query) {
+        return searchable.stream()
+            .map(product -> product.match(query))
             .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
             .toList();
@@ -95,7 +88,7 @@ public class Products {
     public ProductSuggestionPage suggest(String keyword, int page, int size) {
         requireValidPageCondition(page, size);
 
-        List<MatchedProduct> found = matched(keyword, MatchedProduct::of);
+        List<MatchedProduct> found = matched(new ProductSearchQuery(keyword));
 
         return new ProductSuggestionPage(pageOf(found, page, size), found.size());
     }

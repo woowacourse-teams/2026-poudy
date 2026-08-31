@@ -9,15 +9,31 @@ const DEFAULT_APP_VERSION = '0.1.0';
 const EAS_ACCOUNT = 'poudys-team';
 const EAS_PROJECT_ID = '25e0967e-a114-4253-ad7a-a39063fce314';
 const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_URL;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
 
-if (!WEB_BASE_URL) {
-  throw new Error('EXPO_PUBLIC_WEB_URL is required.');
-}
+const isHttpUrl = (value: string): boolean => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
 
-if (!['http:', 'https:'].includes(new URL(WEB_BASE_URL).protocol)) {
-  throw new Error('EXPO_PUBLIC_WEB_URL must use http or https.');
-}
+const requiredHttpUrl = (name: string, value: string | undefined): string => {
+  if (!value) {
+    throw new Error(`${name} is required.`);
+  }
+
+  if (!isHttpUrl(value)) {
+    throw new Error(`${name} must use http or https.`);
+  }
+
+  return value;
+};
+
+const validatedWebBaseUrl = requiredHttpUrl('EXPO_PUBLIC_WEB_URL', WEB_BASE_URL);
+requiredHttpUrl('EXPO_PUBLIC_API_BASE_URL', API_BASE_URL);
 
 if (process.env.EAS_BUILD_PROFILE === 'production' && !APP_VERSION) {
   throw new Error('POUDY_APP_VERSION is required for production builds.');
@@ -74,7 +90,7 @@ const appNameOf = (bundleIdentifier: string) => {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const bundleIdentifier = process.env.POUDY_BUNDLE_IDENTIFIER ?? DEFAULT_BUNDLE_IDENTIFIER;
-  const appLinkHost = appLinkHostOf(WEB_BASE_URL);
+  const appLinkHost = appLinkHostOf(validatedWebBaseUrl);
 
   return {
     ...config,

@@ -4,12 +4,12 @@ const PATH = '/api/products/share-matches';
 const MAX_TEXT_LENGTH = 500;
 const TIMEOUT_MS = 8000;
 
-export const requestShareMatch = async (text: string, baseUrl: string): Promise<ShareMatchResponse | null> => {
+export const requestShareMatch = async (text: string, apiBaseUrl: string): Promise<ShareMatchResponse | null> => {
   if (text.length === 0 || text.length > MAX_TEXT_LENGTH) {
     return null;
   }
 
-  const url = new URL(PATH, baseUrl);
+  const url = new URL(PATH, apiBaseUrl);
   url.searchParams.set('text', text);
 
   const controller = new AbortController();

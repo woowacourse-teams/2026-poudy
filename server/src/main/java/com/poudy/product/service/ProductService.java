@@ -14,6 +14,7 @@ import com.poudy.product.domain.ProductSuggestionPage;
 import com.poudy.product.domain.Products;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,15 +24,18 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
+    private final ProductSearchLogger searchLogger;
 
     public ProductService(
         ProductRepository productRepository,
         Categories categories,
-        ExcludeCodeIngredients excludeCodeIngredients
+        ExcludeCodeIngredients excludeCodeIngredients,
+        ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
+        this.searchLogger = searchLogger;
     }
 
     public ProductPage findProducts(
@@ -40,11 +44,23 @@ public class ProductService {
         int page,
         int size
     ) {
-        return products().find(
-            filterOf(query),
-            sort,
-            page,
-            size
+        ProductFilter filter = filterOf(query);
+        Products products = products();
+
+        if (query.keyword() == null || page > 0) {
+            return products.find(filter, sort, page, size);
+        }
+
+        return searchLogger.analyze(
+            new ProductSearchLogger.Context(
+                query.keyword(),
+                page,
+                size,
+                ProductSort.orDefault(sort),
+                hasFilters(query)
+            ),
+            () -> products.find(filter, sort, page, size),
+            ProductPage::totalElements
         );
     }
 
@@ -86,5 +102,15 @@ public class ProductService {
             query.oilLevels().stream().map(OilLevel::new).toList(),
             ingredientFilter
         );
+    }
+
+    private static boolean hasFilters(ProductQuery query) {
+        return !query.categoryIds().isEmpty()
+            || !query.brandIds().isEmpty()
+            || !query.moistureLevels().isEmpty()
+            || !query.oilLevels().isEmpty()
+            || !query.includeIngredientIds().isEmpty()
+            || !query.excludeIngredientIds().isEmpty()
+            || !query.excludeCodes().isEmpty();
     }
 }

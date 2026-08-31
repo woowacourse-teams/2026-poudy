@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
   fetchBrand: vi.fn(),
+  fetchCategories: vi.fn(),
   fetchProductDetail: vi.fn(),
   fetchIngredientDetail: vi.fn(),
 }));
@@ -96,6 +97,11 @@ describe("색인 메타데이터", () => {
       description: "카테고리별 화장품과 전성분 정보를 확인해 보세요.",
       alternates: { canonical: "/categories" },
     });
+    expect(brandsMetadata).toMatchObject({
+      title: "브랜드",
+      description: "브랜드별 화장품과 전성분 정보를 확인해 보세요.",
+      alternates: { canonical: "/brands" },
+    });
     expect(savedMetadata).toMatchObject({
       title: "보관함",
       description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
@@ -108,13 +114,27 @@ describe("색인 메타데이터", () => {
     expect(savedMetadata.robots).toBeUndefined();
   });
 
-  it("카테고리 상세 canonical 에 ID만 남긴다", async () => {
+  it("카테고리 상세에 카테고리 이름으로 고유한 제목과 설명을 만든다", async () => {
+    api.fetchCategories.mockResolvedValue({
+      items: [
+        {
+          id: 4,
+          name: "메이크업",
+          children: [{ id: 42, name: "립 메이크업" }],
+        },
+      ],
+    });
+
     const metadata = await categoryMetadata({
       params: Promise.resolve({ categoryId: "42" }),
       searchParams: Promise.resolve({}),
     });
 
-    expect(metadata.alternates?.canonical).toBe("/categories/42");
+    expect(metadata).toMatchObject({
+      title: "립 메이크업 화장품",
+      description: "립 메이크업 카테고리의 화장품과 전성분 정보를 확인해 보세요.",
+      alternates: { canonical: "/categories/42" },
+    });
   });
 });
 
@@ -151,6 +171,7 @@ describe("공유 메타데이터", () => {
     expect(markup).toContain('"inLanguage":"ko-KR"');
     expect(markup).toContain('"@type":"Organization"');
     expect(markup).toContain('"@id":"http://localhost:3000/#organization"');
+    expect(markup).toContain('"alternateName":"파우디"');
     expect(markup).toContain('"logo":"http://localhost:3000/favicon.png"');
     expect(markup).toContain('"sameAs":["https://www.instagram.com/poudy.official"]');
     expect(markup).toContain(`"description":"${SITE_DESCRIPTION}"`);

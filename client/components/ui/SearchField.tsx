@@ -2,6 +2,8 @@
 
 import { Icon } from "./icons/Icon";
 
+export const SEARCH_KEYWORD_MAX_LENGTH = 100;
+
 type SearchFieldProps = {
   readonly value: string;
   readonly onChange: (value: string) => void;
@@ -39,6 +41,7 @@ export function SearchField({ value, onChange, placeholder, label, onSubmit, onC
         aria-label={label}
         value={value}
         placeholder={placeholder}
+        maxLength={SEARCH_KEYWORD_MAX_LENGTH}
         onChange={(event) => onChange(event.target.value)}
         onCompositionStart={() => onChangeComposing?.(true)}
         /*

@@ -21,6 +21,7 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
+import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -28,7 +29,11 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+@ExtendWith(OutputCaptureExtension.class)
 @DisplayName("제품 서비스")
 class ProductServiceTest {
 
@@ -44,7 +49,8 @@ class ProductServiceTest {
         ProductService service = new ProductService(
             repository,
             categories(product.category()),
-            excludeCodeIngredients
+            excludeCodeIngredients,
+            new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -79,7 +85,8 @@ class ProductServiceTest {
         ProductService service = new ProductService(
             repository,
             categories(product.category()),
-            excludeCodeIngredients
+            excludeCodeIngredients,
+            new ProductSearchLogger()
         );
 
         ProductDetail detail = service.findDetail(1L);
@@ -100,13 +107,78 @@ class ProductServiceTest {
         ProductService service = new ProductService(
             repository,
             Categories.from(List.of(parent, child)),
-            excludeCodeIngredients
+            excludeCodeIngredients,
+            new ProductSearchLogger()
         );
 
         assertThatThrownBy(() -> service.findDetail(999L))
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("제품 검색을 필터 적용 여부와 함께 기록한다")
+    void logsProductSearch(CapturedOutput output) {
+        Product product = product(1L);
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
+        ProductService service = new ProductService(
+            repository,
+            categories(product.category()),
+            excludeCodeIngredients,
+            new ProductSearchLogger()
+        );
+        ProductQuery query = new ProductQuery(
+            "제품",
+            null,
+            List.of(product.brand().id()),
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+
+        ProductPage found = service.findProducts(query, ProductSort.NAME_ASC, 0, 20);
+
+        assertThat(found.totalElements()).isEqualTo(1);
+        assertThat(output).contains(
+            "searchType=PRODUCT_SEARCH",
+            "keyword=\"제품\"",
+            "page=0",
+            "sort=NAME_ASC",
+            "filtered=true",
+            "resultCount=1",
+            "outcome=SUCCESS"
+        );
+    }
+
+    @Test
+    @DisplayName("검색어 없는 목록, 후속 페이지, 개수와 자동완성 조회는 검색 로그를 남기지 않는다")
+    void skipsNonSearchAndCountLogs(CapturedOutput output) {
+        Product product = product(1L);
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
+        ProductService service = new ProductService(
+            repository,
+            categories(product.category()),
+            excludeCodeIngredients,
+            new ProductSearchLogger()
+        );
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null);
+
+        service.findProducts(browse, ProductSort.NAME_ASC, 0, 20);
+        service.findProducts(search, ProductSort.PRICE_DESC, 1, 20);
+        service.countProducts(search);
+        service.suggestProducts("제품", 0, 20);
+
+        assertThat(output).doesNotContain("event=search_completed");
     }
 
     private static Product product(Long id) {
