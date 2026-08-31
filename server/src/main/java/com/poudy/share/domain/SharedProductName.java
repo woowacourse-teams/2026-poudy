@@ -187,7 +187,7 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
     private static Optional<Product> confirmSimilar(List<Product> candidates, String sharedName) {
         List<SimilarityCandidate> similar = candidates.stream()
             .filter(product -> hasCompatibleNewMarker(sharedName, product.name()))
-            .filter(product -> hasNoAdditionalVersionSign(sharedName, product.name()))
+            .filter(product -> hasSameVersionSign(sharedName, product.name()))
             .filter(product -> hasSamePrimaryForm(sharedName, product.name()))
             .filter(product -> hasSameScopes(sharedName, product.name()))
             .filter(product -> isSimilarName(sharedName, product.name()))
@@ -236,8 +236,8 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
         return startsWithNewProductMarker(ShareWords.of(productName));
     }
 
-    private static boolean hasNoAdditionalVersionSign(String sharedName, String productName) {
-        return !normalizedName(sharedName).contains("+") || normalizedName(productName).contains("+");
+    private static boolean hasSameVersionSign(String sharedName, String productName) {
+        return normalizedName(sharedName).contains("+") == normalizedName(productName).contains("+");
     }
 
     private static boolean hasSamePrimaryForm(String sharedName, String productName) {
