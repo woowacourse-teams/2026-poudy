@@ -42,6 +42,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'com.tngtech.archunit:archunit-junit6:1.5.0'
 }
 
 spotless {
