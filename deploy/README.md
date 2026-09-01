@@ -6,7 +6,8 @@ MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다
 
 - 프론트엔드: Nginx `:443` → Next.js standalone `127.0.0.1:3000`
 - HTTP `:80` → HTTPS `:443` 리다이렉트
-- 프론트엔드 Nginx: `/api/*` → 백엔드 EC2 사설 IP `:8080`
+- 공개 브라우저 API: Nginx `:443/api/*` → 백엔드 EC2 사설 IP `:8080`
+- Next.js 서버 API: Nginx `127.0.0.1:8081/api/*` → 같은 백엔드 upstream
 - 백엔드: Spring Boot JAR `:8080` → systemd
 - 데이터: `/opt/poudy/data`에 S3 JSON을 다운로드
 
@@ -39,7 +40,8 @@ EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고�
 ## EC2 프론트 구성
 
 프론트 EC2에서는 Nginx를 호스트에 설치하고 `nginx/ec2-frontend.conf`를 설정 파일로
-사용합니다. Next.js standalone 프로세스는 `127.0.0.1:3000`에만 바인딩합니다.
+사용합니다. Next.js standalone 프로세스는 `127.0.0.1:3000`에만 바인딩하고,
+서버 컴포넌트와 런타임 sitemap은 `127.0.0.1:8081`의 로컬 Nginx를 사용합니다.
 
 초기화 시 `/etc/letsencrypt/live/poudy.site/fullchain.pem`과
 `privkey.pem`이 모두 없으면 HTTP bootstrap 설정을 사용합니다. 이 상태에서는
@@ -102,14 +104,15 @@ sudo certbot renew --deploy-hook \
 
 Nginx 라우팅은 다음 규칙을 사용합니다.
 
-- `/api/*` → 백엔드 EC2 사설 IP `8080`
+- 공개 `/api/*` → 백엔드 EC2 사설 IP `8080`, 사용자 IP별 요청 제한 적용
+- 로컬 `127.0.0.1:8081/api/*` → 같은 백엔드 upstream, 공개 요청 제한 미적용
 - 그 외 요청 → 프론트 Next.js `3000`
 - 프론트 호스트 확인 → `/nginx-health`
 - 백엔드 호스트 확인 → `/actuator/health`
 
 ### Nginx 캐시 정책
 
-`ec2-nginx.conf`는 Nginx 디스크 캐시 영역을 만들고, 프론트 설정은 다음 두 종류만
+`ec2-nginx.conf`는 Nginx 디스크 캐시 영역을 만들고, 프론트 설정은 다음 세 종류만
 캐시합니다.
 
 - `/_next/static/` 및 확장자가 명확한 정적 자산: 브라우저와 Nginx 캐시를 사용합니다.
@@ -117,10 +120,27 @@ Nginx 라우팅은 다음 규칙을 사용합니다.
 - 정확히 `GET /api/categories`: 200 응답만 30초 동안 캐시합니다. 쿼리 문자열과
   `Origin`을 캐시 키에 포함하고, `Authorization` 또는 Cookie가 있는 요청은 캐시를
   우회합니다. `X-Poudy-Cache: HIT|MISS|BYPASS`로 실제 경로를 확인할 수 있습니다.
+- `/sitemap-pages.xml`, `/sitemap-products.xml`, `/sitemap-ingredients.xml`: 완성된 200 XML만
+  `poudy_sitemaps` 파일 캐시에 저장합니다. 제품은 12시간, 페이지·성분은 24시간
+  유지하며 만료 갱신이나 일시적인 Next.js 5xx에는 기존 정상 XML을 제공합니다.
+  cache key는 query와 요청 헤더를 제외한 `sitemap:$uri`이고, Cookie·Authorization·
+  RSC 관련 헤더는 upstream에 전달하지 않습니다.
 
 feedback·product request를 포함한 변경 요청과 나머지 API는 캐시 대상이 아닙니다. S3
 데이터가 갱신되면 최대 30초 동안 categories 응답이 이전 값일 수 있으므로, 더 짧은
 최신성이 필요하면 TTL을 조정하거나 해당 경로를 캐시에서 제외합니다.
+
+### Nginx 요청 제한 정책
+
+공개 server block은 IP별로 모든 `/api/*`를 `30r/s`, `burst=120`으로 제한합니다.
+자동완성과 제품 개수 API는 이 일반 제한만 적용합니다. 사용자 입력 과정에서 호출량이 많고
+여러 사용자가 공인 IP를 공유할 수 있으므로 별도 낮은 한도를 중복 적용하지 않습니다. 공유
+매칭 API만 추가로 `10r/s`, `burst=30` 제한을 받습니다. 두 제한 모두 `nodelay`이며 burst를
+넘으면 429를 반환합니다. Spring MVC가 같은 공유 매칭 API로 처리하는 세미콜론 path
+parameter도 추가 제한에 포함됩니다.
+HTML/RSC 페이지와 sitemap에는 별도 요청 제한을 적용하지 않습니다.
+
+access log는 query string이 없는 `$uri`, listener port와 `$limit_req_status`를 기록합니다.
 
 설정을 반영할 때는 다음 순서를 지킵니다.
 
@@ -142,13 +162,66 @@ HTTPS 활성화 후 로컬 검증:
 curl -I http://poudy.site
 curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/nginx-health
 curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/api/categories
+curl http://127.0.0.1:8081/api/categories
+ss -ltnp '( sport = :8081 )'
+curl -k --resolve poudy.site:443:127.0.0.1 \
+  -D - -o /dev/null https://poudy.site/sitemap-pages.xml
+curl -k --resolve poudy.site:443:127.0.0.1 \
+  -H 'Cookie: poudy_sitemap_probe=1' \
+  -H 'Authorization: Bearer deployment-probe' \
+  -H 'RSC: 1' \
+  -D - -o /dev/null 'https://poudy.site/sitemap-pages.xml?probe=1'
 ```
+
+`ss`는 `127.0.0.1:8081`만 보여야 하며 `0.0.0.0:8081`, `[::]:8081` 또는 프론트
+사설 IP의 8081이 나타나면 배포하지 않습니다.
+첫 sitemap 요청이 `MISS`였다면 두 번째 요청은 `X-Poudy-Cache: HIT`여야 하며,
+`Set-Cookie`와 RSC 관련 `Vary`가 응답에 없어야 합니다. cold sitemap 생성 시간이
+60초에 근접하면 실제 p99와 검증한 최악 시간에 여유를 더해 `proxy_read_timeout`,
+`proxy_cache_lock_age`, `proxy_cache_lock_timeout`을 함께 조정합니다.
+
+백엔드가 세미콜론 경로를 같은 API로 처리하는지 로컬 listener에서 비교합니다.
+
+```bash
+curl --fail --silent --show-error \
+  'http://127.0.0.1:8081/api/products/share-matches?text=%ED%85%8C%EC%8A%A4%ED%8A%B8' \
+  --output /tmp/poudy-share-match-canonical.json
+curl --fail --silent --show-error \
+  'http://127.0.0.1:8081/api/products;probe=1/share-matches;probe=1?text=%ED%85%8C%EC%8A%A4%ED%8A%B8' \
+  --output /tmp/poudy-share-match-semicolon.json
+sha256sum /tmp/poudy-share-match-canonical.json /tmp/poudy-share-match-semicolon.json
+```
+
+두 hash가 같아야 합니다. 공개 추가 제한은 낮은 트래픽 시간에 프론트 EC2 loopback으로
+제한된 burst만 보내 확인합니다.
+
+```bash
+seq 1 60 | xargs -P 60 -I % curl --insecure --resolve poudy.site:443:127.0.0.1 \
+  --silent --output /dev/null --write-out '%{http_code}\n' \
+  'https://poudy.site/api/products;probe=1/share-matches;probe=1?text=%ED%85%8C%EC%8A%A4%ED%8A%B8' \
+  | sort | uniq -c
+
+sleep 10
+
+seq 1 160 | xargs -P 160 -I % curl --insecure --resolve poudy.site:443:127.0.0.1 \
+  --silent --output /dev/null --write-out '%{http_code}\n' \
+  'https://poudy.site/api/brands' \
+  | sort | uniq -c
+```
+
+각 실행에서 정상 응답과 429가 함께 나타나야 합니다. 이어서 access log에서
+`listener=443`, `limit_req=REJECTED`와 query string이 기록되지 않은 것을 확인합니다.
 
 프론트 EC2 초기화 후 백엔드의 사설 IP를 전달해 프록시 대상을 설정합니다.
 
 ```bash
 sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
 ```
+
+이 스크립트는 공개·로컬 listener가 공유하는 `poudy_backend` upstream만 변경합니다.
+Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도로 갱신하지 않습니다.
+`poudy-frontend.service`는 `/etc/poudy/frontend.env`에 같은 키가 있더라도 `ExecStart`의
+`/usr/bin/env`로 `POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081`을 최종 강제합니다.
 
 공용 `project-public` 보안 그룹을 사용해야 해 `8080`에 인터넷 전체 허용 규칙이
 남아 있을 수 있습니다. 따라서 Nginx만으로 외부 직접 접근이 차단된다고 가정하지

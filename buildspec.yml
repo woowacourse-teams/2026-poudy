@@ -4,8 +4,8 @@ env:
   variables:
     PNPM_VERSION: "11.21.0"
     # Next.js의 NEXT_PUBLIC_* 값은 빌드 결과물에 포함되므로 CodeBuild에서 지정합니다.
-    # sitemap.xml은 빌드 중 API 데이터를 읽어 정적으로 생성합니다. 외부 origin을
-    # 지정해 빌드 환경에서도 Nginx의 /api/* 중계를 이용합니다.
+    # 브라우저 번들은 공개 Nginx의 /api/*를 사용합니다. 서버 컴포넌트와 런타임
+    # sitemap은 EC2에서 systemd가 주입하는 로컬 전용 API 주소를 사용합니다.
     NEXT_PUBLIC_API_MOCKING: ""
     NEXT_PUBLIC_API_BASE_URL: "https://poudy.site"
     NEXT_PUBLIC_ENVIRONMENT: "production"

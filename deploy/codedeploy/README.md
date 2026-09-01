@@ -18,9 +18,9 @@ store와 각 action의 세부 설정은 AWS 콘솔 구성이 기준입니다.
 - Build input artifact: `SourceArtifact`
 - Build output artifacts: `backend`, `frontend`
 - Deploy action `fe-deploy`: CodeDeploy 애플리케이션 `poudy-codedeploy`,
-배포 그룹 `poudy-frontend-dg`, input artifact `frontend`
+  배포 그룹 `poudy-frontend-dg`, input artifact `frontend`
 - Deploy action `be-deploy`: CodeDeploy 애플리케이션 `poudy-codedeploy`,
-배포 그룹 `poudy-backend-dg`, input artifact `backend`
+  배포 그룹 `poudy-backend-dg`, input artifact `backend`
 
 > 배포용 GitHub Actions 워크플로는 사용하지 않습니다. GitHub Actions에는 PR 검증만
 > 남기고, 운영 산출물 생성과 EC2 배포는 CodeBuild·CodeDeploy가 담당합니다.
@@ -128,11 +128,12 @@ s3://techcourse-project-2026/poudy/staging/
 시도가 1:1로 붙고, 어긋났을 때 대조할 근거는 배포된 `app.jar` 매니페스트의
 `Implementation-Version`입니다.
 
-`buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. `NEXT_PUBLIC_API_BASE_URL`은
-비워 두어 브라우저가 현재 프론트 origin을 사용하게 하며, 프론트 EC2 Nginx가 `/api/*`를
-백엔드 EC2의 사설 IP로 전달합니다. `NEXT_PUBLIC_POSTHOG_KEY`와 `NEXT_PUBLIC_GA_MEASUREMENT_ID`처럼
-값이 필요한 환경값은 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager 연동으로
-주입합니다.
+`buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. 브라우저 번들의
+`NEXT_PUBLIC_API_BASE_URL`은 `https://poudy.site`로 고정하고, 서버 컴포넌트와
+런타임 sitemap은 systemd의 `POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081`을
+사용합니다. `NEXT_PUBLIC_POSTHOG_KEY`와 `NEXT_PUBLIC_GA_MEASUREMENT_ID`처럼 값이
+필요한 환경값은 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager
+연동으로 주입합니다.
 
 프론트엔드 secondary artifact에는 Nginx main 설정·서버 설정 템플릿과 systemd unit이
 포함됩니다. CodeDeploy
@@ -142,11 +143,20 @@ s3://techcourse-project-2026/poudy/staging/
 `/etc/letsencrypt/live/poudy.site` 경로 때문에 실패하지 않습니다.
 
 이번 Nginx 템플릿에는 `/_next/static/` 정적 자산 캐시와 정확히
-`GET /api/categories`에만 적용되는 30초 캐시가 포함됩니다. `Origin`은 캐시 키에
-포함되고 Cookie·Authorization 요청은 우회하므로 CORS 응답이나 사용자별 응답을
-재사용하지 않습니다. CodeDeploy의 `ApplicationStart` 훅이 Nginx main 설정·서버 설정·
-캐시 디렉터리·systemd unit을 설치한 뒤 `nginx -t`와 reload를 수행하며, Nginx 검증
-실패 시 기존 설정을 복구합니다.
+`GET /api/categories`에만 적용되는 30초 캐시가 포함됩니다. 공개 cache key는 `Origin`을
+포함하고 Cookie·Authorization 요청은 우회하며, 로컬 listener는 별도의 `internal:`
+cache key를 사용합니다. 세 runtime sitemap은 별도의 `poudy_sitemaps` 파일 캐시에서
+제품 12시간, 페이지·성분 24시간 동안 완성된 200 XML만 보관합니다. query·Host·Cookie·
+Authorization·RSC 헤더는 cache variant를 만들지 않으며 만료 갱신과 일시적인 5xx에는
+기존 정상 XML을 제공합니다. CodeDeploy의 `ApplicationStart` 훅은 Nginx main 설정·
+server 설정·캐시 디렉터리·systemd unit을 설치하고 `nginx -t`를 통과시킨 뒤 Nginx를
+먼저, Next.js를 나중에 재시작합니다. Nginx 검증 실패 시 기존 설정을 복구합니다.
+
+`ValidateService`는 실행 중인 Node MainPID 환경에서 로컬 API origin이 최종 강제됐는지,
+`:8081`이 loopback에만 열렸는지 확인합니다. 이어서 가장 작은 페이지 sitemap을 한 번만
+warm-up하고 query·Cookie·Authorization·RSC 헤더를 바꾼 요청이 같은 cache entry를
+재사용하는지 확인합니다. 운영 캐시를 삭제하거나 제품·성분 전체를 매 배포마다 다시
+생성하지 않습니다.
 
 인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
 
@@ -157,7 +167,8 @@ sudo ./deploy/scripts/enable-frontend-https.sh
 
 이후 HTTP `:80`은 ACME challenge를 제외하고 HTTPS `:443`으로 리다이렉트하며,
 HTTPS 서버의 `/api/*`와 `/` 프록시 경로는 각각 기존 백엔드 사설 IP와 Next.js
-standalone을 유지합니다.
+standalone을 유지합니다. 같은 Nginx 프로세스의 `127.0.0.1:8081` listener는
+Next.js 서버 요청만 `poudy_backend` upstream으로 전달합니다.
 
 ## CodeDeploy
 
