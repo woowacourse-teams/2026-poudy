@@ -1,13 +1,13 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
 /**
- * 서버 컴포넌트의 fetch 는 상대 경로를 쓸 수 없다. 목을 쓰는 동안에는
- * NEXT_PUBLIC_API_BASE_URL 이 비어 있으므로 로컬 주소를 기본값으로 채운다.
+ * 브라우저는 공개 Nginx를, 서버 컴포넌트와 런타임 sitemap은 프론트 EC2의
+ * 로컬 전용 Nginx listener를 사용한다. 서버 전용 값은 standalone 프로세스가
+ * 시작될 때 주입되므로 함수 실행 시점에 읽는다.
  */
 const origin = () => {
-  if (baseUrl) return baseUrl;
-  if (typeof window !== "undefined") return window.location.origin;
-  return `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+  const publicBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+  if (typeof window !== "undefined") return publicBaseUrl || window.location.origin;
+  return process.env.POUDY_SERVER_API_BASE_URL || publicBaseUrl || `http://127.0.0.1:${process.env.PORT ?? 3000}`;
 };
 
 export const apiUrl = (path: string, query?: URLSearchParams) => {
