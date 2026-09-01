@@ -16,6 +16,7 @@ import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductPages } from "@/lib/hooks/useProductPages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
+import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 
 type ProductListProps = {
   readonly categories: readonly CategoryResponse[];
@@ -177,7 +178,8 @@ export function ProductList({
         ) : (
           <ul className="divide-y divide-divider">
             {items.map((product) => (
-              <li key={product.id}>
+              // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
+              <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>
                 <ProductCard
                   product={product}
                   saved={isSaved(product.id)}
