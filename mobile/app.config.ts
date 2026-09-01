@@ -134,6 +134,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       './plugins/withQuickActionIcons',
+      './plugins/withAndroidReleaseOptimization.ts',
       [
         'expo-dev-client',
         {
