@@ -15,7 +15,7 @@ Environment=NODE_ENV=production
 Environment=HOSTNAME=127.0.0.1
 Environment=PORT=3000
 Environment=NODE_OPTIONS=--max-old-space-size=512
-ExecStart=/opt/node/bin/node /opt/poudy/frontend/server.js
+ExecStart=/usr/bin/env POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081 /opt/node/bin/node /opt/poudy/frontend/server.js
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=20s

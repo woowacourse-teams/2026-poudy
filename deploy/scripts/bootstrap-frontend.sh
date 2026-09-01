@@ -95,6 +95,7 @@ install \
 
 install -d -o nginx -g nginx -m 0750 \
     /var/cache/nginx/poudy_categories \
+    /var/cache/nginx/poudy_sitemaps \
     /var/cache/nginx/poudy_static
 
 if [[ -f /etc/nginx/conf.d/default.conf ]]; then
