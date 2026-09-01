@@ -38,6 +38,8 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - `/etc/poudy/frontend.env` 생성
 - `poudy-frontend.service` 설치 및 enable
 - `ec2-nginx.conf`와 `ec2-frontend.conf` 설치
+- Next.js 서버 요청용 `127.0.0.1:8081` 로컬 Nginx listener 구성
+- categories·정적 자산·runtime sitemap 전용 Nginx 캐시 디렉터리 생성
 - `/var/www/letsencrypt` ACME webroot 생성
 - 백엔드 프록시 기본 설정 설치
 - Nginx 설정 검증 및 enable/start
@@ -53,7 +55,9 @@ cd /opt/poudy/repository
 sudo ./deploy/scripts/configure-frontend-backend.sh <백엔드-사설-IP>
 ```
 
-이 명령은 `/api/*` 요청의 전달 대상을 변경하고 Nginx를 reload합니다.
+이 명령은 공개·로컬 `/api/*`가 함께 사용하는 `poudy_backend` upstream만 변경하고
+Nginx를 reload합니다. Next.js는 항상 `http://127.0.0.1:8081`을 사용하므로 백엔드
+주소가 바뀌어도 `/etc/poudy/frontend.env`를 수정하지 않습니다.
 
 ## HTTPS와 인증서
 

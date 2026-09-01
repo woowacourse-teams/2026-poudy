@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
   fetchBrands: vi.fn(),
@@ -10,15 +10,16 @@ const api = vi.hoisted(() => ({
 vi.mock("@/lib/api/products", () => api);
 
 import robots from "@/app/robots";
+import { dynamic as ingredientSitemapDynamic, GET as ingredientsSitemap } from "@/app/sitemap-ingredients.xml/route";
+import { dynamic as pageSitemapDynamic, GET as pagesSitemap } from "@/app/sitemap-pages.xml/route";
+import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/sitemap-products.xml/route";
 import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
-import { revalidate as ingredientSitemapRevalidate } from "@/app/sitemaps/ingredients.xml/route";
-import { revalidate as pageSitemapRevalidate } from "@/app/sitemaps/pages.xml/route";
-import { revalidate as productSitemapRevalidate } from "@/app/sitemaps/products.xml/route";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import { ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
 
 afterEach(() => {
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
+  vi.resetAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -55,33 +56,69 @@ describe("robots", () => {
 });
 
 describe("sitemap", () => {
-  it("인덱스가 분리된 사이트맵을 절대 주소로 연결한다", async () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
+  });
 
+  it("인덱스가 루트의 분할 사이트맵을 절대 주소로 연결한다", async () => {
     const response = sitemapIndex();
     const xml = await response.text();
 
+    expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
     expect(xml).toContain("<sitemapindex");
-    expect(xml).toContain("<loc>https://poudy.site/sitemaps/pages.xml</loc>");
-    expect(xml).toContain("<loc>https://poudy.site/sitemaps/products.xml</loc>");
-    expect(xml).toContain("<loc>https://poudy.site/sitemaps/ingredients.xml</loc>");
+    expect(xml).toContain("<loc>https://poudy.site/sitemap-pages.xml</loc>");
+    expect(xml).toContain("<loc>https://poudy.site/sitemap-products.xml</loc>");
+    expect(xml).toContain("<loc>https://poudy.site/sitemap-ingredients.xml</loc>");
   });
 
-  it("제품은 12시간, 나머지 주소와 성분은 24시간 간격으로 다시 조회한다", () => {
-    expect(productSitemapRevalidate).toBe(43200);
-    expect(pageSitemapRevalidate).toBe(86400);
-    expect(ingredientSitemapRevalidate).toBe(86400);
+  it("분할 사이트맵은 Next.js cache 없이 런타임에 만든다", () => {
+    expect([pageSitemapDynamic, productSitemapDynamic, ingredientSitemapDynamic]).toEqual([
+      "force-dynamic",
+      "force-dynamic",
+      "force-dynamic",
+    ]);
+  });
+
+  it("비운영 환경에서는 API를 부르기 전에 모든 사이트맵을 404로 막는다", async () => {
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "staging");
+
+    const responses = await Promise.all([sitemapIndex(), pagesSitemap(), productsSitemap(), ingredientsSitemap()]);
+
+    expect(responses.map(({ status }) => status)).toEqual([404, 404, 404, 404]);
+    expect(responses.map((response) => response.headers.get("Cache-Control"))).toEqual([
+      "no-store",
+      "no-store",
+      "no-store",
+      "no-store",
+    ]);
+    expect(api.fetchCategories).not.toHaveBeenCalled();
+    expect(api.fetchBrands).not.toHaveBeenCalled();
+    expect(api.fetchProducts).not.toHaveBeenCalled();
+    expect(api.fetchIngredients).not.toHaveBeenCalled();
+  });
+
+  it("운영 분할 사이트맵이 완성된 API 결과만 XML 200으로 반환한다", async () => {
+    api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
+    api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchProducts.mockResolvedValue({ items: [{ id: 30 }], pagination: { hasNext: false } });
+    api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: false } });
+
+    const responses = await Promise.all([pagesSitemap(), productsSitemap(), ingredientsSitemap()]);
+    const xml = await Promise.all(responses.map((response) => response.text()));
+
+    expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
+    expect(xml[0]).toContain("<loc>https://poudy.site/categories/10</loc>");
+    expect(xml[0]).toContain("<loc>https://poudy.site/brands/20</loc>");
+    expect(xml[1]).toContain("<loc>https://poudy.site/products/30</loc>");
+    expect(xml[2]).toContain("<loc>https://poudy.site/ingredients/40</loc>");
   });
 
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchProducts.mockResolvedValue({
-      items: [{ id: 30 }],
-      pagination: { hasNext: false },
-    });
+    api.fetchProducts.mockResolvedValue({ items: [{ id: 30 }], pagination: { hasNext: false } });
     api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({
         items: page === 0 ? [{ id: 40 }] : [{ id: 5001 }],
@@ -110,36 +147,51 @@ describe("sitemap", () => {
     expect(api.fetchProducts).toHaveBeenCalledTimes(1);
   });
 
-  it("뒤쪽 제품 페이지가 실패해도 앞에서 찾은 제품 주소는 유지한다", async () => {
+  it("카테고리나 브랜드 API가 실패하면 페이지 사이트맵을 503으로 반환한다", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
+    api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+
+    const response = await pagesSitemap();
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("");
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Retry-After")).toBe("300");
+    expect(errorLog).toHaveBeenCalledOnce();
+  });
+
+  it("뒤쪽 제품 페이지가 실패하면 부분 XML 대신 503을 반환한다", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     api.fetchProducts.mockImplementation(({ page }: { readonly page: number }) => {
-      if (page === 0) {
-        return Promise.resolve({ items: [{ id: 30 }], pagination: { hasNext: true } });
-      }
+      if (page === 0) return Promise.resolve({ items: [{ id: 30 }], pagination: { hasNext: true } });
       return Promise.reject(new Error("second product page unavailable"));
     });
 
-    const entries = await productEntries();
+    const response = await productsSitemap();
 
-    expect(entries.map(({ url }) => url)).toContain("http://localhost:3000/products/30");
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("");
+    expect(api.fetchProducts).toHaveBeenCalledTimes(2);
+    expect(errorLog).toHaveBeenCalledOnce();
   });
 
-  it("API가 모두 실패해도 고정 주소는 유지한다", async () => {
-    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
-    api.fetchBrands.mockRejectedValue(new Error("brands unavailable"));
-    api.fetchProducts.mockRejectedValue(new Error("products unavailable"));
-    api.fetchIngredients.mockRejectedValue(new Error("ingredients unavailable"));
+  it("뒤쪽 성분 페이지가 실패하면 부분 XML 대신 503을 반환한다", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) => {
+      if (page === 0) return Promise.resolve({ items: [{ id: 40 }], pagination: { hasNext: true } });
+      return Promise.reject(new Error("second ingredient page unavailable"));
+    });
 
-    await expect(pageEntries()).resolves.toHaveLength(6);
-    await expect(productEntries()).resolves.toHaveLength(0);
-    await expect(ingredientEntries()).resolves.toHaveLength(0);
+    const response = await ingredientsSitemap();
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("");
+    expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
+    expect(errorLog).toHaveBeenCalledOnce();
   });
 
-  /*
-   * 예전에는 제품 10 페이지·성분 ID 10000 번에서 끊겨 그 뒤가 조용히 빠졌다.
-   * 이제 상한은 색인 범위가 아니라 안전장치라, 그 자리를 넘겨도 계속 따라가야 한다.
-   */
-  it("예전 상한을 넘겨도 hasNext 를 따라 계속 싣는다", async () => {
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
+  it("예전 상한을 넘겨도 hasNext를 따라 계속 싣는다", async () => {
     api.fetchProducts.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({ items: [{ id: 1000 + page }], pagination: { hasNext: page < 20 } }),
     );
@@ -149,24 +201,23 @@ describe("sitemap", () => {
 
     const urls = (await Promise.all([productEntries(), ingredientEntries()])).flat().map(({ url }) => url);
 
-    // 제품 11 번째 페이지는 예전 상한(10 페이지) 밖이다.
     expect(api.fetchProducts).toHaveBeenCalledTimes(21);
     expect(urls).toContain("https://poudy.site/products/1020");
-    // 성분 101 번째 페이지는 예전 상한(ID 10000) 밖이다.
     expect(api.fetchIngredients).toHaveBeenCalledTimes(121);
     expect(urls).toContain("https://poudy.site/ingredients/2120");
   });
 
-  it("뒤쪽 성분 페이지가 실패해도 앞에서 찾은 성분 주소는 유지한다", async () => {
-    api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) => {
-      if (page === 0) {
-        return Promise.resolve({ items: [{ id: 40 }], pagination: { hasNext: true } });
-      }
-      return Promise.reject(new Error("second ingredient page unavailable"));
-    });
+  it("제품 pagination이 500페이지 안에 끝나지 않으면 실패한다", async () => {
+    api.fetchProducts.mockResolvedValue({ items: [{ id: 30 }], pagination: { hasNext: true } });
 
-    const entries = await ingredientEntries();
+    await expect(productEntries()).rejects.toThrow("500페이지 안에 종료되지 않았습니다");
+    expect(api.fetchProducts).toHaveBeenCalledTimes(500);
+  });
 
-    expect(entries.map(({ url }) => url)).toContain("http://localhost:3000/ingredients/40");
+  it("성분 pagination이 500페이지 안에 끝나지 않으면 실패한다", async () => {
+    api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: true } });
+
+    await expect(ingredientEntries()).rejects.toThrow("500페이지 안에 종료되지 않았습니다");
+    expect(api.fetchIngredients).toHaveBeenCalledTimes(500);
   });
 });

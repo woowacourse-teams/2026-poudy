@@ -24,9 +24,9 @@ class ShareMatchQueryTest {
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("제품 하나로 확정하면 제품 ID 를 반환한다")
+    @DisplayName("앱의 실제 전체 공유 텍스트로 제품 하나를 확정한다")
     void matchesSharedProduct() throws Exception {
-        String text = "[단독기획] 다 브랜드 블랙 스네일 토너 150ml 기획 (+30ml 리필)" + TAIL;
+        String text = "[단독기획]\u00A0다 브랜드\u00A0블랙 스네일 토너 150ml 기획 (+30ml 리필)" + TAIL;
 
         mockMvc.perform(get(PATH).param("text", text))
             .andExpect(status().isOk())
