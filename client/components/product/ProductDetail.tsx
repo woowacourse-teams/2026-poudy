@@ -2,6 +2,7 @@ import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 
 import { IngredientList } from "./IngredientList";
+import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
 import { SaveProductButton } from "./SaveProductButton";
 
 import { TrackView } from "@/components/analytics/TrackView";
@@ -9,10 +10,9 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
-import { TopBar } from "@/components/ui/TopBar";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
-import { formatPrice, unitPrice } from "@/lib/domain/product-display";
+import { cheapestVariant, formatPrice, formatVolume, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
 export const ingredientSummary = (ingredientCount: number, effectNames: readonly string[]): string => {
@@ -32,8 +32,7 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
 }) {
   return (
-    <>
-      <TopBar title="제품 상세" variant="sub" right={<ShareButton />} />
+    <ProductDetailHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
@@ -69,6 +68,8 @@ export function ProductDetail({
           <SaveProductButton productId={product.id} productName={product.name} />
         </section>
 
+        <ProductSummaryEnd />
+
         <div className="flex flex-col gap-6 px-4 pb-8">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
@@ -76,7 +77,68 @@ export function ProductDetail({
           <Source updatedAt={product.updatedAt} />
         </div>
       </main>
-    </>
+    </ProductDetailHeader>
+  );
+}
+
+/**
+ * 머리에 붙는 축약형. 원래 배치와 같은 것을 담되 가로로 접는다.
+ *
+ * 세로로 쌓인 원래 배치를 그대로 붙이면 화면 절반을 차지해 본문을 읽을 자리가 남지 않는다.
+ * 그림을 줄이고, 이름은 한 줄로 줄이고, 용량별 가격은 가장 싼 것 하나로 접는다.
+ */
+function CompactSummary({ product }: { readonly product: ProductDetailResponse }) {
+  return (
+    <div className="flex h-14 items-center gap-2.5 px-4">
+      {/*
+        원래 배치와 같은 크기로 받아 보여 줄 때만 줄인다. 40px 로 새로 받으면
+        같은 그림을 한 번 더 내려받게 된다.
+      */}
+      <Image
+        src={product.imageUrl || PRODUCT_PLACEHOLDER}
+        alt=""
+        width={184}
+        height={184}
+        className="size-10 shrink-0 object-contain"
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-baseline gap-1.5">
+          {/* 이름이 길면 여기서 줄인다. 붙은 채로 두 줄이 되면 머리가 본문을 덮는다. */}
+          <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-text-primary">
+            <span className="pr-1 text-[11px] font-medium text-text-secondary">{product.brand.name}</span>
+            {product.name}
+          </p>
+
+          <CompactPrice variants={product.variants} />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <LevelTag kind="moisture" level={product.moistureLevel} />
+          <LevelTag kind="oil" level={product.oilLevel} />
+        </div>
+      </div>
+
+      <SaveProductButton productId={product.id} productName={product.name} variant="icon" />
+    </div>
+  );
+}
+
+/**
+ * 용량별 가격을 한 줄로 접는다. 용량이 여럿이면 가장 싼 것만 적고 `부터` 를 붙인다.
+ *
+ * 가로로 늘어놓으면 용량이 셋인 제품에서 이름과 저장 버튼을 밀어낸다. 대표 하나만 고르면
+ * 어느 것이 대표인지 화면에서 알 수 없다. 가장 싼 것은 기준이 하나뿐이라 그 둘이 없다.
+ */
+function CompactPrice({ variants }: { readonly variants: ProductDetailResponse["variants"] }) {
+  const cheapest = cheapestVariant(variants);
+  if (!cheapest) return null;
+
+  return (
+    <span className="shrink-0 text-[11px] font-semibold text-text-primary">
+      {formatVolume(cheapest)} {formatPrice(cheapest.price)}
+      {variants.length > 1 ? "부터" : ""}
+    </span>
   );
 }
 

@@ -260,6 +260,35 @@ body {
 }
 
 /*
+ * 제품 상세의 축약 머리. 원래 배치가 머리 아래로 지나가는 순간 그 자리를 이어받는다.
+ *
+ * 두 배치를 각각 그려 두고 바꿔 끼우면 그 순간이 눈에 띈다. 아래로 지나간 원래 배치가
+ * 나온 곳에서 이어지도록, 머리 밑에서 8px 미끄러져 내려오며 짙어진다.
+ *
+ * 자리를 차지하는 속성은 건드리지 않는다. 머리 높이가 늘었다 줄면 아래 본문이 그만큼 튄다.
+ */
+.product-summary-bar {
+  transition-property: opacity, transform;
+  transition-duration: var(--transition-duration-disclosure);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/*
+ * 떨어져 있는 동안에는 본문 위에 겹쳐 있어도 손을 받지 않는다. 초점도 들어가지 않도록
+ * 컴포넌트에서 `inert` 를 함께 건다.
+ */
+.product-summary-bar[data-stuck="false"] {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.product-summary-bar[data-stuck="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/*
  * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
  * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
  *
@@ -619,6 +648,18 @@ body {
 
   /* 각도는 유틸리티로 걸려 있어 그쪽도 함께 꺼야 돌지 않는다. */
   .category-disclosure-chevron.rotate-180 {
+    transform: none;
+  }
+
+  /*
+   * 축약 머리도 미끄러져 내려오지 않는다. 제자리에서 짙어지고 옅어지는 것만 남겨
+   * 머리가 붙고 떨어지는 것은 그대로 읽히게 한다.
+   */
+  .product-summary-bar {
+    transition-property: opacity;
+  }
+
+  .product-summary-bar[data-stuck="false"] {
     transform: none;
   }
 
