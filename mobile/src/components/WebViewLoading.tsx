@@ -4,13 +4,13 @@ import LoadingIndicator from '@/components/LoadingIndicator';
 
 interface WebViewLoadingProps {
   readonly onInitialFoldComplete?: () => void;
-  readonly running?: boolean;
+  readonly isRunning?: boolean;
 }
 
-export default function WebViewLoading({ onInitialFoldComplete, running = true }: WebViewLoadingProps) {
+export default function WebViewLoading({ isRunning = true, onInitialFoldComplete }: WebViewLoadingProps) {
   return (
     <View pointerEvents='none' style={styles.overlay}>
-      <LoadingIndicator onInitialFoldComplete={onInitialFoldComplete} running={running} />
+      <LoadingIndicator isRunning={isRunning} onInitialFoldComplete={onInitialFoldComplete} />
     </View>
   );
 }

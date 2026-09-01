@@ -1,18 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { WebViewFailure } from '@/types/webView';
+import type { WebViewFailure, WebViewFailureMessage } from '@/types/webView';
 
 interface WebViewErrorProps {
   readonly reason: WebViewFailure;
   readonly onRetry: () => void;
 }
 
-interface FailureMessage {
-  readonly title: string;
-  readonly body: string;
-}
-
-const MESSAGES: Record<WebViewFailure, FailureMessage> = {
+const MESSAGES: Record<WebViewFailure, WebViewFailureMessage> = {
   offline: {
     title: '인터넷에 연결되어 있지 않아요',
     body: 'Wi-Fi 나 데이터가 켜져 있는지 확인한 뒤 다시 시도해 주세요.',

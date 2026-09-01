@@ -1,14 +1,9 @@
 import { useNetworkState } from 'expo-network';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { WebViewFailure, WebViewNavigation } from '@/types/webView';
+import type { WebViewFailure, WebViewNavigation, WebViewSource } from '@/types/webView';
 
 const LOAD_TIMEOUT_MS = 10_000;
-
-interface WebViewSource {
-  readonly key: number;
-  readonly url: string;
-}
 
 export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
   const [source, setSource] = useState<WebViewSource>({ key: 0, url: initialUrl });
@@ -26,7 +21,6 @@ export const useWebViewNavigation = (initialUrl: string): WebViewNavigation => {
     [isConnected],
   );
 
-  /** `key` 를 두어 WebView 를 다시 만들지 않는다. 새로 만들면 방문 기록이 사라진다. */
   const navigate = useCallback((url: string) => {
     if (currentUrlRef.current === url) {
       return;

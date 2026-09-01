@@ -1,12 +1,6 @@
 import type { Action } from 'expo-quick-actions';
 
-/** icon 은 두 플랫폼이 함께 쓴다. 안드로이드 리소스 이름 규칙 때문에 밑줄만 쓸 수 있다. */
-interface QuickActionEntry {
-  readonly id: string;
-  readonly title: string;
-  readonly icon: string;
-  readonly path: string;
-}
+import type { QuickActionEntry } from '@/types/quickAction';
 
 const QUICK_ACTION_ENTRIES: readonly QuickActionEntry[] = [
   { id: 'product-search', title: '제품 검색', icon: 'asset:quick_action_product_search', path: '/search/products' },

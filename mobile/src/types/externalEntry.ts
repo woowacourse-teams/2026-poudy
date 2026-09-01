@@ -4,6 +4,5 @@ export interface SharedPayload {
 
 export interface ExternalEntryOptions {
   readonly onNavigate: (url: string) => void;
-  readonly onUnsupportedShare: () => void;
   readonly serviceBaseUrl: string;
 }

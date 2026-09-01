@@ -6,7 +6,7 @@ import type { ExternalEntryOptions } from '@/types/externalEntry';
 import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
 
-export const useExternalEntry = ({ onNavigate, onUnsupportedShare, serviceBaseUrl }: ExternalEntryOptions) => {
+export const useExternalEntry = ({ onNavigate, serviceBaseUrl }: ExternalEntryOptions) => {
   const { clearSharedPayloads, refreshSharePayloads, sharedPayloads } = useIncomingShare();
   const lastShare = useRef<string | null>(null);
 
@@ -26,13 +26,11 @@ export const useExternalEntry = ({ onNavigate, onUnsupportedShare, serviceBaseUr
     const targetUrl = resolveSharedUrl(values, serviceBaseUrl);
     if (targetUrl) {
       onNavigate(targetUrl);
-    } else {
-      onUnsupportedShare();
     }
 
     clearSharedPayloads();
-    void refreshSharePayloads();
-  }, [clearSharedPayloads, onNavigate, onUnsupportedShare, refreshSharePayloads, sharedPayloads, serviceBaseUrl]);
+    refreshSharePayloads();
+  }, [clearSharedPayloads, onNavigate, refreshSharePayloads, sharedPayloads, serviceBaseUrl]);
 
   useEffect(() => {
     const handleUrl = (value: string | null) => {
@@ -47,7 +45,7 @@ export const useExternalEntry = ({ onNavigate, onUnsupportedShare, serviceBaseUr
     };
 
     const subscription = Linking.addEventListener('url', ({ url }) => handleUrl(url));
-    void Linking.getInitialURL()
+    Linking.getInitialURL()
       .then(handleUrl)
       .catch(() => undefined);
 

@@ -24,7 +24,6 @@ export const getDeepLinkUrl = (value: string, serviceBaseUrl: string): string | 
   try {
     const deepLink = new URL(value);
 
-    // App Links 로 받은 주소다.
     if (deepLink.origin === new URL(serviceBaseUrl).origin) {
       return deepLink.toString();
     }
@@ -41,10 +40,6 @@ export const getDeepLinkUrl = (value: string, serviceBaseUrl: string): string | 
   }
 };
 
-/**
- * 공유 원문을 웹의 경유 경로로 넘긴다. 어느 제품인지 정하는 일은 웹이 맡으므로
- * 앱은 API 주소를 알 필요가 없고, API 도메인이 바뀌어도 다시 빌드하지 않는다.
- */
 export const getShareRedirectUrl = (text: string, serviceBaseUrl: string): string | null => {
   try {
     const url = new URL(SHARE_REDIRECT_PATH, serviceBaseUrl);

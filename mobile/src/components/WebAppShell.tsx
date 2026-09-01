@@ -1,5 +1,5 @@
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -10,32 +10,36 @@ import {
 
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
+import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
-import type { WebViewErrorEvent, WebViewNavigation } from '@/types/webView';
+import { useQuickActions } from '@/hooks/useQuickActions';
+import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
+import type { WebViewErrorEvent, WebViewNavigationRequest } from '@/types/webView';
 import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 import { shareText } from '@/util/share';
 
-interface NavigationRequest {
-  readonly url: string;
-}
-
-interface WebAppShellProps {
-  readonly serviceBaseUrl: string;
-  readonly navigation: WebViewNavigation;
-}
-
 const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
 const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
-export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellProps) {
+const serviceBaseUrl = process.env.EXPO_PUBLIC_SERVICE_URL!;
+const serviceOrigin = new URL(serviceBaseUrl).origin;
+
+export default function WebAppShell() {
   const webViewRef = useRef<WebView>(null);
-  const [loadingAnimationRunning, setLoadingAnimationRunning] = useState(Platform.OS !== 'android');
-  const splashTransitionStartedRef = useRef(false);
-  const serviceOrigin = useMemo(() => new URL(serviceBaseUrl).origin, [serviceBaseUrl]);
+  const hasStartedSplashTransitionRef = useRef(false);
+
+  const [isLoadingAnimationRunning, setIsLoadingAnimationRunning] = useState(Platform.OS !== 'android');
+
+  const navigation = useWebViewNavigation(serviceBaseUrl);
+  const { fail } = navigation;
+
+  useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
+  useQuickActions({ onNavigate: navigation.navigate, serviceBaseUrl });
+
   const handleHardwareNavigationChange = useHardwareBack({
     onNavigate: navigation.navigate,
     sourceKey: navigation.key,
@@ -53,7 +57,7 @@ export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellP
   );
 
   const handleShouldStartLoad = useCallback(
-    (request: NavigationRequest) => {
+    (request: WebViewNavigationRequest) => {
       if (shouldLoadInWebView(request.url, serviceOrigin)) {
         return true;
       }
@@ -63,8 +67,6 @@ export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellP
     },
     [serviceOrigin],
   );
-
-  const { fail } = navigation;
 
   const handleError = useCallback(
     (event: WebViewErrorEvent) => {
@@ -91,18 +93,17 @@ export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellP
   }, []);
 
   const handleRootLayout = useCallback(() => {
-    if (Platform.OS !== 'android' || splashTransitionStartedRef.current) {
+    if (Platform.OS !== 'android' || hasStartedSplashTransitionRef.current) {
       return;
     }
 
-    splashTransitionStartedRef.current = true;
+    hasStartedSplashTransitionRef.current = true;
     SplashScreen.setOptions({ duration: 0 });
     SplashScreen.hide();
 
-    // 첫 RAF에서 네이티브 스플래시가 제거되고, 다음 RAF부터 RN 로더를 움직인다.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setLoadingAnimationRunning(true);
+        setIsLoadingAnimationRunning(true);
       });
     });
   }, []);
@@ -134,9 +135,7 @@ export default function WebAppShell({ serviceBaseUrl, navigation }: WebAppShellP
 
         {navigation.failure ? <WebViewError reason={navigation.failure} onRetry={navigation.reload} /> : null}
       </SafeAreaView>
-      {navigation.isLoading && navigation.failure === null ? (
-        <WebViewLoading running={loadingAnimationRunning} />
-      ) : null}
+      {navigation.isLoading && navigation.failure === null && <WebViewLoading isRunning={isLoadingAnimationRunning} />}
     </View>
   );
 }
