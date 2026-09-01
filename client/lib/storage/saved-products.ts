@@ -103,6 +103,12 @@ export const saveProduct = (productId: number): readonly number[] =>
 export const unsaveProduct = (productId: number): readonly number[] =>
   commit(saved.filter((item) => item.id !== productId));
 
+/** 서버에서 더 이상 찾을 수 없는 제품처럼 여러 항목을 한 번에 정리한다. */
+export const unsaveProducts = (productIds: readonly number[]): readonly number[] => {
+  const targets = new Set(productIds);
+  return commit(saved.filter((item) => !targets.has(item.id)));
+};
+
 export const toggleSaved = (productId: number): readonly number[] =>
   isSaved(productId) ? unsaveProduct(productId) : saveProduct(productId);
 
