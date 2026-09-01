@@ -1,4 +1,11 @@
 export interface QuickActionOptions {
   readonly onNavigate: (url: string) => void;
-  readonly webBaseUrl: string;
+  readonly serviceBaseUrl: string;
+}
+
+export interface QuickActionEntry {
+  readonly icon: string;
+  readonly id: string;
+  readonly path: string;
+  readonly title: string;
 }

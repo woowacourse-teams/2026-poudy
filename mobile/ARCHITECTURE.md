@@ -9,7 +9,7 @@
 바깥 경계만 맡는다. 공유 수신, 딥링크, 공유 시트, 퀵 액션이 그렇다. 이들은 모두 목적지 URL 을
 정해 WebView 에 넘기는 것으로 끝나고, 앱은 화면을 따로 그리지 않는다.
 
-`EXPO_PUBLIC_WEB_URL` 과 같은 origin 만 WebView 안에서 연다. 다른 origin 은 외부 브라우저로
+`EXPO_PUBLIC_SERVICE_URL` 과 같은 origin 만 WebView 안에서 연다. 다른 origin 은 외부 브라우저로
 보낸다.
 
 ## 의존 방향

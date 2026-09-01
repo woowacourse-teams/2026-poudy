@@ -2,8 +2,5 @@
 
 구조와 경계는 `ARCHITECTURE.md` 에 있다.
 
-- React 컴포넌트는 `export default function ComponentName()` 형태로 작성한다.
-- 하나의 파일에는 하나의 React 컴포넌트만 작성한다.
-- 컴포넌트를 제외한 함수와 훅은 화살표 함수로 작성한다.
-- 객체 형태는 `interface`로 선언한다.
-- `type`은 union 또는 단순 값 별칭처럼 `interface`로 표현할 수 없는 경우에만 사용한다.
+- 컴포넌트 본문은 `useRef`, `useState`, 다른 훅, 핸들러 함수 순서로 선언한다. 모듈 상수는 컴포넌트 밖에 둔다.
+- 코드만으로 알 수 없는 구현 근거는 코드 주석이 아니라 `docs/TECHNICAL_DECISIONS.md`에 기록한다.
