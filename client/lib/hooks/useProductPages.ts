@@ -7,13 +7,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { fetchProducts } from "@/lib/api/products";
 import type { Filter } from "@/lib/domain/filter";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
+import { STALE_MS } from "@/lib/storage/list-cache";
 import { readProductPages, rememberScrollPosition, writeProductPages } from "@/lib/storage/product-pages-cache";
-
-/**
- * 되살린 목록을 이 시간이 지나면 다시 받는다. 카탈로그는 하루 단위로 바뀌므로
- * 상세를 보고 곧바로 돌아오는 길에는 요청을 한 번도 쓰지 않는다.
- */
-const STALE_MS = 5 * 60 * 1000;
 
 type PageState = {
   readonly key: string;
