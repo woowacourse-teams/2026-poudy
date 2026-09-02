@@ -2,8 +2,9 @@
 
 ## 상태
 
-- 상태: 진행 중
+- 상태: 완료
 - 시작일: 2026-09-02
+- 완료일: 2026-09-02
 - 대상 영역: 백엔드 도메인, 일급 컬렉션, Service와 저장소 경계
 
 ## 목표
@@ -24,9 +25,10 @@
 
 ### 컬렉션과 생성 경계
 
-- `Brands`, `Ingredients`, `Products`, `ExcludeCodeIngredients`는 입력을 인덱싱하거나 여러
-  상태를 조립하므로 정적 팩토리와 private 생성자를 사용한다.
-- `Ingredients`는 입력 순서를 보존하는 성분 검색 인덱스 Map 하나만 가진다.
+- `Brands`, `IngredientCatalog`, `Products`, `ExcludeCodeIngredients`는 입력을 인덱싱하거나
+  여러 상태를 조립하므로 정적 팩토리와 private 생성자를 사용한다.
+- `IngredientCatalog`는 ID가 유일한 전역 성분 검색 인덱스 Map 하나만 가진다.
+- 제품의 `Ingredients`는 감각 추론의 품질 신호로 쓰는 입력 순서와 중복을 보존한다.
 - `Products`는 입력 순서를 보존하는 제품 검색 인덱스 Map 하나만 가진다. 원본 List, 검색
   List, ID Map과 미리 계산한 브랜드 집계를 함께 보관하지 않는다.
 - 제외 성분군의 정방향·역방향 Map은 의미가 다른 조회이므로 유지한다.
@@ -38,7 +40,8 @@
 - `Ingredient`는 `IngredientTags`를 한 번 생성해 소유한다.
 - `IngredientFilter`와 `ProductFilter`가 필터 판정을 소유하고, 제품은 자신의 상태에 관한
   의미 있는 판단만 제공한다.
-- 값 동등성이 실제 계산과 테스트에 필요한 감각 값 객체에만 `equals`와 `hashCode`를 둔다.
+- record가 제공하던 값 동등성이 실제 계산이나 협력 객체 검증에 필요한 감각·피드백 값 객체에는
+  `equals`와 `hashCode`를 명시한다.
 
 ### 계층 경계
 
@@ -50,17 +53,23 @@
 
 ## 작업
 
-- [ ] 컬렉션의 정적 생성 경계와 단일 권위 상태를 구현한다.
-- [ ] 행동을 가진 도메인 record를 클래스로 바꾸고 호출자를 새 행동으로 연결한다.
-- [ ] 필터와 태그 컬렉션의 판단 책임을 이동한다.
-- [ ] 제품 등록 요청과 제외 성분군의 계층 의존을 바로잡는다.
-- [ ] 관련 단위 테스트와 아키텍처 테스트를 보강한다.
-- [ ] `sh ./scripts/verify.sh`를 통과한다.
+- [x] 컬렉션의 정적 생성 경계와 단일 권위 상태를 구현한다.
+- [x] 행동을 가진 도메인 record를 클래스로 바꾸고 호출자를 새 행동으로 연결한다.
+- [x] 필터와 태그 컬렉션의 판단 책임을 이동한다.
+- [x] 제품 등록 요청과 제외 성분군의 계층 의존을 바로잡는다.
+- [x] 관련 단위 테스트와 아키텍처 테스트를 보강한다.
+- [x] `sh ./scripts/verify.sh`를 통과한다.
 
 ## 완료 조건
 
-- `Ingredients`와 `Products`가 같은 원소를 여러 컬렉션에 중복 보관하지 않는다.
+- `IngredientCatalog`와 `Products`가 같은 원소를 여러 컬렉션에 중복 보관하지 않는다.
 - 조립이 필요한 컬렉션을 호출자가 완성된 내부 상태로 만들 수 없다.
 - Service와 Domain이 Controller DTO에 의존하지 않는다.
 - 공개 API와 저장 문서 계약에 의도하지 않은 변경이 없다.
 - 전체 서버 검증이 통과한다.
+
+## 검증 결과
+
+- `sh ./scripts/verify.sh` 통과
+- 전체 Gradle 테스트, Checkstyle, Spotless 통과
+- OpenAPI와 공통 Zod 산출물 변경 없음
