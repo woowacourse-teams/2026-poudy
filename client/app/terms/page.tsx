@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { LegalArticle, LegalDocument, LegalList } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 
 /*
@@ -136,8 +135,6 @@ export default function TermsPage() {
           </LegalList>
         </LegalArticle>
       </LegalDocument>
-
-      <BottomNavigation />
     </>
   );
 }

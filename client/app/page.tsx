@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { RecentFilters, SavedPreview } from "@/components/home/PersonalSections";
 import { OPERATOR } from "@/components/legal/operator";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODES } from "@/lib/domain/filter";
@@ -72,6 +71,7 @@ export default function Home() {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: 신뢰하는 정적 구조화 데이터를 스크립트로 직렬화한다.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c") }}
       />
       <TopBar title="oudy" variant="root" showLogo />
@@ -181,8 +181,6 @@ export default function Home() {
           당신의 피부를 생각하는 {OPERATOR.name} <span aria-hidden="true">💗</span>
         </p>
       </footer>
-
-      <BottomNavigation />
     </>
   );
 }

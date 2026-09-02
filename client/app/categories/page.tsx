@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { CategoryDirectory } from "@/components/directory/CategoryDirectory";
 import { DirectoryTabs } from "@/components/directory/DirectoryTabs";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories } from "@/lib/api/products";
 
@@ -27,7 +26,6 @@ export default async function CategoriesPage() {
         <DirectoryTabs current="category" />
         <CategoryDirectory categories={categories.items} />
       </div>
-      <BottomNavigation />
     </>
   );
 }

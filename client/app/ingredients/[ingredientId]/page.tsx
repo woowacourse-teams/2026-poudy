@@ -5,7 +5,6 @@ import { Suspense } from "react";
 
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
@@ -202,8 +201,6 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           </div>
         </section>
       </main>
-
-      <BottomNavigation />
     </>
   );
 }

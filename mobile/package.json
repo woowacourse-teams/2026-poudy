@@ -18,7 +18,7 @@
     "expo-constants": "~57.0.12",
     "expo-dev-client": "~57.0.13",
     "expo-device": "~57.0.1",
-    "expo-haptics": "~57.0.1",
+    "expo-haptics": "~57.0.2",
     "expo-network": "~57.0.1",
     "expo-quick-actions": "6.0.2",
     "expo-sharing": "~57.0.13",
