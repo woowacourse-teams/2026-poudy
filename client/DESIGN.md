@@ -61,17 +61,26 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 - `BottomSheet`: 필터 내용을 담고 backdrop, focus trap, Escape 닫기를 제공하는 modal surface
 - `BottomNavigation`: 네 개의 주요 경로와 현재 경로 상태를 보여 주는 고정 내비게이션
 
+### BottomNavigation
+
+- **Structure**: 네 개의 경로 링크, 선택된 항목의 뒤를 따라 움직이는 배경, 아이콘과 라벨로 구성한다.
+- **States**: 기본, hover, 선택됨, 눌림, 선택 위치 이동, 키보드 포커스 상태를 제공한다. 선택된 배경은 hover 배경보다 항상 앞선다. 선택된 아이콘과 라벨에는 `--color-brand`를 사용한다.
+- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택 배경은 `--transition-duration-travel`과 `--ease-travel`을 사용하여 현재 위치에서 새 위치로 이어서 이동한다. 이동하는 동안 진행 방향으로 1.14배 늘어났다가 원래 길이로 돌아온다.
+- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 한 번만 흔들린다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
+- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로 전환 전의 선택 배경은 즉시 움직여 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. `prefers-reduced-motion: reduce`에서는 위치 이동, 크기 변화, 흔들림, 조각 합치기를 제거하고 색상과 opacity 전환만 유지한다.
+
 ## 6. Motion & Interaction
 
 | Token                                 | Duration | Easing       | Usage                   |
 | ------------------------------------- | -------- | ------------ | ----------------------- |
 | `--transition-duration-press`         | 100ms    | `--ease-out` | 저장 버튼 눌림 반응     |
+| `--transition-duration-release`       | 200ms    | 감쇠 반동    | 하단 메뉴 손 뗌 반응    |
 | `--transition-duration-control-state` | 160ms    | `--ease-out` | 컨트롤 아이콘·색상 전환 |
 | `--transition-duration-disclosure`    | 200ms    | `--ease-out` | 메뉴 열림·닫힘          |
 | `--transition-duration-celebration`   | 520ms    | `--ease-out` | 저장 불꽃               |
 
 - 저장 불꽃만 300ms 를 넘는다. 담기는 순간에만 터지는 드문 축하라 예산을 따로 쓴다. 나머지 전환은 모두 300ms 안에 든다.
-- 움직이는 표면은 모두 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
+- 움직이는 표면은 기본적으로 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. 하단 메뉴에서 손을 뗄 때만 `--ease-release`로 한 번의 약한 감쇠 반동을 만든다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
 - hover는 진입과 이탈의 시간을 같게 둔다. 한쪽만 즉시 바뀌면 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠져 잔상처럼 보인다.
 - 메뉴가 열리고 닫히는 공간 모션은 transform과 opacity만 애니메이션하고, 컨트롤의 상태 색상은 레이아웃에 영향을 주지 않는 color 전환만 사용한다.
 - 공간 이동은 즉시 다시 열거나 닫아도 현재 상태에서 새 상태로 이어져야 한다.
