@@ -95,7 +95,7 @@ const scrollPastSummary = () => scrollSummaryEndTo(-1);
 
 const summaryBar = () => document.querySelector(".product-summary-bar") as HTMLElement;
 
-/** 용량이 둘인 제품(1025 독도 토너). 가격을 접는 것을 확인하는 데 쓴다. */
+/** 용량이 둘인 제품(1025 독도 토너). 이름이 긴 제품을 확인하는 데 쓴다. */
 const multiVariantProduct = productDetails[0];
 
 describe("제품 상세 머리 고정", () => {
@@ -192,7 +192,7 @@ describe("제품 상세 머리 고정", () => {
     expect(summaryBar()).toHaveAttribute("data-stuck", "true");
   });
 
-  it("축약형에도 브랜드·제품명·유수분·가격·저장 버튼이 모두 남는다", () => {
+  it("축약형에도 브랜드·제품명·유수분·저장 버튼이 모두 남는다", () => {
     render(<ProductDetail product={multiVariantProduct} />);
     scrollPastSummary();
 
@@ -204,18 +204,6 @@ describe("제품 상세 머리 고정", () => {
     expect(bar.getByText("유분")).toBeInTheDocument();
     expect(bar.getByRole("button", { name: `${multiVariantProduct.name} 저장` })).toBeInTheDocument();
     expect(summaryBar().querySelector("img")).toBeInTheDocument();
-  });
-
-  it("용량이 여럿이면 가장 싼 용량 하나로 접고 그보다 비싼 것이 있음을 알린다", () => {
-    render(<ProductDetail product={multiVariantProduct} />);
-
-    expect(within(summaryBar()).getByText("200ml 18,000원부터")).toBeInTheDocument();
-  });
-
-  it("용량이 하나면 그 값을 그대로 적는다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
-
-    expect(within(summaryBar()).getByText("50ml 39,000원")).toBeInTheDocument();
   });
 
   it("축약형의 제품명은 길어져도 한 줄로 줄인다", () => {

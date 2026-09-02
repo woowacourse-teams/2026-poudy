@@ -12,7 +12,7 @@ import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
-import { cheapestVariant, formatPrice, formatVolume, unitPrice } from "@/lib/domain/product-display";
+import { formatPrice, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
 export const ingredientSummary = (ingredientCount: number, effectNames: readonly string[]): string => {
@@ -89,29 +89,33 @@ export function ProductDetail({
  */
 function CompactSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <div className="flex h-14 items-center gap-2.5 px-4">
+    <div className="flex items-center gap-3 px-4 py-2.5">
       {/*
         원래 배치와 같은 크기로 받아 보여 줄 때만 줄인다. 40px 로 새로 받으면
         같은 그림을 한 번 더 내려받게 된다.
+
+        옆 글(제품명·유수분 두 줄)이 차지하는 높이에 맞춘다. 그림에 높이를 재게 두면 그 높이가
+        줄을 다시 늘려 끝없이 커지므로, 자라는 쪽을 글로 정해 두고 그림은 그 값을 받아 쓴다.
       */}
       <Image
         src={product.imageUrl || PRODUCT_PLACEHOLDER}
         alt=""
         width={184}
         height={184}
-        className="size-10 shrink-0 object-contain"
+        className="size-[42px] shrink-0 object-contain"
       />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-baseline gap-1.5">
-          {/* 이름이 길면 여기서 줄인다. 붙은 채로 두 줄이 되면 머리가 본문을 덮는다. */}
-          <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-text-primary">
-            <span className="pr-1 text-[11px] font-medium text-text-secondary">{product.brand.name}</span>
-            {product.name}
-          </p>
-
-          <CompactPrice variants={product.variants} />
-        </div>
+      {/*
+        글자 크기와 줄 높이는 `ProductCard` 를 따른다. 같은 제품을 같은 방식으로 읽게 두어야
+        목록에서 상세로 들어와도 눈이 다시 적응하지 않는다. 브랜드명은 제품명 위가 아니라 앞에
+        붙이고, 값은 적지 않는다. 머리는 지금 보는 제품이 무엇인지만 알려 주면 된다.
+      */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        {/* 이름이 길면 여기서 줄인다. 붙은 채로 두 줄이 되면 머리가 본문을 덮는다. */}
+        <p className="truncate text-[14px] leading-tight text-text-primary">
+          <span className="pr-1 text-[12px] leading-tight font-medium text-text-secondary">{product.brand.name}</span>
+          {product.name}
+        </p>
 
         <div className="flex items-center gap-2">
           <LevelTag kind="moisture" level={product.moistureLevel} />
@@ -121,24 +125,6 @@ function CompactSummary({ product }: { readonly product: ProductDetailResponse }
 
       <SaveProductButton productId={product.id} productName={product.name} variant="icon" />
     </div>
-  );
-}
-
-/**
- * 용량별 가격을 한 줄로 접는다. 용량이 여럿이면 가장 싼 것만 적고 `부터` 를 붙인다.
- *
- * 가로로 늘어놓으면 용량이 셋인 제품에서 이름과 저장 버튼을 밀어낸다. 대표 하나만 고르면
- * 어느 것이 대표인지 화면에서 알 수 없다. 가장 싼 것은 기준이 하나뿐이라 그 둘이 없다.
- */
-function CompactPrice({ variants }: { readonly variants: ProductDetailResponse["variants"] }) {
-  const cheapest = cheapestVariant(variants);
-  if (!cheapest) return null;
-
-  return (
-    <span className="shrink-0 text-[11px] font-semibold text-text-primary">
-      {formatVolume(cheapest)} {formatPrice(cheapest.price)}
-      {variants.length > 1 ? "부터" : ""}
-    </span>
   );
 }
 
