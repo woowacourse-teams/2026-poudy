@@ -1,5 +1,6 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import Link from "next/link";
 
 import { IngredientList } from "./IngredientList";
 import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
@@ -54,7 +55,13 @@ export function ProductDetail({
           />
 
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[12px] font-medium text-text-secondary">{product.brand.name}</p>
+            <Link
+              href={`/brands/${product.brand.id}`}
+              aria-label={`${product.brand.name} 브랜드관`}
+              className="-my-1.5 py-1.5 text-[12px] font-medium text-text-secondary active:opacity-60"
+            >
+              {product.brand.name}
+            </Link>
             <h2 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h2>
 
             <div className="flex gap-2">
@@ -128,6 +135,14 @@ function CompactSummary({ product }: { readonly product: ProductDetailResponse }
   );
 }
 
+/*
+ * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 위아래로 여백을 주어 손이 닿을 자리를
+ * 넓히고, 같은 크기의 음수 바깥 여백으로 되돌려 경로가 차지하는 높이는 그대로 둔다.
+ *
+ * 가만히 있을 때의 모습은 원래 배치 그대로 두고, 손이 닿는 동안에만 옅어져 눌린 것을 알린다.
+ */
+const LINK = "-my-1.5 py-1.5 active:opacity-60";
+
 function CategoryPath({ categories }: { readonly categories: ProductDetailResponse["categories"] }) {
   if (categories.length === 0) return null;
 
@@ -137,9 +152,17 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
       <ol className="flex flex-col gap-[3px]">
         {categories.map((path) => (
           <li key={path.id} className="flex items-center gap-[5px] text-[12px] text-text-secondary">
-            <span>{path.name}</span>
+            <Link href={`/categories/${path.id}`} aria-label={`${path.name} 카테고리 제품`} className={LINK}>
+              {path.name}
+            </Link>
             <Icon name="chevron-right" size={12} />
-            <span className="font-semibold">{path.child.name}</span>
+            <Link
+              href={`/categories/${path.child.id}`}
+              aria-label={`${path.child.name} 카테고리 제품`}
+              className={`${LINK} font-semibold`}
+            >
+              {path.child.name}
+            </Link>
           </li>
         ))}
       </ol>
