@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandSummaryResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
@@ -20,7 +20,6 @@ import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 
 type ProductListProps = {
   readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandSummaryResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
   readonly basePath?: string;
@@ -65,7 +64,6 @@ const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): 
 /** S04 조건 일치 제품. 조건은 URL 이 들고, 목록은 페이지를 이어 붙인다. */
 export function ProductList({
   categories,
-  brands,
   excludeCodes,
   basePath = "/products",
   fixedFilter,
@@ -130,11 +128,11 @@ export function ProductList({
     });
   }, [filter, key, loaded, loading, page, searchMode, total]);
 
-  /**
+  /*
    * 지금 조건에 걸린 브랜드만 고르게 한다. 결과가 0 건인 브랜드가 목록에서 빠진다.
-   * 첫 응답 전에는 걸린 브랜드를 모르므로 그때만 전체 목록을 보여 준다.
+   * 목록 응답이 함께 실어 보내므로 따로 받지 않는다. 첫 응답 전에는 비어 있는데,
+   * 이 값은 필터 시트 안에서만 쓰이고 그때는 이미 응답이 도착해 있다.
    */
-  const selectableBrands = matchedBrands.length > 0 ? matchedBrands : brands;
 
   // 첫 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {
@@ -210,7 +208,7 @@ export function ProductList({
           }
         }}
         categories={categories}
-        brands={selectableBrands}
+        brands={matchedBrands}
         excludeCodes={excludeCodes}
         initialCount={total}
       />
