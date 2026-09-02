@@ -11,9 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/brands" },
 };
 
-// 고정 URL 이라 원래는 ISR 대상이다. 다만 목 서버는 빌드 시점에 뜨지 않아
-// 미리 만들 수 없다. 실제 API 에 붙일 때 revalidate 로 바꾼다.
-export const dynamic = "force-dynamic";
+// 브랜드가 늘면 값이 바뀌므로 하루에 한 번 다시 만든다.
+export const revalidate = 86400;
 
 export default async function BrandsPage() {
   const brands = await fetchBrands();
