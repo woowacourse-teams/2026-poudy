@@ -69,6 +69,9 @@ jobs:
         env:
           NEXT_PUBLIC_ENVIRONMENT: production
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+          # 미리 만드는 화면은 빌드하며 API 를 부른다. 주소가 없으면 앱이 자기
+          # 자신에게 요청해 실패한다. 운영과 staging 은 이미 각자의 주소를 준다.
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
         run: pnpm run build
 
       - name: Setup Chrome
