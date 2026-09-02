@@ -141,8 +141,7 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
 };
 
 /**
- * 장이 늘 때마다 담아 둔다. 떠나는 순간에만 담으면 그 시점의 상태를 붙잡기 어렵다.
- * 보던 자리는 상태를 바꾸지 않으므로 따로 적어 둔다.
+ * 장이 늘 때마다 담아 둔다. 보던 자리는 상태를 바꾸지 않으므로 따로 적어 둔다.
  */
 const useRememberPages = (key: string, state: PageState) => {
   const { loaded, loading, revalidating, page, items, brands, total, hasNext } = state;
@@ -152,11 +151,16 @@ const useRememberPages = (key: string, state: PageState) => {
     writeProductPages(key, { page, items, brands, total, hasNext });
   }, [key, loaded, loading, revalidating, page, items, brands, total, hasNext]);
 
-  useEffect(() => {
-    const onScroll = () => rememberScrollPosition(key, readScrollPosition());
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [key]);
+  /*
+   * 보던 자리는 떠나는 순간에만 잰다. 담아 둔 값은 돌아올 때 한 번 읽히는데, 스크롤마다
+   * 다시 재면 프레임마다 hit-test 를 돌리게 된다(160건 목록에서 스크롤 이벤트당 108µs 이고
+   * 항목 수에 비례해 자란다). 여기서는 화면을 떠날 때 한 번만 잰다.
+   *
+   * 지우는 트리의 layout effect 정리는 DOM 을 떼어내기 전에 돌아, 이 자리에서 항목의
+   * 자리를 아직 잴 수 있다. 캐시는 메모리에 있어 새로고침하면 사라지므로, 되돌릴 자리가
+   * 필요한 경우는 화면을 옮겨 다니다 돌아오는 길뿐이다.
+   */
+  useLayoutEffect(() => () => rememberScrollPosition(key, readScrollPosition), [key]);
 };
 
 /**

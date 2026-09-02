@@ -19,6 +19,12 @@ if (!("IntersectionObserver" in globalThis)) {
   } as unknown as typeof IntersectionObserver;
 }
 
+// jsdom 에 없다. node 환경으로 도는 파일에는 document 자체가 없다.
+// 항목을 못 찾은 셈이 되어 픽셀값으로 되돌아간다.
+if (typeof document !== "undefined" && !document.elementFromPoint) {
+  document.elementFromPoint = () => null;
+}
+
 // 테스트도 화면과 같은 목 서버를 쓴다. 핸들러가 한 벌이라 응답이 어긋나지 않는다.
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });

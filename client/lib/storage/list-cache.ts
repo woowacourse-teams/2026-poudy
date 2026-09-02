@@ -50,11 +50,14 @@ export const createListCache = <T>(limit: number) => {
       touch(key, { ...value, position: cache.get(key)?.position ?? NO_POSITION, fetchedAt: Date.now() });
     },
 
-    /** 목록을 담은 적이 없으면 자리만 남겨 두지 않는다. 되살릴 목록이 없으면 쓸모가 없다. */
-    rememberPosition: (key: string, position: ScrollPosition): void => {
+    /**
+     * 목록을 담은 적이 없으면 자리만 남겨 두지 않는다. 되살릴 목록이 없으면 쓸모가 없다.
+     * 재는 일은 되살릴 목록이 있을 때만 시킨다. 자리를 재려면 화면을 훑어야 한다.
+     */
+    rememberPosition: (key: string, read: () => ScrollPosition): void => {
       const found = cache.get(key);
       if (!found) return;
-      cache.set(key, { ...found, position });
+      cache.set(key, { ...found, position: read() });
     },
 
     clear: (): void => {

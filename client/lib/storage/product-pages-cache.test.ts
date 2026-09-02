@@ -1,5 +1,5 @@
 import type { ProductResponse } from "@poudy/api/api.zod";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   clearProductPages,
@@ -34,15 +34,18 @@ describe("제품 목록 캐시", () => {
 
   it("보던 자리는 목록을 다시 담아도 남는다", () => {
     writeProductPages("a", pages(0, [1]));
-    rememberScrollPosition("a", { scrollY: 820, anchor: { id: 3, offset: 52 } });
+    rememberScrollPosition("a", () => ({ scrollY: 820, anchor: { id: 3, offset: 52 } }));
     writeProductPages("a", pages(1, [1, 2]));
 
     expect(readProductPages("a")?.position).toEqual({ scrollY: 820, anchor: { id: 3, offset: 52 } });
   });
 
-  it("되살릴 목록이 없으면 보던 자리만 남기지 않는다", () => {
-    rememberScrollPosition("a", { scrollY: 820 });
+  it("되살릴 목록이 없으면 자리를 재지도, 남기지도 않는다", () => {
+    const read = vi.fn(() => ({ scrollY: 820 }));
 
+    rememberScrollPosition("a", read);
+
+    expect(read).not.toHaveBeenCalled();
     expect(readProductPages("a")).toBeUndefined();
   });
 

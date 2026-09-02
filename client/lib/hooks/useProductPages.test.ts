@@ -31,13 +31,16 @@ const countingProducts = () => {
 };
 
 const scrollTo = vi.fn();
+/** 자리를 재는 일이 언제 일어나는지 세는 데 쓴다. */
+const hitTest = vi.fn(() => null);
 
 beforeEach(() => {
   clearProductPages();
   scrollTo.mockClear();
   window.scrollTo = scrollTo as unknown as typeof window.scrollTo;
   // jsdom 에 없다. 항목을 못 찾은 셈이므로 픽셀값으로 되돌아간다.
-  document.elementFromPoint = () => null;
+  hitTest.mockClear();
+  document.elementFromPoint = hitTest as unknown as typeof document.elementFromPoint;
 });
 
 afterEach(() => {
@@ -114,12 +117,26 @@ describe("useProductPages", () => {
 
     await waitFor(() => expect(first.result.current.items).toHaveLength(2));
     Object.defineProperty(window, "scrollY", { value: 640, configurable: true });
-    window.dispatchEvent(new Event("scroll"));
     first.unmount();
 
     renderHook(() => useProductPages(filterOf("a")));
 
     expect(scrollTo).toHaveBeenCalledWith(0, 640);
+  });
+
+  it("스크롤하는 동안에는 자리를 재지 않고 떠날 때 한 번만 잰다", async () => {
+    countingProducts();
+    const view = renderHook(() => useProductPages(filterOf("a")));
+
+    await waitFor(() => expect(view.result.current.items).toHaveLength(2));
+    window.dispatchEvent(new Event("scroll"));
+    window.dispatchEvent(new Event("scroll"));
+
+    expect(hitTest).not.toHaveBeenCalled();
+
+    view.unmount();
+
+    expect(hitTest).toHaveBeenCalledOnce();
   });
 
   it("오래된 목록은 되살린 뒤 쌓아 둔 장을 전부 다시 받는다", async () => {

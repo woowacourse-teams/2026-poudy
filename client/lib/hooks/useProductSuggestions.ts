@@ -150,11 +150,10 @@ const useRememberPages = (keyword: string, state: State) => {
     writeSuggestionPages(keyword, { page, items, total, hasNext });
   }, [keyword, loading, revalidating, page, items, total, hasNext]);
 
-  useEffect(() => {
+  /* 목록과 같다. 보던 자리는 떠나는 순간에만 잰다. */
+  useLayoutEffect(() => {
     if (!keyword) return;
-    const onScroll = () => rememberSuggestionPosition(keyword, readScrollPosition());
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => rememberSuggestionPosition(keyword, readScrollPosition);
   }, [keyword]);
 };
 
