@@ -3,7 +3,6 @@ package com.poudy.excludecode.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.Arrays;
@@ -72,7 +71,7 @@ class ExcludeCodeIngredientsTest {
             .toList();
 
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(withoutSulfates, ingredientsOf(10L)))
-            .isInstanceOf(InfrastructureException.class)
+            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
 
@@ -83,7 +82,7 @@ class ExcludeCodeIngredientsTest {
         duplicated.add(new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of(10L)));
 
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(duplicated, ingredientsOf(10L)))
-            .isInstanceOf(InfrastructureException.class)
+            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
 
@@ -95,7 +94,7 @@ class ExcludeCodeIngredientsTest {
             .toList();
 
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(withEmptySulfates, ingredientsOf(10L)))
-            .isInstanceOf(InfrastructureException.class)
+            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
 
@@ -111,7 +110,7 @@ class ExcludeCodeIngredientsTest {
     @DisplayName("찾을 수 없는 성분 ID 가 있으면 만들 수 없다")
     void rejectsUnknownIngredientId() {
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(everyCodeWith(List.of(10L, 999L)), ingredientsOf(10L)))
-            .isInstanceOf(InfrastructureException.class)
+            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
             .hasMessageContaining("999");
     }
 }

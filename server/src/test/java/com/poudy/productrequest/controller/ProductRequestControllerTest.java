@@ -53,11 +53,12 @@ class ProductRequestControllerTest {
             .andExpect(status().isAccepted())
             .andExpect(content().string(""));
 
-        ArgumentCaptor<ProductRegistrationRequest> body = ArgumentCaptor.forClass(ProductRegistrationRequest.class);
+        ArgumentCaptor<String> productName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> brandName = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> clientAddress = ArgumentCaptor.forClass(String.class);
-        verify(productRequestService).submit(body.capture(), clientAddress.capture());
-        org.assertj.core.api.Assertions.assertThat(body.getValue().productName()).isEqualTo("제품 이름");
-        org.assertj.core.api.Assertions.assertThat(body.getValue().brandName()).isEqualTo("브랜드 이름");
+        verify(productRequestService).submit(productName.capture(), brandName.capture(), clientAddress.capture());
+        org.assertj.core.api.Assertions.assertThat(productName.getValue()).isEqualTo("제품 이름");
+        org.assertj.core.api.Assertions.assertThat(brandName.getValue()).isEqualTo("브랜드 이름");
         org.assertj.core.api.Assertions.assertThat(clientAddress.getValue()).isEqualTo("203.0.113.8");
     }
 
@@ -87,7 +88,7 @@ class ProductRequestControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
 
-        verify(productRequestService, never()).submit(any(), anyString());
+        verify(productRequestService, never()).submit(any(), any(), anyString());
     }
 
     @Test
@@ -118,7 +119,7 @@ class ProductRequestControllerTest {
     void rejectsTooManyRequests() throws Exception {
         willThrow(new TooManyRequestsException(Duration.ofSeconds(30)))
             .given(productRequestService)
-            .submit(any(), anyString());
+            .submit(any(), any(), anyString());
 
         mockMvc.perform(
             post(PATH)

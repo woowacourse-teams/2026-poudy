@@ -33,4 +33,13 @@ class ArchitectureTest {
             "tools.jackson.."
         )
         .because("도메인 모델은 프레임워크 없이 실행하고 검증할 수 있어야 한다");
+
+    @ArchTest
+    static final ArchRule INNER_LAYERS_DO_NOT_DEPEND_ON_CONTROLLERS = noClasses()
+        .that()
+        .resideInAnyPackage("..domain..", "..service..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("..controller..")
+        .because("도메인과 유스케이스는 HTTP 전송 모델과 독립적이어야 한다");
 }
