@@ -19,7 +19,8 @@ const TABS = [
     href: "/search/products",
     label: "탐색",
     icon: "search",
-    match: (path: string) => path.startsWith("/search") || path.startsWith("/products"),
+    match: (path: string) =>
+      path.startsWith("/search") || path.startsWith("/products") || path.startsWith("/ingredients"),
   },
   { href: "/saved", label: "저장", icon: "bookmark", match: (path: string) => path.startsWith("/saved") },
 ] as const;

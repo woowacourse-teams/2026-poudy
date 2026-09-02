@@ -38,13 +38,11 @@ describe("TopBar 뒤로 가기", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("메신저나 검색에서 바로 들어오면 메인으로 간다", async () => {
+  it("메신저나 검색에서 바로 들어오면 홈으로 가는 링크를 보여 준다", () => {
     render(<TopBar title="제품 상세" variant="sub" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-
-    expect(replace).toHaveBeenCalledWith("/");
-    expect(back).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "뒤로 가기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 });
 
@@ -81,13 +79,10 @@ describe("TopBar 뒤로 가기 출처", () => {
     expect(back).toHaveBeenCalledOnce();
   });
 
-  it("다른 사이트에서 넘어온 문서면 메인으로 간다", async () => {
+  it("다른 사이트에서 넘어온 문서면 홈으로 가는 링크를 보여 준다", () => {
     setReferrer("https://www.google.com/search?q=poudy");
     render(<TopBar title="제품 상세" variant="sub" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-
-    expect(replace).toHaveBeenCalledWith("/");
-    expect(back).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 });

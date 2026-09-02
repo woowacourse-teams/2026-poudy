@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSyncExternalStore } from "react";
 
 import { Icon } from "./icons/Icon";
 
@@ -18,9 +20,28 @@ type TopBarProps = {
   readonly right?: React.ReactNode;
 };
 
-export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
+/* 방문 기록은 스스로 알려 오지 않는다. 그릴 때마다 그때의 기록을 읽는다. */
+const subscribe = () => () => {};
+
+/* 서버에는 방문 기록이 없다. 미리 만든 화면은 기록이 있는 쪽으로 그린다. */
+const serverSnapshot = () => false;
+
+/**
+ * 뒤로 가기 자리. 방문 기록이 없으면 홈으로 가는 링크가 대신 선다.
+ *
+ * `뒤로 가기` 라는 이름은 이전 화면으로 돌아간다고 말한다. 기록이 없어 홈으로 보내면서
+ * 그 이름을 그대로 두면 화면 낭독기를 쓰는 사람은 눌러 본 뒤에야 어디로 갔는지 안다.
+ * 정해진 주소로 가는 일이므로 역할도 단추가 아니라 링크다.
+ *
+ * 방문 기록은 브라우저에만 있어 미리 만들어 둔 화면은 기록이 있는 쪽으로 그려진다.
+ * 붙은 뒤에 실제 기록을 보고 이름과 역할을 바꾼다. 그림은 바꾸지 않는다. 바꾸면 이미
+ * 그려진 화면에서 화살표가 집으로 뒤바뀌어, 밖에서 바로 들어온 사람에게만 깜빡인다.
+ */
+function BackControl({ iconSize, className }: { readonly iconSize: number; readonly className: string }) {
   const router = useRouter();
-  /* 밖에서 바로 들어온 화면에서 뒤로 가면 사이트를 벗어난다. */
+  const toHome = useSyncExternalStore(subscribe, () => !hasInSiteHistory(), serverSnapshot);
+
+  /* 한 화면에 머무는 동안 기록이 늘 수 있어 누르는 순간 다시 살핀다. */
   const handleBack = () => {
     if (hasInSiteHistory()) {
       router.back();
@@ -30,19 +51,27 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
     router.replace("/");
   };
 
+  if (toHome) {
+    return (
+      // 기록을 늘리지 않도록 지금 화면을 대신한다. router.replace 와 같은 자리다.
+      <Link href="/" replace aria-label="홈으로" className={className}>
+        <Icon name="chevron-left" size={iconSize} />
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={handleBack} aria-label="뒤로 가기" className={className}>
+      <Icon name="chevron-left" size={iconSize} />
+    </button>
+  );
+}
+
+export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
   if (variant === "root") {
     return (
       <header className="flex h-14 items-center gap-1 px-1">
-        {showBack ? (
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="뒤로 가기"
-            className="flex size-11 shrink-0 items-center justify-center"
-          >
-            <Icon name="chevron-left" size={22} />
-          </button>
-        ) : null}
+        {showBack ? <BackControl iconSize={22} className="flex size-11 shrink-0 items-center justify-center" /> : null}
 
         {/* 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다. */}
         {showLogo ? (
@@ -81,14 +110,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
 
   return (
     <header className="flex h-[44px] items-center px-1">
-      <button
-        type="button"
-        onClick={handleBack}
-        aria-label="뒤로 가기"
-        className="flex size-11 items-center justify-center"
-      >
-        <Icon name="chevron-left" size={20} />
-      </button>
+      <BackControl iconSize={20} className="flex size-11 items-center justify-center" />
 
       <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
 

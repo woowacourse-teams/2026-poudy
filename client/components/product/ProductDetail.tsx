@@ -39,7 +39,7 @@ export function ProductDetail({
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
       />
 
-      <main className="flex-1 px-4 pb-10">
+      <main className="flex-1 px-4">
         <div className="flex flex-col gap-4 pt-4 pb-3">
           <CategoryPath categories={product.categories} />
         </div>
@@ -77,7 +77,7 @@ export function ProductDetail({
 
         <ProductSummaryEnd />
 
-        <div className="flex flex-col gap-6 px-4 pb-8">
+        <div className="flex flex-col gap-6 px-4 pb-4">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />

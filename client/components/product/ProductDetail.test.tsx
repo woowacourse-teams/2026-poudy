@@ -171,7 +171,7 @@ describe("제품 상세 머리 고정", () => {
   it("뒤로가기를 단 머리를 화면 위에 붙이고 바텀시트보다 아래에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const header = screen.getByRole("button", { name: "뒤로 가기" }).closest("header")?.parentElement;
+    const header = screen.getByRole("heading", { name: "제품 상세" }).closest("header")?.parentElement;
 
     expect(header).toHaveClass("sticky", "top-0", "z-30", "bg-background");
   });
