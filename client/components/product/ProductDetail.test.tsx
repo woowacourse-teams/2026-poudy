@@ -58,6 +58,53 @@ describe("제품 성분 요약", () => {
     expect(toggle).toHaveClass("bg-transparent", "before:-inset-x-4", "before:bg-[#F4F5F6]");
   });
 
+  it("카테고리 경로의 대분류와 소분류를 각각의 목록으로 잇는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const path = screen.getByRole("navigation", { name: "카테고리 경로" });
+
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveAttribute("href", "/categories/2");
+    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveAttribute("href", "/categories/21");
+  });
+
+  it("브랜드명을 브랜드관으로 잇는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("link", { name: "셀퓨전씨 브랜드관" })).toHaveAttribute("href", "/brands/6");
+  });
+
+  it("보이는 이름을 그대로 담은 이름으로 어디로 가는지 알린다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const path = screen.getByRole("navigation", { name: "카테고리 경로" });
+
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveTextContent("선케어");
+    expect(screen.getByRole("link", { name: "셀퓨전씨 브랜드관" })).toHaveTextContent("셀퓨전씨");
+  });
+
+  it("이동할 수 있는 카테고리와 브랜드는 누르는 동안 옅어진다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const path = screen.getByRole("navigation", { name: "카테고리 경로" });
+
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveClass("active:opacity-60");
+    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveClass("active:opacity-60");
+    expect(screen.getByRole("link", { name: "셀퓨전씨 브랜드관" })).toHaveClass("active:opacity-60");
+  });
+
+  it("이동할 수 있는 카테고리와 브랜드의 누를 자리를 넓힌다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const path = screen.getByRole("navigation", { name: "카테고리 경로" });
+    const links = [
+      within(path).getByRole("link", { name: "선케어 카테고리 제품" }),
+      within(path).getByRole("link", { name: "선크림 카테고리 제품" }),
+      screen.getByRole("link", { name: "셀퓨전씨 브랜드관" }),
+    ];
+
+    links.forEach((link) => expect(link).toHaveClass("py-1.5", "-my-1.5"));
+  });
+
   it("상세 구역을 24px씩 띄우고 출처 안내에는 옅은 surface를 쓴다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
