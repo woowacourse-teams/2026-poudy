@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -22,12 +22,12 @@ class ExcludeCodeIngredientsTest {
     @Autowired
     private ExcludeCodeIngredients excludeCodeIngredients;
 
-    private static Ingredients ingredientsOf(Long... ids) {
+    private static IngredientCatalog ingredientsOf(Long... ids) {
         List<Ingredient> values = Arrays.stream(ids)
             .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null, null, null))
             .toList();
 
-        return new Ingredients(values);
+        return IngredientCatalog.from(values);
     }
 
     private static List<ExcludeCodeMapping> everyCodeWith(List<Long> ingredientIds) {
@@ -55,7 +55,7 @@ class ExcludeCodeIngredientsTest {
     @Test
     @DisplayName("데이터의 성분 ID 순서를 그대로 유지한다")
     void keepsIngredientOrderOfData() {
-        ExcludeCodeIngredients resolved = new ExcludeCodeIngredients(
+        ExcludeCodeIngredients resolved = ExcludeCodeIngredients.from(
             everyCodeWith(List.of(30L, 10L, 20L)),
             ingredientsOf(10L, 20L, 30L)
         );
@@ -71,7 +71,7 @@ class ExcludeCodeIngredientsTest {
             .filter(mapping -> mapping.code() != ExcludeCode.SULFATES)
             .toList();
 
-        assertThatThrownBy(() -> new ExcludeCodeIngredients(withoutSulfates, ingredientsOf(10L)))
+        assertThatThrownBy(() -> ExcludeCodeIngredients.from(withoutSulfates, ingredientsOf(10L)))
             .isInstanceOf(InfrastructureException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
@@ -82,7 +82,7 @@ class ExcludeCodeIngredientsTest {
         List<ExcludeCodeMapping> duplicated = new java.util.ArrayList<>(everyCodeWith(List.of(10L)));
         duplicated.add(new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of(10L)));
 
-        assertThatThrownBy(() -> new ExcludeCodeIngredients(duplicated, ingredientsOf(10L)))
+        assertThatThrownBy(() -> ExcludeCodeIngredients.from(duplicated, ingredientsOf(10L)))
             .isInstanceOf(InfrastructureException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
@@ -94,7 +94,7 @@ class ExcludeCodeIngredientsTest {
             .map(ExcludeCodeIngredientsTest::emptiedWhenSulfates)
             .toList();
 
-        assertThatThrownBy(() -> new ExcludeCodeIngredients(withEmptySulfates, ingredientsOf(10L)))
+        assertThatThrownBy(() -> ExcludeCodeIngredients.from(withEmptySulfates, ingredientsOf(10L)))
             .isInstanceOf(InfrastructureException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
     }
@@ -110,7 +110,7 @@ class ExcludeCodeIngredientsTest {
     @Test
     @DisplayName("찾을 수 없는 성분 ID 가 있으면 만들 수 없다")
     void rejectsUnknownIngredientId() {
-        assertThatThrownBy(() -> new ExcludeCodeIngredients(everyCodeWith(List.of(10L, 999L)), ingredientsOf(10L)))
+        assertThatThrownBy(() -> ExcludeCodeIngredients.from(everyCodeWith(List.of(10L, 999L)), ingredientsOf(10L)))
             .isInstanceOf(InfrastructureException.class)
             .hasMessageContaining("999");
     }

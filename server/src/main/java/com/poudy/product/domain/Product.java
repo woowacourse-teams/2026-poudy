@@ -65,7 +65,7 @@ public record Product(
             return false;
         }
 
-        return ingredients.findById(ingredientId).isPresent();
+        return ingredients.contains(ingredientId);
     }
 
     public boolean hasBrand(Brand other) {

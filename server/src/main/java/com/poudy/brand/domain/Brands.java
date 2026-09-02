@@ -13,8 +13,12 @@ public class Brands {
 
     private final Map<Long, Brand> brandsById;
 
-    public Brands(List<Brand> brands) {
-        this.brandsById = parseBrandsById(brands);
+    private Brands(Map<Long, Brand> brandsById) {
+        this.brandsById = brandsById;
+    }
+
+    public static Brands from(List<Brand> brands) {
+        return new Brands(indexById(brands));
     }
 
     public List<Brand> sortedByName() {
@@ -35,7 +39,7 @@ public class Brands {
             .findFirst();
     }
 
-    private static Map<Long, Brand> parseBrandsById(List<Brand> brands) {
+    private static Map<Long, Brand> indexById(List<Brand> brands) {
         if (brands == null) {
             return Map.of();
         }

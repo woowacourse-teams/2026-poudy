@@ -11,7 +11,7 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFactory;
@@ -185,13 +185,13 @@ class ProductRepositoryTest {
             new JsonDataReader(resourceLoader),
             brands(),
             categories(),
-            new Ingredients(List.of()),
+            IngredientCatalog.from(List.of()),
             new ProductFactory(new HeuristicProductSensoryEstimator())
         );
     }
 
     private static Brands brands() {
-        return new Brands(List.of(new Brand(1L, "다 브랜드", null, null)));
+        return Brands.from(List.of(new Brand(1L, "다 브랜드", null, null)));
     }
 
     private static Categories categories() {

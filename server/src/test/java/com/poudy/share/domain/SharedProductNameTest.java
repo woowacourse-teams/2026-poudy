@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("공유 제품명 분리")
 class SharedProductNameTest {
 
-    private static final Brands BRANDS = new Brands(
+    private static final Brands BRANDS = Brands.from(
         List.of(
             new Brand(1L, "닥터지", "Dr.G", null),
             new Brand(2L, "메디큐브", null, null),

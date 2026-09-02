@@ -30,6 +30,10 @@ public record Ingredient(
         return candidate.equals(koreanName);
     }
 
+    public boolean hasId(Long ingredientId) {
+        return Objects.equals(id, ingredientId);
+    }
+
     public boolean hasEnglishName(String candidate) {
         return candidate.equalsIgnoreCase(englishName);
     }

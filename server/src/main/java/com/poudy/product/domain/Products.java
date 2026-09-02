@@ -4,7 +4,8 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.search.domain.SearchKeyword;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,32 +13,23 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Products {
+public final class Products {
 
-    private final List<Product> products;
-    private final List<SearchableProduct> searchable;
-    private final Map<Long, Product> byId;
-    private final ProductCountsByBrand productCountsByBrand;
+    private final Map<Long, SearchableProduct> productsById;
 
-    public Products(List<Product> products) {
-        this.products = List.copyOf(Objects.requireNonNullElse(products, List.of()));
-        this.searchable = this.products.stream()
-            .map(SearchableProduct::of)
-            .toList();
-        this.byId = indexById(this.products);
-        this.productCountsByBrand = productCountsByBrandOf(this.products);
+    private Products(Map<Long, SearchableProduct> productsById) {
+        this.productsById = productsById;
     }
 
-    private static Map<Long, Product> indexById(List<Product> products) {
-        Map<Long, Product> indexed = new HashMap<>();
-
-        for (Product product : products) {
-            if (indexed.putIfAbsent(product.id(), product) != null) {
+    public static Products from(List<Product> products) {
+        Map<Long, SearchableProduct> indexedProducts = new LinkedHashMap<>();
+        for (Product product : Objects.requireNonNullElse(products, List.<Product>of())) {
+            if (indexedProducts.putIfAbsent(product.id(), SearchableProduct.of(product)) != null) {
                 throw new IllegalArgumentException("제품 ID가 중복됐습니다: " + product.id());
             }
         }
 
-        return Map.copyOf(indexed);
+        return new Products(Collections.unmodifiableMap(indexedProducts));
     }
 
     public List<Product> search(String keyword) {
@@ -48,7 +40,7 @@ public class Products {
 
     public List<Product> searchByProductName(String keyword) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
-        return searchable.stream()
+        return productsById.values().stream()
             .map(product -> MatchedProduct.ofProductName(product, searchKeyword))
             .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
@@ -57,13 +49,13 @@ public class Products {
     }
 
     public List<Product> findAllByBrand(Brand brand) {
-        return products.stream()
+        return values().stream()
             .filter(product -> product.hasBrand(brand))
             .toList();
     }
 
     private List<MatchedProduct> matched(ProductSearchQuery query) {
-        return searchable.stream()
+        return productsById.values().stream()
             .map(product -> product.match(query))
             .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
@@ -75,7 +67,7 @@ public class Products {
             return 0;
         }
 
-        return products.stream()
+        return values().stream()
             .filter(product -> product.contains(ingredientId))
             .count();
     }
@@ -117,7 +109,8 @@ public class Products {
     }
 
     public Optional<Product> findById(Long id) {
-        return Optional.ofNullable(byId.get(id));
+        return Optional.ofNullable(productsById.get(id))
+            .map(SearchableProduct::product);
     }
 
     public List<Product> findAllById(List<Long> ids) {
@@ -126,8 +119,9 @@ public class Products {
         }
 
         return ids.stream()
-            .map(byId::get)
+            .map(productsById::get)
             .filter(Objects::nonNull)
+            .map(SearchableProduct::product)
             .toList();
     }
 
@@ -142,7 +136,7 @@ public class Products {
             return search(filter.keyword());
         }
 
-        return products;
+        return values();
     }
 
     private static List<Brand> brandsOf(List<Product> products) {
@@ -154,11 +148,11 @@ public class Products {
     }
 
     public List<CategoryProductCount> productCountsByCategory(Categories categories) {
-        return countsByCategory(products).categoriesOf(categories);
+        return countsByCategory(values()).categoriesOf(categories);
     }
 
     private ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
-        List<Product> productsInBrand = products.stream()
+        List<Product> productsInBrand = values().stream()
             .filter(product -> product.hasBrandId(brandId))
             .toList();
 
@@ -166,7 +160,7 @@ public class Products {
     }
 
     public List<BrandProductCount> productCountsByBrand(List<Brand> brands) {
-        return productCountsByBrand.countsOf(brands);
+        return productCountsByBrandOf(values()).countsOf(brands);
     }
 
     public BrandProductCounts brandProductCountsOf(Brand brand, Categories categories) {
@@ -193,5 +187,11 @@ public class Products {
         Map<Long, Long> countsByBrandId = products.stream()
             .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
         return new ProductCountsByBrand(countsByBrandId);
+    }
+
+    private List<Product> values() {
+        return productsById.values().stream()
+            .map(SearchableProduct::product)
+            .toList();
     }
 }

@@ -4,7 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +73,7 @@ class IngredientSearchTest {
     void limitsSearchResult() throws Exception {
         mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "적색"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(Ingredients.SEARCH_RESULT_LIMIT))
+            .andExpect(jsonPath("$.items.length()").value(IngredientCatalog.SEARCH_RESULT_LIMIT))
             .andExpect(jsonPath("$.items[0].id").value(2645))
             .andExpect(jsonPath("$.items[0].koreanName").value("적색2호"));
     }

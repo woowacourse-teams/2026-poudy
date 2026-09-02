@@ -30,7 +30,7 @@ class BrandControllerTest {
     void findsBrands() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
-        List<BrandProductCount> brandProductCounts = productCounts.countsOf(new Brands(List.of(drG)).sortedByName());
+        List<BrandProductCount> brandProductCounts = productCounts.countsOf(Brands.from(List.of(drG)).sortedByName());
         BrandService brandService = mock(BrandService.class);
         given(brandService.findBrands()).willReturn(brandProductCounts);
         BrandController controller = new BrandController(brandService);

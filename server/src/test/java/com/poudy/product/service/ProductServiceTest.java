@@ -43,7 +43,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(repository.findAll()).willReturn(Products.from(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
             .willReturn(Set.of(999L));
         ProductService service = new ProductService(
@@ -79,7 +79,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(repository.findAll()).willReturn(Products.from(List.of(product)));
         given(excludeCodeIngredients.freeCodesOf(product.ingredients()))
             .willReturn(List.of(ExcludeCode.SULFATES));
         ProductService service = new ProductService(
@@ -103,7 +103,7 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         Category parent = new Category(1L, null, "스킨케어", 0);
         Category child = new Category(2L, 1L, "토너", 1);
-        given(repository.findAll()).willReturn(new Products(List.of()));
+        given(repository.findAll()).willReturn(Products.from(List.of()));
         ProductService service = new ProductService(
             repository,
             Categories.from(List.of(parent, child)),
@@ -123,7 +123,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(repository.findAll()).willReturn(Products.from(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
@@ -162,7 +162,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(new Products(List.of(product)));
+        given(repository.findAll()).willReturn(Products.from(List.of(product)));
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,

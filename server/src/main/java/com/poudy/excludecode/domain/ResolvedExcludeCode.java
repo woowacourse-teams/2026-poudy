@@ -1,6 +1,6 @@
 package com.poudy.excludecode.domain;
 
-import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -12,7 +12,7 @@ public record ResolvedExcludeCode(ExcludeCode code, List<ExcludeCodeIngredient> 
         missing = List.copyOf(missing);
     }
 
-    public static ResolvedExcludeCode of(ExcludeCodeMapping mapping, Ingredients ingredients) {
+    public static ResolvedExcludeCode of(ExcludeCodeMapping mapping, IngredientCatalog ingredients) {
         List<ExcludeCodeIngredient> found = new ArrayList<>();
         List<Long> missing = new ArrayList<>();
 
