@@ -1,13 +1,7 @@
 "use client";
 
-import type {
-  BrandResponse,
-  BrandSummaryResponse,
-  CategoryResponse,
-  ExcludeCodeResponse,
-  ProductResponse,
-} from "@poudy/api/api.zod";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { BrandSummaryResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar, type FilterChipItem } from "@/components/ui/FilterChipBar";
@@ -15,13 +9,14 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import { fetchProducts } from "@/lib/api/products";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
+import { useProductPages } from "@/lib/hooks/useProductPages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
+import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 
 type ProductListProps = {
   readonly categories: readonly CategoryResponse[];
@@ -183,7 +178,8 @@ export function ProductList({
         ) : (
           <ul className="divide-y divide-divider">
             {items.map((product) => (
-              <li key={product.id}>
+              // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
+              <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>
                 <ProductCard
                   product={product}
                   saved={isSaved(product.id)}
@@ -259,74 +255,4 @@ function FilterSummary({ filter }: { readonly filter: Filter }) {
       <p className="text-[12px] text-[#767B83]">{summarizeFilter(filter, names)}</p>
     </section>
   );
-}
-
-type PageState = {
-  readonly key: string;
-  readonly page: number;
-  readonly items: readonly ProductResponse[];
-  /** 지금 조건에 걸린 제품 전체의 브랜드. 페이지에 걸리지 않는다. */
-  readonly brands: readonly BrandResponse[];
-  readonly total: number;
-  readonly hasNext: boolean;
-  readonly loading: boolean;
-  /** 현재 조건의 API 응답을 성공적으로 받은 적이 있는지. 실패를 0건으로 기록하지 않는다. */
-  readonly loaded: boolean;
-};
-
-const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
-  page: 0,
-  items: [],
-  brands: [],
-  total: 0,
-  hasNext: false,
-  loading: true,
-  loaded: false,
-};
-
-/** 조건이 바뀌면 목록을 처음부터 다시 쌓는다. */
-function useProductPages(filter: Filter) {
-  const key = JSON.stringify({ ...filter, page: 0 });
-  const [state, setState] = useState<PageState>({ ...EMPTY_PAGE_STATE, key });
-
-  // 조건이 바뀌면 렌더링 중에 목록을 비운다. effect 에서 되돌리면 한 번 더 그리게 된다.
-  const current = state.key === key ? state : { ...EMPTY_PAGE_STATE, key };
-  if (state.key !== key) setState(current);
-
-  const { page } = current;
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetchProducts({ ...JSON.parse(key), page })
-      .then((response) => {
-        if (controller.signal.aborted) return;
-        setState((previous) => {
-          if (previous.key !== key) return previous;
-          return {
-            ...previous,
-            // 첫 페이지는 갈아 끼우고 다음 페이지는 이어 붙인다.
-            items: page === 0 ? response.items : [...previous.items, ...response.items],
-            // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
-            brands: response.brands,
-            total: response.pagination.totalElements,
-            hasNext: response.pagination.hasNext,
-            loading: false,
-            loaded: true,
-          };
-        });
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return;
-        setState((previous) => (previous.key === key ? { ...previous, loading: false } : previous));
-      });
-
-    return () => controller.abort();
-  }, [key, page]);
-
-  const loadNext = useCallback(() => {
-    setState((previous) => ({ ...previous, page: previous.page + 1, loading: true }));
-  }, []);
-
-  return { ...current, loadNext };
 }
