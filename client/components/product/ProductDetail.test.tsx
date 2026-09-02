@@ -71,16 +71,27 @@ describe("제품 성분 요약", () => {
   });
 });
 
-const observers: IntersectionObserverCallback[] = [];
+/** 지켜보는 자리마다 하나씩. 각자 제 자리의 `rootMargin` 을 기억한다. */
+const observers: { readonly margin: number; readonly notify: IntersectionObserverCallback }[] = [];
 
-/** 축약형이 드러나는 때를 IntersectionObserver 가 알려 준다. 그 자리를 대신 두드린다. */
-const scrollPastSummary = () => {
+/**
+ * 지켜보는 자리를 화면 위 `top` 에 두고 IntersectionObserver 가 알리는 것을 흉내 낸다.
+ *
+ * 진짜 관찰자는 제 자리를 넘는 순간에만 알려 온다. 넘지 않은 자리는 잠자코 있어야
+ * 되돌아올 때 생기던 문제가 시험에도 그대로 나타난다.
+ */
+const scrollSummaryEndTo = (top: number, previousTop = Infinity) => {
   act(() => {
-    observers.forEach((notify) =>
-      notify([{ boundingClientRect: { top: -1 } } as IntersectionObserverEntry], {} as IntersectionObserver),
-    );
+    observers
+      .filter(({ margin }) => top < margin !== previousTop < margin)
+      .forEach(({ notify }) =>
+        notify([{ boundingClientRect: { top } } as IntersectionObserverEntry], {} as IntersectionObserver),
+      );
   });
 };
+
+/** 축약형이 드러나는 때를 IntersectionObserver 가 알려 준다. 그 자리를 대신 두드린다. */
+const scrollPastSummary = () => scrollSummaryEndTo(-1);
 
 const summaryBar = () => document.querySelector(".product-summary-bar") as HTMLElement;
 
@@ -93,8 +104,8 @@ describe("제품 상세 머리 고정", () => {
     vi.stubGlobal(
       "IntersectionObserver",
       class {
-        constructor(callback: IntersectionObserverCallback) {
-          observers.push(callback);
+        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+          observers.push({ margin: -parseFloat(String(options?.rootMargin ?? "0")), notify: callback });
         }
         observe() {}
         unobserve() {}
@@ -132,6 +143,53 @@ describe("제품 상세 머리 고정", () => {
 
     expect(summaryBar()).toHaveAttribute("data-stuck", "true");
     expect(summaryBar()).not.toHaveAttribute("inert");
+  });
+
+  it("나타난 뒤에는 나타난 자리로 조금 되돌아와도 그대로 남는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    scrollPastSummary();
+    // 나타나는 자리(44)는 다시 넘겼지만 사라지는 자리(44+24)에는 못 미친 그사이.
+    scrollSummaryEndTo(50, -1);
+
+    expect(summaryBar()).toHaveAttribute("data-stuck", "true");
+  });
+
+  it("사라지는 자리까지 거슬러 올라가야 축약형이 물러난다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    scrollPastSummary();
+    scrollSummaryEndTo(68, -1);
+
+    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
+  });
+
+  it("그사이에 머물러 있으면 나타난 적 없는 축약형은 나오지 않는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    scrollSummaryEndTo(50);
+
+    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
+  });
+
+  it("한참 내려갔다 되돌아와도 사라지는 자리를 넘으면 축약형이 물러난다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    // 한참 내려가면 지켜보는 자리를 둘 다 지나 알림이 끊긴다.
+    scrollSummaryEndTo(-800);
+    scrollSummaryEndTo(300, -800);
+
+    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
+  });
+
+  it("되돌아오다 그사이에 멈추면 축약형이 그대로 남는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    scrollSummaryEndTo(-800);
+    // 나타나는 자리(44)는 넘었지만 사라지는 자리(68)에는 못 미친 그사이.
+    scrollSummaryEndTo(50, -800);
+
+    expect(summaryBar()).toHaveAttribute("data-stuck", "true");
   });
 
   it("축약형에도 브랜드·제품명·유수분·가격·저장 버튼이 모두 남는다", () => {

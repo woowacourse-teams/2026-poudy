@@ -7,7 +7,15 @@ import { TopBar } from "@/components/ui/TopBar";
 /** `TopBar variant="sub"` 의 높이. 축약형이 그 아래에서 자리를 이어받는다. */
 const TOP_BAR_HEIGHT = 44;
 
-const Context = createContext<((passed: boolean) => void) | undefined>(undefined);
+/**
+ * 나타나는 자리와 사라지는 자리를 벌려 두는 폭.
+ *
+ * 두 자리가 같으면 그 경계에 손을 멈춘 채 조금만 흔들어도 나타남과 사라짐이 번갈아 걸린다.
+ * 한 번 나타난 뒤에는 이만큼 더 거슬러 올라가야 사라지게 해 그 떨림을 없앤다.
+ */
+const HYSTERESIS = 24;
+
+const Context = createContext<React.Dispatch<React.SetStateAction<boolean>> | undefined>(undefined);
 
 type ProductDetailHeaderProps = {
   readonly title: string;
@@ -67,12 +75,31 @@ export function ProductSummaryEnd() {
     // 지켜볼 수 없는 환경에서는 축약형을 띄우지 않는다. 원래 배치는 그대로 읽힌다.
     if (typeof IntersectionObserver === "undefined") return;
 
-    const observer = new IntersectionObserver(([entry]) => setPassed(entry.boundingClientRect.top < TOP_BAR_HEIGHT), {
-      rootMargin: `-${TOP_BAR_HEIGHT}px 0px 0px 0px`,
+    /*
+     * 지켜보는 자리를 두 곳에 둔다. 하나로 두면 그 경계를 넘을 때만 알려 오므로, 되돌아올 때
+     * 알려 오는 값이 사라질 자리에 닿지 않아 축약형이 남는다.
+     *
+     * 나타나는 자리는 머리 바로 아래, 사라지는 자리는 그보다 `HYSTERESIS` 만큼 더 아래다.
+     * 각 자리를 넘는 순간마다 알려 오니 그 자리에서 곧바로 뒤집는다.
+     */
+    const observers = [
+      [TOP_BAR_HEIGHT, true],
+      [TOP_BAR_HEIGHT + HYSTERESIS, false],
+    ].map(([margin, entering]) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          // 자리 위로 지나갔으면 나타나고, 아래로 되돌아왔으면 물러난다.
+          const above = entry.boundingClientRect.top < Number(margin);
+          setPassed((passed) => (entering ? (above ? true : passed) : above ? passed : false));
+        },
+        { rootMargin: `-${margin}px 0px 0px 0px` },
+      );
+
+      observer.observe(element);
+      return observer;
     });
 
-    observer.observe(element);
-    return () => observer.disconnect();
+    return () => observers.forEach((observer) => observer.disconnect());
   }, [setPassed]);
 
   return <div ref={ref} aria-hidden="true" className="h-px" />;
