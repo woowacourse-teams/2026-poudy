@@ -4,7 +4,6 @@ import { Suspense } from "react";
 
 import { CategoryTrack } from "@/components/directory/CategoryTrack";
 import { ProductList } from "@/components/product/ProductList";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
 
@@ -76,8 +75,6 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
           excludeCodes={excludeCodes.items}
         />
       </Suspense>
-
-      <BottomNavigation />
     </>
   );
 }

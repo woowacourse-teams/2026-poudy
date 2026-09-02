@@ -6,6 +6,7 @@ import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
+import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { indexingEnabled, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/seo/site";
 import { MockProvider } from "@/mocks/MockProvider";
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AnalyticsProvider />
         </Suspense>
         <MockProvider>{children}</MockProvider>
+        <BottomNavigationSlot />
       </body>
       <GoogleAnalyticsTag />
     </html>

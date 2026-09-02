@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { ProductList } from "@/components/product/ProductList";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
@@ -81,8 +80,6 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
           excludeCodes={excludeCodes.items}
         />
       </Suspense>
-
-      <BottomNavigation />
     </>
   );
 }

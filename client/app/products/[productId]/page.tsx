@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProductDetail } from "@/components/product/ProductDetail";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
@@ -66,7 +65,6 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
     <>
       <script type="application/ld+json">{JSON.stringify(structuredData).replace(/</g, "\\u003c")}</script>
       <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />
-      <BottomNavigation />
     </>
   );
 }

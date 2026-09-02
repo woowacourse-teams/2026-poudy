@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { ProductList } from "@/components/product/ProductList";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
 
@@ -27,8 +26,6 @@ export default async function ProductsPage() {
       <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
         <ProductList categories={categories.items} brands={brands.items} excludeCodes={excludeCodes.items} />
       </Suspense>
-
-      <BottomNavigation />
     </>
   );
 }

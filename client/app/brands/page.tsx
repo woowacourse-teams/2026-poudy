@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { BrandDirectory } from "@/components/directory/BrandDirectory";
 import { DirectoryTabs } from "@/components/directory/DirectoryTabs";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchBrands } from "@/lib/api/products";
 
@@ -26,7 +25,6 @@ export default async function BrandsPage() {
         <DirectoryTabs current="brand" />
         <BrandDirectory brands={brands.items} />
       </div>
-      <BottomNavigation />
     </>
   );
 }

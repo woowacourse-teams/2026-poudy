@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { LegalArticle, LegalDocument, LegalList, LegalRecords } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 
 /*
@@ -378,8 +377,6 @@ export default function PrivacyPage() {
           서비스 이용에 관한 사항은 <Link href="/terms">이용약관</Link>에서 확인하실 수 있습니다.
         </p>
       </LegalDocument>
-
-      <BottomNavigation />
     </>
   );
 }
