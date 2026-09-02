@@ -4,6 +4,8 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
@@ -17,20 +19,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record Product(
-    Long id,
-    String name,
-    Brand brand,
-    Category category,
-    Ingredients ingredients,
-    String imageUrl,
-    ProductVariants variants,
-    ProductSensory sensory,
-    OffsetDateTime updatedAt) {
+public final class Product {
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
-    public Product {
+    private final Long id;
+    private final String name;
+    private final Brand brand;
+    private final Category category;
+    private final Ingredients ingredients;
+    private final String imageUrl;
+    private final ProductVariants variants;
+    private final ProductSensory sensory;
+    private final OffsetDateTime updatedAt;
+
+    public Product(
+        Long id,
+        String name,
+        Brand brand,
+        Category category,
+        Ingredients ingredients,
+        String imageUrl,
+        ProductVariants variants,
+        ProductSensory sensory,
+        OffsetDateTime updatedAt
+    ) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("제품 이름이 필요합니다.");
         }
@@ -58,6 +71,52 @@ public record Product(
         if (updatedAt == null) {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
         }
+
+        this.id = id;
+        this.name = name;
+        this.brand = brand;
+        this.category = category;
+        this.ingredients = ingredients;
+        this.imageUrl = imageUrl;
+        this.variants = variants;
+        this.sensory = sensory;
+        this.updatedAt = updatedAt;
+    }
+
+    public Long id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Brand brand() {
+        return brand;
+    }
+
+    public Category category() {
+        return category;
+    }
+
+    public Ingredients ingredients() {
+        return ingredients;
+    }
+
+    public String imageUrl() {
+        return imageUrl;
+    }
+
+    public ProductVariants variants() {
+        return variants;
+    }
+
+    public ProductSensory sensory() {
+        return sensory;
+    }
+
+    public OffsetDateTime updatedAt() {
+        return updatedAt;
     }
 
     public boolean contains(Long ingredientId) {
@@ -86,15 +145,6 @@ public record Product(
 
     public boolean matchesNameExactly(SearchKeyword keyword) {
         return keyword.matchesExactly(name);
-    }
-
-    public boolean matches(ProductFilter filter) {
-        return matchesCategory(filter.categoryIds())
-            && matchesBrand(filter.brandIds())
-            && matchesAny(filter.moistureLevels(), sensory.moisture())
-            && matchesAny(filter.oilLevels(), sensory.oil())
-            && ingredients.containsAll(filter.ingredientFilter().includedIds())
-            && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
     }
 
     public Integer moistureLevel() {
@@ -150,18 +200,21 @@ public record Product(
         }
     }
 
-    private boolean matchesCategory(List<Long> categoryIds) {
+    boolean belongsToAnyCategory(List<Long> categoryIds) {
         return categoryIds.isEmpty()
             || categoryIds.contains(category.id())
             || categoryIds.contains(category.parentId());
     }
 
-    private boolean matchesBrand(List<Long> brandIds) {
+    boolean belongsToAnyBrand(List<Long> brandIds) {
         return brandIds.isEmpty() || brandIds.stream().anyMatch(brand::hasId);
     }
 
-    private static boolean matchesAny(List<?> candidates, Object value) {
-        return candidates.isEmpty() || candidates.contains(value);
+    boolean hasAnyMoistureLevel(List<MoistureLevel> levels) {
+        return levels.isEmpty() || levels.contains(sensory.moisture());
     }
 
+    boolean hasAnyOilLevel(List<OilLevel> levels) {
+        return levels.isEmpty() || levels.contains(sensory.oil());
+    }
 }

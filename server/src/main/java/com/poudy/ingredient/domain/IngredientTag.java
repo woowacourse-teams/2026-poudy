@@ -7,13 +7,25 @@ import com.poudy.tag.domain.TagCategory;
 import java.util.List;
 import java.util.Objects;
 
-public record IngredientTag(Tag tag, String source) {
+public final class IngredientTag {
 
-    public IngredientTag {
-        Objects.requireNonNull(tag, "성분 태그가 필요합니다.");
+    private final Tag tag;
+    private final String source;
+
+    public IngredientTag(Tag tag, String source) {
+        this.tag = Objects.requireNonNull(tag, "성분 태그가 필요합니다.");
+        this.source = source;
         if (Evidence.ofTag(source).isDeferred()) {
             throw new DeferredTagEvidenceException();
         }
+    }
+
+    public Tag tag() {
+        return tag;
+    }
+
+    public String source() {
+        return source;
     }
 
     public boolean isOf(TagCategory other) {

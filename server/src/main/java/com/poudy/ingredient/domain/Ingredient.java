@@ -6,24 +6,81 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public record Ingredient(
-    Long id,
-    String koreanName,
-    String englishName,
-    String originDefinition,
-    String description,
-    String descriptionEvidence,
-    List<String> aliases,
-    List<IngredientTag> tagMappings,
-    OffsetDateTime createdAt,
-    OffsetDateTime updatedAt) {
+public final class Ingredient {
 
-    public Ingredient {
-        englishName = Objects.requireNonNullElse(englishName, "");
-        originDefinition = Objects.requireNonNullElse(originDefinition, "");
-        descriptionEvidence = Objects.requireNonNullElse(descriptionEvidence, "");
-        aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
-        tagMappings = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
+    private final Long id;
+    private final String koreanName;
+    private final String englishName;
+    private final String originDefinition;
+    private final String description;
+    private final String descriptionEvidence;
+    private final List<String> aliases;
+    private final IngredientTags tags;
+    private final OffsetDateTime createdAt;
+    private final OffsetDateTime updatedAt;
+
+    public Ingredient(
+        Long id,
+        String koreanName,
+        String englishName,
+        String originDefinition,
+        String description,
+        String descriptionEvidence,
+        List<String> aliases,
+        List<IngredientTag> tagMappings,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt
+    ) {
+        this.id = id;
+        this.koreanName = koreanName;
+        this.englishName = Objects.requireNonNullElse(englishName, "");
+        this.originDefinition = Objects.requireNonNullElse(originDefinition, "");
+        this.description = description;
+        this.descriptionEvidence = Objects.requireNonNullElse(descriptionEvidence, "");
+        this.aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
+        this.tags = IngredientTags.from(tagMappings);
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public Long id() {
+        return id;
+    }
+
+    public String koreanName() {
+        return koreanName;
+    }
+
+    public String englishName() {
+        return englishName;
+    }
+
+    public String originDefinition() {
+        return originDefinition;
+    }
+
+    public String description() {
+        return description;
+    }
+
+    public String descriptionEvidence() {
+        return descriptionEvidence;
+    }
+
+    public List<String> aliases() {
+        return aliases;
+    }
+
+    public List<IngredientTag> tagMappings() {
+        return tags.values();
+    }
+
+    public OffsetDateTime createdAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime updatedAt() {
+        return updatedAt;
     }
 
     public boolean hasKoreanName(String candidate) {
@@ -39,11 +96,11 @@ public record Ingredient(
     }
 
     public List<FormulationRole> formulationRoles() {
-        return tags().formulationRoles();
+        return tags.formulationRoles();
     }
 
     public List<SkinEffect> skinEffects() {
-        return tags().skinEffects();
+        return tags.skinEffects();
     }
 
     public List<String> infoSources() {
@@ -51,10 +108,6 @@ public record Ingredient(
     }
 
     public List<String> effectSources() {
-        return tags().effectSources();
-    }
-
-    private IngredientTags tags() {
-        return new IngredientTags(tagMappings);
+        return tags.effectSources();
     }
 }

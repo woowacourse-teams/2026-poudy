@@ -24,6 +24,16 @@ public record ProductQuery(
         excludeCodes = copyOf(excludeCodes);
     }
 
+    public boolean hasFilters() {
+        return !categoryIds.isEmpty()
+            || !brandIds.isEmpty()
+            || !moistureLevels.isEmpty()
+            || !oilLevels.isEmpty()
+            || !includeIngredientIds.isEmpty()
+            || !excludeIngredientIds.isEmpty()
+            || !excludeCodes.isEmpty();
+    }
+
     private static <T> List<T> copyOf(List<T> values) {
         return List.copyOf(Objects.requireNonNullElse(values, List.of()));
     }

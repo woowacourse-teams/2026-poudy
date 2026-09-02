@@ -8,10 +8,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public record SearchableProduct(Product product, List<SearchableText> productNames) {
+public final class SearchableProduct {
 
-    public SearchableProduct {
-        productNames = List.copyOf(productNames);
+    private final Product product;
+    private final List<SearchableText> productNames;
+
+    private SearchableProduct(Product product, List<SearchableText> productNames) {
+        this.product = product;
+        this.productNames = List.copyOf(productNames);
+    }
+
+    public Product product() {
+        return product;
     }
 
     public static SearchableProduct of(Product product) {

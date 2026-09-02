@@ -57,7 +57,7 @@ public class ProductService {
                 page,
                 size,
                 ProductSort.orDefault(sort),
-                hasFilters(query)
+                query.hasFilters()
             ),
             () -> products.find(filter, sort, page, size),
             ProductPage::totalElements
@@ -104,13 +104,4 @@ public class ProductService {
         );
     }
 
-    private static boolean hasFilters(ProductQuery query) {
-        return !query.categoryIds().isEmpty()
-            || !query.brandIds().isEmpty()
-            || !query.moistureLevels().isEmpty()
-            || !query.oilLevels().isEmpty()
-            || !query.includeIngredientIds().isEmpty()
-            || !query.excludeIngredientIds().isEmpty()
-            || !query.excludeCodes().isEmpty();
-    }
 }

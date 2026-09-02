@@ -6,10 +6,20 @@ import com.poudy.tag.domain.TagCategory;
 import java.util.List;
 import java.util.Objects;
 
-public record IngredientTags(List<IngredientTag> values) {
+public final class IngredientTags {
 
-    public IngredientTags {
-        values = List.copyOf(Objects.requireNonNullElse(values, List.of()));
+    private final List<IngredientTag> values;
+
+    private IngredientTags(List<IngredientTag> values) {
+        this.values = values;
+    }
+
+    public static IngredientTags from(List<IngredientTag> values) {
+        return new IngredientTags(List.copyOf(Objects.requireNonNullElse(values, List.of())));
+    }
+
+    public List<IngredientTag> values() {
+        return values;
     }
 
     public List<FormulationRole> formulationRoles() {

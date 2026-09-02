@@ -7,16 +7,27 @@ import com.poudy.search.domain.TextMatch;
 import java.util.List;
 import java.util.Optional;
 
-public record SearchableIngredient(
-    Ingredient ingredient,
-    List<SearchableText> koreanNames,
-    List<SearchableText> englishNames,
-    List<SearchableText> aliases) {
+public final class SearchableIngredient {
 
-    public SearchableIngredient {
-        koreanNames = List.copyOf(koreanNames);
-        englishNames = List.copyOf(englishNames);
-        aliases = List.copyOf(aliases);
+    private final Ingredient ingredient;
+    private final List<SearchableText> koreanNames;
+    private final List<SearchableText> englishNames;
+    private final List<SearchableText> aliases;
+
+    private SearchableIngredient(
+        Ingredient ingredient,
+        List<SearchableText> koreanNames,
+        List<SearchableText> englishNames,
+        List<SearchableText> aliases
+    ) {
+        this.ingredient = ingredient;
+        this.koreanNames = List.copyOf(koreanNames);
+        this.englishNames = List.copyOf(englishNames);
+        this.aliases = List.copyOf(aliases);
+    }
+
+    public Ingredient ingredient() {
+        return ingredient;
     }
 
     public static SearchableIngredient of(Ingredient ingredient) {

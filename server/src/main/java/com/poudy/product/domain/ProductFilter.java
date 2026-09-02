@@ -4,22 +4,41 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import java.util.List;
 
-public record ProductFilter(
-    String keyword,
-    List<Long> categoryIds,
-    List<Long> brandIds,
-    List<MoistureLevel> moistureLevels,
-    List<OilLevel> oilLevels,
-    IngredientFilter ingredientFilter) {
+public final class ProductFilter {
 
-    public ProductFilter {
-        categoryIds = copyOf(categoryIds);
-        brandIds = copyOf(brandIds);
-        moistureLevels = copyOf(moistureLevels);
-        oilLevels = copyOf(oilLevels);
-        if (ingredientFilter == null) {
-            ingredientFilter = new IngredientFilter(null, null);
-        }
+    private final String keyword;
+    private final List<Long> categoryIds;
+    private final List<Long> brandIds;
+    private final List<MoistureLevel> moistureLevels;
+    private final List<OilLevel> oilLevels;
+    private final IngredientFilter ingredientFilter;
+
+    public ProductFilter(
+        String keyword,
+        List<Long> categoryIds,
+        List<Long> brandIds,
+        List<MoistureLevel> moistureLevels,
+        List<OilLevel> oilLevels,
+        IngredientFilter ingredientFilter
+    ) {
+        this.keyword = keyword;
+        this.categoryIds = copyOf(categoryIds);
+        this.brandIds = copyOf(brandIds);
+        this.moistureLevels = copyOf(moistureLevels);
+        this.oilLevels = copyOf(oilLevels);
+        this.ingredientFilter = ingredientFilter == null ? new IngredientFilter(null, null) : ingredientFilter;
+    }
+
+    public String keyword() {
+        return keyword;
+    }
+
+    public boolean matches(Product product) {
+        return product.belongsToAnyCategory(categoryIds)
+            && product.belongsToAnyBrand(brandIds)
+            && product.hasAnyMoistureLevel(moistureLevels)
+            && product.hasAnyOilLevel(oilLevels)
+            && ingredientFilter.matches(product.ingredients());
     }
 
     public boolean hasKeyword() {

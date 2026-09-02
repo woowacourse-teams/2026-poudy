@@ -127,7 +127,7 @@ public final class Products {
 
     private List<Product> matchedBy(ProductFilter filter) {
         return candidatesOf(filter).stream()
-            .filter(product -> product.matches(filter))
+            .filter(filter::matches)
             .toList();
     }
 
