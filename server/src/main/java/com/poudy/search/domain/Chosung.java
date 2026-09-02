@@ -1,6 +1,8 @@
 package com.poudy.search.domain;
 
-public record Chosung(String value) {
+import java.util.Objects;
+
+public final class Chosung {
 
     private static final String LETTERS = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
     private static final String DOUBLE_LETTERS = "ㄲㄸㅃㅆㅉ";
@@ -11,6 +13,16 @@ public record Chosung(String value) {
     private static final char FIRST_SYLLABLE = '가';
     private static final char LAST_SYLLABLE = '힣';
     private static final int LETTERS_PER_CHOSUNG = 588;
+
+    private final String value;
+
+    public Chosung(String value) {
+        this.value = Objects.requireNonNull(value);
+    }
+
+    public String value() {
+        return value;
+    }
 
     public static Chosung of(String text) {
         StringBuilder extracted = new StringBuilder();
@@ -79,5 +91,15 @@ public record Chosung(String value) {
 
     private static char letterOf(char syllable) {
         return LETTERS.charAt((syllable - FIRST_SYLLABLE) / LETTERS_PER_CHOSUNG);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this == other || other instanceof Chosung that && value.equals(that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 }
