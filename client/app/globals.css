@@ -100,6 +100,8 @@
   --ease-travel: cubic-bezier(0.4, 0, 0.2, 1);
 
   --transition-duration-press: 100ms;
+  --transition-duration-release: 200ms;
+  --ease-release: linear(0, 0.45 14%, 0.82 28%, 1.267 48%, 1.04 64%, 0.933 76%, 1.015 89%, 1);
   --transition-duration-celebration: 520ms;
   /*
    * 움직이는 것은 모두 이 커브를 쓴다. 예전에 쓰던 cubic-bezier(0, 0, 0.2, 1) 은
