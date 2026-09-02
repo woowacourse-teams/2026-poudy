@@ -66,6 +66,7 @@ fi
 
 install -d -o nginx -g nginx -m 0750 \
     /var/cache/nginx/poudy_categories \
+    /var/cache/nginx/poudy_sitemaps \
     /var/cache/nginx/poudy_static
 
 install -o root -g root -m 0644 "${SOURCE_MAIN_CONFIG}" "${temporary_main_config}"

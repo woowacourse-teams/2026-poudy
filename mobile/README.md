@@ -29,12 +29,11 @@ pnpm android
 
 ## 환경 변수
 
-| 변수                       | 필수       | 용도                                                             |
-| -------------------------- | ---------- | ---------------------------------------------------------------- |
-| `EXPO_PUBLIC_WEB_URL`      | 예         | WebView가 표시할 Poudy 웹 클라이언트 기준 URL                    |
-| `EXPO_PUBLIC_API_BASE_URL` | 예         | 공유 텍스트 매칭 API 기준 URL                                    |
-| `POUDY_BUNDLE_IDENTIFIER`  | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app` |
-| `POUDY_APP_VERSION`        | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다             |
+| 변수                      | 필수       | 용도                                                                   |
+| ------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `EXPO_PUBLIC_SERVICE_URL` | 예         | 앱이 상대하는 Poudy 서비스 기준 URL. 웹뷰 표시와 출처 판별에 함께 쓴다 |
+| `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app`       |
+| `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다                   |
 
 실기기에서 `localhost`는 개발 PC가 아니므로 HTTPS 터널을 사용합니다. 값이 없거나 HTTP(S) URL이 아니면 Expo 설정 평가 단계에서 빌드를 중단합니다.
 
@@ -45,8 +44,7 @@ pnpm android
 ```bash
 cd mobile
 export POUDY_BUNDLE_IDENTIFIER=com.poudy.app.dev
-export EXPO_PUBLIC_WEB_URL=https://poudy-staging.vercel.app
-export EXPO_PUBLIC_API_BASE_URL=https://api.poudy.example.com
+export EXPO_PUBLIC_SERVICE_URL=https://poudy-staging.vercel.app
 pnpm exec expo prebuild --clean --no-install
 pnpm android
 ```
@@ -84,7 +82,7 @@ npx eas-cli@latest submit --platform android --profile staging --latest
 
 `production` 빌드는 production EAS Environment에 `POUDY_APP_VERSION`이 없으면 중단됩니다.
 
-`eas.json`은 development, preview, production 환경을 각각 같은 이름의 EAS Environment와 연결합니다. 각 환경에 `EXPO_PUBLIC_WEB_URL`과 `EXPO_PUBLIC_API_BASE_URL`을 plaintext로 등록해야 하며, 처음 사용할 때 EAS 프로젝트 연결과 서명 자격 증명 설정이 필요합니다. Play Store 제출용 서비스 계정 키는 저장소에 두지 않고 각자 `mobile/google-service-account.json`으로 놓습니다.
+`eas.json`은 development, preview, production 환경을 각각 같은 이름의 EAS Environment와 연결합니다. 각 환경에 `EXPO_PUBLIC_SERVICE_URL`을 plaintext로 등록해야 하며, 처음 사용할 때 EAS 프로젝트 연결과 서명 자격 증명 설정이 필요합니다. Play Store 제출용 서비스 계정 키는 저장소에 두지 않고 각자 `mobile/google-service-account.json`으로 놓습니다.
 
 ## 공유 수신 확인
 
