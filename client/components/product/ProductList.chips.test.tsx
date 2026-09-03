@@ -29,7 +29,7 @@ const excludeCodes = [
 
 const setup = (query: string) => {
   params.current = new URLSearchParams(query);
-  render(<ProductList categories={[]} brands={[]} excludeCodes={excludeCodes} />);
+  render(<ProductList categories={[]} excludeCodes={excludeCodes} />);
 };
 
 const chipCount = async () =>

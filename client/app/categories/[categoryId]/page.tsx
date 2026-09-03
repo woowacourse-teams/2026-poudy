@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { CategoryTrack } from "@/components/directory/CategoryTrack";
 import { ProductList } from "@/components/product/ProductList";
 import { TopBar } from "@/components/ui/TopBar";
-import { fetchBrands, fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
+import { fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
 
 export async function generateMetadata(props: PageProps<"/categories/[categoryId]">): Promise<Metadata> {
   const { categoryId } = await props.params;
@@ -40,7 +40,7 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
   const id = Number(categoryId);
   if (!Number.isInteger(id)) notFound();
 
-  const [categories, brands, excludeCodes] = await Promise.all([fetchCategories(), fetchBrands(), fetchExcludeCodes()]);
+  const [categories, excludeCodes] = await Promise.all([fetchCategories(), fetchExcludeCodes()]);
 
   // 대분류를 고르면 그 아래 소분류를 모두 담고, 소분류를 고르면 형제들을 가로로 보여 준다.
   const parent = categories.items.find((category) => category.id === id);
@@ -71,7 +71,6 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
           fixedFilter={{ categoryIds }}
           hiddenChips={["category"]}
           categories={categories.items}
-          brands={brands.items}
           excludeCodes={excludeCodes.items}
         />
       </Suspense>

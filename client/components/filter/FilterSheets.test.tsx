@@ -7,7 +7,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "@/components/product/ProductList";
-import { brands, categories, excludeCodes } from "@/mocks/fixtures";
+import { categories, excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
 const countIs = (count: number) => server.use(http.get("*/api/products/count", () => HttpResponse.json({ count })));
 
 const openSheet = async (name: RegExp) => {
-  render(<ProductList categories={categories} brands={brands} excludeCodes={excludeCodes} />);
+  render(<ProductList categories={categories} excludeCodes={excludeCodes} />);
 
   await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
   await userEvent.click(screen.getByRole("button", { name }));

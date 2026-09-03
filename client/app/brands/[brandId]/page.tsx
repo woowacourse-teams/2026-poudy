@@ -76,7 +76,6 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
           fixedFilter={{ brandIds: [brand.id] }}
           hiddenChips={["brand"]}
           categories={brand.categories}
-          brands={brands.items}
           excludeCodes={excludeCodes.items}
         />
       </Suspense>

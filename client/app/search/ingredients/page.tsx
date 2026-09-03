@@ -10,8 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/search/ingredients" },
 };
 
-// 입력이 중심이라 미리 만들지 않는다.
-export const dynamic = "force-dynamic";
+// 조건은 클라이언트가 읽으므로 서버가 그리는 껍데기는 하나뿐이다.
+// 제외 성분군만 하루에 한 번 다시 받는다.
+export const revalidate = 86400;
 
 /** S03 성분 필터링 탭. */
 export default async function IngredientSearchPage() {
