@@ -22,11 +22,17 @@ export const ProductResponse = z.object({ id: z.number().int(), name: z.string()
 export type StorageResponse = __TypedOpenapi.Schemas.StorageResponse;
 export const StorageResponse = z.object({ items: z.array(ProductResponse) });
 
+export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
+export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
+
+export type CategoryResponse = __TypedOpenapi.Schemas.CategoryResponse;
+export const CategoryResponse = z.object({ id: z.number().int(), name: z.string(), children: z.array(CategoryChildResponse), productCount: z.number().int() });
+
 export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
 export const PaginationResponse = z.object({ page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int(), hasNext: z.boolean() });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
-export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, brands: z.array(BrandResponse) });
+export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, brands: z.array(BrandResponse), categories: z.array(CategoryResponse) });
 
 export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
 export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
@@ -96,12 +102,6 @@ export const ExcludeCodeResponse = z.object({ code: z.enum(["FRAGRANCE_ALLERGENS
 
 export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResponse;
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
-
-export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
-export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
-
-export type CategoryResponse = __TypedOpenapi.Schemas.CategoryResponse;
-export const CategoryResponse = z.object({ id: z.number().int(), name: z.string(), children: z.array(CategoryChildResponse), productCount: z.number().int() });
 
 export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
 export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });

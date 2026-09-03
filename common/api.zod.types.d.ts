@@ -89,6 +89,8 @@ export type StorageResponse = {
    */
   items: Array<ProductResponse>;
 }
+export type CategoryChildResponse = { id: number, name: string, productCount: number }
+export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -97,6 +99,10 @@ export type ProductPageResponse = {
    * 조회 조건에 해당하는 제품 전체의 브랜드. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
    */
   brands: Array<BrandResponse>;
+  /**
+   * 조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
+   */
+  categories: Array<CategoryResponse>;
 }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
@@ -402,8 +408,6 @@ export type ExcludeCodeListResponse = {
    */
   items: Array<ExcludeCodeResponse>;
 }
-export type CategoryChildResponse = { id: number, name: string, productCount: number }
-export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type BrandSummaryResponse = {
   /**

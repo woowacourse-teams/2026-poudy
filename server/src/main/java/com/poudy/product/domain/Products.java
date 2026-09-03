@@ -71,7 +71,7 @@ public final class Products {
             .count();
     }
 
-    public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size) {
+    public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size, Categories categories) {
         requireValidPageCondition(page, size);
 
         List<Product> matched = matchedBy(filter);
@@ -79,7 +79,12 @@ public final class Products {
             .sorted(ProductSort.orDefault(sort).comparator())
             .toList();
 
-        return new ProductPage(pageOf(sorted, page, size), matched.size(), brandsOf(matched));
+        return new ProductPage(
+            pageOf(sorted, page, size),
+            matched.size(),
+            brandsOf(matched),
+            countsByCategory(matched).nonEmptyCategoriesOf(categories)
+        );
     }
 
     public ProductSuggestionPage suggest(String keyword, int page, int size) {
