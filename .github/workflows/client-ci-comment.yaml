@@ -18,7 +18,12 @@ jobs:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-latest
     steps:
+      # Client CI 가 결과를 남기기 전에 멈추면 산출물이 없다. preview 용 secret 이
+      # 없는 fork PR 이 여기에 해당한다. 실패는 Client CI 가 이미 알리므로
+      # 댓글 워크플로까지 붉게 만들지 않는다.
       - name: Download check results
+        id: download
+        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: client-ci-results
@@ -27,6 +32,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Update PR comment
+        if: steps.download.outcome == 'success'
         uses: actions/github-script@v9
         with:
           script: |
@@ -183,6 +189,10 @@ jobs:
               '',
               '## Lighthouse 결과',
               '',
+              // 어느 주소를 잰 점수인지 함께 보여 준다.
+              ...(results.lighthouseUrl
+                ? [`측정 대상: ${results.lighthouseUrl}`, '']
+                : []),
               '| 검사 항목 | 점수 |',
               '| --- | --- |',
               `| Performance | ${formatLighthouseScore('performance')} |`,
