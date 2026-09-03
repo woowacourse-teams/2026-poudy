@@ -48,7 +48,7 @@ public class ProductService {
         Products products = products();
 
         if (query.keyword() == null || page > 0) {
-            return products.find(filter, sort, page, size);
+            return products.find(filter, sort, page, size, categories);
         }
 
         return searchLogger.analyze(
@@ -59,7 +59,7 @@ public class ProductService {
                 ProductSort.orDefault(sort),
                 query.hasFilters()
             ),
-            () -> products.find(filter, sort, page, size),
+            () -> products.find(filter, sort, page, size, categories),
             ProductPage::totalElements
         );
     }

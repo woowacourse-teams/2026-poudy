@@ -1722,6 +1722,61 @@
           "items"
         ]
       },
+      "CategoryChildResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨/토너"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 30
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "productCount"
+        ]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨케어"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryChildResponse"
+            }
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 51
+          }
+        },
+        "required": [
+          "children",
+          "id",
+          "name",
+          "productCount"
+        ]
+      },
       "PaginationResponse": {
         "type": "object",
         "properties": {
@@ -1776,10 +1831,18 @@
             "items": {
               "$ref": "#/components/schemas/BrandResponse"
             }
+          },
+          "categories": {
+            "type": "array",
+            "description": "조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다",
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            }
           }
         },
         "required": [
           "brands",
+          "categories",
           "items",
           "pagination"
         ]
@@ -2588,30 +2651,6 @@
           "koreanName"
         ]
       },
-      "CategoryChildResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 2
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨/토너"
-          },
-          "productCount": {
-            "type": "integer",
-            "format": "int64",
-            "example": 30
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "productCount"
-        ]
-      },
       "CategoryListResponse": {
         "type": "object",
         "properties": {
@@ -2624,37 +2663,6 @@
         },
         "required": [
           "items"
-        ]
-      },
-      "CategoryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨케어"
-          },
-          "children": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategoryChildResponse"
-            }
-          },
-          "productCount": {
-            "type": "integer",
-            "format": "int64",
-            "example": 51
-          }
-        },
-        "required": [
-          "children",
-          "id",
-          "name",
-          "productCount"
         ]
       },
       "BrandOverviewResponse": {

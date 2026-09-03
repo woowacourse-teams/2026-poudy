@@ -2,8 +2,10 @@ package com.poudy.product.domain;
 
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
@@ -53,6 +55,15 @@ class ProductCatalogTest {
         30L
     );
     private final Products products = Products.from(List.of(toner, serum, cream));
+    private final Categories categories = Categories.from(
+        List.of(
+            new Category(1L, null, "스킨케어", 0),
+            toner.category(),
+            serum.category(),
+            new Category(5L, null, "크림", 0),
+            cream.category()
+        )
+    );
 
     @Test
     @DisplayName("서로 다른 필터 종류를 AND 로 결합한다")
@@ -66,7 +77,8 @@ class ProductCatalogTest {
             new IngredientFilter(List.of(10L, 30L), List.of(20L))
         );
 
-        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20).items()).containsExactly(serum);
+        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
+            .containsExactly(serum);
     }
 
     @Test
@@ -81,12 +93,12 @@ class ProductCatalogTest {
             new IngredientFilter(null, null)
         );
 
-        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20).items())
+        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
             .containsExactly(toner, serum);
     }
 
     @Test
-    @DisplayName("페이지 항목과 전체 개수 및 전체 결과 브랜드를 함께 만든다")
+    @DisplayName("페이지 항목과 전체 개수 및 전체 결과의 브랜드와 카테고리를 함께 만든다")
     void createsPageFromAllMatches() {
         ProductFilter filter = new ProductFilter(
             null,
@@ -97,11 +109,17 @@ class ProductCatalogTest {
             new IngredientFilter(null, null)
         );
 
-        ProductPage found = products.find(filter, ProductSort.PRICE_DESC, 0, 1);
+        ProductPage found = products.find(filter, ProductSort.PRICE_DESC, 0, 1, categories);
 
         assertThat(found.items()).containsExactly(serum);
         assertThat(found.totalElements()).isEqualTo(2);
         assertThat(found.brands()).containsExactly(toner.brand());
+        assertThat(found.categories()).hasSize(1);
+        assertThat(found.categories().getFirst().id()).isEqualTo(1L);
+        assertThat(found.categories().getFirst().productCount()).isEqualTo(2L);
+        assertThat(found.categories().getFirst().children())
+            .extracting(CategoryProductCount::id, CategoryProductCount::productCount)
+            .containsExactly(tuple(2L, 1L), tuple(3L, 1L));
     }
 
     @Test
@@ -117,7 +135,7 @@ class ProductCatalogTest {
         );
 
         assertThat(products.count(filter))
-            .isEqualTo(products.find(filter, ProductSort.NAME_ASC, 0, 20).totalElements());
+            .isEqualTo(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).totalElements());
     }
 
     @Test
