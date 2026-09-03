@@ -11,11 +11,12 @@ import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
+import com.poudy.product.domain.sensory.SensoryModelVersion;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -47,8 +48,8 @@ class ProductRepositoryTest {
         assertThat(product.id()).isEqualTo(1L);
         assertThat(product.brand()).extracting(Brand::id, Brand::koreanName)
             .containsExactly(1L, "다 브랜드");
-        assertThat(product.category()).extracting(Category::id, Category::name)
-            .containsExactly(2L, "스킨/토너");
+        assertThat(product.belongsToCategory(2L)).isTrue();
+        assertThat(product.belongsToCategory(1L)).isTrue();
         assertThat(product.name()).isEqualTo("블랙 스네일 토너");
         assertThat(product.imageUrl()).isEqualTo("https://cdn.example.com/products/1.png");
         assertThat(product.representativeVariant())
@@ -56,8 +57,15 @@ class ProductRepositoryTest {
             .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
-        assertThat(product.sensory().modelVersion().ingredientProfileVersion())
-            .isEqualTo("ingredient-role-profile-v0.2");
+        assertThat(
+            product.usesSensoryModelVersion(
+                new SensoryModelVersion(
+                    HeuristicProductSensoryEstimator.INGREDIENT_PROFILE_VERSION,
+                    HeuristicProductSensoryEstimator.CATEGORY_PRIOR_VERSION,
+                    HeuristicProductSensoryEstimator.LEVEL_MODEL_VERSION
+                )
+            )
+        ).isTrue();
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
@@ -185,13 +193,13 @@ class ProductRepositoryTest {
             new JsonDataReader(resourceLoader),
             brands(),
             categories(),
-            new Ingredients(List.of()),
+            IngredientCatalog.from(List.of()),
             new ProductFactory(new HeuristicProductSensoryEstimator())
         );
     }
 
     private static Brands brands() {
-        return new Brands(List.of(new Brand(1L, "다 브랜드", null, null)));
+        return Brands.from(List.of(new Brand(1L, "다 브랜드", null, null)));
     }
 
     private static Categories categories() {

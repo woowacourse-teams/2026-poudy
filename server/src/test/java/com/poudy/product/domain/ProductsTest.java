@@ -32,7 +32,7 @@ class ProductsTest {
         return product(id, brand(1L), category(1L), new Ingredients(ingredients));
     }
 
-    private final Products products = new Products(
+    private final Products products = Products.from(
         List.of(product(1L, 100L, 200L), product(2L, 200L, 300L), product(3L, 300L))
     );
 
@@ -54,7 +54,7 @@ class ProductsTest {
     @Test
     @DisplayName("제품 ID가 중복되면 목록을 만들 수 없다")
     void rejectsDuplicateProductIds() {
-        assertThatThrownBy(() -> new Products(List.of(product(1L), product(1L))))
+        assertThatThrownBy(() -> Products.from(List.of(product(1L), product(1L))))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("1");
     }
@@ -80,7 +80,7 @@ class ProductsTest {
     @Test
     @DisplayName("브랜드별 제품 수를 센다")
     void countsProductsByBrand() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(productOfBrand(1L, 1L), productOfBrand(2L, 1L), productOfBrand(3L, 2L))
         );
 
@@ -96,7 +96,7 @@ class ProductsTest {
         Category firstChild = category(2L);
         Category secondChild = category(3L);
         Category emptyChild = category(4L);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 productOfBrandAndCategory(1L, 1L, 2L),
                 productOfBrandAndCategory(2L, 1L, 2L),

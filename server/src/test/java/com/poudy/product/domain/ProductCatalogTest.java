@@ -52,7 +52,7 @@ class ProductCatalogTest {
         10L,
         30L
     );
-    private final Products products = new Products(List.of(toner, serum, cream));
+    private final Products products = Products.from(List.of(toner, serum, cream));
 
     @Test
     @DisplayName("서로 다른 필터 종류를 AND 로 결합한다")

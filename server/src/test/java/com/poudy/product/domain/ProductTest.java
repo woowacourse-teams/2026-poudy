@@ -176,6 +176,27 @@ class ProductTest {
             .hasMessage("제품 감각 추론 결과가 필요합니다.");
     }
 
+    @Test
+    @DisplayName("자신의 제품명과 브랜드명을 함께 해석해 검색 결과를 만든다")
+    void matchesOwnSearchableNames() {
+        Product product = new Product(
+            1L,
+            "수분 토너",
+            brand,
+            category,
+            ingredients,
+            "image",
+            variants,
+            sensory(1, 1),
+            updatedAt
+        );
+
+        assertThat(product.match(new ProductSearchQuery("브랜드 수분토너")))
+            .get()
+            .extracting(MatchedProduct::field)
+            .isEqualTo(ProductMatchField.PRODUCT_NAME);
+    }
+
     private static Ingredient ingredient(Long id, String effect) {
         return ingredient(id, 57L, effect);
     }

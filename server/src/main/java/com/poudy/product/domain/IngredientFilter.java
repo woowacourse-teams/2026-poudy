@@ -1,19 +1,23 @@
 package com.poudy.product.domain;
 
+import com.poudy.ingredient.domain.Ingredients;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
+public final class IngredientFilter {
 
-    public IngredientFilter {
-        includedIds = List.copyOf(Objects.requireNonNullElse(includedIds, List.of()));
-        excludedIds = List.copyOf(Objects.requireNonNullElse(excludedIds, List.of()));
+    private final List<Long> includedIds;
+    private final List<Long> excludedIds;
 
-        if (includedIds.stream()
-            .anyMatch(excludedIds::contains)) {
+    public IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
+        this.includedIds = List.copyOf(Objects.requireNonNullElse(includedIds, List.of()));
+        this.excludedIds = List.copyOf(Objects.requireNonNullElse(excludedIds, List.of()));
+
+        if (this.includedIds.stream()
+            .anyMatch(this.excludedIds::contains)) {
             throw new ConflictingIngredientFilterException();
         }
     }
@@ -31,5 +35,9 @@ public record IngredientFilter(List<Long> includedIds, List<Long> excludedIds) {
             .toList();
 
         return new IngredientFilter(includedIds, resolved);
+    }
+
+    public boolean matches(Ingredients ingredients) {
+        return ingredients.containsAll(includedIds) && !ingredients.containsAny(excludedIds);
     }
 }

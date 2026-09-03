@@ -14,7 +14,7 @@ public class BrandRepository {
     private final Brands brands;
 
     public BrandRepository(JsonDataReader jsonDataReader) {
-        this.brands = new Brands(jsonDataReader.readList(BRANDS_FILE_NAME, Brand.class));
+        this.brands = Brands.from(jsonDataReader.readList(BRANDS_FILE_NAME, Brand.class));
     }
 
     public Brands findAll() {

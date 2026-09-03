@@ -32,7 +32,7 @@ class BrandServiceTest {
     void findsBrandsWithProductCounts() {
         Brand drG = new Brand(1L, "닥터지", null, null);
         Brand medicube = new Brand(2L, "메디큐브", null, null);
-        Brands brands = new Brands(List.of(medicube, drG));
+        Brands brands = Brands.from(List.of(medicube, drG));
         BrandRepository brandRepository = mock(BrandRepository.class);
         ProductRepository productRepository = mock(ProductRepository.class);
         Products products = mock(Products.class);

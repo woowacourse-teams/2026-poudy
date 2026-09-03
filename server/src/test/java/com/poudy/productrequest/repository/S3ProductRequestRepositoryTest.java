@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("S3 제품 등록 요청 저장소")
 class S3ProductRequestRepositoryTest {
@@ -28,9 +30,36 @@ class S3ProductRequestRepositoryTest {
     private final ObjectMapper objectMapper = mock(ObjectMapper.class);
 
     @Test
+    @DisplayName("도메인 구현과 무관하게 기존 JSON 문서 계약을 유지한다")
+    void preservesJsonDocumentContract() throws Exception {
+        ObjectMapper realObjectMapper = JsonMapper.builder().build();
+        S3ProductRequestRepository repository = new S3ProductRequestRepository(
+            s3Client,
+            realObjectMapper,
+            "requests-bucket",
+            "requests"
+        );
+
+        repository.save(request("00000000-0000-0000-0000-000000000001"));
+
+        ArgumentCaptor<RequestBody> body = ArgumentCaptor.forClass(RequestBody.class);
+        verify(s3Client).putObject(any(PutObjectRequest.class), body.capture());
+        byte[] bytes = body.getValue().contentStreamProvider().newStream().readAllBytes();
+        tools.jackson.databind.JsonNode document = realObjectMapper.readTree(
+            new String(bytes, StandardCharsets.UTF_8)
+        );
+
+        assertThat(document.get("schemaVersion").asInt()).isEqualTo(1);
+        assertThat(document.get("requestId").asText()).isEqualTo("00000000-0000-0000-0000-000000000001");
+        assertThat(document.get("productName").asText()).isEqualTo("제품");
+        assertThat(document.get("brandName").asText()).isEqualTo("브랜드");
+        assertThat(document.get("requestedAt").asText()).isEqualTo("2026-08-23T12:34:56Z");
+    }
+
+    @Test
     @DisplayName("요청마다 prefix 아래 서로 다른 JSON 객체를 저장한다")
     void storesEachRequestAsUniqueJsonObject() {
-        given(objectMapper.writeValueAsString(any(ProductRequest.class))).willReturn("{}");
+        given(objectMapper.writeValueAsString(any())).willReturn("{}");
         S3ProductRequestRepository repository = new S3ProductRequestRepository(
             s3Client,
             objectMapper,
@@ -59,7 +88,7 @@ class S3ProductRequestRepositoryTest {
     @Test
     @DisplayName("S3 저장 실패를 인프라 예외로 변환한다")
     void wrapsS3Failure() {
-        given(objectMapper.writeValueAsString(any(ProductRequest.class))).willReturn("{}");
+        given(objectMapper.writeValueAsString(any())).willReturn("{}");
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
             .willThrow(S3Exception.builder().message("secret detail").build());
         S3ProductRequestRepository repository = new S3ProductRequestRepository(

@@ -4,8 +4,8 @@ import com.poudy.common.json.JsonDataReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.DeferredTagEvidenceException;
 import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.IngredientTag;
-import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredient.domain.MatchedIngredient;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.Tags;
@@ -13,9 +13,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -42,13 +40,16 @@ public class IngredientRepository {
     private static final String CREATED_AT_FIELD = "created_at";
     private static final String UPDATED_AT_FIELD = "updated_at";
 
-    private final Ingredients ingredients;
+    private final IngredientCatalog ingredients;
 
     public IngredientRepository(JsonDataReader jsonDataReader, Tags tags) {
         List<Ingredient> values = jsonDataReader.readList(INGREDIENTS_FILE_NAME, Ingredient.class, resolvedWith(tags));
-        validateUniqueIds(values);
         validateDetailFields(values);
-        this.ingredients = new Ingredients(values);
+        try {
+            this.ingredients = IngredientCatalog.from(values);
+        } catch (IllegalArgumentException exception) {
+            throw new InfrastructureException(exception.getMessage(), exception);
+        }
     }
 
     private static JacksonModule resolvedWith(Tags tags) {
@@ -167,7 +168,7 @@ public class IngredientRepository {
         }
     }
 
-    public Ingredients findAll() {
+    public IngredientCatalog findAll() {
         return ingredients;
     }
 
@@ -191,16 +192,4 @@ public class IngredientRepository {
         }
     }
 
-    private static void validateUniqueIds(List<Ingredient> values) {
-        List<Long> duplicateIds = values.stream()
-            .collect(Collectors.groupingBy(Ingredient::id, Collectors.counting()))
-            .entrySet().stream()
-            .filter(entry -> entry.getValue() > 1)
-            .map(Map.Entry::getKey)
-            .sorted()
-            .toList();
-        if (!duplicateIds.isEmpty()) {
-            throw new InfrastructureException("성분 ID가 중복되었습니다: %s".formatted(duplicateIds));
-        }
-    }
 }

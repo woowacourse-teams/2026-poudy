@@ -4,12 +4,12 @@ import com.poudy.search.domain.SearchKeyword;
 import java.util.ArrayList;
 import java.util.List;
 
-final class ProductSearchQuery {
+public final class ProductSearchQuery {
 
     private final SearchKeyword whole;
     private final List<Parts> parts;
 
-    ProductSearchQuery(String keyword) {
+    public ProductSearchQuery(String keyword) {
         this.whole = new SearchKeyword(keyword);
         this.parts = partsOf(whole.value());
     }

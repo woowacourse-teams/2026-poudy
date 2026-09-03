@@ -3,6 +3,7 @@ package com.poudy.product.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -36,5 +37,24 @@ class ProductQueryTest {
         assertThat(query.categoryIds()).containsExactly(1L);
         assertThatThrownBy(() -> query.categoryIds().add(3L))
             .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    @DisplayName("목록 조건 중 하나라도 있으면 필터가 있다고 판단한다")
+    void checksWhetherItHasFilters() {
+        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null);
+        ProductQuery withFilter = new ProductQuery(
+            "토너",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(ExcludeCode.SULFATES)
+        );
+
+        assertThat(noFilters.hasFilters()).isFalse();
+        assertThat(withFilter.hasFilters()).isTrue();
     }
 }

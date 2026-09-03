@@ -16,7 +16,7 @@ class ProductCountsByBrandTest {
     @Test
     @DisplayName("브랜드를 받은 순서대로 제품 수와 결합한다")
     void summarizesBrandsWithProductCounts() {
-        Brands brands = new Brands(List.of(brand(2L, "메디큐브"), brand(1L, "닥터지")));
+        Brands brands = Brands.from(List.of(brand(2L, "메디큐브"), brand(1L, "닥터지")));
         ProductCountsByBrand productCounts = new ProductCountsByBrand(Map.of(1L, 3L));
 
         assertThat(productCounts.countsOf(brands.sortedByName()))

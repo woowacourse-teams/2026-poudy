@@ -27,6 +27,17 @@ class CategoryTest {
     }
 
     @Test
+    @DisplayName("소분류는 자신과 부모 카테고리에 속한다")
+    void identifiesCategoryPathMembership() {
+        Category child = new Category(2L, 1L, "토너", 1);
+
+        assertThat(child.belongsTo(2L)).isTrue();
+        assertThat(child.belongsTo(1L)).isTrue();
+        assertThat(child.belongsTo(3L)).isFalse();
+        assertThat(child.belongsTo(null)).isFalse();
+    }
+
+    @Test
     @DisplayName("대분류는 부모 카테고리를 가질 수 없다")
     void rejectsParentWithParentId() {
         assertThatThrownBy(() -> new Category(1L, 2L, "스킨케어", 0))

@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
-public record SharedProductName(Optional<Brand> brand, String keyword) {
+public final class SharedProductName {
 
     private static final String UNKNOWN_BRAND = "미상";
     private static final int MINIMUM_WORDS = 2;
@@ -61,9 +61,12 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
         "ex"
     );
 
-    public SharedProductName {
-        brand = Objects.requireNonNullElse(brand, Optional.empty());
-        keyword = Objects.requireNonNullElse(keyword, "").trim();
+    private final Optional<Brand> brand;
+    private final String keyword;
+
+    private SharedProductName(Optional<Brand> brand, String keyword) {
+        this.brand = Objects.requireNonNullElse(brand, Optional.empty());
+        this.keyword = Objects.requireNonNullElse(keyword, "").trim();
     }
 
     public static SharedProductName of(String productPhrase, Brands brands) {
@@ -81,6 +84,14 @@ public record SharedProductName(Optional<Brand> brand, String keyword) {
         }
 
         return new SharedProductName(Optional.empty(), productPhrase);
+    }
+
+    public Optional<Brand> brand() {
+        return brand;
+    }
+
+    public String keyword() {
+        return keyword;
     }
 
     public boolean isEmpty() {

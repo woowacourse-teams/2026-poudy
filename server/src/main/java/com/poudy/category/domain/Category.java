@@ -29,6 +29,14 @@ public class Category {
         return parent.isParent() && Objects.equals(parentId, parent.id);
     }
 
+    public boolean belongsTo(Long categoryId) {
+        if (categoryId == null) {
+            return false;
+        }
+
+        return Objects.equals(id, categoryId) || Objects.equals(parentId, categoryId);
+    }
+
     private static void validateDepth(Integer depth) {
         if (depth == null || depth < 0 || depth > 1) {
             throw new IllegalArgumentException("카테고리 깊이는 0 또는 1이어야 합니다.");

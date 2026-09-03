@@ -1,10 +1,8 @@
 package com.poudy.product.domain;
 
 import com.poudy.search.domain.NameRank;
-import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.TextMatch;
 import java.util.Comparator;
-import java.util.Optional;
 
 public final class MatchedProduct {
 
@@ -43,10 +41,6 @@ public final class MatchedProduct {
             productMatch,
             MatchRank.combined(brandMatch, productMatch)
         );
-    }
-
-    public static Optional<MatchedProduct> ofProductName(SearchableProduct searchable, SearchKeyword keyword) {
-        return searchable.matchByProductName(keyword);
     }
 
     public static Comparator<MatchedProduct> order() {
