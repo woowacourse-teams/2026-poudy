@@ -6,7 +6,16 @@ const client = vi.hoisted(() => ({
 
 vi.mock("./client", () => client);
 
-import { fetchIngredientsByIds } from "./products";
+import {
+  fetchBrand,
+  fetchBrands,
+  fetchCategories,
+  fetchExcludeCodes,
+  fetchIngredientsByIds,
+  fetchProducts,
+} from "./products";
+
+import { EMPTY_FILTER } from "@/lib/domain/filter";
 
 beforeEach(() => {
   client.apiGet.mockReset();
@@ -51,5 +60,23 @@ describe("fetchIngredientsByIds", () => {
   it("ID가 없으면 전체 성분을 조회하지 않는다", async () => {
     await expect(fetchIngredientsByIds([])).resolves.toEqual({ items: [] });
     expect(client.apiGet).not.toHaveBeenCalled();
+  });
+});
+
+describe("목록 화면 fetch cache", () => {
+  it("제품과 필터 재료를 12시간마다 재검증한다", () => {
+    void fetchProducts(EMPTY_FILTER);
+    void fetchExcludeCodes();
+    void fetchCategories();
+    void fetchBrands();
+    void fetchBrand(1);
+
+    expect(client.apiGet.mock.calls.map(([, , revalidate]) => revalidate)).toEqual([
+      12 * 60 * 60,
+      12 * 60 * 60,
+      12 * 60 * 60,
+      12 * 60 * 60,
+      12 * 60 * 60,
+    ]);
   });
 });
