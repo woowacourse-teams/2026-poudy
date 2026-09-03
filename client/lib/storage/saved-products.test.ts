@@ -13,6 +13,7 @@ import {
   saveProduct,
   savedAtOf,
   unsaveProduct,
+  unsaveProducts,
 } from "./saved-products";
 
 const LEGACY_KEY = "poudy.saved-products.v1";
@@ -53,6 +54,14 @@ describe("저장한 제품", () => {
 
     expect(readSavedProducts()).toEqual([]);
     expect(savedAtOf(4)).toBeUndefined();
+  });
+
+  it("여러 제품을 한 번에 빼고 나머지 차례는 지킨다", () => {
+    [1, 2, 3, 4].forEach(saveProduct);
+
+    unsaveProducts([2, 4]);
+
+    expect(readSavedProductIds()).toEqual([3, 1]);
   });
 });
 

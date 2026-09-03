@@ -14,6 +14,7 @@ import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
+import { unsaveProducts } from "@/lib/storage/saved-products";
 
 /**
  * 저장함이 가질 수 있는 상태.
@@ -58,12 +59,15 @@ const keptFrom = (state: State, key: string, savedIds: readonly number[]): State
   key,
   status: state.status === "error" ? "error" : "ready",
   items: state.items.filter((product) => savedIds.includes(product.id)),
+  missingIds: state.missingIds.filter((id) => savedIds.includes(id)),
 });
 
 type State = {
   readonly key: string;
   readonly status: Status;
   readonly items: readonly ProductResponse[];
+  /** 성공 응답에 없어서 지금은 표시 정보를 채울 수 없는 저장 제품 번호. */
+  readonly missingIds: readonly number[];
 };
 
 /** S07 저장함. 목록은 브라우저가 들고 표시 정보만 서버에서 채운다. */
@@ -86,6 +90,7 @@ export function SavedScreen() {
     key: id,
     status: id ? "loading" : "ready",
     items: [],
+    missingIds: [],
   });
 
   const [state, setState] = useState<State>(() => initial(key));
@@ -96,22 +101,26 @@ export function SavedScreen() {
    * 버리고 다시 부르면 화면이 통째로 비었다가 돌아와 카드 하나를 뺀 것치고 요란하다.
    * 줄어든 때는 가진 것에서 걸러 내고, 처음 보거나 번호가 늘었을 때만 서버를 부른다.
    */
-  const known = new Set(state.items.map((product) => product.id));
-  const needsFetch = savedIds.some((id) => !known.has(id));
-
   const current = state.key === key ? state : keptFrom(state, key, savedIds);
   if (state.key !== key) setState(current);
+
+  // 성공 응답에서 빠졌다고 확인한 번호도 다시 물을 필요가 없다. 화면에 다시 들어오면 새로 확인한다.
+  const known = new Set([...current.items.map((product) => product.id), ...current.missingIds]);
+  const needsFetch = savedIds.some((id) => !known.has(id));
 
   useEffect(() => {
     if (!key || !needsFetch) return;
 
     const controller = new AbortController();
+    const requestedIds = key.split(",").map(Number);
 
-    fetchStorage(key.split(",").map(Number))
+    fetchStorage(requestedIds)
       .then((response) => {
         if (controller.signal.aborted) return;
+        const receivedIds = new Set(response.items.map((product) => product.id));
+        const missingIds = requestedIds.filter((id) => !receivedIds.has(id));
         setState((previous) =>
-          previous.key === key ? { ...previous, status: "ready", items: response.items } : previous,
+          previous.key === key ? { ...previous, status: "ready", items: response.items, missingIds } : previous,
         );
       })
       .catch(() => {
@@ -171,7 +180,7 @@ export function SavedScreen() {
         <button
           type="button"
           onClick={() => {
-            setState({ key, status: "loading", items: [] });
+            setState({ key, status: "loading", items: [], missingIds: [] });
             setRetry((previous) => previous + 1);
           }}
           className="mt-2 h-11 rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
@@ -184,6 +193,31 @@ export function SavedScreen() {
 
   return (
     <main className="flex flex-1 flex-col px-4">
+      {current.missingIds.length > 0 ? (
+        <section
+          role="status"
+          aria-labelledby="missing-saved-products-title"
+          className="mt-3 flex items-start gap-3 rounded-xl bg-surface p-3.5"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background">
+            <Icon name="info" size={19} className="text-text-secondary" />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <p id="missing-saved-products-title" className="text-[13px] font-bold text-text-primary">
+              저장한 제품 {current.missingIds.length}개를 더 이상 볼 수 없어요
+            </p>
+            <p className="text-[11px] leading-4 text-text-secondary">제품이 삭제되었거나 정보가 바뀌었을 수 있어요.</p>
+            <button
+              type="button"
+              onClick={() => unsaveProducts(current.missingIds)}
+              className="mt-1 h-8 self-start rounded-lg text-[12px] font-bold text-[#D93B5C]"
+            >
+              목록에서 지우기
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
       {current.items.length > 0 ? (
         <div className="pt-3">
@@ -207,7 +241,7 @@ export function SavedScreen() {
           <EmptyNotice
             icon="bookmark"
             image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
-            title="아직 저장한 제품이 없어요"
+            title={current.missingIds.length > 0 ? "지금 볼 수 있는 저장 제품이 없어요" : "아직 저장한 제품이 없어요"}
             className="flex-1"
           />
         </div>
