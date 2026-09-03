@@ -102,7 +102,7 @@ export function BottomNavigation() {
   };
 
   return (
-    <nav aria-label="주요 메뉴" className="sticky bottom-0 border-t border-border bg-background">
+    <nav aria-label="주요 메뉴" className="sticky bottom-0 z-20 mt-auto shrink-0 border-t border-border bg-background">
       <ul className={`${styles.list} flex px-2 pt-2 pb-3.5`}>
         {TABS.map((tab, index) => {
           const active = tab.match(pathname);
