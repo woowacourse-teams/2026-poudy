@@ -43,8 +43,16 @@ export class ApiError extends Error {
   }
 }
 
-export const apiGet = async <T>(path: string, query?: URLSearchParams): Promise<T> => {
-  const response = await fetch(apiUrl(path, query)).catch((cause: unknown) => {
+/**
+ * 서버에서 이 응답을 얼마나 담아 둘지(초). 브라우저 요청에는 아무 영향이 없다.
+ *
+ * 조건이 주소에 붙는 화면은 라우트 단위 캐시가 걸리지 않으므로, 자주 바뀌지 않는
+ * 값은 이렇게 요청 단위로 담아 둔다.
+ */
+type CacheSeconds = number;
+
+export const apiGet = async <T>(path: string, query?: URLSearchParams, revalidate?: CacheSeconds): Promise<T> => {
+  const response = await fetch(apiUrl(path, query), { next: { revalidate } }).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);
     throw new ApiError(0, "NETWORK_ERROR", cause instanceof Error ? cause.message : "요청을 보내지 못했습니다.");

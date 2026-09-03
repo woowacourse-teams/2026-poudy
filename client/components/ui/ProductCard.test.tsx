@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { ProductResponse } from "@poudy/api/api.zod";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -69,5 +69,41 @@ describe("ProductCard", () => {
     // 수분 2 단계는 보통, 유분 1 단계는 낮음이다.
     expect(screen.getByText("보통")).toBeInTheDocument();
     expect(screen.getByText("낮음")).toBeInTheDocument();
+  });
+
+  it("각 제품 이미지는 자기 로딩이 끝나면 자기 스켈레톤만 없앤다", async () => {
+    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
+    const image = container.querySelector("img");
+    const card = container.querySelector("article");
+    const content = card?.querySelector("[data-product-content]");
+
+    expect(card?.querySelector(".animate-pulse")).toBeInTheDocument();
+    expect(card).toHaveAttribute("data-image-state", "loading");
+    expect(content).toBeInTheDocument();
+
+    fireEvent.load(image!);
+
+    await waitFor(() => expect(card).toHaveAttribute("data-image-state", "loaded"));
+  });
+
+  it("한 제품 이미지의 완료가 다른 제품의 이미지·텍스트 스켈레톤을 해제하지 않는다", async () => {
+    const second = { ...product, id: 2, name: "다이브인 세럼", imageUrl: "/images/products/second.png" };
+    const { container } = render(
+      <>
+        <ProductCard product={product} saved={false} onToggleSave={() => {}} />
+        <ProductCard product={second} saved={false} onToggleSave={() => {}} />
+      </>,
+    );
+    const cards = container.querySelectorAll("article");
+    const images = container.querySelectorAll("img");
+
+    expect(cards[0]).toHaveAttribute("data-image-state", "loading");
+    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
+
+    fireEvent.load(images[0]);
+
+    await waitFor(() => expect(cards[0]).toHaveAttribute("data-image-state", "loaded"));
+    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
+    expect(cards[1].querySelector(".animate-pulse")).toBeInTheDocument();
   });
 });

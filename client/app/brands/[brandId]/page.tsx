@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 
+import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
-import { fetchBrand, fetchBrands, fetchExcludeCodes } from "@/lib/api/products";
+import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { parseFilter } from "@/lib/domain/filter";
+import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 
-export const revalidate = 86400;
-
-const load = async (raw: string) => {
+const load = cache(async (raw: string) => {
   const brandId = Number(raw);
   if (!Number.isInteger(brandId)) notFound();
 
@@ -20,7 +21,13 @@ const load = async (raw: string) => {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
-};
+});
+
+/*
+ * 조건이 주소에 붙어 어차피 요청마다 그려지지만, 그 사실을 코드로 남긴다.
+ * 카탈로그 조회의 fetch 캐시는 이 설정과 무관하게 그대로 동작한다.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
@@ -42,9 +49,10 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
   }
 }
 
-export default async function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
-  const { brandId } = await props.params;
-  const [brand, brands, excludeCodes] = await Promise.all([load(brandId), fetchBrands(), fetchExcludeCodes()]);
+/** 브랜드 소개는 제품 목록과 별개로 스트리밍한다. */
+async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[brandId]">["params"] }) {
+  const { brandId } = await params;
+  const [brand, brands] = await Promise.all([load(brandId), fetchBrands()]);
 
   // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
   const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
@@ -56,27 +64,65 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
     .join(" · ");
 
   return (
+    <section className="flex items-center gap-3 px-4">
+      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
+      <span className="flex flex-col gap-0.5">
+        <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
+        <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
+      </span>
+    </section>
+  );
+}
+
+/** 필터 재료와 첫 장. 브랜드 소개를 막지 않고 별도 경계에서 스트리밍한다. */
+async function BrandProducts({
+  params,
+  searchParams,
+}: {
+  readonly params: PageProps<"/brands/[brandId]">["params"];
+  readonly searchParams: SearchParams;
+}) {
+  const { brandId: raw } = await params;
+  const brand = await load(raw);
+  const brandIds = [brand.id];
+  const urlFilter = parseFilter(toSearchParams(await searchParams));
+  const filter = { ...urlFilter, brandIds };
+  const key = JSON.stringify({ ...filter, page: 0 });
+
+  /*
+   * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄이 제품 조회보다 먼저 나가고,
+   * 목록 자리만 도착을 기다린다. 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
+   */
+  const initialPagePromise = fetchProducts({ ...filter, page: 0 })
+    .then((response) => ({ key, response }))
+    .catch(() => undefined);
+
+  const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
+
+  return (
+    <ProductList
+      basePath={`/brands/${brand.id}`}
+      surface="brand"
+      fixedFilter={{ brandIds }}
+      hiddenChips={["brand"]}
+      excludeCodes={excludeCodes.items}
+      initialPage={initialPage}
+    />
+  );
+}
+
+export default function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
+  return (
     <>
-      {/* 이름만 두면 바로 아래 큰 이름과 겹쳐 읽힌다. 어떤 화면인지 함께 밝힌다. */}
-      <TopBar title={`${brand.name} 브랜드관`} variant="sub" />
+      <TopBar title="브랜드관" variant="sub" />
 
-      <section className="flex items-center gap-3 px-4">
-        <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
-        <span className="flex flex-col gap-0.5">
-          <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
-          <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
-        </span>
-      </section>
+      <Suspense fallback={<BrandSummarySkeleton />}>
+        <BrandSummary params={props.params} />
+      </Suspense>
 
-      {/* 브랜드 제품은 목록 화면과 같은 규칙으로 보여 준다. */}
-      <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
-        <ProductList
-          basePath={`/brands/${brand.id}`}
-          surface="brand"
-          fixedFilter={{ brandIds: [brand.id] }}
-          hiddenChips={["brand"]}
-          excludeCodes={excludeCodes.items}
-        />
+      {/* 제품군 전체를 가리지 않는다. 행이 도착한 뒤 각 이미지만 자기 스켈레톤을 쓴다. */}
+      <Suspense fallback={null}>
+        <BrandProducts params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </>
   );

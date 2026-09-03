@@ -33,6 +33,12 @@ type PageState = {
 
 type SetPageState = Dispatch<SetStateAction<PageState>>;
 
+/** 서버가 그려 보낸 첫 장. 어느 조건의 결과인지 함께 들고 온다. */
+export type InitialPage = {
+  readonly key: string;
+  readonly response: ProductPageResponse;
+};
+
 const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   page: 0,
   items: [],
@@ -51,9 +57,13 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
  * 담아 둔 조건이면 이어 붙인 목록을 통째로 되살린다.
  * 첫 그리기부터 문서 높이가 살아 있어야 보던 자리로 되돌릴 수 있다.
  */
-const initialState = (key: string): PageState => {
+const initialState = (key: string, seed?: ProductPageResponse): PageState => {
   const cached = readProductPages(key);
-  if (!cached) return { ...EMPTY_PAGE_STATE, key };
+  if (!cached) {
+    // 서버가 첫 장을 그려 보냈으면 그것으로 시작한다. 같은 장을 다시 받지 않는다.
+    if (seed) return { ...merged({ ...EMPTY_PAGE_STATE, key }, 0, seed), restored: false, revalidating: false };
+    return { ...EMPTY_PAGE_STATE, key };
+  }
 
   const { page, items, brands, categories, total, hasNext, fetchedAt } = cached;
   return {
@@ -190,13 +200,20 @@ const useRestoreScroll = (key: string, state: PageState) => {
   }, [key, state.restored, state.revalidating]);
 };
 
+const seedFor = (initial: InitialPage | undefined, key: string): ProductPageResponse | undefined => {
+  if (initial?.key !== key) return undefined;
+  return initial.response;
+};
+
 /** 조건이 바뀌면 목록을 처음부터 다시 쌓고, 떠났다 돌아오면 담아 둔 목록에서 잇는다. */
-export const useProductPages = (filter: Filter) => {
+export const useProductPages = (filter: Filter, initial?: InitialPage) => {
   const key = JSON.stringify({ ...filter, page: 0 });
-  const [state, setState] = useState<PageState>(() => initialState(key));
+  // 서버가 본 조건과 지금 조건이 같을 때만 쓴다. 조건이 바뀌면 씨앗은 버린다.
+  const seed = seedFor(initial, key);
+  const [state, setState] = useState<PageState>(() => initialState(key, seed));
 
   // 조건이 바뀌면 렌더링 중에 목록을 갈아 끼운다. effect 에서 되돌리면 한 번 더 그리게 된다.
-  const current = state.key === key ? state : initialState(key);
+  const current = state.key === key ? state : initialState(key, seed);
   if (state.key !== key) setState(current);
 
   useFetchPage(key, current, setState);

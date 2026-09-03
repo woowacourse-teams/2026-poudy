@@ -727,3 +727,17 @@ body {
   transform: scale(0.875);
   transform-origin: left center;
 }
+
+/*
+ * 제품 이미지가 React hydration보다 먼저 도착해도 해당 카드만 바로 연다.
+ * 실제 제품 내용은 SSR DOM에 그대로 두고, 네이티브 이미지 상태로 표시만 고른다.
+ */
+[data-product-card][data-image-state="loading"] [data-product-content] {
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+[data-product-card][data-image-state="loaded"] [data-product-skeleton] {
+  display: none;
+}
