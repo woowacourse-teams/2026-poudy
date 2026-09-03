@@ -7,6 +7,9 @@ poudy:
   # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
+  feedback:
+    image-reconciliation:
+      enabled: true
 
 # 같은 인스턴스의 nginx가 전달한 X-Forwarded-For를 원격 주소로 복원해 요청 제한에 사용한다.
 server:
