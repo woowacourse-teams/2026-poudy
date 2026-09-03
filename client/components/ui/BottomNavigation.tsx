@@ -37,6 +37,7 @@ type PendingSelection = {
 };
 type PendingActivation = {
   readonly index: number;
+  readonly runId: number;
 };
 
 function getActiveIndex(pathname: string): number | null {
@@ -92,7 +93,11 @@ export function BottomNavigation() {
     }
 
     setPendingSelection({ index, pathname });
-    setPendingActivation({ index });
+    /*
+     * 흔들림은 keyframes 라 재생 중에 다시 눌러도 처음부터 다시 시작하지 않는다.
+     * 재생마다 다른 키를 주어 React 가 요소를 새로 만들게 해서 매번 처음부터 흔든다.
+     */
+    setPendingActivation((current) => ({ index, runId: (current?.runId ?? 0) + 1 }));
     requestSelectionHaptic();
   };
 
@@ -118,6 +123,7 @@ export function BottomNavigation() {
                 ].join(" ")}
               >
                 <NavigationIcon
+                  key={activatedIndex === index ? pendingActivation?.runId : undefined}
                   name={tab.icon}
                   filled={selected}
                   activated={activatedIndex === index}

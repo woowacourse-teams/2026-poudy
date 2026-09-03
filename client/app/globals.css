@@ -101,6 +101,14 @@
 
   --transition-duration-press: 100ms;
   --transition-duration-release: 200ms;
+  /*
+   * 고른 뒤 아이콘이 한 번 흔들리는 길이.
+   *
+   * 자리를 옮기는 것이 아니라 제자리에서 도는 움직임이라 `--transition-duration-travel`
+   * 과 뜻이 다르다. 지금 값이 같더라도 옮겨 가는 길이를 손볼 때 흔들림까지 함께
+   * 끌려가지 않도록 따로 둔다.
+   */
+  --transition-duration-shake: 280ms;
   --ease-release: linear(0, 0.45 14%, 0.82 28%, 1.267 48%, 1.04 64%, 0.933 76%, 1.015 89%, 1);
   --transition-duration-celebration: 520ms;
   /*

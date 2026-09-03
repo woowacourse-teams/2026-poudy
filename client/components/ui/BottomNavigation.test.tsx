@@ -116,6 +116,26 @@ describe("BottomNavigation 선택 모션", () => {
     expect(categoryLink.querySelector("svg")).toHaveAttribute("fill", "currentColor");
     expect(categoryLink.querySelector("[data-icon-fragment]")).not.toBeInTheDocument();
   });
+
+  it("흔들림이 끝나기 전에 다시 누르면 아이콘을 새로 만들어 처음부터 흔든다", async () => {
+    render(<BottomNavigation />);
+    const categoryLink = screen.getByRole("link", { name: "카테고리" });
+    const searchLink = screen.getByRole("link", { name: "탐색" });
+    for (const link of [categoryLink, searchLink]) {
+      link.addEventListener("click", (event) => event.preventDefault());
+    }
+
+    await userEvent.click(categoryLink);
+    const firstIcon = categoryLink.querySelector("[data-activated]");
+
+    await userEvent.click(searchLink);
+    await userEvent.click(categoryLink);
+
+    // 같은 요소를 그대로 두면 keyframes 가 다시 시작하지 않아 흔들림이 한 번 걸러진다.
+    const secondIcon = categoryLink.querySelector("[data-activated]");
+    expect(secondIcon).not.toBe(firstIcon);
+    expect(secondIcon).toHaveAttribute("data-activated", "true");
+  });
 });
 
 describe("BottomNavigationSlot 경로 범위", () => {

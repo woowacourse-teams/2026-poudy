@@ -68,8 +68,8 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 - **Selected**: 선택된 탭은 배경을 깔지 않고 `--color-brand` 색상과 채워진 아이콘, 굵은 라벨로 구분한다. 색 하나에만 기대지 않아야 색각 이상이 있어도 아이콘과 굵기로 읽힌다.
 - **Interaction background**: hover 와 눌림에서만 `--color-surface` 회색 배경이 `--transition-duration-control-state` 동안 나타난다. 선택 여부와 상관없이 네 탭이 똑같이 반응한다. 선택된 탭만 커서에 반응하지 않으면 오히려 어색하다. hover 는 `hover: hover` 와 `pointer: fine` 을 함께 만족하는 환경에만 적용해서, 손가락으로 누른 자리에 배경이 남지 않도록 한다. 터치 기기에서는 누름 배경만 나타난다. 배경은 링크의 형제 요소라서 `:has()` 로 부모에서 `:active` 를 받아 켠다.
 - **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택된 자리를 따라 배경이 이동하는 연출은 쓰지 않는다.
-- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 한 번만 흔들린다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
-- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로가 도착하기 전에도 선택 표시를 먼저 옮겨 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. 경로가 실제로 바뀌면 앞당겨 둔 표시를 버린다. 눌렀던 경로로 되돌아올 때 지나간 선택이 되살아나기 때문이다. `prefers-reduced-motion: reduce`에서는 크기 변화와 흔들림을 제거하고 색상과 opacity 전환만 유지한다.
+- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 `--transition-duration-shake` 동안 한 번만 흔들린다. 제자리에서 도는 움직임이라 자리를 옮기는 `--transition-duration-travel` 과 길이 토큰을 따로 둔다. 흔들리는 도중에 다시 누르면 재생마다 다른 키를 주어 아이콘을 새로 만들고 처음부터 흔든다. keyframes 는 그대로 두면 다시 시작하지 않아 빠르게 오갈 때 흔들림이 걸러진다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
+- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로가 도착하기 전에도 선택 표시를 먼저 옮겨 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. 경로가 실제로 바뀌면 앞당겨 둔 표시를 버린다. 눌렀던 경로로 되돌아올 때 지나간 선택이 되살아나기 때문이다. `prefers-reduced-motion: reduce`에서는 크기 변화와 흔들림을 제거하되 누른 것이 보이는 신호는 남긴다. 선택되지 않은 링크를 누르면 글자와 아이콘이 `--color-text-primary`로 짙어진다. 회색 배경은 톤이 옅어 더 짙게 만들어도 눌린 자리가 드러나지 않는다.
 
 ## 6. Motion & Interaction
 
@@ -80,6 +80,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | `--transition-duration-control-state` | 160ms    | `--ease-out`    | 컨트롤 아이콘·색상 전환 |
 | `--transition-duration-disclosure`    | 200ms    | `--ease-out`    | 메뉴 열림·닫힘          |
 | `--transition-duration-travel`        | 280ms    | `--ease-travel` | 탭 밑줄이 자리를 옮김   |
+| `--transition-duration-shake`         | 280ms    | `--ease-out`    | 하단 메뉴 아이콘 흔들림 |
 | `--transition-duration-celebration`   | 520ms    | `--ease-out`    | 저장 불꽃               |
 
 - `--transition-duration-travel` 과 `--ease-travel` 은 늘 함께 쓰지 않는다. 카테고리·브랜드 탭의 알약은 커브만 가져오고 길이는 `--transition-duration-control-state` 를 쓴다. 눌린 뒤 150ms 안팎이면 라우트가 갈려 요소가 새로 그려지므로, 280ms 를 다 쓰면 옮겨 가는 길이 중간에 끊긴다.
