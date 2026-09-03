@@ -18,7 +18,8 @@
 
 ## 햅틱
 
-- Android는 시스템 터치 피드백 설정을 따르는 `performAndroidHapticsAsync`를 사용한다. 모든 지원 API 수준에서 사용할 수 있는 `Clock_Tick`을 선택한다.
+- Android는 시스템 터치 피드백 설정을 따르며, 지원되는 기기에서는 메뉴 선택에 맞는 `Virtual_Key`를 사용한다.
+- Android 11 이상에서 기본 클릭 효과 지원을 보고하지 않는 기기는 `Virtual_Key`가 성공처럼 반환돼도 실제로 울리지 않을 수 있다. 이 경우 시스템 터치 피드백 설정을 확인한 뒤 코인 모터에서도 체감 가능한 50ms `Vibrator` 파형으로 대체한다.
 - iOS는 시스템 햅틱 설정을 따르는 `selectionAsync`를 사용한다.
 
 ## 빠른 동작 아이콘
