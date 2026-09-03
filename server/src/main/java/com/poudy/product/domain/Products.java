@@ -3,7 +3,6 @@ package com.poudy.product.domain;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.search.domain.SearchKeyword;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,16 +14,16 @@ import java.util.stream.Stream;
 
 public final class Products {
 
-    private final Map<Long, SearchableProduct> productsById;
+    private final Map<Long, Product> products;
 
-    private Products(Map<Long, SearchableProduct> productsById) {
-        this.productsById = productsById;
+    private Products(Map<Long, Product> products) {
+        this.products = products;
     }
 
     public static Products from(List<Product> products) {
-        Map<Long, SearchableProduct> indexedProducts = new LinkedHashMap<>();
+        Map<Long, Product> indexedProducts = new LinkedHashMap<>();
         for (Product product : Objects.requireNonNullElse(products, List.<Product>of())) {
-            if (indexedProducts.putIfAbsent(product.id(), SearchableProduct.of(product)) != null) {
+            if (indexedProducts.putIfAbsent(product.id(), product) != null) {
                 throw new IllegalArgumentException("제품 ID가 중복됐습니다: " + product.id());
             }
         }
@@ -39,9 +38,9 @@ public final class Products {
     }
 
     public List<Product> searchByProductName(String keyword) {
-        SearchKeyword searchKeyword = new SearchKeyword(keyword);
-        return productsById.values().stream()
-            .map(product -> MatchedProduct.ofProductName(product, searchKeyword))
+        ProductSearchQuery query = new ProductSearchQuery(keyword);
+        return products.values().stream()
+            .map(product -> product.matchByProductName(query.whole()))
             .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
             .map(MatchedProduct::product)
@@ -55,7 +54,7 @@ public final class Products {
     }
 
     private List<MatchedProduct> matched(ProductSearchQuery query) {
-        return productsById.values().stream()
+        return products.values().stream()
             .map(product -> product.match(query))
             .flatMap(Optional::stream)
             .sorted(MatchedProduct.order())
@@ -109,8 +108,7 @@ public final class Products {
     }
 
     public Optional<Product> findById(Long id) {
-        return Optional.ofNullable(productsById.get(id))
-            .map(SearchableProduct::product);
+        return Optional.ofNullable(products.get(id));
     }
 
     public List<Product> findAllById(List<Long> ids) {
@@ -119,9 +117,8 @@ public final class Products {
         }
 
         return ids.stream()
-            .map(productsById::get)
+            .map(products::get)
             .filter(Objects::nonNull)
-            .map(SearchableProduct::product)
             .toList();
     }
 
@@ -190,8 +187,6 @@ public final class Products {
     }
 
     private List<Product> values() {
-        return productsById.values().stream()
-            .map(SearchableProduct::product)
-            .toList();
+        return List.copyOf(products.values());
     }
 }

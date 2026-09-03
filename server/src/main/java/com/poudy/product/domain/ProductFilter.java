@@ -29,11 +29,11 @@ public final class ProductFilter {
         this.ingredientFilter = ingredientFilter == null ? new IngredientFilter(null, null) : ingredientFilter;
     }
 
-    String keyword() {
+    public String keyword() {
         return keyword;
     }
 
-    boolean matches(Product product) {
+    public boolean matches(Product product) {
         return product.belongsToAnyCategory(categoryIds)
             && product.belongsToAnyBrand(brandIds)
             && product.hasAnyMoistureLevel(moistureLevels)
@@ -41,7 +41,7 @@ public final class ProductFilter {
             && product.matchesIngredients(ingredientFilter);
     }
 
-    boolean hasKeyword() {
+    public boolean hasKeyword() {
         return keyword != null;
     }
 

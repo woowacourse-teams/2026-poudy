@@ -15,19 +15,18 @@ public final class IngredientCatalog {
 
     public static final int SEARCH_RESULT_LIMIT = 5;
 
-    private final Map<Long, SearchableIngredient> ingredientsById;
+    private final Map<Long, Ingredient> ingredients;
 
-    private IngredientCatalog(Map<Long, SearchableIngredient> ingredientsById) {
-        this.ingredientsById = ingredientsById;
+    private IngredientCatalog(Map<Long, Ingredient> ingredients) {
+        this.ingredients = ingredients;
     }
 
     public static IngredientCatalog from(List<Ingredient> ingredients) {
         List<Ingredient> copied = List.copyOf(Objects.requireNonNullElse(ingredients, List.of()));
-        Map<Long, SearchableIngredient> indexedIngredients = new LinkedHashMap<>();
+        Map<Long, Ingredient> indexedIngredients = new LinkedHashMap<>();
 
         for (Ingredient ingredient : copied) {
-            SearchableIngredient searchableIngredient = SearchableIngredient.of(ingredient);
-            if (indexedIngredients.putIfAbsent(ingredient.id(), searchableIngredient) != null) {
+            if (indexedIngredients.putIfAbsent(ingredient.id(), ingredient) != null) {
                 throw new IllegalArgumentException("성분 ID가 중복되었습니다: " + ingredient.id());
             }
         }
@@ -44,8 +43,8 @@ public final class IngredientCatalog {
     public List<MatchedIngredient> suggest(String keyword) {
         SearchKeyword searchKeyword = new SearchKeyword(keyword);
 
-        return ingredientsById.values().stream()
-            .map(ingredient -> MatchedIngredient.of(ingredient, searchKeyword))
+        return ingredients.values().stream()
+            .map(ingredient -> ingredient.match(searchKeyword))
             .flatMap(Optional::stream)
             .sorted(MatchedIngredient.order())
             .limit(SEARCH_RESULT_LIMIT)
@@ -53,14 +52,11 @@ public final class IngredientCatalog {
     }
 
     public Optional<Ingredient> findById(Long id) {
-        return Optional.ofNullable(ingredientsById.get(id))
-            .map(SearchableIngredient::ingredient);
+        return Optional.ofNullable(ingredients.get(id));
     }
 
     public List<Ingredient> values() {
-        return ingredientsById.values().stream()
-            .map(SearchableIngredient::ingredient)
-            .toList();
+        return List.copyOf(ingredients.values());
     }
 
     public IngredientPage page(int page, int size) {
@@ -68,19 +64,18 @@ public final class IngredientCatalog {
             throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
         }
 
-        List<Ingredient> items = ingredientsById.values().stream()
+        List<Ingredient> items = ingredients.values().stream()
             .skip((long) page * size)
             .limit(size)
-            .map(SearchableIngredient::ingredient)
             .toList();
 
-        return new IngredientPage(items, ingredientsById.size());
+        return new IngredientPage(items, ingredients.size());
     }
 
     public IngredientCatalog findAllById(Collection<Long> ids) {
-        Map<Long, SearchableIngredient> foundIngredients = new LinkedHashMap<>();
+        Map<Long, Ingredient> foundIngredients = new LinkedHashMap<>();
         for (Long id : Objects.requireNonNullElse(ids, List.<Long>of())) {
-            SearchableIngredient found = ingredientsById.get(id);
+            Ingredient found = ingredients.get(id);
             if (found != null) {
                 foundIngredients.putIfAbsent(id, found);
             }
@@ -91,9 +86,8 @@ public final class IngredientCatalog {
 
     public Ingredients resolveInOrder(Collection<Long> ids) {
         List<Ingredient> resolvedIngredients = Objects.requireNonNullElse(ids, List.<Long>of()).stream()
-            .map(ingredientsById::get)
+            .map(ingredients::get)
             .filter(Objects::nonNull)
-            .map(SearchableIngredient::ingredient)
             .toList();
 
         return new Ingredients(resolvedIngredients);
@@ -109,8 +103,7 @@ public final class IngredientCatalog {
     }
 
     private Optional<Ingredient> firstOf(Predicate<Ingredient> match) {
-        return ingredientsById.values().stream()
-            .map(SearchableIngredient::ingredient)
+        return ingredients.values().stream()
             .filter(match)
             .min(Comparator.comparing(Ingredient::id));
     }

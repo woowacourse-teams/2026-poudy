@@ -76,7 +76,7 @@ public class ProductService {
         Product product = products().findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return product.detail(categories, excludeCodeIngredients);
+        return ProductDetail.from(product, categories, excludeCodeIngredients);
     }
 
     private Products products() {

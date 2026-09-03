@@ -37,7 +37,7 @@ public final class IngredientFilter {
         return new IngredientFilter(includedIds, resolved);
     }
 
-    boolean matches(Ingredients ingredients) {
+    public boolean matches(Ingredients ingredients) {
         return ingredients.containsAll(includedIds) && !ingredients.containsAny(excludedIds);
     }
 }

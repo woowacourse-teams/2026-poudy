@@ -1,10 +1,8 @@
 package com.poudy.ingredient.domain;
 
 import com.poudy.search.domain.NameRank;
-import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.TextMatch;
 import java.util.Comparator;
-import java.util.Optional;
 
 public final class MatchedIngredient {
 
@@ -31,16 +29,6 @@ public final class MatchedIngredient {
         this.nameRank = nameRank;
     }
 
-    static Optional<MatchedIngredient> of(SearchableIngredient searchable, SearchKeyword keyword) {
-        NameRank nameRank = searchable.nameRank(keyword);
-        Optional<IngredientTextMatch> nameMatch = searchable.findNameMatch(keyword);
-        if (nameMatch.isPresent()) {
-            return Optional.of(from(searchable.ingredient(), nameMatch.get(), nameRank));
-        }
-        return searchable.findAliasMatch(keyword)
-            .map(match -> from(searchable.ingredient(), match, nameRank));
-    }
-
     public static Comparator<MatchedIngredient> order() {
         return ORDER;
     }
@@ -55,14 +43,6 @@ public final class MatchedIngredient {
 
     public TextMatch textMatch() {
         return textMatch;
-    }
-
-    private static MatchedIngredient from(
-        Ingredient ingredient,
-        IngredientTextMatch match,
-        NameRank nameRank
-    ) {
-        return new MatchedIngredient(ingredient, match.field(), match.textMatch(), nameRank);
     }
 
     private NameRank nameRank() {
