@@ -15,7 +15,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | Text primary   | `--color-text-primary`   | `#202124` | 제목과 본문          |
 | Text secondary | `--color-text-secondary` | `#72747a` | 설명과 보조 정보     |
 | Brand          | `--color-brand`          | `#f46a8d` | 현재 선택과 강조     |
-| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 선택 배경            |
+| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 브랜드 색 알림 배경  |
 | Action         | `--color-action`         | `#202124` | 주요 버튼            |
 | Action text    | `--color-action-text`    | `#ffffff` | 주요 버튼 글자       |
 | Info           | `--color-info`           | `#38a6dd` | 정보 상태            |
@@ -63,24 +63,29 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 
 ### BottomNavigation
 
-- **Structure**: 네 개의 경로 링크, 선택된 항목의 뒤를 따라 움직이는 배경, 아이콘과 라벨로 구성한다.
-- **States**: 기본, hover, 선택됨, 눌림, 선택 위치 이동, 키보드 포커스 상태를 제공한다. 선택된 배경은 hover 배경보다 항상 앞선다. 선택된 아이콘과 라벨에는 `--color-brand`를 사용한다.
-- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택 배경은 `--transition-duration-travel`과 `--ease-travel`을 사용하여 현재 위치에서 새 위치로 이어서 이동한다. 이동하는 동안 진행 방향으로 1.14배 늘어났다가 원래 길이로 돌아온다.
-- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 한 번만 흔들린다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
-- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로 전환 전의 선택 배경은 즉시 움직여 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. `prefers-reduced-motion: reduce`에서는 위치 이동, 크기 변화, 흔들림, 조각 합치기를 제거하고 색상과 opacity 전환만 유지한다.
+- **Structure**: 네 개의 경로 링크로 구성하고, 각 링크는 아이콘과 라벨을 세로로 쌓는다. 링크마다 뒤에 상호작용 배경을 하나씩 깔아 둔다.
+- **States**: 기본, hover, 눌림, 선택됨, 키보드 포커스 상태를 제공한다.
+- **Selected**: 선택된 탭은 배경을 깔지 않고 `--color-brand` 색상과 채워진 아이콘, 굵은 라벨로 구분한다. 색 하나에만 기대지 않아야 색각 이상이 있어도 아이콘과 굵기로 읽힌다.
+- **Interaction background**: hover 와 눌림에서만 `--color-surface` 회색 배경이 `--transition-duration-control-state` 동안 나타난다. 선택 여부와 상관없이 네 탭이 똑같이 반응한다. 선택된 탭만 커서에 반응하지 않으면 오히려 어색하다. hover 는 `hover: hover` 와 `pointer: fine` 을 함께 만족하는 환경에만 적용해서, 손가락으로 누른 자리에 배경이 남지 않도록 한다. 터치 기기에서는 누름 배경만 나타난다. 배경은 링크의 형제 요소라서 `:has()` 로 부모에서 `:active` 를 받아 켠다.
+- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택된 자리를 따라 배경이 이동하는 연출은 쓰지 않는다.
+- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 `--transition-duration-shake` 동안 한 번만 흔들린다. 제자리에서 도는 움직임이라 자리를 옮기는 `--transition-duration-travel` 과 길이 토큰을 따로 둔다. 흔들리는 도중에 다시 누르면 재생마다 다른 키를 주어 아이콘을 새로 만들고 처음부터 흔든다. keyframes 는 그대로 두면 다시 시작하지 않아 빠르게 오갈 때 흔들림이 걸러진다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
+- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로가 도착하기 전에도 선택 표시를 먼저 옮겨 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. 경로가 실제로 바뀌면 앞당겨 둔 표시를 버린다. 눌렀던 경로로 되돌아올 때 지나간 선택이 되살아나기 때문이다. `prefers-reduced-motion: reduce`에서는 크기 변화와 흔들림을 제거하되 누른 것이 보이는 신호는 남긴다. 선택되지 않은 링크를 누르면 글자와 아이콘이 `--color-text-primary`로 짙어진다. 회색 배경은 톤이 옅어 더 짙게 만들어도 눌린 자리가 드러나지 않는다.
 
 ## 6. Motion & Interaction
 
-| Token                                 | Duration | Easing       | Usage                   |
-| ------------------------------------- | -------- | ------------ | ----------------------- |
-| `--transition-duration-press`         | 100ms    | `--ease-out` | 저장 버튼 눌림 반응     |
-| `--transition-duration-release`       | 200ms    | 감쇠 반동    | 하단 메뉴 손 뗌 반응    |
-| `--transition-duration-control-state` | 160ms    | `--ease-out` | 컨트롤 아이콘·색상 전환 |
-| `--transition-duration-disclosure`    | 200ms    | `--ease-out` | 메뉴 열림·닫힘          |
-| `--transition-duration-celebration`   | 520ms    | `--ease-out` | 저장 불꽃               |
+| Token                                 | Duration | Easing          | Usage                   |
+| ------------------------------------- | -------- | --------------- | ----------------------- |
+| `--transition-duration-press`         | 100ms    | `--ease-out`    | 저장 버튼 눌림 반응     |
+| `--transition-duration-release`       | 200ms    | 감쇠 반동       | 하단 메뉴 손 뗌 반응    |
+| `--transition-duration-control-state` | 160ms    | `--ease-out`    | 컨트롤 아이콘·색상 전환 |
+| `--transition-duration-disclosure`    | 200ms    | `--ease-out`    | 메뉴 열림·닫힘          |
+| `--transition-duration-travel`        | 280ms    | `--ease-travel` | 탭 밑줄이 자리를 옮김   |
+| `--transition-duration-shake`         | 280ms    | `--ease-out`    | 하단 메뉴 아이콘 흔들림 |
+| `--transition-duration-celebration`   | 520ms    | `--ease-out`    | 저장 불꽃               |
 
+- `--transition-duration-travel` 과 `--ease-travel` 은 늘 함께 쓰지 않는다. 카테고리·브랜드 탭의 알약은 커브만 가져오고 길이는 `--transition-duration-control-state` 를 쓴다. 눌린 뒤 150ms 안팎이면 라우트가 갈려 요소가 새로 그려지므로, 280ms 를 다 쓰면 옮겨 가는 길이 중간에 끊긴다.
 - 저장 불꽃만 300ms 를 넘는다. 담기는 순간에만 터지는 드문 축하라 예산을 따로 쓴다. 나머지 전환은 모두 300ms 안에 든다.
-- 움직이는 표면은 기본적으로 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. 하단 메뉴에서 손을 뗄 때만 `--ease-release`로 한 번의 약한 감쇠 반동을 만든다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
+- 움직이는 표면은 기본적으로 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. 자리를 옮기는 표시만 `--ease-travel`(`cubic-bezier(0.4, 0, 0.2, 1)`)로 앞뒤가 고른 커브를 쓴다. `--ease-out` 은 시간 25% 에 거리 77% 를 가버려 먼 거리에서는 순간이동한 뒤 멎는 것으로 보인다. 어디에서 어디로 갔는지가 보여야 하는 움직임에는 맞지 않는다. 하단 메뉴에서 손을 뗄 때만 `--ease-release`로 한 번의 약한 감쇠 반동을 만든다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
 - hover는 진입과 이탈의 시간을 같게 둔다. 한쪽만 즉시 바뀌면 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠져 잔상처럼 보인다.
 - 메뉴가 열리고 닫히는 공간 모션은 transform과 opacity만 애니메이션하고, 컨트롤의 상태 색상은 레이아웃에 영향을 주지 않는 color 전환만 사용한다.
 - 공간 이동은 즉시 다시 열거나 닫아도 현재 상태에서 새 상태로 이어져야 한다.

@@ -44,24 +44,21 @@ describe("BottomNavigation 앱 햅틱", () => {
 });
 
 describe("BottomNavigation 선택 모션", () => {
-  it("현재 경로의 배경과 표시를 선택된 탭 위치에 둔다", () => {
+  it("현재 경로의 탭을 선택된 상태로 표시한다", () => {
     render(<BottomNavigation />);
 
-    expect(screen.getByRole("list")).toHaveAttribute("data-selected-index", "0");
     expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("data-selected", "true");
     expect(screen.getByRole("link", { name: "카테고리" })).toHaveAttribute("data-selected", "false");
   });
 
-  it("다른 탭을 누르면 경로가 바뀌기 전에 선택 배경을 해당 방향으로 이동한다", async () => {
+  it("다른 탭을 누르면 경로가 바뀌기 전에 선택 상태를 먼저 옮긴다", async () => {
     render(<BottomNavigation />);
     const categoryLink = screen.getByRole("link", { name: "카테고리" });
     categoryLink.addEventListener("click", (event) => event.preventDefault());
 
     await userEvent.click(categoryLink);
 
-    expect(screen.getByRole("list")).toHaveAttribute("data-selected-index", "1");
-    expect(screen.getByRole("list")).toHaveAttribute("data-travel-direction", "right");
-    expect(screen.getByRole("list")).toHaveAttribute("data-traveling", "true");
+    expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("data-selected", "false");
     expect(categoryLink).toHaveAttribute("data-selected", "true");
     expect(categoryLink).toHaveAttribute("data-activated", "true");
   });
@@ -77,7 +74,7 @@ describe("BottomNavigation 선택 모션", () => {
 
     const activatedCategoryLink = screen.getByRole("link", { name: "카테고리" });
     expect(activatedCategoryLink).toHaveAttribute("data-activated", "true");
-    expect(screen.getByRole("list")).toHaveAttribute("data-traveling", "true");
+    expect(activatedCategoryLink).toHaveAttribute("data-selected", "true");
   });
 
   it("경로가 되돌아오면 실제 경로의 탭을 다시 선택한다", async () => {
@@ -91,13 +88,12 @@ describe("BottomNavigation 선택 모션", () => {
       fireEvent.click(categoryLink);
       routerState.pathname = "/categories";
       rerender(<BottomNavigation />);
-      expect(screen.getByRole("list")).toHaveAttribute("data-selected-index", "1");
+      expect(screen.getByRole("link", { name: "카테고리" })).toHaveAttribute("data-selected", "true");
 
       await vi.advanceTimersByTimeAsync(280);
       routerState.pathname = "/";
       rerender(<BottomNavigation />);
 
-      expect(screen.getByRole("list")).toHaveAttribute("data-selected-index", "0");
       expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("aria-current", "page");
       expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("data-selected", "true");
       expect(screen.getByRole("link", { name: "카테고리" })).toHaveAttribute("data-selected", "false");
@@ -119,6 +115,26 @@ describe("BottomNavigation 선택 모션", () => {
     expect(categoryLink.querySelectorAll("svg")).toHaveLength(1);
     expect(categoryLink.querySelector("svg")).toHaveAttribute("fill", "currentColor");
     expect(categoryLink.querySelector("[data-icon-fragment]")).not.toBeInTheDocument();
+  });
+
+  it("흔들림이 끝나기 전에 다시 누르면 아이콘을 새로 만들어 처음부터 흔든다", async () => {
+    render(<BottomNavigation />);
+    const categoryLink = screen.getByRole("link", { name: "카테고리" });
+    const searchLink = screen.getByRole("link", { name: "탐색" });
+    for (const link of [categoryLink, searchLink]) {
+      link.addEventListener("click", (event) => event.preventDefault());
+    }
+
+    await userEvent.click(categoryLink);
+    const firstIcon = categoryLink.querySelector("[data-activated]");
+
+    await userEvent.click(searchLink);
+    await userEvent.click(categoryLink);
+
+    // 같은 요소를 그대로 두면 keyframes 가 다시 시작하지 않아 흔들림이 한 번 걸러진다.
+    const secondIcon = categoryLink.querySelector("[data-activated]");
+    expect(secondIcon).not.toBe(firstIcon);
+    expect(secondIcon).toHaveAttribute("data-activated", "true");
   });
 });
 
