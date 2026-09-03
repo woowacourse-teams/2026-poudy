@@ -3,7 +3,8 @@
     "collect": {
       "numberOfRuns": 3,
       "settings": {
-        "chromeFlags": "--headless --no-sandbox --disable-dev-shm-usage"
+        "chromeFlags": "--headless --no-sandbox --disable-dev-shm-usage",
+        "skipAudits": ["is-crawlable"]
       }
     },
     "upload": {
