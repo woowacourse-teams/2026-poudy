@@ -1,9 +1,8 @@
 "use client";
 
-// biome-ignore assist/source/organizeImports: 저장소에서 강제하는 ESLint import 순서를 따른다.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { matchesPathSegment } from "./bottom-navigation-path";
 import styles from "./BottomNavigation.module.css";
@@ -32,19 +31,13 @@ const TABS = [
 ] as const;
 
 type TabIcon = (typeof TABS)[number]["icon"];
-type TravelDirection = "left" | "none" | "right";
 type PendingSelection = {
-  readonly direction: Exclude<TravelDirection, "none">;
   readonly index: number;
   readonly pathname: string;
-  readonly requestId: number;
-  readonly traveling: boolean;
 };
 type PendingActivation = {
   readonly index: number;
 };
-
-const SELECTION_TRAVEL_DURATION_MS = 280;
 
 function getActiveIndex(pathname: string): number | null {
   const index = TABS.findIndex((tab) => tab.match(pathname));
@@ -76,17 +69,20 @@ function NavigationIcon({ activated, filled, name, onAnimationEnd }: NavigationI
 export function BottomNavigation() {
   const pathname = usePathname();
   const activeIndex = getActiveIndex(pathname);
-  const selectionRequestIdRef = useRef(0);
   const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
   const [pendingActivation, setPendingActivation] = useState<PendingActivation | null>(null);
-  const currentSelection =
-    pendingSelection !== null &&
-    (pendingSelection.index === activeIndex || (pendingSelection.traveling && pendingSelection.pathname === pathname))
-      ? pendingSelection
-      : null;
+
+  /*
+   * 낙관적 선택은 누른 경로에 머무는 동안에만 쓴다. 경로가 실제로 바뀌면 버린다.
+   * 눌렀던 경로로 되돌아오는 경우가 있어 경로를 비교하는 것만으로는 부족하다.
+   * 되돌아온 시점에 다시 조건이 맞아 지나간 선택이 되살아난다.
+   */
+  if (pendingSelection !== null && pendingSelection.pathname !== pathname) {
+    setPendingSelection(null);
+  }
+
+  const currentSelection = pendingSelection?.pathname === pathname ? pendingSelection : null;
   const selectedIndex = currentSelection?.index ?? activeIndex;
-  const travelDirection: TravelDirection = currentSelection?.direction ?? "none";
-  const traveling = currentSelection?.traveling ?? false;
   const activatedIndex = pendingActivation?.index ?? null;
 
   const selectTab = (index: number, active: boolean) => {
@@ -95,44 +91,14 @@ export function BottomNavigation() {
       return;
     }
 
-    selectionRequestIdRef.current += 1;
-    const requestId = selectionRequestIdRef.current;
-    setPendingSelection({
-      direction: selectedIndex === null || index > selectedIndex ? "right" : "left",
-      index,
-      pathname,
-      requestId,
-      traveling: true,
-    });
-    window.setTimeout(() => {
-      setPendingSelection((current) => {
-        if (current === null || current.requestId !== requestId || !current.traveling) return current;
-        return { ...current, traveling: false };
-      });
-    }, SELECTION_TRAVEL_DURATION_MS);
+    setPendingSelection({ index, pathname });
     setPendingActivation({ index });
     requestSelectionHaptic();
   };
 
   return (
     <nav aria-label="주요 메뉴" className="sticky bottom-0 border-t border-border bg-background">
-      <ul
-        className={`${styles.list} flex px-2 pt-2 pb-3.5`}
-        data-selected-index={selectedIndex ?? "none"}
-        data-travel-direction={travelDirection}
-        data-traveling={traveling}
-      >
-        <li
-          aria-hidden="true"
-          className={styles.selection}
-          onTransitionEnd={(event) => {
-            if (event.propertyName !== "transform") return;
-            setPendingSelection((current) => (current === null ? null : { ...current, traveling: false }));
-          }}
-        >
-          <span className={styles.selectionBackground} />
-        </li>
-
+      <ul className={`${styles.list} flex px-2 pt-2 pb-3.5`}>
         {TABS.map((tab, index) => {
           const active = tab.match(pathname);
           const selected = selectedIndex === index;

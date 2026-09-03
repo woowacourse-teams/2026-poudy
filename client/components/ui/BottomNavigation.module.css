@@ -3,64 +3,6 @@
   isolation: isolate;
 }
 
-.selection {
-  position: absolute;
-  inset-block: 4px 10px;
-  left: 8px;
-  width: calc((100% - 16px) / 4);
-  z-index: 1;
-  pointer-events: none;
-  opacity: 1;
-  transition:
-    transform var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    opacity var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.list[data-selected-index="none"] .selection {
-  opacity: 0;
-}
-
-.list[data-selected-index="0"] .selection {
-  transform: translateX(0%);
-}
-
-.list[data-selected-index="1"] .selection {
-  transform: translateX(100%);
-}
-
-.list[data-selected-index="2"] .selection {
-  transform: translateX(200%);
-}
-
-.list[data-selected-index="3"] .selection {
-  transform: translateX(300%);
-}
-
-.selectionBackground {
-  position: absolute;
-  inset: 0 5px 1px;
-  border-radius: 14px;
-  background: var(--color-brand-soft);
-}
-
-.list[data-traveling="true"][data-travel-direction="right"] .selectionBackground {
-  transform-origin: left center;
-  animation: selection-background-stretch var(--transition-duration-travel)
-    var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.list[data-traveling="true"][data-travel-direction="left"] .selectionBackground {
-  transform-origin: right center;
-  animation: selection-background-stretch var(--transition-duration-travel)
-    var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-@keyframes selection-background-stretch {
-  45% {
-    transform: scaleX(1.14);
-  }
-}
-
 .item,
 .link {
   position: relative;
@@ -98,9 +40,13 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .item[data-selected="false"]:hover .hoverBackground {
+  .item:hover .hoverBackground {
     opacity: 1;
   }
+}
+
+.item:has(.link:active) .hoverBackground {
+  opacity: 1;
 }
 
 .icon {
@@ -131,16 +77,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .selection {
-    transition-duration: 0s, var(--transition-duration-control-state);
-  }
-
-  .selectionBackground,
   .link {
     transition-property: color, opacity;
   }
 
-  .list[data-traveling="true"] .selectionBackground,
   .link:active,
   .icon[data-activated="true"] {
     transform: none;
