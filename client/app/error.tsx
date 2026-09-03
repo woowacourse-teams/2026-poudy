@@ -2,14 +2,13 @@
 
 import { useEffect } from "react";
 
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { reportBoundaryError } from "@/lib/analytics/report-error";
 
 /**
- * 화면 하나가 무너졌을 때. 무너진 화면이 그리던 상단 바와 하단 내비게이션도 함께
- * 사라지므로, 찾을 수 없는 화면과 같이 여기서 다시 그려 나갈 길을 남긴다.
+ * 화면 하나가 무너졌을 때. 상단 바는 무너진 화면과 함께 사라져 여기서 다시 그린다.
+ * 하단 내비게이션은 이 경계 바깥의 루트 레이아웃이 그대로 유지한다.
  *
  * 운영에서는 message 가 가려지고 digest 만 남는다. 서버 로그와 맞추려면 그 값이 필요해
  * 화면에도 작게 보여 준다.
@@ -42,8 +41,6 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
           <p className="pt-2 font-data text-[10px] text-text-secondary">오류 코드 {error.digest}</p>
         ) : null}
       </main>
-
-      <BottomNavigation />
     </>
   );
 }
