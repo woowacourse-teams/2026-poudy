@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import { foldit, geistMono, notoSansKr } from "./fonts";
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        <Script src="/product-image-ready.js" strategy="beforeInteractive" />
         <IconSprite />
         {children}
         <BottomNavigationSlot />
