@@ -7,7 +7,7 @@ import com.poudy.search.domain.TextMatch;
 import java.util.List;
 import java.util.Optional;
 
-public final class SearchableIngredient {
+final class SearchableIngredient {
 
     private final Ingredient ingredient;
     private final List<SearchableText> koreanNames;
@@ -26,11 +26,11 @@ public final class SearchableIngredient {
         this.aliases = List.copyOf(aliases);
     }
 
-    public Ingredient ingredient() {
+    Ingredient ingredient() {
         return ingredient;
     }
 
-    public static SearchableIngredient of(Ingredient ingredient) {
+    static SearchableIngredient of(Ingredient ingredient) {
         return new SearchableIngredient(
             ingredient,
             SearchableText.formsOf(ingredient.koreanName()),
@@ -41,7 +41,7 @@ public final class SearchableIngredient {
         );
     }
 
-    public Optional<IngredientTextMatch> findNameMatch(SearchKeyword keyword) {
+    Optional<IngredientTextMatch> findNameMatch(SearchKeyword keyword) {
         Optional<TextMatch> koreanNameMatch = TextMatch.best(koreanNames, keyword);
         Optional<TextMatch> englishNameMatch = TextMatch.best(englishNames, keyword);
 
@@ -51,12 +51,12 @@ public final class SearchableIngredient {
         return koreanNameMatch.map(match -> new IngredientTextMatch(IngredientMatchField.KOREAN_NAME, match));
     }
 
-    public Optional<IngredientTextMatch> findAliasMatch(SearchKeyword keyword) {
+    Optional<IngredientTextMatch> findAliasMatch(SearchKeyword keyword) {
         return TextMatch.best(aliases, keyword)
             .map(match -> new IngredientTextMatch(IngredientMatchField.ALIAS, match));
     }
 
-    public NameRank nameRank(SearchKeyword keyword) {
+    NameRank nameRank(SearchKeyword keyword) {
         NameRank koreanNameRank = NameRank.best(koreanNames, keyword);
         NameRank englishNameRank = NameRank.best(englishNames, keyword);
 

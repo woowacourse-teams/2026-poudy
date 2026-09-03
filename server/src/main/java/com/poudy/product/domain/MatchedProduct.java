@@ -45,7 +45,7 @@ public final class MatchedProduct {
         );
     }
 
-    public static Optional<MatchedProduct> ofProductName(SearchableProduct searchable, SearchKeyword keyword) {
+    static Optional<MatchedProduct> ofProductName(SearchableProduct searchable, SearchKeyword keyword) {
         return searchable.matchByProductName(keyword);
     }
 

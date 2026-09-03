@@ -29,19 +29,19 @@ public final class ProductFilter {
         this.ingredientFilter = ingredientFilter == null ? new IngredientFilter(null, null) : ingredientFilter;
     }
 
-    public String keyword() {
+    String keyword() {
         return keyword;
     }
 
-    public boolean matches(Product product) {
+    boolean matches(Product product) {
         return product.belongsToAnyCategory(categoryIds)
             && product.belongsToAnyBrand(brandIds)
             && product.hasAnyMoistureLevel(moistureLevels)
             && product.hasAnyOilLevel(oilLevels)
-            && ingredientFilter.matches(product.ingredients());
+            && product.matchesIngredients(ingredientFilter);
     }
 
-    public boolean hasKeyword() {
+    boolean hasKeyword() {
         return keyword != null;
     }
 

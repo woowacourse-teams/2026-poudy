@@ -1,12 +1,15 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
+import com.poudy.product.domain.sensory.SensoryModelVersion;
 import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.TextMatch;
@@ -17,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class Product {
@@ -95,7 +99,7 @@ public final class Product {
         return brand;
     }
 
-    public Category category() {
+    Category category() {
         return category;
     }
 
@@ -109,10 +113,6 @@ public final class Product {
 
     public ProductVariants variants() {
         return variants;
-    }
-
-    public ProductSensory sensory() {
-        return sensory;
     }
 
     public OffsetDateTime updatedAt() {
@@ -135,6 +135,10 @@ public final class Product {
         return brand.hasId(brandId);
     }
 
+    public boolean belongsToCategory(Long categoryId) {
+        return category.belongsTo(categoryId);
+    }
+
     public NameRank matchBrandKeyword(SearchKeyword keyword) {
         return brand.matchKeyword(keyword);
     }
@@ -145,6 +149,21 @@ public final class Product {
 
     public boolean matchesNameExactly(SearchKeyword keyword) {
         return keyword.matchesExactly(name);
+    }
+
+    public boolean usesSensoryModelVersion(SensoryModelVersion modelVersion) {
+        return sensory.usesModelVersion(modelVersion);
+    }
+
+    public ProductDetail detail(Categories categories, ExcludeCodeIngredients excludeCodeIngredients) {
+        Objects.requireNonNull(categories, "카테고리 목록이 필요합니다.");
+        Objects.requireNonNull(excludeCodeIngredients, "제외 성분군 목록이 필요합니다.");
+
+        return new ProductDetail(
+            this,
+            categories.pathOf(category),
+            excludeCodeIngredients.freeCodesOf(ingredients)
+        );
     }
 
     public Integer moistureLevel() {
@@ -201,9 +220,7 @@ public final class Product {
     }
 
     boolean belongsToAnyCategory(List<Long> categoryIds) {
-        return categoryIds.isEmpty()
-            || categoryIds.contains(category.id())
-            || categoryIds.contains(category.parentId());
+        return categoryIds.isEmpty() || categoryIds.stream().anyMatch(this::belongsToCategory);
     }
 
     boolean belongsToAnyBrand(List<Long> brandIds) {
@@ -216,5 +233,9 @@ public final class Product {
 
     boolean hasAnyOilLevel(List<OilLevel> levels) {
         return levels.isEmpty() || levels.contains(sensory.oil());
+    }
+
+    boolean matchesIngredients(IngredientFilter filter) {
+        return filter.matches(ingredients);
     }
 }

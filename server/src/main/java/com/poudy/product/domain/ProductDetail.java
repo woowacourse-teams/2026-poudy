@@ -10,4 +10,5 @@ public record ProductDetail(Product product, List<Category> categoryPath, List<E
         categoryPath = List.copyOf(categoryPath);
         freeOfCodes = List.copyOf(freeOfCodes);
     }
+
 }

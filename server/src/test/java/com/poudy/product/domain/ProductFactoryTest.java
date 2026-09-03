@@ -52,7 +52,9 @@ class ProductFactoryTest {
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
 
-        assertThat(product.sensory()).isSameAs(sensory);
+        assertThat(product.moistureLevel()).isEqualTo(2);
+        assertThat(product.oilLevel()).isEqualTo(1);
+        assertThat(product.usesSensoryModelVersion(sensory.modelVersion())).isTrue();
         verify(estimator).estimate(category, ingredients);
     }
 

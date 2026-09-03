@@ -55,7 +55,7 @@ public final class Ingredient {
         return englishName;
     }
 
-    public String originDefinition() {
+    String originDefinition() {
         return originDefinition;
     }
 
@@ -63,19 +63,19 @@ public final class Ingredient {
         return description;
     }
 
-    public String descriptionEvidence() {
+    String descriptionEvidence() {
         return descriptionEvidence;
     }
 
-    public List<String> aliases() {
+    List<String> aliases() {
         return aliases;
     }
 
-    public List<IngredientTag> tagMappings() {
+    List<IngredientTag> tagMappings() {
         return tags.values();
     }
 
-    public OffsetDateTime createdAt() {
+    OffsetDateTime createdAt() {
         return createdAt;
     }
 

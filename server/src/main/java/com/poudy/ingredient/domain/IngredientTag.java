@@ -20,23 +20,15 @@ public final class IngredientTag {
         }
     }
 
-    public Tag tag() {
-        return tag;
-    }
-
-    public String source() {
-        return source;
-    }
-
-    public boolean isOf(TagCategory other) {
+    boolean isOf(TagCategory other) {
         return tag.isOf(other);
     }
 
-    public boolean isDisplayedSkinEffect() {
+    boolean isDisplayedSkinEffect() {
         return isOf(TagCategory.BIOLOGICAL_EFFECT);
     }
 
-    public FormulationRole formulationRole() {
+    FormulationRole formulationRole() {
         if (!isOf(TagCategory.FUNCTION)) {
             throw new IllegalArgumentException("배합 목적은 FUNCTION 태그로 만들어야 합니다.");
         }
@@ -44,7 +36,7 @@ public final class IngredientTag {
         return new FormulationRole(tag.id(), tag.code(), tag.name());
     }
 
-    public SkinEffect skinEffect() {
+    SkinEffect skinEffect() {
         if (!isOf(TagCategory.BIOLOGICAL_EFFECT)) {
             throw new IllegalArgumentException("피부 작용은 BIOLOGICAL_EFFECT 태그로 만들어야 합니다.");
         }
@@ -52,7 +44,7 @@ public final class IngredientTag {
         return new SkinEffect(tag.id(), tag.code(), tag.name());
     }
 
-    public List<String> sources() {
+    List<String> sources() {
         return Evidence.ofTag(source).sources();
     }
 }

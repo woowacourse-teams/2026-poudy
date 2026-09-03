@@ -3,6 +3,7 @@ package com.poudy.product.service;
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -13,6 +14,7 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
@@ -48,7 +50,7 @@ class ProductServiceTest {
             .willReturn(Set.of(999L));
         ProductService service = new ProductService(
             repository,
-            categories(product.category()),
+            categories(),
             excludeCodeIngredients,
             new ProductSearchLogger()
         );
@@ -80,11 +82,11 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product)));
-        given(excludeCodeIngredients.freeCodesOf(product.ingredients()))
+        given(excludeCodeIngredients.freeCodesOf(argThat(ingredients -> ingredients.contains(10L))))
             .willReturn(List.of(ExcludeCode.SULFATES));
         ProductService service = new ProductService(
             repository,
-            categories(product.category()),
+            categories(),
             excludeCodeIngredients,
             new ProductSearchLogger()
         );
@@ -127,14 +129,14 @@ class ProductServiceTest {
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
-            categories(product.category()),
+            categories(),
             excludeCodeIngredients,
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             "제품",
             null,
-            List.of(product.brand().id()),
+            List.of(1L),
             null,
             null,
             null,
@@ -166,7 +168,7 @@ class ProductServiceTest {
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
-            categories(product.category()),
+            categories(),
             excludeCodeIngredients,
             new ProductSearchLogger()
         );
@@ -191,7 +193,9 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
-            new Ingredients(List.of()),
+            new Ingredients(
+                List.of(new Ingredient(10L, "성분", null, null, null, null, null, null, null, null))
+            ),
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
@@ -199,8 +203,9 @@ class ProductServiceTest {
         );
     }
 
-    private static Categories categories(Category child) {
-        Category parent = new Category(child.parentId(), null, "스킨케어", 0);
+    private static Categories categories() {
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "토너", 1);
         return Categories.from(List.of(parent, child));
     }
 }

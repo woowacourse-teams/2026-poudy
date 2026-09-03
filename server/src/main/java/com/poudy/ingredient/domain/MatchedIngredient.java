@@ -31,7 +31,7 @@ public final class MatchedIngredient {
         this.nameRank = nameRank;
     }
 
-    public static Optional<MatchedIngredient> of(SearchableIngredient searchable, SearchKeyword keyword) {
+    static Optional<MatchedIngredient> of(SearchableIngredient searchable, SearchKeyword keyword) {
         NameRank nameRank = searchable.nameRank(keyword);
         Optional<IngredientTextMatch> nameMatch = searchable.findNameMatch(keyword);
         if (nameMatch.isPresent()) {

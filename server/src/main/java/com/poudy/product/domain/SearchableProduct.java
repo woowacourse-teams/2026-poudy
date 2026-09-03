@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public final class SearchableProduct {
+final class SearchableProduct {
 
     private final Product product;
     private final List<SearchableText> productNames;
@@ -18,15 +18,15 @@ public final class SearchableProduct {
         this.productNames = List.copyOf(productNames);
     }
 
-    public Product product() {
+    Product product() {
         return product;
     }
 
-    public static SearchableProduct of(Product product) {
+    static SearchableProduct of(Product product) {
         return new SearchableProduct(product, SearchableText.formsOf(product.name()));
     }
 
-    public Optional<MatchedProduct> match(ProductSearchQuery query) {
+    Optional<MatchedProduct> match(ProductSearchQuery query) {
         Optional<MatchedProduct> direct = matchDirectly(query.whole());
         if (direct.isPresent()) {
             return direct;
@@ -63,7 +63,7 @@ public final class SearchableProduct {
         return match.rank().match() == NameMatch.EXACT || match.rank().match() == NameMatch.PREFIX;
     }
 
-    public Optional<MatchedProduct> matchByProductName(SearchKeyword keyword) {
+    Optional<MatchedProduct> matchByProductName(SearchKeyword keyword) {
         return matchProductName(keyword)
             .map(match -> new MatchedProduct(product, ProductMatchField.PRODUCT_NAME, match));
     }
