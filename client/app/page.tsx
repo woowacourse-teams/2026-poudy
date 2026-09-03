@@ -71,7 +71,6 @@ export default function Home() {
     <>
       <script
         type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: 신뢰하는 정적 구조화 데이터를 스크립트로 직렬화한다.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c") }}
       />
       <TopBar title="oudy" variant="root" showLogo />
