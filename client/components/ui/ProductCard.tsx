@@ -21,12 +21,21 @@ type ProductCardProps = {
   readonly saved: boolean;
   readonly onToggleSave: (productId: number) => void;
   readonly entryPoint?: ProductEntryPoint;
+  /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
+  readonly imageLoading?: "eager" | "lazy";
   /** 찾은 말. 주면 이름에서 맞는 자리를 색으로 가른다. */
   readonly keyword?: string;
 };
 
 /** 디자인 C03. 홈·목록·저장함·카테고리·브랜드 화면이 함께 쓴다. */
-export function ProductCard({ product, saved, onToggleSave, entryPoint, keyword = "" }: ProductCardProps) {
+export function ProductCard({
+  product,
+  saved,
+  onToggleSave,
+  entryPoint,
+  imageLoading = "lazy",
+  keyword = "",
+}: ProductCardProps) {
   const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
   const imageSource = product.imageUrl || PRODUCT_PLACEHOLDER;
   // 같은 주소를 쓰는 제품도 서로의 완료 상태를 공유하지 않도록 제품 ID까지 묶는다.
@@ -49,7 +58,7 @@ export function ProductCard({ product, saved, onToggleSave, entryPoint, keyword 
           href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
           className="flex flex-1 items-center gap-3"
         >
-          <ProductThumbnail imageUrl={product.imageUrl} onSettled={settleImage} />
+          <ProductThumbnail imageUrl={product.imageUrl} loading={imageLoading} onSettled={settleImage} />
 
           {/*
           줄 높이를 좁힌 대신 줄 사이는 넉넉히 벌려, 한 줄씩 또렷하게 끊어 읽히게 한다.

@@ -65,7 +65,7 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
 
   return (
     <section className="flex items-center gap-3 px-4">
-      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
+      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
       <span className="flex flex-col gap-0.5">
         <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
         <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>

@@ -35,6 +35,20 @@ describe("ProductCard", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1");
   });
 
+  it("기본 목록 이미지는 지연해서 불러온다", () => {
+    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
+
+    expect(container.querySelector("[data-product-image]")).toHaveAttribute("loading", "lazy");
+  });
+
+  it("첫 화면의 LCP 후보 이미지는 즉시 불러올 수 있다", () => {
+    const { container } = render(
+      <ProductCard product={product} saved={false} onToggleSave={() => {}} imageLoading="eager" />,
+    );
+
+    expect(container.querySelector("[data-product-image]")).toHaveAttribute("loading", "eager");
+  });
+
   it("상세 진입 경로를 링크에 남긴다", () => {
     render(<ProductCard product={product} saved={false} onToggleSave={() => {}} entryPoint="search_results" />);
 

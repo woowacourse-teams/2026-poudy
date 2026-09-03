@@ -19,16 +19,33 @@ const sourceOf = (imageUrl: string, failed: boolean): string => {
  */
 export function ProductThumbnail({
   imageUrl,
+  loading = "lazy",
   onSettled,
 }: {
   readonly imageUrl: string;
+  readonly loading?: "eager" | "lazy";
   readonly onSettled: () => void;
 }) {
   // 같은 제품 자리의 주소가 바뀌면 이전 그림의 완료 상태를 가져가지 않는다.
-  return <ProductThumbnailImage key={imageUrl || PRODUCT_PLACEHOLDER} imageUrl={imageUrl} onSettled={onSettled} />;
+  return (
+    <ProductThumbnailImage
+      key={imageUrl || PRODUCT_PLACEHOLDER}
+      imageUrl={imageUrl}
+      loading={loading}
+      onSettled={onSettled}
+    />
+  );
 }
 
-function ProductThumbnailImage({ imageUrl, onSettled }: { readonly imageUrl: string; readonly onSettled: () => void }) {
+function ProductThumbnailImage({
+  imageUrl,
+  loading,
+  onSettled,
+}: {
+  readonly imageUrl: string;
+  readonly loading: "eager" | "lazy";
+  readonly onSettled: () => void;
+}) {
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
 
@@ -56,6 +73,7 @@ function ProductThumbnailImage({ imageUrl, onSettled }: { readonly imageUrl: str
         data-product-image
         width={80}
         height={80}
+        loading={loading}
         onLoad={onSettled}
         onError={handleError}
         className="size-20 rounded-lg bg-transparent object-contain"

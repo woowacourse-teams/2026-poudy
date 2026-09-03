@@ -88,4 +88,23 @@ describe("ProductList 브랜드 시트", () => {
     );
     expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=search_results");
   });
+
+  it("첫 제품 이미지만 즉시 받고 다음 제품부터 지연한다", async () => {
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        }),
+      ),
+    );
+
+    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    await waitFor(() => expect(container.querySelectorAll("[data-product-image]")).toHaveLength(2));
+
+    const images = container.querySelectorAll("[data-product-image]");
+    expect(images[0]).toHaveAttribute("loading", "eager");
+    expect(images[1]).toHaveAttribute("loading", "lazy");
+  });
 });

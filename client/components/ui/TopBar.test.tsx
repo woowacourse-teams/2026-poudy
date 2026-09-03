@@ -61,6 +61,12 @@ describe("TopBar 제목", () => {
     expect(container.querySelector("img")).toHaveClass("select-none");
   });
 
+  it("첫 화면에 보이는 로고를 즉시 불러온다", () => {
+    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
+
+    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
+  });
+
   // 성분·브랜드·카테고리는 이름을 그대로 넘긴다. 긴 이름이 좌우 버튼을 밀면 안 된다.
   it.each(["root", "sub"] as const)("%s 형태의 긴 제목은 넘치는 만큼 줄인다", (variant) => {
     render(<TopBar title="사이클로펜타실록세인" variant={variant} />);
