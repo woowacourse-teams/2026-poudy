@@ -11,8 +11,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-// 조건 조합이 사실상 무한해서 미리 만들지 않는다. 색인 대상도 아니다.
-export const dynamic = "force-dynamic";
+// 조건은 클라이언트가 읽으므로 서버가 그리는 껍데기는 하나뿐이다.
+// 필터 재료만 하루에 한 번 다시 받는다.
+export const revalidate = 86400;
 
 export default async function ProductsPage() {
   // 필터 시트에 쓰는 목록은 거의 바뀌지 않아 서버에서 미리 받아 넘긴다.
