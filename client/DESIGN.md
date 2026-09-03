@@ -15,7 +15,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | Text primary   | `--color-text-primary`   | `#202124` | 제목과 본문          |
 | Text secondary | `--color-text-secondary` | `#72747a` | 설명과 보조 정보     |
 | Brand          | `--color-brand`          | `#f46a8d` | 현재 선택과 강조     |
-| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 선택 배경            |
+| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 브랜드 색 알림 배경  |
 | Action         | `--color-action`         | `#202124` | 주요 버튼            |
 | Action text    | `--color-action-text`    | `#ffffff` | 주요 버튼 글자       |
 | Info           | `--color-info`           | `#38a6dd` | 정보 상태            |
@@ -63,11 +63,13 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 
 ### BottomNavigation
 
-- **Structure**: 네 개의 경로 링크, 선택된 항목의 뒤를 따라 움직이는 배경, 아이콘과 라벨로 구성한다.
-- **States**: 기본, hover, 선택됨, 눌림, 선택 위치 이동, 키보드 포커스 상태를 제공한다. 선택된 배경은 hover 배경보다 항상 앞선다. 선택된 아이콘과 라벨에는 `--color-brand`를 사용한다.
-- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택 배경은 `--transition-duration-travel`과 `--ease-travel`을 사용하여 현재 위치에서 새 위치로 이어서 이동한다. 이동하는 동안 진행 방향으로 1.14배 늘어났다가 원래 길이로 돌아온다.
+- **Structure**: 네 개의 경로 링크로 구성하고, 각 링크는 아이콘과 라벨을 세로로 쌓는다. 링크마다 뒤에 상호작용 배경을 하나씩 깔아 둔다.
+- **States**: 기본, hover, 눌림, 선택됨, 키보드 포커스 상태를 제공한다.
+- **Selected**: 선택된 탭은 배경을 깔지 않고 `--color-brand` 색상과 채워진 아이콘, 굵은 라벨로 구분한다. 색 하나에만 기대지 않아야 색각 이상이 있어도 아이콘과 굵기로 읽힌다.
+- **Interaction background**: hover 와 눌림에서만 `--color-surface` 회색 배경이 `--transition-duration-control-state` 동안 나타난다. 선택 여부와 상관없이 네 탭이 똑같이 반응한다. 선택된 탭만 커서에 반응하지 않으면 오히려 어색하다. hover 는 `hover: hover` 와 `pointer: fine` 을 함께 만족하는 환경에만 적용해서, 손가락으로 누른 자리에 배경이 남지 않도록 한다. 터치 기기에서는 누름 배경만 나타난다. 배경은 링크의 형제 요소라서 `:has()` 로 부모에서 `:active` 를 받아 켠다.
+- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택된 자리를 따라 배경이 이동하는 연출은 쓰지 않는다.
 - **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 한 번만 흔들린다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
-- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로 전환 전의 선택 배경은 즉시 움직여 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. `prefers-reduced-motion: reduce`에서는 위치 이동, 크기 변화, 흔들림, 조각 합치기를 제거하고 색상과 opacity 전환만 유지한다.
+- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로가 도착하기 전에도 선택 표시를 먼저 옮겨 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. 경로가 실제로 바뀌면 앞당겨 둔 표시를 버린다. 눌렀던 경로로 되돌아올 때 지나간 선택이 되살아나기 때문이다. `prefers-reduced-motion: reduce`에서는 크기 변화와 흔들림을 제거하고 색상과 opacity 전환만 유지한다.
 
 ## 6. Motion & Interaction
 
