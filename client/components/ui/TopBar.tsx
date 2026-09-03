@@ -81,7 +81,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
             width={26}
             height={29}
             draggable={false}
-            priority
+            loading="eager"
             className="ml-3 mb-1.5 select-none self-end h-[29px] w-[26px]"
           />
         ) : null}

@@ -127,6 +127,7 @@ export default function Home() {
                     alt=""
                     width={120}
                     height={120}
+                    loading="eager"
                     className="quick-filter-tile size-17 rounded-[20px] bg-linear-to-br from-[#FBFBFC] to-[#EFF0F3] p-1"
                   />
                   <span className="text-center text-[13px] font-semibold text-text-primary">

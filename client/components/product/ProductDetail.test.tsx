@@ -50,6 +50,15 @@ describe("제품 성분 요약", () => {
     expect(screen.queryByText(/기준으로,\s*을/)).not.toBeInTheDocument();
   });
 
+  it("첫 화면의 대표 이미지만 즉시 불러온다", () => {
+    const { container } = render(<ProductDetail product={untaggedProductDetail} />);
+    const compactImage = summaryBar().querySelector("img");
+    const mainImage = container.querySelector("main section img");
+
+    expect(mainImage).toHaveAttribute("loading", "eager");
+    expect(compactImage).toHaveAttribute("loading", "lazy");
+  });
+
   it("전성분 펼쳐보기 버튼 배경을 Callout과 같은 surface 너비로 확장한다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 

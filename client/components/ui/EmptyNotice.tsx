@@ -10,7 +10,7 @@ type EmptyNoticeProps = {
    * 아이콘 대신 세울 그림. 화면 전체가 비는 자리처럼 한마디 더 건네고 싶을 때 쓴다.
    * 주면 아이콘은 그리지 않는다.
    */
-  readonly image?: { readonly src: string; readonly size: number };
+  readonly image?: { readonly src: string; readonly size: number; readonly loading?: "eager" | "lazy" };
   readonly title: string;
   /** 무엇을 하면 채워지는지 덧붙인다. 제목만으로 뜻이 서면 두지 않는다. */
   readonly detail?: string;
@@ -64,6 +64,7 @@ export function EmptyNotice({ icon, image, title, detail, size = "section", clas
           alt=""
           width={image.size * 2}
           height={image.size * 2}
+          loading={image.loading ?? "lazy"}
           style={{ width: image.size, height: image.size }}
         />
       ) : (

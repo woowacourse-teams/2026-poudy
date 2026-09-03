@@ -51,7 +51,7 @@ export function ProductDetail({
             width={184}
             height={184}
             className="size-[184px] object-contain"
-            priority
+            loading="eager"
           />
 
           <div className="flex flex-col items-center gap-2">
@@ -109,6 +109,7 @@ function CompactSummary({ product }: { readonly product: ProductDetailResponse }
         alt=""
         width={184}
         height={184}
+        loading="lazy"
         className="size-[42px] shrink-0 object-contain"
       />
 

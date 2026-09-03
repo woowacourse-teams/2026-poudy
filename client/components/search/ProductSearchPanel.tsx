@@ -244,6 +244,7 @@ export function ProductSearchPanel() {
                         alt=""
                         width={40}
                         height={40}
+                        loading="lazy"
                         className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
                       />
                       <span className="flex flex-1 flex-col gap-0.5">
