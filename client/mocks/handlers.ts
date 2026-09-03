@@ -211,6 +211,8 @@ export const handlers = [
       brands: allBrands
         .filter((brand) => matched.some((product) => product.brand.id === brand.id))
         .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
+      // 목 제품에는 카테고리가 없어 걸러 낼 기준이 없다. 형태만 실제와 맞춘다.
+      categories,
     });
   }),
 

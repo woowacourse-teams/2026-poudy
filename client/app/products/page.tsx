@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { ProductList } from "@/components/product/ProductList";
 import { TopBar } from "@/components/ui/TopBar";
-import { fetchCategories, fetchExcludeCodes } from "@/lib/api/products";
+import { fetchExcludeCodes } from "@/lib/api/products";
 
 export const metadata: Metadata = {
   title: "조건 일치 제품",
@@ -17,7 +17,7 @@ export const revalidate = 86400;
 
 export default async function ProductsPage() {
   // 필터 시트에 쓰는 목록은 거의 바뀌지 않아 서버에서 미리 받아 넘긴다.
-  const [categories, excludeCodes] = await Promise.all([fetchCategories(), fetchExcludeCodes()]);
+  const excludeCodes = await fetchExcludeCodes();
 
   return (
     <>
@@ -25,7 +25,7 @@ export default async function ProductsPage() {
 
       {/* useSearchParams 를 쓰는 목록은 클라이언트에서 그린다. */}
       <Suspense fallback={<p className="p-4 text-[13px] text-text-secondary">불러오는 중…</p>}>
-        <ProductList categories={categories.items} excludeCodes={excludeCodes.items} />
+        <ProductList excludeCodes={excludeCodes.items} />
       </Suspense>
     </>
   );

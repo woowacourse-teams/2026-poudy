@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductList } from "./ProductList";
 
 import { track } from "@/lib/analytics/track";
-import { categories, excludeCodes, products } from "@/mocks/fixtures";
+import { excludeCodes, products } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const openBrandSheet = async () => {
-  render(<ProductList categories={categories} excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} />);
 
   // 목록 응답이 도착해 조건에 걸린 브랜드를 알게 될 때까지 기다린다.
   await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
@@ -74,7 +74,7 @@ describe("ProductList 브랜드 시트", () => {
       ),
     );
 
-    render(<ProductList categories={categories} excludeCodes={excludeCodes} />);
+    render(<ProductList excludeCodes={excludeCodes} />);
 
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith("search_results_viewed", {

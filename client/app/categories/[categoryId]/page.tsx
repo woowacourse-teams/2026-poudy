@@ -70,7 +70,6 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
           surface="category"
           fixedFilter={{ categoryIds }}
           hiddenChips={["category"]}
-          categories={categories.items}
           excludeCodes={excludeCodes.items}
         />
       </Suspense>

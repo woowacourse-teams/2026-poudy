@@ -1,6 +1,6 @@
 "use client";
 
-import type { CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
@@ -19,7 +19,6 @@ import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 
 type ProductListProps = {
-  readonly categories: readonly CategoryResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
   readonly basePath?: string;
@@ -63,7 +62,6 @@ const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): 
 
 /** S04 조건 일치 제품. 조건은 URL 이 들고, 목록은 페이지를 이어 붙인다. */
 export function ProductList({
-  categories,
   excludeCodes,
   basePath = "/products",
   fixedFilter,
@@ -94,6 +92,7 @@ export function ProductList({
     key,
     items,
     brands: matchedBrands,
+    categories: matchedCategories,
     total,
     page,
     hasNext,
@@ -207,7 +206,7 @@ export function ProductList({
             });
           }
         }}
-        categories={categories}
+        categories={matchedCategories}
         brands={matchedBrands}
         excludeCodes={excludeCodes}
         initialCount={total}
