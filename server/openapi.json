@@ -217,7 +217,7 @@
           "피드백"
         ],
         "summary": "의견 이미지 업로드",
-        "description": "이미지를 검증·재인코딩해 24시간 동안 임시 저장한다.",
+        "description": "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.",
         "operationId": "uploadImages",
         "requestBody": {
           "content": {

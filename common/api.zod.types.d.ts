@@ -499,7 +499,7 @@ export type post_Submit_1 = {
 
     }
 /**
- * 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다.
+ * JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.
  */
 export type post_UploadImages = {
       method: "POST",
