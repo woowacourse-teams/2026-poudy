@@ -9,6 +9,7 @@ import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
+import { InquiryButtonSlot } from "@/components/ui/InquiryButtonSlot";
 import { rootMetadata } from "@/lib/seo/metadata";
 
 import "./globals.css";
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <IconSprite />
         {children}
         <BottomNavigationSlot />
+        <InquiryButtonSlot />
       </body>
 
       <HistoryDepthTracker />
