@@ -63,10 +63,13 @@ describe("이미지 첨부", () => {
     expect(await screen.findByRole("button", { name: "첨부한 사진 1 크게 보기" })).toBeInTheDocument();
   });
 
-  it("JPG 와 PNG 만 받도록 accept 를 둔다", async () => {
+  it("서버가 받는 형식만 고르도록 accept 를 둔다", async () => {
     await start();
 
-    expect(document.querySelector('input[type="file"]')).toHaveAttribute("accept", "image/jpeg,image/png");
+    expect(document.querySelector('input[type="file"]')).toHaveAttribute(
+      "accept",
+      "image/jpeg,image/png,image/heic,image/heif",
+    );
   });
 
   it("다섯 장을 첨부하면 첨부 버튼을 비활성화한다", async () => {
@@ -82,7 +85,7 @@ describe("이미지 첨부", () => {
 
     await attach(user, [png("1.png"), png("2.png"), png("3.png"), png("4.png"), png("5.png"), png("6.png")]);
 
-    await waitFor(() => expect(screen.getByText("5 / 5 · 장당 5MB · JPG, PNG")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("5 / 5 · 장당 5MB · JPG, PNG, HEIC")).toBeInTheDocument());
   });
 
   it("삭제하면 미리보기에서 사라지고 첨부 버튼이 다시 켜진다", async () => {
@@ -93,7 +96,7 @@ describe("이미지 첨부", () => {
     await user.click(screen.getByRole("button", { name: "첨부한 사진 1 삭제" }));
 
     expect(screen.getByRole("button", { name: "이미지 첨부" })).toBeEnabled();
-    expect(screen.getByText("4 / 5 · 장당 5MB · JPG, PNG")).toBeInTheDocument();
+    expect(screen.getByText("4 / 5 · 장당 5MB · JPG, PNG, HEIC")).toBeInTheDocument();
   });
 
   it("5MB 를 넘으면 올리지 않고 그 자리에서 알린다", async () => {
@@ -105,11 +108,8 @@ describe("이미지 첨부", () => {
     expect(uploadFeedbackImages).not.toHaveBeenCalled();
   });
 
-  /*
-   * accept 가 걸러 주므로 사진 보관함에서는 HEIC 가 들어오지 않는다. 그러나 파일 앱에서
-   * 고르면 그대로 넘어오므로, input 을 거치지 않고 검사 자체가 도는지 본다.
-   */
-  it("HEIC 를 고르면 JPG 나 PNG 로 저장하라고 안내한다", async () => {
+  /* 아이폰이 저장하는 형식이다. 서버가 JPEG 로 다시 저장해 주므로 그대로 올린다. */
+  it("HEIC 도 첨부할 수 있다", async () => {
     await start();
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     const heic = new File(["x"], "photo.heic", { type: "image/heic" });
@@ -117,7 +117,20 @@ describe("이미지 첨부", () => {
     Object.defineProperty(input, "files", { value: [heic], configurable: true });
     fireEvent.change(input);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("JPG 나 PNG");
+    await waitFor(() => expect(uploadFeedbackImages).toHaveBeenCalled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  /* 사진이 아닌 파일은 서버가 거절하므로 그 자리에서 막는다. */
+  it("사진이 아닌 파일은 받지 않는다", async () => {
+    await start();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const pdf = new File(["x"], "문서.pdf", { type: "application/pdf" });
+
+    Object.defineProperty(input, "files", { value: [pdf], configurable: true });
+    fireEvent.change(input);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("사진 파일이 아니에요");
     expect(uploadFeedbackImages).not.toHaveBeenCalled();
   });
 

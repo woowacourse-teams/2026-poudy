@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { IMAGE_ACCEPT_ATTRIBUTE, IMAGE_MAX_COUNT } from "@/lib/api/feedback";
@@ -17,6 +17,7 @@ function Thumbnail({
   readonly onOpen: (key: string) => void;
   readonly onRemove: (key: string) => void;
 }) {
+  const [broken, setBroken] = useState(false);
   const uploading = image.status === "uploading";
 
   return (
@@ -25,11 +26,20 @@ function Thumbnail({
         type="button"
         onClick={() => onOpen(image.key)}
         aria-label={`첨부한 사진 ${index + 1} 크게 보기`}
-        className="size-full overflow-hidden rounded-xl border border-border"
+        className="flex size-full items-center justify-center overflow-hidden rounded-xl border border-border bg-surface-subtle"
       >
-        {/* 사용자가 방금 고른 파일이라 next/image 의 최적화 대상이 아니다. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={image.previewUrl} alt="" className="size-full object-cover" />
+        {/*
+         * HEIC 는 브라우저가 그리지 못해 빈 칸이 된다. 올리는 데는 지장이 없으므로
+         * 그리지 못할 때만 사진이 있다는 표시로 자리를 채운다.
+         *
+         * 사용자가 방금 고른 파일이라 next/image 의 최적화 대상이 아니다.
+         */}
+        {broken ? (
+          <Icon name="info" size={18} className="text-text-secondary" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image.previewUrl} alt="" className="size-full object-cover" onError={() => setBroken(true)} />
+        )}
       </button>
 
       {uploading ? (
@@ -112,7 +122,7 @@ export function ImageField({
       </ul>
 
       <p className="text-[11px] text-text-secondary">
-        {images.length} / {IMAGE_MAX_COUNT} · 장당 5MB · JPG, PNG
+        {images.length} / {IMAGE_MAX_COUNT} · 장당 5MB · JPG, PNG, HEIC
       </p>
 
       {rejection ? (

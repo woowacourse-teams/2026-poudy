@@ -14,8 +14,7 @@ export type AttachedImage = {
 /** 고른 파일을 받을 수 없는 이유. 없으면 받는다. */
 export const rejectionOf = (file: File): string | undefined => {
   if (!isAcceptedImageType(file.type)) {
-    /* 아이폰은 사진을 HEIC 로 저장한다. 형식만 알리면 무엇을 해야 할지 알 수 없다. */
-    return `${file.name} 은 JPG 나 PNG 가 아니에요. 사진을 JPG 나 PNG 로 저장한 뒤 다시 첨부해주세요.`;
+    return `${file.name} 은 사진 파일이 아니에요. JPG 나 PNG, HEIC 사진을 첨부해주세요.`;
   }
 
   if (file.size > IMAGE_MAX_BYTES) return `${file.name} 은 5MB 를 넘어요. 더 작은 사진을 첨부해주세요.`;

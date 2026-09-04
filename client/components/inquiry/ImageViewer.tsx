@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
@@ -19,6 +19,7 @@ export function ImageViewer({
   readonly onRemove: (key: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [broken, setBroken] = useState(false);
   useFocusTrap(ref, true, onClose);
 
   const index = images.findIndex((image) => image.key === openKey);
@@ -65,8 +66,20 @@ export function ImageViewer({
        * 담는 자리를 먼저 정하고 그 안에서 비율을 지켜 줄인다.
        */}
       <div className="flex min-h-0 flex-1 items-center justify-center p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={image.previewUrl} alt={`첨부한 사진 ${index + 1}`} className="max-h-full max-w-full object-contain" />
+        {/* HEIC 처럼 브라우저가 그리지 못하는 사진은 빈 화면 대신 까닭을 적는다. */}
+        {broken ? (
+          <p className="px-8 text-center text-[13px] text-[#8B8D94]">
+            이 사진은 미리 보여 드릴 수 없어요. 첨부는 정상으로 됐어요.
+          </p>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image.previewUrl}
+            alt={`첨부한 사진 ${index + 1}`}
+            className="max-h-full max-w-full object-contain"
+            onError={() => setBroken(true)}
+          />
+        )}
       </div>
     </div>
   );

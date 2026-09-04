@@ -128,8 +128,14 @@ describe("이미지 형식 검사", () => {
     expect(isAcceptedImageType("image/png")).toBe(true);
   });
 
-  it("서버가 아직 받지 못하는 HEIC 는 거른다", () => {
-    expect(isAcceptedImageType("image/heic")).toBe(false);
+  it("서버가 다시 저장해 주는 HEIC 도 받는다", () => {
+    expect(isAcceptedImageType("image/heic")).toBe(true);
+    expect(isAcceptedImageType("image/heif")).toBe(true);
+  });
+
+  it("사진이 아닌 형식은 거른다", () => {
+    expect(isAcceptedImageType("application/pdf")).toBe(false);
+    expect(isAcceptedImageType("image/gif")).toBe(false);
   });
 });
 

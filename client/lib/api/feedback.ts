@@ -14,10 +14,11 @@ export const IMAGE_MAX_COUNT = 5;
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 /**
- * 서버가 아직 HEIC 를 받지 못한다. 나중에 받게 되면 이 값만 고치면 되도록
- * input 의 accept 와 파일 검사가 같은 목록을 본다.
+ * 서버가 JPEG, PNG, HEIC 를 받는다. HEIC 는 서버가 JPEG 로 다시 저장한다.
+ *
+ * input 의 accept 와 파일 검사가 같은 목록을 본다. 형식이 늘거나 줄면 이 값만 고친다.
  */
-export const IMAGE_ACCEPTED_TYPES = ["image/jpeg", "image/png"] as const;
+export const IMAGE_ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"] as const;
 export const IMAGE_ACCEPT_ATTRIBUTE = IMAGE_ACCEPTED_TYPES.join(",");
 
 export const isAcceptedImageType = (type: string): boolean =>
