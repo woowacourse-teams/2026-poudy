@@ -46,11 +46,10 @@ public class FeedbackImageReconciler {
             CleanupCounts counts = operation.get();
             if (counts.total() > 0) {
                 log.info(
-                    "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}, orphanedFinalImages={}",
+                    "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}",
                     counts.committedClaims(),
                     counts.rolledBackClaims(),
-                    counts.expiredPending(),
-                    counts.orphanedFinalImages()
+                    counts.expiredPending()
                 );
             }
         } catch (RuntimeException exception) {

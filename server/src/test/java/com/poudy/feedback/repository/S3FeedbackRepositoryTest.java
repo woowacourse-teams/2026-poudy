@@ -24,12 +24,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -102,7 +99,7 @@ class S3FeedbackRepositoryTest {
     }
 
     @Test
-    @DisplayName("Put 응답이 유실돼도 저장된 JSON hash가 같으면 commit 성공으로 확인한다")
+    @DisplayName("Put 응답이 유실돼도 피드백 JSON 키가 있으면 commit 성공으로 확인한다")
     void confirmsCommitAfterLostPutResponse() {
         S3FeedbackRepository.PreparedDocument document = repository.prepare(FEEDBACK);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
@@ -117,14 +114,6 @@ class S3FeedbackRepositoryTest {
                     )
                     .build()
             );
-        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
-            .willReturn(
-                ResponseBytes.fromByteArray(
-                    GetObjectResponse.builder().build(),
-                    document.bytes()
-                )
-            );
-
         assertThat(repository.save(FEEDBACK, document)).isEqualTo(S3FeedbackRepository.SaveStatus.SUCCESS);
     }
 
@@ -148,7 +137,7 @@ class S3FeedbackRepositoryTest {
         S3FeedbackImageRepository.PendingImage pending = new S3FeedbackImageRepository.PendingImage(image, "etag", NOW);
         S3FeedbackImageRepository.Claim claim = new S3FeedbackImageRepository.Claim(ID, List.of(image));
         given(imageRepository.resolve(List.of(imageId), NOW)).willReturn(List.of(pending));
-        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any(), any())).willReturn(claim);
+        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any())).willReturn(claim);
         given(imageRepository.commit(claim)).willReturn(true);
 
         Feedback saved = repository.save(FEEDBACK, List.of(imageId), () -> NOW);
@@ -165,7 +154,7 @@ class S3FeedbackRepositoryTest {
         S3FeedbackImageRepository.PendingImage pending = new S3FeedbackImageRepository.PendingImage(image, "etag", NOW);
         S3FeedbackImageRepository.Claim claim = new S3FeedbackImageRepository.Claim(ID, List.of(image));
         given(imageRepository.resolve(List.of(imageId), NOW)).willReturn(List.of(pending));
-        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any(), any())).willReturn(claim);
+        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any())).willReturn(claim);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
             .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
@@ -185,7 +174,7 @@ class S3FeedbackRepositoryTest {
         S3FeedbackImageRepository.PendingImage pending = new S3FeedbackImageRepository.PendingImage(image, "etag", NOW);
         S3FeedbackImageRepository.Claim claim = new S3FeedbackImageRepository.Claim(ID, List.of(image));
         given(imageRepository.resolve(List.of(imageId), NOW)).willReturn(List.of(pending));
-        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any(), any())).willReturn(claim);
+        given(imageRepository.claimAndCopy(eq(ID), eq(List.of(pending)), any())).willReturn(claim);
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
             .willThrow(SdkClientException.create("timeout"));
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))

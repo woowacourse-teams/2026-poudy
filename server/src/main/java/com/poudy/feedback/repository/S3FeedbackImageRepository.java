@@ -13,12 +13,10 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
@@ -34,8 +32,6 @@ public class S3FeedbackImageRepository {
     private static final String PENDING_PREFIX = "poudy/feedback/pending/";
     private static final String CLAIM_PREFIX = "poudy/feedback/claims/";
     private static final String FEEDBACK_PREFIX = "poudy/feedback/";
-    private static final int MAX_ID_GENERATION_ATTEMPTS = 3;
-    private static final int MAX_CONDITIONAL_WRITE_ATTEMPTS = 3;
 
     private final S3FeedbackObjectStore objectStore;
     private final ObjectMapper objectMapper;
@@ -49,47 +45,16 @@ public class S3FeedbackImageRepository {
     }
 
     public FeedbackImage savePending(ProcessedImage processed) {
-        for (int idAttempt = 0; idAttempt < MAX_ID_GENERATION_ATTEMPTS; idAttempt++) {
-            FeedbackImage image = FeedbackImage.create(processed.format());
-            boolean outcomeWasUnknown = false;
-            for (int writeAttempt = 0; writeAttempt < MAX_CONDITIONAL_WRITE_ATTEMPTS; writeAttempt++) {
-                try {
-                    objectStore.putIfAbsent(
-                        pendingKey(image),
-                        image.format().contentType(),
-                        processed.bytes()
-                    );
-                    return image;
-                } catch (ObjectStoreException exception) {
-                    if (exception.kind() == FailureKind.PRECONDITION_FAILED) {
-                        if (outcomeWasUnknown) {
-                            return image;
-                        }
-                        break;
-                    }
-                    if (exception.kind() == FailureKind.CONFLICT
-                        || exception.kind() == FailureKind.RETRYABLE) {
-                        outcomeWasUnknown = true;
-                        if (pendingExistsAfterUnknownWrite(image)) {
-                            return image;
-                        }
-                        continue;
-                    }
-                    throw infrastructure();
-                }
-            }
-            if (outcomeWasUnknown) {
-                throw infrastructure();
-            }
-        }
-        throw infrastructure();
-    }
-
-    private boolean pendingExistsAfterUnknownWrite(FeedbackImage image) {
+        FeedbackImage image = FeedbackImage.create(processed.format());
         try {
-            return head(image.id(), image.format()).isPresent();
-        } catch (InfrastructureException exception) {
-            return false;
+            objectStore.putIfAbsent(
+                pendingKey(image),
+                image.format().contentType(),
+                processed.bytes()
+            );
+            return image;
+        } catch (ObjectStoreException exception) {
+            throw infrastructure();
         }
     }
 
@@ -117,7 +82,6 @@ public class S3FeedbackImageRepository {
     public Claim claimAndCopy(
         UUID feedbackId,
         List<PendingImage> images,
-        String feedbackDocumentSha256,
         InstantSource timeSource
     ) {
         List<PendingImage> ordered = images.stream()
@@ -130,7 +94,7 @@ public class S3FeedbackImageRepository {
                 if (!claimedAt.isBefore(image.lastModified().plus(PENDING_TTL))) {
                     throw new InvalidFeedbackImageIdException();
                 }
-                claim(feedbackId, image, feedbackDocumentSha256, claimedAt);
+                claim(feedbackId, image);
                 claimed.add(image.image());
             }
             for (PendingImage image : images) {
@@ -184,12 +148,10 @@ public class S3FeedbackImageRepository {
                 continue;
             }
             ClaimDocument document = claimDocument.get();
-            CommitPresence presence = commitPresence(document.feedbackId(), document.feedbackDocumentSha256());
-            if (presence == CommitPresence.COMMITTED) {
+            if (existsExactly(feedbackKey(document.feedbackId()))) {
                 commitRecovered(document.image());
                 committed++;
-            }
-            if (presence == CommitPresence.ABSENT) {
+            } else {
                 rollbackRecovered(document.feedbackId(), document.image());
                 rolledBack++;
             }
@@ -198,7 +160,7 @@ public class S3FeedbackImageRepository {
     }
 
     public CleanupCounts cleanupStorage(Instant now) {
-        return CleanupCounts.storage(cleanupExpiredPending(now), cleanupOrphanedFinalImages(now));
+        return CleanupCounts.storage(cleanupExpiredPending(now));
     }
 
     private int cleanupExpiredPending(Instant now) {
@@ -219,46 +181,6 @@ public class S3FeedbackImageRepository {
         return deleted;
     }
 
-    private int cleanupOrphanedFinalImages(Instant now) {
-        int deleted = 0;
-        List<StoredObject> objects = listAll(FEEDBACK_PREFIX);
-        Set<UUID> feedbackIds = new HashSet<>();
-        for (StoredObject object : objects) {
-            feedbackIdFromDocumentKey(object.key()).ifPresent(feedbackIds::add);
-        }
-        for (StoredObject object : objects) {
-            if (now.isBefore(object.lastModified().plus(CLAIM_GRACE_PERIOD))) {
-                continue;
-            }
-            Optional<FinalImageKey> finalImage = finalImageFromKey(object.key());
-            if (finalImage.isPresent() && !feedbackIds.contains(finalImage.get().feedbackId())) {
-                deleteRequired(object.key());
-                deleted++;
-            }
-        }
-        return deleted;
-    }
-
-    private CommitPresence commitPresence(UUID feedbackId, String expectedSha256) {
-        String key = feedbackKey(feedbackId);
-        if (existsExactly(key)) {
-            return presenceOf(key, expectedSha256);
-        }
-        String legacyKey = legacyFeedbackKey(feedbackId);
-        if (existsExactly(legacyKey)) {
-            return presenceOf(legacyKey, expectedSha256);
-        }
-        return CommitPresence.ABSENT;
-    }
-
-    private CommitPresence presenceOf(String key, String expectedSha256) {
-        if (matchesSha256(key, expectedSha256)) {
-            return CommitPresence.COMMITTED;
-        }
-
-        return CommitPresence.UNKNOWN;
-    }
-
     private void commitRecovered(FeedbackImage image) {
         deleteRequired(pendingKey(image));
         deleteRequired(claimKey(image.id()));
@@ -269,50 +191,11 @@ public class S3FeedbackImageRepository {
         deleteRequired(claimKey(image.id()));
     }
 
-    private static Optional<UUID> feedbackIdFromDocumentKey(String key) {
-        if (!key.startsWith(FEEDBACK_PREFIX)) {
-            return Optional.empty();
-        }
-        String relativeKey = key.substring(FEEDBACK_PREFIX.length());
-        String feedbackId;
-        if (relativeKey.endsWith("/feedback.json")) {
-            feedbackId = relativeKey.substring(0, relativeKey.length() - "/feedback.json".length());
-        } else if (relativeKey.endsWith(".json")) {
-            feedbackId = relativeKey.substring(0, relativeKey.length() - ".json".length());
-        } else {
-            return Optional.empty();
-        }
-        if (feedbackId.contains("/")) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(UUID.fromString(feedbackId));
-        } catch (IllegalArgumentException exception) {
-            return Optional.empty();
-        }
-    }
-
     private static Optional<FeedbackImage> imageFromPendingKey(String key) {
         if (!key.startsWith(PENDING_PREFIX)) {
             return Optional.empty();
         }
         return imageFromFileName(key.substring(PENDING_PREFIX.length()));
-    }
-
-    private static Optional<FinalImageKey> finalImageFromKey(String key) {
-        if (!key.startsWith(FEEDBACK_PREFIX)) {
-            return Optional.empty();
-        }
-        String[] segments = key.substring(FEEDBACK_PREFIX.length()).split("/");
-        if (segments.length != 3 || !"images".equals(segments[1])) {
-            return Optional.empty();
-        }
-        try {
-            UUID feedbackId = UUID.fromString(segments[0]);
-            return imageFromFileName(segments[2]).map(image -> new FinalImageKey(feedbackId, image));
-        } catch (IllegalArgumentException exception) {
-            return Optional.empty();
-        }
     }
 
     private static Optional<FeedbackImage> imageFromFileName(String fileName) {
@@ -341,9 +224,7 @@ public class S3FeedbackImageRepository {
             return Optional.of(
                 new ClaimDocument(
                     UUID.fromString(requiredText(document, "feedbackId")),
-                    new FeedbackImage(imageId, format),
-                    requiredText(document, "sourceETag"),
-                    requiredText(document, "feedbackDocumentSha256")
+                    new FeedbackImage(imageId, format)
                 )
             );
         } catch (JacksonException | IllegalArgumentException exception) {
@@ -354,14 +235,6 @@ public class S3FeedbackImageRepository {
     private byte[] readBytes(String key) {
         try {
             return objectStore.read(key);
-        } catch (ObjectStoreException exception) {
-            throw infrastructure();
-        }
-    }
-
-    private boolean matchesSha256(String key, String expectedSha256) {
-        try {
-            return objectStore.matchesSha256(key, expectedSha256);
         } catch (ObjectStoreException exception) {
             throw infrastructure();
         }
@@ -408,72 +281,49 @@ public class S3FeedbackImageRepository {
         }
     }
 
-    private void claim(
-        UUID feedbackId,
-        PendingImage pending,
-        String feedbackDocumentSha256,
-        Instant claimedAt
-    ) {
+    private void claim(UUID feedbackId, PendingImage pending) {
         byte[] body;
         try {
             Map<String, String> document = new LinkedHashMap<>();
             document.put("feedbackId", feedbackId.toString());
             document.put("extension", pending.image().format().extension());
-            document.put("sourceETag", pending.eTag());
-            document.put("feedbackDocumentSha256", feedbackDocumentSha256);
-            document.put("claimedAt", claimedAt.toString());
             body = objectMapper.writeValueAsBytes(document);
         } catch (JacksonException exception) {
             throw infrastructure();
         }
 
-        boolean outcomeWasUnknown = false;
-        for (int attempt = 0; attempt < MAX_CONDITIONAL_WRITE_ATTEMPTS; attempt++) {
-            try {
-                objectStore.putIfAbsent(
-                    claimKey(pending.image().id()),
-                    "application/json; charset=UTF-8",
-                    body
-                );
-                return;
-            } catch (ObjectStoreException exception) {
-                if (exception.kind() == FailureKind.PRECONDITION_FAILED) {
-                    if (outcomeWasUnknown && hasSameClaim(feedbackId, pending, feedbackDocumentSha256)) {
-                        return;
-                    }
-                    throw new InvalidFeedbackImageIdException();
-                }
-                if (exception.kind() == FailureKind.CONFLICT
-                    || exception.kind() == FailureKind.RETRYABLE) {
-                    outcomeWasUnknown = true;
-                    if (hasSameClaim(feedbackId, pending, feedbackDocumentSha256)) {
-                        return;
-                    }
-                    continue;
-                }
-                throw infrastructure();
+        try {
+            objectStore.putIfAbsent(
+                claimKey(pending.image().id()),
+                "application/json; charset=UTF-8",
+                body
+            );
+        } catch (ObjectStoreException exception) {
+            if (exception.kind() == FailureKind.PRECONDITION_FAILED) {
+                throw new InvalidFeedbackImageIdException();
             }
+            if ((exception.kind() == FailureKind.CONFLICT
+                || exception.kind() == FailureKind.RETRYABLE)
+                && hasSameClaim(feedbackId, pending)) {
+                return;
+            }
+            throw infrastructure();
         }
-        throw infrastructure();
     }
 
-    private boolean hasSameClaim(
-        UUID feedbackId,
-        PendingImage pending,
-        String feedbackDocumentSha256
-    ) {
+    private boolean hasSameClaim(UUID feedbackId, PendingImage pending) {
         String key = claimKey(pending.image().id());
         if (!existsExactly(key)) {
             return false;
         }
         return readClaim(key)
-            .filter(document -> document.belongsTo(feedbackId, pending, feedbackDocumentSha256))
+            .filter(document -> document.belongsTo(feedbackId, pending))
             .isPresent();
     }
 
     private void copy(UUID feedbackId, PendingImage pending) {
         try {
-            objectStore.copyIfAbsent(
+            objectStore.copy(
                 pendingKey(pending.image()),
                 pending.eTag(),
                 finalKey(feedbackId, pending.image()),
@@ -521,57 +371,33 @@ public class S3FeedbackImageRepository {
         return FEEDBACK_PREFIX + feedbackId + "/feedback.json";
     }
 
-    private static String legacyFeedbackKey(UUID feedbackId) {
-        return FEEDBACK_PREFIX + feedbackId + ".json";
-    }
-
     private static InfrastructureException infrastructure() {
         return new InfrastructureException("의견 이미지 저장소를 처리하지 못했습니다.");
-    }
-
-    private enum CommitPresence {
-        COMMITTED,
-        ABSENT,
-        UNKNOWN
-    }
-
-    private record FinalImageKey(UUID feedbackId, FeedbackImage image) {
     }
 
     public record CleanupCounts(
         int committedClaims,
         int rolledBackClaims,
-        int expiredPending,
-        int orphanedFinalImages) {
+        int expiredPending) {
 
         private static CleanupCounts claims(int committedClaims, int rolledBackClaims) {
-            return new CleanupCounts(committedClaims, rolledBackClaims, 0, 0);
+            return new CleanupCounts(committedClaims, rolledBackClaims, 0);
         }
 
-        private static CleanupCounts storage(int expiredPending, int orphanedFinalImages) {
-            return new CleanupCounts(0, 0, expiredPending, orphanedFinalImages);
+        private static CleanupCounts storage(int expiredPending) {
+            return new CleanupCounts(0, 0, expiredPending);
         }
 
         public int total() {
-            return committedClaims + rolledBackClaims + expiredPending + orphanedFinalImages;
+            return committedClaims + rolledBackClaims + expiredPending;
         }
     }
 
-    record ClaimDocument(
-        UUID feedbackId,
-        FeedbackImage image,
-        String sourceETag,
-        String feedbackDocumentSha256) {
+    record ClaimDocument(UUID feedbackId, FeedbackImage image) {
 
-        private boolean belongsTo(
-            UUID expectedFeedbackId,
-            PendingImage pending,
-            String expectedFeedbackDocumentSha256
-        ) {
+        private boolean belongsTo(UUID expectedFeedbackId, PendingImage pending) {
             return feedbackId.equals(expectedFeedbackId)
-                && image.equals(pending.image())
-                && sourceETag.equals(pending.eTag())
-                && feedbackDocumentSha256.equals(expectedFeedbackDocumentSha256);
+                && image.equals(pending.image());
         }
     }
 
