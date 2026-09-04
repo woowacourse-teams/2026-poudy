@@ -11,7 +11,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -27,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class FeedbackImageProcessor {
 
     public static final long MAX_FILE_BYTES = 5L * 1024 * 1024;
-    public static final long MAX_TOTAL_BYTES = MAX_FILE_BYTES * Feedback.MAX_IMAGE_COUNT;
     public static final int MAX_DIMENSION = 4_096;
     public static final long MAX_PIXELS = 16_000_000L;
 
@@ -41,9 +39,17 @@ public class FeedbackImageProcessor {
             0x1a,
             0x0a
     };
-    private static final byte[] APNG_CHUNK = "acTL".getBytes(StandardCharsets.US_ASCII);
-    private static final byte[] PNG_END_CHUNK = "IEND".getBytes(StandardCharsets.US_ASCII);
-    private static final byte[] MPO_SIGNATURE = {'M', 'P', 'F', 0};
+    private static final byte[] FILE_TYPE_BOX = "ftyp".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[][] HEIC_BRANDS = {
+            "heic".getBytes(StandardCharsets.US_ASCII),
+            "heix".getBytes(StandardCharsets.US_ASCII)
+    };
+
+    private final HeicImageDecoder heicImageDecoder;
+
+    public FeedbackImageProcessor(HeicImageDecoder heicImageDecoder) {
+        this.heicImageDecoder = heicImageDecoder;
+    }
 
     public ProcessedImage process(MultipartFile file) {
         if (file == null || file.isEmpty() || file.getSize() > MAX_FILE_BYTES) {
@@ -56,15 +62,14 @@ public class FeedbackImageProcessor {
                 throw invalidImage();
             }
 
-            FeedbackImageFormat format = signatureOf(original);
-            rejectMultipleFrames(original, format);
-            byte[] encoded = reencode(original, format);
+            InputFormat inputFormat = signatureOf(original);
+            FeedbackImageFormat storedFormat = inputFormat.storedFormat();
+            byte[] encoded = reencode(original, inputFormat);
             if (encoded.length > MAX_FILE_BYTES) {
                 throw invalidImage();
             }
-            verifyEncoded(encoded, format);
 
-            return new ProcessedImage(format, encoded);
+            return new ProcessedImage(storedFormat, encoded);
         } catch (InvalidFeedbackImageException exception) {
             throw exception;
         } catch (IOException | RuntimeException exception) {
@@ -77,59 +82,80 @@ public class FeedbackImageProcessor {
             throw invalidImage();
         }
 
-        long total = 0;
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty() || file.getSize() > MAX_FILE_BYTES) {
-                throw invalidImage();
-            }
-            total = Math.addExact(total, file.getSize());
-            if (total > MAX_TOTAL_BYTES) {
                 throw invalidImage();
             }
         }
     }
 
-    private static FeedbackImageFormat signatureOf(byte[] bytes) {
+    private static InputFormat signatureOf(byte[] bytes) {
         if (startsWith(bytes, PNG_SIGNATURE)) {
-            return FeedbackImageFormat.PNG;
+            return InputFormat.PNG;
         }
         if (bytes.length >= 3
             && (bytes[0] & 0xff) == 0xff
             && (bytes[1] & 0xff) == 0xd8
             && (bytes[2] & 0xff) == 0xff) {
-            return FeedbackImageFormat.JPEG;
+            return InputFormat.JPEG;
+        }
+        if (isHeic(bytes)) {
+            return InputFormat.HEIC;
         }
         throw invalidImage();
     }
 
-    private static void rejectMultipleFrames(byte[] bytes, FeedbackImageFormat format) {
-        if (format == FeedbackImageFormat.PNG && hasPngChunk(bytes, APNG_CHUNK)) {
-            throw invalidImage();
+    private static boolean isHeic(byte[] bytes) {
+        if (bytes.length < 16 || !matchesAt(bytes, FILE_TYPE_BOX, 4)) {
+            return false;
         }
-        if (format == FeedbackImageFormat.JPEG) {
-            JpegInspection inspection = inspectJpeg(bytes, 0);
-            if (inspection.hasMpoApp2Segment()
-                || hasFollowingJpeg(bytes, inspection.endOffset())) {
-                throw invalidImage();
+
+        long boxSize = Integer.toUnsignedLong(readInt(bytes, 0));
+        if (boxSize < 16 || boxSize > bytes.length) {
+            return false;
+        }
+
+        int endOffset = Math.toIntExact(boxSize);
+        for (int offset = 8; offset + 4 <= endOffset; offset += 4) {
+            if (offset != 12 && isSupportedHeicBrand(bytes, offset)) {
+                return true;
             }
         }
+        return false;
     }
 
-    private static byte[] reencode(byte[] original, FeedbackImageFormat format) throws IOException {
-        BufferedImage decoded = decode(original, format, true);
+    private static boolean isSupportedHeicBrand(byte[] bytes, int offset) {
+        for (byte[] brand : HEIC_BRANDS) {
+            if (matchesAt(bytes, brand, offset)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private byte[] reencode(byte[] original, InputFormat inputFormat) throws IOException {
+        FeedbackImageFormat storedFormat = inputFormat.storedFormat();
+        BufferedImage decoded = decodeOriginal(original, inputFormat);
         try {
-            return encode(decoded, format);
+            return encode(decoded, storedFormat);
         } finally {
             decoded.flush();
         }
     }
 
-    private static BufferedImage decode(
-        byte[] bytes,
-        FeedbackImageFormat expectedFormat,
-        boolean normalize
-    )
-        throws IOException {
+    private BufferedImage decodeOriginal(byte[] original, InputFormat inputFormat) throws IOException {
+        if (inputFormat == InputFormat.HEIC) {
+            return decodeHeic(original);
+        }
+        return decode(original, inputFormat.storedFormat());
+    }
+
+    private BufferedImage decodeHeic(byte[] bytes) throws IOException {
+        byte[] jpeg = heicImageDecoder.decodeToJpeg(bytes);
+        return decode(jpeg, FeedbackImageFormat.JPEG);
+    }
+
+    private static BufferedImage decode(byte[] bytes, FeedbackImageFormat expectedFormat) throws IOException {
         try (MemoryCacheImageInputStream input = new MemoryCacheImageInputStream(new ByteArrayInputStream(bytes))) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
@@ -137,11 +163,9 @@ public class FeedbackImageProcessor {
             }
 
             ImageReader reader = readers.next();
-            AtomicBoolean warned = new AtomicBoolean();
             try {
-                reader.addIIOReadWarningListener((ignored, warning) -> warned.set(true));
                 reader.setInput(input, false, false);
-                if (formatOf(reader) != expectedFormat || reader.getNumImages(true) != 1) {
+                if (formatOf(reader) != expectedFormat) {
                     throw invalidImage();
                 }
 
@@ -150,11 +174,8 @@ public class FeedbackImageProcessor {
                 validateDimensions(width, height);
                 ImageReadParam readParam = reader.getDefaultReadParam();
                 BufferedImage image = reader.read(0, readParam);
-                if (image == null || warned.get()) {
+                if (image == null) {
                     throw invalidImage();
-                }
-                if (!normalize) {
-                    return image;
                 }
                 BufferedImage normalized = normalized(image, expectedFormat);
                 image.flush();
@@ -176,7 +197,7 @@ public class FeedbackImageProcessor {
         throw invalidImage();
     }
 
-    private static void validateDimensions(int width, int height) {
+    private static void validateDimensions(long width, long height) {
         if (width <= 0
             || height <= 0
             || width > MAX_DIMENSION
@@ -241,129 +262,11 @@ public class FeedbackImageProcessor {
         return bytes.toByteArray();
     }
 
-    private static void verifyEncoded(byte[] bytes, FeedbackImageFormat format) throws IOException {
-        BufferedImage verified = decode(bytes, format, false);
-        try {
-            if (verified.getWidth() <= 0 || verified.getHeight() <= 0) {
-                throw invalidImage();
-            }
-        } finally {
-            verified.flush();
-        }
-    }
-
-    private static boolean hasPngChunk(byte[] bytes, byte[] expectedType) {
-        int offset = PNG_SIGNATURE.length;
-        while (offset + 12 <= bytes.length) {
-            long length = Integer.toUnsignedLong(readInt(bytes, offset));
-            if (length > Integer.MAX_VALUE || offset + 12L + length > bytes.length) {
-                throw invalidImage();
-            }
-            if (matchesAt(bytes, expectedType, offset + 4)) {
-                return true;
-            }
-            if (matchesAt(bytes, PNG_END_CHUNK, offset + 4)) {
-                return false;
-            }
-            offset = Math.toIntExact(offset + 12L + length);
-        }
-        return false;
-    }
-
     private static int readInt(byte[] bytes, int offset) {
         return (bytes[offset] & 0xff) << 24
             | (bytes[offset + 1] & 0xff) << 16
             | (bytes[offset + 2] & 0xff) << 8
             | bytes[offset + 3] & 0xff;
-    }
-
-    private static boolean hasFollowingJpeg(byte[] bytes, int firstImageEndOffset) {
-        if (firstImageEndOffset < 0) {
-            return false;
-        }
-        for (int offset = firstImageEndOffset; offset + 2 < bytes.length; offset++) {
-            if (isJpegSignatureAt(bytes, offset)
-                && inspectJpeg(bytes, offset).endOffset() > offset) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static JpegInspection inspectJpeg(byte[] bytes, int startOffset) {
-        int offset = startOffset + 2;
-        boolean inScan = false;
-        boolean hasMpoApp2Segment = false;
-        while (offset < bytes.length) {
-            int marker;
-            if (inScan) {
-                marker = -1;
-                while (offset < bytes.length) {
-                    if ((bytes[offset] & 0xff) != 0xff) {
-                        offset++;
-                        continue;
-                    }
-                    offset++;
-                    while (offset < bytes.length && (bytes[offset] & 0xff) == 0xff) {
-                        offset++;
-                    }
-                    if (offset >= bytes.length) {
-                        return new JpegInspection(hasMpoApp2Segment, -1);
-                    }
-                    marker = bytes[offset++] & 0xff;
-                    if (marker == 0x00 || marker >= 0xd0 && marker <= 0xd7) {
-                        marker = -1;
-                        continue;
-                    }
-                    inScan = false;
-                    break;
-                }
-                if (marker < 0) {
-                    return new JpegInspection(hasMpoApp2Segment, -1);
-                }
-            } else {
-                if ((bytes[offset] & 0xff) != 0xff) {
-                    return new JpegInspection(hasMpoApp2Segment, -1);
-                }
-                while (offset < bytes.length && (bytes[offset] & 0xff) == 0xff) {
-                    offset++;
-                }
-                if (offset >= bytes.length) {
-                    return new JpegInspection(hasMpoApp2Segment, -1);
-                }
-                marker = bytes[offset++] & 0xff;
-            }
-
-            if (marker == 0xd9) {
-                return new JpegInspection(hasMpoApp2Segment, offset);
-            }
-            if (marker == 0x01 || marker == 0xd8 || marker >= 0xd0 && marker <= 0xd7) {
-                continue;
-            }
-            if (marker == 0x00 || offset + 2 > bytes.length) {
-                return new JpegInspection(hasMpoApp2Segment, -1);
-            }
-
-            int segmentLength = (bytes[offset] & 0xff) << 8 | bytes[offset + 1] & 0xff;
-            if (segmentLength < 2 || offset + segmentLength > bytes.length) {
-                return new JpegInspection(hasMpoApp2Segment, -1);
-            }
-            if (marker == 0xe2 && matchesAt(bytes, MPO_SIGNATURE, offset + 2)) {
-                hasMpoApp2Segment = true;
-            }
-            offset += segmentLength;
-            if (marker == 0xda) {
-                inScan = true;
-            }
-        }
-        return new JpegInspection(hasMpoApp2Segment, -1);
-    }
-
-    private static boolean isJpegSignatureAt(byte[] bytes, int offset) {
-        return offset + 2 < bytes.length
-            && (bytes[offset] & 0xff) == 0xff
-            && (bytes[offset + 1] & 0xff) == 0xd8
-            && (bytes[offset + 2] & 0xff) == 0xff;
     }
 
     private static boolean startsWith(byte[] bytes, byte[] expected) {
@@ -386,7 +289,21 @@ public class FeedbackImageProcessor {
         return new InvalidFeedbackImageException("처리할 수 없는 의견 이미지입니다.");
     }
 
-    private record JpegInspection(boolean hasMpoApp2Segment, int endOffset) {
+    private enum InputFormat {
+
+        JPEG(FeedbackImageFormat.JPEG),
+        PNG(FeedbackImageFormat.PNG),
+        HEIC(FeedbackImageFormat.JPEG);
+
+        private final FeedbackImageFormat storedFormat;
+
+        InputFormat(FeedbackImageFormat storedFormat) {
+            this.storedFormat = storedFormat;
+        }
+
+        private FeedbackImageFormat storedFormat() {
+            return storedFormat;
+        }
     }
 
     public record ProcessedImage(FeedbackImageFormat format, byte[] bytes) {

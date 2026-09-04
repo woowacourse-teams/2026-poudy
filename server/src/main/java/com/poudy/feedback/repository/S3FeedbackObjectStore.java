@@ -2,11 +2,8 @@ package com.poudy.feedback.repository;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -89,10 +86,6 @@ public class S3FeedbackObjectStore {
         }
     }
 
-    boolean matchesSha256(String key, String expectedSha256) {
-        return expectedSha256.equals(sha256(read(key)));
-    }
-
     boolean existsExactly(String key) {
         try {
             ListObjectsV2Response response = s3Client.listObjectsV2(
@@ -131,7 +124,7 @@ public class S3FeedbackObjectStore {
         }
     }
 
-    void copyIfAbsent(
+    void copy(
         String sourceKey,
         String sourceETag,
         String targetKey,
@@ -144,7 +137,6 @@ public class S3FeedbackObjectStore {
                     .key(targetKey)
                     .copySource(encode(bucket + "/" + sourceKey))
                     .copySourceIfMatch(sourceETag)
-                    .ifNoneMatch("*")
                     .contentType(contentType)
                     .serverSideEncryption(ServerSideEncryption.AES256)
                     .build()
@@ -170,14 +162,6 @@ public class S3FeedbackObjectStore {
         return URLEncoder.encode(value, StandardCharsets.UTF_8)
             .replace("+", "%20")
             .replace("%2F", "/");
-    }
-
-    static String sha256(byte[] bytes) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256을 사용할 수 없습니다.", exception);
-        }
     }
 
     private static ObjectStoreException failure(SdkException exception) {

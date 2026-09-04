@@ -55,7 +55,7 @@ public class FeedbackController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "의견 이미지 업로드", description = "이미지를 검증·재인코딩해 24시간 동안 임시 저장한다.")
+    @Operation(summary = "의견 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.")
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
     @PostMapping(path = "/images", consumes = "multipart/form-data")
     public ResponseEntity<FeedbackImageUploadResponse> uploadImages(

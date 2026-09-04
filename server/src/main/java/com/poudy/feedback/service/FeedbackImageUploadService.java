@@ -38,23 +38,28 @@ public class FeedbackImageUploadService {
 
     public List<UUID> upload(List<MultipartFile> files, String clientId) {
         imageProcessor.validateBatch(files);
+        rateLimiter.requireAllowed(clientId);
+
+        List<FeedbackImage> stored = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                ProcessedImage processed = processWithPermit(file);
+                stored.add(imageRepository.savePending(processed));
+            }
+            return stored.stream().map(FeedbackImage::id).toList();
+        } catch (RuntimeException exception) {
+            imageRepository.cleanupPending(stored);
+            throw exception;
+        }
+    }
+
+    private ProcessedImage processWithPermit(MultipartFile file) {
         if (!processingPermits.tryAcquire()) {
             throw new TooManyRequestsException(Duration.ofSeconds(1));
         }
 
         try {
-            rateLimiter.requireAllowed(clientId);
-            List<FeedbackImage> stored = new ArrayList<>();
-            try {
-                for (MultipartFile file : files) {
-                    ProcessedImage processed = imageProcessor.process(file);
-                    stored.add(imageRepository.savePending(processed));
-                }
-                return stored.stream().map(FeedbackImage::id).toList();
-            } catch (RuntimeException exception) {
-                imageRepository.cleanupPending(stored);
-                throw exception;
-            }
+            return imageProcessor.process(file);
         } finally {
             processingPermits.release();
         }
