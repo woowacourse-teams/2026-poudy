@@ -68,3 +68,50 @@ export const apiGet = async <T>(path: string, query?: URLSearchParams, revalidat
 
   return response.json() as Promise<T>;
 };
+
+/**
+ * 실패 응답에서 오류 코드와 설명을 꺼낸다. 본문이 비어 있거나 JSON 이 아닐 수 있어
+ * 어느 쪽이든 화면이 쓸 수 있는 ApiError 로 바꾼다.
+ */
+const toApiError = async (response: Response, path: string): Promise<ApiError> => {
+  const problem = await response.json().catch(() => null);
+  const code = problem?.code ?? "INTERNAL_SERVER_ERROR";
+
+  reportError(code, response.status, path);
+  return new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
+};
+
+const networkError = (cause: unknown, path: string): ApiError => {
+  reportError("NETWORK_ERROR", 0, path);
+  return new ApiError(0, "NETWORK_ERROR", cause instanceof Error ? cause.message : "요청을 보내지 못했습니다.");
+};
+
+/**
+ * 본문을 보내고 응답을 받지 않는 요청. 204 처럼 내용이 없는 응답을 돌려주는 곳에 쓴다.
+ * 캐시를 두지 않는다. 보내는 요청은 저장해 두었다 다시 쓸 수 있는 종류가 아니다.
+ */
+export const apiPost = async (path: string, body: unknown): Promise<void> => {
+  const response = await fetch(apiUrl(path), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+};
+
+/**
+ * 파일을 보내고 결과를 받는 요청. Content-Type 을 직접 정하지 않는다.
+ * FormData 를 넘기면 브라우저가 multipart 경계 문자열까지 붙여 준다.
+ */
+export const apiPostForm = async <T>(path: string, form: FormData): Promise<T> => {
+  const response = await fetch(apiUrl(path), { method: "POST", body: form }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+
+  return response.json() as Promise<T>;
+};
