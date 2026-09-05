@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addShareMarker,
+  consumeShareMarker,
   buildAndroidIntentUrl,
   buildKakaoExternalUrl,
   consumeFallbackMarker,
@@ -60,16 +62,17 @@ describe("앱 자동 열기 주소", () => {
 });
 
 describe("planAppOpen", () => {
-  it("Android에서는 페이지를 그린 뒤 곧바로 앱 열기를 계획한다", () => {
-    expect(planAppOpen(WEB_URL, ANDROID_CHROME, false)).toEqual({
+  it("share=true인 Android 방문에서만 앱 열기를 계획한다", () => {
+    expect(planAppOpen(addShareMarker(WEB_URL), ANDROID_CHROME, false)).toEqual({
       type: "open-app",
       appUrl: buildAndroidIntentUrl(WEB_URL),
+      webUrl: WEB_URL,
     });
   });
 
   it("fallback으로 돌아온 웹에서는 표시만 지우고 앱을 다시 열지 않는다", () => {
     expect(planAppOpen(FALLBACK_URL, ANDROID_CHROME, false)).toEqual({
-      type: "clean-fallback",
+      type: "clean-url",
       webUrl: WEB_URL,
     });
   });
@@ -77,5 +80,45 @@ describe("planAppOpen", () => {
   it("Poudy 앱 WebView와 지원하지 않는 환경에서는 아무것도 하지 않는다", () => {
     expect(planAppOpen(WEB_URL, ANDROID_CHROME, true)).toEqual({ type: "none" });
     expect(planAppOpen(WEB_URL, "desktop", false)).toEqual({ type: "none" });
+  });
+});
+
+describe("공유 표시", () => {
+  it("다른 검색 조건과 fragment를 보존하고 중복 없이 표시를 붙이고 소비한다", () => {
+    const markedUrl = addShareMarker(WEB_URL);
+    expect(new URL(markedUrl).searchParams.get("share")).toBe("true");
+    expect(addShareMarker(markedUrl)).toBe(markedUrl);
+    expect(consumeShareMarker(markedUrl)).toBe(WEB_URL);
+    expect(consumeShareMarker(WEB_URL)).toBeNull();
+  });
+
+  it.each(["", "?share=false", "?share=1", "?share=True", "?share="])(
+    "정확한 share=true가 없으면 Android에서도 앱을 열지 않는다: %s",
+    (query) => {
+      expect(planAppOpen(`https://poudy.site/products/42${query}`, ANDROID_CHROME, false)).toEqual({ type: "none" });
+    },
+  );
+
+  it.each([
+    [ANDROID_CHROME, true],
+    ["desktop", false],
+    ["iPhone", false],
+  ] as const)("앱 내부와 지원하지 않는 환경에서는 공유 표시만 지운다: %s", (userAgent, isApp) => {
+    expect(planAppOpen(addShareMarker(WEB_URL), userAgent, isApp)).toEqual({ type: "clean-url", webUrl: WEB_URL });
+  });
+
+  it("fallback과 공유 표시가 함께 있으면 모두 지우고 앱을 다시 열지 않는다", () => {
+    expect(planAppOpen(addShareMarker(FALLBACK_URL), ANDROID_CHROME, false)).toEqual({
+      type: "clean-url",
+      webUrl: WEB_URL,
+    });
+  });
+
+  it("카카오톡 공유 방문은 표시를 지운 주소로 외부 열기를 계획한다", () => {
+    expect(planAppOpen(addShareMarker(WEB_URL), `${ANDROID_CHROME} KAKAOTALK`, false)).toEqual({
+      type: "open-app",
+      appUrl: buildKakaoExternalUrl(WEB_URL),
+      webUrl: WEB_URL,
+    });
   });
 });

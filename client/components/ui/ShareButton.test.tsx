@@ -41,6 +41,7 @@ describe("ShareButton 복사 안내", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "공유하기" }));
 
+    expect(writeText).toHaveBeenCalledWith(`${window.location.href}?share=true`);
     expect(await screen.findByRole("status")).toHaveTextContent("주소를 복사했어요");
   });
 
@@ -50,7 +51,7 @@ describe("ShareButton 복사 안내", () => {
     render(<ShareButton />);
 
     await userEvent.click(screen.getByRole("button", { name: "공유하기" }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(window.location.href));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.href}?share=true`));
 
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });

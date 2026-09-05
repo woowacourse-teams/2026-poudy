@@ -7,6 +7,8 @@ import { sharePage } from "./share";
 
 const URL_TO_SHARE = "https://poudy.site/products/1";
 
+const MARKED_URL = `${URL_TO_SHARE}?share=true`;
+
 const APP_INFO = {
   is_app: true,
   platform: "android",
@@ -42,7 +44,7 @@ describe("sharePage", () => {
     window.__POUDY_APP__ = APP_INFO;
 
     await expect(sharePage(URL_TO_SHARE)).resolves.toBe("shared");
-    expect(postMessage).toHaveBeenCalledWith(`poudy:share:${URL_TO_SHARE}`);
+    expect(postMessage).toHaveBeenCalledWith(`poudy:share:${MARKED_URL}`);
   });
 
   it("공유를 모르는 옛 앱에는 보내지 않고 주소를 복사한다", async () => {
@@ -54,7 +56,7 @@ describe("sharePage", () => {
 
     await expect(sharePage(URL_TO_SHARE)).resolves.toBe("copied");
     expect(postMessage).not.toHaveBeenCalled();
-    expect(writeText).toHaveBeenCalledWith(URL_TO_SHARE);
+    expect(writeText).toHaveBeenCalledWith(MARKED_URL);
   });
 
   it("공유를 지원하는 브라우저에서는 공유 시트를 연다", async () => {
@@ -62,7 +64,7 @@ describe("sharePage", () => {
     Object.defineProperty(navigator, "share", { configurable: true, value: share });
 
     await expect(sharePage(URL_TO_SHARE)).resolves.toBe("shared");
-    expect(share).toHaveBeenCalledWith({ url: URL_TO_SHARE });
+    expect(share).toHaveBeenCalledWith({ url: MARKED_URL });
   });
 
   it("공유 시트를 닫아도 실패로 보지 않는다", async () => {
@@ -77,6 +79,6 @@ describe("sharePage", () => {
     setClipboard(writeText);
 
     await expect(sharePage(URL_TO_SHARE)).resolves.toBe("copied");
-    expect(writeText).toHaveBeenCalledWith(URL_TO_SHARE);
+    expect(writeText).toHaveBeenCalledWith(MARKED_URL);
   });
 });
