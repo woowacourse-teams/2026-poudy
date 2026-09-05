@@ -232,7 +232,7 @@ export default function PrivacyPage() {
           </LegalList>
           <p>Google Analytics</p>
           <LegalList>
-            <li>이전받는 자 — Google LLC</li>
+            <li>이전받는 자 — Google LLC (개인정보 문의 — support.google.com/policies/contact/general_privacy_form)</li>
             <li>이전되는 국가 — 미국</li>
             <li>이전 일시와 방법 — 서비스를 이용하는 시점에 정보통신망을 통해 전송</li>
             <li>이전 항목 — 제2조의 웹 트래픽 기록, 핵심 이용 행동, 웹 접속 환경, 웹 트래픽 분석용 식별자</li>
@@ -299,14 +299,19 @@ export default function PrivacyPage() {
             않고, 이 정보를 광고에 쓰지 않습니다.
           </p>
           <p>
-            브라우저 설정에서 쿠키와 추적을 차단하면 수집을 거부하실 수 있습니다. 브라우저의 &quot;추적 안 함(Do Not
-            Track)&quot; 설정을 켜면 팀은 그 신호를 받아 수집을 멈춥니다.
+            브라우저의 &quot;추적 안 함(Do Not Track)&quot; 설정을 켜면 팀은 그 신호를 받아 수집을 멈춥니다. 가장 확실한
+            방법입니다.
+          </p>
+          <p>
+            분석 기록은 다른 회사의 주소가 아니라 이 서비스의 주소를 거쳐 전송되므로, 서드 파티 쿠키 차단이나 사이트 간
+            추적 방지만으로는 멈추지 않습니다. 브라우저 설정으로 막으시려면 이 사이트의 쿠키와 사이트 데이터를 차단해
+            주셔야 합니다.
           </p>
           <LegalList>
-            <li>Chrome — 설정 &gt; 개인정보 보호 및 보안 &gt; 서드 파티 쿠키</li>
-            <li>Safari — 설정 &gt; 개인정보 보호 &gt; 사이트 간 추적 방지</li>
-            <li>Edge — 설정 &gt; 쿠키 및 사이트 권한 &gt; 쿠키 및 사이트 데이터 관리</li>
-            <li>Firefox — 설정 &gt; 개인 정보 및 보안 &gt; 향상된 추적 방지 기능</li>
+            <li>Chrome — 설정 &gt; 개인정보 보호 및 보안 &gt; 사이트 설정 &gt; 쿠키 및 사이트 데이터</li>
+            <li>Safari — 설정 &gt; 개인정보 보호 &gt; 모든 쿠키 차단</li>
+            <li>Edge — 설정 &gt; 쿠키 및 사이트 권한 &gt; 쿠키 및 사이트 데이터 관리 및 삭제</li>
+            <li>Firefox — 설정 &gt; 개인 정보 및 보안 &gt; 쿠키 및 사이트 데이터 &gt; 데이터 관리</li>
           </LegalList>
           <p>
             앱으로 이용하실 때는 앱 안에 브라우저 설정 화면이 없어 위 방법을 쓸 수 없습니다. 이때는 제8조의 접수처로
