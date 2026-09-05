@@ -275,3 +275,14 @@ describe("제품 상세 머리 고정", () => {
     expect(within(summaryBar()).getByText(multiVariantProduct.name).closest("p")).toHaveClass("truncate");
   });
 });
+
+describe("상품 정보 출처 안내", () => {
+  it("정보 수정 제안으로 제품 정보 정정 화면에 간다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("link", { name: /정보 수정 제안/ })).toHaveAttribute(
+      "href",
+      `/inquiry/products/${untaggedProductDetail.id}`,
+    );
+  });
+});

@@ -81,7 +81,7 @@ export function ProductDetail({
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
-          <Source updatedAt={product.updatedAt} />
+          <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
     </ProductDetailHeader>
@@ -285,7 +285,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
   );
 }
 
-function Source({ updatedAt }: { readonly updatedAt: string }) {
+function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly productId: number }) {
   const date = new Date(updatedAt)
     .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
     .replace(/\.$/, "")
@@ -302,8 +302,18 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
         <span className="text-pretty text-[12px] text-[#5F6268]">
           브랜드 공식 전성분을 기준으로 정리했어요. {"제품\u00a0리뉴얼에\u00a0따라"} 실제 표기와 다를 수 있어요.
         </span>
-        <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
-        {/* 정보 수정 제안은 받을 곳이 아직 없어 화면에서 감춘다. */}
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
+
+          {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
+          <Link
+            href={`/inquiry/products/${productId}`}
+            className="flex shrink-0 items-center gap-0.5 text-[11px] text-[#5F6268]"
+          >
+            정보 수정 제안
+            <Icon name="chevron-right" size={12} />
+          </Link>
+        </span>
       </span>
     </section>
   );

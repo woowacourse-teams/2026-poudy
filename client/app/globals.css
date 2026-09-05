@@ -119,6 +119,9 @@
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
+
+  /* 접수 완료의 체크. 선을 따라 그려지듯 나타난다. */
+  --animate-check-draw: check-draw var(--transition-duration-celebration) var(--ease-out) forwards;
 }
 
 /*
@@ -567,6 +570,21 @@ body {
  * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
  * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
  */
+/*
+ * 선 길이만큼 끊어 두었다가 그 간격을 0 으로 줄인다. 획이 시작점에서
+ * 끝점으로 이어지며 손으로 그은 것처럼 보인다.
+ *
+ * pathLength 로 길이를 1 로 맞춰 두어 실제 좌표와 무관하게 셈이 맞는다.
+ */
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes spark-burst {
   from {
     opacity: 1;
@@ -601,6 +619,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-spark-burst {
     animation: none;
+  }
+
+  /* 그려지는 과정만 걷어내고 체크는 처음부터 온전히 보인다. */
+  .animate-check-draw {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
