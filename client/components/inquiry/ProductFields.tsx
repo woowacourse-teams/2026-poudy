@@ -8,8 +8,9 @@ import { BRAND_NAME_MAX_LENGTH, PRODUCT_NAME_MAX_LENGTH } from "@/lib/api/feedba
 import { brandNameError, productNameError } from "@/lib/domain/inquiry-validation";
 import { useFieldError } from "@/lib/hooks/useFieldError";
 
+/* inquiry-input 은 iOS 확대를 막으려고 font-size 를 16px 로 두고 scale 로 줄인다. */
 const inputClass =
-  "w-full rounded-xl bg-surface-subtle px-3 py-3 text-[14px] text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60";
+  "inquiry-input rounded-xl bg-surface-subtle px-3 py-3 text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60";
 
 /**
  * 제품 등록 요청은 자유 입력 대신 제품명과 브랜드를 받는다.
