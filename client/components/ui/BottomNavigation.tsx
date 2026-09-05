@@ -102,39 +102,44 @@ export function BottomNavigation() {
   };
 
   return (
-    <nav aria-label="주요 메뉴" className="sticky bottom-0 z-20 mt-auto shrink-0 border-t border-border bg-background">
-      <ul className={`${styles.list} flex px-2 pt-2 pb-3.5`}>
-        {TABS.map((tab, index) => {
-          const active = tab.match(pathname);
-          const selected = selectedIndex === index;
-          return (
-            <li key={tab.href} className={`${styles.item} flex-1`} data-selected={selected}>
-              <span className={styles.hoverBackground} aria-hidden="true" />
-              <Link
-                href={tab.href}
-                aria-current={active ? "page" : undefined}
-                data-activated={activatedIndex === index}
-                data-selected={selected}
-                onClick={() => selectTab(index, active)}
-                className={[
-                  styles.link,
-                  "relative flex flex-col items-center gap-1 py-1 text-[11px]",
-                  selected ? "font-bold text-brand" : "font-medium text-text-secondary",
-                ].join(" ")}
-              >
-                <NavigationIcon
-                  key={activatedIndex === index ? pendingActivation?.runId : undefined}
-                  name={tab.icon}
-                  filled={selected}
-                  activated={activatedIndex === index}
-                  onAnimationEnd={() => setPendingActivation(null)}
-                />
-                <span className="relative z-10">{tab.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <div className={`${styles.space} mt-auto shrink-0`}>
+      <nav
+        aria-label="주요 메뉴"
+        className={`${styles.navigation} fixed bottom-0 z-20 border-t border-border bg-background`}
+      >
+        <ul className={`${styles.list} flex px-2 pt-2 pb-3.5`}>
+          {TABS.map((tab, index) => {
+            const active = tab.match(pathname);
+            const selected = selectedIndex === index;
+            return (
+              <li key={tab.href} className={`${styles.item} flex-1`} data-selected={selected}>
+                <span className={styles.hoverBackground} aria-hidden="true" />
+                <Link
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  data-activated={activatedIndex === index}
+                  data-selected={selected}
+                  onClick={() => selectTab(index, active)}
+                  className={[
+                    styles.link,
+                    "relative flex flex-col items-center gap-1 py-1 text-[11px]",
+                    selected ? "font-bold text-brand" : "font-medium text-text-secondary",
+                  ].join(" ")}
+                >
+                  <NavigationIcon
+                    key={activatedIndex === index ? pendingActivation?.runId : undefined}
+                    name={tab.icon}
+                    filled={selected}
+                    activated={activatedIndex === index}
+                    onAnimationEnd={() => setPendingActivation(null)}
+                  />
+                  <span className="relative z-10">{tab.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
   );
 }
