@@ -120,8 +120,11 @@ export function InquiryForm({ originPath, fixed }: { readonly originPath: string
 
         {fixed ? null : <TypeField selected={choice} onSelect={chooseType} disabled={sending} />}
 
+        {/* 디자인 S13 은 유형 버튼 아래 빈 자리 가운데에 안내를 둔다. */}
         {!fixed && choice === undefined ? (
-          <p className="text-[13px] text-text-secondary">문의 유형을 선택하면 이어서 작성할 수 있어요.</p>
+          <p className="flex h-40 items-center justify-center text-center text-[13px] text-text-secondary">
+            문의 유형을 선택하면 이어서 작성할 수 있어요.
+          </p>
         ) : null}
 
         {productMode ? (
