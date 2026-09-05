@@ -25,7 +25,7 @@ export default function TermsPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 이용약관`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate.terms}
+        revisionEffectiveDate={OPERATOR.revisionEffectiveDate.terms}
       >
         <LegalArticle heading="제1조 목적">
           <p>
@@ -123,9 +123,9 @@ export default function TermsPage() {
 
         <LegalArticle heading="제10조 책임의 제한">
           <p>
-            팀은 천재지변이나 이에 준하는 불가항력, 이용자의 고의나 과실로 생긴 손해에 대해 책임지지 않습니다. 서비스가
-            무료로 제공되는 점을 고려하여, 팀은 관련 법령이 허용하는 범위에서 서비스 이용으로 생긴 손해에 대한 책임을
-            지지 않습니다. 다만 팀의 고의나 중대한 과실로 생긴 손해는 그러하지 않습니다.
+            팀은 천재지변이나 이에 준하는 불가항력, 이용자의 고의나 과실로 생긴 손해에 대해 책임지지 않습니다. 팀의 책임
+            있는 사유로 손해가 생긴 경우에는 관련 법령에 따라 배상하며, 서비스가 무료로 제공되는 점은 배상 범위를 정할
+            때 고려됩니다.
           </p>
         </LegalArticle>
 
@@ -152,7 +152,10 @@ export default function TermsPage() {
         <LegalArticle heading="부칙">
           <LegalList>
             <li>{OPERATOR.effectiveDate} — 제정</li>
-            <li>{OPERATOR.lastRevisedDate.terms} — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호 조정</li>
+            <li>
+              {OPERATOR.revisionEffectiveDate.terms} 시행 예정 — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호
+              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정
+            </li>
           </LegalList>
         </LegalArticle>
       </LegalDocument>

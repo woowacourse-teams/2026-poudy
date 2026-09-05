@@ -1,7 +1,8 @@
 type LegalDocumentProps = {
   readonly title: string;
   readonly effectiveDate: string;
-  readonly lastRevisedDate: string;
+  /** 아직 시행되지 않은 개정이 공지 중일 때만 적는다. */
+  readonly revisionEffectiveDate?: string;
   readonly children: React.ReactNode;
 };
 
@@ -9,13 +10,21 @@ type LegalDocumentProps = {
  * 처리방침과 이용약관이 함께 쓰는 문서 틀.
  * 본문 글자색을 이 자리에서 한 번만 정해 조문마다 되풀이하지 않는다.
  */
-export function LegalDocument({ title, effectiveDate, lastRevisedDate, children }: LegalDocumentProps) {
+/** 공지 중인 개정이 없으면 시행일만 적는다. */
+const revisionNotice = (date: string | undefined): string => {
+  if (!date) return "";
+
+  return ` · ${date} 개정 시행 예정`;
+};
+
+export function LegalDocument({ title, effectiveDate, revisionEffectiveDate, children }: LegalDocumentProps) {
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-10 text-[13px] leading-6 [&_a]:underline [&_li]:text-text-secondary [&_p]:text-text-secondary">
       <header className="flex flex-col gap-1">
         <h2 className="text-[18px] font-bold text-text-primary">{title}</h2>
         <p className="text-[12px]">
-          시행일 {effectiveDate} · 최종 개정일 {lastRevisedDate}
+          시행일 {effectiveDate}
+          {revisionNotice(revisionEffectiveDate)}
         </p>
       </header>
 
