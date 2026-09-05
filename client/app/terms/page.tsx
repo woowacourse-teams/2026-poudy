@@ -25,7 +25,7 @@ export default function TermsPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 이용약관`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate}
+        lastRevisedDate={OPERATOR.lastRevisedDate.terms}
       >
         <LegalArticle heading="제1조 목적">
           <p>

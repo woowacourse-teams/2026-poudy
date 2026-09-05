@@ -11,5 +11,8 @@ export const OPERATOR = {
     email: "poudy.official@gmail.com",
   },
   effectiveDate: "2026년 9월 1일",
-  lastRevisedDate: "2026년 9월 1일",
+  lastRevisedDate: {
+    privacy: "2026년 9월 14일",
+    terms: "2026년 9월 1일",
+  },
 } as const;
