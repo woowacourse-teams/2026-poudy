@@ -13,6 +13,6 @@ export const OPERATOR = {
   effectiveDate: "2026년 9월 1일",
   lastRevisedDate: {
     privacy: "2026년 9월 14일",
-    terms: "2026년 9월 1일",
+    terms: "2026년 10월 7일",
   },
 } as const;
