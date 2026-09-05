@@ -66,12 +66,12 @@ const COLLECTED_ROWS = [
   ],
   [
     "문의와 제품 정보 추가 요청",
-    "이용자가 직접 입력한 문의·요청 내용, 답변을 받을 이메일 주소(적지 않고 보내실 수 있습니다)",
+    "이용자가 직접 입력한 문의·요청 내용, 문의를 연 화면의 경로(주소에 담긴 검색어와 조건은 빼고 경로만 남깁니다), 답변을 받을 이메일 주소(적지 않고 보내실 수 있습니다)",
     "Poudy 팀이 운영하는 웹 서버",
   ],
   [
     "문의에 첨부한 이미지",
-    "이용자가 문의에 직접 첨부한 사진 파일(JPEG·PNG, 장당 5MB·한 번에 5장까지). 팀은 받은 파일을 다시 저장하면서 촬영 기기와 촬영 위치처럼 파일에 딸려 오는 정보를 지웁니다",
+    "이용자가 문의에 직접 첨부한 사진 파일(JPEG·PNG·HEIC, 장당 5MB·한 번에 5장까지). 팀은 받은 파일을 JPEG 나 PNG 로 다시 저장하면서 촬영 기기와 촬영 위치처럼 파일에 딸려 오는 정보를 지웁니다",
     "Poudy 팀이 운영하는 웹 서버",
   ],
 ] as const;
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 개인정보 처리방침`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate}
+        lastRevisedDate={OPERATOR.lastRevisedDate.privacy}
       >
         <p>
           {OPERATOR.name}(이하 &quot;팀&quot;)은 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와
@@ -295,17 +295,19 @@ export default function PrivacyPage() {
             않고, 이 정보를 광고에 쓰지 않습니다.
           </p>
           <p>
-            브라우저나 기기의 설정에서 쿠키와 추적을 차단하면 수집을 거부하실 수 있습니다. 브라우저의 &quot;추적 안
-            함(Do Not Track)&quot; 설정을 켜면 팀은 그 신호를 받아 수집을 멈춥니다.
+            브라우저 설정에서 쿠키와 추적을 차단하면 수집을 거부하실 수 있습니다. 브라우저의 &quot;추적 안 함(Do Not
+            Track)&quot; 설정을 켜면 팀은 그 신호를 받아 수집을 멈춥니다.
           </p>
           <LegalList>
             <li>Chrome — 설정 &gt; 개인정보 보호 및 보안 &gt; 서드 파티 쿠키</li>
             <li>Safari — 설정 &gt; 개인정보 보호 &gt; 사이트 간 추적 방지</li>
             <li>Edge — 설정 &gt; 쿠키 및 사이트 권한 &gt; 쿠키 및 사이트 데이터 관리</li>
             <li>Firefox — 설정 &gt; 개인 정보 및 보안 &gt; 향상된 추적 방지 기능</li>
-            <li>iOS — 설정 &gt; 개인정보 보호 및 보안 &gt; 추적</li>
-            <li>Android — 설정 &gt; 보안 및 개인정보 보호 &gt; 광고 &gt; 광고 ID 삭제</li>
           </LegalList>
+          <p>
+            앱으로 이용하실 때는 앱 안에 브라우저 설정 화면이 없어 위 방법을 쓸 수 없습니다. 이때는 제8조의 접수처로
+            처리정지를 요구하시면 팀이 수집을 멈춥니다.
+          </p>
           <p>
             쿠키와 로컬 저장소를 막으면 분석용 식별자가 만들어지지 않아 방문을 이어 붙인 기록이 남지 않습니다. 다만
             저장함과 최근 검색어도 함께 유지되지 않습니다. 남은 항목의 처리를 멈추려면 제8조의 접수처로 처리정지를
@@ -367,8 +369,12 @@ export default function PrivacyPage() {
           <LegalList>
             <li>{OPERATOR.effectiveDate} — 제정</li>
             <li>
-              {OPERATOR.lastRevisedDate} — 문의하기와 제품 정보 추가 요청, Google Analytics 도입에 따라 수집 항목과 보유
+              {OPERATOR.effectiveDate} — 문의하기와 제품 정보 추가 요청, Google Analytics 도입에 따라 수집 항목과 보유
               기간 추가. 문의 첨부 이미지와 Discord 알림에 따라 수집 항목, 위탁과 국외 이전 추가
+            </li>
+            <li>
+              {OPERATOR.lastRevisedDate.privacy} — 앱에서 쓸 수 없는 추적 거부 방법을 지우고, 앱으로 이용할 때의 거부
+              방법 추가. 문의 첨부 이미지의 HEIC 형식과 문의를 연 화면의 경로를 수집 항목에 반영
             </li>
           </LegalList>
         </LegalArticle>

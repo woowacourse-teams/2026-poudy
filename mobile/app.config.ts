@@ -41,6 +41,10 @@ if (APP_VERSION && !/^\d+\.\d+\.\d+$/.test(APP_VERSION)) {
   throw new Error('POUDY_APP_VERSION must be x.y.z.');
 }
 
+if (process.env.EAS_BUILD_PROFILE === 'production' && new URL(validatedServiceBaseUrl).protocol !== 'https:') {
+  throw new Error('EXPO_PUBLIC_SERVICE_URL must use https for production builds.');
+}
+
 /** App Links 는 https 로만 검증된다. */
 const appLinkHostOf = (serviceBaseUrl: string) => {
   const service = new URL(serviceBaseUrl);
