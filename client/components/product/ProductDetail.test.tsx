@@ -42,6 +42,13 @@ describe("제품 성분 요약", () => {
     );
   });
 
+  it("문서의 대표 제목으로 바 문구가 아니라 제품명을 쓴다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("더마 릴리프 썬스크린");
+    expect(screen.getByText("제품 상세").tagName).toBe("P");
+  });
+
   it("피부 작용 태그가 없는 24개 전성분 제품을 깨진 조사 없이 보여 준다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
@@ -180,7 +187,7 @@ describe("제품 상세 머리 고정", () => {
   it("뒤로가기를 단 머리를 화면 위에 붙이고 바텀시트보다 아래에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const header = screen.getByRole("heading", { name: "제품 상세" }).closest("header")?.parentElement;
+    const header = screen.getByText("제품 상세").closest("header")?.parentElement;
 
     expect(header).toHaveClass("sticky", "top-0", "z-30", "bg-background");
   });

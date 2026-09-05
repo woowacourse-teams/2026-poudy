@@ -42,7 +42,7 @@ export function ProductDetailHeader({ title, right, summary, children }: Product
     <Context.Provider value={setPassed}>
       {/* 바텀시트의 딤(z-40)·시트(z-50)보다 아래에 둔다. */}
       <div className="sticky top-0 z-30 h-11 bg-background">
-        <TopBar title={title} variant="sub" right={right} />
+        <TopBar title={title} variant="sub" right={right} titleAs="p" />
 
         <div
           data-stuck={passed}
