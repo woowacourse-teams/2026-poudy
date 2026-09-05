@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { RecentFilters, SavedPreview } from "@/components/home/PersonalSections";
 import { OPERATOR } from "@/components/legal/operator";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { EXCLUDE_CODES } from "@/lib/domain/filter";
@@ -128,6 +127,7 @@ export default function Home() {
                     alt=""
                     width={120}
                     height={120}
+                    loading="eager"
                     className="quick-filter-tile size-17 rounded-[20px] bg-linear-to-br from-[#FBFBFC] to-[#EFF0F3] p-1"
                   />
                   <span className="text-center text-[13px] font-semibold text-text-primary">
@@ -181,8 +181,6 @@ export default function Home() {
           당신의 피부를 생각하는 {OPERATOR.name} <span aria-hidden="true">💗</span>
         </p>
       </footer>
-
-      <BottomNavigation />
     </>
   );
 }

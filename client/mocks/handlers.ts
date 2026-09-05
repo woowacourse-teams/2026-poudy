@@ -29,6 +29,24 @@ const numbers = (url: URL, key: string) =>
 const notFound = (detail: string, code: string) =>
   HttpResponse.json({ title: "Not Found", status: 404, detail, code }, { status: 404 });
 
+const problem = (status: number, detail: string, code: string) =>
+  HttpResponse.json({ title: code, status, detail, code }, { status });
+
+const MOCK_IMAGE_MAX_COUNT = 5;
+const MOCK_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+/* 목에서 실패 화면을 확인하려고 쓰는 낱말. */
+const RATE_LIMIT_KEYWORD = "429";
+const SERVER_ERROR_KEYWORD = "500";
+
+const forcedError = (text: string) => {
+  if (text.includes(RATE_LIMIT_KEYWORD)) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
+  if (text.includes(SERVER_ERROR_KEYWORD))
+    return problem(500, "서버에서 처리하지 못했습니다.", "INTERNAL_SERVER_ERROR");
+
+  return undefined;
+};
+
 const paginate = <T>(matched: readonly T[], url: URL) => {
   const page = Number(url.searchParams.get("page") ?? 0);
   const size = Number(url.searchParams.get("size") ?? 20);
@@ -211,6 +229,8 @@ export const handlers = [
       brands: allBrands
         .filter((brand) => matched.some((product) => product.brand.id === brand.id))
         .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
+      // 목 제품에는 카테고리가 없어 걸러 낼 기준이 없다. 형태만 실제와 맞춘다.
+      categories,
     });
   }),
 
@@ -321,5 +341,43 @@ export const handlers = [
       imageUrl: brand.imageUrl,
       categories,
     });
+  }),
+
+  /*
+   * 문의 접수. 실패 문구를 눈으로 확인할 수 있도록 특정 낱말로 오류를 부른다.
+   * 목에서만 쓰는 장치이므로 실제 서버는 이런 규칙을 두지 않는다.
+   */
+  http.post("*/api/feedback", async ({ request }) => {
+    const body = (await request.json()) as { content?: string };
+    const forced = forcedError(body.content ?? "");
+    if (forced) return forced;
+
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("*/api/feedback/images", async ({ request }) => {
+    const form = await request.formData();
+    const images = form.getAll("images").filter((value): value is File => value instanceof File);
+
+    if (images.length === 0) return problem(400, "이미지를 찾을 수 없습니다.", "INVALID_FEEDBACK_IMAGE");
+    if (images.length > MOCK_IMAGE_MAX_COUNT) {
+      return problem(400, "이미지는 다섯 장까지 올릴 수 있습니다.", "INVALID_FEEDBACK_IMAGE");
+    }
+
+    const tooLarge = images.find((image) => image.size > MOCK_IMAGE_MAX_BYTES);
+    if (tooLarge) return problem(413, "이미지 용량이 너무 큽니다.", "PAYLOAD_TOO_LARGE");
+
+    const named = images.find((image) => image.name.includes(RATE_LIMIT_KEYWORD));
+    if (named) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
+
+    return HttpResponse.json({ imageIds: images.map(() => crypto.randomUUID()) }, { status: 201 });
+  }),
+
+  http.post("*/api/product-requests", async ({ request }) => {
+    const body = (await request.json()) as { productName?: string };
+    const forced = forcedError(body.productName ?? "");
+    if (forced) return forced;
+
+    return new HttpResponse(null, { status: 202 });
   }),
 ];

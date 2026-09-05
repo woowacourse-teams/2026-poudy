@@ -1,7 +1,9 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import Link from "next/link";
 
 import { IngredientList } from "./IngredientList";
+import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
 import { SaveProductButton } from "./SaveProductButton";
 
 import { TrackView } from "@/components/analytics/TrackView";
@@ -9,7 +11,6 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
-import { TopBar } from "@/components/ui/TopBar";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
@@ -32,14 +33,13 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
 }) {
   return (
-    <>
-      <TopBar title="제품 상세" variant="sub" right={<ShareButton />} />
+    <ProductDetailHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
       />
 
-      <main className="flex-1 px-4 pb-10">
+      <main className="flex-1 px-4">
         <div className="flex flex-col gap-4 pt-4 pb-3">
           <CategoryPath categories={product.categories} />
         </div>
@@ -51,12 +51,18 @@ export function ProductDetail({
             width={184}
             height={184}
             className="size-[184px] object-contain"
-            priority
+            loading="eager"
           />
 
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[12px] font-medium text-text-secondary">{product.brand.name}</p>
-            <h2 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h2>
+            <Link
+              href={`/brands/${product.brand.id}`}
+              aria-label={`${product.brand.name} 브랜드관`}
+              className="-my-1.5 py-1.5 text-[12px] font-medium text-text-secondary active:opacity-60"
+            >
+              {product.brand.name}
+            </Link>
+            <h1 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h1>
 
             <div className="flex gap-2">
               <LevelTag kind="moisture" level={product.moistureLevel} variant="pill" />
@@ -69,16 +75,74 @@ export function ProductDetail({
           <SaveProductButton productId={product.id} productName={product.name} />
         </section>
 
-        <div className="flex flex-col gap-6 px-4 pb-8">
+        <ProductSummaryEnd />
+
+        <div className="flex flex-col gap-6 px-4 pb-4">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
-          <Source updatedAt={product.updatedAt} />
+          <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
-    </>
+    </ProductDetailHeader>
   );
 }
+
+/**
+ * 머리에 붙는 축약형. 원래 배치와 같은 것을 담되 가로로 접는다.
+ *
+ * 세로로 쌓인 원래 배치를 그대로 붙이면 화면 절반을 차지해 본문을 읽을 자리가 남지 않는다.
+ * 그림을 줄이고, 이름은 한 줄로 줄이고, 용량별 가격은 가장 싼 것 하나로 접는다.
+ */
+function CompactSummary({ product }: { readonly product: ProductDetailResponse }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      {/*
+        원래 배치와 같은 크기로 받아 보여 줄 때만 줄인다. 40px 로 새로 받으면
+        같은 그림을 한 번 더 내려받게 된다.
+
+        옆 글(제품명·유수분 두 줄)이 차지하는 높이에 맞춘다. 그림에 높이를 재게 두면 그 높이가
+        줄을 다시 늘려 끝없이 커지므로, 자라는 쪽을 글로 정해 두고 그림은 그 값을 받아 쓴다.
+      */}
+      <Image
+        src={product.imageUrl || PRODUCT_PLACEHOLDER}
+        alt=""
+        width={184}
+        height={184}
+        loading="lazy"
+        className="size-[42px] shrink-0 object-contain"
+      />
+
+      {/*
+        글자 크기와 줄 높이는 `ProductCard` 를 따른다. 같은 제품을 같은 방식으로 읽게 두어야
+        목록에서 상세로 들어와도 눈이 다시 적응하지 않는다. 브랜드명은 제품명 위가 아니라 앞에
+        붙이고, 값은 적지 않는다. 머리는 지금 보는 제품이 무엇인지만 알려 주면 된다.
+      */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        {/* 이름이 길면 여기서 줄인다. 붙은 채로 두 줄이 되면 머리가 본문을 덮는다. */}
+        <p className="truncate text-[14px] leading-tight text-text-primary">
+          <span className="pr-1 text-[12px] leading-tight font-medium text-text-secondary">{product.brand.name}</span>
+          {product.name}
+        </p>
+
+        <div className="flex items-center gap-2">
+          <LevelTag kind="moisture" level={product.moistureLevel} />
+          <LevelTag kind="oil" level={product.oilLevel} />
+        </div>
+      </div>
+
+      <SaveProductButton productId={product.id} productName={product.name} variant="icon" />
+    </div>
+  );
+}
+
+/*
+ * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 위아래로 여백을 주어 손이 닿을 자리를
+ * 넓히고, 같은 크기의 음수 바깥 여백으로 되돌려 경로가 차지하는 높이는 그대로 둔다.
+ *
+ * 가만히 있을 때의 모습은 원래 배치 그대로 두고, 손이 닿는 동안에만 옅어져 눌린 것을 알린다.
+ */
+const LINK = "-my-1.5 py-1.5 active:opacity-60";
 
 function CategoryPath({ categories }: { readonly categories: ProductDetailResponse["categories"] }) {
   if (categories.length === 0) return null;
@@ -89,9 +153,17 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
       <ol className="flex flex-col gap-[3px]">
         {categories.map((path) => (
           <li key={path.id} className="flex items-center gap-[5px] text-[12px] text-text-secondary">
-            <span>{path.name}</span>
+            <Link href={`/categories/${path.id}`} aria-label={`${path.name} 카테고리 제품`} className={LINK}>
+              {path.name}
+            </Link>
             <Icon name="chevron-right" size={12} />
-            <span className="font-semibold">{path.child.name}</span>
+            <Link
+              href={`/categories/${path.child.id}`}
+              aria-label={`${path.child.name} 카테고리 제품`}
+              className={`${LINK} font-semibold`}
+            >
+              {path.child.name}
+            </Link>
           </li>
         ))}
       </ol>
@@ -213,7 +285,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductDetailRespo
   );
 }
 
-function Source({ updatedAt }: { readonly updatedAt: string }) {
+function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly productId: number }) {
   const date = new Date(updatedAt)
     .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
     .replace(/\.$/, "")
@@ -230,8 +302,18 @@ function Source({ updatedAt }: { readonly updatedAt: string }) {
         <span className="text-pretty text-[12px] text-[#5F6268]">
           브랜드 공식 전성분을 기준으로 정리했어요. {"제품\u00a0리뉴얼에\u00a0따라"} 실제 표기와 다를 수 있어요.
         </span>
-        <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
-        {/* 정보 수정 제안은 받을 곳이 아직 없어 화면에서 감춘다. */}
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
+
+          {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
+          <Link
+            href={`/inquiry/products/${productId}`}
+            className="flex shrink-0 items-center gap-0.5 text-[11px] text-[#5F6268]"
+          >
+            정보 수정 제안
+            <Icon name="chevron-right" size={12} />
+          </Link>
+        </span>
       </span>
     </section>
   );

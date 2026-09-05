@@ -206,7 +206,7 @@ export function SavedScreen() {
         <div className="flex flex-1 flex-col py-4">
           <EmptyNotice
             icon="bookmark"
-            image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
+            image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170, loading: "eager" }}
             title="아직 저장한 제품이 없어요"
             className="flex-1"
           />
@@ -215,13 +215,14 @@ export function SavedScreen() {
 
       {/* 저장한 제품은 그 사람의 관심사라 세션 리플레이에서 가린다. */}
       <ul data-private className="divide-y divide-divider">
-        {shown.map((product) => (
+        {shown.map((product, index) => (
           <li key={product.id}>
             <ProductCard
               product={product}
               saved={isSaved(product.id)}
               onToggleSave={onToggleSave}
               entryPoint="saved"
+              imageLoading={index === 0 ? "eager" : "lazy"}
               keyword={settled}
             />
           </li>

@@ -65,7 +65,8 @@ public class S3ProductRequestRepository {
 
     private byte[] serialize(ProductRequest request) {
         try {
-            return objectMapper.writeValueAsString(request).getBytes(StandardCharsets.UTF_8);
+            return objectMapper.writeValueAsString(ProductRequestDocument.from(request))
+                .getBytes(StandardCharsets.UTF_8);
         } catch (JacksonException exception) {
             throw new InfrastructureException("제품 등록 요청 JSON을 만들지 못했습니다.", exception);
         }
@@ -77,5 +78,23 @@ public class S3ProductRequestRepository {
         }
 
         return prefix.trim().replaceAll("^/+|/+$", "");
+    }
+
+    private record ProductRequestDocument(
+        int schemaVersion,
+        java.util.UUID requestId,
+        String productName,
+        String brandName,
+        java.time.OffsetDateTime requestedAt) {
+
+        private static ProductRequestDocument from(ProductRequest request) {
+            return new ProductRequestDocument(
+                request.schemaVersion(),
+                request.requestId(),
+                request.productName(),
+                request.brandName(),
+                request.requestedAt()
+            );
+        }
     }
 }

@@ -30,7 +30,7 @@ store와 각 action의 세부 설정은 AWS 콘솔 구성이 기준입니다.
 CodeBuild 프로젝트는 다음 기준으로 생성합니다.
 
 - 소스: GitHub OAuth(GitHub 버전 1), `woowacourse-teams/2026-poudy`의 `main` 브랜치
-- git clone depth: 릴리스 태그를 읽어야 하므로 전체 클론
+- 소스 아티팩트: Git 히스토리와 태그를 포함하지 않는 ZIP
 - 환경: 관리형 이미지, ARM64, Java 21·Node.js 22 지원 이미지
 - CodeBuild 프로젝트: `poudy-codebuild`
 - 로그 그룹: "/aws/codebuild/project-2026"
@@ -113,20 +113,16 @@ s3://techcourse-project-2026/poudy/staging/
 각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상
 필요한 빌드 식별 marker만 담으며, 실제 배포에는 사용하지 않습니다.
 
-산출물의 버전은 `main`에 붙은 릴리스 태그에서 옵니다. `buildspec.yml`이 `git describe`로
-태그를 읽어 `APP_VERSION`으로 넘기고, 서버 JAR 버전과 `build-metadata.txt`의 `version`에
-같은 값이 들어갑니다. 태그를 찾지 못하면 커밋 SHA로 대체하고 그 사실을 빌드 로그에
-남기므로, 버전이 커밋으로 찍혀 있다면 clone depth부터 확인합니다.
+배포 산출물은 `CODEBUILD_RESOLVED_SOURCE_VERSION` 커밋으로 식별합니다.
+`buildspec.yml`은 primary artifact의 `build-metadata.txt`에 이 커밋을 기록합니다. GitHub
+OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가 없으므로 빌드 중 릴리스 버전을
+계산하지 않습니다.
 
-버전 태그는 `dev` → `main` PR에 붙인 `major`·`minor`·`patch` 레이블을 보고
-`.github/workflows/release-tag.yml`이 만듭니다. 브랜치 push를 빌드 트리거로 쓰면 태그가
-만들어지기 전에 빌드가 시작될 수 있으므로, 트리거는 태그 push를 기준으로 둡니다.
-
-무엇을 언제 내보냈는지는 GitHub Release가 기록합니다. 배포 이력을 위한 별도 파일이나
-엔드포인트를 두지 않습니다. 다만 릴리스는 "냈다"의 기록이지 "떠 있다"의 기록이 아니므로,
-배포가 실패하면 릴리스와 실제가 어긋납니다. 트리거를 태그 push로 두어야 릴리스와 배포
-시도가 1:1로 붙고, 어긋났을 때 대조할 근거는 배포된 `app.jar` 매니페스트의
-`Implementation-Version`입니다.
+버전 태그와 GitHub Release는 `dev` → `main` PR에 붙인 `major`·`minor`·`patch` 레이블을
+보고 `.github/workflows/release-tag.yml`이 만듭니다. 운영 Pipeline은 `main` 변경을 별도로
+감지하므로 태그 생성보다 먼저 시작될 수 있지만, 두 흐름 모두 같은 머지 커밋을 기준으로
+합니다. 릴리스가 배포됐는지는 태그가 가리키는 커밋과 CodePipeline Source revision 또는
+`build-metadata.txt`의 `commit`을 대조해 확인합니다.
 
 `buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. 브라우저 번들의
 `NEXT_PUBLIC_API_BASE_URL`은 `https://poudy.site`로 고정하고, 서버 컴포넌트와

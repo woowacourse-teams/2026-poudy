@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useIncomingShare } from 'expo-sharing';
 import { useEffect, useRef } from 'react';
 import { Linking } from 'react-native';
@@ -6,16 +5,8 @@ import { Linking } from 'react-native';
 import type { ExternalEntryOptions } from '@/types/externalEntry';
 import { getDeepLinkUrl } from '@/util/entryUrl';
 import { getShareSignature, getSharedValues, resolveSharedUrl } from '@/util/externalEntry';
-import { shareFailureOf } from '@/util/shareFailure';
 
-export const useExternalEntry = ({
-  apiBaseUrl,
-  onNavigate,
-  onShareFailure,
-  onUnsupportedShare,
-  webBaseUrl,
-}: ExternalEntryOptions) => {
-  const queryClient = useQueryClient();
+export const useExternalEntry = ({ onNavigate, serviceBaseUrl }: ExternalEntryOptions) => {
   const { clearSharedPayloads, refreshSharePayloads, sharedPayloads } = useIncomingShare();
   const lastShare = useRef<string | null>(null);
 
@@ -32,43 +23,14 @@ export const useExternalEntry = ({
     }
     lastShare.current = signature;
 
-    const isLatestShare = () => lastShare.current === signature;
+    const targetUrl = resolveSharedUrl(values, serviceBaseUrl);
+    if (targetUrl) {
+      onNavigate(targetUrl);
+    }
 
-    const navigate = async () => {
-      const targetUrl = await resolveSharedUrl(values, webBaseUrl, apiBaseUrl, queryClient);
-      if (!isLatestShare()) {
-        return;
-      }
-
-      if (targetUrl) {
-        onNavigate(targetUrl);
-        return;
-      }
-
-      onUnsupportedShare();
-    };
-
-    void navigate()
-      .catch((error: unknown) => {
-        if (isLatestShare()) {
-          onShareFailure(shareFailureOf(error));
-        }
-      })
-      .finally(() => {
-        clearSharedPayloads();
-        void refreshSharePayloads();
-      });
-  }, [
-    clearSharedPayloads,
-    apiBaseUrl,
-    onNavigate,
-    onShareFailure,
-    onUnsupportedShare,
-    queryClient,
-    refreshSharePayloads,
-    sharedPayloads,
-    webBaseUrl,
-  ]);
+    clearSharedPayloads();
+    refreshSharePayloads();
+  }, [clearSharedPayloads, onNavigate, refreshSharePayloads, sharedPayloads, serviceBaseUrl]);
 
   useEffect(() => {
     const handleUrl = (value: string | null) => {
@@ -76,17 +38,17 @@ export const useExternalEntry = ({
         return;
       }
 
-      const targetUrl = getDeepLinkUrl(value, webBaseUrl);
+      const targetUrl = getDeepLinkUrl(value, serviceBaseUrl);
       if (targetUrl) {
         onNavigate(targetUrl);
       }
     };
 
     const subscription = Linking.addEventListener('url', ({ url }) => handleUrl(url));
-    void Linking.getInitialURL()
+    Linking.getInitialURL()
       .then(handleUrl)
       .catch(() => undefined);
 
     return () => subscription.remove();
-  }, [onNavigate, webBaseUrl]);
+  }, [onNavigate, serviceBaseUrl]);
 };

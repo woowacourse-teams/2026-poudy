@@ -11,5 +11,12 @@ export const OPERATOR = {
     email: "poudy.official@gmail.com",
   },
   effectiveDate: "2026년 9월 1일",
-  lastRevisedDate: "2026년 9월 1일",
+  /**
+   * 공지 중인 개정의 시행 예정일. 시행일이 지나면 effectiveDate 로 옮기고 이 값을 비운다.
+   * 처리방침은 7일 전, 이용자에게 불리한 약관 변경은 30일 전부터 공지해야 한다.
+   */
+  revisionEffectiveDate: {
+    privacy: "2026년 9월 14일",
+    terms: "2026년 10월 7일",
+  },
 } as const;

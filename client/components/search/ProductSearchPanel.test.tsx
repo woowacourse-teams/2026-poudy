@@ -4,14 +4,17 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductSearchPanel } from "./ProductSearchPanel";
 
 import { server } from "@/mocks/server";
 
+const { searchParams } = vi.hoisted(() => ({ searchParams: { current: new URLSearchParams() } }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => searchParams.current,
 }));
 
 /**
@@ -201,5 +204,40 @@ describe("ProductSearchPanel", () => {
 
     await screen.findByText("제품 3");
     expect(screen.queryByText("불러오는 중…")).not.toBeInTheDocument();
+  });
+});
+
+describe("검색어를 주소에 남긴다", () => {
+  beforeEach(() => {
+    searchParams.current = new URLSearchParams();
+    window.history.replaceState(null, "", "/search/products");
+  });
+
+  it("검색어를 치면 주소에 남는다", async () => {
+    render(<ProductSearchPanel />);
+
+    await userEvent.type(screen.getByRole("searchbox"), "독도");
+
+    await waitFor(() => expect(window.location.search).toBe("?keyword=%EB%8F%85%EB%8F%84"));
+  });
+
+  it("검색어를 비우면 주소에서도 지운다", async () => {
+    render(<ProductSearchPanel />);
+    const field = screen.getByRole("searchbox");
+
+    await userEvent.type(field, "독도");
+    await waitFor(() => expect(window.location.search).toBe("?keyword=%EB%8F%85%EB%8F%84"));
+
+    await userEvent.clear(field);
+
+    await waitFor(() => expect(window.location.search).toBe(""));
+  });
+
+  it("주소에 검색어가 있으면 그 검색어로 시작한다", async () => {
+    searchParams.current = new URLSearchParams("keyword=독도");
+
+    render(<ProductSearchPanel />);
+
+    expect(screen.getByRole("searchbox")).toHaveValue("독도");
   });
 });

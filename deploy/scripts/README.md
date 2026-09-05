@@ -17,12 +17,35 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 구성 내용:
 
 - Java 21 설치
+- HEIC 변환용 `libheif-tools`, `libde265`와 자원 제한용 `util-linux-core` 설치
 - AWS CLI v2 및 jq 설치
 - `poudy` system user 및 `/opt/poudy/backend`, `/opt/poudy/data` 생성
 - `/etc/poudy/backend.env` 생성
 - `poudy-backend.service` 설치 및 enable
 - `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
 - JSON 데이터 디렉터리의 기본 권한 설정
+
+### HEIC 런타임
+
+`bootstrap-backend.sh`는 Amazon Linux 2023의 `libheif-tools`, `libde265`,
+`util-linux-core`를 설치합니다. 설치 후 `/usr/bin/heif-convert`와 `/usr/bin/prlimit`이
+실행 가능한지도 확인하므로, 의존성이 준비되지 않으면 초기화를 실패시킵니다.
+
+운영에서는 다음을 확인합니다.
+
+1. Amazon Linux 보안 공지와 RPM changelog·빌드 정보로 현재 `libheif`·HEVC 디코더 패키지에
+   필요한 보안 수정이 backport되었는지 확인합니다. 배포판은 버전 문자열을 그대로 두고
+   패치를 역이식할 수 있으므로 upstream semver만으로 승인하지 않습니다.
+2. OS 패키지가 제공하는 `libheif`·`libde265` LGPL 고지와 소스 제공 경로를 보존합니다.
+   애플리케이션은 해당 바이너리를 번들하거나 링크하지 않고 OS 실행 파일로만 호출합니다.
+3. 오픈소스 라이선스가 HEVC/H.265 특허권을 허여하는 것은 아니므로 서비스 국가·제공
+   방식·사업 범위에 맞는 특허 정책을 조직에서 별도로 확인합니다.
+4. 백엔드 실행 계정에서 다음 두 파일을 실행할 수 있는지 확인합니다.
+
+```bash
+test -x /usr/bin/prlimit
+test -x /usr/bin/heif-convert
+```
 
 ## 프론트엔드 EC2
 

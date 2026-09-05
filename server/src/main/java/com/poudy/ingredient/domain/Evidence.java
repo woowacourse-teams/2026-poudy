@@ -3,9 +3,17 @@ package com.poudy.ingredient.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-public record Evidence(String source, EvidenceDelimiter delimiter) {
+public final class Evidence {
 
     private static final String DEFERRED_PREFIX = "태그 보류";
+
+    private final String source;
+    private final EvidenceDelimiter delimiter;
+
+    private Evidence(String source, EvidenceDelimiter delimiter) {
+        this.source = source;
+        this.delimiter = delimiter;
+    }
 
     public static Evidence ofDescription(String source) {
         return new Evidence(source, EvidenceDelimiter.SEMICOLON);

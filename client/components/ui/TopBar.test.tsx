@@ -38,13 +38,11 @@ describe("TopBar 뒤로 가기", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("메신저나 검색에서 바로 들어오면 메인으로 간다", async () => {
+  it("메신저나 검색에서 바로 들어오면 홈으로 가는 링크를 보여 준다", () => {
     render(<TopBar title="제품 상세" variant="sub" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-
-    expect(replace).toHaveBeenCalledWith("/");
-    expect(back).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "뒤로 가기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 });
 
@@ -61,6 +59,12 @@ describe("TopBar 제목", () => {
     expect(screen.getByRole("heading", { name: "Poudy" })).toHaveClass("cursor-default", "select-none");
     expect(container.querySelector("img")).toHaveAttribute("draggable", "false");
     expect(container.querySelector("img")).toHaveClass("select-none");
+  });
+
+  it("첫 화면에 보이는 로고를 즉시 불러온다", () => {
+    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
+
+    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
   });
 
   // 성분·브랜드·카테고리는 이름을 그대로 넘긴다. 긴 이름이 좌우 버튼을 밀면 안 된다.
@@ -81,13 +85,10 @@ describe("TopBar 뒤로 가기 출처", () => {
     expect(back).toHaveBeenCalledOnce();
   });
 
-  it("다른 사이트에서 넘어온 문서면 메인으로 간다", async () => {
+  it("다른 사이트에서 넘어온 문서면 홈으로 가는 링크를 보여 준다", () => {
     setReferrer("https://www.google.com/search?q=poudy");
     render(<TopBar title="제품 상세" variant="sub" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-
-    expect(replace).toHaveBeenCalledWith("/");
-    expect(back).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 });

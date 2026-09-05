@@ -30,6 +30,11 @@ jobs:
 
   type-label:
     name: 제목 타입 레이블
+    # 경로 레이블 잡이 sync-labels 로 레이블 집합을 읽고 통째로 다시 쓴다.
+    # 나란히 돌면 그 읽기와 쓰기 사이에 붙인 타입 레이블이 지워진다.
+    # always 는 label 을 건너뛰는 edited 이벤트에서도 이 잡을 돌리기 위한 것이다.
+    needs: label
+    if: always()
     concurrency:
       group: ${{ github.workflow }}-type-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -40,23 +45,28 @@ jobs:
         with:
           script: |
             // 제목 타입과 저장소 레이블 이름이 어긋나 있다. fix 는 bug, docs 는 documentation 이다.
+            // bug 와 hotfix 는 이슈 템플릿이 쓰는 [BUG], [HOTFIX] 를 받는 자리다.
             // build, perf, test 는 대응하는 레이블이 없어 뺐다. 새로 만들지 않는다.
             const typeLabels = {
+              bug: 'bug',
               ci: 'ci',
               docs: 'documentation',
               feat: 'feat',
               fix: 'bug',
+              hotfix: 'hotfix',
               refactor: 'refactor',
             };
 
             // 제목이 바뀌면 떼는 대상은 타입 말고 다른 뜻이 없는 레이블로 한정한다.
             // ci 와 documentation 은 labeler 가 경로를 보고 붙이는 영역 레이블이기도 해서,
             // 여기서 떼면 두 워크플로가 같은 레이블을 서로 붙였다 뗐다 한다.
-            const exclusive = ['bug', 'feat', 'refactor'];
+            const exclusive = ['bug', 'feat', 'hotfix', 'refactor'];
 
+            // 제목은 커밋 형식(`fix : …`)과 이슈 형식(`[FIX] …`) 을 모두 쓴다. 둘 다 읽는다.
             const title = context.payload.pull_request.title || '';
-            const match = title.match(/^([a-z]+)\s*:/);
-            const picked = match ? typeLabels[match[1]] ?? null : null;
+            const match = title.match(/^(?:\[\s*([A-Za-z]+)\s*\]|([A-Za-z]+)\s*:)/);
+            const type = (match?.[1] ?? match?.[2] ?? '').toLowerCase();
+            const picked = typeLabels[type] ?? null;
 
             if (!picked) {
               core.info(`제목에서 타입을 읽지 못했습니다: ${title}`);

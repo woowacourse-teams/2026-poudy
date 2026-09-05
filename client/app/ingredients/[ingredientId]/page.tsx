@@ -166,7 +166,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
         </div>
 
         {/* 바탕을 가진 덩어리라 안쪽 여백을 두지 않고 바탕 여백인 16px 에 맞춘다. */}
-        <section className="pb-6">
+        <section className="pb-4">
           <div className="flex gap-3 rounded-xl bg-surface-subtle p-4">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
               <Icon name="badge-check" size={16} className="text-[#2C9A72]" />

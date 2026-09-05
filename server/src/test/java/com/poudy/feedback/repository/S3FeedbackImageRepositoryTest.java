@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -47,6 +45,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -80,20 +79,17 @@ class S3FeedbackImageRepositoryTest {
     }
 
     @Test
-    @DisplayName("pending Put 응답이 유실돼도 생성된 객체를 확인해 같은 ID를 반환한다")
-    void confirmsPendingImageAfterLostPutResponse() {
+    @DisplayName("pending Put 실패를 재시도하지 않고 인프라 예외로 변환한다")
+    void doesNotRetryFailedPendingWrite() {
         ProcessedImage processed = new ProcessedImage(FeedbackImageFormat.PNG, new byte[] {1, 2, 3});
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
             .willThrow(SdkClientException.create("timeout"));
-        given(s3Client.headObject(any(HeadObjectRequest.class)))
-            .willReturn(HeadObjectResponse.builder().eTag("etag").lastModified(NOW).build());
 
-        FeedbackImage image = repository.savePending(processed);
+        assertThatThrownBy(() -> repository.savePending(processed))
+            .isInstanceOf(InfrastructureException.class);
 
-        assertThat(image.format()).isEqualTo(FeedbackImageFormat.PNG);
-        verify(s3Client).headObject(
-            argThat((HeadObjectRequest request) -> request.key().endsWith(image.id() + ".png"))
-        );
+        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(s3Client, never()).headObject(any(HeadObjectRequest.class));
     }
 
     @Test
@@ -157,27 +153,34 @@ class S3FeedbackImageRepositoryTest {
     }
 
     @Test
-    @DisplayName("claim과 최종 복사 모두 조건부 쓰기와 암호화를 적용한다")
-    void claimsAndCopiesConditionally() {
+    @DisplayName("claim은 조건부 생성하고 최종 복사는 같은 원본으로 재실행할 수 있다")
+    void claimsConditionallyAndCopiesIdempotently() throws Exception {
         UUID feedbackId = UUID.randomUUID();
         FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG);
         S3FeedbackImageRepository.PendingImage pending = new S3FeedbackImageRepository.PendingImage(image, "etag", NOW);
 
-        repository.claimAndCopy(feedbackId, List.of(pending), "sha256", () -> NOW);
+        repository.claimAndCopy(feedbackId, List.of(pending), () -> NOW);
 
         ArgumentCaptor<PutObjectRequest> claimCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
-        verify(s3Client).putObject(claimCaptor.capture(), any(RequestBody.class));
+        ArgumentCaptor<RequestBody> claimBodyCaptor = ArgumentCaptor.forClass(RequestBody.class);
+        verify(s3Client).putObject(claimCaptor.capture(), claimBodyCaptor.capture());
         PutObjectRequest claim = claimCaptor.getValue();
         assertThat(claim.key()).isEqualTo("poudy/feedback/claims/" + image.id() + ".json");
         assertThat(claim.ifNoneMatch()).isEqualTo("*");
         assertThat(claim.serverSideEncryption()).isEqualTo(ServerSideEncryption.AES256);
+        JsonNode claimDocument = objectMapper.readTree(
+            claimBodyCaptor.getValue().contentStreamProvider().newStream().readAllBytes()
+        );
+        assertThat(claimDocument.size()).isEqualTo(2);
+        assertThat(claimDocument.get("feedbackId").asText()).isEqualTo(feedbackId.toString());
+        assertThat(claimDocument.get("extension").asText()).isEqualTo("jpg");
 
         ArgumentCaptor<CopyObjectRequest> copyCaptor = ArgumentCaptor.forClass(CopyObjectRequest.class);
         verify(s3Client).copyObject(copyCaptor.capture());
         CopyObjectRequest copy = copyCaptor.getValue();
         assertThat(copy.key()).isEqualTo("poudy/feedback/" + feedbackId + "/images/" + image.id() + ".jpg");
         assertThat(copy.copySourceIfMatch()).isEqualTo("etag");
-        assertThat(copy.ifNoneMatch()).isEqualTo("*");
+        assertThat(copy.ifNoneMatch()).isNull();
         assertThat(copy.serverSideEncryption()).isEqualTo(ServerSideEncryption.AES256);
     }
 
@@ -193,13 +196,7 @@ class S3FeedbackImageRepositoryTest {
                 "feedbackId",
                 feedbackId.toString(),
                 "extension",
-                "png",
-                "sourceETag",
-                "etag",
-                "feedbackDocumentSha256",
-                "sha256",
-                "claimedAt",
-                NOW.toString()
+                "png"
             )
         );
         given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
@@ -214,10 +211,13 @@ class S3FeedbackImageRepositoryTest {
             .willReturn(ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), claimDocument));
 
         S3FeedbackImageRepository.Claim claim = repository
-            .claimAndCopy(feedbackId, List.of(pending), "sha256", () -> NOW);
+            .claimAndCopy(feedbackId, List.of(pending), () -> NOW);
 
         assertThat(claim.images()).containsExactly(image);
+        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         verify(s3Client).copyObject(any(CopyObjectRequest.class));
+        verify(s3Client, times(1)).listObjectsV2(any(ListObjectsV2Request.class));
+        verify(s3Client, times(1)).getObjectAsBytes(any(GetObjectRequest.class));
     }
 
     @Test
@@ -231,7 +231,7 @@ class S3FeedbackImageRepositoryTest {
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
             .willThrow(SdkClientException.create("verification timeout"));
 
-        assertThatThrownBy(() -> repository.claimAndCopy(feedbackId, List.of(pending), "sha256", () -> NOW))
+        assertThatThrownBy(() -> repository.claimAndCopy(feedbackId, List.of(pending), () -> NOW))
             .isInstanceOf(InfrastructureException.class);
 
         verify(s3Client, never()).copyObject(any(CopyObjectRequest.class));
@@ -258,7 +258,6 @@ class S3FeedbackImageRepositoryTest {
             () -> repository.claimAndCopy(
                 UUID.randomUUID(),
                 List.of(first, expiring),
-                "sha256",
                 () -> nowThenLater(calls)
             )
         )
@@ -278,7 +277,7 @@ class S3FeedbackImageRepositoryTest {
             NOW.minus(S3FeedbackImageRepository.PENDING_TTL)
         );
 
-        assertThatThrownBy(() -> repository.claimAndCopy(feedbackId, List.of(pending), "sha256", () -> NOW))
+        assertThatThrownBy(() -> repository.claimAndCopy(feedbackId, List.of(pending), () -> NOW))
             .isInstanceOf(InvalidFeedbackImageIdException.class);
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -298,6 +297,24 @@ class S3FeedbackImageRepositoryTest {
             .willThrow(SdkClientException.create("timeout"));
 
         assertThat(repository.commit(claim)).isFalse();
+
+        verify(s3Client, never())
+            .deleteObject(argThat((DeleteObjectRequest request) -> request.key().contains("/claims/")));
+    }
+
+    @Test
+    @DisplayName("최종 이미지 삭제 결과가 불명하면 claim을 지우지 않는다")
+    void preservesClaimWhenFinalImageDeletionIsUnknown() {
+        UUID feedbackId = UUID.randomUUID();
+        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG);
+        S3FeedbackImageRepository.Claim claim = new S3FeedbackImageRepository.Claim(
+            feedbackId,
+            List.of(image)
+        );
+        given(s3Client.deleteObject(argThat((DeleteObjectRequest request) -> request.key().contains("/images/"))))
+            .willThrow(SdkClientException.create("timeout"));
+
+        assertThat(repository.rollback(claim)).isFalse();
 
         verify(s3Client, never())
             .deleteObject(argThat((DeleteObjectRequest request) -> request.key().contains("/claims/")));
@@ -333,28 +350,19 @@ class S3FeedbackImageRepositoryTest {
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    @DisplayName("현재 및 배포 전에 저장된 JSON을 오래된 claim의 commit으로 인식한다")
-    void reconcilesCommittedClaim(boolean legacyKey) throws Exception {
+    @Test
+    @DisplayName("피드백 JSON 키가 있으면 오래된 claim을 commit 처리한다")
+    void reconcilesCommittedClaim() throws Exception {
         UUID feedbackId = UUID.randomUUID();
         UUID imageId = UUID.randomUUID();
-        byte[] feedbackDocument = "{\"feedbackId\":\"committed\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String feedbackSha = S3FeedbackObjectStore.sha256(feedbackDocument);
         String claimKey = "poudy/feedback/claims/" + imageId + ".json";
-        String feedbackKey = feedbackKeyOf(feedbackId, legacyKey);
+        String feedbackKey = "poudy/feedback/" + feedbackId + "/feedback.json";
         byte[] claimDocument = objectMapper.writeValueAsBytes(
             java.util.Map.of(
                 "feedbackId",
                 feedbackId.toString(),
                 "extension",
-                "png",
-                "sourceETag",
-                "etag",
-                "feedbackDocumentSha256",
-                feedbackSha,
-                "claimedAt",
-                NOW.minus(S3FeedbackImageRepository.CLAIM_GRACE_PERIOD).minusSeconds(1).toString()
+                "png"
             )
         );
         S3Object claimObject = S3Object.builder()
@@ -374,14 +382,8 @@ class S3FeedbackImageRepositoryTest {
             }
             return ListObjectsV2Response.builder().contents(List.of()).build();
         });
-        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).willAnswer(invocation -> {
-            GetObjectRequest request = invocation.getArgument(0);
-            byte[] body = feedbackDocument;
-            if (claimKey.equals(request.key())) {
-                body = claimDocument;
-            }
-            return ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), body);
-        });
+        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
+            .willReturn(ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), claimDocument));
 
         S3FeedbackImageRepository.CleanupCounts counts = repository.reconcileClaims(NOW);
 
@@ -399,53 +401,64 @@ class S3FeedbackImageRepositoryTest {
     }
 
     @Test
-    @DisplayName("고아 이미지 정리는 전체 목록에서 의견 문서를 함께 판정한다")
-    void cleansOrphanedImagesWithoutPerImageListRequests() {
-        UUID existingFeedbackId = UUID.randomUUID();
-        UUID legacyFeedbackId = UUID.randomUUID();
-        UUID orphanedFeedbackId = UUID.randomUUID();
-        UUID existingImageId = UUID.randomUUID();
-        UUID legacyImageId = UUID.randomUUID();
-        UUID orphanedImageId = UUID.randomUUID();
-        String existingFeedbackKey = "poudy/feedback/" + existingFeedbackId + "/feedback.json";
-        String legacyFeedbackKey = "poudy/feedback/" + legacyFeedbackId + ".json";
-        String existingImageKey = "poudy/feedback/" + existingFeedbackId + "/images/" + existingImageId + ".png";
-        String legacyImageKey = "poudy/feedback/" + legacyFeedbackId + "/images/" + legacyImageId + ".jpg";
-        String orphanedImageKey = "poudy/feedback/" + orphanedFeedbackId + "/images/" + orphanedImageId + ".jpg";
-        Instant old = NOW.minus(S3FeedbackImageRepository.CLAIM_GRACE_PERIOD).minusSeconds(1);
+    @DisplayName("피드백 JSON 키가 없으면 오래된 claim의 최종 이미지를 rollback한다")
+    void rollsBackStaleUncommittedClaim() throws Exception {
+        UUID feedbackId = UUID.randomUUID();
+        UUID imageId = UUID.randomUUID();
+        String claimKey = "poudy/feedback/claims/" + imageId + ".json";
+        String finalKey = "poudy/feedback/" + feedbackId + "/images/" + imageId + ".jpg";
+        byte[] claimDocument = objectMapper.writeValueAsBytes(
+            java.util.Map.of("feedbackId", feedbackId.toString(), "extension", "jpg")
+        );
+        S3Object claimObject = S3Object.builder()
+            .key(claimKey)
+            .lastModified(NOW.minus(S3FeedbackImageRepository.CLAIM_GRACE_PERIOD).minusSeconds(1))
+            .build();
+        given(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).willAnswer(invocation -> {
+            ListObjectsV2Request request = invocation.getArgument(0);
+            if ("poudy/feedback/claims/".equals(request.prefix())) {
+                return ListObjectsV2Response.builder().contents(claimObject).build();
+            }
+            return ListObjectsV2Response.builder().contents(List.of()).build();
+        });
+        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
+            .willReturn(ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), claimDocument));
 
+        S3FeedbackImageRepository.CleanupCounts counts = repository.reconcileClaims(NOW);
+
+        assertThat(counts.rolledBackClaims()).isEqualTo(1);
+        verify(s3Client).deleteObject(
+            argThat((DeleteObjectRequest request) -> finalKey.equals(request.key()))
+        );
+        verify(s3Client).deleteObject(
+            argThat((DeleteObjectRequest request) -> claimKey.equals(request.key()))
+        );
+    }
+
+    @Test
+    @DisplayName("claim이 없는 만료 pending 이미지만 정리한다")
+    void cleansOnlyUnclaimedExpiredPendingImage() {
+        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
+        String pendingKey = "poudy/feedback/pending/" + image.id() + ".png";
+        S3Object pendingObject = S3Object.builder()
+            .key(pendingKey)
+            .lastModified(NOW.minus(S3FeedbackImageRepository.PENDING_TTL).minusSeconds(1))
+            .build();
         given(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).willAnswer(invocation -> {
             ListObjectsV2Request request = invocation.getArgument(0);
             if ("poudy/feedback/pending/".equals(request.prefix())) {
-                return ListObjectsV2Response.builder().contents(List.of()).build();
+                return ListObjectsV2Response.builder().contents(pendingObject).build();
             }
-            if ("poudy/feedback/".equals(request.prefix())) {
-                return ListObjectsV2Response.builder()
-                    .contents(
-                        S3Object.builder().key(existingFeedbackKey).lastModified(old).build(),
-                        S3Object.builder().key(legacyFeedbackKey).lastModified(old).build(),
-                        S3Object.builder().key(existingImageKey).lastModified(old).build(),
-                        S3Object.builder().key(legacyImageKey).lastModified(old).build(),
-                        S3Object.builder().key(orphanedImageKey).lastModified(old).build()
-                    )
-                    .build();
-            }
-            throw new AssertionError("예상하지 않은 prefix: " + request.prefix());
+            return ListObjectsV2Response.builder().contents(List.of()).build();
         });
 
         S3FeedbackImageRepository.CleanupCounts counts = repository.cleanupStorage(NOW);
 
-        assertThat(counts.orphanedFinalImages()).isEqualTo(1);
+        assertThat(counts.expiredPending()).isEqualTo(1);
         verify(s3Client).deleteObject(
-            argThat((DeleteObjectRequest request) -> orphanedImageKey.equals(request.key()))
+            argThat((DeleteObjectRequest request) -> pendingKey.equals(request.key()))
         );
-        verify(s3Client, never()).deleteObject(
-            argThat((DeleteObjectRequest request) -> existingImageKey.equals(request.key()))
-        );
-        verify(s3Client, never()).deleteObject(
-            argThat((DeleteObjectRequest request) -> legacyImageKey.equals(request.key()))
-        );
-        verify(s3Client, times(1)).listObjectsV2(
+        verify(s3Client, never()).listObjectsV2(
             argThat((ListObjectsV2Request request) -> "poudy/feedback/".equals(request.prefix()))
         );
     }
@@ -546,19 +559,11 @@ class S3FeedbackImageRepositoryTest {
         throws Exception {
         start.await();
         try {
-            repository.claimAndCopy(feedbackId, List.of(pending), "sha256", () -> NOW);
+            repository.claimAndCopy(feedbackId, List.of(pending), () -> NOW);
             return true;
         } catch (InvalidFeedbackImageIdException exception) {
             return false;
         }
-    }
-
-    private static String feedbackKeyOf(UUID feedbackId, boolean legacyKey) {
-        if (legacyKey) {
-            return "poudy/feedback/" + feedbackId + ".json";
-        }
-
-        return "poudy/feedback/" + feedbackId + "/feedback.json";
     }
 
     private static Instant nowThenLater(AtomicInteger calls) {

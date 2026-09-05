@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.Ingredients;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
@@ -30,8 +33,7 @@ class IngredientFilterTest {
     void fillsMissingSidesWithEmptyLists() {
         IngredientFilter filter = new IngredientFilter(null, null);
 
-        assertThat(filter.includedIds()).isEmpty();
-        assertThat(filter.excludedIds()).isEmpty();
+        assertThat(filter.matches(ingredients(1001L))).isTrue();
         assertThatCode(() -> new IngredientFilter(List.of(1005L), null)).doesNotThrowAnyException();
         assertThatCode(() -> new IngredientFilter(null, List.of(1001L))).doesNotThrowAnyException();
     }
@@ -48,20 +50,36 @@ class IngredientFilterTest {
     void resolvesExcludedCodesIntoIngredientIds() {
         IngredientFilter filter = IngredientFilter.of(List.of(1005L), List.of(1001L), Set.of(1079L, 1050L));
 
-        assertThat(filter.excludedIds()).contains(1001L, 1079L, 1050L);
+        assertThat(filter.matches(ingredients(1005L))).isTrue();
+        assertThat(filter.matches(ingredients(1005L, 1001L))).isFalse();
+        assertThat(filter.matches(ingredients(1005L, 1079L))).isFalse();
+        assertThat(filter.matches(ingredients(1005L, 1050L))).isFalse();
     }
 
     @Test
     @DisplayName("제외 성분군이 없으면 제외 목록을 그대로 쓴다")
     void keepsExcludedIdsWhenNoCodeGiven() {
-        assertThat(IngredientFilter.of(List.of(1005L), List.of(1001L), null).excludedIds()).containsExactly(1001L);
-        assertThat(IngredientFilter.of(null, null, Set.of()).excludedIds()).isEmpty();
+        IngredientFilter filter = IngredientFilter.of(List.of(1005L), List.of(1001L), null);
+
+        assertThat(filter.matches(ingredients(1005L))).isTrue();
+        assertThat(filter.matches(ingredients(1005L, 1001L))).isFalse();
+        assertThat(IngredientFilter.of(null, null, Set.of()).matches(ingredients(1001L))).isTrue();
     }
 
     @Test
-    @DisplayName("성분군과 성분으로 같은 제외를 중복해 보내도 한 번만 남는다")
-    void deduplicatesResolvedExclusions() {
-        assertThat(IngredientFilter.of(null, List.of(1079L), Set.of(1079L, 1050L)).excludedIds())
-            .filteredOn(id -> id.equals(1079L)).hasSize(1);
+    @DisplayName("성분군과 성분으로 같은 제외를 중복해 보내도 정상적으로 판정한다")
+    void acceptsDuplicatedResolvedExclusions() {
+        IngredientFilter filter = IngredientFilter.of(null, List.of(1079L), Set.of(1079L, 1050L));
+
+        assertThat(filter.matches(ingredients(1079L))).isFalse();
+        assertThat(filter.matches(ingredients(1050L))).isFalse();
+    }
+
+    private static Ingredients ingredients(Long... ids) {
+        return new Ingredients(
+            Arrays.stream(ids)
+                .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null, null, null))
+                .toList()
+        );
     }
 }

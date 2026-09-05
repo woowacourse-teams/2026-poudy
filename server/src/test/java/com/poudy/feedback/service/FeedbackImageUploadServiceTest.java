@@ -56,12 +56,12 @@ class FeedbackImageUploadServiceTest {
         List<UUID> result = service.upload(List.of(first, second), "client-a");
 
         assertThat(result).containsExactly(firstStored.id(), secondStored.id());
-        InOrder order = inOrder(processor, repository);
+        InOrder order = inOrder(rateLimiter, processor, repository);
+        order.verify(rateLimiter).requireAllowed("client-a");
         order.verify(processor).process(first);
         order.verify(repository).savePending(firstProcessed);
         order.verify(processor).process(second);
         order.verify(repository).savePending(secondProcessed);
-        verify(rateLimiter).requireAllowed("client-a");
     }
 
     @Test
@@ -110,5 +110,39 @@ class FeedbackImageUploadServiceTest {
             assertThat(active.get()).containsExactly(stored.id());
         }
         verify(rateLimiter, times(1)).requireAllowed("client-a");
+        verify(rateLimiter, times(1)).requireAllowed("client-b");
+    }
+
+    @Test
+    @DisplayName("이미지 저장 중에는 처리 슬롯을 점유하지 않는다")
+    void releasesImageProcessingPermitBeforeStorage() throws Exception {
+        MultipartFile first = new MockMultipartFile("images", new byte[] {1});
+        MultipartFile second = new MockMultipartFile("images", new byte[] {2});
+        ProcessedImage firstProcessed = new ProcessedImage(FeedbackImageFormat.PNG, new byte[] {3});
+        ProcessedImage secondProcessed = new ProcessedImage(FeedbackImageFormat.JPEG, new byte[] {4});
+        FeedbackImage firstStored = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
+        FeedbackImage secondStored = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG);
+        CountDownLatch storageStarted = new CountDownLatch(1);
+        CountDownLatch releaseStorage = new CountDownLatch(1);
+        given(processor.process(first)).willReturn(firstProcessed);
+        given(processor.process(second)).willReturn(secondProcessed);
+        given(repository.savePending(firstProcessed)).willAnswer(invocation -> {
+            storageStarted.countDown();
+            releaseStorage.await();
+            return firstStored;
+        });
+        given(repository.savePending(secondProcessed)).willReturn(secondStored);
+
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            Future<List<UUID>> active = executor.submit(() -> service.upload(List.of(first), "client-a"));
+            storageStarted.await();
+
+            try {
+                assertThat(service.upload(List.of(second), "client-b")).containsExactly(secondStored.id());
+            } finally {
+                releaseStorage.countDown();
+            }
+            assertThat(active.get()).containsExactly(firstStored.id());
+        }
     }
 }

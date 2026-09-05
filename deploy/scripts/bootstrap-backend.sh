@@ -12,10 +12,19 @@ require_root
 
 log '백엔드 호스트 초기화를 시작합니다.'
 
-dnf install -y awscli-2 curl-minimal java-21-amazon-corretto-headless jq
+dnf install -y \
+    awscli-2 \
+    curl-minimal \
+    java-21-amazon-corretto-headless \
+    jq \
+    libde265 \
+    libheif-tools \
+    util-linux-core
 
 java_major="$(java -version 2>&1 | sed -n 's/.*version "\([0-9][0-9]*\).*/\1/p' | head -n 1)"
 [[ "${java_major}" == '21' ]] || fail "Java 21을 확인하지 못했습니다. 현재 major: ${java_major:-unknown}"
+[[ -x /usr/bin/prlimit ]] || fail '/usr/bin/prlimit을 확인하지 못했습니다.'
+[[ -x /usr/bin/heif-convert ]] || fail '/usr/bin/heif-convert를 확인하지 못했습니다.'
 
 ensure_poudy_user
 ensure_config_directory

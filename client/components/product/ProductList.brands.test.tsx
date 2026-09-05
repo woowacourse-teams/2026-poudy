@@ -3,13 +3,13 @@
  */
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "./ProductList";
 
 import { track } from "@/lib/analytics/track";
-import { brands, categories, excludeCodes, products } from "@/mocks/fixtures";
+import { excludeCodes, products } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -23,10 +23,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 const openBrandSheet = async () => {
-  render(<ProductList categories={categories} brands={brands} excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} />);
 
   // 목록 응답이 도착해 조건에 걸린 브랜드를 알게 될 때까지 기다린다.
-  await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("main")).toBeInTheDocument());
 
   await userEvent.click(screen.getByRole("button", { name: /브랜드/ }));
 
@@ -38,6 +38,34 @@ describe("ProductList 브랜드 시트", () => {
   beforeEach(() => {
     searchParams.current = new URLSearchParams();
     vi.mocked(track).mockClear();
+  });
+
+  it("데이터를 기다리는 동안만 스켈레톤을 두고, 카드가 오면 바로 읽힌다", async () => {
+    server.use(
+      http.get("*/api/products", async () => {
+        await delay(100);
+        return HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        });
+      }),
+    );
+
+    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(20);
+    expect(container.querySelectorAll("[data-product-card]")).toHaveLength(0);
+    expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
+
+    await waitFor(() => expect(container.querySelectorAll("[data-product-card]")).toHaveLength(2));
+
+    // 카드가 오면 자리를 채우던 스켈레톤은 물러난다.
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(0);
+
+    // 그림에 load 를 주지 않아도 제품 이름은 이미 읽힌다.
+    const cards = container.querySelectorAll("[data-product-card]");
+    expect(cards[0]).toHaveTextContent(products[0].name);
+    expect(cards[1]).toHaveTextContent(products[1].name);
   });
 
   it("조건에 걸린 브랜드만 고를 수 있다", async () => {
@@ -74,7 +102,7 @@ describe("ProductList 브랜드 시트", () => {
       ),
     );
 
-    render(<ProductList categories={categories} brands={brands} excludeCodes={excludeCodes} />);
+    render(<ProductList excludeCodes={excludeCodes} />);
 
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith("search_results_viewed", {
@@ -87,5 +115,24 @@ describe("ProductList 브랜드 시트", () => {
       }),
     );
     expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=search_results");
+  });
+
+  it("첫 제품 이미지만 즉시 받고 다음 제품부터 지연한다", async () => {
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        }),
+      ),
+    );
+
+    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    await waitFor(() => expect(container.querySelectorAll("[data-product-image]")).toHaveLength(2));
+
+    const images = container.querySelectorAll("[data-product-image]");
+    expect(images[0]).toHaveAttribute("loading", "eager");
+    expect(images[1]).toHaveAttribute("loading", "lazy");
   });
 });

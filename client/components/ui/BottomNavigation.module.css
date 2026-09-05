@@ -1,0 +1,113 @@
+/* 고정 메뉴가 본문의 마지막 항목을 가리지 않도록 같은 높이를 확보한다. */
+.space {
+  --navigation-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  height: var(--navigation-height);
+}
+
+.navigation {
+  left: 0;
+  right: var(--scrollbar-width, 0px);
+  max-width: var(--container-md);
+  margin-inline: auto;
+  height: var(--navigation-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.list {
+  position: relative;
+  isolation: isolate;
+}
+
+.item,
+.link {
+  position: relative;
+}
+
+.link {
+  z-index: 2;
+  transform: scale(1);
+  transition:
+    color var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    transform var(--transition-duration-release) var(--ease-release);
+}
+
+.link:active {
+  transform: scale(0.97);
+  transition:
+    color var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    transform var(--transition-duration-press) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+.hoverBackground {
+  position: absolute;
+  inset: 0 5px;
+  z-index: 0;
+  border-radius: 14px;
+  background: var(--color-surface);
+  opacity: 0;
+  transition: opacity var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover .hoverBackground {
+    opacity: 1;
+  }
+}
+
+.item:has(.link:active) .hoverBackground {
+  opacity: 1;
+}
+
+.icon {
+  position: relative;
+  z-index: 10;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+
+.icon[data-activated="true"] {
+  animation: icon-shake var(--transition-duration-shake) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@keyframes icon-shake {
+  0% {
+    transform: rotate(0deg);
+  }
+  32% {
+    transform: rotate(-8deg);
+  }
+  62% {
+    transform: rotate(6deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition-property: color, opacity;
+  }
+
+  /*
+   * 자리를 옮기는 움직임만 걷어내고 누른 것이 보이는 신호는 남긴다.
+   * 회색 배경은 톤이 옅어 짙게 만들어도 눌린 자리가 드러나지 않는다.
+   * 크기 변화 대신 글자와 아이콘을 본문 색으로 바꿔서 알린다.
+   */
+  .link:active,
+  .icon[data-activated="true"] {
+    transform: none;
+    animation: none;
+  }
+
+  .link[data-selected="false"]:active {
+    color: var(--color-text-primary);
+  }
+}

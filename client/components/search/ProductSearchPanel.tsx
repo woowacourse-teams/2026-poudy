@@ -3,7 +3,7 @@
 import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
@@ -15,6 +15,7 @@ import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
+import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 import {
   addRecentSearch,
@@ -59,8 +60,21 @@ const rememberFilter = (keyword: string) => {
 
 export function ProductSearchPanel() {
   const router = useRouter();
-  const [keyword, setKeyword] = useState("");
-  const { items, total, hasNext, loading, loadNext } = useProductSuggestions(keyword);
+  const searchParams = useSearchParams();
+  // 상세로 갔다 돌아왔을 때 주소에 남은 검색어로 다시 시작한다.
+  const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
+  const { items, total, hasNext, loading, loadNext, keyword: searched } = useProductSuggestions(keyword);
+
+  /*
+   * 검색어를 주소에 남긴다. 화면이 들고 있으면 상세로 나갔다 돌아왔을 때 사라진다.
+   *
+   * `router.replace` 는 서버를 한 번 다녀오므로 타이핑이 멈출 때마다 왕복이 생긴다.
+   * 조건 화면과 같은 이유로 history API 만 갈아 끼운다.
+   */
+  useEffect(() => {
+    const query = searched ? `?keyword=${encodeURIComponent(searched)}` : "";
+    window.history.replaceState(null, "", `/search/products${query}`);
+  }, [searched]);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
   const typing = keyword.trim().length > 0;
 
@@ -205,7 +219,8 @@ export function ProductSearchPanel() {
 
               <ul className="divide-y divide-divider">
                 {items.map((item, index) => (
-                  <li key={item.id}>
+                  // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
+                  <li key={item.id} {...{ [ANCHOR_ATTRIBUTE]: item.id }}>
                     <Link
                       href={`/products/${item.id}?from=suggestion`}
                       onClick={() => {
@@ -229,6 +244,7 @@ export function ProductSearchPanel() {
                         alt=""
                         width={40}
                         height={40}
+                        loading="lazy"
                         className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
                       />
                       <span className="flex flex-1 flex-col gap-0.5">

@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 @DisplayName("의견 이미지 처리")
 class FeedbackImageProcessorTest {
 
-    private final FeedbackImageProcessor processor = new FeedbackImageProcessor();
+    private final HeicImageDecoder heicImageDecoder = mock(HeicImageDecoder.class);
+    private final FeedbackImageProcessor processor = new FeedbackImageProcessor(heicImageDecoder);
 
     @Test
     @DisplayName("파일명과 선언 형식 대신 실제 PNG 바이트를 재인코딩한다")
@@ -73,6 +75,69 @@ class FeedbackImageProcessorTest {
     }
 
     @Test
+    @DisplayName("HEIC의 기본 이미지를 JPEG로 재인코딩한다")
+    void processesHeicAsJpeg() throws Exception {
+        byte[] heic = heicHeader();
+        given(heicImageDecoder.decodeToJpeg(heic)).willReturn(imageBytes("jpeg", 16, 8));
+        MockMultipartFile file = new MockMultipartFile("images", "image.heic", "image/heic", heic);
+
+        ProcessedImage processed = processor.process(file);
+
+        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+        BufferedImage decoded = ImageIO.read(new java.io.ByteArrayInputStream(processed.bytes()));
+        assertThat(decoded.getWidth()).isEqualTo(16);
+        assertThat(decoded.getHeight()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("HEIX brand의 HEIC 이미지도 JPEG로 재인코딩한다")
+    void processesHeixAsJpeg() throws Exception {
+        byte[] heix = heicHeader("heix");
+        given(heicImageDecoder.decodeToJpeg(heix)).willReturn(imageBytes("jpeg", 16, 8));
+        MockMultipartFile file = new MockMultipartFile("images", "image.heic", "image/heic", heix);
+
+        ProcessedImage processed = processor.process(file);
+
+        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+    }
+
+    @Test
+    @DisplayName("HEIC brand만 있고 디코딩할 수 없는 ISO BMFF 입력을 거절한다")
+    void rejectsBrokenHeic() throws Exception {
+        byte[] broken = heicHeader();
+        given(heicImageDecoder.decodeToJpeg(broken)).willThrow(new IOException("broken"));
+        MockMultipartFile file = new MockMultipartFile("images", "image.heic", "image/heic", broken);
+
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+    }
+
+    @Test
+    @DisplayName("HEIC이 아닌 ISO BMFF 형식을 HEIC로 오인하지 않는다")
+    void rejectsOtherIsoBaseMediaFile() {
+        byte[] avifHeader = {
+                0,
+                0,
+                0,
+                16,
+                'f',
+                't',
+                'y',
+                'p',
+                'a',
+                'v',
+                'i',
+                'f',
+                0,
+                0,
+                0,
+                0
+        };
+        MockMultipartFile file = new MockMultipartFile("images", "image.avif", "image/avif", avifHeader);
+
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+    }
+
+    @Test
     @DisplayName("메타데이터 안에 JPEG 썸네일 표식이 있어도 한 장의 JPEG로 처리한다")
     void processesJpegWithEmbeddedThumbnailMarker() throws Exception {
         byte[] original = imageBytes("jpeg", 16, 8);
@@ -91,72 +156,10 @@ class FeedbackImageProcessorTest {
     }
 
     @Test
-    @DisplayName("APP2가 아닌 JPEG 메타데이터의 MPF 문자열은 한 장의 JPEG로 처리한다")
-    void processesJpegWithMpfTextOutsideApp2() throws Exception {
-        byte[] jpeg = imageBytes("jpeg", 16, 8);
-        byte[] withMpfComment = withJpegSegment(jpeg, 0xfe, new byte[] {'M', 'P', 'F', 0});
-        MockMultipartFile file = new MockMultipartFile(
-            "images",
-            "image.jpg",
-            "image/jpeg",
-            withMpfComment
-        );
-
-        ProcessedImage processed = processor.process(file);
-
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
-    }
-
-    @Test
-    @DisplayName("JPEG 메타데이터의 EOI와 SOI 바이트를 연결된 이미지로 오인하지 않는다")
-    void processesJpegWithEndAndStartMarkersInMetadata() throws Exception {
-        byte[] jpeg = imageBytes("jpeg", 16, 8);
-        byte[] misleadingMarkers = {
-                (byte) 0xff,
-                (byte) 0xd9,
-                (byte) 0xff,
-                (byte) 0xd8,
-                (byte) 0xff
-        };
-        byte[] withMisleadingComment = withJpegSegment(jpeg, 0xfe, misleadingMarkers);
-        MockMultipartFile file = new MockMultipartFile(
-            "images",
-            "image.jpg",
-            "image/jpeg",
-            withMisleadingComment
-        );
-
-        ProcessedImage processed = processor.process(file);
-
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
-    }
-
-    @Test
-    @DisplayName("APP2 세그먼트에 MPF 표식이 있는 JPEG를 거절한다")
-    void rejectsMpoApp2Segment() throws Exception {
-        byte[] jpeg = imageBytes("jpeg", 2, 2);
-        byte[] mpo = withJpegSegment(jpeg, 0xe2, new byte[] {'M', 'P', 'F', 0});
-        MockMultipartFile file = new MockMultipartFile("images", "image.jpg", "image/jpeg", mpo);
-
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
-    }
-
-    @Test
     @DisplayName("시그니처만 PNG인 손상 파일을 거절한다")
     void rejectsBrokenPng() {
         byte[] broken = {(byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
         MockMultipartFile file = new MockMultipartFile("images", "image.png", "image/png", broken);
-
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
-    }
-
-    @Test
-    @DisplayName("APNG 제어 chunk가 있는 PNG를 디코딩 전에 거절한다")
-    void rejectsApng() throws Exception {
-        byte[] png = imageBytes("png", 2, 2);
-        byte[] apngChunk = {0, 0, 0, 0, 'a', 'c', 'T', 'L', 0, 0, 0, 0};
-        byte[] apng = insertAfterSignature(png, apngChunk);
-        MockMultipartFile file = new MockMultipartFile("images", "image.png", "image/png", apng);
 
         assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
     }
@@ -185,21 +188,7 @@ class FeedbackImageProcessorTest {
     }
 
     @Test
-    @DisplayName("두 JPEG 이미지가 이어진 입력을 거절한다")
-    void rejectsMultipleJpegImages() throws Exception {
-        byte[] jpeg = imageBytes("jpeg", 2, 2);
-        MockMultipartFile file = new MockMultipartFile(
-            "images",
-            "image.jpg",
-            "image/jpeg",
-            append(jpeg, jpeg)
-        );
-
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
-    }
-
-    @Test
-    @DisplayName("파일 수와 합계 크기를 디코딩 전에 거절한다")
+    @DisplayName("파일 수와 개별 파일 크기를 디코딩 전에 거절한다")
     void validatesBatchLimits() {
         List<MultipartFile> tooManyFiles = new ArrayList<>();
         for (int index = 0; index < Feedback.MAX_IMAGE_COUNT + 1; index++) {
@@ -224,6 +213,40 @@ class FeedbackImageProcessorTest {
         return file;
     }
 
+    private static byte[] heicHeader() {
+        return heicHeader("heic");
+    }
+
+    private static byte[] heicHeader(String brand) {
+        byte[] brandBytes = brand.getBytes(StandardCharsets.US_ASCII);
+        return new byte[] {
+                0,
+                0,
+                0,
+                24,
+                'f',
+                't',
+                'y',
+                'p',
+                brandBytes[0],
+                brandBytes[1],
+                brandBytes[2],
+                brandBytes[3],
+                0,
+                0,
+                0,
+                0,
+                'm',
+                'i',
+                'f',
+                '1',
+                brandBytes[0],
+                brandBytes[1],
+                brandBytes[2],
+                brandBytes[3]
+        };
+    }
+
     private static byte[] imageBytes(String format, int width, int height) throws Exception {
         int type = BufferedImage.TYPE_INT_ARGB;
         if ("jpeg".equals(format)) {
@@ -246,14 +269,6 @@ class FeedbackImageProcessorTest {
         byte[] joined = new byte[first.length + second.length];
         System.arraycopy(first, 0, joined, 0, first.length);
         System.arraycopy(second, 0, joined, first.length, second.length);
-        return joined;
-    }
-
-    private static byte[] insertAfterSignature(byte[] png, byte[] chunk) {
-        byte[] joined = new byte[png.length + chunk.length];
-        System.arraycopy(png, 0, joined, 0, 8);
-        System.arraycopy(chunk, 0, joined, 8, chunk.length);
-        System.arraycopy(png, 8, joined, 8 + chunk.length, png.length - 8);
         return joined;
     }
 

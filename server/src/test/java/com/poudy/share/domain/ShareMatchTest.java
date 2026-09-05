@@ -28,7 +28,7 @@ class ShareMatchTest {
 
     private static final Brand DOCTOR_G = new Brand(1L, "닥터지", null, null);
     private static final Brand MEDICUBE = new Brand(2L, "메디큐브", null, null);
-    private static final Brands BRANDS = new Brands(List.of(DOCTOR_G, MEDICUBE));
+    private static final Brands BRANDS = Brands.from(List.of(DOCTOR_G, MEDICUBE));
 
     private static Product product(Long id, Brand brand, String name) {
         return new Product(
@@ -186,7 +186,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("이름이 정확히 같은 제품 하나면 확정한다")
     void confirmsSingleExactName() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "레드 블레미쉬 클리어 수딩 크림 EX"),
                 product(2L, DOCTOR_G, "레드 블레미쉬 클리어 수딩 토너")
@@ -202,7 +202,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("후보가 하나뿐이면 이름이 정확히 같지 않아도 확정한다")
     void confirmsSingleCandidate() {
-        Products products = new Products(List.of(product(1L, MEDICUBE, "PDRN 핑크 시카 수딩 토너 플러스")));
+        Products products = Products.from(List.of(product(1L, MEDICUBE, "PDRN 핑크 시카 수딩 토너 플러스")));
 
         ShareMatch matched = match("메디큐브 PDRN 핑크 시카 수딩 토너", products);
 
@@ -212,7 +212,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("브랜드를 알아냈으면 다른 브랜드 제품은 후보에서 뺀다")
     void keepsCandidatesInSharedBrand() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, MEDICUBE, "핑크 시카 수딩 토너"),
                 product(2L, DOCTOR_G, "핑크 시카 수딩 토너")
@@ -226,7 +226,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("제품명 자리에 남은 브랜드명만으로 제품을 확정하지 않는다")
     void doesNotConfirmByBrandNameInProductNamePosition() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "레드 블레미쉬 클리어 토너")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "레드 블레미쉬 클리어 토너")));
 
         assertThat(match("닥터지 닥터지", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -234,7 +234,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("축약한 검색어로는 확정하지 않는다")
     void doesNotConfirmFromShortenedKeyword() {
-        Products products = new Products(List.of(product(7L, DOCTOR_G, "블랙스네일 레티놀 콜라겐 세럼 인텐스")));
+        Products products = Products.from(List.of(product(7L, DOCTOR_G, "블랙스네일 레티놀 콜라겐 세럼 인텐스")));
 
         ShareMatch matched = match("닥터지 블랙스네일 레티놀 콜라겐 마스크", products);
 
@@ -245,7 +245,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("카탈로그에 없는 형제 제품을 공유해도 확정하지 않는다")
     void doesNotConfirmAbsentSiblingProduct() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
 
         assertThat(match("닥터지 블랙 스네일 토너 라이트", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -253,7 +253,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("앞에 새 라인명이 붙어도 브랜드 안의 고유한 핵심 제품명으로 확정한다")
     void confirmsUniqueContainedProductName() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "블랙 스네일 토너"),
                 product(2L, DOCTOR_G, "블랙 스네일 크림")
@@ -268,7 +268,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("핵심 제품명을 포함한 같은 브랜드 제품이 여럿이면 확정하지 않는다")
     void doesNotConfirmAmbiguousContainedProductName() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "로얄 블랙 스네일 토너"),
                 product(2L, DOCTOR_G, "프레스티지 블랙 스네일 토너")
@@ -283,7 +283,7 @@ class ShareMatchTest {
     @DisplayName("안전 조건을 통과한 후보 중 이름 점수가 명확히 높으면 확정한다")
     void confirmsCandidateWithClearSimilarityAdvantage() {
         Brand brand = new Brand(100L, "비플레인", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "선뮤즈 톤업&코렉팅 선크림 SPF50+ PA++++"),
                 product(2L, brand, "선뮤즈 톤업&코렉팅 매트 선크림 SPF50+ PA++++")
@@ -292,7 +292,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "비플레인 선뮤즈 톤업 앤 코렉팅 선크림",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.productId()).isEqualTo(1L);
@@ -302,7 +302,7 @@ class ShareMatchTest {
     @DisplayName("pH 표기 유무는 제품 이름 비교에서 무시한다")
     void ignoresPhMarkerForSimilarity() {
         Brand brand = new Brand(100L, "아비브", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "약산성 시트 마스크 부활초 핏"),
                 product(2L, brand, "약산성 시트 마스크 어성초 핏")
@@ -311,7 +311,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "아비브 약산성 pH시트 마스크 부활초 핏",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.productId()).isEqualTo(1L);
@@ -321,7 +321,7 @@ class ShareMatchTest {
     @DisplayName("용도 표현에 형태 낱말이 있어도 마지막 제품 형태가 같으면 비교한다")
     void comparesLastProductForm() {
         Brand brand = new Brand(100L, "이니스프리", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "레티놀 PDRN 스킨부스터 앰플"),
                 product(2L, brand, "레티놀 시카 모공 흔적 앰플")
@@ -330,7 +330,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "이니스프리 레티놀 그린티 PDRN 앰플",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.productId()).isEqualTo(1L);
@@ -339,7 +339,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("여러 제품 형태가 연결자로 묶인 세트는 비슷한 단일 제품으로 확정하지 않는다")
     void doesNotConfirmConnectedProductForms() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 크림")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "블랙 스네일 크림")));
 
         ShareMatch matched = match("닥터지 블랙 스네일 토너&크림", products);
 
@@ -350,7 +350,7 @@ class ShareMatchTest {
     @DisplayName("가장 비슷한 후보들의 점수 차이가 작으면 확정하지 않는다")
     void doesNotConfirmCandidatesWithSmallSimilarityAdvantage() {
         Brand brand = new Brand(100L, "이니스프리", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "그린티 히알루론산 수분 세럼"),
                 product(2L, brand, "그린티 씨드 히알루론산 세럼")
@@ -359,7 +359,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "이니스프리 그린티 씨드 히알루론산 수분 세럼",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
@@ -369,7 +369,7 @@ class ShareMatchTest {
     @DisplayName("일반 패키지는 소용량 표식이 붙은 별도 후보와 구분한다")
     void distinguishesSmallPackageScope() {
         Brand brand = new Brand(100L, "이니스프리", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "그린티 히알루론산 수분크림"),
                 product(2L, brand, "[소용량] 그린티 히알루론산 수분크림")
@@ -378,7 +378,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "이니스프리 그린티 수분크림",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.productId()).isEqualTo(1L);
@@ -388,7 +388,7 @@ class ShareMatchTest {
     @DisplayName("공통 낱말 점수가 명확히 높은 제품을 글자 배열이 비슷한 후보보다 우선한다")
     void confirmsCandidateWithClearTokenAdvantage() {
         Brand brand = new Brand(100L, "이니스프리", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, brand, "그린티 히알루론산 수분크림"),
                 product(2L, brand, "그린티 판테놀 수분 젤 크림")
@@ -397,7 +397,7 @@ class ShareMatchTest {
 
         ShareMatch matched = SharedProductName.of(
             "이니스프리 그린티 수분크림",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.productId()).isEqualTo(1L);
@@ -406,7 +406,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("사용 부위가 추가된 형제 제품은 핵심 이름이 같아도 확정하지 않는다")
     void doesNotConfirmContainedNameWithDifferentScope() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
 
         assertThat(match("닥터지 포맨 블랙 스네일 토너", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -414,7 +414,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("제품 형태가 추가된 형제 제품은 핵심 이름이 같아도 확정하지 않는다")
     void doesNotConfirmContainedNameWithDifferentForm() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
 
         assertThat(match("닥터지 블랙 스네일 토너 마스크", products).status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -423,7 +423,7 @@ class ShareMatchTest {
     @DisplayName("NEW 표식이 있는 공유는 성분이 다른 이전 제품보다 새 제품을 확정한다")
     void confirmsNewProductBeforePreviousVersion() {
         Brand brand = new Brand(100L, "토리든", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(203L, brand, "다이브인 저분자 히알루론산 토너"),
                 product(539L, brand, "[NEW] 다이브인 저분자 히알루론산 토너")
@@ -432,7 +432,8 @@ class ShareMatchTest {
         String shared = "[NEW] 토리든 다이브인 저분자 히알루론산 토너 300ml 기획" +
             " 올리브영에서 다양한 뷰티 제품을 만나보세요! https://oy.run/abc";
 
-        ShareMatch matched = SharedProductNames.of(new ShareText(shared), new Brands(List.of(brand))).matchIn(products);
+        ShareMatch matched = SharedProductNames.of(new ShareText(shared), Brands.from(List.of(brand)))
+            .matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
         assertThat(matched.productId()).isEqualTo(539L);
@@ -442,11 +443,12 @@ class ShareMatchTest {
     @DisplayName("카탈로그에 새 버전이 없으면 NEW 표식을 제외하고 기존 제품을 찾는다")
     void fallsBackFromUnknownNewProductMarker() {
         Brand brand = new Brand(100L, "닥터지", null, null);
-        Products products = new Products(List.of(product(9L, brand, "비타 클리어 글루타샷 흔적 크림")));
+        Products products = Products.from(List.of(product(9L, brand, "비타 클리어 글루타샷 흔적 크림")));
         String shared = "[NEW/흔적토닝] 닥터지 비타 클리어 글루타샷 흔적 크림 50ml" +
             " 올리브영에서 다양한 뷰티 제품을 만나보세요! https://oy.run/abc";
 
-        ShareMatch matched = SharedProductNames.of(new ShareText(shared), new Brands(List.of(brand))).matchIn(products);
+        ShareMatch matched = SharedProductNames.of(new ShareText(shared), Brands.from(List.of(brand)))
+            .matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
         assertThat(matched.productId()).isEqualTo(9L);
@@ -456,7 +458,7 @@ class ShareMatchTest {
     @DisplayName("새 버전 후보가 모호하면 이전 제품으로 내려가 확정하지 않는다")
     void doesNotFallBackFromAmbiguousNewProduct() {
         Brand brand = new Brand(100L, "토리든", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(203L, brand, "다이브인 저분자 히알루론산 크림"),
                 product(541L, brand, "[NEW] 다이브인 저분자 히알루론산 크림 라이트"),
@@ -466,7 +468,8 @@ class ShareMatchTest {
         String shared = "[NEW] 토리든 다이브인 저분자 히알루론산 크림 100ml" +
             " 올리브영에서 다양한 뷰티 제품을 만나보세요! https://oy.run/abc";
 
-        ShareMatch matched = SharedProductNames.of(new ShareText(shared), new Brands(List.of(brand))).matchIn(products);
+        ShareMatch matched = SharedProductNames.of(new ShareText(shared), Brands.from(List.of(brand)))
+            .matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -481,12 +484,13 @@ class ShareMatchTest {
         String listingName
     ) {
         Brand brand = new Brand(100L, brandName, null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(product(1L, brand, canonicalName), product(2L, brand, canonicalName + " 라이트"))
         );
         String shared = listingName + " 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/abc";
 
-        ShareMatch matched = SharedProductNames.of(new ShareText(shared), new Brands(List.of(brand))).matchIn(products);
+        ShareMatch matched = SharedProductNames.of(new ShareText(shared), Brands.from(List.of(brand)))
+            .matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.MATCHED);
         assertThat(matched.productId()).isEqualTo(1L);
@@ -496,13 +500,13 @@ class ShareMatchTest {
     @DisplayName("비슷한 카탈로그 이름이 중복이면 제품을 확정하지 않는다")
     void doesNotConfirmDuplicatedSimilarTarget() {
         Brand brand = new Brand(100L, "셀퓨전씨", null, null);
-        Products products = new Products(
+        Products products = Products.from(
             List.of(product(1L, brand, "PH 컨디션 토너"), product(2L, brand, "PH 컨디션 토너"))
         );
 
         ShareMatch matched = SharedProductName.of(
             "셀퓨전씨 트리악 pH 컨디션 토너",
-            new Brands(List.of(brand))
+            Brands.from(List.of(brand))
         ).matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
@@ -518,10 +522,11 @@ class ShareMatchTest {
         String listingName
     ) {
         Brand brand = new Brand(100L, brandName, null, null);
-        Products products = new Products(List.of(product(1L, brand, canonicalName)));
+        Products products = Products.from(List.of(product(1L, brand, canonicalName)));
         String shared = listingName + " 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/abc";
 
-        ShareMatch matched = SharedProductNames.of(new ShareText(shared), new Brands(List.of(brand))).matchIn(products);
+        ShareMatch matched = SharedProductNames.of(new ShareText(shared), Brands.from(List.of(brand)))
+            .matchIn(products);
 
         assertThat(matched.status()).isEqualTo(ShareMatchStatus.NOT_FOUND);
     }
@@ -552,7 +557,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("축약 재검색 결과가 여러 건이면 확정하지 않고 그 검색어를 돌려준다")
     void returnsShortenedKeywordForSeveralCandidates() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "레드 블레미쉬 클리어 수딩 토너"),
                 product(2L, DOCTOR_G, "레드 블레미쉬 클리어 수딩 크림")
@@ -569,7 +574,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("이름이 정확히 같은 제품이 여럿이면 확정하지 않는다")
     void doesNotConfirmSeveralExactNames() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "레드 블레미쉬 클리어 토너"),
                 product(2L, DOCTOR_G, "레드 블레미쉬 클리어 토너")
@@ -582,7 +587,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("제품명이 기획 낱말로 끝나면 낱말을 털어 내기 전 이름으로 확정한다")
     void confirmsNameEndingWithPlanWord() {
-        Products products = new Products(
+        Products products = Products.from(
             List.of(
                 product(1L, DOCTOR_G, "어성초 크림 카밍 튜브"),
                 product(2L, DOCTOR_G, "어성초 크림 카밍 앰플")
@@ -601,7 +606,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("제품명에 없는 기획 낱말은 털어 내고 확정한다")
     void confirmsAfterTrimmingPlanWord() {
-        Products products = new Products(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
+        Products products = Products.from(List.of(product(1L, DOCTOR_G, "블랙 스네일 토너")));
 
         ShareMatch matched = matchShared(
             "[단독] 닥터지 블랙 스네일 토너 기획 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/abc",
@@ -626,7 +631,7 @@ class ShareMatchTest {
     @Test
     @DisplayName("끝내 찾지 못하면 정제한 검색어를 돌려준다")
     void returnsCleanedKeywordWhenNothingMatches() {
-        Products products = new Products(List.of(product(1L, MEDICUBE, "PDRN 핑크 시카 수딩 토너")));
+        Products products = Products.from(List.of(product(1L, MEDICUBE, "PDRN 핑크 시카 수딩 토너")));
 
         ShareMatch matched = match("닥터지 브라이트닝 필링젤", products);
 

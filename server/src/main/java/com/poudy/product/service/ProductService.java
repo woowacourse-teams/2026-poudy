@@ -48,7 +48,7 @@ public class ProductService {
         Products products = products();
 
         if (query.keyword() == null || page > 0) {
-            return products.find(filter, sort, page, size);
+            return products.find(filter, sort, page, size, categories);
         }
 
         return searchLogger.analyze(
@@ -57,9 +57,9 @@ public class ProductService {
                 page,
                 size,
                 ProductSort.orDefault(sort),
-                hasFilters(query)
+                query.hasFilters()
             ),
-            () -> products.find(filter, sort, page, size),
+            () -> products.find(filter, sort, page, size, categories),
             ProductPage::totalElements
         );
     }
@@ -76,11 +76,7 @@ public class ProductService {
         Product product = products().findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return new ProductDetail(
-            product,
-            categories.pathOf(product.category()),
-            excludeCodeIngredients.freeCodesOf(product.ingredients())
-        );
+        return ProductDetail.from(product, categories, excludeCodeIngredients);
     }
 
     private Products products() {
@@ -104,13 +100,4 @@ public class ProductService {
         );
     }
 
-    private static boolean hasFilters(ProductQuery query) {
-        return !query.categoryIds().isEmpty()
-            || !query.brandIds().isEmpty()
-            || !query.moistureLevels().isEmpty()
-            || !query.oilLevels().isEmpty()
-            || !query.includeIngredientIds().isEmpty()
-            || !query.excludeIngredientIds().isEmpty()
-            || !query.excludeCodes().isEmpty();
-    }
 }

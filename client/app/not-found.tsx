@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 
@@ -32,8 +31,6 @@ export default function NotFound() {
           제품 검색하기
         </Link>
       </main>
-
-      <BottomNavigation />
     </>
   );
 }

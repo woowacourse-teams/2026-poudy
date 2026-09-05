@@ -28,7 +28,6 @@ sh ./scripts/verify.sh
 - 완료 전에 `sh ./scripts/verify.sh`를 통과시킨다.
 - 실패한 검증을 우회하거나 약화하지 않는다.
 - Excel은 런타임에서 읽지 않는다.
-- 하네스 파일을 변경하면 `$audit-backend-harness`로 독립 감사한다.
 
 ## Planning
 

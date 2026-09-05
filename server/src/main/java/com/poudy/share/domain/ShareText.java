@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public record ShareText(String value) {
+public final class ShareText {
 
     private static final Pattern LINK = Pattern.compile("https?://\\S+", Pattern.CASE_INSENSITIVE);
     private static final Pattern SERVICE_PHRASE = Pattern.compile("올리브영에서.*", Pattern.DOTALL);
@@ -38,8 +38,14 @@ public record ShareText(String value) {
     );
     private static final String SPACE = " ";
 
-    public ShareText {
-        value = Objects.requireNonNullElse(value, "").trim();
+    private final String value;
+
+    public ShareText(String value) {
+        this.value = Objects.requireNonNullElse(value, "").trim();
+    }
+
+    public String value() {
+        return value;
     }
 
     public boolean hasLink() {

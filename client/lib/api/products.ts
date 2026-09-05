@@ -20,10 +20,13 @@ import { serializeFilter } from "@/lib/domain/filter";
 
 const INGREDIENT_PAGE_SIZE = 100;
 
+/** 동적 목록 화면에서 사용하는 fetch 응답을 서버에 담아 두는 시간. */
+const CATALOG_TTL = 12 * 60 * 60;
+
 type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
-  apiGet("/api/products", serializeFilter(filter));
+  apiGet("/api/products", serializeFilter(filter), CATALOG_TTL);
 
 export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
   apiGet("/api/products/count", serializeFilter(filter));
@@ -70,13 +73,15 @@ export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientL
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
   apiGet(`/api/ingredients/${ingredientId}`);
 
-export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> => apiGet("/api/exclude-codes");
+export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> =>
+  apiGet("/api/exclude-codes", undefined, CATALOG_TTL);
 
-export const fetchCategories = (): Promise<CategoryListResponse> => apiGet("/api/categories");
+export const fetchCategories = (): Promise<CategoryListResponse> => apiGet("/api/categories", undefined, CATALOG_TTL);
 
-export const fetchBrands = (): Promise<BrandOverviewResponse> => apiGet("/api/brands");
+export const fetchBrands = (): Promise<BrandOverviewResponse> => apiGet("/api/brands", undefined, CATALOG_TTL);
 
-export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> => apiGet(`/api/brands/${brandId}`);
+export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
+  apiGet(`/api/brands/${brandId}`, undefined, CATALOG_TTL);
 
 /** 저장함은 브라우저가 가진 ID 로 표시 정보를 채운다. */
 export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>

@@ -3,6 +3,19 @@ import type { WebView } from 'react-native-webview';
 
 export type WebViewFailure = 'offline' | 'address' | 'timeout' | 'server' | 'unknown';
 
+export interface HardwareBackOptions {
+  readonly onNavigate: (url: string) => void;
+  readonly serviceBaseUrl: string;
+  readonly sourceKey: number;
+  readonly sourceUrl: string;
+  readonly webViewRef: RefObject<WebView | null>;
+}
+
+export interface WebViewBackState {
+  readonly canGoBack: boolean;
+  readonly url: string;
+}
+
 export interface WebViewErrorDetail {
   readonly code: number;
 }
@@ -11,24 +24,29 @@ export interface WebViewErrorEvent {
   readonly nativeEvent: WebViewErrorDetail;
 }
 
-export interface WebViewNavigation {
-  readonly key: number;
-  readonly url: string;
-  readonly isLoading: boolean;
-  readonly failure: WebViewFailure | null;
-  readonly navigate: (url: string) => void;
-  readonly reload: () => void;
-  readonly handleUrlChange: (url: string) => void;
-  readonly handleLoad: () => void;
-  readonly handleLoadEnd: () => void;
-  readonly fail: (reason: WebViewFailure) => void;
+export interface WebViewFailureMessage {
+  readonly body: string;
+  readonly title: string;
 }
 
-export interface HardwareBackOptions {
-  readonly onNavigate: (url: string) => void;
-  /** 바뀌면 WebView 를 다시 만든 것이고, 방문 기록이 비어 있다. */
-  readonly sourceKey: number;
-  readonly sourceUrl: string;
-  readonly webBaseUrl: string;
-  readonly webViewRef: RefObject<WebView | null>;
+export interface WebViewNavigation {
+  readonly fail: (reason: WebViewFailure) => void;
+  readonly failure: WebViewFailure | null;
+  readonly handleLoad: () => void;
+  readonly handleLoadEnd: () => void;
+  readonly handleUrlChange: (url: string) => void;
+  readonly isLoading: boolean;
+  readonly key: number;
+  readonly navigate: (url: string) => void;
+  readonly reload: () => void;
+  readonly url: string;
+}
+
+export interface WebViewNavigationRequest {
+  readonly url: string;
+}
+
+export interface WebViewSource {
+  readonly key: number;
+  readonly url: string;
 }

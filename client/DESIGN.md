@@ -15,7 +15,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | Text primary   | `--color-text-primary`   | `#202124` | 제목과 본문          |
 | Text secondary | `--color-text-secondary` | `#72747a` | 설명과 보조 정보     |
 | Brand          | `--color-brand`          | `#f46a8d` | 현재 선택과 강조     |
-| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 선택 배경            |
+| Brand soft     | `--color-brand-soft`     | `#fff0f4` | 브랜드 색 알림 배경  |
 | Action         | `--color-action`         | `#202124` | 주요 버튼            |
 | Action text    | `--color-action-text`    | `#ffffff` | 주요 버튼 글자       |
 | Info           | `--color-info`           | `#38a6dd` | 정보 상태            |
@@ -47,23 +47,45 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 - **Motion**: 목록은 트리거 쪽인 아래에서 4px 자라 나오며 opacity와 scale만 전환하고, 화살표는 180도 회전한다. fine pointer hover는 진입과 이탈 모두 `--transition-duration-control-state` 동안 표면색을 바꾼다. 눌림에는 크기를 줄이지 않는다. 고르면 배경색이 크게 바뀌어 눌린 것이 이미 보이고, 필터 칩도 같은 이유로 색만 쓴다. 실제 값이 바뀌는 옵션 선택에는 선택 햅틱을 함께 쓴다.
 - **Layout**: 트리거 오른쪽 아래에 붙는 절대 위치 popover. 필터 selector와 같은 조밀한 인상을 유지하도록 메뉴는 156px 폭, 옵션은 36px 높이·12px 글자를 사용한다. 메뉴에는 위아래 여백을 두지 않는다. 여백이 있으면 hover 배경이 옵션에만 깔리고 그 바깥으로 흰 띠가 남는다. 대신 넘치는 부분을 잘라 첫 옵션과 마지막 옵션이 둥근 모서리를 넘지 않게 한다.
 
+### ProductDetailHeader
+
+- **Structure**: `TopBar variant="sub"` 와 가로 축약형을 한 덩어리로 묶어 화면 위에 붙이는 머리. 축약형은 40px 썸네일, 브랜드·제품명 한 줄, 가장 싼 용량의 가격, 유수분 태그, 저장 버튼으로 이뤄진다.
+- **States**: 떨어짐(원래 배치가 화면에 있음), 붙음(원래 배치가 머리 아래를 지나감)
+- **Accessibility**: 뒤로가기는 두 상태 모두에서 화면에 남는다. 떨어져 있는 축약형은 `inert` 로 초점과 손을 함께 막아 저장 버튼이 둘로 읽히지 않게 한다. 제품명은 한 줄로 줄이되 저장 버튼의 접근 가능한 이름에는 전체 이름을 쓴다.
+- **Motion**: 축약형은 머리 밑에서 8px 미끄러져 내려오며 짙어진다(`--transition-duration-disclosure`). `prefers-reduced-motion: reduce` 에서는 제자리에서 짙어지기만 한다. 머리 높이는 두 상태에서 같다. 높이를 늘렸다 줄이면 아래 본문이 그만큼 튄다.
+- **Layout**: `fixed` 가 아니라 `sticky` 로 붙인다. 본문이 `--container-md` 로 가운데 놓인 카드라 `fixed` 는 폭이 화면 전체로 벌어진다. 축약형은 머리 아래에 겹쳐 두고 본문이 그 밑으로 지나간다. `z-30` 이라 바텀시트의 딤(`z-40`)과 시트(`z-50`) 아래에 온다.
+
 ### Shared UI primitives
 
 - `Button`: primary·secondary 변형과 disabled 상태를 가진 전체 너비 행동 버튼
 - `BottomSheet`: 필터 내용을 담고 backdrop, focus trap, Escape 닫기를 제공하는 modal surface
 - `BottomNavigation`: 네 개의 주요 경로와 현재 경로 상태를 보여 주는 고정 내비게이션
 
+### BottomNavigation
+
+- **Structure**: 네 개의 경로 링크로 구성하고, 각 링크는 아이콘과 라벨을 세로로 쌓는다. 링크마다 뒤에 상호작용 배경을 하나씩 깔아 둔다.
+- **States**: 기본, hover, 눌림, 선택됨, 키보드 포커스 상태를 제공한다.
+- **Selected**: 선택된 탭은 배경을 깔지 않고 `--color-brand` 색상과 채워진 아이콘, 굵은 라벨로 구분한다. 색 하나에만 기대지 않아야 색각 이상이 있어도 아이콘과 굵기로 읽힌다.
+- **Interaction background**: hover 와 눌림에서만 `--color-surface` 회색 배경이 `--transition-duration-control-state` 동안 나타난다. 선택 여부와 상관없이 네 탭이 똑같이 반응한다. 선택된 탭만 커서에 반응하지 않으면 오히려 어색하다. hover 는 `hover: hover` 와 `pointer: fine` 을 함께 만족하는 환경에만 적용해서, 손가락으로 누른 자리에 배경이 남지 않도록 한다. 터치 기기에서는 누름 배경만 나타난다. 배경은 링크의 형제 요소라서 `:has()` 로 부모에서 `:active` 를 받아 켠다.
+- **Motion**: 링크를 누르면 전체 항목이 100ms 동안 `scale(0.97)`로 줄어든다. 손을 떼면 200ms 동안 `1.008 → 0.998 → 1` 순서로 한 번만 작게 울렁이며 돌아온다. 선택된 자리를 따라 배경이 이동하는 연출은 쓰지 않는다.
+- **Icon motion**: 비활성 탭을 선택하면 아이콘 전체에 색이 즉시 채워지고 `0deg → -8deg → 6deg → 0deg`로 `--transition-duration-shake` 동안 한 번만 흔들린다. 제자리에서 도는 움직임이라 자리를 옮기는 `--transition-duration-travel` 과 길이 토큰을 따로 둔다. 흔들리는 도중에 다시 누르면 재생마다 다른 키를 주어 아이콘을 새로 만들고 처음부터 흔든다. keyframes 는 그대로 두면 다시 시작하지 않아 빠르게 오갈 때 흔들림이 걸러진다. 아이콘을 여러 조각으로 복제하거나 순차적으로 합치는 효과는 사용하지 않는다.
+- **Accessibility**: 실제 경로와 일치하는 링크에만 `aria-current="page"`를 적용한다. 경로가 도착하기 전에도 선택 표시를 먼저 옮겨 반응을 보여 주되 접근성 상태를 미리 바꾸지 않는다. 경로가 실제로 바뀌면 앞당겨 둔 표시를 버린다. 눌렀던 경로로 되돌아올 때 지나간 선택이 되살아나기 때문이다. `prefers-reduced-motion: reduce`에서는 크기 변화와 흔들림을 제거하되 누른 것이 보이는 신호는 남긴다. 선택되지 않은 링크를 누르면 글자와 아이콘이 `--color-text-primary`로 짙어진다. 회색 배경은 톤이 옅어 더 짙게 만들어도 눌린 자리가 드러나지 않는다.
+
 ## 6. Motion & Interaction
 
-| Token                                 | Duration | Easing       | Usage                   |
-| ------------------------------------- | -------- | ------------ | ----------------------- |
-| `--transition-duration-press`         | 100ms    | `--ease-out` | 저장 버튼 눌림 반응     |
-| `--transition-duration-control-state` | 160ms    | `--ease-out` | 컨트롤 아이콘·색상 전환 |
-| `--transition-duration-disclosure`    | 200ms    | `--ease-out` | 메뉴 열림·닫힘          |
-| `--transition-duration-celebration`   | 520ms    | `--ease-out` | 저장 불꽃               |
+| Token                                 | Duration | Easing          | Usage                   |
+| ------------------------------------- | -------- | --------------- | ----------------------- |
+| `--transition-duration-press`         | 100ms    | `--ease-out`    | 저장 버튼 눌림 반응     |
+| `--transition-duration-release`       | 200ms    | 감쇠 반동       | 하단 메뉴 손 뗌 반응    |
+| `--transition-duration-control-state` | 160ms    | `--ease-out`    | 컨트롤 아이콘·색상 전환 |
+| `--transition-duration-disclosure`    | 200ms    | `--ease-out`    | 메뉴 열림·닫힘          |
+| `--transition-duration-travel`        | 280ms    | `--ease-travel` | 탭 밑줄이 자리를 옮김   |
+| `--transition-duration-shake`         | 280ms    | `--ease-out`    | 하단 메뉴 아이콘 흔들림 |
+| `--transition-duration-celebration`   | 520ms    | `--ease-out`    | 저장 불꽃               |
 
+- `--transition-duration-travel` 과 `--ease-travel` 은 늘 함께 쓰지 않는다. 카테고리·브랜드 탭의 알약은 커브만 가져오고 길이는 `--transition-duration-control-state` 를 쓴다. 눌린 뒤 150ms 안팎이면 라우트가 갈려 요소가 새로 그려지므로, 280ms 를 다 쓰면 옮겨 가는 길이 중간에 끊긴다.
 - 저장 불꽃만 300ms 를 넘는다. 담기는 순간에만 터지는 드문 축하라 예산을 따로 쓴다. 나머지 전환은 모두 300ms 안에 든다.
-- 움직이는 표면은 모두 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
+- 움직이는 표면은 기본적으로 `--ease-out`(`cubic-bezier(0.23, 1, 0.32, 1)`)을 쓴다. 자리를 옮기는 표시만 `--ease-travel`(`cubic-bezier(0.4, 0, 0.2, 1)`)로 앞뒤가 고른 커브를 쓴다. `--ease-out` 은 시간 25% 에 거리 77% 를 가버려 먼 거리에서는 순간이동한 뒤 멎는 것으로 보인다. 어디에서 어디로 갔는지가 보여야 하는 움직임에는 맞지 않는다. 하단 메뉴에서 손을 뗄 때만 `--ease-release`로 한 번의 약한 감쇠 반동을 만든다. `--ease-standard`는 끝이 흐리게 끌려 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다. 토큰이 아직 없는 환경을 위해 각 선언에 같은 값을 fallback으로 둔다.
 - hover는 진입과 이탈의 시간을 같게 둔다. 한쪽만 즉시 바뀌면 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠져 잔상처럼 보인다.
 - 메뉴가 열리고 닫히는 공간 모션은 transform과 opacity만 애니메이션하고, 컨트롤의 상태 색상은 레이아웃에 영향을 주지 않는 color 전환만 사용한다.
 - 공간 이동은 즉시 다시 열거나 닫아도 현재 상태에서 새 상태로 이어져야 한다.

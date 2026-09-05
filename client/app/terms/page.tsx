@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { LegalArticle, LegalDocument, LegalList } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { TopBar } from "@/components/ui/TopBar";
 
 /*
@@ -26,7 +25,7 @@ export default function TermsPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 이용약관`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate}
+        revisionEffectiveDate={OPERATOR.revisionEffectiveDate.terms}
       >
         <LegalArticle heading="제1조 목적">
           <p>
@@ -87,14 +86,34 @@ export default function TermsPage() {
           </LegalList>
         </LegalArticle>
 
-        <LegalArticle heading="제7조 지식재산권">
+        <LegalArticle heading="제7조 이용자 제출물">
+          <p>
+            이용자가 문의하기와 제품 정보 추가 요청으로 보낸 내용과 첨부한 이미지(이하 &quot;제출물&quot;)에 대한 권리는
+            이용자에게 있습니다.
+          </p>
+          <p>
+            이용자는 제출물이 다른 사람의 저작권, 초상권, 개인정보를 비롯한 권리를 침해하지 않는다는 점을 보증합니다.
+            다른 사람을 알아볼 수 있는 얼굴이나 개인정보가 담긴 이미지는 올리지 않아야 합니다.
+          </p>
+          <p>
+            팀은 제출물을 접수한 문의를 확인하고 처리하는 데, 그리고 서비스의 자료와 기능을 고치는 데 이용합니다.
+            개인정보 처리방침에 적은 위탁을 제외하고는 제출물을 공개하거나 제3자에게 제공하지 않습니다. 제출물에 담긴
+            개인정보의 처리는 개인정보 처리방침을 따릅니다.
+          </p>
+          <p>
+            팀은 제출물이 이 조를 어기거나 법령을 어긴다고 판단하면 삭제할 수 있습니다. 서비스는 회원가입을 받지 않아
+            이용자에게 따로 알릴 방법이 없으므로, 삭제한 사실은 이 화면의 공지로 갈음합니다.
+          </p>
+        </LegalArticle>
+
+        <LegalArticle heading="제8조 지식재산권">
           <p>
             서비스의 화면 구성, 디자인, 편집물에 대한 권리는 팀에 있습니다. 제조사와 판매처가 표기한 성분 자료의 권리는
             해당 권리자에게 있습니다. 이용자는 팀의 동의 없이 이를 영리 목적으로 이용할 수 없습니다.
           </p>
         </LegalArticle>
 
-        <LegalArticle heading="제8조 서비스의 중단">
+        <LegalArticle heading="제9조 서비스의 중단">
           <p>
             팀은 설비 점검, 교체, 고장이나 통신 두절 등 부득이한 사유가 있으면 서비스 제공을 일시적으로 멈출 수
             있습니다. 미리 알릴 수 있는 경우에는 서비스 화면에 공지하고, 예상하지 못한 사유로 멈춘 경우에는 사유를 안
@@ -102,22 +121,22 @@ export default function TermsPage() {
           </p>
         </LegalArticle>
 
-        <LegalArticle heading="제9조 책임의 제한">
+        <LegalArticle heading="제10조 책임의 제한">
           <p>
-            팀은 천재지변이나 이에 준하는 불가항력, 이용자의 고의나 과실로 생긴 손해에 대해 책임지지 않습니다. 서비스가
-            무료로 제공되는 점을 고려하여, 팀은 관련 법령이 허용하는 범위에서 서비스 이용으로 생긴 손해에 대한 책임을
-            지지 않습니다. 다만 팀의 고의나 중대한 과실로 생긴 손해는 그러하지 않습니다.
+            팀은 천재지변이나 이에 준하는 불가항력, 이용자의 고의나 과실로 생긴 손해에 대해 책임지지 않습니다. 팀의 책임
+            있는 사유로 손해가 생긴 경우에는 관련 법령에 따라 배상하며, 서비스가 무료로 제공되는 점은 배상 범위를 정할
+            때 고려됩니다.
           </p>
         </LegalArticle>
 
-        <LegalArticle heading="제10조 개인정보의 보호">
+        <LegalArticle heading="제11조 개인정보의 보호">
           <p>
             팀은 관련 법령에 따라 이용자의 개인정보를 보호합니다. 자세한 내용은{" "}
             <Link href="/privacy">개인정보 처리방침</Link>에서 확인하실 수 있습니다.
           </p>
         </LegalArticle>
 
-        <LegalArticle heading="제11조 준거법과 분쟁 해결">
+        <LegalArticle heading="제12조 준거법과 분쟁 해결">
           <p>
             이 약관과 서비스 이용에는 대한민국 법을 적용합니다. 서비스 이용과 관련해 분쟁이 생기면 팀과 이용자는 원만한
             해결을 위해 성실히 협의하며, 협의가 되지 않으면 민사소송법에 따른 관할 법원에 소를 제기할 수 있습니다.
@@ -133,11 +152,13 @@ export default function TermsPage() {
         <LegalArticle heading="부칙">
           <LegalList>
             <li>{OPERATOR.effectiveDate} — 제정</li>
+            <li>
+              {OPERATOR.revisionEffectiveDate.terms} 시행 예정 — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호
+              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정
+            </li>
           </LegalList>
         </LegalArticle>
       </LegalDocument>
-
-      <BottomNavigation />
     </>
   );
 }

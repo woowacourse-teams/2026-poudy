@@ -40,7 +40,7 @@ public class S3FeedbackRepository {
     PreparedDocument prepare(Feedback feedback) {
         try {
             byte[] body = objectMapper.writeValueAsBytes(documentOf(feedback));
-            return new PreparedDocument(body, S3FeedbackObjectStore.sha256(body));
+            return new PreparedDocument(body);
         } catch (JacksonException exception) {
             throw new InfrastructureException("의견 원본을 직렬화하지 못했습니다.");
         }
@@ -51,21 +51,14 @@ public class S3FeedbackRepository {
             objectStore.putIfAbsent(keyOf(feedback), CONTENT_TYPE, document.bytes());
             return SaveStatus.SUCCESS;
         } catch (ObjectStoreException exception) {
-            return verifyCommit(feedback, document);
+            return verifyCommit(feedback);
         }
     }
 
-    private SaveStatus verifyCommit(Feedback feedback, PreparedDocument expected) {
+    private SaveStatus verifyCommit(Feedback feedback) {
         String key = keyOf(feedback);
         try {
-            if (!objectStore.existsExactly(key)) {
-                return SaveStatus.FAILURE;
-            }
-            if (objectStore.matchesSha256(key, expected.sha256())) {
-                return SaveStatus.SUCCESS;
-            }
-
-            return SaveStatus.UNKNOWN;
+            return objectStore.existsExactly(key) ? SaveStatus.SUCCESS : SaveStatus.FAILURE;
         } catch (ObjectStoreException exception) {
             return SaveStatus.UNKNOWN;
         }
@@ -95,7 +88,6 @@ public class S3FeedbackRepository {
         S3FeedbackImageRepository.Claim claim = imageRepository.claimAndCopy(
             attached.id(),
             pending,
-            document.sha256(),
             timeSource
         );
         SaveStatus status = save(attached, document);
@@ -146,7 +138,7 @@ public class S3FeedbackRepository {
         UNKNOWN
     }
 
-    record PreparedDocument(byte[] bytes, String sha256) {
+    record PreparedDocument(byte[] bytes) {
 
         PreparedDocument {
             bytes = bytes.clone();

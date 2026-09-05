@@ -41,9 +41,10 @@ const failStorage = () => {
 
 describe("저장함", () => {
   it("저장한 제품이 없으면 API 를 부르지 않고 빈 안내를 보여 준다", async () => {
-    render(<SavedScreen />);
+    const { container } = render(<SavedScreen />);
 
     expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
+    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
     // 담긴 것이 없으면 검색과 정렬은 쓸 일이 없다.
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByText("최근 저장순")).not.toBeInTheDocument();
@@ -65,6 +66,18 @@ describe("저장함", () => {
     expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
     expect(screen.getByText("총 2개")).toBeInTheDocument();
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
+  });
+
+  it("첫 저장 제품 이미지만 즉시 받고 다음 제품부터 지연한다", async () => {
+    saveProduct(1);
+    saveProduct(3);
+    const { container } = render(<SavedScreen />);
+
+    await screen.findByText("1025 독도 토너");
+    const images = container.querySelectorAll("[data-product-image]");
+
+    expect(images[0]).toHaveAttribute("loading", "eager");
+    expect(images[1]).toHaveAttribute("loading", "lazy");
   });
 
   it("브라우저 저장 안내를 숨기고 개수와 정렬을 한 줄에 둔다", async () => {

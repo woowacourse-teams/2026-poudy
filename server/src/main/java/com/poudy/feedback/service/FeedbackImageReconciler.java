@@ -7,10 +7,12 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(prefix = "poudy.feedback.image-reconciliation", name = "enabled", havingValue = "true")
 public class FeedbackImageReconciler {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackImageReconciler.class);
@@ -44,11 +46,10 @@ public class FeedbackImageReconciler {
             CleanupCounts counts = operation.get();
             if (counts.total() > 0) {
                 log.info(
-                    "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}, orphanedFinalImages={}",
+                    "의견 이미지 정리를 완료했습니다. committedClaims={}, rolledBackClaims={}, expiredPending={}",
                     counts.committedClaims(),
                     counts.rolledBackClaims(),
-                    counts.expiredPending(),
-                    counts.orphanedFinalImages()
+                    counts.expiredPending()
                 );
             }
         } catch (RuntimeException exception) {

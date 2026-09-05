@@ -4,9 +4,13 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
-import com.poudy.search.domain.NameRank;
+import com.poudy.product.domain.sensory.SensoryModelVersion;
+import com.poudy.search.domain.NameMatch;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.domain.SearchableText;
 import com.poudy.search.domain.TextMatch;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
@@ -17,20 +21,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record Product(
-    Long id,
-    String name,
-    Brand brand,
-    Category category,
-    Ingredients ingredients,
-    String imageUrl,
-    ProductVariants variants,
-    ProductSensory sensory,
-    OffsetDateTime updatedAt) {
+public final class Product {
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
-    public Product {
+    private final Long id;
+    private final String name;
+    private final Brand brand;
+    private final Category category;
+    private final Ingredients ingredients;
+    private final String imageUrl;
+    private final ProductVariants variants;
+    private final ProductSensory sensory;
+    private final OffsetDateTime updatedAt;
+    private final List<SearchableText> searchableNames;
+
+    public Product(
+        Long id,
+        String name,
+        Brand brand,
+        Category category,
+        Ingredients ingredients,
+        String imageUrl,
+        ProductVariants variants,
+        ProductSensory sensory,
+        OffsetDateTime updatedAt
+    ) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("제품 이름이 필요합니다.");
         }
@@ -58,6 +74,49 @@ public record Product(
         if (updatedAt == null) {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
         }
+
+        this.id = id;
+        this.name = name;
+        this.brand = brand;
+        this.category = category;
+        this.ingredients = ingredients;
+        this.imageUrl = imageUrl;
+        this.variants = variants;
+        this.sensory = sensory;
+        this.updatedAt = updatedAt;
+        this.searchableNames = SearchableText.formsOf(name);
+    }
+
+    public Long id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Brand brand() {
+        return brand;
+    }
+
+    public Category category() {
+        return category;
+    }
+
+    public Ingredients ingredients() {
+        return ingredients;
+    }
+
+    public String imageUrl() {
+        return imageUrl;
+    }
+
+    public ProductVariants variants() {
+        return variants;
+    }
+
+    public OffsetDateTime updatedAt() {
+        return updatedAt;
     }
 
     public boolean contains(Long ingredientId) {
@@ -65,7 +124,7 @@ public record Product(
             return false;
         }
 
-        return ingredients.findById(ingredientId).isPresent();
+        return ingredients.contains(ingredientId);
     }
 
     public boolean hasBrand(Brand other) {
@@ -76,25 +135,16 @@ public record Product(
         return brand.hasId(brandId);
     }
 
-    public NameRank matchBrandKeyword(SearchKeyword keyword) {
-        return brand.matchKeyword(keyword);
-    }
-
-    public Optional<TextMatch> findBrandMatch(SearchKeyword keyword) {
-        return brand.findMatch(keyword);
+    public boolean belongsToCategory(Long categoryId) {
+        return category.belongsTo(categoryId);
     }
 
     public boolean matchesNameExactly(SearchKeyword keyword) {
         return keyword.matchesExactly(name);
     }
 
-    public boolean matches(ProductFilter filter) {
-        return matchesCategory(filter.categoryIds())
-            && matchesBrand(filter.brandIds())
-            && matchesAny(filter.moistureLevels(), sensory.moisture())
-            && matchesAny(filter.oilLevels(), sensory.oil())
-            && ingredients.containsAll(filter.ingredientFilter().includedIds())
-            && !ingredients.containsAny(filter.ingredientFilter().excludedIds());
+    public boolean usesSensoryModelVersion(SensoryModelVersion modelVersion) {
+        return sensory.usesModelVersion(modelVersion);
     }
 
     public Integer moistureLevel() {
@@ -132,6 +182,59 @@ public record Product(
             .toList();
     }
 
+    public Optional<MatchedProduct> match(ProductSearchQuery query) {
+        Optional<MatchedProduct> direct = matchDirectly(query.whole());
+        if (direct.isPresent()) {
+            return direct;
+        }
+
+        return query.parts().stream()
+            .map(this::matchCombined)
+            .flatMap(Optional::stream)
+            .min(CombinedMatch.ORDER)
+            .map(match -> MatchedProduct.combined(this, match.brand(), match.product()));
+    }
+
+    public Optional<MatchedProduct> matchByProductName(SearchKeyword keyword) {
+        return findProductNameMatch(keyword)
+            .map(match -> new MatchedProduct(this, ProductMatchField.PRODUCT_NAME, match));
+    }
+
+    private Optional<MatchedProduct> matchDirectly(SearchKeyword keyword) {
+        Optional<TextMatch> productNameMatch = findProductNameMatch(keyword);
+        Optional<TextMatch> brandNameMatch = brand.findMatch(keyword);
+
+        if (isBetterThan(brandNameMatch, productNameMatch)) {
+            return brandNameMatch.map(match -> new MatchedProduct(this, ProductMatchField.BRAND_NAME, match));
+        }
+        return productNameMatch.map(match -> new MatchedProduct(this, ProductMatchField.PRODUCT_NAME, match));
+    }
+
+    private Optional<CombinedMatch> matchCombined(ProductSearchQuery.Parts parts) {
+        Optional<TextMatch> brandMatch = brand.findMatch(parts.brand());
+        if (brandMatch.isEmpty() || !matchesBrandPrefix(brandMatch.get())) {
+            return Optional.empty();
+        }
+
+        return findProductNameMatch(parts.product())
+            .map(productMatch -> new CombinedMatch(brandMatch.get(), productMatch));
+    }
+
+    private Optional<TextMatch> findProductNameMatch(SearchKeyword keyword) {
+        return TextMatch.best(searchableNames, keyword);
+    }
+
+    private static boolean matchesBrandPrefix(TextMatch match) {
+        return match.rank().match() == NameMatch.EXACT || match.rank().match() == NameMatch.PREFIX;
+    }
+
+    private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        return current.isEmpty() || candidate.get().rank().isBetterThan(current.get().rank());
+    }
+
     private static class SkinEffectGroupAccumulator {
 
         private final SkinEffect effect;
@@ -150,18 +253,30 @@ public record Product(
         }
     }
 
-    private boolean matchesCategory(List<Long> categoryIds) {
-        return categoryIds.isEmpty()
-            || categoryIds.contains(category.id())
-            || categoryIds.contains(category.parentId());
+    private record CombinedMatch(TextMatch brand, TextMatch product) {
+
+        private static final Comparator<CombinedMatch> ORDER = Comparator
+            .comparing((CombinedMatch match) -> match.brand().rank())
+            .thenComparing(match -> match.product().rank());
     }
 
-    private boolean matchesBrand(List<Long> brandIds) {
+    public boolean belongsToAnyCategory(List<Long> categoryIds) {
+        return categoryIds.isEmpty() || categoryIds.stream().anyMatch(this::belongsToCategory);
+    }
+
+    public boolean belongsToAnyBrand(List<Long> brandIds) {
         return brandIds.isEmpty() || brandIds.stream().anyMatch(brand::hasId);
     }
 
-    private static boolean matchesAny(List<?> candidates, Object value) {
-        return candidates.isEmpty() || candidates.contains(value);
+    public boolean hasAnyMoistureLevel(List<MoistureLevel> levels) {
+        return levels.isEmpty() || levels.contains(sensory.moisture());
     }
 
+    public boolean hasAnyOilLevel(List<OilLevel> levels) {
+        return levels.isEmpty() || levels.contains(sensory.oil());
+    }
+
+    public boolean matchesIngredients(IngredientFilter filter) {
+        return filter.matches(ingredients);
+    }
 }

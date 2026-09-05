@@ -1,0 +1,139 @@
+"use client";
+
+import { useRef, useState } from "react";
+
+import { Icon } from "@/components/ui/icons/Icon";
+import { IMAGE_ACCEPT_ATTRIBUTE, IMAGE_MAX_COUNT } from "@/lib/api/feedback";
+import type { AttachedImage } from "@/lib/hooks/useImageUpload";
+
+function Thumbnail({
+  image,
+  index,
+  onOpen,
+  onRemove,
+}: {
+  readonly image: AttachedImage;
+  readonly index: number;
+  readonly onOpen: (key: string) => void;
+  readonly onRemove: (key: string) => void;
+}) {
+  const [broken, setBroken] = useState(false);
+  const uploading = image.status === "uploading";
+
+  return (
+    <li className="relative size-16 shrink-0">
+      <button
+        type="button"
+        onClick={() => onOpen(image.key)}
+        aria-label={`첨부한 사진 ${index + 1} 크게 보기`}
+        className="flex size-full items-center justify-center overflow-hidden rounded-xl border border-border bg-surface-subtle"
+      >
+        {/*
+         * HEIC 는 브라우저가 그리지 못해 빈 칸이 된다. 올리는 데는 지장이 없으므로
+         * 그리지 못할 때만 사진이 있다는 표시로 자리를 채운다.
+         *
+         * 사용자가 방금 고른 파일이라 next/image 의 최적화 대상이 아니다.
+         */}
+        {broken ? (
+          <Icon name="info" size={18} className="text-text-secondary" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image.previewUrl} alt="" className="size-full object-cover" onError={() => setBroken(true)} />
+        )}
+      </button>
+
+      {uploading ? (
+        <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-[#20212466]">
+          <span
+            role="status"
+            aria-label={`사진 ${index + 1} 올리는 중`}
+            className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          />
+        </span>
+      ) : (
+        /* 올리는 중에는 지울 수 없다. 지운 뒤 응답이 오면 화면에 없는 사진의 imageId 가 남는다. */
+        <button
+          type="button"
+          onClick={() => onRemove(image.key)}
+          aria-label={`첨부한 사진 ${index + 1} 삭제`}
+          className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-action text-action-text"
+        >
+          <Icon name="x" size={12} strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* 실패는 썸네일 안에 겹쳐 둔다. 아래에 두면 자리를 차지해 목록이 들쭉날쭉해진다. */}
+      {image.status === "failed" ? (
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-xl bg-[#202124CC] py-0.5 text-center text-[10px] text-white">
+          실패
+        </span>
+      ) : null}
+    </li>
+  );
+}
+
+export function ImageField({
+  images,
+  rejection,
+  full,
+  onAdd,
+  onRemove,
+  onOpen,
+}: {
+  readonly images: readonly AttachedImage[];
+  readonly rejection?: string;
+  readonly full: boolean;
+  readonly onAdd: (files: readonly File[]) => void;
+  readonly onRemove: (key: string) => void;
+  readonly onOpen: (key: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <section className="flex flex-col gap-2">
+      <p className="text-[13px] font-semibold text-text-primary">이미지</p>
+
+      <ul className="flex flex-wrap items-start gap-2">
+        <li>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={full}
+            aria-label="이미지 첨부"
+            /* 누름과 올림에 반응한다. 저장 버튼이 쓰는 방식과 같게 둔다. */
+            className="flex size-16 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-text-secondary transition duration-press ease-out hover:border-text-secondary hover:bg-surface-subtle active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-background disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
+          >
+            <Icon name="plus" size={20} />
+          </button>
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept={IMAGE_ACCEPT_ATTRIBUTE}
+            multiple
+            hidden
+            onChange={(event) => {
+              onAdd([...(event.target.files ?? [])]);
+              /* 같은 파일을 다시 고를 수 있도록 값을 비운다. */
+              event.target.value = "";
+            }}
+          />
+        </li>
+
+        {images.map((image, index) => (
+          <Thumbnail key={image.key} image={image} index={index} onOpen={onOpen} onRemove={onRemove} />
+        ))}
+      </ul>
+
+      <p className="text-[11px] text-text-secondary">
+        {images.length} / {IMAGE_MAX_COUNT} · 장당 5MB · JPG, PNG, HEIC
+      </p>
+
+      {rejection ? (
+        <p role="alert" className="text-[12px] text-brand">
+          {rejection}
+        </p>
+      ) : null}
+    </section>
+  );
+}

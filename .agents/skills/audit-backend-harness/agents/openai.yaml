@@ -2,3 +2,6 @@ interface:
   display_name: "백엔드 하네스 감사"
   short_description: "백엔드 하네스 전체를 발견하고 독립적으로 감사"
   default_prompt: "$audit-backend-harness로 현재 백엔드 하네스를 감사해줘."
+
+policy:
+  allow_implicit_invocation: false

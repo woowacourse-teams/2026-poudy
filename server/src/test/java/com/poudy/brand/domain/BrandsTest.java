@@ -16,7 +16,7 @@ class BrandsTest {
         Brand cellFusionC = brand(3L, "셀퓨전씨");
         Brand drG = brand(1L, "닥터지");
         Brand medicube = brand(2L, "메디큐브");
-        Brands brands = new Brands(List.of(cellFusionC, drG, medicube));
+        Brands brands = Brands.from(List.of(cellFusionC, drG, medicube));
 
         assertThat(brands.sortedByName()).containsExactly(drG, medicube, cellFusionC);
     }
@@ -26,7 +26,7 @@ class BrandsTest {
     void sortsBrandsWithSameKoreanNameById() {
         Brand second = brand(2L, "브랜드");
         Brand first = brand(1L, "브랜드");
-        Brands brands = new Brands(List.of(second, first));
+        Brands brands = Brands.from(List.of(second, first));
 
         assertThat(brands.sortedByName()).containsExactly(first, second);
     }
@@ -34,14 +34,14 @@ class BrandsTest {
     @Test
     @DisplayName("브랜드 목록이 없으면 빈 목록을 반환한다")
     void returnsEmptyListForMissingBrands() {
-        assertThat(new Brands(null).sortedByName()).isEmpty();
+        assertThat(Brands.from(null).sortedByName()).isEmpty();
     }
 
     @Test
     @DisplayName("ID에 해당하는 브랜드를 찾는다")
     void findsBrandById() {
         Brand drG = brand(1L, "닥터지");
-        Brands brands = new Brands(List.of(drG));
+        Brands brands = Brands.from(List.of(drG));
 
         assertThat(brands.findById(1L)).contains(drG);
     }
@@ -49,7 +49,7 @@ class BrandsTest {
     @Test
     @DisplayName("ID에 해당하는 브랜드가 없으면 빈 결과를 반환한다")
     void returnsEmptyForUnknownId() {
-        Brands brands = new Brands(List.of(brand(1L, "닥터지")));
+        Brands brands = Brands.from(List.of(brand(1L, "닥터지")));
 
         assertThat(brands.findById(999L)).isEmpty();
     }
@@ -57,7 +57,7 @@ class BrandsTest {
     @Test
     @DisplayName("같은 ID의 브랜드는 허용하지 않는다")
     void rejectsDuplicateIds() {
-        assertThatThrownBy(() -> new Brands(List.of(brand(1L, "닥터지"), brand(1L, "메디큐브"))))
+        assertThatThrownBy(() -> Brands.from(List.of(brand(1L, "닥터지"), brand(1L, "메디큐브"))))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("브랜드 ID는 중복될 수 없습니다: 1");
     }

@@ -40,8 +40,8 @@ describe("robots", () => {
     expect(robots()).toEqual({
       rules: {
         userAgent: "*",
-        allow: ["/", "/products/"],
-        disallow: ["/api/", "/products"],
+        allow: ["/", "/products/", "/products?excludeCodes="],
+        disallow: ["/api/", "/products", "/share/"],
       },
       sitemap: "https://poudy.site/sitemap.xml",
       host: "https://poudy.site",
@@ -145,6 +145,35 @@ describe("sitemap", () => {
     );
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchProducts).toHaveBeenCalledTimes(1);
+  });
+
+  it("문구가 바뀐 날을 아는 화면에만 lastmod 를 싣는다", async () => {
+    api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
+    api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+
+    const entries = await pageEntries();
+    const lastModifiedOf = (path: string) =>
+      entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
+
+    expect(lastModifiedOf("/")).toBe("2026-09-05");
+    expect(lastModifiedOf("/search/products")).toBe("2026-08-30");
+    expect(lastModifiedOf("/search/ingredients")).toBe("2026-08-30");
+    expect(lastModifiedOf("/categories")).toBeUndefined();
+    expect(lastModifiedOf("/brands")).toBeUndefined();
+    expect(lastModifiedOf("/categories/10")).toBeUndefined();
+    expect(lastModifiedOf("/brands/20")).toBeUndefined();
+  });
+
+  it("사이트맵 XML 이 lastmod 를 스키마 순서대로 적는다", async () => {
+    api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
+    api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+
+    const xml = await (await pagesSitemap()).text();
+
+    expect(xml).toContain(
+      "<url><loc>https://poudy.site/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>",
+    );
+    expect(xml).toContain("<url><loc>https://poudy.site/brands/20</loc><changefreq>weekly</changefreq>");
   });
 
   it("카테고리나 브랜드 API가 실패하면 페이지 사이트맵을 503으로 반환한다", async () => {

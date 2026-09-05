@@ -5,6 +5,7 @@ import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFactory;
@@ -49,10 +50,10 @@ public class ProductRepository {
         JsonDataReader jsonDataReader,
         Brands brands,
         Categories categories,
-        Ingredients ingredients,
+        IngredientCatalog ingredients,
         ProductFactory productFactory
     ) {
-        this.products = new Products(
+        this.products = Products.from(
             jsonDataReader.readList(
                 PRODUCTS_FILE_NAME,
                 Product.class,
@@ -64,7 +65,7 @@ public class ProductRepository {
     private static JacksonModule resolvedWith(
         Brands brands,
         Categories categories,
-        Ingredients ingredients,
+        IngredientCatalog ingredients,
         ProductFactory productFactory
     ) {
         SimpleModule resolution = new SimpleModule("제품 참조 해석");
@@ -131,13 +132,13 @@ public class ProductRepository {
 
     private static Ingredients ingredientsOf(
         JsonNode product,
-        Ingredients ingredients,
+        IngredientCatalog ingredients,
         DeserializationContext context
     )
         throws JacksonException {
         JsonNode references = product.get(INGREDIENTS_FIELD);
         if (references == null || !references.isArray()) {
-            return context.reportInputMismatch(Ingredients.class, "제품 성분 참조는 배열이어야 합니다.");
+            return context.reportInputMismatch(IngredientCatalog.class, "제품 성분 참조는 배열이어야 합니다.");
         }
 
         List<Long> ids = new ArrayList<>();
@@ -151,13 +152,13 @@ public class ProductRepository {
             .toList();
         if (!unresolved.isEmpty()) {
             return context.reportInputMismatch(
-                Ingredients.class,
+                IngredientCatalog.class,
                 "제품이 존재하지 않는 성분 ID를 참조합니다: %s",
                 unresolved
             );
         }
 
-        return ingredients.findAllById(ids);
+        return ingredients.resolveInOrder(ids);
     }
 
     private static ProductVariants variantsOf(JsonNode product, DeserializationContext context)
@@ -256,7 +257,7 @@ public class ProductRepository {
         JsonNode ingredientId = reference.get(INGREDIENT_ID_FIELD);
         if (ingredientId == null || !ingredientId.isIntegralNumber()) {
             return context
-                .reportInputMismatch(Ingredients.class, "제품 성분 참조의 \"%s\" 필드는 정수여야 합니다.", INGREDIENT_ID_FIELD);
+                .reportInputMismatch(IngredientCatalog.class, "제품 성분 참조의 \"%s\" 필드는 정수여야 합니다.", INGREDIENT_ID_FIELD);
         }
 
         return ingredientId.asLong();
