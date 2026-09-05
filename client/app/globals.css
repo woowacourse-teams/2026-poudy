@@ -120,8 +120,13 @@
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
 
-  /* 접수 완료의 체크. 선을 따라 그려지듯 나타난다. */
-  --animate-check-draw: check-draw var(--transition-duration-celebration) var(--ease-out) forwards;
+  /*
+   * 접수 완료의 체크. 선을 따라 그려지듯 나타난다.
+   * 저장 버튼의 불꽃(520ms)보다 길게 둔다. 접수를 마친 자리라 서두를 이유가 없고,
+   * 획이 그려지는 것을 눈으로 좇을 만큼은 되어야 한다.
+   */
+  --transition-duration-check-draw: 1000ms;
+  --animate-check-draw: check-draw var(--transition-duration-check-draw) var(--ease-out) forwards;
 }
 
 /*
