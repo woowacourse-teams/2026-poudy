@@ -85,39 +85,30 @@ describe("ProductCard", () => {
     expect(screen.getByText("낮음")).toBeInTheDocument();
   });
 
-  it("각 제품 이미지는 자기 로딩이 끝나면 자기 스켈레톤만 없앤다", async () => {
+  it("제품 이름과 가격은 그림을 기다리지 않고 바로 읽힌다", () => {
     const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
-    const image = container.querySelector("img");
-    const card = container.querySelector("article");
-    const content = card?.querySelector("[data-product-content]");
+    const content = container.querySelector("[data-product-content]");
 
-    expect(card?.querySelector(".animate-pulse")).toBeInTheDocument();
-    expect(card).toHaveAttribute("data-image-state", "loading");
-    expect(content).toBeInTheDocument();
-
-    fireEvent.load(image!);
-
-    await waitFor(() => expect(card).toHaveAttribute("data-image-state", "loaded"));
+    // 그림에 load 를 주지 않은 첫 그림 상태다.
+    expect(content).toBeVisible();
+    expect(screen.getByText(product.name)).toBeVisible();
+    expect(screen.getByText(product.brand.name)).toBeVisible();
   });
 
-  it("한 제품 이미지의 완료가 다른 제품의 이미지·텍스트 스켈레톤을 해제하지 않는다", async () => {
-    const second = { ...product, id: 2, name: "다이브인 세럼", imageUrl: "/images/products/second.png" };
-    const { container } = render(
-      <>
-        <ProductCard product={product} saved={false} onToggleSave={() => {}} />
-        <ProductCard product={second} saved={false} onToggleSave={() => {}} />
-      </>,
-    );
-    const cards = container.querySelectorAll("article");
-    const images = container.querySelectorAll("img");
+  it("그림이 오기 전에도 그림 자리를 잡아 둔다", () => {
+    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
+    const image = container.querySelector("img");
 
-    expect(cards[0]).toHaveAttribute("data-image-state", "loading");
-    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
+    // 자리를 잡아 두어야 그림이 도착해도 옆의 글이 밀리지 않는다.
+    expect(image?.parentElement).toHaveClass("size-20");
+  });
 
-    fireEvent.load(images[0]);
+  it("그림을 받아 오지 못하면 기본 공병 그림으로 자리를 채운다", async () => {
+    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
+    const image = container.querySelector("img");
 
-    await waitFor(() => expect(cards[0]).toHaveAttribute("data-image-state", "loaded"));
-    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
-    expect(cards[1].querySelector(".animate-pulse")).toBeInTheDocument();
+    fireEvent.error(image!);
+
+    await waitFor(() => expect(container.querySelector("img")?.getAttribute("src")).toContain("placeholder"));
   });
 });

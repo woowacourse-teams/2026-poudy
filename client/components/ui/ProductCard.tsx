@@ -2,12 +2,10 @@
 
 import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
-import { useCallback, useState } from "react";
 
 import { LevelTag } from "./LevelTag";
 import { MatchedText } from "./MatchedText";
-import { ProductCardSkeleton } from "./ProductCardSkeleton";
-import { PRODUCT_PLACEHOLDER, ProductThumbnail } from "./ProductThumbnail";
+import { ProductThumbnail } from "./ProductThumbnail";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
@@ -38,28 +36,15 @@ export function ProductCard({
   keyword = "",
 }: ProductCardProps) {
   const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
-  const imageSource = product.imageUrl || PRODUCT_PLACEHOLDER;
-  // 같은 주소를 쓰는 제품도 서로의 완료 상태를 공유하지 않도록 제품 ID까지 묶는다.
-  const imageLoadKey = `${id}:${imageSource}`;
-  const [settledImage, setSettledImage] = useState<string>();
-  const imageSettled = settledImage === imageLoadKey;
-  const settleImage = useCallback(() => setSettledImage(imageLoadKey), [imageLoadKey]);
 
   return (
-    <article
-      className="relative bg-white"
-      aria-busy={!imageSettled}
-      data-product-card
-      data-image-state={imageSettled ? "loaded" : "loading"}
-      data-product-id={id}
-      suppressHydrationWarning
-    >
+    <article className="bg-white" data-product-card data-product-id={id}>
       <div data-product-content className="flex min-h-27 items-center gap-3 py-3">
         <Link
           href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
           className="flex flex-1 items-center gap-3"
         >
-          <ProductThumbnail imageUrl={product.imageUrl} loading={imageLoading} onSettled={settleImage} />
+          <ProductThumbnail imageUrl={product.imageUrl} loading={imageLoading} />
 
           {/*
           줄 높이를 좁힌 대신 줄 사이는 넉넉히 벌려, 한 줄씩 또렷하게 끊어 읽히게 한다.
@@ -101,8 +86,6 @@ export function ProductCard({
 
         <SaveButton productName={name} saved={saved} onToggle={() => onToggleSave(id)} />
       </div>
-
-      <ProductCardSkeleton overlay />
     </article>
   );
 }

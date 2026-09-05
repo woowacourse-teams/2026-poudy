@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -40,7 +40,7 @@ describe("ProductList 브랜드 시트", () => {
     vi.mocked(track).mockClear();
   });
 
-  it("데이터 대기 스켈레톤이 카드별 스켈레톤으로 이어지고 각 이미지는 독립적으로 열린다", async () => {
+  it("데이터를 기다리는 동안만 스켈레톤을 두고, 카드가 오면 바로 읽힌다", async () => {
     server.use(
       http.get("*/api/products", async () => {
         await delay(100);
@@ -58,17 +58,14 @@ describe("ProductList 브랜드 시트", () => {
     expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
 
     await waitFor(() => expect(container.querySelectorAll("[data-product-card]")).toHaveLength(2));
+
+    // 카드가 오면 자리를 채우던 스켈레톤은 물러난다.
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(0);
+
+    // 그림에 load 를 주지 않아도 제품 이름은 이미 읽힌다.
     const cards = container.querySelectorAll("[data-product-card]");
-    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(2);
-    expect(cards[0]).toHaveAttribute("data-image-state", "loading");
-    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
-
-    fireEvent.load(cards[0].querySelector("img")!);
-    await waitFor(() => expect(cards[0]).toHaveAttribute("data-image-state", "loaded"));
-    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
-
-    fireEvent.load(cards[1].querySelector("img")!);
-    await waitFor(() => expect(cards[1]).toHaveAttribute("data-image-state", "loaded"));
+    expect(cards[0]).toHaveTextContent(products[0].name);
+    expect(cards[1]).toHaveTextContent(products[1].name);
   });
 
   it("조건에 걸린 브랜드만 고를 수 있다", async () => {
