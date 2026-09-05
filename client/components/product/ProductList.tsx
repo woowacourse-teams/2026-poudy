@@ -32,8 +32,8 @@ type ProductListProps = {
 /**
  * S04 조건 일치 제품. 조건은 URL 이 들고, 목록은 페이지를 이어 붙인다.
  *
- * 제품 데이터가 도착하면 행 전체를 실제 내용으로 그리고, 각 이미지만 자기 로딩 상태를
- * `ProductThumbnail`에서 따로 표시한다.
+ * 제품 데이터가 도착하면 실제 내용을 렌더링하고, 각 카드가 자기 이미지의 로딩 완료에
+ * 맞춰 스켈레톤을 독립적으로 해제한다.
  */
 export function ProductList({
   excludeCodes,

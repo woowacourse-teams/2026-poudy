@@ -4,6 +4,7 @@ import { Suspense, cache } from "react";
 
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
+import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
@@ -120,8 +121,8 @@ export default function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
         <BrandSummary params={props.params} />
       </Suspense>
 
-      {/* 제품군 전체를 가리지 않는다. 행이 도착한 뒤 각 이미지만 자기 스켈레톤을 쓴다. */}
-      <Suspense fallback={null}>
+      {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
+      <Suspense fallback={<ProductListSkeleton hiddenChips={["brand"]} />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </>

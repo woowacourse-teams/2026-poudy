@@ -1,9 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "./ProductList";
@@ -26,7 +26,7 @@ const openBrandSheet = async () => {
   render(<ProductList excludeCodes={excludeCodes} />);
 
   // 목록 응답이 도착해 조건에 걸린 브랜드를 알게 될 때까지 기다린다.
-  await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("main")).toBeInTheDocument());
 
   await userEvent.click(screen.getByRole("button", { name: /브랜드/ }));
 
@@ -38,6 +38,37 @@ describe("ProductList 브랜드 시트", () => {
   beforeEach(() => {
     searchParams.current = new URLSearchParams();
     vi.mocked(track).mockClear();
+  });
+
+  it("데이터 대기 스켈레톤이 카드별 스켈레톤으로 이어지고 각 이미지는 독립적으로 열린다", async () => {
+    server.use(
+      http.get("*/api/products", async () => {
+        await delay(100);
+        return HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        });
+      }),
+    );
+
+    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(20);
+    expect(container.querySelectorAll("[data-product-card]")).toHaveLength(0);
+    expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
+
+    await waitFor(() => expect(container.querySelectorAll("[data-product-card]")).toHaveLength(2));
+    const cards = container.querySelectorAll("[data-product-card]");
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(2);
+    expect(cards[0]).toHaveAttribute("data-image-state", "loading");
+    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
+
+    fireEvent.load(cards[0].querySelector("img")!);
+    await waitFor(() => expect(cards[0]).toHaveAttribute("data-image-state", "loaded"));
+    expect(cards[1]).toHaveAttribute("data-image-state", "loading");
+
+    fireEvent.load(cards[1].querySelector("img")!);
+    await waitFor(() => expect(cards[1]).toHaveAttribute("data-image-state", "loaded"));
   });
 
   it("조건에 걸린 브랜드만 고를 수 있다", async () => {
