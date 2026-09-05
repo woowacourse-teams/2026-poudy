@@ -25,7 +25,7 @@ export default function TermsPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 이용약관`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate.terms}
+        revisionEffectiveDate={OPERATOR.revisionEffectiveDate.terms}
       >
         <LegalArticle heading="제1조 목적">
           <p>
@@ -152,7 +152,10 @@ export default function TermsPage() {
         <LegalArticle heading="부칙">
           <LegalList>
             <li>{OPERATOR.effectiveDate} — 제정</li>
-            <li>{OPERATOR.lastRevisedDate.terms} — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호 조정</li>
+            <li>
+              {OPERATOR.revisionEffectiveDate.terms} 시행 예정 — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호
+              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정
+            </li>
           </LegalList>
         </LegalArticle>
       </LegalDocument>

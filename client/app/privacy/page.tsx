@@ -121,7 +121,7 @@ export default function PrivacyPage() {
       <LegalDocument
         title={`${OPERATOR.serviceName} 개인정보 처리방침`}
         effectiveDate={OPERATOR.effectiveDate}
-        lastRevisedDate={OPERATOR.lastRevisedDate.privacy}
+        revisionEffectiveDate={OPERATOR.revisionEffectiveDate.privacy}
       >
         <p>
           {OPERATOR.name}(이하 &quot;팀&quot;)은 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와
@@ -382,8 +382,10 @@ export default function PrivacyPage() {
               기간 추가. 문의 첨부 이미지와 Discord 알림에 따라 수집 항목, 위탁과 국외 이전 추가
             </li>
             <li>
-              {OPERATOR.lastRevisedDate.privacy} — 앱에서 쓸 수 없는 추적 거부 방법을 지우고, 앱으로 이용할 때의 거부
-              방법 추가. 문의 첨부 이미지의 HEIC 형식과 문의를 연 화면의 경로를 수집 항목에 반영
+              {OPERATOR.revisionEffectiveDate.privacy} 시행 예정 — 앱에서 쓸 수 없는 추적 거부 방법을 지우고, 앱으로
+              이용할 때의 거부 방법 추가. 문의 첨부 이미지의 HEIC 형식과 문의를 연 화면의 경로를 수집 항목에 반영.
+              저장함 정보의 전송 여부를 실제 동작에 맞게 정정하고, 받지 않는 이메일을 수집 항목에서 삭제. 추적 거부
+              방법을 이 사이트의 쿠키 차단 기준으로 고치고, 국외 이전에 Google 연락처 추가
             </li>
           </LegalList>
         </LegalArticle>
