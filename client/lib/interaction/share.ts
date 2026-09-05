@@ -1,4 +1,5 @@
 import { readAppInfo } from "@/lib/analytics/app-info";
+import { addShareMarker } from "@/lib/navigation/open-app";
 
 const SHARE_MESSAGE_PREFIX = "poudy:share:";
 
@@ -27,7 +28,9 @@ const canAppShare = (): boolean => {
 export type ShareResult = "shared" | "copied" | "unavailable";
 
 /** WebView 에는 Web Share API 가 없어 앱에 넘긴다. */
-export const sharePage = async (url: string): Promise<ShareResult> => {
+export const sharePage = async (webUrl: string): Promise<ShareResult> => {
+  const url = addShareMarker(webUrl);
+
   if (canAppShare()) {
     window.ReactNativeWebView?.postMessage(`${SHARE_MESSAGE_PREFIX}${url}`);
 

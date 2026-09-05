@@ -10,9 +10,8 @@ export function OpenInAppRedirect() {
     const isPoudyApp = readAppInfo(window.__POUDY_APP__).is_app || Boolean(window.ReactNativeWebView);
     const plan = planAppOpen(window.location.href, navigator.userAgent, isPoudyApp);
 
-    if (plan.type === "clean-fallback") {
+    if (plan.type !== "none") {
       window.history.replaceState(window.history.state, "", plan.webUrl);
-      return;
     }
 
     if (plan.type === "open-app") {
