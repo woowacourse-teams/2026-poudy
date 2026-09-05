@@ -40,7 +40,7 @@ describe("robots", () => {
     expect(robots()).toEqual({
       rules: {
         userAgent: "*",
-        allow: ["/", "/products/"],
+        allow: ["/", "/products/", "/products?excludeCodes="],
         disallow: ["/api/", "/products", "/share/"],
       },
       sitemap: "https://poudy.site/sitemap.xml",
