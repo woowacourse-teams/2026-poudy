@@ -44,10 +44,10 @@ describe("BottomNavigation 앱 햅틱", () => {
 });
 
 describe("BottomNavigation 배치", () => {
-  it("콘텐츠가 짧아도 화면 아래에 놓일 수 있도록 남은 세로 공간을 앞쪽 여백으로 채운다", () => {
+  it("본문 높이와 관계없이 화면 하단에 고정한다", () => {
     render(<BottomNavigation />);
 
-    expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toHaveClass("mt-auto", "shrink-0");
+    expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toHaveClass("fixed", "bottom-0");
   });
 
   it("상품 카드 스켈레톤보다 위에 놓이고 고정 헤더와 시트보다는 아래에 놓인다", () => {

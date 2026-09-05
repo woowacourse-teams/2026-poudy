@@ -158,7 +158,7 @@ export function SavedPreview() {
       {visible.length === 0 && !loading ? (
         <EmptyNotice
           icon="bookmark"
-          image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170 }}
+          image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170, loading: "eager" }}
           title="아직 저장한 제품이 없어요"
           className="min-h-[240px]"
         />
