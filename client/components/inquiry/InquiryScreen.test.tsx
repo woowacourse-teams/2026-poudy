@@ -63,13 +63,13 @@ describe("문의를 연 화면의 경로", () => {
     await waitFor(() => expect(sentPath()).toBe("/"));
   });
 
-  it("검색 조건이 함께 실려 가지 않는다", async () => {
+  it("어떤 조건을 걸고 있었는지 함께 보낸다", async () => {
     const user = userEvent.setup();
     renderWith(toOriginPath("/products?include=1&exclude=2"));
 
     await submit(user);
 
-    await waitFor(() => expect(sentPath()).toBe("/products"));
+    await waitFor(() => expect(sentPath()).toBe("/products?include=1&exclude=2"));
   });
 });
 

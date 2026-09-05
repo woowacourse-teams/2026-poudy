@@ -112,7 +112,7 @@ export function InquiryForm({ originPath, fixed }: { readonly originPath: string
     }
   };
 
-  if (done) return <InquiryDone description={DONE_DESCRIPTION} />;
+  if (done) return <InquiryDone description={DONE_DESCRIPTION} originPath={originPath} />;
 
   const label = fixed?.fieldLabel ?? (choice ? INQUIRY_COPY[choice].fieldLabel : "");
   const placeholder = fixed?.placeholder ?? (choice ? INQUIRY_COPY[choice].placeholder : "");

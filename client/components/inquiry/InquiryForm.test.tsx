@@ -21,7 +21,8 @@ vi.mock("@/lib/api/feedback", async (importOriginal) => ({
 }));
 
 const back = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ back }) }));
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ back, replace }) }));
 
 const CONTENT = "열 자가 넘는 문의 내용입니다";
 
@@ -225,6 +226,31 @@ describe("전송 동작", () => {
     await screen.findByText("문의를 접수했어요");
 
     expect(screen.queryByText(/답변드릴게요|빠른 시일/)).not.toBeInTheDocument();
+  });
+});
+
+describe("접수 완료에서 돌아가기", () => {
+  const finish = async (originPath: string) => {
+    const user = userEvent.setup();
+    render(<InquiryForm originPath={originPath} />);
+    await chooseBug(user);
+    await user.type(screen.getByLabelText(/문의 내용/), CONTENT);
+    await user.click(submitButton());
+    await screen.findByText("문의를 접수했어요");
+    await user.click(screen.getByRole("button", { name: "확인" }));
+  };
+
+  it("문의를 연 화면이 있으면 그곳으로 돌아간다", async () => {
+    await finish("/products/123");
+
+    expect(replace).toHaveBeenCalledWith("/products/123");
+    expect(back).not.toHaveBeenCalled();
+  });
+
+  it("문의를 연 화면이 없으면 홈으로 보낸다", async () => {
+    await finish("/inquiry");
+
+    expect(replace).toHaveBeenCalledWith("/");
   });
 });
 

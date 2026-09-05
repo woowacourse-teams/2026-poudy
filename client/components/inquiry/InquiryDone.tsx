@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
+import { hasInSiteHistory } from "@/lib/navigation/history-depth";
+
 /*
  * 체크만 따로 그린다. 공용 Icon 은 스프라이트를 <use> 로 가리켜 안쪽 path 에
  * pathLength 를 줄 수 없다. 획이 그려지는 움직임은 이 화면에만 쓴다.
@@ -9,8 +11,13 @@ import { useRouter } from "next/navigation";
 function DrawnCheck() {
   return (
     <svg
-      width={30}
-      height={30}
+      width={38}
+      height={38}
+      /*
+       * 시각 보정. 체크는 아래로 뻗은 획이 짧고 위로 올라가는 획이 길어,
+       * 자를 대고 가운데에 두면 위로 떠 보인다. 조금 내려 눈에 맞춘다.
+       */
+      className="translate-y-[1.5px]"
       viewBox="0 0 24 24"
       aria-hidden="true"
       focusable="false"
@@ -36,8 +43,39 @@ function DrawnCheck() {
  * 접수만 됐다는 사실을 전한다. 이 API 들은 답장을 돌려주지 않으므로
  * 답변이나 반영 시점을 약속하는 문구를 쓰지 않는다.
  */
-export function InquiryDone({ description }: { readonly description: string }) {
+export function InquiryDone({
+  description,
+  originPath,
+}: {
+  readonly description: string;
+  /** 문의를 연 화면의 경로. 돌아갈 곳을 정할 때 먼저 본다. */
+  readonly originPath?: string;
+}) {
   const router = useRouter();
+
+  /*
+   * 돌아갈 곳을 세 단계로 고른다.
+   *
+   * originPath 를 먼저 보는 까닭은 이 값이 `이 문의를 어디서 시작했는가` 를 그대로
+   * 담고 있기 때문이다. 방문 기록은 문의 화면에 들어오기까지 거친 자리를 가리키므로,
+   * 중간에 다른 화면을 들렀다면 시작한 곳과 어긋난다.
+   *
+   * 기록을 늘리지 않도록 replace 로 옮긴다. 옮긴 뒤 뒤로 가도 접수 화면으로
+   * 돌아오지 않는다.
+   */
+  const goBack = () => {
+    if (originPath && originPath !== "/inquiry") {
+      router.replace(originPath);
+      return;
+    }
+
+    if (hasInSiteHistory()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/");
+  };
 
   return (
     <>
@@ -53,7 +91,7 @@ export function InquiryDone({ description }: { readonly description: string }) {
       <div className="sticky bottom-0 bg-background px-8 pb-6 pt-3">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={goBack}
           className="w-full rounded-xl bg-action py-4 text-[14px] font-bold text-action-text"
         >
           확인
