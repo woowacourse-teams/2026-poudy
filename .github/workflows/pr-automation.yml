@@ -30,6 +30,11 @@ jobs:
 
   type-label:
     name: 제목 타입 레이블
+    # 경로 레이블 잡이 sync-labels 로 레이블 집합을 읽고 통째로 다시 쓴다.
+    # 나란히 돌면 그 읽기와 쓰기 사이에 붙인 타입 레이블이 지워진다.
+    # always 는 label 을 건너뛰는 edited 이벤트에서도 이 잡을 돌리기 위한 것이다.
+    needs: label
+    if: always()
     concurrency:
       group: ${{ github.workflow }}-type-${{ github.event.pull_request.number }}
       cancel-in-progress: true

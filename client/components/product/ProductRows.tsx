@@ -4,6 +4,7 @@ import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useEffect, useRef } from "react";
 
 import { chipsOf } from "./product-chips";
+import { ProductRowsSkeleton } from "./ProductListSkeleton";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -113,6 +114,10 @@ export function ProductRows({
   useEffect(() => {
     if (empty) track("empty_result_shown", { surface, condition_count: countConditions(filter) });
   }, [empty, surface, filter]);
+
+  // 서버 응답이 없거나 조건을 바꿔 첫 장을 기다릴 때도 카드 자리를 유지한다.
+  // 데이터가 오면 각 ProductCard가 자기 이미지 완료 상태로 독립적으로 열린다.
+  if (loading && items.length === 0) return <ProductRowsSkeleton />;
 
   return (
     <>
