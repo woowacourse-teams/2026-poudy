@@ -117,20 +117,26 @@ sendFeedback({ type, content, originPath, imageIds });
 
 ## 파일 구성
 
-| 파일                                   | 역할                                                 |
-| -------------------------------------- | ---------------------------------------------------- |
-| `app/inquiry/page.tsx`                 | 진입점이며 `from`을 읽습니다                         |
-| `components/inquiry/InquiryForm.tsx`   | 작성 화면 전체를 구성합니다                          |
-| `components/inquiry/TypeField.tsx`     | 유형 버튼 네 개를 보여 줍니다                        |
-| `components/inquiry/ContentField.tsx`  | 문의 내용 입력과 글자 수를 담당합니다                |
-| `components/inquiry/ImageField.tsx`    | 이미지 첨부와 업로드 상태를 보여 줍니다              |
-| `components/inquiry/ImageViewer.tsx`   | S13d 화면이며 첨부 이미지를 전체화면으로 보여 줍니다 |
-| `components/inquiry/ProductFields.tsx` | 제품명과 브랜드 입력을 담당합니다                    |
-| `components/inquiry/TargetProduct.tsx` | S13e의 정정 대상 제품을 보여 줍니다                  |
-| `components/inquiry/InquiryDone.tsx`   | S13c 접수 완료 화면입니다                            |
-| `components/inquiry/inquiry-type.ts`   | 유형별 문구와 화면 구성을 한곳에 모읍니다            |
-| `lib/hooks/useImageUpload.ts`          | 첨부한 이미지의 업로드 상태를 관리합니다             |
-| `lib/api/feedback.ts`                  | 세 가지 엔드포인트를 호출합니다                      |
+| 파일                                     | 역할                                                 |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `app/inquiry/page.tsx`                   | 진입점이며 `from`을 읽습니다                         |
+| `components/inquiry/InquiryForm.tsx`     | 작성 화면 전체를 구성합니다                          |
+| `components/inquiry/TypeField.tsx`       | 유형 버튼 네 개를 보여 줍니다                        |
+| `components/inquiry/ContentField.tsx`    | 문의 내용 입력과 글자 수를 담당합니다                |
+| `components/inquiry/ImageField.tsx`      | 이미지 첨부와 업로드 상태를 보여 줍니다              |
+| `components/inquiry/ImageViewer.tsx`     | S13d 화면이며 첨부 이미지를 전체화면으로 보여 줍니다 |
+| `components/inquiry/ProductFields.tsx`   | 제품명과 브랜드 입력을 담당합니다                    |
+| `components/inquiry/TargetProduct.tsx`   | S13e의 정정 대상 제품을 보여 줍니다                  |
+| `components/inquiry/InquiryDone.tsx`     | S13c 접수 완료 화면입니다                            |
+| `components/inquiry/InquiryScreen.tsx`   | 일반 문의 화면을 구성합니다                          |
+| `components/inquiry/FieldLabel.tsx`      | 항목 이름과 필수 표시를 그립니다                     |
+| `components/inquiry/FieldMessage.tsx`    | 입력 칸 아래에 잘못이나 설명을 보여 줍니다           |
+| `components/inquiry/SensitiveNotice.tsx` | 민감한 정보 안내를 보여 줍니다                       |
+| `components/inquiry/inquiry-type.ts`     | 유형별 문구와 화면 구성을 한곳에 모읍니다            |
+| `lib/hooks/useImageUpload.ts`            | 첨부한 이미지의 업로드 상태를 관리합니다             |
+| `lib/hooks/useFieldError.ts`             | 입력이 멈춘 뒤에 잘못을 알립니다                     |
+| `lib/domain/inquiry-validation.ts`       | 입력 길이 제약을 검사합니다                          |
+| `lib/api/feedback.ts`                    | 세 가지 엔드포인트를 호출합니다                      |
 
 유형별로 달라지는 문구와 구성은 `inquiry-type.ts`에 모아 두고 화면에서는 그 값을 읽어 그립니다. 유형이 다섯 갈래여서 화면마다 조건문으로 흩어 두면 어느 유형에서 무엇이 보이는지 파악하기 어렵습니다.
 
@@ -187,6 +193,16 @@ sendFeedback({ type, content, originPath, imageIds });
 
 서버는 파일 이름이나 선언된 형식이 아니라 실제 바이트로 판별합니다. 클라이언트의 `accept` 와 형식 검사는 사용자가 엉뚱한 파일을 고르는 것을 미리 막아 주는 장치일 뿐, 서버 검증을 대신하지 않습니다.
 
+### 입력이 멈춘 뒤에 알립니다
+
+잘못은 글자마다 알리지 않고 입력이 멈춘 뒤에 알립니다. 열 자를 채우는 동안 붉은 글씨가 따라다니면 재촉받는 느낌을 줍니다. 기존 `useDebouncedValue`를 그대로 씁니다.
+
+아직 아무것도 적지 않은 칸은 잘못으로 보지 않습니다. 화면에 들어오자마자 붉은 글씨가 깔리면 처음 온 사람에게는 자기가 뭘 잘못한 것처럼 보입니다.
+
+잘못이 있으면 설명 자리를 대신 씁니다. 제품명 칸은 평소 `용량이나 버전이 있다면 함께 적어주세요`를 보여 주다가 잘못이 생기면 그 자리에 잘못을 보여 줍니다. 둘을 함께 쌓지 않습니다.
+
+자리는 미리 잡아 둡니다. 잘못이 나타나도 아래 항목이 밀리지 않습니다. 다만 비어 있을 때 한 줄이 그대로 남으면 아래와 사이가 유독 벌어지므로, 자리의 절반만 흐름에 두고 나머지는 아래 여백에 겹칩니다.
+
 ## 업로드 상태
 
 이미지 업로드는 문의 전송과 별개로 진행되므로, 업로드가 끝나지 않은 상태에서 전송하면 `imageIds`가 빠진 채로 접수됩니다. 이를 막기 위해 업로드하는 동안 화면을 다음과 같이 다룹니다.
@@ -226,7 +242,7 @@ sendFeedback({ type, content, originPath, imageIds });
 
 `BUG_REPORT`와 `DATA_CORRECTION`의 문구는 디자인 S13a와 S13e에 있는 것을 그대로 씁니다. `IMPROVEMENT`와 `OTHER`는 디자인에 없어서 같은 기준으로 새로 적었으므로, 디자인이 나오면 그에 맞춥니다.
 
-제품 등록 요청은 `POST /api/product-requests`를 호출하며 이미지를 첨부하지 않습니다. 제품명과 브랜드를 각각 한 줄 입력으로 받고, 브랜드에는 `선택` 표시를 붙입니다.
+제품 등록 요청은 `POST /api/product-requests`를 호출하며 이미지를 첨부하지 않습니다. 제품명과 브랜드를 각각 한 줄 입력으로 받습니다.
 
 민감한 정보에 대한 안내는 자유 입력을 받는 화면에 공통으로 보여 줍니다. 제품 등록 요청 화면에는 대신 제품 정보 안내를 둡니다.
 
@@ -250,7 +266,7 @@ POST /api/product-requests → 202
 
 ### 떠 있는 문의하기 버튼
 
-화면 오른쪽 아래에 원형 버튼을 띄웁니다. 스크롤해도 자리를 지키며, `/inquiry` 한 곳을 뺀 모든 화면에 나타납니다. 문의는 어느 화면에서든 생기므로 화면을 가리지 않습니다.
+화면 오른쪽 아래에 원형 버튼을 띄웁니다. 스크롤해도 자리를 지키며, 문의하기 화면을 뺀 모든 화면에 나타납니다. 문의는 어느 화면에서든 생기므로 화면을 가리지 않습니다.
 
 `components/ui/BottomNavigationSlot.tsx`와 같은 방식으로 만듭니다. 경로를 보고 보여 줄지 판단하는 컴포넌트를 `app/layout.tsx`에 두며, 하단 내비게이션 옆에 나란히 놓습니다.
 
@@ -260,11 +276,7 @@ POST /api/product-requests → 202
 <InquiryButtonSlot />
 ```
 
-`/inquiry`에서는 숨깁니다. 이미 그 화면에 있는데 같은 곳으로 가는 버튼이 떠 있을 이유가 없습니다.
-
-`/inquiry/products/[productId]`에서는 보여 줍니다. 이 화면은 제품 정정만 받으므로 다른 문의를 하려는 사람에게는 나갈 길이 필요합니다.
-
-버튼을 누르면 쓰던 제보 내용이 사라집니다. 초안을 저장하지 않기 때문입니다. 그래도 길을 막지 않는 편이 낫습니다. 제품 정정 화면까지 온 사용자는 대개 그 일을 하러 온 것이고, 중간에 다른 문의로 갈아타는 경우는 드뭅니다.
+`/inquiry`로 시작하는 경로에서는 모두 숨깁니다. 제품 정보 정정 화면도 포함합니다. 이미 문의하기 안에 있는데 같은 곳으로 들어가는 버튼을 둘 이유가 없고, 버튼을 누르면 쓰던 내용이 사라지기 때문입니다.
 
 ### 하단 내비게이션과 겹치지 않게 둡니다
 
@@ -311,9 +323,11 @@ POST /api/product-requests → 202
 
 ### 디자인
 
-떠 있는 버튼은 v1.pen에 아직 없습니다. 기존 변수를 써서 구현하되, 디자인이 나오면 그에 맞춥니다.
+떠 있는 버튼은 v1.pen에 아직 없어 기존 변수로 구현했습니다. 디자인이 나오면 그에 맞춥니다.
 
-배경은 `$ui-action`, 아이콘은 `$ui-action-text`를 쓰고 원형으로 둡니다. 화면을 가리는 요소이므로 크기를 키우지 않습니다.
+배경은 `$ui-brand-soft`, 아이콘은 `$ui-brand`를 쓰고 원형으로 둡니다. 배경이 연해 흰 본문에 묻히므로 퍼짐 없는 1px 그림자를 겹쳐 테두리를 겸합니다. `--shadow-app-frame`이 쓰는 방식과 같습니다.
+
+아이콘은 말풍선 안에 물음표를 둔 모양입니다. 봉투는 받은 편지함으로 읽혀 답장이 온 것처럼 보이고, 홈 하단의 메일 보내기 링크와도 겹칩니다.
 
 화면 낭독기를 쓰는 사람을 위해 버튼에 이름을 붙입니다.
 
@@ -402,7 +416,7 @@ POST /api/product-requests → 202
 
 - 문의하기 화면이 아니면 버튼을 보여 준다
 - `/inquiry`에서는 버튼을 보여 주지 않는다
-- `/inquiry/products/123`에서는 버튼을 보여 준다
+- `/inquiry/products/123`에서도 버튼을 보여 주지 않는다
 - 누르면 누른 화면의 경로를 `from`에 담아 이동한다
 - 누른 화면의 쿼리 파라미터는 `from`에 담지 않는다
 - 하단 내비게이션이 있는 화면에서는 그 위로 올라간다
@@ -450,6 +464,8 @@ POST /api/product-requests → 202
 | `lib/domain/origin-path.ts`    | 문의를 연 화면의 경로를 다듬습니다            |
 | `lib/hooks/usePreviewUrls.ts`  | 미리보기 주소를 만들고 되돌려줍니다           |
 
-### 남은 확인 사항
+### 빌드는 API 주소가 있어야 지나갑니다
 
-`/brands` 를 미리 만드는 단계는 API 서버가 있어야 지나갑니다. 이 worktree 의 `.env.local` 에는 주소가 없어 `pnpm run build` 가 거기서 멈추는데, 문의하기를 붙이기 전에도 같은 자리에서 멈춥니다. 주소를 주면 두 경로 모두 정상으로 만들어집니다.
+`next build` 는 `/brands` 처럼 미리 만드는 화면을 그리며 서버에서 API 를 부릅니다. MSW 는 서버가 뜰 때 `instrumentation.ts` 로 붙는데, 빌드의 사전 생성은 서버가 아니라 빌드 워커라 그 함수가 불리지 않습니다. 그래서 목이 없고 실제 요청이 나갑니다.
+
+`client/.env.example` 이 이 사정을 알고 `NEXT_PUBLIC_API_BASE_URL` 에 스테이징 주소를 적어 두었습니다. 사본이 오래돼 이 값이 비어 있으면 빌드가 멈추므로, 그럴 때는 `.env.example` 을 다시 복사합니다.
