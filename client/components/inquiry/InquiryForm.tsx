@@ -19,16 +19,20 @@ import { useImageUpload } from "@/lib/hooks/useImageUpload";
 
 const DONE_DESCRIPTION = "보내주신 내용을 확인해 반영할게요.";
 
+/*
+ * 문구는 한 줄에 들어가는 길이로 맞춘다. 폭이 좁아 서른 자를 넘기면 두 줄이 되는데,
+ * 버튼 바로 위라 줄 수가 달라지면 버튼이 오르내려 눌리는 자리가 흔들린다.
+ */
 const messageOf = (error: unknown): string => {
   if (error instanceof ApiError && error.status === 429) {
-    return "요청이 잦아 접수하지 못했어요. 잠시 뒤 다시 시도해주세요.";
+    return "요청이 잦아요. 잠시 뒤 다시 시도해주세요.";
   }
 
   if (error instanceof ApiError && error.status === 400) {
     return "입력한 내용을 다시 확인해주세요.";
   }
 
-  return "문의를 접수하지 못했어요. 잠시 뒤 다시 시도해주세요.";
+  return "접수하지 못했어요. 잠시 뒤 다시 시도해주세요.";
 };
 
 type FixedType = {
@@ -159,15 +163,19 @@ export function InquiryForm({ originPath, fixed }: { readonly originPath: string
             <SensitiveNotice />
           </>
         ) : null}
-
-        {failure ? (
-          <p role="alert" className="text-[13px] text-brand">
-            {failure}
-          </p>
-        ) : null}
       </div>
 
       <div className="sticky bottom-0 bg-background px-8 pb-6 pt-3">
+        {/*
+          실패는 누른 버튼 바로 위에 둔다. 본문 끝에 두면 항목이 적은 화면에서
+          버튼과 멀리 떨어져, 눌러 놓고도 왜 안 됐는지 눈에 들어오지 않는다.
+        */}
+        {failure ? (
+          <p role="alert" className="pb-2 text-center text-[13px] text-brand">
+            {failure}
+          </p>
+        ) : null}
+
         {/* 올리는 중이면 imageIds 가 빠진 채로 접수되므로 끝날 때까지 막는다. */}
         {images.uploading ? (
           <p className="pb-2 text-center text-[11px] text-text-secondary">이미지를 올리는 중이에요.</p>
