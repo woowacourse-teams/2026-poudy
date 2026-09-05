@@ -16,11 +16,30 @@ const MAX_PRODUCT_PAGES = SITEMAP_URL_LIMIT / PRODUCT_PAGE_SIZE;
 const INGREDIENT_PAGE_SIZE = 100;
 const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
 
-const entry = (path: string, changeFrequency: "daily" | "weekly" | "monthly", priority: number) => ({
-  url: absoluteUrl(path),
-  changeFrequency,
-  priority,
-});
+/**
+ * 화면이 검색 결과에 내보이는 것 - 본문 문구, 제목, 설명 - 이 마지막으로 바뀐 날.
+ * 그 화면의 문구를 고칠 때 함께 고친다.
+ *
+ * 배포 시각을 쓰지 않는다. 문구를 건드리지 않은 배포까지 바뀌었다고 말하게 되고, 값이
+ * 실제보다 새로우면 검색 엔진이 사이트맵의 lastmod 를 통째로 믿지 않는다.
+ *
+ * 목록이 API 에서 오는 화면은 언제 바뀌었는지 여기서 알 수 없어 담지 않는다.
+ */
+const CONTENT_UPDATED_AT: Readonly<Record<string, string>> = {
+  "/": "2026-09-05",
+  "/search/products": "2026-08-30",
+  "/search/ingredients": "2026-08-30",
+};
+
+type ChangeFrequency = "daily" | "weekly" | "monthly";
+
+const entry = (path: string, changeFrequency: ChangeFrequency, priority: number): MetadataRoute.Sitemap[number] => {
+  const url = absoluteUrl(path);
+  const lastModified = CONTENT_UPDATED_AT[path];
+  if (!lastModified) return { url, changeFrequency, priority };
+
+  return { url, changeFrequency, priority, lastModified };
+};
 
 export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const entries: MetadataRoute.Sitemap = [
@@ -71,14 +90,24 @@ export const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
   throw new Error("성분 사이트맵 pagination이 500페이지 안에 종료되지 않았습니다.");
 };
 
+const lastmodTag = (lastModified: MetadataRoute.Sitemap[number]["lastModified"]): string =>
+  optionalTag("lastmod", lastModified?.toString());
+
 const escapeXml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
+const optionalTag = (name: string, value: string | number | undefined): string => {
+  if (value === undefined) return "";
+
+  return `<${name}>${value}</${name}>`;
+};
+
+/** 사이트맵 스키마가 정한 자식 순서는 loc, lastmod, changefreq, priority 다. */
 export const sitemapXml = (entries: MetadataRoute.Sitemap): string => {
   const urls = entries
     .map(
-      ({ url, changeFrequency, priority }) =>
-        `<url><loc>${escapeXml(url)}</loc>${changeFrequency ? `<changefreq>${changeFrequency}</changefreq>` : ""}${priority === undefined ? "" : `<priority>${priority}</priority>`}</url>`,
+      ({ url, lastModified, changeFrequency, priority }) =>
+        `<url><loc>${escapeXml(url)}</loc>${lastmodTag(lastModified)}${optionalTag("changefreq", changeFrequency)}${optionalTag("priority", priority)}</url>`,
     )
     .join("");
 

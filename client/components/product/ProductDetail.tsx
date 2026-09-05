@@ -62,7 +62,7 @@ export function ProductDetail({
             >
               {product.brand.name}
             </Link>
-            <h2 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h2>
+            <h1 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h1>
 
             <div className="flex gap-2">
               <LevelTag kind="moisture" level={product.moistureLevel} variant="pill" />

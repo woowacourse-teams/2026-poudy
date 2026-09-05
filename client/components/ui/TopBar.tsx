@@ -17,6 +17,11 @@ type TopBarProps = {
   readonly showBack?: boolean;
   /** 제목 앞에 로고를 둘지. 홈처럼 서비스를 대표하는 화면에서 쓴다. */
   readonly showLogo?: boolean;
+  /**
+   * 바 제목을 문서의 대표 제목으로 둘지. 본문에 진짜 제목이 있는 화면은 `p` 로 내린다.
+   * 그리는 모양은 그대로고 문서 구조만 바뀐다.
+   */
+  readonly titleAs?: "h1" | "p";
   readonly right?: React.ReactNode;
 };
 
@@ -67,7 +72,9 @@ function BackControl({ iconSize, className }: { readonly iconSize: number; reado
   );
 }
 
-export function TopBar({ title, variant, right, showBack = false, showLogo = false }: TopBarProps) {
+export function TopBar({ title, variant, right, showBack = false, showLogo = false, titleAs = "h1" }: TopBarProps) {
+  const Title = titleAs;
+
   if (variant === "root") {
     return (
       <header className="flex h-14 items-center gap-1 px-1">
@@ -93,7 +100,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
 
           Foldit 은 글자에 색이 박힌 글꼴이라 color 대신 팔레트로 색을 맞춘다.
         */}
-        <h1
+        <Title
           className={
             showLogo
               ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
@@ -102,7 +109,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
         >
           {showLogo ? <span className="sr-only">P</span> : null}
           {title}
-        </h1>
+        </Title>
         {right}
       </header>
     );
@@ -112,7 +119,7 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
     <header className="flex h-[44px] items-center px-1">
       <BackControl iconSize={20} className="flex size-11 items-center justify-center" />
 
-      <h1 className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</h1>
+      <Title className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</Title>
 
       <span className="flex size-11 items-center justify-center">{right}</span>
     </header>

@@ -147,14 +147,14 @@ describe("공유 메타데이터", () => {
       other: { "naver-site-verification": "f61dfe971733b0d1d2e8b1a8e3cda559b5b62264" },
     });
     expect(rootMetadata.openGraph).toMatchObject({
-      title: "Poudy",
+      title: SITE_TITLE,
       description: SITE_DESCRIPTION,
       type: "website",
       locale: "ko_KR",
     });
     expect(rootMetadata.twitter).toMatchObject({
       card: "summary_large_image",
-      title: "Poudy",
+      title: SITE_TITLE,
       description: SITE_DESCRIPTION,
     });
     expect(rootImageAlt).toBe(SITE_DESCRIPTION);

@@ -18,7 +18,7 @@ const defaultRobots = (): Robots => {
 const SHARE_IMAGE = "/opengraph-image";
 
 const openGraph: Metadata["openGraph"] = {
-  title: SITE_NAME,
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   type: "website",
   locale: "ko_KR",
@@ -28,7 +28,7 @@ const openGraph: Metadata["openGraph"] = {
 
 const twitter: Metadata["twitter"] = {
   card: "summary_large_image",
-  title: SITE_NAME,
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   images: [SHARE_IMAGE],
 };
