@@ -62,8 +62,11 @@ function Thumbnail({
         </button>
       )}
 
+      {/* 실패는 썸네일 안에 겹쳐 둔다. 아래에 두면 자리를 차지해 목록이 들쭉날쭉해진다. */}
       {image.status === "failed" ? (
-        <span className="absolute inset-x-0 -bottom-4 text-center text-[10px] text-brand">실패</span>
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-xl bg-[#202124CC] py-0.5 text-center text-[10px] text-white">
+          실패
+        </span>
       ) : null}
     </li>
   );
@@ -97,7 +100,8 @@ export function ImageField({
             onClick={() => inputRef.current?.click()}
             disabled={full}
             aria-label="이미지 첨부"
-            className="flex size-16 items-center justify-center rounded-xl border border-border bg-background text-text-secondary disabled:opacity-40"
+            /* 누름과 올림에 반응한다. 저장 버튼이 쓰는 방식과 같게 둔다. */
+            className="flex size-16 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-text-secondary transition duration-press ease-out hover:border-text-secondary hover:bg-surface-subtle active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-background disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             <Icon name="plus" size={20} />
           </button>
