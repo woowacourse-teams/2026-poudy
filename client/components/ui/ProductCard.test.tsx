@@ -103,6 +103,19 @@ describe("ProductCard", () => {
     expect(image?.parentElement).toHaveClass("size-20");
   });
 
+  it("그림이 오기 전에는 회색 자리를 두고, 도착하면 회색을 걷는다", async () => {
+    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
+    const image = container.querySelector("img");
+    const slot = container.querySelector("[data-thumbnail-state]");
+
+    // 제품 그림은 배경이 비어 있어, 회색을 남겨 두면 그림 뒤로 그대로 비친다.
+    expect(slot).toHaveAttribute("data-thumbnail-state", "loading");
+
+    fireEvent.load(image!);
+
+    await waitFor(() => expect(slot).toHaveAttribute("data-thumbnail-state", "loaded"));
+  });
+
   it("그림을 받아 오지 못하면 기본 공병 그림으로 자리를 채운다", async () => {
     const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
     const image = container.querySelector("img");
