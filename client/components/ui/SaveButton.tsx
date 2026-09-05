@@ -26,7 +26,11 @@ const randomSparkAngles = (): readonly number[] =>
 
 /**
  * 저장 버튼. 아이콘만 있는 형태는 이름을 읽을 수 없으므로 접근 가능한 이름을 붙인다.
- * 저장 전과 저장됨의 생김새가 다르다.
+ * 저장 전과 저장한 뒤의 생김새가 다르다.
+ *
+ * 글자는 지금의 상태가 아니라 누르면 일어날 일을 적는다. 그래서 aria-pressed 를 두지
+ * 않는다. 이름이 이미 동작을 말하는데 눌림까지 붙으면 해제가 켜져 있다는 뜻으로도
+ * 읽혀 상태가 두 번, 서로 어긋나게 전해진다.
  *
  * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
@@ -34,6 +38,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const handleClick = () => {
     requestSelectionHaptic();
@@ -50,6 +55,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
     const celebrate = !saved && !reduced;
     setSparkAngles(celebrate ? randomSparkAngles() : []);
     setPopping(celebrate);
+    setNotice(saved ? "저장을 해제했어요" : "저장했어요");
     onToggle();
   };
 
@@ -59,57 +65,77 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
 
   if (variant === "wide") {
     return (
-      <button
-        type="button"
-        onClick={handleClick}
-        aria-pressed={saved}
-        aria-label={label}
-        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
-          saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
-        }`}
-      >
-        {/*
-          `제품 저장` 과 `저장됨` 은 길이가 달라 그대로 두면 글자와 아이콘이 좌우로 밀린다.
-          긴 쪽을 자리로 잡아 두고 그 안에서 글자만 바꿔 위치를 고정한다.
-        */}
-        <span className="relative inline-flex items-center justify-center leading-none">
-          {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
-          <span
-            className="save-pop inline-flex items-center justify-center leading-none"
-            data-popped={popping}
-            onTransitionEnd={finishPop}
-          >
-            <Icon name="bookmark" size={18} filled={saved} strokeWidth={2.5} />
+      <>
+        <button
+          type="button"
+          onClick={handleClick}
+          aria-label={label}
+          className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
+            saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
+          }`}
+        >
+          {/*
+            문구가 바뀔 때 글자와 아이콘이 좌우로 밀리지 않게 보이지 않는 한 벌을 깔아
+            자리를 먼저 잡는다. 두 문구는 지금 폭이 같지만 한쪽이 길어지면 다시 밀린다.
+            짧은 쪽이 와도 칸 안에서 가운데 서게 둔다.
+          */}
+          <span className="relative inline-flex items-center justify-center leading-none">
+            {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
+            <span
+              className="save-pop inline-flex items-center justify-center leading-none"
+              data-popped={popping}
+              onTransitionEnd={finishPop}
+            >
+              <Icon name="bookmark" size={18} filled={saved} strokeWidth={2.5} />
+            </span>
+            <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
           </span>
-          <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
-        </span>
-        <span className="inline-grid items-center leading-none">
-          <span className="invisible col-start-1 row-start-1" aria-hidden="true">
-            제품 저장
+          <span className="inline-grid items-center justify-items-center leading-none">
+            <span className="invisible col-start-1 row-start-1" aria-hidden="true">
+              제품 저장
+            </span>
+            <span className="col-start-1 row-start-1">{saved ? "저장 해제" : "제품 저장"}</span>
           </span>
-          <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
-        </span>
-      </button>
+        </button>
+        <ToggleNotice text={notice} />
+      </>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      aria-pressed={saved}
-      aria-label={label}
-      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
-    >
-      <span
-        className="save-pop inline-flex items-center justify-center leading-none"
-        data-popped={popping}
-        onTransitionEnd={finishPop}
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-label={label}
+        className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
       >
-        <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
-      </span>
-      <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
-    </button>
+        <span
+          className="save-pop inline-flex items-center justify-center leading-none"
+          data-popped={popping}
+          onTransitionEnd={finishPop}
+        >
+          <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
+        </span>
+        <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
+      </button>
+      <ToggleNotice text={notice} />
+    </>
+  );
+}
+
+/**
+ * 누른 결과를 보조 기술에 알린다. 불꽃은 aria-hidden 이라 눈으로만 보이고, 글자는
+ * 이름이 바뀔 뿐이라 다시 읽어 준다는 보장이 없다. 그 자리를 이 알림이 메운다.
+ *
+ * 버튼 밖에 둔다. 안에 있으면 버튼의 이름에 딸려 들어가 이름이 매번 길어진다.
+ * 비어 있어도 자리를 지운 채 남겨 둔다. 누른 뒤에 만들면 갓 생긴 영역이라 읽히지 않는다.
+ */
+function ToggleNotice({ text }: { readonly text: string }) {
+  return (
+    <span aria-live="polite" className="sr-only">
+      {text}
+    </span>
   );
 }
 
