@@ -8,9 +8,11 @@ import { InquiryButtonSlot } from "./InquiryButtonSlot";
 
 const pathname = vi.fn();
 
+const push = vi.fn();
+
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname(),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push }),
 }));
 
 const renderAt = (path: string) => {
