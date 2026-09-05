@@ -18,9 +18,11 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 
 - Java 21 설치
 - HEIC 변환용 `libheif-tools`, `libde265`와 자원 제한용 `util-linux-core` 설치
+- AWS CLI v2 및 jq 설치
 - `poudy` system user 및 `/opt/poudy/backend`, `/opt/poudy/data` 생성
 - `/etc/poudy/backend.env` 생성
 - `poudy-backend.service` 설치 및 enable
+- `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
 - JSON 데이터 디렉터리의 기본 권한 설정
 
 ### HEIC 런타임

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Poudy backend JSON data synchronization periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=60s
+Unit=poudy-data-sync.service
+
+[Install]
+WantedBy=timers.target
