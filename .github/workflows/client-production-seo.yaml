@@ -78,6 +78,15 @@ jobs:
           const crawlable = report.audits['is-crawlable'];
           const indexable = crawlable?.score === 1;
 
+          // Lighthouse 보고서가 점수를 늘어놓는 차례대로 둔다. 측정 화면과
+          // 순서가 같아야 두 곳을 함께 볼 때 눈이 헤매지 않는다.
+          const scores = [
+            ['Performance', percent(median.summary.performance)],
+            ['Accessibility', percent(median.summary.accessibility)],
+            ['Best Practices', percent(median.summary['best-practices'])],
+            ['SEO', percent(median.summary.seo)],
+          ];
+
           const lines = [
             '### 운영 SEO 측정',
             '',
@@ -87,17 +96,19 @@ jobs:
             '',
             '| 검사 항목 | 점수 |',
             '| --- | --- |',
-            `| SEO | ${percent(median.summary.seo)} |`,
-            `| Performance | ${percent(median.summary.performance)} |`,
-            `| Accessibility | ${percent(median.summary.accessibility)} |`,
-            `| Best Practices | ${percent(median.summary['best-practices'])} |`,
+            ...scores.map(([name, score]) => `| ${name} | ${score} |`),
           ];
 
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
 
-          // Discord 는 표 문법을 렌더링하지 않는다. 점수는 embed field 로 세운다.
+          // Discord 는 표 문법을 렌더링하지 않는다. 그래서 코드 블록에 담아
+          // 고정폭 글꼴로 세운다. 자릿수가 달라도 칸이 어긋나지 않도록 이름은
+          // 왼쪽으로, 점수는 오른쪽으로 붙여 맞춘다.
           const mark = (score) => (score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴');
-          const field = (name, score) => ({ name, value: `${mark(score)} ${score}`, inline: true });
+          const nameWidth = Math.max(...scores.map(([name]) => name.length));
+          const table = scores
+            .map(([name, score]) => `${name.padEnd(nameWidth)}  ${String(score).padStart(3)}  ${mark(score)}`)
+            .join('\n');
           const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
           fs.writeFileSync(
@@ -109,13 +120,14 @@ jobs:
                   url: '${{ vars.PRODUCTION_SITE_URL }}',
                   // 색인이 막힌 것은 사고이므로 붉게, 정상이면 초록으로 둔다.
                   color: indexable ? 5763719 : 15548997,
-                  description: `색인 허용: ${indexable ? '✅ 열려 있음' : '❌ 막혀 있음'}\n[실행 기록 보기](${runUrl})`,
-                  fields: [
-                    field('SEO', percent(median.summary.seo)),
-                    field('Performance', percent(median.summary.performance)),
-                    field('Accessibility', percent(median.summary.accessibility)),
-                    field('Best Practices', percent(median.summary['best-practices'])),
-                  ],
+                  description: [
+                    `색인 허용: ${indexable ? '✅ 열려 있음' : '❌ 막혀 있음'}`,
+                    '',
+                    '```',
+                    table,
+                    '```',
+                    `[실행 기록 보기](${runUrl})`,
+                  ].join('\n'),
                   footer: { text: process.env.GITHUB_REPOSITORY },
                   timestamp: new Date().toISOString(),
                 },
