@@ -42,7 +42,7 @@ export function ContentField({
           rows={6}
           aria-invalid={error ? true : undefined}
           aria-describedby={MESSAGE_ID}
-          className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60"
+          className="inquiry-input resize-none bg-transparent leading-relaxed text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60"
         />
 
         {/* 남은 분량을 눈으로 볼 수 있어야 2,000 자에 걸려 놀라지 않는다. */}
