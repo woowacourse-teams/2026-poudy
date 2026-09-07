@@ -130,6 +130,14 @@ describe("initAnalytics", () => {
     );
   });
 
+  it("SDK 가 딸린 script 를 본문이 아니라 머리에 붙이게 한다", async () => {
+    const { initAnalytics } = await load("production", "phc_test");
+
+    initAnalytics();
+
+    expect(init).toHaveBeenCalledWith("phc_test", expect.objectContaining({ external_scripts_inject_target: "head" }));
+  });
+
   it("앱에서 열면 앱 정보를 모든 이벤트에 붙인다", async () => {
     window.__POUDY_APP__ = APP_INFO;
     const { initAnalytics } = await load("production", "phc_test");

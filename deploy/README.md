@@ -91,12 +91,14 @@ prefix를 수정하지 않는 방식으로 배포해야 합니다. 장기적으�
 인증서 발급을 위해 HTTP-01 challenge와 기존 HTTP 프록시를 유지하며, 인증서가 없는
 설정에 `ssl_certificate` 경로를 넣지 않습니다. 인증서가 발급되면
 `nginx/ec2-frontend-https.conf`로 전환하고 일반 HTTP 요청을 HTTPS로 리다이렉트합니다.
+HTTPS 설정은 인증서가 `poudy.site`와 `www.poudy.site`를 모두 포함할 때만 활성화됩니다.
+기존 단일 도메인 인증서가 있으면 먼저 아래 절차로 같은 인증서 lineage를 확장해야 합니다.
 
 ### Certbot 최초 발급
 
 프론트 EC2의 보안 그룹에서 먼저 TCP `443`을 인터넷에 개방한 뒤, 프론트 EC2에서
-다음 명령을 순서대로 실행합니다. `poudy.site`의 DNS A 레코드는 프론트 EIP
-`54.116.229.77`을 가리켜야 합니다.
+다음 명령을 순서대로 실행합니다. `poudy.site`와 `www.poudy.site`의 DNS A 레코드는
+모두 프론트 EIP `54.116.229.77`을 가리켜야 합니다.
 
 AWS CLI를 실행할 권한이 있는 환경에서 보안 그룹 ID를 확인하고 443을 추가합니다.
 
@@ -120,7 +122,10 @@ sudo dnf install -y certbot
 sudo install -d -o root -g root -m 0755 /var/www/letsencrypt
 sudo certbot certonly --webroot \
   --webroot-path /var/www/letsencrypt \
+  --cert-name poudy.site \
   --domain poudy.site \
+  --domain www.poudy.site \
+  --expand \
   --email <운영_이메일> \
   --agree-tos \
   --no-eff-email
@@ -130,6 +135,11 @@ sudo ./deploy/scripts/enable-frontend-https.sh
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+`--cert-name poudy.site`는 기존 `/etc/letsencrypt/live/poudy.site` lineage를 유지하고,
+`--expand`는 apex만 포함한 기존 인증서를 두 호스트를 포함하는 인증서로 교체합니다.
+`enable-frontend-https.sh`는 두 호스트가 인증서 SAN에 실제로 포함됐는지 검사한 뒤에만
+Nginx 설정을 교체합니다. 따라서 인증서를 확장하기 전에 새 설정을 배포하지 않습니다.
 
 갱신 성공 시에도 동일한 전환 스크립트를 deploy hook으로 사용합니다.
 
@@ -147,6 +157,9 @@ sudo certbot renew --deploy-hook \
 
 Nginx 라우팅은 다음 규칙을 사용합니다.
 
+- `www.poudy.site`의 HTTP·HTTPS 요청 → 경로와 query string을 보존한
+  `https://poudy.site` 영구 리디렉션
+- HTTP-01 challenge → 두 호스트 모두 `/var/www/letsencrypt`에서 직접 제공
 - 공개 `/api/*` → 백엔드 EC2 사설 IP `8080`, 사용자 IP별 요청 제한 적용
 - 로컬 `127.0.0.1:8081/api/*` → 같은 백엔드 upstream, 공개 요청 제한 미적용
 - 그 외 요청 → 프론트 Next.js `3000`
@@ -203,6 +216,10 @@ HTTPS 활성화 후 로컬 검증:
 
 ```bash
 curl -I http://poudy.site
+curl -I --resolve www.poudy.site:80:127.0.0.1 \
+  'http://www.poudy.site/products/601?source=canonical-probe'
+curl -I --resolve www.poudy.site:443:127.0.0.1 \
+  'https://www.poudy.site/products/601?source=canonical-probe'
 curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/nginx-health
 curl -k --resolve poudy.site:443:127.0.0.1 https://poudy.site/api/categories
 curl http://127.0.0.1:8081/api/categories
@@ -215,6 +232,18 @@ curl -k --resolve poudy.site:443:127.0.0.1 \
   -H 'RSC: 1' \
   -D - -o /dev/null 'https://poudy.site/sitemap-pages.xml?probe=1'
 ```
+
+두 `www` 요청은 모두 `301`과
+`Location: https://poudy.site/products/601?source=canonical-probe`를 반환해야 합니다.
+DNS를 우회하지 않은 외부 환경에서도 인증서와 최종 응답을 함께 확인합니다.
+
+```bash
+curl --fail --silent --show-error --location --head \
+  'https://www.poudy.site/products/601?source=canonical-probe'
+```
+
+첫 응답은 위 대표 URL을 가리키는 `301`, 마지막 응답은 `poudy.site`의 정상 응답이어야
+합니다. 인증서 검증을 생략하는 옵션은 사용하지 않습니다.
 
 `ss`는 `127.0.0.1:8081`만 보여야 하며 `0.0.0.0:8081`, `[::]:8081` 또는 프론트
 사설 IP의 8081이 나타나면 배포하지 않습니다.

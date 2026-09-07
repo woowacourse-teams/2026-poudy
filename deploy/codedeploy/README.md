@@ -137,6 +137,9 @@ OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가 없으므�
 그 외에는 HTTP bootstrap 템플릿을 활성화합니다. 따라서 인증서가 아직 없는 신규
 인스턴스나 인증서가 제거된 인스턴스에 재배포해도 `nginx -t`가 존재하지 않는
 `/etc/letsencrypt/live/poudy.site` 경로 때문에 실패하지 않습니다.
+인증서 파일이 존재하면 `poudy.site`와 `www.poudy.site`가 SAN에 모두 포함됐는지도
+확인합니다. apex만 포함한 기존 인증서는 활성 설정을 교체하기 전에 배포를 실패시키므로,
+운영자는 먼저 같은 Certbot lineage를 두 호스트로 확장해야 합니다.
 
 이번 Nginx 템플릿에는 `/_next/static/` 정적 자산 캐시와 정확히
 `GET /api/categories`에만 적용되는 30초 캐시가 포함됩니다. 공개 cache key는 `Origin`을
@@ -157,6 +160,15 @@ warm-up하고 query·Cookie·Authorization·RSC 헤더를 바꾼 요청이 같�
 인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
 
 ```bash
+sudo certbot certonly --webroot \
+  --webroot-path /var/www/letsencrypt \
+  --cert-name poudy.site \
+  --domain poudy.site \
+  --domain www.poudy.site \
+  --expand \
+  --email <운영_이메일> \
+  --agree-tos \
+  --no-eff-email
 cd /opt/poudy/repository
 sudo ./deploy/scripts/enable-frontend-https.sh
 ```
@@ -165,6 +177,8 @@ sudo ./deploy/scripts/enable-frontend-https.sh
 HTTPS 서버의 `/api/*`와 `/` 프록시 경로는 각각 기존 백엔드 사설 IP와 Next.js
 standalone을 유지합니다. 같은 Nginx 프로세스의 `127.0.0.1:8081` listener는
 Next.js 서버 요청만 `poudy_backend` upstream으로 전달합니다.
+`www.poudy.site`의 HTTP·HTTPS 요청은 경로와 query string을 유지한 채
+`https://poudy.site`로 영구 리디렉션됩니다.
 
 ## CodeDeploy
 

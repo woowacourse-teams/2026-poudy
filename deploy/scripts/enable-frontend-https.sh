@@ -7,6 +7,9 @@ readonly REPOSITORY_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 readonly ACTIVE_CONFIG="/etc/nginx/conf.d/poudy-frontend.conf"
 readonly CERT_DIR="/etc/letsencrypt/live/poudy.site"
 
+# shellcheck source=deploy/scripts/lib/frontend-certificate.sh
+source "${SCRIPT_DIR}/lib/frontend-certificate.sh"
+
 log() {
     printf '[poudy-frontend-ssl] %s\n' "$*"
 }
@@ -20,6 +23,12 @@ fail() {
 
 [[ -s "${CERT_DIR}/fullchain.pem" && -s "${CERT_DIR}/privkey.pem" ]] \
     || fail "인증서를 찾을 수 없습니다: ${CERT_DIR}"
+command -v openssl >/dev/null 2>&1 || fail '인증서 호스트 검증에 필요한 openssl을 찾을 수 없습니다.'
+frontend_certificate_covers_hosts \
+    "${CERT_DIR}/fullchain.pem" \
+    poudy.site \
+    www.poudy.site \
+    || fail '인증서가 poudy.site와 www.poudy.site를 모두 포함하지 않습니다. 먼저 기존 인증서를 확장하세요.'
 
 source_config="${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend-https.conf"
 [[ -f "${source_config}" ]] || fail "HTTPS Nginx 설정을 찾을 수 없습니다: ${source_config}"
@@ -63,4 +72,4 @@ if systemctl is-active --quiet nginx.service; then
     fi
 fi
 
-log 'poudy.site HTTPS 설정을 활성화했습니다.'
+log 'poudy.site HTTPS와 www 대표 도메인 리디렉션을 활성화했습니다.'
