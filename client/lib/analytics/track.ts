@@ -43,6 +43,13 @@ export const initAnalytics = (): void => {
     api_host: host,
     // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
     ui_host: "https://us.posthog.com",
+
+    /**
+     * SDK 가 딸린 script 를 body 의 첫 script 앞에 끼워 넣는 것이 기본값이다.
+     * 그 자리는 본문 맨 앞의 JSON-LD 라, 하이드레이션이 제 노드를 찾지 못하고
+     * 다시 그리면서 구조화 데이터가 둘로 남는다. 머리 쪽으로 보내 본문을 건드리지 않는다.
+     */
+    external_scripts_inject_target: "head",
     autocapture: false,
     capture_pageview: "history_change",
     capture_pageleave: true,
