@@ -48,23 +48,6 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
   const { productId } = await props.params;
   const searchParams = (await props.searchParams) ?? {};
   const product = await load(productId);
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    brand: { "@type": "Brand", name: product.brand.name },
-    ...(product.imageUrl ? { image: product.imageUrl } : {}),
-    additionalProperty: {
-      "@type": "PropertyValue",
-      name: "전성분 수",
-      value: product.ingredients.length,
-    },
-  };
 
-  return (
-    <>
-      <script type="application/ld+json">{JSON.stringify(structuredData).replace(/</g, "\\u003c")}</script>
-      <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />
-    </>
-  );
+  return <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />;
 }
