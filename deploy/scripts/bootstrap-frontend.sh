@@ -15,7 +15,7 @@ require_root
 
 log '프론트엔드 호스트 초기화를 시작합니다.'
 
-dnf install -y curl-minimal nginx xz
+dnf install -y curl-minimal nginx openssl xz
 
 node_install_dir="/opt/node-v${NODE_VERSION}-linux-arm64"
 if [[ ! -x "${node_install_dir}/bin/node" ]]; then
@@ -54,6 +54,26 @@ install_systemd_unit \
     "${REPOSITORY_ROOT}/deploy/systemd/poudy-frontend.service" \
     /etc/systemd/system/poudy-frontend.service
 
+# Certbot이 아직 인증서를 발급하지 않은 초기 상태에서는 HTTP 설정을
+# 유지합니다. 이미 인증서가 있는 호스트를 재초기화하는 경우에만 HTTPS
+# 설정을 활성화합니다. 일부 파일만 있거나 www가 빠진 기존 인증서가 있으면
+# 현재 실행 중인 Nginx 설정을 교체하기 전에 실패합니다.
+frontend_config="${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend.conf"
+if [[ -s /etc/letsencrypt/live/poudy.site/fullchain.pem \
+    && -s /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+    # shellcheck source=deploy/scripts/lib/frontend-certificate.sh
+    source "${SCRIPT_DIR}/lib/frontend-certificate.sh"
+    frontend_certificate_covers_hosts \
+        /etc/letsencrypt/live/poudy.site/fullchain.pem \
+        poudy.site \
+        www.poudy.site \
+        || fail '기존 인증서가 poudy.site와 www.poudy.site를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 실행하세요.'
+    frontend_config="${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend-https.conf"
+elif [[ -e /etc/letsencrypt/live/poudy.site/fullchain.pem \
+    || -e /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+    fail '인증서 fullchain.pem과 privkey.pem 중 일부만 존재합니다.'
+fi
+
 if [[ ! -e /etc/nginx/nginx.conf.poudy-default ]]; then
     mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.poudy-default
 fi
@@ -69,22 +89,8 @@ install \
     -o root \
     -g root \
     -m 0644 \
-    "${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend.conf" \
+    "${frontend_config}" \
     /etc/nginx/conf.d/poudy-frontend.conf
-
-# Certbot이 아직 인증서를 발급하지 않은 초기 상태에서는 HTTP 설정을
-# 유지합니다. 이미 인증서가 있는 호스트를 재초기화하는 경우에만 HTTPS
-# 설정을 활성화하며, 인증서가 없을 때는 절대 인증서 경로를 nginx에 넣지
-# 않습니다.
-if [[ -s /etc/letsencrypt/live/poudy.site/fullchain.pem \
-    && -s /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
-    install \
-        -o root \
-        -g root \
-        -m 0644 \
-        "${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend-https.conf" \
-        /etc/nginx/conf.d/poudy-frontend.conf
-fi
 
 install \
     -o root \
