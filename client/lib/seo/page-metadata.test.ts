@@ -269,7 +269,7 @@ describe("공유 메타데이터", () => {
     expect(savedMetadata.twitter).toBeNull();
   });
 
-  it("제품 상세 본문에 판매 정보 없는 Product JSON-LD를 넣는다", async () => {
+  it("판매 정보가 없는 제품 상세에는 Product JSON-LD 를 넣지 않는다", async () => {
     api.fetchProductDetail.mockResolvedValue({
       id: 103,
       name: "장벽 크림",
@@ -284,9 +284,7 @@ describe("공유 메타데이터", () => {
     });
     const markup = renderToStaticMarkup(element);
 
-    expect(markup).toContain('type="application/ld+json"');
-    expect(markup).toContain('"@type":"Product"');
-    expect(markup).toContain('"name":"전성분 수","value":2');
-    expect(markup).not.toContain('"offers"');
+    expect(markup).not.toContain("application/ld+json");
+    expect(markup).not.toContain('"@type":"Product"');
   });
 });
