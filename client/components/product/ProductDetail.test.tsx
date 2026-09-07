@@ -74,6 +74,21 @@ describe("제품 성분 요약", () => {
     expect(toggle).toHaveClass("bg-transparent", "before:-inset-x-4", "before:bg-[#F4F5F6]");
   });
 
+  it("펼치기 전에도 전성분 전체를 본문에 그려 두고 보이기만 감춘다", () => {
+    const { container } = render(<ProductDetail product={untaggedProductDetail} />);
+
+    const links = container.querySelectorAll('a[href^="/ingredients/"]');
+    const sixth = links[5]?.closest("li");
+
+    expect(links).toHaveLength(untaggedProductDetail.ingredients.length);
+    expect(links[0]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(sixth).toHaveAttribute("hidden");
+
+    act(() => screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" }).click());
+
+    expect(sixth).not.toHaveAttribute("hidden");
+  });
+
   it("카테고리 경로의 대분류와 소분류를 각각의 목록으로 잇는다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 

@@ -14,23 +14,28 @@ type IngredientListProps = {
   readonly ingredients: ProductDetailResponse["ingredients"];
 };
 
-/** 서버 컴포넌트인 상세 화면에서 전성분 접기 상태만 클라이언트로 떼어낸다. */
+/**
+ * 서버 컴포넌트인 상세 화면에서 전성분 접기 상태만 클라이언트로 떼어낸다.
+ *
+ * 접힌 성분도 목록에 그려 두고 보이기만 감춘다. 눌러야 만들어지는 목록은
+ * 검색 로봇이 받는 첫 HTML 에 남지 않아 전성분이 본문에서 통째로 빠진다.
+ */
 export function IngredientList({ ingredients }: IngredientListProps) {
   const [expanded, setExpanded] = useState(false);
 
   const collapsible = ingredients.length > COLLAPSED_COUNT;
-  const visible = collapsible && !expanded ? ingredients.slice(0, COLLAPSED_COUNT) : ingredients;
+  const collapsed = collapsible && !expanded;
   const restCount = ingredients.length - COLLAPSED_COUNT;
 
   return (
     <div className="flex flex-col items-center gap-3">
       <ol className="w-full">
-        {visible.map((ingredient, index) => {
+        {ingredients.map((ingredient, index) => {
           const effect = ingredient.skinEffects[0];
           const color = effectColor(effect?.code);
 
           return (
-            <li key={ingredient.id}>
+            <li key={ingredient.id} hidden={collapsed && index >= COLLAPSED_COUNT}>
               <Link
                 href={`/ingredients/${ingredient.id}?from=product_detail`}
                 prefetch="auto"
