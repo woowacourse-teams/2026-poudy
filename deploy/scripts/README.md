@@ -68,8 +68,9 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - Nginx 설정 검증 및 enable/start
 
 인증서가 이미 발급된 호스트를 재초기화하면 `ec2-frontend-https.conf`를 활성화합니다.
-인증서가 없으면 HTTP bootstrap 설정만 사용하므로 초기화와 CodeDeploy 재배포가
-`nginx -t`에서 실패하지 않습니다.
+이때 인증서가 `poudy.site`와 `www.poudy.site`를 모두 포함하는지 검사합니다. apex만
+포함한 기존 인증서나 일부 파일만 남은 인증서는 활성 설정을 교체하기 전에 실패합니다.
+인증서가 없으면 HTTP bootstrap 설정만 사용합니다.
 
 프론트 EC2에서 백엔드 EC2의 사설 IP를 설정합니다.
 
@@ -84,14 +85,18 @@ Nginx를 reload합니다. Next.js는 항상 `http://127.0.0.1:8081`을 사용하
 
 ## HTTPS와 인증서
 
-최초 발급 전에는 프론트 보안 그룹의 TCP `443`을 열고 DNS가 프론트 EIP를 가리키는지
-확인합니다. Certbot은 EC2에서 별도로 설치·실행합니다.
+최초 발급 또는 기존 인증서 확장 전에는 프론트 보안 그룹의 TCP `443`을 열고
+`poudy.site`와 `www.poudy.site` DNS가 모두 프론트 EIP를 가리키는지 확인합니다.
+Certbot은 EC2에서 별도로 설치·실행합니다.
 
 ```bash
 sudo dnf install -y certbot
 sudo certbot certonly --webroot \
   --webroot-path /var/www/letsencrypt \
+  --cert-name poudy.site \
   --domain poudy.site \
+  --domain www.poudy.site \
+  --expand \
   --email <운영_이메일> \
   --agree-tos \
   --no-eff-email
@@ -99,7 +104,9 @@ sudo ./deploy/scripts/enable-frontend-https.sh
 ```
 
 `enable-frontend-https.sh`는 인증서가 없으면 실패하고, 설정 검증이나 reload가
-실패하면 기존 Nginx 설정으로 복구합니다. 인증서는 저장소에 복사하지 않습니다.
+실패하면 기존 Nginx 설정으로 복구합니다. 인증서에 두 호스트가 모두 없을 때도 설정을
+교체하지 않습니다. 인증서는 저장소에 복사하지 않습니다. 발급 후 `www`의 HTTP·HTTPS
+요청은 경로와 query string을 보존해 `https://poudy.site`로 영구 리디렉션됩니다.
 
 ## 실행 시점
 
