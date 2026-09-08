@@ -10,6 +10,7 @@ import {
   storedPullRequestEmbed,
 } from "./embeds/collaboration.ts";
 import { discussionCommentEmbed, discussionEmbed, wikiEmbed } from "./embeds/community.ts";
+import { seoReportEmbed } from "./embeds/seo.ts";
 import type { DiscordEmbed } from "./embeds/shared.ts";
 import {
   type ParsedGitHubEvent,
@@ -17,6 +18,7 @@ import {
   parseGitHubEvent,
   type WorkflowRunPayload,
 } from "./github-event.ts";
+import { channelWebhookKey, hasValidNotifyToken, type NotifyPayload, notifySchema } from "./notify.ts";
 import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
 import {
   commitKey,
@@ -45,6 +47,11 @@ async function handleRequest(request: Request, env: WorkerEnv): Promise<Response
       status: 405,
       headers: { Allow: "POST" },
     });
+  }
+
+  // GitHub Webhook 과 다른 자격으로 들어오므로 서명 검증보다 앞에서 갈라낸다.
+  if (new URL(request.url).pathname === "/notify") {
+    return handleNotify(request, env);
   }
 
   const githubSecret = env.GITHUB_WEBHOOK_SECRET;
@@ -351,6 +358,47 @@ async function deliverParsedEvent(parsedEvent: ParsedGitHubEvent, env: WorkerEnv
   }
 
   return deliveryResponse(await sendDiscordEmbed(webhookUrl, embed), webhookKey);
+}
+
+// 지금은 kind 가 하나뿐이라 곧장 부른다. 종류가 늘면 여기서 kind 로 가른다.
+function notifyEmbed(payload: NotifyPayload): DiscordEmbed {
+  return seoReportEmbed(payload);
+}
+
+// GitHub Webhook 이 실어 오지 않는 소식을 워크플로가 직접 보내는 자리다.
+// Discord Webhook URL 은 이 Worker 만 알고, 쏘는 쪽은 채널 이름만 고른다.
+async function handleNotify(request: Request, env: WorkerEnv): Promise<Response> {
+  const notifyToken = env.NOTIFY_TOKEN;
+
+  if (!notifyToken) {
+    return new Response("Missing notify token", { status: 500 });
+  }
+
+  if (!(await hasValidNotifyToken(request.headers.get("Authorization"), notifyToken))) {
+    return new Response("Invalid token", { status: 401 });
+  }
+
+  let rawPayload: unknown;
+  try {
+    rawPayload = await request.json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const parsed = notifySchema.safeParse(rawPayload);
+
+  if (!parsed.success) {
+    return new Response("Invalid notify payload", { status: 400 });
+  }
+
+  const webhookKey = channelWebhookKey(parsed.data.channel);
+  const webhookUrl = env[webhookKey];
+
+  if (typeof webhookUrl !== "string" || !webhookUrl) {
+    return new Response(`Missing Discord webhook: ${webhookKey}`, { status: 500 });
+  }
+
+  return deliveryResponse(await sendDiscordEmbed(webhookUrl, notifyEmbed(parsed.data)), webhookKey);
 }
 
 export default { fetch: handleRequest } satisfies WorkerHandler;
