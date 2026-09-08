@@ -42,6 +42,33 @@ describe("SaveButton 저장 인터랙션", () => {
     expect(label).toHaveTextContent("제품 저장");
   });
 
+  it("저장한 뒤에도 글자는 누르면 일어날 일을 적는다", () => {
+    render(<SaveButton productName="테스트 제품" saved onToggle={vi.fn()} variant="wide" />);
+
+    const button = screen.getByRole("button", { name: "테스트 제품 저장 해제" });
+
+    expect(button).toHaveTextContent("저장 해제");
+    expect(button).not.toHaveTextContent("저장됨");
+  });
+
+  it.each(["icon", "wide"] as const)("%s 형태는 이름이 동작을 말하므로 눌림 상태를 따로 두지 않는다", (variant) => {
+    render(<SaveButton productName="테스트 제품" saved onToggle={vi.fn()} variant={variant} />);
+
+    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" })).not.toHaveAttribute("aria-pressed");
+  });
+
+  it.each([
+    { from: false, notice: "저장했어요" },
+    { from: true, notice: "저장을 해제했어요" },
+  ])("누른 결과를 보조 기술에 알린다: $notice", async ({ from, notice }) => {
+    const name = from ? "테스트 제품 저장 해제" : "테스트 제품 저장";
+    render(<SaveButton productName="테스트 제품" saved={from} onToggle={vi.fn()} variant="wide" />);
+
+    await userEvent.click(screen.getByRole("button", { name }));
+
+    expect(screen.getByText(notice)).toHaveAttribute("aria-live", "polite");
+  });
+
   it.each(["icon", "wide"] as const)("%s 형태를 누르면 앱에 선택 햅틱을 요청한다", async (variant) => {
     render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant={variant} />);
 
@@ -103,7 +130,7 @@ describe("SaveButton 저장 인터랙션", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
 
-    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" })).toBeInTheDocument();
     expect(sparkAngles()).toHaveLength(0);
   });
 

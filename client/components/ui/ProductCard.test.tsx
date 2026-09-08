@@ -65,7 +65,7 @@ describe("ProductCard", () => {
     render(<ProductCard product={product} saved onToggleSave={() => {}} />);
 
     const button = screen.getByRole("button", { name: "1025 독도 토너 저장 해제" });
-    expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(button).not.toHaveAttribute("aria-pressed");
   });
 
   it("저장 버튼을 누르면 제품 ID 를 넘긴다", async () => {
