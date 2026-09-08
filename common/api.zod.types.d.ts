@@ -408,6 +408,96 @@ export type ExcludeCodeListResponse = {
    */
   items: Array<ExcludeCodeResponse>;
 }
+export type CurationSummaryResponse = {
+  /**
+   * 큐레이션 ID
+   */
+  id: number;
+  /**
+   * 큐레이션 제목
+   */
+  title: string;
+  /**
+   * 큐레이션 간단 설명
+   */
+  description: string;
+  /**
+   * 목록 대표 이미지 URL
+   */
+  imageUrl: string;
+}
+export type CurationListResponse = { items: Array<CurationSummaryResponse> }
+export type CurationCategoryResponse = {
+  /**
+   * 카테고리 ID
+   */
+  id: number;
+  /**
+   * 카테고리 이름
+   */
+  name: string;
+}
+export type CurationDetailResponse = {
+  /**
+   * 큐레이션 ID
+   */
+  id: number;
+  /**
+   * 큐레이션 제목
+   */
+  title: string;
+  /**
+   * 큐레이션 상세 설명
+   */
+  description: string;
+  /**
+   * 상세 화면 이미지 URL 목록
+   */
+  imageUrls: Array<string>;
+  /**
+   * 제품 필터에 사용할 카테고리 목록
+   */
+  categories: Array<CurationCategoryResponse>;
+}
+export type CurationProductResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드명
+   */
+  brandName: string;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 제품 가격 (원)
+   */
+  price: number;
+  /**
+   * 제품 용량 값
+   */
+  volumeValue: number;
+  /**
+   * 제품 용량 단위
+   */
+  volumeUnit: string;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+}
+export type CurationProductListResponse = { items: Array<CurationProductResponse> }
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type BrandSummaryResponse = {
   /**
@@ -454,7 +544,7 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -763,6 +853,60 @@ export type get_FindExcludeCodes = {
 
     }
 /**
+ * PUBLISHED 상태의 큐레이션을 ID 오름차순으로 조회한다.
+ */
+export type get_FindCurations = {
+      method: "GET",
+      path: "/api/curations",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.CurationListResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * PUBLISHED 상태인 큐레이션의 상세 정보와 제품 필터용 카테고리를 조회한다.
+ */
+export type get_FindCuration = {
+      method: "GET",
+      path: "/api/curations/{curationId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { curationId: number },
+
+          }
+      responses: {200: Schemas.CurationDetailResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * PUBLISHED 상태인 큐레이션의 제품을 등록 순서로 조회한다. categoryId로 필터해도 순서를 유지한다.
+ */
+export type get_FindCurationProducts = {
+      method: "GET",
+      path: "/api/curations/{curationId}/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ categoryId: number }>,
+        path:  { curationId: number },
+
+          }
+      responses: {200: Schemas.CurationProductListResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품 필터에서 사용하는 전체 카테고리를 계층 구조로 조회한다.
  */
 export type get_FindCategories = {
@@ -830,6 +974,9 @@ get: {
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
+"/api/curations": Endpoints.get_FindCurations,
+"/api/curations/{curationId}": Endpoints.get_FindCuration,
+"/api/curations/{curationId}/products": Endpoints.get_FindCurationProducts,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand

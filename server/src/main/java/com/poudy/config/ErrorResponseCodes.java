@@ -16,6 +16,8 @@ public final class ErrorResponseCodes {
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
         "brands",
         ErrorCode.BRAND_NOT_FOUND,
+        "curations",
+        ErrorCode.CURATION_NOT_FOUND,
         "ingredients",
         ErrorCode.INGREDIENT_NOT_FOUND,
         "products",

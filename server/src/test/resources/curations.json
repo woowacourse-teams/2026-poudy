@@ -1,0 +1,73 @@
+{
+  "curations": [
+    {
+      "id": 12,
+      "title": "환절기 장벽 케어",
+      "summary": "환절기를 위한 제품 모음",
+      "description": "환절기에 피부 장벽 관리가 필요한 이유와 제품 선택 기준",
+      "image_urls": [
+        "https://cdn.example.com/curations/12/main.png",
+        "https://cdn.example.com/curations/12/description-1.png"
+      ],
+      "category_ids": [
+        13,
+        1
+      ],
+      "product_ids": [
+        15,
+        10,
+        7,
+        1
+      ],
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 20,
+      "title": "작성 중인 큐레이션",
+      "summary": "작성 중인 큐레이션 간단 설명",
+      "description": "작성 중인 큐레이션 상세 설명",
+      "image_urls": [
+        "https://cdn.example.com/curations/20/main.png"
+      ],
+      "category_ids": [
+        1
+      ],
+      "product_ids": [
+        1
+      ],
+      "status": "DRAFT"
+    },
+    {
+      "id": 4,
+      "title": "선케어 큐레이션",
+      "summary": "선케어 제품 모음",
+      "description": "선케어 제품 선택 기준",
+      "image_urls": [
+        "https://cdn.example.com/curations/4/main.png"
+      ],
+      "category_ids": [
+        13
+      ],
+      "product_ids": [
+        10
+      ],
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 30,
+      "title": "게시 종료된 큐레이션",
+      "summary": "게시 종료된 큐레이션 간단 설명",
+      "description": "게시 종료된 큐레이션 상세 설명",
+      "image_urls": [
+        "https://cdn.example.com/curations/30/main.png"
+      ],
+      "category_ids": [
+        1
+      ],
+      "product_ids": [
+        7
+      ],
+      "status": "ARCHIVED"
+    }
+  ]
+}
