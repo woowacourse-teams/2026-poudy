@@ -1,6 +1,7 @@
 # Discord Worker
 
 GitHub Webhook 이벤트를 이벤트별 Discord 채널로 전달하는 Cloudflare Worker입니다.
+워크플로가 직접 보내는 알림도 `POST /notify` 로 함께 받습니다.
 
 ```mermaid
 flowchart TD
@@ -47,6 +48,7 @@ Secret은 배포 후에도 유지되며, `keep_vars = true`로 Dashboard에서 �
 환경 변수도 유지합니다.
 
 - `GITHUB_WEBHOOK_SECRET`
+- `NOTIFY_TOKEN`
 - `DISCORD_WEBHOOK_ISSUE_UPDATE`
 - `DISCORD_WEBHOOK_PR_UPDATE`
 - `DISCORD_WEBHOOK_STAGING`
@@ -130,6 +132,98 @@ KV에는 compare-and-swap이 없어 워크플로 두 개가 거의 동시에 끝
 
 완전히 막으려면 PR마다 Durable Object로 읽기와 쓰기를 직렬화해야 합니다.
 실제로 결과가 빠지는 일이 잦아지면 그때 도입합니다.
+
+## 워크플로가 직접 보내는 알림
+
+GitHub Webhook 이 실어 오지 않는 소식은 워크플로가 `POST /notify` 로 보냅니다. 운영
+SEO 측정처럼 GitHub 이 이벤트로 알려 주지 않는 값이 여기 해당합니다.
+
+**보내는 쪽은 잰 값만 넘기고, 알림 모양은 Worker 가 정합니다.** 제목도 색도 본문도
+`embeds/` 가 만듭니다. 보내는 쪽이 제목이나 색을 넘기는 자리는 두지 않았습니다.
+그래야 알림이 늘어도 채널에 올라오는 모양이 한곳에 모입니다. Discord Webhook URL 도
+Worker 만 알아서, 같은 URL 을 저장소 Secret 에 따로 둘 필요가 없습니다.
+
+그래서 **알림 종류를 더하려면 이 Worker 를 고쳐야 합니다.** `notify.ts` 에 무엇을
+받을지 스키마를 더하고, `embeds/` 에 그 값을 어떻게 보일지 씁니다. 워크플로만 고쳐서
+새 알림을 만들 수는 없습니다.
+
+인증은 `Authorization: Bearer` 헤더로 `NOTIFY_TOKEN` 을 확인합니다. GitHub Webhook 의
+HMAC 서명과 자격을 나눠 두어, 하나가 새어도 다른 경로에 번지지 않습니다. 토큰 비교는
+상수 시간으로 하여 앞자리가 몇 개 맞는지가 걸린 시간에 드러나지 않게 합니다.
+
+```bash
+curl --fail --silent --show-error \
+  --header "Authorization: Bearer $NOTIFY_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data @notify-payload.json \
+  "$WORKER_NOTIFY_URL"
+```
+
+보내는 쪽 저장소에는 아래 두 가지를 등록합니다.
+
+| 이름                | 종류     | 값                                |
+| ------------------- | -------- | --------------------------------- |
+| `NOTIFY_TOKEN`      | Secret   | Cloudflare 에 등록한 것과 같은 값 |
+| `WORKER_NOTIFY_URL` | Variable | 배포된 Worker 주소 + `/notify`    |
+
+주소는 비밀이 아니라 Variable 로 둡니다. 토큰 없이는 401 이고, 로그에 값이 보여야
+잘못된 주소로 쏠 때 바로 알아챕니다.
+
+### 어느 알림에나 있는 자리
+
+| 항목         | 필수 | 설명                                            |
+| ------------ | ---- | ----------------------------------------------- |
+| `kind`       | 예   | 알림 종류. 아래 표에서 고릅니다                 |
+| `channel`    | 예   | 알림이 갈 채널 이름                             |
+| `timestamp`  | 아니오 | 일어난 시각(ISO 8601). 없으면 받은 시각을 씁니다 |
+| `repository` | 아니오 | 알림 아래에 남길 저장소 이름                    |
+
+`channel` 은 아래 다섯 가지 중 하나이며 각각 같은 이름의 Secret 을 가리킵니다.
+
+| `channel`    | 대상 Secret                    |
+| ------------ | ------------------------------ |
+| `issue`      | `DISCORD_WEBHOOK_ISSUE_UPDATE` |
+| `pr`         | `DISCORD_WEBHOOK_PR_UPDATE`    |
+| `staging`    | `DISCORD_WEBHOOK_STAGING`      |
+| `production` | `DISCORD_WEBHOOK_PRODUCTION`   |
+| `wiki`       | `DISCORD_WEBHOOK_WIKI_UPDATE`  |
+
+### `kind` 별로 받는 값
+
+| `kind`       | 무엇을 알리나      | 그리는 곳            |
+| ------------ | ------------------ | -------------------- |
+| `seo-report` | 운영 화면 SEO 측정 | `embeds/seo.ts`      |
+
+`seo-report` 는 아래를 받습니다. `scores` 의 네 값은 0 부터 100 까지의 정수이며, 재지
+못했으면 `null` 을 넣습니다. `runUrl` 은 없어도 됩니다.
+
+```json
+{
+  "kind": "seo-report",
+  "channel": "production",
+  "siteUrl": "https://example.com",
+  "indexable": false,
+  "scores": {
+    "performance": 87,
+    "accessibility": 100,
+    "bestPractices": 92,
+    "seo": 64
+  },
+  "runUrl": "https://github.com/owner/repo/actions/runs/1",
+  "repository": "owner/repo",
+  "timestamp": "2026-09-08T01:02:03Z"
+}
+```
+
+### 응답 코드
+
+| 상황                               | 응답 |
+| ---------------------------------- | ---- |
+| 전송 성공                          | 200  |
+| 토큰이 없거나 다름                 | 401  |
+| JSON 또는 페이로드 형식 오류       | 400  |
+| `NOTIFY_TOKEN` 미등록              | 500  |
+| 대상 채널의 Discord Webhook 미등록 | 500  |
 
 ## GitHub Webhook 설정
 
