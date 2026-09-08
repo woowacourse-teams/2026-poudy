@@ -16,6 +16,10 @@
   ],
   "tags": [
     {
+      "name": "큐레이션",
+      "description": "큐레이션 조회 API"
+    },
+    {
       "name": "보관함",
       "description": "보관함 조회 API"
     },
@@ -1350,6 +1354,219 @@
         }
       }
     },
+    "/api/curations": {
+      "get": {
+        "tags": [
+          "큐레이션"
+        ],
+        "summary": "큐레이션 목록 조회",
+        "description": "PUBLISHED 상태의 큐레이션을 ID 오름차순으로 조회한다.",
+        "operationId": "findCurations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurationListResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/curations/{curationId}": {
+      "get": {
+        "tags": [
+          "큐레이션"
+        ],
+        "summary": "큐레이션 상세 조회",
+        "description": "PUBLISHED 상태인 큐레이션의 상세 정보와 제품 필터용 카테고리를 조회한다.",
+        "operationId": "findCuration",
+        "parameters": [
+          {
+            "name": "curationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurationDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "큐레이션을 찾을 수 없습니다.",
+                  "code": "CURATION_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/curations/{curationId}/products": {
+      "get": {
+        "tags": [
+          "큐레이션"
+        ],
+        "summary": "큐레이션 제품 조회",
+        "description": "PUBLISHED 상태인 큐레이션의 제품을 등록 순서로 조회한다. categoryId로 필터해도 순서를 유지한다.",
+        "operationId": "findCurationProducts",
+        "parameters": [
+          {
+            "name": "curationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "description": "제품을 필터링할 카테고리 ID",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurationProductListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "큐레이션을 찾을 수 없습니다.",
+                  "code": "CURATION_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
@@ -2651,6 +2868,197 @@
           "koreanName"
         ]
       },
+      "CurationListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurationSummaryResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CurationSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "큐레이션 ID",
+            "example": 12
+          },
+          "title": {
+            "type": "string",
+            "description": "큐레이션 제목",
+            "example": "환절기 장벽 케어"
+          },
+          "description": {
+            "type": "string",
+            "description": "큐레이션 간단 설명",
+            "example": "환절기를 위한 제품 모음"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "목록 대표 이미지 URL",
+            "example": "https://cdn.example.com/curations/12/main.png"
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "imageUrl",
+          "title"
+        ]
+      },
+      "CurationCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "카테고리 ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "카테고리 이름",
+            "example": "스킨케어"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CurationDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "큐레이션 ID",
+            "example": 12
+          },
+          "title": {
+            "type": "string",
+            "description": "큐레이션 제목",
+            "example": "환절기 장벽 케어"
+          },
+          "description": {
+            "type": "string",
+            "description": "큐레이션 상세 설명",
+            "example": "환절기에 피부 장벽 관리가 필요한 이유와 제품 선택 기준"
+          },
+          "imageUrls": {
+            "type": "array",
+            "description": "상세 화면 이미지 URL 목록",
+            "items": {
+              "type": "string"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "description": "제품 필터에 사용할 카테고리 목록",
+            "items": {
+              "$ref": "#/components/schemas/CurationCategoryResponse"
+            }
+          }
+        },
+        "required": [
+          "categories",
+          "description",
+          "id",
+          "imageUrls",
+          "title"
+        ]
+      },
+      "CurationProductListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurationProductResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CurationProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "제품 ID",
+            "example": 101
+          },
+          "name": {
+            "type": "string",
+            "description": "제품명",
+            "example": "제품명"
+          },
+          "brandName": {
+            "type": "string",
+            "description": "브랜드명",
+            "example": "브랜드명"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "제품 대표 이미지 URL",
+            "example": "https://cdn.example.com/products/101.png"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "description": "제품 가격 (원)",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "description": "제품 용량 값",
+            "example": 200
+          },
+          "volumeUnit": {
+            "type": "string",
+            "description": "제품 용량 단위",
+            "example": "ml"
+          },
+          "moistureLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "수분감 단계 (0~3)",
+            "example": 3,
+            "maximum": 3,
+            "minimum": 0
+          },
+          "oilLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "유분감 단계 (0~3)",
+            "example": 1,
+            "maximum": 3,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "brandName",
+          "id",
+          "imageUrl",
+          "moistureLevel",
+          "name",
+          "oilLevel",
+          "price",
+          "volumeUnit",
+          "volumeValue"
+        ]
+      },
       "CategoryListResponse": {
         "type": "object",
         "properties": {
@@ -2807,6 +3215,7 @@
               "PAYLOAD_TOO_LARGE",
               "TOO_MANY_REQUESTS",
               "UNSUPPORTED_REQUEST",
+              "CURATION_NOT_FOUND",
               "PRODUCT_NOT_FOUND",
               "BRAND_NOT_FOUND",
               "INGREDIENT_NOT_FOUND",

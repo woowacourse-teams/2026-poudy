@@ -16,6 +16,7 @@ public enum ErrorCode {
     PAYLOAD_TOO_LARGE("요청 본문 크기가 허용 범위를 초과했습니다."),
     TOO_MANY_REQUESTS("요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."),
     UNSUPPORTED_REQUEST("지원하지 않는 요청입니다."),
+    CURATION_NOT_FOUND("큐레이션을 찾을 수 없습니다."),
     PRODUCT_NOT_FOUND("제품을 찾을 수 없습니다."),
     BRAND_NOT_FOUND("브랜드를 찾을 수 없습니다."),
     INGREDIENT_NOT_FOUND("성분을 찾을 수 없습니다."),

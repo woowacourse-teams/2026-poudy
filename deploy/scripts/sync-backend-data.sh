@@ -12,6 +12,7 @@ readonly LOCK_FILE='/run/poudy-backend-data-sync.lock'
 readonly EXPECTED_FILES=(
     brands.json
     categories.json
+    curations.json
     exclude_codes.json
     ingredients.json
     products.json
