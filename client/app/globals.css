@@ -139,7 +139,7 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  --bottom-navigation-height: 4.5rem;
+  --bottom-navigation-height: 3.875rem;
 }
 
 /*
