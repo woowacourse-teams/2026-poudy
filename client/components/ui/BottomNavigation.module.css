@@ -1,7 +1,6 @@
 /* 고정 메뉴가 본문의 마지막 항목을 가리지 않도록 같은 높이를 확보한다. */
 .space {
-  --navigation-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-  height: var(--navigation-height);
+  height: var(--bottom-navigation-height);
 }
 
 .navigation {
@@ -9,8 +8,7 @@
   right: var(--scrollbar-width, 0px);
   max-width: var(--container-md);
   margin-inline: auto;
-  height: var(--navigation-height);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: var(--bottom-navigation-height);
 }
 
 .list {
