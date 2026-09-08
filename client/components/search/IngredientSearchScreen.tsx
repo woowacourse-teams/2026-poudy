@@ -77,9 +77,9 @@ export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes
         <IngredientSearchPanel filter={filter} onChange={setCondition} excludeCodes={excludeCodes} names={names} />
       </div>
 
-      {/* bottom-18 은 하단 네비게이션 높이다. 0 으로 두면 네비가 이 블록을 가린다. */}
+      {/* 하단 내비게이션 높이만큼 띄운다. 0 으로 두면 네비가 이 블록을 가린다. */}
       {total > 0 ? (
-        <div className="sticky bottom-18 border-t border-border bg-white p-4">
+        <div className="sticky bottom-[var(--bottom-navigation-height)] border-t border-border bg-white p-4">
           {/*
             제품 목록의 `탐색 조건` 요약과 같은 글자결로 둔다. 제목과 개수 배지는 두지
             않는다. 바로 아래 버튼이 이미 조건에 맞는 개수를 말하고 있어, 조건 수까지

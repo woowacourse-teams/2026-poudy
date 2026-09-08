@@ -42,11 +42,9 @@ export function InquiryButton({ liftedAboveNavigation }: { readonly liftedAboveN
 
   return (
     <div
-      className={`pointer-events-none sticky z-30 mt-auto flex h-0 justify-end px-4 ${
-        /* 하단 내비게이션(72px)이 있는 화면에서는 그 위로 올린다. */
-        liftedAboveNavigation
-          ? "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] -translate-y-[4rem]"
-          : "bottom-0 -translate-y-[calc(4rem+env(safe-area-inset-bottom))]"
+      className={`pointer-events-none sticky z-30 mt-auto flex h-0 -translate-y-[4rem] justify-end px-4 ${
+        /* 하단 내비게이션이 있는 화면에서는 그 위로 올린다. */
+        liftedAboveNavigation ? "bottom-[var(--bottom-navigation-height)]" : "bottom-0"
       }`}
     >
       <Link

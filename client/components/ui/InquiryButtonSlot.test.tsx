@@ -59,7 +59,7 @@ describe("떠 있는 문의하기 버튼", () => {
   it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
     renderAt("/products");
 
-    expect(frame()).toHaveClass("bottom-[calc(4.5rem+env(safe-area-inset-bottom))]");
+    expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
   });
 
   it("하단 내비게이션이 없는 화면에서는 화면 아래에 붙는다", () => {
