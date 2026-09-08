@@ -78,14 +78,25 @@ jobs:
           const crawlable = report.audits['is-crawlable'];
           const indexable = crawlable?.score === 1;
 
+          // 점수는 여기서 한 번만 잰다. 요약과 알림이 같은 값을 보아야
+          // 두 곳이 어긋나지 않는다.
+          const scores = {
+            performance: percent(median.summary.performance),
+            accessibility: percent(median.summary.accessibility),
+            bestPractices: percent(median.summary['best-practices']),
+            seo: percent(median.summary.seo),
+          };
+
           // Lighthouse 보고서가 점수를 늘어놓는 차례대로 둔다. 측정 화면과
           // 순서가 같아야 두 곳을 함께 볼 때 눈이 헤매지 않는다.
-          const scores = [
-            ['Performance', percent(median.summary.performance)],
-            ['Accessibility', percent(median.summary.accessibility)],
-            ['Best Practices', percent(median.summary['best-practices'])],
-            ['SEO', percent(median.summary.seo)],
+          const scoreRows = [
+            ['Performance', scores.performance],
+            ['Accessibility', scores.accessibility],
+            ['Best Practices', scores.bestPractices],
+            ['SEO', scores.seo],
           ];
+
+          const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
           const lines = [
             '### 운영 SEO 측정',
@@ -96,42 +107,23 @@ jobs:
             '',
             '| 검사 항목 | 점수 |',
             '| --- | --- |',
-            ...scores.map(([name, score]) => `| ${name} | ${score} |`),
+            ...scoreRows.map(([name, score]) => `| ${name} | ${score} |`),
           ];
 
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
 
-          // Discord 는 표 문법을 렌더링하지 않는다. 그래서 코드 블록에 담아
-          // 고정폭 글꼴로 세운다. 자릿수가 달라도 칸이 어긋나지 않도록 이름은
-          // 왼쪽으로, 점수는 오른쪽으로 붙여 맞춘다.
-          const mark = (score) => (score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴');
-          const nameWidth = Math.max(...scores.map(([name]) => name.length));
-          const table = scores
-            .map(([name, score]) => `${name.padEnd(nameWidth)}  ${String(score).padStart(3)}  ${mark(score)}`)
-            .join('\n');
-          const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
+          // 알림 모양은 Worker 가 정한다. 여기서는 잰 값만 넘긴다.
           fs.writeFileSync(
-            'discord-payload.json',
+            'notify-payload.json',
             JSON.stringify({
-              embeds: [
-                {
-                  title: indexable ? '🔍 운영 SEO 측정' : '❌ 운영 화면이 색인에서 막혔습니다',
-                  url: '${{ vars.PRODUCTION_SITE_URL }}',
-                  // 색인이 막힌 것은 사고이므로 붉게, 정상이면 초록으로 둔다.
-                  color: indexable ? 5763719 : 15548997,
-                  description: [
-                    `색인 허용: ${indexable ? '✅ 열려 있음' : '❌ 막혀 있음'}`,
-                    '',
-                    '```',
-                    table,
-                    '```',
-                    `[실행 기록 보기](${runUrl})`,
-                  ].join('\n'),
-                  footer: { text: process.env.GITHUB_REPOSITORY },
-                  timestamp: new Date().toISOString(),
-                },
-              ],
+              kind: 'seo-report',
+              channel: 'production',
+              siteUrl: '${{ vars.PRODUCTION_SITE_URL }}',
+              indexable,
+              scores,
+              runUrl,
+              repository: process.env.GITHUB_REPOSITORY,
+              timestamp: new Date().toISOString(),
             }),
           );
 
@@ -142,18 +134,24 @@ jobs:
           NODE
 
       # 색인이 막히면 앞 단계가 실패하므로 always 로 둔다. 그 경우가 오히려
-      # 가장 알려야 하는 상황이다. Webhook 이 없으면 알림만 건너뛴다.
+      # 가장 알려야 하는 상황이다. Worker 주소가 없으면 알림만 건너뛴다.
+      #
+      # Discord Webhook URL 은 Worker 만 안다. 여기서는 채널 이름과 잰 값만 넘긴다.
       - name: Notify Discord
-        if: always() && hashFiles('discord-payload.json') != ''
+        if: always() && hashFiles('notify-payload.json') != ''
+        env:
+          NOTIFY_URL: ${{ vars.WORKER_NOTIFY_URL }}
+          NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
         run: |
-          if [ -z "${{ secrets.DISCORD_WEBHOOK_PRODUCTION }}" ]; then
-            echo "::notice::Discord Webhook 이 없어 알림을 건너뜁니다."
+          if [ -z "$NOTIFY_URL" ] || [ -z "$NOTIFY_TOKEN" ]; then
+            echo "::notice::알림 설정이 없어 건너뜁니다."
             exit 0
           fi
           curl --fail --silent --show-error \
+            --header "Authorization: Bearer $NOTIFY_TOKEN" \
             --header 'Content-Type: application/json' \
-            --data @discord-payload.json \
-            "${{ secrets.DISCORD_WEBHOOK_PRODUCTION }}"
+            --data @notify-payload.json \
+            "$NOTIFY_URL"
 
       - name: Upload report
         if: always()
