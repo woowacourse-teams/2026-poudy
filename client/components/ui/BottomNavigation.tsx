@@ -107,7 +107,7 @@ export function BottomNavigation() {
         aria-label="주요 메뉴"
         className={`${styles.navigation} fixed bottom-0 z-20 border-t border-border bg-background`}
       >
-        <ul className={`${styles.list} flex px-2 pt-2 pb-3.5`}>
+        <ul className={`${styles.list} flex px-2 py-2`}>
           {TABS.map((tab, index) => {
             const active = tab.match(pathname);
             const selected = selectedIndex === index;
@@ -133,7 +133,7 @@ export function BottomNavigation() {
                     activated={activatedIndex === index}
                     onAnimationEnd={() => setPendingActivation(null)}
                   />
-                  <span className="relative z-10">{tab.label}</span>
+                  <span className="relative z-10 leading-[13px]">{tab.label}</span>
                 </Link>
               </li>
             );

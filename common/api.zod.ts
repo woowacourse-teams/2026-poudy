@@ -103,6 +103,24 @@ export const ExcludeCodeResponse = z.object({ code: z.enum(["FRAGRANCE_ALLERGENS
 export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResponse;
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
 
+export type CurationSummaryResponse = __TypedOpenapi.Schemas.CurationSummaryResponse;
+export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrl: z.string() });
+
+export type CurationListResponse = __TypedOpenapi.Schemas.CurationListResponse;
+export const CurationListResponse = z.object({ items: z.array(CurationSummaryResponse) });
+
+export type CurationCategoryResponse = __TypedOpenapi.Schemas.CurationCategoryResponse;
+export const CurationCategoryResponse = z.object({ id: z.number().int(), name: z.string() });
+
+export type CurationDetailResponse = __TypedOpenapi.Schemas.CurationDetailResponse;
+export const CurationDetailResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrls: z.array(z.string()), categories: z.array(CurationCategoryResponse) });
+
+export type CurationProductResponse = __TypedOpenapi.Schemas.CurationProductResponse;
+export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
+
+export type CurationProductListResponse = __TypedOpenapi.Schemas.CurationProductListResponse;
+export const CurationProductListResponse = z.object({ items: z.array(CurationProductResponse) });
+
 export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
 export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });
 
@@ -116,6 +134,6 @@ export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
 export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
-export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
+export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
 
 // </Schemas>
