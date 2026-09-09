@@ -14,7 +14,6 @@ import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
-import { unsaveProducts } from "@/lib/storage/saved-products";
 
 /**
  * 저장함이 가질 수 있는 상태.
@@ -70,6 +69,62 @@ type State = {
   readonly missingIds: readonly number[];
 };
 
+/**
+ * 지금 불러오지 못한 제품을 알리는 콜아웃. 제품 상세의 `상품 정보 출처 안내` 에서
+ * 아이콘·제목·설명·행동의 차례와 크기를 가져왔다.
+ *
+ * 다만 바탕은 좌우로 넓히지 않는다. 상세에서는 이런 칸이 여러 섹션 사이에 끼어 있어
+ * 화면 끝까지 닿는 바탕이 자연스럽지만, 여기서는 목록 위에 홀로 서 있어 너무 넓어 보인다.
+ *
+ * 아이콘 자리는 뜻에 맞는 색을 입힌다. 잃은 것이 아니라 잠시 못 보는 상태라 알림 색을 쓴다.
+ */
+function MissingNotice({
+  count,
+  onRecheck,
+  onDismiss,
+}: {
+  readonly count: number;
+  readonly onRecheck: () => void;
+  readonly onDismiss: () => void;
+}) {
+  return (
+    <section
+      role="status"
+      aria-labelledby="missing-saved-products-title"
+      className="mt-3 flex gap-3 rounded-xl bg-surface-subtle p-4"
+    >
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-info-soft">
+        <Icon name="info" size={16} className="text-info" />
+      </span>
+
+      <span className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <span id="missing-saved-products-title" className="text-[14px] font-bold text-text-primary">
+          제품 {count}개를 지금은 불러올 수 없어요
+        </span>
+        <span className="text-pretty text-[12px] text-[#5F6268]">
+          저장은 그대로 있어요. {"제품\u00a0정보가\u00a0바뀌는\u00a0동안"} 잠시 보이지 않을 수 있어요.
+        </span>
+
+        {/* 잠시 못 보는 것일 수 있다고 알리는 자리에서 바로 다시 묻는다. */}
+        <span className="flex items-center justify-between gap-2">
+          <button type="button" onClick={onDismiss} className="shrink-0 text-[11px] text-[#8B8D94]">
+            그만 보기
+          </button>
+
+          <button
+            type="button"
+            onClick={onRecheck}
+            className="flex shrink-0 items-center gap-0.5 text-[11px] text-[#5F6268]"
+          >
+            다시 확인
+            <Icon name="chevron-right" size={12} />
+          </button>
+        </span>
+      </span>
+    </section>
+  );
+}
+
 /** S07 저장함. 목록은 브라우저가 들고 표시 정보만 서버에서 채운다. */
 export function SavedScreen() {
   const { savedIds, isSaved, toggle } = useSavedProducts();
@@ -95,6 +150,15 @@ export function SavedScreen() {
 
   const [state, setState] = useState<State>(() => initial(key));
   const [retry, setRetry] = useState(0);
+  /*
+   * 누락 안내를 이번 방문 동안만 닫아 둔다. 저장할 것이 없어 화면을 벗어나면 사라진다.
+   *
+   * 영영 끄지 않는 이유가 있다. 이 안내는 저장한 것이 보이지 않는다는 사실을 알리는
+   * 유일한 통로라, 아주 꺼 버리면 저장함이 조용히 비는 일을 다시 겪게 된다.
+   */
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+  /** 어느 누락 번호에 대해 닫았는지. 그 뒤에 새로 빠진 것이 있으면 다시 알린다. */
+  const [dismissedFor, setDismissedFor] = useState("");
 
   /*
    * 저장을 풀면 담아 둔 번호가 줄지만 그 제품의 표시 정보는 이미 갖고 있다. 목록을
@@ -103,6 +167,13 @@ export function SavedScreen() {
    */
   const current = state.key === key ? state : keptFrom(state, key, savedIds);
   if (state.key !== key) setState(current);
+
+  /*
+   * 닫아 둔 뒤에 다른 제품이 새로 빠지면 다시 알린다. 닫은 것은 그때 본 안내라
+   * 그 뒤에 생긴 일까지 덮으면 저장한 것이 조용히 사라지는 일이 되풀이된다.
+   */
+  const missingKey = current.missingIds.join(",");
+  if (noticeDismissed && dismissedFor !== missingKey) setNoticeDismissed(false);
 
   // 성공 응답에서 빠졌다고 확인한 번호도 다시 물을 필요가 없다. 화면에 다시 들어오면 새로 확인한다.
   const known = new Set([...current.items.map((product) => product.id), ...current.missingIds]);
@@ -131,9 +202,19 @@ export function SavedScreen() {
     return () => controller.abort();
   }, [key, needsFetch, retry]);
 
+  /*
+   * 빠진 번호를 잊고 다시 묻는다. 서버가 잠시 실패했을 뿐이면 이것으로 돌아온다.
+   * `missingIds` 를 비우면 `needsFetch` 가 다시 참이 되어 위의 효과가 요청을 보낸다.
+   */
+  const recheckMissing = () => {
+    setState((previous) => ({ ...previous, status: "loading", missingIds: [] }));
+  };
+
   const onToggleSave = (productId: number) => {
+    const removing = isSaved(productId);
+
     toggle(productId);
-    track(isSaved(productId) ? "product_unsaved" : "product_saved", {
+    track(removing ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "saved",
     });
@@ -193,29 +274,15 @@ export function SavedScreen() {
 
   return (
     <main className="flex flex-1 flex-col px-4">
-      {current.missingIds.length > 0 ? (
-        <section
-          role="status"
-          aria-labelledby="missing-saved-products-title"
-          className="mt-3 flex items-start gap-3 rounded-xl bg-surface p-3.5"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background">
-            <Icon name="info" size={19} className="text-text-secondary" />
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p id="missing-saved-products-title" className="text-[13px] font-bold text-text-primary">
-              저장한 제품 {current.missingIds.length}개를 더 이상 볼 수 없어요
-            </p>
-            <p className="text-[11px] leading-4 text-text-secondary">제품이 삭제되었거나 정보가 바뀌었을 수 있어요.</p>
-            <button
-              type="button"
-              onClick={() => unsaveProducts(current.missingIds)}
-              className="mt-1 h-8 self-start rounded-lg text-[12px] font-bold text-[#D93B5C]"
-            >
-              목록에서 지우기
-            </button>
-          </div>
-        </section>
+      {current.missingIds.length > 0 && !noticeDismissed ? (
+        <MissingNotice
+          count={current.missingIds.length}
+          onRecheck={recheckMissing}
+          onDismiss={() => {
+            setNoticeDismissed(true);
+            setDismissedFor(missingKey);
+          }}
+        />
       ) : null}
 
       {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
@@ -241,7 +308,9 @@ export function SavedScreen() {
           <EmptyNotice
             icon="bookmark"
             image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170, loading: "eager" }}
-            title={current.missingIds.length > 0 ? "지금 볼 수 있는 저장 제품이 없어요" : "아직 저장한 제품이 없어요"}
+            title={
+              current.missingIds.length > 0 ? "저장한 제품을 지금은 불러올 수 없어요" : "아직 저장한 제품이 없어요"
+            }
             className="flex-1"
           />
         </div>

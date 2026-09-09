@@ -3,7 +3,7 @@
  *
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -138,27 +138,79 @@ describe("저장함", () => {
     saveProduct(1);
     render(<SavedScreen />);
 
-    expect(await screen.findByText("저장한 제품 1개를 더 이상 볼 수 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("제품 1개를 지금은 불러올 수 없어요")).toBeInTheDocument();
     expect(screen.getByText("총 1개")).toBeInTheDocument();
     expect(screen.getAllByRole("article")).toHaveLength(1);
     // 성공 응답만으로 브라우저의 저장을 자동으로 지우지는 않는다.
     expect(readSavedProductIds()).toEqual([1, 99999]);
   });
 
-  it("볼 수 없는 제품을 저장 목록에서 한 번에 정리한다", async () => {
+  it("다시 확인해서 서버가 돌려주면 그 제품이 목록에 돌아온다", async () => {
+    // 처음에는 서버가 1번을 모른다고 답한다.
+    server.use(http.get("*/api/storage", () => HttpResponse.json({ items: [] })));
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+
+    // 서버가 제자리를 찾은 뒤 다시 확인하면 돌아온다.
+    server.resetHandlers();
+    await userEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
+  });
+
+  it("누락을 안내하면서 저장 목록을 지우지 않는다", async () => {
     saveProduct(99998);
     saveProduct(1);
     saveProduct(99999);
     render(<SavedScreen />);
 
-    await screen.findByText("저장한 제품 2개를 더 이상 볼 수 없어요");
-    await userEvent.click(screen.getByRole("button", { name: "목록에서 지우기" }));
+    await screen.findByText("제품 2개를 지금은 불러올 수 없어요");
+
+    // 되돌아올 수 있는 상태라 저장 목록에 손대지 않는다.
+    expect(readSavedProductIds()).toEqual([99999, 1, 99998]);
+    expect(screen.queryByRole("button", { name: "목록에서 지우기" })).not.toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
+  });
+
+  it("그만 보기를 누르면 누락 안내를 닫는다", async () => {
+    saveProduct(99999);
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+    await userEvent.click(screen.getByRole("button", { name: "그만 보기" }));
 
     await waitFor(() => {
-      expect(readSavedProductIds()).toEqual([1]);
+      expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
     });
-    expect(screen.queryByText(/더 이상 볼 수 없어요/)).not.toBeInTheDocument();
-    expect(screen.getByText("총 1개")).toBeInTheDocument();
+    // 안내만 닫고 저장 목록은 그대로 둔다.
+    expect(readSavedProductIds()).toEqual([1, 99999]);
+    // 남은 제품은 계속 보인다.
+    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+  });
+
+  it("안내를 닫은 뒤 다른 제품이 새로 빠지면 다시 알린다", async () => {
+    saveProduct(99999);
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+    await userEvent.click(screen.getByRole("button", { name: "그만 보기" }));
+    await waitFor(() => {
+      expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
+    });
+
+    // 서버가 모르는 번호를 하나 더 담으면 그때 본 안내가 아니므로 다시 알린다.
+    act(() => {
+      saveProduct(99998);
+    });
+
+    expect(await screen.findByText("제품 2개를 지금은 불러올 수 없어요")).toBeInTheDocument();
   });
 
   it("저장한 제품을 모두 볼 수 없으면 빈 저장함으로 오해하게 하지 않는다", async () => {
@@ -166,8 +218,8 @@ describe("저장함", () => {
     saveProduct(99999);
     render(<SavedScreen />);
 
-    expect(await screen.findByText("저장한 제품 2개를 더 이상 볼 수 없어요")).toBeInTheDocument();
-    expect(screen.getByText("지금 볼 수 있는 저장 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("제품 2개를 지금은 불러올 수 없어요")).toBeInTheDocument();
+    expect(screen.getByText("저장한 제품을 지금은 불러올 수 없어요")).toBeInTheDocument();
     expect(screen.queryByText("아직 저장한 제품이 없어요")).not.toBeInTheDocument();
   });
 
@@ -177,7 +229,7 @@ describe("저장함", () => {
     render(<SavedScreen />);
 
     expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "목록에서 지우기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "다시 확인" })).not.toBeInTheDocument();
     expect(readSavedProductIds()).toEqual([99999]);
   });
 
