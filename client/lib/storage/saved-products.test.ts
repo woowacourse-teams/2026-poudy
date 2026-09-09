@@ -10,8 +10,10 @@ import {
   readSavedProductIds,
   readSavedProducts,
   refreshSavedProducts,
+  restoreProducts,
   saveProduct,
   savedAtOf,
+  savedEntriesOf,
   unsaveProduct,
   unsaveProducts,
 } from "./saved-products";
@@ -100,5 +102,87 @@ describe("번호만 담던 예전 저장을 옮긴다", () => {
 
     expect(readSavedProducts()).toEqual([]);
     expect(window.localStorage.getItem(LEGACY_KEY)).toBeNull();
+  });
+});
+
+describe("되돌리기", () => {
+  it("저장을 푼 항목을 담았던 때와 자리까지 그대로 되살린다", () => {
+    saveProduct(1);
+    saveProduct(2);
+    saveProduct(3);
+
+    // 가운데 것을 뺐다가 되돌린다.
+    const removed = savedEntriesOf([2]);
+    const savedAt = savedAtOf(2);
+    unsaveProduct(2);
+    expect(readSavedProductIds()).toEqual([3, 1]);
+
+    restoreProducts(removed);
+
+    expect(readSavedProductIds()).toEqual([3, 2, 1]);
+    // 담았던 때가 새로 찍히지 않아야 `최근 저장순` 이 어긋나지 않는다.
+    expect(savedAtOf(2)).toBe(savedAt);
+  });
+
+  it("담은 때가 같아도 원래 차례로 돌아간다", () => {
+    // 잇달아 담으면 밀리초까지 같을 수 있다. 그때도 자리가 뒤집히지 않아야 한다.
+    saveProduct(1);
+    saveProduct(2);
+    const [first, second] = readSavedProducts();
+    expect(first.savedAt).toBe(second.savedAt);
+
+    const removed = savedEntriesOf([2]);
+    unsaveProduct(2);
+    restoreProducts(removed);
+
+    expect(readSavedProductIds()).toEqual([2, 1]);
+  });
+
+  it("여럿을 되살려도 서로의 자리를 밀지 않는다", () => {
+    saveProduct(1);
+    saveProduct(2);
+    saveProduct(3);
+    saveProduct(4);
+    // 최근 저장순은 4, 3, 2, 1 이다.
+
+    /*
+     * 화면에서 저장을 푸는 것은 한 번에 하나씩이라, 뺄 때마다 그때의 자리를 남긴다.
+     * 되돌리기도 하나씩이지만 한꺼번에 넘겨도 같은 자리로 돌아가야 한다.
+     */
+    const third = savedEntriesOf([3]);
+    unsaveProduct(3);
+    const second = savedEntriesOf([2]);
+    unsaveProduct(2);
+    expect(readSavedProductIds()).toEqual([4, 1]);
+
+    restoreProducts([...third, ...second]);
+
+    expect(readSavedProductIds()).toEqual([4, 3, 2, 1]);
+  });
+
+  it("잇달아 뺀 뒤 되살려도 저마다 담았던 자리로 돌아간다", () => {
+    saveProduct(1);
+    saveProduct(2);
+    saveProduct(3);
+    saveProduct(4);
+    // 최근 저장순은 4, 3, 2, 1 이다.
+
+    // 하나씩 뺀다. 두 번째로 뺄 때의 목록은 이미 첫 번째가 빠진 상태다.
+    const first = savedEntriesOf([4]);
+    unsaveProduct(4);
+    const second = savedEntriesOf([2]);
+    unsaveProduct(2);
+    expect(readSavedProductIds()).toEqual([3, 1]);
+
+    restoreProducts([...first, ...second]);
+
+    expect(readSavedProductIds()).toEqual([4, 3, 2, 1]);
+  });
+
+  it("되살릴 것이 없으면 목록을 건드리지 않는다", () => {
+    saveProduct(1);
+
+    expect(restoreProducts([])).toEqual([1]);
+    expect(readSavedProductIds()).toEqual([1]);
   });
 });
