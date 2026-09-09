@@ -2,6 +2,7 @@
   "products": [
     {
       "id": 1,
+      "skin_types": ["DRY", "SENSITIVE"],
       "brand_id": 1,
       "category_id": 2,
       "product_name": "블랙 스네일 토너",
@@ -25,6 +26,7 @@
     },
     {
       "id": 7,
+      "skin_types": [],
       "brand_id": 1,
       "category_id": 3,
       "product_name": "블랙스네일 레티놀 콜라겐 세럼 인텐스",
@@ -71,6 +73,7 @@
     },
     {
       "id": 13,
+      "skin_types": ["DRY", "OILY"],
       "brand_id": 3,
       "category_id": 2,
       "product_name": "래디언스 비타 토너",
@@ -94,6 +97,7 @@
     },
     {
       "id": 15,
+      "skin_types": ["DRY", "COMBINATION"],
       "brand_id": 3,
       "category_id": 2,
       "product_name": "PH 컨디션 토너",
