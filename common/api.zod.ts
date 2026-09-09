@@ -25,8 +25,8 @@ export const StorageResponse = z.object({ items: z.array(ProductResponse) });
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]), name: z.string() });
 
-export type SkinTypeListResponse = __TypedOpenapi.Schemas.SkinTypeListResponse;
-export const SkinTypeListResponse = z.object({ items: z.array(SkinTypeResponse) });
+export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
+export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
 
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });

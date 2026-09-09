@@ -99,7 +99,7 @@ export type SkinTypeResponse = {
    */
   name: string;
 }
-export type SkinTypeListResponse = {
+export type SkinTypesResponse = {
   /**
    * 표시 순서대로 정렬된 피부타입 전체
    */
@@ -651,7 +651,7 @@ export type get_FindSkinTypes = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
-      responses: {200: Schemas.SkinTypeListResponse,
+      responses: {200: Schemas.SkinTypesResponse,
 500: Schemas.ProblemDetail,
 },
 

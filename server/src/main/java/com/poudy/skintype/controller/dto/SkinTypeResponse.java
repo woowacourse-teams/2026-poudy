@@ -9,6 +9,6 @@ public record SkinTypeResponse(
     @NotNull @Schema(description = "피부타입 표시명", example = "건성") String name) {
 
     public static SkinTypeResponse from(SkinType skinType) {
-        return new SkinTypeResponse(skinType, skinType.displayName());
+        return new SkinTypeResponse(skinType, skinType.getDisplayName());
     }
 }

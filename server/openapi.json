@@ -415,7 +415,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkinTypeListResponse"
+                  "$ref": "#/components/schemas/SkinTypesResponse"
                 }
               }
             }
@@ -1981,21 +1981,6 @@
           "items"
         ]
       },
-      "SkinTypeListResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "description": "표시 순서대로 정렬된 피부타입 전체",
-            "items": {
-              "$ref": "#/components/schemas/SkinTypeResponse"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ]
-      },
       "SkinTypeResponse": {
         "type": "object",
         "properties": {
@@ -2019,6 +2004,21 @@
         "required": [
           "code",
           "name"
+        ]
+      },
+      "SkinTypesResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "표시 순서대로 정렬된 피부타입 전체",
+            "items": {
+              "$ref": "#/components/schemas/SkinTypeResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "CategoryChildResponse": {

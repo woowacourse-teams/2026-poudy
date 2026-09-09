@@ -13,7 +13,7 @@ public enum SkinType {
         this.displayName = displayName;
     }
 
-    public String displayName() {
+    public String getDisplayName() {
         return displayName;
     }
 }
