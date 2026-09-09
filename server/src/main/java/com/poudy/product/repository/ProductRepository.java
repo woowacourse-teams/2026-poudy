@@ -12,11 +12,14 @@ import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
+import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -85,12 +88,39 @@ public class ProductRepository {
                     productIngredients,
                     nullableTextOf(product, IMAGE_URL_FIELD, context),
                     variantsOf(product, context),
-                    updatedAtOf(product, context)
+                    updatedAtOf(product, context),
+                    skinTypesOf(product, context)
                 );
             }
         });
 
         return resolution;
+    }
+
+    private static Set<SkinType> skinTypesOf(JsonNode product, DeserializationContext context) {
+        JsonNode values = product.get("skin_types");
+        if (values == null) {
+            return Set.of();
+        }
+        if (!values.isArray()) {
+            return context.reportInputMismatch(Product.class, "제품의 skin_types 필드는 배열이어야 합니다.");
+        }
+        Set<SkinType> skinTypes = EnumSet.noneOf(SkinType.class);
+        for (JsonNode value : values) {
+            if (!value.isString()) {
+                return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 문자열이어야 합니다.");
+            }
+            SkinType skinType;
+            try {
+                skinType = SkinType.valueOf(value.asString());
+            } catch (IllegalArgumentException exception) {
+                return context.reportInputMismatch(Product.class, "등록되지 않은 제품 피부타입 코드입니다: %s", value.asString());
+            }
+            if (!skinTypes.add(skinType)) {
+                return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 중복될 수 없습니다: %s", skinType);
+            }
+        }
+        return skinTypes;
     }
 
     private static Brand brandOf(JsonNode product, Brands brands, DeserializationContext context)

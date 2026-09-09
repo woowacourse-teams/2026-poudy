@@ -41,7 +41,8 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt
+                updatedAt,
+                java.util.Set.of()
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -61,7 +62,8 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt
+                updatedAt,
+                java.util.Set.of()
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -83,7 +85,8 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt
+                updatedAt,
+                java.util.Set.of()
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -104,7 +107,8 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt
+            updatedAt,
+            java.util.Set.of()
         );
 
         assertThat(product.skinEffectGroups()).singleElement()
@@ -136,7 +140,8 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt
+            updatedAt,
+            java.util.Set.of()
         );
 
         assertThat(product.skinEffectGroups())
@@ -169,7 +174,8 @@ class ProductTest {
                 "image",
                 variants,
                 null,
-                updatedAt
+                updatedAt,
+                java.util.Set.of()
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -188,7 +194,8 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt
+            updatedAt,
+            java.util.Set.of()
         );
 
         assertThat(product.match(new ProductSearchQuery("브랜드 수분토너")))

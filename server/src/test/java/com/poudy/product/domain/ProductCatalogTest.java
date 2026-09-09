@@ -182,7 +182,8 @@ class ProductCatalogTest {
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(moistureLevel, oilLevel),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
     }
 
