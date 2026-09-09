@@ -89,6 +89,22 @@ export type StorageResponse = {
    */
   items: Array<ProductResponse>;
 }
+export type SkinTypeResponse = {
+  /**
+   * 피부타입 코드
+   */
+  code: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
+  /**
+   * 피부타입 표시명
+   */
+  name: string;
+}
+export type SkinTypeListResponse = {
+  /**
+   * 표시 순서대로 정렬된 피부타입 전체
+   */
+  items: Array<SkinTypeResponse>;
+}
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
@@ -627,6 +643,20 @@ export type get_FindStorageProducts = {
 
     }
 /**
+ * 피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.
+ */
+export type get_FindSkinTypes = {
+      method: "GET",
+      path: "/api/skin-types",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SkinTypeListResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
  */
 export type get_FindProducts = {
@@ -965,6 +995,7 @@ export type get_FindBrand = {
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
+"/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
