@@ -92,6 +92,8 @@ tasks.register('setupGit', Exec) {
 // outputDir 을 프로젝트 루트로 두면 server/ 전체가 이 태스크의 출력이 되어 그 아래를 읽는
 // 태스크가 전부 의존성 미선언으로 잡힌다. build 아래에 뽑고 copyOpenApiDoc 이 옮긴다.
 openApi {
+    // 서버 기동과 최초 문서 생성이 기본 30초를 넘을 수 있다.
+    waitTimeInSeconds = 60
     outputDir = layout.buildDirectory.dir('openapi')
     outputFileName = 'openapi.json'
     apiDocsUrl = "http://localhost:${openApiDocPort}/v3/api-docs"
