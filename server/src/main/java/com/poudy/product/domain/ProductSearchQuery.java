@@ -10,7 +10,11 @@ public final class ProductSearchQuery {
     private final List<Parts> parts;
 
     public ProductSearchQuery(String keyword) {
-        this.whole = new SearchKeyword(keyword);
+        this(new SearchKeyword(keyword));
+    }
+
+    public ProductSearchQuery(SearchKeyword keyword) {
+        this.whole = keyword;
         this.parts = partsOf(whole.value());
     }
 

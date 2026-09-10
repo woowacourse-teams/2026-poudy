@@ -2,11 +2,12 @@ package com.poudy.product.domain;
 
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.List;
 
 public final class ProductFilter {
 
-    private final String keyword;
+    private final SearchKeyword keyword;
     private final List<Long> categoryIds;
     private final List<Long> brandIds;
     private final List<MoistureLevel> moistureLevels;
@@ -14,7 +15,7 @@ public final class ProductFilter {
     private final IngredientFilter ingredientFilter;
 
     public ProductFilter(
-        String keyword,
+        SearchKeyword keyword,
         List<Long> categoryIds,
         List<Long> brandIds,
         List<MoistureLevel> moistureLevels,
@@ -29,7 +30,7 @@ public final class ProductFilter {
         this.ingredientFilter = ingredientFilter == null ? new IngredientFilter(null, null) : ingredientFilter;
     }
 
-    public String keyword() {
+    public SearchKeyword keyword() {
         return keyword;
     }
 

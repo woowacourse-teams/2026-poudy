@@ -28,6 +28,12 @@ export const SkinTypeResponse = z.object({ code: z.enum(["DRY", "OILY", "SENSITI
 export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
 export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
 
+export type RankingItem = __TypedOpenapi.Schemas.RankingItem;
+export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string() });
+
+export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
+export const RankingsResponse = z.object({ items: z.array(RankingItem) });
+
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
 

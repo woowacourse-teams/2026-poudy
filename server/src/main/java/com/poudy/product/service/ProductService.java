@@ -16,6 +16,8 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.observation.ProductSearchObserver;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,17 +27,20 @@ public class ProductService {
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
     private final ProductSearchLogger searchLogger;
+    private final ProductSearchObserver searchObserver;
 
     public ProductService(
         ProductRepository productRepository,
         Categories categories,
         ExcludeCodeIngredients excludeCodeIngredients,
-        ProductSearchLogger searchLogger
+        ProductSearchLogger searchLogger,
+        ProductSearchObserver searchObserver
     ) {
         this.productRepository = productRepository;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
         this.searchLogger = searchLogger;
+        this.searchObserver = searchObserver;
     }
 
     public ProductPage findProducts(
@@ -51,17 +56,39 @@ public class ProductService {
             return products.find(filter, sort, page, size, categories);
         }
 
-        return searchLogger.analyze(
-            new ProductSearchLogger.Context(
-                query.keyword(),
-                page,
-                size,
-                ProductSort.orDefault(sort),
-                query.hasFilters()
-            ),
-            () -> products.find(filter, sort, page, size, categories),
-            ProductPage::totalElements
+        // 정규화는 요청당 한 번만 한다. 검색·로그·수집이 같은 값을 나눠 쓴다.
+        SearchKeyword keyword = filter.keyword();
+        var context = new ProductSearchLogger.Context(
+            keyword,
+            page,
+            size,
+            ProductSort.orDefault(sort),
+            query.hasFilters()
         );
+        // 검색이 어떻게 끝났는지는 여기서 한 번만 가른다. 기록하는 쪽은 판정하지 않는다.
+        long startedAt = System.nanoTime();
+        ProductPage result;
+        try {
+            result = products.find(filter, sort, page, size, categories);
+        } catch (RuntimeException exception) {
+            long failedAfter = System.nanoTime() - startedAt;
+            quietly(() -> searchLogger.failed(context, failedAfter));
+            throw exception;
+        }
+        long elapsed = System.nanoTime() - startedAt;
+        quietly(() -> searchLogger.completed(context, elapsed, result.totalElements()));
+        quietly(() -> searchObserver.completed(keyword, result.totalElements()));
+        return result;
+    }
+
+    /** 기록은 응답의 조건이 아니다. 로그든 집계든 실패해도 검색 결과는 그대로 나간다. */
+    private static void quietly(Runnable recording) {
+        try {
+            recording.run();
+        } catch (RuntimeException exception) {
+            org.slf4j.LoggerFactory.getLogger(ProductService.class)
+                .warn("event=search_recording_failed");
+        }
     }
 
     public long countProducts(ProductQuery query) {
@@ -91,7 +118,7 @@ public class ProductService {
         );
 
         return new ProductFilter(
-            query.keyword(),
+            query.keyword() == null ? null : new SearchKeyword(query.keyword()),
             query.categoryIds(),
             query.brandIds(),
             query.moistureLevels().stream().map(MoistureLevel::new).toList(),

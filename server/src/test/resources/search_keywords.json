@@ -1,0 +1,67 @@
+{
+  "schema_version": 3,
+  "normalizer_version": "search-keyword-v1",
+  "dictionary_version": "fixture-v1",
+  "search_keywords": [
+    {
+      "id": "brand:1",
+      "kind": "BRAND",
+      "keyword": "라운드랩",
+      "expressions": [
+        "라운드랩"
+      ],
+      "expression_types": {
+        "라운드랩": "CATALOG"
+      },
+      "status": "ACTIVE",
+      "ranking_eligible": true,
+      "catalog_refs": [
+        {
+          "type": "BRAND",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "id": "product:1",
+      "kind": "PRODUCT",
+      "keyword": "라운드랩 1025 독도 토너",
+      "expressions": [
+        "라운드랩 1025 독도 토너",
+        " 독도 토너 ",
+        "독도토너"
+      ],
+      "expression_types": {
+        "라운드랩1025독도토너": "CATALOG",
+        "독도토너": "REVIEWED_ALIAS"
+      },
+      "status": "ACTIVE",
+      "ranking_eligible": true,
+      "catalog_refs": [
+        {
+          "type": "PRODUCT",
+          "id": 1
+        },
+        {
+          "type": "PRODUCT",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "id": "term:pdrn",
+      "kind": "TERM",
+      "keyword": "PDRN",
+      "expressions": [
+        "PDRN",
+        "pdrn"
+      ],
+      "expression_types": {
+        "pdrn": "CATALOG"
+      },
+      "status": "ACTIVE",
+      "ranking_eligible": true,
+      "catalog_refs": []
+    }
+  ]
+}

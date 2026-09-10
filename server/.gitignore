@@ -34,3 +34,6 @@ out/
 # .env 는 로컬 값이므로 올리지 않는다. 예시는 .env.example 이 갖는다.
 .env
 !.env.example
+
+# Runtime search observations must never enter artifacts.
+/var/search-ranking/
