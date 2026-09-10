@@ -23,6 +23,8 @@ import java.util.Optional;
 
 public final class Product {
 
+    private static final int MINIMUM_BRAND_PREFIX_LENGTH = 2;
+
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
     private final Long id;
@@ -212,7 +214,7 @@ public final class Product {
 
     private Optional<CombinedMatch> matchCombined(ProductSearchQuery.Parts parts) {
         Optional<TextMatch> brandMatch = brand.findMatch(parts.brand());
-        if (brandMatch.isEmpty() || !matchesBrandPrefix(brandMatch.get())) {
+        if (brandMatch.isEmpty() || !matchesBrandPrefix(parts.brand(), brandMatch.get())) {
             return Optional.empty();
         }
 
@@ -224,8 +226,13 @@ public final class Product {
         return TextMatch.best(searchableNames, keyword);
     }
 
-    private static boolean matchesBrandPrefix(TextMatch match) {
-        return match.rank().match() == NameMatch.EXACT || match.rank().match() == NameMatch.PREFIX;
+    private static boolean matchesBrandPrefix(SearchKeyword searched, TextMatch match) {
+        if (match.rank().match() == NameMatch.EXACT) {
+            return true;
+        }
+        // 한 글자 접두는 브랜드를 지목하지 못한다. ㄷ 하나로 닥터지를 집으면 다른 브랜드 제품이 딸려 온다.
+        return match.rank().match() == NameMatch.PREFIX
+            && searched.value().codePointCount(0, searched.value().length()) >= MINIMUM_BRAND_PREFIX_LENGTH;
     }
 
     private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {
