@@ -1,6 +1,7 @@
 package com.poudy.search.domain;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class SearchKeyword {
@@ -9,12 +10,29 @@ public final class SearchKeyword {
     private final String reading;
 
     public SearchKeyword(String keyword) {
+        Objects.requireNonNull(keyword, "검색어는 null 일 수 없습니다.");
         this.value = normalize(keyword);
         this.reading = LatinReading.ofKeyword(this.value);
     }
 
     public String value() {
         return value;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof SearchKeyword compared)) {
+            return false;
+        }
+        return value.equals(compared.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 
     public boolean matches(String candidate) {
@@ -133,7 +151,11 @@ public final class SearchKeyword {
         return searched.length() == 1 && !Chosung.isDouble(searched);
     }
 
-    static boolean isSpace(char character) {
-        return Character.isWhitespace(character) || Character.isSpaceChar(character);
+    /** 보이지 않는 문자는 검색 의도가 아니다. 남겨 두면 같은 말이 서로 다른 키로 갈라진다. */
+    static boolean isIgnorable(char character) {
+        return Character.isWhitespace(character)
+            || Character.isSpaceChar(character)
+            || Character.isISOControl(character)
+            || Character.getType(character) == Character.FORMAT;
     }
 }
