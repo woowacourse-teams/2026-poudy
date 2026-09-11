@@ -19,23 +19,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class SearchKeywordRankingPersistenceTest {
-    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-09T00:00:00Z"), ZoneOffset.UTC);
+    private static final Instant RECORDED_AT = Instant.parse("2026-09-09T00:00:00Z");
+    private static final Clock AFTER_BOUNDARY = Clock.fixed(RECORDED_AT.plusSeconds(600), ZoneOffset.UTC);
 
     @TempDir
     Path directory;
 
     @Test
     void restartRebuildsTheSameRankingFromRestoredCountsOnFirstRefresh() {
-        var buckets = new KeywordBuckets(CLOCK, 168);
-        var before = service(buckets);
+        var recording = new KeywordBuckets(Clock.fixed(RECORDED_AT, ZoneOffset.UTC), 168);
+        var recorder = service(recording);
         for (int i = 0; i < 5; i++) {
-            before.completed(new SearchKeyword("토너"), 1);
+            recorder.completed(new SearchKeyword("토너"), 1);
         }
-        before.refreshRankings();
         var countsRepository = new KeywordSnapshotRepository(directory.resolve("buckets.json"), 168);
-        countsRepository.save(buckets.snapshot());
+        countsRepository.save(recording.snapshot());
 
-        var restored = new KeywordBuckets(CLOCK, 168);
+        var running = new KeywordBuckets(AFTER_BOUNDARY, 168);
+        running.restore(recording.snapshot());
+        var before = service(running);
+        before.refreshRankings();
+
+        var restored = new KeywordBuckets(AFTER_BOUNDARY, 168);
         countsRepository.load().ifPresent(restored::restore);
         var after = service(restored);
         assertThat(after.rankings()).isEmpty();

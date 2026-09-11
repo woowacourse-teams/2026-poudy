@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class SearchKeywordServiceTest {
-    private final Clock clock = Clock.fixed(Instant.parse("2026-09-08T10:30:00Z"), ZoneOffset.UTC);
+    private final MutableClock clock = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
     private final KeywordBuckets successful = new KeywordBuckets(clock, 168);
 
     @Test
@@ -46,12 +47,14 @@ class SearchKeywordServiceTest {
         for (int i = 0; i < 4; i++) {
             service.completed(new SearchKeyword("독도 토너"), 4);
         }
+        closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).extracting(RankedKeyword::keyword).containsExactly("PDRN");
         service.completed(new SearchKeyword("ㄷㄷㅌㄴ"), 1);
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("라운드랩"), 40);
         }
+        closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).extracting(RankedKeyword::keyword)
             .containsExactly("PDRN", "라운드랩", "라운드랩 1025 독도 토너");
@@ -65,6 +68,7 @@ class SearchKeywordServiceTest {
             old.completed(new SearchKeyword("독도 토너"), 1);
             old.completed(new SearchKeyword("토너"), 0);
         }
+        closeBucket();
         old.refreshRankings();
         assertThat(old.rankings()).isEmpty();
         var updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
@@ -83,6 +87,7 @@ class SearchKeywordServiceTest {
             service.completed(new SearchKeyword("사전에없는말"), 1);
         }
         service.completed(new SearchKeyword("적은입력"), 1);
+        closeBucket();
 
         var report = service.report("catalog", "code");
 
@@ -103,8 +108,10 @@ class SearchKeywordServiceTest {
         for (int i = 0; i < 19; i++) {
             service.completed(new SearchKeyword("미등록"), 1);
         }
+        closeBucket();
         assertThat(service.report("catalog", "code").nonzeroUnresolved().items()).isEmpty();
         service.completed(new SearchKeyword("미등록"), 1);
+        closeBucket();
         assertThat(service.report("catalog", "code").nonzeroUnresolved().items())
             .extracting(ReportItem::normalizedQuery, ReportItem::count)
             .containsExactly(tuple("미등록", 20L));
@@ -120,6 +127,7 @@ class SearchKeywordServiceTest {
             service.completed(new SearchKeyword("a@example.com"), 1);
             service.completed(new SearchKeyword("미등록"), 1);
         }
+        closeBucket();
         assertThat(successful.view().counts()).containsKeys("a@example.com", "미등록");
         assertThat(service.report("catalog", "code").nonzeroUnresolved().items())
             .extracting(ReportItem::normalizedQuery, ReportItem::count)
@@ -141,6 +149,7 @@ class SearchKeywordServiceTest {
                 service.completed(new SearchKeyword(entry.expressions().iterator().next()), 1);
             }
         }
+        closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).hasSize(10);
         service.refreshRankings();
@@ -155,6 +164,7 @@ class SearchKeywordServiceTest {
             service.completed(new SearchKeyword("토너"), 1);
         }
         assertThat(service.rankings()).isEmpty();
+        closeBucket();
         service.refreshRankings();
         List<RankedKeyword> published = service.rankings();
         assertThat(published).containsExactly(new RankedKeyword(1, "토너"));
@@ -165,6 +175,7 @@ class SearchKeywordServiceTest {
             service.completed(new SearchKeyword("크림"), 1);
         }
         assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너"));
+        closeBucket();
 
         ExecutorService readers = Executors.newFixedThreadPool(4);
         List<Future<List<RankedKeyword>>> futures = new ArrayList<>();
@@ -204,8 +215,10 @@ class SearchKeywordServiceTest {
         for (int i = 0; i < 5; i++) {
             failing.completed(new SearchKeyword("토너"), 1);
         }
+        throwingClock.now = throwingClock.now.plus(10, ChronoUnit.MINUTES);
         failing.refreshRankings();
         var previous = failing.rankings();
+        assertThat(previous).containsExactly(new RankedKeyword(1, "토너"));
         throwingClock.fail = true;
         assertThat(failing.rankings()).isEqualTo(previous);
         failing.refreshRankings();
@@ -226,9 +239,10 @@ class SearchKeywordServiceTest {
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("토너"), 1);
         }
+        mutable.now = mutable.now.plus(1, ChronoUnit.MINUTES);
         service.refreshRankings();
         assertThat(service.rankings()).hasSize(1);
-        mutable.now = mutable.now.plus(2, java.time.temporal.ChronoUnit.HOURS);
+        mutable.now = mutable.now.plus(2, ChronoUnit.HOURS);
         service.refreshRankings();
         assertThat(service.rankings()).isEmpty();
     }
@@ -257,6 +271,7 @@ class SearchKeywordServiceTest {
         }
         assertThat(service.rankings()).isEmpty();
         assertThat(calls).hasValue(0);
+        closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).hasSize(10);
         assertThat(calls).hasValue(10);
@@ -293,13 +308,14 @@ class SearchKeywordServiceTest {
         for (int i = 0; i < 10; i++) {
             service.completed(new SearchKeyword("차단"), 1);
         }
+        closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "자격"));
         assertThat(calls).hasValue(1);
     }
 
     private static class MutableClock extends Clock {
-        private Instant now;
+        Instant now;
         private MutableClock(Instant now) {
             this.now = now;
         }
@@ -333,6 +349,10 @@ class SearchKeywordServiceTest {
             }
             return super.instant();
         }
+    }
+
+    private void closeBucket() {
+        clock.now = clock.now.plus(10, ChronoUnit.MINUTES);
     }
 
     private SearchKeywordService service(List<DictionaryEntry> entries, Set<String> blocked) {

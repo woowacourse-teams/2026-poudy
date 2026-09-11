@@ -41,25 +41,23 @@ public class KeywordSnapshotRepository {
     private static final int SCHEMA_VERSION = 1;
 
     private final Path file;
-    private final int retainedHours;
-    private final int retainedBuckets;
+    private final int windowHours;
     private final int bucketSeconds;
 
-    public KeywordSnapshotRepository(Path file, int retainedHours) {
-        this(file, retainedHours, SearchKeywordPolicy.BUCKET_SECONDS);
+    public KeywordSnapshotRepository(Path file, int windowHours) {
+        this(file, windowHours, SearchKeywordPolicy.BUCKET_SECONDS);
     }
 
-    public KeywordSnapshotRepository(Path file, int retainedHours, int bucketSeconds) {
-        if (retainedHours < 1) {
-            throw new IllegalArgumentException("Retention must be positive");
+    public KeywordSnapshotRepository(Path file, int windowHours, int bucketSeconds) {
+        if (windowHours < 1) {
+            throw new IllegalArgumentException("Window must be positive");
         }
         this.file = file.toAbsolutePath().normalize();
-        this.retainedHours = retainedHours;
+        this.windowHours = windowHours;
         if (bucketSeconds < 1 || 3600 % bucketSeconds != 0) {
             throw new IllegalArgumentException("Bucket duration must divide one hour");
         }
         this.bucketSeconds = bucketSeconds;
-        this.retainedBuckets = Math.multiplyExact(retainedHours, 3600 / bucketSeconds);
     }
 
     public Optional<KeywordBucketSnapshot> load() {
@@ -143,7 +141,7 @@ public class KeywordSnapshotRepository {
         // 키 검증은 복원이 소유한다. 여기서 한 번 더 훑으면 같은 규칙이 두 곳에서 갈라진다.
         KeywordBuckets validator = new KeywordBuckets(
             Clock.fixed(snapshot.maxObservedBucketStart(), ZoneOffset.UTC),
-            retainedHours,
+            windowHours,
             bucketSeconds
         );
         validator.restore(snapshot);
@@ -160,7 +158,7 @@ public class KeywordSnapshotRepository {
             );
         }
         JsonNode bucketNodes = root.get("buckets");
-        if (!bucketNodes.isArray() || bucketNodes.size() > retainedBuckets) {
+        if (!bucketNodes.isArray()) {
             throw new IllegalArgumentException("Invalid snapshot buckets");
         }
         List<KeywordBucket> buckets = new ArrayList<>();

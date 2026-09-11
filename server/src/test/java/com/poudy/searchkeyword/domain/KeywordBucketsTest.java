@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.searchkeyword.domain.KeywordBuckets.RecordResult;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -27,7 +28,12 @@ class KeywordBucketsTest {
     private final MutableClock clock = new MutableClock(START);
 
     @ParameterizedTest
-    @CsvSource({"30,10:02:59,10:03:00", "60,10:00:59,10:01:00", "180,10:02:59,10:03:00"})
+    @CsvSource({
+            "30,10:02:59,10:03:00",
+            "60,10:00:59,10:01:00",
+            "180,10:02:59,10:03:00",
+            "600,10:09:59,10:10:00"
+    })
     void alignsBucketsToEpochBoundariesForSupportedDurations(int seconds, String before, String after) {
         Instant initial = Instant.parse("2026-09-06T" + before + "Z");
         MutableClock durationClock = new MutableClock(initial);
@@ -35,30 +41,49 @@ class KeywordBucketsTest {
         buckets.record("토너");
         durationClock.set(Instant.parse("2026-09-06T" + after + "Z"));
         buckets.record("크림");
-        assertThat(buckets.view().bucketCount()).isEqualTo(2);
-        assertThat(buckets.view().counts()).containsEntry("토너", 1L).containsEntry("크림", 1L);
+        assertThat(buckets.statistics().bucketCount()).isEqualTo(2);
+        assertThat(buckets.view().counts()).containsOnlyKeys("토너");
     }
 
     @Test
-    void retainsExactlyCurrentAndPrevious167Hours() {
+    void viewExcludesTheBucketInProgressUntilItsBoundary() {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
         buckets.record("토너");
-        clock.set(START.plus(167, ChronoUnit.HOURS));
-        assertThat(buckets.view().counts()).containsEntry("토너", 1L);
-        clock.set(START.plus(168, ChronoUnit.HOURS));
+        clock.set(START.plus(9, ChronoUnit.MINUTES).plusSeconds(59));
         assertThat(buckets.view().counts()).isEmpty();
-        assertThat(buckets.view().uniqueKeyCount()).isZero();
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
+        assertThat(buckets.view().counts()).containsEntry("토너", 1L);
     }
 
     @Test
-    void zeroStoreExpiresIndependentlyAt72Hours() {
-        KeywordBuckets ranking = new KeywordBuckets(clock, 168);
-        KeywordBuckets zero = new KeywordBuckets(clock, 72);
-        ranking.record("토너");
-        zero.record("없는제품");
-        clock.set(START.plus(72, ChronoUnit.HOURS));
-        assertThat(zero.view().counts()).isEmpty();
-        assertThat(ranking.view().counts()).containsEntry("토너", 1L);
+    void windowHoldsExactly168HoursOfCompletedBuckets() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        buckets.record("토너");
+        clock.set(START.plus(168, ChronoUnit.HOURS));
+        assertThat(buckets.view().counts()).containsEntry("토너", 1L);
+        assertThat(buckets.view().windowStart()).isEqualTo(START);
+        clock.set(START.plus(168, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
+        assertThat(buckets.view().counts()).isEmpty();
+        assertThat(buckets.statistics().uniqueKeyCount()).isZero();
+    }
+
+    @Test
+    void storesWithDifferentWindowsExpireIndependently() {
+        KeywordBuckets week = new KeywordBuckets(clock, 168);
+        KeywordBuckets threeDays = new KeywordBuckets(clock, 72);
+        week.record("토너");
+        threeDays.record("크림");
+        clock.set(START.plus(72, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
+        assertThat(threeDays.view().counts()).isEmpty();
+        assertThat(week.view().counts()).containsEntry("토너", 1L);
+    }
+
+    @Test
+    void nextBucketStartsAtTheFollowingTenMinuteBoundary() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        assertThat(buckets.untilNextBucket()).isEqualTo(Duration.ofMinutes(10));
+        clock.set(START.plusSeconds(299));
+        assertThat(buckets.untilNextBucket()).isEqualTo(Duration.ofSeconds(301));
     }
 
     @Test
@@ -69,8 +94,9 @@ class KeywordBucketsTest {
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
         clock.set(START.plus(1, ChronoUnit.HOURS));
         assertThat(buckets.record("크림")).isEqualTo(RecordResult.RECORDED);
+        clock.set(START.plus(1, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
         assertThat(buckets.view().counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 2L, "크림", 2L));
-        assertThat(buckets.view().entryCount()).isEqualTo(3);
+        assertThat(buckets.statistics().entryCount()).isEqualTo(3);
     }
 
     @Test
@@ -79,7 +105,7 @@ class KeywordBucketsTest {
         for (int index = 0; index < 1_000; index++) {
             assertThat(buckets.record("입력" + index)).isEqualTo(RecordResult.RECORDED);
         }
-        assertThat(buckets.view().entryCount()).isEqualTo(1_000);
+        assertThat(buckets.statistics().entryCount()).isEqualTo(1_000);
     }
 
     @Test
@@ -94,7 +120,7 @@ class KeywordBucketsTest {
         assertThat(buckets.view().clockRegressed()).isTrue();
         KeywordBucketSnapshot snapshot = buckets.snapshot();
         assertThat(snapshot.savedAt()).isAfterOrEqualTo(snapshot.maxObservedBucketStart());
-        assertThat(buckets.view().counts()).containsEntry("토너", 2L);
+        assertThat(snapshot.buckets().getFirst().counts()).containsEntry("토너", 2L);
         regressionClock.set(Instant.parse("2026-09-06T10:30:40Z"));
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
         assertThat(buckets.view().clockRegressed()).isFalse();
@@ -114,23 +140,22 @@ class KeywordBucketsTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"30", "60", "180"})
-    void retentionExpiresExactlyAtConfiguredDuration(int seconds) {
+    @CsvSource({"30", "60", "180", "600"})
+    void windowExpiresExactlyAtConfiguredDuration(int seconds) {
         MutableClock durationClock = new MutableClock(Instant.parse("2026-09-06T10:00:00Z"));
         KeywordBuckets buckets = new KeywordBuckets(durationClock, 1, seconds);
         buckets.record("토너");
-        durationClock.set(durationClock.instant().plusSeconds(3599));
+        durationClock.set(Instant.parse("2026-09-06T11:00:00Z").plusSeconds(seconds - 1));
         assertThat(buckets.view().counts()).containsEntry("토너", 1L);
-        durationClock.set(Instant.parse("2026-09-06T11:00:00Z"));
+        durationClock.set(Instant.parse("2026-09-06T11:00:00Z").plusSeconds(seconds));
         assertThat(buckets.view().counts()).isEmpty();
     }
 
     @ParameterizedTest
-    @CsvSource({"30", "60", "180"})
+    @CsvSource({"30", "60", "180", "600"})
     void snapshotAcceptsOldestRetainedBucketAndRejectsOneOlder(int seconds) {
         Instant maximum = Instant.parse("2026-09-06T10:00:00Z");
-        int retainedBuckets = 2 * 3600 / seconds;
-        Instant oldest = maximum.minus((retainedBuckets - 1L) * seconds, ChronoUnit.SECONDS);
+        Instant oldest = maximum.minus(2, ChronoUnit.HOURS);
         KeywordBucketSnapshot valid = new KeywordBucketSnapshot(
             maximum,
             maximum,
@@ -157,6 +182,7 @@ class KeywordBucketsTest {
         KeywordBucketSnapshot snapshot = original.snapshot();
         KeywordBuckets restored = new KeywordBuckets(clock, 168, 1);
         restored.restore(snapshot);
+        clock.set(START.plusSeconds(1));
         assertThat(restored.view().counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 2L, "크림", 1L));
     }
 
@@ -179,9 +205,13 @@ class KeywordBucketsTest {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
         buckets.record("토너");
         KeywordBucketSnapshot first = buckets.snapshot();
+        buckets.record("토너");
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
         var view = buckets.view();
         buckets.record("토너");
-        assertThat(view.counts()).containsEntry("토너", 1L);
+        clock.set(START.plus(20, ChronoUnit.MINUTES));
+        assertThat(view.counts()).containsEntry("토너", 2L);
+        assertThat(buckets.view().counts()).containsEntry("토너", 3L);
         assertThatThrownBy(() -> view.counts().put("크림", 1L)).isInstanceOf(UnsupportedOperationException.class);
         assertThat(first.buckets().getFirst().counts()).containsEntry("토너", 1L);
         assertThat(buckets.snapshot().buckets().getFirst().counts()).containsEntry("토너", 2L);
@@ -199,7 +229,7 @@ class KeywordBucketsTest {
             )
         );
         assertThatThrownBy(() -> buckets.record("토너")).isInstanceOf(ArithmeticException.class);
-        assertThat(buckets.view().counts()).containsEntry("토너", Long.MAX_VALUE);
+        assertThat(buckets.snapshot().buckets().getFirst().counts()).containsEntry("토너", Long.MAX_VALUE);
     }
 
     @Test
@@ -237,9 +267,10 @@ class KeywordBucketsTest {
             );
             Future<?> reader = executor.submit(() -> {
                 for (int index = 0; index < 1000; index++) {
-                    KeywordBucketView view = buckets.view();
-                    assertThat(view.entryCount()).isLessThanOrEqualTo(1);
-                    assertThat(view.uniqueKeyCount()).isEqualTo(view.entryCount());
+                    KeywordBucketStatistics statistics = buckets.statistics();
+                    assertThat(statistics.entryCount()).isLessThanOrEqualTo(1);
+                    assertThat(statistics.uniqueKeyCount()).isEqualTo(statistics.entryCount());
+                    buckets.view();
                     buckets.snapshot();
                     buckets.expire();
                 }
@@ -249,8 +280,9 @@ class KeywordBucketsTest {
             }
             reader.get();
         }
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
         assertThat(buckets.view().counts()).containsExactlyEntriesOf(Map.of("토너", 1_000_000L));
-        assertThat(buckets.view().entryCount()).isOne();
+        assertThat(buckets.statistics().entryCount()).isOne();
     }
 
     @Test
@@ -274,10 +306,10 @@ class KeywordBucketsTest {
                 task.get(10, TimeUnit.SECONDS);
             }
         }
-        var view = buckets.view();
-        assertThat(view.entryCount()).isEqualTo(800);
-        assertThat(view.uniqueKeyCount()).isEqualTo(800);
-        assertThat(view.counts().values()).allMatch(count -> count == 1L);
+        assertThat(buckets.statistics().entryCount()).isEqualTo(800);
+        assertThat(buckets.statistics().uniqueKeyCount()).isEqualTo(800);
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
+        assertThat(buckets.view().counts()).hasSize(800).allSatisfy((key, count) -> assertThat(count).isOne());
     }
 
     @Test
@@ -311,14 +343,15 @@ class KeywordBucketsTest {
                 for (int hour = 1; hour <= 200; hour++) {
                     clock.set(START.plus(hour, ChronoUnit.HOURS));
                     buckets.expire();
-                    var view = buckets.view();
-                    assertThat(view.bucketCount()).isLessThanOrEqualTo(3);
-                    assertThat(view.uniqueKeyCount()).isEqualTo(view.counts().size());
-                    assertThat(view.entryCount()).isBetween(view.uniqueKeyCount(), 30);
+                    var statistics = buckets.statistics();
+                    assertThat(statistics.bucketCount()).isLessThanOrEqualTo(4);
+                    assertThat(statistics.entryCount()).isBetween(statistics.uniqueKeyCount(), 40);
+                    assertThat(buckets.view().counts().size()).isLessThanOrEqualTo(10);
                     var snapshot = buckets.snapshot();
                     var restored = new KeywordBuckets(Clock.fixed(snapshot.savedAt(), ZoneOffset.UTC), 3);
                     restored.restore(snapshot);
-                    assertThat(restored.view().uniqueKeyCount()).isEqualTo(restored.view().counts().size());
+                    assertThat(restored.statistics().entryCount())
+                        .isEqualTo(snapshot.buckets().stream().mapToInt(bucket -> bucket.counts().size()).sum());
                 }
                 return null;
             }));
@@ -327,10 +360,10 @@ class KeywordBucketsTest {
                 task.get(20, TimeUnit.SECONDS);
             }
         }
-        clock.set(START.plus(203, ChronoUnit.HOURS));
+        clock.set(START.plus(203, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
         assertThat(buckets.view().counts()).isEmpty();
-        assertThat(buckets.view().entryCount()).isZero();
-        assertThat(buckets.view().uniqueKeyCount()).isZero();
+        assertThat(buckets.statistics().entryCount()).isZero();
+        assertThat(buckets.statistics().uniqueKeyCount()).isZero();
     }
 
     @Test

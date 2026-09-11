@@ -168,13 +168,14 @@ public class SearchKeywordConfig {
             thread.setDaemon(true);
             return thread;
         });
-        // 순위는 이 스레드 하나만 만든다. 기동 직후 복원한 집계로 곧바로 한 번 돌고, 이후 30초마다 다시 만든다.
-        scheduler.scheduleWithFixedDelay(
-            () -> runtime.service().refreshRankings(),
-            0,
-            SearchKeywordPolicy.RANKING_REFRESH_SECONDS,
-            TimeUnit.SECONDS
-        );
+        Runnable refreshAtEveryBucketBoundary = new Runnable() {
+            @Override
+            public void run() {
+                runtime.service().refreshRankings();
+                scheduler.schedule(this, runtime.successful().untilNextBucket().toNanos(), TimeUnit.NANOSECONDS);
+            }
+        };
+        scheduler.execute(refreshAtEveryBucketBoundary);
         return scheduler;
     }
 

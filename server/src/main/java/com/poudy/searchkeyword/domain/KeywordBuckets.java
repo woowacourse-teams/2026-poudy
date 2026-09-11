@@ -2,6 +2,7 @@ package com.poudy.searchkeyword.domain;
 
 import com.poudy.search.domain.SearchKeyword;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -16,8 +17,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class KeywordBuckets {
 
     private final Clock clock;
-    private final int retainedHours;
     private final int bucketSeconds;
+    private final int windowBuckets;
     private final int retainedBuckets;
     private final Instant startedAt;
     private final ReentrantLock lock = new ReentrantLock();
@@ -27,29 +28,29 @@ public final class KeywordBuckets {
     private Instant maxObservedBucketStart;
     private boolean clockRegressed;
 
-    public KeywordBuckets(Clock clock, int retainedHours) {
+    public KeywordBuckets(Clock clock, int windowHours) {
         this(
             clock,
-            retainedHours,
+            windowHours,
             SearchKeywordPolicy.BUCKET_SECONDS
         );
     }
 
     public KeywordBuckets(
         Clock clock,
-        int retainedHours,
+        int windowHours,
         int bucketSeconds
     ) {
-        if (retainedHours < 1) {
-            throw new IllegalArgumentException("Retention must be positive");
+        if (windowHours < 1) {
+            throw new IllegalArgumentException("Window must be positive");
         }
         if (bucketSeconds < 1 || 3600 % bucketSeconds != 0) {
             throw new IllegalArgumentException("Bucket duration must divide one hour");
         }
         this.bucketSeconds = bucketSeconds;
-        this.retainedBuckets = Math.multiplyExact(retainedHours, 3600 / bucketSeconds);
+        this.windowBuckets = Math.multiplyExact(windowHours, 3600 / bucketSeconds);
+        this.retainedBuckets = Math.addExact(windowBuckets, 1);
         this.clock = clock;
-        this.retainedHours = retainedHours;
         this.startedAt = clock.instant();
         this.maxObservedBucketStart = bucket(startedAt);
     }
@@ -85,22 +86,30 @@ public final class KeywordBuckets {
     public KeywordBucketView view() {
         lock.lock();
         try {
-            Instant now = advance();
-            int entries = entryCount;
-            Instant observedThrough = now.isBefore(maxObservedBucketStart) ? maxObservedBucketStart : now;
+            advance();
+            Map<String, Long> completed = new HashMap<>(totals);
+            ConcurrentHashMap<String, Long> inProgress = buckets.get(maxObservedBucketStart);
+            if (inProgress != null) {
+                inProgress.forEach((key, count) -> completed.computeIfPresent(key, (ignored, total) -> {
+                    long remaining = Math.subtractExact(total, count);
+                    return remaining == 0 ? null : remaining;
+                }));
+            }
             return new KeywordBucketView(
-                totals,
+                completed,
                 windowStart(),
-                observedThrough,
+                maxObservedBucketStart,
                 startedAt,
-                clockRegressed,
-                buckets.size(),
-                entries,
-                totals.size()
+                clockRegressed
             );
         } finally {
             lock.unlock();
         }
+    }
+
+    public Duration untilNextBucket() {
+        Instant now = clock.instant();
+        return Duration.between(now, bucket(now).plusSeconds(bucketSeconds));
     }
 
     public KeywordBucketStatistics statistics() {
@@ -196,7 +205,7 @@ public final class KeywordBuckets {
     }
 
     private Instant windowStart() {
-        return maxObservedBucketStart.minus((retainedBuckets - 1L) * bucketSeconds, ChronoUnit.SECONDS);
+        return maxObservedBucketStart.minus((long) windowBuckets * bucketSeconds, ChronoUnit.SECONDS);
     }
 
     private void validateSnapshot(KeywordBucketSnapshot snapshot) {
@@ -212,7 +221,7 @@ public final class KeywordBuckets {
                 || bucket.start()
                     .isBefore(
                         snapshot.maxObservedBucketStart()
-                            .minus((retainedBuckets - 1L) * bucketSeconds, ChronoUnit.SECONDS)
+                            .minus((long) windowBuckets * bucketSeconds, ChronoUnit.SECONDS)
                     )
                 || starts.put(bucket.start(), true) != null
                 || bucket.counts().isEmpty()) {

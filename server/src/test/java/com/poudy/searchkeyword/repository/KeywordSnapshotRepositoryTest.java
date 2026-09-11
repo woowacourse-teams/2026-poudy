@@ -27,7 +27,7 @@ class KeywordSnapshotRepositoryTest {
     private static final Instant NOW = Instant.parse("2026-09-06T10:30:00Z");
     private static final String VALID = """
         {"schemaVersion":1,"savedAt":"2026-09-06T10:30:00Z",
-         "bucketSeconds":60,"maxObservedBucketStart":"2026-09-06T10:30:00Z",
+         "bucketSeconds":600,"maxObservedBucketStart":"2026-09-06T10:30:00Z",
          "buckets":[{"start":"2026-09-06T10:30:00Z","counts":{"토너":2}}]}
         """;
 
@@ -48,7 +48,7 @@ class KeywordSnapshotRepositoryTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"30", "60", "180"})
+    @CsvSource({"30", "60", "180", "600"})
     void roundtripPreservesConfiguredBucketResolution(int bucketSeconds) {
         KeywordSnapshotRepository configured = new KeywordSnapshotRepository(
             file(),
@@ -162,9 +162,10 @@ class KeywordSnapshotRepositoryTest {
     private String corrupt(String corruption) {
         return switch (corruption) {
             case "schema" -> VALID.replace("\"schemaVersion\":1", "\"schemaVersion\":2");
-            case "missing" -> VALID.replace("\"bucketSeconds\":60,", "");
-            case "unknown" -> VALID.replace("\"bucketSeconds\":60", "\"bucketSeconds\":60,\"unknown\":1");
-            case "duplicateField" -> VALID.replace("\"bucketSeconds\":60", "\"bucketSeconds\":60,\"bucketSeconds\":60");
+            case "missing" -> VALID.replace("\"bucketSeconds\":600,", "");
+            case "unknown" -> VALID.replace("\"bucketSeconds\":600", "\"bucketSeconds\":600,\"unknown\":1");
+            case "duplicateField" ->
+                VALID.replace("\"bucketSeconds\":600", "\"bucketSeconds\":600,\"bucketSeconds\":600");
             case "duplicateCount" -> VALID.replace("\"토너\":2", "\"토너\":2,\"토너\":3");
             case "duplicateBucket" -> VALID.replace(
                 "\"counts\":{\"토너\":2}}]",
@@ -180,12 +181,12 @@ class KeywordSnapshotRepositoryTest {
             case "longKey" -> VALID.replace("토너", "가".repeat(301));
             case "unusable-key" -> VALID.replace("토너", "");
             case "formatCharacter" -> VALID.replace("토너", "토\\u200b너");
-            case "future" -> VALID.replace("\"start\":\"2026-09-06T10:30:00Z\"", "\"start\":\"2026-09-06T10:33:00Z\"");
+            case "future" -> VALID.replace("\"start\":\"2026-09-06T10:30:00Z\"", "\"start\":\"2026-09-06T10:40:00Z\"");
             case "fractionalHour" ->
                 VALID.replace("\"start\":\"2026-09-06T10:30:00Z\"", "\"start\":\"2026-09-06T10:30:01Z\"");
             case "futureMaximum" -> VALID.replace(
                 "\"maxObservedBucketStart\":\"2026-09-06T10:30:00Z\"",
-                "\"maxObservedBucketStart\":\"2026-09-06T10:33:00Z\""
+                "\"maxObservedBucketStart\":\"2026-09-06T10:40:00Z\""
             );
             case "fractionalMaximum" -> VALID.replace(
                 "\"maxObservedBucketStart\":\"2026-09-06T10:30:00Z\"",
