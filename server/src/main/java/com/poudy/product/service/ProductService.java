@@ -16,12 +16,16 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.observation.ProductSearchObserver;
+import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
     private final Categories categories;
@@ -52,42 +56,48 @@ public class ProductService {
         ProductFilter filter = filterOf(query);
         Products products = products();
 
-        if (query.keyword() == null || page > 0) {
+        if (!query.hasKeyword() || page > 0) {
             return products.find(filter, sort, page, size, categories);
         }
 
-        // 정규화는 요청당 한 번만 한다. 검색·로그·수집이 같은 값을 나눠 쓴다.
-        SearchKeyword keyword = filter.keyword();
-        var context = new ProductSearchLogger.Context(
-            keyword,
+        ProductSearchLogger.Context context = new ProductSearchLogger.Context(
+            filter.keyword(),
             page,
             size,
             ProductSort.orDefault(sort),
             query.hasFilters()
         );
-        // 검색이 어떻게 끝났는지는 여기서 한 번만 가른다. 기록하는 쪽은 판정하지 않는다.
+        return recordedSearch(context, () -> products.find(filter, sort, page, size, categories));
+    }
+
+    private ProductPage recordedSearch(ProductSearchLogger.Context context, Supplier<ProductPage> search) {
         long startedAt = System.nanoTime();
-        ProductPage result;
+        ProductPage result = searchOrRecordFailure(context, search, startedAt);
+        long elapsed = System.nanoTime() - startedAt;
+        quietly(() -> searchLogger.completed(context, elapsed, result.totalElements()));
+        quietly(() -> searchObserver.completed(context.keyword(), result.totalElements()));
+        return result;
+    }
+
+    private ProductPage searchOrRecordFailure(
+        ProductSearchLogger.Context context,
+        Supplier<ProductPage> search,
+        long startedAt
+    ) {
         try {
-            result = products.find(filter, sort, page, size, categories);
+            return search.get();
         } catch (RuntimeException exception) {
             long failedAfter = System.nanoTime() - startedAt;
             quietly(() -> searchLogger.failed(context, failedAfter));
             throw exception;
         }
-        long elapsed = System.nanoTime() - startedAt;
-        quietly(() -> searchLogger.completed(context, elapsed, result.totalElements()));
-        quietly(() -> searchObserver.completed(keyword, result.totalElements()));
-        return result;
     }
 
-    /** 기록은 응답의 조건이 아니다. 로그든 집계든 실패해도 검색 결과는 그대로 나간다. */
     private static void quietly(Runnable recording) {
         try {
             recording.run();
         } catch (RuntimeException exception) {
-            org.slf4j.LoggerFactory.getLogger(ProductService.class)
-                .warn("event=search_recording_failed");
+            log.warn("event=search_recording_failed");
         }
     }
 
@@ -118,7 +128,7 @@ public class ProductService {
         );
 
         return new ProductFilter(
-            query.keyword() == null ? null : new SearchKeyword(query.keyword()),
+            query.searchKeyword(),
             query.categoryIds(),
             query.brandIds(),
             query.moistureLevels().stream().map(MoistureLevel::new).toList(),

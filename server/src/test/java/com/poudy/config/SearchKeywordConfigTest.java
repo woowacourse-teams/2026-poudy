@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.poudy.category.domain.Categories;
+import com.poudy.exception.InfrastructureException;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.time.Clock;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
@@ -22,38 +22,26 @@ class SearchKeywordConfigTest {
         ResourceLoader resources = mock(ResourceLoader.class);
         when(resources.getResource("classpath:search_keywords.json"))
             .thenReturn(new FileSystemResource("/no-such-poudy-dictionary.json"));
-        ProductRepository products = mock(ProductRepository.class);
-        when(products.findAll()).thenReturn(Products.from(List.of()));
 
         assertThatThrownBy(
-            () -> new SearchKeywordConfig().searchKeywordRuntime(
-                new MockEnvironment(),
-                resources,
-                products,
-                Categories.from(List.of()),
-                Clock.systemUTC(),
-                new SimpleMeterRegistry()
-            )
-        ).isInstanceOf(java.io.IOException.class);
+            () -> new SearchKeywordConfig().searchKeywordDictionary(new MockEnvironment(), resources, emptyCatalog())
+        ).isInstanceOf(IOException.class);
     }
 
     @Test
-    void corruptDictionaryFailsBeforeReadingOrWritingState() {
+    void corruptDictionaryFailsStartup() {
         ResourceLoader resources = mock(ResourceLoader.class);
         when(resources.getResource("classpath:search_keywords.json"))
-            .thenReturn(new ByteArrayResource("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            .thenReturn(new ByteArrayResource("{}".getBytes(StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(
+            () -> new SearchKeywordConfig().searchKeywordDictionary(new MockEnvironment(), resources, emptyCatalog())
+        ).isInstanceOf(InfrastructureException.class);
+    }
+
+    private static ProductRepository emptyCatalog() {
         ProductRepository products = mock(ProductRepository.class);
         when(products.findAll()).thenReturn(Products.from(List.of()));
-        assertThatThrownBy(
-            () -> new SearchKeywordConfig().searchKeywordRuntime(
-                new MockEnvironment(),
-                resources,
-                products,
-                Categories.from(List.of()),
-                Clock.systemUTC(),
-                new SimpleMeterRegistry()
-            )
-        )
-            .isInstanceOf(com.poudy.exception.InfrastructureException.class);
+        return products;
     }
 }

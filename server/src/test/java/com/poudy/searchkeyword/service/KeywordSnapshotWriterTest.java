@@ -1,117 +1,84 @@
 package com.poudy.searchkeyword.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import com.poudy.searchkeyword.domain.KeywordBucketSnapshot;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 class KeywordSnapshotWriterTest {
-    @TempDir
-    Path directory;
+
     private final KeywordBuckets buckets = new KeywordBuckets(
         Clock.fixed(Instant.parse("2026-09-08T10:30:00Z"), ZoneOffset.UTC),
-        168,
-        100
+        168
     );
+    private final KeywordSnapshotRepository repository = mock(KeywordSnapshotRepository.class);
+    private final KeywordSnapshotWriter writer = new KeywordSnapshotWriter(buckets, repository);
 
     @Test
-    void delayedWriteDoesNotBlockCollectionAndConcurrentWriterSkipsWithoutLosingLaterCounts() throws Exception {
-        var entered = new CountDownLatch(1);
-        var release = new CountDownLatch(1);
-        var first = new AtomicBoolean(true);
-        var repository = new KeywordSnapshotRepository(
-            directory.resolve("buckets.json"),
-            168
-        ) {
-            @Override
-            protected void forceFile(Path temporary) throws IOException {
-                if (first.getAndSet(false)) {
-                    entered.countDown();
-                    try {
-                        if (!release.await(5, TimeUnit.SECONDS)) {
-                            throw new IOException("Timed out");
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new IOException(e);
-                    }
-                }
-                super.forceFile(temporary);
-            }
-        };
-        var writer = new KeywordSnapshotWriter(buckets, repository);
+    void slowSaveDoesNotBlockCollectionAndConcurrentRunSkips() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            entered.countDown();
+            release.await(5, TimeUnit.SECONDS);
+            return null;
+        }).when(repository).save(any());
         buckets.record("토너");
-        try (var executor = Executors.newFixedThreadPool(2)) {
-            var task = executor.submit(writer);
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<?> slowSave = executor.submit(writer);
             assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
             executor.submit(() -> {
                 buckets.record("토너");
                 writer.run();
             }).get(2, TimeUnit.SECONDS);
             release.countDown();
-            task.get(5, TimeUnit.SECONDS);
+            slowSave.get(5, TimeUnit.SECONDS);
         } finally {
             release.countDown();
         }
-        assertThat(repository.load().orElseThrow().buckets().getFirst().counts()).containsEntry("토너", 1L);
-        writer.run();
-        assertThat(repository.load().orElseThrow().buckets().getFirst().counts()).containsEntry("토너", 2L);
+        verify(repository, times(1)).save(any());
+        assertThat(buckets.snapshot().buckets().getFirst().counts()).containsEntry("토너", 2L);
     }
 
     @Test
-    void directorySyncFailureIsCountedAndNextRunRewritesWholeSnapshot() {
-        var fail = new AtomicBoolean(true);
-        var repository = new KeywordSnapshotRepository(
-            directory.resolve("buckets.json"),
-            168
-        ) {
-            @Override
-            protected void syncDirectory(Path path) throws IOException {
-                if (fail.getAndSet(false)) {
-                    throw new IOException("Injected directory failure");
-                }
-                super.syncDirectory(path);
-            }
-        };
-        var writer = new KeywordSnapshotWriter(buckets, repository);
+    void failedSaveIsCountedAndNextRunSavesAgain() {
+        doThrow(new IllegalStateException("save failed")).doNothing().when(repository).save(any());
         buckets.record("토너");
+
         writer.run();
         assertThat(writer.failureCount()).isOne();
         assertThat(writer.lastSuccessfulSaveAt()).isEmpty();
-        buckets.record("토너");
+
         writer.run();
-        assertThat(repository.load().orElseThrow().buckets().getFirst().counts()).containsEntry("토너", 2L);
         assertThat(writer.lastSuccessfulSaveAt()).isPresent();
+        verify(repository, times(2)).save(any());
     }
 
     @Test
-    void writesEveryRunEvenWhenNothingChanged() {
-        var saves = new AtomicInteger();
-        var repository = new KeywordSnapshotRepository(directory.resolve("buckets.json"), 168) {
-            @Override
-            public void save(KeywordBucketSnapshot snapshot) {
-                saves.incrementAndGet();
-                super.save(snapshot);
-            }
-        };
-        var writer = new KeywordSnapshotWriter(buckets, repository);
+    void savesEveryRunEvenWhenNothingChanged() {
+        doNothing().when(repository).save(any());
         buckets.record("토너");
+
         writer.run();
         writer.run();
-        assertThat(saves).hasValue(2);
+
+        verify(repository, times(2)).save(any());
         assertThat(writer.failureCount()).isZero();
     }
 }

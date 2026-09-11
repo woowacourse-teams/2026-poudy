@@ -24,6 +24,24 @@ public final class KeywordBucket {
         return counts;
     }
 
+    public int entryCount() {
+        return counts.size();
+    }
+
+    public void validateWithin(BucketWindow window, Instant latestStart) {
+        if (!window.isStart(start) || !window.covers(latestStart, start) || counts.isEmpty()) {
+            throw new IllegalArgumentException("Invalid snapshot bucket");
+        }
+        counts.forEach(KeywordBucket::requireValidCount);
+    }
+
+    private static void requireValidCount(String key, Long count) {
+        KeywordKeys.requireNormalized(key);
+        if (count == null || count <= 0) {
+            throw new IllegalArgumentException("Invalid snapshot count");
+        }
+    }
+
     @Override
     public boolean equals(Object other) {
         return this == other || other instanceof KeywordBucket compared

@@ -1,6 +1,5 @@
 package com.poudy.searchkeyword.controller;
 
-import com.poudy.searchkeyword.controller.dto.RankingItem;
 import com.poudy.searchkeyword.controller.dto.RankingsResponse;
 import com.poudy.searchkeyword.service.SearchKeywordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,9 +22,6 @@ public class SearchKeywordController {
     @Operation(summary = "인기 검색어 순위", description = "공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.")
     @GetMapping("/rankings")
     public RankingsResponse rankings() {
-        return new RankingsResponse(
-            service.rankings().stream()
-                .map(item -> new RankingItem(item.rank(), item.keyword())).toList()
-        );
+        return RankingsResponse.from(service.rankings());
     }
 }

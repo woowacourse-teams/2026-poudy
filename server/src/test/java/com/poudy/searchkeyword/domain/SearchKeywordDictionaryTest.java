@@ -8,11 +8,13 @@ import com.poudy.searchkeyword.domain.DictionaryEntry.ExpressionType;
 import com.poudy.searchkeyword.domain.DictionaryEntry.Kind;
 import com.poudy.searchkeyword.domain.DictionaryEntry.Status;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 class SearchKeywordDictionaryTest {
@@ -99,7 +101,7 @@ class SearchKeywordDictionaryTest {
         );
         assertThatThrownBy(() -> dictionary.validateForRanking(dictionary.resolve("토너").orElseThrow()))
             .isInstanceOf(IllegalStateException.class);
-        var entry = dictionary.resolve("토너").orElseThrow();
+        DictionaryEntry entry = dictionary.resolve("토너").orElseThrow();
         assertThat(dictionary.validateForRanking(entry)).isFalse();
         assertThat(dictionary.validateForRanking(entry)).isFalse();
         assertThat(calls).hasValue(2);
@@ -128,8 +130,8 @@ class SearchKeywordDictionaryTest {
 
     @Test
     void validatesNormalizationAgainstExplicitUnicodeFixtures() throws IOException {
-        try (var source = getClass().getResourceAsStream("/searchkeyword/normalization.json")) {
-            for (var fixture : JsonMapper.builder().build().readTree(source)) {
+        try (InputStream source = getClass().getResourceAsStream("/searchkeyword/normalization.json")) {
+            for (JsonNode fixture : JsonMapper.builder().build().readTree(source)) {
                 assertThat(new SearchKeyword(fixture.get(1).asString()).value())
                     .as(fixture.get(0).asString()).isEqualTo(fixture.get(2).asString());
             }

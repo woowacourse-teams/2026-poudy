@@ -27,22 +27,25 @@ class SearchKeywordRankingPersistenceTest {
 
     @Test
     void restartRebuildsTheSameRankingFromRestoredCountsOnFirstRefresh() {
-        var recording = new KeywordBuckets(Clock.fixed(RECORDED_AT, ZoneOffset.UTC), 168);
-        var recorder = service(recording);
+        KeywordBuckets recording = new KeywordBuckets(Clock.fixed(RECORDED_AT, ZoneOffset.UTC), 168);
+        SearchKeywordService recorder = service(recording);
         for (int i = 0; i < 5; i++) {
             recorder.completed(new SearchKeyword("토너"), 1);
         }
-        var countsRepository = new KeywordSnapshotRepository(directory.resolve("buckets.json"), 168);
+        KeywordSnapshotRepository countsRepository = new KeywordSnapshotRepository(
+            directory.resolve("buckets.json"),
+            168
+        );
         countsRepository.save(recording.snapshot());
 
-        var running = new KeywordBuckets(AFTER_BOUNDARY, 168);
+        KeywordBuckets running = new KeywordBuckets(AFTER_BOUNDARY, 168);
         running.restore(recording.snapshot());
-        var before = service(running);
+        SearchKeywordService before = service(running);
         before.refreshRankings();
 
-        var restored = new KeywordBuckets(AFTER_BOUNDARY, 168);
+        KeywordBuckets restored = new KeywordBuckets(AFTER_BOUNDARY, 168);
         countsRepository.load().ifPresent(restored::restore);
-        var after = service(restored);
+        SearchKeywordService after = service(restored);
         assertThat(after.rankings()).isEmpty();
         after.refreshRankings();
         assertThat(after.rankings())
@@ -51,7 +54,7 @@ class SearchKeywordRankingPersistenceTest {
     }
 
     private static SearchKeywordService service(KeywordBuckets buckets) {
-        var entry = new DictionaryEntry(
+        DictionaryEntry entry = new DictionaryEntry(
             "term",
             DictionaryEntry.Kind.TERM,
             "토너",
@@ -60,7 +63,7 @@ class SearchKeywordRankingPersistenceTest {
             List.of("토너"),
             Map.of("토너", DictionaryEntry.ExpressionType.CATALOG)
         );
-        var dictionary = new SearchKeywordDictionary("data-v1", List.of(entry), ignored -> true);
+        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("data-v1", List.of(entry), ignored -> true);
         return new SearchKeywordService(dictionary, buckets, 5, 20, Set.of());
     }
 }

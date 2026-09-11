@@ -2,12 +2,9 @@ package com.poudy.searchkeyword.domain;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class SearchKeywordDictionary {
@@ -24,34 +21,15 @@ public final class SearchKeywordDictionary {
         if (version == null || version.isBlank()) {
             throw new IllegalArgumentException("사전 버전은 비어 있을 수 없습니다.");
         }
+        List<DictionaryEntry> copied = List.copyOf(entries);
         this.version = version;
-        Set<String> ids = new HashSet<>();
-        Map<String, DictionaryEntry> index = new HashMap<>();
-        this.search = Objects.requireNonNull(search);
-        Map<String, DictionaryEntry> byId = new HashMap<>();
-        for (DictionaryEntry entry : List.copyOf(entries)) {
-            if (!ids.add(entry.id())) {
-                throw new IllegalArgumentException("사전 ID가 중복됐습니다: " + entry.id());
-            }
-            if (entry.isActive()) {
-                for (String expression : entry.expressions()) {
-                    if (index.putIfAbsent(expression, entry) != null) {
-                        throw new IllegalArgumentException("ACTIVE 사전 표현이 충돌했습니다: " + entry.id());
-                    }
-                }
-            }
-        }
-        for (DictionaryEntry entry : entries) {
-            byId.put(entry.id(), entry);
-        }
-        // Map.copyOf uses linear probing, which degrades for many similar expression hashes.
-        // The private HashMap remains read-only after construction and handles collisions predictably.
-        this.expressions = Collections.unmodifiableMap(index);
-        this.entriesById = Collections.unmodifiableMap(byId);
-        this.activeEntryCount = (int) entries.stream().filter(DictionaryEntry::isActive).count();
-        this.emptyActiveEntryIds = entries.stream()
+        this.search = search;
+        this.entriesById = indexById(copied);
+        this.expressions = indexActiveExpressions(copied);
+        this.activeEntryCount = (int) copied.stream().filter(DictionaryEntry::isActive).count();
+        this.emptyActiveEntryIds = copied.stream()
             .filter(DictionaryEntry::isActive)
-            .filter(entry -> entry.expressions().isEmpty())
+            .filter(entry -> !entry.hasExpressions())
             .map(DictionaryEntry::id)
             .toList();
     }
@@ -61,10 +39,14 @@ public final class SearchKeywordDictionary {
     }
 
     public boolean validateForRanking(DictionaryEntry entry) {
-        if (entry == null || entriesById.get(entry.id()) != entry || !entry.isActive() || !entry.rankingEligible()) {
+        if (entry == null || !owns(entry) || !entry.isRankable()) {
             return false;
         }
         return catalogEligibility.computeIfAbsent(entry.id(), ignored -> search.hasResults(entry.keyword()));
+    }
+
+    public boolean recognizes(String normalizedQuery) {
+        return expressions.containsKey(normalizedQuery);
     }
 
     public String version() {
@@ -81,5 +63,35 @@ public final class SearchKeywordDictionary {
 
     public List<String> emptyActiveEntryIds() {
         return emptyActiveEntryIds;
+    }
+
+    private boolean owns(DictionaryEntry entry) {
+        return entriesById.get(entry.id()) == entry;
+    }
+
+    private static Map<String, DictionaryEntry> indexById(List<DictionaryEntry> entries) {
+        Map<String, DictionaryEntry> byId = new HashMap<>();
+        for (DictionaryEntry entry : entries) {
+            if (byId.putIfAbsent(entry.id(), entry) != null) {
+                throw new IllegalArgumentException("사전 ID가 중복됐습니다: " + entry.id());
+            }
+        }
+        return Collections.unmodifiableMap(byId);
+    }
+
+    private static Map<String, DictionaryEntry> indexActiveExpressions(List<DictionaryEntry> entries) {
+        Map<String, DictionaryEntry> index = new HashMap<>();
+        entries.stream()
+            .filter(DictionaryEntry::isActive)
+            .forEach(entry -> addExpressions(index, entry));
+        return Collections.unmodifiableMap(index);
+    }
+
+    private static void addExpressions(Map<String, DictionaryEntry> index, DictionaryEntry entry) {
+        for (String expression : entry.expressions()) {
+            if (index.putIfAbsent(expression, entry) != null) {
+                throw new IllegalArgumentException("ACTIVE 사전 표현이 충돌했습니다: " + entry.id());
+            }
+        }
     }
 }

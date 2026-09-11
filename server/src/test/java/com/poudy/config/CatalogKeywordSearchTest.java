@@ -7,9 +7,12 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
+import com.poudy.category.domain.Categories;
 import com.poudy.category.repository.CategoryRepository;
 import com.poudy.common.json.JsonDataReader;
+import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductFilter;
@@ -17,6 +20,7 @@ import com.poudy.product.domain.Products;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.tag.domain.Tags;
 import com.poudy.tag.repository.TagRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -26,10 +30,10 @@ class CatalogKeywordSearchTest {
     @Test
     void usesExistingProductSearchWithBrandIntentWithoutRereadingCatalogs() {
         JsonDataReader reader = spy(new JsonDataReader(new DefaultResourceLoader()));
-        var brands = new BrandRepository(reader).findAll();
-        var categories = new CategoryRepository(reader).findAll();
-        var tags = new TagRepository(reader).findAll();
-        var ingredients = new IngredientRepository(reader, tags).findAll();
+        Brands brands = new BrandRepository(reader).findAll();
+        Categories categories = new CategoryRepository(reader).findAll();
+        Tags tags = new TagRepository(reader).findAll();
+        IngredientCatalog ingredients = new IngredientRepository(reader, tags).findAll();
         ProductRepository repository = spy(
             new ProductRepository(
                 reader,

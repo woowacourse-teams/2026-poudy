@@ -227,12 +227,10 @@ public final class Product {
     }
 
     private static boolean matchesBrandPrefix(SearchKeyword searched, TextMatch match) {
-        if (match.rank().match() == NameMatch.EXACT) {
+        if (match.is(NameMatch.EXACT)) {
             return true;
         }
-        // 한 글자 접두는 브랜드를 지목하지 못한다. ㄷ 하나로 닥터지를 집으면 다른 브랜드 제품이 딸려 온다.
-        return match.rank().match() == NameMatch.PREFIX
-            && searched.value().codePointCount(0, searched.value().length()) >= MINIMUM_BRAND_PREFIX_LENGTH;
+        return match.is(NameMatch.PREFIX) && searched.hasAtLeastLetters(MINIMUM_BRAND_PREFIX_LENGTH);
     }
 
     private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {

@@ -13,9 +13,12 @@ class KeywordStoreMonitorTest {
 
     @Test
     void publishesOnlyFixedCardinalityCountsWithoutDroppedGauge() {
-        var registry = new SimpleMeterRegistry();
-        var buckets = new KeywordBuckets(Clock.fixed(Instant.parse("2026-09-10T00:00:00Z"), ZoneOffset.UTC), 168);
-        var monitor = new KeywordStoreMonitor(buckets, "NONZERO", registry);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        KeywordBuckets buckets = new KeywordBuckets(
+            Clock.fixed(Instant.parse("2026-09-10T00:00:00Z"), ZoneOffset.UTC),
+            168
+        );
+        KeywordStoreMonitor monitor = new KeywordStoreMonitor(buckets, "NONZERO", registry);
 
         buckets.record("토너");
         monitor.sample();

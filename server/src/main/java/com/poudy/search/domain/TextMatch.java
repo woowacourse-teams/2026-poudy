@@ -33,6 +33,10 @@ public final class TextMatch {
         return range;
     }
 
+    public boolean is(NameMatch match) {
+        return rank.match() == match;
+    }
+
     public static Optional<TextMatch> best(List<SearchableText> candidates, SearchKeyword keyword) {
         TextMatch best = null;
         for (SearchableText candidate : candidates) {

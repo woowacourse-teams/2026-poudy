@@ -1,7 +1,6 @@
 package com.poudy.search.domain;
 
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.Optional;
 
 public final class SearchKeyword {
@@ -10,7 +9,6 @@ public final class SearchKeyword {
     private final String reading;
 
     public SearchKeyword(String keyword) {
-        Objects.requireNonNull(keyword, "검색어는 null 일 수 없습니다.");
         this.value = normalize(keyword);
         this.reading = LatinReading.ofKeyword(this.value);
     }
@@ -41,6 +39,10 @@ public final class SearchKeyword {
 
     public boolean isEmpty() {
         return value.isEmpty();
+    }
+
+    public boolean hasAtLeastLetters(int count) {
+        return value.codePointCount(0, value.length()) >= count;
     }
 
     public boolean matchesExactly(String... candidates) {
@@ -151,7 +153,6 @@ public final class SearchKeyword {
         return searched.length() == 1 && !Chosung.isDouble(searched);
     }
 
-    /** 보이지 않는 문자는 검색 의도가 아니다. 남겨 두면 같은 말이 서로 다른 키로 갈라진다. */
     static boolean isIgnorable(char character) {
         return Character.isWhitespace(character)
             || Character.isSpaceChar(character)

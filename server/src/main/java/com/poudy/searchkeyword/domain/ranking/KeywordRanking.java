@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-/** The public projection of collected counts. Ordering and exposure rules live here, not in the caller. */
 public final class KeywordRanking {
 
     private KeywordRanking() {
@@ -19,41 +18,48 @@ public final class KeywordRanking {
         SearchKeywordDictionary dictionary,
         RankingPolicy policy
     ) {
-        Map<String, Long> totals = new HashMap<>();
-        Map<String, DictionaryEntry> entries = new HashMap<>();
-        counts.forEach((key, count) -> dictionary.resolve(key).ifPresent(entry -> {
-            totals.merge(entry.id(), count, Math::addExact);
-            entries.put(entry.id(), entry);
-        }));
-        List<DictionaryEntry> selected = totals.entrySet().stream()
-            .filter(entry -> entry.getValue() >= policy.minCount())
-            .map(entry -> entries.get(entry.getKey()))
+        Map<DictionaryEntry, Long> totals = totalsByEntry(counts, dictionary);
+        List<String> selected = totals.entrySet().stream()
+            .filter(entry -> policy.qualifies(entry.getValue()))
+            .map(Map.Entry::getKey)
             .sorted(order(totals))
-            .filter(entry -> policy.publishes(entry.id()))
+            .filter(policy::publishes)
             .filter(dictionary::validateForRanking)
             .limit(policy.size())
+            .map(DictionaryEntry::keyword)
             .toList();
-        return IntStream.range(0, selected.size())
-            .mapToObj(index -> new RankedKeyword(index + 1, selected.get(index).keyword()))
-            .toList();
+        return numbered(selected);
     }
 
-    /** Dictionary-free projection of the same counts, for comparing what the dictionary gains or loses. */
     public static List<RankedKeyword> shadowOf(Map<String, Long> counts, RankingPolicy policy) {
         List<String> selected = counts.entrySet().stream()
-            .filter(entry -> entry.getValue() >= policy.minCount())
+            .filter(entry -> policy.qualifies(entry.getValue()))
             .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry::getKey))
             .limit(policy.size())
             .map(Map.Entry::getKey)
             .toList();
-        return IntStream.range(0, selected.size())
-            .mapToObj(index -> new RankedKeyword(index + 1, selected.get(index)))
-            .toList();
+        return numbered(selected);
     }
 
-    private static Comparator<DictionaryEntry> order(Map<String, Long> totals) {
-        return Comparator.<DictionaryEntry>comparingLong(entry -> totals.get(entry.id())).reversed()
-            .thenComparing(DictionaryEntry::normalizedKeyword)
-            .thenComparing(DictionaryEntry::id);
+    private static Map<DictionaryEntry, Long> totalsByEntry(
+        Map<String, Long> counts,
+        SearchKeywordDictionary dictionary
+    ) {
+        Map<DictionaryEntry, Long> totals = new HashMap<>();
+        counts.forEach(
+            (key, count) -> dictionary.resolve(key).ifPresent(entry -> totals.merge(entry, count, Math::addExact))
+        );
+        return totals;
+    }
+
+    private static Comparator<DictionaryEntry> order(Map<DictionaryEntry, Long> totals) {
+        return Comparator.<DictionaryEntry>comparingLong(totals::get).reversed()
+            .thenComparing(Comparator.naturalOrder());
+    }
+
+    private static List<RankedKeyword> numbered(List<String> keywords) {
+        return IntStream.range(0, keywords.size())
+            .mapToObj(index -> new RankedKeyword(index + 1, keywords.get(index)))
+            .toList();
     }
 }

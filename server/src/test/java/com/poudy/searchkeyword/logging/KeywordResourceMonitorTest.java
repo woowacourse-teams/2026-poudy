@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +17,13 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @ExtendWith(OutputCaptureExtension.class)
 class KeywordResourceMonitorTest {
     @Test
-    void distinguishesUnknownGcCountersFromZero() {
-        assertThat(KeywordResourceMonitor.knownSum(new long[] {-1, -1})).isEqualTo(-1);
-        assertThat(KeywordResourceMonitor.knownSum(new long[] {-1, 3, 4})).isEqualTo(7);
-        assertThat(KeywordResourceMonitor.knownSum(new long[] {0, 0})).isZero();
+    void distinguishesUnknownGcCountersFromZero(CapturedOutput output) {
+        sampleWithCollectionCounts(-1L, -1L);
+        assertThat(output).contains("gcCount=-1 ");
+        sampleWithCollectionCounts(-1L, 3L, 4L);
+        assertThat(output).contains("gcCount=7 ");
+        sampleWithCollectionCounts(0L, 0L);
+        assertThat(output).contains("gcCount=0 ");
     }
 
     @Test
@@ -40,5 +44,20 @@ class KeywordResourceMonitorTest {
             "snapshotFailures=3",
             "lastSnapshotSuccessEpochSecond=4"
         );
+    }
+
+    private static void sampleWithCollectionCounts(long... counts) {
+        MemoryMXBean memory = mock(MemoryMXBean.class);
+        when(memory.getHeapMemoryUsage()).thenReturn(new MemoryUsage(0, 0, 0, 0));
+        List<GarbageCollectorMXBean> collectors = Arrays.stream(counts)
+            .mapToObj(KeywordResourceMonitorTest::collector)
+            .toList();
+        new KeywordResourceMonitor(memory, collectors, () -> 0L, () -> -1L).sample();
+    }
+
+    private static GarbageCollectorMXBean collector(long count) {
+        GarbageCollectorMXBean collector = mock(GarbageCollectorMXBean.class);
+        when(collector.getCollectionCount()).thenReturn(count);
+        return collector;
     }
 }

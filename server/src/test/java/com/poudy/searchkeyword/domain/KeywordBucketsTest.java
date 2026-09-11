@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -135,7 +136,7 @@ class KeywordBucketsTest {
         dropClock.set(Instant.parse("2026-09-06T10:30:20Z"));
         KeywordBucketSnapshot snapshot = buckets.snapshot();
         assertThat(snapshot.savedAt()).isAfterOrEqualTo(snapshot.maxObservedBucketStart());
-        var restored = new KeywordBuckets(clock, 168);
+        KeywordBuckets restored = new KeywordBuckets(clock, 168);
         restored.restore(snapshot);
     }
 
@@ -207,7 +208,7 @@ class KeywordBucketsTest {
         KeywordBucketSnapshot first = buckets.snapshot();
         buckets.record("토너");
         clock.set(START.plus(10, ChronoUnit.MINUTES));
-        var view = buckets.view();
+        KeywordBucketView view = buckets.view();
         buckets.record("토너");
         clock.set(START.plus(20, ChronoUnit.MINUTES));
         assertThat(view.counts()).containsEntry("토너", 2L);
@@ -252,7 +253,7 @@ class KeywordBucketsTest {
     @Test
     void oneMillionConcurrentIncrementsRemainOneEntryWithConsistentSnapshots() throws Exception {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
-        try (var executor = Executors.newFixedThreadPool(5)) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
             Callable<Void> record = () -> {
                 for (int index = 0; index < 250_000; index++) {
                     buckets.record("토너");
@@ -272,7 +273,7 @@ class KeywordBucketsTest {
                     assertThat(statistics.uniqueKeyCount()).isEqualTo(statistics.entryCount());
                     buckets.view();
                     buckets.snapshot();
-                    buckets.expire();
+                    buckets.statistics();
                 }
             });
             for (Future<Void> writer : writers) {
@@ -288,8 +289,8 @@ class KeywordBucketsTest {
     @Test
     void concurrentDistinctKeysRespectCapacityAndAccountForEveryRejectedAttempt() throws Exception {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
-        var start = new CountDownLatch(1);
-        try (var executor = Executors.newFixedThreadPool(8)) {
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService executor = Executors.newFixedThreadPool(8)) {
             List<Future<?>> tasks = new ArrayList<>();
             for (int worker = 0; worker < 8; worker++) {
                 int offset = worker * 100;
@@ -326,8 +327,8 @@ class KeywordBucketsTest {
     @Test
     void concurrentExpiryCollectionAndSnapshotsPreserveWindowAndReferenceCounts() throws Exception {
         KeywordBuckets buckets = new KeywordBuckets(clock, 3);
-        var start = new CountDownLatch(1);
-        try (var executor = Executors.newFixedThreadPool(5)) {
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
             List<Future<?>> tasks = new ArrayList<>();
             for (int worker = 0; worker < 4; worker++) {
                 tasks.add(executor.submit(() -> {
@@ -342,13 +343,13 @@ class KeywordBucketsTest {
                 start.await();
                 for (int hour = 1; hour <= 200; hour++) {
                     clock.set(START.plus(hour, ChronoUnit.HOURS));
-                    buckets.expire();
-                    var statistics = buckets.statistics();
+                    buckets.statistics();
+                    KeywordBucketStatistics statistics = buckets.statistics();
                     assertThat(statistics.bucketCount()).isLessThanOrEqualTo(4);
                     assertThat(statistics.entryCount()).isBetween(statistics.uniqueKeyCount(), 40);
                     assertThat(buckets.view().counts().size()).isLessThanOrEqualTo(10);
-                    var snapshot = buckets.snapshot();
-                    var restored = new KeywordBuckets(Clock.fixed(snapshot.savedAt(), ZoneOffset.UTC), 3);
+                    KeywordBucketSnapshot snapshot = buckets.snapshot();
+                    KeywordBuckets restored = new KeywordBuckets(Clock.fixed(snapshot.savedAt(), ZoneOffset.UTC), 3);
                     restored.restore(snapshot);
                     assertThat(restored.statistics().entryCount())
                         .isEqualTo(snapshot.buckets().stream().mapToInt(bucket -> bucket.counts().size()).sum());

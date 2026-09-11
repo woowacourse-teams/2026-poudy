@@ -42,7 +42,7 @@ class KeywordReportRepositoryTest {
     @Test
     void discardPreviousRemovesAnEarlierReport() throws Exception {
         Path file = directory.resolve("report.json");
-        var repository = new KeywordReportRepository(file);
+        KeywordReportRepository repository = new KeywordReportRepository(file);
         repository.save(report());
 
         repository.discardPrevious();

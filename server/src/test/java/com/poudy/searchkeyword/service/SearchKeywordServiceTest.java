@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
+import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
@@ -32,7 +33,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void mergesAliasesAcrossKindsButKeepsProductAndGeneralTermSeparate() {
-        var service = service(
+        SearchKeywordService service = service(
             List.of(
                 entry("term", "PDRN", "PDRN"),
                 entry("brand", "라운드랩", "라운드랩"),
@@ -63,7 +64,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void retainsUnresolvedSuccessfulInputsAndReinterpretsThemAfterDictionaryReplacement() {
-        var old = service(List.of(entry("term", "토너", "토너")), Set.of());
+        SearchKeywordService old = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 5; i++) {
             old.completed(new SearchKeyword("독도 토너"), 1);
             old.completed(new SearchKeyword("토너"), 0);
@@ -71,7 +72,7 @@ class SearchKeywordServiceTest {
         closeBucket();
         old.refreshRankings();
         assertThat(old.rankings()).isEmpty();
-        var updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
+        SearchKeywordService updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         updated.refreshRankings();
         assertThat(updated.rankings()).containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너"));
         assertThat(successful.view().counts()).containsOnlyKeys("독도토너");
@@ -79,7 +80,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void shadowRankingRanksInputsThatTheDictionaryCannotResolve() {
-        var service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("토너"), 1);
         }
@@ -89,7 +90,7 @@ class SearchKeywordServiceTest {
         service.completed(new SearchKeyword("적은입력"), 1);
         closeBucket();
 
-        var report = service.report("catalog", "code");
+        ImprovementReport report = service.report("catalog", "code");
 
         assertThat(report.shadowRanking()).containsExactly(
             new RankedKeyword(1, "사전에없는말"),
@@ -101,7 +102,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void keepsOnlyInputsWithResultsAndSeparatesReportThreshold() {
-        var service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
             service.completed(new SearchKeyword("없는검색"), 0);
         }
@@ -122,7 +123,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void reportShowsUnresolvedInputsAsTyped() {
-        var service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
             service.completed(new SearchKeyword("a@example.com"), 1);
             service.completed(new SearchKeyword("미등록"), 1);
@@ -143,8 +144,8 @@ class SearchKeywordServiceTest {
     void appliesBlockBeforeTopTenAndUsesIdsForFinalTie() {
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 12)
             .mapToObj(i -> entry("id%02d".formatted(i), "토너", "표현" + (char) ('a' + i))).toList();
-        var service = service(entries, Set.of("id00"));
-        for (var entry : entries) {
+        SearchKeywordService service = service(entries, Set.of("id00"));
+        for (DictionaryEntry entry : entries) {
             for (int i = 0; i < 5; i++) {
                 service.completed(new SearchKeyword(entry.expressions().iterator().next()), 1);
             }
@@ -159,7 +160,10 @@ class SearchKeywordServiceTest {
 
     @Test
     void servesImmutableLastRefreshWhileReadersRaceWithRefresh() throws Exception {
-        var service = service(List.of(entry("term", "토너", "토너"), entry("cream", "크림", "크림")), Set.of());
+        SearchKeywordService service = service(
+            List.of(entry("term", "토너", "토너"), entry("cream", "크림", "크림")),
+            Set.of()
+        );
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("토너"), 1);
         }
@@ -203,9 +207,9 @@ class SearchKeywordServiceTest {
 
     @Test
     void preservesPreviousCacheWhenRefreshFails() {
-        var throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
-        var ranking = new KeywordBuckets(throwingClock, 168);
-        var failing = new SearchKeywordService(
+        ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
+        KeywordBuckets ranking = new KeywordBuckets(throwingClock, 168);
+        SearchKeywordService failing = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             5,
@@ -217,7 +221,7 @@ class SearchKeywordServiceTest {
         }
         throwingClock.now = throwingClock.now.plus(10, ChronoUnit.MINUTES);
         failing.refreshRankings();
-        var previous = failing.rankings();
+        List<RankedKeyword> previous = failing.rankings();
         assertThat(previous).containsExactly(new RankedKeyword(1, "토너"));
         throwingClock.fail = true;
         assertThat(failing.rankings()).isEqualTo(previous);
@@ -227,9 +231,9 @@ class SearchKeywordServiceTest {
 
     @Test
     void refreshAfterRetentionExpiryPublishesEmptyCache() {
-        var mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-        var ranking = new KeywordBuckets(mutable, 1, 60);
-        var service = new SearchKeywordService(
+        MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
+        KeywordBuckets ranking = new KeywordBuckets(mutable, 1, 60);
+        SearchKeywordService service = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             5,
@@ -252,12 +256,12 @@ class SearchKeywordServiceTest {
         AtomicInteger calls = new AtomicInteger();
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 20)
             .mapToObj(i -> entry("term%02d".formatted(i), "검색어%02d".formatted(i), "표현%02d".formatted(i))).toList();
-        var dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
-        var ranking = new KeywordBuckets(clock, 168);
-        var service = new SearchKeywordService(
+        KeywordBuckets ranking = new KeywordBuckets(clock, 168);
+        SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
             5,
@@ -287,12 +291,12 @@ class SearchKeywordServiceTest {
             entry("below", "부족", "부족"),
             entry("blocked", "차단", "차단")
         );
-        var dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
-        var ranking = new KeywordBuckets(clock, 168);
-        var service = new SearchKeywordService(
+        KeywordBuckets ranking = new KeywordBuckets(clock, 168);
+        SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
             5,
@@ -366,7 +370,7 @@ class SearchKeywordServiceTest {
     }
 
     private DictionaryEntry entry(String id, String keyword, String... aliases) {
-        var kind = id.equals("brand") ? DictionaryEntry.Kind.BRAND : id.equals("product")
+        DictionaryEntry.Kind kind = id.equals("brand") ? DictionaryEntry.Kind.BRAND : id.equals("product")
             ? DictionaryEntry.Kind.PRODUCT : DictionaryEntry.Kind.TERM;
         return new DictionaryEntry(
             id,

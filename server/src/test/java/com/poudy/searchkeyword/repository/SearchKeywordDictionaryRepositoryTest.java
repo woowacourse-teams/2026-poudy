@@ -8,6 +8,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -216,7 +217,7 @@ class SearchKeywordDictionaryRepositoryTest {
     }
 
     private String fixture() throws IOException {
-        try (var source = getClass().getResourceAsStream("/search_keywords.json")) {
+        try (InputStream source = getClass().getResourceAsStream("/search_keywords.json")) {
             return new String(source.readAllBytes(), StandardCharsets.UTF_8);
         }
     }

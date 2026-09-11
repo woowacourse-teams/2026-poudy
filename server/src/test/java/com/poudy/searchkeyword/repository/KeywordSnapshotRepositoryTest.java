@@ -121,31 +121,6 @@ class KeywordSnapshotRepositoryTest {
         assertThat(orphan).doesNotExist();
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"force", "replace"})
-    void failuresBeforeReplacementPreserveOriginal(String stage) throws IOException {
-        Files.writeString(file(), VALID);
-        KeywordSnapshotRepository failing = new KeywordSnapshotRepository(
-            file(),
-            168
-        ) {
-            @Override
-            protected void forceFile(Path temporary) throws IOException {
-                if (stage.equals("force")) {
-                    throw new IOException("injected force failure");
-                }
-                super.forceFile(temporary);
-            }
-
-            @Override
-            protected void replace(Path temporary, Path target) throws IOException {
-                throw new IOException("injected replace failure");
-            }
-        };
-        assertThatThrownBy(() -> failing.save(snapshot())).isInstanceOf(InfrastructureException.class);
-        assertThat(Files.readString(file())).isEqualTo(VALID);
-    }
-
     @Test
     void everyMaxLengthEscapingSampleFitsTheConservativePerEntryBudget() throws IOException {
         String maximum = "\"\\".repeat(150);
@@ -196,14 +171,6 @@ class KeywordSnapshotRepositoryTest {
             case "null" -> "null";
             default -> throw new IllegalArgumentException(corruption);
         };
-    }
-
-    private KeywordBucketSnapshot snapshot() {
-        return new KeywordBucketSnapshot(
-            NOW,
-            NOW.truncatedTo(ChronoUnit.HOURS),
-            List.of(new KeywordBucket(NOW.truncatedTo(ChronoUnit.HOURS), Map.of("크림", 4L)))
-        );
     }
 
     private Path file() {

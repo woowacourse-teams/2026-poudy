@@ -20,10 +20,6 @@
       "description": "큐레이션 조회 API"
     },
     {
-      "name": "인기 검색어",
-      "description": "최근 7일 검색량을 10분마다 갱신한 인기 검색어"
-    },
-    {
       "name": "보관함",
       "description": "보관함 조회 API"
     },
@@ -58,6 +54,10 @@
     {
       "name": "제품",
       "description": "제품 조회 API"
+    },
+    {
+      "name": "인기 검색어",
+      "description": "최근 7일 검색량을 10분마다 갱신한 인기 검색어"
     },
     {
       "name": "성분",

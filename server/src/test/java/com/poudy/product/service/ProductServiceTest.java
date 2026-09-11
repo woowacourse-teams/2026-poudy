@@ -26,6 +26,7 @@ import com.poudy.product.domain.Products;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.observation.ProductSearchObserver;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -54,7 +55,7 @@ class ProductServiceTest {
             categories(),
             excludeCodeIngredients,
             new ProductSearchLogger(),
-            mock(com.poudy.search.observation.ProductSearchObserver.class)
+            mock(ProductSearchObserver.class)
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -91,7 +92,7 @@ class ProductServiceTest {
             categories(),
             excludeCodeIngredients,
             new ProductSearchLogger(),
-            mock(com.poudy.search.observation.ProductSearchObserver.class)
+            mock(ProductSearchObserver.class)
         );
 
         ProductDetail detail = service.findDetail(1L);
@@ -114,7 +115,7 @@ class ProductServiceTest {
             Categories.from(List.of(parent, child)),
             excludeCodeIngredients,
             new ProductSearchLogger(),
-            mock(com.poudy.search.observation.ProductSearchObserver.class)
+            mock(ProductSearchObserver.class)
         );
 
         assertThatThrownBy(() -> service.findDetail(999L))
@@ -136,7 +137,7 @@ class ProductServiceTest {
             categories(),
             excludeCodeIngredients,
             new ProductSearchLogger(),
-            mock(com.poudy.search.observation.ProductSearchObserver.class)
+            mock(ProductSearchObserver.class)
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -176,7 +177,7 @@ class ProductServiceTest {
             categories(),
             excludeCodeIngredients,
             new ProductSearchLogger(),
-            mock(com.poudy.search.observation.ProductSearchObserver.class)
+            mock(ProductSearchObserver.class)
         );
         ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null);
         ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null);
@@ -195,9 +196,15 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
         given(excludes.idsOf(List.of())).willReturn(Set.of());
-        var observer = mock(com.poudy.search.observation.ProductSearchObserver.class);
-        var service = new ProductService(repository, categories(), excludes, new ProductSearchLogger(), observer);
-        var query = new ProductQuery("제품", null, null, null, null, null, null, null);
+        ProductSearchObserver observer = mock(ProductSearchObserver.class);
+        ProductService service = new ProductService(
+            repository,
+            categories(),
+            excludes,
+            new ProductSearchLogger(),
+            observer
+        );
+        ProductQuery query = new ProductQuery("제품", null, null, null, null, null, null, null);
         service.findProducts(query, ProductSort.NAME_ASC, 0, 20);
         service.findProducts(query, ProductSort.PRICE_DESC, 0, 20);
         service.findProducts(query, ProductSort.NAME_ASC, 1, 20);
@@ -212,7 +219,7 @@ class ProductServiceTest {
         );
         org.mockito.Mockito.verify(observer, org.mockito.Mockito.times(2)).completed(new SearchKeyword("제품"), 1L);
         org.mockito.Mockito.verifyNoMoreInteractions(observer);
-        var filtered = new ProductQuery("제품", null, List.of(999L), null, null, null, null, null);
+        ProductQuery filtered = new ProductQuery("제품", null, List.of(999L), null, null, null, null, null);
         service.findProducts(filtered, ProductSort.NAME_ASC, 0, 20);
         org.mockito.Mockito.verify(observer).completed(new SearchKeyword("제품"), 0L);
         org.mockito.Mockito.doThrow(new IllegalStateException("observation broken")).when(observer)
@@ -227,16 +234,16 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
         given(excludes.idsOf(List.of())).willReturn(Set.of());
-        var logger = new ProductSearchLogger() {
+        ProductSearchLogger logger = new ProductSearchLogger() {
             @Override
             public void completed(Context context, long elapsedNanos, long resultCount) {
                 throw new IllegalStateException("logging broken");
             }
         };
-        var observer = mock(com.poudy.search.observation.ProductSearchObserver.class);
-        var service = new ProductService(repository, categories(), excludes, logger, observer);
+        ProductSearchObserver observer = mock(ProductSearchObserver.class);
+        ProductService service = new ProductService(repository, categories(), excludes, logger, observer);
 
-        var result = service.findProducts(
+        ProductPage result = service.findProducts(
             new ProductQuery("제품", null, null, null, null, null, null, null),
             ProductSort.NAME_ASC,
             0,

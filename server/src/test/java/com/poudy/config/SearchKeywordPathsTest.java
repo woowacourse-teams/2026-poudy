@@ -11,17 +11,18 @@ import org.junit.jupiter.api.io.TempDir;
 class SearchKeywordPathsTest {
     @TempDir
     Path temp;
+
     @Test
     void requiresExplicitProductionPathAndRejectsCatalogAndResources() {
-        assertThatThrownBy(() -> SearchKeywordPaths.validate("", true, ""))
+        assertThatThrownBy(() -> new SearchKeywordPaths(true, "").reportFile(""))
             .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> SearchKeywordPaths.validate("relative.json", true, ""))
+        assertThatThrownBy(() -> new SearchKeywordPaths(true, "").reportFile("relative.json"))
             .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> SearchKeywordPaths.validate("src/main/resources/state.json", false, ""))
+        assertThatThrownBy(() -> new SearchKeywordPaths(false, "").reportFile("src/main/resources/state.json"))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
-            () -> SearchKeywordPaths
-                .validate(temp.resolve("data/a.json").toString(), false, temp.resolve("data").toString())
+            () -> new SearchKeywordPaths(false, temp.resolve("data").toString())
+                .reportFile(temp.resolve("data/a.json").toString())
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -31,9 +32,19 @@ class SearchKeywordPathsTest {
         Path child = Files.createDirectories(catalog.resolve("child"));
         Files.createSymbolicLink(temp.resolve("alias"), child);
         assertThatThrownBy(
-            () -> SearchKeywordPaths.validate(temp.resolve("alias/../state.json").toString(), false, catalog.toString())
+            () -> new SearchKeywordPaths(false, catalog.toString())
+                .reportFile(temp.resolve("alias/../state.json").toString())
         ).isInstanceOf(IllegalArgumentException.class);
-        assertThat(SearchKeywordPaths.validate(temp.resolve("state/buckets.json").toString(), true, catalog.toString()))
+        assertThat(
+            new SearchKeywordPaths(true, catalog.toString()).reportFile(temp.resolve("state/buckets.json").toString())
+        )
             .isEqualTo(temp.toRealPath().resolve("state/buckets.json"));
+    }
+
+    @Test
+    void rejectsReportAtTheSnapshotPath() {
+        SearchKeywordPaths paths = new SearchKeywordPaths(false, "");
+        assertThatThrownBy(() -> paths.reportFile("./var/search-ranking/buckets.json"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

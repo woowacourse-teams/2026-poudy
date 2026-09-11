@@ -1,5 +1,6 @@
 package com.poudy.searchkeyword.logging;
 
+import com.poudy.searchkeyword.domain.KeywordBucketStatistics;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -7,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Fixed-cardinality observations; never includes input or dictionary IDs. */
 public final class KeywordStoreMonitor {
     private static final Logger LOG = LoggerFactory.getLogger(KeywordStoreMonitor.class);
     private final KeywordBuckets buckets;
@@ -15,6 +15,7 @@ public final class KeywordStoreMonitor {
     private boolean regressed;
     private final AtomicLong entries = new AtomicLong();
     private final AtomicLong keys = new AtomicLong();
+
     public KeywordStoreMonitor(KeywordBuckets buckets, String store, MeterRegistry registry) {
         this.buckets = buckets;
         this.store = store;
@@ -23,28 +24,34 @@ public final class KeywordStoreMonitor {
     }
 
     public synchronized void sample() {
-        var statistics = buckets.statistics();
+        KeywordBucketStatistics statistics = buckets.statistics();
         entries.set(statistics.entryCount());
         keys.set(statistics.uniqueKeyCount());
-        boolean backwards = statistics.clockRegressed();
-        boolean changed = backwards != regressed;
-        if (changed) {
+        warnWhenRegressionChanges(statistics);
+        logState(statistics);
+    }
+
+    private void warnWhenRegressionChanges(KeywordBucketStatistics statistics) {
+        if (statistics.clockRegressed() != regressed) {
             LOG.warn(
                 "event=search_keyword_store_clock_regression store={} clockRegressed={} observedThrough={}",
                 store,
-                backwards,
+                statistics.clockRegressed(),
                 statistics.observedThrough()
             );
         }
+        regressed = statistics.clockRegressed();
+    }
+
+    private void logState(KeywordBucketStatistics statistics) {
         LOG.info(
             "event=search_keyword_store store={} entries={} keys={} buckets={} clockRegressed={} observedThrough={}",
             store,
             statistics.entryCount(),
             statistics.uniqueKeyCount(),
             statistics.bucketCount(),
-            backwards,
+            statistics.clockRegressed(),
             statistics.observedThrough()
         );
-        regressed = backwards;
     }
 }

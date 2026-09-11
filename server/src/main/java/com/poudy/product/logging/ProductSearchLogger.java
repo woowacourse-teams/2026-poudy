@@ -17,7 +17,6 @@ public class ProductSearchLogger {
     private static final Logger log = LoggerFactory.getLogger(ProductSearchLogger.class);
 
     public void completed(Context context, long elapsedNanos, long resultCount) {
-        Objects.requireNonNull(context);
         log.info(
             "event=search_completed searchType=PRODUCT_SEARCH keyword=\"{}\" page={} size={} sort={} filtered={} durationMs={} resultCount={} outcome={}",
             safeKeyword(context.keyword()),
@@ -32,7 +31,6 @@ public class ProductSearchLogger {
     }
 
     public void failed(Context context, long elapsedNanos) {
-        Objects.requireNonNull(context);
         log.warn(
             "event=search_completed searchType=PRODUCT_SEARCH keyword=\"{}\" page={} size={} sort={} filtered={} durationMs={} outcome={} errorCode={}",
             safeKeyword(context.keyword()),

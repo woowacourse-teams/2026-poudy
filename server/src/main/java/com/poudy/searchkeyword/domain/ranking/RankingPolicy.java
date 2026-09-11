@@ -1,5 +1,6 @@
 package com.poudy.searchkeyword.domain.ranking;
 
+import com.poudy.searchkeyword.domain.DictionaryEntry;
 import java.util.Set;
 
 public record RankingPolicy(long minCount, int size, Set<String> blockedIds) {
@@ -10,7 +11,11 @@ public record RankingPolicy(long minCount, int size, Set<String> blockedIds) {
         blockedIds = Set.copyOf(blockedIds);
     }
 
-    public boolean publishes(String entryId) {
-        return !blockedIds.contains(entryId);
+    public boolean qualifies(long count) {
+        return count >= minCount;
+    }
+
+    public boolean publishes(DictionaryEntry entry) {
+        return !blockedIds.contains(entry.id());
     }
 }

@@ -1,13 +1,12 @@
 package com.poudy.searchkeyword.domain;
 
 import com.poudy.search.domain.SearchKeyword;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public final class DictionaryEntry {
+public final class DictionaryEntry implements Comparable<DictionaryEntry> {
 
     public enum Kind {
         BRAND,
@@ -43,26 +42,41 @@ public final class DictionaryEntry {
         Map<String, ExpressionType> expressionTypes
     ) {
         this.id = requiredText(id);
-        this.kind = Objects.requireNonNull(kind);
+        this.kind = kind;
         this.keyword = requiredText(keyword);
         this.normalizedKeyword = requiredText(new SearchKeyword(keyword).value());
-        this.status = Objects.requireNonNull(status);
+        this.status = status;
         this.rankingEligible = rankingEligible;
-        Set<String> normalized = new HashSet<>();
-        for (String expression : Objects.requireNonNull(expressions)) {
-            normalized.add(requiredText(new SearchKeyword(requiredText(expression)).value()));
-        }
-        Objects.requireNonNull(expressionTypes).forEach((key, type) -> {
-            requiredText(key);
-            Objects.requireNonNull(type);
-            if (!key.equals(new SearchKeyword(key).value())) {
-                throw new IllegalArgumentException("사전 표현 출처의 키가 정규화되어 있지 않습니다: " + id);
-            }
-        });
+        this.expressions = normalizedExpressions(id, expressions, expressionTypes);
+    }
+
+    private static Set<String> normalizedExpressions(
+        String id,
+        List<String> expressions,
+        Map<String, ExpressionType> expressionTypes
+    ) {
+        Set<String> normalized = expressions.stream()
+            .map(DictionaryEntry::normalizedText)
+            .collect(Collectors.toUnmodifiableSet());
+        expressionTypes.forEach((key, type) -> requireNormalizedSource(id, key, type));
         if (!normalized.equals(expressionTypes.keySet())) {
             throw new IllegalArgumentException("사전 표현과 표현 출처의 정규화 키가 다릅니다: " + id);
         }
-        this.expressions = Set.copyOf(normalized);
+        return normalized;
+    }
+
+    private static String normalizedText(String expression) {
+        return requiredText(new SearchKeyword(requiredText(expression)).value());
+    }
+
+    private static void requireNormalizedSource(String id, String key, ExpressionType type) {
+        requiredText(key);
+        if (type == null) {
+            throw new IllegalArgumentException("사전 표현 출처가 비어 있습니다: " + id);
+        }
+        if (!key.equals(new SearchKeyword(key).value())) {
+            throw new IllegalArgumentException("사전 표현 출처의 키가 정규화되어 있지 않습니다: " + id);
+        }
     }
 
     private static String requiredText(String value) {
@@ -84,16 +98,8 @@ public final class DictionaryEntry {
         return keyword;
     }
 
-    public String normalizedKeyword() {
-        return normalizedKeyword;
-    }
-
     public Status status() {
         return status;
-    }
-
-    public boolean rankingEligible() {
-        return rankingEligible;
     }
 
     public Set<String> expressions() {
@@ -102,5 +108,22 @@ public final class DictionaryEntry {
 
     public boolean isActive() {
         return status == Status.ACTIVE;
+    }
+
+    public boolean isRankable() {
+        return isActive() && rankingEligible;
+    }
+
+    public boolean hasExpressions() {
+        return !expressions.isEmpty();
+    }
+
+    @Override
+    public int compareTo(DictionaryEntry other) {
+        int byKeyword = normalizedKeyword.compareTo(other.normalizedKeyword);
+        if (byKeyword != 0) {
+            return byKeyword;
+        }
+        return id.compareTo(other.id);
     }
 }

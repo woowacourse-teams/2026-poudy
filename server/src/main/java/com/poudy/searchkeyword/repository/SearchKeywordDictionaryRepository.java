@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.core.StreamReadFeature;
@@ -50,24 +49,28 @@ public final class SearchKeywordDictionaryRepository {
         try {
             DictionaryDocument document = MAPPER.readValue(source, DictionaryDocument.class);
             SearchKeywordDictionary dictionary = document.toDictionary(search);
-            LOG.info(
-                "Search keyword dictionary loaded: version={}, activeEntries={}, expressionKeys={}, emptyEntries={}",
-                dictionary.version(),
-                dictionary.activeEntryCount(),
-                dictionary.expressionCount(),
-                dictionary.emptyActiveEntryIds().size()
-            );
-            for (String id : dictionary.emptyActiveEntryIds()) {
-                LOG.warn(
-                    "Active search keyword has no expressions: id={}, dictionaryVersion={}",
-                    id,
-                    dictionary.version()
-                );
-            }
+            logLoaded(dictionary);
             return dictionary;
         } catch (RuntimeException exception) {
             throw new InfrastructureException("검색어 사전 형식 검증에 실패했습니다.", exception);
         }
+    }
+
+    private static void logLoaded(SearchKeywordDictionary dictionary) {
+        LOG.info(
+            "Search keyword dictionary loaded: version={}, activeEntries={}, expressionKeys={}, emptyEntries={}",
+            dictionary.version(),
+            dictionary.activeEntryCount(),
+            dictionary.expressionCount(),
+            dictionary.emptyActiveEntryIds().size()
+        );
+        dictionary.emptyActiveEntryIds().forEach(
+            id -> LOG.warn(
+                "Active search keyword has no expressions: id={}, dictionaryVersion={}",
+                id,
+                dictionary.version()
+            )
+        );
     }
 
     private record DictionaryDocument(
@@ -75,7 +78,7 @@ public final class SearchKeywordDictionaryRepository {
         String normalizerVersion,
         String dictionaryVersion,
         List<EntryDocument> searchKeywords) {
-        SearchKeywordDictionary toDictionary(KeywordSearch search) {
+        private SearchKeywordDictionary toDictionary(KeywordSearch search) {
             if (schemaVersion != 3 || !"search-keyword-v1".equals(normalizerVersion)) {
                 throw new IllegalArgumentException("지원하지 않는 검색어 사전 버전입니다.");
             }
@@ -96,15 +99,17 @@ public final class SearchKeywordDictionaryRepository {
         Status status,
         Boolean rankingEligible,
         List<CatalogReference> catalogRefs) {
-        DictionaryEntry toEntry() {
-            catalogRefs.forEach(reference -> Objects.requireNonNull(reference).validate());
+        private DictionaryEntry toEntry() {
+            if (catalogRefs.contains(null)) {
+                throw new IllegalArgumentException("사전 카탈로그 참조가 비어 있습니다.");
+            }
+            catalogRefs.forEach(CatalogReference::validate);
             return new DictionaryEntry(id, kind, keyword, status, rankingEligible, expressions, expressionTypes);
         }
     }
 
     private record CatalogReference(ReferenceType type, Long id) {
-        void validate() {
-            Objects.requireNonNull(type);
+        private void validate() {
             if (id == null || id <= 0) {
                 throw new IllegalArgumentException("사전 카탈로그 참조 ID는 양수여야 합니다.");
             }

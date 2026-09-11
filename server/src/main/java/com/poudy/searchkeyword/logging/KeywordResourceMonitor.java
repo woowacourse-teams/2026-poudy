@@ -4,12 +4,12 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.LongSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Emits a numeric-only JVM-wide resource summary from the existing maintenance tick. */
 public final class KeywordResourceMonitor {
     private static final Logger LOG = LoggerFactory.getLogger(KeywordResourceMonitor.class);
     private final MemoryMXBean memory;
@@ -26,7 +26,7 @@ public final class KeywordResourceMonitor {
         );
     }
 
-    KeywordResourceMonitor(
+    public KeywordResourceMonitor(
         MemoryMXBean memory,
         List<GarbageCollectorMXBean> collectors,
         LongSupplier snapshotFailures,
@@ -55,15 +55,11 @@ public final class KeywordResourceMonitor {
         );
     }
 
-    static long knownSum(long[] values) {
-        long sum = 0;
-        boolean known = false;
-        for (long value : values) {
-            if (value >= 0) {
-                sum = Math.addExact(sum, value);
-                known = true;
-            }
+    private static long knownSum(long[] values) {
+        long[] known = Arrays.stream(values).filter(value -> value >= 0).toArray();
+        if (known.length == 0) {
+            return -1;
         }
-        return known ? sum : -1;
+        return Arrays.stream(known).reduce(0L, Math::addExact);
     }
 }
