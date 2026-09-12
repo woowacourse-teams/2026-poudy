@@ -5,8 +5,6 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.search.domain.SearchKeyword;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.function.ToLongFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,29 +16,7 @@ public class ProductSearchLogger {
 
     private static final Logger log = LoggerFactory.getLogger(ProductSearchLogger.class);
 
-    public <T> T analyze(
-        Context context,
-        Supplier<T> search,
-        ToLongFunction<T> resultCount
-    ) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(search);
-        Objects.requireNonNull(resultCount);
-
-        long startedAt = System.nanoTime();
-
-        try {
-            T result = search.get();
-            long count = resultCount.applyAsLong(result);
-            logCompleted(context, elapsedMillis(startedAt), count);
-            return result;
-        } catch (RuntimeException exception) {
-            logFailed(context, elapsedMillis(startedAt));
-            throw exception;
-        }
-    }
-
-    private void logCompleted(Context context, String durationMillis, long resultCount) {
+    public void completed(Context context, long elapsedNanos, long resultCount) {
         log.info(
             "event=search_completed searchType=PRODUCT_SEARCH keyword=\"{}\" page={} size={} sort={} filtered={} durationMs={} resultCount={} outcome={}",
             safeKeyword(context.keyword()),
@@ -48,13 +24,13 @@ public class ProductSearchLogger {
             context.size(),
             context.sort(),
             context.filtered(),
-            durationMillis,
+            elapsedMillis(elapsedNanos),
             resultCount,
-            resultCount == 0 ? SearchOutcome.NO_RESULT : SearchOutcome.SUCCESS
+            outcomeOf(resultCount)
         );
     }
 
-    private void logFailed(Context context, String durationMillis) {
+    public void failed(Context context, long elapsedNanos) {
         log.warn(
             "event=search_completed searchType=PRODUCT_SEARCH keyword=\"{}\" page={} size={} sort={} filtered={} durationMs={} outcome={} errorCode={}",
             safeKeyword(context.keyword()),
@@ -62,19 +38,26 @@ public class ProductSearchLogger {
             context.size(),
             context.sort(),
             context.filtered(),
-            durationMillis,
+            elapsedMillis(elapsedNanos),
             SearchOutcome.ERROR,
             ErrorCode.INTERNAL_SERVER_ERROR
         );
     }
 
-    private static String elapsedMillis(long startedAt) {
-        long elapsedMicros = TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startedAt);
+    private static SearchOutcome outcomeOf(long resultCount) {
+        if (resultCount == 0) {
+            return SearchOutcome.NO_RESULT;
+        }
+        return SearchOutcome.SUCCESS;
+    }
+
+    private static String elapsedMillis(long elapsedNanos) {
+        long elapsedMicros = TimeUnit.NANOSECONDS.toMicros(elapsedNanos);
         return "%d.%03d".formatted(elapsedMicros / 1_000, elapsedMicros % 1_000);
     }
 
-    private static String safeKeyword(String keyword) {
-        String normalized = new SearchKeyword(keyword).value();
+    private static String safeKeyword(SearchKeyword keyword) {
+        String normalized = keyword.value();
         StringBuilder safe = new StringBuilder();
 
         normalized.codePoints()
@@ -87,7 +70,12 @@ public class ProductSearchLogger {
             .replace("\"", "\\\"");
     }
 
-    public record Context(String keyword, int page, int size, ProductSort sort, boolean filtered) {
+    public record Context(
+        SearchKeyword keyword,
+        int page,
+        int size,
+        ProductSort sort,
+        boolean filtered) {
 
         public Context {
             Objects.requireNonNull(keyword);

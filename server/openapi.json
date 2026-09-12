@@ -56,6 +56,10 @@
       "description": "제품 조회 API"
     },
     {
+      "name": "인기 검색어",
+      "description": "최근 7일 검색량을 10분마다 갱신한 인기 검색어"
+    },
+    {
       "name": "성분",
       "description": "성분 조회 API"
     }
@@ -416,6 +420,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SkinTypesResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search-keywords/rankings": {
+      "get": {
+        "tags": [
+          "인기 검색어"
+        ],
+        "summary": "인기 검색어 순위",
+        "description": "공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.",
+        "operationId": "rankings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankingsResponse"
                 }
               }
             }
@@ -2050,6 +2092,38 @@
             "description": "표시 순서대로 정렬된 피부타입 전체",
             "items": {
               "$ref": "#/components/schemas/SkinTypeResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "RankingItem": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "keyword": {
+            "type": "string",
+            "example": "토너"
+          }
+        },
+        "required": [
+          "keyword",
+          "rank"
+        ]
+      },
+      "RankingsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RankingItem"
             }
           }
         },

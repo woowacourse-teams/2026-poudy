@@ -16,26 +16,35 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.search.observation.ProductSearchObserver;
+import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
+
     private final ProductRepository productRepository;
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
     private final ProductSearchLogger searchLogger;
+    private final ProductSearchObserver searchObserver;
 
     public ProductService(
         ProductRepository productRepository,
         Categories categories,
         ExcludeCodeIngredients excludeCodeIngredients,
-        ProductSearchLogger searchLogger
+        ProductSearchLogger searchLogger,
+        ProductSearchObserver searchObserver
     ) {
         this.productRepository = productRepository;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
         this.searchLogger = searchLogger;
+        this.searchObserver = searchObserver;
     }
 
     public ProductPage findProducts(
@@ -47,21 +56,49 @@ public class ProductService {
         ProductFilter filter = filterOf(query);
         Products products = products();
 
-        if (query.keyword() == null || page > 0) {
+        if (!query.hasKeyword() || page > 0) {
             return products.find(filter, sort, page, size, categories);
         }
 
-        return searchLogger.analyze(
-            new ProductSearchLogger.Context(
-                query.keyword(),
-                page,
-                size,
-                ProductSort.orDefault(sort),
-                query.hasFilters()
-            ),
-            () -> products.find(filter, sort, page, size, categories),
-            ProductPage::totalElements
+        ProductSearchLogger.Context context = new ProductSearchLogger.Context(
+            filter.keyword(),
+            page,
+            size,
+            ProductSort.orDefault(sort),
+            query.hasFilters()
         );
+        return recordedSearch(context, () -> products.find(filter, sort, page, size, categories));
+    }
+
+    private ProductPage recordedSearch(ProductSearchLogger.Context context, Supplier<ProductPage> search) {
+        long startedAt = System.nanoTime();
+        ProductPage result = searchOrRecordFailure(context, search, startedAt);
+        long elapsed = System.nanoTime() - startedAt;
+        quietly(() -> searchLogger.completed(context, elapsed, result.totalElements()));
+        quietly(() -> searchObserver.completed(context.keyword(), result.totalElements()));
+        return result;
+    }
+
+    private ProductPage searchOrRecordFailure(
+        ProductSearchLogger.Context context,
+        Supplier<ProductPage> search,
+        long startedAt
+    ) {
+        try {
+            return search.get();
+        } catch (RuntimeException exception) {
+            long failedAfter = System.nanoTime() - startedAt;
+            quietly(() -> searchLogger.failed(context, failedAfter));
+            throw exception;
+        }
+    }
+
+    private static void quietly(Runnable recording) {
+        try {
+            recording.run();
+        } catch (RuntimeException exception) {
+            log.warn("event=search_recording_failed");
+        }
     }
 
     public long countProducts(ProductQuery query) {
@@ -91,7 +128,7 @@ public class ProductService {
         );
 
         return new ProductFilter(
-            query.keyword(),
+            query.searchKeyword(),
             query.categoryIds(),
             query.brandIds(),
             query.moistureLevels().stream().map(MoistureLevel::new).toList(),

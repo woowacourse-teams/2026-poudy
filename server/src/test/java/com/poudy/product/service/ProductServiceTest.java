@@ -25,6 +25,8 @@ import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.search.domain.SearchKeyword;
+import com.poudy.search.observation.ProductSearchObserver;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -52,7 +54,8 @@ class ProductServiceTest {
             repository,
             categories(),
             excludeCodeIngredients,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            mock(ProductSearchObserver.class)
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -89,7 +92,8 @@ class ProductServiceTest {
             repository,
             categories(),
             excludeCodeIngredients,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            mock(ProductSearchObserver.class)
         );
 
         ProductDetail detail = service.findDetail(1L);
@@ -111,7 +115,8 @@ class ProductServiceTest {
             repository,
             Categories.from(List.of(parent, child)),
             excludeCodeIngredients,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            mock(ProductSearchObserver.class)
         );
 
         assertThatThrownBy(() -> service.findDetail(999L))
@@ -132,7 +137,8 @@ class ProductServiceTest {
             repository,
             categories(),
             excludeCodeIngredients,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            mock(ProductSearchObserver.class)
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -172,7 +178,8 @@ class ProductServiceTest {
             repository,
             categories(),
             excludeCodeIngredients,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            mock(ProductSearchObserver.class)
         );
         ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
         ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
@@ -183,6 +190,71 @@ class ProductServiceTest {
         service.suggestProducts("제품", 0, 20);
 
         assertThat(output).doesNotContain("event=search_completed");
+    }
+
+    @Test
+    void observesOnlyCompletedFirstPageAndKeepsResponseOnObservationFailure() {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
+        given(excludes.idsOf(List.of())).willReturn(Set.of());
+        ProductSearchObserver observer = mock(ProductSearchObserver.class);
+        ProductService service = new ProductService(
+            repository,
+            categories(),
+            excludes,
+            new ProductSearchLogger(),
+            observer
+        );
+        ProductQuery query = new ProductQuery("제품", null, null, null, null, null, null, null, null);
+        service.findProducts(query, ProductSort.NAME_ASC, 0, 20);
+        service.findProducts(query, ProductSort.PRICE_DESC, 0, 20);
+        service.findProducts(query, ProductSort.NAME_ASC, 1, 20);
+        service.countProducts(query);
+        service.suggestProducts("제품", 0, 20);
+        service.findDetail(1L);
+        service.findProducts(
+            new ProductQuery(null, null, null, null, null, null, null, null, null),
+            ProductSort.NAME_ASC,
+            0,
+            20
+        );
+        org.mockito.Mockito.verify(observer, org.mockito.Mockito.times(2)).completed(new SearchKeyword("제품"), 1L);
+        org.mockito.Mockito.verifyNoMoreInteractions(observer);
+        ProductQuery filtered = new ProductQuery("제품", null, List.of(999L), null, null, null, null, null, null);
+        service.findProducts(filtered, ProductSort.NAME_ASC, 0, 20);
+        org.mockito.Mockito.verify(observer).completed(new SearchKeyword("제품"), 0L);
+        org.mockito.Mockito.doThrow(new IllegalStateException("observation broken")).when(observer)
+            .completed(new SearchKeyword("제품"), 1L);
+        assertThat(service.findProducts(query, ProductSort.NAME_ASC, 0, 20).totalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("기록이 실패해도 검색 응답은 그대로 나가고 성공이 오류로 뒤집히지 않는다")
+    void keepsResponseWhenLoggingFails(CapturedOutput output) {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
+        given(excludes.idsOf(List.of())).willReturn(Set.of());
+        ProductSearchLogger logger = new ProductSearchLogger() {
+            @Override
+            public void completed(Context context, long elapsedNanos, long resultCount) {
+                throw new IllegalStateException("logging broken");
+            }
+        };
+        ProductSearchObserver observer = mock(ProductSearchObserver.class);
+        ProductService service = new ProductService(repository, categories(), excludes, logger, observer);
+
+        ProductPage result = service.findProducts(
+            new ProductQuery("제품", null, null, null, null, null, null, null, null),
+            ProductSort.NAME_ASC,
+            0,
+            20
+        );
+
+        assertThat(result.totalElements()).isEqualTo(1L);
+        assertThat(output).contains("event=search_recording_failed").doesNotContain("outcome=ERROR");
+        org.mockito.Mockito.verify(observer).completed(new SearchKeyword("제품"), 1L);
     }
 
     private static Product product(Long id) {

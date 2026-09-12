@@ -25,6 +25,8 @@ import java.util.Set;
 
 public final class Product {
 
+    private static final int MINIMUM_BRAND_PREFIX_LENGTH = 2;
+
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
     private final Set<SkinType> skinTypes;
@@ -217,7 +219,7 @@ public final class Product {
 
     private Optional<CombinedMatch> matchCombined(ProductSearchQuery.Parts parts) {
         Optional<TextMatch> brandMatch = brand.findMatch(parts.brand());
-        if (brandMatch.isEmpty() || !matchesBrandPrefix(brandMatch.get())) {
+        if (brandMatch.isEmpty() || !matchesBrandPrefix(parts.brand(), brandMatch.get())) {
             return Optional.empty();
         }
 
@@ -229,8 +231,11 @@ public final class Product {
         return TextMatch.best(searchableNames, keyword);
     }
 
-    private static boolean matchesBrandPrefix(TextMatch match) {
-        return match.rank().match() == NameMatch.EXACT || match.rank().match() == NameMatch.PREFIX;
+    private static boolean matchesBrandPrefix(SearchKeyword searched, TextMatch match) {
+        if (match.is(NameMatch.EXACT)) {
+            return true;
+        }
+        return match.is(NameMatch.PREFIX) && searched.hasAtLeastLetters(MINIMUM_BRAND_PREFIX_LENGTH);
     }
 
     private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {

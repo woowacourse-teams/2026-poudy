@@ -11,6 +11,7 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.search.domain.SearchKeyword;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -69,7 +70,7 @@ class ProductCatalogTest {
     @DisplayName("서로 다른 필터 종류를 AND 로 결합한다")
     void filtersWithEveryCondition() {
         ProductFilter filter = new ProductFilter(
-            "토너",
+            new SearchKeyword("토너"),
             List.of(1L),
             List.of(1L),
             List.of(new MoistureLevel(2)),
@@ -129,7 +130,7 @@ class ProductCatalogTest {
     @DisplayName("목록과 개수는 같은 필터 판정을 사용한다")
     void countsWithSameFilterRule() {
         ProductFilter filter = new ProductFilter(
-            "토너",
+            new SearchKeyword("토너"),
             List.of(),
             List.of(1L),
             List.of(),

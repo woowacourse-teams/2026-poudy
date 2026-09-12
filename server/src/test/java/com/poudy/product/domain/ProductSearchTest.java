@@ -170,8 +170,8 @@ class ProductSearchTest {
     @Test
     @DisplayName("복합 검색에서는 정확히 맞은 브랜드의 제품을 접두 일치 브랜드보다 먼저 담는다")
     void ordersCombinedMatchesByBrandThenProductName() {
-        Brand exact = new Brand(1L, "다", null, null);
-        Brand prefix = new Brand(2L, "다 브랜드", null, null);
+        Brand exact = new Brand(1L, "다온", null, null);
+        Brand prefix = new Brand(2L, "다온 브랜드", null, null);
         Products products = Products.from(
             List.of(
                 product(2L, "블랙 크림", prefix),
@@ -179,7 +179,17 @@ class ProductSearchTest {
             )
         );
 
-        assertThat(names(products.search("다 블랙"))).containsExactly("블랙 토너", "블랙 크림");
+        assertThat(names(products.search("다온 블랙"))).containsExactly("블랙 토너", "블랙 크림");
+    }
+
+    @Test
+    @DisplayName("한 글자 접두로는 브랜드를 지목하지 못하고 정확히 같을 때만 복합 검색이 성립한다")
+    void rejectsSingleCharacterBrandPrefixInCombinedName() {
+        Brand drG = new Brand(1L, "닥터지", null, null);
+        Products products = Products.from(List.of(product(1L, "수딩 토너", drG)));
+
+        assertThat(names(products.search("ㄷㅅㄷㅌㄴ"))).isEmpty();
+        assertThat(names(products.search("ㄷㅌㅅㄷㅌㄴ"))).containsExactly("수딩 토너");
     }
 
     @Test

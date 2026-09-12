@@ -3,6 +3,7 @@ package com.poudy.product.domain;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,10 +32,19 @@ public final class Products {
         return new Products(Collections.unmodifiableMap(indexedProducts));
     }
 
-    public List<Product> search(String keyword) {
+    public List<Product> search(SearchKeyword keyword) {
         return matched(new ProductSearchQuery(keyword)).stream()
             .map(MatchedProduct::product)
             .toList();
+    }
+
+    public List<Product> search(String keyword) {
+        return search(new SearchKeyword(keyword));
+    }
+
+    public boolean hasResults(String keyword) {
+        ProductSearchQuery query = new ProductSearchQuery(keyword);
+        return products.values().stream().anyMatch(product -> product.match(query).isPresent());
     }
 
     public List<Product> searchByProductName(String keyword) {

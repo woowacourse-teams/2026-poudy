@@ -105,6 +105,8 @@ export type SkinTypesResponse = {
    */
   items: Array<SkinTypeResponse>;
 }
+export type RankingItem = { rank: number, keyword: string }
+export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
@@ -657,6 +659,20 @@ export type get_FindSkinTypes = {
 
     }
 /**
+ * 공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.
+ */
+export type get_Rankings = {
+      method: "GET",
+      path: "/api/search-keywords/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.RankingsResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
  */
 export type get_FindProducts = {
@@ -1004,6 +1020,7 @@ export type get_FindBrand = {
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
