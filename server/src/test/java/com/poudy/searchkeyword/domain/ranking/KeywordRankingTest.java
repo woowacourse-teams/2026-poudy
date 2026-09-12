@@ -129,6 +129,43 @@ class KeywordRankingTest {
     }
 
     @Test
+    void fillsEmptySlotsWithTheDefaultKeywordsWithoutDuplicating() {
+        SearchKeywordDictionary dictionary = dictionary(
+            entry("term:1", "토너"),
+            entry("term:2", "크림"),
+            entry("term:3", "세럼")
+        );
+        RankingFallback fallback = new RankingFallback(List.of("크림", "세럼"));
+
+        List<RankedKeyword> rankings = KeywordRanking.of(
+            Map.of("토너", 9L, "크림", 5L),
+            dictionary,
+            new RankingPolicy(5, 3, Set.of()),
+            fallback
+        );
+
+        assertThat(rankings).containsExactly(
+            new RankedKeyword(1, "토너"),
+            new RankedKeyword(2, "크림"),
+            new RankedKeyword(3, "세럼")
+        );
+    }
+
+    @Test
+    void defaultKeywordsPassTheSameEligibilityAsCountedOnes() {
+        SearchKeywordDictionary dictionary = new SearchKeywordDictionary(
+            "fixture-v1",
+            List.of(entry("term:1", "토너"), entry("term:2", "크림"), entry("term:3", "세럼", Status.ACTIVE, false)),
+            keyword -> !keyword.equals("크림")
+        );
+        RankingFallback fallback = new RankingFallback(List.of("크림", "세럼", "토너", "없는말"));
+
+        List<RankedKeyword> rankings = KeywordRanking.of(Map.of(), dictionary, POLICY, fallback);
+
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
+    }
+
+    @Test
     void shadowRankingCountsInputsWithoutTheDictionary() {
         List<RankedKeyword> shadow = KeywordRanking.shadowOf(
             Map.of("토너", 9L, "ㄷㄷㅌㄴ", 8L, "사전에없는말", 7L, "적은입력", 4L),

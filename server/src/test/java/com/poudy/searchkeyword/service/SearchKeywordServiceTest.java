@@ -12,6 +12,7 @@ import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -256,7 +257,8 @@ class SearchKeywordServiceTest {
             ranking,
             5,
             20,
-            Set.of()
+            Set.of(),
+            RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
             failing.completed(new SearchKeyword("토너"), 1);
@@ -280,7 +282,8 @@ class SearchKeywordServiceTest {
             ranking,
             5,
             20,
-            Set.of()
+            Set.of(),
+            RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("토너"), 1);
@@ -308,7 +311,8 @@ class SearchKeywordServiceTest {
             ranking,
             5,
             20,
-            Set.of()
+            Set.of(),
+            RankingFallback.none()
         );
         for (DictionaryEntry entry : entries) {
             for (int i = 0; i < (entry.id().endsWith("19") ? 1 : 5); i++) {
@@ -343,7 +347,8 @@ class SearchKeywordServiceTest {
             ranking,
             5,
             20,
-            Set.of("blocked")
+            Set.of("blocked"),
+            RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
             service.completed(new SearchKeyword("자격"), 1);
@@ -407,7 +412,8 @@ class SearchKeywordServiceTest {
             successful,
             5,
             20,
-            blocked
+            blocked,
+            RankingFallback.none()
         );
     }
 

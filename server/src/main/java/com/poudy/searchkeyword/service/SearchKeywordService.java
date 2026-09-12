@@ -11,6 +11,7 @@ import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.KeywordRanking;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class SearchKeywordService implements ProductSearchObserver {
     private final KeywordBuckets successful;
     private final long reportMinCount;
     private final RankingPolicy rankingPolicy;
+    private final RankingFallback rankingFallback;
     private final AtomicReference<List<RankedKeyword>> cachedRankings = new AtomicReference<>(List.of());
 
     public SearchKeywordService(
@@ -33,7 +35,8 @@ public class SearchKeywordService implements ProductSearchObserver {
         KeywordBuckets successful,
         long minCount,
         long reportMinCount,
-        Set<String> blockedIds
+        Set<String> blockedIds,
+        RankingFallback rankingFallback
     ) {
         if (minCount < 1 || reportMinCount < 1) {
             throw new IllegalArgumentException("Minimum counts must be positive");
@@ -42,6 +45,7 @@ public class SearchKeywordService implements ProductSearchObserver {
         this.successful = successful;
         this.reportMinCount = reportMinCount;
         this.rankingPolicy = new RankingPolicy(minCount, SearchKeywordPolicy.RANKING_SIZE, blockedIds);
+        this.rankingFallback = rankingFallback;
     }
 
     @Override
@@ -59,7 +63,7 @@ public class SearchKeywordService implements ProductSearchObserver {
     public void refreshRankings() {
         try {
             Map<String, Long> counts = successful.view().counts();
-            cachedRankings.set(KeywordRanking.of(counts, dictionary, rankingPolicy));
+            cachedRankings.set(KeywordRanking.of(counts, dictionary, rankingPolicy, rankingFallback));
             logCoverage(KeywordCoverage.of(counts, dictionary));
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_rankings_refresh_failed");

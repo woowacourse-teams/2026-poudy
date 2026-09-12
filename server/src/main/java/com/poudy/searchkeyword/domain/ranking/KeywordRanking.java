@@ -2,6 +2,7 @@ package com.poudy.searchkeyword.domain.ranking;
 
 import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +19,30 @@ public final class KeywordRanking {
         SearchKeywordDictionary dictionary,
         RankingPolicy policy
     ) {
+        return of(counts, dictionary, policy, RankingFallback.none());
+    }
+
+    public static List<RankedKeyword> of(
+        Map<String, Long> counts,
+        SearchKeywordDictionary dictionary,
+        RankingPolicy policy,
+        RankingFallback fallback
+    ) {
+        List<String> published = new ArrayList<>(counted(counts, dictionary, policy));
+        fallback.publishableNames(dictionary).stream()
+            .filter(name -> !published.contains(name))
+            .limit(Math.max(policy.size() - published.size(), 0))
+            .forEach(published::add);
+        return numbered(published);
+    }
+
+    private static List<String> counted(
+        Map<String, Long> counts,
+        SearchKeywordDictionary dictionary,
+        RankingPolicy policy
+    ) {
         Map<DictionaryEntry, Long> totals = totalsByEntry(counts, dictionary);
-        List<String> selected = totals.entrySet().stream()
+        return totals.entrySet().stream()
             .filter(entry -> policy.qualifies(entry.getValue()))
             .map(Map.Entry::getKey)
             .sorted(order(totals))
@@ -28,7 +51,6 @@ public final class KeywordRanking {
             .limit(policy.size())
             .map(DictionaryEntry::keyword)
             .toList();
-        return numbered(selected);
     }
 
     public static List<RankedKeyword> shadowOf(Map<String, Long> counts, RankingPolicy policy) {

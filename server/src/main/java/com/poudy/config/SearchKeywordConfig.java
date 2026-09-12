@@ -4,6 +4,7 @@ import com.poudy.product.repository.ProductRepository;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
+import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.logging.KeywordResourceMonitor;
 import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
 import com.poudy.searchkeyword.repository.KeywordReportRepository;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -43,6 +45,18 @@ public class SearchKeywordConfig {
         "ingredients.json",
         "tags.json",
         "exclude_codes.json"
+    );
+    private static final List<String> DEFAULT_KEYWORDS = List.of(
+        "토너",
+        "선크림",
+        "크림",
+        "로션",
+        "클렌징",
+        "선스틱",
+        "패드",
+        "패치",
+        "앰플",
+        "에센스"
     );
     private static final List<String> SEARCH_CLASSES = List.of(
         "com/poudy/search/domain/SearchKeyword.class",
@@ -88,14 +102,27 @@ public class SearchKeywordConfig {
     }
 
     @Bean
-    public SearchKeywordService searchKeywordService(SearchKeywordDictionary dictionary, KeywordBuckets buckets) {
+    public SearchKeywordService searchKeywordService(
+        Environment env,
+        SearchKeywordDictionary dictionary,
+        KeywordBuckets buckets
+    ) {
         return new SearchKeywordService(
             dictionary,
             buckets,
             SearchKeywordPolicy.MIN_COUNT,
             SearchKeywordPolicy.REPORT_MIN_COUNT,
-            Set.of()
+            Set.of(),
+            new RankingFallback(defaultKeywords(env))
         );
+    }
+
+    private static List<String> defaultKeywords(Environment env) {
+        String configured = env.getProperty(PROPERTY_PREFIX + "default-keywords", "");
+        if (configured.isBlank()) {
+            return DEFAULT_KEYWORDS;
+        }
+        return Arrays.stream(configured.split(",")).map(String::trim).filter(keyword -> !keyword.isBlank()).toList();
     }
 
     @Bean

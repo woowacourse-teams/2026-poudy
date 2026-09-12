@@ -7,6 +7,7 @@ import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -64,6 +65,6 @@ class SearchKeywordRankingPersistenceTest {
             Map.of("토너", DictionaryEntry.ExpressionType.CATALOG)
         );
         SearchKeywordDictionary dictionary = new SearchKeywordDictionary("data-v1", List.of(entry), ignored -> true);
-        return new SearchKeywordService(dictionary, buckets, 5, 20, Set.of());
+        return new SearchKeywordService(dictionary, buckets, 5, 20, Set.of(), RankingFallback.none());
     }
 }
