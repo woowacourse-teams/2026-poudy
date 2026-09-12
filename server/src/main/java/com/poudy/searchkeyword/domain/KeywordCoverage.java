@@ -2,7 +2,17 @@ package com.poudy.searchkeyword.domain;
 
 import java.util.Map;
 
-public record KeywordCoverage(long total, long resolved, int distinctKeys) {
+public final class KeywordCoverage {
+
+    private final long total;
+    private final long resolved;
+    private final int distinctKeys;
+
+    public KeywordCoverage(long total, long resolved, int distinctKeys) {
+        this.total = total;
+        this.resolved = resolved;
+        this.distinctKeys = distinctKeys;
+    }
 
     public static KeywordCoverage of(Map<String, Long> counts, SearchKeywordDictionary dictionary) {
         long total = counts.values().stream().mapToLong(Long::longValue).reduce(0L, Math::addExact);
@@ -18,5 +28,17 @@ public record KeywordCoverage(long total, long resolved, int distinctKeys) {
             return 0;
         }
         return (double) resolved / total;
+    }
+
+    public long total() {
+        return total;
+    }
+
+    public long resolved() {
+        return resolved;
+    }
+
+    public int distinctKeys() {
+        return distinctKeys;
     }
 }
