@@ -2,6 +2,7 @@ package com.poudy.searchkeyword.domain;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,8 +45,14 @@ public final class KeywordBucketSnapshot {
 
     public Map<String, Long> totals() {
         Map<String, Long> totals = new HashMap<>();
-        buckets.forEach(bucket -> bucket.counts().forEach((key, count) -> totals.merge(key, count, Math::addExact)));
+        buckets.forEach(bucket -> bucket.addCountsTo(totals));
         return totals;
+    }
+
+    public Map<Instant, Map<String, Long>> countsByStart() {
+        Map<Instant, Map<String, Long>> byStart = new LinkedHashMap<>();
+        buckets.forEach(bucket -> byStart.put(bucket.start(), bucket.counts()));
+        return byStart;
     }
 
     public int entryCount() {

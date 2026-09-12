@@ -37,6 +37,10 @@ public final class TextMatch {
         return rank.match() == match;
     }
 
+    public boolean isBetterThan(TextMatch other) {
+        return rank.isBetterThan(other.rank);
+    }
+
     public static Optional<TextMatch> best(List<SearchableText> candidates, SearchKeyword keyword) {
         TextMatch best = null;
         for (SearchableText candidate : candidates) {
@@ -49,6 +53,6 @@ public final class TextMatch {
     }
 
     private static boolean isBetterThan(TextMatch candidate, TextMatch current) {
-        return current == null || candidate.rank().isBetterThan(current.rank());
+        return current == null || candidate.isBetterThan(current);
     }
 }

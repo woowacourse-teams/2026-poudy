@@ -62,15 +62,11 @@ public final class SearchKeywordDictionaryRepository {
             dictionary.version(),
             dictionary.activeEntryCount(),
             dictionary.expressionCount(),
-            dictionary.emptyActiveEntryIds().size()
+            dictionary.emptyActiveEntryCount()
         );
-        dictionary.emptyActiveEntryIds().forEach(
-            id -> LOG.warn(
-                "Active search keyword has no expressions: id={}, dictionaryVersion={}",
-                id,
-                dictionary.version()
-            )
-        );
+        for (String id : dictionary.emptyActiveEntryIds()) {
+            LOG.warn("Active search keyword has no expressions: id={}, dictionaryVersion={}", id, dictionary.version());
+        }
     }
 
     private record DictionaryDocument(

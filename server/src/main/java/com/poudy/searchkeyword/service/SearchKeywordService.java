@@ -9,12 +9,10 @@ import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
-import com.poudy.searchkeyword.domain.ranking.KeywordRanking;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
@@ -62,9 +60,9 @@ public class SearchKeywordService implements ProductSearchObserver {
 
     public void refreshRankings() {
         try {
-            Map<String, Long> counts = successful.view().counts();
-            cachedRankings.set(KeywordRanking.of(counts, dictionary, rankingPolicy, rankingFallback));
-            logCoverage(KeywordCoverage.of(counts, dictionary));
+            KeywordBucketView view = successful.view();
+            cachedRankings.set(view.rank(dictionary, rankingPolicy, rankingFallback));
+            logCoverage(view.coverage(dictionary));
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_rankings_refresh_failed");
         }
@@ -86,9 +84,9 @@ public class SearchKeywordService implements ProductSearchObserver {
             dictionary.version(),
             catalogVersion,
             searchVersion,
-            KeywordCoverage.of(view.counts(), dictionary),
+            view.coverage(dictionary),
             ReportSection.unresolvedOf(view, dictionary, reportMinCount),
-            KeywordRanking.shadowOf(view.counts(), rankingPolicy)
+            view.shadowRank(rankingPolicy)
         );
     }
 }

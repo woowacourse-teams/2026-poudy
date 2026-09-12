@@ -66,6 +66,10 @@ public final class SearchKeywordDictionary {
         return emptyActiveEntryIds;
     }
 
+    public int emptyActiveEntryCount() {
+        return emptyActiveEntryIds.size();
+    }
+
     private static String matchKey(String normalizedQuery) {
         return SearchKeyword.folded(normalizedQuery);
     }

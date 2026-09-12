@@ -28,6 +28,10 @@ public final class KeywordBucket {
         return counts.size();
     }
 
+    public void addCountsTo(Map<String, Long> target) {
+        counts.forEach((key, count) -> target.merge(key, count, Math::addExact));
+    }
+
     public void validateWithin(BucketWindow window, Instant latestStart) {
         if (!window.isStart(start) || !window.covers(latestStart, start) || counts.isEmpty()) {
             throw new IllegalArgumentException("Invalid snapshot bucket");

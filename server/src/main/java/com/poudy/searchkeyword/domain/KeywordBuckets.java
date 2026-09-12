@@ -118,7 +118,7 @@ public final class KeywordBuckets {
     private void load(KeywordBucketSnapshot snapshot) {
         Map<String, Long> restoredTotals = snapshot.totals();
         int restoredEntries = snapshot.entryCount();
-        snapshot.buckets().forEach(bucket -> buckets.put(bucket.start(), new ConcurrentHashMap<>(bucket.counts())));
+        snapshot.countsByStart().forEach((start, counts) -> buckets.put(start, new ConcurrentHashMap<>(counts)));
         totals.putAll(restoredTotals);
         entryCount = restoredEntries;
         maxObservedBucketStart = snapshot.maxObservedBucketStart();
