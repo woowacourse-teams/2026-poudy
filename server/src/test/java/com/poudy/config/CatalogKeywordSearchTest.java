@@ -58,7 +58,7 @@ class CatalogKeywordSearchTest {
             "없는상품"
         )) {
             boolean expected = products.find(
-                new ProductFilter(new SearchKeyword(keyword), null, null, null, null, null),
+                new ProductFilter(new SearchKeyword(keyword), null, null, null, null, null, null),
                 null,
                 0,
                 1,

@@ -133,7 +133,8 @@ public class ProductService {
             query.brandIds(),
             query.moistureLevels().stream().map(MoistureLevel::new).toList(),
             query.oilLevels().stream().map(OilLevel::new).toList(),
-            ingredientFilter
+            ingredientFilter,
+            query.skinType()
         );
     }
 

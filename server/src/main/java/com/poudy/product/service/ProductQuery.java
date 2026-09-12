@@ -2,6 +2,7 @@ package com.poudy.product.service;
 
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.skintype.domain.SkinType;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +14,8 @@ public record ProductQuery(
     List<Integer> oilLevels,
     List<Long> includeIngredientIds,
     List<Long> excludeIngredientIds,
-    List<ExcludeCode> excludeCodes) {
+    List<ExcludeCode> excludeCodes,
+    SkinType skinType) {
 
     public ProductQuery {
         categoryIds = copyOf(categoryIds);
@@ -37,7 +39,8 @@ public record ProductQuery(
     }
 
     public boolean hasFilters() {
-        return !categoryIds.isEmpty()
+        return skinType != null
+            || !categoryIds.isEmpty()
             || !brandIds.isEmpty()
             || !moistureLevels.isEmpty()
             || !oilLevels.isEmpty()

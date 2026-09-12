@@ -12,6 +12,7 @@ import com.poudy.search.domain.NameMatch;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
 import com.poudy.search.domain.TextMatch;
+import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public final class Product {
 
@@ -27,6 +29,7 @@ public final class Product {
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
+    private final Set<SkinType> skinTypes;
     private final Long id;
     private final String name;
     private final Brand brand;
@@ -47,7 +50,8 @@ public final class Product {
         String imageUrl,
         ProductVariants variants,
         ProductSensory sensory,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        Set<SkinType> skinTypes
     ) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("제품 이름이 필요합니다.");
@@ -77,6 +81,7 @@ public final class Product {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
         }
 
+        this.skinTypes = Set.copyOf(skinTypes);
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -279,6 +284,10 @@ public final class Product {
 
     public boolean hasAnyOilLevel(List<OilLevel> levels) {
         return levels.isEmpty() || levels.contains(sensory.oil());
+    }
+
+    public boolean matchesSkinType(SkinType skinType) {
+        return skinType == null || skinTypes.contains(skinType);
     }
 
     public boolean matchesIngredients(IngredientFilter filter) {

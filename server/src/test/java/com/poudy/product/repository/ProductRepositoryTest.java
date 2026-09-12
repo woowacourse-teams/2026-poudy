@@ -17,6 +17,7 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
 import com.poudy.product.domain.sensory.SensoryModelVersion;
+import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -153,6 +154,52 @@ class ProductRepositoryTest {
             .isInstanceOf(InfrastructureException.class);
     }
 
+    @Test
+    @DisplayName("제품의 복수 피부타입을 로딩하고 선택한 타입을 판정한다")
+    void loadsSkinTypes() {
+        Product product = repositoryReading(1L, 2L, "", "null", ", \"skin_types\":[\"DRY\",\"SENSITIVE\"]")
+            .findAll().findById(1L).orElseThrow();
+
+        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
+        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
+        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
+        assertThat(product.matchesSkinType(null)).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", ", \"skin_types\":[]"})
+    @DisplayName("피부타입이 누락되거나 빈 배열이면 미분류 제품으로 로딩한다")
+    void loadsUnclassifiedProduct(String field) {
+        Product product = repositoryReading(1L, 2L, "", "null", field)
+            .findAll().findById(1L).orElseThrow();
+
+        assertThat(product.matchesSkinType(null)).isTrue();
+        for (SkinType skinType : SkinType.values()) {
+            assertThat(product.matchesSkinType(skinType)).isFalse();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "null",
+            "{}",
+            "\"DRY\"",
+            "1",
+            "true",
+            "[null]",
+            "[1]",
+            "[true]",
+            "[{}]",
+            "[[]]",
+            "[\"UNKNOWN\"]",
+            "[\"dry\"]",
+            "[\"DRY\",\"DRY\"]"})
+    @DisplayName("잘못된 피부타입 데이터는 빈 배열로 대체하지 않고 로딩에 실패한다")
+    void rejectsInvalidSkinTypes(String value) {
+        assertThatThrownBy(() -> repositoryReading(1L, 2L, "", "null", ", \"skin_types\":" + value))
+            .isInstanceOf(InfrastructureException.class);
+    }
+
     private static ProductRepository repositoryReading(Long brandId, Long categoryId, String ingredientReferences) {
         return repositoryReading(brandId, categoryId, ingredientReferences, "\"https://example.com/product.png\"");
     }
@@ -162,6 +209,16 @@ class ProductRepositoryTest {
         Long categoryId,
         String ingredientReferences,
         String imageUrl
+    ) {
+        return repositoryReading(brandId, categoryId, ingredientReferences, imageUrl, "");
+    }
+
+    private static ProductRepository repositoryReading(
+        Long brandId,
+        Long categoryId,
+        String ingredientReferences,
+        String imageUrl,
+        String skinTypesField
     ) {
         String productData = """
             {"products":[{
@@ -178,9 +235,9 @@ class ProductRepositoryTest {
                 "status":"active"
               }],
               "updated_at":"2026-08-01T00:00:00Z",
-              "ingredients":[%s]
+              "ingredients":[%s]%s
             }]}
-            """.formatted(brandId, categoryId, imageUrl, ingredientReferences);
+            """.formatted(brandId, categoryId, imageUrl, ingredientReferences, skinTypesField);
         DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
 
             @Override

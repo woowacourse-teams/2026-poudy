@@ -65,7 +65,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            List.of(ExcludeCode.HARSH_PRESERVATIVES)
+            List.of(ExcludeCode.HARSH_PRESERVATIVES),
+            null
         );
 
         ProductPage found = service.findProducts(
@@ -147,6 +148,7 @@ class ProductServiceTest {
             null,
             null,
             null,
+            null,
             null
         );
 
@@ -179,8 +181,8 @@ class ProductServiceTest {
             new ProductSearchLogger(),
             mock(ProductSearchObserver.class)
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
 
         service.findProducts(browse, ProductSort.NAME_ASC, 0, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 1, 20);
@@ -204,7 +206,7 @@ class ProductServiceTest {
             new ProductSearchLogger(),
             observer
         );
-        ProductQuery query = new ProductQuery("제품", null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("제품", null, null, null, null, null, null, null, null);
         service.findProducts(query, ProductSort.NAME_ASC, 0, 20);
         service.findProducts(query, ProductSort.PRICE_DESC, 0, 20);
         service.findProducts(query, ProductSort.NAME_ASC, 1, 20);
@@ -212,14 +214,14 @@ class ProductServiceTest {
         service.suggestProducts("제품", 0, 20);
         service.findDetail(1L);
         service.findProducts(
-            new ProductQuery(null, null, null, null, null, null, null, null),
+            new ProductQuery(null, null, null, null, null, null, null, null, null),
             ProductSort.NAME_ASC,
             0,
             20
         );
         org.mockito.Mockito.verify(observer, org.mockito.Mockito.times(2)).completed(new SearchKeyword("제품"), 1L);
         org.mockito.Mockito.verifyNoMoreInteractions(observer);
-        ProductQuery filtered = new ProductQuery("제품", null, List.of(999L), null, null, null, null, null);
+        ProductQuery filtered = new ProductQuery("제품", null, List.of(999L), null, null, null, null, null, null);
         service.findProducts(filtered, ProductSort.NAME_ASC, 0, 20);
         org.mockito.Mockito.verify(observer).completed(new SearchKeyword("제품"), 0L);
         org.mockito.Mockito.doThrow(new IllegalStateException("observation broken")).when(observer)
@@ -244,7 +246,7 @@ class ProductServiceTest {
         ProductService service = new ProductService(repository, categories(), excludes, logger, observer);
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null),
             ProductSort.NAME_ASC,
             0,
             20
@@ -271,7 +273,8 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
     }
 
