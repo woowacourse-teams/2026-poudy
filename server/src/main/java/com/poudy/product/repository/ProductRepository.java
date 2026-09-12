@@ -98,29 +98,35 @@ public class ProductRepository {
     }
 
     private static Set<SkinType> skinTypesOf(JsonNode product, DeserializationContext context) {
-        JsonNode values = product.get("skin_types");
-        if (values == null) {
+        JsonNode skinTypeCodes = product.get("skin_types");
+        if (skinTypeCodes == null) {
             return Set.of();
         }
-        if (!values.isArray()) {
+        if (!skinTypeCodes.isArray()) {
             return context.reportInputMismatch(Product.class, "제품의 skin_types 필드는 배열이어야 합니다.");
         }
+
         Set<SkinType> skinTypes = EnumSet.noneOf(SkinType.class);
-        for (JsonNode value : values) {
-            if (!value.isString()) {
-                return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 문자열이어야 합니다.");
-            }
-            SkinType skinType;
-            try {
-                skinType = SkinType.valueOf(value.asString());
-            } catch (IllegalArgumentException exception) {
-                return context.reportInputMismatch(Product.class, "등록되지 않은 제품 피부타입 코드입니다: %s", value.asString());
-            }
+        for (JsonNode skinTypeCode : skinTypeCodes) {
+            SkinType skinType = skinTypeOf(skinTypeCode, context);
             if (!skinTypes.add(skinType)) {
                 return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 중복될 수 없습니다: %s", skinType);
             }
         }
         return skinTypes;
+    }
+
+    private static SkinType skinTypeOf(JsonNode skinTypeCode, DeserializationContext context) {
+        if (!skinTypeCode.isString()) {
+            return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 문자열이어야 합니다.");
+        }
+
+        String code = skinTypeCode.asString();
+        try {
+            return SkinType.valueOf(code);
+        } catch (IllegalArgumentException exception) {
+            return context.reportInputMismatch(Product.class, "등록되지 않은 제품 피부타입 코드입니다: %s", code);
+        }
     }
 
     private static Brand brandOf(JsonNode product, Brands brands, DeserializationContext context)
