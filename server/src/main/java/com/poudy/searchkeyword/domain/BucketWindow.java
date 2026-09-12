@@ -1,6 +1,5 @@
 package com.poudy.searchkeyword.domain;
 
-import java.time.Duration;
 import java.time.Instant;
 
 public final class BucketWindow {
@@ -46,7 +45,7 @@ public final class BucketWindow {
         return !start.isBefore(oldestStart(latestStart)) && !start.isAfter(latestStart);
     }
 
-    public Duration untilNextStart(Instant now) {
-        return Duration.between(now, startOf(now).plusSeconds(bucketSeconds));
+    public Instant nextStart(Instant instant) {
+        return startOf(instant).plusSeconds(bucketSeconds);
     }
 }

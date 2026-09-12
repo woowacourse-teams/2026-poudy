@@ -3,7 +3,6 @@ package com.poudy.searchkeyword.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,8 @@ class BucketWindowTest {
 
     @Test
     void countsDownToTheNextStart() {
-        assertThat(window.untilNextStart(LATEST)).isEqualTo(Duration.ofMinutes(10));
-        assertThat(window.untilNextStart(LATEST.plusSeconds(599))).isEqualTo(Duration.ofSeconds(1));
+        assertThat(window.nextStart(LATEST)).isEqualTo(LATEST.plusSeconds(600));
+        assertThat(window.nextStart(LATEST.plusSeconds(599))).isEqualTo(LATEST.plusSeconds(600));
     }
 
     @Test

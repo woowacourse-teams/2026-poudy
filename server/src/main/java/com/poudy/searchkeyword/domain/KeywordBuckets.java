@@ -107,12 +107,12 @@ public final class KeywordBuckets {
         }
     }
 
-    public Duration untilNextBucket() {
-        return window.untilNextStart(clock.instant());
-    }
-
     public Instant currentBucketStart() {
         return window.startOf(clock.instant());
+    }
+
+    public Duration untilBucketAfter(Instant bucketStart) {
+        return Duration.between(clock.instant(), window.nextStart(bucketStart));
     }
 
     private void load(KeywordBucketSnapshot snapshot) {

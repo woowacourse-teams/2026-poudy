@@ -93,11 +93,15 @@ class KeywordBucketsTest {
     }
 
     @Test
-    void nextBucketStartsAtTheFollowingTenMinuteBoundary() {
+    void measuresTheWaitToTheBoundaryOfAGivenBucket() {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
-        assertThat(buckets.untilNextBucket()).isEqualTo(Duration.ofMinutes(10));
+        Instant current = buckets.currentBucketStart();
+
+        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofMinutes(10));
         clock.set(START.plusSeconds(299));
-        assertThat(buckets.untilNextBucket()).isEqualTo(Duration.ofSeconds(301));
+        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofSeconds(301));
+        clock.set(START.plusSeconds(601));
+        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofSeconds(-1));
     }
 
     @Test
