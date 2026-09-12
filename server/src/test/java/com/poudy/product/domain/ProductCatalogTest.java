@@ -74,7 +74,8 @@ class ProductCatalogTest {
             List.of(1L),
             List.of(new MoistureLevel(2)),
             List.of(new OilLevel(3)),
-            new IngredientFilter(List.of(10L, 30L), List.of(20L))
+            new IngredientFilter(List.of(10L, 30L), List.of(20L)),
+            null
         );
 
         assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
@@ -90,7 +91,8 @@ class ProductCatalogTest {
             List.of(),
             List.of(),
             List.of(),
-            new IngredientFilter(null, null)
+            new IngredientFilter(null, null),
+            null
         );
 
         assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
@@ -106,7 +108,8 @@ class ProductCatalogTest {
             List.of(1L),
             List.of(),
             List.of(),
-            new IngredientFilter(null, null)
+            new IngredientFilter(null, null),
+            null
         );
 
         ProductPage found = products.find(filter, ProductSort.PRICE_DESC, 0, 1, categories);
@@ -131,7 +134,8 @@ class ProductCatalogTest {
             List.of(1L),
             List.of(),
             List.of(),
-            new IngredientFilter(null, null)
+            new IngredientFilter(null, null),
+            null
         );
 
         assertThat(products.count(filter))
@@ -182,7 +186,8 @@ class ProductCatalogTest {
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(moistureLevel, oilLevel),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
     }
 

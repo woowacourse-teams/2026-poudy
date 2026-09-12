@@ -678,6 +678,10 @@ export type get_FindProducts = {
   excludeIngredientIds: Array<number>;
   excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
   /**
+   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
+   */
+  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
+  /**
    * 정렬 조건
    */
   sort: ("NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC");
@@ -788,6 +792,10 @@ export type get_CountProducts = {
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
   excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  /**
+   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
+   */
+  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
 }>,
 
           }

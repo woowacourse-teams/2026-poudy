@@ -2,10 +2,12 @@ package com.poudy.product.domain;
 
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.skintype.domain.SkinType;
 import java.util.List;
 
 public final class ProductFilter {
 
+    private final SkinType skinType;
     private final String keyword;
     private final List<Long> categoryIds;
     private final List<Long> brandIds;
@@ -19,8 +21,10 @@ public final class ProductFilter {
         List<Long> brandIds,
         List<MoistureLevel> moistureLevels,
         List<OilLevel> oilLevels,
-        IngredientFilter ingredientFilter
+        IngredientFilter ingredientFilter,
+        SkinType skinType
     ) {
+        this.skinType = skinType;
         this.keyword = keyword;
         this.categoryIds = copyOf(categoryIds);
         this.brandIds = copyOf(brandIds);
@@ -38,7 +42,8 @@ public final class ProductFilter {
             && product.belongsToAnyBrand(brandIds)
             && product.hasAnyMoistureLevel(moistureLevels)
             && product.hasAnyOilLevel(oilLevels)
-            && product.matchesIngredients(ingredientFilter);
+            && product.matchesIngredients(ingredientFilter)
+            && product.matchesSkinType(skinType);
     }
 
     public boolean hasKeyword() {

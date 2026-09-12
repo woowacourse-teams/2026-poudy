@@ -573,6 +573,24 @@
             }
           },
           {
+            "name": "skinType",
+            "in": "query",
+            "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
+              "enum": [
+                "DRY",
+                "OILY",
+                "SENSITIVE",
+                "COMBINATION"
+              ],
+              "example": "DRY"
+            },
+            "example": "DRY"
+          },
+          {
             "name": "sort",
             "in": "query",
             "description": "정렬 조건",
@@ -1052,6 +1070,24 @@
               },
               "uniqueItems": true
             }
+          },
+          {
+            "name": "skinType",
+            "in": "query",
+            "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
+              "enum": [
+                "DRY",
+                "OILY",
+                "SENSITIVE",
+                "COMBINATION"
+              ],
+              "example": "DRY"
+            },
+            "example": "DRY"
           }
         ],
         "responses": {

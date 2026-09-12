@@ -13,9 +13,26 @@ import org.junit.jupiter.api.Test;
 class ProductQueryTest {
 
     @Test
+    @DisplayName("피부타입만 선택해도 필터가 있다고 판단한다")
+    void recognizesSkinTypeFilter() {
+        ProductQuery query = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            com.poudy.skintype.domain.SkinType.DRY
+        );
+        assertThat(query.hasFilters()).isTrue();
+    }
+
+    @Test
     @DisplayName("누락된 목록 조건을 빈 목록으로 다룬다")
     void defaultsMissingListsToEmpty() {
-        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null);
 
         assertThat(query.categoryIds()).isEmpty();
         assertThat(query.brandIds()).isEmpty();
@@ -30,7 +47,7 @@ class ProductQueryTest {
     @DisplayName("목록 조건을 방어적으로 복사한다")
     void copiesListConditions() {
         List<Long> categoryIds = new ArrayList<>(List.of(1L));
-        ProductQuery query = new ProductQuery("토너", categoryIds, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", categoryIds, null, null, null, null, null, null, null);
 
         categoryIds.add(2L);
 
@@ -42,7 +59,7 @@ class ProductQueryTest {
     @Test
     @DisplayName("목록 조건 중 하나라도 있으면 필터가 있다고 판단한다")
     void checksWhetherItHasFilters() {
-        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null);
+        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null, null);
         ProductQuery withFilter = new ProductQuery(
             "토너",
             null,
@@ -51,7 +68,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            List.of(ExcludeCode.SULFATES)
+            List.of(ExcludeCode.SULFATES),
+            null
         );
 
         assertThat(noFilters.hasFilters()).isFalse();
