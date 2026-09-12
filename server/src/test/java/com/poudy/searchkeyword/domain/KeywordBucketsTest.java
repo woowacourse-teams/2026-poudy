@@ -57,6 +57,19 @@ class KeywordBucketsTest {
     }
 
     @Test
+    void keepsSingleSpacesInKeysAndRejectsUnnormalizedSpacing() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        assertThat(buckets.record("독도 토너")).isEqualTo(RecordResult.RECORDED);
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
+        assertThat(buckets.view().counts()).containsEntry("독도 토너", 1L);
+
+        KeywordBuckets restored = new KeywordBuckets(clock, 168);
+        restored.restore(buckets.snapshot());
+        assertThat(restored.view().counts()).containsEntry("독도 토너", 1L);
+        assertThatThrownBy(() -> buckets.record("독도  토너")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void windowHoldsExactly168HoursOfCompletedBuckets() {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
         buckets.record("토너");

@@ -47,7 +47,7 @@ public class SearchKeywordService implements ProductSearchObserver {
         if (totalElements <= 0) {
             return;
         }
-        successful.record(keyword.value());
+        successful.record(keyword.text());
     }
 
     public List<RankedKeyword> rankings() {

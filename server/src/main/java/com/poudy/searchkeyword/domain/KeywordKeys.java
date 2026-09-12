@@ -10,7 +10,7 @@ public final class KeywordKeys {
     }
 
     public static void requireNormalized(String key) {
-        if (key == null || key.isEmpty() || key.length() > MAX_LENGTH || !new SearchKeyword(key).value().equals(key)) {
+        if (key == null || key.isEmpty() || key.length() > MAX_LENGTH || !new SearchKeyword(key).text().equals(key)) {
             throw new IllegalArgumentException("Invalid normalized keyword");
         }
     }

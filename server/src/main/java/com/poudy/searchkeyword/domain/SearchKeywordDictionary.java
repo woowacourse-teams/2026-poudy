@@ -35,7 +35,7 @@ public final class SearchKeywordDictionary {
     }
 
     public Optional<DictionaryEntry> resolve(String normalizedQuery) {
-        return Optional.ofNullable(expressions.get(normalizedQuery));
+        return Optional.ofNullable(expressions.get(matchKey(normalizedQuery)));
     }
 
     public boolean validateForRanking(DictionaryEntry entry) {
@@ -46,7 +46,7 @@ public final class SearchKeywordDictionary {
     }
 
     public boolean recognizes(String normalizedQuery) {
-        return expressions.containsKey(normalizedQuery);
+        return expressions.containsKey(matchKey(normalizedQuery));
     }
 
     public String version() {
@@ -63,6 +63,10 @@ public final class SearchKeywordDictionary {
 
     public List<String> emptyActiveEntryIds() {
         return emptyActiveEntryIds;
+    }
+
+    private static String matchKey(String normalizedQuery) {
+        return normalizedQuery.replace(" ", "");
     }
 
     private boolean owns(DictionaryEntry entry) {

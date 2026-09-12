@@ -2,15 +2,25 @@ package com.poudy.search.domain;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class SearchKeyword {
 
+    private static final Pattern SPACES = Pattern.compile("[\\p{Z}\\s\\u0085]+");
+
+    private final String text;
     private final String value;
     private final String reading;
 
     public SearchKeyword(String keyword) {
+        this.text = spaced(keyword);
         this.value = normalize(keyword);
         this.reading = LatinReading.ofKeyword(this.value);
+    }
+
+    public String text() {
+        return text;
     }
 
     public String value() {
@@ -103,6 +113,13 @@ public final class SearchKeyword {
 
     static String normalize(String text) {
         return IndexedText.normalize(text).value();
+    }
+
+    private static String spaced(String keyword) {
+        return SPACES.splitAsStream(keyword)
+            .map(SearchKeyword::normalize)
+            .filter(token -> !token.isEmpty())
+            .collect(Collectors.joining(" "));
     }
 
     private static NameMatch match(String searched, SearchableText candidate) {

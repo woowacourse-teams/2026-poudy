@@ -31,6 +31,17 @@ class SearchKeywordDictionaryTest {
     }
 
     @Test
+    void resolvesSpacingVariantsThroughTheSameExpressionKey() {
+        DictionaryEntry product = entry("product:1", "라운드랩 1025 독도 토너", Kind.PRODUCT, Status.ACTIVE, true, "독도토너");
+        SearchKeywordDictionary dictionary = dictionary(List.of(product), keyword -> true);
+
+        assertThat(dictionary.resolve("독도 토너")).contains(product);
+        assertThat(dictionary.resolve("독도토너")).contains(product);
+        assertThat(dictionary.recognizes("독도 토너")).isTrue();
+        assertThat(dictionary.resolve("독도 토")).isEmpty();
+    }
+
+    @Test
     void mergesNormalizedDuplicatesWithinEntryButRejectsActiveConflicts() {
         DictionaryEntry term = new DictionaryEntry(
             "term:1",

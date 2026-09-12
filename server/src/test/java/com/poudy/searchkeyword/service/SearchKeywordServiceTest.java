@@ -59,7 +59,23 @@ class SearchKeywordServiceTest {
         service.refreshRankings();
         assertThat(service.rankings()).extracting(RankedKeyword::keyword)
             .containsExactly("PDRN", "라운드랩", "라운드랩 1025 독도 토너");
-        assertThat(successful.view().counts()).containsEntry("독도토너", 4L).containsEntry("ㄷㄷㅌㄴ", 1L);
+        assertThat(successful.view().counts()).containsEntry("독도 토너", 4L).containsEntry("ㄷㄷㅌㄴ", 1L);
+    }
+
+    @Test
+    void mergesSpacingVariantsOfOneInputIntoTheSameKeyword() {
+        SearchKeywordService service = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
+        for (int i = 0; i < 3; i++) {
+            service.completed(new SearchKeyword("독도 토너"), 1);
+        }
+        for (int i = 0; i < 2; i++) {
+            service.completed(new SearchKeyword("독도토너"), 1);
+        }
+        closeBucket();
+        service.refreshRankings();
+
+        assertThat(successful.view().counts()).containsOnlyKeys("독도 토너", "독도토너");
+        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너"));
     }
 
     @Test
@@ -75,7 +91,7 @@ class SearchKeywordServiceTest {
         SearchKeywordService updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         updated.refreshRankings();
         assertThat(updated.rankings()).containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너"));
-        assertThat(successful.view().counts()).containsOnlyKeys("독도토너");
+        assertThat(successful.view().counts()).containsOnlyKeys("독도 토너");
     }
 
     @Test
