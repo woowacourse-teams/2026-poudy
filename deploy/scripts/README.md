@@ -24,6 +24,45 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 - `poudy-backend.service` 설치 및 enable
 - `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
 - JSON 데이터 디렉터리의 기본 권한 설정
+- 조회수 상태 디렉터리 `/opt/poudy/state/product-views` 생성 (`poudy:poudy`, `0750`)
+
+### 제품 조회수 상태
+
+제품 조회수는 `/opt/poudy/state/product-views/daily-counts.json`에 저장합니다.
+검색어 집계 #414의 `/opt/poudy/state/search-ranking/buckets.json`과 상위 디렉터리만
+공유하며, 애플리케이션 산출물과 읽기 전용 카탈로그 `/opt/poudy/data`에서 분리합니다.
+초기화와 CodeDeploy AfterInstall은 상태 디렉터리를 준비하고 기존 파일을 보존합니다.
+데이터 동기화는 `/opt/poudy/data`만 교체·롤백하므로 조회수 파일에 영향을 주지 않습니다.
+
+기본 저장 간격은 10초입니다. `/etc/poudy/backend.env`에서 다음 값을 바꾸고 서비스를
+재시작하면 경로와 주기를 조절할 수 있습니다. 경로를 바꾸는 경우 배포·동기화로 교체되지
+않는 절대 경로를 사용하고, 그 디렉터리에 `poudy` 사용자의 쓰기 권한을 먼저 준비합니다.
+기존 기록을 옮길 때는 서비스를 중지한 뒤 파일을 복사하고 소유권을 유지합니다.
+
+```properties
+POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
+POUDY_PRODUCT_VIEWS_SAVE_INTERVAL=PT10S
+```
+
+한국 시간 날짜별 기록은 자동 삭제하지 않습니다. 변경이 있을 때만 메모리 복사본을
+임시 파일에 쓰고 동기화한 뒤 원자 교체합니다. 기동 시 복원하고 정상 종료 시 마지막 저장을
+시도합니다. 파일이 없으면 빈 상태로 시작하지만 손상되었거나 읽지 못하면 기동에 실패합니다.
+손상된 파일은 원본을 보존한 상태에서 원인을 조사하고 복구해야 합니다. 서버가 빈 파일로
+초기화하거나 원자 교체가 불가능한 파일시스템에서 일반 덮어쓰기로 전환하지 않습니다.
+
+저장 실패는 `journalctl -u poudy-backend.service`에 예외와 함께 남고 다음 주기에 재시도합니다.
+저장이 정상적으로 지속되면 강제 종료 시 마지막 저장 이후 약 10초 분량의 유실을 허용합니다.
+저장 장애가 지속되거나 디스크를 잃으면 유실 범위가 커질 수 있습니다. 단일 프로세스의
+로컬 복원만 제공하며 별도 백업·S3 업로드·다중 인스턴스 집계는 제공하지 않습니다.
+
+배포 후에는 아래 명령으로 권한과 실제 저장 여부를 확인합니다. 실제 화면 노출 요청은
+클라이언트 연동 #425에서 추가하므로 GET 호출만으로 파일이 생기지는 않습니다.
+
+```bash
+sudo -u poudy test -w /opt/poudy/state/product-views
+sudo journalctl -u poudy-backend.service --since '10 minutes ago'
+sudo stat /opt/poudy/state/product-views/daily-counts.json
+```
 
 ### HEIC 런타임
 
