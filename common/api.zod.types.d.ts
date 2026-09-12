@@ -567,6 +567,26 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
+ * 존재하는 제품의 조회수를 요청마다 1회 증가시킨다. 인증이나 방문자 중복 제거 없이 새로고침과 재방문도 집계한다. 상세·목록 GET은 조회수를 증가시키지 않는다.
+ */
+export type post_RecordProductView = {
+      method: "POST",
+      path: "/api/products/{productId}/views",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
  */
 export type post_Submit = {
@@ -997,7 +1017,8 @@ export type get_FindBrand = {
 
      export type EndpointByMethod = {
      post: {
-           "/api/product-requests": Endpoints.post_Submit,
+           "/api/products/{productId}/views": Endpoints.post_RecordProductView,
+"/api/product-requests": Endpoints.post_Submit,
 "/api/feedback": Endpoints.post_Submit_1,
 "/api/feedback/images": Endpoints.post_UploadImages
          },
