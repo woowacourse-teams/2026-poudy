@@ -61,11 +61,17 @@ public class SearchKeywordService implements ProductSearchObserver {
     public void refreshRankings() {
         try {
             KeywordBucketView view = successful.view();
-            cachedRankings.set(view.rank(dictionary, rankingPolicy, rankingFallback));
+            cachedRankings.set(ranked(view));
             logCoverage(view.coverage(dictionary));
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_rankings_refresh_failed");
         }
+    }
+
+    private List<RankedKeyword> ranked(KeywordBucketView view) {
+        return successful.comparisonView()
+            .map(compared -> view.rank(dictionary, rankingPolicy, rankingFallback, compared))
+            .orElseGet(() -> view.rank(dictionary, rankingPolicy, rankingFallback));
     }
 
     private static void logCoverage(KeywordCoverage coverage) {

@@ -39,8 +39,12 @@ public final class KeywordSnapshotRepository {
     }
 
     public KeywordSnapshotRepository(Path file, int windowHours, int bucketSeconds) {
+        this(file, windowHours, bucketSeconds, 0);
+    }
+
+    public KeywordSnapshotRepository(Path file, int windowHours, int bucketSeconds, int comparisonHours) {
         this.file = file.toAbsolutePath().normalize();
-        this.window = new BucketWindow(windowHours, bucketSeconds);
+        this.window = new BucketWindow(windowHours, bucketSeconds, comparisonHours);
     }
 
     public Optional<KeywordBucketSnapshot> load() {

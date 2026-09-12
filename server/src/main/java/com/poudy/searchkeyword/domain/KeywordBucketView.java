@@ -42,6 +42,15 @@ public final class KeywordBucketView {
         return KeywordRanking.of(counts, dictionary, policy, fallback);
     }
 
+    public List<RankedKeyword> rank(
+        SearchKeywordDictionary dictionary,
+        RankingPolicy policy,
+        RankingFallback fallback,
+        KeywordBucketView compared
+    ) {
+        return KeywordRanking.of(counts, compared.counts(), dictionary, policy, fallback);
+    }
+
     public List<RankedKeyword> shadowRank(RankingPolicy policy) {
         return KeywordRanking.shadowOf(counts, policy);
     }

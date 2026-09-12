@@ -2099,6 +2099,24 @@
           "items"
         ]
       },
+      "RankingChangeItem": {
+        "type": "object",
+        "properties": {
+          "movement": {
+            "type": "string",
+            "example": "UP"
+          },
+          "steps": {
+            "type": "integer",
+            "format": "int32",
+            "example": 2
+          }
+        },
+        "required": [
+          "movement",
+          "steps"
+        ]
+      },
       "RankingItem": {
         "type": "object",
         "properties": {
@@ -2110,6 +2128,9 @@
           "keyword": {
             "type": "string",
             "example": "토너"
+          },
+          "change": {
+            "$ref": "#/components/schemas/RankingChangeItem"
           }
         },
         "required": [

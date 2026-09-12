@@ -70,6 +70,28 @@ class KeywordBucketsTest {
     }
 
     @Test
+    void comparisonWindowNeedsAFullyObservedPastWindow() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, 1, 600, 24);
+        buckets.record("토너");
+
+        assertThat(buckets.comparisonView()).isEmpty();
+        assertThat(new KeywordBuckets(clock, 168).comparisonView()).isEmpty();
+    }
+
+    @Test
+    void comparisonWindowSumsTheSameWindowOneDayEarlier() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, 1, 600, 24);
+        clock.set(START.plus(20, ChronoUnit.MINUTES));
+        buckets.record("토너");
+        clock.set(START.plus(25, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
+
+        assertThat(buckets.comparisonView()).hasValueSatisfying(
+            compared -> assertThat(compared.counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 1L))
+        );
+        assertThat(buckets.view().counts()).isEmpty();
+    }
+
+    @Test
     void windowHoldsExactly168HoursOfCompletedBuckets() {
         KeywordBuckets buckets = new KeywordBuckets(clock, 168);
         buckets.record("토너");

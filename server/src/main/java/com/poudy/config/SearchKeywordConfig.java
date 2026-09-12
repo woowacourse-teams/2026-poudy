@@ -88,7 +88,12 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) throws IOException {
-        return new KeywordSnapshotRepository(paths(env).stateFile(), SearchKeywordPolicy.RANKING_HOURS);
+        return new KeywordSnapshotRepository(
+            paths(env).stateFile(),
+            SearchKeywordPolicy.RANKING_HOURS,
+            SearchKeywordPolicy.BUCKET_SECONDS,
+            SearchKeywordPolicy.COMPARISON_HOURS
+        );
     }
 
     @Bean
@@ -96,7 +101,12 @@ public class SearchKeywordConfig {
         @Qualifier("searchKeywordClock") Clock clock,
         KeywordSnapshotRepository repository
     ) {
-        KeywordBuckets buckets = new KeywordBuckets(clock, SearchKeywordPolicy.RANKING_HOURS);
+        KeywordBuckets buckets = new KeywordBuckets(
+            clock,
+            SearchKeywordPolicy.RANKING_HOURS,
+            SearchKeywordPolicy.BUCKET_SECONDS,
+            SearchKeywordPolicy.COMPARISON_HOURS
+        );
         repository.load().ifPresent(buckets::restore);
         return buckets;
     }

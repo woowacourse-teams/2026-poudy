@@ -166,6 +166,52 @@ class KeywordRankingTest {
     }
 
     @Test
+    void marksMovementAgainstTheRankingOfOneDayEarlier() {
+        SearchKeywordDictionary dictionary = dictionary(
+            entry("term:1", "토너"),
+            entry("term:2", "크림"),
+            entry("term:3", "세럼")
+        );
+
+        List<RankedKeyword> rankings = KeywordRanking.of(
+            Map.of("토너", 9L, "크림", 8L, "세럼", 7L),
+            Map.of("크림", 9L, "토너", 8L),
+            dictionary,
+            POLICY,
+            RankingFallback.none()
+        );
+
+        assertThat(rankings).containsExactly(
+            new RankedKeyword(1, "토너", RankingChange.moved(2, 1)),
+            new RankedKeyword(2, "크림", RankingChange.moved(1, 2)),
+            new RankedKeyword(3, "세럼", RankingChange.entered())
+        );
+    }
+
+    @Test
+    void leavesMovementUnknownWithoutComparisonAndForDefaultKeywords() {
+        SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
+
+        List<RankedKeyword> withoutComparison = KeywordRanking.of(
+            Map.of("토너", 9L),
+            dictionary,
+            POLICY,
+            RankingFallback.none()
+        );
+        List<RankedKeyword> filled = KeywordRanking.of(
+            Map.of("토너", 9L),
+            Map.of("토너", 9L),
+            dictionary,
+            POLICY,
+            new RankingFallback(List.of("크림"))
+        );
+
+        assertThat(withoutComparison.getFirst().change().isKnown()).isFalse();
+        assertThat(filled.get(0).change()).isEqualTo(RankingChange.moved(1, 1));
+        assertThat(filled.get(1).change().isKnown()).isFalse();
+    }
+
+    @Test
     void shadowRankingCountsInputsWithoutTheDictionary() {
         List<RankedKeyword> shadow = KeywordRanking.shadowOf(
             Map.of("토너", 9L, "ㄷㄷㅌㄴ", 8L, "사전에없는말", 7L, "적은입력", 4L),

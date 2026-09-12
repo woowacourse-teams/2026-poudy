@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,8 +28,12 @@ public final class KeywordBuckets {
     }
 
     public KeywordBuckets(Clock clock, int windowHours, int bucketSeconds) {
+        this(clock, windowHours, bucketSeconds, 0);
+    }
+
+    public KeywordBuckets(Clock clock, int windowHours, int bucketSeconds, int comparisonHours) {
         this.clock = clock;
-        this.window = new BucketWindow(windowHours, bucketSeconds);
+        this.window = new BucketWindow(windowHours, bucketSeconds, comparisonHours);
         this.startedAt = clock.instant();
         this.maxObservedBucketStart = window.startOf(startedAt);
     }
@@ -111,6 +116,16 @@ public final class KeywordBuckets {
         return window.startOf(clock.instant());
     }
 
+    public Optional<KeywordBucketView> comparisonView() {
+        lock.lock();
+        try {
+            advance();
+            return comparedWindow();
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public Duration untilBucketAfter(Instant bucketStart) {
         return Duration.between(clock.instant(), window.nextStart(bucketStart));
     }
@@ -136,7 +151,7 @@ public final class KeywordBuckets {
     }
 
     private void removeExpired() {
-        Instant oldest = window.oldestStart(maxObservedBucketStart);
+        Instant oldest = window.retainedStart(maxObservedBucketStart);
         while (!buckets.isEmpty() && buckets.firstKey().isBefore(oldest)) {
             Map<String, Long> expired = buckets.pollFirstEntry().getValue();
             subtractFrom(totals, expired);
@@ -156,10 +171,38 @@ public final class KeywordBuckets {
         totals.put(key, total);
     }
 
+    private Optional<KeywordBucketView> comparedWindow() {
+        if (!window.comparesWithPast()) {
+            return Optional.empty();
+        }
+        Instant latest = window.comparisonLatestStart(maxObservedBucketStart);
+        Instant oldest = window.oldestStart(latest);
+        if (observedFrom().isAfter(oldest)) {
+            return Optional.empty();
+        }
+        return Optional.of(new KeywordBucketView(sumOf(oldest, latest), oldest, latest, startedAt, clockRegressed));
+    }
+
+    private Instant observedFrom() {
+        Instant started = window.startOf(startedAt);
+        if (buckets.isEmpty() || started.isBefore(buckets.firstKey())) {
+            return started;
+        }
+        return buckets.firstKey();
+    }
+
+    private static void addTo(Map<String, Long> target, Map<String, Long> counts) {
+        counts.forEach((key, count) -> target.merge(key, count, Math::addExact));
+    }
+
     private Map<String, Long> completedCounts() {
-        Map<String, Long> completed = new HashMap<>(totals);
-        subtractFrom(completed, buckets.getOrDefault(maxObservedBucketStart, Map.of()));
-        return completed;
+        return sumOf(window.oldestStart(maxObservedBucketStart), maxObservedBucketStart);
+    }
+
+    private Map<String, Long> sumOf(Instant from, Instant toExclusive) {
+        Map<String, Long> counts = new HashMap<>();
+        buckets.subMap(from, true, toExclusive, false).values().forEach(bucket -> addTo(counts, bucket));
+        return counts;
     }
 
     private Instant observedThrough(Instant now) {

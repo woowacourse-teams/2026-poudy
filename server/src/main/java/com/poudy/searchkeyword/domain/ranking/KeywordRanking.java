@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public final class KeywordRanking {
@@ -28,12 +29,59 @@ public final class KeywordRanking {
         RankingPolicy policy,
         RankingFallback fallback
     ) {
-        List<String> published = new ArrayList<>(counted(counts, dictionary, policy));
+        return published(counts, Optional.empty(), dictionary, policy, fallback);
+    }
+
+    public static List<RankedKeyword> of(
+        Map<String, Long> counts,
+        Map<String, Long> comparedCounts,
+        SearchKeywordDictionary dictionary,
+        RankingPolicy policy,
+        RankingFallback fallback
+    ) {
+        return published(counts, Optional.of(comparedCounts), dictionary, policy, fallback);
+    }
+
+    private static List<RankedKeyword> published(
+        Map<String, Long> counts,
+        Optional<Map<String, Long>> comparedCounts,
+        SearchKeywordDictionary dictionary,
+        RankingPolicy policy,
+        RankingFallback fallback
+    ) {
+        List<String> counted = counted(counts, dictionary, policy);
+        Map<String, Integer> before = comparedCounts
+            .map(compared -> ranksOf(counted(compared, dictionary, policy)))
+            .orElse(null);
+        List<String> names = new ArrayList<>(counted);
         fallback.publishableNames(dictionary).stream()
-            .filter(name -> !published.contains(name))
-            .limit(Math.max(policy.size() - published.size(), 0))
-            .forEach(published::add);
-        return numbered(published);
+            .filter(name -> !names.contains(name))
+            .limit(Math.max(policy.size() - names.size(), 0))
+            .forEach(names::add);
+        return IntStream.range(0, names.size())
+            .mapToObj(index -> ranked(names.get(index), index + 1, counted, before))
+            .toList();
+    }
+
+    private static RankedKeyword ranked(String name, int rank, List<String> counted, Map<String, Integer> before) {
+        return new RankedKeyword(rank, name, change(name, rank, counted, before));
+    }
+
+    private static RankingChange change(String name, int rank, List<String> counted, Map<String, Integer> before) {
+        if (before == null || !counted.contains(name)) {
+            return RankingChange.unknown();
+        }
+        Integer previousRank = before.get(name);
+        if (previousRank == null) {
+            return RankingChange.entered();
+        }
+        return RankingChange.moved(previousRank, rank);
+    }
+
+    private static Map<String, Integer> ranksOf(List<String> names) {
+        Map<String, Integer> ranks = new HashMap<>();
+        IntStream.range(0, names.size()).forEach(index -> ranks.put(names.get(index), index + 1));
+        return ranks;
     }
 
     private static List<String> counted(
