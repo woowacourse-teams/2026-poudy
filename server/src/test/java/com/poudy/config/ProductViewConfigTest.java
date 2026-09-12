@@ -15,12 +15,32 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.FixedDelayTask;
 
 class ProductViewConfigTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    void shutdownReleasesPausedSchedulerAndFlushes() throws Exception {
+        Path file = directory.resolve("views.json");
+        assertTimeout(
+            Duration.ofSeconds(5),
+            () -> runner(file).withPropertyValues("poudy.product-views.save-interval=PT1H")
+                .run(context -> {
+                    context.getBean(ProductViews.class).record(1L);
+                    ThreadPoolTaskScheduler scheduler = context
+                        .getBean("productViewScheduler", ThreadPoolTaskScheduler.class);
+                    scheduler.stop();
+                    scheduler.execute(() -> {
+                    });
+                    await().atMost(Duration.ofSeconds(2)).until(() -> scheduler.getActiveCount() == 1);
+                })
+        );
+        assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1);
+    }
 
     @Test
     void shutdownCancelsNextScheduledSaveAndFlushesImmediately() throws Exception {

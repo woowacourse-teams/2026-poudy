@@ -21,8 +21,6 @@ public class ProductViewConfig {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(1);
         scheduler.setThreadNamePrefix("product-views-");
-        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        scheduler.setWaitForTasksToCompleteOnShutdown(true);
         scheduler.setAwaitTerminationSeconds(20);
         return scheduler;
     }
