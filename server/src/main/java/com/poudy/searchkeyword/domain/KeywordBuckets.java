@@ -111,6 +111,10 @@ public final class KeywordBuckets {
         return window.untilNextStart(clock.instant());
     }
 
+    public Instant currentBucketStart() {
+        return window.startOf(clock.instant());
+    }
+
     private void load(KeywordBucketSnapshot snapshot) {
         Map<String, Long> restoredTotals = snapshot.totals();
         int restoredEntries = snapshot.entryCount();
