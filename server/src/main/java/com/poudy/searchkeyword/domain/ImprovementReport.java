@@ -8,6 +8,7 @@ public final class ImprovementReport {
     private final String dictionaryVersion;
     private final String catalogVersion;
     private final String searchVersion;
+    private final KeywordCoverage coverage;
     private final ReportSection nonzeroUnresolved;
     private final List<RankedKeyword> shadowRanking;
 
@@ -15,12 +16,14 @@ public final class ImprovementReport {
         String dictionaryVersion,
         String catalogVersion,
         String searchVersion,
+        KeywordCoverage coverage,
         ReportSection nonzeroUnresolved,
         List<RankedKeyword> shadowRanking
     ) {
         this.dictionaryVersion = dictionaryVersion;
         this.catalogVersion = catalogVersion;
         this.searchVersion = searchVersion;
+        this.coverage = coverage;
         this.nonzeroUnresolved = nonzeroUnresolved;
         this.shadowRanking = List.copyOf(shadowRanking);
     }
@@ -35,6 +38,10 @@ public final class ImprovementReport {
 
     public String searchVersion() {
         return searchVersion;
+    }
+
+    public KeywordCoverage coverage() {
+        return coverage;
     }
 
     public ReportSection nonzeroUnresolved() {

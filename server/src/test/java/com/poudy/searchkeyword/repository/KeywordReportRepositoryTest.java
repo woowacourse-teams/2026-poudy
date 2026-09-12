@@ -3,6 +3,7 @@ package com.poudy.searchkeyword.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.searchkeyword.domain.ImprovementReport;
+import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -29,6 +30,7 @@ class KeywordReportRepositoryTest {
 
         assertThat(Files.readString(file)).isEqualTo(
             "{\"dictionaryVersion\":\"v1\",\"catalogVersion\":\"catalog\",\"searchVersion\":\"search\","
+                + "\"coverage\":{\"total\":40,\"resolved\":10,\"ratio\":0.25,\"distinctKeys\":3},"
                 + "\"nonzeroUnresolved\":{\"windowStart\":\"2026-09-03T00:01:00Z\",\"observedThrough\":\"2026-09-10T00:00:00Z\","
                 + "\"startedAt\":\"2026-09-09T00:00:00Z\",\"clockRegressed\":false,"
                 + "\"items\":[{\"normalizedQuery\":\"없는검색\",\"count\":20}]},"
@@ -55,6 +57,7 @@ class KeywordReportRepositoryTest {
             "v1",
             "catalog",
             "search",
+            new KeywordCoverage(40, 10, 3),
             new ReportSection(
                 Instant.parse("2026-09-03T00:01:00Z"),
                 NOW,

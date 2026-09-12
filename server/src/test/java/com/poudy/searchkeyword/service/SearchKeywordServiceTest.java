@@ -8,6 +8,7 @@ import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -135,6 +136,31 @@ class SearchKeywordServiceTest {
         assertThat(successful.view().counts()).containsOnlyKeys("미등록");
         service.refreshRankings();
         assertThat(service.rankings()).isEmpty();
+    }
+
+    @Test
+    void reportGroupsSpacingVariantsAndCarriesTheResolvedShare() {
+        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        for (int i = 0; i < 12; i++) {
+            service.completed(new SearchKeyword("없는 말"), 1);
+        }
+        for (int i = 0; i < 9; i++) {
+            service.completed(new SearchKeyword("없는말"), 1);
+        }
+        for (int i = 0; i < 4; i++) {
+            service.completed(new SearchKeyword("토너"), 1);
+        }
+        closeBucket();
+
+        ImprovementReport report = service.report("catalog", "code");
+
+        assertThat(report.nonzeroUnresolved().items())
+            .extracting(ReportItem::normalizedQuery, ReportItem::count)
+            .containsExactly(tuple("없는 말", 21L));
+        KeywordCoverage coverage = report.coverage();
+        assertThat(coverage.total()).isEqualTo(25);
+        assertThat(coverage.resolved()).isEqualTo(4);
+        assertThat(coverage.distinctKeys()).isEqualTo(3);
     }
 
     @Test

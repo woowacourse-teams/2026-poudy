@@ -1,5 +1,6 @@
 package com.poudy.searchkeyword.domain;
 
+import com.poudy.search.domain.SearchKeyword;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,7 @@ public final class SearchKeywordDictionary {
     }
 
     private static String matchKey(String normalizedQuery) {
-        return normalizedQuery.replace(" ", "");
+        return SearchKeyword.folded(normalizedQuery);
     }
 
     private boolean owns(DictionaryEntry entry) {

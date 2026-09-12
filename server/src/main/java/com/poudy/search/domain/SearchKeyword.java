@@ -27,6 +27,10 @@ public final class SearchKeyword {
         return value;
     }
 
+    public static String folded(String normalizedText) {
+        return normalizedText.replace(" ", "");
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

@@ -2,6 +2,7 @@ package com.poudy.searchkeyword.repository;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.searchkeyword.domain.ImprovementReport;
+import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -69,8 +70,18 @@ public final class KeywordReportRepository {
         document.put("dictionaryVersion", report.dictionaryVersion());
         document.put("catalogVersion", report.catalogVersion());
         document.put("searchVersion", report.searchVersion());
+        document.put("coverage", coverageOf(report.coverage()));
         document.put("nonzeroUnresolved", sectionOf(report.nonzeroUnresolved()));
         document.put("shadowRanking", report.shadowRanking().stream().map(KeywordReportRepository::rankingOf).toList());
+        return document;
+    }
+
+    private static Map<String, Object> coverageOf(KeywordCoverage coverage) {
+        Map<String, Object> document = new LinkedHashMap<>();
+        document.put("total", coverage.total());
+        document.put("resolved", coverage.resolved());
+        document.put("ratio", coverage.ratio());
+        document.put("distinctKeys", coverage.distinctKeys());
         return document;
     }
 

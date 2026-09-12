@@ -5,6 +5,7 @@ import com.poudy.search.observation.ProductSearchObserver;
 import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBucketView;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
@@ -12,6 +13,7 @@ import com.poudy.searchkeyword.domain.ranking.KeywordRanking;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
@@ -56,10 +58,22 @@ public class SearchKeywordService implements ProductSearchObserver {
 
     public void refreshRankings() {
         try {
-            cachedRankings.set(KeywordRanking.of(successful.view().counts(), dictionary, rankingPolicy));
+            Map<String, Long> counts = successful.view().counts();
+            cachedRankings.set(KeywordRanking.of(counts, dictionary, rankingPolicy));
+            logCoverage(KeywordCoverage.of(counts, dictionary));
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_rankings_refresh_failed");
         }
+    }
+
+    private static void logCoverage(KeywordCoverage coverage) {
+        log.info(
+            "event=search_keyword_coverage total={} resolved={} ratio={} keys={}",
+            coverage.total(),
+            coverage.resolved(),
+            "%.3f".formatted(coverage.ratio()),
+            coverage.distinctKeys()
+        );
     }
 
     public ImprovementReport report(String catalogVersion, String searchVersion) {
@@ -68,6 +82,7 @@ public class SearchKeywordService implements ProductSearchObserver {
             dictionary.version(),
             catalogVersion,
             searchVersion,
+            KeywordCoverage.of(view.counts(), dictionary),
             ReportSection.unresolvedOf(view, dictionary, reportMinCount),
             KeywordRanking.shadowOf(view.counts(), rankingPolicy)
         );
