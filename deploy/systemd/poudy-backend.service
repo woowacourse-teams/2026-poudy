@@ -10,6 +10,7 @@ Type=simple
 User=poudy
 Group=poudy
 WorkingDirectory=/opt/poudy/backend
+Environment=POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
 EnvironmentFile=-/etc/poudy/backend.env
 Environment=SPRING_PROFILES_ACTIVE=prod
 Environment=POUDY_DATA_DIR=/opt/poudy/data
@@ -25,6 +26,7 @@ PrivateTmp=true
 ProtectHome=true
 ProtectSystem=full
 ReadOnlyPaths=/opt/poudy/data
+ReadWritePaths=/opt/poudy/state
 MemoryMax=1G
 CPUQuota=100%
 TasksMax=256
