@@ -219,6 +219,8 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
 });
 
 export const handlers = [
+  http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
+
   http.get("*/api/products", ({ request }) => {
     const url = new URL(request.url);
     const matched = sortProducts(filterProducts(url), url.searchParams.get("sort"));

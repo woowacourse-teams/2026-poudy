@@ -13,7 +13,7 @@ import type {
   StorageResponse,
 } from "@poudy/api/api.zod";
 
-import { apiGet } from "./client";
+import { apiGet, apiPost } from "./client";
 
 import type { Filter } from "@/lib/domain/filter";
 import { serializeFilter } from "@/lib/domain/filter";
@@ -33,6 +33,8 @@ export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse>
 
 export const fetchProductDetail = (productId: number): Promise<ProductDetailResponse> =>
   apiGet(`/api/products/${productId}`);
+
+export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
 export const fetchProductSuggestions = (keyword: string, page = 0): Promise<ProductSuggestionPageResponse> =>
   apiGet("/api/products/suggestions", new URLSearchParams({ keyword, page: String(page) }));
