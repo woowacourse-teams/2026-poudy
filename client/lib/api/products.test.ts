@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const client = vi.hoisted(() => ({
   apiGet: vi.fn(),
+  apiPost: vi.fn(),
 }));
 
 vi.mock("./client", () => client);
@@ -13,12 +14,22 @@ import {
   fetchExcludeCodes,
   fetchIngredientsByIds,
   fetchProducts,
+  recordProductView,
 } from "./products";
 
 import { EMPTY_FILTER } from "@/lib/domain/filter";
 
 beforeEach(() => {
   client.apiGet.mockReset();
+  client.apiPost.mockReset();
+});
+
+describe("제품 조회 기록", () => {
+  it("본문 없이 제품 조회 기록 API를 호출한다", () => {
+    void recordProductView(42);
+
+    expect(client.apiPost).toHaveBeenCalledWith("/api/products/42/views");
+  });
 });
 
 describe("fetchIngredientsByIds", () => {

@@ -148,7 +148,7 @@ describe("목 응답과 스키마", () => {
     const tested = new Set(cases.map(([, path]) => path.split("?")[0].replace(/\/\d+$/, "/:id")));
 
     /* 보내는 요청은 it.each 로 따로 검사하므로 여기서 함께 센다. */
-    const postPaths = ["/feedback", "/feedback/images", "/product-requests"];
+    const postPaths = ["/feedback", "/feedback/images", "/product-requests", "/products/:id/views"];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);
   });
