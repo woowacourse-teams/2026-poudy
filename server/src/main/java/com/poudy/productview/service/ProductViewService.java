@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProductViewService {
 
-    private static final int MAX_RANKING_SIZE = 6;
-
     private final ProductRepository productRepository;
     private final ProductViewRepository productViewRepository;
     private final Clock productViewClock;
@@ -45,6 +43,6 @@ public class ProductViewService {
 
     public List<Product> findRankings(List<Long> categoryIds, Integer days) {
         Map<Long, Long> viewCounts = sumViewCounts(days);
-        return productRepository.findAll().rankByViewCounts(categoryIds, viewCounts, MAX_RANKING_SIZE);
+        return productRepository.findAll().rankByViewCounts(categoryIds, viewCounts);
     }
 }

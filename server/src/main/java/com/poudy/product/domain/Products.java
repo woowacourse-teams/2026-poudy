@@ -15,6 +15,8 @@ import java.util.stream.Stream;
 
 public final class Products {
 
+    private static final int MAX_RANKING_SIZE = 6;
+
     private final Map<Long, Product> products;
 
     private Products(Map<Long, Product> products) {
@@ -128,21 +130,17 @@ public final class Products {
             .toList();
     }
 
-    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts, int maximumSize) {
-        if (maximumSize < 1) {
-            throw new IllegalArgumentException("랭킹의 최대 제품 수는 양수여야 합니다.");
-        }
-
-        List<Long> requestedCategoryIds = Objects.requireNonNullElse(categoryIds, List.of());
-        Map<Long, Long> counts = Objects.requireNonNullElse(viewCounts, Map.of());
+    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts) {
+        List<Product> rankingCandidates = values().stream()
+            .filter(product -> product.belongsToAnyCategory(categoryIds))
+            .toList();
         Comparator<Product> byViewCountDescending = Comparator
-            .comparingLong((Product product) -> counts.getOrDefault(product.id(), 0L))
+            .comparingLong((Product product) -> viewCounts.getOrDefault(product.id(), 0L))
             .reversed();
 
-        return values().stream()
-            .filter(product -> product.belongsToAnyCategory(requestedCategoryIds))
+        return rankingCandidates.stream()
             .sorted(byViewCountDescending)
-            .limit(maximumSize)
+            .limit(MAX_RANKING_SIZE)
             .toList();
     }
 

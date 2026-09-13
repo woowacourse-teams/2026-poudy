@@ -112,7 +112,7 @@ class ProductsTest {
             100L
         );
 
-        assertThat(products.rankByViewCounts(List.of(2L), viewCounts, 6))
+        assertThat(products.rankByViewCounts(List.of(2L), viewCounts))
             .extracting(Product::id)
             .containsExactly(7L, 6L, 5L, 4L, 3L, 2L);
     }
@@ -124,13 +124,13 @@ class ProductsTest {
             List.of(productOfCategory(1L, 2L), productOfCategory(2L, 3L), productOfCategory(3L, 4L))
         );
 
-        assertThat(products.rankByViewCounts(List.of(2L, 3L), Map.of(), 6))
+        assertThat(products.rankByViewCounts(List.of(2L, 3L), Map.of()))
             .extracting(Product::id)
             .containsExactly(1L, 2L);
-        assertThat(products.rankByViewCounts(List.of(100L), Map.of(), 6))
+        assertThat(products.rankByViewCounts(List.of(100L), Map.of()))
             .extracting(Product::id)
             .containsExactly(1L, 2L, 3L);
-        assertThat(products.rankByViewCounts(List.of(999L), Map.of(), 6)).isEmpty();
+        assertThat(products.rankByViewCounts(List.of(999L), Map.of())).isEmpty();
     }
 
     @Test
@@ -140,7 +140,7 @@ class ProductsTest {
             List.of(productOfCategory(1L, 2L), productOfCategory(2L, 2L), productOfCategory(3L, 2L))
         );
 
-        assertThat(products.rankByViewCounts(List.of(), Map.of(2L, 5L, 3L, 5L), 6))
+        assertThat(products.rankByViewCounts(List.of(), Map.of(2L, 5L, 3L, 5L)))
             .extracting(Product::id)
             .containsExactly(2L, 3L, 1L);
     }
