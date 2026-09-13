@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -71,7 +73,54 @@ class ProductViewControllerTest {
         mvc.perform(get("/api/products/count")).andExpect(status().isOk());
         mvc.perform(get("/api/products/suggestions").param("keyword", "토너"))
             .andExpect(status().isOk());
+        mvc.perform(get("/api/products/rankings")).andExpect(status().isOk());
         assertThat(productViewService.sumViewCounts(null)).isEqualTo(before);
+    }
+
+    @Test
+    void returnsCategoryFilteredRankingsWithoutDisclosingViewCounts() throws Exception {
+        for (int request = 0; request < 10; request++) {
+            mvc.perform(post("/api/products/15/views")).andExpect(status().isNoContent());
+        }
+
+        mvc.perform(
+            get("/api/products/rankings")
+                .param("categoryIds", "2")
+                .param("categoryIds", "14")
+                .param("days", "1")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items.length()").value(4))
+            .andExpect(jsonPath("$.items[0].product.id").value(15L))
+            .andExpect(jsonPath("$.items[0].product.name").value("PH 컨디션 토너"))
+            .andExpect(jsonPath("$.items[0].product.brandName").value("나 브랜드"))
+            .andExpect(jsonPath("$.items[0].product.imageUrl").value("https://cdn.example.com/products/15.png"))
+            .andExpect(jsonPath("$.items[0].product.price").value(15000L))
+            .andExpect(jsonPath("$.items[0].product.moistureLevel").isNumber())
+            .andExpect(jsonPath("$.items[0].product.oilLevel").isNumber())
+            .andExpect(jsonPath("$.items[0].product.viewCount").doesNotExist());
+    }
+
+    @Test
+    void returnsEmptyRankingWhenOnlyUnknownCategoriesAreRequested() throws Exception {
+        mvc.perform(get("/api/products/rankings").param("categoryIds", "999999"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "1.5", "invalid"})
+    void rejectsNonPositiveAndNonIntegerDays(String days) throws Exception {
+        mvc.perform(get("/api/products/rankings").param("days", days))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+    }
+
+    @Test
+    void rejectsEmptyCategoryIdAmongRepeatedParameters() throws Exception {
+        mvc.perform(get("/api/products/rankings").param("categoryIds", "2", ""))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
 
     @Test

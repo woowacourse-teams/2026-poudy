@@ -1,10 +1,16 @@
 package com.poudy.productview.controller;
 
+import com.poudy.productview.controller.dto.ProductRankingRequest;
+import com.poudy.productview.controller.dto.ProductRankingResponse;
 import com.poudy.productview.service.ProductViewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,5 +32,18 @@ public class ProductViewController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void increaseViewCount(@Parameter(example = "101") @PathVariable Long productId) {
         productViewService.increaseViewCount(productId);
+    }
+
+    @Operation(summary = "인기 제품 랭킹 조회", description = "현재 카탈로그에서 카테고리에 해당하는 제품을 먼저 고른 뒤 "
+        + "한국 시간 날짜별 조회수를 합산해 내림차순으로 최대 6개 반환한다. 조회수가 같으면 기본 제품 순서를 유지한다.")
+    @GetMapping("/api/products/rankings")
+    public ResponseEntity<ProductRankingResponse> findRankings(
+        @Valid @ModelAttribute ProductRankingRequest request
+    ) {
+        return ResponseEntity.ok(
+            ProductRankingResponse.from(
+                productViewService.findRankings(request.categoryIds(), request.days())
+            )
+        );
     }
 }

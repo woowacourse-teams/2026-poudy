@@ -79,6 +79,15 @@ export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSu
 export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: z.enum(["MATCHED", "NOT_FOUND"]), productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
 
+export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
+export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
+
+export type ProductRankingItemResponse = __TypedOpenapi.Schemas.ProductRankingItemResponse;
+export const ProductRankingItemResponse = z.object({ product: ProductRankingProductResponse });
+
+export type ProductRankingResponse = __TypedOpenapi.Schemas.ProductRankingResponse;
+export const ProductRankingResponse = z.object({ items: z.array(ProductRankingItemResponse) });
+
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 

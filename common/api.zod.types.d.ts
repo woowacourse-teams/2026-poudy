@@ -308,6 +308,38 @@ export type ProductSuggestionPageResponse = {
   pagination: PaginationResponse;
 }
 export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
+export type ProductRankingProductResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드명
+   */
+  brandName: string;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 대표 판매 옵션 가격 (원)
+   */
+  price: number;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+}
+export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
+export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
@@ -792,6 +824,30 @@ export type get_MatchSharedProduct = {
 
     }
 /**
+ * 현재 카탈로그에서 카테고리에 해당하는 제품을 먼저 고른 뒤 한국 시간 날짜별 조회수를 합산해 내림차순으로 최대 6개 반환한다. 조회수가 같으면 기본 제품 순서를 유지한다.
+ */
+export type get_FindRankings = {
+      method: "GET",
+      path: "/api/products/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  categoryIds: Array<number>;
+  /**
+   * 한국 시간 기준 오늘을 포함해 집계할 날짜 수. 미지정 시 전체 기간
+   */
+  days: number;
+}>,
+
+          }
+      responses: {200: Schemas.ProductRankingResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.
  */
 export type get_CountProducts = {
@@ -1029,6 +1085,7 @@ get: {
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
+"/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,

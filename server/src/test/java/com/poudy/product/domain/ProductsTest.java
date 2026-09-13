@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +79,73 @@ class ProductsTest {
     }
 
     @Test
+    @DisplayName("카테고리 후보를 먼저 고른 뒤 조회수로 최대 개수만큼 정렬한다")
+    void ranksFilteredProductsByViewCount() {
+        Products products = Products.from(
+            List.of(
+                productOfCategory(1L, 2L),
+                productOfCategory(2L, 2L),
+                productOfCategory(3L, 2L),
+                productOfCategory(4L, 2L),
+                productOfCategory(5L, 2L),
+                productOfCategory(6L, 2L),
+                productOfCategory(7L, 2L),
+                productOfCategory(8L, 3L)
+            )
+        );
+        Map<Long, Long> viewCounts = Map.of(
+            1L,
+            1L,
+            2L,
+            2L,
+            3L,
+            3L,
+            4L,
+            4L,
+            5L,
+            5L,
+            6L,
+            6L,
+            7L,
+            7L,
+            8L,
+            100L
+        );
+
+        assertThat(products.rankByViewCounts(List.of(2L), viewCounts))
+            .extracting(Product::id)
+            .containsExactly(7L, 6L, 5L, 4L, 3L, 2L);
+    }
+
+    @Test
+    @DisplayName("카테고리는 OR로 결합하고 부모 카테고리는 자식 제품을 포함한다")
+    void ranksProductsInAnyRequestedCategory() {
+        Products products = Products.from(
+            List.of(productOfCategory(1L, 2L), productOfCategory(2L, 3L), productOfCategory(3L, 4L))
+        );
+
+        assertThat(products.rankByViewCounts(List.of(2L, 3L), Map.of()))
+            .extracting(Product::id)
+            .containsExactly(1L, 2L);
+        assertThat(products.rankByViewCounts(List.of(100L), Map.of()))
+            .extracting(Product::id)
+            .containsExactly(1L, 2L, 3L);
+        assertThat(products.rankByViewCounts(List.of(999L), Map.of())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("카테고리와 조회 기록이 없으면 전체 제품을 대상으로 동점에서 카탈로그 순서를 유지한다")
+    void keepsCatalogOrderForEqualAndMissingViewCounts() {
+        Products products = Products.from(
+            List.of(productOfCategory(1L, 2L), productOfCategory(2L, 2L), productOfCategory(3L, 2L))
+        );
+
+        assertThat(products.rankByViewCounts(List.of(), Map.of(2L, 5L, 3L, 5L)))
+            .extracting(Product::id)
+            .containsExactly(2L, 3L, 1L);
+    }
+
+    @Test
     @DisplayName("브랜드별 제품 수를 센다")
     void countsProductsByBrand() {
         Products products = Products.from(
@@ -119,6 +187,10 @@ class ProductsTest {
 
     private static Product productOfBrand(Long id, Long brandId) {
         return product(id, brand(brandId), category(1L), new Ingredients(List.of()));
+    }
+
+    private static Product productOfCategory(Long id, Long categoryId) {
+        return product(id, brand(1L), category(categoryId), new Ingredients(List.of()));
     }
 
     private static Product productOfBrandAndCategory(Long id, Long brandId, Long categoryId) {

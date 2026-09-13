@@ -4,6 +4,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class Products {
+
+    private static final int MAX_RANKING_SIZE = 6;
 
     private final Map<Long, Product> products;
 
@@ -124,6 +127,20 @@ public final class Products {
         return ids.stream()
             .map(products::get)
             .filter(Objects::nonNull)
+            .toList();
+    }
+
+    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts) {
+        List<Product> rankingCandidates = values().stream()
+            .filter(product -> product.belongsToAnyCategory(categoryIds))
+            .toList();
+        Comparator<Product> byViewCountDescending = Comparator
+            .comparingLong((Product product) -> viewCounts.getOrDefault(product.id(), 0L))
+            .reversed();
+
+        return rankingCandidates.stream()
+            .sorted(byViewCountDescending)
+            .limit(MAX_RANKING_SIZE)
             .toList();
     }
 
