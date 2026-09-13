@@ -1,7 +1,7 @@
 package com.poudy.config;
 
-import com.poudy.productview.domain.ProductViews;
 import com.poudy.productview.repository.ProductViewFileRepository;
+import com.poudy.productview.repository.ProductViewRepository;
 import com.poudy.productview.service.ProductViewWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,12 +34,18 @@ public class ProductViewConfig {
     }
 
     @Bean
-    public ProductViews productViews(ProductViewFileRepository repository) throws IOException {
-        return new ProductViews(Clock.systemUTC(), repository.load());
+    public ProductViewRepository productViewRepository(ProductViewFileRepository productViewFileRepository)
+        throws IOException {
+        return ProductViewRepository.restore(productViewFileRepository);
     }
 
     @Bean
-    public ProductViewWriter productViewWriter(ProductViews views, ProductViewFileRepository repository) {
-        return new ProductViewWriter(views, repository);
+    public Clock productViewClock() {
+        return Clock.systemUTC();
+    }
+
+    @Bean
+    public ProductViewWriter productViewWriter(ProductViewRepository productViewRepository) {
+        return new ProductViewWriter(productViewRepository);
     }
 }

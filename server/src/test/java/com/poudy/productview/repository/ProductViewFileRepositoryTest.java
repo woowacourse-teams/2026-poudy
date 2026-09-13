@@ -3,7 +3,7 @@ package com.poudy.productview.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIOException;
 
-import com.poudy.productview.domain.ProductViewSnapshot;
+import com.poudy.productview.domain.ProductViews;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -24,14 +24,14 @@ class ProductViewFileRepositoryTest {
         ProductViewFileRepository repository = new ProductViewFileRepository(file);
         assertThat(repository.load().dailyCounts()).isEmpty();
         assertThat(Files.exists(file)).isFalse();
-        repository.save(new ProductViewSnapshot(1, Map.of(LocalDate.of(2020, 1, 1), Map.of(999L, 1L))));
+        repository.save(ProductViews.from(Map.of(LocalDate.of(2020, 1, 1), Map.of(999L, 1L))));
         Map<LocalDate, Map<Long, Long>> counts = Map.of(
             LocalDate.of(2020, 1, 1),
             Map.of(999L, 1L),
             LocalDate.of(2026, 9, 12),
             Map.of(1L, 3L)
         );
-        repository.save(new ProductViewSnapshot(2, counts));
+        repository.save(ProductViews.from(counts));
 
         assertThat(new ProductViewFileRepository(file).load().dailyCounts()).isEqualTo(counts);
         try (var files = Files.list(file.getParent())) {
@@ -69,7 +69,7 @@ class ProductViewFileRepositoryTest {
         Path file = Files.createDirectory(directory.resolve("views.json"));
         Files.writeString(file.resolve("existing"), "preserve");
         ProductViewFileRepository repository = new ProductViewFileRepository(file);
-        assertThatIOException().isThrownBy(() -> repository.save(new ProductViewSnapshot(1, Map.of())));
+        assertThatIOException().isThrownBy(() -> repository.save(ProductViews.from(Map.of())));
         assertThat(Files.readString(file.resolve("existing"))).isEqualTo("preserve");
         try (var files = Files.list(directory)) {
             assertThat(files.toList()).containsExactly(file);

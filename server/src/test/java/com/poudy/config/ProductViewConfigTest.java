@@ -4,11 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
-import com.poudy.productview.domain.ProductViews;
 import com.poudy.productview.repository.ProductViewFileRepository;
+import com.poudy.productview.repository.ProductViewRepository;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -30,7 +31,7 @@ class ProductViewConfigTest {
             Duration.ofSeconds(5),
             () -> runner(file).withPropertyValues("poudy.product-views.save-interval=PT1H")
                 .run(context -> {
-                    context.getBean(ProductViews.class).increaseViewCount(1L);
+                    context.getBean(ProductViewRepository.class).increaseViewCount(1L, LocalDate.of(2026, 9, 12));
                     ThreadPoolTaskScheduler scheduler = context
                         .getBean("productViewScheduler", ThreadPoolTaskScheduler.class);
                     scheduler.stop();
@@ -48,7 +49,10 @@ class ProductViewConfigTest {
         assertTimeout(
             Duration.ofSeconds(5),
             () -> runner(file).withPropertyValues("poudy.product-views.save-interval=PT1H")
-                .run(context -> context.getBean(ProductViews.class).increaseViewCount(1L))
+                .run(
+                    context -> context.getBean(ProductViewRepository.class)
+                        .increaseViewCount(1L, LocalDate.of(2026, 9, 12))
+                )
         );
         assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1);
     }
@@ -74,19 +78,23 @@ class ProductViewConfigTest {
             FixedDelayTask task = (FixedDelayTask) scheduling.getScheduledTasks().iterator().next().getTask();
             assertThat(task.getIntervalDuration()).isEqualTo(Duration.ofSeconds(10));
             assertThat(task.getInitialDelayDuration()).isEqualTo(Duration.ofSeconds(10));
-            context.getBean(ProductViews.class).increaseViewCount(1L);
+            context.getBean(ProductViewRepository.class).increaseViewCount(1L, LocalDate.of(2026, 9, 12));
             assertThat(Files.exists(file)).isFalse();
         });
 
         assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1);
-        runner(file).run(context -> assertThat(context.getBean(ProductViews.class).totals(null)).containsEntry(1L, 1L));
+        runner(file).run(
+            context -> assertThat(
+                context.getBean(ProductViewRepository.class).sumViewCounts(LocalDate.of(2026, 9, 12), null)
+            ).containsEntry(1L, 1L)
+        );
     }
 
     @Test
     void configuredIntervalSavesWithoutWaitingForShutdown() {
         Path file = directory.resolve("views.json");
         runner(file).withPropertyValues("poudy.product-views.save-interval=PT0.02S").run(context -> {
-            context.getBean(ProductViews.class).increaseViewCount(1L);
+            context.getBean(ProductViewRepository.class).increaseViewCount(1L, LocalDate.of(2026, 9, 12));
             await().atMost(Duration.ofSeconds(5)).untilAsserted(
                 () -> assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1)
             );

@@ -1,6 +1,6 @@
 package com.poudy.productview.repository;
 
-import com.poudy.productview.domain.ProductViewSnapshot;
+import com.poudy.productview.domain.ProductViews;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -30,12 +30,12 @@ public class ProductViewFileRepository {
         this.file = file.toAbsolutePath().normalize();
     }
 
-    public ProductViewSnapshot load() throws IOException {
+    public ProductViews load() throws IOException {
         byte[] bytes;
         try {
             bytes = Files.readAllBytes(file);
         } catch (NoSuchFileException exception) {
-            return new ProductViewSnapshot(0, Map.of());
+            return ProductViews.from(Map.of());
         }
         try {
             JsonNode root = mapper.readTree(bytes);
@@ -53,7 +53,7 @@ public class ProductViewFileRepository {
                 require(date.toString().equals(day.getKey()), "날짜 표기");
                 dailyCounts.put(date, countsOf(day.getValue()));
             }
-            return new ProductViewSnapshot(0, dailyCounts);
+            return ProductViews.from(dailyCounts);
         } catch (RuntimeException exception) {
             throw new IOException("제품 조회수 파일을 복원할 수 없습니다: " + file, exception);
         }
@@ -78,8 +78,8 @@ public class ProductViewFileRepository {
         }
     }
 
-    public void save(ProductViewSnapshot snapshot) throws IOException {
-        byte[] bytes = mapper.writeValueAsBytes(Map.of("version", 1, "days", snapshot.dailyCounts()));
+    public void save(ProductViews productViews) throws IOException {
+        byte[] bytes = mapper.writeValueAsBytes(Map.of("version", 1, "days", productViews.dailyCounts()));
         Files.createDirectories(file.getParent());
         Path temporary = Files.createTempFile(file.getParent(), ".product-views-", ".tmp");
         try {
