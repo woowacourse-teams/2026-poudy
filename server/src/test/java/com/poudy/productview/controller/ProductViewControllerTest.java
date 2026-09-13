@@ -40,7 +40,7 @@ class ProductViewControllerTest {
     }
 
     @Test
-    void repeatedUnauthenticatedRequestsRecordEachViewAndReturnEmpty204() throws Exception {
+    void repeatedUnauthenticatedRequestsIncreaseEachViewAndReturnEmpty204() throws Exception {
         long before = views.totals(null).getOrDefault(1L, 0L);
         for (int request = 0; request < 2; request++) {
             mvc.perform(post("/api/products/1/views"))
@@ -51,7 +51,7 @@ class ProductViewControllerTest {
     }
 
     @Test
-    void nonexistentAndMalformedProductIdsDoNotRecordViews() throws Exception {
+    void nonexistentAndMalformedProductIdsDoNotIncreaseViews() throws Exception {
         Map<Long, Long> before = views.totals(null);
         mvc.perform(post("/api/products/999999/views"))
             .andExpect(status().isNotFound())
@@ -63,7 +63,7 @@ class ProductViewControllerTest {
     }
 
     @Test
-    void readApisDoNotRecordViews() throws Exception {
+    void readApisDoNotIncreaseViews() throws Exception {
         Map<Long, Long> before = views.totals(null);
         mvc.perform(get("/api/products/1")).andExpect(status().isOk());
         mvc.perform(get("/api/products/1")).andExpect(status().isOk());

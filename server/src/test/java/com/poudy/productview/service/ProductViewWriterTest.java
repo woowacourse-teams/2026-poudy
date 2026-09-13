@@ -32,7 +32,7 @@ class ProductViewWriterTest {
     void skipsUnchangedStateAndRetriesFailedSave() throws Exception {
         writer.save();
         verifyNoInteractions(repository);
-        views.record(1L);
+        views.increaseViewCount(1L);
         doThrow(new IOException("disk unavailable")).doNothing().when(repository).save(any());
         writer.save();
         writer.save();
@@ -41,7 +41,7 @@ class ProductViewWriterTest {
     }
 
     @Test
-    void recordsDuringWriteProceedAndRemainForNextSerializedSave() throws Exception {
+    void increasesDuringWriteProceedAndRemainForNextSerializedSave() throws Exception {
         CountDownLatch writing = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         doAnswer(invocation -> {
@@ -49,12 +49,12 @@ class ProductViewWriterTest {
             assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
             return null;
         }).when(repository).save(any());
-        views.record(1L);
+        views.increaseViewCount(1L);
         try (var executor = Executors.newFixedThreadPool(3)) {
             var first = executor.submit(writer::save);
             try {
                 assertThat(writing.await(5, TimeUnit.SECONDS)).isTrue();
-                executor.submit(() -> views.record(1L)).get(5, TimeUnit.SECONDS);
+                executor.submit(() -> views.increaseViewCount(1L)).get(5, TimeUnit.SECONDS);
                 assertThat(views.totals(null)).containsEntry(1L, 2L);
                 var second = executor.submit(writer::save);
                 release.countDown();

@@ -30,7 +30,7 @@ class ProductViewConfigTest {
             Duration.ofSeconds(5),
             () -> runner(file).withPropertyValues("poudy.product-views.save-interval=PT1H")
                 .run(context -> {
-                    context.getBean(ProductViews.class).record(1L);
+                    context.getBean(ProductViews.class).increaseViewCount(1L);
                     ThreadPoolTaskScheduler scheduler = context
                         .getBean("productViewScheduler", ThreadPoolTaskScheduler.class);
                     scheduler.stop();
@@ -48,7 +48,7 @@ class ProductViewConfigTest {
         assertTimeout(
             Duration.ofSeconds(5),
             () -> runner(file).withPropertyValues("poudy.product-views.save-interval=PT1H")
-                .run(context -> context.getBean(ProductViews.class).record(1L))
+                .run(context -> context.getBean(ProductViews.class).increaseViewCount(1L))
         );
         assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1);
     }
@@ -74,7 +74,7 @@ class ProductViewConfigTest {
             FixedDelayTask task = (FixedDelayTask) scheduling.getScheduledTasks().iterator().next().getTask();
             assertThat(task.getIntervalDuration()).isEqualTo(Duration.ofSeconds(10));
             assertThat(task.getInitialDelayDuration()).isEqualTo(Duration.ofSeconds(10));
-            context.getBean(ProductViews.class).record(1L);
+            context.getBean(ProductViews.class).increaseViewCount(1L);
             assertThat(Files.exists(file)).isFalse();
         });
 
@@ -86,7 +86,7 @@ class ProductViewConfigTest {
     void configuredIntervalSavesWithoutWaitingForShutdown() {
         Path file = directory.resolve("views.json");
         runner(file).withPropertyValues("poudy.product-views.save-interval=PT0.02S").run(context -> {
-            context.getBean(ProductViews.class).record(1L);
+            context.getBean(ProductViews.class).increaseViewCount(1L);
             await().atMost(Duration.ofSeconds(5)).untilAsserted(
                 () -> assertThat(new ProductViewFileRepository(file).load().dailyCounts()).hasSize(1)
             );

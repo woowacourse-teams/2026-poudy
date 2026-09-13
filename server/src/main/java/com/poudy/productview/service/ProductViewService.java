@@ -9,18 +9,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProductViewService {
 
-    private final ProductRepository products;
-    private final ProductViews views;
+    private final ProductRepository productRepository;
+    private final ProductViews productViews;
 
-    public ProductViewService(ProductRepository products, ProductViews views) {
-        this.products = products;
-        this.views = views;
+    public ProductViewService(ProductRepository productRepository, ProductViews productViews) {
+        this.productRepository = productRepository;
+        this.productViews = productViews;
     }
 
-    public void record(Long productId) {
-        if (products.findAll().findById(productId).isEmpty()) {
+    public void increaseViewCount(Long productId) {
+        if (productRepository.findAll().findById(productId).isEmpty()) {
             throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
         }
-        views.record(productId);
+        productViews.increaseViewCount(productId);
     }
 }

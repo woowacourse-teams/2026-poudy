@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class ProductViewsTest {
 
     @Test
-    void recordsOnKoreanCalendarAndRetainsAllHistory() {
+    void increasesOnKoreanCalendarAndRetainsAllHistory() {
         Clock clock = mock(Clock.class);
         when(clock.withZone(ZoneId.of("Asia/Seoul"))).thenReturn(clock);
         when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
@@ -39,10 +39,10 @@ class ProductViewsTest {
                 )
             )
         );
-        views.record(1L);
+        views.increaseViewCount(1L);
         when(clock.instant()).thenReturn(Instant.parse("2026-09-11T15:00:00Z"));
-        views.record(1L);
-        views.record(2L);
+        views.increaseViewCount(1L);
+        views.increaseViewCount(2L);
 
         assertThat(views.totals(1)).containsExactlyInAnyOrderEntriesOf(Map.of(1L, 1L, 2L, 1L));
         assertThat(views.totals(7)).containsExactlyInAnyOrderEntriesOf(Map.of(1L, 32L, 2L, 1L));
@@ -53,17 +53,17 @@ class ProductViewsTest {
     }
 
     @Test
-    void concurrentRecordsAreNotLostAndSnapshotsStayImmutable() throws Exception {
+    void concurrentIncreasesAreNotLostAndSnapshotsStayImmutable() throws Exception {
         ProductViews views = new ProductViews(Clock.systemUTC(), new ProductViewSnapshot(0, Map.of()));
         assertThat(views.changedSince(0)).isEmpty();
-        views.record(1L);
+        views.increaseViewCount(1L);
         ProductViewSnapshot before = views.changedSince(0).orElseThrow();
         try (var executor = Executors.newFixedThreadPool(8)) {
             List<Future<?>> tasks = new ArrayList<>();
             for (int worker = 0; worker < 8; worker++) {
                 tasks.add(executor.submit(() -> {
                     for (int count = 0; count < 1000; count++) {
-                        views.record(1L);
+                        views.increaseViewCount(1L);
                     }
                 }));
             }

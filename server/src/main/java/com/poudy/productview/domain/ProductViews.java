@@ -18,7 +18,7 @@ public final class ProductViews {
         restored.dailyCounts().forEach((date, counts) -> dailyCounts.put(date, new HashMap<>(counts)));
     }
 
-    public synchronized void record(Long productId) {
+    public synchronized void increaseViewCount(Long productId) {
         dailyCounts.computeIfAbsent(LocalDate.now(clock), ignored -> new HashMap<>())
             .merge(productId, 1L, Math::addExact);
         revision++;
