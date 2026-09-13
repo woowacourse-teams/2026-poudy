@@ -96,10 +96,12 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 
 ### ProductView
 
-`productview`는 한국 시간 날짜별 제품 조회수를 카탈로그와 분리해 소유한다. Service가
-제품 존재를 확인한 뒤 명시적인 조회 기록 요청만 집계한다. Domain은 잠금으로 증가와
-복사본 생성을 보호하고, 저장·조회는 불변 복사본을 사용한다. 전용 단일 스케줄러의 Writer는
-변경된 복사본만 상태 잠금 밖에서 Repository에 저장하며 성공한 변경 번호만 기억한다.
+`productview`는 한국 시간 날짜별 제품 조회수를 카탈로그와 분리해 소유한다. Service는
+제품 존재와 한국 시간 날짜를 결정하고, `ProductViews`는 전달받은 날짜의 증가와 기간별
+합산을 담당한다. 메모리 Repository가 집계 객체와 동시 접근, 저장 변경 번호를 소유한다.
+증가와 복사는 같은 잠금으로 보호하고 합산과 파일 쓰기는 독립된 복사본으로 수행한다.
+전용 스케줄러의 Writer는 저장 호출과 실패 로그만 담당한다. 파일 Repository가 JSON을 해석하고
+원자 교체한다. 정상 종료의 마지막 저장도 메모리 Repository에서 주기 저장과 직렬화한다.
 카탈로그에서 사라진 제품과 과거 날짜도 기록에서 제거하지 않는다. 운영 경로와 유실 범위는
 [`deploy/scripts/README.md`](../deploy/scripts/README.md)의 제품 조회수 상태 절을 따른다.
 
