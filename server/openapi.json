@@ -2847,7 +2847,7 @@
           "brandName": {
             "type": "string",
             "description": "브랜드명",
-            "example": "푸디"
+            "example": "파우디"
           },
           "imageUrl": {
             "type": "string",
