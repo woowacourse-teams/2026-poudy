@@ -3,14 +3,14 @@
  *
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { SavedScreen } from "./SavedScreen";
 
-import { refreshSavedProducts, saveProduct } from "@/lib/storage/saved-products";
+import { readSavedProductIds, refreshSavedProducts, saveProduct } from "@/lib/storage/saved-products";
 import { allProducts } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
@@ -133,6 +133,194 @@ describe("저장함", () => {
     expect(screen.queryByText("아직 저장한 제품이 없어요")).not.toBeInTheDocument();
   });
 
+  it("서버가 모르는 저장 제품이 있으면 빠진 개수를 알린다", async () => {
+    saveProduct(99999);
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    expect(await screen.findByText("제품 1개를 지금은 불러올 수 없어요")).toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    // 성공 응답만으로 브라우저의 저장을 자동으로 지우지는 않는다.
+    expect(readSavedProductIds()).toEqual([1, 99999]);
+  });
+
+  it("다시 확인해서 서버가 돌려주면 그 제품이 목록에 돌아온다", async () => {
+    // 처음에는 서버가 1번을 모른다고 답한다.
+    server.use(http.get("*/api/storage", () => HttpResponse.json({ items: [] })));
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+
+    // 서버가 제자리를 찾은 뒤 다시 확인하면 돌아온다.
+    server.resetHandlers();
+    await userEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
+  });
+
+  it("누락을 안내하면서 저장 목록을 지우지 않는다", async () => {
+    saveProduct(99998);
+    saveProduct(1);
+    saveProduct(99999);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 2개를 지금은 불러올 수 없어요");
+
+    // 되돌아올 수 있는 상태라 저장 목록에 손대지 않는다.
+    expect(readSavedProductIds()).toEqual([99999, 1, 99998]);
+    expect(screen.queryByRole("button", { name: "목록에서 지우기" })).not.toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
+  });
+
+  it("저장을 풀면 그 자리에 되돌리기가 남는다", async () => {
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("1025 독도 토너");
+    await userEvent.click(screen.getByRole("button", { name: /1025 독도 토너 저장 해제/ }));
+
+    // 카드가 곧바로 사라지지 않고 되돌릴 자리가 남는다.
+    expect(await screen.findByRole("button", { name: /되돌리기/ })).toBeInTheDocument();
+    expect(screen.getByText(/저장함에서 삭제됐어요/)).toBeInTheDocument();
+    // 저장 자체는 이미 풀렸다.
+    expect(readSavedProductIds()).toEqual([]);
+  });
+
+  it("저장을 풀어도 되돌릴 자리가 제자리에 선다", async () => {
+    // 1 → 3 → 6 차례로 담으면 최근 저장순은 6, 3, 1 이다.
+    saveProduct(1);
+    saveProduct(3);
+    saveProduct(6);
+    render(<SavedScreen />);
+    await screen.findByText("가벼운 수분 앰플");
+
+    // 가운데 것을 푼다.
+    await userEvent.click(screen.getByRole("button", { name: /다이브인 저분자 히알루론산 토너 저장 해제/ }));
+    await screen.findByRole("button", { name: /되돌리기/ });
+
+    // 되돌릴 자리가 맨 앞으로 튀지 않고 원래 자리인 가운데에 남는다.
+    const rows = screen.getAllByRole("listitem").map((row) => row.textContent ?? "");
+    expect(rows[0]).toContain("가벼운 수분 앰플");
+    expect(rows[1]).toContain("저장함에서 삭제됐어요");
+    expect(rows[2]).toContain("1025 독도 토너");
+  });
+
+  it("여러 개를 잇달아 풀어도 저마다 제자리에 남는다", async () => {
+    saveProduct(1);
+    saveProduct(3);
+    saveProduct(6);
+    render(<SavedScreen />);
+    await screen.findByText("가벼운 수분 앰플");
+
+    // 맨 앞과 맨 뒤를 푼다. 가운데만 카드로 남아야 한다.
+    await userEvent.click(screen.getByRole("button", { name: /가벼운 수분 앰플 저장 해제/ }));
+    await userEvent.click(screen.getByRole("button", { name: /1025 독도 토너 저장 해제/ }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: /되돌리기/ })).toHaveLength(2);
+    });
+
+    const rows = screen.getAllByRole("listitem").map((row) => row.textContent ?? "");
+    expect(rows[0]).toContain("저장함에서 삭제됐어요");
+    expect(rows[1]).toContain("다이브인 저분자 히알루론산 토너");
+    expect(rows[2]).toContain("저장함에서 삭제됐어요");
+  });
+
+  it("되돌리면 담았던 때가 남아 최근 저장순이 어긋나지 않는다", async () => {
+    // 1 을 먼저, 6 을 나중에 담아 6 이 앞에 온다.
+    saveProduct(1);
+    saveProduct(6);
+    render(<SavedScreen />);
+
+    await screen.findByText("가벼운 수분 앰플");
+    // 나중에 담은 6 을 풀었다가 되돌린다.
+    await userEvent.click(screen.getByRole("button", { name: /가벼운 수분 앰플 저장 해제/ }));
+    await userEvent.click(await screen.findByRole("button", { name: /되돌리기/ }));
+
+    await waitFor(() => {
+      // 담았던 때가 그대로라 6 이 다시 앞에 선다. 되돌리기가 맨 앞으로 밀어 올리지 않는다.
+      expect(readSavedProductIds()).toEqual([6, 1]);
+    });
+    expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument();
+  });
+
+  it("되돌릴 자리가 남아 있어도 총 개수는 실제 저장한 수를 센다", async () => {
+    saveProduct(1);
+    saveProduct(6);
+    render(<SavedScreen />);
+
+    await screen.findByText("가벼운 수분 앰플");
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /가벼운 수분 앰플 저장 해제/ }));
+
+    // 되돌리기 자리는 이미 푼 것이라 개수에서 뺀다.
+    await waitFor(() => {
+      expect(screen.getByText("총 1개")).toBeInTheDocument();
+    });
+  });
+
+  it("그만 보기를 누르면 누락 안내를 닫는다", async () => {
+    saveProduct(99999);
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+    await userEvent.click(screen.getByRole("button", { name: "그만 보기" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
+    });
+    // 안내만 닫고 저장 목록은 그대로 둔다.
+    expect(readSavedProductIds()).toEqual([1, 99999]);
+    // 남은 제품은 계속 보인다.
+    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+  });
+
+  it("안내를 닫은 뒤 다른 제품이 새로 빠지면 다시 알린다", async () => {
+    saveProduct(99999);
+    saveProduct(1);
+    render(<SavedScreen />);
+
+    await screen.findByText("제품 1개를 지금은 불러올 수 없어요");
+    await userEvent.click(screen.getByRole("button", { name: "그만 보기" }));
+    await waitFor(() => {
+      expect(screen.queryByText(/지금은 불러올 수 없어요/)).not.toBeInTheDocument();
+    });
+
+    // 서버가 모르는 번호를 하나 더 담으면 그때 본 안내가 아니므로 다시 알린다.
+    act(() => {
+      saveProduct(99998);
+    });
+
+    expect(await screen.findByText("제품 2개를 지금은 불러올 수 없어요")).toBeInTheDocument();
+  });
+
+  it("저장한 제품을 모두 볼 수 없으면 빈 저장함으로 오해하게 하지 않는다", async () => {
+    saveProduct(99998);
+    saveProduct(99999);
+    render(<SavedScreen />);
+
+    expect(await screen.findByText("제품 2개를 지금은 불러올 수 없어요")).toBeInTheDocument();
+    expect(screen.getByText("저장한 제품을 지금은 불러올 수 없어요")).toBeInTheDocument();
+    expect(screen.queryByText("아직 저장한 제품이 없어요")).not.toBeInTheDocument();
+  });
+
+  it("서버 요청이 실패하면 저장 목록을 정리하지 않는다", async () => {
+    failStorage();
+    saveProduct(99999);
+    render(<SavedScreen />);
+
+    expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "다시 확인" })).not.toBeInTheDocument();
+    expect(readSavedProductIds()).toEqual([99999]);
+  });
+
   it("실패한 뒤 다시 시도하면 목록을 보여 준다", async () => {
     failStorage();
     saveProduct(1);
@@ -148,7 +336,7 @@ describe("저장함", () => {
     });
   });
 
-  it("저장을 해제하면 목록에서 빠진다", async () => {
+  it("저장을 해제하면 되돌릴 자리를 남기고 개수에서 뺀다", async () => {
     saveProduct(1);
     saveProduct(3);
     render(<SavedScreen />);
@@ -156,9 +344,11 @@ describe("저장함", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
 
+    // 카드는 되돌릴 자리로 바뀌고 저장은 이미 풀렸다.
     await waitFor(() => {
-      expect(screen.queryByText("1025 독도 토너")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /되돌리기/ })).toBeInTheDocument();
     });
+    expect(readSavedProductIds()).toEqual([3]);
     expect(screen.getByText("총 1개")).toBeInTheDocument();
   });
   it("이름 오름차순으로 바꾸면 순서가 다시 매겨진다", async () => {
@@ -284,8 +474,8 @@ describe("저장을 풀 때", () => {
     const before = calls;
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
 
-    // 카드는 곧바로 사라지고 남은 것은 그대로 있다.
-    await waitFor(() => expect(screen.queryByText("1025 독도 토너")).not.toBeInTheDocument());
+    // 되돌릴 자리로 바뀌고 남은 것은 그대로 있다. 서버를 다시 부르지 않는다.
+    await waitFor(() => expect(screen.getByRole("button", { name: /되돌리기/ })).toBeInTheDocument());
     expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
     expect(calls).toBe(before);
   });
