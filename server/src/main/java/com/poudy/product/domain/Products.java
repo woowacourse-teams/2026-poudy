@@ -4,6 +4,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,24 @@ public final class Products {
         return ids.stream()
             .map(products::get)
             .filter(Objects::nonNull)
+            .toList();
+    }
+
+    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts, int maximumSize) {
+        if (maximumSize < 1) {
+            throw new IllegalArgumentException("랭킹의 최대 제품 수는 양수여야 합니다.");
+        }
+
+        List<Long> requestedCategoryIds = Objects.requireNonNullElse(categoryIds, List.of());
+        Map<Long, Long> counts = Objects.requireNonNullElse(viewCounts, Map.of());
+        Comparator<Product> byViewCountDescending = Comparator
+            .comparingLong((Product product) -> counts.getOrDefault(product.id(), 0L))
+            .reversed();
+
+        return values().stream()
+            .filter(product -> product.belongsToAnyCategory(requestedCategoryIds))
+            .sorted(byViewCountDescending)
+            .limit(maximumSize)
             .toList();
     }
 
