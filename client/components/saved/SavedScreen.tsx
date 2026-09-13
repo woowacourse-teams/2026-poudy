@@ -119,14 +119,14 @@ function MissingNotice({
 
         {/* 잠시 못 보는 것일 수 있다고 알리는 자리에서 바로 다시 묻는다. */}
         <span className="flex items-center justify-between gap-2">
-          <button type="button" onClick={onDismiss} className="shrink-0 text-[11px] text-[#8B8D94]">
+          <button type="button" onClick={onDismiss} className="shrink-0 cursor-pointer text-[11px] text-[#8B8D94]">
             그만 보기
           </button>
 
           <button
             type="button"
             onClick={onRecheck}
-            className="flex shrink-0 items-center gap-0.5 text-[11px] text-[#5F6268]"
+            className="flex shrink-0 cursor-pointer items-center gap-0.5 text-[11px] text-[#5F6268]"
           >
             다시 확인
             <Icon name="chevron-right" size={12} />
@@ -196,7 +196,7 @@ function UndoRow({
           type="button"
           onClick={onUndo}
           aria-label={`${productName} 저장 되돌리기`}
-          className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-border bg-white px-3 text-[12px] font-bold text-text-primary"
+          className="flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-white px-3 text-[12px] font-bold text-text-primary"
         >
           <Icon name="undo" size={13} strokeWidth={2.5} />
           되돌리기
