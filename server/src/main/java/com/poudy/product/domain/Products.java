@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,6 +73,12 @@ public final class Products {
         return values().stream()
             .filter(product -> product.contains(ingredientId))
             .count();
+    }
+
+    public Set<Long> containedIngredientIds() {
+        return values().stream()
+            .flatMap(product -> product.ingredientIds().stream())
+            .collect(Collectors.toUnmodifiableSet());
     }
 
     public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size, Categories categories) {

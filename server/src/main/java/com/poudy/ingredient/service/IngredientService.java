@@ -46,6 +46,9 @@ public class IngredientService {
         if (query.hasIngredientIds()) {
             ingredients = ingredients.findAllById(query.ingredientIds());
         }
+        if (query.usedInProducts()) {
+            ingredients = ingredients.retainIds(productRepository.containedIngredientIds());
+        }
         return ingredients.page(page, size);
     }
 

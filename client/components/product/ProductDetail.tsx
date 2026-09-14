@@ -14,16 +14,8 @@ import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
-import { formatPrice, unitPrice } from "@/lib/domain/product-display";
+import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
-
-export const ingredientSummary = (ingredientCount: number, effectNames: readonly string[]): string => {
-  const effects = [...new Set(effectNames)].slice(0, 2).map((name) => `${name} 성분`);
-
-  if (effects.length === 0) return `${ingredientCount}개 전성분으로 이루어진 제품이에요.`;
-  if (effects.length === 1) return `${ingredientCount}개 전성분을 기준으로, ${effects[0]}을 담은 구성입니다.`;
-  return `${ingredientCount}개 전성분을 기준으로, ${effects.join("과 ")}을 함께 담은 구성입니다.`;
-};
 
 /** S05 제품 성분 상세. 문구와 구조는 design/v1.pen 을 따른다. */
 export function ProductDetail({

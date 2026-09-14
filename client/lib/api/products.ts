@@ -41,11 +41,13 @@ export const fetchProductSuggestions = (keyword: string, page = 0): Promise<Prod
 
 export const fetchIngredients = (query: {
   readonly ingredientIds?: readonly number[];
+  readonly usedInProducts?: boolean;
   readonly page?: number;
   readonly size?: number;
 }): Promise<IngredientPageResponse> => {
   const params = new URLSearchParams();
   for (const id of query.ingredientIds ?? []) params.append("ingredientIds", String(id));
+  if (query.usedInProducts) params.set("usedInProducts", "true");
   if (query.page !== undefined) params.set("page", String(query.page));
   if (query.size !== undefined) params.set("size", String(query.size));
   return apiGet("/api/ingredients", params);

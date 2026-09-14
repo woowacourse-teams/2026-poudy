@@ -882,7 +882,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.
+ * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다. usedInProducts 를 true 로 보내면 제품 전성분에 한 번 이상 쓰인 성분만 조회한다.
  */
 export type get_FindIngredients = {
       method: "GET",
@@ -892,6 +892,7 @@ export type get_FindIngredients = {
       parameters: {
             query?:  Partial<{
   ingredientIds: Array<number>;
+  usedInProducts: boolean;
   /**
    * 조회할 페이지 번호 (0부터 시작)
    */

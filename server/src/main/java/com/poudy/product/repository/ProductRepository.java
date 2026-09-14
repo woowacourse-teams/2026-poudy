@@ -307,4 +307,8 @@ public class ProductRepository {
         return products.countContaining(ingredientId);
     }
 
+    public Set<Long> containedIngredientIds() {
+        return products.containedIngredientIds();
+    }
+
 }

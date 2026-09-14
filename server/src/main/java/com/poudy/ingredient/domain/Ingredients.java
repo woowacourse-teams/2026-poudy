@@ -35,6 +35,12 @@ public final class Ingredients {
         return ingredientIds.stream().anyMatch(this::contains);
     }
 
+    public List<Long> ids() {
+        return ingredients.stream()
+            .map(Ingredient::id)
+            .toList();
+    }
+
     public List<Ingredient> values() {
         return ingredients;
     }

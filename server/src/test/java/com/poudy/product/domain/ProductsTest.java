@@ -45,6 +45,12 @@ class ProductsTest {
     }
 
     @Test
+    @DisplayName("제품 전성분에 쓰인 성분 ID를 중복 없이 모은다")
+    void collectsContainedIngredientIds() {
+        assertThat(products.containedIngredientIds()).containsExactlyInAnyOrder(100L, 200L, 300L);
+    }
+
+    @Test
     @DisplayName("요청한 ID 순서로 존재하는 제품만 찾는다")
     void findsProductsInRequestedOrder() {
         assertThat(products.findAllById(List.of(3L, 999L, 1L)))
