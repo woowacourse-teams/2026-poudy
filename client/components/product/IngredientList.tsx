@@ -37,7 +37,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           return (
             <li key={ingredient.id} hidden={collapsed && index >= COLLAPSED_COUNT}>
               <Link
-                href={`/ingredients/${ingredient.id}?from=product_detail`}
+                href={`/ingredients/${ingredient.id}`}
                 prefetch="auto"
                 className="flex h-[60px] items-center gap-2.5 border-b border-border"
               >
