@@ -135,6 +135,12 @@ describe("색인 메타데이터", () => {
       description: "립 메이크업 카테고리의 화장품과 전성분 정보를 확인해 보세요.",
       alternates: { canonical: "/categories/42" },
     });
+    expect(metadata.openGraph).toMatchObject({
+      title: "립 메이크업 화장품",
+      url: "/categories/42",
+      siteName: "Poudy",
+      locale: "ko_KR",
+    });
   });
 });
 
@@ -185,6 +191,8 @@ describe("공유 메타데이터", () => {
       name: "수분 세럼",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "https://images.example/product.png",
+      ingredients: [],
+      skinEffectGroups: [],
     });
 
     const metadata = await productMetadata({
@@ -203,6 +211,8 @@ describe("공유 메타데이터", () => {
       name: "진정 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "",
+      ingredients: [],
+      skinEffectGroups: [],
     });
 
     const metadata = await productMetadata({
@@ -224,8 +234,32 @@ describe("공유 메타데이터", () => {
 
     expect(ingredient.alternates?.canonical).toBe("/ingredients/12");
     expect(ingredient.openGraph?.images).toEqual(["/ingredients/12/opengraph-image"]);
+    expect(ingredient.openGraph).toMatchObject({ url: "/ingredients/12" });
     expect(brand.alternates?.canonical).toBe("/brands/7");
     expect(brand.openGraph?.images).toEqual(["/brands/7/opengraph-image"]);
+    expect(brand.openGraph).toMatchObject({ url: "/brands/7" });
+  });
+
+  it("제품 설명문에 브랜드·제품명과 본문 성분 요약을 담고 og:url 을 canonical 과 맞춘다", async () => {
+    api.fetchProductDetail.mockResolvedValue({
+      id: 104,
+      name: "약콩 판테놀 마스크",
+      brand: { id: 2, name: "라운드랩", englishName: "Round Lab", imageUrl: "" },
+      imageUrl: "",
+      ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+    });
+
+    const metadata = await productMetadata({
+      params: Promise.resolve({ productId: "104" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    const description =
+      "라운드랩 약콩 판테놀 마스크의 전성분을 확인하세요. 3개 전성분을 기준으로, 수분 성분과 피부 장벽 성분을 함께 담은 구성입니다.";
+    expect(metadata.description).toBe(description);
+    expect(metadata.openGraph).toMatchObject({ description, url: "/products/104", siteName: "Poudy", locale: "ko_KR" });
+    expect(metadata.alternates?.canonical).toBe("/products/104");
   });
 
   it("상세 공유 이미지를 하루 동안 응답 캐시에 넣는다", () => {

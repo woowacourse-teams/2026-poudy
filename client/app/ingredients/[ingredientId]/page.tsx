@@ -12,6 +12,7 @@ import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
+import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
 // 성분 설명은 거의 바뀌지 않고 검색 노출 대상이다.
 export const revalidate = 86400;
@@ -37,11 +38,12 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
     const title = `${ingredient.koreanName} 성분 정보`;
     const description = ingredient.description;
     const image = `/ingredients/${ingredientId}/opengraph-image`;
+    const canonical = `/ingredients/${ingredientId}`;
     return {
       title,
       description,
-      alternates: { canonical: `/ingredients/${ingredientId}` },
-      openGraph: { title, description, type: "website", images: [image] },
+      alternates: { canonical },
+      openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [image] },
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {

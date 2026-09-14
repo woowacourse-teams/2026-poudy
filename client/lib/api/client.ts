@@ -87,14 +87,18 @@ const networkError = (cause: unknown, path: string): ApiError => {
 };
 
 /**
- * 본문을 보내고 응답을 받지 않는 요청. 204 처럼 내용이 없는 응답을 돌려주는 곳에 쓴다.
+ * 선택적으로 본문을 보내고 응답을 받지 않는 요청. 204 처럼 내용이 없는 응답을 돌려주는 곳에 쓴다.
  * 캐시를 두지 않는다. 보내는 요청은 저장해 두었다 다시 쓸 수 있는 종류가 아니다.
  */
-export const apiPost = async (path: string, body: unknown): Promise<void> => {
+export const apiPost = async (path: string, body?: unknown): Promise<void> => {
   const response = await fetch(apiUrl(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    ...(body === undefined
+      ? {}
+      : {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
   }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });

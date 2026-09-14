@@ -312,6 +312,38 @@ export type ProductSuggestionPageResponse = {
   pagination: PaginationResponse;
 }
 export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
+export type ProductRankingProductResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드명
+   */
+  brandName: string;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 대표 판매 옵션 가격 (원)
+   */
+  price: number;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+}
+export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
+export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
@@ -589,6 +621,26 @@ export type post_Record = {
 
     }
 /**
+ * 존재하는 제품의 조회수를 요청마다 1회 증가시킨다. 인증이나 방문자 중복 제거 없이 새로고침과 재방문도 집계한다. 상세·목록 GET은 조회수를 증가시키지 않는다.
+ */
+export type post_IncreaseViewCount = {
+      method: "POST",
+      path: "/api/products/{productId}/views",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
  */
 export type post_Submit = {
@@ -808,6 +860,30 @@ export type get_MatchSharedProduct = {
 
     }
 /**
+ * 현재 카탈로그에서 카테고리에 해당하는 제품을 먼저 고른 뒤 한국 시간 날짜별 조회수를 합산해 내림차순으로 최대 6개 반환한다. 조회수가 같으면 기본 제품 순서를 유지한다.
+ */
+export type get_FindRankings = {
+      method: "GET",
+      path: "/api/products/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  categoryIds: Array<number>;
+  /**
+   * 한국 시간 기준 오늘을 포함해 집계할 날짜 수. 미지정 시 전체 기간
+   */
+  days: number;
+}>,
+
+          }
+      responses: {200: Schemas.ProductRankingResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.
  */
 export type get_CountProducts = {
@@ -842,7 +918,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.
+ * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다. usedInProducts 를 true 로 보내면 제품 전성분에 한 번 이상 쓰인 성분만 조회한다.
  */
 export type get_FindIngredients = {
       method: "GET",
@@ -852,6 +928,7 @@ export type get_FindIngredients = {
       parameters: {
             query?:  Partial<{
   ingredientIds: Array<number>;
+  usedInProducts: boolean;
   /**
    * 조회할 페이지 번호 (0부터 시작)
    */
@@ -1034,6 +1111,7 @@ export type get_FindBrand = {
      export type EndpointByMethod = {
      post: {
            "/api/search-keywords": Endpoints.post_Record,
+"/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/product-requests": Endpoints.post_Submit,
 "/api/feedback": Endpoints.post_Submit_1,
 "/api/feedback/images": Endpoints.post_UploadImages
@@ -1046,6 +1124,7 @@ get: {
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
+"/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,

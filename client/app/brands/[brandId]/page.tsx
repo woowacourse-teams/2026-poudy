@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { parseFilter } from "@/lib/domain/filter";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
+import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
 const load = cache(async (raw: string) => {
   const brandId = Number(raw);
@@ -38,11 +39,12 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
     const title = `${brand.name} 제품`;
     const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
     const image = `/brands/${brandId}/opengraph-image`;
+    const canonical = `/brands/${brandId}`;
     return {
       title,
       description,
-      alternates: { canonical: `/brands/${brandId}` },
-      openGraph: { title, description, type: "website", images: [image] },
+      alternates: { canonical },
+      openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [image] },
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {

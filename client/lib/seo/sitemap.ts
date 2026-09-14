@@ -81,7 +81,7 @@ export const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const entries: MetadataRoute.Sitemap = [];
 
   for (let page = 0; page < MAX_INGREDIENT_PAGES; page += 1) {
-    const response = await fetchIngredients({ page, size: INGREDIENT_PAGE_SIZE });
+    const response = await fetchIngredients({ page, size: INGREDIENT_PAGE_SIZE, usedInProducts: true });
     entries.push(...response.items.map((ingredient) => entry(`/ingredients/${ingredient.id}`, "monthly", 0.7)));
     if (entries.length > SITEMAP_URL_LIMIT) throw new Error("성분 사이트맵이 URL 50,000개 제한을 초과했습니다.");
     if (!response.pagination.hasNext) return entries;

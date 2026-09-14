@@ -94,6 +94,17 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 하나를 권위 상태로 사용하고 목록·ID 조회·집계를 여기서 파생한다. 목록과 개수는 같은 필터
 판정을 사용하고, 응답 DTO가 규칙을 다시 구현하지 않는다.
 
+### ProductView
+
+`productview`는 한국 시간 날짜별 제품 조회수를 카탈로그와 분리해 소유한다. Service는
+제품 존재와 한국 시간 날짜를 결정하고, `ProductViews`는 전달받은 날짜의 증가와 기간별
+합산을 담당한다. 메모리 Repository가 집계 객체와 동시 접근, 저장 변경 번호를 소유한다.
+증가와 복사는 같은 잠금으로 보호하고 합산과 파일 쓰기는 독립된 복사본으로 수행한다.
+전용 스케줄러의 Writer는 저장 호출과 실패 로그만 담당한다. 파일 Repository가 JSON을 해석하고
+원자 교체한다. 정상 종료의 마지막 저장도 메모리 Repository에서 주기 저장과 직렬화한다.
+카탈로그에서 사라진 제품과 과거 날짜도 기록에서 제거하지 않는다. 운영 경로와 유실 범위는
+[`deploy/scripts/README.md`](../deploy/scripts/README.md)의 제품 조회수 상태 절을 따른다.
+
 ### ExcludeCode
 
 `excludecode`는 빠른 제외 성분군의 식별자와 성분 매핑을 소유한다. 성분군은 서버에서 성분으로

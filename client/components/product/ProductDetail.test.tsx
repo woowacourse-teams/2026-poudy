@@ -4,9 +4,10 @@
 import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ingredientSummary, ProductDetail } from "./ProductDetail";
+import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
+import { ingredientSummary } from "@/lib/domain/product-display";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({

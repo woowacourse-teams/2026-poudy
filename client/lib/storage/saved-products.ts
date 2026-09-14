@@ -103,6 +103,58 @@ export const saveProduct = (productId: number): readonly number[] =>
 export const unsaveProduct = (productId: number): readonly number[] =>
   commit(saved.filter((item) => item.id !== productId));
 
+/** 서버에서 더 이상 찾을 수 없는 제품처럼 여러 항목을 한 번에 정리한다. */
+export const unsaveProducts = (productIds: readonly number[]): readonly number[] => {
+  const targets = new Set(productIds);
+  return commit(saved.filter((item) => !targets.has(item.id)));
+};
+
+/** 저장을 푼 항목과 그것이 있던 자리. 되돌리기가 이 값을 들고 있다가 되살린다. */
+export type RemovedEntry = {
+  readonly product: SavedProduct;
+  readonly index: number;
+};
+
+/**
+ * 저장을 풀기 직전의 항목을 자리와 함께 돌려준다. 담은 때만으로는 잇달아 담은
+ * 항목의 차례를 가릴 수 없어 자리를 같이 남긴다.
+ */
+export const savedEntriesOf = (productIds: readonly number[]): readonly RemovedEntry[] => {
+  const targets = new Set(productIds);
+  return saved.flatMap((product, index) => (targets.has(product.id) ? [{ product, index }] : []));
+};
+
+/**
+ * 되돌리기로 되살린다. `saveProduct` 는 담은 때를 지금으로 새로 찍어 맨 앞에 놓으므로
+ * 되살리는 데 쓸 수 없다. 담았던 때를 그대로 두고 그 때 순으로 다시 세운다.
+ *
+ * 자리를 함께 받아 담은 때가 같은 항목도 원래 차례로 돌아가게 한다. 잇달아 담으면
+ * 밀리초까지 같을 수 있어 때만으로는 어느 쪽이 앞인지 가릴 수 없다.
+ */
+export const restoreProducts = (entries: readonly RemovedEntry[]): readonly number[] => {
+  if (entries.length === 0) return snapshot;
+
+  /*
+   * 뺐던 자리에 도로 꽂는다. 자리가 큰 것부터 넣어야 앞자리를 채우는 동안 뒷자리가
+   * 밀리지 않는다.
+   *
+   * `index` 는 그 항목을 뺄 때의 목록을 가리킨다. `savedEntriesOf` 로 한 번에 뽑은
+   * 것들은 같은 목록을 가리키므로 이대로 맞고, 하나씩 뽑아 잇달아 뺀 것들은 저마다
+   * 다른 목록을 가리키지만 나중에 뺀 것부터 되돌리면 그 목록으로 돌아간 뒤에 꽂힌다.
+   * 어느 쪽이든 자리가 큰 것부터라는 한 가지 차례로 풀린다.
+   */
+  const next = entries
+    .map((entry, order) => ({ ...entry, order }))
+    // 자리가 같으면 나중에 뺀 것부터 되돌린다. 그래야 저마다 빠지던 목록으로 돌아간다.
+    .toSorted((a, b) => b.index - a.index || b.order - a.order)
+    .reduce<readonly SavedProduct[]>((list, { product, index }) => {
+      const without = list.filter((item) => item.id !== product.id);
+      return [...without.slice(0, index), product, ...without.slice(index)];
+    }, saved);
+
+  return commit(next);
+};
+
 export const toggleSaved = (productId: number): readonly number[] =>
   isSaved(productId) ? unsaveProduct(productId) : saveProduct(productId);
 

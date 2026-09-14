@@ -24,6 +24,18 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 - `poudy-backend.service` 설치 및 enable
 - `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
 - JSON 데이터 디렉터리의 기본 권한 설정
+- 조회수 상태 디렉터리 `/opt/poudy/state/product-views` 생성 (`poudy:poudy`, `0750`)
+
+### 제품 조회수 상태
+
+제품 조회수는 `/opt/poudy/state/product-views/daily-counts.json`에 저장합니다.
+초기화와 CodeDeploy에서 `poudy` 사용자가 쓸 수 있는 상태 디렉터리를 준비합니다.
+저장 경로와 기본 10초 저장 주기는 `/etc/poudy/backend.env`에서 변경할 수 있습니다.
+
+```properties
+POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
+POUDY_PRODUCT_VIEWS_SAVE_INTERVAL=PT10S
+```
 
 ### HEIC 런타임
 

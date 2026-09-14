@@ -126,6 +126,10 @@ public final class Product {
         return updatedAt;
     }
 
+    public List<Long> ingredientIds() {
+        return ingredients.ids();
+    }
+
     public boolean contains(Long ingredientId) {
         if (ingredientId == null) {
             return false;

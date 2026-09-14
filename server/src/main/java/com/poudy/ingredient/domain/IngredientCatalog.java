@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public final class IngredientCatalog {
@@ -82,6 +83,14 @@ public final class IngredientCatalog {
         }
 
         return new IngredientCatalog(Collections.unmodifiableMap(foundIngredients));
+    }
+
+    public IngredientCatalog retainIds(Set<Long> ids) {
+        return from(
+            ingredients.values().stream()
+                .filter(ingredient -> ids.contains(ingredient.id()))
+                .toList()
+        );
     }
 
     public Ingredients resolveInOrder(Collection<Long> ids) {

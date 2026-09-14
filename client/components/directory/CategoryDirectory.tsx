@@ -8,7 +8,6 @@ import { DirectoryList } from "@/components/ui/DirectoryList";
 /** S08 카테고리. 대분류를 고르면 오른쪽에 소분류가 나온다. */
 export function CategoryDirectory({ categories }: { readonly categories: readonly CategoryResponse[] }) {
   const [selectedId, setSelectedId] = useState(String(categories[0]?.id ?? ""));
-  const selected = categories.find((category) => String(category.id) === selectedId);
 
   return (
     <DirectoryList
@@ -16,20 +15,21 @@ export function CategoryDirectory({ categories }: { readonly categories: readonl
       rail={categories.map((category) => ({ id: String(category.id), label: category.name }))}
       selectedRailId={selectedId}
       onSelectRail={setSelectedId}
-      title={selected?.name ?? ""}
-      description="원하는 제품 유형을 선택하세요"
-      rows={[
-        // 전체는 대분류 자신의 화면으로, 소분류는 각자의 화면으로 보낸다.
-        ...(selected
-          ? [{ id: "all", label: "전체", count: selected.productCount, href: `/categories/${selected.id}` }]
-          : []),
-        ...(selected?.children ?? []).map((child) => ({
-          id: String(child.id),
-          label: child.name,
-          count: child.productCount,
-          href: `/categories/${child.id}`,
-        })),
-      ]}
+      panels={categories.map((category) => ({
+        railId: String(category.id),
+        title: category.name,
+        description: "원하는 제품 유형을 선택하세요",
+        rows: [
+          // 전체는 대분류 자신의 화면으로, 소분류는 각자의 화면으로 보낸다.
+          { id: "all", label: "전체", count: category.productCount, href: `/categories/${category.id}` },
+          ...category.children.map((child) => ({
+            id: String(child.id),
+            label: child.name,
+            count: child.productCount,
+            href: `/categories/${child.id}`,
+          })),
+        ],
+      }))}
     />
   );
 }

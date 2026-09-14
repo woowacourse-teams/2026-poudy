@@ -5,15 +5,19 @@ import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.search.domain.SearchKeyword;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class Products {
+
+    private static final int MAX_RANKING_SIZE = 6;
 
     private final Map<Long, Product> products;
 
@@ -81,6 +85,12 @@ public final class Products {
             .count();
     }
 
+    public Set<Long> containedIngredientIds() {
+        return values().stream()
+            .flatMap(product -> product.ingredientIds().stream())
+            .collect(Collectors.toUnmodifiableSet());
+    }
+
     public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size, Categories categories) {
         requireValidPageCondition(page, size);
 
@@ -134,6 +144,20 @@ public final class Products {
         return ids.stream()
             .map(products::get)
             .filter(Objects::nonNull)
+            .toList();
+    }
+
+    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts) {
+        List<Product> rankingCandidates = values().stream()
+            .filter(product -> product.belongsToAnyCategory(categoryIds))
+            .toList();
+        Comparator<Product> byViewCountDescending = Comparator
+            .comparingLong((Product product) -> viewCounts.getOrDefault(product.id(), 0L))
+            .reversed();
+
+        return rankingCandidates.stream()
+            .sorted(byViewCountDescending)
+            .limit(MAX_RANKING_SIZE)
             .toList();
     }
 

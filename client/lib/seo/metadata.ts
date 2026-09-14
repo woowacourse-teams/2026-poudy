@@ -17,12 +17,20 @@ const defaultRobots = (): Robots => {
 /** 공유 카드. 카카오톡과 X 가 같은 그림과 문구를 쓴다. */
 const SHARE_IMAGE = "/opengraph-image";
 
-const openGraph: Metadata["openGraph"] = {
-  title: SITE_TITLE,
-  description: SITE_DESCRIPTION,
+/**
+ * 화면마다 openGraph 를 적으면 루트 값이 통째로 바뀐다. 제목·설명·그림·주소만 다른 화면이
+ * 사이트 이름과 언어를 잃지 않도록 함께 펼쳐 쓴다.
+ */
+export const OPEN_GRAPH_BASE = {
   type: "website",
   locale: "ko_KR",
   siteName: SITE_NAME,
+} as const;
+
+const openGraph: Metadata["openGraph"] = {
+  ...OPEN_GRAPH_BASE,
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   images: [SHARE_IMAGE],
 };
 
