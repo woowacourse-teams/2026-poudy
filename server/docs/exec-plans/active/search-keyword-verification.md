@@ -8,12 +8,12 @@
 사용자별 중복 제출 제거는 추가하지 않았다.
 
 `SearchKeywordPolicy`가 칸 크기·순위 기간·최소 횟수·순위 크기·보고서 최소 횟수·60초 저장 주기를 소유한다.
-인기 검색어 전용 환경 변수와 배포 스크립트는 추가하지 않았다.
+집계 파일 경로는 `POUDY_SEARCH_KEYWORDS_STATE_FILE`로 받고, 배포 스크립트가 운영 상태 디렉터리를 만든다.
 서버는 제공된 사전을 읽기만 하며, JSON 생성은 private의 오프라인 파이프라인 책임이다.
 
-개발 실행 디렉터리를 server로 두면 상태는 `./var/search-ranking/buckets.json`이다.
+개발 기본 경로는 실행 디렉터리 기준 `./var/search-ranking/buckets.json`이다.
 운영 기본값은 `/opt/poudy/state/search-ranking/buckets.json`이며,
-운영 권한·배포·롤백 점검은 이번 로컬 구현과 별개다.
+실제 운영 호스트의 권한·배포·롤백 점검은 이번 로컬 구현과 별개다.
 사전 누락·손상은 기동 실패다. 사전 검증은 리더와 도메인 생성자가 담당하고, 잘못된 사전이
 올라오면 데이터 동기화가 health 실패로 판정해 이전 데이터로 되돌린다.
 
