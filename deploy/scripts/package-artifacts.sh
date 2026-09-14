@@ -54,6 +54,7 @@ fi
 node "${SCRIPT_DIR}/copy-tree.js" \
     "${standalone_source}" \
     "${output_dir}/frontend"
+node "${SCRIPT_DIR}/verify-frontend-artifact.js" "${output_dir}/frontend"
 mkdir -p "${output_dir}/frontend/.next"
 cp -R "${REPOSITORY_ROOT}/client/.next/static" "${output_dir}/frontend/.next/static"
 
