@@ -1,9 +1,16 @@
 package com.poudy.feedback.service;
 
+import com.poudy.exception.ErrorCode;
+import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.product.domain.Product;
+import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
@@ -20,17 +27,20 @@ public class FeedbackService {
     private final S3FeedbackRepository feedbackRepository;
     private final FeedbackNotifier feedbackNotifier;
     private final FeedbackRateLimiter rateLimiter;
+    private final ProductRepository productRepository;
     private final Clock clock;
 
     public FeedbackService(
         S3FeedbackRepository feedbackRepository,
         FeedbackNotifier feedbackNotifier,
         FeedbackRateLimiter rateLimiter,
+        ProductRepository productRepository,
         @Qualifier("feedbackClock") Clock clock
     ) {
         this.feedbackRepository = feedbackRepository;
         this.feedbackNotifier = feedbackNotifier;
         this.rateLimiter = rateLimiter;
+        this.productRepository = productRepository;
         this.clock = clock;
     }
 
@@ -45,7 +55,24 @@ public class FeedbackService {
         List<UUID> imageIds,
         String clientId
     ) {
-        Feedback feedback = Feedback.register(type, content, path, clock);
+        Feedback feedback = Feedback.register(new ServiceFeedback(type, FeedbackPath.from(path)), content, clock);
+        receive(feedback, imageIds, clientId);
+    }
+
+    public void submitProductCorrection(
+        Long productId,
+        String content,
+        List<UUID> imageIds,
+        String clientId
+    ) {
+        Product product = productRepository.findAll()
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        Feedback feedback = Feedback.register(new ProductCorrection(product.id(), product.name()), content, clock);
+        receive(feedback, imageIds, clientId);
+    }
+
+    private void receive(Feedback feedback, List<UUID> imageIds, String clientId) {
         List<UUID> normalizedImageIds = Feedback.normalizeImageIds(imageIds);
         rateLimiter.requireAllowed(clientId);
         Feedback saved;
