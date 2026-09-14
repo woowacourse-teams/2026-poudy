@@ -8,7 +8,6 @@ import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
-import com.poudy.searchkeyword.logging.KeywordResourceMonitor;
 import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
@@ -16,13 +15,10 @@ import com.poudy.searchkeyword.service.KeywordMaintenance;
 import com.poudy.searchkeyword.service.KeywordSnapshotWriter;
 import com.poudy.searchkeyword.service.RankingRefresher;
 import com.poudy.searchkeyword.service.SearchKeywordService;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -136,27 +132,13 @@ public class SearchKeywordConfig {
     }
 
     @Bean(destroyMethod = "saveBeforeShutdown")
-    public KeywordSnapshotWriter keywordSnapshotWriter(
-        KeywordBuckets buckets,
-        KeywordSnapshotRepository repository,
-        MeterRegistry metrics
-    ) {
-        KeywordSnapshotWriter writer = new KeywordSnapshotWriter(buckets, repository);
-        registerSnapshotGauges(metrics, writer);
-        return writer;
+    public KeywordSnapshotWriter keywordSnapshotWriter(KeywordBuckets buckets, KeywordSnapshotRepository repository) {
+        return new KeywordSnapshotWriter(buckets, repository);
     }
 
     @Bean
-    public KeywordMaintenance keywordMaintenance(
-        KeywordBuckets buckets,
-        KeywordSnapshotWriter writer,
-        MeterRegistry metrics
-    ) {
-        return new KeywordMaintenance(
-            writer,
-            new KeywordStoreMonitor(buckets, "NONZERO", metrics),
-            resourceMonitor(writer)
-        );
+    public KeywordMaintenance keywordMaintenance(KeywordBuckets buckets, KeywordSnapshotWriter writer) {
+        return new KeywordMaintenance(writer, new KeywordStoreMonitor(buckets));
     }
 
     @Bean(destroyMethod = "shutdown")
@@ -183,24 +165,6 @@ public class SearchKeywordConfig {
 
     private static String dataDirectory(Environment env) {
         return env.getProperty("poudy.data-dir", "");
-    }
-
-    private static KeywordResourceMonitor resourceMonitor(KeywordSnapshotWriter writer) {
-        return new KeywordResourceMonitor(
-            writer::failureCount,
-            () -> writer.lastSuccessfulSaveAt().map(Instant::getEpochSecond).orElse(-1L)
-        );
-    }
-
-    private static void registerSnapshotGauges(MeterRegistry metrics, KeywordSnapshotWriter writer) {
-        Gauge.builder("poudy.search.snapshot.failures", writer, KeywordSnapshotWriter::failureCount)
-            .register(metrics);
-        Gauge.builder("poudy.search.snapshot.last.success", writer, SearchKeywordConfig::lastSuccessEpochSecond)
-            .register(metrics);
-    }
-
-    private static double lastSuccessEpochSecond(KeywordSnapshotWriter writer) {
-        return writer.lastSuccessfulSaveAt().map(saved -> (double) saved.getEpochSecond()).orElse(Double.NaN);
     }
 
     private static ScheduledExecutorService daemonScheduler(String name) {

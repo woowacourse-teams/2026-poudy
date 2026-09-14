@@ -89,16 +89,13 @@ class KeywordSnapshotWriterTest {
     }
 
     @Test
-    void failedSaveIsCountedAndNextRunSavesAgain() {
+    void failedSaveIsRetriedOnTheNextRun() {
         doThrow(new IllegalStateException("save failed")).doNothing().when(repository).save(any());
         buckets.record("토너");
 
         writer.run();
-        assertThat(writer.failureCount()).isOne();
-        assertThat(writer.lastSuccessfulSaveAt()).isEmpty();
 
         writer.run();
-        assertThat(writer.lastSuccessfulSaveAt()).isPresent();
         verify(repository, times(2)).save(any());
     }
 
@@ -111,6 +108,5 @@ class KeywordSnapshotWriterTest {
         writer.run();
 
         verify(repository, times(2)).save(any());
-        assertThat(writer.failureCount()).isZero();
     }
 }
