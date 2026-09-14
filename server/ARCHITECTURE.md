@@ -174,9 +174,17 @@ CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소�
 제안은 표시용 일치 정보라는 다른 표현을 반환하므로 별도 경계를 사용한다. 목록과 count는 같은
 요청 해석과 필터 규칙을 공유해야 한다.
 
-피드백 이미지는 기존 2단계 API를 유지한다. `POST /api/feedback/images`가 검증·정규화한
-이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, `POST /api/feedback`가 그 ID를
-받아 피드백에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
+서비스 의견과 제품 정보 정정 요청은 입력 계약을 나눈다. `POST /api/feedback`의 유형은 필드와
+처리가 같고 분류만 다른 서비스 의견만 담으며, 작성 화면 경로는 클라이언트가 알 때만 받는 참고
+정보다. 모르는 경로를 `/`로 채우면 홈에서 쓴 의견과 구분되지 않으므로 비워 둔다. 제품 정보
+정정은 대상 제품이 필수이므로 `POST /api/products/{productId}/correction-requests`가 경로로
+받고, 제품이 없으면 접수하지 않는다. 두 요청은 내용 검증, 요청 제한, S3 저장·이미지 귀속과
+Discord 알림이 같으므로 `feedback` 안에서 `FeedbackSubject`로만 구분하고 같은 저장 경계를
+공유한다.
+
+문의 이미지는 기존 2단계 API를 유지한다. `POST /api/inquiry-images`가 검증·정규화한
+이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, 의견 등록이나 제품 정보 정정
+요청이 그 ID를 받아 접수 건에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
 commit 판단 기준이다. claim은 `feedbackId`와 확장자만 저장하고, 오래된 claim의 JSON 키가
 존재하면 pending을, 존재하지 않으면 최종 이미지를 정리한다. 내용 hash, 이전 키 형식 조회,
 전체 최종 prefix 스캔은 이 일회성 claim 경계에 필요한 보안 효과를 더하지 않으므로 하지 않는다.

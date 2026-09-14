@@ -42,7 +42,7 @@
 
 ### 이미지 업로드
 
-`POST /api/feedback/images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
+`POST /api/inquiry-images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
 성공은 정규화한 임시 S3 객체가 모두 저장된 상태를 뜻하며 `201 Created`를 반환한다.
 
 ```json
@@ -64,9 +64,9 @@
 
 ```json
 {
-  "type": "DATA_CORRECTION",
-  "content": "제품 정보가 실제 패키지와 달라요.",
-  "path": "/products/12345",
+  "type": "BUG_REPORT",
+  "content": "검색 버튼을 눌러도 반응이 없어요.",
+  "path": "/products?include=123",
   "imageIds": [
     "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
   ]
