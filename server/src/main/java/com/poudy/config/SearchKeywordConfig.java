@@ -58,10 +58,7 @@ public class SearchKeywordConfig {
         "앰플",
         "에센스"
     );
-    private static final List<String> SEARCH_CLASSES = List.of(
-        "com/poudy/search/domain/SearchKeyword.class",
-        "com/poudy/product/domain/Products.class"
-    );
+    private static final String UNKNOWN_SEARCH_VERSION = "unknown";
 
     @Bean
     public Clock searchKeywordClock() {
@@ -195,16 +192,8 @@ public class SearchKeywordConfig {
         KeywordReportRepository repository = new KeywordReportRepository(paths(env).reportFile(reportFile));
         repository.discardPrevious();
         String catalogVersion = ResourceFingerprint.of(resources, dataDirectory(env), CATALOG_FILES);
-        String searchVersion = searchVersion(env, resources);
+        String searchVersion = env.getProperty(PROPERTY_PREFIX + "search-version", UNKNOWN_SEARCH_VERSION);
         return () -> repository.save(service.report(catalogVersion, searchVersion));
-    }
-
-    private static String searchVersion(Environment env, ResourceLoader resources) throws IOException {
-        String configured = env.getProperty(PROPERTY_PREFIX + "search-version", "");
-        if (!configured.isBlank()) {
-            return configured;
-        }
-        return "build-" + ResourceFingerprint.of(resources, "", SEARCH_CLASSES);
     }
 
     private static KeywordResourceMonitor resourceMonitor(KeywordSnapshotWriter writer) {
