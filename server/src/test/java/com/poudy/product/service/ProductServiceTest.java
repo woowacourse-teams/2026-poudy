@@ -185,6 +185,32 @@ class ProductServiceTest {
         assertThat(output).doesNotContain("event=search_completed");
     }
 
+    @Test
+    @DisplayName("기록이 실패해도 검색 응답은 그대로 나가고 성공이 오류로 뒤집히지 않는다")
+    void keepsResponseWhenLoggingFails(CapturedOutput output) {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
+        given(excludes.idsOf(List.of())).willReturn(Set.of());
+        ProductSearchLogger logger = new ProductSearchLogger() {
+            @Override
+            public void completed(Context context, long elapsedNanos, long resultCount) {
+                throw new IllegalStateException("logging broken");
+            }
+        };
+        ProductService service = new ProductService(repository, categories(), excludes, logger);
+
+        ProductPage result = service.findProducts(
+            new ProductQuery("제품", null, null, null, null, null, null, null, null),
+            ProductSort.NAME_ASC,
+            0,
+            20
+        );
+
+        assertThat(result.totalElements()).isEqualTo(1L);
+        assertThat(output).contains("event=search_recording_failed").doesNotContain("outcome=ERROR");
+    }
+
     private static Product product(Long id) {
         Brand brand = new Brand(1L, "브랜드", null, null);
         Category category = new Category(2L, 1L, "토너", 1);

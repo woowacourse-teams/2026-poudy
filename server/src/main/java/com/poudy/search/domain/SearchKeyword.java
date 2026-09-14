@@ -2,19 +2,49 @@ package com.poudy.search.domain;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class SearchKeyword {
 
+    private static final Pattern SPACES = Pattern.compile("[\\p{Z}\\s\\u0085]+");
+
+    private final String text;
     private final String value;
     private final String reading;
 
     public SearchKeyword(String keyword) {
+        this.text = spaced(keyword);
         this.value = normalize(keyword);
         this.reading = LatinReading.ofKeyword(this.value);
     }
 
+    public String text() {
+        return text;
+    }
+
     public String value() {
         return value;
+    }
+
+    public static String folded(String normalizedText) {
+        return normalizedText.replace(" ", "");
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof SearchKeyword compared)) {
+            return false;
+        }
+        return value.equals(compared.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 
     public boolean matches(String candidate) {
@@ -23,6 +53,10 @@ public final class SearchKeyword {
 
     public boolean isEmpty() {
         return value.isEmpty();
+    }
+
+    public boolean hasAtLeastLetters(int count) {
+        return value.codePointCount(0, value.length()) >= count;
     }
 
     public boolean matchesExactly(String... candidates) {
@@ -85,6 +119,13 @@ public final class SearchKeyword {
         return IndexedText.normalize(text).value();
     }
 
+    private static String spaced(String keyword) {
+        return SPACES.splitAsStream(keyword)
+            .map(SearchKeyword::normalize)
+            .filter(token -> !token.isEmpty())
+            .collect(Collectors.joining(" "));
+    }
+
     private static NameMatch match(String searched, SearchableText candidate) {
         if (searched.isEmpty()) {
             return NameMatch.NONE;
@@ -133,7 +174,10 @@ public final class SearchKeyword {
         return searched.length() == 1 && !Chosung.isDouble(searched);
     }
 
-    static boolean isSpace(char character) {
-        return Character.isWhitespace(character) || Character.isSpaceChar(character);
+    static boolean isIgnorable(char character) {
+        return Character.isWhitespace(character)
+            || Character.isSpaceChar(character)
+            || Character.isISOControl(character)
+            || Character.getType(character) == Character.FORMAT;
     }
 }

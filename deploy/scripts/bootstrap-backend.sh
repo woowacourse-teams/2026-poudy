@@ -32,6 +32,7 @@ ensure_directory "${POUDY_ROOT}/backend" 0750
 ensure_directory "${POUDY_ROOT}/data" 0750
 ensure_directory "${POUDY_ROOT}/state" 0750
 ensure_directory "${POUDY_ROOT}/state/product-views" 0750
+ensure_directory "${POUDY_ROOT}/state/search-ranking" 0750
 install -d -o root -g root -m 0755 /var/lib/poudy/backend-data
 ensure_environment_file "${POUDY_CONFIG_DIR}/backend.env"
 

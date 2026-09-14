@@ -1,0 +1,70 @@
+package com.poudy.searchkeyword.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.poudy.search.domain.SearchKeyword;
+import com.poudy.searchkeyword.domain.BucketWindow;
+import com.poudy.searchkeyword.domain.DictionaryEntry;
+import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingChange;
+import com.poudy.searchkeyword.domain.ranking.RankingFallback;
+import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
+import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+class SearchKeywordRankingPersistenceTest {
+    private static final Instant RECORDED_AT = Instant.parse("2026-09-09T00:00:00Z");
+    private static final Clock AFTER_BOUNDARY = Clock.fixed(RECORDED_AT.plusSeconds(600), ZoneOffset.UTC);
+
+    @TempDir
+    Path directory;
+
+    @Test
+    void restartRebuildsTheSameRankingFromRestoredCountsOnFirstRefresh() {
+        KeywordBuckets recording = new KeywordBuckets(
+            Clock.fixed(RECORDED_AT, ZoneOffset.UTC),
+            new BucketWindow(168, 600, 0)
+        );
+        SearchKeywordService recorder = service(recording);
+        for (int i = 0; i < 5; i++) {
+            recorder.record(new SearchKeyword("토너"));
+        }
+        KeywordSnapshotRepository countsRepository = new KeywordSnapshotRepository(directory.resolve("buckets.json"));
+        countsRepository.save(recording.snapshot());
+
+        KeywordBuckets running = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0));
+        running.restore(recording.snapshot());
+        SearchKeywordService before = service(running);
+        before.refreshRankings();
+
+        KeywordBuckets restored = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0));
+        countsRepository.restoreInto(restored);
+        SearchKeywordService after = service(restored);
+        assertThat(after.rankings()).isEmpty();
+        after.refreshRankings();
+        assertThat(after.rankings())
+            .isEqualTo(before.rankings())
+            .containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+    }
+
+    private static SearchKeywordService service(KeywordBuckets buckets) {
+        DictionaryEntry entry = DictionaryEntry.of("term", "토너", DictionaryEntry.Status.ACTIVE, true, List.of("토너"));
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("data-v1", List.of(entry), ignored -> true);
+        return new SearchKeywordService(
+            dictionary,
+            buckets,
+            ignored -> true,
+            new RankingPolicy(5, 10, Set.of()),
+            RankingFallback.of(List.of())
+        );
+    }
+}

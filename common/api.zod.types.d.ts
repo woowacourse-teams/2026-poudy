@@ -1,5 +1,6 @@
   export namespace Schemas {
-  export type ProductRegistrationRequest = {
+  export type SearchKeywordRequest = { keyword: string }
+export type ProductRegistrationRequest = {
   /**
    * 등록을 요청할 제품명
    */
@@ -105,6 +106,9 @@ export type SkinTypesResponse = {
    */
   items: Array<SkinTypeResponse>;
 }
+export type RankingChangeItem = { movement: string, steps: number }
+export type RankingItem = { rank: number, keyword: string, change?: RankingChangeItem }
+export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
@@ -599,6 +603,24 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
+ * 제출한 검색어를 인기 검색어 집계에 더한다. 지금 상품이 검색되지 않는 검색어는 세지 않는다.
+ */
+export type post_Record = {
+      method: "POST",
+      path: "/api/search-keywords",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.SearchKeywordRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 존재하는 제품의 조회수를 요청마다 1회 증가시킨다. 인증이나 방문자 중복 제거 없이 새로고침과 재방문도 집계한다. 상세·목록 GET은 조회수를 증가시키지 않는다.
  */
 export type post_IncreaseViewCount = {
@@ -704,6 +726,20 @@ export type get_FindSkinTypes = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.SkinTypesResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.
+ */
+export type get_Rankings = {
+      method: "GET",
+      path: "/api/search-keywords/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.RankingsResponse,
 500: Schemas.ProblemDetail,
 },
 
@@ -1074,7 +1110,8 @@ export type get_FindBrand = {
 
      export type EndpointByMethod = {
      post: {
-           "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
+           "/api/search-keywords": Endpoints.post_Record,
+"/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/product-requests": Endpoints.post_Submit,
 "/api/feedback": Endpoints.post_Submit_1,
 "/api/feedback/images": Endpoints.post_UploadImages
@@ -1082,6 +1119,7 @@ export type get_FindBrand = {
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,

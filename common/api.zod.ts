@@ -4,6 +4,9 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
+export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
+
 export type ProductRegistrationRequest = __TypedOpenapi.Schemas.ProductRegistrationRequest;
 export const ProductRegistrationRequest = z.object({ productName: z.string().min(1).max(200), brandName: z.string().min(0).max(100).nullable().optional() });
 
@@ -27,6 +30,15 @@ export const SkinTypeResponse = z.object({ code: z.enum(["DRY", "OILY", "SENSITI
 
 export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
 export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
+
+export type RankingChangeItem = __TypedOpenapi.Schemas.RankingChangeItem;
+export const RankingChangeItem = z.object({ movement: z.string(), steps: z.number().int() });
+
+export type RankingItem = __TypedOpenapi.Schemas.RankingItem;
+export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(), change: RankingChangeItem.optional() });
+
+export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
+export const RankingsResponse = z.object({ items: z.array(RankingItem) });
 
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });

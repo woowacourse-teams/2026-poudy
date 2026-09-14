@@ -33,18 +33,25 @@ public final class TextMatch {
         return range;
     }
 
-    public static Optional<TextMatch> best(List<SearchableText> candidates, SearchKeyword keyword) {
-        TextMatch best = null;
-        for (SearchableText candidate : candidates) {
-            Optional<TextMatch> found = keyword.findMatch(candidate);
-            if (found.isPresent() && isBetterThan(found.get(), best)) {
-                best = found.get();
-            }
-        }
-        return Optional.ofNullable(best);
+    public boolean is(NameMatch match) {
+        return rank.match() == match;
     }
 
-    private static boolean isBetterThan(TextMatch candidate, TextMatch current) {
-        return current == null || candidate.rank().isBetterThan(current.rank());
+    public boolean isBetterThan(TextMatch other) {
+        return rank.isBetterThan(other.rank);
+    }
+
+    public static Optional<TextMatch> best(List<SearchableText> candidates, SearchKeyword keyword) {
+        return candidates.stream()
+            .map(keyword::findMatch)
+            .flatMap(Optional::stream)
+            .reduce(TextMatch::orBetter);
+    }
+
+    private TextMatch orBetter(TextMatch candidate) {
+        if (candidate.isBetterThan(this)) {
+            return candidate;
+        }
+        return this;
     }
 }

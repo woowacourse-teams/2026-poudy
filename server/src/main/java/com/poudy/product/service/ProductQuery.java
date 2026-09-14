@@ -1,6 +1,7 @@
 package com.poudy.product.service;
 
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +25,17 @@ public record ProductQuery(
         includeIngredientIds = copyOf(includeIngredientIds);
         excludeIngredientIds = copyOf(excludeIngredientIds);
         excludeCodes = copyOf(excludeCodes);
+    }
+
+    public boolean hasKeyword() {
+        return keyword != null;
+    }
+
+    public SearchKeyword searchKeyword() {
+        if (!hasKeyword()) {
+            return null;
+        }
+        return new SearchKeyword(keyword);
     }
 
     public boolean hasFilters() {
