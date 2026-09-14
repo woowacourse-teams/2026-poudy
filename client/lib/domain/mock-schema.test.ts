@@ -103,11 +103,18 @@ describe("목 응답과 스키마", () => {
     expect(body).toBeUndefined();
   });
 
+  it("제품 정보 정정 요청은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/products/1/correction-requests", ...json({ content: "열 자가 넘는 내용" }));
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
+  });
+
   it("이미지 업로드는 FeedbackImageUploadResponse 를 지킨다", async () => {
     const form = new FormData();
     form.append("images", new File(["a"], "a.png", { type: "image/png" }));
 
-    const { status, body } = await post("/feedback/images", form);
+    const { status, body } = await post("/inquiry-images", form);
 
     expect(status).toBe(201);
     expect(deepStrict(FeedbackImageUploadResponse).safeParse(body)).toMatchObject({ success: true });
@@ -148,7 +155,13 @@ describe("목 응답과 스키마", () => {
     const tested = new Set(cases.map(([, path]) => path.split("?")[0].replace(/\/\d+$/, "/:id")));
 
     /* 보내는 요청은 it.each 로 따로 검사하므로 여기서 함께 센다. */
-    const postPaths = ["/feedback", "/feedback/images", "/product-requests", "/products/:id/views"];
+    const postPaths = [
+      "/feedback",
+      "/products/:id/correction-requests",
+      "/inquiry-images",
+      "/product-requests",
+      "/products/:id/views",
+    ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);
   });

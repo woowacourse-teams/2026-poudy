@@ -41,11 +41,11 @@ export const INQUIRY_COPY: Record<InquiryChoice, InquiryCopy> = {
   },
 };
 
-/** 화면에 보여 주는 차례. DATA_CORRECTION 은 제품 정보 정정 경로에서만 쓰므로 여기 없다. */
+/** 화면에 보여 주는 차례. 제품 정보 정정은 대상 제품이 있는 경로에서만 받으므로 여기 없다. */
 export const INQUIRY_CHOICES: readonly InquiryChoice[] = ["BUG_REPORT", "IMPROVEMENT", PRODUCT_REQUEST, "OTHER"];
 
 /** 제품 정보 정정은 유형을 고르지 않고 들어오므로 문구를 따로 둔다. */
-export const DATA_CORRECTION_COPY = {
+export const PRODUCT_CORRECTION_COPY = {
   title: "제품 정보가 정확하지 않나요?",
   fieldLabel: "제보 내용",
   placeholder: "성분이나 용량, 가격 중 무엇이 다른지 실제 정보와 함께 적어주시면 확인이 빨라요.",

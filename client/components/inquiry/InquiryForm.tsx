@@ -14,7 +14,12 @@ import { TypeField } from "./TypeField";
 
 import { ApiError } from "@/lib/api/client";
 import type { FeedbackType } from "@/lib/api/feedback";
-import { CONTENT_MIN_LENGTH, requestProductRegistration, sendFeedback } from "@/lib/api/feedback";
+import {
+  CONTENT_MIN_LENGTH,
+  requestProductCorrection,
+  requestProductRegistration,
+  sendFeedback,
+} from "@/lib/api/feedback";
 import { useImageUpload } from "@/lib/hooks/useImageUpload";
 
 const DONE_DESCRIPTION = "보내주신 내용을 확인해 반영할게요.";
@@ -35,16 +40,16 @@ const messageOf = (error: unknown): string => {
   return "접수하지 못했어요. 잠시 뒤 다시 시도해주세요.";
 };
 
-type FixedType = {
-  /** 유형이 정해진 채로 들어올 때 쓴다. 유형 버튼을 그리지 않는다. */
-  readonly type: FeedbackType;
+type FixedProduct = {
+  /** 정정 대상 제품이 정해진 채로 들어올 때 쓴다. 유형 버튼을 그리지 않고 정정 요청으로 보낸다. */
+  readonly productId: number;
   readonly fieldLabel: string;
   readonly placeholder: string;
   /** 대상 제품처럼 입력 위에 두는 내용. */
   readonly header: React.ReactNode;
 };
 
-export function InquiryForm({ originPath, fixed }: { readonly originPath: string; readonly fixed?: FixedType }) {
+export function InquiryForm({ originPath, fixed }: { readonly originPath?: string; readonly fixed?: FixedProduct }) {
   const [choice, setChoice] = useState<InquiryChoice | undefined>(undefined);
   const [content, setContent] = useState("");
   const [productName, setProductName] = useState("");
@@ -89,9 +94,15 @@ export function InquiryForm({ originPath, fixed }: { readonly originPath: string
     try {
       if (productMode) {
         await requestProductRegistration({ productName: productName.trim(), brandName });
+      } else if (fixed) {
+        await requestProductCorrection({
+          productId: fixed.productId,
+          content: content.trim(),
+          imageIds: images.imageIds,
+        });
       } else {
         await sendFeedback({
-          type: fixed?.type ?? (choice as FeedbackType),
+          type: choice as FeedbackType,
           content: content.trim(),
           originPath,
           imageIds: images.imageIds,

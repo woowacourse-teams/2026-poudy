@@ -357,7 +357,15 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post("*/api/feedback/images", async ({ request }) => {
+  http.post("*/api/products/:productId/correction-requests", async ({ request }) => {
+    const body = (await request.json()) as { content?: string };
+    const forced = forcedError(body.content ?? "");
+    if (forced) return forced;
+
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("*/api/inquiry-images", async ({ request }) => {
     const form = await request.formData();
     const images = form.getAll("images").filter((value): value is File => value instanceof File);
 

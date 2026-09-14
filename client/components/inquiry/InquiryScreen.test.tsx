@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ back: vi.fn(), replace: 
 const CONTENT = "열 자가 넘는 문의 내용입니다";
 
 /* 경로를 고르는 일은 서버 컴포넌트가 맡으므로 화면에는 정해진 값이 들어온다. */
-const renderWith = (originPath: string) => render(<InquiryScreen originPath={originPath} />);
+const renderWith = (originPath?: string) => render(<InquiryScreen originPath={originPath} />);
 
 const submit = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole("radio", { name: "그 밖의 문의가 있어요" }));
@@ -45,22 +45,24 @@ describe("문의를 연 화면의 경로", () => {
     await waitFor(() => expect(sentPath()).toBe("/products/123"));
   });
 
-  it("from 이 없으면 홈을 보낸다", async () => {
+  it("from 이 없으면 홈으로 채우지 않고 경로 없이 보낸다", async () => {
     const user = userEvent.setup();
-    renderWith("/");
+    renderWith(toOriginPath(undefined));
 
     await submit(user);
 
-    await waitFor(() => expect(sentPath()).toBe("/"));
+    await waitFor(() => expect(sendFeedback).toHaveBeenCalled());
+    expect(sentPath()).toBeUndefined();
   });
 
-  it("우리 화면의 경로가 아니면 홈을 보낸다", async () => {
+  it("우리 화면의 경로가 아니면 경로 없이 보낸다", async () => {
     const user = userEvent.setup();
     renderWith(toOriginPath("https://example.com/spam"));
 
     await submit(user);
 
-    await waitFor(() => expect(sentPath()).toBe("/"));
+    await waitFor(() => expect(sendFeedback).toHaveBeenCalled());
+    expect(sentPath()).toBeUndefined();
   });
 
   it("어떤 조건을 걸고 있었는지 함께 보낸다", async () => {
