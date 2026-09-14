@@ -47,13 +47,7 @@ public final class KeywordBuckets {
         lock.lock();
         try {
             advance();
-            return new KeywordBucketView(
-                completedCounts(),
-                window.oldestStart(maxObservedBucketStart),
-                maxObservedBucketStart,
-                startedAt,
-                clockRegressed
-            );
+            return new KeywordBucketView(completedCounts());
         } finally {
             lock.unlock();
         }
@@ -171,7 +165,7 @@ public final class KeywordBuckets {
             return Optional.empty();
         }
         Instant oldest = window.oldestStart(latest);
-        return Optional.of(new KeywordBucketView(sumOf(oldest, latest), oldest, latest, startedAt, clockRegressed));
+        return Optional.of(new KeywordBucketView(sumOf(oldest, latest)));
     }
 
     private Instant observedFrom() {

@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.poudy.exception.GlobalExceptionHandler;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingChange;
 import com.poudy.searchkeyword.service.SearchKeywordService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class SearchKeywordControllerTest {
     void exposesOnlyRankAndKeywordAndEmptyArray() throws Exception {
         SearchKeywordService service = mock(SearchKeywordService.class);
         MockMvc mvc = MockMvcBuilders.standaloneSetup(new SearchKeywordController(service)).build();
-        given(service.rankings()).willReturn(List.of(new RankedKeyword(1, "토너")));
+        given(service.rankings()).willReturn(List.of(new RankedKeyword(1, "토너", RankingChange.unknown())));
         mvc.perform(get("/api/search-keywords/rankings?limit=100"))
             .andExpect(status().isOk()).andExpect(content().json("{\"items\":[{\"rank\":1,\"keyword\":\"토너\"}]}"));
         given(service.rankings()).willReturn(List.of());

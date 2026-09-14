@@ -8,6 +8,7 @@ import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingChange;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
@@ -52,7 +53,7 @@ class SearchKeywordRankingPersistenceTest {
         after.refreshRankings();
         assertThat(after.rankings())
             .isEqualTo(before.rankings())
-            .containsExactly(new RankedKeyword(1, "토너"));
+            .containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
     }
 
     private static SearchKeywordService service(KeywordBuckets buckets) {
@@ -63,8 +64,7 @@ class SearchKeywordRankingPersistenceTest {
             buckets,
             ignored -> true,
             new RankingPolicy(5, 10, Set.of()),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
     }
 }

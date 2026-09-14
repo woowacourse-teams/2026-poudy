@@ -1,12 +1,10 @@
 package com.poudy.searchkeyword.service;
 
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBucketView;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
@@ -22,7 +20,6 @@ public class SearchKeywordService {
     private final SearchKeywordDictionary dictionary;
     private final KeywordBuckets successful;
     private final KeywordSearch search;
-    private final long reportMinCount;
     private final RankingPolicy rankingPolicy;
     private final RankingFallback rankingFallback;
     private final AtomicReference<List<RankedKeyword>> cachedRankings = new AtomicReference<>(List.of());
@@ -32,16 +29,11 @@ public class SearchKeywordService {
         KeywordBuckets successful,
         KeywordSearch search,
         RankingPolicy rankingPolicy,
-        long reportMinCount,
         RankingFallback rankingFallback
     ) {
-        if (reportMinCount < 1) {
-            throw new IllegalArgumentException("Report minimum count must be positive");
-        }
         this.dictionary = dictionary;
         this.successful = successful;
         this.search = search;
-        this.reportMinCount = reportMinCount;
         this.rankingPolicy = rankingPolicy;
         this.rankingFallback = rankingFallback;
     }
@@ -83,15 +75,4 @@ public class SearchKeywordService {
         );
     }
 
-    public ImprovementReport report(String catalogVersion, String searchVersion) {
-        KeywordBucketView view = successful.view();
-        return new ImprovementReport(
-            dictionary.version(),
-            catalogVersion,
-            searchVersion,
-            view.coverage(dictionary),
-            ReportSection.unresolvedOf(view, dictionary, reportMinCount),
-            view.shadowRank(rankingPolicy)
-        );
-    }
 }

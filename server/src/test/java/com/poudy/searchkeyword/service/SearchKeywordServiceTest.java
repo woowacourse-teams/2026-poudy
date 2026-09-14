@@ -2,18 +2,15 @@ package com.poudy.searchkeyword.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
-import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
+import com.poudy.searchkeyword.domain.ranking.RankingChange;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.time.Clock;
@@ -80,7 +77,8 @@ class SearchKeywordServiceTest {
         service.refreshRankings();
 
         assertThat(successful.view().counts()).containsOnlyKeys("독도 토너", "독도토너");
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너"));
+        assertThat(service.rankings())
+            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unknown()));
     }
 
     @Test
@@ -94,95 +92,22 @@ class SearchKeywordServiceTest {
         assertThat(old.rankings()).isEmpty();
         SearchKeywordService updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         updated.refreshRankings();
-        assertThat(updated.rankings()).containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너"));
+        assertThat(updated.rankings())
+            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unknown()));
         assertThat(successful.view().counts()).containsOnlyKeys("독도 토너");
     }
 
     @Test
-    void shadowRankingRanksInputsThatTheDictionaryCannotResolve() {
-        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
-        for (int i = 0; i < 5; i++) {
-            service.record(new SearchKeyword("토너"));
-        }
-        for (int i = 0; i < 9; i++) {
-            service.record(new SearchKeyword("사전에없는말"));
-        }
-        service.record(new SearchKeyword("적은입력"));
-        closeBucket();
-
-        ImprovementReport report = service.report("catalog", "code");
-
-        assertThat(report.shadowRanking()).containsExactly(
-            new RankedKeyword(1, "사전에없는말"),
-            new RankedKeyword(2, "토너")
-        );
-        service.refreshRankings();
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너"));
-    }
-
-    @Test
-    void keepsOnlyInputsWithResultsAndSeparatesReportThreshold() {
+    void keepsOnlyInputsWithResults() {
         SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
             service.record(new SearchKeyword("없는검색"));
-        }
-        for (int i = 0; i < 19; i++) {
             service.record(new SearchKeyword("미등록"));
         }
         closeBucket();
-        assertThat(service.report("catalog", "code").nonzeroUnresolved().items()).isEmpty();
-        service.record(new SearchKeyword("미등록"));
-        closeBucket();
-        assertThat(service.report("catalog", "code").nonzeroUnresolved().items())
-            .extracting(ReportItem::normalizedQuery, ReportItem::count)
-            .containsExactly(tuple("미등록", 20L));
         assertThat(successful.view().counts()).containsOnlyKeys("미등록");
         service.refreshRankings();
         assertThat(service.rankings()).isEmpty();
-    }
-
-    @Test
-    void reportGroupsSpacingVariantsAndCarriesTheResolvedShare() {
-        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
-        for (int i = 0; i < 12; i++) {
-            service.record(new SearchKeyword("없는 말"));
-        }
-        for (int i = 0; i < 9; i++) {
-            service.record(new SearchKeyword("없는말"));
-        }
-        for (int i = 0; i < 4; i++) {
-            service.record(new SearchKeyword("토너"));
-        }
-        closeBucket();
-
-        ImprovementReport report = service.report("catalog", "code");
-
-        assertThat(report.nonzeroUnresolved().items())
-            .extracting(ReportItem::normalizedQuery, ReportItem::count)
-            .containsExactly(tuple("없는 말", 21L));
-        KeywordCoverage coverage = report.coverage();
-        assertThat(coverage.total()).isEqualTo(25);
-        assertThat(coverage.resolved()).isEqualTo(4);
-        assertThat(coverage.distinctKeys()).isEqualTo(3);
-    }
-
-    @Test
-    void reportShowsUnresolvedInputsAsTyped() {
-        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
-        for (int i = 0; i < 20; i++) {
-            service.record(new SearchKeyword("a@example.com"));
-            service.record(new SearchKeyword("미등록"));
-        }
-        closeBucket();
-        assertThat(successful.view().counts()).containsKeys("a@example.com", "미등록");
-        assertThat(service.report("catalog", "code").nonzeroUnresolved().items())
-            .extracting(ReportItem::normalizedQuery, ReportItem::count)
-            .containsExactly(
-                tuple("a@example.com", 20L),
-                tuple("미등록", 20L)
-            );
-        assertThat(service.report("catalog", "code").shadowRanking())
-            .containsExactly(new RankedKeyword(1, "a@example.com"), new RankedKeyword(2, "미등록"));
     }
 
     @Test
@@ -216,14 +141,14 @@ class SearchKeywordServiceTest {
         closeBucket();
         service.refreshRankings();
         List<RankedKeyword> published = service.rankings();
-        assertThat(published).containsExactly(new RankedKeyword(1, "토너"));
-        assertThatThrownBy(() -> published.add(new RankedKeyword(2, "크림")))
+        assertThat(published).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThatThrownBy(() -> published.add(new RankedKeyword(2, "크림", RankingChange.unknown())))
             .isInstanceOf(UnsupportedOperationException.class);
 
         for (int i = 0; i < 6; i++) {
             service.record(new SearchKeyword("크림"));
         }
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너"));
+        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
         closeBucket();
 
         ExecutorService readers = Executors.newFixedThreadPool(4);
@@ -236,17 +161,17 @@ class SearchKeywordServiceTest {
         assertThat(readers.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
         for (Future<List<RankedKeyword>> future : futures) {
             assertThat(future.get()).isIn(
-                List.of(new RankedKeyword(1, "토너")),
+                List.of(new RankedKeyword(1, "토너", RankingChange.unknown())),
                 List.of(
-                    new RankedKeyword(1, "크림"),
-                    new RankedKeyword(2, "토너")
+                    new RankedKeyword(1, "크림", RankingChange.unknown()),
+                    new RankedKeyword(2, "토너", RankingChange.unknown())
                 )
             );
         }
         service.refreshRankings();
         assertThat(service.rankings()).containsExactly(
-            new RankedKeyword(1, "크림"),
-            new RankedKeyword(2, "토너")
+            new RankedKeyword(1, "크림", RankingChange.unknown()),
+            new RankedKeyword(2, "토너", RankingChange.unknown())
         );
     }
 
@@ -259,8 +184,7 @@ class SearchKeywordServiceTest {
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
         for (int i = 0; i < 5; i++) {
             failing.record(new SearchKeyword("토너"));
@@ -268,7 +192,7 @@ class SearchKeywordServiceTest {
         throwingClock.now = throwingClock.now.plus(10, ChronoUnit.MINUTES);
         failing.refreshRankings();
         List<RankedKeyword> previous = failing.rankings();
-        assertThat(previous).containsExactly(new RankedKeyword(1, "토너"));
+        assertThat(previous).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
         throwingClock.fail = true;
         assertThat(failing.rankings()).isEqualTo(previous);
         failing.refreshRankings();
@@ -284,8 +208,7 @@ class SearchKeywordServiceTest {
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
         for (int i = 0; i < 5; i++) {
             service.record(new SearchKeyword("토너"));
@@ -313,8 +236,7 @@ class SearchKeywordServiceTest {
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
         for (DictionaryEntry entry : entries) {
             for (int i = 0; i < (entry.id().endsWith("19") ? 1 : 5); i++) {
@@ -349,8 +271,7 @@ class SearchKeywordServiceTest {
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of("blocked")),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
         for (int i = 0; i < 5; i++) {
             service.record(new SearchKeyword("자격"));
@@ -363,7 +284,7 @@ class SearchKeywordServiceTest {
         }
         closeBucket();
         service.refreshRankings();
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "자격"));
+        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "자격", RankingChange.unknown()));
         assertThat(calls).hasValue(1);
     }
 
@@ -414,8 +335,7 @@ class SearchKeywordServiceTest {
             successful,
             CATALOG,
             new RankingPolicy(5, 10, blocked),
-            20,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
     }
 

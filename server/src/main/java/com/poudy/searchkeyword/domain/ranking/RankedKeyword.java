@@ -8,10 +8,6 @@ public final class RankedKeyword {
     private final String keyword;
     private final RankingChange change;
 
-    public RankedKeyword(int rank, String keyword) {
-        this(rank, keyword, RankingChange.unknown());
-    }
-
     public RankedKeyword(int rank, String keyword, RankingChange change) {
         this.rank = rank;
         this.keyword = keyword;

@@ -20,9 +20,9 @@ class KeywordRankingTest {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 
         List<RankedKeyword> rankings = KeywordRanking
-            .of(Map.of("토너", 5L, "크림", 4L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 5L, "크림", 4L), dictionary, POLICY, RankingFallback.of(List.of()));
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
     }
 
     @Test
@@ -31,9 +31,12 @@ class KeywordRankingTest {
         SearchKeywordDictionary dictionary = dictionary(toner, entry("term:2", "크림"));
 
         List<RankedKeyword> rankings = KeywordRanking
-            .of(Map.of("토너", 3L, "toner", 3L, "크림", 5L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 3L, "toner", 3L, "크림", 5L), dictionary, POLICY, RankingFallback.of(List.of()));
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"), new RankedKeyword(2, "크림"));
+        assertThat(rankings).containsExactly(
+            new RankedKeyword(1, "토너", RankingChange.unknown()),
+            new RankedKeyword(2, "크림", RankingChange.unknown())
+        );
     }
 
     @Test
@@ -45,12 +48,12 @@ class KeywordRankingTest {
         );
 
         List<RankedKeyword> rankings = KeywordRanking
-            .of(Map.of("토너", 5L, "크림", 5L, "크림오일", 5L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 5L, "크림", 5L, "크림오일", 5L), dictionary, POLICY, RankingFallback.of(List.of()));
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "크림"),
-            new RankedKeyword(2, "크림오일"),
-            new RankedKeyword(3, "토너")
+            new RankedKeyword(1, "크림", RankingChange.unknown()),
+            new RankedKeyword(2, "크림오일", RankingChange.unknown()),
+            new RankedKeyword(3, "토너", RankingChange.unknown())
         );
     }
 
@@ -66,10 +69,13 @@ class KeywordRankingTest {
             Map.of("토너", 9L, "크림", 8L, "세럼", 7L),
             dictionary,
             new RankingPolicy(5, 2, Set.of()),
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"), new RankedKeyword(2, "크림"));
+        assertThat(rankings).containsExactly(
+            new RankedKeyword(1, "토너", RankingChange.unknown()),
+            new RankedKeyword(2, "크림", RankingChange.unknown())
+        );
     }
 
     @Test
@@ -80,10 +86,10 @@ class KeywordRankingTest {
             Map.of("토너", 9L, "크림", 8L),
             dictionary,
             new RankingPolicy(5, 10, Set.of("term:1")),
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림"));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림", RankingChange.unknown()));
     }
 
     @Test
@@ -93,9 +99,9 @@ class KeywordRankingTest {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), inactive, ineligible);
 
         List<RankedKeyword> rankings = KeywordRanking
-            .of(Map.of("토너", 5L, "크림", 9L, "세럼", 9L, "미해석", 9L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 5L, "크림", 9L, "세럼", 9L, "미해석", 9L), dictionary, POLICY, RankingFallback.of(List.of()));
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
     }
 
     @Test
@@ -107,9 +113,9 @@ class KeywordRankingTest {
         );
 
         List<RankedKeyword> rankings = KeywordRanking
-            .of(Map.of("토너", 9L, "크림", 5L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 9L, "크림", 5L), dictionary, POLICY, RankingFallback.of(List.of()));
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림"));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림", RankingChange.unknown()));
     }
 
     @Test
@@ -125,9 +131,9 @@ class KeywordRankingTest {
             .of(Map.of("토너", 9L, "크림", 5L), dictionary, new RankingPolicy(5, 3, Set.of()), fallback);
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "토너"),
-            new RankedKeyword(2, "크림"),
-            new RankedKeyword(3, "세럼")
+            new RankedKeyword(1, "토너", RankingChange.unknown()),
+            new RankedKeyword(2, "크림", RankingChange.unknown()),
+            new RankedKeyword(3, "세럼", RankingChange.unknown())
         );
     }
 
@@ -142,7 +148,7 @@ class KeywordRankingTest {
 
         List<RankedKeyword> rankings = KeywordRanking.of(Map.of(), dictionary, POLICY, fallback);
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
     }
 
     @Test
@@ -158,7 +164,7 @@ class KeywordRankingTest {
             Map.of("크림", 9L, "토너", 8L),
             dictionary,
             POLICY,
-            RankingFallback.none()
+            RankingFallback.of(List.of())
         );
 
         assertThat(rankings).containsExactly(
@@ -173,36 +179,13 @@ class KeywordRankingTest {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 
         List<RankedKeyword> withoutComparison = KeywordRanking
-            .of(Map.of("토너", 9L), dictionary, POLICY, RankingFallback.none());
+            .of(Map.of("토너", 9L), dictionary, POLICY, RankingFallback.of(List.of()));
         List<RankedKeyword> filled = KeywordRanking
             .of(Map.of("토너", 9L), Map.of("토너", 9L), dictionary, POLICY, RankingFallback.of(List.of("크림")));
 
         assertThat(withoutComparison.getFirst().change().isKnown()).isFalse();
         assertThat(filled.get(0).change()).isEqualTo(RankingChange.moved(1, 1));
         assertThat(filled.get(1).change().isKnown()).isFalse();
-    }
-
-    @Test
-    void shadowRankingCountsInputsWithoutTheDictionary() {
-        List<RankedKeyword> shadow = KeywordRanking.shadowOf(
-            Map.of("토너", 9L, "ㄷㄷㅌㄴ", 8L, "사전에없는말", 7L, "적은입력", 4L),
-            POLICY
-        );
-
-        assertThat(shadow).containsExactly(
-            new RankedKeyword(1, "토너"),
-            new RankedKeyword(2, "ㄷㄷㅌㄴ"),
-            new RankedKeyword(3, "사전에없는말")
-        );
-    }
-
-    @Test
-    void shadowRankingKeepsTheSameThresholdAndSizeAsThePublicRanking() {
-        Map<String, Long> counts = Map.of("가", 9L, "나", 8L, "다", 7L, "라", 6L);
-
-        assertThat(KeywordRanking.shadowOf(counts, new RankingPolicy(5, 2, Set.of())))
-            .containsExactly(new RankedKeyword(1, "가"), new RankedKeyword(2, "나"));
-        assertThat(KeywordRanking.shadowOf(counts, new RankingPolicy(7, 10, Set.of()))).hasSize(3);
     }
 
     private static SearchKeywordDictionary dictionary(DictionaryEntry... entries) {

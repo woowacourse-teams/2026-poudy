@@ -19,10 +19,6 @@ public final class RankingFallback {
         return new RankingFallback(normalized);
     }
 
-    public static RankingFallback none() {
-        return new RankingFallback(List.of());
-    }
-
     List<String> publishableNames(SearchKeywordDictionary dictionary) {
         return keywords.stream()
             .map(dictionary::resolve)

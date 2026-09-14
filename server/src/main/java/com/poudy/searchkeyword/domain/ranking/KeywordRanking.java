@@ -93,16 +93,6 @@ public final class KeywordRanking {
             .toList();
     }
 
-    public static List<RankedKeyword> shadowOf(Map<String, Long> counts, RankingPolicy policy) {
-        List<String> selected = counts.entrySet().stream()
-            .filter(entry -> policy.qualifies(entry.getValue()))
-            .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry::getKey))
-            .limit(policy.size())
-            .map(Map.Entry::getKey)
-            .toList();
-        return numbered(selected);
-    }
-
     private static Map<DictionaryEntry, Long> totalsByEntry(
         Map<String, Long> counts,
         SearchKeywordDictionary dictionary
@@ -119,9 +109,4 @@ public final class KeywordRanking {
             .thenComparing(Comparator.naturalOrder());
     }
 
-    private static List<RankedKeyword> numbered(List<String> keywords) {
-        return IntStream.range(0, keywords.size())
-            .mapToObj(index -> new RankedKeyword(index + 1, keywords.get(index)))
-            .toList();
-    }
 }

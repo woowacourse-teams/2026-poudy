@@ -8,7 +8,7 @@ public final class KeywordCoverage {
     private final long resolved;
     private final int distinctKeys;
 
-    public KeywordCoverage(long total, long resolved, int distinctKeys) {
+    private KeywordCoverage(long total, long resolved, int distinctKeys) {
         this.total = total;
         this.resolved = resolved;
         this.distinctKeys = distinctKeys;

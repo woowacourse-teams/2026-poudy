@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class KeywordMaintenanceTest {
 
     @Test
-    void savesSnapshotAndSwallowsReportFailure() {
+    void savesSnapshotAndSamplesMonitors() {
         KeywordBuckets buckets = new KeywordBuckets(
             Clock.fixed(Instant.parse("2026-09-11T10:30:00Z"), ZoneOffset.UTC),
             new BucketWindow(168, 600, 0)
@@ -28,10 +28,7 @@ class KeywordMaintenanceTest {
         KeywordMaintenance maintenance = new KeywordMaintenance(
             new KeywordSnapshotWriter(buckets, repository),
             new KeywordStoreMonitor(buckets, "NONZERO", new SimpleMeterRegistry()),
-            new KeywordResourceMonitor(() -> 0L, () -> -1L),
-            () -> {
-                throw new IllegalStateException("report export failed");
-            }
+            new KeywordResourceMonitor(() -> 0L, () -> -1L)
         );
 
         assertThatCode(maintenance::run).doesNotThrowAnyException();

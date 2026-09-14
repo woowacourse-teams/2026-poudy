@@ -12,18 +12,15 @@ public final class KeywordMaintenance implements Runnable {
     private final KeywordSnapshotWriter writer;
     private final KeywordStoreMonitor storeMonitor;
     private final KeywordResourceMonitor resourceMonitor;
-    private final Runnable reportExport;
 
     public KeywordMaintenance(
         KeywordSnapshotWriter writer,
         KeywordStoreMonitor storeMonitor,
-        KeywordResourceMonitor resourceMonitor,
-        Runnable reportExport
+        KeywordResourceMonitor resourceMonitor
     ) {
         this.writer = writer;
         this.storeMonitor = storeMonitor;
         this.resourceMonitor = resourceMonitor;
-        this.reportExport = reportExport;
     }
 
     @Override
@@ -32,7 +29,6 @@ public final class KeywordMaintenance implements Runnable {
             writer.run();
             storeMonitor.sample();
             resourceMonitor.sample();
-            reportExport.run();
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_maintenance_failed");
         }

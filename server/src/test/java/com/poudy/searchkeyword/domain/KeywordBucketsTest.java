@@ -114,7 +114,6 @@ class KeywordBucketsTest {
         buckets.record("토너");
         clock.set(START.plus(168, ChronoUnit.HOURS));
         assertThat(buckets.view().counts()).containsEntry("토너", 1L);
-        assertThat(buckets.view().windowStart()).isEqualTo(START);
         clock.set(START.plus(168, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
         assertThat(buckets.view().counts()).isEmpty();
         assertThat(buckets.statistics().uniqueKeyCount()).isZero();
@@ -174,13 +173,13 @@ class KeywordBucketsTest {
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
         regressionClock.set(Instant.parse("2026-09-06T10:29:59Z"));
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.CLOCK_REGRESSION);
-        assertThat(buckets.view().clockRegressed()).isTrue();
+        assertThat(buckets.statistics().clockRegressed()).isTrue();
         KeywordBucketSnapshot snapshot = buckets.snapshot();
         assertThat(snapshot.savedAt()).isAfterOrEqualTo(snapshot.maxObservedBucketStart());
         assertThat(snapshot.buckets().getFirst().counts()).containsEntry("토너", 2L);
         regressionClock.set(Instant.parse("2026-09-06T10:30:40Z"));
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
-        assertThat(buckets.view().clockRegressed()).isFalse();
+        assertThat(buckets.statistics().clockRegressed()).isFalse();
     }
 
     @Test

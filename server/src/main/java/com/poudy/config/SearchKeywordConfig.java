@@ -10,7 +10,6 @@ import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.logging.KeywordResourceMonitor;
 import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
-import com.poudy.searchkeyword.repository.KeywordReportRepository;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
 import com.poudy.searchkeyword.service.KeywordMaintenance;
@@ -41,14 +40,6 @@ public class SearchKeywordConfig {
 
     private static final String PROPERTY_PREFIX = "poudy.search-keywords.";
     private static final String DICTIONARY_FILE = "search_keywords.json";
-    private static final List<String> CATALOG_FILES = List.of(
-        "brands.json",
-        "categories.json",
-        "products.json",
-        "ingredients.json",
-        "tags.json",
-        "exclude_codes.json"
-    );
     private static final List<String> DEFAULT_KEYWORDS = List.of(
         "토너",
         "선크림",
@@ -61,7 +52,6 @@ public class SearchKeywordConfig {
         "앰플",
         "에센스"
     );
-    private static final String UNKNOWN_SEARCH_VERSION = "unknown";
 
     @Bean
     public Clock searchKeywordClock() {
@@ -92,7 +82,7 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) {
-        return new KeywordSnapshotRepository(paths(env).stateFile());
+        return new KeywordSnapshotRepository(Path.of(env.getRequiredProperty(PROPERTY_PREFIX + "state-file")));
     }
 
     @Bean
@@ -133,7 +123,6 @@ public class SearchKeywordConfig {
             buckets,
             search,
             rankingPolicy,
-            SearchKeywordPolicy.REPORT_MIN_COUNT,
             RankingFallback.of(defaultKeywords(env))
         );
     }
@@ -159,19 +148,14 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordMaintenance keywordMaintenance(
-        Environment env,
-        ResourceLoader resources,
         KeywordBuckets buckets,
         KeywordSnapshotWriter writer,
-        SearchKeywordService service,
         MeterRegistry metrics
-    )
-        throws IOException {
+    ) {
         return new KeywordMaintenance(
             writer,
             new KeywordStoreMonitor(buckets, "NONZERO", metrics),
-            resourceMonitor(writer),
-            reportExport(env, resources, service)
+            resourceMonitor(writer)
         );
     }
 
@@ -199,24 +183,6 @@ public class SearchKeywordConfig {
 
     private static String dataDirectory(Environment env) {
         return env.getProperty("poudy.data-dir", "");
-    }
-
-    private static SearchKeywordPaths paths(Environment env) {
-        return new SearchKeywordPaths(env.getProperty(PROPERTY_PREFIX + "state-file", ""));
-    }
-
-    private static Runnable reportExport(Environment env, ResourceLoader resources, SearchKeywordService service)
-        throws IOException {
-        String reportFile = env.getProperty(PROPERTY_PREFIX + "report-file", "");
-        if (reportFile.isBlank()) {
-            return () -> {
-            };
-        }
-        KeywordReportRepository repository = new KeywordReportRepository(paths(env).reportFile(reportFile));
-        repository.discardPrevious();
-        String catalogVersion = ResourceFingerprint.of(resources, dataDirectory(env), CATALOG_FILES);
-        String searchVersion = env.getProperty(PROPERTY_PREFIX + "search-version", UNKNOWN_SEARCH_VERSION);
-        return () -> repository.save(service.report(catalogVersion, searchVersion));
     }
 
     private static KeywordResourceMonitor resourceMonitor(KeywordSnapshotWriter writer) {
