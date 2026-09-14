@@ -146,18 +146,27 @@ public class SearchKeywordConfig {
         return Arrays.stream(configured.split(",")).map(String::trim).filter(keyword -> !keyword.isBlank()).toList();
     }
 
+    @Bean(destroyMethod = "saveBeforeShutdown")
+    public KeywordSnapshotWriter keywordSnapshotWriter(
+        KeywordBuckets buckets,
+        KeywordSnapshotRepository repository,
+        MeterRegistry metrics
+    ) {
+        KeywordSnapshotWriter writer = new KeywordSnapshotWriter(buckets, repository);
+        registerSnapshotGauges(metrics, writer);
+        return writer;
+    }
+
     @Bean
     public KeywordMaintenance keywordMaintenance(
         Environment env,
         ResourceLoader resources,
         KeywordBuckets buckets,
-        KeywordSnapshotRepository repository,
+        KeywordSnapshotWriter writer,
         SearchKeywordService service,
         MeterRegistry metrics
     )
         throws IOException {
-        KeywordSnapshotWriter writer = new KeywordSnapshotWriter(buckets, repository);
-        registerSnapshotGauges(metrics, writer);
         return new KeywordMaintenance(
             writer,
             new KeywordStoreMonitor(buckets, "NONZERO", metrics),

@@ -29,6 +29,15 @@ public final class KeywordSnapshotWriter implements Runnable {
         if (!writer.tryLock()) {
             return;
         }
+        saveHoldingLock();
+    }
+
+    public void saveBeforeShutdown() {
+        writer.lock();
+        saveHoldingLock();
+    }
+
+    private void saveHoldingLock() {
         try {
             repository.save(buckets.snapshot());
             lastSuccessfulSaveAt = Instant.now();
