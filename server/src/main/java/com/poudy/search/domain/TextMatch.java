@@ -42,17 +42,16 @@ public final class TextMatch {
     }
 
     public static Optional<TextMatch> best(List<SearchableText> candidates, SearchKeyword keyword) {
-        TextMatch best = null;
-        for (SearchableText candidate : candidates) {
-            Optional<TextMatch> found = keyword.findMatch(candidate);
-            if (found.isPresent() && isBetterThan(found.get(), best)) {
-                best = found.get();
-            }
-        }
-        return Optional.ofNullable(best);
+        return candidates.stream()
+            .map(keyword::findMatch)
+            .flatMap(Optional::stream)
+            .reduce(TextMatch::orBetter);
     }
 
-    private static boolean isBetterThan(TextMatch candidate, TextMatch current) {
-        return current == null || candidate.isBetterThan(current);
+    private TextMatch orBetter(TextMatch candidate) {
+        if (candidate.isBetterThan(this)) {
+            return candidate;
+        }
+        return this;
     }
 }
