@@ -11,6 +11,7 @@ User=poudy
 Group=poudy
 WorkingDirectory=/opt/poudy/backend
 Environment=POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
+Environment=POUDY_SEARCH_KEYWORDS_STATE_FILE=/opt/poudy/state/search-ranking/buckets.json
 EnvironmentFile=-/etc/poudy/backend.env
 Environment=SPRING_PROFILES_ACTIVE=prod
 Environment=POUDY_DATA_DIR=/opt/poudy/data
