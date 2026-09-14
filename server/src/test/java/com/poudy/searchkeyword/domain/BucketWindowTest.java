@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 class BucketWindowTest {
 
     private static final Instant LATEST = Instant.parse("2026-09-11T10:30:00Z");
-    private final BucketWindow window = new BucketWindow(168, 600);
+    private final BucketWindow window = new BucketWindow(168, 600, 0);
 
     @Test
     void alignsInstantsToTenMinuteStarts() {
@@ -39,7 +39,7 @@ class BucketWindowTest {
 
     @Test
     void rejectsEmptyWindowsAndBucketsThatDoNotDivideAnHour() {
-        assertThatThrownBy(() -> new BucketWindow(0, 600)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new BucketWindow(1, 7)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new BucketWindow(0, 600, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new BucketWindow(1, 7, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.logging.KeywordResourceMonitor;
 import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
@@ -21,7 +22,7 @@ class KeywordMaintenanceTest {
     void savesSnapshotAndSwallowsReportFailure() {
         KeywordBuckets buckets = new KeywordBuckets(
             Clock.fixed(Instant.parse("2026-09-11T10:30:00Z"), ZoneOffset.UTC),
-            168
+            new BucketWindow(168, 600, 0)
         );
         KeywordSnapshotRepository repository = mock(KeywordSnapshotRepository.class);
         KeywordMaintenance maintenance = new KeywordMaintenance(

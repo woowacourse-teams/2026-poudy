@@ -23,17 +23,9 @@ public final class KeywordBuckets {
     private Instant maxObservedBucketStart;
     private boolean clockRegressed;
 
-    public KeywordBuckets(Clock clock, int windowHours) {
-        this(clock, windowHours, SearchKeywordPolicy.BUCKET_SECONDS);
-    }
-
-    public KeywordBuckets(Clock clock, int windowHours, int bucketSeconds) {
-        this(clock, windowHours, bucketSeconds, 0);
-    }
-
-    public KeywordBuckets(Clock clock, int windowHours, int bucketSeconds, int comparisonHours) {
+    public KeywordBuckets(Clock clock, BucketWindow window) {
         this.clock = clock;
-        this.window = new BucketWindow(windowHours, bucketSeconds, comparisonHours);
+        this.window = window;
         this.startedAt = clock.instant();
         this.maxObservedBucketStart = window.startOf(startedAt);
     }
@@ -92,7 +84,12 @@ public final class KeywordBuckets {
             List<KeywordBucket> copies = buckets.entrySet().stream()
                 .map(entry -> new KeywordBucket(entry.getKey(), entry.getValue()))
                 .toList();
-            return new KeywordBucketSnapshot(observedThrough(now), maxObservedBucketStart, copies);
+            return new KeywordBucketSnapshot(
+                observedThrough(now),
+                window.bucketSeconds(),
+                maxObservedBucketStart,
+                copies
+            );
         } finally {
             lock.unlock();
         }

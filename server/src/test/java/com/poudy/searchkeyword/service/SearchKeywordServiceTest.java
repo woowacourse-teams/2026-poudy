@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
@@ -13,6 +14,7 @@ import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
+import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -31,7 +33,7 @@ import org.junit.jupiter.api.Test;
 
 class SearchKeywordServiceTest {
     private final MutableClock clock = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-    private final KeywordBuckets successful = new KeywordBuckets(clock, 168);
+    private final KeywordBuckets successful = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
 
     @Test
     void mergesAliasesAcrossKindsButKeepsProductAndGeneralTermSeparate() {
@@ -251,13 +253,12 @@ class SearchKeywordServiceTest {
     @Test
     void preservesPreviousCacheWhenRefreshFails() {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(throwingClock, 168);
+        KeywordBuckets ranking = new KeywordBuckets(throwingClock, new BucketWindow(168, 600, 0));
         SearchKeywordService failing = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
-            5,
+            new RankingPolicy(5, 10, Set.of()),
             20,
-            Set.of(),
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
@@ -276,13 +277,12 @@ class SearchKeywordServiceTest {
     @Test
     void refreshAfterRetentionExpiryPublishesEmptyCache() {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(mutable, 1, 60);
+        KeywordBuckets ranking = new KeywordBuckets(mutable, new BucketWindow(1, 60, 0));
         SearchKeywordService service = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
-            5,
+            new RankingPolicy(5, 10, Set.of()),
             20,
-            Set.of(),
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
@@ -305,13 +305,12 @@ class SearchKeywordServiceTest {
             calls.incrementAndGet();
             return true;
         });
-        KeywordBuckets ranking = new KeywordBuckets(clock, 168);
+        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
-            5,
+            new RankingPolicy(5, 10, Set.of()),
             20,
-            Set.of(),
             RankingFallback.none()
         );
         for (DictionaryEntry entry : entries) {
@@ -341,13 +340,12 @@ class SearchKeywordServiceTest {
             calls.incrementAndGet();
             return true;
         });
-        KeywordBuckets ranking = new KeywordBuckets(clock, 168);
+        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
-            5,
+            new RankingPolicy(5, 10, Set.of("blocked")),
             20,
-            Set.of("blocked"),
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
@@ -410,9 +408,8 @@ class SearchKeywordServiceTest {
         return new SearchKeywordService(
             new SearchKeywordDictionary("v1", entries, ignored -> true),
             successful,
-            5,
+            new RankingPolicy(5, 10, blocked),
             20,
-            blocked,
             RankingFallback.none()
         );
     }

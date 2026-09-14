@@ -1,10 +1,12 @@
 package com.poudy.config;
 
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
+import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.logging.KeywordResourceMonitor;
 import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
 import com.poudy.searchkeyword.repository.KeywordReportRepository;
@@ -85,8 +87,12 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) throws IOException {
-        return new KeywordSnapshotRepository(
-            paths(env).stateFile(),
+        return new KeywordSnapshotRepository(paths(env).stateFile());
+    }
+
+    @Bean
+    public BucketWindow searchKeywordWindow() {
+        return new BucketWindow(
             SearchKeywordPolicy.RANKING_HOURS,
             SearchKeywordPolicy.BUCKET_SECONDS,
             SearchKeywordPolicy.COMPARISON_HOURS
@@ -94,17 +100,18 @@ public class SearchKeywordConfig {
     }
 
     @Bean
+    public RankingPolicy searchKeywordRankingPolicy() {
+        return new RankingPolicy(SearchKeywordPolicy.MIN_COUNT, SearchKeywordPolicy.RANKING_SIZE, Set.of());
+    }
+
+    @Bean
     public KeywordBuckets keywordBuckets(
         @Qualifier("searchKeywordClock") Clock clock,
+        BucketWindow window,
         KeywordSnapshotRepository repository
     ) {
-        KeywordBuckets buckets = new KeywordBuckets(
-            clock,
-            SearchKeywordPolicy.RANKING_HOURS,
-            SearchKeywordPolicy.BUCKET_SECONDS,
-            SearchKeywordPolicy.COMPARISON_HOURS
-        );
-        repository.load().ifPresent(buckets::restore);
+        KeywordBuckets buckets = new KeywordBuckets(clock, window);
+        repository.restoreInto(buckets);
         return buckets;
     }
 
@@ -112,14 +119,14 @@ public class SearchKeywordConfig {
     public SearchKeywordService searchKeywordService(
         Environment env,
         SearchKeywordDictionary dictionary,
-        KeywordBuckets buckets
+        KeywordBuckets buckets,
+        RankingPolicy rankingPolicy
     ) {
         return new SearchKeywordService(
             dictionary,
             buckets,
-            SearchKeywordPolicy.MIN_COUNT,
+            rankingPolicy,
             SearchKeywordPolicy.REPORT_MIN_COUNT,
-            Set.of(),
             new RankingFallback(defaultKeywords(env))
         );
     }

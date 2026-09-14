@@ -8,12 +8,10 @@ import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.KeywordCoverage;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
-import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +29,17 @@ public class SearchKeywordService implements ProductSearchObserver {
     public SearchKeywordService(
         SearchKeywordDictionary dictionary,
         KeywordBuckets successful,
-        long minCount,
+        RankingPolicy rankingPolicy,
         long reportMinCount,
-        Set<String> blockedIds,
         RankingFallback rankingFallback
     ) {
-        if (minCount < 1 || reportMinCount < 1) {
-            throw new IllegalArgumentException("Minimum counts must be positive");
+        if (reportMinCount < 1) {
+            throw new IllegalArgumentException("Report minimum count must be positive");
         }
         this.dictionary = dictionary;
         this.successful = successful;
         this.reportMinCount = reportMinCount;
-        this.rankingPolicy = new RankingPolicy(minCount, SearchKeywordPolicy.RANKING_SIZE, blockedIds);
+        this.rankingPolicy = rankingPolicy;
         this.rankingFallback = rankingFallback;
     }
 

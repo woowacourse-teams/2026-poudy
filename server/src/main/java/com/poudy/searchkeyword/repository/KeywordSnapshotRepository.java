@@ -1,10 +1,9 @@
 package com.poudy.searchkeyword.repository;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBucket;
 import com.poudy.searchkeyword.domain.KeywordBucketSnapshot;
-import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
+import com.poudy.searchkeyword.domain.KeywordBuckets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,27 +31,15 @@ import tools.jackson.databind.json.JsonMapper;
 public final class KeywordSnapshotRepository {
 
     private final Path file;
-    private final BucketWindow window;
 
-    public KeywordSnapshotRepository(Path file, int windowHours) {
-        this(file, windowHours, SearchKeywordPolicy.BUCKET_SECONDS);
-    }
-
-    public KeywordSnapshotRepository(Path file, int windowHours, int bucketSeconds) {
-        this(file, windowHours, bucketSeconds, 0);
-    }
-
-    public KeywordSnapshotRepository(Path file, int windowHours, int bucketSeconds, int comparisonHours) {
+    public KeywordSnapshotRepository(Path file) {
         this.file = file.toAbsolutePath().normalize();
-        this.window = new BucketWindow(windowHours, bucketSeconds, comparisonHours);
     }
 
-    public Optional<KeywordBucketSnapshot> load() {
+    public void restoreInto(KeywordBuckets buckets) {
         try {
-            Optional<KeywordBucketSnapshot> snapshot = read();
-            snapshot.ifPresent(found -> found.validateWithin(window));
+            read().ifPresent(buckets::restore);
             removeTemporaryFiles();
-            return snapshot;
         } catch (IOException | RuntimeException failure) {
             throw new InfrastructureException("검색어 집계 파일을 복원하지 못했습니다", failure);
         }
@@ -92,7 +79,7 @@ public final class KeywordSnapshotRepository {
 
     private Optional<KeywordBucketSnapshot> read() throws IOException {
         try (InputStream input = Files.newInputStream(file)) {
-            return Optional.of(SnapshotJson.decode(input, window.bucketSeconds()));
+            return Optional.of(SnapshotJson.decode(input));
         } catch (NoSuchFileException missing) {
             return absentUnlessLinked(missing);
         }
@@ -108,7 +95,7 @@ public final class KeywordSnapshotRepository {
 
     private void write(Path temporary, KeywordBucketSnapshot snapshot) throws IOException {
         try (OutputStream output = Files.newOutputStream(temporary)) {
-            SnapshotJson.encode(output, snapshot, window.bucketSeconds());
+            SnapshotJson.encode(output, snapshot);
         }
     }
 
@@ -158,23 +145,24 @@ public final class KeywordSnapshotRepository {
         );
         private static final Set<String> BUCKET_FIELDS = Set.of("start", "counts");
 
-        private static KeywordBucketSnapshot decode(InputStream input, int bucketSeconds) {
+        private static KeywordBucketSnapshot decode(InputStream input) {
             JsonNode root = MAPPER.readTree(input);
             requireFields(root, SNAPSHOT_FIELDS);
-            requireFormat(root, bucketSeconds);
+            requireSchema(root);
             return new KeywordBucketSnapshot(
                 timestamp(root.get("savedAt")),
+                Math.toIntExact(integer(root.get("bucketSeconds"))),
                 timestamp(root.get("maxObservedBucketStart")),
                 buckets(root.get("buckets"))
             );
         }
 
-        private static void encode(OutputStream output, KeywordBucketSnapshot snapshot, int bucketSeconds) {
+        private static void encode(OutputStream output, KeywordBucketSnapshot snapshot) {
             try (JsonGenerator json = MAPPER.createGenerator(output)) {
                 json.writeStartObject();
                 json.writeNumberProperty("schemaVersion", SCHEMA_VERSION);
                 json.writeStringProperty("savedAt", snapshot.savedAt().toString());
-                json.writeNumberProperty("bucketSeconds", bucketSeconds);
+                json.writeNumberProperty("bucketSeconds", snapshot.bucketSeconds());
                 json.writeStringProperty("maxObservedBucketStart", snapshot.maxObservedBucketStart().toString());
                 json.writeArrayPropertyStart("buckets");
                 snapshot.buckets().forEach(bucket -> writeBucket(json, bucket));
@@ -192,13 +180,9 @@ public final class KeywordSnapshotRepository {
             json.writeEndObject();
         }
 
-        private static void requireFormat(JsonNode root, int bucketSeconds) {
-            if (integer(root.get("schemaVersion")) != SCHEMA_VERSION
-                || integer(root.get("bucketSeconds")) != bucketSeconds) {
-                throw new IllegalArgumentException(
-                    "Unsupported snapshot format: expected schemaVersion=" + SCHEMA_VERSION + ",bucketSeconds="
-                        + bucketSeconds
-                );
+        private static void requireSchema(JsonNode root) {
+            if (integer(root.get("schemaVersion")) != SCHEMA_VERSION) {
+                throw new IllegalArgumentException("Unsupported snapshot schema: expected " + SCHEMA_VERSION);
             }
         }
 

@@ -3,11 +3,13 @@ package com.poudy.searchkeyword.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
+import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -28,24 +30,24 @@ class SearchKeywordRankingPersistenceTest {
 
     @Test
     void restartRebuildsTheSameRankingFromRestoredCountsOnFirstRefresh() {
-        KeywordBuckets recording = new KeywordBuckets(Clock.fixed(RECORDED_AT, ZoneOffset.UTC), 168);
+        KeywordBuckets recording = new KeywordBuckets(
+            Clock.fixed(RECORDED_AT, ZoneOffset.UTC),
+            new BucketWindow(168, 600, 0)
+        );
         SearchKeywordService recorder = service(recording);
         for (int i = 0; i < 5; i++) {
             recorder.completed(new SearchKeyword("토너"), 1);
         }
-        KeywordSnapshotRepository countsRepository = new KeywordSnapshotRepository(
-            directory.resolve("buckets.json"),
-            168
-        );
+        KeywordSnapshotRepository countsRepository = new KeywordSnapshotRepository(directory.resolve("buckets.json"));
         countsRepository.save(recording.snapshot());
 
-        KeywordBuckets running = new KeywordBuckets(AFTER_BOUNDARY, 168);
+        KeywordBuckets running = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0));
         running.restore(recording.snapshot());
         SearchKeywordService before = service(running);
         before.refreshRankings();
 
-        KeywordBuckets restored = new KeywordBuckets(AFTER_BOUNDARY, 168);
-        countsRepository.load().ifPresent(restored::restore);
+        KeywordBuckets restored = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0));
+        countsRepository.restoreInto(restored);
         SearchKeywordService after = service(restored);
         assertThat(after.rankings()).isEmpty();
         after.refreshRankings();
@@ -65,6 +67,12 @@ class SearchKeywordRankingPersistenceTest {
             Map.of("토너", DictionaryEntry.ExpressionType.CATALOG)
         );
         SearchKeywordDictionary dictionary = new SearchKeywordDictionary("data-v1", List.of(entry), ignored -> true);
-        return new SearchKeywordService(dictionary, buckets, 5, 20, Set.of(), RankingFallback.none());
+        return new SearchKeywordService(
+            dictionary,
+            buckets,
+            new RankingPolicy(5, 10, Set.of()),
+            20,
+            RankingFallback.none()
+        );
     }
 }

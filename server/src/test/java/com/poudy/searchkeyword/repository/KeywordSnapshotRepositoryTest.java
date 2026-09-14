@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.InfrastructureException;
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBucket;
 import com.poudy.searchkeyword.domain.KeywordBucketSnapshot;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
@@ -37,36 +38,34 @@ class KeywordSnapshotRepositoryTest {
     @Test
     void missingFileAloneStartsEmptyAndRoundtripPreservesNormalizedCounts() {
         KeywordSnapshotRepository repository = repository();
-        assertThat(repository.load()).isEmpty();
-        KeywordBuckets original = new KeywordBuckets(Clock.fixed(NOW, ZoneOffset.UTC), 168);
+        KeywordBuckets empty = buckets();
+        repository.restoreInto(empty);
+        assertThat(empty.snapshot().buckets()).isEmpty();
+        KeywordBuckets original = buckets();
         original.record("토너");
         original.record("pdrn");
         original.record("토너");
         KeywordBucketSnapshot snapshot = original.snapshot();
         repository.save(snapshot);
-        assertThat(repository.load()).contains(snapshot);
+        KeywordBuckets restored = buckets();
+        repository.restoreInto(restored);
+        assertThat(restored.snapshot()).isEqualTo(snapshot);
     }
 
     @ParameterizedTest
-    @CsvSource({"30", "60", "180", "600"})
-    void roundtripPreservesConfiguredBucketResolution(int bucketSeconds) {
-        KeywordSnapshotRepository configured = new KeywordSnapshotRepository(
-            file(),
-            168,
-            bucketSeconds
-        );
-        Instant start = Instant.parse("2026-09-06T10:00:00Z");
-        KeywordBuckets buckets = new KeywordBuckets(Clock.fixed(start, ZoneOffset.UTC), 168, bucketSeconds);
-        buckets.record("토너");
-        KeywordBucketSnapshot snapshot = buckets.snapshot();
-        configured.save(snapshot);
-        assertThat(configured.load()).contains(snapshot);
-        KeywordSnapshotRepository mismatched = new KeywordSnapshotRepository(
-            file(),
-            168,
-            bucketSeconds == 60 ? 30 : 60
-        );
-        assertThatThrownBy(mismatched::load).isInstanceOf(InfrastructureException.class);
+    @CsvSource({"30,60", "60,30", "180,60", "600,60"})
+    void roundtripPreservesConfiguredBucketResolution(int bucketSeconds, int otherSeconds) {
+        KeywordSnapshotRepository repository = repository();
+        Clock clock = Clock.fixed(Instant.parse("2026-09-06T10:00:00Z"), ZoneOffset.UTC);
+        KeywordBuckets original = new KeywordBuckets(clock, new BucketWindow(168, bucketSeconds, 0));
+        original.record("토너");
+        KeywordBucketSnapshot snapshot = original.snapshot();
+        repository.save(snapshot);
+        KeywordBuckets restored = new KeywordBuckets(clock, new BucketWindow(168, bucketSeconds, 0));
+        repository.restoreInto(restored);
+        assertThat(restored.snapshot()).isEqualTo(snapshot);
+        KeywordBuckets mismatched = new KeywordBuckets(clock, new BucketWindow(168, otherSeconds, 0));
+        assertThatThrownBy(() -> repository.restoreInto(mismatched)).isInstanceOf(InfrastructureException.class);
     }
 
     @ParameterizedTest
@@ -99,7 +98,7 @@ class KeywordSnapshotRepositoryTest {
         Files.writeString(file(), invalid);
         Path leftover = directory.resolve("buckets.json.tmp-orphan.json");
         Files.writeString(leftover, VALID);
-        assertThatThrownBy(() -> repository().load()).isInstanceOf(InfrastructureException.class);
+        assertThatThrownBy(() -> repository().restoreInto(buckets())).isInstanceOf(InfrastructureException.class);
         assertThat(Files.readString(file())).isEqualTo(invalid);
         assertThat(leftover).exists();
     }
@@ -108,7 +107,9 @@ class KeywordSnapshotRepositoryTest {
     void rejectsDuplicateOrMalformedSnapshotInsteadOfPartiallyRestoring() throws IOException {
         String twoKeys = VALID.replace("\"토너\":2", "\"토너\":2,\"크림\":3");
         Files.writeString(file(), twoKeys);
-        assertThat(repository().load()).isPresent();
+        KeywordBuckets restored = buckets();
+        repository().restoreInto(restored);
+        assertThat(restored.snapshot().buckets().getFirst().counts()).containsEntry("크림", 3L);
         assertThat(Files.readString(file())).isEqualTo(twoKeys);
     }
 
@@ -117,7 +118,7 @@ class KeywordSnapshotRepositoryTest {
         Files.writeString(file(), VALID);
         Path orphan = directory.resolve("buckets.json.tmp-orphan.json");
         Files.writeString(orphan, "invalid");
-        assertThat(repository().load()).isPresent();
+        repository().restoreInto(buckets());
         assertThat(orphan).doesNotExist();
     }
 
@@ -126,12 +127,15 @@ class KeywordSnapshotRepositoryTest {
         String maximum = "\"\\".repeat(150);
         KeywordBucketSnapshot sample = new KeywordBucketSnapshot(
             NOW,
+            600,
             NOW.truncatedTo(ChronoUnit.HOURS),
             List.of(new KeywordBucket(NOW.truncatedTo(ChronoUnit.HOURS), Map.of(maximum, Long.MAX_VALUE)))
         );
         repository().save(sample);
         assertThat(Files.size(file())).isLessThan(2048L + 1024L);
-        assertThat(repository().load()).contains(sample);
+        KeywordBuckets restored = buckets();
+        repository().restoreInto(restored);
+        assertThat(restored.snapshot().buckets()).isEqualTo(sample.buckets());
     }
 
     private String corrupt(String corruption) {
@@ -178,6 +182,10 @@ class KeywordSnapshotRepositoryTest {
     }
 
     private KeywordSnapshotRepository repository() {
-        return new KeywordSnapshotRepository(file(), 168);
+        return new KeywordSnapshotRepository(file());
+    }
+
+    private static KeywordBuckets buckets() {
+        return new KeywordBuckets(Clock.fixed(NOW, ZoneOffset.UTC), new BucketWindow(168, 600, 0));
     }
 }

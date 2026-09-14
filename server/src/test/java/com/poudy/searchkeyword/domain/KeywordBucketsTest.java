@@ -38,7 +38,7 @@ class KeywordBucketsTest {
     void alignsBucketsToEpochBoundariesForSupportedDurations(int seconds, String before, String after) {
         Instant initial = Instant.parse("2026-09-06T" + before + "Z");
         MutableClock durationClock = new MutableClock(initial);
-        KeywordBuckets buckets = new KeywordBuckets(durationClock, 1, seconds);
+        KeywordBuckets buckets = new KeywordBuckets(durationClock, new BucketWindow(1, seconds, 0));
         buckets.record("토너");
         durationClock.set(Instant.parse("2026-09-06T" + after + "Z"));
         buckets.record("크림");
@@ -48,7 +48,7 @@ class KeywordBucketsTest {
 
     @Test
     void viewExcludesTheBucketInProgressUntilItsBoundary() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         buckets.record("토너");
         clock.set(START.plus(9, ChronoUnit.MINUTES).plusSeconds(59));
         assertThat(buckets.view().counts()).isEmpty();
@@ -58,12 +58,12 @@ class KeywordBucketsTest {
 
     @Test
     void keepsSingleSpacesInKeysAndRejectsUnnormalizedSpacing() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         assertThat(buckets.record("독도 토너")).isEqualTo(RecordResult.RECORDED);
         clock.set(START.plus(10, ChronoUnit.MINUTES));
         assertThat(buckets.view().counts()).containsEntry("독도 토너", 1L);
 
-        KeywordBuckets restored = new KeywordBuckets(clock, 168);
+        KeywordBuckets restored = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         restored.restore(buckets.snapshot());
         assertThat(restored.view().counts()).containsEntry("독도 토너", 1L);
         assertThatThrownBy(() -> buckets.record("독도  토너")).isInstanceOf(IllegalArgumentException.class);
@@ -71,16 +71,16 @@ class KeywordBucketsTest {
 
     @Test
     void comparisonWindowNeedsAFullyObservedPastWindow() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 1, 600, 24);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 24));
         buckets.record("토너");
 
         assertThat(buckets.comparisonView()).isEmpty();
-        assertThat(new KeywordBuckets(clock, 168).comparisonView()).isEmpty();
+        assertThat(new KeywordBuckets(clock, new BucketWindow(168, 600, 0)).comparisonView()).isEmpty();
     }
 
     @Test
     void comparisonWindowSumsTheSameWindowOneDayEarlier() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 1, 600, 24);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 24));
         clock.set(START.plus(20, ChronoUnit.MINUTES));
         buckets.record("토너");
         clock.set(START.plus(25, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
@@ -93,7 +93,7 @@ class KeywordBucketsTest {
 
     @Test
     void windowHoldsExactly168HoursOfCompletedBuckets() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         buckets.record("토너");
         clock.set(START.plus(168, ChronoUnit.HOURS));
         assertThat(buckets.view().counts()).containsEntry("토너", 1L);
@@ -105,8 +105,8 @@ class KeywordBucketsTest {
 
     @Test
     void storesWithDifferentWindowsExpireIndependently() {
-        KeywordBuckets week = new KeywordBuckets(clock, 168);
-        KeywordBuckets threeDays = new KeywordBuckets(clock, 72);
+        KeywordBuckets week = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+        KeywordBuckets threeDays = new KeywordBuckets(clock, new BucketWindow(72, 600, 0));
         week.record("토너");
         threeDays.record("크림");
         clock.set(START.plus(72, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
@@ -116,7 +116,7 @@ class KeywordBucketsTest {
 
     @Test
     void measuresTheWaitToTheBoundaryOfAGivenBucket() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         Instant current = buckets.currentBucketStart();
 
         assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofMinutes(10));
@@ -128,7 +128,7 @@ class KeywordBucketsTest {
 
     @Test
     void multipleInputsInOneBucketRemainRecorded() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
         assertThat(buckets.record("크림")).isEqualTo(RecordResult.RECORDED);
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
@@ -141,7 +141,7 @@ class KeywordBucketsTest {
 
     @Test
     void moreThanHundredDistinctInputsInOneBucketRemainRecorded() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 1);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 0));
         for (int index = 0; index < 1_000; index++) {
             assertThat(buckets.record("입력" + index)).isEqualTo(RecordResult.RECORDED);
         }
@@ -151,7 +151,7 @@ class KeywordBucketsTest {
     @Test
     void sameHourRegressionIsAcceptedButEarlierBucketFreezesCollectionUntilCatchup() {
         MutableClock regressionClock = new MutableClock(Instant.parse("2026-09-06T10:30:40Z"));
-        KeywordBuckets buckets = new KeywordBuckets(regressionClock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(regressionClock, new BucketWindow(168, 600, 0));
         buckets.record("토너");
         regressionClock.set(Instant.parse("2026-09-06T10:30:20Z"));
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
@@ -169,13 +169,13 @@ class KeywordBucketsTest {
     @Test
     void sameBucketClockRegressionKeepsSnapshotTimestampsValid() {
         MutableClock dropClock = new MutableClock(Instant.parse("2026-09-06T10:30:40Z"));
-        KeywordBuckets buckets = new KeywordBuckets(dropClock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(dropClock, new BucketWindow(168, 600, 0));
         buckets.record("토너");
         buckets.record("크림");
         dropClock.set(Instant.parse("2026-09-06T10:30:20Z"));
         KeywordBucketSnapshot snapshot = buckets.snapshot();
         assertThat(snapshot.savedAt()).isAfterOrEqualTo(snapshot.maxObservedBucketStart());
-        KeywordBuckets restored = new KeywordBuckets(clock, 168);
+        KeywordBuckets restored = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         restored.restore(snapshot);
     }
 
@@ -183,7 +183,7 @@ class KeywordBucketsTest {
     @CsvSource({"30", "60", "180", "600"})
     void windowExpiresExactlyAtConfiguredDuration(int seconds) {
         MutableClock durationClock = new MutableClock(Instant.parse("2026-09-06T10:00:00Z"));
-        KeywordBuckets buckets = new KeywordBuckets(durationClock, 1, seconds);
+        KeywordBuckets buckets = new KeywordBuckets(durationClock, new BucketWindow(1, seconds, 0));
         buckets.record("토너");
         durationClock.set(Instant.parse("2026-09-06T11:00:00Z").plusSeconds(seconds - 1));
         assertThat(buckets.view().counts()).containsEntry("토너", 1L);
@@ -198,41 +198,58 @@ class KeywordBucketsTest {
         Instant oldest = maximum.minus(2, ChronoUnit.HOURS);
         KeywordBucketSnapshot valid = new KeywordBucketSnapshot(
             maximum,
+            seconds,
             maximum,
             List.of(new KeywordBucket(oldest, Map.of("토너", 1L)))
         );
-        KeywordBuckets accepted = new KeywordBuckets(Clock.fixed(maximum, ZoneOffset.UTC), 2, seconds);
+        KeywordBuckets accepted = new KeywordBuckets(
+            Clock.fixed(maximum, ZoneOffset.UTC),
+            new BucketWindow(2, seconds, 0)
+        );
         accepted.restore(valid);
         Instant tooOld = oldest.minus(seconds, ChronoUnit.SECONDS);
         KeywordBucketSnapshot invalid = new KeywordBucketSnapshot(
             maximum,
+            seconds,
             maximum,
             List.of(new KeywordBucket(tooOld, Map.of("토너", 1L)))
         );
-        KeywordBuckets rejected = new KeywordBuckets(Clock.fixed(maximum, ZoneOffset.UTC), 2, seconds);
+        KeywordBuckets rejected = new KeywordBuckets(
+            Clock.fixed(maximum, ZoneOffset.UTC),
+            new BucketWindow(2, seconds, 0)
+        );
         assertThatThrownBy(() -> rejected.restore(invalid)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void restoringPreservesCountsAndDoesNotReplaySearch() {
-        KeywordBuckets original = new KeywordBuckets(clock, 168, 1);
+        KeywordBuckets original = new KeywordBuckets(clock, new BucketWindow(168, 1, 0));
         original.record("토너");
         original.record("토너");
         original.record("크림");
         KeywordBucketSnapshot snapshot = original.snapshot();
-        KeywordBuckets restored = new KeywordBuckets(clock, 168, 1);
+        KeywordBuckets restored = new KeywordBuckets(clock, new BucketWindow(168, 1, 0));
         restored.restore(snapshot);
         clock.set(START.plusSeconds(1));
         assertThat(restored.view().counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 2L, "크림", 1L));
     }
 
     @Test
+    void restoreRejectsSnapshotWithADifferentBucketDuration() {
+        KeywordBuckets minutes = new KeywordBuckets(clock, new BucketWindow(168, 60, 0));
+        minutes.record("토너");
+        KeywordBuckets tenMinutes = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+
+        assertThatThrownBy(() -> tenMinutes.restore(minutes.snapshot())).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void restoringInFutureExpiresWhileRegressionKeepsPreviousWindow() {
-        KeywordBuckets original = new KeywordBuckets(clock, 168);
+        KeywordBuckets original = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         original.record("토너");
         KeywordBucketSnapshot snapshot = original.snapshot();
         clock.set(START.plus(200, ChronoUnit.HOURS));
-        KeywordBuckets restored = new KeywordBuckets(clock, 168);
+        KeywordBuckets restored = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         restored.restore(snapshot);
         assertThat(restored.view().counts()).isEmpty();
         clock.set(START);
@@ -242,7 +259,7 @@ class KeywordBucketsTest {
 
     @Test
     void snapshotsAndViewsAreDetachedFromLaterChanges() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         buckets.record("토너");
         KeywordBucketSnapshot first = buckets.snapshot();
         buckets.record("토너");
@@ -259,11 +276,12 @@ class KeywordBucketsTest {
 
     @Test
     void longOverflowFailsWithoutWrappingOrMutatingCount() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         Instant hour = START.truncatedTo(ChronoUnit.HOURS).plus(30, ChronoUnit.MINUTES);
         buckets.restore(
             new KeywordBucketSnapshot(
                 START,
+                600,
                 hour,
                 List.of(new KeywordBucket(hour, Map.of("토너", Long.MAX_VALUE)))
             )
@@ -277,13 +295,14 @@ class KeywordBucketsTest {
         Instant maximum = Instant.parse("2026-09-06T10:30:00Z");
         KeywordBucketSnapshot invalid = new KeywordBucketSnapshot(
             maximum,
+            60,
             maximum,
             List.of(
                 new KeywordBucket(maximum.minus(60, ChronoUnit.SECONDS), Map.of("토너", Long.MAX_VALUE)),
                 new KeywordBucket(maximum, Map.of("토너", 1L))
             )
         );
-        KeywordBuckets buckets = new KeywordBuckets(Clock.fixed(maximum, ZoneOffset.UTC), 2, 60);
+        KeywordBuckets buckets = new KeywordBuckets(Clock.fixed(maximum, ZoneOffset.UTC), new BucketWindow(2, 60, 0));
         assertThatThrownBy(() -> buckets.restore(invalid)).isInstanceOf(ArithmeticException.class);
         assertThat(buckets.view().counts()).isEmpty();
         assertThat(buckets.record("토너")).isEqualTo(RecordResult.RECORDED);
@@ -291,7 +310,7 @@ class KeywordBucketsTest {
 
     @Test
     void oneMillionConcurrentIncrementsRemainOneEntryWithConsistentSnapshots() throws Exception {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
             Callable<Void> record = () -> {
                 for (int index = 0; index < 250_000; index++) {
@@ -327,7 +346,7 @@ class KeywordBucketsTest {
 
     @Test
     void concurrentDistinctKeysRespectCapacityAndAccountForEveryRejectedAttempt() throws Exception {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         CountDownLatch start = new CountDownLatch(1);
         try (ExecutorService executor = Executors.newFixedThreadPool(8)) {
             List<Future<?>> tasks = new ArrayList<>();
@@ -354,7 +373,7 @@ class KeywordBucketsTest {
 
     @Test
     void repeatedKeysAcrossMinuteBucketsRemainAcceptedBeyondFormerGlobalCap() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 24, 60);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(24, 60, 0));
         for (int minute = 0; minute < 841; minute++) {
             clock.set(START.plus(minute, ChronoUnit.MINUTES));
             for (int key = 0; key < 20; key++) {
@@ -365,7 +384,7 @@ class KeywordBucketsTest {
 
     @Test
     void concurrentExpiryCollectionAndSnapshotsPreserveWindowAndReferenceCounts() throws Exception {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 3);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(3, 600, 0));
         CountDownLatch start = new CountDownLatch(1);
         try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
             List<Future<?>> tasks = new ArrayList<>();
@@ -388,7 +407,10 @@ class KeywordBucketsTest {
                     assertThat(statistics.entryCount()).isBetween(statistics.uniqueKeyCount(), 40);
                     assertThat(buckets.view().counts().size()).isLessThanOrEqualTo(10);
                     KeywordBucketSnapshot snapshot = buckets.snapshot();
-                    KeywordBuckets restored = new KeywordBuckets(Clock.fixed(snapshot.savedAt(), ZoneOffset.UTC), 3);
+                    KeywordBuckets restored = new KeywordBuckets(
+                        Clock.fixed(snapshot.savedAt(), ZoneOffset.UTC),
+                        new BucketWindow(3, 600, 0)
+                    );
                     restored.restore(snapshot);
                     assertThat(restored.statistics().entryCount())
                         .isEqualTo(snapshot.buckets().stream().mapToInt(bucket -> bucket.counts().size()).sum());
@@ -408,10 +430,10 @@ class KeywordBucketsTest {
 
     @Test
     void rejectsInvalidKeysAndCapacityOverflow() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, 168);
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
         assertThatThrownBy(() -> buckets.record(" PDRN ")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> buckets.record("가".repeat(301))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new KeywordBuckets(clock, 168, Integer.MAX_VALUE))
+        assertThatThrownBy(() -> new KeywordBuckets(clock, new BucketWindow(168, Integer.MAX_VALUE, 0)))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

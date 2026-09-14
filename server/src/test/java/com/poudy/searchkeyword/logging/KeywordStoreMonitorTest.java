@@ -2,6 +2,7 @@ package com.poudy.searchkeyword.logging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
@@ -16,7 +17,7 @@ class KeywordStoreMonitorTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         KeywordBuckets buckets = new KeywordBuckets(
             Clock.fixed(Instant.parse("2026-09-10T00:00:00Z"), ZoneOffset.UTC),
-            168
+            new BucketWindow(168, 600, 0)
         );
         KeywordStoreMonitor monitor = new KeywordStoreMonitor(buckets, "NONZERO", registry);
 

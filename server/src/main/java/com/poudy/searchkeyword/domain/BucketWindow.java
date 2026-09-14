@@ -10,10 +10,6 @@ public final class BucketWindow {
     private final int windowBuckets;
     private final int comparisonBuckets;
 
-    public BucketWindow(int windowHours, int bucketSeconds) {
-        this(windowHours, bucketSeconds, 0);
-    }
-
     public BucketWindow(int windowHours, int bucketSeconds, int comparisonHours) {
         if (windowHours < 1) {
             throw new IllegalArgumentException("Window must be positive");
@@ -31,6 +27,10 @@ public final class BucketWindow {
 
     public int bucketSeconds() {
         return bucketSeconds;
+    }
+
+    public boolean hasBucketSeconds(int seconds) {
+        return bucketSeconds == seconds;
     }
 
     public boolean canRetain(int bucketCount) {

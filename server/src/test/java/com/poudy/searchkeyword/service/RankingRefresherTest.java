@@ -5,6 +5,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import java.time.Clock;
 import java.time.Duration;
@@ -26,7 +27,11 @@ class RankingRefresherTest {
     @Test
     void refreshesThenSchedulesItselfAtTheNextBucketBoundary() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-11T10:34:00Z"), ZoneOffset.UTC);
-        RankingRefresher refresher = new RankingRefresher(service, new KeywordBuckets(clock, 168), scheduler);
+        RankingRefresher refresher = new RankingRefresher(
+            service,
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            scheduler
+        );
 
         refresher.run();
 
@@ -42,7 +47,11 @@ class RankingRefresherTest {
             clock.now = Instant.parse("2026-09-11T10:10:01Z");
             return null;
         }).when(service).refreshRankings();
-        RankingRefresher refresher = new RankingRefresher(service, new KeywordBuckets(clock, 168), scheduler);
+        RankingRefresher refresher = new RankingRefresher(
+            service,
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            scheduler
+        );
 
         refresher.run();
 
@@ -57,7 +66,11 @@ class RankingRefresherTest {
             Instant.parse("2026-09-11T10:09:59.999Z"),
             Instant.parse("2026-09-11T10:10:00.001Z")
         );
-        RankingRefresher refresher = new RankingRefresher(service, new KeywordBuckets(clock, 168), scheduler);
+        RankingRefresher refresher = new RankingRefresher(
+            service,
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            scheduler
+        );
 
         refresher.run();
 

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
 import java.time.Clock;
@@ -25,7 +26,7 @@ class KeywordSnapshotWriterTest {
 
     private final KeywordBuckets buckets = new KeywordBuckets(
         Clock.fixed(Instant.parse("2026-09-08T10:30:00Z"), ZoneOffset.UTC),
-        168
+        new BucketWindow(168, 600, 0)
     );
     private final KeywordSnapshotRepository repository = mock(KeywordSnapshotRepository.class);
     private final KeywordSnapshotWriter writer = new KeywordSnapshotWriter(buckets, repository);
