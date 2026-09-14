@@ -6,6 +6,7 @@ import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
 import { ingredientSummary } from "@/lib/domain/product-display";
+import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
 export const revalidate = 86400;
@@ -38,11 +39,12 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
     );
     const description = `${product.brand.name} ${product.name}의 전성분을 확인하세요. ${summary}`;
     const image = product.imageUrl || "/opengraph-image";
+    const canonical = `/products/${productId}`;
     return {
       title,
       description,
-      alternates: { canonical: `/products/${productId}` },
-      openGraph: { title, description, type: "website", images: [image] },
+      alternates: { canonical },
+      openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [image] },
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
