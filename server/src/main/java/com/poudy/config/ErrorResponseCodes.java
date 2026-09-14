@@ -12,6 +12,7 @@ public final class ErrorResponseCodes {
     private static final String PRODUCT_REQUESTS_PATH = "/api/product-requests";
     private static final String FEEDBACK_PATH = "/api/feedback";
     private static final String FEEDBACK_IMAGES_PATH = "/api/feedback/images";
+    private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
         "brands",
@@ -36,6 +37,9 @@ public final class ErrorResponseCodes {
         }
         if (FEEDBACK_IMAGES_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
+        }
+        if (ADMIN_LOGIN_PATH.equals(path)) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
