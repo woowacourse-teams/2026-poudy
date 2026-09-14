@@ -5,6 +5,7 @@ import { ProductDetail } from "@/components/product/ProductDetail";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
+import { ingredientSummary } from "@/lib/domain/product-display";
 
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
 export const revalidate = 86400;
@@ -30,7 +31,12 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
   try {
     const product = await fetchProductDetail(Number(productId));
     const title = `${product.brand.name} ${product.name} 전성분`;
-    const description = `${product.name}의 전체 성분과 기능별 성분을 확인합니다.`;
+    // 제품마다 성분 수와 대표 작용이 달라 설명문이 겹치지 않는다. 본문 `성분 정보` 와 같은 문장이다.
+    const summary = ingredientSummary(
+      product.ingredients.length,
+      product.skinEffectGroups.map((group) => group.name),
+    );
+    const description = `${product.brand.name} ${product.name}의 전성분을 확인하세요. ${summary}`;
     const image = product.imageUrl || "/opengraph-image";
     return {
       title,
