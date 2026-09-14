@@ -167,10 +167,10 @@ public final class KeywordBuckets {
             return Optional.empty();
         }
         Instant latest = window.comparisonLatestStart(maxObservedBucketStart);
-        Instant oldest = window.oldestStart(latest);
-        if (observedFrom().isAfter(oldest)) {
+        if (!observedFrom().isBefore(latest)) {
             return Optional.empty();
         }
+        Instant oldest = window.oldestStart(latest);
         return Optional.of(new KeywordBucketView(sumOf(oldest, latest), oldest, latest, startedAt, clockRegressed));
     }
 

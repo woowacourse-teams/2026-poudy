@@ -10,19 +10,19 @@ public final class BucketWindow {
     private final int windowBuckets;
     private final int comparisonBuckets;
 
-    public BucketWindow(int windowHours, int bucketSeconds, int comparisonHours) {
+    public BucketWindow(int windowHours, int bucketSeconds, int comparisonBuckets) {
         if (windowHours < 1) {
             throw new IllegalArgumentException("Window must be positive");
         }
         if (bucketSeconds < 1 || SECONDS_PER_HOUR % bucketSeconds != 0) {
             throw new IllegalArgumentException("Bucket duration must divide one hour");
         }
-        if (comparisonHours < 0) {
+        if (comparisonBuckets < 0) {
             throw new IllegalArgumentException("Comparison offset cannot be negative");
         }
         this.bucketSeconds = bucketSeconds;
         this.windowBuckets = Math.multiplyExact(windowHours, SECONDS_PER_HOUR / bucketSeconds);
-        this.comparisonBuckets = Math.multiplyExact(comparisonHours, SECONDS_PER_HOUR / bucketSeconds);
+        this.comparisonBuckets = comparisonBuckets;
     }
 
     public int bucketSeconds() {

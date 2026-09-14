@@ -100,7 +100,7 @@ public class SearchKeywordConfig {
         return new BucketWindow(
             SearchKeywordPolicy.RANKING_HOURS,
             SearchKeywordPolicy.BUCKET_SECONDS,
-            SearchKeywordPolicy.COMPARISON_HOURS
+            SearchKeywordPolicy.COMPARISON_BUCKETS
         );
     }
 

@@ -70,25 +70,42 @@ class KeywordBucketsTest {
     }
 
     @Test
-    void comparisonWindowNeedsAFullyObservedPastWindow() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 24));
+    void comparisonWindowNeedsObservationBeforeThePreviousBoundary() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 1));
         buckets.record("토너");
 
         assertThat(buckets.comparisonView()).isEmpty();
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
+        assertThat(buckets.comparisonView()).isEmpty();
+        clock.set(START.plus(20, ChronoUnit.MINUTES));
+        assertThat(buckets.comparisonView()).isPresent();
         assertThat(new KeywordBuckets(clock, new BucketWindow(168, 600, 0)).comparisonView()).isEmpty();
     }
 
     @Test
-    void comparisonWindowSumsTheSameWindowOneDayEarlier() {
-        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 24));
-        clock.set(START.plus(20, ChronoUnit.MINUTES));
+    void comparisonWindowSumsTheSameWindowOneBucketEarlier() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 1));
         buckets.record("토너");
-        clock.set(START.plus(25, ChronoUnit.HOURS).plus(10, ChronoUnit.MINUTES));
+        clock.set(START.plus(10, ChronoUnit.MINUTES));
+        buckets.record("크림");
+        clock.set(START.plus(20, ChronoUnit.MINUTES));
 
         assertThat(buckets.comparisonView()).hasValueSatisfying(
             compared -> assertThat(compared.counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 1L))
         );
-        assertThat(buckets.view().counts()).isEmpty();
+        assertThat(buckets.view().counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 1L, "크림", 1L));
+    }
+
+    @Test
+    void retainsOnlyOneExtraBucketForTheComparison() {
+        KeywordBuckets buckets = new KeywordBuckets(clock, new BucketWindow(1, 600, 1));
+        buckets.record("토너");
+        clock.set(START.plus(70, ChronoUnit.MINUTES));
+        assertThat(buckets.comparisonView()).hasValueSatisfying(
+            compared -> assertThat(compared.counts()).containsExactlyInAnyOrderEntriesOf(Map.of("토너", 1L))
+        );
+        clock.set(START.plus(80, ChronoUnit.MINUTES));
+        assertThat(buckets.statistics().bucketCount()).isZero();
     }
 
     @Test
