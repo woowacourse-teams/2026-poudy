@@ -27,6 +27,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 class SearchKeywordServiceTest {
     private static final KeywordSearch CATALOG = keyword -> !keyword.equals("없는검색");
@@ -108,6 +111,21 @@ class SearchKeywordServiceTest {
         assertThat(successful.view().counts()).containsOnlyKeys("미등록");
         service.refreshRankings();
         assertThat(service.rankings()).isEmpty();
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void logsRecordedInputsThatTheDictionaryCannotResolve(CapturedOutput output) {
+        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
+
+        service.record(new SearchKeyword("토너"));
+        service.record(new SearchKeyword(" 독도  \"토너\" "));
+        service.record(new SearchKeyword("없는검색"));
+
+        assertThat(output)
+            .contains("event=search_keyword_unresolved keyword=\"독도 \\\"토너\\\"\"")
+            .doesNotContain("keyword=\"토너\"")
+            .doesNotContain("keyword=\"없는검색\"");
     }
 
     @Test

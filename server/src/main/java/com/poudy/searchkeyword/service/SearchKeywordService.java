@@ -43,6 +43,18 @@ public class SearchKeywordService {
             return;
         }
         successful.record(keyword.text());
+        logWhenUnresolved(keyword.text());
+    }
+
+    private void logWhenUnresolved(String normalizedQuery) {
+        if (dictionary.recognizes(normalizedQuery)) {
+            return;
+        }
+        log.info("event=search_keyword_unresolved keyword=\"{}\"", quoted(normalizedQuery));
+    }
+
+    private static String quoted(String normalizedQuery) {
+        return normalizedQuery.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     public List<RankedKeyword> rankings() {
