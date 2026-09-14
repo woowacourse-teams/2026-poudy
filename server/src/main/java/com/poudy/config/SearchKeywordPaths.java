@@ -2,9 +2,10 @@ package com.poudy.config;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public final class SearchKeywordPaths {
 
@@ -45,11 +46,18 @@ public final class SearchKeywordPaths {
 
     private static Path canonical(Path path) throws IOException {
         Path absolute = path.toAbsolutePath();
-        Path resolved = absolute.getRoot();
-        for (Path part : absolute) {
-            resolved = follow(resolved, part.toString());
-        }
-        return resolved;
+        Path existing = existingAncestor(absolute);
+        Path realExisting = existing.toRealPath();
+        Path missing = existing.relativize(absolute);
+        Path joined = realExisting.resolve(missing);
+        return joined.normalize();
+    }
+
+    private static Path existingAncestor(Path path) {
+        return Stream.iterate(path, Objects::nonNull, Path::getParent)
+            .filter(Files::exists)
+            .findFirst()
+            .orElse(path.getRoot());
     }
 
     private void requireExplicitPath(String configured) {
@@ -87,26 +95,5 @@ public final class SearchKeywordPaths {
         if (directories.stream().anyMatch(path::startsWith)) {
             throw new IllegalArgumentException(message);
         }
-    }
-
-    private static Path follow(Path resolved, String part) throws IOException {
-        if (part.equals(".")) {
-            return resolved;
-        }
-        if (part.equals("..")) {
-            return parentOf(resolved);
-        }
-        Path next = resolved.resolve(part);
-        if (Files.exists(next, LinkOption.NOFOLLOW_LINKS)) {
-            return next.toRealPath();
-        }
-        return next;
-    }
-
-    private static Path parentOf(Path path) {
-        if (path.getParent() == null) {
-            return path;
-        }
-        return path.getParent();
     }
 }
