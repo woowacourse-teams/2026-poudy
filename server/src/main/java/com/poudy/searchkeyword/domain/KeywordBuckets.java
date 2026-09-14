@@ -18,8 +18,6 @@ public final class KeywordBuckets {
     private final Instant startedAt;
     private final ReentrantLock lock = new ReentrantLock();
     private final TreeMap<Instant, Map<String, Long>> buckets = new TreeMap<>();
-    private final Map<String, Long> totals = new HashMap<>();
-    private int entryCount;
     private Instant maxObservedBucketStart;
     private boolean clockRegressed;
 
@@ -69,8 +67,8 @@ public final class KeywordBuckets {
                 observedThrough(now),
                 clockRegressed,
                 buckets.size(),
-                entryCount,
-                totals.size()
+                entryCount(),
+                uniqueKeyCount()
             );
         } finally {
             lock.unlock();
@@ -128,11 +126,7 @@ public final class KeywordBuckets {
     }
 
     private void load(KeywordBucketSnapshot snapshot) {
-        Map<String, Long> restoredTotals = snapshot.totals();
-        int restoredEntries = snapshot.entryCount();
         snapshot.countsByStart().forEach((start, counts) -> buckets.put(start, new ConcurrentHashMap<>(counts)));
-        totals.putAll(restoredTotals);
-        entryCount = restoredEntries;
         maxObservedBucketStart = snapshot.maxObservedBucketStart();
     }
 
@@ -149,23 +143,23 @@ public final class KeywordBuckets {
 
     private void removeExpired() {
         Instant oldest = window.retainedStart(maxObservedBucketStart);
-        while (!buckets.isEmpty() && buckets.firstKey().isBefore(oldest)) {
-            Map<String, Long> expired = buckets.pollFirstEntry().getValue();
-            subtractFrom(totals, expired);
-            entryCount = Math.subtractExact(entryCount, expired.size());
-        }
+        buckets.headMap(oldest).clear();
     }
 
     private void increment(String key) {
-        long total = Math.addExact(totals.getOrDefault(key, 0L), 1L);
         Map<String, Long> current = buckets.computeIfAbsent(
             maxObservedBucketStart,
             ignored -> new ConcurrentHashMap<>()
         );
-        if (current.merge(key, 1L, Long::sum) == 1L) {
-            entryCount = Math.incrementExact(entryCount);
-        }
-        totals.put(key, total);
+        current.merge(key, 1L, Math::addExact);
+    }
+
+    private int entryCount() {
+        return buckets.values().stream().mapToInt(Map::size).sum();
+    }
+
+    private int uniqueKeyCount() {
+        return (int) buckets.values().stream().flatMap(counts -> counts.keySet().stream()).distinct().count();
     }
 
     private Optional<KeywordBucketView> comparedWindow() {
@@ -207,18 +201,6 @@ public final class KeywordBuckets {
             return maxObservedBucketStart;
         }
         return now;
-    }
-
-    private static void subtractFrom(Map<String, Long> target, Map<String, Long> counts) {
-        counts.forEach((key, count) -> target.computeIfPresent(key, (ignored, total) -> remainder(total, count)));
-    }
-
-    private static Long remainder(long total, long count) {
-        long remaining = Math.subtractExact(total, count);
-        if (remaining == 0) {
-            return null;
-        }
-        return remaining;
     }
 
     public enum RecordResult {

@@ -24,10 +24,6 @@ public final class KeywordBucket {
         return counts;
     }
 
-    public int entryCount() {
-        return counts.size();
-    }
-
     public void addCountsTo(Map<String, Long> target) {
         counts.forEach((key, count) -> target.merge(key, count, Math::addExact));
     }

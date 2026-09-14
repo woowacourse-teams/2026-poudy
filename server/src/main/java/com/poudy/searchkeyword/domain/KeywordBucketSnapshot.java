@@ -55,12 +55,7 @@ public final class KeywordBucketSnapshot {
             throw new IllegalArgumentException("Invalid snapshot bucket");
         }
         buckets.forEach(bucket -> bucket.validateWithin(window, maxObservedBucketStart));
-    }
-
-    public Map<String, Long> totals() {
-        Map<String, Long> totals = new HashMap<>();
-        buckets.forEach(bucket -> bucket.addCountsTo(totals));
-        return totals;
+        requireSummableCounts();
     }
 
     public Map<Instant, Map<String, Long>> countsByStart() {
@@ -69,8 +64,9 @@ public final class KeywordBucketSnapshot {
         return byStart;
     }
 
-    public int entryCount() {
-        return buckets.stream().mapToInt(KeywordBucket::entryCount).reduce(0, Math::addExact);
+    private void requireSummableCounts() {
+        Map<String, Long> sums = new HashMap<>();
+        buckets.forEach(bucket -> bucket.addCountsTo(sums));
     }
 
     private boolean hasDuplicateStarts() {
