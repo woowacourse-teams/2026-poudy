@@ -51,6 +51,8 @@ poudy:
   product-views:
     file: ${POUDY_PRODUCT_VIEWS_FILE:./var/product-views/daily-counts.json}
     save-interval: ${POUDY_PRODUCT_VIEWS_SAVE_INTERVAL:PT10S}
+  search-keywords:
+    state-file: ${POUDY_SEARCH_KEYWORDS_STATE_FILE:./var/search-ranking/buckets.json}
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:

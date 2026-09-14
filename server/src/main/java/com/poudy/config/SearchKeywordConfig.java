@@ -91,7 +91,7 @@ public class SearchKeywordConfig {
     }
 
     @Bean
-    public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) throws IOException {
+    public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) {
         return new KeywordSnapshotRepository(paths(env).stateFile());
     }
 
@@ -193,7 +193,7 @@ public class SearchKeywordConfig {
     }
 
     private static SearchKeywordPaths paths(Environment env) {
-        return new SearchKeywordPaths(env.matchesProfiles("prod"), dataDirectory(env));
+        return new SearchKeywordPaths(env.getProperty(PROPERTY_PREFIX + "state-file", ""));
     }
 
     private static Runnable reportExport(Environment env, ResourceLoader resources, SearchKeywordService service)
