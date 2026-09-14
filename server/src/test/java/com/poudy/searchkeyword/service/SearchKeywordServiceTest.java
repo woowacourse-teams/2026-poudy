@@ -10,6 +10,7 @@ import com.poudy.searchkeyword.domain.DictionaryEntry;
 import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.KeywordCoverage;
+import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.ReportItem;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class SearchKeywordServiceTest {
+    private static final KeywordSearch CATALOG = keyword -> !keyword.equals("없는검색");
     private final MutableClock clock = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
     private final KeywordBuckets successful = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
 
@@ -46,18 +48,18 @@ class SearchKeywordServiceTest {
             Set.of()
         );
         for (int i = 0; i < 3; i++) {
-            service.completed(new SearchKeyword("pdrn"), 20);
-            service.completed(new SearchKeyword("PDRN"), 20);
+            service.record(new SearchKeyword("pdrn"));
+            service.record(new SearchKeyword("PDRN"));
         }
         for (int i = 0; i < 4; i++) {
-            service.completed(new SearchKeyword("독도 토너"), 4);
+            service.record(new SearchKeyword("독도 토너"));
         }
         closeBucket();
         service.refreshRankings();
         assertThat(service.rankings()).extracting(RankedKeyword::keyword).containsExactly("PDRN");
-        service.completed(new SearchKeyword("ㄷㄷㅌㄴ"), 1);
+        service.record(new SearchKeyword("ㄷㄷㅌㄴ"));
         for (int i = 0; i < 5; i++) {
-            service.completed(new SearchKeyword("라운드랩"), 40);
+            service.record(new SearchKeyword("라운드랩"));
         }
         closeBucket();
         service.refreshRankings();
@@ -70,10 +72,10 @@ class SearchKeywordServiceTest {
     void mergesSpacingVariantsOfOneInputIntoTheSameKeyword() {
         SearchKeywordService service = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         for (int i = 0; i < 3; i++) {
-            service.completed(new SearchKeyword("독도 토너"), 1);
+            service.record(new SearchKeyword("독도 토너"));
         }
         for (int i = 0; i < 2; i++) {
-            service.completed(new SearchKeyword("독도토너"), 1);
+            service.record(new SearchKeyword("독도토너"));
         }
         closeBucket();
         service.refreshRankings();
@@ -86,8 +88,7 @@ class SearchKeywordServiceTest {
     void retainsUnresolvedSuccessfulInputsAndReinterpretsThemAfterDictionaryReplacement() {
         SearchKeywordService old = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 5; i++) {
-            old.completed(new SearchKeyword("독도 토너"), 1);
-            old.completed(new SearchKeyword("토너"), 0);
+            old.record(new SearchKeyword("독도 토너"));
         }
         closeBucket();
         old.refreshRankings();
@@ -102,12 +103,12 @@ class SearchKeywordServiceTest {
     void shadowRankingRanksInputsThatTheDictionaryCannotResolve() {
         SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 5; i++) {
-            service.completed(new SearchKeyword("토너"), 1);
+            service.record(new SearchKeyword("토너"));
         }
         for (int i = 0; i < 9; i++) {
-            service.completed(new SearchKeyword("사전에없는말"), 1);
+            service.record(new SearchKeyword("사전에없는말"));
         }
-        service.completed(new SearchKeyword("적은입력"), 1);
+        service.record(new SearchKeyword("적은입력"));
         closeBucket();
 
         ImprovementReport report = service.report("catalog", "code");
@@ -124,14 +125,14 @@ class SearchKeywordServiceTest {
     void keepsOnlyInputsWithResultsAndSeparatesReportThreshold() {
         SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
-            service.completed(new SearchKeyword("없는검색"), 0);
+            service.record(new SearchKeyword("없는검색"));
         }
         for (int i = 0; i < 19; i++) {
-            service.completed(new SearchKeyword("미등록"), 1);
+            service.record(new SearchKeyword("미등록"));
         }
         closeBucket();
         assertThat(service.report("catalog", "code").nonzeroUnresolved().items()).isEmpty();
-        service.completed(new SearchKeyword("미등록"), 1);
+        service.record(new SearchKeyword("미등록"));
         closeBucket();
         assertThat(service.report("catalog", "code").nonzeroUnresolved().items())
             .extracting(ReportItem::normalizedQuery, ReportItem::count)
@@ -145,13 +146,13 @@ class SearchKeywordServiceTest {
     void reportGroupsSpacingVariantsAndCarriesTheResolvedShare() {
         SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 12; i++) {
-            service.completed(new SearchKeyword("없는 말"), 1);
+            service.record(new SearchKeyword("없는 말"));
         }
         for (int i = 0; i < 9; i++) {
-            service.completed(new SearchKeyword("없는말"), 1);
+            service.record(new SearchKeyword("없는말"));
         }
         for (int i = 0; i < 4; i++) {
-            service.completed(new SearchKeyword("토너"), 1);
+            service.record(new SearchKeyword("토너"));
         }
         closeBucket();
 
@@ -170,8 +171,8 @@ class SearchKeywordServiceTest {
     void reportShowsUnresolvedInputsAsTyped() {
         SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
-            service.completed(new SearchKeyword("a@example.com"), 1);
-            service.completed(new SearchKeyword("미등록"), 1);
+            service.record(new SearchKeyword("a@example.com"));
+            service.record(new SearchKeyword("미등록"));
         }
         closeBucket();
         assertThat(successful.view().counts()).containsKeys("a@example.com", "미등록");
@@ -192,7 +193,7 @@ class SearchKeywordServiceTest {
         SearchKeywordService service = service(entries, Set.of("id00"));
         for (DictionaryEntry entry : entries) {
             for (int i = 0; i < 5; i++) {
-                service.completed(new SearchKeyword(entry.expressions().iterator().next()), 1);
+                service.record(new SearchKeyword(entry.expressions().iterator().next()));
             }
         }
         closeBucket();
@@ -210,7 +211,7 @@ class SearchKeywordServiceTest {
             Set.of()
         );
         for (int i = 0; i < 5; i++) {
-            service.completed(new SearchKeyword("토너"), 1);
+            service.record(new SearchKeyword("토너"));
         }
         assertThat(service.rankings()).isEmpty();
         closeBucket();
@@ -221,7 +222,7 @@ class SearchKeywordServiceTest {
             .isInstanceOf(UnsupportedOperationException.class);
 
         for (int i = 0; i < 6; i++) {
-            service.completed(new SearchKeyword("크림"), 1);
+            service.record(new SearchKeyword("크림"));
         }
         assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너"));
         closeBucket();
@@ -257,12 +258,13 @@ class SearchKeywordServiceTest {
         SearchKeywordService failing = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
+            CATALOG,
             new RankingPolicy(5, 10, Set.of()),
             20,
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
-            failing.completed(new SearchKeyword("토너"), 1);
+            failing.record(new SearchKeyword("토너"));
         }
         throwingClock.now = throwingClock.now.plus(10, ChronoUnit.MINUTES);
         failing.refreshRankings();
@@ -281,12 +283,13 @@ class SearchKeywordServiceTest {
         SearchKeywordService service = new SearchKeywordService(
             new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
+            CATALOG,
             new RankingPolicy(5, 10, Set.of()),
             20,
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
-            service.completed(new SearchKeyword("토너"), 1);
+            service.record(new SearchKeyword("토너"));
         }
         mutable.now = mutable.now.plus(1, ChronoUnit.MINUTES);
         service.refreshRankings();
@@ -309,13 +312,14 @@ class SearchKeywordServiceTest {
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
+            CATALOG,
             new RankingPolicy(5, 10, Set.of()),
             20,
             RankingFallback.none()
         );
         for (DictionaryEntry entry : entries) {
             for (int i = 0; i < (entry.id().endsWith("19") ? 1 : 5); i++) {
-                service.completed(new SearchKeyword(entry.expressions().iterator().next()), 1);
+                service.record(new SearchKeyword(entry.expressions().iterator().next()));
             }
         }
         assertThat(service.rankings()).isEmpty();
@@ -344,18 +348,19 @@ class SearchKeywordServiceTest {
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
+            CATALOG,
             new RankingPolicy(5, 10, Set.of("blocked")),
             20,
             RankingFallback.none()
         );
         for (int i = 0; i < 5; i++) {
-            service.completed(new SearchKeyword("자격"), 1);
+            service.record(new SearchKeyword("자격"));
         }
         for (int i = 0; i < 4; i++) {
-            service.completed(new SearchKeyword("부족"), 1);
+            service.record(new SearchKeyword("부족"));
         }
         for (int i = 0; i < 10; i++) {
-            service.completed(new SearchKeyword("차단"), 1);
+            service.record(new SearchKeyword("차단"));
         }
         closeBucket();
         service.refreshRankings();
@@ -408,6 +413,7 @@ class SearchKeywordServiceTest {
         return new SearchKeywordService(
             new SearchKeywordDictionary("v1", entries, ignored -> true),
             successful,
+            CATALOG,
             new RankingPolicy(5, 10, blocked),
             20,
             RankingFallback.none()

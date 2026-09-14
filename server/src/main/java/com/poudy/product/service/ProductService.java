@@ -16,7 +16,6 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.search.observation.ProductSearchObserver;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,20 +30,17 @@ public class ProductService {
     private final Categories categories;
     private final ExcludeCodeIngredients excludeCodeIngredients;
     private final ProductSearchLogger searchLogger;
-    private final ProductSearchObserver searchObserver;
 
     public ProductService(
         ProductRepository productRepository,
         Categories categories,
         ExcludeCodeIngredients excludeCodeIngredients,
-        ProductSearchLogger searchLogger,
-        ProductSearchObserver searchObserver
+        ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
         this.categories = categories;
         this.excludeCodeIngredients = excludeCodeIngredients;
         this.searchLogger = searchLogger;
-        this.searchObserver = searchObserver;
     }
 
     public ProductPage findProducts(
@@ -75,7 +71,6 @@ public class ProductService {
         ProductPage result = searchOrRecordFailure(context, search, startedAt);
         long elapsed = System.nanoTime() - startedAt;
         quietly(() -> searchLogger.completed(context, elapsed, result.totalElements()));
-        quietly(() -> searchObserver.completed(context.keyword(), result.totalElements()));
         return result;
     }
 

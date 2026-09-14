@@ -4,6 +4,9 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
+export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
+
 export type ProductRegistrationRequest = __TypedOpenapi.Schemas.ProductRegistrationRequest;
 export const ProductRegistrationRequest = z.object({ productName: z.string().min(1).max(200), brandName: z.string().min(0).max(100).nullable().optional() });
 

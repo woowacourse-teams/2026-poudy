@@ -1,11 +1,11 @@
 package com.poudy.searchkeyword.service;
 
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.search.observation.ProductSearchObserver;
 import com.poudy.searchkeyword.domain.ImprovementReport;
 import com.poudy.searchkeyword.domain.KeywordBucketView;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
 import com.poudy.searchkeyword.domain.KeywordCoverage;
+import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.ReportSection;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -16,11 +16,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SearchKeywordService implements ProductSearchObserver {
+public class SearchKeywordService {
 
     private static final Logger log = LoggerFactory.getLogger(SearchKeywordService.class);
     private final SearchKeywordDictionary dictionary;
     private final KeywordBuckets successful;
+    private final KeywordSearch search;
     private final long reportMinCount;
     private final RankingPolicy rankingPolicy;
     private final RankingFallback rankingFallback;
@@ -29,6 +30,7 @@ public class SearchKeywordService implements ProductSearchObserver {
     public SearchKeywordService(
         SearchKeywordDictionary dictionary,
         KeywordBuckets successful,
+        KeywordSearch search,
         RankingPolicy rankingPolicy,
         long reportMinCount,
         RankingFallback rankingFallback
@@ -38,14 +40,14 @@ public class SearchKeywordService implements ProductSearchObserver {
         }
         this.dictionary = dictionary;
         this.successful = successful;
+        this.search = search;
         this.reportMinCount = reportMinCount;
         this.rankingPolicy = rankingPolicy;
         this.rankingFallback = rankingFallback;
     }
 
-    @Override
-    public void completed(SearchKeyword keyword, long totalElements) {
-        if (totalElements <= 0) {
+    public void record(SearchKeyword keyword) {
+        if (!search.hasResults(keyword.text())) {
             return;
         }
         successful.record(keyword.text());

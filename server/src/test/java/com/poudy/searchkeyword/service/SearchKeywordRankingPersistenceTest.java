@@ -36,7 +36,7 @@ class SearchKeywordRankingPersistenceTest {
         );
         SearchKeywordService recorder = service(recording);
         for (int i = 0; i < 5; i++) {
-            recorder.completed(new SearchKeyword("토너"), 1);
+            recorder.record(new SearchKeyword("토너"));
         }
         KeywordSnapshotRepository countsRepository = new KeywordSnapshotRepository(directory.resolve("buckets.json"));
         countsRepository.save(recording.snapshot());
@@ -70,6 +70,7 @@ class SearchKeywordRankingPersistenceTest {
         return new SearchKeywordService(
             dictionary,
             buckets,
+            ignored -> true,
             new RankingPolicy(5, 10, Set.of()),
             20,
             RankingFallback.none()

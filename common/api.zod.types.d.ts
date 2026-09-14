@@ -1,5 +1,6 @@
   export namespace Schemas {
-  export type ProductRegistrationRequest = {
+  export type SearchKeywordRequest = { keyword: string }
+export type ProductRegistrationRequest = {
   /**
    * 등록을 요청할 제품명
    */
@@ -570,6 +571,24 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
+ * 제출한 검색어를 인기 검색어 집계에 더한다. 지금 상품이 검색되지 않는 검색어는 세지 않는다.
+ */
+export type post_Record = {
+      method: "POST",
+      path: "/api/search-keywords",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.SearchKeywordRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
  */
 export type post_Submit = {
@@ -1014,7 +1033,8 @@ export type get_FindBrand = {
 
      export type EndpointByMethod = {
      post: {
-           "/api/product-requests": Endpoints.post_Submit,
+           "/api/search-keywords": Endpoints.post_Record,
+"/api/product-requests": Endpoints.post_Submit,
 "/api/feedback": Endpoints.post_Submit_1,
 "/api/feedback/images": Endpoints.post_UploadImages
          },

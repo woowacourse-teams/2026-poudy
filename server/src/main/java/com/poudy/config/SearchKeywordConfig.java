@@ -3,6 +3,7 @@ package com.poudy.config;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
@@ -68,14 +69,18 @@ public class SearchKeywordConfig {
     }
 
     @Bean
+    public KeywordSearch catalogKeywordSearch(ProductRepository products) {
+        return new CatalogKeywordSearch(products);
+    }
+
+    @Bean
     public SearchKeywordDictionary searchKeywordDictionary(
         Environment env,
         ResourceLoader resources,
-        ProductRepository products
+        KeywordSearch search
     )
         throws IOException {
         SearchKeywordDictionaryRepository repository = new SearchKeywordDictionaryRepository();
-        CatalogKeywordSearch search = new CatalogKeywordSearch(products);
         String dataDirectory = dataDirectory(env);
         if (!dataDirectory.isBlank()) {
             return repository.read(Path.of(dataDirectory).resolve(DICTIONARY_FILE), search);
@@ -120,11 +125,13 @@ public class SearchKeywordConfig {
         Environment env,
         SearchKeywordDictionary dictionary,
         KeywordBuckets buckets,
+        KeywordSearch search,
         RankingPolicy rankingPolicy
     ) {
         return new SearchKeywordService(
             dictionary,
             buckets,
+            search,
             rankingPolicy,
             SearchKeywordPolicy.REPORT_MIN_COUNT,
             new RankingFallback(defaultKeywords(env))

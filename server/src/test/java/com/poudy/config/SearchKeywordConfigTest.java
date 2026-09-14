@@ -5,11 +5,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.product.domain.Products;
-import com.poudy.product.repository.ProductRepository;
+import com.poudy.searchkeyword.domain.KeywordSearch;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -39,9 +37,7 @@ class SearchKeywordConfigTest {
         ).isInstanceOf(InfrastructureException.class);
     }
 
-    private static ProductRepository emptyCatalog() {
-        ProductRepository products = mock(ProductRepository.class);
-        when(products.findAll()).thenReturn(Products.from(List.of()));
-        return products;
+    private static KeywordSearch emptyCatalog() {
+        return ignored -> false;
     }
 }
