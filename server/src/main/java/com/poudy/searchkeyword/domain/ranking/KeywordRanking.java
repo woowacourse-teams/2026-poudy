@@ -18,14 +18,6 @@ public final class KeywordRanking {
     public static List<RankedKeyword> of(
         Map<String, Long> counts,
         SearchKeywordDictionary dictionary,
-        RankingPolicy policy
-    ) {
-        return of(counts, dictionary, policy, RankingFallback.none());
-    }
-
-    public static List<RankedKeyword> of(
-        Map<String, Long> counts,
-        SearchKeywordDictionary dictionary,
         RankingPolicy policy,
         RankingFallback fallback
     ) {
@@ -95,7 +87,7 @@ public final class KeywordRanking {
             .map(Map.Entry::getKey)
             .sorted(order(totals))
             .filter(policy::publishes)
-            .filter(dictionary::validateForRanking)
+            .filter(dictionary::canRank)
             .limit(policy.size())
             .map(DictionaryEntry::keyword)
             .toList();

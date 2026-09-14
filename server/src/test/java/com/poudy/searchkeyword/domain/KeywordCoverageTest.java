@@ -2,8 +2,6 @@ package com.poudy.searchkeyword.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.searchkeyword.domain.DictionaryEntry.ExpressionType;
-import com.poudy.searchkeyword.domain.DictionaryEntry.Kind;
 import com.poudy.searchkeyword.domain.DictionaryEntry.Status;
 import java.util.List;
 import java.util.Map;
@@ -11,18 +9,10 @@ import org.junit.jupiter.api.Test;
 
 class KeywordCoverageTest {
 
-    private final SearchKeywordDictionary dictionary = new SearchKeywordDictionary(
+    private final SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
         "v1",
         List.of(
-            new DictionaryEntry(
-                "term:1",
-                Kind.TERM,
-                "토너",
-                Status.ACTIVE,
-                true,
-                List.of("토너"),
-                Map.of("토너", ExpressionType.CATALOG)
-            )
+            DictionaryEntry.of("term:1", "토너", Status.ACTIVE, true, List.of("토너"))
         ),
         keyword -> true
     );

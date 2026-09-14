@@ -16,7 +16,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -57,16 +56,8 @@ class SearchKeywordRankingPersistenceTest {
     }
 
     private static SearchKeywordService service(KeywordBuckets buckets) {
-        DictionaryEntry entry = new DictionaryEntry(
-            "term",
-            DictionaryEntry.Kind.TERM,
-            "토너",
-            DictionaryEntry.Status.ACTIVE,
-            true,
-            List.of("토너"),
-            Map.of("토너", DictionaryEntry.ExpressionType.CATALOG)
-        );
-        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("data-v1", List.of(entry), ignored -> true);
+        DictionaryEntry entry = DictionaryEntry.of("term", "토너", DictionaryEntry.Status.ACTIVE, true, List.of("토너"));
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("data-v1", List.of(entry), ignored -> true);
         return new SearchKeywordService(
             dictionary,
             buckets,

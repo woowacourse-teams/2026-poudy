@@ -43,10 +43,10 @@ class SearchKeywordDictionaryRepositoryTest {
         assertThat(dictionary.expressionCount()).isEqualTo(4);
         assertThat(dictionary.resolve("독도토너")).hasValueSatisfying(entry -> {
             assertThat(entry.keyword()).isEqualTo("라운드랩 1025 독도 토너");
-            assertThat(dictionary.validateForRanking(entry)).isTrue();
+            assertThat(dictionary.canRank(entry)).isTrue();
         });
         assertThat(dictionary.resolve("pdrn"))
-            .hasValueSatisfying(entry -> assertThat(dictionary.validateForRanking(entry)).isTrue());
+            .hasValueSatisfying(entry -> assertThat(dictionary.canRank(entry)).isTrue());
         assertThat(Files.readAllBytes(file)).isEqualTo(bytes);
     }
 

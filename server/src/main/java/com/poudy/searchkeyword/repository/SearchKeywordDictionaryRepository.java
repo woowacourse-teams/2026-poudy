@@ -2,8 +2,6 @@ package com.poudy.searchkeyword.repository;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.DictionaryEntry.ExpressionType;
-import com.poudy.searchkeyword.domain.DictionaryEntry.Kind;
 import com.poudy.searchkeyword.domain.DictionaryEntry.Status;
 import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
@@ -78,7 +76,7 @@ public final class SearchKeywordDictionaryRepository {
             if (schemaVersion != 3 || !"search-keyword-v1".equals(normalizerVersion)) {
                 throw new IllegalArgumentException("지원하지 않는 검색어 사전 버전입니다.");
             }
-            return new SearchKeywordDictionary(
+            return SearchKeywordDictionary.of(
                 dictionaryVersion,
                 searchKeywords.stream().map(EntryDocument::toEntry).toList(),
                 search
@@ -100,8 +98,30 @@ public final class SearchKeywordDictionaryRepository {
                 throw new IllegalArgumentException("사전 카탈로그 참조가 비어 있습니다.");
             }
             catalogRefs.forEach(CatalogReference::validate);
-            return new DictionaryEntry(id, kind, keyword, status, rankingEligible, expressions, expressionTypes);
+            DictionaryEntry entry = DictionaryEntry.of(id, keyword, status, rankingEligible, expressions);
+            requireExpressionSources(entry);
+            return entry;
         }
+
+        private void requireExpressionSources(DictionaryEntry entry) {
+            if (expressionTypes.containsValue(null)) {
+                throw new IllegalArgumentException("사전 표현 출처가 비어 있습니다: " + id);
+            }
+            if (!entry.expressions().equals(expressionTypes.keySet())) {
+                throw new IllegalArgumentException("사전 표현과 표현 출처의 정규화 키가 다릅니다: " + id);
+            }
+        }
+    }
+
+    private enum Kind {
+        BRAND,
+        PRODUCT,
+        TERM
+    }
+
+    private enum ExpressionType {
+        CATALOG,
+        REVIEWED_ALIAS
     }
 
     private record CatalogReference(ReferenceType type, Long id) {

@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class SearchKeywordServiceTest {
@@ -256,7 +255,7 @@ class SearchKeywordServiceTest {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(throwingClock, new BucketWindow(168, 600, 0));
         SearchKeywordService failing = new SearchKeywordService(
-            new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -281,7 +280,7 @@ class SearchKeywordServiceTest {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(mutable, new BucketWindow(1, 60, 0));
         SearchKeywordService service = new SearchKeywordService(
-            new SearchKeywordDictionary("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -304,7 +303,7 @@ class SearchKeywordServiceTest {
         AtomicInteger calls = new AtomicInteger();
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 20)
             .mapToObj(i -> entry("term%02d".formatted(i), "검색어%02d".formatted(i), "표현%02d".formatted(i))).toList();
-        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
@@ -340,7 +339,7 @@ class SearchKeywordServiceTest {
             entry("below", "부족", "부족"),
             entry("blocked", "차단", "차단")
         );
-        SearchKeywordDictionary dictionary = new SearchKeywordDictionary("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
@@ -411,7 +410,7 @@ class SearchKeywordServiceTest {
 
     private SearchKeywordService service(List<DictionaryEntry> entries, Set<String> blocked) {
         return new SearchKeywordService(
-            new SearchKeywordDictionary("v1", entries, ignored -> true),
+            SearchKeywordDictionary.of("v1", entries, ignored -> true),
             successful,
             CATALOG,
             new RankingPolicy(5, 10, blocked),
@@ -421,18 +420,6 @@ class SearchKeywordServiceTest {
     }
 
     private DictionaryEntry entry(String id, String keyword, String... aliases) {
-        DictionaryEntry.Kind kind = id.equals("brand") ? DictionaryEntry.Kind.BRAND : id.equals("product")
-            ? DictionaryEntry.Kind.PRODUCT : DictionaryEntry.Kind.TERM;
-        return new DictionaryEntry(
-            id,
-            kind,
-            keyword,
-            DictionaryEntry.Status.ACTIVE,
-            true,
-            List.of(aliases),
-            List.of(aliases).stream().collect(
-                Collectors.toMap(a -> new SearchKeyword(a).value(), a -> DictionaryEntry.ExpressionType.REVIEWED_ALIAS)
-            )
-        );
+        return DictionaryEntry.of(id, keyword, DictionaryEntry.Status.ACTIVE, true, List.of(aliases));
     }
 }

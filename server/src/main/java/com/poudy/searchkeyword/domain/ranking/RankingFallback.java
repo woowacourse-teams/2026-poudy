@@ -10,8 +10,13 @@ public final class RankingFallback {
 
     private final List<String> keywords;
 
-    public RankingFallback(List<String> keywords) {
-        this.keywords = keywords.stream().map(keyword -> new SearchKeyword(keyword).text()).toList();
+    private RankingFallback(List<String> keywords) {
+        this.keywords = keywords;
+    }
+
+    public static RankingFallback of(List<String> keywords) {
+        List<String> normalized = keywords.stream().map(keyword -> new SearchKeyword(keyword).text()).toList();
+        return new RankingFallback(normalized);
     }
 
     public static RankingFallback none() {
@@ -22,7 +27,7 @@ public final class RankingFallback {
         return keywords.stream()
             .map(dictionary::resolve)
             .flatMap(Optional::stream)
-            .filter(dictionary::validateForRanking)
+            .filter(dictionary::canRank)
             .map(DictionaryEntry::keyword)
             .distinct()
             .toList();

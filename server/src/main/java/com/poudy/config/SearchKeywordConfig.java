@@ -134,7 +134,7 @@ public class SearchKeywordConfig {
             search,
             rankingPolicy,
             SearchKeywordPolicy.REPORT_MIN_COUNT,
-            new RankingFallback(defaultKeywords(env))
+            RankingFallback.of(defaultKeywords(env))
         );
     }
 

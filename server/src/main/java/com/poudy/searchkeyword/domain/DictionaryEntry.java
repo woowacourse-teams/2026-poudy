@@ -2,81 +2,56 @@ package com.poudy.searchkeyword.domain;
 
 import com.poudy.search.domain.SearchKeyword;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class DictionaryEntry implements Comparable<DictionaryEntry> {
-
-    public enum Kind {
-        BRAND,
-        PRODUCT,
-        TERM
-    }
 
     public enum Status {
         ACTIVE,
         INACTIVE
     }
 
-    public enum ExpressionType {
-        CATALOG,
-        REVIEWED_ALIAS
-    }
-
     private final String id;
-    private final Kind kind;
     private final String keyword;
     private final String normalizedKeyword;
     private final Status status;
     private final boolean rankingEligible;
     private final Set<String> expressions;
 
-    public DictionaryEntry(
+    private DictionaryEntry(
         String id,
-        Kind kind,
+        String keyword,
+        String normalizedKeyword,
+        Status status,
+        boolean rankingEligible,
+        Set<String> expressions
+    ) {
+        this.id = id;
+        this.keyword = keyword;
+        this.normalizedKeyword = normalizedKeyword;
+        this.status = status;
+        this.rankingEligible = rankingEligible;
+        this.expressions = expressions;
+    }
+
+    public static DictionaryEntry of(
+        String id,
         String keyword,
         Status status,
         boolean rankingEligible,
-        List<String> expressions,
-        Map<String, ExpressionType> expressionTypes
+        List<String> expressions
     ) {
-        this.id = requiredText(id);
-        this.kind = kind;
-        this.keyword = requiredText(keyword);
-        this.normalizedKeyword = requiredText(new SearchKeyword(keyword).value());
-        this.status = status;
-        this.rankingEligible = rankingEligible;
-        this.expressions = normalizedExpressions(id, expressions, expressionTypes);
-    }
-
-    private static Set<String> normalizedExpressions(
-        String id,
-        List<String> expressions,
-        Map<String, ExpressionType> expressionTypes
-    ) {
-        Set<String> normalized = expressions.stream()
+        requiredText(id);
+        String normalizedKeyword = normalizedText(keyword);
+        Set<String> normalizedExpressions = expressions.stream()
             .map(DictionaryEntry::normalizedText)
             .collect(Collectors.toUnmodifiableSet());
-        expressionTypes.forEach((key, type) -> requireNormalizedSource(id, key, type));
-        if (!normalized.equals(expressionTypes.keySet())) {
-            throw new IllegalArgumentException("사전 표현과 표현 출처의 정규화 키가 다릅니다: " + id);
-        }
-        return normalized;
+        return new DictionaryEntry(id, keyword, normalizedKeyword, status, rankingEligible, normalizedExpressions);
     }
 
-    private static String normalizedText(String expression) {
-        return requiredText(new SearchKeyword(requiredText(expression)).value());
-    }
-
-    private static void requireNormalizedSource(String id, String key, ExpressionType type) {
-        requiredText(key);
-        if (type == null) {
-            throw new IllegalArgumentException("사전 표현 출처가 비어 있습니다: " + id);
-        }
-        if (!key.equals(new SearchKeyword(key).value())) {
-            throw new IllegalArgumentException("사전 표현 출처의 키가 정규화되어 있지 않습니다: " + id);
-        }
+    private static String normalizedText(String text) {
+        return requiredText(new SearchKeyword(requiredText(text)).value());
     }
 
     private static String requiredText(String value) {
@@ -90,16 +65,8 @@ public final class DictionaryEntry implements Comparable<DictionaryEntry> {
         return id;
     }
 
-    public Kind kind() {
-        return kind;
-    }
-
     public String keyword() {
         return keyword;
-    }
-
-    public Status status() {
-        return status;
     }
 
     public Set<String> expressions() {

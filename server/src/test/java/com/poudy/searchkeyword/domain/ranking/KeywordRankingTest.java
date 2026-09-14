@@ -2,10 +2,7 @@ package com.poudy.searchkeyword.domain.ranking;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.DictionaryEntry.ExpressionType;
-import com.poudy.searchkeyword.domain.DictionaryEntry.Kind;
 import com.poudy.searchkeyword.domain.DictionaryEntry.Status;
 import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
@@ -22,29 +19,19 @@ class KeywordRankingTest {
     void countsBelowTheMinimumAreCollectedButNotPublished() {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 
-        List<RankedKeyword> rankings = KeywordRanking.of(Map.of("토너", 5L, "크림", 4L), dictionary, POLICY);
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 5L, "크림", 4L), dictionary, POLICY, RankingFallback.none());
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
     }
 
     @Test
     void sumsEveryInputLinkedToOneKeyword() {
-        DictionaryEntry toner = new DictionaryEntry(
-            "term:1",
-            Kind.TERM,
-            "토너",
-            Status.ACTIVE,
-            true,
-            List.of("토너", "toner"),
-            Map.of("토너", ExpressionType.CATALOG, "toner", ExpressionType.REVIEWED_ALIAS)
-        );
+        DictionaryEntry toner = DictionaryEntry.of("term:1", "토너", Status.ACTIVE, true, List.of("토너", "toner"));
         SearchKeywordDictionary dictionary = dictionary(toner, entry("term:2", "크림"));
 
-        List<RankedKeyword> rankings = KeywordRanking.of(
-            Map.of("토너", 3L, "toner", 3L, "크림", 5L),
-            dictionary,
-            POLICY
-        );
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 3L, "toner", 3L, "크림", 5L), dictionary, POLICY, RankingFallback.none());
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"), new RankedKeyword(2, "크림"));
     }
@@ -57,11 +44,8 @@ class KeywordRankingTest {
             entry("term:3", "크림오일")
         );
 
-        List<RankedKeyword> rankings = KeywordRanking.of(
-            Map.of("토너", 5L, "크림", 5L, "크림오일", 5L),
-            dictionary,
-            POLICY
-        );
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 5L, "크림", 5L, "크림오일", 5L), dictionary, POLICY, RankingFallback.none());
 
         assertThat(rankings).containsExactly(
             new RankedKeyword(1, "크림"),
@@ -81,7 +65,8 @@ class KeywordRankingTest {
         List<RankedKeyword> rankings = KeywordRanking.of(
             Map.of("토너", 9L, "크림", 8L, "세럼", 7L),
             dictionary,
-            new RankingPolicy(5, 2, Set.of())
+            new RankingPolicy(5, 2, Set.of()),
+            RankingFallback.none()
         );
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"), new RankedKeyword(2, "크림"));
@@ -94,7 +79,8 @@ class KeywordRankingTest {
         List<RankedKeyword> rankings = KeywordRanking.of(
             Map.of("토너", 9L, "크림", 8L),
             dictionary,
-            new RankingPolicy(5, 10, Set.of("term:1"))
+            new RankingPolicy(5, 10, Set.of("term:1")),
+            RankingFallback.none()
         );
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "크림"));
@@ -106,24 +92,22 @@ class KeywordRankingTest {
         DictionaryEntry ineligible = entry("term:3", "세럼", Status.ACTIVE, false);
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), inactive, ineligible);
 
-        List<RankedKeyword> rankings = KeywordRanking.of(
-            Map.of("토너", 5L, "크림", 9L, "세럼", 9L, "미해석", 9L),
-            dictionary,
-            POLICY
-        );
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 5L, "크림", 9L, "세럼", 9L, "미해석", 9L), dictionary, POLICY, RankingFallback.none());
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "토너"));
     }
 
     @Test
     void keywordsWithoutCatalogResultsAreDropped() {
-        SearchKeywordDictionary dictionary = new SearchKeywordDictionary(
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
             "fixture-v1",
             List.of(entry("term:1", "토너"), entry("term:2", "크림")),
             keyword -> keyword.equals("크림")
         );
 
-        List<RankedKeyword> rankings = KeywordRanking.of(Map.of("토너", 9L, "크림", 5L), dictionary, POLICY);
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 9L, "크림", 5L), dictionary, POLICY, RankingFallback.none());
 
         assertThat(rankings).containsExactly(new RankedKeyword(1, "크림"));
     }
@@ -135,14 +119,10 @@ class KeywordRankingTest {
             entry("term:2", "크림"),
             entry("term:3", "세럼")
         );
-        RankingFallback fallback = new RankingFallback(List.of("크림", "세럼"));
+        RankingFallback fallback = RankingFallback.of(List.of("크림", "세럼"));
 
-        List<RankedKeyword> rankings = KeywordRanking.of(
-            Map.of("토너", 9L, "크림", 5L),
-            dictionary,
-            new RankingPolicy(5, 3, Set.of()),
-            fallback
-        );
+        List<RankedKeyword> rankings = KeywordRanking
+            .of(Map.of("토너", 9L, "크림", 5L), dictionary, new RankingPolicy(5, 3, Set.of()), fallback);
 
         assertThat(rankings).containsExactly(
             new RankedKeyword(1, "토너"),
@@ -153,12 +133,12 @@ class KeywordRankingTest {
 
     @Test
     void defaultKeywordsPassTheSameEligibilityAsCountedOnes() {
-        SearchKeywordDictionary dictionary = new SearchKeywordDictionary(
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
             "fixture-v1",
             List.of(entry("term:1", "토너"), entry("term:2", "크림"), entry("term:3", "세럼", Status.ACTIVE, false)),
             keyword -> !keyword.equals("크림")
         );
-        RankingFallback fallback = new RankingFallback(List.of("크림", "세럼", "토너", "없는말"));
+        RankingFallback fallback = RankingFallback.of(List.of("크림", "세럼", "토너", "없는말"));
 
         List<RankedKeyword> rankings = KeywordRanking.of(Map.of(), dictionary, POLICY, fallback);
 
@@ -192,19 +172,10 @@ class KeywordRankingTest {
     void leavesMovementUnknownWithoutComparisonAndForDefaultKeywords() {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 
-        List<RankedKeyword> withoutComparison = KeywordRanking.of(
-            Map.of("토너", 9L),
-            dictionary,
-            POLICY,
-            RankingFallback.none()
-        );
-        List<RankedKeyword> filled = KeywordRanking.of(
-            Map.of("토너", 9L),
-            Map.of("토너", 9L),
-            dictionary,
-            POLICY,
-            new RankingFallback(List.of("크림"))
-        );
+        List<RankedKeyword> withoutComparison = KeywordRanking
+            .of(Map.of("토너", 9L), dictionary, POLICY, RankingFallback.none());
+        List<RankedKeyword> filled = KeywordRanking
+            .of(Map.of("토너", 9L), Map.of("토너", 9L), dictionary, POLICY, RankingFallback.of(List.of("크림")));
 
         assertThat(withoutComparison.getFirst().change().isKnown()).isFalse();
         assertThat(filled.get(0).change()).isEqualTo(RankingChange.moved(1, 1));
@@ -236,7 +207,7 @@ class KeywordRankingTest {
 
     private static SearchKeywordDictionary dictionary(DictionaryEntry... entries) {
         KeywordSearch search = keyword -> true;
-        return new SearchKeywordDictionary("fixture-v1", List.of(entries), search);
+        return SearchKeywordDictionary.of("fixture-v1", List.of(entries), search);
     }
 
     private static DictionaryEntry entry(String id, String keyword) {
@@ -244,14 +215,6 @@ class KeywordRankingTest {
     }
 
     private static DictionaryEntry entry(String id, String keyword, Status status, boolean eligible) {
-        return new DictionaryEntry(
-            id,
-            Kind.TERM,
-            keyword,
-            status,
-            eligible,
-            List.of(keyword),
-            Map.of(new SearchKeyword(keyword).value(), ExpressionType.CATALOG)
-        );
+        return DictionaryEntry.of(id, keyword, status, eligible, List.of(keyword));
     }
 }
