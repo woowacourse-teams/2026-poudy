@@ -7,24 +7,20 @@ public final class FeedbackPath {
 
     public static final int MAX_LENGTH = 500;
 
-    private static final FeedbackPath UNKNOWN = new FeedbackPath();
+    private static final FeedbackPath UNKNOWN = new FeedbackPath(null);
 
     private final String value;
 
-    private FeedbackPath() {
-        this.value = null;
-    }
-
-    public FeedbackPath(String value) {
-        if (value == null || value.isBlank() || value.length() > MAX_LENGTH) {
-            throw new InvalidFeedbackException("의견 작성 화면 경로는 500자 이하여야 합니다.");
-        }
+    private FeedbackPath(String value) {
         this.value = value;
     }
 
     public static FeedbackPath from(String value) {
         if (value == null) {
             return UNKNOWN;
+        }
+        if (value.isBlank() || value.length() > MAX_LENGTH) {
+            throw new InvalidFeedbackException("의견 작성 화면 경로는 500자 이하여야 합니다.");
         }
 
         return new FeedbackPath(value);

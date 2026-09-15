@@ -36,7 +36,8 @@ export const sendFeedback = ({ type, content, originPath, imageIds }: SendFeedba
   apiPost("/api/feedbacks", {
     type,
     content,
-    ...(originPath ? { path: originPath } : {}),
+    // JSON 으로 바꿀 때 undefined 는 빠지므로 모르는 경로는 필드째 보내지 않는다.
+    path: originPath,
     ...(imageIds?.length ? { imageIds } : {}),
   });
 
