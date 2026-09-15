@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,52 +20,61 @@ class FeedbackTest {
         Instant.parse("2026-08-23T07:20:30Z"),
         ZoneId.of("Asia/Seoul")
     );
+    private static final ServiceFeedback OTHER = new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from("/"));
 
     @Test
     @DisplayName("접수 ID와 접수 시각을 생성한다")
     void registersFeedback() {
+        ServiceFeedback subject = new ServiceFeedback(FeedbackType.BUG_REPORT, FeedbackPath.from("/products/12345"));
+
+        Feedback feedback = Feedback.register(subject, "  검색 버튼을 눌러도 반응이 없어요.  ", CLOCK);
+
+        assertThat(feedback.id()).isNotNull();
+        assertThat(feedback.subject()).isEqualTo(subject);
+        assertThat(feedback.content().value()).isEqualTo("  검색 버튼을 눌러도 반응이 없어요.  ");
+        assertThat(feedback.receivedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+    }
+
+    @Test
+    @DisplayName("제품 정보 정정 요청은 대상 제품을 가진다")
+    void registersProductCorrection() {
         Feedback feedback = Feedback.register(
-            FeedbackType.DATA_CORRECTION,
-            "  제품 정보가 실제 패키지와 달라요.  ",
-            "/products/12345",
+            new ProductCorrection(1L, "블랙 스네일 토너"),
+            "전성분 표기가 실제 패키지와 달라요.",
             CLOCK
         );
 
-        assertThat(feedback.id()).isNotNull();
-        assertThat(feedback.type()).isEqualTo(FeedbackType.DATA_CORRECTION);
-        assertThat(feedback.content().value()).isEqualTo("  제품 정보가 실제 패키지와 달라요.  ");
-        assertThat(feedback.path().value()).isEqualTo("/products/12345");
-        assertThat(feedback.receivedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+        assertThat(feedback.subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
     }
 
     @Test
     @DisplayName("공백을 제외하고 10자보다 짧은 의견을 거절한다")
     void rejectsShortContentAfterStripping() {
-        assertThatThrownBy(() -> Feedback.register(FeedbackType.OTHER, "짧 은 의 견 입 니 다", "/", CLOCK))
+        assertThatThrownBy(() -> Feedback.register(OTHER, "짧 은 의 견 입 니 다", CLOCK))
             .isInstanceOf(InvalidFeedbackException.class);
     }
 
     @Test
     @DisplayName("2,000자보다 긴 의견을 거절한다")
     void rejectsTooLongContent() {
-        assertThatThrownBy(() -> Feedback.register(FeedbackType.OTHER, "가".repeat(2001), "/", CLOCK))
+        assertThatThrownBy(() -> Feedback.register(OTHER, "가".repeat(2001), CLOCK))
             .isInstanceOf(InvalidFeedbackException.class);
     }
 
     @Test
     @DisplayName("비어 있거나 500자보다 긴 화면 경로를 거절한다")
     void rejectsInvalidPath() {
-        assertThatThrownBy(() -> Feedback.register(FeedbackType.OTHER, "충분히 긴 기타 의견입니다.", " ", CLOCK))
+        assertThatThrownBy(() -> FeedbackPath.from(" ")).isInstanceOf(InvalidFeedbackException.class);
+        assertThatThrownBy(() -> FeedbackPath.from("/" + "a".repeat(500)))
             .isInstanceOf(InvalidFeedbackException.class);
-        assertThatThrownBy(
-            () -> Feedback.register(
-                FeedbackType.OTHER,
-                "충분히 긴 기타 의견입니다.",
-                "/" + "a".repeat(500),
-                CLOCK
-            )
-        )
-            .isInstanceOf(InvalidFeedbackException.class);
+    }
+
+    @Test
+    @DisplayName("전달되지 않은 화면 경로는 알 수 없는 경로로 둔다")
+    void keepsMissingPathUnknown() {
+        assertThat(FeedbackPath.from(null).value()).isEmpty();
+        assertThat(FeedbackPath.from(null)).isEqualTo(FeedbackPath.from(null));
+        assertThat(FeedbackPath.from("/").value()).contains("/");
     }
 
     @Test
@@ -76,7 +86,7 @@ class FeedbackTest {
             .isInstanceOf(InvalidFeedbackImageIdException.class);
         assertThatThrownBy(
             () -> Feedback.normalizeImageIds(
-                java.util.stream.IntStream.range(0, Feedback.MAX_IMAGE_COUNT + 1)
+                IntStream.range(0, Feedback.MAX_IMAGE_COUNT + 1)
                     .mapToObj(ignored -> UUID.randomUUID())
                     .toList()
             )

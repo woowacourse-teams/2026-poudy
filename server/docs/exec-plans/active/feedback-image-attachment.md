@@ -15,7 +15,7 @@
 
 ## 목표와 범위
 
-기존 `POST /api/feedback`의 JSON 계약과 `204 No Content`를 깨지 않으면서 선택적인 이미지
+기존 `POST /api/feedbacks`의 JSON 계약과 `204 No Content`를 깨지 않으면서 선택적인 이미지
 1~5장을 첨부한다. 이미지는 서버가 검증하고 재인코딩한 결과만 S3에 비공개·암호화
 상태로 저장하며 원본 바이트, 원본 파일명과 저장소 URL을 보존하거나 노출하지 않는다.
 
@@ -42,7 +42,7 @@
 
 ### 이미지 업로드
 
-`POST /api/feedback/images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
+`POST /api/inquiry-images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
 성공은 정규화한 임시 S3 객체가 모두 저장된 상태를 뜻하며 `201 Created`를 반환한다.
 
 ```json
@@ -60,13 +60,13 @@
 
 ### 의견 등록
 
-`POST /api/feedback`는 기존 요청에 선택 필드 `imageIds`를 받는다.
+`POST /api/feedbacks`는 기존 요청에 선택 필드 `imageIds`를 받는다.
 
 ```json
 {
-  "type": "DATA_CORRECTION",
-  "content": "제품 정보가 실제 패키지와 달라요.",
-  "path": "/products/12345",
+  "type": "BUG_REPORT",
+  "content": "검색 버튼을 눌러도 반응이 없어요.",
+  "path": "/products?include=123",
   "imageIds": [
     "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
   ]

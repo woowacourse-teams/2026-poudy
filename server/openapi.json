@@ -16,18 +16,6 @@
   ],
   "tags": [
     {
-      "name": "큐레이션",
-      "description": "큐레이션 조회 API"
-    },
-    {
-      "name": "보관함",
-      "description": "보관함 조회 API"
-    },
-    {
-      "name": "피드백",
-      "description": "사용자 피드백 등록 API"
-    },
-    {
       "name": "카테고리",
       "description": "카테고리 조회 API"
     },
@@ -40,20 +28,8 @@
       "description": "빠른 필터 조회 API"
     },
     {
-      "name": "브랜드",
-      "description": "브랜드 조회 API"
-    },
-    {
-      "name": "제품 등록 요청",
-      "description": "검색 결과에 없는 제품의 등록 요청 API"
-    },
-    {
       "name": "피부타입",
       "description": "피부타입 조회 API"
-    },
-    {
-      "name": "공유",
-      "description": "공유 텍스트 기반 제품 식별 API"
     },
     {
       "name": "제품",
@@ -62,6 +38,30 @@
     {
       "name": "인기 검색어",
       "description": "최근 7일 검색량을 10분마다 갱신한 인기 검색어"
+    },
+    {
+      "name": "큐레이션",
+      "description": "큐레이션 조회 API"
+    },
+    {
+      "name": "보관함",
+      "description": "보관함 조회 API"
+    },
+    {
+      "name": "피드백",
+      "description": "사용자 피드백 등록 API"
+    },
+    {
+      "name": "브랜드",
+      "description": "브랜드 조회 API"
+    },
+    {
+      "name": "제품 등록 요청",
+      "description": "검색 결과에 없는 제품의 등록 요청 API"
+    },
+    {
+      "name": "공유",
+      "description": "공유 텍스트 기반 제품 식별 API"
     },
     {
       "name": "성분",
@@ -201,7 +201,128 @@
         }
       }
     },
-    "/api/product-requests": {
+    "/api/products/{productId}/correction-requests": {
+      "post": {
+        "tags": [
+          "피드백"
+        ],
+        "summary": "제품 정보 정정 요청",
+        "description": "존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.",
+        "operationId": "submitProductCorrection",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 101
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "정정 요청 접수 완료"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  },
+                  "INVALID_FEEDBACK_IMAGE_ID": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "사용할 수 없는 첨부 이미지 ID입니다.",
+                      "code": "INVALID_FEEDBACK_IMAGE_ID"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 제한 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                  "code": "TOO_MANY_REQUESTS"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "제품을 찾을 수 없습니다.",
+                  "code": "PRODUCT_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/registration-requests": {
       "post": {
         "tags": [
           "제품 등록 요청"
@@ -274,97 +395,12 @@
         }
       }
     },
-    "/api/feedback": {
+    "/api/inquiry-images": {
       "post": {
         "tags": [
           "피드백"
         ],
-        "summary": "의견 등록",
-        "description": "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.",
-        "operationId": "submit_1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FeedbackRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "의견 등록 완료"
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "examples": {
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  },
-                  "INVALID_FEEDBACK_IMAGE_ID": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "사용할 수 없는 첨부 이미지 ID입니다.",
-                      "code": "INVALID_FEEDBACK_IMAGE_ID"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "요청 제한 초과",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Too Many Requests",
-                  "status": 429,
-                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
-                  "code": "TOO_MANY_REQUESTS"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Internal Server Error",
-                  "status": 500,
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "code": "INTERNAL_SERVER_ERROR"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/feedback/images": {
-      "post": {
-        "tags": [
-          "피드백"
-        ],
-        "summary": "의견 이미지 업로드",
+        "summary": "문의 이미지 업로드",
         "description": "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.",
         "operationId": "uploadImages",
         "requestBody": {
@@ -445,6 +481,91 @@
                   "status": 413,
                   "detail": "요청 본문 크기가 허용 범위를 초과했습니다.",
                   "code": "PAYLOAD_TOO_LARGE"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbacks": {
+      "post": {
+        "tags": [
+          "피드백"
+        ],
+        "summary": "의견 등록",
+        "description": "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.",
+        "operationId": "submit_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "의견 등록 완료"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  },
+                  "INVALID_FEEDBACK_IMAGE_ID": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "사용할 수 없는 첨부 이미지 ID입니다.",
+                      "code": "INVALID_FEEDBACK_IMAGE_ID"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 제한 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                  "code": "TOO_MANY_REQUESTS"
                 }
               }
             }
@@ -2152,6 +2273,32 @@
           "keyword"
         ]
       },
+      "ProductCorrectionRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "전성분 표기가 실제 패키지와 달라요.",
+            "maxLength": 2000,
+            "minLength": 10
+          },
+          "imageIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
       "ProductRegistrationRequest": {
         "type": "object",
         "properties": {
@@ -2177,6 +2324,24 @@
           "productName"
         ]
       },
+      "FeedbackImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "imageIds": {
+            "type": "array",
+            "description": "요청한 이미지 순서의 일회성 ID",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "imageIds"
+        ]
+      },
       "FeedbackRequest": {
         "type": "object",
         "properties": {
@@ -2185,22 +2350,24 @@
             "description": "의견 유형",
             "enum": [
               "BUG_REPORT",
-              "DATA_CORRECTION",
               "IMPROVEMENT",
               "OTHER"
             ],
-            "example": "DATA_CORRECTION"
+            "example": "BUG_REPORT"
           },
           "content": {
             "type": "string",
-            "example": "제품 정보가 실제 패키지와 달라요.",
+            "example": "검색 버튼을 눌러도 반응이 없어요.",
             "maxLength": 2000,
             "minLength": 10
           },
           "path": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "의견을 작성한 화면 경로",
-            "example": "/products/12345",
+            "example": "/products?include\u003d123",
             "maxLength": 500,
             "minLength": 1
           },
@@ -2220,26 +2387,7 @@
         },
         "required": [
           "content",
-          "path",
           "type"
-        ]
-      },
-      "FeedbackImageUploadResponse": {
-        "type": "object",
-        "properties": {
-          "imageIds": {
-            "type": "array",
-            "description": "요청한 이미지 순서의 일회성 ID",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "maxItems": 5,
-            "minItems": 1
-          }
-        },
-        "required": [
-          "imageIds"
         ]
       },
       "AdminLoginRequest": {

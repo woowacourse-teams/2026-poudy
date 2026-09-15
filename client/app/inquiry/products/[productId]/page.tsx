@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { DATA_CORRECTION_COPY } from "@/components/inquiry/inquiry-type";
+import { PRODUCT_CORRECTION_COPY } from "@/components/inquiry/inquiry-type";
 import { InquiryForm } from "@/components/inquiry/InquiryForm";
 import { TargetProduct } from "@/components/inquiry/TargetProduct";
 import { TopBar } from "@/components/ui/TopBar";
@@ -37,12 +37,12 @@ export default async function ProductCorrectionPage(props: PageProps<"/inquiry/p
       <InquiryForm
         originPath={`/products/${id}`}
         fixed={{
-          type: "DATA_CORRECTION",
-          fieldLabel: DATA_CORRECTION_COPY.fieldLabel,
-          placeholder: DATA_CORRECTION_COPY.placeholder,
+          productId: id,
+          fieldLabel: PRODUCT_CORRECTION_COPY.fieldLabel,
+          placeholder: PRODUCT_CORRECTION_COPY.placeholder,
           header: (
             <>
-              <h2 className="text-[20px] font-bold text-text-primary">{DATA_CORRECTION_COPY.title}</h2>
+              <h2 className="text-[20px] font-bold text-text-primary">{PRODUCT_CORRECTION_COPY.title}</h2>
               <TargetProduct brandName={product.brand.name} productName={product.name} imageUrl={product.imageUrl} />
             </>
           ),

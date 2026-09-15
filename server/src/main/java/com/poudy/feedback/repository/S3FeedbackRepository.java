@@ -2,6 +2,9 @@ package com.poudy.feedback.repository;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackSubject;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.repository.S3FeedbackObjectStore.ObjectStoreException;
 import java.nio.charset.StandardCharsets;
 import java.time.InstantSource;
@@ -22,6 +25,7 @@ public class S3FeedbackRepository {
     private static final Logger log = LoggerFactory.getLogger(S3FeedbackRepository.class);
     private static final String KEY_PREFIX = "poudy/feedback/";
     private static final String CONTENT_TYPE = "application/json; charset=" + StandardCharsets.UTF_8.name();
+    private static final String PRODUCT_CORRECTION_TYPE = "PRODUCT_CORRECTION";
 
     private final S3FeedbackObjectStore objectStore;
     private final S3FeedbackImageRepository imageRepository;
@@ -115,9 +119,8 @@ public class S3FeedbackRepository {
     private static Map<String, Object> documentOf(Feedback feedback) {
         Map<String, Object> document = new LinkedHashMap<>();
         document.put("feedbackId", feedback.id().toString());
-        document.put("type", feedback.type().name());
+        putSubject(document, feedback.subject());
         document.put("content", feedback.content().value());
-        document.put("path", feedback.path().value());
         document.put("receivedAt", feedback.receivedAt().toString());
 
         List<Map<String, String>> images = new ArrayList<>();
@@ -130,6 +133,20 @@ public class S3FeedbackRepository {
         document.put("images", images);
 
         return document;
+    }
+
+    private static void putSubject(Map<String, Object> document, FeedbackSubject subject) {
+        switch (subject) {
+            case ServiceFeedback service -> {
+                document.put("type", service.type().name());
+                document.put("path", service.path().value().orElse(null));
+            }
+            case ProductCorrection correction -> {
+                document.put("type", PRODUCT_CORRECTION_TYPE);
+                document.put("productId", correction.productId());
+                document.put("productName", correction.productName());
+            }
+        }
     }
 
     enum SaveStatus {

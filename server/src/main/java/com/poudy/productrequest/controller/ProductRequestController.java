@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "제품 등록 요청", description = "검색 결과에 없는 제품의 등록 요청 API")
 @RestController
-@RequestMapping("/api/product-requests")
+@RequestMapping("/api/products/registration-requests")
 public class ProductRequestController {
 
     private final ProductRequestService productRequestService;

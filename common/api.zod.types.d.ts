@@ -1,5 +1,6 @@
   export namespace Schemas {
   export type SearchKeywordRequest = { keyword: string }
+export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
   /**
    * 등록을 요청할 제품명
@@ -10,26 +11,26 @@ export type ProductRegistrationRequest = {
    */
   brandName?: (string | null);
 }
-export type FeedbackRequest = {
-  /**
-   * 의견 유형
-   */
-  type: ("BUG_REPORT" | "DATA_CORRECTION" | "IMPROVEMENT" | "OTHER");
-  content: string;
-  /**
-   * 의견을 작성한 화면 경로
-   */
-  path: string;
-  /**
-   * 미리 업로드한 선택적 이미지 ID 목록
-   */
-  imageIds?: (Array<string> | null);
-}
 export type FeedbackImageUploadResponse = {
   /**
    * 요청한 이미지 순서의 일회성 ID
    */
   imageIds: Array<string>;
+}
+export type FeedbackRequest = {
+  /**
+   * 의견 유형
+   */
+  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER");
+  content: string;
+  /**
+   * 의견을 작성한 화면 경로
+   */
+  path?: (string | null);
+  /**
+   * 미리 업로드한 선택적 이미지 ID 목록
+   */
+  imageIds?: (Array<string> | null);
 }
 export type AdminLoginRequest = {
   /**
@@ -651,11 +652,33 @@ export type post_IncreaseViewCount = {
 
     }
 /**
+ * 존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.
+ */
+export type post_SubmitProductCorrection = {
+      method: "POST",
+      path: "/api/products/{productId}/correction-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+        body:  Schemas.ProductCorrectionRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
  */
 export type post_Submit = {
       method: "POST",
-      path: "/api/product-requests",
+      path: "/api/products/registration-requests",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -670,30 +693,11 @@ export type post_Submit = {
 
     }
 /**
- * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
- */
-export type post_Submit_1 = {
-      method: "POST",
-      path: "/api/feedback",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-
-        body:  Schemas.FeedbackRequest,
-          }
-      responses: {204: unknown,
-400: Schemas.ProblemDetail,
-429: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
  * JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.
  */
 export type post_UploadImages = {
       method: "POST",
-      path: "/api/feedback/images",
+      path: "/api/inquiry-images",
       requestFormat: "form-data",
       responseFormat: "json",
       parameters: {
@@ -703,6 +707,25 @@ export type post_UploadImages = {
       responses: {201: Schemas.FeedbackImageUploadResponse,
 400: Schemas.ProblemDetail,
 413: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
+ */
+export type post_Submit_1 = {
+      method: "POST",
+      path: "/api/feedbacks",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.FeedbackRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -1141,9 +1164,10 @@ export type get_FindBrand = {
      post: {
            "/api/search-keywords": Endpoints.post_Record,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
-"/api/product-requests": Endpoints.post_Submit,
-"/api/feedback": Endpoints.post_Submit_1,
-"/api/feedback/images": Endpoints.post_UploadImages,
+"/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
+"/api/products/registration-requests": Endpoints.post_Submit,
+"/api/inquiry-images": Endpoints.post_UploadImages,
+"/api/feedbacks": Endpoints.post_Submit_1,
 "/api/admin/login": Endpoints.post_Login
          },
 get: {

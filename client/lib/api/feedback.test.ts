@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "./client";
-import { isAcceptedImageType, requestProductRegistration, sendFeedback, uploadFeedbackImages } from "./feedback";
+import {
+  isAcceptedImageType,
+  requestProductCorrection,
+  requestProductRegistration,
+  sendFeedback,
+  uploadFeedbackImages,
+} from "./feedback";
 
 const okEmpty = () => new Response(null, { status: 204 });
 
@@ -30,7 +36,7 @@ describe("의견 보내기", () => {
   it("originPath 를 서버 필드 이름인 path 로 보낸다", async () => {
     await sendFeedback({ type: "BUG_REPORT", content: "열 자가 넘는 내용", originPath: "/products/1" });
 
-    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/feedback");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/feedbacks");
     expect(bodyOf(0)).toEqual({ type: "BUG_REPORT", content: "열 자가 넘는 내용", path: "/products/1" });
   });
 
@@ -49,6 +55,12 @@ describe("의견 보내기", () => {
     await sendFeedback({ type: "OTHER", content: "열 자가 넘는 내용", originPath: "/", imageIds: [] });
 
     expect(bodyOf(0)).not.toHaveProperty("imageIds");
+  });
+
+  it("문의를 연 화면을 모르면 path 를 보내지 않는다", async () => {
+    await sendFeedback({ type: "OTHER", content: "열 자가 넘는 내용" });
+
+    expect(bodyOf(0)).toEqual({ type: "OTHER", content: "열 자가 넘는 내용" });
   });
 
   it("429 응답을 코드가 담긴 오류로 알린다", async () => {
@@ -74,6 +86,7 @@ describe("이미지 업로드", () => {
     const result = await uploadFeedbackImages(files);
 
     const sent = fetchMock.mock.calls[0][1].body as FormData;
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/inquiry-images");
     expect(sent.getAll("images")).toHaveLength(2);
     expect(result.imageIds).toEqual(["one", "two"]);
   });
@@ -101,11 +114,35 @@ describe("이미지 업로드", () => {
   });
 });
 
+describe("제품 정보 정정 요청", () => {
+  it("대상 제품을 주소에 담고 본문에는 내용만 보낸다", async () => {
+    await requestProductCorrection({ productId: 123, content: "열 자가 넘는 내용", imageIds: [] });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/products/123/correction-requests");
+    expect(bodyOf(0)).toEqual({ content: "열 자가 넘는 내용" });
+  });
+
+  it("첨부한 이미지가 있으면 imageIds 를 함께 보낸다", async () => {
+    await requestProductCorrection({ productId: 123, content: "열 자가 넘는 내용", imageIds: ["a"] });
+
+    expect(bodyOf(0)).toEqual({ content: "열 자가 넘는 내용", imageIds: ["a"] });
+  });
+
+  it("없는 제품이면 404 오류로 알린다", async () => {
+    fetchMock.mockResolvedValue(failWith(404, "PRODUCT_NOT_FOUND"));
+
+    await expect(requestProductCorrection({ productId: 9999, content: "열 자가 넘는 내용" })).rejects.toMatchObject({
+      status: 404,
+      code: "PRODUCT_NOT_FOUND",
+    });
+  });
+});
+
 describe("제품 등록 요청", () => {
   it("제품명과 브랜드를 보낸다", async () => {
     await requestProductRegistration({ productName: "1025 독도 토너", brandName: "라운드랩" });
 
-    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/product-requests");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/products/registration-requests");
     expect(bodyOf(0)).toEqual({ productName: "1025 독도 토너", brandName: "라운드랩" });
   });
 

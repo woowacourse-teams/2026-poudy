@@ -16,6 +16,8 @@ import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -42,12 +44,12 @@ class S3FeedbackRepositoryTest {
     private static final String BUCKET = "poudy-bucket";
     private static final UUID ID = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
     private static final Instant NOW = Instant.parse("2026-08-23T07:20:30Z");
+    private static final OffsetDateTime RECEIVED_AT = OffsetDateTime.parse("2026-08-23T16:20:30+09:00");
     private static final Feedback FEEDBACK = new Feedback(
         ID,
-        FeedbackType.DATA_CORRECTION,
+        new ServiceFeedback(FeedbackType.BUG_REPORT, FeedbackPath.from("/products/12345")),
         new FeedbackContent("제품 정보가 실제 패키지와 달라요."),
-        new FeedbackPath("/products/12345"),
-        OffsetDateTime.parse("2026-08-23T16:20:30+09:00")
+        RECEIVED_AT
     );
 
     private final S3Client s3Client = mock(S3Client.class);
@@ -79,12 +81,54 @@ class S3FeedbackRepositoryTest {
         byte[] bytes = bodyCaptor.getValue().contentStreamProvider().newStream().readAllBytes();
         JsonNode document = objectMapper.readTree(new String(bytes, StandardCharsets.UTF_8));
         assertThat(document.get("feedbackId").asText()).isEqualTo(ID.toString());
-        assertThat(document.get("type").asText()).isEqualTo("DATA_CORRECTION");
+        assertThat(document.get("type").asText()).isEqualTo("BUG_REPORT");
         assertThat(document.get("content").asText()).isEqualTo("제품 정보가 실제 패키지와 달라요.");
         assertThat(document.get("path").asText()).isEqualTo("/products/12345");
         assertThat(document.get("receivedAt").asText()).isEqualTo("2026-08-23T16:20:30+09:00");
         assertThat(document.get("images").isArray()).isTrue();
         assertThat(document.get("images").isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("알 수 없는 화면 경로는 null로 저장한다")
+    void storesUnknownPathAsNull() throws Exception {
+        JsonNode document = storedDocumentOf(
+            new Feedback(
+                ID,
+                new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)),
+                new FeedbackContent("화면과 관계없는 기타 의견입니다."),
+                RECEIVED_AT
+            )
+        );
+
+        assertThat(document.get("path").isNull()).isTrue();
+    }
+
+    @Test
+    @DisplayName("제품 정보 정정 요청은 화면 경로 대신 대상 제품을 저장한다")
+    void storesProductCorrectionTarget() throws Exception {
+        JsonNode document = storedDocumentOf(
+            new Feedback(
+                ID,
+                new ProductCorrection(1L, "블랙 스네일 토너"),
+                new FeedbackContent("전성분 표기가 실제 패키지와 달라요."),
+                RECEIVED_AT
+            )
+        );
+
+        assertThat(document.get("type").asText()).isEqualTo("PRODUCT_CORRECTION");
+        assertThat(document.get("productId").asLong()).isEqualTo(1L);
+        assertThat(document.get("productName").asText()).isEqualTo("블랙 스네일 토너");
+        assertThat(document.has("path")).isFalse();
+    }
+
+    private JsonNode storedDocumentOf(Feedback feedback) throws Exception {
+        repository.save(feedback);
+
+        ArgumentCaptor<RequestBody> bodyCaptor = ArgumentCaptor.forClass(RequestBody.class);
+        verify(s3Client).putObject(any(PutObjectRequest.class), bodyCaptor.capture());
+        byte[] bytes = bodyCaptor.getValue().contentStreamProvider().newStream().readAllBytes();
+        return objectMapper.readTree(new String(bytes, StandardCharsets.UTF_8));
     }
 
     @Test

@@ -12,24 +12,21 @@ public final class Feedback {
     public static final int MAX_IMAGE_COUNT = 5;
 
     private final UUID id;
-    private final FeedbackType type;
+    private final FeedbackSubject subject;
     private final FeedbackContent content;
-    private final FeedbackPath path;
     private final OffsetDateTime receivedAt;
     private final List<FeedbackImage> images;
 
     public Feedback(
         UUID id,
-        FeedbackType type,
+        FeedbackSubject subject,
         FeedbackContent content,
-        FeedbackPath path,
         OffsetDateTime receivedAt,
         List<FeedbackImage> images
     ) {
         this.id = Objects.requireNonNull(id, "의견 접수 ID가 필요합니다.");
-        this.type = Objects.requireNonNull(type, "의견 유형이 필요합니다.");
+        this.subject = Objects.requireNonNull(subject, "의견 대상이 필요합니다.");
         this.content = Objects.requireNonNull(content, "의견 내용이 필요합니다.");
-        this.path = Objects.requireNonNull(path, "의견 작성 화면 경로가 필요합니다.");
         this.receivedAt = Objects.requireNonNull(receivedAt, "의견 접수 시각이 필요합니다.");
         this.images = List.copyOf(Objects.requireNonNull(images, "의견 이미지 목록이 필요합니다."));
         if (this.images.size() > MAX_IMAGE_COUNT) {
@@ -42,20 +39,18 @@ public final class Feedback {
 
     public Feedback(
         UUID id,
-        FeedbackType type,
+        FeedbackSubject subject,
         FeedbackContent content,
-        FeedbackPath path,
         OffsetDateTime receivedAt
     ) {
-        this(id, type, content, path, receivedAt, List.of());
+        this(id, subject, content, receivedAt, List.of());
     }
 
-    public static Feedback register(FeedbackType type, String content, String path, Clock clock) {
+    public static Feedback register(FeedbackSubject subject, String content, Clock clock) {
         return new Feedback(
             UUID.randomUUID(),
-            type,
+            subject,
             new FeedbackContent(content),
-            new FeedbackPath(path),
             OffsetDateTime.now(clock),
             List.of()
         );
@@ -65,16 +60,12 @@ public final class Feedback {
         return id;
     }
 
-    public FeedbackType type() {
-        return type;
+    public FeedbackSubject subject() {
+        return subject;
     }
 
     public FeedbackContent content() {
         return content;
-    }
-
-    public FeedbackPath path() {
-        return path;
     }
 
     public OffsetDateTime receivedAt() {
@@ -86,7 +77,7 @@ public final class Feedback {
     }
 
     public Feedback attachImages(List<FeedbackImage> images) {
-        return new Feedback(id, type, content, path, receivedAt, images);
+        return new Feedback(id, subject, content, receivedAt, images);
     }
 
     @Override
@@ -98,16 +89,15 @@ public final class Feedback {
             return false;
         }
         return id.equals(that.id)
-            && type == that.type
+            && subject.equals(that.subject)
             && content.equals(that.content)
-            && path.equals(that.path)
             && receivedAt.equals(that.receivedAt)
             && images.equals(that.images);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type, content, path, receivedAt, images);
+        return Objects.hash(id, subject, content, receivedAt, images);
     }
 
     public static List<UUID> normalizeImageIds(List<UUID> imageIds) {

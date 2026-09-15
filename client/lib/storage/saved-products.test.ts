@@ -3,7 +3,7 @@
  *
  * @vitest-environment jsdom
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   clearSavedProducts,
@@ -125,17 +125,28 @@ describe("되돌리기", () => {
   });
 
   it("담은 때가 같아도 원래 차례로 돌아간다", () => {
-    // 잇달아 담으면 밀리초까지 같을 수 있다. 그때도 자리가 뒤집히지 않아야 한다.
-    saveProduct(1);
-    saveProduct(2);
-    const [first, second] = readSavedProducts();
-    expect(first.savedAt).toBe(second.savedAt);
+    /*
+     * 잇달아 담으면 밀리초까지 같을 수 있다. 그때도 자리가 뒤집히지 않아야 한다.
+     * 실제 시계에 맡기면 테스트가 몰릴 때 두 번 사이에 밀리초가 넘어가 전제가 깨지므로
+     * 시각을 고정해 같은 때를 만든다.
+     */
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-09T00:00:00.000Z"));
 
-    const removed = savedEntriesOf([2]);
-    unsaveProduct(2);
-    restoreProducts(removed);
+    try {
+      saveProduct(1);
+      saveProduct(2);
+      const [first, second] = readSavedProducts();
+      expect(first.savedAt).toBe(second.savedAt);
 
-    expect(readSavedProductIds()).toEqual([2, 1]);
+      const removed = savedEntriesOf([2]);
+      unsaveProduct(2);
+      restoreProducts(removed);
+
+      expect(readSavedProductIds()).toEqual([2, 1]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("여럿을 되살려도 서로의 자리를 밀지 않는다", () => {

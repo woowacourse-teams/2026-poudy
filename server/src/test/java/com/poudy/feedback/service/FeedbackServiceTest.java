@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -12,18 +13,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
+import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.domain.FeedbackImageFormat;
+import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.product.domain.Product;
+import com.poudy.product.domain.Products;
+import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,10 +55,13 @@ class FeedbackServiceTest {
     private final S3FeedbackRepository feedbackRepository = mock(S3FeedbackRepository.class);
     private final FeedbackNotifier feedbackNotifier = mock(FeedbackNotifier.class);
     private final FeedbackRateLimiter rateLimiter = mock(FeedbackRateLimiter.class);
+    private final ProductRepository productRepository = mock(ProductRepository.class);
+    private final Products products = mock(Products.class);
     private final FeedbackService feedbackService = new FeedbackService(
         feedbackRepository,
         feedbackNotifier,
         rateLimiter,
+        productRepository,
         CLOCK
     );
 
@@ -56,9 +69,9 @@ class FeedbackServiceTest {
     @DisplayName("원본을 저장한 뒤 같은 의견으로 Discord 알림을 전송한다")
     void storesBeforeNotifying() {
         feedbackService.submit(
-            FeedbackType.DATA_CORRECTION,
-            "제품 정보가 실제 패키지와 달라요.",
-            "/products/12345",
+            FeedbackType.BUG_REPORT,
+            "검색 버튼을 눌러도 반응이 없어요.",
+            "/products?include=123",
             "client-a"
         );
 
@@ -67,8 +80,21 @@ class FeedbackServiceTest {
         order.verify(rateLimiter).requireAllowed("client-a");
         order.verify(feedbackRepository).save(feedbackCaptor.capture());
         order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
+        assertThat(feedbackCaptor.getValue().subject())
+            .isEqualTo(new ServiceFeedback(FeedbackType.BUG_REPORT, FeedbackPath.from("/products?include=123")));
         assertThat(feedbackCaptor.getValue().receivedAt())
             .isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+    }
+
+    @Test
+    @DisplayName("화면 경로가 없으면 알 수 없는 경로로 접수한다")
+    void acceptsMissingPath() {
+        feedbackService.submit(FeedbackType.OTHER, "화면과 관계없는 기타 의견입니다.", null, "client-a");
+
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        verify(feedbackRepository).save(feedbackCaptor.capture());
+        assertThat(feedbackCaptor.getValue().subject())
+            .isEqualTo(new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)));
     }
 
     @Test
@@ -114,9 +140,9 @@ class FeedbackServiceTest {
             .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
 
         feedbackService.submit(
-            FeedbackType.DATA_CORRECTION,
-            "제품 정보가 실제 패키지와 달라요.",
-            "/products/12345",
+            FeedbackType.BUG_REPORT,
+            "검색 버튼을 눌러도 반응이 없어요.",
+            "/products",
             List.of(imageId),
             "client-a"
         );
@@ -125,5 +151,45 @@ class FeedbackServiceTest {
         verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)), any());
         Feedback attached = feedbackCaptor.getValue().attachImages(List.of(image));
         verify(feedbackNotifier).notify(attached);
+    }
+
+    @Test
+    @DisplayName("제품 정보 정정 요청을 대상 제품과 함께 저장하고 알린다")
+    void submitsProductCorrection() {
+        Product product = mock(Product.class);
+        given(product.id()).willReturn(1L);
+        given(product.name()).willReturn("블랙 스네일 토너");
+        given(productRepository.findAll()).willReturn(products);
+        given(products.findById(1L)).willReturn(Optional.of(product));
+
+        feedbackService.submitProductCorrection(1L, "전성분 표기가 실제 패키지와 달라요.", List.of(), "client-a");
+
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        InOrder order = inOrder(rateLimiter, feedbackRepository, feedbackNotifier);
+        order.verify(rateLimiter).requireAllowed("client-a");
+        order.verify(feedbackRepository).save(feedbackCaptor.capture());
+        order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
+        assertThat(feedbackCaptor.getValue().subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
+    }
+
+    @Test
+    @DisplayName("없는 제품의 정정 요청은 요청 제한과 저장 없이 거절한다")
+    void rejectsCorrectionForUnknownProduct() {
+        given(productRepository.findAll()).willReturn(products);
+        given(products.findById(999999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(
+            () -> feedbackService.submitProductCorrection(
+                999999L,
+                "전성분 표기가 실제 패키지와 달라요.",
+                List.of(),
+                "client-a"
+            )
+        )
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting("code")
+            .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+        verify(rateLimiter, never()).requireAllowed(anyString());
+        verify(feedbackRepository, never()).save(any());
     }
 }
