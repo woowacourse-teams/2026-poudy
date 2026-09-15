@@ -9,8 +9,8 @@ public final class ErrorResponseCodes {
 
     private static final String PRODUCTS_PATH = "/api/products";
     private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
-    private static final String PRODUCT_REQUESTS_PATH = "/api/product-requests";
-    private static final String FEEDBACK_PATH = "/api/feedback";
+    private static final String PRODUCT_REQUESTS_PATH = "/api/products/registration-requests";
+    private static final String FEEDBACK_PATH = "/api/feedbacks";
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
     private static final String INQUIRY_IMAGES_PATH = "/api/inquiry-images";
 

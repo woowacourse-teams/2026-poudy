@@ -318,7 +318,7 @@
         }
       }
     },
-    "/api/product-requests": {
+    "/api/products/registration-requests": {
       "post": {
         "tags": [
           "제품 등록 요청"
@@ -500,7 +500,7 @@
         }
       }
     },
-    "/api/feedback": {
+    "/api/feedbacks": {
       "post": {
         "tags": [
           "피드백"

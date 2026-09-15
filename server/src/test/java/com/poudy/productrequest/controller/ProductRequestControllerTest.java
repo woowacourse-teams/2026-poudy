@@ -31,7 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("제품 등록 요청 API")
 class ProductRequestControllerTest {
 
-    private static final String PATH = "/api/product-requests";
+    private static final String PATH = "/api/products/registration-requests";
 
     @Autowired
     private MockMvc mockMvc;

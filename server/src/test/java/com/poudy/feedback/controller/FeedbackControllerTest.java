@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("의견 API")
 class FeedbackControllerTest {
 
-    private static final String PATH = "/api/feedback";
+    private static final String PATH = "/api/feedbacks";
     private static final String IMAGES_PATH = "/api/inquiry-images";
 
     @Autowired

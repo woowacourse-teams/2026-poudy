@@ -40,7 +40,7 @@ public class FeedbackController {
 
     @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "의견 등록 완료")
-    @PostMapping("/api/feedback")
+    @PostMapping("/api/feedbacks")
     public ResponseEntity<Void> submit(
         @Valid @RequestBody FeedbackRequest request,
         HttpServletRequest httpRequest

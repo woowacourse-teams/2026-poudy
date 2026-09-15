@@ -668,7 +668,7 @@ export type post_SubmitProductCorrection = {
  */
 export type post_Submit = {
       method: "POST",
-      path: "/api/product-requests",
+      path: "/api/products/registration-requests",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -707,7 +707,7 @@ export type post_UploadImages = {
  */
 export type post_Submit_1 = {
       method: "POST",
-      path: "/api/feedback",
+      path: "/api/feedbacks",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -1136,9 +1136,9 @@ export type get_FindBrand = {
            "/api/search-keywords": Endpoints.post_Record,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
-"/api/product-requests": Endpoints.post_Submit,
+"/api/products/registration-requests": Endpoints.post_Submit,
 "/api/inquiry-images": Endpoints.post_UploadImages,
-"/api/feedback": Endpoints.post_Submit_1
+"/api/feedbacks": Endpoints.post_Submit_1
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,

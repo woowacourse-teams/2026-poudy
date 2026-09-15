@@ -31,7 +31,7 @@ class CorsConfigTest {
     @DisplayName("허용한 도메인의 사전 요청에 허용 헤더를 준다")
     void allowsPreflightFromAllowedOrigin(String origin) throws Exception {
         mockMvc.perform(
-            options("/api/feedback")
+            options("/api/feedbacks")
                 .header(HttpHeaders.ORIGIN, origin)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
         )
