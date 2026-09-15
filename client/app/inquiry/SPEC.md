@@ -158,10 +158,10 @@ sendFeedback({ type, content, originPath, imageIds });
 
 | 엔드포인트                                           | 본문                                  | 성공 | 오류               |
 | ---------------------------------------------------- | ------------------------------------- | ---- | ------------------ |
-| `POST /api/feedback`                                 | `type`, `content`, `path`, `imageIds` | 204  | 400, 429, 500      |
+| `POST /api/feedbacks`                                | `type`, `content`, `path`, `imageIds` | 204  | 400, 429, 500      |
 | `POST /api/products/{productId}/correction-requests` | `content`, `imageIds`                 | 204  | 400, 404, 429, 500 |
 | `POST /api/inquiry-images`                           | `images`                              | 201  | 400, 413, 429, 500 |
-| `POST /api/product-requests`                         | `productName`, `brandName`            | 202  | 400, 429, 500      |
+| `POST /api/products/registration-requests`           | `productName`, `brandName`            | 202  | 400, 429, 500      |
 
 `path`를 받는 스키마는 `FeedbackRequest` 하나뿐이므로 제품 등록 요청과 제품 정보 정정 요청에는 경로를 보내지 않습니다. `path`와 `imageIds`는 선택이라 값이 없으면 필드를 빼고 보냅니다.
 
@@ -169,7 +169,7 @@ sendFeedback({ type, content, originPath, imageIds });
 
 접수 완료 화면에는 제목 `문의를 접수했어요` 아래에 `보내주신 내용을 확인해 반영할게요`를 함께 보여 줍니다. 제목만으로는 접수됐다는 사실만 전할 뿐, 확인한 뒤 반영한다는 뜻이 빠집니다.
 
-반영 시점을 약속하는 문구는 쓰지 않습니다. `POST /api/product-requests`는 202를 돌려주며 스키마에 제품 등록 완료를 뜻하지 않는다고 적혀 있습니다. 접수만 된 것이고 실제 반영은 운영이 따로 판단하므로, `빠른 시일 내에`처럼 시점을 약속하면 지키지 못합니다.
+반영 시점을 약속하는 문구는 쓰지 않습니다. `POST /api/products/registration-requests`는 202를 돌려주며 스키마에 제품 등록 완료를 뜻하지 않는다고 적혀 있습니다. 접수만 된 것이고 실제 반영은 운영이 따로 판단하므로, `빠른 시일 내에`처럼 시점을 약속하면 지키지 못합니다.
 
 ## 입력 제약
 
@@ -251,7 +251,7 @@ sendFeedback({ type, content, originPath, imageIds });
 
 `BUG_REPORT`와 제품 정보 정정의 문구는 디자인 S13a와 S13e에 있는 것을 그대로 씁니다. `IMPROVEMENT`와 `OTHER`는 디자인에 없어서 같은 기준으로 새로 적었으므로, 디자인이 나오면 그에 맞춥니다.
 
-제품 등록 요청은 `POST /api/product-requests`를 호출하며 이미지를 첨부하지 않습니다. 제품명과 브랜드를 각각 한 줄 입력으로 받습니다.
+제품 등록 요청은 `POST /api/products/registration-requests`를 호출하며 이미지를 첨부하지 않습니다. 제품명과 브랜드를 각각 한 줄 입력으로 받습니다.
 
 민감한 정보에 대한 안내는 자유 입력을 받는 화면에 공통으로 보여 줍니다. 제품 등록 요청 화면에는 대신 제품 정보 안내를 둡니다.
 
@@ -264,10 +264,10 @@ sendFeedback({ type, content, originPath, imageIds });
 `mocks/handlers.ts`에 POST 핸들러 세 개를 추가합니다. 현재 등록된 핸들러는 모두 GET이므로 이번에 추가하는 핸들러가 첫 POST 핸들러입니다.
 
 ```
-POST /api/feedback                                  → 204
+POST /api/feedbacks                                 → 204
 POST /api/products/{productId}/correction-requests  → 204
 POST /api/inquiry-images                            → 201, imageIds 반환
-POST /api/product-requests                          → 202
+POST /api/products/registration-requests            → 202
 ```
 
 429 오류와 413 오류의 안내 문구를 실제로 확인할 수 있도록, 특정한 입력을 넣으면 해당 오류가 발생하도록 유도하는 경로도 함께 마련합니다.
@@ -376,7 +376,7 @@ POST /api/product-requests                          → 202
 
 ### 전송 동작
 
-- 제출하면 `type`, `content`, `path`를 담아 `POST /api/feedback`을 호출한다
+- 제출하면 `type`, `content`, `path`를 담아 `POST /api/feedbacks`를 호출한다
 - 내부에서 사용한 `originPath` 값이 요청 본문에서는 `path` 필드로 전달된다
 - 전송하는 동안 제출 버튼을 비활성화한다
 - 전송이 끝나기 전에 버튼을 두 번 눌러도 요청은 한 번만 나간다
@@ -448,7 +448,7 @@ POST /api/product-requests                          → 202
 
 ### 제품 등록 요청
 
-- 제품명과 브랜드를 담아 `POST /api/product-requests`를 호출한다
+- 제품명과 브랜드를 담아 `POST /api/products/registration-requests`를 호출한다
 - 브랜드를 입력하지 않고 등록을 요청할 수 있다
 - 브랜드가 비어 있어도 제출 버튼이 활성화된다
 - 제품명이 비어 있으면 제출할 수 없다

@@ -15,7 +15,7 @@
 
 ## 목표와 범위
 
-기존 `POST /api/feedback`의 JSON 계약과 `204 No Content`를 깨지 않으면서 선택적인 이미지
+기존 `POST /api/feedbacks`의 JSON 계약과 `204 No Content`를 깨지 않으면서 선택적인 이미지
 1~5장을 첨부한다. 이미지는 서버가 검증하고 재인코딩한 결과만 S3에 비공개·암호화
 상태로 저장하며 원본 바이트, 원본 파일명과 저장소 URL을 보존하거나 노출하지 않는다.
 
@@ -60,7 +60,7 @@
 
 ### 의견 등록
 
-`POST /api/feedback`는 기존 요청에 선택 필드 `imageIds`를 받는다.
+`POST /api/feedbacks`는 기존 요청에 선택 필드 `imageIds`를 받는다.
 
 ```json
 {

@@ -10,7 +10,10 @@
 
 - 제품 정보 정정 요청을 `POST /api/products/{productId}/correction-requests`로 분리하고
   `FeedbackType.DATA_CORRECTION`을 제거한다.
-- `POST /api/feedback`의 `path`를 선택 필드로 바꾸고, 없으면 `null`로 저장하고 알림에는
+- 의견 등록 경로를 `POST /api/feedbacks`로 바꿔 다른 컬렉션 경로와 같은 복수형으로 맞춘다.
+- 제품 등록 요청을 `POST /api/products/registration-requests`로 옮겨 제품 정보 정정 요청과 함께
+  제품 컬렉션 아래에 둔다. S3 저장 prefix `product-requests`는 URL과 무관하므로 바꾸지 않는다.
+- `POST /api/feedbacks`의 `path`를 선택 필드로 바꾸고, 없으면 `null`로 저장하고 알림에는
   `알 수 없음`으로 표시한다.
 - 이미지 업로드를 `POST /api/inquiry-images`로 옮긴다.
 
