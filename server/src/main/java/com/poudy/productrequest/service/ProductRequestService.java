@@ -2,9 +2,12 @@ package com.poudy.productrequest.service;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.repository.S3ProductRequestRepository;
 import java.time.Clock;
+import java.util.List;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -48,10 +51,47 @@ public class ProductRequestService {
         }
     }
 
+    public ProductRequestPage findAll(ProductRequestStatus status, int page, int size) {
+        List<ProductRequest> requests = repository.findAll(status);
+        int fromIndex = pageOffset(page, size, requests.size());
+        int toIndex = Math.min(fromIndex + size, requests.size());
+        return new ProductRequestPage(requests.subList(fromIndex, toIndex), requests.size());
+    }
+
+    public ProductRequest findById(UUID requestId) {
+        return repository.findById(requestId);
+    }
+
+    public ProductRequest changeStatus(UUID requestId, ProductRequestStatus status) {
+        ProductRequest current = repository.findById(requestId);
+        ProductRequest changed = current.changeStatus(status, clock);
+        if (changed == current) {
+            return current;
+        }
+
+        repository.update(changed);
+        return changed;
+    }
+
     private static String notificationFailureDetail(RuntimeException exception) {
         if (exception instanceof InfrastructureException) {
             return exception.getMessage();
         }
         return exception.getClass().getSimpleName();
+    }
+
+    private static int pageOffset(int page, int size, int totalElements) {
+        long offset = (long) page * size;
+        if (offset >= totalElements) {
+            return totalElements;
+        }
+        return Math.toIntExact(offset);
+    }
+
+    public record ProductRequestPage(List<ProductRequest> items, long totalElements) {
+
+        public ProductRequestPage {
+            items = List.copyOf(items);
+        }
     }
 }

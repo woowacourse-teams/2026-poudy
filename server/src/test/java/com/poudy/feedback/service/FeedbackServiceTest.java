@@ -17,9 +17,11 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackContent;
 import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
+import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
@@ -191,5 +193,41 @@ class FeedbackServiceTest {
             .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
         verify(rateLimiter, never()).requireAllowed(anyString());
         verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("피드백 상태 전이를 도메인에 요청한 뒤 변경 결과를 저장한다")
+    void changesAndStoresStatus() {
+        UUID feedbackId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        Feedback received = feedback(feedbackId);
+        given(feedbackRepository.findById(feedbackId)).willReturn(received);
+
+        Feedback changed = feedbackService.changeStatus(feedbackId, FeedbackStatus.COMPLETED);
+
+        assertThat(changed.hasStatus(FeedbackStatus.COMPLETED)).isTrue();
+        assertThat(changed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+        verify(feedbackRepository).updateStatus(changed);
+    }
+
+    @Test
+    @DisplayName("이미 같은 피드백 상태면 다시 저장하지 않는다")
+    void skipsSameStatusUpdate() {
+        UUID feedbackId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        Feedback received = feedback(feedbackId);
+        given(feedbackRepository.findById(feedbackId)).willReturn(received);
+
+        Feedback unchanged = feedbackService.changeStatus(feedbackId, FeedbackStatus.RECEIVED);
+
+        assertThat(unchanged).isSameAs(received);
+        verify(feedbackRepository, never()).updateStatus(any());
+    }
+
+    private static Feedback feedback(UUID feedbackId) {
+        return new Feedback(
+            feedbackId,
+            new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from("/")),
+            new FeedbackContent("충분히 긴 기타 의견입니다."),
+            OffsetDateTime.parse("2026-08-23T15:00:00+09:00")
+        );
     }
 }

@@ -79,8 +79,7 @@ public class S3FeedbackObjectStore {
                     .bucket(bucket)
                     .key(key)
                     .build()
-            )
-                .asByteArray();
+            ).asByteArray();
         } catch (SdkException exception) {
             throw failure(exception);
         }
@@ -141,6 +140,20 @@ public class S3FeedbackObjectStore {
                     .serverSideEncryption(ServerSideEncryption.AES256)
                     .build()
             );
+        } catch (SdkException exception) {
+            throw failure(exception);
+        }
+    }
+
+    void replace(String key, String contentType, byte[] body) {
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .serverSideEncryption(ServerSideEncryption.AES256)
+                .build();
+            s3Client.putObject(request, RequestBody.fromBytes(body));
         } catch (SdkException exception) {
             throw failure(exception);
         }
@@ -210,4 +223,5 @@ public class S3FeedbackObjectStore {
 
     record StoredObject(String key, Instant lastModified) {
     }
+
 }

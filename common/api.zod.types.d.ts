@@ -42,6 +42,11 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
+export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
+export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
+export type AdminFeedbackStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
+export type AdminFeedbackImageResponse = { imageId: string, extension: string }
+export type AdminFeedbackResponse = { feedbackId: string, type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION"), content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -607,7 +612,9 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
+export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -746,6 +753,42 @@ export type post_Login = {
       responses: {200: unknown,
 400: Schemas.ProblemDetail,
 401: unknown,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_ChangeStatus = {
+      method: "PATCH",
+      path: "/api/admin/product-requests/{requestId}/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { requestId: string },
+
+        body:  Schemas.AdminProductRequestStatusUpdateRequest,
+          }
+      responses: {200: Schemas.AdminProductRequestResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_ChangeStatus_1 = {
+      method: "PATCH",
+      path: "/api/admin/feedbacks/{feedbackId}/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { feedbackId: string },
+
+        body:  Schemas.AdminFeedbackStatusUpdateRequest,
+          }
+      responses: {200: Schemas.AdminFeedbackResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1157,6 +1200,91 @@ export type get_FindBrand = {
 },
 
     }
+export type get_FindAll = {
+      method: "GET",
+      path: "/api/admin/product-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminProductRequestPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindById = {
+      method: "GET",
+      path: "/api/admin/product-requests/{requestId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { requestId: string },
+
+          }
+      responses: {200: Schemas.AdminProductRequestResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindAll_1 = {
+      method: "GET",
+      path: "/api/admin/feedbacks",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
+  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION");
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminFeedbackPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindById_1 = {
+      method: "GET",
+      path: "/api/admin/feedbacks/{feedbackId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { feedbackId: string },
+
+          }
+      responses: {200: Schemas.AdminFeedbackResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 
   }
 
@@ -1169,6 +1297,10 @@ export type get_FindBrand = {
 "/api/inquiry-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
 "/api/admin/login": Endpoints.post_Login
+         },
+patch: {
+           "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
+"/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
@@ -1189,9 +1321,14 @@ get: {
 "/api/curations/{curationId}/products": Endpoints.get_FindCurationProducts,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
-"/api/brands/{brandId}": Endpoints.get_FindBrand
+"/api/brands/{brandId}": Endpoints.get_FindBrand,
+"/api/admin/product-requests": Endpoints.get_FindAll,
+"/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
+"/api/admin/feedbacks": Endpoints.get_FindAll_1,
+"/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1
          }
      }
 
     export type PostEndpoints = EndpointByMethod["post"]
+export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]

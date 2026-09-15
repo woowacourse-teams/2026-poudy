@@ -14,6 +14,8 @@ public final class ErrorResponseCodes {
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
     private static final String INQUIRY_IMAGES_PATH = "/api/inquiry-images";
     private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
+    private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
+    private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
         "brands",
@@ -49,6 +51,9 @@ public final class ErrorResponseCodes {
         if (ADMIN_LOGIN_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
+        if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
+            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+        }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
         }
@@ -70,6 +75,13 @@ public final class ErrorResponseCodes {
     public static Optional<ErrorCode> notFound(String path) {
         if (!path.contains("{")) {
             return Optional.empty();
+        }
+
+        if (path.startsWith("/api/admin/feedbacks/")) {
+            return Optional.of(ErrorCode.FEEDBACK_NOT_FOUND);
+        }
+        if (path.startsWith("/api/admin/product-requests/")) {
+            return Optional.of(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
         }
 
         String[] segments = path.split("/");
