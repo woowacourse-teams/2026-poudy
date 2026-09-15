@@ -32,6 +32,10 @@
       "description": "카테고리 조회 API"
     },
     {
+      "name": "관리자",
+      "description": "관리자 인증 API"
+    },
+    {
       "name": "제외 성분군",
       "description": "빠른 필터 조회 API"
     },
@@ -441,6 +445,66 @@
                   "status": 413,
                   "detail": "요청 본문 크기가 허용 범위를 초과했습니다.",
                   "code": "PAYLOAD_TOO_LARGE"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/login": {
+      "post": {
+        "tags": [
+          "관리자"
+        ],
+        "summary": "관리자 로그인",
+        "description": "관리자 계정을 확인한다.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "로그인 성공"
+          },
+          "401": {
+            "description": "아이디 또는 비밀번호가 일치하지 않음"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 본문 값이 올바르지 않습니다.",
+                  "code": "INVALID_REQUEST_BODY"
                 }
               }
             }
@@ -2176,6 +2240,30 @@
         },
         "required": [
           "imageIds"
+        ]
+      },
+      "AdminLoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "관리자 아이디",
+            "example": "admin",
+            "minLength": 1,
+            "pattern": ".*\\S.*"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "관리자 비밀번호",
+            "example": "password",
+            "minLength": 1,
+            "pattern": ".*\\S.*"
+          }
+        },
+        "required": [
+          "password",
+          "username"
         ]
       },
       "BrandResponse": {

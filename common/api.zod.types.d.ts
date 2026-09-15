@@ -31,6 +31,16 @@ export type FeedbackImageUploadResponse = {
    */
   imageIds: Array<string>;
 }
+export type AdminLoginRequest = {
+  /**
+   * 관리자 아이디
+   */
+  username: string;
+  /**
+   * 관리자 비밀번호
+   */
+  password: string;
+}
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -699,6 +709,25 @@ export type post_UploadImages = {
 
     }
 /**
+ * 관리자 계정을 확인한다.
+ */
+export type post_Login = {
+      method: "POST",
+      path: "/api/admin/login",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.AdminLoginRequest,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: unknown,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. 받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.
  */
 export type get_FindStorageProducts = {
@@ -1114,7 +1143,8 @@ export type get_FindBrand = {
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/product-requests": Endpoints.post_Submit,
 "/api/feedback": Endpoints.post_Submit_1,
-"/api/feedback/images": Endpoints.post_UploadImages
+"/api/feedback/images": Endpoints.post_UploadImages,
+"/api/admin/login": Endpoints.post_Login
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,

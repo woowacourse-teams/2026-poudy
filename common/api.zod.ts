@@ -16,6 +16,9 @@ export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "DATA_CORR
 export type FeedbackImageUploadResponse = __TypedOpenapi.Schemas.FeedbackImageUploadResponse;
 export const FeedbackImageUploadResponse = z.object({ imageIds: z.array(z.uuid()).min(1).max(5) });
 
+export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
+export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
+
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
 
