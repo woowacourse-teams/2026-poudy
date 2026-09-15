@@ -15,20 +15,27 @@ import com.poudy.feedback.domain.FeedbackContent;
 import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
+import com.poudy.feedback.domain.FeedbackStatus;
+import com.poudy.feedback.domain.FeedbackSubjectType;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -229,5 +236,137 @@ class S3FeedbackRepositoryTest {
 
         verify(imageRepository, never()).rollback(any());
         verify(imageRepository, never()).commit(any());
+    }
+
+    @Test
+    @DisplayName("관리 필드가 없는 기존 JSON을 RECEIVED 상태로 읽고 피드백 문서만 목록에 포함한다")
+    void readsLegacyDocumentsAndExcludesNonFeedbackObjects() {
+        UUID newerId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        given(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).willReturn(
+            ListObjectsV2Response.builder()
+                .contents(
+                    S3Object.builder().key("poudy/feedback/" + ID + "/feedback.json").build(),
+                    S3Object.builder().key("poudy/feedback/" + newerId + "/feedback.json").build(),
+                    S3Object.builder().key("poudy/feedback/pending/" + newerId + ".png").build(),
+                    S3Object.builder().key("poudy/feedback/claims/" + newerId + ".json").build(),
+                    S3Object.builder().key("poudy/feedback/" + newerId + "/images/image.png").build()
+                )
+                .build()
+        );
+        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).willAnswer(invocation -> {
+            String key = invocation.getArgument(0, GetObjectRequest.class).key();
+            if (key.endsWith("/management.json")) {
+                throw software.amazon.awssdk.services.s3.model.S3Exception.builder().statusCode(404).build();
+            }
+            String body = key.contains(newerId.toString())
+                ? legacyDocument(newerId, "2026-08-24T12:34:56Z", "BUG_REPORT")
+                : legacyDocument(ID, "2026-08-23T12:34:56Z", "OTHER");
+            return ResponseBytes.fromByteArray(
+                GetObjectResponse.builder().eTag("etag-" + key).build(),
+                body.getBytes(StandardCharsets.UTF_8)
+            );
+        });
+
+        List<Feedback> feedbacks = repository.findAll(FeedbackStatus.RECEIVED, FeedbackSubjectType.BUG_REPORT);
+
+        assertThat(feedbacks).singleElement().satisfies(item -> {
+            assertThat(item.id()).isEqualTo(newerId);
+            assertThat(item.status()).isEqualTo(FeedbackStatus.RECEIVED);
+            assertThat(item.statusChangedAt()).isEqualTo(OffsetDateTime.parse("2026-08-24T12:34:56Z"));
+        });
+    }
+
+    @Test
+    @DisplayName("상태 변경은 피드백 원본 대신 별도 관리 문서에 저장한다")
+    void storesStatusInManagementDocument() throws Exception {
+        Feedback changed = FEEDBACK.changeStatus(
+            FeedbackStatus.COMPLETED,
+            Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC)
+        );
+        repository.updateStatus(changed);
+
+        ArgumentCaptor<PutObjectRequest> request = ArgumentCaptor.forClass(PutObjectRequest.class);
+        ArgumentCaptor<RequestBody> body = ArgumentCaptor.forClass(RequestBody.class);
+        verify(s3Client).putObject(request.capture(), body.capture());
+        assertThat(request.getValue().key()).isEqualTo("poudy/feedback/" + ID + "/management.json");
+        assertThat(request.getValue().ifNoneMatch()).isNull();
+        assertThat(request.getValue().serverSideEncryption()).isEqualTo(ServerSideEncryption.AES256);
+
+        JsonNode document = objectMapper.readTree(
+            body.getValue().contentStreamProvider().newStream().readAllBytes()
+        );
+        assertThat(document.get("status").asText()).isEqualTo("COMPLETED");
+        assertThat(OffsetDateTime.parse(document.get("statusChangedAt").asText()))
+            .isEqualTo(OffsetDateTime.parse("2026-09-15T10:00:00Z"));
+        assertThat(OffsetDateTime.parse(document.get("completedAt").asText()))
+            .isEqualTo(OffsetDateTime.parse("2026-09-15T10:00:00Z"));
+        assertThat(changed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-09-15T10:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("별도 관리 문서의 완료 상태와 처리 시각을 피드백에 결합한다")
+    void readsManagementDocument() {
+        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).willAnswer(invocation -> {
+            String key = invocation.getArgument(0, GetObjectRequest.class).key();
+            String body = key.endsWith("/management.json")
+                ? """
+                    {"status":"COMPLETED","statusChangedAt":"2026-09-15T10:00:00Z","completedAt":"2026-09-15T10:00:00Z"}
+                    """
+                : legacyDocument(ID, "2026-08-23T12:34:56Z", "OTHER");
+            return ResponseBytes.fromByteArray(
+                GetObjectResponse.builder().build(),
+                body.getBytes(StandardCharsets.UTF_8)
+            );
+        });
+
+        Feedback feedback = repository.findById(ID);
+
+        assertThat(feedback.status()).isEqualTo(FeedbackStatus.COMPLETED);
+        assertThat(feedback.statusChangedAt()).isEqualTo(OffsetDateTime.parse("2026-09-15T10:00:00Z"));
+        assertThat(feedback.completedAt()).isEqualTo(OffsetDateTime.parse("2026-09-15T10:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("제품 정보 정정 요청 문서를 대상 제품과 함께 복원한다")
+    void readsProductCorrectionDocument() {
+        String document = """
+            {
+              "feedbackId":"%s",
+              "type":"PRODUCT_CORRECTION",
+              "content":"전성분 표기가 실제 패키지와 달라요.",
+              "productId":1,
+              "productName":"블랙 스네일 토너",
+              "receivedAt":"2026-08-23T12:34:56Z",
+              "images":[]
+            }
+            """.formatted(ID);
+        given(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).willAnswer(invocation -> {
+            String key = invocation.getArgument(0, GetObjectRequest.class).key();
+            if (key.endsWith("/management.json")) {
+                throw software.amazon.awssdk.services.s3.model.S3Exception.builder().statusCode(404).build();
+            }
+            return ResponseBytes.fromByteArray(
+                GetObjectResponse.builder().build(),
+                document.getBytes(StandardCharsets.UTF_8)
+            );
+        });
+
+        Feedback feedback = repository.findById(ID);
+
+        assertThat(feedback.subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
+        assertThat(feedback.type()).isEqualTo(FeedbackSubjectType.PRODUCT_CORRECTION);
+    }
+
+    private static String legacyDocument(UUID id, String receivedAt, String type) {
+        return """
+            {
+              "feedbackId":"%s",
+              "type":"%s",
+              "content":"충분히 긴 기존 피드백 내용입니다.",
+              "path":"/products/1",
+              "receivedAt":"%s",
+              "images":[]
+            }
+            """.formatted(id, type, receivedAt);
     }
 }

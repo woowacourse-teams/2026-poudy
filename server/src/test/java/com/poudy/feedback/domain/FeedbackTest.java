@@ -33,6 +33,9 @@ class FeedbackTest {
         assertThat(feedback.subject()).isEqualTo(subject);
         assertThat(feedback.content().value()).isEqualTo("  검색 버튼을 눌러도 반응이 없어요.  ");
         assertThat(feedback.receivedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
+        assertThat(feedback.status()).isEqualTo(FeedbackStatus.RECEIVED);
+        assertThat(feedback.statusChangedAt()).isEqualTo(feedback.receivedAt());
+        assertThat(feedback.completedAt()).isNull();
     }
 
     @Test
@@ -45,6 +48,41 @@ class FeedbackTest {
         );
 
         assertThat(feedback.subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
+    }
+
+    @Test
+    @DisplayName("상태가 실제로 바뀔 때만 처리 시각을 갱신한다")
+    void transitionsStatusIdempotently() {
+        Feedback received = Feedback.register(OTHER, "충분히 긴 기타 의견입니다.", CLOCK);
+        Clock completedClock = Clock.fixed(Instant.parse("2026-08-24T00:00:00Z"), ZoneId.of("Asia/Seoul"));
+        Clock reopenedClock = Clock.fixed(Instant.parse("2026-08-25T00:00:00Z"), ZoneId.of("Asia/Seoul"));
+
+        Feedback completed = received.changeStatus(FeedbackStatus.COMPLETED, completedClock);
+        Feedback repeated = completed.changeStatus(FeedbackStatus.COMPLETED, CLOCK);
+        Feedback reopened = completed.changeStatus(FeedbackStatus.IN_PROGRESS, reopenedClock);
+
+        assertThat(completed.status()).isEqualTo(FeedbackStatus.COMPLETED);
+        assertThat(completed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-24T09:00:00+09:00"));
+        assertThat(repeated).isSameAs(completed);
+        assertThat(reopened.completedAt()).isNull();
+        assertThat(reopened.statusChangedAt()).isEqualTo(OffsetDateTime.parse("2026-08-25T09:00:00+09:00"));
+    }
+
+    @Test
+    @DisplayName("지정한 상태와 유형에 일치하고 생략한 조건은 무시한다")
+    void matchesStatusAndType() {
+        Feedback feedback = Feedback.register(
+            new ProductCorrection(1L, "블랙 스네일 토너"),
+            "제품 정보가 실제 패키지와 달라요.",
+            CLOCK
+        );
+
+        assertThat(feedback.matches(FeedbackStatus.RECEIVED, FeedbackSubjectType.PRODUCT_CORRECTION)).isTrue();
+        assertThat(feedback.matches(null, FeedbackSubjectType.PRODUCT_CORRECTION)).isTrue();
+        assertThat(feedback.matches(FeedbackStatus.RECEIVED, null)).isTrue();
+        assertThat(feedback.matches(null, null)).isTrue();
+        assertThat(feedback.matches(FeedbackStatus.COMPLETED, FeedbackSubjectType.PRODUCT_CORRECTION)).isFalse();
+        assertThat(feedback.matches(FeedbackStatus.RECEIVED, FeedbackSubjectType.BUG_REPORT)).isFalse();
     }
 
     @Test

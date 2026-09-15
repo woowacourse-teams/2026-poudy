@@ -3,6 +3,7 @@ package com.poudy.productrequest.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.inOrder;
@@ -13,11 +14,14 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.repository.S3ProductRequestRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -91,5 +95,42 @@ class ProductRequestServiceTest {
 
         assertThatNoException().isThrownBy(() -> service.submit("제품", null, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("제품 요청 상태 전이를 도메인에 요청한 뒤 변경 결과를 저장한다")
+    void changesAndStoresStatus() {
+        UUID requestId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        ProductRequest stored = new ProductRequest(
+            requestId,
+            "제품",
+            "브랜드",
+            OffsetDateTime.parse("2026-08-23T11:00:00Z")
+        );
+        given(repository.findById(requestId)).willReturn(stored);
+
+        ProductRequest changed = service.changeStatus(requestId, ProductRequestStatus.COMPLETED);
+
+        assertThat(changed.status()).isEqualTo(ProductRequestStatus.COMPLETED);
+        assertThat(changed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T12:34:56Z"));
+        verify(repository).update(changed);
+    }
+
+    @Test
+    @DisplayName("이미 같은 제품 요청 상태면 다시 저장하지 않는다")
+    void skipsSameStatusUpdate() {
+        UUID requestId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        ProductRequest stored = new ProductRequest(
+            requestId,
+            "제품",
+            "브랜드",
+            OffsetDateTime.parse("2026-08-23T11:00:00Z")
+        );
+        given(repository.findById(requestId)).willReturn(stored);
+
+        ProductRequest unchanged = service.changeStatus(requestId, ProductRequestStatus.RECEIVED);
+
+        assertThat(unchanged).isSameAs(stored);
+        verify(repository, never()).update(org.mockito.ArgumentMatchers.any());
     }
 }
