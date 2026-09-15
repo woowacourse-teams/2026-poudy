@@ -48,6 +48,9 @@ springdoc:
 # CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
 # 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
 poudy:
+  admin:
+    username: ${ADMIN_USERNAME:}
+    password: ${ADMIN_PASSWORD:}
   product-views:
     file: ${POUDY_PRODUCT_VIEWS_FILE:./var/product-views/daily-counts.json}
     save-interval: ${POUDY_PRODUCT_VIEWS_SAVE_INTERVAL:PT10S}
