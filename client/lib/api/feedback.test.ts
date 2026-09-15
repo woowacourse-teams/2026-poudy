@@ -36,7 +36,7 @@ describe("의견 보내기", () => {
   it("originPath 를 서버 필드 이름인 path 로 보낸다", async () => {
     await sendFeedback({ type: "BUG_REPORT", content: "열 자가 넘는 내용", originPath: "/products/1" });
 
-    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/feedback");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/feedbacks");
     expect(bodyOf(0)).toEqual({ type: "BUG_REPORT", content: "열 자가 넘는 내용", path: "/products/1" });
   });
 
@@ -142,7 +142,7 @@ describe("제품 등록 요청", () => {
   it("제품명과 브랜드를 보낸다", async () => {
     await requestProductRegistration({ productName: "1025 독도 토너", brandName: "라운드랩" });
 
-    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/product-requests");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/products/registration-requests");
     expect(bodyOf(0)).toEqual({ productName: "1025 독도 토너", brandName: "라운드랩" });
   });
 

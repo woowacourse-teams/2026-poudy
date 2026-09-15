@@ -57,9 +57,9 @@ describe("POST 요청", () => {
   it("본문이 있으면 JSON으로 전송한다", async () => {
     const fetchMock = prepareFetch();
 
-    await apiPost("/api/feedback", { content: "문의 내용" });
+    await apiPost("/api/feedbacks", { content: "문의 내용" });
 
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/feedback", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/feedbacks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: "문의 내용" }),

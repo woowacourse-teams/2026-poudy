@@ -95,7 +95,7 @@ describe("목 응답과 스키마", () => {
 
   it("문의 접수는 내용 없이 204 를 준다", async () => {
     const { status, body } = await post(
-      "/feedback",
+      "/feedbacks",
       ...json({ type: "OTHER", content: "열 자가 넘는 내용", path: "/" }),
     );
 
@@ -121,17 +121,17 @@ describe("목 응답과 스키마", () => {
   });
 
   it("제품 등록 요청은 내용 없이 202 를 준다", async () => {
-    const { status, body } = await post("/product-requests", ...json({ productName: "1025 독도 토너" }));
+    const { status, body } = await post("/products/registration-requests", ...json({ productName: "1025 독도 토너" }));
 
     expect(status).toBe(202);
     expect(body).toBeUndefined();
   });
 
   it.each([
-    ["/feedback", "429 를 부르는 내용"],
-    ["/product-requests", "429 를 부르는 제품"],
+    ["/feedbacks", "429 를 부르는 내용"],
+    ["/products/registration-requests", "429 를 부르는 제품"],
   ])("%s 의 실패는 ProblemDetail 을 지킨다", async (path, text) => {
-    const field = path === "/feedback" ? { type: "OTHER", content: text, path: "/" } : { productName: text };
+    const field = path === "/feedbacks" ? { type: "OTHER", content: text, path: "/" } : { productName: text };
     const { status, body } = await post(path, ...json(field));
 
     expect(status).toBe(429);
@@ -156,10 +156,10 @@ describe("목 응답과 스키마", () => {
 
     /* 보내는 요청은 it.each 로 따로 검사하므로 여기서 함께 센다. */
     const postPaths = [
-      "/feedback",
+      "/feedbacks",
       "/products/:id/correction-requests",
       "/inquiry-images",
-      "/product-requests",
+      "/products/registration-requests",
       "/products/:id/views",
     ];
 

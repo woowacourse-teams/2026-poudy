@@ -33,7 +33,7 @@ type SendFeedbackInput = {
 };
 
 export const sendFeedback = ({ type, content, originPath, imageIds }: SendFeedbackInput): Promise<void> =>
-  apiPost("/api/feedback", {
+  apiPost("/api/feedbacks", {
     type,
     content,
     ...(originPath ? { path: originPath } : {}),
@@ -72,7 +72,7 @@ type RequestProductInput = {
 
 /** 202 를 돌려주며 등록 완료가 아니라 접수만 뜻한다. */
 export const requestProductRegistration = ({ productName, brandName }: RequestProductInput): Promise<void> =>
-  apiPost("/api/product-requests", {
+  apiPost("/api/products/registration-requests", {
     productName,
     ...(brandName?.trim() ? { brandName: brandName.trim() } : {}),
   });

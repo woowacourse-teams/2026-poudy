@@ -349,7 +349,7 @@ export const handlers = [
    * 문의 접수. 실패 문구를 눈으로 확인할 수 있도록 특정 낱말로 오류를 부른다.
    * 목에서만 쓰는 장치이므로 실제 서버는 이런 규칙을 두지 않는다.
    */
-  http.post("*/api/feedback", async ({ request }) => {
+  http.post("*/api/feedbacks", async ({ request }) => {
     const body = (await request.json()) as { content?: string };
     const forced = forcedError(body.content ?? "");
     if (forced) return forced;
@@ -383,7 +383,7 @@ export const handlers = [
     return HttpResponse.json({ imageIds: images.map(() => crypto.randomUUID()) }, { status: 201 });
   }),
 
-  http.post("*/api/product-requests", async ({ request }) => {
+  http.post("*/api/products/registration-requests", async ({ request }) => {
     const body = (await request.json()) as { productName?: string };
     const forced = forcedError(body.productName ?? "");
     if (forced) return forced;
