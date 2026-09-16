@@ -1,15 +1,12 @@
 package com.poudy.curation.domain;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public final class Curations {
-
     private final Map<Long, Curation> curations;
 
     private Curations(Map<Long, Curation> curations) {
@@ -17,25 +14,20 @@ public final class Curations {
     }
 
     public static Curations from(List<Curation> curations) {
-        Map<Long, Curation> indexedCurations = new LinkedHashMap<>();
-        for (Curation curation : Objects.requireNonNullElse(curations, List.<Curation>of())) {
-            if (indexedCurations.putIfAbsent(curation.id(), curation) != null) {
+        Map<Long, Curation> indexed = new LinkedHashMap<>();
+        for (Curation curation : curations) {
+            if (indexed.putIfAbsent(curation.id(), curation) != null) {
                 throw new IllegalArgumentException("큐레이션 ID가 중복됐습니다: " + curation.id());
             }
         }
-
-        return new Curations(Collections.unmodifiableMap(indexedCurations));
+        return new Curations(Collections.unmodifiableMap(indexed));
     }
 
-    public List<Curation> publishedSortedById() {
-        return curations.values().stream()
-            .filter(Curation::isPublished)
-            .sorted(Comparator.comparing(Curation::id))
-            .toList();
+    public List<Curation> inOrder() {
+        return List.copyOf(curations.values());
     }
 
-    public Optional<Curation> findPublishedById(Long id) {
-        return Optional.ofNullable(curations.get(id))
-            .filter(Curation::isPublished);
+    public Optional<Curation> findById(Long id) {
+        return Optional.ofNullable(curations.get(id));
     }
 }

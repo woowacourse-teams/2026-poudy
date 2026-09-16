@@ -486,50 +486,31 @@ export type CurationSummaryResponse = {
    */
   id: number;
   /**
-   * 큐레이션 제목
+   * 배너 제목
    */
   title: string;
   /**
-   * 큐레이션 간단 설명
+   * 배너 설명
    */
   description: string;
   /**
-   * 목록 대표 이미지 URL
+   * 상세 이미지와 독립적인 배너 썸네일 URL
    */
-  imageUrl: string;
+  thumbnailImageUrl: string;
 }
 export type CurationListResponse = { items: Array<CurationSummaryResponse> }
-export type CurationCategoryResponse = {
+export type CurationImageBlockResponse = {
+  id: string;
+  type: "IMAGE";
   /**
-   * 카테고리 ID
+   * 위 여백 (px)
    */
-  id: number;
+  spacingTop: number;
   /**
-   * 카테고리 이름
+   * 아래 여백 (px)
    */
-  name: string;
-}
-export type CurationDetailResponse = {
-  /**
-   * 큐레이션 ID
-   */
-  id: number;
-  /**
-   * 큐레이션 제목
-   */
-  title: string;
-  /**
-   * 큐레이션 상세 설명
-   */
-  description: string;
-  /**
-   * 상세 화면 이미지 URL 목록
-   */
-  imageUrls: Array<string>;
-  /**
-   * 제품 필터에 사용할 카테고리 목록
-   */
-  categories: Array<CurationCategoryResponse>;
+  spacingBottom: number;
+  imageUrl: string;
 }
 export type CurationProductResponse = {
   /**
@@ -569,7 +550,60 @@ export type CurationProductResponse = {
    */
   oilLevel: number;
 }
-export type CurationProductListResponse = { items: Array<CurationProductResponse> }
+export type CurationProductsBlockResponse = {
+  id: string;
+  type: "PRODUCTS";
+  /**
+   * 위 여백 (px)
+   */
+  spacingTop: number;
+  /**
+   * 아래 여백 (px)
+   */
+  spacingBottom: number;
+  products: Array<CurationProductResponse>;
+}
+export type CurationFilterResponse = { id: string, label: string }
+export type CurationProductItemResponse = {
+  product: CurationProductResponse;
+  /**
+   * 제품이 속한 블록 내 필터 ID. 하나 이상
+   */
+  filterIds: Array<string>;
+}
+export type CurationProductsByFilterBlockResponse = {
+  id: string;
+  type: "PRODUCTS_BY_FILTER";
+  /**
+   * 위 여백 (px)
+   */
+  spacingTop: number;
+  /**
+   * 아래 여백 (px)
+   */
+  spacingBottom: number;
+  filters: Array<CurationFilterResponse>;
+  products: Array<CurationProductItemResponse>;
+}
+export type CurationBlockResponse = (CurationImageBlockResponse | CurationProductsBlockResponse | CurationProductsByFilterBlockResponse)
+export type CurationDetailResponse = {
+  /**
+   * 큐레이션 ID
+   */
+  id: number;
+  /**
+   * 큐레이션 상세 제목
+   */
+  title: string;
+  /**
+   * 큐레이션 상세 설명
+   */
+  description: string;
+  /**
+   * 노출 가능한 블록 목록. 저장 순서를 유지하며 빈 배열일 수 있다.
+   */
+  blocks: Array<CurationBlockResponse>;
+}
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type BrandSummaryResponse = {
   /**
@@ -1103,7 +1137,7 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * PUBLISHED 상태의 큐레이션을 ID 오름차순으로 조회한다.
+ * 게시 중인 큐레이션 배너를 지정된 순서로 조회한다.
  */
 export type get_FindCurations = {
       method: "GET",
@@ -1117,7 +1151,7 @@ export type get_FindCurations = {
 
     }
 /**
- * PUBLISHED 상태인 큐레이션의 상세 정보와 제품 필터용 카테고리를 조회한다.
+ * 게시 중인 큐레이션의 이미지·제품 블록과 필터를 저장 순서대로 조회한다.
  */
 export type get_FindCuration = {
       method: "GET",
@@ -1130,26 +1164,6 @@ export type get_FindCuration = {
 
           }
       responses: {200: Schemas.CurationDetailResponse,
-400: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * PUBLISHED 상태인 큐레이션의 제품을 등록 순서로 조회한다. categoryId로 필터해도 순서를 유지한다.
- */
-export type get_FindCurationProducts = {
-      method: "GET",
-      path: "/api/curations/{curationId}/products",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-            query?:  Partial<{ categoryId: number }>,
-        path:  { curationId: number },
-
-          }
-      responses: {200: Schemas.CurationProductListResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1322,7 +1336,6 @@ get: {
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/curations": Endpoints.get_FindCurations,
 "/api/curations/{curationId}": Endpoints.get_FindCuration,
-"/api/curations/{curationId}/products": Endpoints.get_FindCurationProducts,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand,

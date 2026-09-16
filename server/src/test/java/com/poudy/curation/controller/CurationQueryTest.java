@@ -3,11 +3,12 @@ package com.poudy.curation.controller;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.exception.ErrorCode;
-import org.junit.jupiter.api.DisplayName;
+import com.poudy.product.domain.Product;
+import com.poudy.product.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -18,90 +19,96 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DisplayName("큐레이션 조회")
 class CurationQueryTest {
-
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private ProductRepository products;
 
     @Test
-    @DisplayName("게시 중인 큐레이션 목록을 ID 오름차순으로 반환한다")
-    void findsPublishedCurationsSortedById() throws Exception {
+    void returnsPublicBannerInConfiguredOrder() throws Exception {
         mockMvc.perform(get("/api/curations"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items", hasSize(2)))
-            .andExpect(jsonPath("$.items[*].id", contains(4, 12)))
-            .andExpect(jsonPath("$.items[1].title").value("환절기 장벽 케어"))
-            .andExpect(jsonPath("$.items[1].description").value("환절기를 위한 제품 모음"))
-            .andExpect(jsonPath("$.items[1].imageUrl").value("https://cdn.example.com/curations/12/main.png"));
+            .andExpect(jsonPath("$.items[*].id", contains(12, 4)))
+            .andExpect(jsonPath("$.items[0].title").value("환절기 장벽 케어"))
+            .andExpect(jsonPath("$.items[0].description").value("환절기를 위한 제품 모음"))
+            .andExpect(jsonPath("$.items[0].thumbnailImageUrl").value("https://cdn.example.com/curations/banner.png"))
+            .andExpect(jsonPath("$.items[0].imageUrl").doesNotExist());
     }
 
     @Test
-    @DisplayName("큐레이션 상세의 이미지와 카테고리를 편집 순서대로 반환한다")
-    void findsCurationDetail() throws Exception {
+    void returnsVisibleBlocksFiltersAndProductsInSavedOrder() throws Exception {
+        Product first = products.findAll().findById(15L).orElseThrow();
         mockMvc.perform(get("/api/curations/12"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(12L))
-            .andExpect(jsonPath("$.description").value("환절기에 피부 장벽 관리가 필요한 이유와 제품 선택 기준"))
+            .andExpect(jsonPath("$.title").value("상세 제목"))
+            .andExpect(jsonPath("$.description").value("피부 장벽을 위한 제품 선택 기준"))
+            .andExpect(jsonPath("$.blocks[*].id", contains(uuid(1), uuid(3), uuid(5), uuid(6))))
+            .andExpect(jsonPath("$.blocks[0].type").value("IMAGE"))
+            .andExpect(jsonPath("$.blocks[0].imageUrl").value("https://cdn.example.com/curations/12/detail-1.png"))
+            .andExpect(jsonPath("$.blocks[0].spacingTop").value(8))
+            .andExpect(jsonPath("$.blocks[0].spacingBottom").value(24))
+            .andExpect(jsonPath("$.blocks[0].filters").doesNotExist())
+            .andExpect(jsonPath("$.blocks[0].products").doesNotExist())
+            .andExpect(jsonPath("$.blocks[1].type").value("PRODUCTS_BY_FILTER"))
+            .andExpect(jsonPath("$.blocks[1].imageUrl").doesNotExist())
+            .andExpect(jsonPath("$.blocks[1].filters[*].id", contains(uuid(12), uuid(11))))
+            .andExpect(jsonPath("$.blocks[1].filters[*].label", contains("보습", "진정")))
+            .andExpect(jsonPath("$.blocks[1].products[*].product.id", contains(15, 10, 7, 1)))
+            .andExpect(jsonPath("$.blocks[1].products[0].filterIds", contains(uuid(12), uuid(11))))
+            .andExpect(jsonPath("$.blocks[1].products[2].filterIds", contains(uuid(12))))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.name").value(first.name()))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.brandName").value(first.brand().koreanName()))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.imageUrl").value(first.imageUrl()))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.price").value(first.representativeVariant().price()))
             .andExpect(
-                jsonPath(
-                    "$.imageUrls",
-                    contains(
-                        "https://cdn.example.com/curations/12/main.png",
-                        "https://cdn.example.com/curations/12/description-1.png"
-                    )
-                )
+                jsonPath("$.blocks[1].products[0].product.volumeValue")
+                    .value(first.representativeVariant().volumeValue().doubleValue())
             )
-            .andExpect(jsonPath("$.categories[*].id", contains(13, 1)))
-            .andExpect(jsonPath("$.categories[*].name", contains("선케어", "스킨케어")));
+            .andExpect(
+                jsonPath("$.blocks[1].products[0].product.volumeUnit").value(first.representativeVariant().volumeUnit())
+            )
+            .andExpect(jsonPath("$.blocks[1].products[0].product.moistureLevel").value(first.moistureLevel()))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.oilLevel").value(first.oilLevel()))
+            .andExpect(jsonPath("$.blocks[3].type").value("PRODUCTS"))
+            .andExpect(jsonPath("$.blocks[3].filters").doesNotExist())
+            .andExpect(jsonPath("$.blocks[3].products[0].id").value(10))
+            .andExpect(jsonPath("$.blocks[3].products[0].filterIds").doesNotExist())
+            .andExpect(jsonPath("$.imageUrls").doesNotExist())
+            .andExpect(jsonPath("$.categories").doesNotExist())
+            .andExpect(jsonPath("$.blocks[*].status").isEmpty())
+            .andExpect(jsonPath("$.blocks[*].imageId").isEmpty())
+            .andExpect(jsonPath("$.blocks[*].position").isEmpty());
     }
 
     @Test
-    @DisplayName("큐레이션 제품을 등록 순서와 제품 목록 표현으로 반환한다")
-    void findsCurationProductsKeepingEditorialOrder() throws Exception {
-        mockMvc.perform(get("/api/curations/12/products"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", contains(15, 10, 7, 1)))
-            .andExpect(jsonPath("$.items[0].name").value("PH 컨디션 토너"))
-            .andExpect(jsonPath("$.items[0].brandName").value("나 브랜드"))
-            .andExpect(jsonPath("$.items[0].imageUrl").value("https://cdn.example.com/products/15.png"))
-            .andExpect(jsonPath("$.items[0].price").value(15000L))
-            .andExpect(jsonPath("$.items[0].volumeValue").value(150))
-            .andExpect(jsonPath("$.items[0].volumeUnit").value("ml"))
-            .andExpect(jsonPath("$.items[0].moistureLevel").isNumber())
-            .andExpect(jsonPath("$.items[0].oilLevel").isNumber());
-    }
-
-    @Test
-    @DisplayName("대분류나 소분류로 필터링해도 큐레이션 제품 순서를 유지한다")
-    void filtersProductsKeepingEditorialOrder() throws Exception {
-        mockMvc.perform(get("/api/curations/12/products").param("categoryId", "1"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", contains(15, 7, 1)));
-
-        mockMvc.perform(get("/api/curations/12/products").param("categoryId", "2"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", contains(15, 1)));
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 카테고리 ID는 빈 제품 목록을 반환한다")
-    void returnsEmptyProductsForUnknownCategory() throws Exception {
-        mockMvc.perform(get("/api/curations/12/products").param("categoryId", "999"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items", hasSize(0)));
+    void returnsEmptyBlocksWhenAllReferencedProductsAreMissing() throws Exception {
+        mockMvc.perform(get("/api/curations/4")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.blocks", hasSize(0)));
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {20L, 30L, 999L})
-    @DisplayName("조회할 수 없는 큐레이션 상세와 제품은 404를 반환한다")
-    void rejectsUnavailableCuration(Long curationId) throws Exception {
-        mockMvc.perform(get("/api/curations/{curationId}", curationId))
+    @ValueSource(longs = {20L, 30L, 40L, 999L})
+    void unavailableCurationReturns404(Long id) throws Exception {
+        mockMvc.perform(get("/api/curations/{id}", id))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value(ErrorCode.CURATION_NOT_FOUND.name()));
+            .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+            .andExpect(jsonPath("$.code").value("CURATION_NOT_FOUND"));
+    }
 
-        mockMvc.perform(get("/api/curations/{curationId}/products", curationId))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value(ErrorCode.CURATION_NOT_FOUND.name()));
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "abc", "1.5", "9223372036854775808"})
+    void invalidPathReturns400(String id) throws Exception {
+        mockMvc.perform(get("/api/curations/{id}", id)).andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+    }
+
+    @Test
+    void removesSeparateProductEndpoint() throws Exception {
+        mockMvc.perform(get("/api/curations/12/products")).andExpect(status().isNotFound());
+    }
+
+    private static String uuid(int number) {
+        return "00000000-0000-4000-8000-%012d".formatted(number);
     }
 }

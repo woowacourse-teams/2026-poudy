@@ -2,94 +2,68 @@ package com.poudy.curation.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
-import com.poudy.category.domain.Categories;
-import com.poudy.category.domain.Category;
 import com.poudy.common.json.JsonDataReader;
 import com.poudy.curation.domain.Curation;
 import com.poudy.exception.InfrastructureException;
-import com.poudy.product.domain.Product;
-import com.poudy.product.domain.Products;
-import com.poudy.product.repository.ProductRepository;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 
-@SpringBootTest
-@DisplayName("큐레이션 저장소")
 class CurationRepositoryTest {
 
-    @Autowired
-    private CurationRepository curationRepository;
-
     @Test
-    @DisplayName("카테고리와 제품 참조를 순서대로 해석한다")
-    void resolvesReferencesKeepingOrder() {
-        Curation curation = curationRepository.findAll().findPublishedById(12L).orElseThrow();
-
-        assertThat(curation.categories()).extracting(Category::id).containsExactly(13L, 1L);
-        assertThat(curation.products(null)).extracting(Product::id).containsExactly(15L, 10L, 7L, 1L);
-        assertThat(curation.imageUrls()).containsExactly(
-            "https://cdn.example.com/curations/12/main.png",
-            "https://cdn.example.com/curations/12/description-1.png"
-        );
+    void loadsPublicContentInBannerOrderWithoutResolvingMissingProducts() throws IOException {
+        CurationRepository repository = reading(fixture());
+        assertThat(repository.findAll().inOrder()).extracting(Curation::id).containsExactly(12L, 4L);
+        assertThat(repository.findAll().findById(12L).orElseThrow().banner().title())
+            .isEqualTo("환절기 장벽 케어");
     }
 
     @Test
-    @DisplayName("존재하지 않는 카테고리나 제품 참조는 데이터 오류로 처리한다")
-    void rejectsUnknownReferences() {
-        assertThatThrownBy(() -> repositoryReading("[999]", "[1]", "PUBLISHED"))
-            .isInstanceOf(InfrastructureException.class);
-        assertThatThrownBy(() -> repositoryReading("[1]", "[999]", "PUBLISHED"))
-            .isInstanceOf(InfrastructureException.class);
+    void permitsEmptyCatalog() {
+        assertThat(reading("{\"curations\":[]}").findAll().inOrder()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "thumbnail_image_url,thumbnail_image_typo",
+            "VISIBLE,UNKNOWN",
+            "IMAGE,UNKNOWN",
+            "00000000-0000-4000-8000-000000000012,invalid-uuid",
+            "spacing_top,spacing_typo"
+    })
+    void rejectsInvalidSavedData(String from, String to) throws IOException {
+        String invalid = fixture().replaceFirst(from, to);
+        assertThatThrownBy(() -> reading(invalid)).isInstanceOf(InfrastructureException.class);
     }
 
     @Test
-    @DisplayName("지원하지 않는 상태는 데이터 오류로 처리한다")
-    void rejectsUnknownStatus() {
-        assertThatThrownBy(() -> repositoryReading("[1]", "[1]", "UNKNOWN"))
+    void rejectsWrongScalarTypesAndNumericOverflow() throws IOException {
+        String json = fixture();
+        assertThatThrownBy(() -> reading(json.replaceFirst("\"id\": 12", "\"id\": 1.2")))
+            .isInstanceOf(InfrastructureException.class);
+        assertThatThrownBy(() -> reading(json.replaceFirst("\"spacing_top\": 8", "\"spacing_top\": 2147483648")))
             .isInstanceOf(InfrastructureException.class);
     }
 
-    private static CurationRepository repositoryReading(String categoryIds, String productIds, String status) {
-        String curationData = """
-            {"curations":[{
-              "id":12,
-              "title":"제목",
-              "summary":"간단 설명",
-              "description":"상세 설명",
-              "image_urls":["https://example.com/main.png"],
-              "category_ids":%s,
-              "product_ids":%s,
-              "status":"%s"
-            }]}
-            """.formatted(categoryIds, productIds, status);
-        DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
+    private static String fixture() throws IOException {
+        return new ClassPathResource("curations.json").getContentAsString(StandardCharsets.UTF_8);
+    }
 
+    private static CurationRepository reading(String json) {
+        DefaultResourceLoader loader = new DefaultResourceLoader() {
             @Override
             public Resource getResource(String location) {
-                return new ByteArrayResource(curationData.getBytes(StandardCharsets.UTF_8));
+                return new ByteArrayResource(json.getBytes(StandardCharsets.UTF_8));
             }
         };
-
-        Product product = mock(Product.class);
-        given(product.id()).willReturn(1L);
-        Products products = Products.from(List.of(product));
-        ProductRepository productRepository = mock(ProductRepository.class);
-        given(productRepository.findAll()).willReturn(products);
-
-        return new CurationRepository(
-            new JsonDataReader(resourceLoader),
-            Categories.from(List.of(new Category(1L, null, "스킨케어", 0))),
-            productRepository
-        );
+        return new CurationRepository(new JsonDataReader(loader));
     }
 }

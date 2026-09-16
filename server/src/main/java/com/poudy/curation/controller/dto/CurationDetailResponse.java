@@ -1,24 +1,24 @@
 package com.poudy.curation.controller.dto;
 
 import com.poudy.curation.domain.Curation;
+import com.poudy.curation.domain.CurationDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CurationDetailResponse(
     @NotNull @Schema(description = "큐레이션 ID", example = "12") Long id,
-    @NotNull @Schema(description = "큐레이션 제목", example = "환절기 장벽 케어") String title,
-    @NotNull @Schema(description = "큐레이션 상세 설명", example = "환절기에 피부 장벽 관리가 필요한 이유와 제품 선택 기준") String description,
-    @NotNull @Schema(description = "상세 화면 이미지 URL 목록") List<String> imageUrls,
-    @NotNull @Schema(description = "제품 필터에 사용할 카테고리 목록") List<CurationCategoryResponse> categories) {
+    @NotNull @Schema(description = "큐레이션 상세 제목") String title,
+    @NotNull @Schema(description = "큐레이션 상세 설명") String description,
+    @NotNull @Schema(description = "노출 가능한 블록 목록. 저장 순서를 유지하며 빈 배열일 수 있다.") List<CurationBlockResponse> blocks) {
 
-    public static CurationDetailResponse from(Curation curation) {
+    public static CurationDetailResponse from(CurationDetail detail) {
+        Curation curation = detail.curation();
         return new CurationDetailResponse(
             curation.id(),
             curation.title(),
             curation.description(),
-            curation.imageUrls(),
-            CurationCategoryResponse.from(curation.categories())
+            detail.blocks().stream().map(CurationBlockResponse::from).toList()
         );
     }
 }
