@@ -1,6 +1,8 @@
 package com.poudy.product.controller;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -71,7 +73,9 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.categories[0].productCount").value(3))
             .andExpect(jsonPath("$.categories[0].children.length()").value(1))
             .andExpect(jsonPath("$.categories[0].children[0].id").value(2))
-            .andExpect(jsonPath("$.categories[0].children[0].productCount").value(3));
+            .andExpect(jsonPath("$.categories[0].children[0].productCount").value(3))
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")))
+            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "민감성", "복합성")));
         mockMvc.perform(get("/api/products/count").param("skinType", "DRY"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
     }
@@ -85,7 +89,21 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.hasNext").value(false))
             .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
-            .andExpect(jsonPath("$.categories[0].productCount").value(3));
+            .andExpect(jsonPath("$.categories[0].productCount").value(3))
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")));
+    }
+
+    @Test
+    @DisplayName("조회 결과가 없거나 모든 결과가 미분류이면 피부타입 선택지가 비어 있다")
+    void returnsNoSkinTypesWithoutClassifiedResults() throws Exception {
+        mockMvc.perform(get("/api/products").param("keyword", "존재하지 않는 제품"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinTypes").value(empty()));
+
+        mockMvc.perform(get("/api/products").param("keyword", "레티놀 콜라겐"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.pagination.totalElements").value(1))
+            .andExpect(jsonPath("$.skinTypes").value(empty()));
     }
 
     @ParameterizedTest
@@ -123,6 +141,9 @@ class ProductSkinTypeFilterTest {
         params.add("moistureLevel", "2");
         params.add("oilLevel", "0");
         assertCount(params, 1);
+        mockMvc.perform(get("/api/products").params(params))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY")));
     }
 
     @ParameterizedTest
