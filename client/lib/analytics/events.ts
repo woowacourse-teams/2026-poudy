@@ -12,6 +12,9 @@ export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | 
 
 export type SearchMode = "product" | "ingredient";
 
+/** 피부 타입 코드. 조건 타입과 같은 값이지만 이벤트 정의는 스스로 서게 둔다. */
+export type SkinTypeCode = "DRY" | "OILY" | "SENSITIVE" | "COMBINATION";
+
 export const PRODUCT_ENTRY_POINTS = [
   "search_results",
   "suggestion",
@@ -99,6 +102,16 @@ export type EventMap = {
   recent_search_used:
     | { target_type: "product"; position: number; product_id: number }
     | { target_type: "keyword"; position: number; query: string };
+  /** 홈의 인기 검색어를 눌렀을 때. 접힌 줄과 펼친 목록을 가리지 않고 남긴다. */
+  popular_keyword_used: { keyword: string; rank: number };
+  /** 인기 검색어를 펼쳤을 때. 접힌 줄만으로 충분한지 본다. */
+  popular_keywords_expanded: { rank: number };
+  /** 홈의 큐레이션 카드를 눌렀을 때. */
+  curation_opened: { curation_id: number; position: number };
+  /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
+  skin_type_selected: { skin_type: SkinTypeCode };
+  /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
+  ranking_category_changed: { category_id?: number };
   /** 성분을 포함·제외 조건으로 켜고 끌 때. 어떤 성분이 실제로 쓰이는지 본다. */
   ingredient_condition_toggled:
     | {

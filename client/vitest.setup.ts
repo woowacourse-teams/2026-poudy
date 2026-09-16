@@ -19,6 +19,15 @@ if (!("IntersectionObserver" in globalThis)) {
   } as unknown as typeof IntersectionObserver;
 }
 
+// jsdom 에 없다. 캐러셀이 칸의 폭을 다시 재려고 쓴다.
+if (!("ResizeObserver" in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 // jsdom 에 없다. node 환경으로 도는 파일에는 document 자체가 없다.
 // 항목을 못 찾은 셈이 되어 픽셀값으로 되돌아간다.
 if (typeof document !== "undefined" && !document.elementFromPoint) {
