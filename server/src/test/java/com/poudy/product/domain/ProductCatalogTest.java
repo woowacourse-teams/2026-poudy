@@ -12,10 +12,12 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -127,6 +129,56 @@ class ProductCatalogTest {
     }
 
     @Test
+    @DisplayName("필터에 맞는 전체 제품의 피부타입을 중복 없이 표시 순서대로 집계한다")
+    void aggregatesSkinTypesFromAllMatches() {
+        Product dryAndSensitive = product(
+            4L,
+            "건성 민감 토너",
+            1L,
+            toner.category(),
+            10000L,
+            1,
+            1,
+            Set.of(SkinType.DRY, SkinType.SENSITIVE)
+        );
+        Product dryAndOily = product(
+            5L,
+            "건성 지성 토너",
+            1L,
+            toner.category(),
+            20000L,
+            1,
+            1,
+            Set.of(SkinType.DRY, SkinType.OILY)
+        );
+        Product unclassified = product(
+            6L,
+            "미분류 토너",
+            1L,
+            toner.category(),
+            30000L,
+            1,
+            1,
+            Set.of()
+        );
+        Products typedProducts = Products.from(List.of(dryAndSensitive, dryAndOily, unclassified));
+        ProductFilter filter = new ProductFilter(
+            null,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            new IngredientFilter(null, null),
+            SkinType.DRY
+        );
+
+        ProductPage found = typedProducts.find(filter, ProductSort.PRICE_ASC, 0, 1, categories);
+
+        assertThat(found.items()).containsExactly(dryAndSensitive);
+        assertThat(found.skinTypes()).containsExactly(SkinType.DRY, SkinType.OILY, SkinType.SENSITIVE);
+    }
+
+    @Test
     @DisplayName("목록과 개수는 같은 필터 판정을 사용한다")
     void countsWithSameFilterRule() {
         ProductFilter filter = new ProductFilter(
@@ -160,6 +212,30 @@ class ProductCatalogTest {
         Integer oilLevel,
         Long... ingredientIds
     ) {
+        return product(
+            id,
+            name,
+            brandId,
+            category,
+            price,
+            moistureLevel,
+            oilLevel,
+            Set.of(),
+            ingredientIds
+        );
+    }
+
+    private static Product product(
+        Long id,
+        String name,
+        Long brandId,
+        Category category,
+        Long price,
+        Integer moistureLevel,
+        Integer oilLevel,
+        Set<SkinType> skinTypes,
+        Long... ingredientIds
+    ) {
         List<Ingredient> ingredients = Arrays.stream(ingredientIds)
             .map(
                 ingredientId -> new Ingredient(
@@ -188,7 +264,7 @@ class ProductCatalogTest {
             new ProductVariants(List.of(variant)),
             sensory(moistureLevel, oilLevel),
             OffsetDateTime.parse("2026-08-01T00:00:00Z"),
-            java.util.Set.of()
+            skinTypes
         );
     }
 

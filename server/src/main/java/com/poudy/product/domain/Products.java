@@ -4,6 +4,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.skintype.domain.SkinType;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -103,7 +104,8 @@ public final class Products {
             pageOf(sorted, page, size),
             matched.size(),
             brandsOf(matched),
-            countsByCategory(matched).nonEmptyCategoriesOf(categories)
+            countsByCategory(matched).nonEmptyCategoriesOf(categories),
+            skinTypesOf(matched)
         );
     }
 
@@ -180,6 +182,14 @@ public final class Products {
             .map(Product::brand)
             .distinct()
             .sorted(Brand::compareOrderByName)
+            .toList();
+    }
+
+    private static List<SkinType> skinTypesOf(List<Product> products) {
+        return products.stream()
+            .flatMap(product -> product.getSkinTypes().stream())
+            .distinct()
+            .sorted()
             .toList();
     }
 
