@@ -63,6 +63,13 @@ class CurationServiceTest {
     }
 
     private static Curation curation(Long id, String title, List<CurationBlock> blocks) {
-        return new Curation(id, new CurationBanner("배너", "설명", "banner.png"), title, "설명", blocks);
+        return new Curation(
+            id,
+            "seasonal-skin-care",
+            new CurationBanner("배너", "설명", "banner.png"),
+            title,
+            "설명",
+            blocks
+        );
     }
 }

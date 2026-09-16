@@ -64,6 +64,7 @@ public class CurationRepository {
         }
         return new Curation(
             number(node, "id", context),
+            text(node, "slug", context),
             new CurationBanner(
                 text(banner, "title", context),
                 text(banner, "description", context),

@@ -21,6 +21,7 @@ class CurationTest {
         assertThatThrownBy(
             () -> new Curation(
                 12L,
+                "seasonal-skin-care",
                 new CurationBanner("배너", "설명", "banner.png"),
                 " ",
                 "설명",
@@ -29,6 +30,20 @@ class CurationTest {
         ).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new CurationFilter(UUID.randomUUID(), " "))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsInvalidSlug() {
+        assertThatThrownBy(
+            () -> new Curation(
+                12L,
+                "Seasonal Skin Care",
+                new CurationBanner("배너", "설명", "banner.png"),
+                "상세 제목",
+                "상세 설명",
+                List.of()
+            )
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -41,6 +56,7 @@ class CurationTest {
     public static Curation curation(Long id, List<CurationBlock> blocks) {
         return new Curation(
             id,
+            "seasonal-skin-care",
             new CurationBanner("배너 제목", "배너 설명", "banner.png"),
             "상세 제목",
             "상세 설명",

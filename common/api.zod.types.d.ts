@@ -486,6 +486,10 @@ export type CurationSummaryResponse = {
    */
   id: number;
   /**
+   * 웹 경로 표시값. 영문 소문자, 숫자, 하이픈으로 구성하며 중복을 허용한다.
+   */
+  slug: string;
+  /**
    * 배너 제목
    */
   title: string;
