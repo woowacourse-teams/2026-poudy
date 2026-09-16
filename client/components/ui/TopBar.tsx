@@ -18,6 +18,13 @@ type TopBarProps = {
   /** 제목 앞에 로고를 둘지. 홈처럼 서비스를 대표하는 화면에서 쓴다. */
   readonly showLogo?: boolean;
   /**
+   * 로고만 두고 이름 글자는 그리지 않을지(디자인 S01 홈).
+   *
+   * 글자가 사라지면 서비스 이름을 읽을 자리가 없어지므로 로고가 그 몫을 대신한다.
+   * 그림에 대체 텍스트를 주고 제목은 화면에서만 감춘다.
+   */
+  readonly logoOnly?: boolean;
+  /**
    * 바 제목을 문서의 대표 제목으로 둘지. 본문에 진짜 제목이 있는 화면은 `p` 로 내린다.
    * 그리는 모양은 그대로고 문서 구조만 바뀐다.
    */
@@ -72,7 +79,15 @@ function BackControl({ iconSize, className }: { readonly iconSize: number; reado
   );
 }
 
-export function TopBar({ title, variant, right, showBack = false, showLogo = false, titleAs = "h1" }: TopBarProps) {
+export function TopBar({
+  title,
+  variant,
+  right,
+  showBack = false,
+  showLogo = false,
+  logoOnly = false,
+  titleAs = "h1",
+}: TopBarProps) {
   const Title = titleAs;
 
   if (variant === "root") {
@@ -80,16 +95,25 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
       <header className="flex h-14 items-center gap-1 px-1">
         {showBack ? <BackControl iconSize={22} className="flex size-11 shrink-0 items-center justify-center" /> : null}
 
-        {/* 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다. */}
+        {/*
+          이름 글자가 함께 있으면 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다.
+          로고만 둘 때는 읽을 글자가 없어 그림이 그 몫을 대신한다.
+        */}
         {showLogo ? (
+          /*
+            이름 글자와 나란히 설 때는 글자의 아랫줄에 맞춰야 한 낱말로 읽힌다.
+            로고만 둘 때는 맞출 글자가 없으므로 바 높이를 채우고 가운데에 선다.
+          */
           <Image
             src="/logo.png"
-            alt=""
-            width={26}
-            height={29}
+            alt={logoOnly ? title : ""}
+            width={80}
+            height={89}
             draggable={false}
             loading="eager"
-            className="ml-3 mb-1.5 select-none self-end h-[29px] w-[26px]"
+            className={
+              logoOnly ? "ml-3 h-9 w-auto shrink-0 select-none" : "ml-3 mb-1.5 h-[29px] w-[26px] select-none self-end"
+            }
           />
         ) : null}
 
@@ -99,17 +123,27 @@ export function TopBar({ title, variant, right, showBack = false, showLogo = fal
           아래를 기준으로 맞추되 헤더 바닥에 닿지 않도록 둘 다 같은 만큼 띄운다.
 
           Foldit 은 글자에 색이 박힌 글꼴이라 color 대신 팔레트로 색을 맞춘다.
+
+          로고만 두는 화면은 그림이 이미 이름을 읽어 주므로 제목을 화면에서만 감춘다.
+          문서에는 대표 제목이 남아 구조가 무너지지 않는다.
         */}
-        <Title
-          className={
-            showLogo
-              ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
-              : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
-          }
-        >
-          {showLogo ? <span className="sr-only">P</span> : null}
-          {title}
-        </Title>
+        {logoOnly ? (
+          <Title className="sr-only">{title}</Title>
+        ) : (
+          <Title
+            className={
+              showLogo
+                ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
+                : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
+            }
+          >
+            {showLogo ? <span className="sr-only">P</span> : null}
+            {title}
+          </Title>
+        )}
+
+        {/* 제목이 자리를 채우지 않으므로 오른쪽 것을 끝으로 밀어 둔다. */}
+        {logoOnly ? <span className="flex-1" /> : null}
         {right}
       </header>
     );
