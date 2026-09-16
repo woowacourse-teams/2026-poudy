@@ -6,67 +6,63 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationStatus;
+import com.poudy.curation.domain.CurationBanner;
+import com.poudy.curation.domain.CurationBlock;
+import com.poudy.curation.domain.CurationBlockContent;
+import com.poudy.curation.domain.CurationDetail;
 import com.poudy.curation.domain.Curations;
 import com.poudy.curation.repository.CurationRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.product.domain.Product;
+import com.poudy.product.domain.Products;
+import com.poudy.product.repository.ProductRepository;
 import java.util.List;
-import org.junit.jupiter.api.DisplayName;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("큐레이션 서비스")
 class CurationServiceTest {
 
     @Test
-    @DisplayName("게시 중인 큐레이션만 ID순으로 조회한다")
-    void findsPublishedCurations() {
-        Curation highId = curation(12L, CurationStatus.PUBLISHED);
-        Curation lowId = curation(4L, CurationStatus.PUBLISHED);
-        Curation draft = curation(20L, CurationStatus.DRAFT);
-        CurationService service = serviceWith(Curations.from(List.of(highId, draft, lowId)));
+    void usesCurrentProductCatalogOnEveryRead() {
+        CurationBlock block = CurationBlock.products(
+            UUID.randomUUID(),
+            CurationBlock.Status.VISIBLE,
+            0,
+            0,
+            List.of(15L)
+        );
+        Curation curation = curation(12L, "상세", List.of(block));
+        CurationRepository repository = mock(CurationRepository.class);
+        given(repository.findAll()).willReturn(Curations.from(List.of(curation)));
+        ProductRepository products = mock(ProductRepository.class);
+        Product current = mock(Product.class);
+        given(current.id()).willReturn(15L);
+        Products currentCatalog = Products.from(List.of(current));
+        given(products.findAll()).willReturn(Products.from(List.of()), currentCatalog);
+        CurationService service = new CurationService(repository, products);
 
-        assertThat(service.findCurations()).extracting(Curation::id).containsExactly(4L, 12L);
-        assertThat(service.findDetail(12L)).isSameAs(highId);
+        assertThat(service.findCurations()).containsExactly(curation);
+        CurationDetail first = service.findDetail(12L);
+        assertThat(first.curation().title()).isEqualTo("상세");
+        assertThat(first.blocks()).isEmpty();
+        CurationBlockContent.Products productsBlock = (CurationBlockContent.Products) service.findDetail(12L)
+            .blocks().getFirst();
+        assertThat(productsBlock.products().getFirst()).isSameAs(current);
     }
 
-    @ParameterizedTest
-    @ValueSource(longs = {20L, 30L, 999L})
-    @DisplayName("작성 중, 게시 종료 또는 존재하지 않는 큐레이션은 찾을 수 없다")
-    void rejectsUnavailableCuration(Long curationId) {
-        CurationService service = serviceWith(
-            Curations.from(
-                List.of(
-                    curation(20L, CurationStatus.DRAFT),
-                    curation(30L, CurationStatus.ARCHIVED)
-                )
-            )
-        );
+    @Test
+    void rejectsUnavailableCuration() {
+        CurationRepository repository = mock(CurationRepository.class);
+        given(repository.findAll()).willReturn(Curations.from(List.of()));
+        CurationService service = new CurationService(repository, mock(ProductRepository.class));
 
-        assertThatThrownBy(() -> service.findDetail(curationId))
-            .isInstanceOf(ResourceNotFoundException.class)
+        assertThatThrownBy(() -> service.findDetail(999L)).isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.CURATION_NOT_FOUND);
     }
 
-    private static CurationService serviceWith(Curations curations) {
-        CurationRepository repository = mock(CurationRepository.class);
-        given(repository.findAll()).willReturn(curations);
-        return new CurationService(repository);
-    }
-
-    private static Curation curation(Long id, CurationStatus status) {
-        return new Curation(
-            id,
-            "제목",
-            "간단 설명",
-            "상세 설명",
-            List.of("https://example.com/main.png"),
-            List.of(),
-            List.of(),
-            status
-        );
+    private static Curation curation(Long id, String title, List<CurationBlock> blocks) {
+        return new Curation(id, new CurationBanner("배너", "설명", "banner.png"), title, "설명", blocks);
     }
 }

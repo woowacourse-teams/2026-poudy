@@ -152,22 +152,34 @@ export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResp
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
 
 export type CurationSummaryResponse = __TypedOpenapi.Schemas.CurationSummaryResponse;
-export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrl: z.string() });
+export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), thumbnailImageUrl: z.string() });
 
 export type CurationListResponse = __TypedOpenapi.Schemas.CurationListResponse;
 export const CurationListResponse = z.object({ items: z.array(CurationSummaryResponse) });
 
-export type CurationCategoryResponse = __TypedOpenapi.Schemas.CurationCategoryResponse;
-export const CurationCategoryResponse = z.object({ id: z.number().int(), name: z.string() });
-
-export type CurationDetailResponse = __TypedOpenapi.Schemas.CurationDetailResponse;
-export const CurationDetailResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrls: z.array(z.string()), categories: z.array(CurationCategoryResponse) });
+export type CurationImageBlockResponse = __TypedOpenapi.Schemas.CurationImageBlockResponse;
+export const CurationImageBlockResponse = z.object({ id: z.uuid(), type: z.literal("IMAGE"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), imageUrl: z.string() });
 
 export type CurationProductResponse = __TypedOpenapi.Schemas.CurationProductResponse;
 export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
 
-export type CurationProductListResponse = __TypedOpenapi.Schemas.CurationProductListResponse;
-export const CurationProductListResponse = z.object({ items: z.array(CurationProductResponse) });
+export type CurationProductsBlockResponse = __TypedOpenapi.Schemas.CurationProductsBlockResponse;
+export const CurationProductsBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), products: z.array(CurationProductResponse).min(1).max(2147483647) });
+
+export type CurationFilterResponse = __TypedOpenapi.Schemas.CurationFilterResponse;
+export const CurationFilterResponse = z.object({ id: z.uuid(), label: z.string() });
+
+export type CurationProductItemResponse = __TypedOpenapi.Schemas.CurationProductItemResponse;
+export const CurationProductItemResponse = z.object({ product: CurationProductResponse, filterIds: z.array(z.uuid()).min(1).max(2147483647) });
+
+export type CurationProductsByFilterBlockResponse = __TypedOpenapi.Schemas.CurationProductsByFilterBlockResponse;
+export const CurationProductsByFilterBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS_BY_FILTER"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), filters: z.array(CurationFilterResponse).min(1).max(2147483647), products: z.array(CurationProductItemResponse).min(1).max(2147483647) });
+
+export type CurationBlockResponse = __TypedOpenapi.Schemas.CurationBlockResponse;
+export const CurationBlockResponse = z.discriminatedUnion("type", [CurationImageBlockResponse.extend({ type: z.literal("IMAGE") }), CurationProductsBlockResponse.extend({ type: z.literal("PRODUCTS") }), CurationProductsByFilterBlockResponse.extend({ type: z.literal("PRODUCTS_BY_FILTER") })]);
+
+export type CurationDetailResponse = __TypedOpenapi.Schemas.CurationDetailResponse;
+export const CurationDetailResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), blocks: z.array(CurationBlockResponse) });
 
 export type CategoryListResponse = __TypedOpenapi.Schemas.CategoryListResponse;
 export const CategoryListResponse = z.object({ items: z.array(CategoryResponse) });
