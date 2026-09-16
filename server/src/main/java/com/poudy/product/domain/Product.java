@@ -166,8 +166,8 @@ public final class Product {
         return sensory.oil().value();
     }
 
-    public Set<SkinType> skinTypes() {
-        return skinTypes;
+    public Set<SkinType> getSkinTypes() {
+        return Set.copyOf(skinTypes);
     }
 
     public ProductVariant representativeVariant() {

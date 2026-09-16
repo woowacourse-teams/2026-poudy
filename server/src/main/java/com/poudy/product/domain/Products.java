@@ -187,7 +187,7 @@ public final class Products {
 
     private static List<SkinType> skinTypesOf(List<Product> products) {
         return products.stream()
-            .flatMap(product -> product.skinTypes().stream())
+            .flatMap(product -> product.getSkinTypes().stream())
             .distinct()
             .sorted()
             .toList();
