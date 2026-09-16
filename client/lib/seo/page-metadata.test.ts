@@ -201,8 +201,12 @@ describe("공유 메타데이터", () => {
     });
 
     expect(metadata.alternates?.canonical).toBe("/products/101");
-    expect(metadata.openGraph?.images).toEqual(["https://images.example/product.png"]);
-    expect(metadata.twitter?.images).toEqual(["https://images.example/product.png"]);
+    expect(metadata.openGraph?.images).toEqual([
+      { url: "https://images.example/product.png", alt: "파우디 수분 세럼 제품 이미지" },
+    ]);
+    expect(metadata.twitter?.images).toEqual([
+      { url: "https://images.example/product.png", alt: "파우디 수분 세럼 제품 이미지" },
+    ]);
   });
 
   it("제품 사진이 없으면 기본 미리보기로 떨어진다", async () => {
@@ -220,7 +224,7 @@ describe("공유 메타데이터", () => {
       searchParams: Promise.resolve({}),
     });
 
-    expect(metadata.openGraph?.images).toEqual(["/opengraph-image"]);
+    expect(metadata.openGraph?.images).toEqual([{ url: "/opengraph-image", alt: SITE_DESCRIPTION }]);
   });
 
   it("성분과 브랜드 상세가 전용 미리보기와 canonical 을 가진다", async () => {
@@ -255,8 +259,7 @@ describe("공유 메타데이터", () => {
       searchParams: Promise.resolve({}),
     });
 
-    const description =
-      "라운드랩 약콩 판테놀 마스크의 전성분을 확인하세요. 3개 전성분을 기준으로, 수분 성분과 피부 장벽 성분을 함께 담은 구성입니다.";
+    const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인하세요.";
     expect(metadata.description).toBe(description);
     expect(metadata.openGraph).toMatchObject({ description, url: "/products/104", siteName: "Poudy", locale: "ko_KR" });
     expect(metadata.alternates?.canonical).toBe("/products/104");
