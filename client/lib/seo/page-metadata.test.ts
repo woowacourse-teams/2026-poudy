@@ -29,7 +29,11 @@ vi.mock("next/font/google", () => ({
   Noto_Sans_KR: () => ({ variable: "--font-noto-sans-kr" }),
 }));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
-vi.mock("@/components/home/PersonalSections", () => ({ RecentFilters: () => null, SavedPreview: () => null }));
+/* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */
+vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
+vi.mock("@/components/home/PopularKeywords", () => ({ PopularKeywords: () => null }));
+vi.mock("@/components/home/PopularProducts", () => ({ PopularProducts: () => null }));
+vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
 vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
@@ -166,8 +170,8 @@ describe("공유 메타데이터", () => {
     expect(rootImageAlt).toBe(SITE_DESCRIPTION);
   });
 
-  it("홈에서 사이트와 운영 주체를 Poudy·파우디 이름으로 연결한다", () => {
-    const markup = renderToStaticMarkup(Home());
+  it("홈에서 사이트와 운영 주체를 Poudy·파우디 이름으로 연결한다", async () => {
+    const markup = renderToStaticMarkup(await Home());
 
     expect(markup).toContain('type="application/ld+json"');
     expect(markup).toContain('"@type":"WebSite"');

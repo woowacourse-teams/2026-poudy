@@ -13,6 +13,9 @@ export const EXCLUDE_CODES = [
 ] as const;
 export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
 
+export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
+export type SkinType = (typeof SKIN_TYPES)[number];
+
 export const DEFAULT_SORT: Sort = "NAME_ASC";
 export const DEFAULT_SIZE = 20;
 
@@ -33,6 +36,8 @@ export type Filter = {
   readonly includeIngredientIds: readonly number[];
   readonly excludeIngredientIds: readonly number[];
   readonly excludeCodes: readonly ExcludeCode[];
+  /** 서버가 한 번에 하나만 받는다. 다른 조건과 AND 로 묶인다. */
+  readonly skinType?: SkinType;
   readonly sort: Sort;
   readonly page: number;
   readonly size: number;
@@ -86,6 +91,10 @@ const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
 
+/** 서버가 단일 값만 받으므로 첫 값만 쓴다. 정해진 코드가 아니면 조건이 없는 것으로 본다. */
+const readSkinType = (params: URLSearchParams): SkinType | undefined =>
+  SKIN_TYPES.find((skinType) => skinType === params.get("skinType"));
+
 /** 정수이고 최솟값 이상일 때만 쓴다. 아니면 기본값으로 되돌린다. */
 const readCount = (
   params: URLSearchParams,
@@ -102,10 +111,13 @@ const readKeyword = (params: URLSearchParams): string | undefined => params.get(
 /** 잘못된 값은 버리고 기본값으로 되돌린다. 링크를 직접 고쳐 들어와도 화면이 깨지지 않게 한다. */
 export const parseFilter = (params: URLSearchParams): Filter => {
   const keyword = readKeyword(params);
+  const skinType = readSkinType(params);
 
   return {
     // 검색어가 없을 때 keyword 키 자체를 두지 않아 EMPTY_FILTER 와 같은 모양이 되게 한다.
     ...Object.fromEntries(keepIf(Boolean(keyword), ["keyword", keyword])),
+    // 피부 타입도 같은 이유로 조건이 없으면 키를 두지 않는다.
+    ...Object.fromEntries(keepIf(Boolean(skinType), ["skinType", skinType])),
     categoryIds: readIds(params, "categoryIds"),
     brandIds: readIds(params, "brandIds"),
     moistureLevel: readLevels(params, "moistureLevel"),
@@ -137,6 +149,7 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("includeIngredientIds", filter.includeIngredientIds),
     ...listEntries("excludeIngredientIds", filter.excludeIngredientIds),
     ...listEntries("excludeCodes", filter.excludeCodes),
+    ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== 0, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
@@ -151,7 +164,8 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.oilLevel.length > 0 ||
   filter.includeIngredientIds.length > 0 ||
   filter.excludeIngredientIds.length > 0 ||
-  filter.excludeCodes.length > 0;
+  filter.excludeCodes.length > 0 ||
+  Boolean(filter.skinType);
 
 /** 조건을 바꾸면 페이지를 처음으로 되돌린다. 2 페이지에서 조건을 바꿔 빈 목록이 나오는 것을 막는다. */
 export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter => ({

@@ -56,6 +56,16 @@ describe("parseFilter", () => {
     expect(parse("page=-2").page).toBe(0);
     expect(parse("size=abc").size).toBe(DEFAULT_SIZE);
   });
+
+  it("알 수 없는 피부 타입은 버린다", () => {
+    expect(parse("skinType=DRY").skinType).toBe("DRY");
+    expect(parse("skinType=NOPE").skinType).toBeUndefined();
+    expect(parse("skinType=dry").skinType).toBeUndefined();
+  });
+
+  it("피부 타입이 여러 번 오면 첫 값만 쓴다", () => {
+    expect(parse("skinType=DRY&skinType=OILY").skinType).toBe("DRY");
+  });
 });
 
 describe("serializeFilter", () => {
@@ -81,6 +91,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
     ["성분 포함·제외", { ...EMPTY_FILTER, includeIngredientIds: [6], excludeIngredientIds: [101] }],
     ["빠른 필터", { ...EMPTY_FILTER, excludeCodes: ["SULFATES", "FRAGRANCE_ALLERGENS"] }],
     ["수분·유분", { ...EMPTY_FILTER, moistureLevel: [1, 2], oilLevel: [0] }],
+    ["피부 타입", { ...EMPTY_FILTER, skinType: "SENSITIVE" }],
     [
       "모든 조건",
       {
@@ -92,6 +103,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         includeIngredientIds: [6],
         excludeIngredientIds: [101, 102],
         excludeCodes: ["DRYING_ALCOHOLS"],
+        skinType: "COMBINATION",
         sort: "PRICE_DESC",
         page: 3,
         size: 40,
@@ -115,6 +127,7 @@ describe("hasCondition", () => {
 
   it("조건이 하나라도 있으면 true 다", () => {
     expect(hasCondition({ ...EMPTY_FILTER, excludeCodes: ["SULFATES"] })).toBe(true);
+    expect(hasCondition({ ...EMPTY_FILTER, skinType: "DRY" })).toBe(true);
   });
 });
 

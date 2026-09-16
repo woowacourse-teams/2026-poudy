@@ -467,6 +467,68 @@ body {
 }
 
 /*
+ * 피부 타입 타일. 빠른 필터 타일과 같은 결로 움직인다.
+ *
+ * 다만 이쪽은 바탕이 비어 있고 테두리만 있어, 뜨는 것만으로는 눌러지는 자리라는 것이
+ * 잘 드러나지 않는다. 테두리와 바탕색을 함께 바꿔 손이 닿은 자리를 알린다.
+ */
+.skin-type-tile {
+  transition-property: transform, box-shadow, background-color, border-color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .skin-type-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
+    background-color: var(--color-surface-subtle);
+    /*
+     * 기본 테두리에서 한 단계만 진해진다. 글자색까지 끌어올리면 타일이 눌린 것처럼
+     * 도드라져, 손이 닿았다는 신호보다 먼저 눈에 들어온다. 필터 칩이 쓰는 값과 같다.
+     */
+    border-color: #d1d3d8;
+  }
+}
+
+/*
+ * 누름은 hover 와 반대로 가라앉는다. 마우스가 없는 환경에도 남겨 두어
+ * 손가락으로도 눌린 것이 보이게 한다.
+ */
+.skin-type-tile:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  background-color: var(--color-surface);
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
+.skin-type-link:focus-visible {
+  outline: none;
+}
+
+.skin-type-link:focus-visible .skin-type-tile {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * 움직임을 줄인 환경에서는 자리를 옮기지 않는다. 색만 바뀌어도 손이 닿은 자리는 읽힌다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .skin-type-tile {
+    transition-property: background-color, border-color;
+  }
+
+  .skin-type-tile:hover,
+  .skin-type-tile:active {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/*
  * 가로로 흐르는 줄에서 스크롤막대를 감춘다. 칩 줄은 손가락으로 밀어 보는 곳이라
  * 막대가 칩 아래를 가로질러 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다.
  *
@@ -612,6 +674,136 @@ body {
     opacity: 0;
     transform: rotate(var(--spark-angle)) translateY(-18px) scale(0.3);
   }
+}
+
+/*
+ * 인기 검색어가 다음 순위로 넘어갈 때, 다음 검색어가 아래에서 옅게 올라온다.
+ *
+ * 앞 검색어는 React 가 지우면서 사라지고 새 검색어만 올라온다. 둘을 같은 창에 겹쳐
+ * 두지 않아, 글자가 서로 스치며 뭉개지지 않는다.
+ */
+@keyframes popular-keyword-rise {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 지나가는 검색어는 제자리에서 옅어지기만 한다. 함께 올라가면 둘이 같이 흐르듯 보인다. */
+@keyframes popular-keyword-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.popular-keyword-rise {
+  animation: popular-keyword-rise 420ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 사라지는 쪽을 조금 빨리 걷어 내야 새 검색어가 또렷하게 읽힌다. */
+.popular-keyword-fade {
+  animation: popular-keyword-fade 260ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) forwards;
+}
+
+/* 움직임을 줄인 환경에서는 올라오지 않고 바뀐 검색어만 보여 준다. */
+@media (prefers-reduced-motion: reduce) {
+  .popular-keyword-rise,
+  .popular-keyword-fade {
+    animation: none;
+  }
+
+  .popular-keyword-fade {
+    opacity: 0;
+  }
+}
+
+/*
+ * 큐레이션 목록은 미끄러지는 동작을 브라우저에 맡기지 않는다.
+ *
+ * `scroll-behavior: smooth` 와 `scrollTo({behavior})` 를 모두 무시하는 환경이 있다.
+ * 스냅이 없는 순수한 요소와 페이지 스크롤에서도 같이 무시되는 것을 확인했다.
+ * 그래서 `CurationCarousel` 이 프레임마다 `scrollLeft` 를 직접 옮겨 그린다.
+ *
+ * 여기에 `smooth` 를 켜 두면 그 움직임과 브라우저의 움직임이 서로 다투므로 켜지 않는다.
+ */
+.curation-track {
+  scroll-behavior: auto;
+}
+
+/*
+ * 큐레이션 카드는 가운데로 다가올수록 커진다.
+ *
+ * 크기는 스크롤 위치를 보고 프레임마다 직접 적으므로 전환을 걸지 않는다. 걸면 이미
+ * 프레임마다 정해진 값이 다시 목표가 되어 한 박자씩 늦게 따라온다.
+ *
+ * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
+ * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
+ */
+/*
+ * 카드를 제 층에 올려 둔다.
+ *
+ * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
+ * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
+ * 그린 그림을 확대·축소만 하므로 글자가 흔들리지 않는다.
+ *
+ * 크기는 `CurationCarousel` 이 `transform` 에 `translateZ(0)` 과 함께 담아 적는다.
+ * 여기서는 층을 미리 잡아 두기만 한다.
+ */
+.curation-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/*
+ * 카드 안의 글자를 제 층에 따로 올린다.
+ *
+ * 카드만 층에 올려 두어도 글자는 카드 안에서 다시 그려질 수 있다. 글자에도 층을 주면
+ * 한 번 그린 글자를 그대로 늘였다 줄이므로, 크기가 소수점 단위로 바뀌어도 획이 떨리지
+ * 않는다. `translateZ` 는 층을 잡아 두려는 것이고 자리를 옮기지 않는다.
+ */
+.curation-card h3,
+.curation-card p {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다. */
+@media (prefers-reduced-motion: reduce) {
+  .curation-card {
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
+/*
+ * 펼친 인기 검색어의 한 줄. 어느 줄에 손이 가 있는지 바탕색으로 알린다.
+ *
+ * 들고 나는 시간을 같게 두어 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠지지 않는다.
+ */
+.popular-keyword-row {
+  transition-property: background-color;
+  transition-duration: var(--transition-duration-control-state, 160ms);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸려 뗀 자리에 색이 남는다. 마우스에만 건다. */
+@media (hover: hover) and (pointer: fine) {
+  .popular-keyword-row:hover {
+    background-color: var(--color-surface);
+  }
+}
+
+/* 누름은 마우스가 없는 환경에도 남겨 두어 손가락으로도 눌린 것이 보이게 한다. */
+.popular-keyword-row:active {
+  background-color: var(--color-surface);
 }
 
 /* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */

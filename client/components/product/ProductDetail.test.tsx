@@ -103,8 +103,8 @@ describe("제품 성분 요약", () => {
 
     const path = screen.getByRole("navigation", { name: "카테고리 경로" });
 
-    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveAttribute("href", "/categories/2");
-    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveAttribute("href", "/categories/21");
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveAttribute("href", "/categories/13");
+    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveAttribute("href", "/categories/14");
   });
 
   it("브랜드명을 브랜드관으로 잇는다", () => {

@@ -4,22 +4,42 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import type { Filter } from "@/lib/domain/filter";
-import { parseFilter, serializeFilter, withCondition } from "@/lib/domain/filter";
+import {
+  DEFAULT_SIZE,
+  DEFAULT_SORT,
+  EXCLUDE_CODES,
+  SKIN_TYPES,
+  SORTS,
+  parseFilter,
+  serializeFilter,
+  withCondition,
+} from "@/lib/domain/filter";
 
-/** serializeFilter 가 만드는 키. 이 밖의 쿼리는 조건이 아니라 화면 상태다. */
-const FILTER_KEYS = new Set([
-  "keyword",
-  "categoryIds",
-  "brandIds",
-  "moistureLevel",
-  "oilLevel",
-  "includeIngredientIds",
-  "excludeIngredientIds",
-  "excludeCodes",
-  "sort",
-  "page",
-  "size",
-]);
+/**
+ * `serializeFilter` 가 만드는 키. 이 밖의 쿼리는 조건이 아니라 화면 상태다.
+ *
+ * 손으로 적지 않고 값이 모두 담긴 조건을 한 번 직렬화해서 뽑는다. 예전에는 키를 따로
+ * 적어 두었는데, 조건을 새로 더할 때 이 목록에 넣는 것을 잊으면 그 키가 `extra` 로
+ * 새어 들어간다. 그러면 새 값 옆에 옛 값이 그대로 남아 `skinType=OILY&skinType=DRY`
+ * 처럼 한 번만 고를 수 있는 조건이 두 번 붙는다.
+ */
+const FILTER_KEYS = new Set(
+  serializeFilter({
+    keyword: "x",
+    categoryIds: [1],
+    brandIds: [1],
+    moistureLevel: [1],
+    oilLevel: [1],
+    includeIngredientIds: [1],
+    excludeIngredientIds: [1],
+    excludeCodes: [EXCLUDE_CODES[0]],
+    skinType: SKIN_TYPES[0],
+    /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */
+    sort: SORTS.find((sort) => sort !== DEFAULT_SORT) ?? DEFAULT_SORT,
+    page: 1,
+    size: DEFAULT_SIZE + 1,
+  }).keys(),
+);
 
 /**
  * 탐색 조건을 URL 에서 읽고 URL 로 쓴다.

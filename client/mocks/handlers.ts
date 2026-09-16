@@ -14,6 +14,8 @@ import {
   ingredientDetails,
   pipelineIngredientSummaries,
   pipelineProductIngredients,
+  productCategoryIds,
+  productSkinTypes,
   productDetails,
 } from "./fixtures";
 
@@ -146,11 +148,23 @@ const ingredientsOf = (productId: number) => pipelineProductIngredients.get(prod
  * 다만 조건을 걸 때 개수가 실제로 움직이는지 보려면 성분 조건은 걸려야 한다.
  * 빠른 필터와 성분 포함·제외는 파이프라인 데이터를 기준으로 가른다.
  */
+/**
+ * 제품이 고른 피부 타입에 드는지 본다.
+ *
+ * 서버는 제품마다 딸린 집합에 그 타입이 들어 있는지로 가른다(`Product.matchesSkinType`).
+ * 목도 `productSkinTypes` 를 같은 방식으로 읽어, 한 제품이 여러 타입에 드는 경우를 그대로
+ * 다룬다. 어느 타입에도 들지 않는 제품은 어떤 타입을 골라도 빠진다.
+ */
+const matchesSkinType = (skinType: string, product: { readonly id: number }): boolean =>
+  (productSkinTypes.get(product.id) ?? []).some((code) => code === skinType);
+
 const filterProducts = (url: URL) => {
   const keyword = url.searchParams.get("keyword")?.trim().toLowerCase();
   const brandIds = numbers(url, "brandIds");
+  const categoryIds = numbers(url, "categoryIds");
   const moisture = numbers(url, "moistureLevel");
   const oil = numbers(url, "oilLevel");
+  const skinType = url.searchParams.get("skinType")?.trim();
   const codes = strings(url, "excludeCodes");
   const include = numbers(url, "includeIngredientIds");
   const exclude = numbers(url, "excludeIngredientIds");
@@ -164,8 +178,11 @@ const filterProducts = (url: URL) => {
   return allProducts.filter((product) => {
     if (keyword && !matchesKeyword(keyword, product.name, product.brand.name)) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
+    /* 카테고리는 소분류 ID 로 온다. 어느 소분류에도 들지 않는 제품은 골랐을 때 빠진다. */
+    if (categoryIds.length && !categoryIds.includes(productCategoryIds.get(product.id) ?? -1)) return false;
     if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
     if (oil.length && !oil.includes(product.oilLevel)) return false;
+    if (skinType && !matchesSkinType(skinType, product)) return false;
 
     const has = ingredientsOf(product.id);
     // 제외 조건은 하나라도 들어 있으면 뺀다.
@@ -218,8 +235,140 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   updatedAt: "2026-08-01T00:00:00+09:00",
 });
 
+/**
+ * 조건에 걸린 제품이 실제로 속한 카테고리만 추린다.
+ *
+ * 서버는 `조회 조건에 해당하는 제품 전체의 카테고리와 제품 수` 를 내려준다. 전체를 그대로
+ * 주면 조건에 맞는 제품이 하나도 없는 카테고리까지 시트에 떠서, 골라도 빈 목록이 나온다.
+ *
+ * 소분류가 하나도 걸리지 않은 대분류는 통째로 뺀다. 제품 수도 걸린 것만 세어 실제와 맞춘다.
+ */
+const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => {
+  const counts = new Map<number, number>();
+  for (const product of matched) {
+    const categoryId = productCategoryIds.get(product.id);
+    if (categoryId !== undefined) counts.set(categoryId, (counts.get(categoryId) ?? 0) + 1);
+  }
+
+  return categories
+    .map((category) => {
+      const children = category.children
+        .filter((child) => counts.has(child.id))
+        .map((child) => ({ ...child, productCount: counts.get(child.id) ?? 0 }));
+
+      return {
+        ...category,
+        children,
+        productCount: children.reduce((sum, child) => sum + child.productCount, 0),
+      };
+    })
+    .filter((category) => category.children.length > 0);
+};
+
+/**
+ * 홈의 인기 검색어. 실제 순위는 검색 기록에서 나오지만 목에서는 고정해 둔다.
+ * 순위 변동은 오름과 내림, 유지와 새로 든 것을 모두 한 번씩 담아 화면을 확인할 수 있게 한다.
+ */
+const searchKeywordRankings = [
+  { rank: 1, keyword: "나이아신아마이드", change: { movement: "UP", steps: 2 } },
+  { rank: 2, keyword: "어성초", change: { movement: "DOWN", steps: 1 } },
+  { rank: 3, keyword: "레티놀", change: { movement: "SAME", steps: 0 } },
+  { rank: 4, keyword: "세라마이드", change: { movement: "NEW", steps: 0 } },
+  { rank: 5, keyword: "판테놀", change: { movement: "UP", steps: 3 } },
+  { rank: 6, keyword: "비타민C", change: { movement: "SAME", steps: 0 } },
+  { rank: 7, keyword: "히알루론산", change: { movement: "DOWN", steps: 2 } },
+  { rank: 8, keyword: "무기자차", change: { movement: "UP", steps: 1 } },
+  { rank: 9, keyword: "클렌징오일", change: { movement: "SAME", steps: 0 } },
+  { rank: 10, keyword: "마스크팩", change: { movement: "NEW", steps: 0 } },
+] as const;
+
+const skinTypes = [
+  { code: "DRY", name: "건성" },
+  { code: "OILY", name: "지성" },
+  { code: "SENSITIVE", name: "민감성" },
+  { code: "COMBINATION", name: "복합성" },
+] as const;
+
+/**
+ * 조건에 걸린 제품이 드는 피부 타입을 모은다.
+ *
+ * 브랜드나 카테고리와 같은 기준이다. 서버는 `조회 조건에 해당하는 제품 전체의 피부타입` 을
+ * 중복 없이 내려주는데, 늘어놓는 차례는 제품이 걸린 순서가 아니라 피부 타입을 정의한
+ * 순서를 따른다. 위의 목록이 이미 그 순서이므로 여기에서 걸러 내기만 하면 차례가 맞는다.
+ *
+ * 걸린 제품이 든 타입을 모두 모은다는 점이 중요하다. 조건으로 건 타입만 담는 것이 아니다.
+ * 건성으로 좁혀도 그 제품들이 민감성에도 든다면 민감성까지 함께 담긴다. 서버의
+ * `skinTypesOf` 도 걸린 제품의 집합을 합치는 방식이다.
+ *
+ * 카테고리와 달리 제품 수는 담지 않는다. 서버가 코드와 이름만 내려주기 때문이다.
+ */
+const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][]) => {
+  const present = new Set<string>();
+  for (const product of matched) {
+    for (const code of productSkinTypes.get(product.id) ?? []) present.add(code);
+  }
+
+  return skinTypes.filter((type) => present.has(type.code));
+};
+
+const curations = [
+  {
+    id: 1,
+    title: "가을바람에 지친 피부,\n장벽부터 채워요",
+    description: "세라마이드·판테놀 보습 성분 모아보기",
+    thumbnailImageUrl: "/images/curations/autumn-barrier.jpg",
+  },
+  {
+    id: 2,
+    title: "자극 없이 씻어내는\n순한 클렌징",
+    description: "설페이트 뺀 클렌저 모아보기",
+    thumbnailImageUrl: "/images/curations/gentle-cleansing.jpg",
+  },
+  {
+    id: 3,
+    title: "번들거림은 줄이고\n수분은 남기고",
+    description: "지성 피부를 위한 가벼운 보습",
+    thumbnailImageUrl: "/images/curations/light-moisture.jpg",
+  },
+] as const;
+
+/** 인기 제품은 목록 앞에서 잘라 쓴다. 목에는 조회수가 없어 순위를 만들 기준이 없다. */
+const RANKING_SIZE = 6;
+
 export const handlers = [
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
+
+  http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
+
+  http.get("*/api/skin-types", () => HttpResponse.json({ items: skinTypes })),
+
+  http.get("*/api/search-keywords/rankings", () => HttpResponse.json({ items: searchKeywordRankings })),
+
+  http.post("*/api/search-keywords", () => new HttpResponse(null, { status: 204 })),
+
+  /*
+   * 카테고리를 주면 목록이 달라지는 것만 보이면 되므로, 카테고리 ID 만큼 앞을 건너뛴다.
+   * 목 제품에는 카테고리가 없어 실제로 걸러 낼 기준이 없다.
+   */
+  http.get("*/api/products/rankings", ({ request }) => {
+    const [categoryId] = numbers(new URL(request.url), "categoryIds");
+    const offset = categoryId ? categoryId % allProducts.length : 0;
+    const ranked = [...allProducts.slice(offset), ...allProducts.slice(0, offset)].slice(0, RANKING_SIZE);
+
+    return HttpResponse.json({
+      items: ranked.map((product) => ({
+        product: {
+          id: product.id,
+          name: product.name,
+          brandName: product.brand.name,
+          imageUrl: product.imageUrl,
+          price: product.price,
+          moistureLevel: product.moistureLevel,
+          oilLevel: product.oilLevel,
+        },
+      })),
+    });
+  }),
 
   http.get("*/api/products", ({ request }) => {
     const url = new URL(request.url);
@@ -231,8 +380,10 @@ export const handlers = [
       brands: allBrands
         .filter((brand) => matched.some((product) => product.brand.id === brand.id))
         .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
-      // 목 제품에는 카테고리가 없어 걸러 낼 기준이 없다. 형태만 실제와 맞춘다.
-      categories,
+      // 카테고리도 같은 기준이다. 조건에 걸린 제품이 실제로 속한 것만 추린다.
+      categories: matchedCategories(matched),
+      // 피부 타입도 마찬가지다. 조건에 걸린 제품이 드는 타입만 중복 없이 담는다.
+      skinTypes: matchedSkinTypes(matched),
     });
   }),
 

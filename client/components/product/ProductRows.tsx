@@ -64,6 +64,7 @@ export function ProductRows({
     items,
     brands: matchedBrands,
     categories: matchedCategories,
+    skinTypes: matchedSkinTypes,
     total,
     page,
     hasNext,
@@ -165,6 +166,7 @@ export function ProductRows({
         }}
         categories={matchedCategories}
         brands={matchedBrands}
+        skinTypes={matchedSkinTypes}
         excludeCodes={excludeCodes}
         initialCount={total}
       />

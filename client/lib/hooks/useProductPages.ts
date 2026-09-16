@@ -1,6 +1,12 @@
 "use client";
 
-import type { BrandResponse, CategoryResponse, ProductPageResponse, ProductResponse } from "@poudy/api/api.zod";
+import type {
+  BrandResponse,
+  CategoryResponse,
+  ProductPageResponse,
+  ProductResponse,
+  SkinTypeResponse,
+} from "@poudy/api/api.zod";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -18,6 +24,8 @@ type PageState = {
   readonly brands: readonly BrandResponse[];
   /** 브랜드와 같다. 지금 조건에 걸린 제품 전체의 카테고리다. */
   readonly categories: readonly CategoryResponse[];
+  /** 브랜드와 같다. 지금 조건에 걸린 제품 전체가 드는 피부 타입이다. */
+  readonly skinTypes: readonly SkinTypeResponse[];
   readonly total: number;
   readonly hasNext: boolean;
   readonly loading: boolean;
@@ -44,6 +52,7 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   items: [],
   brands: [],
   categories: [],
+  skinTypes: [],
   total: 0,
   hasNext: false,
   loading: true,
@@ -65,13 +74,14 @@ const initialState = (key: string, seed?: ProductPageResponse): PageState => {
     return { ...EMPTY_PAGE_STATE, key };
   }
 
-  const { page, items, brands, categories, total, hasNext, fetchedAt } = cached;
+  const { page, items, brands, categories, skinTypes, total, hasNext, fetchedAt } = cached;
   return {
     key,
     page,
     items,
     brands,
     categories,
+    skinTypes,
     total,
     hasNext,
     loading: false,
@@ -89,6 +99,7 @@ const merged = (previous: PageState, page: number, response: ProductPageResponse
   // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
   brands: response.brands,
   categories: response.categories,
+  skinTypes: response.skinTypes,
   total: response.pagination.totalElements,
   hasNext: response.pagination.hasNext,
   loading: false,
@@ -129,6 +140,7 @@ const revalidated = (previous: PageState, responses: readonly ProductPageRespons
     items: responses.flatMap((response) => response.items),
     brands: responses[0].brands,
     categories: responses[0].categories,
+    skinTypes: responses[0].skinTypes,
     total: last.pagination.totalElements,
     hasNext: last.pagination.hasNext,
     revalidating: false,
@@ -160,12 +172,12 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
  * 장이 늘 때마다 담아 둔다. 보던 자리는 상태를 바꾸지 않으므로 따로 적어 둔다.
  */
 const useRememberPages = (key: string, state: PageState) => {
-  const { loaded, loading, revalidating, page, items, brands, categories, total, hasNext } = state;
+  const { loaded, loading, revalidating, page, items, brands, categories, skinTypes, total, hasNext } = state;
 
   useEffect(() => {
     if (!loaded || loading || revalidating) return;
-    writeProductPages(key, { page, items, brands, categories, total, hasNext });
-  }, [key, loaded, loading, revalidating, page, items, brands, categories, total, hasNext]);
+    writeProductPages(key, { page, items, brands, categories, skinTypes, total, hasNext });
+  }, [key, loaded, loading, revalidating, page, items, brands, categories, skinTypes, total, hasNext]);
 
   /*
    * 보던 자리는 떠나는 순간에만 잰다. 담아 둔 값은 돌아올 때 한 번 읽히는데, 스크롤마다
