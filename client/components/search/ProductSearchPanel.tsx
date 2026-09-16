@@ -11,6 +11,7 @@ import { MatchedText } from "@/components/ui/MatchedText";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
+import { recordSearchKeyword } from "@/lib/api/products";
 import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
@@ -42,6 +43,17 @@ const nameParts = (item: ProductSuggestionResponse) => {
   if (item.match?.field !== "PRODUCT_NAME") return [{ text: item.name, matched: false }];
 
   return splitByRange(item.match);
+};
+
+/**
+ * 검색어를 인기 검색어 집계에 남긴다.
+ *
+ * 실제로 검색을 보낸 말만 남긴다. 자동완성을 위해 치는 도중의 값까지 세면
+ * 순위가 사람이 찾은 말이 아니라 타이핑 조각으로 채워진다.
+ * 집계는 부수적인 일이라 실패해도 검색을 막지 않는다.
+ */
+const recordKeyword = (keyword: string): void => {
+  void recordSearchKeyword(keyword).catch(() => undefined);
 };
 
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
@@ -102,6 +114,7 @@ export function ProductSearchPanel() {
     sent.current = trimmed;
     track("search_submitted", { mode: "product", query: trimmed, result_count: total });
     addRecentSearch({ kind: "keyword", keyword: trimmed });
+    recordKeyword(trimmed);
     rememberFilter(trimmed);
     router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
   }, [router, total, trimmed]);
@@ -191,6 +204,7 @@ export function ProductSearchPanel() {
               onClick={() => {
                 track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 });
                 addRecentSearch({ kind: "keyword", keyword: trimmed });
+                recordKeyword(trimmed);
                 rememberFilter(trimmed);
               }}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
