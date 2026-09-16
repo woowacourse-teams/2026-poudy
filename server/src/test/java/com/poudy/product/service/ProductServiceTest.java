@@ -62,7 +62,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            List.of(ExcludeCode.HARSH_PRESERVATIVES)
+            List.of(ExcludeCode.HARSH_PRESERVATIVES),
+            null
         );
 
         ProductPage found = service.findProducts(
@@ -141,6 +142,7 @@ class ProductServiceTest {
             null,
             null,
             null,
+            null,
             null
         );
 
@@ -172,8 +174,8 @@ class ProductServiceTest {
             excludeCodeIngredients,
             new ProductSearchLogger()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
 
         service.findProducts(browse, ProductSort.NAME_ASC, 0, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 1, 20);
@@ -181,6 +183,32 @@ class ProductServiceTest {
         service.suggestProducts("제품", 0, 20);
 
         assertThat(output).doesNotContain("event=search_completed");
+    }
+
+    @Test
+    @DisplayName("기록이 실패해도 검색 응답은 그대로 나가고 성공이 오류로 뒤집히지 않는다")
+    void keepsResponseWhenLoggingFails(CapturedOutput output) {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
+        given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
+        given(excludes.idsOf(List.of())).willReturn(Set.of());
+        ProductSearchLogger logger = new ProductSearchLogger() {
+            @Override
+            public void completed(Context context, long elapsedNanos, long resultCount) {
+                throw new IllegalStateException("logging broken");
+            }
+        };
+        ProductService service = new ProductService(repository, categories(), excludes, logger);
+
+        ProductPage result = service.findProducts(
+            new ProductQuery("제품", null, null, null, null, null, null, null, null),
+            ProductSort.NAME_ASC,
+            0,
+            20
+        );
+
+        assertThat(result.totalElements()).isEqualTo(1L);
+        assertThat(output).contains("event=search_recording_failed").doesNotContain("outcome=ERROR");
     }
 
     private static Product product(Long id) {
@@ -199,7 +227,8 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
     }
 

@@ -11,12 +11,14 @@ import { ApiError } from "@/lib/api/client";
 
 const sendFeedback = vi.fn();
 const requestProductRegistration = vi.fn();
+const requestProductCorrection = vi.fn();
 const uploadFeedbackImages = vi.fn();
 
 vi.mock("@/lib/api/feedback", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/feedback")>()),
   sendFeedback: (...args: unknown[]) => sendFeedback(...args),
   requestProductRegistration: (...args: unknown[]) => requestProductRegistration(...args),
+  requestProductCorrection: (...args: unknown[]) => requestProductCorrection(...args),
   uploadFeedbackImages: (...args: unknown[]) => uploadFeedbackImages(...args),
 }));
 
@@ -32,6 +34,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   sendFeedback.mockResolvedValue(undefined);
   requestProductRegistration.mockResolvedValue(undefined);
+  requestProductCorrection.mockResolvedValue(undefined);
   uploadFeedbackImages.mockResolvedValue({ imageIds: ["uploaded-1"] });
 
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:preview", revokeObjectURL: () => {} }));
@@ -362,7 +365,7 @@ describe("제품 등록 요청", () => {
 
 describe("유형이 정해진 채로 들어온 경우", () => {
   const fixed = {
-    type: "DATA_CORRECTION" as const,
+    productId: 123,
     fieldLabel: "제보 내용",
     placeholder: "무엇이 다른지 적어주세요.",
     header: <h2>제품 정보가 정확하지 않나요?</h2>,
@@ -380,7 +383,7 @@ describe("유형이 정해진 채로 들어온 경우", () => {
     expect(screen.getByLabelText(/제보 내용/)).toBeInTheDocument();
   });
 
-  it("DATA_CORRECTION 으로 경로를 담아 보낸다", async () => {
+  it("대상 제품의 정정 요청으로 보낸다", async () => {
     const user = userEvent.setup();
     render(<InquiryForm originPath="/products/123" fixed={fixed} />);
 
@@ -388,13 +391,25 @@ describe("유형이 정해진 채로 들어온 경우", () => {
     await user.click(submitButton());
 
     await waitFor(() =>
-      expect(sendFeedback).toHaveBeenCalledWith({
-        type: "DATA_CORRECTION",
+      expect(requestProductCorrection).toHaveBeenCalledWith({
+        productId: 123,
         content: CONTENT,
-        originPath: "/products/123",
         imageIds: [],
       }),
     );
+    expect(sendFeedback).not.toHaveBeenCalled();
+  });
+
+  it("접수를 마치면 대상 제품 화면으로 돌아간다", async () => {
+    const user = userEvent.setup();
+    render(<InquiryForm originPath="/products/123" fixed={fixed} />);
+
+    await user.type(screen.getByLabelText(/제보 내용/), CONTENT);
+    await user.click(submitButton());
+    await screen.findByText("문의를 접수했어요");
+    await user.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(replace).toHaveBeenCalledWith("/products/123");
   });
 
   it("대상 제품을 사용자가 바꿀 수 없다", () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { apiUrl } from "./client";
+import { apiPost, apiUrl } from "./client";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -43,5 +43,34 @@ describe("API 주소", () => {
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
 
     expect(apiUrl("/api/categories")).toBe("https://browser.example/api/categories");
+  });
+});
+
+describe("POST 요청", () => {
+  const prepareFetch = () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+    return fetchMock;
+  };
+
+  it("본문이 있으면 JSON으로 전송한다", async () => {
+    const fetchMock = prepareFetch();
+
+    await apiPost("/api/feedbacks", { content: "문의 내용" });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/feedbacks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "문의 내용" }),
+    });
+  });
+
+  it("본문이 없으면 Content-Type과 body를 보내지 않는다", async () => {
+    const fetchMock = prepareFetch();
+
+    await apiPost("/api/products/42/views");
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/products/42/views", { method: "POST" });
   });
 });

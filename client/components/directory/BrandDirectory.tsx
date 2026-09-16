@@ -27,17 +27,22 @@ export function BrandDirectory({ brands }: { readonly brands: readonly BrandSumm
       rail={rail.map((label) => ({ id: label, label }))}
       selectedRailId={selected}
       onSelectRail={setSelected}
-      title={selected === ALL ? "전체 브랜드" : `${selected} 브랜드`}
-      description={`브랜드 ${shown.length}개`}
-      rows={shown.map((brand) => ({
-        id: String(brand.id),
-        label: brand.name,
-        count: brand.productCount,
-        countPrefix: "제품",
-        initial: brand.name.trim().charAt(0),
-        imageUrl: brand.imageUrl,
-        href: `/brands/${brand.id}`,
-      }))}
+      panels={[
+        {
+          railId: selected,
+          title: selected === ALL ? "전체 브랜드" : `${selected} 브랜드`,
+          description: `브랜드 ${shown.length}개`,
+          rows: shown.map((brand) => ({
+            id: String(brand.id),
+            label: brand.name,
+            count: brand.productCount,
+            countPrefix: "제품",
+            initial: brand.name.trim().charAt(0),
+            imageUrl: brand.imageUrl,
+            href: `/brands/${brand.id}`,
+          })),
+        },
+      ]}
     />
   );
 }

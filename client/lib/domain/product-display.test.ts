@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { dropletFills, formatPrice, formatVolumeWithUnitPrice, levelLabel, unitPrice } from "./product-display";
+import {
+  dropletFills,
+  formatPrice,
+  formatVolumeWithUnitPrice,
+  levelLabel,
+  productIngredientDescription,
+  unitPrice,
+} from "./product-display";
 
 describe("formatPrice", () => {
   it("천 단위를 끊어 원을 붙인다", () => {
@@ -44,5 +51,29 @@ describe("dropletFills", () => {
     expect(dropletFills(0)).toEqual([false, false, false]);
     expect(dropletFills(2)).toEqual([true, true, false]);
     expect(dropletFills(3)).toEqual([true, true, true]);
+  });
+});
+
+describe("productIngredientDescription", () => {
+  it("제품별 전성분 수와 대표 성분 분류를 짧은 검색 설명으로 만든다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "이니스프리",
+        productName: "그린티 히알루론산 수분 세럼",
+        ingredientCount: 42,
+        effectNames: ["보습", "진정", "각질 케어"],
+      }),
+    ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인하세요.");
+  });
+
+  it("성분 분류가 없으면 전성분 수만 설명한다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "셀퓨전씨",
+        productName: "더마 릴리프 썬스크린",
+        ingredientCount: 24,
+        effectNames: [],
+      }),
+    ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인하세요.");
   });
 });

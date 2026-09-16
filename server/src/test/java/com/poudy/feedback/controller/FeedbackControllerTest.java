@@ -1,11 +1,13 @@
 package com.poudy.feedback.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -14,6 +16,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.TooManyRequestsException;
+import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackPath;
+import com.poudy.feedback.domain.FeedbackType;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import com.poudy.feedback.repository.S3FeedbackRepository;
@@ -24,6 +31,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -38,7 +46,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("의견 API")
 class FeedbackControllerTest {
 
-    private static final String PATH = "/api/feedback";
+    private static final String PATH = "/api/feedbacks";
+    private static final String IMAGES_PATH = "/api/inquiry-images";
 
     @Autowired
     private MockMvc mockMvc;
@@ -67,7 +76,7 @@ class FeedbackControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "type": "DATA_CORRECTION",
+                      "type": "BUG_REPORT",
                       "content": "제품 정보가 실제 패키지와 달라요.",
                       "path": "/products/12345"
                     }
@@ -94,7 +103,7 @@ class FeedbackControllerTest {
         MockMultipartFile secondFile = new MockMultipartFile("images", "second.jpg", "image/jpeg", new byte[] {2});
 
         mockMvc.perform(
-            multipart(PATH + "/images")
+            multipart(IMAGES_PATH)
                 .file(firstFile)
                 .file(secondFile)
                 .header("X-Real-IP", "203.0.113.7")
@@ -110,7 +119,7 @@ class FeedbackControllerTest {
     @Test
     @DisplayName("이미지 파트가 없는 업로드 요청을 거절한다")
     void rejectsMissingImagePart() throws Exception {
-        mockMvc.perform(multipart(PATH + "/images"))
+        mockMvc.perform(multipart(IMAGES_PATH))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE"));
 
@@ -288,5 +297,161 @@ class FeedbackControllerTest {
 
         verify(feedbackRepository, never()).save(any());
         verify(feedbackNotifier, never()).notify(any());
+    }
+
+    @Test
+    @DisplayName("화면 경로 없이 등록한 의견을 알 수 없는 경로로 접수한다")
+    void submitsFeedbackWithoutPath() throws Exception {
+        mockMvc.perform(
+            post(PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "type": "OTHER",
+                      "content": "화면과 관계없는 기타 의견입니다."
+                    }
+                    """)
+        )
+            .andExpect(status().isNoContent());
+
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        verify(feedbackRepository).save(feedbackCaptor.capture());
+        assertThat(feedbackCaptor.getValue().subject())
+            .isEqualTo(new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)));
+    }
+
+    @Test
+    @DisplayName("공백뿐인 화면 경로를 거절한다")
+    void rejectsBlankPath() throws Exception {
+        mockMvc.perform(
+            post(PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "type": "OTHER",
+                      "content": "화면과 관계없는 기타 의견입니다.",
+                      "path": "   "
+                    }
+                    """)
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("제품 정보 정정은 의견 유형으로 받지 않는다")
+    void rejectsDataCorrectionType() throws Exception {
+        mockMvc.perform(
+            post(PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "type": "DATA_CORRECTION",
+                      "content": "제품 정보가 실제 패키지와 달라요.",
+                      "path": "/products/1"
+                    }
+                    """)
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("존재하는 제품의 정보 정정 요청을 대상 제품과 함께 접수한다")
+    void submitsProductCorrection() throws Exception {
+        mockMvc.perform(
+            post("/api/products/1/correction-requests")
+                .header("X-Real-IP", "203.0.113.7")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "content": "전성분 표기가 실제 패키지와 달라요."
+                    }
+                    """)
+        )
+            .andExpect(status().isNoContent());
+
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        verify(feedbackRepository).save(feedbackCaptor.capture());
+        assertThat(feedbackCaptor.getValue().subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
+        verify(rateLimiter).requireAllowed("203.0.113.7");
+        verify(feedbackNotifier).notify(any());
+    }
+
+    @Test
+    @DisplayName("없는 제품의 정보 정정 요청은 요청 제한과 저장 없이 404를 반환한다")
+    void rejectsCorrectionForUnknownProduct() throws Exception {
+        mockMvc.perform(
+            post("/api/products/999999/correction-requests")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "content": "전성분 표기가 실제 패키지와 달라요."
+                    }
+                    """)
+        )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+
+        verify(rateLimiter, never()).requireAllowed(anyString());
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("숫자가 아닌 제품 ID의 정보 정정 요청을 거절한다")
+    void rejectsInvalidProductId() throws Exception {
+        mockMvc.perform(
+            post("/api/products/invalid/correction-requests")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "content": "전성분 표기가 실제 패키지와 달라요."
+                    }
+                    """)
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("10자보다 짧은 정보 정정 요청을 거절한다")
+    void rejectsShortCorrectionContent() throws Exception {
+        mockMvc.perform(
+            post("/api/products/1/correction-requests")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "content": "달라요"
+                    }
+                    """)
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+
+        verify(feedbackRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("OpenAPI에 바뀐 경로와 오류 응답을 문서화한다")
+    void documentsChangedPaths() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.paths['/api/products/{productId}/correction-requests'].post.responses['204']").exists()
+            )
+            .andExpect(
+                jsonPath("$.paths['/api/products/{productId}/correction-requests'].post.responses['404']").exists()
+            )
+            .andExpect(
+                jsonPath("$.paths['/api/products/{productId}/correction-requests'].post.responses['429']").exists()
+            )
+            .andExpect(jsonPath("$.paths['/api/inquiry-images'].post.responses['413']").exists())
+            .andExpect(jsonPath("$.paths['/api/feedback/images']").doesNotExist());
     }
 }

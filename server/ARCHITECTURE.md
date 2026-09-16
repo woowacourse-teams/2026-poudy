@@ -94,11 +94,27 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 하나를 권위 상태로 사용하고 목록·ID 조회·집계를 여기서 파생한다. 목록과 개수는 같은 필터
 판정을 사용하고, 응답 DTO가 규칙을 다시 구현하지 않는다.
 
+### ProductView
+
+`productview`는 한국 시간 날짜별 제품 조회수를 카탈로그와 분리해 소유한다. Service는
+제품 존재와 한국 시간 날짜를 결정하고, `ProductViews`는 전달받은 날짜의 증가와 기간별
+합산을 담당한다. 메모리 Repository가 집계 객체와 동시 접근, 저장 변경 번호를 소유한다.
+증가와 복사는 같은 잠금으로 보호하고 합산과 파일 쓰기는 독립된 복사본으로 수행한다.
+전용 스케줄러의 Writer는 저장 호출과 실패 로그만 담당한다. 파일 Repository가 JSON을 해석하고
+원자 교체한다. 정상 종료의 마지막 저장도 메모리 Repository에서 주기 저장과 직렬화한다.
+카탈로그에서 사라진 제품과 과거 날짜도 기록에서 제거하지 않는다. 운영 경로와 유실 범위는
+[`deploy/scripts/README.md`](../deploy/scripts/README.md)의 제품 조회수 상태 절을 따른다.
+
 ### ExcludeCode
 
 `excludecode`는 빠른 제외 성분군의 식별자와 성분 매핑을 소유한다. 성분군은 서버에서 성분으로
 해석하며, 데이터에 빠지거나 중복된 정의가 있으면 기동을 실패시킨다. 포함 범위는 JSON 데이터의
 책임이며 서버 상수나 패턴으로 추론하지 않는다.
+
+### SkinType
+
+`skintype`은 피부타입 코드, 표시명과 표시 순서의 공통 정의를 소유한다. 제품별 피부타입
+분류와 필터 판정은 `product`의 책임이며, 표시명을 제품 데이터에 중복 저장하지 않는다.
 
 ### Storage
 
@@ -158,9 +174,19 @@ CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소�
 제안은 표시용 일치 정보라는 다른 표현을 반환하므로 별도 경계를 사용한다. 목록과 count는 같은
 요청 해석과 필터 규칙을 공유해야 한다.
 
-피드백 이미지는 기존 2단계 API를 유지한다. `POST /api/feedback/images`가 검증·정규화한
-이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, `POST /api/feedback`가 그 ID를
-받아 피드백에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
+서비스 의견과 제품 정보 정정 요청은 입력 계약을 나눈다. `POST /api/feedbacks`의 유형은 필드와
+처리가 같고 분류만 다른 서비스 의견만 담으며, 작성 화면 경로는 클라이언트가 알 때만 받는 참고
+정보다. 모르는 경로를 `/`로 채우면 홈에서 쓴 의견과 구분되지 않으므로 비워 둔다. 제품 정보
+정정은 대상 제품이 필수이므로 `POST /api/products/{productId}/correction-requests`가 경로로
+받고, 제품이 없으면 접수하지 않는다. 제품 등록 요청도 서비스 의견이 아니라 제품 데이터에 대한
+요청이므로 `POST /api/products/registration-requests`로 제품 컬렉션 아래에 둔다. 문의하기 화면이
+세 요청을 한곳에서 보내는 것은 화면 구성일 뿐 API 자원 구분의 근거가 아니다. 두 요청은 내용 검증, 요청 제한, S3 저장·이미지 귀속과
+Discord 알림이 같으므로 `feedback` 안에서 `FeedbackSubject`로만 구분하고 같은 저장 경계를
+공유한다.
+
+문의 이미지는 기존 2단계 API를 유지한다. `POST /api/inquiry-images`가 검증·정규화한
+이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, 의견 등록이나 제품 정보 정정
+요청이 그 ID를 받아 접수 건에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
 commit 판단 기준이다. claim은 `feedbackId`와 확장자만 저장하고, 오래된 claim의 JSON 키가
 존재하면 pending을, 존재하지 않으면 최종 이미지를 정리한다. 내용 hash, 이전 키 형식 조회,
 전체 최종 prefix 스캔은 이 일회성 claim 경계에 필요한 보안 효과를 더하지 않으므로 하지 않는다.

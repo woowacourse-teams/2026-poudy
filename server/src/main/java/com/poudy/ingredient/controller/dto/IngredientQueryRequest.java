@@ -9,13 +9,15 @@ import java.util.Objects;
 import org.hibernate.validator.constraints.UniqueElements;
 
 public record IngredientQueryRequest(
-    @UniqueElements @ArraySchema(schema = @Schema(implementation = Long.class, example = "2"), uniqueItems = true) List<@NotNull Long> ingredientIds) {
+    @UniqueElements @ArraySchema(schema = @Schema(implementation = Long.class, example = "2"), uniqueItems = true) List<@NotNull Long> ingredientIds,
+    @Schema(example = "true") Boolean usedInProducts) {
 
     public IngredientQueryRequest {
         ingredientIds = Objects.requireNonNullElse(ingredientIds, List.of());
+        usedInProducts = Objects.requireNonNullElse(usedInProducts, false);
     }
 
     public IngredientQuery toQuery() {
-        return new IngredientQuery(ingredientIds);
+        return new IngredientQuery(ingredientIds, usedInProducts);
     }
 }

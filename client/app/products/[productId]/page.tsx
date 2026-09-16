@@ -5,6 +5,9 @@ import { ProductDetail } from "@/components/product/ProductDetail";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
+import { productIngredientDescription } from "@/lib/domain/product-display";
+import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
+import { SITE_DESCRIPTION } from "@/lib/seo/site";
 
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
 export const revalidate = 86400;
@@ -30,14 +33,22 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
   try {
     const product = await fetchProductDetail(Number(productId));
     const title = `${product.brand.name} ${product.name} 전성분`;
-    const description = `${product.name}의 전체 성분과 기능별 성분을 확인합니다.`;
+    // 제품마다 성분 수와 대표 작용이 달라 설명문이 겹치지 않는다.
+    const description = productIngredientDescription({
+      brandName: product.brand.name,
+      productName: product.name,
+      ingredientCount: product.ingredients.length,
+      effectNames: product.skinEffectGroups.map((group) => group.name),
+    });
     const image = product.imageUrl || "/opengraph-image";
+    const imageAlt = product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : SITE_DESCRIPTION;
+    const canonical = `/products/${productId}`;
     return {
       title,
       description,
-      alternates: { canonical: `/products/${productId}` },
-      openGraph: { title, description, type: "website", images: [image] },
-      twitter: { card: "summary_large_image", title, description, images: [image] },
+      alternates: { canonical },
+      openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [{ url: image, alt: imageAlt }] },
+      twitter: { card: "summary_large_image", title, description, images: [{ url: image, alt: imageAlt }] },
     };
   } catch {
     return {};

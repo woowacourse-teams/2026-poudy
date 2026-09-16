@@ -30,7 +30,7 @@ final class IndexedText {
             String character = source.substring(start, end);
             String value = Normalizer.normalize(character, Normalizer.Form.NFC);
             value = Chosung.toCompatibilityLetters(value).toLowerCase(Locale.ROOT);
-            appendWithoutSpaces(normalized, value, start, end);
+            appendVisible(normalized, value, start, end);
         }
 
         return normalized.build();
@@ -66,7 +66,7 @@ final class IndexedText {
         return sourceEnds[index];
     }
 
-    private static void appendWithoutSpaces(
+    private static void appendVisible(
         Builder target,
         String value,
         int sourceStart,
@@ -74,7 +74,7 @@ final class IndexedText {
     ) {
         for (int index = 0; index < value.length(); index++) {
             char character = value.charAt(index);
-            if (SearchKeyword.isSpace(character)) {
+            if (SearchKeyword.isIgnorable(character)) {
                 continue;
             }
             target.append(character, sourceStart, sourceEnd);

@@ -10,6 +10,7 @@ import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { parseFilter } from "@/lib/domain/filter";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
+import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
 /*
  * 조건이 주소에 붙어 어차피 요청마다 그려지지만, 그 사실을 코드로 남긴다.
@@ -61,10 +62,13 @@ export async function generateMetadata(props: PageProps<"/categories/[categoryId
 
     if (!name) return { alternates: { canonical } };
 
+    const title = `${name} 화장품`;
+    const description = `${name} 카테고리의 화장품과 전성분 정보를 확인해 보세요.`;
     return {
-      title: `${name} 화장품`,
-      description: `${name} 카테고리의 화장품과 전성분 정보를 확인해 보세요.`,
+      title,
+      description,
       alternates: { canonical },
+      openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: ["/opengraph-image"] },
     };
   } catch {
     return { alternates: { canonical } };

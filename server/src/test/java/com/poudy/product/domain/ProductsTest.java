@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,12 @@ class ProductsTest {
     void countsProductsContainingIngredient() {
         assertThat(products.countContaining(200L)).isEqualTo(2);
         assertThat(products.countContaining(100L)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("제품 전성분에 쓰인 성분 ID를 중복 없이 모은다")
+    void collectsContainedIngredientIds() {
+        assertThat(products.containedIngredientIds()).containsExactlyInAnyOrder(100L, 200L, 300L);
     }
 
     @Test
@@ -75,6 +82,73 @@ class ProductsTest {
     @DisplayName("성분 ID 가 없어도 제품은 포함 여부를 거짓으로 답한다")
     void answersFalseForMissingId() {
         assertThat(product(1L, 100L).contains(null)).isFalse();
+    }
+
+    @Test
+    @DisplayName("카테고리 후보를 먼저 고른 뒤 조회수로 최대 개수만큼 정렬한다")
+    void ranksFilteredProductsByViewCount() {
+        Products products = Products.from(
+            List.of(
+                productOfCategory(1L, 2L),
+                productOfCategory(2L, 2L),
+                productOfCategory(3L, 2L),
+                productOfCategory(4L, 2L),
+                productOfCategory(5L, 2L),
+                productOfCategory(6L, 2L),
+                productOfCategory(7L, 2L),
+                productOfCategory(8L, 3L)
+            )
+        );
+        Map<Long, Long> viewCounts = Map.of(
+            1L,
+            1L,
+            2L,
+            2L,
+            3L,
+            3L,
+            4L,
+            4L,
+            5L,
+            5L,
+            6L,
+            6L,
+            7L,
+            7L,
+            8L,
+            100L
+        );
+
+        assertThat(products.rankByViewCounts(List.of(2L), viewCounts))
+            .extracting(Product::id)
+            .containsExactly(7L, 6L, 5L, 4L, 3L, 2L);
+    }
+
+    @Test
+    @DisplayName("카테고리는 OR로 결합하고 부모 카테고리는 자식 제품을 포함한다")
+    void ranksProductsInAnyRequestedCategory() {
+        Products products = Products.from(
+            List.of(productOfCategory(1L, 2L), productOfCategory(2L, 3L), productOfCategory(3L, 4L))
+        );
+
+        assertThat(products.rankByViewCounts(List.of(2L, 3L), Map.of()))
+            .extracting(Product::id)
+            .containsExactly(1L, 2L);
+        assertThat(products.rankByViewCounts(List.of(100L), Map.of()))
+            .extracting(Product::id)
+            .containsExactly(1L, 2L, 3L);
+        assertThat(products.rankByViewCounts(List.of(999L), Map.of())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("카테고리와 조회 기록이 없으면 전체 제품을 대상으로 동점에서 카탈로그 순서를 유지한다")
+    void keepsCatalogOrderForEqualAndMissingViewCounts() {
+        Products products = Products.from(
+            List.of(productOfCategory(1L, 2L), productOfCategory(2L, 2L), productOfCategory(3L, 2L))
+        );
+
+        assertThat(products.rankByViewCounts(List.of(), Map.of(2L, 5L, 3L, 5L)))
+            .extracting(Product::id)
+            .containsExactly(2L, 3L, 1L);
     }
 
     @Test
@@ -121,6 +195,10 @@ class ProductsTest {
         return product(id, brand(brandId), category(1L), new Ingredients(List.of()));
     }
 
+    private static Product productOfCategory(Long id, Long categoryId) {
+        return product(id, brand(1L), category(categoryId), new Ingredients(List.of()));
+    }
+
     private static Product productOfBrandAndCategory(Long id, Long brandId, Long categoryId) {
         return product(id, brand(brandId), category(categoryId), new Ingredients(List.of()));
     }
@@ -137,7 +215,8 @@ class ProductsTest {
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
     }
 

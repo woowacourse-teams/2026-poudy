@@ -1,5 +1,7 @@
   export namespace Schemas {
-  export type ProductRegistrationRequest = {
+  export type SearchKeywordRequest = { keyword: string }
+export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
+export type ProductRegistrationRequest = {
   /**
    * 등록을 요청할 제품명
    */
@@ -9,27 +11,42 @@
    */
   brandName?: (string | null);
 }
-export type FeedbackRequest = {
-  /**
-   * 의견 유형
-   */
-  type: ("BUG_REPORT" | "DATA_CORRECTION" | "IMPROVEMENT" | "OTHER");
-  content: string;
-  /**
-   * 의견을 작성한 화면 경로
-   */
-  path: string;
-  /**
-   * 미리 업로드한 선택적 이미지 ID 목록
-   */
-  imageIds?: (Array<string> | null);
-}
 export type FeedbackImageUploadResponse = {
   /**
    * 요청한 이미지 순서의 일회성 ID
    */
   imageIds: Array<string>;
 }
+export type FeedbackRequest = {
+  /**
+   * 의견 유형
+   */
+  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER");
+  content: string;
+  /**
+   * 의견을 작성한 화면 경로
+   */
+  path?: (string | null);
+  /**
+   * 미리 업로드한 선택적 이미지 ID 목록
+   */
+  imageIds?: (Array<string> | null);
+}
+export type AdminLoginRequest = {
+  /**
+   * 관리자 아이디
+   */
+  username: string;
+  /**
+   * 관리자 비밀번호
+   */
+  password: string;
+}
+export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
+export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
+export type AdminFeedbackStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
+export type AdminFeedbackImageResponse = { imageId: string, extension: string }
+export type AdminFeedbackResponse = { feedbackId: string, type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION"), content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -89,6 +106,25 @@ export type StorageResponse = {
    */
   items: Array<ProductResponse>;
 }
+export type SkinTypeResponse = {
+  /**
+   * 피부타입 코드
+   */
+  code: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
+  /**
+   * 피부타입 표시명
+   */
+  name: string;
+}
+export type SkinTypesResponse = {
+  /**
+   * 표시 순서대로 정렬된 피부타입 전체
+   */
+  items: Array<SkinTypeResponse>;
+}
+export type RankingChangeItem = { movement: string, steps: number }
+export type RankingItem = { rank: number, keyword: string, change?: RankingChangeItem }
+export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
@@ -292,6 +328,38 @@ export type ProductSuggestionPageResponse = {
   pagination: PaginationResponse;
 }
 export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
+export type ProductRankingProductResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드명
+   */
+  brandName: string;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  /**
+   * 대표 판매 옵션 가격 (원)
+   */
+  price: number;
+  /**
+   * 수분감 단계 (0~3)
+   */
+  moistureLevel: number;
+  /**
+   * 유분감 단계 (0~3)
+   */
+  oilLevel: number;
+}
+export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
+export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
 export type IngredientResponse = {
   /**
@@ -544,18 +612,80 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
+export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
   export namespace Endpoints {
 
   /**
+ * 제출한 검색어를 인기 검색어 집계에 더한다. 지금 상품이 검색되지 않는 검색어는 세지 않는다.
+ */
+export type post_Record = {
+      method: "POST",
+      path: "/api/search-keywords",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.SearchKeywordRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 존재하는 제품의 조회수를 요청마다 1회 증가시킨다. 인증이나 방문자 중복 제거 없이 새로고침과 재방문도 집계한다. 상세·목록 GET은 조회수를 증가시키지 않는다.
+ */
+export type post_IncreaseViewCount = {
+      method: "POST",
+      path: "/api/products/{productId}/views",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.
+ */
+export type post_SubmitProductCorrection = {
+      method: "POST",
+      path: "/api/products/{productId}/correction-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+        body:  Schemas.ProductCorrectionRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검증한 제품 등록 요청을 운영 검토 대상으로 보관한다. 제품 등록 완료를 뜻하지 않는다.
  */
 export type post_Submit = {
       method: "POST",
-      path: "/api/product-requests",
+      path: "/api/products/registration-requests",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -570,11 +700,31 @@ export type post_Submit = {
 
     }
 /**
+ * JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.
+ */
+export type post_UploadImages = {
+      method: "POST",
+      path: "/api/inquiry-images",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { images: Array<Blob> },
+          }
+      responses: {201: Schemas.FeedbackImageUploadResponse,
+400: Schemas.ProblemDetail,
+413: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
  */
 export type post_Submit_1 = {
       method: "POST",
-      path: "/api/feedback",
+      path: "/api/feedbacks",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -589,21 +739,56 @@ export type post_Submit_1 = {
 
     }
 /**
- * JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.
+ * 관리자 계정을 확인한다.
  */
-export type post_UploadImages = {
+export type post_Login = {
       method: "POST",
-      path: "/api/feedback/images",
-      requestFormat: "form-data",
+      path: "/api/admin/login",
+      requestFormat: "json",
       responseFormat: "json",
       parameters: {
 
-        body:  { images: Array<Blob> },
+        body:  Schemas.AdminLoginRequest,
           }
-      responses: {201: Schemas.FeedbackImageUploadResponse,
+      responses: {200: unknown,
 400: Schemas.ProblemDetail,
-413: Schemas.ProblemDetail,
-429: Schemas.ProblemDetail,
+401: unknown,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_ChangeStatus = {
+      method: "PATCH",
+      path: "/api/admin/product-requests/{requestId}/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { requestId: string },
+
+        body:  Schemas.AdminProductRequestStatusUpdateRequest,
+          }
+      responses: {200: Schemas.AdminProductRequestResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_ChangeStatus_1 = {
+      method: "PATCH",
+      path: "/api/admin/feedbacks/{feedbackId}/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { feedbackId: string },
+
+        body:  Schemas.AdminFeedbackStatusUpdateRequest,
+          }
+      responses: {200: Schemas.AdminFeedbackResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -622,6 +807,34 @@ export type get_FindStorageProducts = {
           }
       responses: {200: Schemas.StorageResponse,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.
+ */
+export type get_FindSkinTypes = {
+      method: "GET",
+      path: "/api/skin-types",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SkinTypesResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.
+ */
+export type get_Rankings = {
+      method: "GET",
+      path: "/api/search-keywords/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.RankingsResponse,
 500: Schemas.ProblemDetail,
 },
 
@@ -647,6 +860,10 @@ export type get_FindProducts = {
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
   excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  /**
+   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
+   */
+  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
   /**
    * 정렬 조건
    */
@@ -738,6 +955,30 @@ export type get_MatchSharedProduct = {
 
     }
 /**
+ * 현재 카탈로그에서 카테고리에 해당하는 제품을 먼저 고른 뒤 한국 시간 날짜별 조회수를 합산해 내림차순으로 최대 6개 반환한다. 조회수가 같으면 기본 제품 순서를 유지한다.
+ */
+export type get_FindRankings = {
+      method: "GET",
+      path: "/api/products/rankings",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  categoryIds: Array<number>;
+  /**
+   * 한국 시간 기준 오늘을 포함해 집계할 날짜 수. 미지정 시 전체 기간
+   */
+  days: number;
+}>,
+
+          }
+      responses: {200: Schemas.ProductRankingResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.
  */
 export type get_CountProducts = {
@@ -758,6 +999,10 @@ export type get_CountProducts = {
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
   excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  /**
+   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
+   */
+  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
 }>,
 
           }
@@ -768,7 +1013,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다.
+ * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다. usedInProducts 를 true 로 보내면 제품 전성분에 한 번 이상 쓰인 성분만 조회한다.
  */
 export type get_FindIngredients = {
       method: "GET",
@@ -778,6 +1023,7 @@ export type get_FindIngredients = {
       parameters: {
             query?:  Partial<{
   ingredientIds: Array<number>;
+  usedInProducts: boolean;
   /**
    * 조회할 페이지 번호 (0부터 시작)
    */
@@ -954,21 +1200,117 @@ export type get_FindBrand = {
 },
 
     }
+export type get_FindAll = {
+      method: "GET",
+      path: "/api/admin/product-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminProductRequestPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindById = {
+      method: "GET",
+      path: "/api/admin/product-requests/{requestId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { requestId: string },
+
+          }
+      responses: {200: Schemas.AdminProductRequestResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindAll_1 = {
+      method: "GET",
+      path: "/api/admin/feedbacks",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
+  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION");
+  /**
+   * 조회할 페이지 번호 (0부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminFeedbackPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_FindById_1 = {
+      method: "GET",
+      path: "/api/admin/feedbacks/{feedbackId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { feedbackId: string },
+
+          }
+      responses: {200: Schemas.AdminFeedbackResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 
   }
 
      export type EndpointByMethod = {
      post: {
-           "/api/product-requests": Endpoints.post_Submit,
-"/api/feedback": Endpoints.post_Submit_1,
-"/api/feedback/images": Endpoints.post_UploadImages
+           "/api/search-keywords": Endpoints.post_Record,
+"/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
+"/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
+"/api/products/registration-requests": Endpoints.post_Submit,
+"/api/inquiry-images": Endpoints.post_UploadImages,
+"/api/feedbacks": Endpoints.post_Submit_1,
+"/api/admin/login": Endpoints.post_Login
+         },
+patch: {
+           "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
+"/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          },
 get: {
            "/api/storage": Endpoints.get_FindStorageProducts,
+"/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
+"/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
@@ -979,9 +1321,14 @@ get: {
 "/api/curations/{curationId}/products": Endpoints.get_FindCurationProducts,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
-"/api/brands/{brandId}": Endpoints.get_FindBrand
+"/api/brands/{brandId}": Endpoints.get_FindBrand,
+"/api/admin/product-requests": Endpoints.get_FindAll,
+"/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
+"/api/admin/feedbacks": Endpoints.get_FindAll_1,
+"/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1
          }
      }
 
     export type PostEndpoints = EndpointByMethod["post"]
+export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]

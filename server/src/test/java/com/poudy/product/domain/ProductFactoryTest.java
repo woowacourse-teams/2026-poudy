@@ -49,7 +49,8 @@ class ProductFactoryTest {
                     )
                 )
             ),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z")
+            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
+            java.util.Set.of()
         );
 
         assertThat(product.moistureLevel()).isEqualTo(2);

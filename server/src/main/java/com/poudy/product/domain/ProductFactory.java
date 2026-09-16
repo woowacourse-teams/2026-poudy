@@ -5,7 +5,9 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.product.domain.sensory.ProductSensoryEstimator;
+import com.poudy.skintype.domain.SkinType;
 import java.time.OffsetDateTime;
+import java.util.Set;
 
 public final class ProductFactory {
 
@@ -26,7 +28,8 @@ public final class ProductFactory {
         Ingredients ingredients,
         String imageUrl,
         ProductVariants variants,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        Set<SkinType> skinTypes
     ) {
         ProductSensory sensory = sensoryEstimator.estimate(category, ingredients);
         return new Product(
@@ -38,7 +41,8 @@ public final class ProductFactory {
             imageUrl,
             variants,
             sensory,
-            updatedAt
+            updatedAt,
+            skinTypes
         );
     }
 }

@@ -4,14 +4,38 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
+export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
+
+export type ProductCorrectionRequest = __TypedOpenapi.Schemas.ProductCorrectionRequest;
+export const ProductCorrectionRequest = z.object({ content: z.string().min(10).max(2000), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
+
 export type ProductRegistrationRequest = __TypedOpenapi.Schemas.ProductRegistrationRequest;
 export const ProductRegistrationRequest = z.object({ productName: z.string().min(1).max(200), brandName: z.string().min(0).max(100).nullable().optional() });
 
-export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
-export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "DATA_CORRECTION", "IMPROVEMENT", "OTHER"]), content: z.string().min(10).max(2000), path: z.string().min(1).max(500), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
-
 export type FeedbackImageUploadResponse = __TypedOpenapi.Schemas.FeedbackImageUploadResponse;
 export const FeedbackImageUploadResponse = z.object({ imageIds: z.array(z.uuid()).min(1).max(5) });
+
+export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
+export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER"]), content: z.string().min(10).max(2000), path: z.string().min(1).max(500).nullable().optional(), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
+
+export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
+export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
+
+export type AdminProductRequestStatusUpdateRequest = __TypedOpenapi.Schemas.AdminProductRequestStatusUpdateRequest;
+export const AdminProductRequestStatusUpdateRequest = z.object({ status: z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]) });
+
+export type AdminProductRequestResponse = __TypedOpenapi.Schemas.AdminProductRequestResponse;
+export const AdminProductRequestResponse = z.object({ requestId: z.uuid(), productName: z.string(), brandName: z.string().nullable(), requestedAt: z.iso.datetime({ offset: true }), status: z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]), statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable() });
+
+export type AdminFeedbackStatusUpdateRequest = __TypedOpenapi.Schemas.AdminFeedbackStatusUpdateRequest;
+export const AdminFeedbackStatusUpdateRequest = z.object({ status: z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]) });
+
+export type AdminFeedbackImageResponse = __TypedOpenapi.Schemas.AdminFeedbackImageResponse;
+export const AdminFeedbackImageResponse = z.object({ imageId: z.uuid(), extension: z.string() });
+
+export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
+export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER", "PRODUCT_CORRECTION"]), content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]), statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
@@ -21,6 +45,21 @@ export const ProductResponse = z.object({ id: z.number().int(), name: z.string()
 
 export type StorageResponse = __TypedOpenapi.Schemas.StorageResponse;
 export const StorageResponse = z.object({ items: z.array(ProductResponse) });
+
+export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
+export const SkinTypeResponse = z.object({ code: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]), name: z.string() });
+
+export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
+export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
+
+export type RankingChangeItem = __TypedOpenapi.Schemas.RankingChangeItem;
+export const RankingChangeItem = z.object({ movement: z.string(), steps: z.number().int() });
+
+export type RankingItem = __TypedOpenapi.Schemas.RankingItem;
+export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(), change: RankingChangeItem.optional() });
+
+export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
+export const RankingsResponse = z.object({ items: z.array(RankingItem) });
 
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
@@ -72,6 +111,15 @@ export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSu
 
 export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: z.enum(["MATCHED", "NOT_FOUND"]), productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
+
+export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
+export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
+
+export type ProductRankingItemResponse = __TypedOpenapi.Schemas.ProductRankingItemResponse;
+export const ProductRankingItemResponse = z.object({ product: ProductRankingProductResponse });
+
+export type ProductRankingResponse = __TypedOpenapi.Schemas.ProductRankingResponse;
+export const ProductRankingResponse = z.object({ items: z.array(ProductRankingItemResponse) });
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
@@ -133,7 +181,13 @@ export const BrandOverviewResponse = z.object({ items: z.array(BrandSummaryRespo
 export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
 export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
 
+export type AdminProductRequestPageResponse = __TypedOpenapi.Schemas.AdminProductRequestPageResponse;
+export const AdminProductRequestPageResponse = z.object({ items: z.array(AdminProductRequestResponse), pagination: PaginationResponse });
+
+export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPageResponse;
+export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
+
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
-export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
+export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "FEEDBACK_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
 
 // </Schemas>

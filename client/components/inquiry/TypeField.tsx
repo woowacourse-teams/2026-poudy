@@ -5,7 +5,7 @@ import { INQUIRY_CHOICES, INQUIRY_COPY } from "./inquiry-type";
 
 /**
  * 문의 유형을 고른다. 고르기 전에는 아래 입력 항목이 나타나지 않는다.
- * DATA_CORRECTION 은 대상 제품이 정해져야 뜻이 서므로 이 목록에 없다.
+ * 제품 정보 정정은 대상 제품이 정해져야 뜻이 서므로 이 목록에 없다.
  */
 export function TypeField({
   selected,

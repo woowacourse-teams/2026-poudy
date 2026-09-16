@@ -23,6 +23,7 @@ export const ICON_IDS = [
   "plus",
   "sliders",
   "arrow-up-down",
+  "undo",
   "share",
   "instagram",
   "mail",
@@ -89,6 +90,12 @@ export function IconSprite() {
         {/* Lucide · check */}
         <symbol id="icon-check" viewBox="0 0 24 24">
           <path d="M20 6 9 17l-5-5" />
+        </symbol>
+
+        {/* Lucide · rotate-ccw */}
+        <symbol id="icon-undo" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+          <path d="M3 3v5h5" />
         </symbol>
 
         {/* Lucide · badge-check */}

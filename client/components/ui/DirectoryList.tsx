@@ -23,14 +23,24 @@ type DirectoryRowItem = {
   readonly href: string;
 };
 
+type DirectoryPanel = {
+  /** 이 목록을 여는 레일 항목. */
+  readonly railId: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly rows: readonly DirectoryRowItem[];
+};
+
 type DirectoryListProps = {
   /** 왼쪽 색인 레일. 카테고리는 대분류, 브랜드는 초성이 들어간다. */
   readonly rail: readonly DirectoryRailItem[];
   readonly selectedRailId: string;
   readonly onSelectRail: (id: string) => void;
-  readonly title: string;
-  readonly description?: string;
-  readonly rows: readonly DirectoryRowItem[];
+  /**
+   * 레일 항목별 목록. 고르지 않은 목록도 그려 두고 보이기만 감춘다.
+   * 누를 때 만들어지는 목록은 검색 로봇이 받는 첫 HTML 에 링크가 남지 않는다.
+   */
+  readonly panels: readonly DirectoryPanel[];
   readonly railLabel: string;
 };
 
@@ -38,15 +48,7 @@ type DirectoryListProps = {
  * S08(카테고리)과 S10(브랜드)이 함께 쓰는 2 단 디렉터리.
  * 왼쪽 색인 레일과 오른쪽 목록 패널로 나뉜다.
  */
-export function DirectoryList({
-  rail,
-  selectedRailId,
-  onSelectRail,
-  title,
-  description,
-  rows,
-  railLabel,
-}: DirectoryListProps) {
+export function DirectoryList({ rail, selectedRailId, onSelectRail, panels, railLabel }: DirectoryListProps) {
   return (
     <div className="flex flex-1 overflow-hidden rounded-xl bg-white">
       <nav aria-label={railLabel} className="w-[92px] shrink-0 border-r border-border bg-[#F5F6F7] px-1.5 py-2">
@@ -72,20 +74,22 @@ export function DirectoryList({
         </ul>
       </nav>
 
-      <div className="flex-1 pt-5">
-        <div className="flex flex-col gap-1 px-4 pb-2">
-          <h2 className="text-[17px] font-bold text-[#202124]">{title}</h2>
-          {description ? <p className="text-[11px] text-[#72747A]">{description}</p> : null}
-        </div>
+      {panels.map(({ railId, title, description, rows }) => (
+        <div key={railId} hidden={railId !== selectedRailId} className="flex-1 pt-5">
+          <div className="flex flex-col gap-1 px-4 pb-2">
+            <h2 className="text-[17px] font-bold text-[#202124]">{title}</h2>
+            {description ? <p className="text-[11px] text-[#72747A]">{description}</p> : null}
+          </div>
 
-        <ul>
-          {rows.map((row) => (
-            <li key={row.id}>
-              <DirectoryRow {...row} />
-            </li>
-          ))}
-        </ul>
-      </div>
+          <ul>
+            {rows.map((row) => (
+              <li key={row.id}>
+                <DirectoryRow {...row} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }

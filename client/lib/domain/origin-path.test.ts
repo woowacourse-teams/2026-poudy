@@ -22,15 +22,19 @@ describe("문의를 연 화면의 경로", () => {
     expect(toOriginPath("/products/1#ingredients")).toBe("/products/1");
   });
 
-  it("값이 없으면 홈을 담는다", () => {
-    expect(toOriginPath(null)).toBe("/");
-    expect(toOriginPath(undefined)).toBe("/");
-    expect(toOriginPath("")).toBe("/");
+  it("값이 없으면 홈으로 채우지 않고 비워 둔다", () => {
+    expect(toOriginPath(null)).toBeUndefined();
+    expect(toOriginPath(undefined)).toBeUndefined();
+    expect(toOriginPath("")).toBeUndefined();
   });
 
-  it("우리 화면의 경로가 아니면 홈을 담는다", () => {
-    expect(toOriginPath("https://example.com/spam")).toBe("/");
-    expect(toOriginPath("//example.com")).toBe("/");
-    expect(toOriginPath("javascript:alert(1)")).toBe("/");
+  it("우리 화면의 경로가 아니면 비워 둔다", () => {
+    expect(toOriginPath("https://example.com/spam")).toBeUndefined();
+    expect(toOriginPath("//example.com")).toBeUndefined();
+    expect(toOriginPath("javascript:alert(1)")).toBeUndefined();
+  });
+
+  it("홈에서 연 문의는 홈 경로를 그대로 담는다", () => {
+    expect(toOriginPath("/")).toBe("/");
   });
 });

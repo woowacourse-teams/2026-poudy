@@ -1,6 +1,9 @@
 package com.poudy.feedback.notification;
 
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackSubject;
+import com.poudy.feedback.domain.ProductCorrection;
+import com.poudy.feedback.domain.ServiceFeedback;
 import java.net.URI;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -16,6 +19,8 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
 
     private static final int DISCORD_CONTENT_MAX_LENGTH = 2000;
     private static final DateTimeFormatter RECEIVED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String UNKNOWN_PATH = "알 수 없음";
+    private static final String PRODUCT_CORRECTION_NAME = "제품 정보 정정";
 
     private final RestClient restClient;
     private final String webhookUrl;
@@ -50,21 +55,28 @@ public class DiscordFeedbackNotifier implements FeedbackNotifier {
         String header = """
             💬 새로운 사용자 의견
 
-            유형: %s
-            화면: %s
+            %s
             접수 시각: %s
             접수 ID: %s
             첨부 이미지: %d장
 
             """.formatted(
-            feedback.type().displayName(),
-            feedback.path().value(),
+            subjectLinesOf(feedback.subject()),
             feedback.receivedAt().format(RECEIVED_AT_FORMAT),
             feedback.id(),
             feedback.images().size()
         );
 
         return appendWithinLimit(header, feedback.content().value());
+    }
+
+    private static String subjectLinesOf(FeedbackSubject subject) {
+        return switch (subject) {
+            case ServiceFeedback service -> "유형: " + service.type().displayName()
+                + "\n화면: " + service.path().value().orElse(UNKNOWN_PATH);
+            case ProductCorrection correction -> "유형: " + PRODUCT_CORRECTION_NAME
+                + "\n제품: " + correction.productName() + " (ID " + correction.productId() + ")";
+        };
     }
 
     private static String appendWithinLimit(String header, String content) {

@@ -234,6 +234,25 @@ class SearchKeywordTest {
         assertThat(match.range().endIndexExclusive()).isEqualTo(decomposed.length());
     }
 
+    @Test
+    @DisplayName("정규화 표기는 공백을 한 칸으로 줄이고 보이지 않는 문자는 지운다")
+    void normalizedTextKeepsSingleSpaces() {
+        assertThat(new SearchKeyword(" 독도  토너 ").text()).isEqualTo("독도 토너");
+        assertThat(new SearchKeyword("토\u200B너").text()).isEqualTo("토너");
+        assertThat(new SearchKeyword("글리\u00A0세린").text()).isEqualTo("글리 세린");
+        assertThat(new SearchKeyword("PDRN").text()).isEqualTo("pdrn");
+        assertThat(new SearchKeyword("\u00A0").text()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("정규화 표기에서 공백을 빼면 대조에 쓰는 값과 같다")
+    void foldedNormalizedTextEqualsTheComparedValue() {
+        SearchKeyword keyword = new SearchKeyword(" 독도  토너 ");
+
+        assertThat(keyword.text().replace(" ", "")).isEqualTo(keyword.value());
+        assertThat(keyword.value()).isEqualTo("독도토너");
+    }
+
     private static TextMatch matchOf(String keyword, String text) {
         return TextMatch.best(SearchableText.formsOf(text), new SearchKeyword(keyword)).orElseThrow();
     }
