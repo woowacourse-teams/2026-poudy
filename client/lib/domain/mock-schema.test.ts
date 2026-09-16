@@ -2,6 +2,7 @@ import {
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
+  CurationListResponse,
   ExcludeCodeListResponse,
   FeedbackImageUploadResponse,
   IngredientDetailResponse,
@@ -11,7 +12,10 @@ import {
   ProductCountResponse,
   ProductDetailResponse,
   ProductPageResponse,
+  ProductRankingResponse,
   ProductSuggestionPageResponse,
+  RankingsResponse,
+  SkinTypesResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
@@ -83,6 +87,11 @@ const cases = [
   ["카테고리", "/categories", CategoryListResponse],
   ["브랜드 목록", "/brands", BrandOverviewResponse],
   ["브랜드 상세", "/brands/1", BrandDetailResponse],
+  ["큐레이션 목록", "/curations", CurationListResponse],
+  ["피부 타입", "/skin-types", SkinTypesResponse],
+  ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
+  ["인기 제품", "/products/rankings", ProductRankingResponse],
+  ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -118,6 +127,13 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(201);
     expect(deepStrict(FeedbackImageUploadResponse).safeParse(body)).toMatchObject({ success: true });
+  });
+
+  it("검색어 기록은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/search-keywords", ...json({ keyword: "어성초" }));
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
   });
 
   it("제품 등록 요청은 내용 없이 202 를 준다", async () => {
@@ -161,6 +177,7 @@ describe("목 응답과 스키마", () => {
       "/inquiry-images",
       "/products/registration-requests",
       "/products/:id/views",
+      "/search-keywords",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

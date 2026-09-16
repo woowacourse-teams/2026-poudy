@@ -2,6 +2,7 @@ import type {
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
+  CurationListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
   IngredientListResponse,
@@ -9,7 +10,10 @@ import type {
   ProductCountResponse,
   ProductDetailResponse,
   ProductPageResponse,
+  ProductRankingResponse,
   ProductSuggestionPageResponse,
+  RankingsResponse,
+  SkinTypesResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
 
@@ -22,6 +26,17 @@ const INGREDIENT_PAGE_SIZE = 100;
 
 /** 동적 목록 화면에서 사용하는 fetch 응답을 서버에 담아 두는 시간. */
 const CATALOG_TTL = 12 * 60 * 60;
+
+/**
+ * 인기 제품을 집계할 기간(일). 한국 시간 기준으로 오늘을 포함해 셈한다.
+ *
+ * 한 주를 기준으로 삼으면 요일에 따른 차이가 고르게 섞인다. 기간을 주지 않으면
+ * 서비스를 열었을 때부터 쌓인 조회수를 전부 더해 순위가 굳는다.
+ */
+const RANKING_DAYS = 7;
+
+/** 홈에서 집계 데이터를 담아 두는 시간. 인기 검색어와 인기 제품을 10분 단위로 새로 받는다. */
+const RANKING_TTL = 10 * 60;
 
 type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
@@ -90,3 +105,27 @@ export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
 /** 저장함은 브라우저가 가진 ID 로 표시 정보를 채운다. */
 export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>
   apiGet("/api/storage", new URLSearchParams(productIds.map((id) => ["productIds", String(id)])));
+
+export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", undefined, CATALOG_TTL);
+
+export const fetchSkinTypes = (): Promise<SkinTypesResponse> => apiGet("/api/skin-types", undefined, CATALOG_TTL);
+
+/** 인기 검색어 순위. 실시간으로 보여 주는 값이라 짧게만 담아 둔다. */
+export const fetchSearchKeywordRankings = (): Promise<RankingsResponse> =>
+  apiGet("/api/search-keywords/rankings", undefined, RANKING_TTL);
+
+/**
+ * 조회수로 매긴 인기 제품. 카테고리를 주면 그 카테고리 안에서만 고른다.
+ * 서버가 최대 여섯 개를 내려 준다.
+ */
+export const fetchProductRankings = (categoryIds: readonly number[] = []): Promise<ProductRankingResponse> => {
+  const params = new URLSearchParams([["days", String(RANKING_DAYS)]]);
+  for (const id of categoryIds) params.append("categoryIds", String(id));
+  return apiGet("/api/products/rankings", params, RANKING_TTL);
+};
+
+/**
+ * 검색어를 순위 집계에 남긴다. 실패해도 검색 자체는 계속되어야 하므로 부르는 쪽에서 삼킨다.
+ * 자동완성을 위해 입력하는 도중의 값이 아니라, 검색이 실제로 수행된 말만 보낸다.
+ */
+export const recordSearchKeyword = (keyword: string): Promise<void> => apiPost("/api/search-keywords", { keyword });
