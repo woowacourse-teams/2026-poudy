@@ -41,7 +41,7 @@ export function ProductDetail({
         <section className="flex flex-col items-center gap-4 pt-2 pb-5">
           <Image
             src={product.imageUrl || PRODUCT_PLACEHOLDER}
-            alt=""
+            alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
             width={184}
             height={184}
             className="size-[184px] object-contain"

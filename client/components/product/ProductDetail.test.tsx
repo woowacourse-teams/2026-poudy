@@ -67,6 +67,14 @@ describe("제품 성분 요약", () => {
     expect(compactImage).toHaveAttribute("loading", "lazy");
   });
 
+  it("대표 이미지에 브랜드와 제품명을 설명한다", () => {
+    const product = productDetails[0];
+    const { container } = render(<ProductDetail product={product} />);
+    const mainImage = container.querySelector("main section img");
+
+    expect(mainImage).toHaveAttribute("alt", `${product.brand.name} ${product.name} 제품 이미지`);
+  });
+
   it("전성분 펼쳐보기 버튼 배경을 Callout과 같은 surface 너비로 확장한다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
