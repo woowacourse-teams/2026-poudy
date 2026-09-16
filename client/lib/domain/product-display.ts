@@ -42,3 +42,21 @@ export const ingredientSummary = (ingredientCount: number, effectNames: readonly
   if (effects.length === 1) return `${ingredientCount}개 전성분을 기준으로, ${effects[0]}을 담은 구성입니다.`;
   return `${ingredientCount}개 전성분을 기준으로, ${effects.join("과 ")}을 함께 담은 구성입니다.`;
 };
+
+/** 검색 결과에 쓰도록 전성분 수와 대표 분류를 간결하게 담은 제품별 설명. */
+export const productIngredientDescription = ({
+  brandName,
+  productName,
+  ingredientCount,
+  effectNames,
+}: {
+  readonly brandName: string;
+  readonly productName: string;
+  readonly ingredientCount: number;
+  readonly effectNames: readonly string[];
+}): string => {
+  const effects = [...new Set(effectNames)].slice(0, 2);
+
+  if (effects.length === 0) return `${brandName} ${productName}의 전성분 ${ingredientCount}개를 확인하세요.`;
+  return `${brandName} ${productName}의 전성분 ${ingredientCount}개와 ${effects.join("·")} 관련 성분을 확인하세요.`;
+};
