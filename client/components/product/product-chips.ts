@@ -31,4 +31,6 @@ export const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeRespon
     label: "유수분",
     count: (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0),
   },
+  // 피부 타입은 한 번에 하나만 걸 수 있어 숫자가 늘 1 이다. 세어 보여 주지 않는다.
+  { id: "skinType", label: "피부 타입", count: filter.skinType ? 1 : 0, showCount: false },
 ];

@@ -8,7 +8,7 @@
 export type PageName =
   "home" | "search" | "product_list" | "product_detail" | "ingredient_detail" | "saved" | "category" | "brand";
 
-export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter";
+export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
 
 export type SearchMode = "product" | "ingredient";
 

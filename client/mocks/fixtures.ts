@@ -313,7 +313,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
   id: 6,
   name: "더마 릴리프 썬스크린",
   brand: { id: 6, name: "셀퓨전씨", englishName: "Cell Fusion C", imageUrl: "" },
-  categories: [{ id: 2, name: "선케어", child: { id: 21, name: "선크림" } }],
+  categories: [{ id: 13, name: "선케어", child: { id: 14, name: "선크림" } }],
   imageUrl: "",
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
@@ -335,7 +335,7 @@ export const productDetails: ProductDetailResponse[] = [
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
-    categories: [{ id: 1, name: "스킨케어", child: { id: 11, name: "스킨/토너" } }],
+    categories: [{ id: 1, name: "스킨케어", child: { id: 2, name: "스킨/토너" } }],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },

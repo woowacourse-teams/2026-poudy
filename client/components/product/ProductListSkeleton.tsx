@@ -33,7 +33,7 @@ export function ProductListSkeleton({ hiddenChips = [] }: { readonly hiddenChips
 
         <div className="bg-white px-4">
           <div className="flex gap-1.5 pb-2">
-            {["ingredient", "category", "brand", "level"]
+            {["ingredient", "category", "brand", "level", "skinType"]
               .filter((chip) => !hiddenChips.includes(chip))
               .map((chip) => (
                 <div key={chip} className="h-8 w-20 shrink-0 rounded-full bg-[#F2F3F5]" />

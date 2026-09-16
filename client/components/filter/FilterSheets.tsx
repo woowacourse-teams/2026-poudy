@@ -1,12 +1,13 @@
 "use client";
 
-import type { BrandResponse, CategoryResponse, ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, ExcludeCodeResponse, SkinTypeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
 import { CategoryOptions } from "./CategoryOptions";
 import { IngredientOptions } from "./IngredientOptions";
 import { LevelRange } from "./LevelRangeOptions";
+import { SkinTypeOptions } from "./SkinTypeOptions";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
@@ -15,7 +16,7 @@ import type { Filter } from "@/lib/domain/filter";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductCount } from "@/lib/hooks/useProductCount";
 
-export type SheetKind = "ingredient" | "category" | "brand" | "level";
+export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType";
 
 type FilterSheetsProps = {
   readonly openSheet: SheetKind | undefined;
@@ -24,6 +25,8 @@ type FilterSheetsProps = {
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
+  /** 지금 조건에 걸린 제품이 드는 피부 타입. 고를 수 없는 것은 오지 않는다. */
+  readonly skinTypes: readonly SkinTypeResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
@@ -34,6 +37,7 @@ const TITLES: Record<SheetKind, string> = {
   category: "카테고리",
   brand: "브랜드",
   level: "유수분 범위",
+  skinType: "피부 타입",
 };
 
 /** 시트 종류를 분석 이벤트의 filter_type 으로 옮긴다. */
@@ -42,6 +46,7 @@ export const FILTER_TYPES: Record<SheetKind, FilterType> = {
   category: "category",
   brand: "brand",
   level: "moisture_oil",
+  skinType: "skin_type",
 };
 
 const DESCRIPTIONS: Record<SheetKind, string> = {
@@ -49,6 +54,7 @@ const DESCRIPTIONS: Record<SheetKind, string> = {
   category: "원하는 제품 카테고리를 선택해 주세요",
   brand: "원하는 브랜드를 선택해 주세요",
   level: "원하는 사용감 범위를 각각 선택해 주세요",
+  skinType: "본인의 피부 타입을 골라 주세요",
 };
 
 /**
@@ -76,6 +82,7 @@ function SheetBody({
   onApply,
   categories,
   brands,
+  skinTypes,
   excludeCodes,
   initialCount,
   open,
@@ -98,6 +105,7 @@ function SheetBody({
       ...(kind === "category" ? { categoryIds: [] } : {}),
       ...(kind === "brand" ? { brandIds: [] } : {}),
       ...(kind === "level" ? { moistureLevel: [], oilLevel: [] } : {}),
+      ...(kind === "skinType" ? { skinType: undefined } : {}),
       ...(kind === "ingredient" ? { excludeCodes: [], excludeIngredientIds: [], includeIngredientIds: [] } : {}),
     });
   };
@@ -152,6 +160,14 @@ function SheetBody({
               />
             </section>
           </>
+        ) : null}
+
+        {kind === "skinType" ? (
+          <SkinTypeOptions
+            selected={draft.skinType}
+            onSelect={(skinType) => setDraft({ ...draft, skinType })}
+            skinTypes={skinTypes}
+          />
         ) : null}
 
         {kind === "ingredient" ? (
