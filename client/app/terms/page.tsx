@@ -24,7 +24,7 @@ export default function TermsPage() {
 
       <LegalDocument
         title={`${OPERATOR.serviceName} 이용약관`}
-        effectiveDate={OPERATOR.effectiveDate}
+        effectiveDate={OPERATOR.effectiveDate.terms}
         revisionEffectiveDate={OPERATOR.revisionEffectiveDate.terms}
       >
         <LegalArticle heading="제1조 목적">
@@ -37,7 +37,10 @@ export default function TermsPage() {
         <LegalArticle heading="제2조 용어의 정의">
           <LegalList>
             <li>이용자 — 이 약관에 따라 서비스를 이용하는 사람을 말합니다.</li>
-            <li>서비스 — 팀이 웹과 모바일 앱으로 제공하는 화장품 제품·성분 정보 조회, 검색, 필터 기능을 말합니다.</li>
+            <li>
+              서비스 — 팀이 웹과 모바일 앱으로 제공하는 화장품 제품·성분 정보 조회, 검색, 필터, 인기 검색어와 인기 제품
+              순위 기능을 말합니다.
+            </li>
             <li>
               성분 정보 — 화장품 제조사와 판매처가 표기한 전성분과 공개된 자료를 팀이 모아 정리한 내용을 말합니다.
             </li>
@@ -57,6 +60,10 @@ export default function TermsPage() {
             서비스는 회원가입 없이 무료로 제공되며, 이용자는 별도의 절차 없이 이용할 수 있습니다. 팀은 서비스의 내용과
             구성을 운영상·기술상 필요에 따라 바꿀 수 있습니다.
           </p>
+          <p>
+            팀은 상품 검색 결과가 있는 검색어의 제출 횟수와 제품 상세 화면의 조회 횟수를 합산해 인기 검색어와 인기 제품
+            순위를 제공할 수 있습니다.
+          </p>
         </LegalArticle>
 
         <LegalArticle heading="제5조 정보의 성격과 한계">
@@ -74,6 +81,26 @@ export default function TermsPage() {
             이상이나 알레르기가 걱정된다면 반드시 전문의와 상담하시고, 제품 구매와 사용 여부는 실제 제품에 표기된
             전성분을 확인한 뒤 이용자가 스스로 판단하시기 바랍니다.
           </p>
+          <p>인기 검색어와 인기 제품 순위는 다음과 같은 이용 횟수 통계이며, 순위에는 아래 한계가 있습니다.</p>
+          <LegalList>
+            <li>
+              인기 검색어는 상품 검색 결과가 있는 검색 제출만 세어 최근 완결된 7일을 기준으로 산정하며, 10분 단위로
+              갱신되어 실제 이용보다 최대 10분 늦게 반영될 수 있습니다. 집계가 충분하지 않으면 팀이 정한 기본 검색어가
+              함께 표시될 수 있습니다.
+            </li>
+            <li>
+              인기 제품은 화면에서 기간을 지정하면 한국 시간 기준 오늘을 포함한 해당 기간, 지정하지 않으면 저장된 전체
+              기간의 제품 상세 화면 조회 횟수를 기준으로 최대 6개를 보여 줍니다.
+            </li>
+            <li>
+              조회 횟수가 0인 제품도 순위에 포함될 수 있고, 조회 횟수가 같으면 카탈로그의 기본 제품 순서에 따라 표시될
+              수 있습니다.
+            </li>
+            <li>
+              이용자·세션을 구분하지 않아 반복 요청과 자동화된 요청이 순위에 중복 반영되거나 순위를 왜곡할 수 있습니다.
+            </li>
+            <li>순위는 판매량, 품질, 효능, 안전성 또는 팀의 추천을 뜻하지 않습니다.</li>
+          </LegalList>
         </LegalArticle>
 
         <LegalArticle heading="제6조 이용자의 의무">
@@ -151,10 +178,11 @@ export default function TermsPage() {
 
         <LegalArticle heading="부칙">
           <LegalList>
-            <li>{OPERATOR.effectiveDate} — 제정</li>
+            <li>{OPERATOR.effectiveDate.terms} — 제정</li>
             <li>
               {OPERATOR.revisionEffectiveDate.terms} 시행 예정 — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호
-              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정
+              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정. 인기 검색어와
+              인기 제품 순위의 제공 기준과 한계 추가
             </li>
           </LegalList>
         </LegalArticle>
