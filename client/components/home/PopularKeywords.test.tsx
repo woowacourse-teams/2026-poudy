@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { RankingItem } from "@poudy/api/api.zod";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -127,5 +127,49 @@ describe("PopularKeywords", () => {
     const { container } = render(<PopularKeywords items={[]} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  /*
+   * 변동은 기호로 그린다. 화살표와 가로줄은 낭독기가 읽어도 뜻이 전해지지 않으므로,
+   * 눈으로 보는 기호와 귀로 듣는 말을 따로 둔다.
+   */
+  it("순위 변동을 기호와 말로 함께 알린다", async () => {
+    const changed: readonly RankingItem[] = [
+      { rank: 1, keyword: "상승어", change: { movement: "UP", steps: 2 } },
+      { rank: 2, keyword: "하락어", change: { movement: "DOWN", steps: 3 } },
+      { rank: 3, keyword: "신규어", change: { movement: "NEW", steps: 0 } },
+      { rank: 4, keyword: "유지어", change: { movement: "SAME", steps: 0 } },
+    ];
+
+    render(<PopularKeywords items={changed} />);
+    await userEvent.click(screen.getByRole("button", { name: "인기 검색어 전체 보기" }));
+
+    const list = screen.getByRole("list");
+
+    /*
+     * 오름과 내림은 아이콘으로 그린다. 스프라이트를 참조하므로 어느 것을 가리키는지로 가린다.
+     * 계단 수는 순위 숫자와 겹치므로, 아이콘이 든 칸 안에서만 찾는다.
+     */
+    const up = list.querySelector('use[href="#icon-trending-up"]')?.closest("span");
+    const down = list.querySelector('use[href="#icon-trending-down"]')?.closest("span");
+
+    expect(up).toHaveTextContent("2");
+    expect(down).toHaveTextContent("3");
+    expect(within(list).getByText("NEW")).toBeInTheDocument();
+    expect(within(list).getByText("2계단 상승", { exact: false })).toBeInTheDocument();
+    expect(within(list).getByText("3계단 하락", { exact: false })).toBeInTheDocument();
+    expect(within(list).getByText("변동 없음", { exact: false })).toBeInTheDocument();
+  });
+
+  /* 서버는 견줄 지난 집계가 없으면 `change` 를 빼고 내려보낸다. 그때도 줄은 서야 한다. */
+  it("변동이 오지 않아도 검색어를 그린다", async () => {
+    render(<PopularKeywords items={items} />);
+    await userEvent.click(screen.getByRole("button", { name: "인기 검색어 전체 보기" }));
+
+    const list = screen.getByRole("list");
+
+    expect(within(list).getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
+    expect(within(list).queryByText("NEW")).not.toBeInTheDocument();
+    expect(within(list).queryByText("변동 없음", { exact: false })).not.toBeInTheDocument();
   });
 });

@@ -269,6 +269,10 @@ const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => 
  * 홈의 인기 검색어. 실제 순위는 검색 기록에서 나오지만 목에서는 고정해 둔다.
  * 순위 변동은 오름과 내림, 유지와 새로 든 것을 모두 한 번씩 담아 화면을 확인할 수 있게 한다.
  */
+/*
+ * 변동은 이전 집계와 견주어 나온다. 서버는 견줄 것이 없으면 `change` 를 아예 빼고 내려보내므로
+ * (`RankingChange.isKnown`), 마지막 하나는 빠진 경우를 그대로 두어 화면이 그때도 서는지 본다.
+ */
 const searchKeywordRankings = [
   { rank: 1, keyword: "나이아신아마이드", change: { movement: "UP", steps: 2 } },
   { rank: 2, keyword: "어성초", change: { movement: "DOWN", steps: 1 } },
@@ -279,7 +283,7 @@ const searchKeywordRankings = [
   { rank: 7, keyword: "히알루론산", change: { movement: "DOWN", steps: 2 } },
   { rank: 8, keyword: "무기자차", change: { movement: "UP", steps: 1 } },
   { rank: 9, keyword: "클렌징오일", change: { movement: "SAME", steps: 0 } },
-  { rank: 10, keyword: "마스크팩", change: { movement: "NEW", steps: 0 } },
+  { rank: 10, keyword: "마스크팩" },
 ] as const;
 
 const skinTypes = [
