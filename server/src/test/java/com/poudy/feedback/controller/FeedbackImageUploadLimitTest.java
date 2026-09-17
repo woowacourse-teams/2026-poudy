@@ -34,7 +34,7 @@ class FeedbackImageUploadLimitTest {
         String boundary = "poudy-boundary";
         byte[] body = multipartBody(boundary, new byte[1_100]);
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("http://localhost:" + port + "/api/inquiry-images"))
+            .uri(URI.create("http://localhost:" + port + "/api/pending-images"))
             .header("Content-Type", "multipart/form-data; boundary=" + boundary)
             .POST(HttpRequest.BodyPublishers.ofByteArray(body))
             .build();

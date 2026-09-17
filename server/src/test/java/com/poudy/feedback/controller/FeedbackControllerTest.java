@@ -47,7 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class FeedbackControllerTest {
 
     private static final String PATH = "/api/feedbacks";
-    private static final String IMAGES_PATH = "/api/inquiry-images";
+    private static final String IMAGES_PATH = "/api/pending-images";
 
     @Autowired
     private MockMvc mockMvc;
@@ -91,7 +91,7 @@ class FeedbackControllerTest {
 
     @Test
     @DisplayName("유효한 이미지 배치를 업로드하면 요청 순서의 ID와 201을 반환한다")
-    void uploadsFeedbackImages() throws Exception {
+    void uploadsPendingImages() throws Exception {
         UUID first = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
         UUID second = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
         given(
@@ -451,7 +451,8 @@ class FeedbackControllerTest {
             .andExpect(
                 jsonPath("$.paths['/api/products/{productId}/correction-requests'].post.responses['429']").exists()
             )
-            .andExpect(jsonPath("$.paths['/api/inquiry-images'].post.responses['413']").exists())
+            .andExpect(jsonPath("$.paths['/api/pending-images'].post.responses['413']").exists())
+            .andExpect(jsonPath("$.paths['/api/inquiry-images']").doesNotExist())
             .andExpect(jsonPath("$.paths['/api/feedback/images']").doesNotExist());
     }
 }
