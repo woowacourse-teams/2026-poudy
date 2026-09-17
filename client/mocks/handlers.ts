@@ -314,18 +314,21 @@ const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][]) => {
 const curations = [
   {
     id: 1,
+    slug: "autumn-barrier",
     title: "가을바람에 지친 피부,\n장벽부터 채워요",
     description: "세라마이드·판테놀 보습 성분 모아보기",
     thumbnailImageUrl: "/images/curations/autumn-barrier.jpg",
   },
   {
     id: 2,
+    slug: "gentle-cleansing",
     title: "자극 없이 씻어내는\n순한 클렌징",
     description: "설페이트 뺀 클렌저 모아보기",
     thumbnailImageUrl: "/images/curations/gentle-cleansing.jpg",
   },
   {
     id: 3,
+    slug: "light-moisture",
     title: "번들거림은 줄이고\n수분은 남기고",
     description: "지성 피부를 위한 가벼운 보습",
     thumbnailImageUrl: "/images/curations/light-moisture.jpg",

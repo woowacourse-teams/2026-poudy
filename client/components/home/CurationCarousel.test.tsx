@@ -9,8 +9,20 @@ import { CurationCarousel } from "./CurationCarousel";
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const items = [
-  { id: 1, title: "가을 장벽", description: "보습 성분 모아보기", thumbnailImageUrl: "/images/a.jpg" },
-  { id: 2, title: "순한 클렌징", description: "설페이트 뺀 클렌저", thumbnailImageUrl: "/images/b.jpg" },
+  {
+    id: 1,
+    slug: "autumn-barrier",
+    title: "가을 장벽",
+    description: "보습 성분 모아보기",
+    thumbnailImageUrl: "/images/a.jpg",
+  },
+  {
+    id: 2,
+    slug: "gentle-cleansing",
+    title: "순한 클렌징",
+    description: "설페이트 뺀 클렌저",
+    thumbnailImageUrl: "/images/b.jpg",
+  },
 ];
 
 describe("CurationCarousel", () => {
