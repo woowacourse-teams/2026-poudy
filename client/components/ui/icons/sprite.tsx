@@ -2,14 +2,22 @@
  * 아이콘 스프라이트. 모든 아이콘을 문서에 한 번만 그려 두고 <use> 로 참조한다.
  * 같은 아이콘이 여러 번 나와도 path 는 한 벌만 내려간다.
  *
- * 아이콘은 Lucide(https://lucide.dev, ISC)에서 가져온다.
- * 새 아이콘을 넣을 때는 24x24 viewBox 의 path 만 옮겨 담는다.
+ * 아이콘은 Tabler(https://tabler.io/icons, MIT)에서 가져온다. 어느 이름에서 왔는지는
+ * 심볼마다 적어 둔다. 새 아이콘을 넣을 때는 24x24 viewBox 의 path 만 옮겨 담고,
+ * 원본 맨 앞의 투명한 사각형(`stroke="none" fill="none"`)은 옮기지 않는다. 홀로 쓰는
+ * 파일에서 여백을 잡아 주는 것이라, 여기서는 그릴 것이 없으면서 stroke 설정만 어긋난다.
+ *
+ * 물방울만 예외로 직접 그린 것을 쓴다. 선이 아니라 면으로 그려야 해서 결이 다르다.
  */
 export const ICON_IDS = [
   "home",
+  "home-solid",
   "grid",
+  "grid-solid",
   "search",
+  "search-solid",
   "bookmark",
+  "bookmark-solid",
   "chevron-down",
   "chevron-up",
   "chevron-right",
@@ -21,13 +29,12 @@ export const ICON_IDS = [
   "x",
   "trash",
   "plus",
-  "sliders",
-  "arrow-up-down",
-  "undo",
   "share",
   "instagram",
   "mail",
   "message-question",
+  "trending-up",
+  "trending-down",
   "droplet",
   "droplet-solid",
 ] as const;
@@ -42,149 +49,182 @@ export function IconSprite() {
   return (
     <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: "absolute" }}>
       <defs>
-        {/* Lucide · house */}
+        {/* Tabler · home */}
         <symbol id="icon-home" viewBox="0 0 24 24">
-          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+          <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+          <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
         </symbol>
 
-        {/* Lucide · layout-grid */}
+        {/* Tabler · home (filled) */}
+        <symbol id="icon-home-solid" viewBox="0 0 24 24">
+          <path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z" />
+        </symbol>
+
+        {/* Tabler · category */}
         <symbol id="icon-grid" viewBox="0 0 24 24">
-          <rect width="7" height="7" x="3" y="3" rx="1" />
-          <rect width="7" height="7" x="14" y="3" rx="1" />
-          <rect width="7" height="7" x="14" y="14" rx="1" />
-          <rect width="7" height="7" x="3" y="14" rx="1" />
+          <path d="M4 4h6v6h-6l0 -6" />
+          <path d="M14 4h6v6h-6l0 -6" />
+          <path d="M4 14h6v6h-6l0 -6" />
+          <path d="M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
         </symbol>
 
-        {/* Lucide · search */}
+        {/* Tabler · category (filled) */}
+        <symbol id="icon-grid-solid" viewBox="0 0 24 24">
+          <path d="M10 3h-6a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1 -1v-6a1 1 0 0 0 -1 -1z" />
+          <path d="M20 3h-6a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1 -1v-6a1 1 0 0 0 -1 -1z" />
+          <path d="M10 13h-6a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1 -1v-6a1 1 0 0 0 -1 -1z" />
+          <path d="M17 13a4 4 0 1 1 -3.995 4.2l-.005 -.2l.005 -.2a4 4 0 0 1 3.995 -3.8z" />
+        </symbol>
+
+        {/* Tabler · search */}
         <symbol id="icon-search" viewBox="0 0 24 24">
-          <path d="m21 21-4.34-4.34" />
-          <circle cx="11" cy="11" r="8" />
+          <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+          <path d="M21 21l-6 -6" />
         </symbol>
 
-        {/* Lucide · bookmark */}
+        {/* Tabler · search (filled) */}
+        <symbol id="icon-search-solid" viewBox="0 0 24 24">
+          <path d="M14 3.072a8 8 0 0 1 2.32 11.834l5.387 5.387a1 1 0 0 1 -1.414 1.414l-5.388 -5.387a8 8 0 1 1 -.905 -13.249" />
+        </symbol>
+
+        {/* Tabler · bookmarks */}
         <symbol id="icon-bookmark" viewBox="0 0 24 24">
-          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          <path d="M15 10v11l-5 -3l-5 3v-11a3 3 0 0 1 3 -3h4a3 3 0 0 1 3 3" />
+          <path d="M11 3h5a3 3 0 0 1 3 3v11" />
         </symbol>
 
-        {/* Lucide · chevron-down */}
+        {/* Tabler · bookmarks (filled) */}
+        <symbol id="icon-bookmark-solid" viewBox="0 0 24 24">
+          <path d="M12 6a4 4 0 0 1 4 4v11a1 1 0 0 1 -1.514 .857l-4.486 -2.691l-4.486 2.691a1 1 0 0 1 -1.508 -.743l-.006 -.114v-11a4 4 0 0 1 4 -4h4z" />
+          <path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" />
+        </symbol>
+
+        {/* Tabler · chevron-down */}
         <symbol id="icon-chevron-down" viewBox="0 0 24 24">
-          <path d="m6 9 6 6 6-6" />
+          <path d="M6 9l6 6l6 -6" />
         </symbol>
 
-        {/* Lucide · chevron-up */}
+        {/* Tabler · chevron-up */}
         <symbol id="icon-chevron-up" viewBox="0 0 24 24">
-          <path d="m18 15-6-6-6 6" />
+          <path d="M6 15l6 -6l6 6" />
         </symbol>
 
-        {/* Lucide · chevron-right */}
+        {/* Tabler · chevron-right */}
         <symbol id="icon-chevron-right" viewBox="0 0 24 24">
-          <path d="m9 18 6-6-6-6" />
+          <path d="M9 6l6 6l-6 6" />
         </symbol>
 
-        {/* Lucide · chevron-left */}
+        {/* Tabler · chevron-left */}
         <symbol id="icon-chevron-left" viewBox="0 0 24 24">
-          <path d="m15 18-6-6 6-6" />
+          <path d="M15 6l-6 6l6 6" />
         </symbol>
 
-        {/* Lucide · check */}
+        {/* Tabler · check */}
         <symbol id="icon-check" viewBox="0 0 24 24">
-          <path d="M20 6 9 17l-5-5" />
+          <path d="M5 12l5 5l10 -10" />
         </symbol>
 
-        {/* Lucide · rotate-ccw */}
-        <symbol id="icon-undo" viewBox="0 0 24 24">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-          <path d="M3 3v5h5" />
-        </symbol>
-
-        {/* Lucide · badge-check */}
+        {/* Tabler · rosette-discount-check */}
         <symbol id="icon-badge-check" viewBox="0 0 24 24">
-          <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
-          <path d="m9 12 2 2 4-4" />
+          <path d="M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1" />
+          <path d="M9 12l2 2l4 -4" />
         </symbol>
 
-        {/* Lucide · sparkles */}
+        {/* Tabler · sparkles-2 */}
         <symbol id="icon-sparkles" viewBox="0 0 24 24">
-          <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
-          <path d="M20 2v4" />
-          <path d="M22 4h-4" />
-          <circle cx="4" cy="20" r="2" />
+          <path d="M14 6a9.3 9.3 0 0 0 1.516 -.546c.911 -.438 1.494 -1.015 1.937 -1.932c.207 -.428 .382 -.928 .547 -1.522c.165 .595 .34 1.095 .547 1.521c.443 .918 1.026 1.495 1.937 1.933c.426 .205 .925 .38 1.516 .546a9.3 9.3 0 0 0 -1.516 .547c-.911 .438 -1.494 1.015 -1.937 1.932a9 9 0 0 0 -.547 1.521c-.165 -.594 -.34 -1.095 -.547 -1.521c-.443 -.918 -1.026 -1.494 -1.937 -1.932a9 9 0 0 0 -1.516 -.547" />
+          <path d="M3 14a21 21 0 0 0 1.652 -.532c2.542 -.953 3.853 -2.238 4.816 -4.806a20 20 0 0 0 .532 -1.662a20 20 0 0 0 .532 1.662c.963 2.567 2.275 3.853 4.816 4.806q .75 .28 1.652 .532a21 21 0 0 0 -1.652 .532c-2.542 .953 -3.854 2.238 -4.816 4.806a20 20 0 0 0 -.532 1.662a20 20 0 0 0 -.532 -1.662c-.963 -2.568 -2.275 -3.853 -4.816 -4.806a21 21 0 0 0 -1.652 -.532" />
         </symbol>
 
-        {/* Lucide · info */}
+        {/* Tabler · info-square-rounded */}
         <symbol id="icon-info" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4" />
-          <path d="M12 8h.01" />
+          <path d="M12 9h.01" />
+          <path d="M11 12h1v4h1" />
+          <path d="M12 3c7.2 0 9 1.8 9 9c0 7.2 -1.8 9 -9 9c-7.2 0 -9 -1.8 -9 -9c0 -7.2 1.8 -9 9 -9" />
         </symbol>
 
-        {/* Lucide · x */}
+        {/* Tabler · x */}
         <symbol id="icon-x" viewBox="0 0 24 24">
-          <path d="M18 6 6 18" />
-          <path d="m6 6 12 12" />
+          <path d="M18 6l-12 12" />
+          <path d="M6 6l12 12" />
         </symbol>
 
-        {/* Lucide · trash-2 */}
+        {/* Tabler · trash */}
         <symbol id="icon-trash" viewBox="0 0 24 24">
-          <path d="M3 6h18" />
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          <path d="M10 11v6" />
-          <path d="M14 11v6" />
+          <path d="M4 7l16 0" />
+          <path d="M10 11l0 6" />
+          <path d="M14 11l0 6" />
+          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
         </symbol>
 
-        {/* Lucide · plus */}
+        {/* Tabler · plus */}
         <symbol id="icon-plus" viewBox="0 0 24 24">
-          <path d="M5 12h14" />
-          <path d="M12 5v14" />
+          <path d="M12 5l0 14" />
+          <path d="M5 12l14 0" />
         </symbol>
 
-        {/* Lucide · sliders-horizontal */}
-        <symbol id="icon-sliders" viewBox="0 0 24 24">
-          <line x1="21" x2="14" y1="4" y2="4" />
-          <line x1="10" x2="3" y1="4" y2="4" />
-          <line x1="21" x2="12" y1="12" y2="12" />
-          <line x1="8" x2="3" y1="12" y2="12" />
-          <line x1="21" x2="16" y1="20" y2="20" />
-          <line x1="12" x2="3" y1="20" y2="20" />
-          <line x1="14" x2="14" y1="2" y2="6" />
-          <line x1="8" x2="8" y1="10" y2="14" />
-          <line x1="16" x2="16" y1="18" y2="22" />
+        {/*
+          Tabler · share
+
+          점 세 개를 선으로 이은 모양이다. Lucide 의 것은 상자에서 화살표가 나가는 모양이라
+          내려받기로 읽히기 쉬워 이쪽을 쓴다.
+
+          path 가 24x24 안에서 3~21 만 쓰므로 사방 3 이 비어 있다. 선 굵기의 절반만 남기고
+          좁혀 지정한 크기대로 보이게 한다. 가로세로가 같아 정사각형 크기를 그대로 주면 된다.
+        */}
+        <symbol id="icon-share" viewBox="2 2 20 20">
+          <path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M8.7 10.7l6.6 -3.4" />
+          <path d="M8.7 13.3l6.6 3.4" />
         </symbol>
 
-        {/* Lucide · arrow-up-down */}
-        <symbol id="icon-arrow-up-down" viewBox="0 0 24 24">
-          <path d="m21 16-4 4-4-4" />
-          <path d="M17 20V4" />
-          <path d="m3 8 4-4 4 4" />
-          <path d="M7 4v16" />
-        </symbol>
-
-        {/* Lucide · share */}
-        <symbol id="icon-share" viewBox="0 0 24 24">
-          <path d="M12 15V3" />
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <path d="m7 8 5-5 5 5" />
-        </symbol>
-
-        {/* Lucide · instagram */}
+        {/* Tabler · brand-instagram */}
         <symbol id="icon-instagram" viewBox="0 0 24 24">
-          <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-          <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+          <path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" />
+          <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+          <path d="M16.5 7.5v.01" />
         </symbol>
 
-        {/* Lucide · mail */}
+        {/* Tabler · mail */}
         <symbol id="icon-mail" viewBox="0 0 24 24">
-          <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
-          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10" />
+          <path d="M3 7l9 6l9 -6" />
         </symbol>
 
-        {/* 문의하기. 말풍선 안에 물음표를 둔다. */}
+        {/* Tabler · message-circle-question */}
         <symbol id="icon-message-question" viewBox="0 0 24 24">
-          <path d="M21.5 12C21.5 14.5196 20.4991 16.9359 18.7175 18.7175C16.9359 20.4991 14.5196 21.5 12 21.5C10.372 21.5 8.84 21.09 7.5 20.369C5.632 19.362 4.375 20.298 3.266 20.466C3.18308 20.4779 3.09851 20.4699 3.01925 20.4428C2.93998 20.4157 2.86827 20.3702 2.81 20.31C2.72301 20.2176 2.66543 20.1015 2.6446 19.9763C2.62377 19.8511 2.64062 19.7226 2.693 19.607C3.129 18.582 3.528 16.638 2.983 15C2.66208 14.0324 2.499 13.0194 2.5 12C2.5 9.48044 3.50089 7.06408 5.28249 5.28249C7.06409 3.50089 9.48045 2.5 12 2.5C14.5196 2.5 16.9359 3.50089 18.7175 5.28249C20.4991 7.06408 21.5 9.48044 21.5 12Z" />
-          <path d="M9.5 9.50005C9.50016 9.06936 9.61158 8.64602 9.82347 8.27105C10.0354 7.89609 10.3405 7.58223 10.7094 7.35988C11.0782 7.13754 11.4983 7.01426 11.9288 7.00199C12.3593 6.98972 12.7857 7.08888 13.1666 7.28986C13.5475 7.49084 13.8701 7.78681 14.103 8.1491C14.3359 8.51139 14.4712 8.9277 14.4959 9.35768C14.5206 9.78766 14.4338 10.2167 14.2439 10.6033C14.054 10.9898 13.7674 11.3208 13.412 11.564C12.728 12.032 12 12.672 12 13.5M12.125 16.75H12M12.25 16.75C12.25 16.8163 12.2237 16.8799 12.1768 16.9268C12.1299 16.9737 12.0663 17 12 17C11.9337 17 11.8701 16.9737 11.8232 16.9268C11.7763 16.8799 11.75 16.8163 11.75 16.75C11.75 16.6837 11.7763 16.6202 11.8232 16.5733C11.8701 16.5264 11.9337 16.5 12 16.5C12.0663 16.5 12.1299 16.5264 12.1768 16.5733C12.2237 16.6202 12.25 16.6837 12.25 16.75Z" />
+          <path d="M15.02 19.52c-2.341 .736 -5 .606 -7.32 -.52l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.649 1.407 2.575 3.253 2.742 5.152" />
+          <path d="M19 22v.01" />
+          <path d="M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
+        </symbol>
+
+        {/*
+          순위 변동. 이 둘만 Tabler(https://tabler.io/icons, MIT)에서 가져온다.
+
+          원본 SVG 맨 앞의 투명한 사각형(`stroke="none" fill="none"`)은 옮기지 않는다.
+          홀로 쓰는 파일에서 여백을 잡아 주는 것이라, 여기서는 그릴 것이 없으면서
+          stroke 설정만 어긋나게 만든다.
+
+          viewBox 를 24x24 그대로 두지 않고 그림에 맞춰 좁힌다. 두 아이콘의 path 는
+          x 3~21, y 7~17 만 쓰므로 위아래로 7 씩 비어 있고, 그대로 두면 지정한 크기보다
+          한참 작게 보인다. 선은 path 위에 가운데로 그려져 굵기의 절반(1.25)이 경계 밖으로
+          나가므로 그만큼 넓혀 잘리지 않게 한다. 물방울도 같은 이유로 viewBox 를 좁혀 두었다.
+
+          결과는 20.5x12.5 로 가로가 길다. 정사각형 크기를 주면 위아래가 남으므로,
+          쓰는 쪽에서 width 와 height 를 비율에 맞춰 따로 준다.
+        */}
+        <symbol id="icon-trending-up" viewBox="1.75 5.75 20.5 12.5">
+          <path d="M3 17l6 -6l4 4l8 -8" />
+          <path d="M14 7l7 0l0 7" />
+        </symbol>
+
+        <symbol id="icon-trending-down" viewBox="1.75 5.75 20.5 12.5">
+          <path d="M3 7l6 6l4 -4l8 8" />
+          <path d="M21 10l0 7l-7 0" />
         </symbol>
 
         {/*
