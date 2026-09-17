@@ -403,12 +403,12 @@
         }
       }
     },
-    "/api/inquiry-images": {
+    "/api/pending-images": {
       "post": {
         "tags": [
           "피드백"
         ],
-        "summary": "문의 이미지 업로드",
+        "summary": "임시 이미지 업로드",
         "description": "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.",
         "operationId": "uploadImages",
         "requestBody": {

@@ -42,7 +42,7 @@
 
 ### 이미지 업로드
 
-`POST /api/inquiry-images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
+`POST /api/pending-images`는 `multipart/form-data`의 반복 파트 `images`를 1~5개 받는다.
 성공은 정규화한 임시 S3 객체가 모두 저장된 상태를 뜻하며 `201 Created`를 반환한다.
 
 ```json

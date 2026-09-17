@@ -746,7 +746,7 @@ export type post_Submit = {
  */
 export type post_UploadImages = {
       method: "POST",
-      path: "/api/inquiry-images",
+      path: "/api/pending-images",
       requestFormat: "form-data",
       responseFormat: "json",
       parameters: {
@@ -1316,7 +1316,7 @@ export type get_FindById_1 = {
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
 "/api/products/registration-requests": Endpoints.post_Submit,
-"/api/inquiry-images": Endpoints.post_UploadImages,
+"/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
 "/api/admin/login": Endpoints.post_Login
          },

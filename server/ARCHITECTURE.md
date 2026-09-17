@@ -195,7 +195,7 @@ CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소�
 Discord 알림이 같으므로 `feedback` 안에서 `FeedbackSubject`로만 구분하고 같은 저장 경계를
 공유한다.
 
-문의 이미지는 기존 2단계 API를 유지한다. `POST /api/inquiry-images`가 검증·정규화한
+첨부 이미지는 기존 2단계 API를 유지한다. `POST /api/pending-images`가 검증·정규화한
 이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, 의견 등록이나 제품 정보 정정
 요청이 그 ID를 받아 접수 건에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
 commit 판단 기준이다. claim은 `feedbackId`와 확장자만 저장하고, 오래된 claim의 JSON 키가

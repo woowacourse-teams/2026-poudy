@@ -15,7 +15,7 @@
   제품 컬렉션 아래에 둔다. S3 저장 prefix `product-requests`는 URL과 무관하므로 바꾸지 않는다.
 - `POST /api/feedbacks`의 `path`를 선택 필드로 바꾸고, 없으면 `null`로 저장하고 알림에는
   `알 수 없음`으로 표시한다.
-- 이미지 업로드를 `POST /api/inquiry-images`로 옮긴다.
+- 이미지 업로드는 `POST /api/pending-images`를 사용한다.
 
 client는 같은 브랜치에서 새 계약에 맞춘다. 정정 화면은 `requestProductCorrection`으로 보내고,
 `toOriginPath`는 알 수 없는 경로를 `/`로 채우지 않는다. 처리방침의 "문의를 연 화면의 주소" 문구는

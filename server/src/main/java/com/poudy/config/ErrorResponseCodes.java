@@ -12,7 +12,7 @@ public final class ErrorResponseCodes {
     private static final String PRODUCT_REQUESTS_PATH = "/api/products/registration-requests";
     private static final String FEEDBACK_PATH = "/api/feedbacks";
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
-    private static final String INQUIRY_IMAGES_PATH = "/api/inquiry-images";
+    private static final String PENDING_IMAGES_PATH = "/api/pending-images";
     private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
@@ -45,7 +45,7 @@ public final class ErrorResponseCodes {
                 ErrorCode.INVALID_FEEDBACK_IMAGE_ID
             );
         }
-        if (INQUIRY_IMAGES_PATH.equals(path)) {
+        if (PENDING_IMAGES_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
         if (ADMIN_LOGIN_PATH.equals(path)) {
@@ -65,11 +65,11 @@ public final class ErrorResponseCodes {
         return PRODUCT_REQUESTS_PATH.equals(path)
             || FEEDBACK_PATH.equals(path)
             || PRODUCT_CORRECTION_REQUESTS_PATH.equals(path)
-            || INQUIRY_IMAGES_PATH.equals(path);
+            || PENDING_IMAGES_PATH.equals(path);
     }
 
     public static boolean payloadLimited(String path) {
-        return INQUIRY_IMAGES_PATH.equals(path);
+        return PENDING_IMAGES_PATH.equals(path);
     }
 
     public static Optional<ErrorCode> notFound(String path) {
