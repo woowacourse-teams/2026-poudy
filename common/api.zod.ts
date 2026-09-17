@@ -152,7 +152,7 @@ export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResp
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
 
 export type CurationSummaryResponse = __TypedOpenapi.Schemas.CurationSummaryResponse;
-export const CurationSummaryResponse = z.object({ id: z.number().int(), slug: z.string().regex(new RegExp("^[a-z0-9-]+$")), title: z.string(), description: z.string(), thumbnailImageUrl: z.string() });
+export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), thumbnailImageUrl: z.string() });
 
 export type CurationListResponse = __TypedOpenapi.Schemas.CurationListResponse;
 export const CurationListResponse = z.object({ items: z.array(CurationSummaryResponse) });

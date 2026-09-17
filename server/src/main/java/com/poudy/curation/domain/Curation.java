@@ -9,7 +9,6 @@ import java.util.UUID;
 
 public final class Curation {
     private final Long id;
-    private final String slug;
     private final CurationBanner banner;
     private final String title;
     private final String description;
@@ -17,7 +16,6 @@ public final class Curation {
 
     public Curation(
         Long id,
-        String slug,
         CurationBanner banner,
         String title,
         String description,
@@ -27,7 +25,6 @@ public final class Curation {
             throw new IllegalArgumentException("큐레이션 ID는 양의 정수여야 합니다.");
         }
         this.id = id;
-        this.slug = requireSlug(slug);
         this.banner = Objects.requireNonNull(banner);
         this.title = requireNonBlank(title, "큐레이션 상세 제목");
         this.description = requireNonBlank(description, "큐레이션 상세 설명");
@@ -42,10 +39,6 @@ public final class Curation {
 
     public Long id() {
         return id;
-    }
-
-    public String slug() {
-        return slug;
     }
 
     public CurationBanner banner() {
@@ -71,10 +64,4 @@ public final class Curation {
         return value;
     }
 
-    private static String requireSlug(String value) {
-        if (value == null || !value.matches("[a-z0-9-]+")) {
-            throw new IllegalArgumentException("큐레이션 슬러그 형식이 올바르지 않습니다.");
-        }
-        return value;
-    }
 }

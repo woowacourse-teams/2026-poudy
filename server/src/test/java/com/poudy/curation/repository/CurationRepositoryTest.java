@@ -24,7 +24,6 @@ class CurationRepositoryTest {
         assertThat(repository.findAll().inOrder()).extracting(Curation::id).containsExactly(12L, 4L);
         assertThat(repository.findAll().findById(12L).orElseThrow().banner().title())
             .isEqualTo("환절기 장벽 케어");
-        assertThat(repository.findAll().findById(12L).orElseThrow().slug()).isEqualTo("seasonal-skin-care");
     }
 
     @Test
@@ -35,7 +34,6 @@ class CurationRepositoryTest {
     @ParameterizedTest
     @CsvSource({
             "thumbnail_image_url,thumbnail_image_typo",
-            "slug,slug_typo",
             "VISIBLE,UNKNOWN",
             "IMAGE,UNKNOWN",
             "00000000-0000-4000-8000-000000000012,invalid-uuid",
