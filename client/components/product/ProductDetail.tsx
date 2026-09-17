@@ -71,7 +71,11 @@ export function ProductDetail({
 
         <ProductSummaryEnd />
 
-        <div className="flex flex-col gap-6 px-4 pb-4">
+        {/*
+          맨 아래의 출처 안내는 문의 버튼이 덮는 자리에 놓인다. 버튼이 가리는 만큼
+          아래를 비워 `정보 수정 제안` 이 눌리게 한다.
+        */}
+        <div className="flex flex-col gap-6 px-4 pb-[var(--inquiry-button-clearance)]">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
