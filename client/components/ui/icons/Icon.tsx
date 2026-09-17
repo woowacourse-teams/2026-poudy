@@ -20,10 +20,13 @@ type IconProps = {
  * 뜻은 옆의 글자나 버튼 이름이 전하므로 그림 자체는 보조 기술에서 감춘다.
  */
 /**
- * 물방울은 테두리까지 path 안에 담겨 있어 선으로 그리지 않는다.
- * 선을 함께 그리면 이미 그려진 테두리 위에 한 겹이 더 얹혀 뭉개진다.
+ * 면으로만 그리는 아이콘. 선을 함께 그리면 이미 그려진 테두리 위에 한 겹이 더 얹혀
+ * 뭉개진다. 집 아이콘이라면 문 구멍이 좁아지고 지붕 각이 뭉툭해진다.
+ *
+ * 이름이 `-solid` 로 끝나는 것은 모두 채움용으로 따로 그린 것이라 여기에 든다.
+ * 물방울은 그 규칙이 생기기 전부터 있어 이름이 어긋나므로 따로 적는다.
  */
-const FILL_ONLY: ReadonlySet<IconId> = new Set(["droplet", "droplet-solid"]);
+const isFillOnly = (name: IconId) => name.endsWith("-solid") || name === "droplet";
 
 export function Icon({
   name,
@@ -35,7 +38,7 @@ export function Icon({
   strokeWidth = 1.5,
   className,
 }: IconProps) {
-  const fillOnly = FILL_ONLY.has(name);
+  const fillOnly = isFillOnly(name);
 
   return (
     <svg

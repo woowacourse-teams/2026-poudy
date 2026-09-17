@@ -198,7 +198,6 @@ function UndoRow({
           aria-label={`${productName} 저장 되돌리기`}
           className="flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-white px-3 text-[12px] font-bold text-text-primary"
         >
-          <Icon name="undo" size={13} strokeWidth={2.5} />
           되돌리기
         </button>
       </div>
