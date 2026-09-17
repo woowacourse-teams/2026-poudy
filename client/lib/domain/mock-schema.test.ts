@@ -123,7 +123,7 @@ describe("목 응답과 스키마", () => {
     const form = new FormData();
     form.append("images", new File(["a"], "a.png", { type: "image/png" }));
 
-    const { status, body } = await post("/inquiry-images", form);
+    const { status, body } = await post("/pending-images", form);
 
     expect(status).toBe(201);
     expect(deepStrict(FeedbackImageUploadResponse).safeParse(body)).toMatchObject({ success: true });
@@ -174,7 +174,7 @@ describe("목 응답과 스키마", () => {
     const postPaths = [
       "/feedbacks",
       "/products/:id/correction-requests",
-      "/inquiry-images",
+      "/pending-images",
       "/products/registration-requests",
       "/products/:id/views",
       "/search-keywords",

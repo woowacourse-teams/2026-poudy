@@ -154,13 +154,13 @@ sendFeedback({ type, content, originPath, imageIds });
 
 `lib/api/client.ts`에는 현재 `apiGet` 함수만 있으므로, `apiPost` 함수와 multipart 형식으로 전송하는 함수를 새로 추가합니다. 기존의 `ApiError` 클래스와 `reportError` 함수가 정해 놓은 규약은 그대로 따릅니다.
 
-이미지는 `POST /api/inquiry-images`로 먼저 업로드해서 `imageIds`를 받고, 그 값을 문의나 제품 정보 정정 요청의 본문에 함께 실어 보냅니다.
+이미지는 `POST /api/pending-images`로 먼저 업로드해서 `imageIds`를 받고, 그 값을 문의나 제품 정보 정정 요청의 본문에 함께 실어 보냅니다.
 
 | 엔드포인트                                           | 본문                                  | 성공 | 오류               |
 | ---------------------------------------------------- | ------------------------------------- | ---- | ------------------ |
 | `POST /api/feedbacks`                                | `type`, `content`, `path`, `imageIds` | 204  | 400, 429, 500      |
 | `POST /api/products/{productId}/correction-requests` | `content`, `imageIds`                 | 204  | 400, 404, 429, 500 |
-| `POST /api/inquiry-images`                           | `images`                              | 201  | 400, 413, 429, 500 |
+| `POST /api/pending-images`                           | `images`                              | 201  | 400, 413, 429, 500 |
 | `POST /api/products/registration-requests`           | `productName`, `brandName`            | 202  | 400, 429, 500      |
 
 `path`를 받는 스키마는 `FeedbackRequest` 하나뿐이므로 제품 등록 요청과 제품 정보 정정 요청에는 경로를 보내지 않습니다. `path`와 `imageIds`는 선택이라 값이 없으면 필드를 빼고 보냅니다.
@@ -266,7 +266,7 @@ sendFeedback({ type, content, originPath, imageIds });
 ```
 POST /api/feedbacks                                 → 204
 POST /api/products/{productId}/correction-requests  → 204
-POST /api/inquiry-images                            → 201, imageIds 반환
+POST /api/pending-images                            → 201, imageIds 반환
 POST /api/products/registration-requests            → 202
 ```
 

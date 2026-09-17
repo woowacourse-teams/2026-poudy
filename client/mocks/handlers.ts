@@ -516,7 +516,7 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post("*/api/inquiry-images", async ({ request }) => {
+  http.post("*/api/pending-images", async ({ request }) => {
     const form = await request.formData();
     const images = form.getAll("images").filter((value): value is File => value instanceof File);
 
