@@ -30,7 +30,7 @@ class CurationQueryTest {
         mockMvc.perform(get("/api/curations"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id", contains(12, 4)))
-            .andExpect(jsonPath("$.items[*].slug", contains("seasonal-skin-care", "missing-products")))
+            .andExpect(jsonPath("$.items[*].slug").doesNotExist())
             .andExpect(jsonPath("$.items[0].title").value("환절기 장벽 케어"))
             .andExpect(jsonPath("$.items[0].description").value("환절기를 위한 제품 모음"))
             .andExpect(jsonPath("$.items[0].thumbnailImageUrl").value("https://cdn.example.com/curations/banner.png"))

@@ -2,7 +2,6 @@
   "curations": [
     {
       "id": 12,
-      "slug": "seasonal-skin-care",
       "banner": {
         "title": "환절기 장벽 케어",
         "description": "환절기를 위한 제품 모음",
@@ -128,7 +127,6 @@
     },
     {
       "id": 4,
-      "slug": "missing-products",
       "banner": {
         "title": "모두 사라진 제품",
         "description": "환절기를 위한 제품 모음",
