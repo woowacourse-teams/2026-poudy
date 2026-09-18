@@ -1,6 +1,0 @@
-// 변경 전 Products 소스를 별도 이름으로 컴파일한다. 운영 소스나 검증 태스크를 바꾸지 않는다.
-allprojects {
-    afterEvaluate {
-        sourceSets.test.java.srcDir(layout.buildDirectory.dir('filter-options-baseline'))
-    }
-}
