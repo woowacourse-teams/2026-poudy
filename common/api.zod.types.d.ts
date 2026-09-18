@@ -128,6 +128,20 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
+export type ProductFilterOptionsResponse = {
+  /**
+   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
+   */
+  brands: Array<BrandResponse>;
+  /**
+   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
+   */
+  categories: Array<CategoryResponse>;
+  /**
+   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   */
+  skinTypes: Array<SkinTypeResponse>;
+}
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
   pagination: PaginationResponse;
@@ -143,6 +157,7 @@ export type ProductPageResponse = {
    * 조회 조건에 해당하는 제품 전체의 피부타입. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
    */
   skinTypes: Array<SkinTypeResponse>;
+  filterOptions?: ProductFilterOptionsResponse;
 }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
