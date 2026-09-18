@@ -36,7 +36,7 @@ const suggestionsAre = (items: readonly { id: number; name: string; brandName: s
       HttpResponse.json({
         items: items.map((item) => ({ ...item, imageUrl: "", match: nameMatch(item.name) })),
         pagination: {
-          page: 0,
+          page: 1,
           size: 20,
           totalElements: items.length,
           totalPages: Math.ceil(items.length / 20),
@@ -49,8 +49,8 @@ const suggestionsAre = (items: readonly { id: number; name: string; brandName: s
 const pagedSuggestionsAre = (total: number, size: number) =>
   server.use(
     http.get("*/api/products/suggestions", ({ request }) => {
-      const page = Number(new URL(request.url).searchParams.get("page") ?? 0);
-      const start = page * size;
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
+      const start = (page - 1) * size;
       const items = Array.from({ length: Math.max(0, Math.min(size, total - start)) }, (_, index) => ({
         id: start + index + 1,
         name: `제품 ${start + index + 1}`,
@@ -143,7 +143,7 @@ describe("ProductSearchPanel", () => {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         return HttpResponse.json({
           items: [],
-          pagination: { page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
         });
       }),
     );

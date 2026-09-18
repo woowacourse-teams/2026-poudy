@@ -11,7 +11,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { fetchProducts } from "@/lib/api/products";
-import type { Filter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
 import { STALE_MS } from "@/lib/storage/list-cache";
 import { readProductPages, rememberScrollPosition, writeProductPages } from "@/lib/storage/product-pages-cache";
@@ -48,7 +48,7 @@ export type InitialPage = {
 };
 
 const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
-  page: 0,
+  page: FIRST_PAGE,
   items: [],
   brands: [],
   categories: [],
@@ -57,7 +57,7 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   hasNext: false,
   loading: true,
   loaded: false,
-  pendingPage: 0,
+  pendingPage: FIRST_PAGE,
   restored: false,
   revalidating: false,
 };
@@ -70,7 +70,8 @@ const initialState = (key: string, seed?: ProductPageResponse): PageState => {
   const cached = readProductPages(key);
   if (!cached) {
     // 서버가 첫 장을 그려 보냈으면 그것으로 시작한다. 같은 장을 다시 받지 않는다.
-    if (seed) return { ...merged({ ...EMPTY_PAGE_STATE, key }, 0, seed), restored: false, revalidating: false };
+    if (seed)
+      return { ...merged({ ...EMPTY_PAGE_STATE, key }, FIRST_PAGE, seed), restored: false, revalidating: false };
     return { ...EMPTY_PAGE_STATE, key };
   }
 
@@ -95,7 +96,7 @@ const initialState = (key: string, seed?: ProductPageResponse): PageState => {
 /** 첫 페이지는 갈아 끼우고 다음 페이지는 이어 붙인다. */
 const merged = (previous: PageState, page: number, response: ProductPageResponse): PageState => ({
   ...previous,
-  items: page === 0 ? response.items : [...previous.items, ...response.items],
+  items: page === FIRST_PAGE ? response.items : [...previous.items, ...response.items],
   // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
   brands: response.brands,
   categories: response.categories,
@@ -130,7 +131,9 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
 /** 쌓아 둔 장을 전부 다시 받는다. 첫 장만 받으면 이어 붙인 목록이 스무 건으로 덮인다. */
 const refetchPages = async (key: string, lastPage: number): Promise<readonly ProductPageResponse[]> => {
   const filter = JSON.parse(key);
-  return Promise.all(Array.from({ length: lastPage + 1 }, (_, page) => fetchProducts({ ...filter, page })));
+  return Promise.all(
+    Array.from({ length: lastPage }, (_, index) => fetchProducts({ ...filter, page: FIRST_PAGE + index })),
+  );
 };
 
 const revalidated = (previous: PageState, responses: readonly ProductPageResponse[]): PageState => {
@@ -219,7 +222,7 @@ const seedFor = (initial: InitialPage | undefined, key: string): ProductPageResp
 
 /** 조건이 바뀌면 목록을 처음부터 다시 쌓고, 떠났다 돌아오면 담아 둔 목록에서 잇는다. */
 export const useProductPages = (filter: Filter, initial?: InitialPage) => {
-  const key = JSON.stringify({ ...filter, page: 0 });
+  const key = JSON.stringify({ ...filter, page: FIRST_PAGE });
   // 서버가 본 조건과 지금 조건이 같을 때만 쓴다. 조건이 바뀌면 씨앗은 버린다.
   const seed = seedFor(initial, key);
   const [state, setState] = useState<PageState>(() => initialState(key, seed));

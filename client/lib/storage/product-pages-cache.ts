@@ -4,7 +4,7 @@ import { createListCache } from "./list-cache";
 
 /** 조건 하나에 대해 이어 붙인 제품 목록 전체. */
 export type ProductPages = {
-  /** 지금까지 받은 가장 마지막 장. 0 이면 첫 장만 받았다는 뜻이다. */
+  /** 지금까지 받은 가장 마지막 장. 1 이면 첫 장만 받았다는 뜻이다. */
   readonly page: number;
   readonly items: readonly ProductResponse[];
   readonly brands: readonly BrandResponse[];

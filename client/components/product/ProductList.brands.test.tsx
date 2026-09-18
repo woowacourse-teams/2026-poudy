@@ -46,7 +46,7 @@ describe("ProductList 브랜드 시트", () => {
         await delay(100);
         return HttpResponse.json({
           items: products.slice(0, 2),
-          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
         });
       }),
@@ -77,7 +77,7 @@ describe("ProductList 브랜드 시트", () => {
       http.get("*/api/products", () =>
         HttpResponse.json({
           items: [],
-          pagination: { page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
           brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
         }),
       ),
@@ -96,7 +96,7 @@ describe("ProductList 브랜드 시트", () => {
       http.get("*/api/products", () =>
         HttpResponse.json({
           items: products.slice(0, 2),
-          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
         }),
       ),
@@ -122,7 +122,7 @@ describe("ProductList 브랜드 시트", () => {
       http.get("*/api/products", () =>
         HttpResponse.json({
           items: products.slice(0, 2),
-          pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
         }),
       ),

@@ -16,12 +16,12 @@ const countingProducts = () => {
 
   server.use(
     http.get("*/api/products", ({ request }) => {
-      const page = Number(new URL(request.url).searchParams.get("page") ?? 0);
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
       pages.push(page);
 
       return HttpResponse.json({
-        items: [{ id: page * 2 + 1 }, { id: page * 2 + 2 }],
-        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 2 },
+        items: [{ id: page * 2 - 1 }, { id: page * 2 }],
+        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },
         brands: [],
       });
     }),
@@ -59,7 +59,7 @@ describe("useProductPages", () => {
     await waitFor(() => expect(result.current.items).toHaveLength(4));
 
     expect(result.current.items.map((item) => item.id)).toEqual([1, 2, 3, 4]);
-    expect(result.current.page).toBe(1);
+    expect(result.current.page).toBe(2);
   });
 
   it("떠났다 돌아오면 이어 붙인 목록을 그대로 되살리고 다시 부르지 않는다", async () => {
@@ -76,7 +76,7 @@ describe("useProductPages", () => {
 
     // 첫 그리기부터 목록이 있어야 문서 높이가 살아 스크롤을 되돌릴 수 있다.
     expect(again.result.current.items).toHaveLength(4);
-    expect(again.result.current.page).toBe(1);
+    expect(again.result.current.page).toBe(2);
     expect(again.result.current.loading).toBe(false);
     expect(pages).toHaveLength(called);
   });
@@ -107,8 +107,8 @@ describe("useProductPages", () => {
 
     rerender({ keyword: "b" });
 
-    await waitFor(() => expect(result.current.page).toBe(0));
-    expect(pages.at(-1)).toBe(0);
+    await waitFor(() => expect(result.current.page).toBe(1));
+    expect(pages.at(-1)).toBe(1);
   });
 
   it("되살린 조건의 스크롤 위치를 되돌린다", async () => {
@@ -158,7 +158,7 @@ describe("useProductPages", () => {
     expect(again.result.current.items).toHaveLength(4);
 
     await waitFor(() => expect(again.result.current.revalidating).toBe(false));
-    expect(pages).toEqual([0, 1]);
+    expect(pages).toEqual([1, 2]);
     expect(again.result.current.items).toHaveLength(4);
     vi.useRealTimers();
   });

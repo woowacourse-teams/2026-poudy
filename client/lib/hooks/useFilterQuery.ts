@@ -8,6 +8,7 @@ import {
   DEFAULT_SIZE,
   DEFAULT_SORT,
   EXCLUDE_CODES,
+  FIRST_PAGE,
   SKIN_TYPES,
   SORTS,
   parseFilter,
@@ -36,7 +37,7 @@ const FILTER_KEYS = new Set(
     skinType: SKIN_TYPES[0],
     /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */
     sort: SORTS.find((sort) => sort !== DEFAULT_SORT) ?? DEFAULT_SORT,
-    page: 1,
+    page: FIRST_PAGE + 1,
     size: DEFAULT_SIZE + 1,
   }).keys(),
 );
@@ -89,7 +90,10 @@ export const useFilterQuery = (path: string) => {
   );
 
   /** 정렬과 페이지는 조건이 아니므로 페이지를 되돌리지 않는다. */
-  const setSort = useCallback((sort: Filter["sort"]) => replace({ ...filter, sort, page: 0 }), [filter, replace]);
+  const setSort = useCallback(
+    (sort: Filter["sort"]) => replace({ ...filter, sort, page: FIRST_PAGE }),
+    [filter, replace],
+  );
 
   return { filter, setCondition, setSort, replace };
 };

@@ -50,9 +50,9 @@ const forcedError = (text: string) => {
 };
 
 const paginate = <T>(matched: readonly T[], url: URL) => {
-  const page = Number(url.searchParams.get("page") ?? 0);
+  const page = Number(url.searchParams.get("page") ?? 1);
   const size = Number(url.searchParams.get("size") ?? 20);
-  const start = page * size;
+  const start = (page - 1) * size;
 
   return {
     items: matched.slice(start, start + size),

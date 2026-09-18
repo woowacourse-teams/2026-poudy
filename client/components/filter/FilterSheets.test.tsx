@@ -95,7 +95,7 @@ describe("필터 시트의 적용 버튼", () => {
         HttpResponse.json({
           /* 목록이 비면 화면이 결과 없음을 그려 시트를 열 자리가 없다. 하나는 남긴다. */
           items: [allProducts[0]],
-          pagination: { page: 0, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
           brands: [],
           categories: [],
           skinTypes: [

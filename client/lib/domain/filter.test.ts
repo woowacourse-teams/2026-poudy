@@ -52,8 +52,9 @@ describe("parseFilter", () => {
     expect(parse("keyword=%20독도%20").keyword).toBe("독도");
   });
 
-  it("음수 페이지는 기본값으로 되돌린다", () => {
-    expect(parse("page=-2").page).toBe(0);
+  it("1 보다 작은 페이지는 첫 페이지로 되돌린다", () => {
+    expect(parse("page=-2").page).toBe(1);
+    expect(parse("page=0").page).toBe(1);
     expect(parse("size=abc").size).toBe(DEFAULT_SIZE);
   });
 
@@ -137,7 +138,7 @@ describe("withCondition", () => {
     expect(withCondition(filter, { brandIds: [1] })).toEqual({
       ...EMPTY_FILTER,
       brandIds: [1],
-      page: 0,
+      page: 1,
     });
   });
 });

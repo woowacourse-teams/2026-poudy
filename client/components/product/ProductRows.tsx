@@ -11,7 +11,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import type { Filter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
@@ -92,7 +92,7 @@ export function ProductRows({
   };
 
   useEffect(() => {
-    if (!searchMode || !loaded || loading || page !== 0 || trackedResultKey.current === key) return;
+    if (!searchMode || !loaded || loading || page !== FIRST_PAGE || trackedResultKey.current === key) return;
     trackedResultKey.current = key;
 
     track("search_results_viewed", {
@@ -107,7 +107,7 @@ export function ProductRows({
 
   // 첫 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {
-    if (page > 0 && !loading) track("product_list_scrolled", { surface, page, loaded_count: items.length });
+    if (page > FIRST_PAGE && !loading) track("product_list_scrolled", { surface, page, loaded_count: items.length });
     // 장이 늘었을 때만 남긴다. 같은 장에서 다시 그려도 보내지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, loading]);

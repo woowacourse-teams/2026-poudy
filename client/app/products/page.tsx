@@ -5,7 +5,7 @@ import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { parseFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 
 export const metadata: Metadata = {
@@ -23,14 +23,14 @@ export const dynamic = "force-dynamic";
 /** 필터 재료와 첫 장. 제목은 조건과 무관해 이미 떠 있다. */
 async function MatchedProducts({ searchParams }: { readonly searchParams: SearchParams }) {
   const filter = parseFilter(toSearchParams(await searchParams));
-  const key = JSON.stringify({ ...filter, page: 0 });
+  const key = JSON.stringify({ ...filter, page: FIRST_PAGE });
 
   /*
    * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄은 제외 성분군만 있으면 그릴 수 있어
    * 제품 조회보다 먼저 나가고, 목록 자리만 도착을 기다린다.
    * 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
    */
-  const initialPagePromise = fetchProducts({ ...filter, page: 0 })
+  const initialPagePromise = fetchProducts({ ...filter, page: FIRST_PAGE })
     .then((response) => ({ key, response }))
     .catch(() => undefined);
 

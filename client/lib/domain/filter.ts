@@ -18,6 +18,8 @@ export type SkinType = (typeof SKIN_TYPES)[number];
 
 export const DEFAULT_SORT: Sort = "NAME_ASC";
 export const DEFAULT_SIZE = 20;
+/** API 와 URL 모두 페이지를 1 부터 센다. */
+export const FIRST_PAGE = 1;
 
 /** 수분감·유분감은 0~3 단계다. */
 const LEVEL_MIN = 0;
@@ -52,7 +54,7 @@ export const EMPTY_FILTER: Filter = {
   excludeIngredientIds: [],
   excludeCodes: [],
   sort: DEFAULT_SORT,
-  page: 0,
+  page: FIRST_PAGE,
   size: DEFAULT_SIZE,
 };
 
@@ -126,8 +128,7 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeIngredientIds: readIds(params, "excludeIngredientIds"),
     excludeCodes: readCodes(params),
     sort: readSort(params),
-    // 페이지는 0 부터 시작하지만, 한 페이지에 0 개를 담을 수는 없다.
-    page: readCount(params, "page", { fallback: 0, min: 0 }),
+    page: readCount(params, "page", { fallback: FIRST_PAGE, min: FIRST_PAGE }),
     size: readCount(params, "size", { fallback: DEFAULT_SIZE, min: 1 }),
   };
 };
@@ -151,7 +152,7 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("excludeCodes", filter.excludeCodes),
     ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
-    ...keepIf<Entry>(filter.page !== 0, ["page", String(filter.page)]),
+    ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
   ]);
 
@@ -171,5 +172,5 @@ export const hasCondition = (filter: Filter): boolean =>
 export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter => ({
   ...filter,
   ...changed,
-  page: 0,
+  page: FIRST_PAGE,
 });

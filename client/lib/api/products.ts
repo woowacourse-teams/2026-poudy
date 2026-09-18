@@ -20,7 +20,7 @@ import type {
 import { apiGet, apiPost } from "./client";
 
 import type { Filter } from "@/lib/domain/filter";
-import { serializeFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, serializeFilter } from "@/lib/domain/filter";
 
 const INGREDIENT_PAGE_SIZE = 100;
 
@@ -51,7 +51,7 @@ export const fetchProductDetail = (productId: number): Promise<ProductDetailResp
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
-export const fetchProductSuggestions = (keyword: string, page = 0): Promise<ProductSuggestionPageResponse> =>
+export const fetchProductSuggestions = (keyword: string, page = FIRST_PAGE): Promise<ProductSuggestionPageResponse> =>
   apiGet("/api/products/suggestions", new URLSearchParams({ keyword, page: String(page) }));
 
 export const fetchIngredients = (query: {
@@ -73,7 +73,7 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
   if (ingredientIds.length === 0) return { items: [] };
 
   const items: IngredientPageResponse["items"] = [];
-  let page = 0;
+  let page = FIRST_PAGE;
   let hasNext = true;
 
   while (hasNext) {
