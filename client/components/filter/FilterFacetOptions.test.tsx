@@ -18,6 +18,17 @@ function Sheet({ facet, initial }: { readonly facet: FilterFacet; readonly initi
 }
 
 describe("자기 조건을 제외한 시트 선택지", () => {
+  it("이미 고른 소분류 외에 다른 소분류도 추가할 수 있다", async () => {
+    render(<Sheet facet="category" initial={{ ...EMPTY_FILTER, categoryIds: [3] }} />);
+    const choices = (await screen.findAllByRole("checkbox")).filter((choice) => choice.textContent !== "전체");
+    expect(choices.length).toBeGreaterThan(1);
+    const selected = choices.find((choice) => choice.getAttribute("aria-checked") === "true")!;
+    const other = choices.find((choice) => choice.getAttribute("aria-checked") === "false")!;
+    await userEvent.click(other);
+    expect(selected).toBeChecked();
+    expect(other).toBeChecked();
+  });
+
   it("이미 고른 브랜드를 유지하면서 두 번째 브랜드를 더 고른다", async () => {
     render(<Sheet facet="brand" initial={{ ...EMPTY_FILTER, brandIds: [1] }} />);
     const choices = await screen.findAllByRole("checkbox");
