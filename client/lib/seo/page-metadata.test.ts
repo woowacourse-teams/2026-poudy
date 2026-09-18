@@ -355,6 +355,8 @@ describe("공유 메타데이터", () => {
       name: "장벽 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "https://images.example/cream.png",
+      categories: [],
+      variants: [],
       ingredients: [{ id: 1 }, { id: 2 }],
     });
 
@@ -364,7 +366,7 @@ describe("공유 메타데이터", () => {
     });
     const markup = renderToStaticMarkup(element);
 
-    expect(markup).not.toContain("application/ld+json");
+    expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).not.toContain('"@type":"Product"');
   });
 });

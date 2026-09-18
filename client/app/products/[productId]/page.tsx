@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProductDetail } from "@/components/product/ProductDetail";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
 import { productIngredientDescription } from "@/lib/domain/product-display";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_DESCRIPTION } from "@/lib/seo/site";
+import { breadcrumbList, productCrumbs, productStructuredData } from "@/lib/seo/structured-data";
 
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
 export const revalidate = 86400;
@@ -62,5 +64,11 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
   const searchParams = (await props.searchParams) ?? {};
   const product = await load(productId);
 
-  return <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />;
+  return (
+    <>
+      <JsonLd data={breadcrumbList(productCrumbs(product))} />
+      <JsonLd data={productStructuredData(product)} />
+      <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />
+    </>
+  );
 }

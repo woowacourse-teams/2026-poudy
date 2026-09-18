@@ -5,15 +5,18 @@ import { cache } from "react";
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
+import type { InitialPage } from "@/lib/hooks/useProductPages";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { breadcrumbList, itemList } from "@/lib/seo/structured-data";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 const load = cache(async (raw: string) => {
@@ -33,6 +36,12 @@ const load = cache(async (raw: string) => {
  * 카탈로그 조회의 fetch 캐시는 이 설정과 무관하게 그대로 동작한다.
  */
 export const dynamic = "force-dynamic";
+
+/** 이 장에 담긴 제품을 구조화 데이터로 싣는다. 번호는 목록 전체에서의 자리로 센다. */
+const pageItemList = (filter: Filter, initialPage: InitialPage | undefined) => {
+  if (!initialPage) return undefined;
+  return itemList(initialPage.response.items, (filter.page - 1) * filter.size + 1);
+};
 
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
@@ -73,6 +82,12 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
 
   return (
     <section className="flex items-center gap-3 px-4">
+      <JsonLd
+        data={breadcrumbList([
+          { name: "브랜드", path: "/brands" },
+          { name: brand.name, path: `/brands/${brand.id}` },
+        ])}
+      />
       <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
       <div className="flex flex-col gap-0.5">
         <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
@@ -108,14 +123,17 @@ async function BrandProducts({
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
   return (
-    <ProductList
-      basePath={`/brands/${brand.id}`}
-      surface="brand"
-      fixedFilter={{ brandIds }}
-      hiddenChips={["brand"]}
-      excludeCodes={excludeCodes.items}
-      initialPage={initialPage}
-    />
+    <>
+      <JsonLd data={pageItemList(filter, initialPage)} />
+      <ProductList
+        basePath={`/brands/${brand.id}`}
+        surface="brand"
+        fixedFilter={{ brandIds }}
+        hiddenChips={["brand"]}
+        excludeCodes={excludeCodes.items}
+        initialPage={initialPage}
+      />
+    </>
   );
 }
 
