@@ -14,10 +14,18 @@ import { fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
 import { STALE_MS } from "@/lib/storage/list-cache";
-import { readProductPages, rememberScrollPosition, writeProductPages } from "@/lib/storage/product-pages-cache";
+import {
+  productPagesKey,
+  readProductPages,
+  rememberScrollPosition,
+  writeProductPages,
+} from "@/lib/storage/product-pages-cache";
 
 type PageState = {
   readonly key: string;
+  /** 목록이 시작한 장. 주소의 `?page=N` 으로 들어오면 첫 장이 아닐 수 있다. */
+  readonly first: number;
+  /** 지금까지 받은 가장 마지막 장. */
   readonly page: number;
   readonly items: readonly ProductResponse[];
   /** 지금 조건에 걸린 제품 전체의 브랜드. 페이지에 걸리지 않는다. */
@@ -33,6 +41,8 @@ type PageState = {
   readonly loaded: boolean;
   /** 아직 받아 오지 않은 장. 없으면 받을 것이 없다. */
   readonly pendingPage?: number;
+  /** 위에 붙일 앞쪽 장. 중간 장부터 들어온 사람이 앞으로 돌아갈 때 받는다. */
+  readonly pendingPreviousPage?: number;
   /** 캐시에서 되살렸는지. 보던 자리로 되돌릴 대상인지 가른다. */
   readonly restored: boolean;
   /** 되살린 장 전체를 다시 받는 중인지. 그동안에도 담아 둔 목록을 보여 준다. */
@@ -47,8 +57,7 @@ export type InitialPage = {
   readonly response: ProductPageResponse;
 };
 
-const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
-  page: FIRST_PAGE,
+const EMPTY_PAGE_STATE: Omit<PageState, "key" | "first" | "page" | "pendingPage"> = {
   items: [],
   brands: [],
   categories: [],
@@ -57,7 +66,6 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
   hasNext: false,
   loading: true,
   loaded: false,
-  pendingPage: FIRST_PAGE,
   restored: false,
   revalidating: false,
 };
@@ -66,18 +74,20 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key"> = {
  * 담아 둔 조건이면 이어 붙인 목록을 통째로 되살린다.
  * 첫 그리기부터 문서 높이가 살아 있어야 보던 자리로 되돌릴 수 있다.
  */
-const initialState = (key: string, seed?: ProductPageResponse): PageState => {
+const initialState = (key: string, first: number, seed?: ProductPageResponse): PageState => {
   const cached = readProductPages(key);
   if (!cached) {
+    const empty = { ...EMPTY_PAGE_STATE, key, first, page: first, pendingPage: first };
     // 서버가 첫 장을 그려 보냈으면 그것으로 시작한다. 같은 장을 다시 받지 않는다.
-    if (seed)
-      return { ...merged({ ...EMPTY_PAGE_STATE, key }, FIRST_PAGE, seed), restored: false, revalidating: false };
-    return { ...EMPTY_PAGE_STATE, key };
+    if (seed) return { ...merged(empty, first, seed), restored: false, revalidating: false };
+    return empty;
   }
 
   const { page, items, brands, categories, skinTypes, total, hasNext, fetchedAt } = cached;
   return {
     key,
+    // 앞쪽 장을 붙였으면 주소의 장보다 앞에서 시작한다.
+    first: cached.first,
     page,
     items,
     brands,
@@ -93,10 +103,10 @@ const initialState = (key: string, seed?: ProductPageResponse): PageState => {
   };
 };
 
-/** 첫 페이지는 갈아 끼우고 다음 페이지는 이어 붙인다. */
+/** 시작한 장은 갈아 끼우고 다음 장은 이어 붙인다. */
 const merged = (previous: PageState, page: number, response: ProductPageResponse): PageState => ({
   ...previous,
-  items: page === FIRST_PAGE ? response.items : [...previous.items, ...response.items],
+  items: page === previous.first ? response.items : [...previous.items, ...response.items],
   // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
   brands: response.brands,
   categories: response.categories,
@@ -107,6 +117,35 @@ const merged = (previous: PageState, page: number, response: ProductPageResponse
   loaded: true,
   pendingPage: undefined,
 });
+
+/** 앞쪽 장은 위에 붙인다. 뒤쪽 끝과 다음 장 여부는 그대로다. */
+const prepended = (previous: PageState, page: number, response: ProductPageResponse): PageState => ({
+  ...previous,
+  first: page,
+  items: [...response.items, ...previous.items],
+  total: response.pagination.totalElements,
+  pendingPreviousPage: undefined,
+});
+
+const useFetchPreviousPage = (key: string, state: PageState, setState: SetPageState) => {
+  const { pendingPreviousPage } = state;
+
+  useEffect(() => {
+    if (pendingPreviousPage === undefined) return;
+
+    const controller = new AbortController();
+    const keep = (update: (previous: PageState) => PageState) => {
+      if (controller.signal.aborted) return;
+      setState((previous) => (previous.key === key ? update(previous) : previous));
+    };
+
+    fetchProducts({ ...JSON.parse(key), page: pendingPreviousPage })
+      .then((response) => keep((previous) => prepended(previous, pendingPreviousPage, response)))
+      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined })));
+
+    return () => controller.abort();
+  }, [key, pendingPreviousPage, setState]);
+};
 
 const useFetchPage = (key: string, state: PageState, setState: SetPageState) => {
   const { pendingPage } = state;
@@ -129,10 +168,10 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
 };
 
 /** 쌓아 둔 장을 전부 다시 받는다. 첫 장만 받으면 이어 붙인 목록이 스무 건으로 덮인다. */
-const refetchPages = async (key: string, lastPage: number): Promise<readonly ProductPageResponse[]> => {
+const refetchPages = async (key: string, first: number, lastPage: number): Promise<readonly ProductPageResponse[]> => {
   const filter = JSON.parse(key);
   return Promise.all(
-    Array.from({ length: lastPage }, (_, index) => fetchProducts({ ...filter, page: FIRST_PAGE + index })),
+    Array.from({ length: lastPage - first + 1 }, (_, index) => fetchProducts({ ...filter, page: first + index })),
   );
 };
 
@@ -152,7 +191,7 @@ const revalidated = (previous: PageState, responses: readonly ProductPageRespons
 
 /** 오래된 목록만 다시 받는다. 받는 동안에도 담아 둔 목록을 그대로 보여 준다. */
 const useRevalidate = (key: string, state: PageState, setState: SetPageState) => {
-  const { revalidating, page } = state;
+  const { revalidating, first, page } = state;
 
   useEffect(() => {
     if (!revalidating) return;
@@ -163,24 +202,24 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
       setState((previous) => (previous.key === key ? update(previous) : previous));
     };
 
-    refetchPages(key, page)
+    refetchPages(key, first, page)
       .then((responses) => keep((previous) => revalidated(previous, responses)))
       .catch(() => keep((previous) => ({ ...previous, revalidating: false })));
 
     return () => controller.abort();
-  }, [key, revalidating, page, setState]);
+  }, [key, revalidating, first, page, setState]);
 };
 
 /**
  * 장이 늘 때마다 담아 둔다. 보던 자리는 상태를 바꾸지 않으므로 따로 적어 둔다.
  */
 const useRememberPages = (key: string, state: PageState) => {
-  const { loaded, loading, revalidating, page, items, brands, categories, skinTypes, total, hasNext } = state;
+  const { loaded, loading, revalidating, first, page, items, brands, categories, skinTypes, total, hasNext } = state;
 
   useEffect(() => {
     if (!loaded || loading || revalidating) return;
-    writeProductPages(key, { page, items, brands, categories, skinTypes, total, hasNext });
-  }, [key, loaded, loading, revalidating, page, items, brands, categories, skinTypes, total, hasNext]);
+    writeProductPages(key, { first, page, items, brands, categories, skinTypes, total, hasNext });
+  }, [key, loaded, loading, revalidating, first, page, items, brands, categories, skinTypes, total, hasNext]);
 
   /*
    * 보던 자리는 떠나는 순간에만 잰다. 담아 둔 값은 돌아올 때 한 번 읽히는데, 스크롤마다
@@ -220,18 +259,22 @@ const seedFor = (initial: InitialPage | undefined, key: string): ProductPageResp
   return initial.response;
 };
 
-/** 조건이 바뀌면 목록을 처음부터 다시 쌓고, 떠났다 돌아오면 담아 둔 목록에서 잇는다. */
+/**
+ * 조건이 바뀌면 목록을 처음부터 다시 쌓고, 떠났다 돌아오면 담아 둔 목록에서 잇는다.
+ * 조건의 `page` 는 목록이 시작할 장이다. 그 뒤로는 주소를 바꾸지 않고 장을 이어 붙인다.
+ */
 export const useProductPages = (filter: Filter, initial?: InitialPage) => {
-  const key = JSON.stringify({ ...filter, page: FIRST_PAGE });
+  const key = productPagesKey(filter);
   // 서버가 본 조건과 지금 조건이 같을 때만 쓴다. 조건이 바뀌면 씨앗은 버린다.
   const seed = seedFor(initial, key);
-  const [state, setState] = useState<PageState>(() => initialState(key, seed));
+  const [state, setState] = useState<PageState>(() => initialState(key, filter.page, seed));
 
   // 조건이 바뀌면 렌더링 중에 목록을 갈아 끼운다. effect 에서 되돌리면 한 번 더 그리게 된다.
-  const current = state.key === key ? state : initialState(key, seed);
+  const current = state.key === key ? state : initialState(key, filter.page, seed);
   if (state.key !== key) setState(current);
 
   useFetchPage(key, current, setState);
+  useFetchPreviousPage(key, current, setState);
   useRevalidate(key, current, setState);
   useRememberPages(key, current);
   useRestoreScroll(key, current);
@@ -240,5 +283,12 @@ export const useProductPages = (filter: Filter, initial?: InitialPage) => {
     setState((previous) => ({ ...previous, page: previous.page + 1, pendingPage: previous.page + 1, loading: true }));
   }, []);
 
-  return { ...current, loadNext };
+  const loadPrevious = useCallback(() => {
+    setState((previous) => {
+      if (previous.first <= FIRST_PAGE || previous.pendingPreviousPage !== undefined) return previous;
+      return { ...previous, pendingPreviousPage: previous.first - 1 };
+    });
+  }, []);
+
+  return { ...current, loadingPrevious: current.pendingPreviousPage !== undefined, loadNext, loadPrevious };
 };

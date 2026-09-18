@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, searchEnginesAllowed, siteUrl } from "./site";
 
+import { FIRST_PAGE } from "@/lib/domain/filter";
+
 /** 네이버 서치어드바이저가 사이트 소유를 확인하는 값. 소스에 드러나도 도메인 밖에서는 쓸 수 없다. */
 const NAVER_SITE_VERIFICATION = "f61dfe971733b0d1d2e8b1a8e3cda559b5b62264";
 
@@ -12,6 +14,15 @@ const defaultRobots = (): Robots => {
   if (searchEnginesAllowed()) return { index: true, follow: true };
 
   return { index: false, follow: false };
+};
+
+/**
+ * 목록의 장마다 자기 주소를 canonical 로 둔다. 첫 장으로 모으면 검색 엔진이 뒤쪽 장과
+ * 그 안의 제품 링크를 버린다. 필터 조건은 남기지 않고 장만 남긴다.
+ */
+export const pagedCanonical = (path: string, page: number): string => {
+  if (page === FIRST_PAGE) return path;
+  return `${path}?page=${page}`;
 };
 
 /** 공유 카드. 카카오톡과 X 가 같은 그림과 문구를 쓴다. */

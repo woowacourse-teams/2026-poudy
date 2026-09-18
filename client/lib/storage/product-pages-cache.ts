@@ -2,9 +2,13 @@ import type { BrandResponse, CategoryResponse, ProductResponse, SkinTypeResponse
 
 import { createListCache } from "./list-cache";
 
+import type { Filter } from "@/lib/domain/filter";
+
 /** 조건 하나에 대해 이어 붙인 제품 목록 전체. */
 export type ProductPages = {
-  /** 지금까지 받은 가장 마지막 장. 1 이면 첫 장만 받았다는 뜻이다. */
+  /** 목록이 시작한 장. 중간 장부터 들어왔거나 앞쪽 장을 붙였으면 1 이 아닐 수 있다. */
+  readonly first: number;
+  /** 지금까지 받은 가장 마지막 장. */
   readonly page: number;
   readonly items: readonly ProductResponse[];
   readonly brands: readonly BrandResponse[];
@@ -21,6 +25,12 @@ export type ProductPages = {
 const LIMIT = 5;
 
 const cache = createListCache<ProductPages>(LIMIT);
+
+/**
+ * 조건 하나를 가리키는 키. 주소의 `page` 는 목록이 시작할 장이라 조건과 함께 넣는다.
+ * 서버가 그린 첫 장을 클라이언트가 같은 키로 알아본다.
+ */
+export const productPagesKey = (filter: Filter): string => JSON.stringify(filter);
 
 export const readProductPages = cache.read;
 export const writeProductPages = cache.write;

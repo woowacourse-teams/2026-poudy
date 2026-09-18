@@ -248,6 +248,26 @@ describe("공유 메타데이터", () => {
     expect(brand.openGraph).toMatchObject({ url: "/brands/7" });
   });
 
+  it("브랜드·카테고리 목록의 뒤쪽 장은 자기 주소를 canonical 로 둔다", async () => {
+    api.fetchBrand.mockResolvedValue({ name: "파우디" });
+    api.fetchCategories.mockResolvedValue({ items: [{ id: 4, name: "메이크업", children: [] }] });
+
+    const [brand, category, first] = await Promise.all([
+      brandMetadata({
+        params: Promise.resolve({ brandId: "7" }),
+        searchParams: Promise.resolve({ page: "3", sort: "PRICE_ASC" }),
+      }),
+      categoryMetadata({ params: Promise.resolve({ categoryId: "4" }), searchParams: Promise.resolve({ page: "2" }) }),
+      brandMetadata({ params: Promise.resolve({ brandId: "7" }), searchParams: Promise.resolve({ page: "1" }) }),
+    ]);
+
+    // 필터 조건은 남기지 않고 장만 남긴다. 첫 장은 쿼리 없이 둔다.
+    expect(brand.alternates?.canonical).toBe("/brands/7?page=3");
+    expect(brand.openGraph).toMatchObject({ url: "/brands/7?page=3" });
+    expect(category.alternates?.canonical).toBe("/categories/4?page=2");
+    expect(first.alternates?.canonical).toBe("/brands/7");
+  });
+
   it("제품 설명문에 브랜드·제품명과 본문 성분 요약을 담고 og:url 을 canonical 과 맞춘다", async () => {
     api.fetchProductDetail.mockResolvedValue({
       id: 104,
