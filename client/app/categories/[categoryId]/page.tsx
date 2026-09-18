@@ -136,18 +136,22 @@ async function CategoryProducts({
 export default async function CategoryProductsPage(props: PageProps<"/categories/[categoryId]">) {
   const [{ categoryId }, searchParams] = await Promise.all([props.params, props.searchParams]);
   const id = Number(categoryId);
+  if (!Number.isInteger(id)) notFound();
+
+  /*
+   * 카테고리 이름이 이 화면의 대표 제목이라 바에 먼저 그린다. 카테고리 목록은 오래 캐시되어
+   * 셸을 거의 늦추지 않고, 없는 카테고리면 스트리밍 전이라 404 를 낼 수 있다.
+   */
+  const { name, categoryIds } = await resolveCategory(id);
   const filter = parseFilter(toSearchParams(searchParams));
 
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
-  if (!stream && Number.isInteger(id)) {
-    const { categoryIds } = await resolveCategory(id);
-    await requireProductPage({ ...filter, categoryIds });
-  }
+  if (!stream) await requireProductPage({ ...filter, categoryIds });
 
   return (
     <>
-      <TopBar title="카테고리" variant="root" showBack />
+      <TopBar title={name} variant="root" showBack />
 
       <StreamBoundary stream={stream} fallback={<CategoryTrackSkeleton />}>
         <CategoryTrackContent params={props.params} />
