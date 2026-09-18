@@ -79,6 +79,7 @@ describe("ProductList 브랜드 시트", () => {
           items: [],
           pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
           brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
+          filterOptions: { brands: [{ id: 1, name: "라운드랩" }], categories: [], skinTypes: [] },
         }),
       ),
     );

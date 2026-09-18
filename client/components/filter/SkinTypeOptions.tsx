@@ -7,7 +7,7 @@ import { type SkinType } from "@/lib/domain/filter";
 type SkinTypeOptionsProps = {
   readonly selected: SkinType | undefined;
   readonly onSelect: (skinType: SkinType) => void;
-  /** 지금 조건에 걸린 제품이 드는 피부 타입. 고를 수 없는 것은 오지 않는다. */
+  /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
 };
 
