@@ -7,6 +7,7 @@ import { chipsOf } from "./product-chips";
 import { ProductRowsSkeleton } from "./ProductListSkeleton";
 
 import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
+import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, SearchMode } from "@/lib/analytics/events";
@@ -51,6 +52,13 @@ const pageHref = (basePath: string, filter: Filter, page: number): string => {
   return `${basePath}?${query}`;
 };
 
+/** 다음 장 링크의 문구. 실패했으면 저절로 다시 부르지 않으므로 누르라고 알린다. */
+const nextLabel = (loading: boolean, failed: boolean): string => {
+  if (loading) return "불러오는 중…";
+  if (failed) return "불러오지 못했어요 · 다시 시도";
+  return "제품 더 보기";
+};
+
 /** 새 탭으로 여는 클릭은 브라우저에 맡긴다. */
 const opensElsewhere = (event: MouseEvent<HTMLAnchorElement>): boolean =>
   event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
@@ -88,11 +96,14 @@ export function ProductRows({
     loading,
     loadingPrevious,
     loaded,
+    failed,
+    retry,
   } = useProductPages(filter, initialPage);
-  const sentinel = useInfiniteScroll<HTMLAnchorElement>(hasNext && !loading, loadNext);
+  const sentinel = useInfiniteScroll<HTMLAnchorElement>(hasNext && !loading && !failed, loadNext);
   const restoreAnchor = useRef<() => void>(undefined);
 
-  const empty = items.length === 0 && !loading;
+  // 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
+  const empty = loaded && items.length === 0 && !loading;
   const searchMode = searchModeOf(filter);
   const trackedResultKey = useRef<string | undefined>(undefined);
 
@@ -111,7 +122,12 @@ export function ProductRows({
   const onClickNext = (event: MouseEvent<HTMLAnchorElement>) => {
     if (opensElsewhere(event)) return;
     event.preventDefault();
-    if (!loading) loadNext();
+    if (loading) return;
+    if (failed) {
+      retry();
+      return;
+    }
+    loadNext();
   };
 
   // 앞쪽 장을 위에 붙이면 보던 제품이 그만큼 밀려 내려가므로, 붙인 뒤 같은 자리로 되돌린다.
@@ -165,6 +181,7 @@ export function ProductRows({
   // 서버 응답이 없거나 조건을 바꿔 첫 장을 기다릴 때도 카드 자리를 유지한다.
   // 데이터가 오면 각 ProductCard가 자기 이미지 완료 상태로 독립적으로 열린다.
   if (loading && items.length === 0) return <ProductRowsSkeleton />;
+  if (failed && !loaded) return <ProductRowsError onRetry={retry} />;
 
   return (
     <>
@@ -210,7 +227,7 @@ export function ProductRows({
             onClick={onClickNext}
             className="flex h-10 items-center justify-center text-[13px] text-text-secondary"
           >
-            {loading ? "불러오는 중…" : "제품 더 보기"}
+            {nextLabel(loading, failed)}
           </a>
         ) : (
           <div className="h-10" />
@@ -238,5 +255,27 @@ export function ProductRows({
         initialCount={total}
       />
     </>
+  );
+}
+
+/**
+ * 첫 장을 받지 못했을 때. 제품이 없다고 하지 않고 받지 못했다고 말한다.
+ * 모양은 화면이 무너졌을 때의 에러 화면(`app/error.tsx`)을 따른다.
+ */
+function ProductRowsError({ onRetry }: { readonly onRetry: () => void }) {
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
+      <Icon name="info" size={28} className="text-text-secondary" />
+      <p className="text-[15px] font-bold text-text-primary">제품을 불러오지 못했어요</p>
+      <p className="text-center text-[12px] text-text-secondary">잠시 후 다시 시도해 주세요.</p>
+
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 h-11 rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
+      >
+        다시 시도
+      </button>
+    </main>
   );
 }
