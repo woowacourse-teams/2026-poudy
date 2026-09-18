@@ -4,7 +4,7 @@ import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
@@ -70,7 +70,34 @@ const rememberFilter = (keyword: string) => {
   });
 };
 
-export function ProductSearchPanel() {
+const PLACEHOLDER = "브랜드 또는 제품명을 입력해 주세요";
+const LABEL = "제품명 검색";
+
+type ProductSearchPanelProps = {
+  /** 검색어가 없을 때 최근 검색 위에 두는 것. 서버가 그려 넘긴다. */
+  readonly children?: ReactNode;
+};
+
+const ignore = () => {};
+
+/**
+ * 검색어를 읽기 전의 S02. 검색어가 없을 때와 같은 모양이다.
+ *
+ * 검색어는 주소에서 읽어 브라우저에서만 알 수 있어, 미리 만든 HTML 에는 이 모양이 담긴다.
+ * 최근 검색은 기기에만 있어 여기서는 그리지 않는다.
+ */
+export function ProductSearchPanelFallback({ children }: ProductSearchPanelProps) {
+  return (
+    <div className="flex flex-col gap-6 p-4">
+      <div className="flex flex-col gap-2">
+        <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   // 상세로 갔다 돌아왔을 때 주소에 남은 검색어로 다시 시작한다.
@@ -172,8 +199,8 @@ export function ProductSearchPanel() {
         <SearchField
           value={keyword}
           onChange={changeKeyword}
-          placeholder="브랜드 또는 제품명을 입력해 주세요"
-          label="제품명 검색"
+          placeholder={PLACEHOLDER}
+          label={LABEL}
           onSubmit={handleSubmit}
         />
         {/*
@@ -292,7 +319,10 @@ export function ProductSearchPanel() {
           )}
         </>
       ) : (
-        <RecentSearches items={recent} />
+        <>
+          {children}
+          <RecentSearches items={recent} />
+        </>
       )}
     </div>
   );
