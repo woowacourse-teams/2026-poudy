@@ -149,6 +149,7 @@ class ProductServiceTest {
         ProductPage found = service.findProducts(query, ProductSort.NAME_ASC, 1, 20);
 
         assertThat(found.totalElements()).isEqualTo(1);
+        assertThat(output.getOut()).containsOnlyOnce("event=search_completed");
         assertThat(output).contains(
             "searchType=PRODUCT_SEARCH",
             "keyword=\"제품\"",

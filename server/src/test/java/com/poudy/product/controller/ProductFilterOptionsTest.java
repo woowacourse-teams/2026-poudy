@@ -77,7 +77,7 @@ class ProductFilterOptionsTest {
         mockMvc.perform(get("/api/products").param("page", "1").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty());
         mockMvc.perform(get("/api/products").param("page", "2").param("size", "1"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotExist())
+            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.brands").isNotEmpty());
     }
 
