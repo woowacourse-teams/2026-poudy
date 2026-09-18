@@ -180,10 +180,14 @@ public final class Products {
         ProductFilter filter,
         Categories categories
     ) {
+        List<Product> brandCandidates = matching(candidates, filter.withoutBrands());
+        List<Product> categoryCandidates = matching(candidates, filter.withoutCategories());
+        List<Product> skinTypeCandidates = matching(candidates, filter.withoutSkinType());
+
         return new ProductFilterOptions(
-            brandsOf(matching(candidates, filter.withoutBrands())),
-            countsByCategory(matching(candidates, filter.withoutCategories())).nonEmptyCategoriesOf(categories),
-            skinTypesOf(matching(candidates, filter.withoutSkinType()))
+            brandsOf(brandCandidates),
+            countsByCategory(categoryCandidates).nonEmptyCategoriesOf(categories),
+            skinTypesOf(skinTypeCandidates)
         );
     }
 
