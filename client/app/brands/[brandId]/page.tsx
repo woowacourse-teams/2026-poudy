@@ -37,13 +37,14 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
   const { page } = parseFilter(toSearchParams(await props.searchParams));
+  // 조회에 실패해도 canonical 은 남긴다. 비워 두면 필터가 붙은 주소가 저마다 원본 행세를 한다.
+  const canonical = pagedCanonical(`/brands/${brandId}`, page);
 
   try {
     const brand = await fetchBrand(Number(brandId));
     const title = `${brand.name} 제품`;
     const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
     const image = `/brands/${brandId}/opengraph-image`;
-    const canonical = pagedCanonical(`/brands/${brandId}`, page);
     return {
       title,
       description,
@@ -52,7 +53,7 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
-    return {};
+    return { alternates: { canonical } };
   }
 }
 

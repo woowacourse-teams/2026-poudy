@@ -30,6 +30,9 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 
   // 메타데이터는 렌더링 경로 밖이라 여기서 notFound() 를 부르지 않는다.
   // 없는 제품 판정은 페이지 컴포넌트가 맡는다.
+  // 조회에 실패해도 canonical 은 남긴다. 비워 두면 유입 경로가 붙은 주소가 저마다 원본 행세를 한다.
+  const canonical = `/products/${productId}`;
+
   try {
     const product = await fetchProductDetail(Number(productId));
     const title = `${product.brand.name} ${product.name} 전성분`;
@@ -42,7 +45,6 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
     });
     const image = product.imageUrl || "/opengraph-image";
     const imageAlt = product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : SITE_DESCRIPTION;
-    const canonical = `/products/${productId}`;
     return {
       title,
       description,
@@ -51,7 +53,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
       twitter: { card: "summary_large_image", title, description, images: [{ url: image, alt: imageAlt }] },
     };
   } catch {
-    return {};
+    return { alternates: { canonical } };
   }
 }
 
