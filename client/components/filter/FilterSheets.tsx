@@ -1,13 +1,11 @@
 "use client";
 
-import type { BrandResponse, CategoryResponse, ExcludeCodeResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
-import { BrandOptions } from "./BrandOptions";
-import { CategoryOptions } from "./CategoryOptions";
+import { FilterFacetOptions } from "./FilterFacetOptions";
 import { IngredientOptions } from "./IngredientOptions";
 import { LevelRange } from "./LevelRangeOptions";
-import { SkinTypeOptions } from "./SkinTypeOptions";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
@@ -23,10 +21,6 @@ type FilterSheetsProps = {
   readonly onClose: () => void;
   readonly filter: Filter;
   readonly onApply: (changed: Partial<Filter>) => void;
-  readonly categories: readonly CategoryResponse[];
-  readonly brands: readonly BrandResponse[];
-  /** 지금 조건에 걸린 제품이 드는 피부 타입. 고를 수 없는 것은 오지 않는다. */
-  readonly skinTypes: readonly SkinTypeResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
@@ -67,12 +61,17 @@ export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
    * BottomSheet 가 아무리 기다려도 이미 트리에서 빠진 뒤라 내려가는 모습이 보이지 않는다.
    * 마지막으로 열었던 종류를 기억해 두고 그 내용을 그대로 그린다.
    */
-  const [lastKind, setLastKind] = useState(openSheet);
+  const [session, setSession] = useState({ kind: openSheet, open: Boolean(openSheet), number: 0 });
 
-  if (openSheet && openSheet !== lastKind) setLastKind(openSheet);
-  if (!lastKind) return null;
+  if (openSheet && (!session.open || openSheet !== session.kind)) {
+    setSession({ kind: openSheet, open: true, number: session.number + 1 });
+  } else if (!openSheet && session.open) {
+    setSession({ ...session, open: false });
+  }
+  if (!session.kind) return null;
 
-  return <SheetBody key={lastKind} kind={lastKind} open={Boolean(openSheet)} {...rest} />;
+  // 같은 시트를 다시 열어도 적용된 조건에서 시작하고 후보를 새로 조회한다.
+  return <SheetBody key={session.number} kind={session.kind} open={Boolean(openSheet)} {...rest} />;
 }
 
 function SheetBody({
@@ -80,9 +79,6 @@ function SheetBody({
   onClose,
   filter,
   onApply,
-  categories,
-  brands,
-  skinTypes,
   excludeCodes,
   initialCount,
   open,
@@ -115,27 +111,8 @@ function SheetBody({
       <BottomSheet.Header title={TITLES[kind]} description={DESCRIPTIONS[kind]} />
 
       <BottomSheet.Body>
-        {kind === "category" ? (
-          <CategoryOptions
-            categories={categories}
-            selectedIds={draft.categoryIds}
-            onSelect={(categoryIds) => setDraft({ ...draft, categoryIds })}
-          />
-        ) : null}
-
-        {kind === "brand" ? (
-          <BrandOptions
-            brands={brands}
-            selectedIds={draft.brandIds}
-            onToggle={(brandId) =>
-              setDraft({
-                ...draft,
-                brandIds: draft.brandIds.includes(brandId)
-                  ? draft.brandIds.filter((id) => id !== brandId)
-                  : [...draft.brandIds, brandId],
-              })
-            }
-          />
+        {kind === "category" || kind === "brand" || kind === "skinType" ? (
+          <FilterFacetOptions facet={kind} draft={draft} onChange={setDraft} />
         ) : null}
 
         {kind === "level" ? (
@@ -160,14 +137,6 @@ function SheetBody({
               />
             </section>
           </>
-        ) : null}
-
-        {kind === "skinType" ? (
-          <SkinTypeOptions
-            selected={draft.skinType}
-            onSelect={(skinType) => setDraft({ ...draft, skinType })}
-            skinTypes={skinTypes}
-          />
         ) : null}
 
         {kind === "ingredient" ? (

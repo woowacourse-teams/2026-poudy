@@ -27,7 +27,9 @@ const openSheet = async (name: RegExp) => {
   await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
   await userEvent.click(screen.getByRole("button", { name }));
 
-  return within(await screen.findByRole("dialog"));
+  const sheet = within(await screen.findByRole("dialog"));
+  await waitFor(() => expect(sheet.queryByRole("status")).not.toBeInTheDocument());
+  return sheet;
 };
 
 /*

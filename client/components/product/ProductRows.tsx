@@ -44,8 +44,7 @@ const searchModeOf = (filter: Filter): SearchMode | undefined => {
 /**
  * 정렬 줄과 제품 행. 첫 장이 도착해야 그릴 수 있는 것만 모아 둔다.
  *
- * 필터 시트도 여기 있다. 시트는 지금 조건에 걸린 브랜드와 결과 개수를 쓰는데 둘 다
- * 목록 응답에서 나오고, 열리기 전에는 아무것도 그리지 않아 기다려도 손해가 없다.
+ * 필터 시트는 목록의 결과 수를 초기값으로 쓰고, 선택지는 자기 조건을 뺀 요청으로 구한다.
  */
 export function ProductRows({
   filter,
@@ -59,19 +58,7 @@ export function ProductRows({
   const { setCondition, setSort } = useFilterQuery(basePath);
   const { isSaved, toggle } = useSavedProducts();
 
-  const {
-    key,
-    items,
-    brands: matchedBrands,
-    categories: matchedCategories,
-    skinTypes: matchedSkinTypes,
-    total,
-    page,
-    hasNext,
-    loadNext,
-    loading,
-    loaded,
-  } = useProductPages(filter, initialPage);
+  const { key, items, total, page, hasNext, loadNext, loading, loaded } = useProductPages(filter, initialPage);
   const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
 
   const empty = items.length === 0 && !loading;
@@ -164,9 +151,6 @@ export function ProductRows({
             });
           }
         }}
-        categories={matchedCategories}
-        brands={matchedBrands}
-        skinTypes={matchedSkinTypes}
         excludeCodes={excludeCodes}
         initialCount={total}
       />
