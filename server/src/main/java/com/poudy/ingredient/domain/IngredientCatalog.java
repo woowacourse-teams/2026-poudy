@@ -61,12 +61,12 @@ public final class IngredientCatalog {
     }
 
     public IngredientPage page(int page, int size) {
-        if (page < 0 || size < 1) {
+        if (page < 1 || size < 1) {
             throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
         }
 
         List<Ingredient> items = ingredients.values().stream()
-            .skip((long) page * size)
+            .skip((long) (page - 1) * size)
             .limit(size)
             .toList();
 

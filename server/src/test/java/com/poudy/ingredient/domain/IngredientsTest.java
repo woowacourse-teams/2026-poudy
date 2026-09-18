@@ -81,7 +81,7 @@ class IngredientsTest {
             )
         );
 
-        IngredientPage page = ingredients.page(1, 2);
+        IngredientPage page = ingredients.page(2, 2);
 
         assertThat(page.items()).map(Ingredient::id).containsExactly(30L);
         assertThat(page.totalElements()).isEqualTo(3);
@@ -92,8 +92,8 @@ class IngredientsTest {
     void rejectsInvalidPageCondition() {
         IngredientCatalog ingredients = IngredientCatalog.from(List.of());
 
-        assertThatThrownBy(() -> ingredients.page(-1, 20)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> ingredients.page(0, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ingredients.page(0, 20)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ingredients.page(1, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

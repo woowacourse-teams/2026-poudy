@@ -1181,14 +1181,14 @@
           {
             "name": "page",
             "in": "query",
-            "description": "조회할 페이지 번호 (0부터 시작)",
+            "description": "조회할 페이지 번호 (1부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 0,
-              "description": "조회할 페이지 번호 (0부터 시작)",
-              "minimum": 0
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
             }
           },
           {
@@ -1370,14 +1370,14 @@
           {
             "name": "page",
             "in": "query",
-            "description": "조회할 페이지 번호 (0부터 시작)",
+            "description": "조회할 페이지 번호 (1부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 0,
-              "description": "조회할 페이지 번호 (0부터 시작)",
-              "minimum": 0
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
             }
           },
           {
@@ -1838,14 +1838,14 @@
           {
             "name": "page",
             "in": "query",
-            "description": "조회할 페이지 번호 (0부터 시작)",
+            "description": "조회할 페이지 번호 (1부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 0,
-              "description": "조회할 페이지 번호 (0부터 시작)",
-              "minimum": 0
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
             }
           },
           {
@@ -2401,14 +2401,14 @@
           {
             "name": "page",
             "in": "query",
-            "description": "조회할 페이지 번호 (0부터 시작)",
+            "description": "조회할 페이지 번호 (1부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 0,
-              "description": "조회할 페이지 번호 (0부터 시작)",
-              "minimum": 0
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
             }
           },
           {
@@ -2615,14 +2615,14 @@
           {
             "name": "page",
             "in": "query",
-            "description": "조회할 페이지 번호 (0부터 시작)",
+            "description": "조회할 페이지 번호 (1부터 시작)",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 0,
-              "description": "조회할 페이지 번호 (0부터 시작)",
-              "minimum": 0
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
             }
           },
           {
@@ -3409,7 +3409,7 @@
           "page": {
             "type": "integer",
             "format": "int32",
-            "example": 0
+            "example": 1
           },
           "size": {
             "type": "integer",

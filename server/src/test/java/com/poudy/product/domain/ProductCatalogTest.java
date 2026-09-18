@@ -81,7 +81,7 @@ class ProductCatalogTest {
             null
         );
 
-        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
+        assertThat(products.find(filter, ProductSort.NAME_ASC, 1, 20, categories).items())
             .containsExactly(serum);
     }
 
@@ -98,7 +98,7 @@ class ProductCatalogTest {
             null
         );
 
-        assertThat(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).items())
+        assertThat(products.find(filter, ProductSort.NAME_ASC, 1, 20, categories).items())
             .containsExactly(toner, serum);
     }
 
@@ -115,7 +115,7 @@ class ProductCatalogTest {
             null
         );
 
-        ProductPage found = products.find(filter, ProductSort.PRICE_DESC, 0, 1, categories);
+        ProductPage found = products.find(filter, ProductSort.PRICE_DESC, 1, 1, categories);
 
         assertThat(found.items()).containsExactly(serum);
         assertThat(found.totalElements()).isEqualTo(2);
@@ -172,7 +172,7 @@ class ProductCatalogTest {
             SkinType.DRY
         );
 
-        ProductPage found = typedProducts.find(filter, ProductSort.PRICE_ASC, 0, 1, categories);
+        ProductPage found = typedProducts.find(filter, ProductSort.PRICE_ASC, 1, 1, categories);
 
         assertThat(found.items()).containsExactly(dryAndSensitive);
         assertThat(found.skinTypes()).containsExactly(SkinType.DRY, SkinType.OILY, SkinType.SENSITIVE);
@@ -192,7 +192,7 @@ class ProductCatalogTest {
         );
 
         assertThat(products.count(filter))
-            .isEqualTo(products.find(filter, ProductSort.NAME_ASC, 0, 20, categories).totalElements());
+            .isEqualTo(products.find(filter, ProductSort.NAME_ASC, 1, 20, categories).totalElements());
     }
 
     @Test

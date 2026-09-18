@@ -27,7 +27,7 @@ class ProductSearchLoggerTest {
             "event=search_completed",
             "searchType=PRODUCT_SEARCH",
             "keyword=\"토너\"",
-            "page=0",
+            "page=1",
             "size=20",
             "sort=PRICE_ASC",
             "filtered=true",
@@ -86,6 +86,6 @@ class ProductSearchLoggerTest {
     }
 
     private static ProductSearchLogger.Context context(String keyword, ProductSort sort, boolean filtered) {
-        return new ProductSearchLogger.Context(new SearchKeyword(keyword), 0, 20, sort, filtered);
+        return new ProductSearchLogger.Context(new SearchKeyword(keyword), 1, 20, sort, filtered);
     }
 }

@@ -907,7 +907,7 @@ export type get_FindProducts = {
    */
   sort: ("NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -958,7 +958,7 @@ export type get_SuggestProducts = {
    */
   keyword: string;
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page?: number;
   /**
@@ -1063,7 +1063,7 @@ export type get_FindIngredients = {
   ingredientIds: Array<number>;
   usedInProducts: boolean;
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -1227,7 +1227,7 @@ export type get_FindAll = {
             query?:  Partial<{
   status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -1270,7 +1270,7 @@ export type get_FindAll_1 = {
   status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
   type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**

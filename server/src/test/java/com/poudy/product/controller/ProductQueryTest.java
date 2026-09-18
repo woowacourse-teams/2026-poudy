@@ -32,7 +32,7 @@ class ProductQueryTest {
                 .param("keyword", "토너")
                 .param("brandIds", "3")
                 .param("sort", "PRICE_ASC")
-                .param("page", "0")
+                .param("page", "1")
                 .param("size", "1")
         )
             .andExpect(status().isOk())
@@ -93,10 +93,10 @@ class ProductQueryTest {
     @Test
     @DisplayName("제품명 검색 제안을 페이지 단위로 반환하고 전체 개수를 함께 싣는다")
     void suggestsProductPage() throws Exception {
-        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "0").param("size", "2"))
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "1").param("size", "2"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items.length()").value(2))
-            .andExpect(jsonPath("$.pagination.page").value(0))
+            .andExpect(jsonPath("$.pagination.page").value(1))
             .andExpect(jsonPath("$.pagination.size").value(2))
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.totalPages").value(2))
@@ -104,9 +104,26 @@ class ProductQueryTest {
     }
 
     @Test
+    @DisplayName("페이지를 지정하지 않으면 1페이지를 반환한다")
+    void findsFirstPageByDefault() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("size", "2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(1))
+            .andExpect(jsonPath("$.pagination.page").value(1));
+    }
+
+    @Test
+    @DisplayName("페이지는 1부터 시작하므로 0페이지는 거절한다")
+    void rejectsZeroPage() throws Exception {
+        mockMvc.perform(get("/api/products").param("page", "0"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
+
+    @Test
     @DisplayName("제품명 검색 제안의 마지막 페이지는 남은 제품만 담고 다음 페이지가 없다")
     void suggestsLastProductPage() throws Exception {
-        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "1").param("size", "2"))
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "2").param("size", "2"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
@@ -120,7 +137,7 @@ class ProductQueryTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].id").value(1));
 
-        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "2").param("size", "1"))
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "3").param("size", "1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].id").value(10));
     }

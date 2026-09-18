@@ -8,7 +8,7 @@ import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { parseFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
@@ -105,13 +105,13 @@ async function CategoryProducts({
   const { categoryIds } = await resolveCategory(id);
   const urlFilter = parseFilter(toSearchParams(await searchParams));
   const filter = { ...urlFilter, categoryIds };
-  const key = JSON.stringify({ ...filter, page: 0 });
+  const key = JSON.stringify({ ...filter, page: FIRST_PAGE });
 
   /*
    * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄이 제품 조회보다 먼저 나가고,
    * 목록 자리만 도착을 기다린다. 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
    */
-  const initialPagePromise = fetchProducts({ ...filter, page: 0 })
+  const initialPagePromise = fetchProducts({ ...filter, page: FIRST_PAGE })
     .then((response) => ({ key, response }))
     .catch(() => undefined);
 
