@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense, cache } from "react";
+import { cache } from "react";
 
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
-import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
+import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 const load = cache(async (raw: string) => {
   const brandId = Number(raw);
@@ -33,13 +36,14 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
+  const { page } = parseFilter(toSearchParams(await props.searchParams));
 
   try {
     const brand = await fetchBrand(Number(brandId));
     const title = `${brand.name} 제품`;
     const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
     const image = `/brands/${brandId}/opengraph-image`;
-    const canonical = `/brands/${brandId}`;
+    const canonical = pagedCanonical(`/brands/${brandId}`, page);
     return {
       title,
       description,
@@ -90,13 +94,13 @@ async function BrandProducts({
   const brandIds = [brand.id];
   const urlFilter = parseFilter(toSearchParams(await searchParams));
   const filter = { ...urlFilter, brandIds };
-  const key = JSON.stringify({ ...filter, page: FIRST_PAGE });
+  const key = productPagesKey(filter);
 
   /*
    * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄이 제품 조회보다 먼저 나가고,
    * 목록 자리만 도착을 기다린다. 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
    */
-  const initialPagePromise = fetchProducts({ ...filter, page: FIRST_PAGE })
+  const initialPagePromise = fetchProducts(filter)
     .then((response) => ({ key, response }))
     .catch(() => undefined);
 
@@ -114,19 +118,26 @@ async function BrandProducts({
   );
 }
 
-export default function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
+export default async function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
+  const [{ brandId }, searchParams] = await Promise.all([props.params, props.searchParams]);
+  const id = Number(brandId);
+  const filter = parseFilter(toSearchParams(searchParams));
+  // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
+  const stream = filter.page === FIRST_PAGE;
+  if (!stream && Number.isInteger(id)) await requireProductPage({ ...filter, brandIds: [id] });
+
   return (
     <>
       <TopBar title="브랜드관" variant="sub" />
 
-      <Suspense fallback={<BrandSummarySkeleton />}>
+      <StreamBoundary stream={stream} fallback={<BrandSummarySkeleton />}>
         <BrandSummary params={props.params} />
-      </Suspense>
+      </StreamBoundary>
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
-      <Suspense fallback={<ProductListSkeleton hiddenChips={["brand"]} />}>
+      <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
-      </Suspense>
+      </StreamBoundary>
     </>
   );
 }
