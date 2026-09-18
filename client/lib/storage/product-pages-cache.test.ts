@@ -9,6 +9,7 @@ import {
 } from "@/lib/storage/product-pages-cache";
 
 const pages = (page: number, ids: readonly number[]) => ({
+  first: 1,
   page,
   items: ids.map((id) => ({ id }) as ProductResponse),
   brands: [],

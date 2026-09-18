@@ -62,6 +62,34 @@ describe("useProductPages", () => {
     expect(result.current.page).toBe(2);
   });
 
+  it("조건의 장에서 시작하고 앞쪽 장은 위에 붙인다", async () => {
+    const pages = countingProducts();
+    const { result } = renderHook(() => useProductPages({ ...filterOf("a"), page: 3 }));
+
+    await waitFor(() => expect(result.current.items).toHaveLength(2));
+    expect(pages).toEqual([3]);
+    expect(result.current.first).toBe(3);
+    expect(result.current.items.map((item) => item.id)).toEqual([5, 6]);
+
+    act(() => result.current.loadPrevious());
+    await waitFor(() => expect(result.current.items).toHaveLength(4));
+
+    expect(result.current.first).toBe(2);
+    expect(result.current.page).toBe(3);
+    expect(result.current.items.map((item) => item.id)).toEqual([3, 4, 5, 6]);
+  });
+
+  it("첫 장에서는 앞쪽 장을 부르지 않는다", async () => {
+    const pages = countingProducts();
+    const { result } = renderHook(() => useProductPages(filterOf("a")));
+
+    await waitFor(() => expect(result.current.items).toHaveLength(2));
+    act(() => result.current.loadPrevious());
+
+    expect(result.current.loadingPrevious).toBe(false);
+    expect(pages).toEqual([1]);
+  });
+
   it("떠났다 돌아오면 이어 붙인 목록을 그대로 되살리고 다시 부르지 않는다", async () => {
     const pages = countingProducts();
     const first = renderHook(() => useProductPages(filterOf("a")));

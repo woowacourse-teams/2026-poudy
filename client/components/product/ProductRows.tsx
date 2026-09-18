@@ -1,7 +1,7 @@
 "use client";
 
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
-import { useEffect, useRef } from "react";
+import { type MouseEvent, useEffect, useLayoutEffect, useRef } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRowsSkeleton } from "./ProductListSkeleton";
@@ -11,13 +11,13 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, serializeFilter } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { type InitialPage, useProductPages } from "@/lib/hooks/useProductPages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
-import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
+import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
 
 type ProductRowsProps = {
   readonly filter: Filter;
@@ -42,6 +42,20 @@ const searchModeOf = (filter: Filter): SearchMode | undefined => {
 };
 
 /**
+ * 같은 조건의 다른 장 주소. 1 페이지는 `page` 를 남기지 않는다.
+ * 크롤러는 스크롤하지 않으므로 이 주소를 따라가야 뒤쪽 장의 제품에 닿는다.
+ */
+const pageHref = (basePath: string, filter: Filter, page: number): string => {
+  const query = serializeFilter({ ...filter, page }).toString();
+  if (!query) return basePath;
+  return `${basePath}?${query}`;
+};
+
+/** 새 탭으로 여는 클릭은 브라우저에 맡긴다. */
+const opensElsewhere = (event: MouseEvent<HTMLAnchorElement>): boolean =>
+  event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+
+/**
  * 정렬 줄과 제품 행. 첫 장이 도착해야 그릴 수 있는 것만 모아 둔다.
  *
  * 필터 시트도 여기 있다. 시트는 지금 조건에 걸린 브랜드와 결과 개수를 쓰는데 둘 다
@@ -56,7 +70,7 @@ export function ProductRows({
   onCloseSheet,
   initialPage,
 }: ProductRowsProps) {
-  const { setCondition, setSort } = useFilterQuery(basePath);
+  const { filter: urlFilter, setCondition, setSort } = useFilterQuery(basePath);
   const { isSaved, toggle } = useSavedProducts();
 
   const {
@@ -66,13 +80,17 @@ export function ProductRows({
     categories: matchedCategories,
     skinTypes: matchedSkinTypes,
     total,
+    first,
     page,
     hasNext,
     loadNext,
+    loadPrevious,
     loading,
+    loadingPrevious,
     loaded,
   } = useProductPages(filter, initialPage);
-  const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
+  const sentinel = useInfiniteScroll<HTMLAnchorElement>(hasNext && !loading, loadNext);
+  const restoreAnchor = useRef<() => void>(undefined);
 
   const empty = items.length === 0 && !loading;
   const searchMode = searchModeOf(filter);
@@ -86,13 +104,41 @@ export function ProductRows({
     });
   };
 
+  /*
+   * 두 링크 모두 크롤러를 위한 주소다. 사람이 누르면 주소를 옮기지 않고 그 자리에 붙인다.
+   * 다음 장은 스크롤로 닿기 전에 키보드로 누르는 경우다.
+   */
+  const onClickNext = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (opensElsewhere(event)) return;
+    event.preventDefault();
+    if (!loading) loadNext();
+  };
+
+  // 앞쪽 장을 위에 붙이면 보던 제품이 그만큼 밀려 내려가므로, 붙인 뒤 같은 자리로 되돌린다.
+  // 마지막 장을 넘어선 주소로 들어와 목록이 비었으면 붙일 자리가 없으니 그 주소로 옮겨 간다.
+  const onClickPrevious = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (opensElsewhere(event) || items.length === 0) return;
+    event.preventDefault();
+    if (loadingPrevious) return;
+    restoreAnchor.current = holdAnchor(items[0].id);
+    loadPrevious();
+  };
+
+  // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
+  const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
+
+  useLayoutEffect(() => {
+    restoreAnchor.current?.();
+    restoreAnchor.current = undefined;
+  }, [first]);
+
   const onChangeSort = (sort: Filter["sort"]) => {
     setSort(sort);
     track("sort_applied", { sort });
   };
 
   useEffect(() => {
-    if (!searchMode || !loaded || loading || page !== FIRST_PAGE || trackedResultKey.current === key) return;
+    if (!searchMode || !loaded || loading || page !== first || trackedResultKey.current === key) return;
     trackedResultKey.current = key;
 
     track("search_results_viewed", {
@@ -103,11 +149,11 @@ export function ProductRows({
       exclude_count: filter.excludeIngredientIds.length,
       exclude_group_count: filter.excludeCodes.length,
     });
-  }, [filter, key, loaded, loading, page, searchMode, total]);
+  }, [filter, first, key, loaded, loading, page, searchMode, total]);
 
-  // 첫 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
+  // 시작한 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {
-    if (page > FIRST_PAGE && !loading) track("product_list_scrolled", { surface, page, loaded_count: items.length });
+    if (page > first && !loading) track("product_list_scrolled", { surface, page, loaded_count: items.length });
     // 장이 늘었을 때만 남긴다. 같은 장에서 다시 그려도 보내지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, loading]);
@@ -127,6 +173,17 @@ export function ProductRows({
       </div>
 
       <main className="flex-1 px-4">
+        {/* 주소의 `?page=N` 으로 중간 장부터 들어온 사람이 앞쪽 장으로 돌아갈 길이다. */}
+        {first > FIRST_PAGE ? (
+          <a
+            href={pageHref(basePath, urlFilter, previousPage)}
+            onClick={onClickPrevious}
+            className="flex h-10 items-center justify-center text-[13px] text-text-secondary"
+          >
+            {loadingPrevious ? "불러오는 중…" : "이전 제품 보기"}
+          </a>
+        ) : null}
+
         {empty ? (
           <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
@@ -146,8 +203,18 @@ export function ProductRows({
           </ul>
         )}
 
-        <div ref={sentinel} className="h-10" />
-        {loading ? <p className="pb-6 text-center text-[13px] text-text-secondary">불러오는 중…</p> : null}
+        {hasNext ? (
+          <a
+            ref={sentinel}
+            href={pageHref(basePath, urlFilter, page + 1)}
+            onClick={onClickNext}
+            className="flex h-10 items-center justify-center text-[13px] text-text-secondary"
+          >
+            {loading ? "불러오는 중…" : "제품 더 보기"}
+          </a>
+        ) : (
+          <div className="h-10" />
+        )}
       </main>
 
       <FilterSheets
