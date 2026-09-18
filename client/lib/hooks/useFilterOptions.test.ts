@@ -11,7 +11,7 @@ vi.mock("@/lib/api/products", () => ({ fetchProducts: vi.fn() }));
 
 const response = (name: string) => ({
   items: [],
-  brands: [{ id: 1, name }],
+  brands: [{ id: 1, name, englishName: null, imageUrl: null }],
   categories: [],
   skinTypes: [],
   pagination: { page: 0, size: 1, totalElements: 1, totalPages: 1, hasNext: false },

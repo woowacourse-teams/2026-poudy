@@ -6,7 +6,10 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { FilterSheets } from "./FilterSheets";
+
 import { ProductList } from "@/components/product/ProductList";
+import { EMPTY_FILTER } from "@/lib/domain/filter";
 import { allProducts, excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
@@ -45,6 +48,27 @@ const SHEETS = [
 ] as const;
 
 describe("필터 시트의 적용 버튼", () => {
+  it("같은 시트를 다시 열면 적용한 조건은 유지하고 취소한 선택은 버린다", async () => {
+    countIs(7);
+    const onApply = vi.fn();
+    const props = { filter: EMPTY_FILTER, onApply, onClose: vi.fn(), excludeCodes };
+    const { rerender } = render(<FilterSheets {...props} openSheet="brand" />);
+    const [first, second] = await screen.findAllByRole("checkbox");
+    const firstName = first.textContent!;
+    const secondName = second.textContent!;
+    await userEvent.click(first);
+    await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
+    const applied = { ...props, filter: onApply.mock.calls[0][0] };
+    rerender(<FilterSheets {...applied} openSheet={undefined} />);
+    rerender(<FilterSheets {...applied} openSheet="brand" />);
+    expect(await screen.findByRole("checkbox", { name: firstName })).toBeChecked();
+    await userEvent.click(screen.getByRole("checkbox", { name: secondName }));
+    rerender(<FilterSheets {...applied} openSheet={undefined} />);
+    rerender(<FilterSheets {...applied} openSheet="brand" />);
+    expect(await screen.findByRole("checkbox", { name: firstName })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: secondName })).not.toBeChecked();
+  });
+
   it.each(SHEETS)("조건에 맞는 제품이 없으면 누를 수 없다 ($name)", async ({ name, label }) => {
     countIs(0);
 
