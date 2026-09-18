@@ -3,6 +3,7 @@
 import type { CategoryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
+import { CheckMark } from "@/components/ui/CheckMark";
 import { Icon } from "@/components/ui/icons/Icon";
 
 type CategoryOptionsProps = {
@@ -12,8 +13,7 @@ type CategoryOptionsProps = {
 };
 
 /**
- * 디자인의 카테고리 시트. 대분류를 펼쳐 소분류를 하나 고른다.
- * 라디오 모양이라 소분류는 한 번에 하나만 고른다.
+ * 대분류를 펼쳐 소분류를 여러 개 고른다. 전체 선택도 다른 대분류의 선택은 보존한다.
  */
 export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryOptionsProps) {
   const selectedChild = categories
@@ -57,29 +57,20 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
                   {[{ id: 0, name: "전체", productCount: category.productCount }, ...category.children].map((child) => {
                     // 전체는 대분류의 소분류를 모두 고른 것과 같다.
                     const ids = child.id === 0 ? category.children.map((item) => item.id) : [child.id];
-                    const selected =
-                      ids.length > 0 &&
-                      ids.every((id) => selectedIds.includes(id)) &&
-                      selectedIds.length === ids.length;
+                    const selected = ids.length > 0 && ids.every((id) => selectedIds.includes(id));
 
                     return (
                       <li key={child.id}>
                         <button
                           type="button"
-                          role="radio"
+                          role="checkbox"
                           aria-checked={selected}
-                          onClick={() => onSelect(ids)}
+                          onClick={() => onSelect(toggleCategoryIds(selectedIds, ids))}
                           className={`flex h-10 w-full items-center gap-2.5 py-0 pr-3 pl-7 text-left ${
                             selected ? "rounded-[10px] bg-[#F2F3F5]" : ""
                           }`}
                         >
-                          <span
-                            className={`flex size-[18px] shrink-0 items-center justify-center rounded-full border ${
-                              selected ? "border-[#212124] bg-[#212124]" : "border-[#B9BDC5] bg-white"
-                            }`}
-                          >
-                            {selected ? <span className="size-1.5 rounded-full bg-white" aria-hidden="true" /> : null}
-                          </span>
+                          <CheckMark checked={selected} />
                           <span
                             className={`text-[14px] ${selected ? "font-semibold text-[#212124]" : "text-[#555A62]"}`}
                           >
@@ -98,3 +89,9 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
     </ul>
   );
 }
+
+/** 모두 고른 범위는 해제하고, 일부만 고른 범위는 나머지를 추가한다. */
+const toggleCategoryIds = (selected: readonly number[], targets: readonly number[]): readonly number[] =>
+  targets.every((id) => selected.includes(id))
+    ? selected.filter((id) => !targets.includes(id))
+    : [...new Set([...selected, ...targets])];

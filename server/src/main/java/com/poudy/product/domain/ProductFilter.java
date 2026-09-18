@@ -51,6 +51,26 @@ public final class ProductFilter {
         return keyword != null;
     }
 
+    public ProductFilter withoutBrands() {
+        return new ProductFilter(
+            keyword,
+            categoryIds,
+            List.of(),
+            moistureLevels,
+            oilLevels,
+            ingredientFilter,
+            skinType
+        );
+    }
+
+    public ProductFilter withoutCategories() {
+        return new ProductFilter(keyword, List.of(), brandIds, moistureLevels, oilLevels, ingredientFilter, skinType);
+    }
+
+    public ProductFilter withoutSkinType() {
+        return new ProductFilter(keyword, categoryIds, brandIds, moistureLevels, oilLevels, ingredientFilter, null);
+    }
+
     private static <T> List<T> copyOf(List<T> values) {
         if (values == null) {
             return List.of();

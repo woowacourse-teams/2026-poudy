@@ -178,8 +178,11 @@ const filterProducts = (url: URL) => {
   return allProducts.filter((product) => {
     if (keyword && !matchesKeyword(keyword, product.name, product.brand.name)) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
-    /* 카테고리는 소분류 ID 로 온다. 어느 소분류에도 들지 않는 제품은 골랐을 때 빠진다. */
-    if (categoryIds.length && !categoryIds.includes(productCategoryIds.get(product.id) ?? -1)) return false;
+    // 서버처럼 소분류와 대분류 ID 모두 허용한다.
+    const categoryId = productCategoryIds.get(product.id);
+    const parent = categories.find((category) => category.children.some((child) => child.id === categoryId));
+    if (categoryIds.length && !categoryIds.includes(categoryId ?? -1) && !categoryIds.includes(parent?.id ?? -1))
+      return false;
     if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
     if (oil.length && !oil.includes(product.oilLevel)) return false;
     if (skinType && !matchesSkinType(skinType, product)) return false;
@@ -315,6 +318,23 @@ const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][]) => {
   return skinTypes.filter((type) => present.has(type.code));
 };
 
+const matchedBrands = (matched: readonly (typeof allProducts)[number][]) =>
+  allBrands
+    .filter((brand) => matched.some((product) => product.brand.id === brand.id))
+    .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl }));
+
+const withoutCondition = (url: URL, condition: string) => {
+  const candidateUrl = new URL(url);
+  candidateUrl.searchParams.delete(condition);
+  return filterProducts(candidateUrl);
+};
+
+const filterOptions = (url: URL) => ({
+  brands: matchedBrands(withoutCondition(url, "brandIds")),
+  categories: matchedCategories(withoutCondition(url, "categoryIds")),
+  skinTypes: matchedSkinTypes(withoutCondition(url, "skinType")),
+});
+
 const curations = [
   {
     id: 1,
@@ -380,10 +400,9 @@ export const handlers = [
 
     return HttpResponse.json({
       ...paginate(matched, url),
+      ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
       // 조건에 걸린 제품 전체의 브랜드다. 페이지가 아니라 matched 를 기준으로 한다.
-      brands: allBrands
-        .filter((brand) => matched.some((product) => product.brand.id === brand.id))
-        .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl })),
+      brands: matchedBrands(matched),
       // 카테고리도 같은 기준이다. 조건에 걸린 제품이 실제로 속한 것만 추린다.
       categories: matchedCategories(matched),
       // 피부 타입도 마찬가지다. 조건에 걸린 제품이 드는 타입만 중복 없이 담는다.

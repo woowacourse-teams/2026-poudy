@@ -8,6 +8,7 @@ import { CategoryOptions } from "./CategoryOptions";
 import { IngredientOptions } from "./IngredientOptions";
 import { LevelRange } from "./LevelRangeOptions";
 import { SkinTypeOptions } from "./SkinTypeOptions";
+import { UnavailableSelections } from "./UnavailableSelections";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
@@ -25,11 +26,12 @@ type FilterSheetsProps = {
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
-  /** 지금 조건에 걸린 제품이 드는 피부 타입. 고를 수 없는 것은 오지 않는다. */
+  /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
+  readonly optionsPageHref?: string;
 };
 
 const TITLES: Record<SheetKind, string> = {
@@ -67,12 +69,15 @@ export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
    * BottomSheet 가 아무리 기다려도 이미 트리에서 빠진 뒤라 내려가는 모습이 보이지 않는다.
    * 마지막으로 열었던 종류를 기억해 두고 그 내용을 그대로 그린다.
    */
-  const [lastKind, setLastKind] = useState(openSheet);
+  const [session, setSession] = useState({ kind: openSheet, open: Boolean(openSheet), number: 0 });
+  if (openSheet && (!session.open || openSheet !== session.kind)) {
+    setSession({ kind: openSheet, open: true, number: session.number + 1 });
+  } else if (!openSheet && session.open) {
+    setSession({ ...session, open: false });
+  }
+  if (!session.kind) return null;
 
-  if (openSheet && openSheet !== lastKind) setLastKind(openSheet);
-  if (!lastKind) return null;
-
-  return <SheetBody key={lastKind} kind={lastKind} open={Boolean(openSheet)} {...rest} />;
+  return <SheetBody key={session.number} kind={session.kind} open={Boolean(openSheet)} {...rest} />;
 }
 
 function SheetBody({
@@ -85,6 +90,7 @@ function SheetBody({
   skinTypes,
   excludeCodes,
   initialCount,
+  optionsPageHref,
   open,
 }: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind; readonly open: boolean }) {
   const [draft, setDraft] = useState<Filter>(filter);
@@ -115,6 +121,19 @@ function SheetBody({
       <BottomSheet.Header title={TITLES[kind]} description={DESCRIPTIONS[kind]} />
 
       <BottomSheet.Body>
+        {(kind === "brand" || kind === "category" || kind === "skinType") && optionsPageHref ? (
+          <a href={optionsPageHref} className="block py-3 text-sm underline">
+            첫 페이지에서 전체 필터 선택지 보기
+          </a>
+        ) : null}
+        <UnavailableSelections
+          kind={kind}
+          draft={draft}
+          brands={brands}
+          categories={categories}
+          skinTypes={skinTypes}
+          onChange={setDraft}
+        />
         {kind === "category" ? (
           <CategoryOptions
             categories={categories}
@@ -177,9 +196,7 @@ function SheetBody({
 
       <BottomSheet.Footer>
         <BottomSheet.ResetButton onClick={reset} />
-        {/* 아직 세지 못한 것과 0 개는 다르다. 세는 동안에는 막지 않는다. */}
         <BottomSheet.SubmitButton
-          disabled={count === 0}
           onClick={() => {
             onApply(draft);
             onClose();

@@ -58,8 +58,7 @@ const opensElsewhere = (event: MouseEvent<HTMLAnchorElement>): boolean =>
 /**
  * 정렬 줄과 제품 행. 첫 장이 도착해야 그릴 수 있는 것만 모아 둔다.
  *
- * 필터 시트도 여기 있다. 시트는 지금 조건에 걸린 브랜드와 결과 개수를 쓰는데 둘 다
- * 목록 응답에서 나오고, 열리기 전에는 아무것도 그리지 않아 기다려도 손해가 없다.
+ * 필터 시트도 여기 있다. 시트의 후보와 결과 개수는 같은 목록 응답에서 받는다.
  */
 export function ProductRows({
   filter,
@@ -76,9 +75,7 @@ export function ProductRows({
   const {
     key,
     items,
-    brands: matchedBrands,
-    categories: matchedCategories,
-    skinTypes: matchedSkinTypes,
+    filterOptions,
     total,
     first,
     page,
@@ -231,9 +228,10 @@ export function ProductRows({
             });
           }
         }}
-        categories={matchedCategories}
-        brands={matchedBrands}
-        skinTypes={matchedSkinTypes}
+        categories={filterOptions?.categories ?? []}
+        brands={filterOptions?.brands ?? []}
+        skinTypes={filterOptions?.skinTypes ?? []}
+        optionsPageHref={filterOptions === undefined ? pageHref(basePath, urlFilter, FIRST_PAGE) : undefined}
         excludeCodes={excludeCodes}
         initialCount={total}
       />

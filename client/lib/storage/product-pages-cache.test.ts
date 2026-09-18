@@ -12,9 +12,7 @@ const pages = (page: number, ids: readonly number[]) => ({
   first: 1,
   page,
   items: ids.map((id) => ({ id }) as ProductResponse),
-  brands: [],
-  categories: [],
-  skinTypes: [],
+  filterOptions: { brands: [], categories: [], skinTypes: [] },
   total: ids.length,
   hasNext: false,
 });

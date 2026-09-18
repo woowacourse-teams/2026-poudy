@@ -3439,6 +3439,37 @@
           "totalPages"
         ]
       },
+      "ProductFilterOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "brands": {
+            "type": "array",
+            "description": "브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드",
+            "items": {
+              "$ref": "#/components/schemas/BrandResponse"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "description": "카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수",
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            }
+          },
+          "skinTypes": {
+            "type": "array",
+            "description": "피부 타입 조건만 제외한 전체 일치 제품의 피부 타입",
+            "items": {
+              "$ref": "#/components/schemas/SkinTypeResponse"
+            }
+          }
+        },
+        "required": [
+          "brands",
+          "categories",
+          "skinTypes"
+        ]
+      },
       "ProductPageResponse": {
         "type": "object",
         "properties": {
@@ -3471,6 +3502,10 @@
             "items": {
               "$ref": "#/components/schemas/SkinTypeResponse"
             }
+          },
+          "filterOptions": {
+            "$ref": "#/components/schemas/ProductFilterOptionsResponse",
+            "description": "첫 페이지(page\u003d1)에만 포함. 각 자기 조건만 제외한 전체 제품의 후보. 후속 페이지는 계산과 필드 전송을 생략하며 빈 배열과 구별한다"
           }
         },
         "required": [

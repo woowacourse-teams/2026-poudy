@@ -10,9 +10,8 @@ import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtu
  * 서버는 `brands` 와 `categories`, `skinTypes` 를 `조회 조건에 해당하는 제품 전체` 를 기준으로
  * 내려준다. 페이지에 걸린 것이 아니라 조건에 걸린 것 전부다.
  *
- * 이 값은 조건 시트의 선택지를 채운다. 결과에 없는 브랜드나 카테고리, 피부 타입이 섞여 있으면
- * 사용자가 골랐을 때 빈 목록이 나온다. 목이 그런 값을 내려주면 화면을 확인하는 동안에는
- * 멀쩡해 보이고 운영에서만 어긋난다.
+ * 기존 최상위 집계의 호환성을 지킨다. 시트는 자기 조건을 제외한 filterOptions를 사용하며
+ * 그 계산 계약은 mock-filter-options.test.ts에서 별도로 검증한다.
  *
  * 형태는 `mock-schema.test.ts` 가 지키므로 여기서는 담긴 값이 결과와 맞는지만 본다.
  */

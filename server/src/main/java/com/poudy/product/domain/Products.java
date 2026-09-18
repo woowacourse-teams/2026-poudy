@@ -95,7 +95,8 @@ public final class Products {
     public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size, Categories categories) {
         requireValidPageCondition(page, size);
 
-        List<Product> matched = matchedBy(filter);
+        List<Product> candidates = candidatesOf(filter);
+        List<Product> matched = matching(candidates, filter);
         List<Product> sorted = matched.stream()
             .sorted(ProductSort.orDefault(sort).comparator())
             .toList();
@@ -105,7 +106,8 @@ public final class Products {
             matched.size(),
             brandsOf(matched),
             countsByCategory(matched).nonEmptyCategoriesOf(categories),
-            skinTypesOf(matched)
+            skinTypesOf(matched),
+            page == 1 ? filterOptions(candidates, filter, categories) : null
         );
     }
 
@@ -164,9 +166,29 @@ public final class Products {
     }
 
     private List<Product> matchedBy(ProductFilter filter) {
-        return candidatesOf(filter).stream()
+        return matching(candidatesOf(filter), filter);
+    }
+
+    private static List<Product> matching(List<Product> candidates, ProductFilter filter) {
+        return candidates.stream()
             .filter(filter::matches)
             .toList();
+    }
+
+    private static ProductFilterOptions filterOptions(
+        List<Product> candidates,
+        ProductFilter filter,
+        Categories categories
+    ) {
+        List<Product> brandCandidates = matching(candidates, filter.withoutBrands());
+        List<Product> categoryCandidates = matching(candidates, filter.withoutCategories());
+        List<Product> skinTypeCandidates = matching(candidates, filter.withoutSkinType());
+
+        return new ProductFilterOptions(
+            brandsOf(brandCandidates),
+            countsByCategory(categoryCandidates).nonEmptyCategoriesOf(categories),
+            skinTypesOf(skinTypeCandidates)
+        );
     }
 
     private List<Product> candidatesOf(ProductFilter filter) {
