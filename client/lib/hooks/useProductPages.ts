@@ -1,13 +1,6 @@
 "use client";
 
-import type {
-  BrandResponse,
-  CategoryResponse,
-  ProductPageResponse,
-  ProductFilterOptionsResponse,
-  ProductResponse,
-  SkinTypeResponse,
-} from "@poudy/api/api.zod";
+import type { ProductPageResponse, ProductFilterOptionsResponse, ProductResponse } from "@poudy/api/api.zod";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -30,12 +23,6 @@ type PageState = {
   readonly page: number;
   readonly items: readonly ProductResponse[];
   readonly filterOptions?: ProductFilterOptionsResponse;
-  /** 지금 조건에 걸린 제품 전체의 브랜드. 페이지에 걸리지 않는다. */
-  readonly brands: readonly BrandResponse[];
-  /** 브랜드와 같다. 지금 조건에 걸린 제품 전체의 카테고리다. */
-  readonly categories: readonly CategoryResponse[];
-  /** 브랜드와 같다. 지금 조건에 걸린 제품 전체가 드는 피부 타입이다. */
-  readonly skinTypes: readonly SkinTypeResponse[];
   readonly total: number;
   readonly hasNext: boolean;
   readonly loading: boolean;
@@ -61,9 +48,6 @@ export type InitialPage = {
 
 const EMPTY_PAGE_STATE: Omit<PageState, "key" | "first" | "page" | "pendingPage"> = {
   items: [],
-  brands: [],
-  categories: [],
-  skinTypes: [],
   total: 0,
   hasNext: false,
   loading: true,
@@ -85,16 +69,13 @@ const initialState = (key: string, first: number, seed?: ProductPageResponse): P
     return empty;
   }
 
-  const { page, items, brands, categories, skinTypes, filterOptions, total, hasNext, fetchedAt } = cached;
+  const { page, items, filterOptions, total, hasNext, fetchedAt } = cached;
   return {
     key,
     // 앞쪽 장을 붙였으면 주소의 장보다 앞에서 시작한다.
     first: cached.first,
     page,
     items,
-    brands,
-    categories,
-    skinTypes,
     filterOptions,
     total,
     hasNext,
@@ -110,10 +91,7 @@ const initialState = (key: string, first: number, seed?: ProductPageResponse): P
 const merged = (previous: PageState, page: number, response: ProductPageResponse): PageState => ({
   ...previous,
   items: page === previous.first ? response.items : [...previous.items, ...response.items],
-  // 조건이 같으면 장마다 같은 값이 온다. 첫 장의 것을 그대로 쓴다.
-  brands: response.brands,
-  categories: response.categories,
-  skinTypes: response.skinTypes,
+  // 후속 페이지는 후보를 생략하므로 첫 페이지에서 받은 값을 유지한다.
   filterOptions: response.filterOptions ?? previous.filterOptions,
   total: response.pagination.totalElements,
   hasNext: response.pagination.hasNext,
@@ -185,9 +163,6 @@ const revalidated = (previous: PageState, responses: readonly ProductPageRespons
   return {
     ...previous,
     items: responses.flatMap((response) => response.items),
-    brands: responses[0].brands,
-    categories: responses[0].categories,
-    skinTypes: responses[0].skinTypes,
     filterOptions: responses[0].filterOptions ?? previous.filterOptions,
     total: last.pagination.totalElements,
     hasNext: last.pagination.hasNext,
@@ -222,8 +197,8 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
 const useRememberPages = (key: string, state: PageState) => {
   useEffect(() => {
     if (!state.loaded || state.loading || state.revalidating) return;
-    const { first, page, items, brands, categories, skinTypes, filterOptions, total, hasNext } = state;
-    writeProductPages(key, { first, page, items, brands, categories, skinTypes, filterOptions, total, hasNext });
+    const { first, page, items, filterOptions, total, hasNext } = state;
+    writeProductPages(key, { first, page, items, filterOptions, total, hasNext });
   }, [key, state]);
   /*
    * 보던 자리는 떠나는 순간에만 잰다. 담아 둔 값은 돌아올 때 한 번 읽히는데, 스크롤마다

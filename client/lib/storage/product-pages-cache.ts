@@ -1,10 +1,4 @@
-import type {
-  BrandResponse,
-  CategoryResponse,
-  ProductResponse,
-  SkinTypeResponse,
-  ProductFilterOptionsResponse,
-} from "@poudy/api/api.zod";
+import type { ProductResponse, ProductFilterOptionsResponse } from "@poudy/api/api.zod";
 
 import { createListCache } from "./list-cache";
 
@@ -18,9 +12,6 @@ export type ProductPages = {
   readonly page: number;
   readonly items: readonly ProductResponse[];
   readonly filterOptions?: ProductFilterOptionsResponse;
-  readonly brands: readonly BrandResponse[];
-  readonly categories: readonly CategoryResponse[];
-  readonly skinTypes: readonly SkinTypeResponse[];
   readonly total: number;
   readonly hasNext: boolean;
 };
