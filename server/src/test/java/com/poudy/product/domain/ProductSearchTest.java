@@ -256,7 +256,7 @@ class ProductSearchTest {
     void suggestsRequestedPage() {
         Products products = suggestionProducts();
 
-        ProductSuggestionPage page = products.suggest("토너", 1, 2);
+        ProductSuggestionPage page = products.suggest("토너", 2, 2);
 
         assertThat(matchedNames(page.items())).containsExactly("토너 3");
         assertThat(page.totalElements()).isEqualTo(3);
@@ -265,7 +265,7 @@ class ProductSearchTest {
     @Test
     @DisplayName("검색 제안은 제품명에서 일치한 원문과 구간을 보존한다")
     void keepsProductNameMatch() {
-        MatchedProduct matched = suggestionProducts().suggest("토너", 0, 1).items().getFirst();
+        MatchedProduct matched = suggestionProducts().suggest("토너", 1, 1).items().getFirst();
 
         assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
         assertThat(matched.textMatch().text()).isEqualTo("토너");
@@ -279,7 +279,7 @@ class ProductSearchTest {
         Brand brand = new Brand(1L, "다 브랜드", null, null);
         Products products = Products.from(List.of(product(1L, "블랙 스네일 토너", brand)));
 
-        MatchedProduct matched = products.suggest("다브랜드", 0, 1).items().getFirst();
+        MatchedProduct matched = products.suggest("다브랜드", 1, 1).items().getFirst();
 
         assertThat(matched.field()).isEqualTo(ProductMatchField.BRAND_NAME);
         assertThat(matched.textMatch().text()).isEqualTo("다 브랜드");
@@ -293,7 +293,7 @@ class ProductSearchTest {
         Brand brand = new Brand(1L, "다 브랜드", null, null);
         Products products = Products.from(List.of(product(1L, "블랙 스네일 토너", brand)));
 
-        MatchedProduct matched = products.suggest("다브랜드 스네일", 0, 1).items().getFirst();
+        MatchedProduct matched = products.suggest("다브랜드 스네일", 1, 1).items().getFirst();
 
         assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
         assertThat(matched.textMatch().text()).isEqualTo("블랙 스네일 토너");
@@ -307,7 +307,7 @@ class ProductSearchTest {
         Brand brand = new Brand(1L, "다 브랜드", null, null);
         Products products = Products.from(List.of(product(1L, "블랙 스네일 토너", brand)));
 
-        MatchedProduct matched = products.suggest("스네일 다브랜드", 0, 1).items().getFirst();
+        MatchedProduct matched = products.suggest("스네일 다브랜드", 1, 1).items().getFirst();
 
         assertThat(matched.field()).isEqualTo(ProductMatchField.PRODUCT_NAME);
         assertThat(matched.textMatch().text()).isEqualTo("블랙 스네일 토너");
@@ -320,7 +320,7 @@ class ProductSearchTest {
     void keepsSearchOrderAcrossSuggestionPages() {
         Products products = suggestionProducts();
 
-        assertThat(matchedNames(products.suggest("토너", 0, 2).items())).containsExactly("토너", "토너 2");
+        assertThat(matchedNames(products.suggest("토너", 1, 2).items())).containsExactly("토너", "토너 2");
     }
 
     @Test
@@ -337,8 +337,8 @@ class ProductSearchTest {
     void rejectsInvalidSuggestionPageCondition() {
         Products products = suggestionProducts();
 
-        assertThatThrownBy(() -> products.suggest("토너", -1, 2)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> products.suggest("토너", 0, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> products.suggest("토너", 0, 2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> products.suggest("토너", 1, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     private static Products suggestionProducts() {

@@ -123,7 +123,7 @@ public class FeedbackService {
     }
 
     private static int pageOffset(int page, int size, int totalElements) {
-        long offset = (long) page * size;
+        long offset = (long) (page - 1) * size;
         if (offset >= totalElements) {
             return totalElements;
         }

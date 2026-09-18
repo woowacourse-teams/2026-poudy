@@ -46,7 +46,7 @@ class AdminFeedbackControllerTest {
     @DisplayName("상태와 유형으로 피드백 목록을 조회한다")
     void findsFilteredFeedbacks() throws Exception {
         Feedback feedback = feedback();
-        given(feedbackService.findAll(FeedbackStatus.RECEIVED, FeedbackSubjectType.BUG_REPORT, 0, 20))
+        given(feedbackService.findAll(FeedbackStatus.RECEIVED, FeedbackSubjectType.BUG_REPORT, 1, 20))
             .willReturn(new FeedbackPage(List.of(feedback), 1));
 
         mockMvc.perform(

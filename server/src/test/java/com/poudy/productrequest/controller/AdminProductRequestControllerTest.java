@@ -44,7 +44,7 @@ class AdminProductRequestControllerTest {
     @DisplayName("상태로 제품 등록 요청 목록을 조회한다")
     void findsFilteredRequests() throws Exception {
         ProductRequest request = request();
-        given(productRequestService.findAll(ProductRequestStatus.RECEIVED, 0, 20))
+        given(productRequestService.findAll(ProductRequestStatus.RECEIVED, 1, 20))
             .willReturn(new ProductRequestPage(List.of(request), 1));
 
         mockMvc.perform(get(PATH).queryParam("status", "RECEIVED"))

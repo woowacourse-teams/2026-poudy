@@ -118,14 +118,14 @@ public final class Products {
     }
 
     private static void requireValidPageCondition(int page, int size) {
-        if (page < 0 || size < 1) {
+        if (page < 1 || size < 1) {
             throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
         }
     }
 
     private static <T> List<T> pageOf(List<T> values, int page, int size) {
         return values.stream()
-            .skip((long) page * size)
+            .skip((long) (page - 1) * size)
             .limit(size)
             .toList();
     }

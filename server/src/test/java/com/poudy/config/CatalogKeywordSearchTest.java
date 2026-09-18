@@ -60,7 +60,7 @@ class CatalogKeywordSearchTest {
             boolean expected = products.find(
                 new ProductFilter(new SearchKeyword(keyword), null, null, null, null, null, null),
                 null,
-                0,
+                1,
                 1,
                 categories
             ).totalElements() > 0;

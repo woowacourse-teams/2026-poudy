@@ -52,7 +52,7 @@ public class ProductService {
         ProductFilter filter = filterOf(query);
         Products products = products();
 
-        if (!query.hasKeyword() || page > 0) {
+        if (!query.hasKeyword() || page > 1) {
             return products.find(filter, sort, page, size, categories);
         }
 

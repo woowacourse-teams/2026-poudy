@@ -19,7 +19,7 @@ class IngredientCatalogTest {
     void retainsIngredientsInCatalogOrder() {
         IngredientCatalog catalog = IngredientCatalog.from(List.of(ingredient(1L), ingredient(2L), ingredient(3L)));
 
-        IngredientPage page = catalog.retainIds(Set.of(3L, 1L, 999L)).page(0, 10);
+        IngredientPage page = catalog.retainIds(Set.of(3L, 1L, 999L)).page(1, 10);
 
         assertThat(page.items()).extracting(Ingredient::id).containsExactly(1L, 3L);
         assertThat(page.totalElements()).isEqualTo(2);
