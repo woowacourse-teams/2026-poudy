@@ -7,11 +7,17 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 
-/** 접힌 줄이 다음 순위로 넘어가는 간격. 한 줄을 읽고 나서 넘어갈 만큼 둔다. */
-const ROTATE_INTERVAL = 6000;
+/**
+ * 접힌 줄이 다음 순위로 넘어가는 간격. 올라오는 데 420ms 를 쓰므로 한 줄이 멈춰 선 시간은
+ * 3초 남짓이다. 한 줄을 읽기에는 넉넉하고, 다음 순위를 보려고 기다리는 느낌은 들지 않는다.
+ */
+const ROTATE_INTERVAL = 3500;
 
-/** 손을 얹고 이만큼 머물러야 목록이 열린다. 지나가다 스치는 것으로는 열리지 않는다. */
-const HOVER_DELAY = 500;
+/**
+ * 손을 얹고 이만큼 머물러야 목록이 열린다. 지나가다 스치는 것으로는 열리지 않되,
+ * 열 뜻으로 멈춘 손은 기다리지 않게 한다.
+ */
+const HOVER_DELAY = 200;
 
 /** 검색 결과 화면으로 바로 보낸다. 조건을 고르는 화면을 거치지 않는다. */
 const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}`;
