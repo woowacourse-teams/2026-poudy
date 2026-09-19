@@ -6,6 +6,7 @@ import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
+import { AppQrPanel } from "@/components/ui/AppQrPanel";
 import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { InquiryButtonSlot } from "@/components/ui/InquiryButtonSlot";
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <BottomNavigationSlot />
         <InquiryButtonSlot />
+        <AppQrPanel />
       </body>
 
       <HistoryDepthTracker />
