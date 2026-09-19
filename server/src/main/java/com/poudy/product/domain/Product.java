@@ -137,6 +137,10 @@ public final class Product {
         return ingredients.contains(ingredientId);
     }
 
+    public boolean isDiscontinued() {
+        return variants.allDiscontinued();
+    }
+
     public boolean hasBrand(Brand other) {
         return brand.equals(other);
     }

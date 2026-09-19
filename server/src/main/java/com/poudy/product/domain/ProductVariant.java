@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 @Table(name = "product_variant")
 public class ProductVariant {
 
+    private static final String DISCONTINUED = "discontinued";
+
     @Id
     private Long id;
 
@@ -87,5 +89,9 @@ public class ProductVariant {
 
     public String status() {
         return status;
+    }
+
+    public boolean isDiscontinued() {
+        return DISCONTINUED.equals(status);
     }
 }

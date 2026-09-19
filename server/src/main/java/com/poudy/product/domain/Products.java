@@ -156,6 +156,7 @@ public final class Products {
 
     public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts) {
         List<Product> rankingCandidates = values().stream()
+            .filter(product -> !product.isDiscontinued())
             .filter(product -> product.belongsToAnyCategory(categoryIds))
             .toList();
         Comparator<Product> byViewCountDescending = Comparator

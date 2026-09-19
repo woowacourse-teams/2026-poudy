@@ -127,6 +127,19 @@ class ProductsTest {
     }
 
     @Test
+    @DisplayName("단종 제품은 랭킹에서 뺀다")
+    void excludesDiscontinuedProductsFromRanking() {
+        Products products = Products.from(
+            List.of(productOfCategory(1L, 2L), discontinuedProductOfCategory(2L, 2L))
+        );
+
+        assertThat(products.rankByViewCounts(List.of(2L), Map.of(2L, 100L)))
+            .extracting(Product::id)
+            .containsExactly(1L);
+        assertThat(products.findById(2L)).isPresent();
+    }
+
+    @Test
     @DisplayName("카테고리는 OR로 결합하고 부모 카테고리는 자식 제품을 포함한다")
     void ranksProductsInAnyRequestedCategory() {
         Products products = Products.from(
@@ -206,8 +219,16 @@ class ProductsTest {
         return product(id, brand(brandId), category(categoryId), new Ingredients(List.of()));
     }
 
+    private static Product discontinuedProductOfCategory(Long id, Long categoryId) {
+        return product(id, brand(1L), category(categoryId), new Ingredients(List.of()), "discontinued");
+    }
+
     private static Product product(Long id, Brand brand, Category category, Ingredients ingredients) {
-        ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active");
+        return product(id, brand, category, ingredients, "active");
+    }
+
+    private static Product product(Long id, Brand brand, Category category, Ingredients ingredients, String status) {
+        ProductVariant variant = new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", status);
 
         return new Product(
             id,
