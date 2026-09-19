@@ -1,9 +1,8 @@
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
+import { APP_STORE_URL } from "@/lib/navigation/open-app";
 import { SITE_NAME } from "@/lib/seo/site";
-
-const APP_STORE_URL = "https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share";
 
 /* 둘레의 빈 테두리까지 포함한 크기다. 코드 자체는 이보다 조금 작게 그려진다. */
 const QR_SIZE = 132;
