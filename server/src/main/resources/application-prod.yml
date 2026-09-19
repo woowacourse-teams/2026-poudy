@@ -1,8 +1,6 @@
 # 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
 poudy:
-  product-views:
-    file: ${POUDY_PRODUCT_VIEWS_FILE:/opt/poudy/state/product-views/daily-counts.json}
   search-keywords:
     state-file: ${POUDY_SEARCH_KEYWORDS_STATE_FILE:/opt/poudy/state/search-ranking/buckets.json}
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.

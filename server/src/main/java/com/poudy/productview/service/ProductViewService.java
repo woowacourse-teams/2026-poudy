@@ -4,6 +4,7 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.productview.domain.ViewPeriod;
 import com.poudy.productview.repository.ProductViewRepository;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -38,7 +39,10 @@ public class ProductViewService {
     }
 
     public Map<Long, Long> sumViewCounts(Integer days) {
-        return productViewRepository.sumViewCounts(LocalDate.now(productViewClock), days);
+        if (days == null) {
+            return productViewRepository.sumAllViewCounts();
+        }
+        return productViewRepository.sumViewCounts(ViewPeriod.recentDays(LocalDate.now(productViewClock), days));
     }
 
     public List<Product> findRankings(List<Long> categoryIds, Integer days) {

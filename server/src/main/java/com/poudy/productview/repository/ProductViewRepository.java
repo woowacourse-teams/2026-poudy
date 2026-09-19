@@ -1,58 +1,35 @@
 package com.poudy.productview.repository;
 
-import com.poudy.productview.domain.ProductViews;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Map;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
+import com.poudy.productview.domain.ViewPeriod;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class ProductViewRepository {
 
-    private final ProductViews productViews;
-    private final ProductViewFileRepository productViewFileRepository;
-    private final Object stateLock = new Object();
-    private final Object saveLock = new Object();
-    private long revision;
-    private long savedRevision;
+    private final ProductDailyViewJpaRepository productDailyViewJpaRepository;
 
-    private ProductViewRepository(ProductViews productViews, ProductViewFileRepository productViewFileRepository) {
-        this.productViews = productViews;
-        this.productViewFileRepository = productViewFileRepository;
-    }
-
-    public static ProductViewRepository restore(ProductViewFileRepository productViewFileRepository)
-        throws IOException {
-        ProductViews productViews = productViewFileRepository.load();
-        return new ProductViewRepository(productViews, productViewFileRepository);
+    public ProductViewRepository(ProductDailyViewJpaRepository productDailyViewJpaRepository) {
+        this.productDailyViewJpaRepository = productDailyViewJpaRepository;
     }
 
     public void increaseViewCount(Long productId, LocalDate date) {
-        synchronized (stateLock) {
-            productViews.increaseViewCount(productId, date);
-            revision++;
-        }
+        productDailyViewJpaRepository.increase(date, productId);
     }
 
-    public Map<Long, Long> sumViewCounts(LocalDate today, Integer days) {
-        ProductViews snapshot;
-        synchronized (stateLock) {
-            snapshot = productViews.copy();
-        }
-        return snapshot.sumViewCounts(today, days);
+    public Map<Long, Long> sumAllViewCounts() {
+        return countsOf(productDailyViewJpaRepository.sumAll());
     }
 
-    public void saveChanges() throws IOException {
-        synchronized (saveLock) {
-            ProductViews snapshot;
-            long snapshotRevision;
-            synchronized (stateLock) {
-                if (revision == savedRevision) {
-                    return;
-                }
-                snapshot = productViews.copy();
-                snapshotRevision = revision;
-            }
-            productViewFileRepository.save(snapshot);
-            savedRevision = snapshotRevision;
-        }
+    public Map<Long, Long> sumViewCounts(ViewPeriod period) {
+        return countsOf(productDailyViewJpaRepository.sumBetween(period.firstDate(), period.lastDate()));
+    }
+
+    private static Map<Long, Long> countsOf(List<ProductViewCount> counts) {
+        return counts.stream().collect(toUnmodifiableMap(ProductViewCount::productId, ProductViewCount::viewCount));
     }
 }

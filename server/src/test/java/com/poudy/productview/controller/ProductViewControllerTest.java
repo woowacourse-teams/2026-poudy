@@ -8,38 +8,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.productview.service.ProductViewService;
-import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class ProductViewControllerTest {
-
-    @TempDir
-    static Path directory;
 
     @Autowired
     private MockMvc mvc;
 
     @Autowired
     private ProductViewService productViewService;
-
-    @DynamicPropertySource
-    static void properties(DynamicPropertyRegistry registry) {
-        registry.add("poudy.product-views.file", () -> directory.resolve("views.json").toString());
-    }
 
     @Test
     void repeatedUnauthenticatedRequestsIncreaseEachViewAndReturnEmpty204() throws Exception {

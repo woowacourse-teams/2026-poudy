@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.productview.domain.ViewPeriod;
 import com.poudy.productview.repository.ProductViewRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -37,7 +38,7 @@ class ProductViewServiceTest {
         ProductRepository productRepository = mock(ProductRepository.class);
         when(productRepository.findAll()).thenReturn(products);
         ProductViewRepository productViewRepository = mock(ProductViewRepository.class);
-        when(productViewRepository.sumViewCounts(today, 7)).thenReturn(Map.of(2L, 3L));
+        when(productViewRepository.sumViewCounts(ViewPeriod.recentDays(today, 7))).thenReturn(Map.of(2L, 3L));
         ProductViewService service = new ProductViewService(
             productRepository,
             productViewRepository,
@@ -46,7 +47,7 @@ class ProductViewServiceTest {
 
         assertThat(service.findRankings(List.of(1L), 7)).containsExactly(second, first);
         verify(productRepository, times(1)).findAll();
-        verify(productViewRepository, times(1)).sumViewCounts(today, 7);
+        verify(productViewRepository, times(1)).sumViewCounts(ViewPeriod.recentDays(today, 7));
     }
 
     @ParameterizedTest
@@ -71,7 +72,7 @@ class ProductViewServiceTest {
         productViewService.sumViewCounts(null);
 
         verify(productViewRepository).increaseViewCount(1L, expectedDate);
-        verify(productViewRepository).sumViewCounts(expectedDate, 7);
-        verify(productViewRepository).sumViewCounts(expectedDate, null);
+        verify(productViewRepository).sumViewCounts(ViewPeriod.recentDays(expectedDate, 7));
+        verify(productViewRepository).sumAllViewCounts();
     }
 }
