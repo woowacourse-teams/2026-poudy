@@ -8,3 +8,6 @@ spring:
       mode: always
       schema-locations: classpath:db/test-reset.sql,classpath:db/schema.sql
       data-locations: classpath:db/test-data.sql
+      # 스키마에 PL/pgSQL 함수($$ 본문 안의 ;)가 있어 문장 단위로 쪼개지 않고 파일 하나를 통째로 실행한다.
+      # 한 번에 보낸 문장 묶음은 한 트랜잭션으로 실행되므로 커밋 시점 검사 트리거도 파일 끝에서 한 번 돈다.
+      separator: "^^^ END OF SCRIPT ^^^"

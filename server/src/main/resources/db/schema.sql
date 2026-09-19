@@ -1,3 +1,20 @@
+-- 적용: psql -X -v ON_ERROR_STOP=1 --single-transaction -f src/main/resources/db/schema.sql
+-- 한 트랜잭션으로 적용해 중간에 실패하면 아무것도 남지 않게 한다. 테스트는 spring.sql.init 이 파일 전체를 한 문장 묶음으로 실행한다.
+
+-- preflight. ASCII 로만 쓴다. UTF8 이 아닌 DB 는 한글이 든 문장을 변환하다 먼저 실패하기 때문이다.
+DO $$
+BEGIN
+    IF current_setting('server_encoding') <> 'UTF8' THEN
+        RAISE EXCEPTION 'preflight failed: server_encoding must be UTF8 (current: %). normalize() and IS NFC NORMALIZED require UTF8.',
+            current_setting('server_encoding');
+    END IF;
+    IF current_setting('server_version_num')::int < 150000 THEN
+        RAISE EXCEPTION 'preflight failed: PostgreSQL 15 or later is required (UNIQUE NULLS NOT DISTINCT). current: %',
+            current_setting('server_version');
+    END IF;
+END
+$$;
+
 CREATE TABLE brand (
     id           BIGINT        NOT NULL,
     korean_name  VARCHAR(100)  NOT NULL,
@@ -5,7 +22,8 @@ CREATE TABLE brand (
     image_url    VARCHAR(1000) NULL,
     CONSTRAINT pk_brand PRIMARY KEY (id),
     CONSTRAINT ck_brand_name_nfc CHECK (korean_name IS NFC NORMALIZED AND (english_name IS NULL OR english_name IS NFC NORMALIZED)),
-    CONSTRAINT ux_brand_korean_name UNIQUE (korean_name)
+    CONSTRAINT ux_brand_korean_name UNIQUE (korean_name),
+    CONSTRAINT ck_brand_korean_name_not_blank CHECK (korean_name !~ '^\s*$')
 );
 
 CREATE TABLE category (
@@ -19,6 +37,7 @@ CREATE TABLE category (
     CONSTRAINT ux_category_id_depth UNIQUE (id, depth),
     CONSTRAINT ux_category_order UNIQUE (display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_category_parent FOREIGN KEY (parent_id, parent_depth) REFERENCES category (id, depth),
+    CONSTRAINT ck_category_name_not_blank CHECK (name !~ '^\s*$'),
     CONSTRAINT ck_category_depth CHECK (
         (depth = 0 AND parent_id IS NULL AND parent_depth IS NULL)
         OR (depth = 1 AND parent_id IS NOT NULL AND parent_depth = 0)
@@ -32,6 +51,8 @@ CREATE TABLE tag (
     name       VARCHAR(100) NOT NULL,
     CONSTRAINT pk_tag PRIMARY KEY (id),
     CONSTRAINT ux_tag_category_code UNIQUE (category, code),
+    CONSTRAINT ck_tag_code_not_blank CHECK (code !~ '^\s*$'),
+    CONSTRAINT ck_tag_name_not_blank CHECK (name !~ '^\s*$'),
     CONSTRAINT ck_tag_category CHECK (category IN (
         'FUNCTION', 'BIOLOGICAL_EFFECT', 'INGREDIENT_CLASS', 'ALLERGEN', 'REGULATORY', 'SKIN_REACTION'
     ))
@@ -118,6 +139,30 @@ CREATE TABLE product (
     CONSTRAINT ck_product_oil_level CHECK (oil_level BETWEEN 0 AND 3)
 );
 
+-- 제품 행은 지우지 않고 ID 도 바꾸지 않는다. 참조가 아직 없는 제품도 삭제·TRUNCATE·ID 변경을 거부해 ID 가 재사용되지 않게 한다.
+CREATE FUNCTION reject_product_identity_change() RETURNS trigger
+    LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.id IS DISTINCT FROM OLD.id THEN
+            RAISE EXCEPTION '제품 ID 는 바꾸지 않는다 (% → %).', OLD.id, NEW.id;
+        END IF;
+        RETURN NEW;
+    END IF;
+    RAISE EXCEPTION '제품 행은 삭제하지 않는다 (%). 단종은 삭제가 아니라 옵션 상태(discontinued)로 표현한다.', TG_OP;
+END
+$$;
+
+CREATE TRIGGER tg_product_reject_delete BEFORE DELETE ON product
+    FOR EACH ROW EXECUTE FUNCTION reject_product_identity_change();
+
+CREATE TRIGGER tg_product_reject_truncate BEFORE TRUNCATE ON product
+    FOR EACH STATEMENT EXECUTE FUNCTION reject_product_identity_change();
+
+CREATE TRIGGER tg_product_reject_id_update BEFORE UPDATE OF id ON product
+    FOR EACH ROW EXECUTE FUNCTION reject_product_identity_change();
+
 CREATE TABLE product_variant (
     id            BIGINT        NOT NULL,
     product_id    BIGINT        NOT NULL,
@@ -134,6 +179,40 @@ CREATE TABLE product_variant (
     CONSTRAINT ck_product_variant_volume_unit CHECK (volume_unit IN ('ml', 'g', 'ea')),
     CONSTRAINT ck_product_variant_status CHECK (status IN ('active', 'discontinued'))
 );
+
+-- 제품은 옵션을 하나 이상 가진다. 적재 중에는 제품과 옵션을 차례로 넣거나 옵션을 지우고 다시 넣으므로 커밋 시점에 검사한다.
+-- 검사 전에 제품 행을 잠가(FOR NO KEY UPDATE, FK 검사의 KEY SHARE 와는 충돌하지 않는다) 같은 제품의 옵션을 동시에 지우는 트랜잭션끼리 차례로 검사하게 한다.
+-- REPEATABLE READ 는 차례를 지켜도 시작 시점 스냅샷이라 앞선 커밋을 못 보므로 거부한다. READ COMMITTED 또는 SERIALIZABLE 에서 적재한다.
+-- TRUNCATE 는 행 트리거를 거치지 않으므로 거부한다. 옵션 전체 교체는 DELETE 후 다시 넣는다.
+CREATE FUNCTION require_product_variant() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_product_id BIGINT;
+BEGIN
+    IF TG_OP = 'TRUNCATE' THEN
+        RAISE EXCEPTION '제품 옵션은 TRUNCATE 하지 않는다. 옵션 교체는 DELETE 후 다시 넣는다.';
+    END IF;
+    IF current_setting('transaction_isolation') = 'repeatable read' THEN
+        RAISE EXCEPTION '% 검사는 REPEATABLE READ 에서 동시 삭제를 놓친다. READ COMMITTED 또는 SERIALIZABLE 로 실행한다.', TG_TABLE_NAME;
+    END IF;
+    IF TG_TABLE_NAME = 'product' THEN
+        v_product_id := NEW.id;
+    ELSE
+        v_product_id := OLD.product_id;
+    END IF;
+    PERFORM 1 FROM product WHERE id = v_product_id FOR NO KEY UPDATE;
+    IF FOUND
+       AND NOT EXISTS (SELECT 1 FROM product_variant WHERE product_id = v_product_id) THEN
+        RAISE EXCEPTION '제품 % 에 옵션이 없다. 제품은 옵션을 하나 이상 가진다.', v_product_id;
+    END IF;
+    RETURN NULL;
+END $$;
+
+CREATE CONSTRAINT TRIGGER tg_product_require_variant AFTER INSERT ON product
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_product_variant();
+CREATE CONSTRAINT TRIGGER tg_product_variant_keep_one AFTER DELETE OR UPDATE OF product_id ON product_variant
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_product_variant();
+CREATE TRIGGER tg_product_variant_reject_truncate BEFORE TRUNCATE ON product_variant
+    FOR EACH STATEMENT EXECUTE FUNCTION require_product_variant();
 
 CREATE TABLE product_component (
     product_id    BIGINT       NOT NULL,
@@ -244,6 +323,60 @@ CREATE TABLE curation_block_product_filter (
     CONSTRAINT fk_cbpf_product FOREIGN KEY (block_id, product_id) REFERENCES curation_block_product (block_id, product_id) ON DELETE CASCADE,
     CONSTRAINT fk_cbpf_filter FOREIGN KEY (block_id, filter_id) REFERENCES curation_block_filter (block_id, id) ON DELETE CASCADE
 );
+
+-- 필터형 제품 블록(PRODUCTS_BY_FILTER)은 필터를 하나 이상 가지고, 블록의 모든 제품은 필터에 하나 이상 연결된다(노출 상태와 무관).
+-- 블록·필터·제품·연결을 차례로 넣거나 바꾸므로 커밋 시점에 검사하고, 검사 전에 블록 행을 잠가 동시 변경을 차례로 검사한다.
+-- 필터·연결 테이블의 TRUNCATE 는 행 트리거를 거치지 않으므로 거부한다. 큐레이션 전체 교체는 curation 행 DELETE(연쇄 삭제) 후 다시 넣는다.
+CREATE FUNCTION require_curation_block_filters() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_block_ids UUID[] := '{}';
+    v_block_id  UUID;
+    v_type      VARCHAR(30);
+BEGIN
+    IF TG_OP = 'TRUNCATE' THEN
+        RAISE EXCEPTION '% 은 TRUNCATE 하지 않는다. 큐레이션 교체는 curation 행을 DELETE 후 다시 넣는다.', TG_TABLE_NAME;
+    END IF;
+    IF current_setting('transaction_isolation') = 'repeatable read' THEN
+        RAISE EXCEPTION '% 검사는 REPEATABLE READ 에서 동시 삭제를 놓친다. READ COMMITTED 또는 SERIALIZABLE 로 실행한다.', TG_TABLE_NAME;
+    END IF;
+    IF TG_TABLE_NAME = 'curation_block' THEN
+        v_block_ids := ARRAY[NEW.id];
+    ELSIF TG_OP = 'INSERT' THEN
+        v_block_ids := ARRAY[NEW.block_id];
+    ELSIF TG_OP = 'DELETE' THEN
+        v_block_ids := ARRAY[OLD.block_id];
+    ELSE
+        v_block_ids := ARRAY[OLD.block_id, NEW.block_id];
+    END IF;
+    FOREACH v_block_id IN ARRAY v_block_ids LOOP
+        CONTINUE WHEN v_block_id IS NULL;
+        SELECT type INTO v_type FROM curation_block WHERE id = v_block_id FOR NO KEY UPDATE;
+        CONTINUE WHEN NOT FOUND OR v_type <> 'PRODUCTS_BY_FILTER';
+        IF NOT EXISTS (SELECT 1 FROM curation_block_filter f WHERE f.block_id = v_block_id) THEN
+            RAISE EXCEPTION '필터형 제품 블록 % 에 필터가 없다.', v_block_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM curation_block_product bp
+                   WHERE bp.block_id = v_block_id
+                     AND NOT EXISTS (SELECT 1 FROM curation_block_product_filter pf
+                                     WHERE pf.block_id = bp.block_id AND pf.product_id = bp.product_id)) THEN
+            RAISE EXCEPTION '필터형 제품 블록 % 에 필터에 연결되지 않은 제품이 있다.', v_block_id;
+        END IF;
+    END LOOP;
+    RETURN NULL;
+END $$;
+
+CREATE CONSTRAINT TRIGGER tg_curation_block_require_filters AFTER INSERT OR UPDATE ON curation_block
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_curation_block_filters();
+CREATE CONSTRAINT TRIGGER tg_curation_block_filter_keep_one AFTER DELETE OR UPDATE ON curation_block_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_curation_block_filters();
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_require_filter AFTER INSERT OR UPDATE ON curation_block_product
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_curation_block_filters();
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_filter_keep_one AFTER DELETE OR UPDATE ON curation_block_product_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_curation_block_filters();
+CREATE TRIGGER tg_curation_block_filter_reject_truncate BEFORE TRUNCATE ON curation_block_filter
+    FOR EACH STATEMENT EXECUTE FUNCTION require_curation_block_filters();
+CREATE TRIGGER tg_curation_block_product_filter_reject_truncate BEFORE TRUNCATE ON curation_block_product_filter
+    FOR EACH STATEMENT EXECUTE FUNCTION require_curation_block_filters();
 
 CREATE TABLE product_daily_view (
     view_date  DATE   NOT NULL,
@@ -369,3 +502,5 @@ CREATE INDEX ix_ingredient_korean_name ON ingredient (korean_name, id);
 CREATE INDEX ix_ingredient_english_name ON ingredient (translate(english_name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), id);
 CREATE INDEX ix_product_category ON product (category_id, category_depth);
 CREATE INDEX ix_product_ingredient_ingredient ON product_ingredient (ingredient_id);
+CREATE INDEX ix_feedback_received_at ON feedback (received_at, id);
+CREATE INDEX ix_product_correction_request_received_at ON product_correction_request (received_at, id);
