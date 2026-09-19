@@ -32,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -293,13 +294,32 @@ class FeedbackRepositoryTest {
         repository.save(newer);
         clear();
 
-        assertThat(repository.findAll(null, null)).extracting(Feedback::id)
+        assertThat(repository.findPage(null, null, 0, 100)).extracting(Feedback::id)
             .containsSubsequence(newer.id(), older.id());
-        assertThat(repository.findAll(null, FeedbackSubjectType.PRODUCT_CORRECTION)).extracting(Feedback::id)
+        assertThat(repository.findPage(null, FeedbackSubjectType.PRODUCT_CORRECTION, 0, 100)).extracting(Feedback::id)
             .contains(newer.id())
             .doesNotContain(older.id());
-        assertThat(repository.findAll(FeedbackStatus.COMPLETED, null)).extracting(Feedback::id)
+        assertThat(repository.findPage(FeedbackStatus.COMPLETED, null, 0, 100)).extracting(Feedback::id)
             .doesNotContain(older.id(), newer.id());
+        assertThat(repository.count(null, FeedbackSubjectType.PRODUCT_CORRECTION))
+            .isEqualTo(repository.findPage(null, FeedbackSubjectType.PRODUCT_CORRECTION, 0, 100).size());
+    }
+
+    @Test
+    @DisplayName("목록은 DB 에서 요청한 페이지만 읽고 이미지와 함께 돌려준다")
+    void readsOnlyRequestedPage() {
+        long before = repository.count(null, FeedbackSubjectType.BUG_REPORT);
+        List<Feedback> saved = IntStream.range(0, 3)
+            .mapToObj(index -> serviceFeedback(FeedbackType.BUG_REPORT, null, RECEIVED_AT.plusDays(10 + index)))
+            .toList();
+        saved.forEach(repository::save);
+        clear();
+
+        assertThat(repository.count(null, FeedbackSubjectType.BUG_REPORT)).isEqualTo(before + 3);
+        assertThat(repository.findPage(null, FeedbackSubjectType.BUG_REPORT, 0, 2)).extracting(Feedback::id)
+            .containsExactly(saved.get(2).id(), saved.get(1).id());
+        assertThat(repository.findPage(null, FeedbackSubjectType.BUG_REPORT, 2, 1)).extracting(Feedback::id)
+            .containsExactly(saved.get(0).id());
     }
 
     @Test

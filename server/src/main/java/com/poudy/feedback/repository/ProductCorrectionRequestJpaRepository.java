@@ -19,8 +19,8 @@ public interface ProductCorrectionRequestJpaRepository extends Repository<Produc
     @Query("select request from ProductCorrectionRequestEntity request left join fetch request.images where request.id = :id")
     Optional<ProductCorrectionRequestEntity> findWithImagesById(@Param("id") UUID id);
 
-    @Query("select distinct request from ProductCorrectionRequestEntity request left join fetch request.images")
-    List<ProductCorrectionRequestEntity> findAllWithImages();
+    @Query("select distinct request from ProductCorrectionRequestEntity request left join fetch request.images where request.id in :ids")
+    List<ProductCorrectionRequestEntity> findAllWithImagesByIdIn(@Param("ids") Collection<UUID> ids);
 
     @Query("select new com.poudy.feedback.repository.ImageOwner(image.imageId, request.id)"
         + " from ProductCorrectionRequestEntity request join request.images image where image.imageId in :imageIds")
@@ -37,4 +37,9 @@ public interface ProductCorrectionRequestJpaRepository extends Repository<Produc
         @Param("statusChangedAt") OffsetDateTime statusChangedAt,
         @Param("completedAt") OffsetDateTime completedAt
     );
+
+    @Transactional
+    @Modifying
+    @Query("delete from ProductCorrectionRequestEntity request where request.id = :id and request.receivedAt <= :cutoff")
+    int deleteExpired(@Param("id") UUID id, @Param("cutoff") OffsetDateTime cutoff);
 }

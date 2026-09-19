@@ -13,13 +13,16 @@ import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -30,6 +33,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class FeedbackRepository {
 
     private static final String IMAGE_LOCK = "select count(*) from (select pg_advisory_xact_lock(hashtextextended(:imageId, 0))) as image_lock";
+    private static final String LISTED = "(select id, received_at, status, subject_type from feedback"
+        + " union all select id, received_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
 
     private final FeedbackJpaRepository feedbackJpaRepository;
     private final ProductCorrectionRequestJpaRepository correctionJpaRepository;
@@ -111,17 +116,82 @@ public class FeedbackRepository {
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
     }
 
-    public List<Feedback> findAll(FeedbackStatus status, FeedbackSubjectType type) {
-        return Stream.concat(
-            feedbackJpaRepository.findAllWithImages().stream().map(feedback -> feedback.toDomain(zone)),
-            correctionJpaRepository.findAllWithImages().stream().map(request -> request.toDomain(zone))
+    public long count(FeedbackStatus status, FeedbackSubjectType type) {
+        Query query = entityManager.createNativeQuery("select count(*) from " + LISTED + conditionOf(status, type));
+        bind(query, status, type);
+        return ((Number) query.getSingleResult()).longValue();
+    }
+
+    public List<Feedback> findPage(FeedbackStatus status, FeedbackSubjectType type, long offset, int size) {
+        Query query = entityManager.createNativeQuery(
+            "select listed.id from " + LISTED + conditionOf(status, type)
+                + " order by listed.received_at desc, listed.id desc offset :offset limit :size"
+        );
+        bind(query, status, type);
+        query.setParameter("offset", offset);
+        query.setParameter("size", size);
+        List<UUID> ids = ((List<?>) query.getResultList()).stream().map(UUID.class::cast).toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Feedback> feedbacks = Stream.concat(
+            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(feedback -> feedback.toDomain(zone)),
+            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(request -> request.toDomain(zone))
         )
-            .filter(feedback -> feedback.matches(status, type))
-            .sorted(
-                Comparator.comparing(Feedback::receivedAt).reversed()
-                    .thenComparing(Feedback::id, Comparator.reverseOrder())
-            )
-            .toList();
+            .collect(toMap(Feedback::id, Function.identity()));
+        return ids.stream().map(feedbacks::get).toList();
+    }
+
+    public List<Feedback> findExpired(OffsetDateTime cutoff, int size) {
+        if (size < 1) {
+            throw new IllegalArgumentException("조회 개수는 1 이상이어야 합니다.");
+        }
+        Query query = entityManager.createNativeQuery(
+            "select listed.id from " + LISTED
+                + " where listed.received_at <= :cutoff order by listed.received_at, listed.id limit :size"
+        );
+        query.setParameter("cutoff", cutoff);
+        query.setParameter("size", size);
+        List<UUID> ids = ((List<?>) query.getResultList()).stream().map(UUID.class::cast).toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Feedback> feedbacks = Stream.concat(
+            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(feedback -> feedback.toDomain(zone)),
+            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(request -> request.toDomain(zone))
+        ).collect(toMap(Feedback::id, Function.identity()));
+        return ids.stream().map(feedbacks::get).toList();
+    }
+
+    public boolean deleteExpired(Feedback feedback, OffsetDateTime cutoff) {
+        int deleted = switch (feedback.subject()) {
+            case ServiceFeedback ignored -> feedbackJpaRepository.deleteExpired(feedback.id(), cutoff);
+            case ProductCorrection ignored -> correctionJpaRepository.deleteExpired(feedback.id(), cutoff);
+        };
+        return deleted == 1;
+    }
+
+    private static String conditionOf(FeedbackStatus status, FeedbackSubjectType type) {
+        List<String> conditions = new ArrayList<>();
+        if (status != null) {
+            conditions.add("listed.status = :status");
+        }
+        if (type != null) {
+            conditions.add("listed.subject_type = :type");
+        }
+        if (conditions.isEmpty()) {
+            return "";
+        }
+        return " where " + String.join(" and ", conditions);
+    }
+
+    private static void bind(Query query, FeedbackStatus status, FeedbackSubjectType type) {
+        if (status != null) {
+            query.setParameter("status", status.name());
+        }
+        if (type != null) {
+            query.setParameter("type", type.name());
+        }
     }
 
     public boolean updateStatus(FeedbackStatus expected, Feedback feedback) {

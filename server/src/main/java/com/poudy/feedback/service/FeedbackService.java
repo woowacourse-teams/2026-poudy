@@ -99,10 +99,12 @@ public class FeedbackService {
         int page,
         int size
     ) {
-        List<Feedback> feedbacks = feedbackRepository.findAll(status, type);
-        int fromIndex = pageOffset(page, size, feedbacks.size());
-        int toIndex = Math.min(fromIndex + size, feedbacks.size());
-        return new FeedbackPage(feedbacks.subList(fromIndex, toIndex), feedbacks.size());
+        long totalElements = feedbackRepository.count(status, type);
+        long offset = (long) (page - 1) * size;
+        if (offset >= totalElements) {
+            return new FeedbackPage(List.of(), totalElements);
+        }
+        return new FeedbackPage(feedbackRepository.findPage(status, type, offset, size), totalElements);
     }
 
     public Feedback findById(UUID feedbackId) {
@@ -133,14 +135,6 @@ public class FeedbackService {
         } catch (RuntimeException exception) {
             log.error("Discord 의견 알림 전송에 실패했습니다. feedbackId={}", feedback.id());
         }
-    }
-
-    private static int pageOffset(int page, int size, int totalElements) {
-        long offset = (long) (page - 1) * size;
-        if (offset >= totalElements) {
-            return totalElements;
-        }
-        return Math.toIntExact(offset);
     }
 
     public record FeedbackPage(List<Feedback> items, long totalElements) {

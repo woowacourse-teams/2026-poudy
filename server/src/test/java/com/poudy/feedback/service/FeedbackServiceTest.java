@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -68,6 +70,31 @@ class FeedbackServiceTest {
         imageRelay,
         CLOCK
     );
+
+    @Test
+    @DisplayName("의견 목록은 전체 건수와 요청한 페이지만 저장소에서 읽는다")
+    void readsRequestedPageFromRepository() {
+        Feedback feedback = Feedback.register(new ProductCorrection(1L, "블랙 스네일 토너"), "제품 정보가 실제 패키지와 달라요.", CLOCK);
+        given(feedbackRepository.count(FeedbackStatus.RECEIVED, null)).willReturn(21L);
+        given(feedbackRepository.findPage(FeedbackStatus.RECEIVED, null, 20L, 20)).willReturn(List.of(feedback));
+
+        FeedbackService.FeedbackPage page = feedbackService.findAll(FeedbackStatus.RECEIVED, null, 2, 20);
+
+        assertThat(page.items()).containsExactly(feedback);
+        assertThat(page.totalElements()).isEqualTo(21L);
+    }
+
+    @Test
+    @DisplayName("전체 건수를 넘는 페이지는 목록을 읽지 않고 빈 페이지를 돌려준다")
+    void skipsReadingPageBeyondTotal() {
+        given(feedbackRepository.count(null, null)).willReturn(3L);
+
+        FeedbackService.FeedbackPage page = feedbackService.findAll(null, null, 2, 20);
+
+        assertThat(page.items()).isEmpty();
+        assertThat(page.totalElements()).isEqualTo(3L);
+        verify(feedbackRepository, never()).findPage(any(), any(), anyLong(), anyInt());
+    }
 
     @Test
     @DisplayName("원본을 저장한 뒤 같은 의견으로 Discord 알림을 전송한다")

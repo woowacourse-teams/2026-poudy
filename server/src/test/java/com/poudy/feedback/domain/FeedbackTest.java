@@ -69,23 +69,6 @@ class FeedbackTest {
     }
 
     @Test
-    @DisplayName("지정한 상태와 유형에 일치하고 생략한 조건은 무시한다")
-    void matchesStatusAndType() {
-        Feedback feedback = Feedback.register(
-            new ProductCorrection(1L, "블랙 스네일 토너"),
-            "제품 정보가 실제 패키지와 달라요.",
-            CLOCK
-        );
-
-        assertThat(feedback.matches(FeedbackStatus.RECEIVED, FeedbackSubjectType.PRODUCT_CORRECTION)).isTrue();
-        assertThat(feedback.matches(null, FeedbackSubjectType.PRODUCT_CORRECTION)).isTrue();
-        assertThat(feedback.matches(FeedbackStatus.RECEIVED, null)).isTrue();
-        assertThat(feedback.matches(null, null)).isTrue();
-        assertThat(feedback.matches(FeedbackStatus.COMPLETED, FeedbackSubjectType.PRODUCT_CORRECTION)).isFalse();
-        assertThat(feedback.matches(FeedbackStatus.RECEIVED, FeedbackSubjectType.BUG_REPORT)).isFalse();
-    }
-
-    @Test
     @DisplayName("공백을 제외하고 10자보다 짧은 의견을 거절한다")
     void rejectsShortContentAfterStripping() {
         assertThatThrownBy(() -> Feedback.register(OTHER, "짧 은 의 견 입 니 다", CLOCK))

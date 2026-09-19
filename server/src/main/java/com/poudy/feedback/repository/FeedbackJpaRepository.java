@@ -19,8 +19,8 @@ public interface FeedbackJpaRepository extends Repository<FeedbackEntity, UUID> 
     @Query("select feedback from FeedbackEntity feedback left join fetch feedback.images where feedback.id = :id")
     Optional<FeedbackEntity> findWithImagesById(@Param("id") UUID id);
 
-    @Query("select distinct feedback from FeedbackEntity feedback left join fetch feedback.images")
-    List<FeedbackEntity> findAllWithImages();
+    @Query("select distinct feedback from FeedbackEntity feedback left join fetch feedback.images where feedback.id in :ids")
+    List<FeedbackEntity> findAllWithImagesByIdIn(@Param("ids") Collection<UUID> ids);
 
     @Query("select new com.poudy.feedback.repository.ImageOwner(image.imageId, feedback.id)"
         + " from FeedbackEntity feedback join feedback.images image where image.imageId in :imageIds")
@@ -37,4 +37,9 @@ public interface FeedbackJpaRepository extends Repository<FeedbackEntity, UUID> 
         @Param("statusChangedAt") OffsetDateTime statusChangedAt,
         @Param("completedAt") OffsetDateTime completedAt
     );
+
+    @Transactional
+    @Modifying
+    @Query("delete from FeedbackEntity feedback where feedback.id = :id and feedback.receivedAt <= :cutoff")
+    int deleteExpired(@Param("id") UUID id, @Param("cutoff") OffsetDateTime cutoff);
 }

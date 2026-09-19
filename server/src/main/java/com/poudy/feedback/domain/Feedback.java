@@ -116,11 +116,6 @@ public final class Feedback {
         return FeedbackSubjectType.from(subject);
     }
 
-    public boolean matches(FeedbackStatus expectedStatus, FeedbackSubjectType expectedType) {
-        return (expectedStatus == null || hasStatus(expectedStatus))
-            && (expectedType == null || type() == expectedType);
-    }
-
     public Feedback attachImages(List<FeedbackImage> images) {
         return new Feedback(id, subject, content, receivedAt, images, status, statusChangedAt, completedAt);
     }

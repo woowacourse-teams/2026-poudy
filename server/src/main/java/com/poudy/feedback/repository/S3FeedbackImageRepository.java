@@ -85,6 +85,12 @@ public class S3FeedbackImageRepository {
         deleteRequired(pendingKey(image));
     }
 
+    public void deleteRetainedData(UUID feedbackId, List<FeedbackImage> images) {
+        images.forEach(image -> deleteRequired(finalKey(feedbackId, image)));
+        deleteRequired(FEEDBACK_PREFIX + feedbackId + "/feedback.json");
+        deleteRequired(FEEDBACK_PREFIX + feedbackId + "/management.json");
+    }
+
     private PendingImage resolve(UUID imageId, Instant now) {
         List<PendingImage> found = Stream.of(FeedbackImageFormat.JPEG, FeedbackImageFormat.PNG)
             .flatMap(format -> head(new FeedbackImage(imageId, format)).stream())
