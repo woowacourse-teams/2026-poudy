@@ -16,7 +16,6 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredient.repository.IngredientRepository;
-import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
@@ -37,19 +36,17 @@ public class ProductRepository {
         BrandRepository brandRepository,
         CategoryRepository categoryRepository,
         IngredientRepository ingredientRepository,
-        ProductFactory productFactory,
         SnapshotReader snapshotReader
     ) {
         this.products = snapshotReader
-            .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository, productFactory));
+            .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository));
     }
 
     private static Products load(
         ProductJpaRepository productJpaRepository,
         BrandRepository brandRepository,
         CategoryRepository categoryRepository,
-        IngredientRepository ingredientRepository,
-        ProductFactory productFactory
+        IngredientRepository ingredientRepository
     ) {
         Brands brands = brandRepository.findAll();
         Categories categories = categoryRepository.findAll();
@@ -72,7 +69,6 @@ public class ProductRepository {
             productJpaRepository.findAllProducts().stream()
                 .map(
                     product -> product.toDomain(
-                        productFactory,
                         brandOf(product, brands),
                         categoryOf(product, categories),
                         ingredientsOf(product, ingredientIds.getOrDefault(product.id(), List.of()), ingredients),

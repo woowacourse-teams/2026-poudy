@@ -7,8 +7,6 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.sensory.HeuristicProductSensoryEstimator;
-import com.poudy.product.domain.sensory.SensoryModelVersion;
 import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -44,21 +42,21 @@ class ProductRepositoryTest {
             .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
-        assertThat(
-            product.usesSensoryModelVersion(
-                new SensoryModelVersion(
-                    HeuristicProductSensoryEstimator.INGREDIENT_PROFILE_VERSION,
-                    HeuristicProductSensoryEstimator.CATEGORY_PRIOR_VERSION,
-                    HeuristicProductSensoryEstimator.LEVEL_MODEL_VERSION
-                )
-            )
-        ).isTrue();
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
             .get()
             .extracting(Ingredient::koreanName)
             .isEqualTo("향료");
+    }
+
+    @Test
+    @DisplayName("DB에 저장된 수분감·유분감 단계를 그대로 읽는다")
+    void readsStoredSensoryLevels() {
+        Product product = productRepository.findAll().findById(10L).orElseThrow();
+
+        assertThat(product.moistureLevel()).isEqualTo(1);
+        assertThat(product.oilLevel()).isEqualTo(2);
     }
 
     @Test

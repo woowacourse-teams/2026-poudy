@@ -685,11 +685,11 @@ INSERT INTO exclude_code_ingredient (exclude_code, ingredient_id, display_order)
     ('SYNTHETIC_COLORANTS', 19601, 83);
 
 INSERT INTO product (id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, updated_at) VALUES
-    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', 0, 0, '2026-08-13T08:28:29.301Z'),
-    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', 0, 0, '2026-08-13T08:28:29.301Z'),
-    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', 0, 0, '2026-08-13T08:28:29.301Z'),
-    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', 0, 0, '2026-08-13T08:28:29.301Z'),
-    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', 0, 0, '2026-08-13T08:28:29.301Z');
+    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', 2, 0, '2026-08-13T08:28:29.301Z'),
+    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', 2, 1, '2026-08-13T08:28:29.301Z'),
+    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', 1, 2, '2026-08-13T08:28:29.301Z'),
+    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', 2, 0, '2026-08-13T08:28:29.301Z'),
+    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', 2, 0, '2026-08-13T08:28:29.301Z');
 
 INSERT INTO product_variant (id, product_id, display_order, price, volume_value, volume_unit, status) VALUES
     (1, 1, 0, 18000, 200, 'ml', 'active'),

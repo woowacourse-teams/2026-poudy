@@ -182,7 +182,7 @@ class ProductTest {
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("제품 감각 추론 결과가 필요합니다.");
+            .hasMessage("제품 수분감·유분감 단계가 필요합니다.");
     }
 
     @Test

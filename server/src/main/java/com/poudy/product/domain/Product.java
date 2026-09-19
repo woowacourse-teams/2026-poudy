@@ -7,7 +7,6 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
-import com.poudy.product.domain.sensory.SensoryModelVersion;
 import com.poudy.search.domain.NameMatch;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
@@ -75,7 +74,7 @@ public final class Product {
             throw new IllegalArgumentException("제품은 용량 옵션을 가져야 합니다.");
         }
         if (sensory == null) {
-            throw new IllegalArgumentException("제품 감각 추론 결과가 필요합니다.");
+            throw new IllegalArgumentException("제품 수분감·유분감 단계가 필요합니다.");
         }
         if (updatedAt == null) {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
@@ -152,10 +151,6 @@ public final class Product {
 
     public boolean matchesNameExactly(SearchKeyword keyword) {
         return keyword.matchesExactly(name);
-    }
-
-    public boolean usesSensoryModelVersion(SensoryModelVersion modelVersion) {
-        return sensory.usesModelVersion(modelVersion);
     }
 
     public Integer moistureLevel() {

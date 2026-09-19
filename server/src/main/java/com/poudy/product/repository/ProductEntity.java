@@ -4,8 +4,10 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.skintype.domain.SkinType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +37,12 @@ public class ProductEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "moisture_level")
+    private Short moistureLevel;
+
+    @Column(name = "oil_level")
+    private Short oilLevel;
+
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -54,14 +62,13 @@ public class ProductEntity {
     }
 
     public Product toDomain(
-        ProductFactory productFactory,
         Brand brand,
         Category category,
         Ingredients ingredients,
         ProductVariants variants,
         Set<SkinType> skinTypes
     ) {
-        return productFactory.create(
+        return new Product(
             id,
             productName,
             brand,
@@ -69,6 +76,7 @@ public class ProductEntity {
             ingredients,
             imageUrl,
             variants,
+            new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel)),
             updatedAt,
             skinTypes
         );
