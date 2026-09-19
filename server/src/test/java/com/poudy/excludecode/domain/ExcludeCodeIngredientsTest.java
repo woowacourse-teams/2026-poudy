@@ -16,7 +16,7 @@ class ExcludeCodeIngredientsTest {
 
     private static IngredientCatalog ingredientsOf(Long... ids) {
         List<Ingredient> values = Arrays.stream(ids)
-            .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null, null, null))
+            .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null))
             .toList();
 
         return IngredientCatalog.from(values);

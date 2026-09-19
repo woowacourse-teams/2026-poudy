@@ -230,7 +230,7 @@ class ProductServiceTest {
             brand,
             category,
             new Ingredients(
-                List.of(new Ingredient(10L, "성분", null, null, null, null, null, null, null, null))
+                List.of(new Ingredient(10L, "성분", null, null, null, null, null, null))
             ),
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),

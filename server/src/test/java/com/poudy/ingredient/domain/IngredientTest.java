@@ -16,22 +16,22 @@ import org.junit.jupiter.api.Test;
 @DisplayName("성분")
 class IngredientTest {
 
-    private static Ingredient ingredient(String englishName, String originDefinition, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", englishName, originDefinition, "설명", List.of("근거"), null, tags, null, null);
+    private static Ingredient ingredient(String englishName, List<IngredientTag> tags) {
+        return new Ingredient(1L, "글리세린", englishName, "설명", List.of("근거"), null, tags, null);
     }
 
     private static Ingredient withEvidence(List<String> infoSources) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", infoSources, null, List.of(), null, null);
+        return new Ingredient(1L, "글리세린", "Glycerin", "설명", infoSources, null, List.of(), null);
     }
 
     private static Ingredient withEvidenceAndTags(List<String> infoSources, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", infoSources, null, tags, null, null);
+        return new Ingredient(1L, "글리세린", "Glycerin", "설명", infoSources, null, tags, null);
     }
 
     @Test
     @DisplayName("표준 자료에 없는 영문명은 빈 문자열로 검색한다")
     void fillsMissingTextWithEmptyString() {
-        Ingredient ingredient = ingredient(null, null, List.of());
+        Ingredient ingredient = ingredient(null, List.of());
 
         assertThat(ingredient.englishName()).isEmpty();
         assertThat(ingredient.match(new SearchKeyword("Glycerin"))).isEmpty();
@@ -40,7 +40,7 @@ class IngredientTest {
     @Test
     @DisplayName("영문명이 있으면 이름 검색 행동에 사용한다")
     void keepsPresentText() {
-        Ingredient ingredient = ingredient("Glycerin", "이 원료는 …", List.of());
+        Ingredient ingredient = ingredient("Glycerin", List.of());
 
         assertThat(ingredient.englishName()).isEqualTo("Glycerin");
         assertThat(ingredient.match(new SearchKeyword("glycerin")))
@@ -54,7 +54,6 @@ class IngredientTest {
     void splitsTagsByCategory() {
         Ingredient ingredient = ingredient(
             "Glycerin",
-            "유래",
             List.of(
                 tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")),
                 tag(18L, "SKIN_CONDITIONING", "피부 컨디셔닝제", TagCategory.FUNCTION, List.of("출처")),
@@ -73,7 +72,6 @@ class IngredientTest {
     void resolvesTagsToNamedValues() {
         Ingredient ingredient = ingredient(
             "Glycerin",
-            "유래",
             List.of(
                 tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")),
                 tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, List.of("출처"))
@@ -91,7 +89,6 @@ class IngredientTest {
     void includesNewTagDefinitions() {
         Ingredient ingredient = ingredient(
             "Glycerin",
-            "유래",
             List.of(
                 tag(75L, "BULKING", "벌킹제", TagCategory.FUNCTION, List.of("출처")),
                 tag(51L, "ELASTICITY_RELATED", "탄력 관련", TagCategory.BIOLOGICAL_EFFECT, List.of("출처"))
@@ -184,12 +181,10 @@ class IngredientTest {
             1L,
             "글리세린",
             "Glycerin",
-            "유래",
             "설명",
             List.of("근거"),
             aliases,
             tags,
-            null,
             null
         );
 

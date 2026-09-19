@@ -17,11 +17,9 @@ public final class Ingredient {
     private final Long id;
     private final String koreanName;
     private final String englishName;
-    private final String originDefinition;
     private final String description;
     private final List<String> infoSources;
     private final List<IngredientTag> tags;
-    private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
     private final List<SearchableText> searchableKoreanNames;
     private final List<SearchableText> searchableEnglishNames;
@@ -31,23 +29,19 @@ public final class Ingredient {
         Long id,
         String koreanName,
         String englishName,
-        String originDefinition,
         String description,
         List<String> infoSources,
         List<String> aliases,
         List<IngredientTag> tagMappings,
-        OffsetDateTime createdAt,
         OffsetDateTime updatedAt
     ) {
         this.id = id;
         this.koreanName = koreanName;
         this.englishName = Objects.requireNonNullElse(englishName, "");
-        this.originDefinition = Objects.requireNonNullElse(originDefinition, "");
         this.description = description;
         this.infoSources = List.copyOf(Objects.requireNonNullElse(infoSources, List.<String>of()));
         List<String> copiedAliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
         this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
-        this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.searchableKoreanNames = SearchableText.formsOf(koreanName);
         this.searchableEnglishNames = SearchableText.formsOf(this.englishName);

@@ -144,6 +144,6 @@ class IngredientsTest {
     }
 
     private static Ingredient ingredient(Long id, String koreanName, String englishName) {
-        return new Ingredient(id, koreanName, englishName, null, null, null, null, null, null, null);
+        return new Ingredient(id, koreanName, englishName, null, null, null, null, null);
     }
 }

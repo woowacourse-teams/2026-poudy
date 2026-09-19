@@ -247,8 +247,6 @@ class ProductCatalogTest {
                     null,
                     null,
                     null,
-                    null,
-                    null,
                     null
                 )
             )

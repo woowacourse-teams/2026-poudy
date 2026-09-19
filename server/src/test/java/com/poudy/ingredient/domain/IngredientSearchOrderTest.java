@@ -172,7 +172,7 @@ class IngredientSearchOrderTest {
     }
 
     private static Ingredient ingredient(Long id, String koreanName, String... aliases) {
-        return new Ingredient(id, koreanName, "", null, null, null, List.of(aliases), null, null, null);
+        return new Ingredient(id, koreanName, "", null, null, List.of(aliases), null, null);
     }
 
     private static Ingredient ingredientWithEnglishName(
@@ -181,6 +181,6 @@ class IngredientSearchOrderTest {
         String englishName,
         String... aliases
     ) {
-        return new Ingredient(id, koreanName, englishName, null, null, null, List.of(aliases), null, null, null);
+        return new Ingredient(id, koreanName, englishName, null, null, List.of(aliases), null, null);
     }
 }

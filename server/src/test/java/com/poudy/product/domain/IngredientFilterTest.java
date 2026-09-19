@@ -78,7 +78,7 @@ class IngredientFilterTest {
     private static Ingredients ingredients(Long... ids) {
         return new Ingredients(
             Arrays.stream(ids)
-                .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null, null, null))
+                .map(id -> new Ingredient(id, "성분 " + id, null, null, null, null, null, null))
                 .toList()
         );
     }

@@ -42,12 +42,10 @@ public class IngredientEntity {
             id,
             koreanName,
             englishName,
-            null,
             description,
             infoSources,
             aliases,
             tags,
-            null,
             updatedAt
         );
     }
