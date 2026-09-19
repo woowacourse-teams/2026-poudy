@@ -43,7 +43,15 @@ Config ─────────────────────→ 객체
 
 Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않는다. 이 부재 형태의
 불변식은 `ArchitectureTest`가 검증한다. 기능 간 조합은 Service나 `config`에서 완결하며,
-도메인 규칙은 저장·전송 타입으로 확산하지 않는다.
+도메인 규칙은 저장·전송 타입으로 확산하지 않는다. 기능·계층 패키지(`brand.domain`,
+`feedback.service` 등) 사이의 순환 참조도 `ArchitectureTest`가 막는다. `exception` 패키지는 기능
+패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
+하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능의 의존 방향은
+`tag ← ingredient ← excludecode ← product → brand → category`다. 제품 수나 성분군처럼 하위 기능이
+상위 기능의 값을 보여 줘야 하면 하위 기능 Service 패키지에 필요한 조회만 담은 인터페이스
+(`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`, `IngredientGroups`)를 두고 상위
+기능이 구현한다. 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)과 성분군 코드
+`ExcludeCode`는 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
 
 새 저장 구현이 실제로 필요해질 때 Service와 Repository 사이의 포트를 함께 결정한다. 교체
 가능성만으로 인터페이스나 빈 계층을 미리 만들지 않는다.
