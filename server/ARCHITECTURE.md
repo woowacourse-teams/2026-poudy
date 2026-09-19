@@ -6,8 +6,8 @@ Poudy 백엔드는 Spring Web MVC 기반의 모듈형 모놀리스다. 기능별
 도메인을 소유하고, 전송·저장 기술은 그 바깥에 둔다.
 
 구조와 동작의 권위 원천은 코드와 테스트다. 이 문서는 코드 탐색만으로 복구하기 어려운 책임
-경계, 금지된 의존과 의도적인 제약만 기록한다. 카탈로그 저장 방식은 현재 JSON이지만, 이 선택이
-Controller·Service·Domain의 계약이 되지 않도록 Repository 경계 안에 감춘다.
+경계, 금지된 의존과 의도적인 제약만 기록한다. 카탈로그와 인기 검색어 사전은 PostgreSQL에서
+읽으며, 이 선택이 Controller·Service·Domain의 계약이 되지 않도록 Repository 경계 안에 감춘다.
 
 ## Package structure
 
@@ -37,7 +37,7 @@ Repository가 없고, `share`는 제품·브랜드 모델을 사용하는 별도
 
 ```text
 HTTP → Controller → Service → Domain
-                         └──→ Repository → JSON · S3 · 외부 시스템
+                         └──→ Repository → PostgreSQL · S3 · 외부 시스템
 Config ─────────────────────→ 객체 조립
 ```
 
@@ -83,9 +83,9 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 ### Product
 
 `Product`는 브랜드, 카테고리, 순서가 보존된 전성분, 판매 옵션과 감각 값을 묶는 중심
-애그리게이트이며 자신의 이름 검색과 필터 조건 판정을 수행한다. 감각 값은 원천 JSON의 완성
-값이 아니라 기동 시 계산한 값이며 목록·상세·필터·
-개수가 같은 결과를 사용한다. 계산 근거와 한계는
+애그리게이트이며 자신의 이름 검색과 필터 조건 판정을 수행한다. 감각 값은 서버 밖에서 계산해 제품
+행에 저장한 수분감·유분감 단계를 그대로 읽으며 목록·상세·필터·개수가 같은 값을 사용한다.
+서버는 감각 값을 계산하지 않는다. 지금 저장된 값을 만든 계산 근거와 한계는
 [`sensory-inference-v0.md`](docs/product/sensory-inference-v0.md)가 소유한다.
 
 ### Products
@@ -97,18 +97,15 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 ### ProductView
 
 `productview`는 한국 시간 날짜별 제품 조회수를 카탈로그와 분리해 소유한다. Service는
-제품 존재와 한국 시간 날짜를 결정하고, `ProductViews`는 전달받은 날짜의 증가와 기간별
-합산을 담당한다. 메모리 Repository가 집계 객체와 동시 접근, 저장 변경 번호를 소유한다.
-증가와 복사는 같은 잠금으로 보호하고 합산과 파일 쓰기는 독립된 복사본으로 수행한다.
-전용 스케줄러의 Writer는 저장 호출과 실패 로그만 담당한다. 파일 Repository가 JSON을 해석하고
-원자 교체한다. 정상 종료의 마지막 저장도 메모리 Repository에서 주기 저장과 직렬화한다.
-카탈로그에서 사라진 제품과 과거 날짜도 기록에서 제거하지 않는다. 운영 경로와 유실 범위는
-[`deploy/scripts/README.md`](../deploy/scripts/README.md)의 제품 조회수 상태 절을 따른다.
+제품 존재와 한국 시간 날짜를 결정하고, `ViewPeriod`는 오늘을 포함한 집계 기간을 정한다.
+Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 올리고, 기간 합산도 DB에서
+계산한다. 메모리에 상태를 두지 않으므로 인스턴스가 여럿이어도 기록이 겹쳐 쓰이지 않는다.
+제품 행은 지우지 않으므로 과거 날짜의 기록도 제품 FK를 유지한 채 남는다.
 
 ### ExcludeCode
 
 `excludecode`는 빠른 제외 성분군의 식별자와 성분 매핑을 소유한다. 성분군은 서버에서 성분으로
-해석하며, 데이터에 빠지거나 중복된 정의가 있으면 기동을 실패시킨다. 포함 범위는 JSON 데이터의
+해석하며, 데이터에 빠지거나 중복된 정의가 있으면 기동을 실패시킨다. 포함 범위는 DB 데이터의
 책임이며 서버 상수나 패턴으로 추론하지 않는다.
 
 ### SkinType
@@ -153,15 +150,26 @@ Service는 유스케이스를 완결하기 위해 Repository와 Domain을 조합
 ### Domain
 
 Domain은 상태와 그 상태에 관한 판단을 함께 소유한다. 저장소와 프레임워크 없이 실행할 수 있어야
-하며, 이 경계는 `ArchitectureTest`로 강제한다.
+하며, 이 경계는 `ArchitectureTest`로 강제한다. 예외는 JPA 매핑 어노테이션(`jakarta.persistence`)
+하나다. 어노테이션은 실행에 영향을 주지 않는 메타데이터이므로 도메인은 여전히 `new`로 만들어 검증한다.
+Hibernate 전용 어노테이션은 도메인에 두지 않는다.
 
 ### Repository
 
-Repository는 JSON·S3 같은 저장 표현을 도메인으로 변환하고 저장 실패를 인프라 오류로
+Repository는 DB·S3 같은 저장 표현을 도메인으로 변환하고 저장 실패를 인프라 오류로
 분류한다. 저장 형식 전용 타입과 프로토콜은 구현 내부에 두고 Controller 응답을 만들지 않는다.
+테이블 하나와 그대로 맞는 도메인(`Brand`, `Category`, `Tag`, `ProductVariant`, `ProductRequest`)은
+JPA 매핑을 직접 갖는다. 여러 테이블을 묶거나 한 도메인이 여러 테이블로 나뉘는 경우(`Product`,
+`Ingredient`, `Curation`, `Feedback` 등)는 Repository 패키지에 엔티티를 두고 도메인으로 변환한다.
+DB에서 읽은 도메인은 생성자 검증을 거치지 않으므로 같은 조건을 스키마 제약이 막는다. 카탈로그는 기동 시
+한 번 읽어 메모리 도메인으로 만들고, 검색·필터·집계는 기존 도메인이 계속 소유한다.
 
-운영 카탈로그 JSON은 커밋하지 않는다. OpenAPI 생성은 테스트 fixture를 사용하는 test runtime
-classpath에서 재현하고, 실제 서버는 main resources의 운영 데이터를 사용한다.
+스키마는 `db/schema.sql` 하나가 소유하고 DB에 직접 적용한다. 서버는 `ddl-auto: validate`로
+엔티티와 스키마가 맞는지만 확인하고 스키마를 만들거나 바꾸지 않는다.
+
+운영 데이터는 커밋하지 않는다. 테스트와 OpenAPI 생성은 `test` 프로필로 개발 DB와 분리된
+테스트 DB를 쓰며, 컨텍스트가 뜰 때마다 스키마와 테스트 데이터를 다시 넣는다. 실제 서버는 운영
+DB를 사용한다.
 
 ### Exception handling
 
@@ -191,16 +199,22 @@ CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소�
 정정은 대상 제품이 필수이므로 `POST /api/products/{productId}/correction-requests`가 경로로
 받고, 제품이 없으면 접수하지 않는다. 제품 등록 요청도 서비스 의견이 아니라 제품 데이터에 대한
 요청이므로 `POST /api/products/registration-requests`로 제품 컬렉션 아래에 둔다. 문의하기 화면이
-세 요청을 한곳에서 보내는 것은 화면 구성일 뿐 API 자원 구분의 근거가 아니다. 두 요청은 내용 검증, 요청 제한, S3 저장·이미지 귀속과
+세 요청을 한곳에서 보내는 것은 화면 구성일 뿐 API 자원 구분의 근거가 아니다. 두 요청은 내용 검증, 요청 제한, 이미지 귀속과
 Discord 알림이 같으므로 `feedback` 안에서 `FeedbackSubject`로만 구분하고 같은 저장 경계를
-공유한다.
+공유한다. 저장은 서비스 의견을 `feedback`, 제품 정보 정정 요청을 `product_correction_request`
+테이블에 나눠 두고 제품 등록 요청은 `product_request`에 둔다.
 
 첨부 이미지는 기존 2단계 API를 유지한다. `POST /api/pending-images`가 검증·정규화한
 이미지를 pending으로 저장하고 일회성 `imageIds`를 반환하며, 의견 등록이나 제품 정보 정정
-요청이 그 ID를 받아 접수 건에 귀속시킨다. 이미지 목록을 포함한 정확한 UUID 키의 `feedback.json` 존재가
-commit 판단 기준이다. claim은 `feedbackId`와 확장자만 저장하고, 오래된 claim의 JSON 키가
-존재하면 pending을, 존재하지 않으면 최종 이미지를 정리한다. 내용 hash, 이전 키 형식 조회,
-전체 최종 prefix 스캔은 이 일회성 claim 경계에 필요한 보안 효과를 더하지 않으므로 하지 않는다.
+요청이 그 ID를 받아 접수 건에 귀속시킨다. 이미지 파일은 S3에 두고 DB에는 이미지 ID·확장자·순서만
+기록한다. 귀속은 outbox 방식이다. 접수 건과 이미지 행을 한 트랜잭션으로 커밋하고, 커밋 뒤 pending을
+최종 경로로 복사하고 지운다. 별도 outbox 테이블은 두지 않는다. DB 이미지 행이 할 일 기록이고, 아직
+남은 pending이 미처리 표시다. 요청 안에서 옮기지 못했거나 서버가 멈춘 경우는 스케줄러가 pending 목록과
+DB 이미지 행을 대조해 다시 옮긴다. 옮기기는 같은 원본 ETag 조건 복사라 여러 번 실행해도 결과가 같다.
+DB에 없는 pending은 만료 후 유예 시간이 지나야 지워, 만료 직전에 커밋된 접수 건의 원본을 지우지 않는다.
+이미지 ID의 고유 제약은 두 이미지 테이블에 따로 걸려 있으므로, 저장 트랜잭션 안에서 이미지 ID마다
+advisory lock을 잡은 뒤 두 테이블을 확인해 이미 쓰인 ID를 거절한다. 같은 ID로 동시에 들어온 요청은
+앞선 요청의 커밋을 기다린 뒤 그 행을 보고 거절되므로, 한 이미지는 접수 건 하나에만 귀속된다.
 
 업로드 입력은 파일명이나 선언된 Content-Type 대신 실제 바이트로 JPEG, PNG 또는 `heic`/`heix`
 brand의 HEIC인지 판별하고 각 디코더가 실제로 읽을 수 있는지 확인한다. 크기·해상도·픽셀 상한을

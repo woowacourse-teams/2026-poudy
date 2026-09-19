@@ -9,6 +9,7 @@ Spring Boot 백엔드.
 | 개발 언어 | Java 21 LTS |
 | 프레임워크 | Spring Boot 4.1 |
 | 빌드 도구 | Gradle 9.2.1 (Wrapper) |
+| 데이터베이스 | PostgreSQL 15 이상, Spring Data JPA |
 | 단위 테스트 | JUnit 6, Mockito 5 |
 | 통합 테스트 | Spring Boot Test |
 | API 문서 | OpenAPI / springdoc 3.1 (Swagger UI) |
@@ -20,17 +21,29 @@ Spring Boot 백엔드.
 
 JDK 21 이상, Node.js 22, POSIX `sh` (Windows는 Git Bash).
 
-## 데이터 파일
+## 데이터베이스
 
-MVP 의 데이터는 JSON 파일에서 읽습니다. 오프라인에서 변환한 산출물이고 용량이 커 저장소에
-두지 않습니다.
+카탈로그(브랜드, 카테고리, 태그, 성분, 제외 성분군, 제품, 큐레이션)와 인기 검색어 사전은
+PostgreSQL 에서 읽습니다. 기동 시 한 번 전부 읽어 메모리에 올리므로, 데이터를 바꾸면 서버를 다시
+띄워야 반영됩니다.
 
-개발·테스트에서는 `src/main/resources` 아래에 파일을 둡니다. 운영에서는 `prod` 프로필이
-`POUDY_DATA_DIR` 디렉터리를 사용하며, 기본값은 `/app/data`입니다. 배포 스크립트가 S3에서
-파일을 내려받아 EC2의 `/opt/poudy/data`에 저장하고 systemd 서비스가 읽도록 설정합니다.
+PostgreSQL 15 이상을 설치하고 UTF-8 로 DB 두 개를 만듭니다. 스키마는
+`src/main/resources/db/schema.sql` 하나가 소유하고, 서버는 스키마를 만들거나 바꾸지 않고 검증만 합니다.
 
-파일이 없으면 기동 시점에 `데이터 파일을 읽지 못했습니다: <파일명>` 으로 실패합니다. 조회
-시점이 아니라 기동 시점에 실패시켜 준비되지 않은 환경을 바로 알 수 있게 한 것입니다.
+```bash
+createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy
+psql -X -v ON_ERROR_STOP=1 -d poudy -f src/main/resources/db/schema.sql
+createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
+```
+
+| DB | 쓰는 곳 | 스키마·데이터 |
+| --- | --- | --- |
+| `poudy` | `bootRun` (`dev`), 운영 (`prod`) | 직접 적용하고 데이터를 적재한다 |
+| `poudy_test` | 테스트, OpenAPI 생성 (`test`) | 컨텍스트가 뜰 때마다 비우고 `schema.sql` 과 `src/test/resources/db/test-data.sql` 을 다시 넣는다 |
+
+접속 정보는 `POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD` 로 바꿉니다. 사용자명 기본값은
+OS 사용자명이고 비밀번호는 비어 있습니다. 테스트 DB 주소는 `POUDY_TEST_DB_URL` 로 바꿉니다.
+테스트, `verify.sh`, `pre-push` 훅은 PostgreSQL 이 떠 있어야 통과합니다.
 
 ## 실행
 
