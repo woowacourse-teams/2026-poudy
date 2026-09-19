@@ -18,36 +18,19 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 
 - Java 21 설치
 - HEIC 변환용 `libheif-tools`, `libde265`와 자원 제한용 `util-linux-core` 설치
-- AWS CLI v2 및 jq 설치
-- `poudy` system user 및 `/opt/poudy/backend`, `/opt/poudy/data` 생성
-- `/etc/poudy/backend.env` 생성
+- AWS CLI v2, PostgreSQL 15 client 및 jq 설치
+- `poudy` system user 및 `/opt/poudy/backend` 생성
+- `/etc/poudy/backend.env` 예시 생성. 실제 DB 비밀 값은 운영자가 교체
 - `poudy-backend.service` 설치 및 enable
-- `poudy-data-sync.service` 및 `poudy-data-sync.timer` 설치 및 timer enable
-- JSON 데이터 디렉터리의 기본 권한 설정
-- 조회수 상태 디렉터리 `/opt/poudy/state/product-views` 생성 (`poudy:poudy`, `0750`)
-- 인기 검색어 상태 디렉터리 `/opt/poudy/state/search-ranking` 생성 (`poudy:poudy`, `0750`)
+- 기존 JSON 동기화 timer 비활성화
 
-### 제품 조회수 상태
+### PostgreSQL 준비
 
-제품 조회수는 `/opt/poudy/state/product-views/daily-counts.json`에 저장합니다.
-초기화와 CodeDeploy에서 `poudy` 사용자가 쓸 수 있는 상태 디렉터리를 준비합니다.
-저장 경로와 기본 10초 저장 주기는 `/etc/poudy/backend.env`에서 변경할 수 있습니다.
-
-```properties
-POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
-POUDY_PRODUCT_VIEWS_SAVE_INTERVAL=PT10S
-```
-
-### 인기 검색어 집계 상태
-
-인기 검색어의 10분 칸별 검색 횟수는 `/opt/poudy/state/search-ranking/buckets.json`에 저장합니다.
-초기화와 CodeDeploy에서 `poudy` 사용자가 쓸 수 있는 상태 디렉터리를 준비합니다.
-저장은 60초마다 하고 정상 종료 때 한 번 더 합니다. 강제 종료나 장애로 끝나면 마지막 저장 이후
-최대 60초치가 빠집니다. 경로는 `/etc/poudy/backend.env`에서 변경할 수 있습니다.
-
-```properties
-POUDY_SEARCH_KEYWORDS_STATE_FILE=/opt/poudy/state/search-ranking/buckets.json
-```
+`deploy/config/backend.env.example`을 참고해 `/etc/poudy/backend.env`에
+`POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD`를 반드시 설정합니다. 파일은
+`root:poudy`, `0640`을 유지합니다. 최초 빈 DB 배포에는 초기 카탈로그 SQL의 S3 URI도
+`POUDY_DB_INITIAL_DATA_S3_URI`로 설정합니다. CodeDeploy는 스키마와 초기 데이터를 적용한 뒤
+필수 테이블과 카탈로그 행을 확인하고, 하나라도 빠지면 기존 서비스를 재시작하지 않습니다.
 
 ### HEIC 런타임
 

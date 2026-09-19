@@ -196,20 +196,18 @@ HEIC는 호스트의 `/usr/bin/prlimit`과 `/usr/bin/heif-convert`를 별도 프
 두 실행 파일을 사용할 수 없으면 HEIC 입력만 거절하며 애플리케이션, JPEG와 PNG 업로드는
 정상 동작한다.
 
-## 피드백 JSON, 로그와 보유
+## 피드백 저장, 로그와 보유
 
-피드백 JSON은 요청 순서대로 `imageId`와 저장 `extension`을 담는다. 이미지가 없는 기존
-요청도 `images: []`를 저장한다. Discord에는 이미지 바이트나 URL 대신 첨부 개수만 추가하며,
-`allowed_mentions.parse=[]`를 유지한다.
+신규 피드백 원문과 이미지 메타데이터는 PostgreSQL에 저장한다. Discord에는 이미지 바이트나
+URL 대신 첨부 개수만 추가하며, `allowed_mentions.parse=[]`를 유지한다.
 
 애플리케이션 로그에는 의견 content/path, 원본·재인코딩 바이트, 원본 파일명, `imageId`,
 S3 키와 URL을 남기지 않는다. 보상·정리 실패는 작업 종류, `feedbackId`, 개수와 예외
 유형처럼 객체 키를 포함하지 않는 진단값만 기록한다.
 
-현재 운영 버킷은 버전 관리가 비활성화되어 있고 lifecycle 설정 권한이 없다. 애플리케이션은
-확정 접수 전의 pending·claim만 정리한다. 접수된 `feedback.json`과 최종 이미지는 운영자가
-최소 주 1회, `feedback.json` Last-Modified 83일 기준으로 삭제해 접수일로부터 90일을 넘지 않게
-한다. 상세 절차는 `deploy/README.md`가 권위 원천이다.
+운영 프로필의 보유기간 작업은 PostgreSQL `received_at` 83일 기준으로 대상을 골라 최종 이미지와
+legacy S3 문서를 먼저 삭제하고 DB 행을 마지막에 삭제한다. 실패한 행은 다음 주기에 재시도한다.
+상세 점검 절차는 `deploy/README.md`가 권위 원천이다.
 
 ## 남은 운영 검증
 
@@ -218,7 +216,7 @@ S3 키와 URL을 남기지 않는다. 보상·정리 실패는 작업 종류, `f
 - 버킷의 Block Public Access, HTTPS 강제, 기본 암호화와 요청의 SSE-S3가 일치하는지 확인한다.
 - 팀이 직접 촬영한 HEIC로 Amazon Linux 호스트의 변환, 타임아웃, 임시 파일 정리를
   확인한다. 외부 라이선스의 HEIC fixture는 저장소에 추가하지 않는다.
-- 수동 83일 삭제 절차가 피드백 JSON·이미지를 모두 지우고 개인정보 처리방침의
+- 예약 83일 삭제 작업이 DB 행·legacy 문서·최종 이미지를 모두 지우고 개인정보 처리방침의
   90일 이내 보유 표현과 일치하는지 확인한다.
 - 운영 경로에서 1~5장 업로드, 26 MiB/413, 429와 최대 처리 시간을 실측한다.
 

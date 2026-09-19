@@ -43,7 +43,7 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 - frontend: "s3://techcourse-project-2026/poudy/frontend/"
 
 운영 artifact에는 애플리케이션과 함께 호스트 설정도 포함합니다. backend artifact는
-`poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
+DB `schema.sql`, `poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
 HTTP·HTTPS 서버 설정, `poudy-frontend.service`와 frontend hook을 포함합니다.
 CodeDeploy hook은 파일을 각 호스트 경로에 반영한 뒤 `daemon-reload`, Nginx 검증 및
 서비스 재시작을 수행합니다.
@@ -87,15 +87,11 @@ staging 백엔드는 다음 검증을 완료했습니다.
 - Nginx HTTPS 및 Let’s Encrypt 자동 갱신 확인
 - CodeDeploy Agent 정상 실행 확인
 
-### Staging 데이터 동기화
+### Staging PostgreSQL
 
-staging EC2의 `poudy-data-sync.timer`가 다음 위치의 JSON을 `/opt/poudy/data`로
-동기화합니다.
-
-```text
-s3://techcourse-project-2026/poudy/staging/
-  → /opt/poudy/data
-```
+staging도 `/etc/poudy/backend.env`의 `POUDY_DB_*`로 별도 PostgreSQL DB에 연결합니다.
+CodeDeploy `AfterInstall`은 서비스 재시작 전에 연결, 스키마와 초기 카탈로그를 검증합니다.
+빈 DB라면 artifact의 `schema.sql`과 `POUDY_DB_INITIAL_DATA_S3_URI`의 SQL을 적용합니다.
 
 운영과 staging의 피드백·제품 등록 요청 데이터는 팀 결정에 따라 별도 분리하지 않습니다.
 피드백 S3 설정은 허용된 `techcourse-project-2026` 버킷을 사용하며, 현재 애플리케이션의
