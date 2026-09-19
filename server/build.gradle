@@ -76,12 +76,7 @@ tasks.named('jar') {
 
 tasks.named('test') {
     useJUnitPlatform()
-    def searchKeywordState = layout.buildDirectory.dir('tmp/test-search-ranking')
-    systemProperty 'poudy.search-keywords.state-file', searchKeywordState.get().file('buckets.json').asFile.path
     systemProperty 'spring.profiles.active', 'test'
-    doFirst {
-        project.delete(searchKeywordState)
-    }
     testLogging {
         events 'passed', 'skipped', 'failed'
     }

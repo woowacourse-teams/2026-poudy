@@ -60,8 +60,6 @@ poudy:
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
-  search-keywords:
-    state-file: ${POUDY_SEARCH_KEYWORDS_STATE_FILE:./var/search-ranking/buckets.json}
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:

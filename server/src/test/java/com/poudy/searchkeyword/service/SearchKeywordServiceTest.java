@@ -13,6 +13,7 @@ import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingChange;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
+import com.poudy.searchkeyword.support.InMemoryKeywordCountStore;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,7 +35,11 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class SearchKeywordServiceTest {
     private static final KeywordSearch CATALOG = keyword -> !keyword.equals("없는검색");
     private final MutableClock clock = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-    private final KeywordBuckets successful = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+    private final KeywordBuckets successful = new KeywordBuckets(
+        clock,
+        new BucketWindow(168, 600, 0),
+        new InMemoryKeywordCountStore()
+    );
 
     @Test
     void mergesAliasesAcrossKindsButKeepsProductAndGeneralTermSeparate() {
@@ -196,7 +201,11 @@ class SearchKeywordServiceTest {
     @Test
     void preservesPreviousCacheWhenRefreshFails() {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(throwingClock, new BucketWindow(168, 600, 0));
+        KeywordBuckets ranking = new KeywordBuckets(
+            throwingClock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
         SearchKeywordService failing = new SearchKeywordService(
             SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
@@ -220,7 +229,11 @@ class SearchKeywordServiceTest {
     @Test
     void refreshAfterRetentionExpiryPublishesEmptyCache() {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(mutable, new BucketWindow(1, 60, 0));
+        KeywordBuckets ranking = new KeywordBuckets(
+            mutable,
+            new BucketWindow(1, 60, 0),
+            new InMemoryKeywordCountStore()
+        );
         SearchKeywordService service = new SearchKeywordService(
             SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
@@ -248,7 +261,11 @@ class SearchKeywordServiceTest {
             calls.incrementAndGet();
             return true;
         });
-        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+        KeywordBuckets ranking = new KeywordBuckets(
+            clock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,
@@ -283,7 +300,11 @@ class SearchKeywordServiceTest {
             calls.incrementAndGet();
             return true;
         });
-        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+        KeywordBuckets ranking = new KeywordBuckets(
+            clock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
         SearchKeywordService service = new SearchKeywordService(
             dictionary,
             ranking,

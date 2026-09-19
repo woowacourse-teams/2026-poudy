@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.support.InMemoryKeywordCountStore;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -29,7 +30,7 @@ class RankingRefresherTest {
         Clock clock = Clock.fixed(Instant.parse("2026-09-11T10:34:00Z"), ZoneOffset.UTC);
         RankingRefresher refresher = new RankingRefresher(
             service,
-            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0), new InMemoryKeywordCountStore()),
             scheduler
         );
 
@@ -49,7 +50,7 @@ class RankingRefresherTest {
         }).when(service).refreshRankings();
         RankingRefresher refresher = new RankingRefresher(
             service,
-            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0), new InMemoryKeywordCountStore()),
             scheduler
         );
 
@@ -68,7 +69,7 @@ class RankingRefresherTest {
         );
         RankingRefresher refresher = new RankingRefresher(
             service,
-            new KeywordBuckets(clock, new BucketWindow(168, 600, 0)),
+            new KeywordBuckets(clock, new BucketWindow(168, 600, 0), new InMemoryKeywordCountStore()),
             scheduler
         );
 

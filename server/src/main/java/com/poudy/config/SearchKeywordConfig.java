@@ -8,21 +8,16 @@ import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
-import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
-import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
+import com.poudy.searchkeyword.repository.KeywordBucketRepository;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import com.poudy.searchkeyword.service.KeywordMaintenance;
-import com.poudy.searchkeyword.service.KeywordSnapshotWriter;
 import com.poudy.searchkeyword.service.RankingRefresher;
 import com.poudy.searchkeyword.service.SearchKeywordService;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,11 +59,6 @@ public class SearchKeywordConfig {
     }
 
     @Bean
-    public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) {
-        return new KeywordSnapshotRepository(Path.of(env.getRequiredProperty(PROPERTY_PREFIX + "state-file")));
-    }
-
-    @Bean
     public BucketWindow searchKeywordWindow() {
         return new BucketWindow(
             SearchKeywordPolicy.RANKING_HOURS,
@@ -86,11 +76,9 @@ public class SearchKeywordConfig {
     public KeywordBuckets keywordBuckets(
         @Qualifier("searchKeywordClock") Clock clock,
         BucketWindow window,
-        KeywordSnapshotRepository repository
+        KeywordBucketRepository repository
     ) {
-        KeywordBuckets buckets = new KeywordBuckets(clock, window);
-        repository.restoreInto(buckets);
-        return buckets;
+        return new KeywordBuckets(clock, window, repository);
     }
 
     @Bean
@@ -116,28 +104,6 @@ public class SearchKeywordConfig {
             return DEFAULT_KEYWORDS;
         }
         return Arrays.stream(configured.split(",")).map(String::trim).filter(keyword -> !keyword.isBlank()).toList();
-    }
-
-    @Bean(destroyMethod = "saveBeforeShutdown")
-    public KeywordSnapshotWriter keywordSnapshotWriter(KeywordBuckets buckets, KeywordSnapshotRepository repository) {
-        return new KeywordSnapshotWriter(buckets, repository);
-    }
-
-    @Bean
-    public KeywordMaintenance keywordMaintenance(KeywordBuckets buckets, KeywordSnapshotWriter writer) {
-        return new KeywordMaintenance(writer, new KeywordStoreMonitor(buckets));
-    }
-
-    @Bean(destroyMethod = "shutdown")
-    public ScheduledExecutorService searchKeywordScheduler(KeywordMaintenance maintenance) {
-        ScheduledExecutorService scheduler = daemonScheduler("search-keyword-snapshot");
-        scheduler.scheduleWithFixedDelay(
-            maintenance,
-            SearchKeywordPolicy.SAVE_INTERVAL_SECONDS,
-            SearchKeywordPolicy.SAVE_INTERVAL_SECONDS,
-            TimeUnit.SECONDS
-        );
-        return scheduler;
     }
 
     @Bean(destroyMethod = "shutdown")
