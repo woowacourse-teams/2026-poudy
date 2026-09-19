@@ -32,7 +32,7 @@ PostgreSQL 15 이상을 설치하고 UTF-8 로 DB 두 개를 만듭니다. 스�
 
 ```bash
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy
-psql -X -v ON_ERROR_STOP=1 -d poudy -f src/main/resources/db/schema.sql
+psql -X -v ON_ERROR_STOP=1 --single-transaction -d poudy -f src/main/resources/db/schema.sql
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 ```
 
