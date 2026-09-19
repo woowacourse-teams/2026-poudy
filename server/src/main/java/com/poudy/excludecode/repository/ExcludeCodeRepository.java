@@ -5,10 +5,10 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.excludecode.domain.ExcludeCodeMapping;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.EnumMap;
 import java.util.List;

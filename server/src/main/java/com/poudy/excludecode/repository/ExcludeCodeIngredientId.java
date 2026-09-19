@@ -1,6 +1,6 @@
 package com.poudy.excludecode.repository;
 
-import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.ingredient.domain.ExcludeCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;

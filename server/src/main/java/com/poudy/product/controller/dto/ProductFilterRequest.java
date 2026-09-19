@@ -1,6 +1,6 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.product.service.ProductQuery;
 import com.poudy.search.validation.ValidSearchKeyword;
 import com.poudy.skintype.domain.SkinType;

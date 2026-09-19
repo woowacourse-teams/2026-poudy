@@ -3,6 +3,7 @@ package com.poudy.excludecode.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.Arrays;

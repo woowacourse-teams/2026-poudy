@@ -7,8 +7,8 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.category.controller.dto.CategoryListResponse;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.category.service.CategoryService;
-import com.poudy.product.domain.CategoryProductCount;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

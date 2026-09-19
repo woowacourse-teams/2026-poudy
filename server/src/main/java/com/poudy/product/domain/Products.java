@@ -1,8 +1,11 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import java.util.Collections;

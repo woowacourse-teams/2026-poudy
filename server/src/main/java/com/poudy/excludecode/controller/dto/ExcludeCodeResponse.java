@@ -1,8 +1,7 @@
 package com.poudy.excludecode.controller.dto;
 
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
-import com.poudy.ingredient.controller.dto.IngredientSummaryResponse;
+import com.poudy.ingredient.domain.ExcludeCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

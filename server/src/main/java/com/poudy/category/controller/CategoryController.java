@@ -1,8 +1,8 @@
 package com.poudy.category.controller;
 
 import com.poudy.category.controller.dto.CategoryListResponse;
+import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.category.service.CategoryService;
-import com.poudy.product.domain.CategoryProductCount;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;

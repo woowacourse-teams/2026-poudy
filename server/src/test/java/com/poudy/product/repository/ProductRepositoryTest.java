@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.Product;
 import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
@@ -62,8 +62,8 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("성분을 포함한 제품 수는 조립된 성분으로 센다")
     void countsWithResolvedIngredients() {
-        assertThat(productRepository.countContaining(4815L)).isPositive();
-        assertThat(productRepository.countContaining(999999L)).isZero();
+        assertThat(productRepository.findAll().countContaining(4815L)).isPositive();
+        assertThat(productRepository.findAll().countContaining(999999L)).isZero();
     }
 
     @Test

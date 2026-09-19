@@ -131,12 +131,4 @@ public class ProductRepository {
     public Products findAll() {
         return products;
     }
-
-    public long countContaining(Long ingredientId) {
-        return products.countContaining(ingredientId);
-    }
-
-    public Set<Long> containedIngredientIds() {
-        return products.containedIngredientIds();
-    }
 }

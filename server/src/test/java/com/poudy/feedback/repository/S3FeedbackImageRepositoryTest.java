@@ -14,7 +14,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
-import com.poudy.feedback.service.FeedbackImageProcessor.ProcessedImage;
+import com.poudy.feedback.domain.ProcessedImage;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

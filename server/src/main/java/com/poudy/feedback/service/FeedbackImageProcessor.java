@@ -3,6 +3,7 @@ package com.poudy.feedback.service;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.InvalidFeedbackImageException;
+import com.poudy.feedback.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -306,15 +307,4 @@ public class FeedbackImageProcessor {
         }
     }
 
-    public record ProcessedImage(FeedbackImageFormat format, byte[] bytes) {
-
-        public ProcessedImage {
-            bytes = bytes.clone();
-        }
-
-        @Override
-        public byte[] bytes() {
-            return bytes.clone();
-        }
-    }
 }

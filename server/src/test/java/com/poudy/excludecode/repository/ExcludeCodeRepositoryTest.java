@@ -6,10 +6,10 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.List;

@@ -2,8 +2,8 @@ package com.poudy.product.domain;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.ingredient.domain.ExcludeCode;
 import java.util.List;
 import java.util.Objects;
 

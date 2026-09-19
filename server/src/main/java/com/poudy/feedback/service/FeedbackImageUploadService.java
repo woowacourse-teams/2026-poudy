@@ -2,8 +2,8 @@ package com.poudy.feedback.service;
 
 import com.poudy.exception.TooManyRequestsException;
 import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.ProcessedImage;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.service.FeedbackImageProcessor.ProcessedImage;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

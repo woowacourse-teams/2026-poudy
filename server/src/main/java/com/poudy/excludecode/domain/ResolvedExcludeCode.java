@@ -1,5 +1,6 @@
 package com.poudy.excludecode.domain;
 
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
-import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import io.swagger.v3.oas.annotations.media.Schema;

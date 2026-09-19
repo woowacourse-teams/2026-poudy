@@ -1,4 +1,4 @@
-package com.poudy.excludecode.domain;
+package com.poudy.ingredient.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

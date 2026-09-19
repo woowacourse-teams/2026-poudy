@@ -1,9 +1,9 @@
-package com.poudy.product.domain;
+package com.poudy.brand.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryProductCount;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

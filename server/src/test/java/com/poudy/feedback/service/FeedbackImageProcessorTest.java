@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mock;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.InvalidFeedbackImageException;
-import com.poudy.feedback.service.FeedbackImageProcessor.ProcessedImage;
+import com.poudy.feedback.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

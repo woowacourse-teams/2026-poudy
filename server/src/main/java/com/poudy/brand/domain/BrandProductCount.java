@@ -1,6 +1,5 @@
-package com.poudy.product.domain;
+package com.poudy.brand.domain;
 
-import com.poudy.brand.domain.Brand;
 import java.util.Objects;
 
 public class BrandProductCount {

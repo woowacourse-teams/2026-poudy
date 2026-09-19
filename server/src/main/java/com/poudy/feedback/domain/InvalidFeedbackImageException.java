@@ -1,12 +1,15 @@
 package com.poudy.feedback.domain;
 
-public class InvalidFeedbackImageException extends IllegalArgumentException {
+import com.poudy.exception.ErrorCode;
+import com.poudy.exception.RuleViolationException;
+
+public class InvalidFeedbackImageException extends RuleViolationException {
 
     public InvalidFeedbackImageException(String message) {
-        super(message);
+        super(ErrorCode.INVALID_FEEDBACK_IMAGE, message);
     }
 
     public InvalidFeedbackImageException(String message, Throwable cause) {
-        super(message, cause);
+        super(ErrorCode.INVALID_FEEDBACK_IMAGE, message, cause);
     }
 }

@@ -2,14 +2,11 @@ package com.poudy.ingredient.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientCatalog;
-import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
 import com.poudy.ingredient.domain.MatchedIngredient;
 import com.poudy.ingredient.repository.IngredientRepository;
-import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -17,17 +14,17 @@ import org.springframework.stereotype.Service;
 public class IngredientService {
 
     private final IngredientRepository ingredientRepository;
-    private final ProductRepository productRepository;
-    private final ExcludeCodeRepository excludeCodeRepository;
+    private final IngredientUsage ingredientUsage;
+    private final IngredientGroups ingredientGroups;
 
     public IngredientService(
         IngredientRepository ingredientRepository,
-        ProductRepository productRepository,
-        ExcludeCodeRepository excludeCodeRepository
+        IngredientUsage ingredientUsage,
+        IngredientGroups ingredientGroups
     ) {
         this.ingredientRepository = ingredientRepository;
-        this.productRepository = productRepository;
-        this.excludeCodeRepository = excludeCodeRepository;
+        this.ingredientUsage = ingredientUsage;
+        this.ingredientGroups = ingredientGroups;
     }
 
     public IngredientDetail findDetail(Long ingredientId) {
@@ -36,8 +33,8 @@ public class IngredientService {
 
         return new IngredientDetail(
             ingredient,
-            excludeCodeRepository.findAll().codesOf(ingredientId),
-            productRepository.countContaining(ingredientId)
+            ingredientGroups.codesOf(ingredientId),
+            ingredientUsage.countProductsContaining(ingredientId)
         );
     }
 
@@ -47,7 +44,7 @@ public class IngredientService {
             ingredients = ingredients.findAllById(query.ingredientIds());
         }
         if (query.usedInProducts()) {
-            ingredients = ingredients.retainIds(productRepository.containedIngredientIds());
+            ingredients = ingredients.retainIds(ingredientUsage.usedIngredientIds());
         }
         return ingredients.page(page, size);
     }

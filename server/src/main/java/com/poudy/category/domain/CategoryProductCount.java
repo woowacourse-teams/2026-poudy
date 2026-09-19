@@ -1,6 +1,5 @@
-package com.poudy.product.domain;
+package com.poudy.category.domain;
 
-import com.poudy.category.domain.Category;
 import java.util.List;
 import java.util.Objects;
 

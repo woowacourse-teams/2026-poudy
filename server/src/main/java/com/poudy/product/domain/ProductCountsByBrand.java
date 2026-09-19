@@ -1,6 +1,7 @@
 package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import java.util.List;
 import java.util.Map;
 
