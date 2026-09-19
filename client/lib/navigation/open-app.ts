@@ -66,6 +66,22 @@ export const buildAndroidIntentUrl = (webUrl: string): string => {
 export const buildOpenAppUrl = (webUrl: string, browser: AndroidMobileBrowser): string =>
   browser === "kakao" ? buildKakaoExternalUrl(webUrl) : buildAndroidIntentUrl(webUrl);
 
+export const APP_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}&pcampaignid=web_share`;
+
+/**
+ * 설치 배너가 쓰는 주소. 보던 화면을 그대로 이어 열되, 앱이 없으면 스토어로 보낸다.
+ *
+ * `buildAndroidIntentUrl` 과 경로를 담는 방식은 같고 되돌아갈 곳만 다르다. 그쪽은
+ * 공유로 들어온 사람을 원래 웹 화면에 남기지만, 배너는 설치를 권하는 자리라 받을 수
+ * 있는 곳으로 보내야 한다.
+ */
+export const buildInstallIntentUrl = (webUrl: string): string => {
+  const url = new URL(webUrl);
+  const destination = `${url.host}${url.pathname}${url.search}`;
+
+  return `intent://${destination}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(APP_STORE_URL)};end`;
+};
+
 export const planAppOpen = (webUrl: string, userAgent: string, isPoudyApp: boolean): AppOpenPlan => {
   const fallbackWebUrl = consumeFallbackMarker(webUrl);
   const cleanWebUrl = consumeShareMarker(fallbackWebUrl ?? webUrl);
