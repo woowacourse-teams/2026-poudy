@@ -1,5 +1,11 @@
 # 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
+spring:
+  datasource:
+    url: ${POUDY_DB_URL}
+    username: ${POUDY_DB_USERNAME}
+    password: ${POUDY_DB_PASSWORD}
+
 poudy:
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
   # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.

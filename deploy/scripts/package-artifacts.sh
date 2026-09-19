@@ -30,6 +30,7 @@ shopt -s nullglob
 backend_jars=("${REPOSITORY_ROOT}"/server/build/libs/*.jar)
 [[ "${#backend_jars[@]}" -eq 1 ]] || fail "백엔드 JAR를 하나로 확인할 수 없습니다. 발견 수: ${#backend_jars[@]}"
 cp "${backend_jars[0]}" "${output_dir}/backend/app.jar"
+cp "${REPOSITORY_ROOT}/server/src/main/resources/db/schema.sql" "${output_dir}/backend/schema.sql"
 
 log '프론트엔드 standalone 산출물을 빌드합니다.'
 (
