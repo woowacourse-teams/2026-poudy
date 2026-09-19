@@ -19,7 +19,7 @@ public final class Ingredient {
     private final String englishName;
     private final String originDefinition;
     private final String description;
-    private final String descriptionEvidence;
+    private final List<String> infoSources;
     private final List<IngredientTag> tags;
     private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
@@ -33,7 +33,7 @@ public final class Ingredient {
         String englishName,
         String originDefinition,
         String description,
-        String descriptionEvidence,
+        List<String> infoSources,
         List<String> aliases,
         List<IngredientTag> tagMappings,
         OffsetDateTime createdAt,
@@ -44,7 +44,7 @@ public final class Ingredient {
         this.englishName = Objects.requireNonNullElse(englishName, "");
         this.originDefinition = Objects.requireNonNullElse(originDefinition, "");
         this.description = description;
-        this.descriptionEvidence = Objects.requireNonNullElse(descriptionEvidence, "");
+        this.infoSources = List.copyOf(Objects.requireNonNullElse(infoSources, List.<String>of()));
         List<String> copiedAliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
         this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
         this.createdAt = createdAt;
@@ -103,7 +103,7 @@ public final class Ingredient {
     }
 
     public List<String> infoSources() {
-        return Evidence.ofDescription(descriptionEvidence).sources();
+        return infoSources;
     }
 
     public List<String> effectSources() {

@@ -1,7 +1,6 @@
 package com.poudy.ingredient.repository;
 
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
@@ -23,8 +22,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class IngredientRepository {
 
-    private static final String EVIDENCE_DELIMITER = "; ";
-
     private final IngredientCatalog ingredients;
 
     public IngredientRepository(
@@ -42,11 +39,11 @@ public class IngredientRepository {
         Tags tags = tagRepository.findAll();
         Map<Long, List<String>> aliases = ingredientJpaRepository.findAllAliases().stream()
             .collect(groupingBy(IngredientAliasEntity::ingredientId, mapping(IngredientAliasEntity::alias, toList())));
-        Map<IngredientTagId, String> tagEvidence = ingredientJpaRepository.findAllTagEvidence().stream()
+        Map<IngredientTagId, List<String>> tagEvidence = ingredientJpaRepository.findAllTagEvidence().stream()
             .collect(
                 groupingBy(
                     IngredientTagEvidenceEntity::ingredientTagId,
-                    mapping(IngredientTagEvidenceEntity::content, joining(EVIDENCE_DELIMITER))
+                    mapping(IngredientTagEvidenceEntity::content, toList())
                 )
             );
         Map<Long, List<IngredientTag>> tagMappings = ingredientJpaRepository.findAllTags().stream()
@@ -57,11 +54,11 @@ public class IngredientRepository {
                     mapping(id -> ingredientTagOf(id, tags, tagEvidence.get(id)), toList())
                 )
             );
-        Map<Long, String> sources = ingredientJpaRepository.findAllSources().stream()
+        Map<Long, List<String>> sources = ingredientJpaRepository.findAllSources().stream()
             .collect(
                 groupingBy(
                     IngredientSourceEntity::ingredientId,
-                    mapping(IngredientSourceEntity::content, joining(EVIDENCE_DELIMITER))
+                    mapping(IngredientSourceEntity::content, toList())
                 )
             );
         List<Ingredient> values = ingredientJpaRepository.findAllIngredients().stream()
@@ -69,7 +66,7 @@ public class IngredientRepository {
                 ingredient -> ingredient.toDomain(
                     aliases.getOrDefault(ingredient.id(), List.of()),
                     tagMappings.getOrDefault(ingredient.id(), List.of()),
-                    sources.get(ingredient.id())
+                    sources.getOrDefault(ingredient.id(), List.of())
                 )
             )
             .toList();
@@ -80,7 +77,7 @@ public class IngredientRepository {
         }
     }
 
-    private static IngredientTag ingredientTagOf(IngredientTagId id, Tags tags, String evidence) {
+    private static IngredientTag ingredientTagOf(IngredientTagId id, Tags tags, List<String> evidence) {
         Tag tag = tags.findById(id.tagId()).orElseThrow(
             () -> new InfrastructureException(
                 "성분이 존재하지 않는 태그 ID를 참조합니다. ingredient_id=%d, tag_id=%d"

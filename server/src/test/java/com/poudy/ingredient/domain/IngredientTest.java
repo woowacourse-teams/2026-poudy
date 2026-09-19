@@ -17,15 +17,15 @@ import org.junit.jupiter.api.Test;
 class IngredientTest {
 
     private static Ingredient ingredient(String englishName, String originDefinition, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", englishName, originDefinition, "설명", "근거", null, tags, null, null);
+        return new Ingredient(1L, "글리세린", englishName, originDefinition, "설명", List.of("근거"), null, tags, null, null);
     }
 
-    private static Ingredient withEvidence(String descriptionEvidence) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", descriptionEvidence, null, List.of(), null, null);
+    private static Ingredient withEvidence(List<String> infoSources) {
+        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", infoSources, null, List.of(), null, null);
     }
 
-    private static Ingredient withEvidenceAndTags(String descriptionEvidence, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", descriptionEvidence, null, tags, null, null);
+    private static Ingredient withEvidenceAndTags(List<String> infoSources, List<IngredientTag> tags) {
+        return new Ingredient(1L, "글리세린", "Glycerin", "유래", "설명", infoSources, null, tags, null, null);
     }
 
     @Test
@@ -56,10 +56,10 @@ class IngredientTest {
             "Glycerin",
             "유래",
             List.of(
-                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "출처"),
-                tag(18L, "SKIN_CONDITIONING", "피부 컨디셔닝제", TagCategory.FUNCTION, "출처"),
-                tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, "출처"),
-                tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, "출처")
+                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")),
+                tag(18L, "SKIN_CONDITIONING", "피부 컨디셔닝제", TagCategory.FUNCTION, List.of("출처")),
+                tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, List.of("출처")),
+                tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, List.of("출처"))
             )
         );
 
@@ -75,8 +75,8 @@ class IngredientTest {
             "Glycerin",
             "유래",
             List.of(
-                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "출처"),
-                tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, "출처")
+                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")),
+                tag(48L, "BARRIER_SUPPORT_RELATED", "피부 장벽 관련", TagCategory.BIOLOGICAL_EFFECT, List.of("출처"))
             )
         );
 
@@ -93,8 +93,8 @@ class IngredientTest {
             "Glycerin",
             "유래",
             List.of(
-                tag(75L, "BULKING", "벌킹제", TagCategory.FUNCTION, "출처"),
-                tag(51L, "ELASTICITY_RELATED", "탄력 관련", TagCategory.BIOLOGICAL_EFFECT, "출처")
+                tag(75L, "BULKING", "벌킹제", TagCategory.FUNCTION, List.of("출처")),
+                tag(51L, "ELASTICITY_RELATED", "탄력 관련", TagCategory.BIOLOGICAL_EFFECT, List.of("출처"))
             )
         );
 
@@ -105,11 +105,14 @@ class IngredientTest {
     }
 
     @Test
-    @DisplayName("설명 근거 전체를 성분 정보 출처로 반환한다")
+    @DisplayName("설명 근거를 받은 순서 그대로 성분 정보 출처로 반환한다")
     void returnsDescriptionEvidenceAsInfoSources() {
         Ingredient ingredient = withEvidence(
-            "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2); Antioxidant Activity (Salerno et al., 2014); "
-                + "Enhanced Antioxidant Effects (Lee et al., 2025)"
+            List.of(
+                "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)",
+                "Antioxidant Activity (Salerno et al., 2014)",
+                "Enhanced Antioxidant Effects (Lee et al., 2025)"
+            )
         );
 
         assertThat(ingredient.infoSources()).containsExactly(
@@ -124,24 +127,24 @@ class IngredientTest {
     @DisplayName("노출되는 피부 작용 태그의 근거만 효과 출처로 반환한다")
     void returnsDisplayedBiologicalEffectEvidenceAsEffectSources() {
         Ingredient ingredient = withEvidenceAndTags(
-            "설명 근거",
+            List.of("설명 근거"),
             List.of(
-                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "배합 목적 근거"),
+                tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("배합 목적 근거")),
                 tag(
                     48L,
                     "BARRIER_SUPPORT_RELATED",
                     "피부 장벽 관련",
                     TagCategory.BIOLOGICAL_EFFECT,
-                    "피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025); 공통 근거"
+                    List.of("피부 장벽 연구 (Kim et al., 2024; Lee et al., 2025)", "공통 근거")
                 ),
                 tag(
                     57L,
                     "HYDRATION_RELATED",
                     "피부 수분 관련",
                     TagCategory.BIOLOGICAL_EFFECT,
-                    "공통 근거; 수분 공급 연구"
+                    List.of("공통 근거", "수분 공급 연구")
                 ),
-                tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, "노출되지 않는 태그 근거")
+                tag(41L, "BOTANICAL_EXTRACT", "식물 추출물", TagCategory.INGREDIENT_CLASS, List.of("노출되지 않는 태그 근거"))
             )
         );
 
@@ -150,45 +153,15 @@ class IngredientTest {
     }
 
     @Test
-    @DisplayName("줄바꿈으로 합쳐진 태그 근거를 별도 효과 출처로 반환한다")
-    void splitsLineSeparatedTagEvidence() {
-        Ingredient ingredient = withEvidenceAndTags(
-            "설명 근거",
-            List.of(
-                tag(
-                    48L,
-                    "BARRIER_SUPPORT_RELATED",
-                    "피부 장벽 관련",
-                    TagCategory.BIOLOGICAL_EFFECT,
-                    "피부 장벽 연구\n보습 연구"
-                )
-            )
+    @DisplayName("출처 문자열 안의 세미콜론·괄호·줄바꿈을 다시 나누지 않는다")
+    void keepsEachSourceAsGiven() {
+        List<String> sources = List.of(
+            "Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)",
+            "대한화장품협회 성분사전 「소듐아세틸에스에이치-올리고펩타\n이드-195」(성분코드 21412)",
+            "짝이 맞지 않는 괄호 (Kim et al."
         );
 
-        assertThat(ingredient.effectSources()).containsExactly("피부 장벽 연구", "보습 연구");
-    }
-
-    @Test
-    @DisplayName("설명 근거의 단어 중간 줄바꿈은 출처 경계로 보지 않는다")
-    void preservesLineBreakInsideDescriptionEvidence() {
-        String evidence = "대한화장품협회 성분사전 「소듐아세틸에스에이치-올리고펩타\n이드-195」(성분코드 21412)";
-        Ingredient ingredient = withEvidence(evidence);
-
-        assertThat(ingredient.infoSources()).containsExactly(evidence);
-    }
-
-    @Test
-    @DisplayName("출처 안의 괄호에 있는 세미콜론은 출처 경계로 보지 않는다")
-    void preservesSemicolonInsideEvidence() {
-        Ingredient ingredient = withEvidence(
-            "대한화장품협회 성분사전 「몬모릴로나이트」(성분코드 290); "
-                + "Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)"
-        );
-
-        assertThat(ingredient.infoSources()).containsExactly(
-            "대한화장품협회 성분사전 「몬모릴로나이트」(성분코드 290)",
-            "Safety Assessment of Silicates (CIR Expert Panel, 2003; Burnett et al., 2025)"
-        );
+        assertThat(withEvidence(sources).infoSources()).containsExactlyElementsOf(sources);
     }
 
     @Test
@@ -205,7 +178,7 @@ class IngredientTest {
     void protectsSearchAndTagBehaviorFromInputMutation() {
         List<String> aliases = new ArrayList<>(List.of("보습 성분"));
         List<IngredientTag> tags = new ArrayList<>(
-            List.of(tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, "출처"))
+            List.of(tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")))
         );
         Ingredient ingredient = new Ingredient(
             1L,
@@ -213,7 +186,7 @@ class IngredientTest {
             "Glycerin",
             "유래",
             "설명",
-            "근거",
+            List.of("근거"),
             aliases,
             tags,
             null,
@@ -235,8 +208,8 @@ class IngredientTest {
         String code,
         String name,
         TagCategory category,
-        String source
+        List<String> sources
     ) {
-        return new IngredientTag(new Tag(id, category, code, name), source);
+        return new IngredientTag(new Tag(id, category, code, name), sources);
     }
 }

@@ -37,14 +37,14 @@ public class IngredientEntity {
         return id;
     }
 
-    public Ingredient toDomain(List<String> aliases, List<IngredientTag> tags, String descriptionEvidence) {
+    public Ingredient toDomain(List<String> aliases, List<IngredientTag> tags, List<String> infoSources) {
         return new Ingredient(
             id,
             koreanName,
             englishName,
             null,
             description,
-            descriptionEvidence,
+            infoSources,
             aliases,
             tags,
             null,
