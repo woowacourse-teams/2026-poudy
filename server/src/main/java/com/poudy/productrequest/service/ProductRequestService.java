@@ -4,7 +4,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
-import com.poudy.productrequest.repository.S3ProductRequestRepository;
+import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
@@ -18,13 +18,13 @@ public class ProductRequestService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductRequestService.class);
 
-    private final S3ProductRequestRepository repository;
+    private final ProductRequestRepository repository;
     private final DiscordProductRequestNotifier notifier;
     private final ProductRequestRateLimiter rateLimiter;
     private final Clock clock;
 
     public ProductRequestService(
-        S3ProductRequestRepository repository,
+        ProductRequestRepository repository,
         DiscordProductRequestNotifier notifier,
         ProductRequestRateLimiter rateLimiter,
         @Qualifier("productRequestClock") Clock clock

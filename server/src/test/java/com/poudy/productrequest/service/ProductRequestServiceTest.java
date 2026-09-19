@@ -16,7 +16,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
-import com.poudy.productrequest.repository.S3ProductRequestRepository;
+import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -30,7 +30,7 @@ import org.mockito.InOrder;
 @DisplayName("제품 등록 요청 서비스")
 class ProductRequestServiceTest {
 
-    private final S3ProductRequestRepository repository = mock(S3ProductRequestRepository.class);
+    private final ProductRequestRepository repository = mock(ProductRequestRepository.class);
     private final DiscordProductRequestNotifier notifier = mock(DiscordProductRequestNotifier.class);
     private final ProductRequestRateLimiter rateLimiter = mock(ProductRequestRateLimiter.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-08-23T12:34:56Z"), ZoneOffset.UTC);
