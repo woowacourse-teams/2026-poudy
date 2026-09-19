@@ -26,7 +26,7 @@ import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
-import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
@@ -54,16 +54,18 @@ class FeedbackServiceTest {
         ZoneId.of("Asia/Seoul")
     );
 
-    private final S3FeedbackRepository feedbackRepository = mock(S3FeedbackRepository.class);
+    private final FeedbackRepository feedbackRepository = mock(FeedbackRepository.class);
     private final FeedbackNotifier feedbackNotifier = mock(FeedbackNotifier.class);
     private final FeedbackRateLimiter rateLimiter = mock(FeedbackRateLimiter.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final Products products = mock(Products.class);
+    private final FeedbackImageRelay imageRelay = mock(FeedbackImageRelay.class);
     private final FeedbackService feedbackService = new FeedbackService(
         feedbackRepository,
         feedbackNotifier,
         rateLimiter,
         productRepository,
+        imageRelay,
         CLOCK
     );
 
@@ -134,11 +136,11 @@ class FeedbackServiceTest {
     }
 
     @Test
-    @DisplayName("이미지 저장 절차를 저장소에 위임하고 귀속된 의견으로 알린다")
+    @DisplayName("이미지를 붙인 의견을 저장한 뒤 이미지를 옮기고 알린다")
     void delegatesImageStorageAndNotifiesAttachedFeedback() {
         UUID imageId = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
         FeedbackImage image = new FeedbackImage(imageId, FeedbackImageFormat.PNG);
-        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId)), any()))
+        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId))))
             .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
 
         feedbackService.submit(
@@ -150,9 +152,11 @@ class FeedbackServiceTest {
         );
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
-        verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)), any());
+        verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)));
         Feedback attached = feedbackCaptor.getValue().attachImages(List.of(image));
-        verify(feedbackNotifier).notify(attached);
+        InOrder order = inOrder(imageRelay, feedbackNotifier);
+        order.verify(imageRelay).relay(attached);
+        order.verify(feedbackNotifier).notify(attached);
     }
 
     @Test
@@ -201,12 +205,13 @@ class FeedbackServiceTest {
         UUID feedbackId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         Feedback received = feedback(feedbackId);
         given(feedbackRepository.findById(feedbackId)).willReturn(received);
+        given(feedbackRepository.updateStatus(eq(FeedbackStatus.RECEIVED), any())).willReturn(true);
 
         Feedback changed = feedbackService.changeStatus(feedbackId, FeedbackStatus.COMPLETED);
 
         assertThat(changed.hasStatus(FeedbackStatus.COMPLETED)).isTrue();
         assertThat(changed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
-        verify(feedbackRepository).updateStatus(changed);
+        verify(feedbackRepository).updateStatus(FeedbackStatus.RECEIVED, changed);
     }
 
     @Test
@@ -219,7 +224,7 @@ class FeedbackServiceTest {
         Feedback unchanged = feedbackService.changeStatus(feedbackId, FeedbackStatus.RECEIVED);
 
         assertThat(unchanged).isSameAs(received);
-        verify(feedbackRepository, never()).updateStatus(any());
+        verify(feedbackRepository, never()).updateStatus(any(), any());
     }
 
     private static Feedback feedback(UUID feedbackId) {

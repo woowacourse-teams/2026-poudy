@@ -3,7 +3,6 @@ package com.poudy.feedback.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Clock;
@@ -23,25 +22,25 @@ class FeedbackImageReconcilerTest {
     private static final Instant NOW = Instant.parse("2026-09-02T00:00:00Z");
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-        .withBean(S3FeedbackImageRepository.class, () -> mock(S3FeedbackImageRepository.class))
+        .withBean(FeedbackImageRelay.class, () -> mock(FeedbackImageRelay.class))
         .withBean("feedbackClock", Clock.class, () -> Clock.fixed(NOW, ZoneOffset.UTC))
         .withUserConfiguration(FeedbackImageReconciler.class);
 
     @Test
-    @DisplayName("claim 조정은 최초 1분 후 실행하고 이후 5분 간격으로 실행한다")
-    void schedulesClaimReconciliationEveryFiveMinutes() throws NoSuchMethodException, IOException {
-        Method method = FeedbackImageReconciler.class.getDeclaredMethod("reconcileClaims");
+    @DisplayName("이미지 옮기기와 정리는 최초 1분 후 실행하고 이후 5분 간격으로 실행한다")
+    void schedulesRelayEveryFiveMinutes() throws NoSuchMethodException, IOException {
+        Method method = FeedbackImageReconciler.class.getDeclaredMethod("relayPendingImages");
         Scheduled scheduled = method.getAnnotation(Scheduled.class);
 
         assertThat(scheduled.fixedDelayString())
-            .isEqualTo("${poudy.feedback.image-reconciliation.claim-interval:PT5M}");
+            .isEqualTo("${poudy.feedback.image-reconciliation.relay-interval:PT5M}");
         assertThat(scheduled.initialDelayString())
-            .isEqualTo("${poudy.feedback.image-reconciliation.claim-initial-delay:PT1M}");
+            .isEqualTo("${poudy.feedback.image-reconciliation.relay-initial-delay:PT1M}");
 
         PropertySource<?> properties = new YamlPropertySourceLoader()
             .load("application", new ClassPathResource("application.yml"))
             .getFirst();
-        assertThat(properties.getProperty("poudy.feedback.image-reconciliation.claim-interval"))
+        assertThat(properties.getProperty("poudy.feedback.image-reconciliation.relay-interval"))
             .isEqualTo("PT5M");
     }
 

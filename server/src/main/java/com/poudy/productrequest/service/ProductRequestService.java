@@ -7,6 +7,7 @@ import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,14 +63,21 @@ public class ProductRequestService {
     }
 
     public ProductRequest changeStatus(UUID requestId, ProductRequestStatus status) {
+        return tryChangeStatus(requestId, status)
+            .or(() -> tryChangeStatus(requestId, status))
+            .orElseThrow(() -> new InfrastructureException("제품 등록 요청 상태가 동시에 바뀌어 저장하지 못했습니다."));
+    }
+
+    private Optional<ProductRequest> tryChangeStatus(UUID requestId, ProductRequestStatus status) {
         ProductRequest current = repository.findById(requestId);
         ProductRequest changed = current.changeStatus(status, clock);
         if (changed == current) {
-            return current;
+            return Optional.of(current);
         }
-
-        repository.update(changed);
-        return changed;
+        if (repository.updateStatus(current.status(), changed)) {
+            return Optional.of(changed);
+        }
+        return Optional.empty();
     }
 
     private static String notificationFailureDetail(RuntimeException exception) {

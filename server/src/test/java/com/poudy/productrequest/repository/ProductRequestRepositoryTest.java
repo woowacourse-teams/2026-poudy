@@ -57,7 +57,13 @@ class ProductRequestRepositoryTest {
         ProductRequest request = new ProductRequest(UUID.randomUUID(), "독도 토너", null, REQUESTED_AT);
         repository.save(request);
 
-        repository.update(request.changeStatus(ProductRequestStatus.COMPLETED, LATER));
+        assertThat(
+            repository.updateStatus(
+                ProductRequestStatus.RECEIVED,
+                request.changeStatus(ProductRequestStatus.COMPLETED, LATER)
+            )
+        )
+            .isTrue();
         clear();
         ProductRequest found = repository.findById(request.requestId());
 
@@ -74,7 +80,8 @@ class ProductRequestRepositoryTest {
         ProductRequest newer = new ProductRequest(UUID.randomUUID(), "최근 요청", null, REQUESTED_AT.plusHours(1));
         repository.save(older);
         repository.save(newer);
-        repository.update(older.changeStatus(ProductRequestStatus.REJECTED, LATER));
+        repository
+            .updateStatus(ProductRequestStatus.RECEIVED, older.changeStatus(ProductRequestStatus.REJECTED, LATER));
         clear();
 
         assertThat(repository.findAll(null)).extracting(ProductRequest::requestId)
@@ -82,6 +89,24 @@ class ProductRequestRepositoryTest {
         assertThat(repository.findAll(ProductRequestStatus.REJECTED)).extracting(ProductRequest::requestId)
             .contains(older.requestId())
             .doesNotContain(newer.requestId());
+    }
+
+    @Test
+    @DisplayName("읽은 뒤 상태가 바뀌었으면 상태 변경을 저장하지 않는다")
+    void rejectsStaleStatusChange() {
+        ProductRequest request = new ProductRequest(UUID.randomUUID(), "독도 토너", null, REQUESTED_AT);
+        repository.save(request);
+        repository
+            .updateStatus(ProductRequestStatus.RECEIVED, request.changeStatus(ProductRequestStatus.IN_PROGRESS, LATER));
+
+        boolean updated = repository.updateStatus(
+            ProductRequestStatus.RECEIVED,
+            request.changeStatus(ProductRequestStatus.COMPLETED, LATER)
+        );
+        clear();
+
+        assertThat(updated).isFalse();
+        assertThat(repository.findById(request.requestId()).status()).isEqualTo(ProductRequestStatus.IN_PROGRESS);
     }
 
     @Test

@@ -14,7 +14,6 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -67,19 +66,6 @@ public class S3FeedbackObjectStore {
                 return Optional.empty();
             }
             throw failure(exception);
-        } catch (SdkException exception) {
-            throw failure(exception);
-        }
-    }
-
-    byte[] read(String key) {
-        try {
-            return s3Client.getObjectAsBytes(
-                GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build()
-            ).asByteArray();
         } catch (SdkException exception) {
             throw failure(exception);
         }
@@ -145,20 +131,6 @@ public class S3FeedbackObjectStore {
         }
     }
 
-    void replace(String key, String contentType, byte[] body) {
-        try {
-            PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .contentType(contentType)
-                .serverSideEncryption(ServerSideEncryption.AES256)
-                .build();
-            s3Client.putObject(request, RequestBody.fromBytes(body));
-        } catch (SdkException exception) {
-            throw failure(exception);
-        }
-    }
-
     void delete(String key) {
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
@@ -168,7 +140,7 @@ public class S3FeedbackObjectStore {
     }
 
     private static StoredObject storedObjectOf(S3Object object) {
-        return new StoredObject(object.key(), object.lastModified());
+        return new StoredObject(object.key(), object.eTag(), object.lastModified());
     }
 
     private static String encode(String value) {
@@ -178,19 +150,12 @@ public class S3FeedbackObjectStore {
     }
 
     private static ObjectStoreException failure(SdkException exception) {
-        FailureKind kind = FailureKind.RETRYABLE;
+        FailureKind kind = FailureKind.OTHER;
         if (exception instanceof S3Exception s3Exception) {
             kind = switch (s3Exception.statusCode()) {
                 case 404 -> FailureKind.NOT_FOUND;
-                case 409 -> FailureKind.CONFLICT;
                 case 412 -> FailureKind.PRECONDITION_FAILED;
-                default -> {
-                    if (s3Exception.statusCode() >= 500) {
-                        yield FailureKind.RETRYABLE;
-                    }
-
-                    yield FailureKind.OTHER;
-                }
+                default -> FailureKind.OTHER;
             };
         }
         return new ObjectStoreException(kind, exception);
@@ -198,9 +163,7 @@ public class S3FeedbackObjectStore {
 
     enum FailureKind {
         NOT_FOUND,
-        CONFLICT,
         PRECONDITION_FAILED,
-        RETRYABLE,
         OTHER
     }
 
@@ -221,7 +184,7 @@ public class S3FeedbackObjectStore {
     record ObjectMetadata(String eTag, Instant lastModified) {
     }
 
-    record StoredObject(String key, Instant lastModified) {
+    record StoredObject(String key, String eTag, Instant lastModified) {
     }
 
 }

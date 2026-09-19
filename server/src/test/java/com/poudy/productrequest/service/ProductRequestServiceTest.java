@@ -108,12 +108,53 @@ class ProductRequestServiceTest {
             OffsetDateTime.parse("2026-08-23T11:00:00Z")
         );
         given(repository.findById(requestId)).willReturn(stored);
+        given(
+            repository.updateStatus(
+                org.mockito.ArgumentMatchers.eq(ProductRequestStatus.RECEIVED),
+                org.mockito.ArgumentMatchers.any()
+            )
+        )
+            .willReturn(true);
 
         ProductRequest changed = service.changeStatus(requestId, ProductRequestStatus.COMPLETED);
 
         assertThat(changed.status()).isEqualTo(ProductRequestStatus.COMPLETED);
         assertThat(changed.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T12:34:56Z"));
-        verify(repository).update(changed);
+        verify(repository).updateStatus(ProductRequestStatus.RECEIVED, changed);
+    }
+
+    @Test
+    @DisplayName("읽은 뒤 다른 변경이 먼저 저장됐으면 다시 읽어 판단하고, 이미 목표 상태면 저장하지 않는다")
+    void rereadsWhenStatusChangedConcurrently() {
+        UUID requestId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        ProductRequest stale = new ProductRequest(
+            requestId,
+            "제품",
+            "브랜드",
+            OffsetDateTime.parse("2026-08-23T11:00:00Z")
+        );
+        ProductRequest completedByOther = new ProductRequest(
+            requestId,
+            "제품",
+            "브랜드",
+            OffsetDateTime.parse("2026-08-23T11:00:00Z"),
+            ProductRequestStatus.COMPLETED,
+            OffsetDateTime.parse("2026-08-23T12:00:00Z"),
+            OffsetDateTime.parse("2026-08-23T12:00:00Z")
+        );
+        given(repository.findById(requestId)).willReturn(stale, completedByOther);
+        given(
+            repository.updateStatus(
+                org.mockito.ArgumentMatchers.eq(ProductRequestStatus.RECEIVED),
+                org.mockito.ArgumentMatchers.any()
+            )
+        )
+            .willReturn(false);
+
+        ProductRequest result = service.changeStatus(requestId, ProductRequestStatus.COMPLETED);
+
+        assertThat(result).isSameAs(completedByOther);
+        assertThat(result.completedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T12:00:00Z"));
     }
 
     @Test
@@ -131,6 +172,7 @@ class ProductRequestServiceTest {
         ProductRequest unchanged = service.changeStatus(requestId, ProductRequestStatus.RECEIVED);
 
         assertThat(unchanged).isSameAs(stored);
-        verify(repository, never()).update(org.mockito.ArgumentMatchers.any());
+        verify(repository, never())
+            .updateStatus(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 }

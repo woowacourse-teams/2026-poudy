@@ -1,6 +1,7 @@
 package com.poudy.feedback.service;
 
 import com.poudy.exception.ErrorCode;
+import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackPath;
@@ -10,11 +11,12 @@ import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
-import com.poudy.feedback.repository.S3FeedbackRepository;
+import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,23 +28,26 @@ public class FeedbackService {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackService.class);
 
-    private final S3FeedbackRepository feedbackRepository;
+    private final FeedbackRepository feedbackRepository;
     private final FeedbackNotifier feedbackNotifier;
     private final FeedbackRateLimiter rateLimiter;
     private final ProductRepository productRepository;
+    private final FeedbackImageRelay imageRelay;
     private final Clock clock;
 
     public FeedbackService(
-        S3FeedbackRepository feedbackRepository,
+        FeedbackRepository feedbackRepository,
         FeedbackNotifier feedbackNotifier,
         FeedbackRateLimiter rateLimiter,
         ProductRepository productRepository,
+        FeedbackImageRelay imageRelay,
         @Qualifier("feedbackClock") Clock clock
     ) {
         this.feedbackRepository = feedbackRepository;
         this.feedbackNotifier = feedbackNotifier;
         this.rateLimiter = rateLimiter;
         this.productRepository = productRepository;
+        this.imageRelay = imageRelay;
         this.clock = clock;
     }
 
@@ -82,7 +87,8 @@ public class FeedbackService {
             feedbackRepository.save(feedback);
             saved = feedback;
         } else {
-            saved = feedbackRepository.save(feedback, normalizedImageIds, clock);
+            saved = feedbackRepository.save(feedback, normalizedImageIds);
+            imageRelay.relay(saved);
         }
         notifySafely(saved);
     }
@@ -104,14 +110,21 @@ public class FeedbackService {
     }
 
     public Feedback changeStatus(UUID feedbackId, FeedbackStatus status) {
+        return tryChangeStatus(feedbackId, status)
+            .or(() -> tryChangeStatus(feedbackId, status))
+            .orElseThrow(() -> new InfrastructureException("의견 상태가 동시에 바뀌어 저장하지 못했습니다."));
+    }
+
+    private Optional<Feedback> tryChangeStatus(UUID feedbackId, FeedbackStatus status) {
         Feedback current = feedbackRepository.findById(feedbackId);
         Feedback changed = current.changeStatus(status, clock);
         if (changed == current) {
-            return current;
+            return Optional.of(current);
         }
-
-        feedbackRepository.updateStatus(changed);
-        return changed;
+        if (feedbackRepository.updateStatus(current.status(), changed)) {
+            return Optional.of(changed);
+        }
+        return Optional.empty();
     }
 
     private void notifySafely(Feedback feedback) {

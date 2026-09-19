@@ -22,8 +22,8 @@ import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.notification.FeedbackNotifier;
+import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.repository.S3FeedbackRepository;
 import com.poudy.feedback.service.FeedbackImageUploadService;
 import com.poudy.feedback.service.FeedbackRateLimiter;
 import java.time.Duration;
@@ -53,7 +53,7 @@ class FeedbackControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private S3FeedbackRepository feedbackRepository;
+    private FeedbackRepository feedbackRepository;
 
     @MockitoBean
     private S3FeedbackImageRepository imageRepository;

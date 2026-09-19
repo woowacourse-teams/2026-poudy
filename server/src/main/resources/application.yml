@@ -78,10 +78,8 @@ poudy:
       max-concurrency: 1
     image-reconciliation:
       enabled: false
-      claim-interval: PT5M
-      claim-initial-delay: PT1M
-      cleanup-interval: PT1H
-      cleanup-initial-delay: PT1H
+      relay-interval: PT5M
+      relay-initial-delay: PT1M
   product-request:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
