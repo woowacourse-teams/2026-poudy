@@ -107,7 +107,6 @@ class KeywordRankingTest {
     @Test
     void keywordsWithoutCatalogResultsAreDropped() {
         SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
-            "fixture-v1",
             List.of(entry("term:1", "토너"), entry("term:2", "크림")),
             keyword -> keyword.equals("크림")
         );
@@ -140,7 +139,6 @@ class KeywordRankingTest {
     @Test
     void defaultKeywordsPassTheSameEligibilityAsCountedOnes() {
         SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
-            "fixture-v1",
             List.of(entry("term:1", "토너"), entry("term:2", "크림"), entry("term:3", "세럼", Status.ACTIVE, false)),
             keyword -> !keyword.equals("크림")
         );
@@ -190,7 +188,7 @@ class KeywordRankingTest {
 
     private static SearchKeywordDictionary dictionary(DictionaryEntry... entries) {
         KeywordSearch search = keyword -> true;
-        return SearchKeywordDictionary.of("fixture-v1", List.of(entries), search);
+        return SearchKeywordDictionary.of(List.of(entries), search);
     }
 
     private static DictionaryEntry entry(String id, String keyword) {

@@ -2,20 +2,23 @@ package com.poudy.excludecode.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
-import com.poudy.common.json.JsonDataReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.excludecode.domain.ExcludeCodeMapping;
-import java.nio.charset.StandardCharsets;
+import com.poudy.excludecode.domain.ExcludeCodeIngredient;
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
+import com.poudy.ingredient.domain.IngredientCatalog;
+import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
 
 @SpringBootTest
 @DisplayName("제외 성분군 저장소")
@@ -24,41 +27,42 @@ class ExcludeCodeRepositoryTest {
     @Autowired
     private ExcludeCodeRepository excludeCodeRepository;
 
-    @Test
-    @DisplayName("파일에서 성분군마다 코드와 성분 ID 목록을 읽는다")
-    void readsCodeAndIngredientIds() {
-        List<ExcludeCodeMapping> mappings = excludeCodeRepository.findAll();
+    @ParameterizedTest
+    @EnumSource(ExcludeCode.class)
+    @DisplayName("성분군마다 성분을 하나 이상 해석한다")
+    void resolvesEveryCode(ExcludeCode code) {
+        assertThat(excludeCodeRepository.findAll().of(code)).isNotEmpty()
+            .allSatisfy(ingredient -> assertThat(ingredient.koreanName()).isNotBlank());
+    }
 
-        assertThat(mappings).extracting(ExcludeCodeMapping::code)
-            .containsExactlyInAnyOrder(ExcludeCode.values());
-        assertThat(mappings).allSatisfy(mapping -> assertThat(mapping.ingredientIds()).isNotEmpty());
+    @ParameterizedTest
+    @EnumSource(ExcludeCode.class)
+    @DisplayName("해석한 성분은 모두 자기 성분군을 되돌려준다")
+    void mapsResolvedIngredientBackToCode(ExcludeCode code) {
+        ExcludeCodeIngredients excludeCodeIngredients = excludeCodeRepository.findAll();
+
+        assertThat(excludeCodeIngredients.of(code))
+            .allSatisfy(ingredient -> assertThat(excludeCodeIngredients.codesOf(ingredient.id())).contains(code));
     }
 
     @Test
-    @DisplayName("모르는 성분군 코드가 있으면 로딩에 실패한다")
-    void rejectsUnknownCode() {
-        assertThatThrownBy(() -> load("""
-            {"exclude_codes":[{"code":"UNKNOWN_CODE","ingredient_ids":[1]}]}
-            """)).isInstanceOf(InfrastructureException.class);
+    @DisplayName("성분을 표시 순서대로 읽는다")
+    void readsIngredientsInDisplayOrder() {
+        assertThat(excludeCodeRepository.findAll().of(ExcludeCode.FRAGRANCE_ALLERGENS))
+            .extracting(ExcludeCodeIngredient::id)
+            .startsWith(9L, 20L, 523L, 608L);
     }
 
     @Test
-    @DisplayName("성분 ID 가 비어 있으면 로딩에 실패한다")
-    void rejectsNullIngredientId() {
-        assertThatThrownBy(() -> load("""
-            {"exclude_codes":[{"code":"SULFATES","ingredient_ids":[1,null]}]}
-            """)).isInstanceOf(InfrastructureException.class);
-    }
+    @DisplayName("성분군 정의 오류를 기동 실패용 인프라 예외로 변환한다")
+    void translatesInvalidDefinitionForStartup() {
+        ExcludeCodeJpaRepository excludeCodeJpaRepository = mock(ExcludeCodeJpaRepository.class);
+        IngredientRepository ingredientRepository = mock(IngredientRepository.class);
+        given(excludeCodeJpaRepository.findAllMappings()).willReturn(List.of());
+        given(ingredientRepository.findAll()).willReturn(IngredientCatalog.from(List.of()));
 
-    private static ExcludeCodeRepository load(String excludeCodeData) {
-        DefaultResourceLoader resourceLoader = new DefaultResourceLoader() {
-
-            @Override
-            public Resource getResource(String location) {
-                return new ByteArrayResource(excludeCodeData.getBytes(StandardCharsets.UTF_8));
-            }
-        };
-
-        return new ExcludeCodeRepository(new JsonDataReader(resourceLoader));
+        assertThatThrownBy(() -> new ExcludeCodeRepository(excludeCodeJpaRepository, ingredientRepository))
+            .isInstanceOf(InfrastructureException.class)
+            .hasCauseInstanceOf(InvalidExcludeCodeDefinitionException.class);
     }
 }

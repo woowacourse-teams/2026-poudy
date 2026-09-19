@@ -1,9 +1,9 @@
 package com.poudy.product.service;
 
-import com.poudy.category.domain.Categories;
+import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.product.domain.IngredientFilter;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
@@ -27,19 +27,19 @@ public class ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
-    private final Categories categories;
-    private final ExcludeCodeIngredients excludeCodeIngredients;
+    private final CategoryRepository categoryRepository;
+    private final ExcludeCodeRepository excludeCodeRepository;
     private final ProductSearchLogger searchLogger;
 
     public ProductService(
         ProductRepository productRepository,
-        Categories categories,
-        ExcludeCodeIngredients excludeCodeIngredients,
+        CategoryRepository categoryRepository,
+        ExcludeCodeRepository excludeCodeRepository,
         ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
-        this.categories = categories;
-        this.excludeCodeIngredients = excludeCodeIngredients;
+        this.categoryRepository = categoryRepository;
+        this.excludeCodeRepository = excludeCodeRepository;
         this.searchLogger = searchLogger;
     }
 
@@ -53,7 +53,7 @@ public class ProductService {
         Products products = products();
 
         if (!query.hasKeyword() || page > 1) {
-            return products.find(filter, sort, page, size, categories);
+            return products.find(filter, sort, page, size, categoryRepository.findAll());
         }
 
         ProductSearchLogger.Context context = new ProductSearchLogger.Context(
@@ -63,7 +63,7 @@ public class ProductService {
             ProductSort.orDefault(sort),
             query.hasFilters()
         );
-        return recordedSearch(context, () -> products.find(filter, sort, page, size, categories));
+        return recordedSearch(context, () -> products.find(filter, sort, page, size, categoryRepository.findAll()));
     }
 
     private ProductPage recordedSearch(ProductSearchLogger.Context context, Supplier<ProductPage> search) {
@@ -108,7 +108,7 @@ public class ProductService {
         Product product = products().findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return ProductDetail.from(product, categories, excludeCodeIngredients);
+        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
     }
 
     private Products products() {
@@ -119,7 +119,7 @@ public class ProductService {
         IngredientFilter ingredientFilter = IngredientFilter.of(
             query.includeIngredientIds(),
             query.excludeIngredientIds(),
-            excludeCodeIngredients.idsOf(query.excludeCodes())
+            excludeCodeRepository.findAll().idsOf(query.excludeCodes())
         );
 
         return new ProductFilter(

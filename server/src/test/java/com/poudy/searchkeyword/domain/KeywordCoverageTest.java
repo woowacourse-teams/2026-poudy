@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 class KeywordCoverageTest {
 
     private final SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
-        "v1",
         List.of(
             DictionaryEntry.of("term:1", "토너", Status.ACTIVE, true, List.of("토너"))
         ),

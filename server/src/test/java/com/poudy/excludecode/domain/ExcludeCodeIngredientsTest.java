@@ -9,17 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 @DisplayName("제외 성분군 성분")
 class ExcludeCodeIngredientsTest {
-
-    @Autowired
-    private ExcludeCodeIngredients excludeCodeIngredients;
 
     private static IngredientCatalog ingredientsOf(Long... ids) {
         List<Ingredient> values = Arrays.stream(ids)
@@ -33,22 +25,6 @@ class ExcludeCodeIngredientsTest {
         return Arrays.stream(ExcludeCode.values())
             .map(code -> new ExcludeCodeMapping(code, ingredientIds))
             .toList();
-    }
-
-    @ParameterizedTest
-    @EnumSource(ExcludeCode.class)
-    @DisplayName("성분군마다 성분을 하나 이상 해석한다")
-    void resolvesEveryCode(ExcludeCode code) {
-        assertThat(excludeCodeIngredients.of(code)).isNotEmpty()
-            .allSatisfy(ingredient -> assertThat(ingredient.koreanName()).isNotBlank());
-    }
-
-    @ParameterizedTest
-    @EnumSource(ExcludeCode.class)
-    @DisplayName("해석한 성분은 모두 자기 성분군을 되돌려준다")
-    void mapsResolvedIngredientBackToCode(ExcludeCode code) {
-        assertThat(excludeCodeIngredients.of(code))
-            .allSatisfy(ingredient -> assertThat(excludeCodeIngredients.codesOf(ingredient.id())).contains(code));
     }
 
     @Test

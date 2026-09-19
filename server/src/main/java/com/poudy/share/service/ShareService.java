@@ -1,6 +1,6 @@
 package com.poudy.share.service;
 
-import com.poudy.brand.domain.Brands;
+import com.poudy.brand.repository.BrandRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.product.repository.ProductRepository;
@@ -18,11 +18,11 @@ public class ShareService {
     private static final Logger log = LoggerFactory.getLogger(ShareService.class);
 
     private final ProductRepository productRepository;
-    private final Brands brands;
+    private final BrandRepository brandRepository;
 
-    public ShareService(ProductRepository productRepository, Brands brands) {
+    public ShareService(ProductRepository productRepository, BrandRepository brandRepository) {
         this.productRepository = productRepository;
-        this.brands = brands;
+        this.brandRepository = brandRepository;
     }
 
     public ShareMatch match(String text) {
@@ -32,7 +32,7 @@ public class ShareService {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
 
-        SharedProductNames names = SharedProductNames.of(shareText, brands);
+        SharedProductNames names = SharedProductNames.of(shareText, brandRepository.findAll());
 
         if (names.isEmpty()) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);

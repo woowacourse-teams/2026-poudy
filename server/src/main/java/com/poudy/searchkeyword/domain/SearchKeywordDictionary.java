@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class SearchKeywordDictionary {
 
-    private final String version;
     private final Map<String, DictionaryEntry> expressions;
     private final int activeEntryCount;
     private final List<String> emptyActiveEntryIds;
@@ -20,23 +19,18 @@ public final class SearchKeywordDictionary {
     private final Map<String, Boolean> catalogEligibility = new ConcurrentHashMap<>();
 
     private SearchKeywordDictionary(
-        String version,
         Map<String, DictionaryEntry> expressions,
         int activeEntryCount,
         List<String> emptyActiveEntryIds,
         KeywordSearch search
     ) {
-        this.version = version;
         this.expressions = expressions;
         this.activeEntryCount = activeEntryCount;
         this.emptyActiveEntryIds = emptyActiveEntryIds;
         this.search = search;
     }
 
-    public static SearchKeywordDictionary of(String version, List<DictionaryEntry> entries, KeywordSearch search) {
-        if (version == null || version.isBlank()) {
-            throw new IllegalArgumentException("사전 버전은 비어 있을 수 없습니다.");
-        }
+    public static SearchKeywordDictionary of(List<DictionaryEntry> entries, KeywordSearch search) {
         List<DictionaryEntry> copied = List.copyOf(entries);
         requireUniqueIds(copied);
         List<DictionaryEntry> activeEntries = copied.stream().filter(DictionaryEntry::isActive).toList();
@@ -45,7 +39,6 @@ public final class SearchKeywordDictionary {
             .map(DictionaryEntry::id)
             .toList();
         return new SearchKeywordDictionary(
-            version,
             indexExpressions(activeEntries),
             activeEntries.size(),
             emptyActiveEntryIds,
@@ -66,10 +59,6 @@ public final class SearchKeywordDictionary {
 
     public boolean recognizes(String normalizedQuery) {
         return expressions.containsKey(matchKey(normalizedQuery));
-    }
-
-    public String version() {
-        return version;
     }
 
     public int activeEntryCount() {

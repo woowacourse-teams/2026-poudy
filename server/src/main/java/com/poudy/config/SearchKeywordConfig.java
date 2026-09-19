@@ -15,8 +15,6 @@ import com.poudy.searchkeyword.service.KeywordMaintenance;
 import com.poudy.searchkeyword.service.KeywordSnapshotWriter;
 import com.poudy.searchkeyword.service.RankingRefresher;
 import com.poudy.searchkeyword.service.SearchKeywordService;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Arrays;
@@ -29,13 +27,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 public class SearchKeywordConfig {
 
     private static final String PROPERTY_PREFIX = "poudy.search-keywords.";
-    private static final String DICTIONARY_FILE = "search_keywords.json";
     private static final List<String> DEFAULT_KEYWORDS = List.of(
         "토너",
         "선크림",
@@ -61,19 +57,10 @@ public class SearchKeywordConfig {
 
     @Bean
     public SearchKeywordDictionary searchKeywordDictionary(
-        Environment env,
-        ResourceLoader resources,
+        SearchKeywordDictionaryRepository repository,
         KeywordSearch search
-    )
-        throws IOException {
-        SearchKeywordDictionaryRepository repository = new SearchKeywordDictionaryRepository();
-        String dataDirectory = dataDirectory(env);
-        if (!dataDirectory.isBlank()) {
-            return repository.read(Path.of(dataDirectory).resolve(DICTIONARY_FILE), search);
-        }
-        try (InputStream input = resources.getResource("classpath:" + DICTIONARY_FILE).getInputStream()) {
-            return repository.read(input, search);
-        }
+    ) {
+        return repository.read(search);
     }
 
     @Bean
@@ -161,10 +148,6 @@ public class SearchKeywordConfig {
         ScheduledExecutorService scheduler = daemonScheduler("search-keyword-rankings");
         scheduler.execute(new RankingRefresher(service, buckets, scheduler));
         return scheduler;
-    }
-
-    private static String dataDirectory(Environment env) {
-        return env.getProperty("poudy.data-dir", "");
     }
 
     private static ScheduledExecutorService daemonScheduler(String name) {

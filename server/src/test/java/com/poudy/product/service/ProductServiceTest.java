@@ -10,10 +10,12 @@ import static org.mockito.Mockito.mock;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
@@ -50,8 +52,8 @@ class ProductServiceTest {
             .willReturn(Set.of(999L));
         ProductService service = new ProductService(
             repository,
-            categories(),
-            excludeCodeIngredients,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -87,8 +89,8 @@ class ProductServiceTest {
             .willReturn(List.of(ExcludeCode.SULFATES));
         ProductService service = new ProductService(
             repository,
-            categories(),
-            excludeCodeIngredients,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
         );
 
@@ -109,8 +111,8 @@ class ProductServiceTest {
         given(repository.findAll()).willReturn(Products.from(List.of()));
         ProductService service = new ProductService(
             repository,
-            Categories.from(List.of(parent, child)),
-            excludeCodeIngredients,
+            categoryRepository(Categories.from(List.of(parent, child))),
+            excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
         );
 
@@ -130,8 +132,8 @@ class ProductServiceTest {
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
-            categories(),
-            excludeCodeIngredients,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -171,8 +173,8 @@ class ProductServiceTest {
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
-            categories(),
-            excludeCodeIngredients,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
         );
         ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
@@ -199,7 +201,12 @@ class ProductServiceTest {
                 throw new IllegalStateException("logging broken");
             }
         };
-        ProductService service = new ProductService(repository, categories(), excludes, logger);
+        ProductService service = new ProductService(
+            repository,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludes),
+            logger
+        );
 
         ProductPage result = service.findProducts(
             new ProductQuery("제품", null, null, null, null, null, null, null, null),
@@ -231,6 +238,18 @@ class ProductServiceTest {
             OffsetDateTime.parse("2026-08-01T00:00:00Z"),
             java.util.Set.of()
         );
+    }
+
+    private static CategoryRepository categoryRepository(Categories categories) {
+        CategoryRepository categoryRepository = mock(CategoryRepository.class);
+        given(categoryRepository.findAll()).willReturn(categories);
+        return categoryRepository;
+    }
+
+    private static ExcludeCodeRepository excludeCodeRepository(ExcludeCodeIngredients excludeCodeIngredients) {
+        ExcludeCodeRepository excludeCodeRepository = mock(ExcludeCodeRepository.class);
+        given(excludeCodeRepository.findAll()).willReturn(excludeCodeIngredients);
+        return excludeCodeRepository;
     }
 
     private static Categories categories() {

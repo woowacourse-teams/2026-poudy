@@ -139,7 +139,7 @@ class SearchKeywordDictionaryTest {
     }
 
     private SearchKeywordDictionary dictionary(List<DictionaryEntry> entries, KeywordSearch search) {
-        return SearchKeywordDictionary.of("fixture-v1", entries, search);
+        return SearchKeywordDictionary.of(entries, search);
     }
 
     private DictionaryEntry entry(

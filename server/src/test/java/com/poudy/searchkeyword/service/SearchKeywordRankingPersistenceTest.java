@@ -58,7 +58,7 @@ class SearchKeywordRankingPersistenceTest {
 
     private static SearchKeywordService service(KeywordBuckets buckets) {
         DictionaryEntry entry = DictionaryEntry.of("term", "토너", DictionaryEntry.Status.ACTIVE, true, List.of("토너"));
-        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("data-v1", List.of(entry), ignored -> true);
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(List.of(entry), ignored -> true);
         return new SearchKeywordService(
             dictionary,
             buckets,

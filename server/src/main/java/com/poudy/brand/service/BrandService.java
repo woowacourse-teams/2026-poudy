@@ -3,7 +3,7 @@ package com.poudy.brand.service;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
-import com.poudy.category.domain.Categories;
+import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.product.domain.BrandProductCount;
@@ -18,16 +18,16 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
     private final ProductRepository productRepository;
-    private final Categories categories;
+    private final CategoryRepository categoryRepository;
 
     public BrandService(
         BrandRepository brandRepository,
         ProductRepository productRepository,
-        Categories categories
+        CategoryRepository categoryRepository
     ) {
         this.brandRepository = brandRepository;
         this.productRepository = productRepository;
-        this.categories = categories;
+        this.categoryRepository = categoryRepository;
     }
 
     public List<BrandProductCount> findBrands() {
@@ -39,7 +39,7 @@ public class BrandService {
         Brand brand = brandRepository.findById(brandId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
 
-        return products().brandProductCountsOf(brand, categories);
+        return products().brandProductCountsOf(brand, categoryRepository.findAll());
     }
 
     private Products products() {

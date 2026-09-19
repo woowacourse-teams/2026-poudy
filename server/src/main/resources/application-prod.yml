@@ -1,12 +1,10 @@
 # 운영 배포용 프로필. SPRING_PROFILES_ACTIVE=prod 로 활성화한다.
 
-# 배포 전에 S3에서 JSON을 내려받아 이 디렉터리에 저장한다.
 poudy:
   product-views:
     file: ${POUDY_PRODUCT_VIEWS_FILE:/opt/poudy/state/product-views/daily-counts.json}
   search-keywords:
     state-file: ${POUDY_SEARCH_KEYWORDS_STATE_FILE:/opt/poudy/state/search-ranking/buckets.json}
-  data-dir: ${POUDY_DATA_DIR:/app/data}
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
   # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.
   cors:

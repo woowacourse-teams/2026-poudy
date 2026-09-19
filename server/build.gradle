@@ -36,8 +36,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
     implementation 'software.amazon.awssdk:s3'
+    runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
@@ -76,6 +78,7 @@ tasks.named('test') {
     useJUnitPlatform()
     def searchKeywordState = layout.buildDirectory.dir('tmp/test-search-ranking')
     systemProperty 'poudy.search-keywords.state-file', searchKeywordState.get().file('buckets.json').asFile.path
+    systemProperty 'spring.profiles.active', 'test'
     doFirst {
         project.delete(searchKeywordState)
     }
@@ -103,7 +106,7 @@ openApi {
     outputFileName = 'openapi.json'
     apiDocsUrl = "http://localhost:${openApiDocPort}/v3/api-docs"
     customBootRun {
-        args = ["--server.port=${openApiDocPort}"]
+        args = ["--server.port=${openApiDocPort}", '--spring.profiles.active=test']
         classpath.from(sourceSets.test.runtimeClasspath)
     }
 }

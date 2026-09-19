@@ -1,191 +1,71 @@
 package com.poudy.curation.repository;
 
-import com.poudy.common.json.JsonDataReader;
-import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationBanner;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+
+import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.curation.domain.CurationBlock;
 import com.poudy.curation.domain.CurationFilter;
-import com.poudy.curation.domain.CurationProductMapping;
 import com.poudy.curation.domain.Curations;
 import com.poudy.exception.InfrastructureException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JacksonModule;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.module.SimpleModule;
 
 @Repository
 public class CurationRepository {
-    private static final String CURATIONS_FILE_NAME = "curations.json";
 
     private final Curations curations;
 
-    public CurationRepository(JsonDataReader reader) {
+    public CurationRepository(CurationJpaRepository curationJpaRepository, SnapshotReader snapshotReader) {
+        this.curations = snapshotReader.read(() -> load(curationJpaRepository));
+    }
+
+    private static Curations load(CurationJpaRepository curationJpaRepository) {
+        Map<UUID, List<CurationFilter>> filters = curationJpaRepository.findAllFilters().stream()
+            .collect(
+                groupingBy(CurationBlockFilterEntity::blockId, mapping(CurationBlockFilterEntity::toDomain, toList()))
+            );
+        Map<UUID, Map<Long, List<UUID>>> productFilterIds = curationJpaRepository.findAllProductFilters()
+            .stream()
+            .map(CurationBlockProductFilterEntity::id)
+            .collect(
+                groupingBy(
+                    CurationBlockProductFilterId::blockId,
+                    groupingBy(
+                        CurationBlockProductFilterId::productId,
+                        mapping(CurationBlockProductFilterId::filterId, toList())
+                    )
+                )
+            );
+        Map<UUID, List<Long>> productIds = curationJpaRepository.findAllProducts().stream()
+            .map(CurationBlockProductEntity::id)
+            .collect(groupingBy(CurationBlockProductId::blockId, mapping(CurationBlockProductId::productId, toList())));
         try {
-            this.curations = Curations.from(
-                reader.readList(CURATIONS_FILE_NAME, Curation.class, deserializationModule())
+            Map<Long, List<CurationBlock>> blocks = curationJpaRepository.findAllBlocks().stream()
+                .collect(
+                    groupingBy(
+                        CurationBlockEntity::curationId,
+                        mapping(
+                            block -> block.toDomain(
+                                filters.getOrDefault(block.id(), List.of()),
+                                productIds.getOrDefault(block.id(), List.of()),
+                                productFilterIds.getOrDefault(block.id(), Map.of())
+                            ),
+                            toList()
+                        )
+                    )
+                );
+            return Curations.from(
+                curationJpaRepository.findAllCurations().stream()
+                    .map(curation -> curation.toDomain(blocks.getOrDefault(curation.id(), List.of())))
+                    .toList()
             );
         } catch (IllegalArgumentException exception) {
             throw new InfrastructureException("큐레이션 데이터가 올바르지 않습니다.", exception);
         }
-    }
-
-    private static JacksonModule deserializationModule() {
-        SimpleModule resolution = new SimpleModule("큐레이션 데이터 해석");
-        resolution.addDeserializer(Curation.class, new ValueDeserializer<Curation>() {
-            @Override
-            public Curation deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
-                try {
-                    return curation(context.readTree(parser), context);
-                } catch (IllegalArgumentException | ArithmeticException exception) {
-                    return context.reportInputMismatch(
-                        Curation.class,
-                        "큐레이션 데이터가 올바르지 않습니다: %s",
-                        exception.getMessage()
-                    );
-                }
-            }
-        });
-        return resolution;
-    }
-
-    private static Curation curation(JsonNode node, DeserializationContext context) throws JacksonException {
-        JsonNode banner = required(node, "banner", context);
-        JsonNode detail = required(node, "detail", context);
-        List<CurationBlock> blocks = new ArrayList<>();
-        for (JsonNode block : array(detail, "blocks", context)) {
-            blocks.add(block(block, context));
-        }
-        return new Curation(
-            number(node, "id", context),
-            new CurationBanner(
-                text(banner, "title", context),
-                text(banner, "description", context),
-                text(banner, "thumbnail_image_url", context)
-            ),
-            text(detail, "title", context),
-            text(detail, "description", context),
-            blocks
-        );
-    }
-
-    private static CurationBlock block(JsonNode node, DeserializationContext context) throws JacksonException {
-        UUID id = UUID.fromString(text(node, "id", context));
-        String type = text(node, "type", context);
-        CurationBlock.Status status = CurationBlock.Status.valueOf(text(node, "status", context));
-        int top = Math.toIntExact(number(node, "spacing_top", context));
-        int bottom = Math.toIntExact(number(node, "spacing_bottom", context));
-
-        return switch (type) {
-            case "IMAGE" -> CurationBlock.image(
-                id,
-                status,
-                top,
-                bottom,
-                nullableText(node, "image_url", context)
-            );
-            case "PRODUCTS" -> CurationBlock.products(id, status, top, bottom, productIds(node, context));
-            case "PRODUCTS_BY_FILTER" -> CurationBlock.productsByFilter(
-                id,
-                status,
-                top,
-                bottom,
-                filters(node, context),
-                productMappings(node, context)
-            );
-            default -> context.reportInputMismatch(Curation.class, "지원하지 않는 큐레이션 블록 타입입니다: %s", type);
-        };
-    }
-
-    private static List<Long> productIds(JsonNode node, DeserializationContext context) throws JacksonException {
-        List<Long> products = new ArrayList<>();
-        for (JsonNode product : array(node, "products", context)) {
-            products.add(number(product, "product_id", context));
-        }
-        return products;
-    }
-
-    private static List<CurationFilter> filters(JsonNode node, DeserializationContext context) throws JacksonException {
-        List<CurationFilter> filters = new ArrayList<>();
-        for (JsonNode filter : array(node, "filters", context)) {
-            filters.add(
-                new CurationFilter(
-                    UUID.fromString(text(filter, "id", context)),
-                    text(filter, "label", context)
-                )
-            );
-        }
-        return filters;
-    }
-
-    private static List<CurationProductMapping> productMappings(
-        JsonNode node,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        List<CurationProductMapping> products = new ArrayList<>();
-        for (JsonNode product : array(node, "products", context)) {
-            List<UUID> filterIds = new ArrayList<>();
-            for (JsonNode filterId : array(product, "filter_ids", context)) {
-                if (!filterId.isString()) {
-                    return context.reportInputMismatch(Curation.class, "필터 ID는 UUID 문자열이어야 합니다.");
-                }
-                filterIds.add(UUID.fromString(filterId.asString()));
-            }
-            products.add(new CurationProductMapping(number(product, "product_id", context), filterIds));
-        }
-        return products;
-    }
-
-    private static JsonNode required(JsonNode node, String field, DeserializationContext context)
-        throws JacksonException {
-        JsonNode value = node.get(field);
-        if (value == null) {
-            return context.reportInputMismatch(Curation.class, "큐레이션 필드가 없습니다: %s", field);
-        }
-        return value;
-    }
-
-    private static JsonNode array(JsonNode node, String field, DeserializationContext context) throws JacksonException {
-        JsonNode value = required(node, field, context);
-        if (!value.isArray()) {
-            return context.reportInputMismatch(Curation.class, "배열이 필요합니다: %s", field);
-        }
-        return value;
-    }
-
-    private static long number(JsonNode node, String field, DeserializationContext context) throws JacksonException {
-        JsonNode value = required(node, field, context);
-        if (!value.isIntegralNumber() || !value.canConvertToLong()) {
-            return context.reportInputMismatch(Curation.class, "Long 정수가 필요합니다: %s", field);
-        }
-        return value.asLong();
-    }
-
-    private static String text(JsonNode node, String field, DeserializationContext context) throws JacksonException {
-        JsonNode value = required(node, field, context);
-        if (!value.isString()) {
-            return context.reportInputMismatch(Curation.class, "문자열이 필요합니다: %s", field);
-        }
-        return value.asString();
-    }
-
-    private static String nullableText(JsonNode node, String field, DeserializationContext context)
-        throws JacksonException {
-        JsonNode value = required(node, field, context);
-        if (value.isNull()) {
-            return null;
-        }
-        if (!value.isString()) {
-            return context.reportInputMismatch(Curation.class, "문자열 또는 null이 필요합니다: %s", field);
-        }
-        return value.asString();
     }
 
     public Curations findAll() {

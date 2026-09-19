@@ -12,6 +12,7 @@ import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.product.domain.BrandProductCount;
@@ -46,7 +47,7 @@ class BrandServiceTest {
         BrandService brandService = new BrandService(
             brandRepository,
             productRepository,
-            Categories.from(List.of())
+            categoryRepository(Categories.from(List.of()))
         );
 
         assertThat(brandService.findBrands())
@@ -68,7 +69,11 @@ class BrandServiceTest {
         given(brandRepository.findById(1L)).willReturn(Optional.of(drG));
         given(productRepository.findAll()).willReturn(products);
         given(products.brandProductCountsOf(drG, categories)).willReturn(productCounts);
-        BrandService brandService = new BrandService(brandRepository, productRepository, categories);
+        BrandService brandService = new BrandService(
+            brandRepository,
+            productRepository,
+            categoryRepository(categories)
+        );
 
         assertThat(brandService.findBrandDetail(1L)).isSameAs(productCounts);
     }
@@ -82,7 +87,7 @@ class BrandServiceTest {
         BrandService brandService = new BrandService(
             brandRepository,
             productRepository,
-            Categories.from(List.of())
+            categoryRepository(Categories.from(List.of()))
         );
 
         assertThatThrownBy(() -> brandService.findBrandDetail(999L))
@@ -90,5 +95,11 @@ class BrandServiceTest {
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.BRAND_NOT_FOUND);
         verifyNoInteractions(productRepository);
+    }
+
+    private static CategoryRepository categoryRepository(Categories categories) {
+        CategoryRepository categoryRepository = mock(CategoryRepository.class);
+        given(categoryRepository.findAll()).willReturn(categories);
+        return categoryRepository;
     }
 }

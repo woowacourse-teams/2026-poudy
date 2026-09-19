@@ -1,0 +1,10 @@
+# 테스트와 OpenAPI 생성은 개발 DB 와 분리된 poudy_test 를 쓴다.
+# 컨텍스트가 뜰 때마다 스키마를 비우고 운영 스키마와 테스트 데이터를 다시 넣는다.
+spring:
+  datasource:
+    url: ${POUDY_TEST_DB_URL:jdbc:postgresql://localhost:5432/poudy_test}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/test-reset.sql,classpath:db/schema.sql
+      data-locations: classpath:db/test-data.sql

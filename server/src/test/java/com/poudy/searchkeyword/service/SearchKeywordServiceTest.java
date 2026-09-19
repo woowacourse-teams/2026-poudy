@@ -198,7 +198,7 @@ class SearchKeywordServiceTest {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(throwingClock, new BucketWindow(168, 600, 0));
         SearchKeywordService failing = new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+            SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -222,7 +222,7 @@ class SearchKeywordServiceTest {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(mutable, new BucketWindow(1, 60, 0));
         SearchKeywordService service = new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+            SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너")), ignored -> true),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -244,7 +244,7 @@ class SearchKeywordServiceTest {
         AtomicInteger calls = new AtomicInteger();
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 20)
             .mapToObj(i -> entry("term%02d".formatted(i), "검색어%02d".formatted(i), "표현%02d".formatted(i))).toList();
-        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
@@ -279,7 +279,7 @@ class SearchKeywordServiceTest {
             entry("below", "부족", "부족"),
             entry("blocked", "차단", "차단")
         );
-        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(entries, ignored -> {
             calls.incrementAndGet();
             return true;
         });
@@ -349,7 +349,7 @@ class SearchKeywordServiceTest {
 
     private SearchKeywordService service(List<DictionaryEntry> entries, Set<String> blocked) {
         return new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", entries, ignored -> true),
+            SearchKeywordDictionary.of(entries, ignored -> true),
             successful,
             CATALOG,
             new RankingPolicy(5, 10, blocked),

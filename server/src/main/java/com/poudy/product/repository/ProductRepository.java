@@ -1,302 +1,135 @@
 package com.poudy.product.repository;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
+import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.common.json.JsonDataReader;
+import com.poudy.category.repository.CategoryRepository;
+import com.poudy.common.persistence.SnapshotReader;
+import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.product.domain.Product;
+import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.product.domain.ProductFactory;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
 import com.poudy.skintype.domain.SkinType;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Repository;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JacksonModule;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.module.SimpleModule;
 
 @Repository
 public class ProductRepository {
 
-    private static final String PRODUCTS_FILE_NAME = "products.json";
-    private static final String ID_FIELD = "id";
-    private static final String BRAND_ID_FIELD = "brand_id";
-    private static final String CATEGORY_ID_FIELD = "category_id";
-    private static final String PRODUCT_NAME_FIELD = "product_name";
-    private static final String IMAGE_URL_FIELD = "image_url";
-    private static final String VARIANTS_FIELD = "variants";
-    private static final String PRICE_FIELD = "price";
-    private static final String VOLUME_VALUE_FIELD = "volume_value";
-    private static final String VOLUME_UNIT_FIELD = "volume_unit";
-    private static final String STATUS_FIELD = "status";
-    private static final String UPDATED_AT_FIELD = "updated_at";
-    private static final String INGREDIENTS_FIELD = "ingredients";
-    private static final String INGREDIENT_ID_FIELD = "ingredient_id";
-
     private final Products products;
 
     public ProductRepository(
-        JsonDataReader jsonDataReader,
-        Brands brands,
-        Categories categories,
-        IngredientCatalog ingredients,
+        ProductJpaRepository productJpaRepository,
+        BrandRepository brandRepository,
+        CategoryRepository categoryRepository,
+        IngredientRepository ingredientRepository,
+        ProductFactory productFactory,
+        SnapshotReader snapshotReader
+    ) {
+        this.products = snapshotReader
+            .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository, productFactory));
+    }
+
+    private static Products load(
+        ProductJpaRepository productJpaRepository,
+        BrandRepository brandRepository,
+        CategoryRepository categoryRepository,
+        IngredientRepository ingredientRepository,
         ProductFactory productFactory
     ) {
-        this.products = Products.from(
-            jsonDataReader.readList(
-                PRODUCTS_FILE_NAME,
-                Product.class,
-                resolvedWith(brands, categories, ingredients, productFactory)
+        Brands brands = brandRepository.findAll();
+        Categories categories = categoryRepository.findAll();
+        IngredientCatalog ingredients = ingredientRepository.findAll();
+        Map<Long, List<ProductVariant>> variants = productJpaRepository.findAllVariants().stream()
+            .collect(groupingBy(ProductVariantEntity::productId, mapping(ProductVariantEntity::toDomain, toList())));
+        Map<Long, List<Long>> ingredientIds = productJpaRepository.findAllIngredients().stream()
+            .collect(
+                groupingBy(ProductIngredientEntity::productId, mapping(ProductIngredientEntity::ingredientId, toList()))
+            );
+        Map<Long, Set<SkinType>> skinTypes = productJpaRepository.findAllSkinTypes().stream()
+            .map(ProductSkinTypeEntity::id)
+            .collect(
+                groupingBy(
+                    ProductSkinTypeId::productId,
+                    mapping(ProductSkinTypeId::skinType, toCollection(() -> EnumSet.noneOf(SkinType.class)))
+                )
+            );
+        return Products.from(
+            productJpaRepository.findAllProducts().stream()
+                .map(
+                    product -> product.toDomain(
+                        productFactory,
+                        brandOf(product, brands),
+                        categoryOf(product, categories),
+                        ingredientsOf(product, ingredientIds.getOrDefault(product.id(), List.of()), ingredients),
+                        variantsOf(product, variants.getOrDefault(product.id(), List.of())),
+                        skinTypes.getOrDefault(product.id(), Set.of())
+                    )
+                )
+                .toList()
+        );
+    }
+
+    private static Brand brandOf(ProductEntity product, Brands brands) {
+        return brands.findById(product.brandId()).orElseThrow(
+            () -> new InfrastructureException(
+                "제품이 존재하지 않는 브랜드 ID를 참조합니다. product_id=%d, brand_id=%d"
+                    .formatted(product.id(), product.brandId())
             )
         );
     }
 
-    private static JacksonModule resolvedWith(
-        Brands brands,
-        Categories categories,
-        IngredientCatalog ingredients,
-        ProductFactory productFactory
-    ) {
-        SimpleModule resolution = new SimpleModule("제품 참조 해석");
-        resolution.addDeserializer(Product.class, new ValueDeserializer<Product>() {
-
-            @Override
-            public Product deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
-                JsonNode product = context.readTree(parser);
-                Category category = categoryOf(product, categories, context);
-                Ingredients productIngredients = ingredientsOf(product, ingredients, context);
-
-                return productFactory.create(
-                    idOf(product, ID_FIELD, context),
-                    requiredTextOf(product, PRODUCT_NAME_FIELD, context),
-                    brandOf(product, brands, context),
-                    category,
-                    productIngredients,
-                    nullableTextOf(product, IMAGE_URL_FIELD, context),
-                    variantsOf(product, context),
-                    updatedAtOf(product, context),
-                    skinTypesOf(product, context)
-                );
-            }
-        });
-
-        return resolution;
-    }
-
-    private static Set<SkinType> skinTypesOf(JsonNode product, DeserializationContext context) {
-        JsonNode skinTypeCodes = product.get("skin_types");
-        if (skinTypeCodes == null) {
-            return Set.of();
-        }
-        if (!skinTypeCodes.isArray()) {
-            return context.reportInputMismatch(Product.class, "제품의 skin_types 필드는 배열이어야 합니다.");
-        }
-
-        Set<SkinType> skinTypes = EnumSet.noneOf(SkinType.class);
-        for (JsonNode skinTypeCode : skinTypeCodes) {
-            SkinType skinType = skinTypeOf(skinTypeCode, context);
-            if (!skinTypes.add(skinType)) {
-                return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 중복될 수 없습니다: %s", skinType);
-            }
-        }
-        return skinTypes;
-    }
-
-    private static SkinType skinTypeOf(JsonNode skinTypeCode, DeserializationContext context) {
-        if (!skinTypeCode.isString()) {
-            return context.reportInputMismatch(Product.class, "제품 피부타입 코드는 문자열이어야 합니다.");
-        }
-
-        String code = skinTypeCode.asString();
-        try {
-            return SkinType.valueOf(code);
-        } catch (IllegalArgumentException exception) {
-            return context.reportInputMismatch(Product.class, "등록되지 않은 제품 피부타입 코드입니다: %s", code);
-        }
-    }
-
-    private static Brand brandOf(JsonNode product, Brands brands, DeserializationContext context)
-        throws JacksonException {
-        Long brandId = idOf(product, BRAND_ID_FIELD, context);
-        Brand brand = brands.findById(brandId).orElse(null);
-        if (brand == null) {
-            return context.reportInputMismatch(
-                Product.class,
-                "제품이 존재하지 않는 브랜드 ID를 참조합니다: %d",
-                brandId
-            );
-        }
-
-        return brand;
-    }
-
-    private static Category categoryOf(JsonNode product, Categories categories, DeserializationContext context)
-        throws JacksonException {
-        Long categoryId = idOf(product, CATEGORY_ID_FIELD, context);
-        Category category = categories.findById(categoryId).orElse(null);
-        if (category == null) {
-            return context.reportInputMismatch(
-                Product.class,
-                "제품이 존재하지 않는 카테고리 ID를 참조합니다: %d",
-                categoryId
-            );
-        }
+    private static Category categoryOf(ProductEntity product, Categories categories) {
+        Category category = categories.findById(product.categoryId()).orElseThrow(
+            () -> new InfrastructureException(
+                "제품이 존재하지 않는 카테고리 ID를 참조합니다. product_id=%d, category_id=%d"
+                    .formatted(product.id(), product.categoryId())
+            )
+        );
         if (category.isParent()) {
-            return context.reportInputMismatch(
-                Product.class,
-                "제품은 소분류 카테고리 ID를 참조해야 합니다: %d",
-                categoryId
+            throw new InfrastructureException(
+                "제품은 소분류 카테고리 ID를 참조해야 합니다. product_id=%d, category_id=%d"
+                    .formatted(product.id(), product.categoryId())
             );
         }
-
         return category;
     }
 
-    private static Ingredients ingredientsOf(
-        JsonNode product,
-        IngredientCatalog ingredients,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        JsonNode references = product.get(INGREDIENTS_FIELD);
-        if (references == null || !references.isArray()) {
-            return context.reportInputMismatch(IngredientCatalog.class, "제품 성분 참조는 배열이어야 합니다.");
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (JsonNode reference : references) {
-            ids.add(ingredientIdOf(reference, context));
-        }
-
+    private static Ingredients ingredientsOf(ProductEntity product, List<Long> ids, IngredientCatalog ingredients) {
         List<Long> unresolved = ids.stream()
             .filter(id -> ingredients.findById(id).isEmpty())
             .distinct()
             .toList();
         if (!unresolved.isEmpty()) {
-            return context.reportInputMismatch(
-                IngredientCatalog.class,
-                "제품이 존재하지 않는 성분 ID를 참조합니다: %s",
-                unresolved
+            throw new InfrastructureException(
+                "제품이 존재하지 않는 성분 ID를 참조합니다. product_id=%d, ingredient_ids=%s"
+                    .formatted(product.id(), unresolved)
             );
         }
-
         return ingredients.resolveInOrder(ids);
     }
 
-    private static ProductVariants variantsOf(JsonNode product, DeserializationContext context)
-        throws JacksonException {
-        JsonNode variants = product.get(VARIANTS_FIELD);
-        if (variants == null || !variants.isArray() || variants.isEmpty()) {
-            return context.reportInputMismatch(ProductVariants.class, "제품 용량 옵션은 하나 이상이어야 합니다.");
-        }
-
-        List<ProductVariant> values = new ArrayList<>();
-        for (JsonNode variant : variants) {
-            values.add(
-                new ProductVariant(
-                    idOf(variant, ID_FIELD, context),
-                    longOf(variant, PRICE_FIELD, context),
-                    decimalOf(variant, VOLUME_VALUE_FIELD, context),
-                    requiredTextOf(variant, VOLUME_UNIT_FIELD, context),
-                    requiredTextOf(variant, STATUS_FIELD, context)
-                )
+    private static ProductVariants variantsOf(ProductEntity product, List<ProductVariant> variants) {
+        if (variants.isEmpty()) {
+            throw new InfrastructureException(
+                "제품 용량 옵션은 하나 이상이어야 합니다. product_id=%d".formatted(product.id())
             );
         }
-
-        return new ProductVariants(values);
-    }
-
-    private static Long idOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
-        return longOf(value, field, context);
-    }
-
-    private static Long longOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
-        JsonNode id = value.get(field);
-        if (id == null || !id.isIntegralNumber()) {
-            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 정수여야 합니다.", field);
-        }
-
-        return id.asLong();
-    }
-
-    private static BigDecimal decimalOf(JsonNode value, String field, DeserializationContext context)
-        throws JacksonException {
-        JsonNode number = value.get(field);
-        if (number == null || !number.isNumber()) {
-            return context.reportInputMismatch(ProductVariant.class, "제품 용량 옵션의 \"%s\" 필드는 숫자여야 합니다.", field);
-        }
-
-        return new BigDecimal(number.asString());
-    }
-
-    private static String requiredTextOf(JsonNode value, String field, DeserializationContext context)
-        throws JacksonException {
-        String text = textOf(value, field);
-        if (text == null || text.isBlank()) {
-            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 문자열이어야 합니다.", field);
-        }
-
-        return text;
-    }
-
-    private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
-        throws JacksonException {
-        JsonNode text = value.get(field);
-        if (text == null || text.isNull()) {
-            return null;
-        }
-        if (!text.isString()) {
-            return context.reportInputMismatch(
-                Product.class,
-                "제품의 \"%s\" 필드는 문자열 또는 null이어야 합니다.",
-                field
-            );
-        }
-
-        return text.asString();
-    }
-
-    private static String textOf(JsonNode value, String field) {
-        JsonNode text = value.get(field);
-        if (text == null || !text.isString()) {
-            return null;
-        }
-
-        return text.asString();
-    }
-
-    private static OffsetDateTime updatedAtOf(JsonNode product, DeserializationContext context)
-        throws JacksonException {
-        String updatedAt = requiredTextOf(product, UPDATED_AT_FIELD, context);
-        try {
-            return OffsetDateTime.parse(updatedAt);
-        } catch (DateTimeParseException exception) {
-            return context.reportInputMismatch(Product.class, "제품의 \"%s\" 필드는 날짜와 시간이어야 합니다.", UPDATED_AT_FIELD);
-        }
-    }
-
-    private static Long ingredientIdOf(JsonNode reference, DeserializationContext context) throws JacksonException {
-        JsonNode ingredientId = reference.get(INGREDIENT_ID_FIELD);
-        if (ingredientId == null || !ingredientId.isIntegralNumber()) {
-            return context
-                .reportInputMismatch(IngredientCatalog.class, "제품 성분 참조의 \"%s\" 필드는 정수여야 합니다.", INGREDIENT_ID_FIELD);
-        }
-
-        return ingredientId.asLong();
+        return new ProductVariants(variants);
     }
 
     public Products findAll() {
@@ -310,5 +143,4 @@ public class ProductRepository {
     public Set<Long> containedIngredientIds() {
         return products.containedIngredientIds();
     }
-
 }
