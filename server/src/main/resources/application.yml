@@ -57,6 +57,8 @@ springdoc:
 # CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
 # 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
 poudy:
+  legacy-s3-migration:
+    enabled: ${POUDY_LEGACY_S3_MIGRATION_ENABLED:false}
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
@@ -87,6 +89,10 @@ poudy:
       max-batches: 20
       cron: "0 30 3 * * *"
   product-request:
+    legacy-s3:
+      bucket: ${POUDY_PRODUCT_REQUEST_S3_BUCKET:}
+      prefix: ${POUDY_PRODUCT_REQUEST_S3_PREFIX:product-requests}
+      region: ${POUDY_PRODUCT_REQUEST_S3_REGION:${AWS_REGION:ap-northeast-2}}
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
     rate-limit:

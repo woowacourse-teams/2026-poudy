@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface ProductRequestJpaRepository extends Repository<ProductRequest, UUID> {
 
+    boolean existsById(UUID id);
+
     Optional<ProductRequest> findById(UUID id);
 
     List<ProductRequest> findAllByOrderByRequestedAtDescRequestIdDesc();

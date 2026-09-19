@@ -29,6 +29,10 @@ public class ProductRequestRepository {
         entityManager.persist(request);
     }
 
+    public boolean exists(UUID requestId) {
+        return productRequestJpaRepository.existsById(requestId);
+    }
+
     public boolean updateStatus(ProductRequestStatus expected, ProductRequest request) {
         return productRequestJpaRepository.updateStatus(
             request.requestId(),

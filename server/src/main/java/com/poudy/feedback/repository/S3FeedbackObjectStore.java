@@ -9,11 +9,13 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -68,6 +70,22 @@ public class S3FeedbackObjectStore {
             throw failure(exception);
         } catch (SdkException exception) {
             throw failure(exception);
+        }
+    }
+
+    byte[] read(String key) {
+        try {
+            return s3Client.getObjectAsBytes(
+                GetObjectRequest.builder().bucket(bucket).key(key).build()
+            ).asByteArray();
+        } catch (SdkException exception) {
+            throw failure(exception);
+        }
+    }
+
+    void requireConfigured() {
+        if (!StringUtils.hasText(bucket)) {
+            throw new ObjectStoreException(FailureKind.OTHER, new IllegalStateException("S3 bucket is not configured"));
         }
     }
 
@@ -171,7 +189,7 @@ public class S3FeedbackObjectStore {
 
         private final FailureKind kind;
 
-        private ObjectStoreException(FailureKind kind, SdkException cause) {
+        private ObjectStoreException(FailureKind kind, RuntimeException cause) {
             super(cause);
             this.kind = kind;
         }
