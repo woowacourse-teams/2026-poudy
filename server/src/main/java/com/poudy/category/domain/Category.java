@@ -1,13 +1,32 @@
 package com.poudy.category.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.Objects;
 
+@Entity
+@Table(name = "category")
 public class Category {
 
-    private final Long id;
-    private final Long parentId;
-    private final String name;
-    private final Integer depth;
+    @Id
+    private Long id;
+
+    @Column(name = "parent_id")
+    private Long parentId;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "depth")
+    private Short depth;
+
+    @Column(name = "display_order")
+    private Integer displayOrder;
+
+    protected Category() {
+    }
 
     public Category(Long id, Long parentId, String name, Integer depth) {
         validateDepth(depth);
@@ -16,7 +35,7 @@ public class Category {
         this.id = id;
         this.parentId = parentId;
         this.name = name;
-        this.depth = depth;
+        this.depth = depth.shortValue();
     }
 
     public boolean isParent() {

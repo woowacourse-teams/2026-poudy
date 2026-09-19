@@ -18,27 +18,22 @@ public class ProductRequestRepository {
     }
 
     public void save(ProductRequest request) {
-        productRequestJpaRepository.save(ProductRequestEntity.from(request));
+        productRequestJpaRepository.save(request);
     }
 
     public void update(ProductRequest request) {
-        productRequestJpaRepository.save(ProductRequestEntity.from(request));
+        productRequestJpaRepository.save(request);
     }
 
     public ProductRequest findById(UUID requestId) {
         return productRequestJpaRepository.findById(requestId)
-            .map(ProductRequestEntity::toDomain)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_REQUEST_NOT_FOUND));
     }
 
     public List<ProductRequest> findAll(ProductRequestStatus status) {
         if (status == null) {
-            return toDomain(productRequestJpaRepository.findAllByOrderByRequestedAtDescIdDesc());
+            return productRequestJpaRepository.findAllByOrderByRequestedAtDescRequestIdDesc();
         }
-        return toDomain(productRequestJpaRepository.findAllByStatusOrderByRequestedAtDescIdDesc(status));
-    }
-
-    private static List<ProductRequest> toDomain(List<ProductRequestEntity> requests) {
-        return requests.stream().map(ProductRequestEntity::toDomain).toList();
+        return productRequestJpaRepository.findAllByStatusOrderByRequestedAtDescRequestIdDesc(status);
     }
 }

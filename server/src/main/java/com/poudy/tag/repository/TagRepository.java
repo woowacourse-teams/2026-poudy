@@ -9,11 +9,7 @@ public class TagRepository {
     private final Tags tags;
 
     public TagRepository(TagJpaRepository tagJpaRepository) {
-        this.tags = Tags.from(
-            tagJpaRepository.findAllByOrderByIdAsc().stream()
-                .map(TagEntity::toDomain)
-                .toList()
-        );
+        this.tags = Tags.from(tagJpaRepository.findAllByOrderByIdAsc());
     }
 
     public Tags findAll() {

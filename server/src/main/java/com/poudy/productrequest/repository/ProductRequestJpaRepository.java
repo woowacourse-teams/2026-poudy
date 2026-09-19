@@ -1,18 +1,19 @@
 package com.poudy.productrequest.repository;
 
+import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
 
-public interface ProductRequestJpaRepository extends Repository<ProductRequestEntity, UUID> {
+public interface ProductRequestJpaRepository extends Repository<ProductRequest, UUID> {
 
-    ProductRequestEntity save(ProductRequestEntity request);
+    ProductRequest save(ProductRequest request);
 
-    Optional<ProductRequestEntity> findById(UUID id);
+    Optional<ProductRequest> findById(UUID id);
 
-    List<ProductRequestEntity> findAllByOrderByRequestedAtDescIdDesc();
+    List<ProductRequest> findAllByOrderByRequestedAtDescRequestIdDesc();
 
-    List<ProductRequestEntity> findAllByStatusOrderByRequestedAtDescIdDesc(ProductRequestStatus status);
+    List<ProductRequest> findAllByStatusOrderByRequestedAtDescRequestIdDesc(ProductRequestStatus status);
 }

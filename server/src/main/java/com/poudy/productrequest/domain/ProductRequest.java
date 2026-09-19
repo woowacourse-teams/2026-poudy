@@ -1,19 +1,45 @@
 package com.poudy.productrequest.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ProductRequest {
+@Entity
+@Table(name = "product_request")
+public class ProductRequest {
 
-    private final UUID requestId;
-    private final String productName;
-    private final String brandName;
-    private final OffsetDateTime requestedAt;
-    private final ProductRequestStatus status;
-    private final OffsetDateTime statusChangedAt;
-    private final OffsetDateTime completedAt;
+    @Id
+    @Column(name = "id")
+    private UUID requestId;
+
+    @Column(name = "product_name")
+    private String productName;
+
+    @Column(name = "brand_name")
+    private String brandName;
+
+    @Column(name = "requested_at")
+    private OffsetDateTime requestedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ProductRequestStatus status;
+
+    @Column(name = "status_changed_at")
+    private OffsetDateTime statusChangedAt;
+
+    @Column(name = "completed_at")
+    private OffsetDateTime completedAt;
+
+    protected ProductRequest() {
+    }
 
     public ProductRequest(
         UUID requestId,

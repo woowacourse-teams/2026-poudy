@@ -4,24 +4,49 @@ import com.poudy.search.domain.NameRank;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.search.domain.SearchableText;
 import com.poudy.search.domain.TextMatch;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+@Entity
+@Table(name = "brand")
 public class Brand {
 
-    private final Long id;
-    private final String koreanName;
-    private final String englishName;
-    private final String imageUrl;
-    private final List<SearchableText> searchableNames;
+    @Id
+    private Long id;
+
+    @Column(name = "korean_name")
+    private String koreanName;
+
+    @Column(name = "english_name")
+    private String englishName;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Transient
+    private List<SearchableText> searchableNames;
+
+    protected Brand() {
+    }
 
     public Brand(Long id, String koreanName, String englishName, String imageUrl) {
         this.id = id;
         this.koreanName = koreanName;
         this.englishName = englishName;
         this.imageUrl = imageUrl;
+        this.searchableNames = searchableNamesOf(koreanName, englishName);
+    }
+
+    @PostLoad
+    private void loadSearchableNames() {
         this.searchableNames = searchableNamesOf(koreanName, englishName);
     }
 

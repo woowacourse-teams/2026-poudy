@@ -1,5 +1,8 @@
 package com.poudy;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -24,15 +27,17 @@ class ArchitectureTest {
         .that()
         .resideInAPackage("..domain..")
         .should()
-        .dependOnClassesThat()
-        .resideInAnyPackage(
-            "org.springframework..",
-            "jakarta..",
-            "software.amazon.awssdk..",
-            "com.fasterxml.jackson..",
-            "tools.jackson.."
+        .dependOnClassesThat(
+            resideInAnyPackage(
+                "org.springframework..",
+                "jakarta..",
+                "org.hibernate..",
+                "software.amazon.awssdk..",
+                "com.fasterxml.jackson..",
+                "tools.jackson.."
+            ).and(not(resideInAPackage("jakarta.persistence..")))
         )
-        .because("도메인 모델은 프레임워크 없이 실행하고 검증할 수 있어야 한다");
+        .because("도메인 모델은 프레임워크 없이 실행하고 검증할 수 있어야 한다. JPA 매핑 어노테이션만 허용한다");
 
     @ArchTest
     static final ArchRule INNER_LAYERS_DO_NOT_DEPEND_ON_CONTROLLERS = noClasses()

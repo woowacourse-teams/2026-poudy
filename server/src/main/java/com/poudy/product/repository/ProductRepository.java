@@ -52,7 +52,7 @@ public class ProductRepository {
         Categories categories = categoryRepository.findAll();
         IngredientCatalog ingredients = ingredientRepository.findAll();
         Map<Long, List<ProductVariant>> variants = productJpaRepository.findAllVariants().stream()
-            .collect(groupingBy(ProductVariantEntity::productId, mapping(ProductVariantEntity::toDomain, toList())));
+            .collect(groupingBy(ProductVariant::productId));
         Map<Long, List<Long>> ingredientIds = productJpaRepository.findAllIngredients().stream()
             .collect(
                 groupingBy(ProductIngredientEntity::productId, mapping(ProductIngredientEntity::ingredientId, toList()))

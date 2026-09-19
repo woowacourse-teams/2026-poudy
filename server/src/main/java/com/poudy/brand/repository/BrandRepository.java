@@ -11,11 +11,7 @@ public class BrandRepository {
     private final Brands brands;
 
     public BrandRepository(BrandJpaRepository brandJpaRepository) {
-        this.brands = Brands.from(
-            brandJpaRepository.findAllByOrderByIdAsc().stream()
-                .map(BrandEntity::toDomain)
-                .toList()
-        );
+        this.brands = Brands.from(brandJpaRepository.findAllByOrderByIdAsc());
     }
 
     public Brands findAll() {

@@ -1,15 +1,12 @@
 package com.poudy.searchkeyword.repository;
 
+import com.poudy.searchkeyword.domain.DictionaryEntry;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 
-public interface SearchKeywordJpaRepository extends Repository<SearchKeywordEntity, String> {
+public interface SearchKeywordJpaRepository extends Repository<DictionaryEntry, String> {
 
-    @Query("select keyword from SearchKeywordEntity keyword order by keyword.id")
-    List<SearchKeywordEntity> findAllKeywords();
-
-    @Query("select expression from SearchKeywordExpressionEntity expression"
-        + " order by expression.keywordId, expression.expressionKey")
-    List<SearchKeywordExpressionEntity> findAllExpressions();
+    @Query("select distinct entry from DictionaryEntry entry left join fetch entry.expressionKeys order by entry.id")
+    List<DictionaryEntry> findAllEntries();
 }

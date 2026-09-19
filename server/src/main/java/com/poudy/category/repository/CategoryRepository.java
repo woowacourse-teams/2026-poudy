@@ -9,11 +9,7 @@ public class CategoryRepository {
     private final Categories categories;
 
     public CategoryRepository(CategoryJpaRepository categoryJpaRepository) {
-        this.categories = Categories.from(
-            categoryJpaRepository.findAllByOrderByDisplayOrderAsc().stream()
-                .map(CategoryEntity::toDomain)
-                .toList()
-        );
+        this.categories = Categories.from(categoryJpaRepository.findAllByOrderByDisplayOrderAsc());
     }
 
     public Categories findAll() {
