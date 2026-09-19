@@ -80,6 +80,12 @@ poudy:
       enabled: false
       relay-interval: PT5M
       relay-initial-delay: PT1M
+    retention:
+      enabled: false
+      max-age: P83D
+      batch-size: 500
+      max-batches: 20
+      cron: "0 30 3 * * *"
   product-request:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}

@@ -8,6 +8,8 @@ poudy:
   feedback:
     image-reconciliation:
       enabled: true
+    retention:
+      enabled: true
 
 # 같은 인스턴스의 nginx가 전달한 X-Forwarded-For를 원격 주소로 복원해 요청 제한에 사용한다.
 server:

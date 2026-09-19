@@ -306,6 +306,43 @@ class FeedbackRepositoryTest {
     }
 
     @Test
+    @DisplayName("cutoff 이전의 두 의견 종류를 오래된 순서로 찾고 이미지 행까지 삭제한다")
+    void findsAndDeletesExpiredFeedback() {
+        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
+        givenPending(image);
+        Feedback oldest = repository.save(
+            serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT.minusDays(100)),
+            List.of(image.id())
+        );
+        Feedback correction = new Feedback(
+            UUID.randomUUID(),
+            new ProductCorrection(1L, "블랙 스네일 토너"),
+            new FeedbackContent("전성분 정보를 정확하게 정정해 주세요"),
+            RECEIVED_AT.minusDays(90)
+        );
+        Feedback fresh = serviceFeedback(FeedbackType.BUG_REPORT, null, RECEIVED_AT.minusDays(82));
+        repository.save(correction);
+        repository.save(fresh);
+        clear();
+        OffsetDateTime cutoff = RECEIVED_AT.minusDays(83);
+
+        assertThat(repository.findExpired(cutoff, 10)).extracting(Feedback::id)
+            .containsExactly(oldest.id(), correction.id());
+        assertThat(repository.deleteExpired(oldest, cutoff)).isTrue();
+        clear();
+
+        assertThat(repository.exists(oldest.id())).isFalse();
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from feedback_image where feedback_id = ?",
+                Long.class,
+                oldest.id()
+            )
+        ).isZero();
+        assertThat(repository.exists(fresh.id())).isTrue();
+    }
+
+    @Test
     @DisplayName("목록은 DB 에서 요청한 페이지만 읽고 이미지와 함께 돌려준다")
     void readsOnlyRequestedPage() {
         long before = repository.count(null, FeedbackSubjectType.BUG_REPORT);

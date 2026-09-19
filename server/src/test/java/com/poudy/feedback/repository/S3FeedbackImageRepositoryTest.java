@@ -251,4 +251,21 @@ class S3FeedbackImageRepositoryTest {
         assertThat(pending.canBeCleanedUp(expiredAt)).isFalse();
         assertThat(pending.canBeCleanedUp(expiredAt.plus(S3FeedbackImageRepository.CLEANUP_GRACE_PERIOD))).isTrue();
     }
+
+    @Test
+    @DisplayName("보유기간이 끝나면 최종 이미지와 기존 의견 문서를 함께 삭제한다")
+    void deletesRetainedFeedbackData() {
+        UUID feedbackId = UUID.randomUUID();
+        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
+
+        repository.deleteRetainedData(feedbackId, List.of(image));
+
+        ArgumentCaptor<DeleteObjectRequest> requests = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(s3Client, times(3)).deleteObject(requests.capture());
+        assertThat(requests.getAllValues()).extracting(DeleteObjectRequest::key).containsExactly(
+            "poudy/feedback/" + feedbackId + "/images/" + image.id() + ".png",
+            "poudy/feedback/" + feedbackId + "/feedback.json",
+            "poudy/feedback/" + feedbackId + "/management.json"
+        );
+    }
 }

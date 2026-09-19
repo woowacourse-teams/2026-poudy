@@ -26,13 +26,15 @@ public class FeedbackRetentionService {
     private final Clock clock;
     private final Duration maxAge;
     private final int batchSize;
+    private final int maxBatches;
 
     public FeedbackRetentionService(
         FeedbackRepository feedbackRepository,
         S3FeedbackImageRepository imageRepository,
         @Qualifier("feedbackClock") Clock clock,
         @Value("${poudy.feedback.retention.max-age:P83D}") Duration maxAge,
-        @Value("${poudy.feedback.retention.batch-size:500}") int batchSize
+        @Value("${poudy.feedback.retention.batch-size:500}") int batchSize,
+        @Value("${poudy.feedback.retention.max-batches:20}") int maxBatches
     ) {
         if (maxAge.isNegative() || maxAge.isZero()) {
             throw new IllegalArgumentException("의견 보유기간은 0보다 길어야 합니다.");
@@ -40,32 +42,45 @@ public class FeedbackRetentionService {
         if (batchSize < 1) {
             throw new IllegalArgumentException("의견 삭제 배치 크기는 1 이상이어야 합니다.");
         }
+        if (maxBatches < 1) {
+            throw new IllegalArgumentException("의견 삭제 최대 배치 수는 1 이상이어야 합니다.");
+        }
         this.feedbackRepository = feedbackRepository;
         this.imageRepository = imageRepository;
         this.clock = clock;
         this.maxAge = maxAge;
         this.batchSize = batchSize;
+        this.maxBatches = maxBatches;
     }
 
     @Scheduled(cron = "${poudy.feedback.retention.cron:0 30 3 * * *}", zone = "Asia/Seoul")
     public void purgeExpired() {
         OffsetDateTime cutoff = OffsetDateTime.now(clock).minus(maxAge);
-        List<Feedback> expired = feedbackRepository.findExpired(cutoff, batchSize);
+        int selected = 0;
         int deleted = 0;
         int failed = 0;
-        for (Feedback feedback : expired) {
-            try {
-                imageRepository.deleteRetainedData(feedback.id(), feedback.images());
-                if (feedbackRepository.deleteExpired(feedback, cutoff)) {
-                    deleted++;
+        for (int batch = 0; batch < maxBatches; batch++) {
+            List<Feedback> expired = feedbackRepository.findExpired(cutoff, batchSize);
+            selected += expired.size();
+            int batchFailures = 0;
+            for (Feedback feedback : expired) {
+                try {
+                    imageRepository.deleteRetainedData(feedback.id(), feedback.images());
+                    if (feedbackRepository.deleteExpired(feedback, cutoff)) {
+                        deleted++;
+                    }
+                } catch (RuntimeException exception) {
+                    batchFailures++;
+                    log.error("만료 의견 삭제를 완료하지 못했습니다. 다음 주기에 재시도합니다.");
                 }
-            } catch (RuntimeException exception) {
-                failed++;
-                log.error("만료 의견 삭제를 완료하지 못했습니다. 다음 주기에 재시도합니다.", exception);
+            }
+            failed += batchFailures;
+            if (expired.size() < batchSize || batchFailures > 0) {
+                break;
             }
         }
-        if (!expired.isEmpty()) {
-            log.info("만료 의견 보유기간 정리를 마쳤습니다. selected={}, deleted={}, failed={}", expired.size(), deleted, failed);
+        if (selected > 0) {
+            log.info("만료 의견 보유기간 정리를 마쳤습니다. selected={}, deleted={}, failed={}", selected, deleted, failed);
         }
     }
 }
