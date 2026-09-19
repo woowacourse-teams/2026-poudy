@@ -3,12 +3,14 @@ package com.poudy.config;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
-public class ProductViewConfig {
+public class ClockConfig {
 
     @Bean
-    public Clock productViewClock() {
+    @Primary
+    public Clock clock() {
         return Clock.systemUTC();
     }
 }

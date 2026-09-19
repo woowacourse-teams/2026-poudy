@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,7 +26,7 @@ public class ProductRequestService {
         ProductRequestRepository repository,
         DiscordProductRequestNotifier notifier,
         ProductRequestRateLimiter rateLimiter,
-        @Qualifier("productRequestClock") Clock clock
+        Clock clock
     ) {
         this.repository = repository;
         this.notifier = notifier;

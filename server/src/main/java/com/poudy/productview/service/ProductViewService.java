@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,30 +18,30 @@ public class ProductViewService {
 
     private final ProductRepository productRepository;
     private final ProductViewRepository productViewRepository;
-    private final Clock productViewClock;
+    private final Clock clock;
 
     public ProductViewService(
         ProductRepository productRepository,
         ProductViewRepository productViewRepository,
-        @Qualifier("productViewClock") Clock productViewClock
+        Clock clock
     ) {
         this.productRepository = productRepository;
         this.productViewRepository = productViewRepository;
-        this.productViewClock = productViewClock.withZone(ZoneId.of("Asia/Seoul"));
+        this.clock = clock.withZone(ZoneId.of("Asia/Seoul"));
     }
 
     public void increaseViewCount(Long productId) {
         if (productRepository.findAll().findById(productId).isEmpty()) {
             throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
         }
-        productViewRepository.increaseViewCount(productId, LocalDate.now(productViewClock));
+        productViewRepository.increaseViewCount(productId, LocalDate.now(clock));
     }
 
     public Map<Long, Long> sumViewCounts(Integer days) {
         if (days == null) {
             return productViewRepository.sumAllViewCounts();
         }
-        return productViewRepository.sumViewCounts(ViewPeriod.recentDays(LocalDate.now(productViewClock), days));
+        return productViewRepository.sumViewCounts(ViewPeriod.recentDays(LocalDate.now(clock), days));
     }
 
     public List<Product> findRankings(List<Long> categoryIds, Integer days) {

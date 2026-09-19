@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -39,11 +38,6 @@ public class SearchKeywordConfig {
         "앰플",
         "에센스"
     );
-
-    @Bean
-    public Clock searchKeywordClock() {
-        return Clock.systemUTC();
-    }
 
     @Bean
     public KeywordSearch catalogKeywordSearch(ProductRepository products) {
@@ -74,7 +68,7 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordBuckets keywordBuckets(
-        @Qualifier("searchKeywordClock") Clock clock,
+        Clock clock,
         BucketWindow window,
         KeywordBucketRepository repository
     ) {
