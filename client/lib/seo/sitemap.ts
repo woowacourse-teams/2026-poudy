@@ -47,7 +47,7 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
     entry("/search/products", "weekly", 0.9),
     entry("/search/ingredients", "weekly", 0.9),
     entry("/categories", "weekly", 0.8),
-    entry("/saved", "monthly", 0.7),
+    // 저장함은 기기마다 담긴 것이 달라 크롤러에게는 늘 빈 화면이다. 색인을 바라지 않으니 알리지 않는다.
     entry("/brands", "weekly", 0.8),
   ];
   const [categories, brands] = await Promise.all([fetchCategories(), fetchBrands()]);

@@ -33,12 +33,14 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
   const { ingredientId } = await props.params;
 
   // 여기서 notFound() 를 부르면 렌더링 경로 밖이라 404 상태가 전해지지 않는다.
+  // 조회에 실패해도 canonical 은 남긴다.
+  const canonical = `/ingredients/${ingredientId}`;
+
   try {
     const ingredient = await fetchIngredientDetail(Number(ingredientId));
     const title = `${ingredient.koreanName} 성분 정보`;
     const description = ingredient.description;
     const image = `/ingredients/${ingredientId}/opengraph-image`;
-    const canonical = `/ingredients/${ingredientId}`;
     return {
       title,
       description,
@@ -47,7 +49,7 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
-    return {};
+    return { alternates: { canonical } };
   }
 }
 

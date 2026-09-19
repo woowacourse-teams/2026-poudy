@@ -134,7 +134,6 @@ describe("sitemap", () => {
         "https://poudy.site/search/products",
         "https://poudy.site/search/ingredients",
         "https://poudy.site/categories",
-        "https://poudy.site/saved",
         "https://poudy.site/categories/10",
         "https://poudy.site/categories/11",
         "https://poudy.site/brands/20",
@@ -143,6 +142,7 @@ describe("sitemap", () => {
         "https://poudy.site/ingredients/5001",
       ]),
     );
+    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/saved");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchProducts).toHaveBeenCalledTimes(1);
   });
