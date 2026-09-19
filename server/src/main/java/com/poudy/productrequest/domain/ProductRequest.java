@@ -122,6 +122,19 @@ public class ProductRequest {
         return status == expected;
     }
 
+    public boolean hasSameHistoryAs(ProductRequest other) {
+        if (other == null) {
+            return false;
+        }
+        return requestId.equals(other.requestId)
+            && Objects.equals(productName, other.productName)
+            && Objects.equals(brandName, other.brandName)
+            && requestedAt.equals(other.requestedAt)
+            && status == other.status
+            && statusChangedAt.equals(other.statusChangedAt)
+            && Objects.equals(completedAt, other.completedAt);
+    }
+
     public ProductRequest changeStatus(ProductRequestStatus target, Clock clock) {
         Objects.requireNonNull(target, "변경할 상태가 필요합니다.");
         Objects.requireNonNull(clock, "시계가 필요합니다.");

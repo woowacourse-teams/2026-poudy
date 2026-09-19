@@ -15,14 +15,22 @@ class ViewPeriodTest {
     @Test
     @DisplayName("오늘을 포함해 최근 날짜 수만큼의 기간을 만든다")
     void coversRecentDaysIncludingToday() {
-        assertThat(ViewPeriod.recentDays(TODAY, 1)).isEqualTo(new ViewPeriod(TODAY, TODAY));
-        assertThat(ViewPeriod.recentDays(TODAY, 7)).isEqualTo(new ViewPeriod(LocalDate.of(2026, 9, 6), TODAY));
+        ViewPeriod today = ViewPeriod.recentDays(TODAY, 1);
+        ViewPeriod recentWeek = ViewPeriod.recentDays(TODAY, 7);
+
+        assertThat(today.firstDate()).isEqualTo(TODAY);
+        assertThat(today.lastDate()).isEqualTo(TODAY);
+        assertThat(recentWeek.firstDate()).isEqualTo(LocalDate.of(2026, 9, 6));
+        assertThat(recentWeek.lastDate()).isEqualTo(TODAY);
     }
 
     @Test
     @DisplayName("아주 긴 기간은 기록 시작 전 날짜에서 멈춘다")
     void clampsVeryLongPeriod() {
-        assertThat(ViewPeriod.recentDays(TODAY, Integer.MAX_VALUE)).isEqualTo(new ViewPeriod(LocalDate.EPOCH, TODAY));
+        ViewPeriod period = ViewPeriod.recentDays(TODAY, Integer.MAX_VALUE);
+
+        assertThat(period.firstDate()).isEqualTo(LocalDate.EPOCH);
+        assertThat(period.lastDate()).isEqualTo(TODAY);
     }
 
     @Test

@@ -44,6 +44,27 @@ class ProductRequestTest {
         assertThat(reprocessing.completedAt()).isNull();
     }
 
+    @Test
+    @DisplayName("모든 접수·처리 이력이 같으면 같은 이력으로 판단한다")
+    void hasSameHistory() {
+        ProductRequest request = request();
+        ProductRequest sameHistory = request();
+
+        assertThat(request.hasSameHistoryAs(sameHistory)).isTrue();
+    }
+
+    @Test
+    @DisplayName("ID가 같아도 처리 상태가 다르면 같은 이력으로 판단하지 않는다")
+    void rejectsDifferentHistoryWithSameId() {
+        ProductRequest request = request();
+        ProductRequest completed = request.changeStatus(
+            ProductRequestStatus.COMPLETED,
+            clock("2026-09-15T10:00:00Z")
+        );
+
+        assertThat(request.hasSameHistoryAs(completed)).isFalse();
+    }
+
     private static ProductRequest request() {
         return new ProductRequest(
             UUID.fromString("00000000-0000-0000-0000-000000000001"),

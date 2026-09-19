@@ -4,9 +4,9 @@ import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackImage;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.repository.S3FeedbackImageRepository.PendingImage;
+import com.poudy.feedback.service.PendingImageBatch.OwnedImage;
+import com.poudy.feedback.service.PendingImageBatch.RelayPlan;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -31,20 +31,22 @@ public class FeedbackImageRelay {
     }
 
     public RelayCounts relayPending(Instant now) {
-        List<PendingImage> pending = imageRepository.findAllPending();
-        Map<UUID, UUID> owners = feedbackRepository.feedbackIdsByImage(
-            pending.stream().map(image -> image.image().id()).toList()
-        );
-        List<PendingImage> owned = pending.stream().filter(image -> owners.containsKey(image.image().id())).toList();
-        List<PendingImage> expired = pending.stream()
-            .filter(image -> !owners.containsKey(image.image().id()))
-            .filter(image -> image.canBeCleanedUp(now))
-            .toList();
-        long transferred = owned.stream()
-            .filter(image -> transferSafely(owners.get(image.image().id()), image.image()))
+        PendingImageBatch pendingImages = new PendingImageBatch(imageRepository.findAllPending());
+        Map<UUID, UUID> owners = feedbackRepository.feedbackIdsByImage(pendingImages.imageIds());
+        RelayPlan plan = pendingImages.plan(owners, now);
+        long transferred = plan.ownedImages().stream()
+            .filter(this::transferSafely)
             .count();
-        expired.forEach(image -> imageRepository.deletePending(image.image()));
-        return new RelayCounts(transferred, owned.size() - transferred, expired.size());
+        plan.expiredOrphans().forEach(imageRepository::deletePending);
+        return new RelayCounts(
+            transferred,
+            plan.ownedImages().size() - transferred,
+            plan.expiredOrphans().size()
+        );
+    }
+
+    private boolean transferSafely(OwnedImage ownedImage) {
+        return transferSafely(ownedImage.feedbackId(), ownedImage.image());
     }
 
     private boolean transferSafely(UUID feedbackId, FeedbackImage image) {
