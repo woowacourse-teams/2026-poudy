@@ -2,9 +2,11 @@ package com.poudy.excludecode.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
@@ -13,6 +15,7 @@ import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.List;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -61,7 +64,12 @@ class ExcludeCodeRepositoryTest {
         given(excludeCodeJpaRepository.findAllMappings()).willReturn(List.of());
         given(ingredientRepository.findAll()).willReturn(IngredientCatalog.from(List.of()));
 
-        assertThatThrownBy(() -> new ExcludeCodeRepository(excludeCodeJpaRepository, ingredientRepository))
+        SnapshotReader snapshotReader = mock(SnapshotReader.class);
+        given(snapshotReader.read(any())).willAnswer(invocation -> invocation.<Supplier<?>>getArgument(0).get());
+
+        assertThatThrownBy(
+            () -> new ExcludeCodeRepository(excludeCodeJpaRepository, ingredientRepository, snapshotReader)
+        )
             .isInstanceOf(InfrastructureException.class)
             .hasCauseInstanceOf(InvalidExcludeCodeDefinitionException.class);
     }

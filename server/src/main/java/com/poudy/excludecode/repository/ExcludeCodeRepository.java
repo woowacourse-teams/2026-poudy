@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
+import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.excludecode.domain.ExcludeCodeMapping;
@@ -22,9 +23,11 @@ public class ExcludeCodeRepository {
 
     public ExcludeCodeRepository(
         ExcludeCodeJpaRepository excludeCodeJpaRepository,
-        IngredientRepository ingredientRepository
+        IngredientRepository ingredientRepository,
+        SnapshotReader snapshotReader
     ) {
-        Map<ExcludeCode, List<Long>> ingredientIds = excludeCodeJpaRepository.findAllMappings().stream()
+        Map<ExcludeCode, List<Long>> ingredientIds = snapshotReader.read(excludeCodeJpaRepository::findAllMappings)
+            .stream()
             .map(ExcludeCodeIngredientEntity::id)
             .collect(
                 groupingBy(
