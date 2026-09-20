@@ -29,6 +29,8 @@ PostgreSQL 에서 읽습니다. 기동 시 한 번 전부 읽어 메모리에 �
 
 PostgreSQL 15 이상을 설치하고 UTF-8 로 DB 두 개를 만듭니다. 스키마는
 `src/main/resources/db/schema.sql` 하나가 소유하고, 서버는 스키마를 만들거나 바꾸지 않고 검증만 합니다.
+검색에는 `pg_trgm` 확장과 한글·자모를 인식하는 로케일이 필요합니다. 스키마 적용 계정과 테스트
+계정에는 해당 DB에서 확장을 생성할 권한이 있어야 하며, 스키마가 확장 생성과 로케일 검사를 수행합니다.
 
 ```bash
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy
