@@ -60,9 +60,8 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 
 ### Search
 
-`search.domain`은 이름 정규화, 초성·라틴 읽기, 일치 등급과 원문 범위를 표현하는 공통 검색
-언어다. 검색 대상 필드, 결과 크기와 동점 정책은 각 기능이 소유한다. 알고리즘의 현재 동작과
-경계값은 검색 도메인 테스트가 권위 원천이다.
+성분 검색은 PostgreSQL이 정규화·일치·순위·원문 범위를 계산한다. 상품·브랜드의 기존 메모리
+검색은 `search.domain`을 사용한다. 전환 방향은 [검색 ADR](docs/adr/postgresql-catalog-search.md)을 따른다.
 
 ### Brand
 
@@ -76,11 +75,9 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 
 ### Ingredient
 
-`ingredient`는 성분, 정규화된 이름 검색 상태와 판단, 근거와 성분에 연결된 태그를 소유한다.
-`IngredientCatalog`는 ID가 유일한 전체 성분 인덱스를 소유하고 여러 성분의 검색 순위를 결정한다.
-제품의 `Ingredients`는 전성분 참조의 입력
-순서와 중복을 그대로 보존한다. 둘은 같은 성분을 다루지만 카탈로그 유일성과 제품 배합 순서라는
-서로 다른 불변식을 갖는다.
+`ingredient`는 성분과 근거·태그를 소유하며 API 조회는 DB에서 처리한다. `IngredientCatalog`는
+상품·제외 성분군의 기동 조립에 사용한다. 제품의 `Ingredients`는 전성분 참조의 입력 순서와
+중복을 보존한다.
 
 ### Tag
 
@@ -169,8 +166,8 @@ Repository는 DB·S3 같은 저장 표현을 도메인으로 변환하고 저장
 테이블 하나와 그대로 맞는 도메인(`Brand`, `Category`, `Tag`, `ProductVariant`, `ProductRequest`)은
 JPA 매핑을 직접 갖는다. 여러 테이블을 묶거나 한 도메인이 여러 테이블로 나뉘는 경우(`Product`,
 `Ingredient`, `Curation`, `Feedback` 등)는 Repository 패키지에 엔티티를 두고 도메인으로 변환한다.
-DB에서 읽은 도메인은 생성자 검증을 거치지 않으므로 같은 조건을 스키마 제약이 막는다. 카탈로그는 기동 시
-한 번 읽어 메모리 도메인으로 만들고, 검색·필터·집계는 기존 도메인이 계속 소유한다. 카탈로그 저장소들은
+JPA로 읽은 도메인의 불변식은 스키마 제약이 보장한다. 성분 API는 필요한 행을 DB에서 조회하며,
+여러 조회의 일관성은 읽기 전용 REPEATABLE READ 트랜잭션으로 유지한다. 나머지 카탈로그 저장소들은
 기동하는 동안 `SnapshotReader`가 연 읽기 전용 REPEATABLE READ 트랜잭션 하나를 함께 쓰고, 모든 빈이 만들어지면
 그 트랜잭션을 닫는다. 기동 중에 적재가 커밋되어도 저장소마다 다른 시점을 보지 않는다.
 
