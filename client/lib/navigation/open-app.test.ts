@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   addShareMarker,
   consumeShareMarker,
+  APP_STORE_URL,
   buildAndroidIntentUrl,
+  buildInstallIntentUrl,
   buildKakaoExternalUrl,
   consumeFallbackMarker,
   detectAndroidMobileBrowser,
@@ -120,5 +122,26 @@ describe("공유 표시", () => {
       appUrl: buildKakaoExternalUrl(WEB_URL),
       webUrl: WEB_URL,
     });
+  });
+});
+
+describe("설치 배너가 여는 주소", () => {
+  const HTTPS_URL = "https://poudy.site/products/123?sort=popular";
+
+  it("보던 화면의 경로와 조건을 그대로 담는다", () => {
+    expect(buildInstallIntentUrl(HTTPS_URL)).toContain("intent://poudy.site/products/123?sort=popular");
+  });
+
+  /* 배너는 설치를 권하는 자리라 앱이 없으면 받을 수 있는 곳으로 보낸다. */
+  it("앱이 없으면 Play 스토어로 되돌아가게 한다", () => {
+    expect(decodeURIComponent(buildInstallIntentUrl(HTTPS_URL))).toContain(APP_STORE_URL);
+  });
+
+  /*
+   * intent 는 `scheme=https` 로 앱을 찾으므로 http 인 localhost 에서는 가리킬 곳이 없다.
+   * 개발 중에 눌러도 아무 일이 일어나지 않아 고장처럼 보이던 자리다.
+   */
+  it("https 가 아니면 스토어 주소를 그대로 내준다", () => {
+    expect(buildInstallIntentUrl("http://localhost:3000/products?sort=popular")).toBe(APP_STORE_URL);
   });
 });

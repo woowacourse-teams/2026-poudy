@@ -45,6 +45,8 @@ afterEach(() => {
   delete window.__POUDY_APP__;
   Reflect.deleteProperty(window, "ReactNativeWebView");
   vi.restoreAllMocks();
+  /* 환경을 바꾼 테스트가 다음 테스트까지 끌고 가지 않도록 되돌린다. */
+  vi.unstubAllEnvs();
 });
 
 const banner = () => screen.queryByRole("button", { name: /이 화면을 앱에서 열기/ });
@@ -104,5 +106,27 @@ describe("앱 설치 배너", () => {
     render(<AppInstallBanner />);
 
     expect(banner()).not.toBeInTheDocument();
+  });
+
+  /*
+   * 개발 중에는 남은 기록을 읽지 않아 손볼 때마다 배너가 되살아난다.
+   * 그 편의가 운영까지 새면 한 번 닫은 사람에게 배너가 계속 따라붙는다.
+   */
+  it("운영에서는 앞선 방문의 닫기 기록을 지킨다", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    window.sessionStorage.setItem("poudy.app-banner.dismissed", "true");
+
+    render(<AppInstallBanner />);
+
+    expect(banner()).not.toBeInTheDocument();
+  });
+
+  it("개발에서는 닫기 기록이 남아 있어도 다시 보여 준다", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    window.sessionStorage.setItem("poudy.app-banner.dismissed", "true");
+
+    render(<AppInstallBanner />);
+
+    expect(banner()).toBeInTheDocument();
   });
 });

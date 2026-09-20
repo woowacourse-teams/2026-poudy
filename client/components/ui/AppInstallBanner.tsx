@@ -15,8 +15,14 @@ const DISMISS_KEY = "poudy.app-banner.dismissed";
  *
  * 사생활 보호 모드처럼 저장이 막힌 환경에서는 읽기와 쓰기가 모두 예외를 던진다.
  * 기억하지 못하더라도 화면은 그대로 떠야 하므로 삼키고 넘어간다.
+ *
+ * 개발 중에는 남은 기록을 읽지 않는다. 한 번 닫으면 저장소를 직접 비우기 전까지
+ * 다시 뜨지 않아, 손볼 때마다 배너를 되살리는 일이 따라붙는다. 닫는 동작 자체는
+ * 이 화면에 그대로 남으므로 개발 중에도 확인할 수 있다.
  */
 const readDismissed = (): boolean => {
+  if (process.env.NODE_ENV === "development") return false;
+
   try {
     return window.sessionStorage.getItem(DISMISS_KEY) === "true";
   } catch {
