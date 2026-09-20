@@ -28,20 +28,21 @@ PostgreSQL 에서 읽습니다. 기동 시 한 번 전부 읽어 메모리에 �
 띄워야 반영됩니다.
 
 PostgreSQL 15 이상을 설치하고 UTF-8 로 DB 두 개를 만듭니다. 스키마는
-`src/main/resources/db/schema.sql` 하나가 소유하고, 서버는 스키마를 만들거나 바꾸지 않고 검증만 합니다.
+`src/main/resources/db/schema.sql`은 테이블과 제약을, `search.sql`은 검색 함수·뷰·인덱스를 정의합니다.
+두 파일을 이 순서로 한 트랜잭션에 적용하며, 서버는 스키마를 만들거나 바꾸지 않고 검증만 합니다.
 검색에는 `pg_trgm` 확장과 한글·자모를 인식하는 로케일이 필요합니다. 스키마 적용 계정과 테스트
 계정에는 해당 DB에서 확장을 생성할 권한이 있어야 하며, 스키마가 확장 생성과 로케일 검사를 수행합니다.
 
 ```bash
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy
-psql -X -v ON_ERROR_STOP=1 --single-transaction -d poudy -f src/main/resources/db/schema.sql
+psql -X -v ON_ERROR_STOP=1 --single-transaction -d poudy -f src/main/resources/db/schema.sql -f src/main/resources/db/search.sql
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 ```
 
 | DB | 쓰는 곳 | 스키마·데이터 |
 | --- | --- | --- |
 | `poudy` | `bootRun` (`dev`), 운영 (`prod`) | 직접 적용하고 데이터를 적재한다 |
-| `poudy_test` | 테스트, OpenAPI 생성 (`test`) | 컨텍스트가 뜰 때마다 비우고 `schema.sql` 과 `src/test/resources/db/test-data.sql` 을 다시 넣는다 |
+| `poudy_test` | 테스트, OpenAPI 생성 (`test`) | 컨텍스트가 뜰 때마다 비우고 `schema.sql` → `search.sql` → `src/test/resources/db/test-data.sql` 순서로 실행한다 |
 
 접속 정보는 `POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD` 로 바꿉니다. 사용자명 기본값은
 OS 사용자명이고 비밀번호는 비어 있습니다. 테스트 DB 주소는 `POUDY_TEST_DB_URL` 로 바꿉니다.
