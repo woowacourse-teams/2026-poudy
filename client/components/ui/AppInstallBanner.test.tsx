@@ -85,6 +85,19 @@ describe("앱 설치 배너", () => {
     expect(assigned).toContain("package=com.poudy.app");
   });
 
+  /*
+   * 바로가기는 앱으로 보내는 길이지 거절이 아니다. 여기서 닫기를 기록하면 앱을 받으러
+   * 갔다가 돌아온 사람에게 배너가 사라져, 스토어에서 마음을 바꾼 사람이 다시 누를 자리를
+   * 잃는다.
+   */
+  it("바로가기를 눌러도 닫기로 기억하지 않는다", async () => {
+    render(<AppInstallBanner />);
+
+    await userEvent.click(banner()!);
+
+    expect(window.sessionStorage.getItem("poudy.app-banner.dismissed")).toBeNull();
+  });
+
   /* 앱이 없는 사람은 받을 수 있는 곳으로 보낸다. */
   it("앱이 없으면 Play 스토어로 되돌아가게 한다", async () => {
     render(<AppInstallBanner />);
