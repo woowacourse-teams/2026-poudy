@@ -765,3 +765,7 @@ INSERT INTO search_keyword_expression (expression_key, keyword_id) VALUES
     ('라운드랩1025독도토너', 'product:1'),
     ('독도토너', 'product:1'),
     ('pdrn', 'term:pdrn');
+
+REFRESH MATERIALIZED VIEW product_search_document;
+REFRESH MATERIALIZED VIEW ingredient_search_term;
+REFRESH MATERIALIZED VIEW search_vocabulary;
