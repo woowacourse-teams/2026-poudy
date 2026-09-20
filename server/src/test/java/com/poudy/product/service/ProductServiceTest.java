@@ -3,9 +3,12 @@ package com.poudy.product.service;
 import static com.poudy.product.support.ProductSensoryTestFixture.sensory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Categories;
@@ -21,6 +24,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
@@ -42,12 +46,13 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class ProductServiceTest {
 
     @Test
-    @DisplayName("빠른 제외 성분군을 성분 필터로 풀어 제품을 조회한다")
-    void findsProductsWithResolvedExcludeCodes() {
+    @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
+    void delegatesProductQuery() {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
             .willReturn(Set.of(999L));
         ProductService service = new ProductService(
@@ -76,6 +81,7 @@ class ProductServiceTest {
         );
 
         assertThat(found.items()).containsExactly(product);
+        verify(repository).find(query, ProductSort.NAME_ASC, 1, 20);
     }
 
     @Test
@@ -85,6 +91,7 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        stubPage(repository, product);
         given(excludeCodeIngredients.freeCodesOf(argThat(ingredients -> ingredients.contains(10L))))
             .willReturn(List.of(ExcludeCode.SULFATES));
         ProductService service = new ProductService(
@@ -129,6 +136,7 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
@@ -170,6 +178,7 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
             repository,
@@ -193,7 +202,7 @@ class ProductServiceTest {
     void keepsResponseWhenLoggingFails(CapturedOutput output) {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludes = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(Products.from(List.of(product(1L))));
+        stubPage(repository, product(1L));
         given(excludes.idsOf(List.of())).willReturn(Set.of());
         ProductSearchLogger logger = new ProductSearchLogger() {
             @Override
@@ -217,6 +226,11 @@ class ProductServiceTest {
 
         assertThat(result.totalElements()).isEqualTo(1L);
         assertThat(output).contains("event=search_recording_failed").doesNotContain("outcome=ERROR");
+    }
+
+    private static void stubPage(ProductRepository repository, Product product) {
+        given(repository.find(any(ProductQuery.class), any(), anyInt(), anyInt()))
+            .willReturn(new ProductPage(List.of(product), 1, List.of(), List.of(), List.of(), null));
     }
 
     private static Product product(Long id) {

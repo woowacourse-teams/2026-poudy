@@ -1,4 +1,4 @@
-package com.poudy.product.service;
+package com.poudy.product.domain;
 
 import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.search.domain.SearchKeyword;

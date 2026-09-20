@@ -420,7 +420,7 @@ $$;
 -- 제품 검색 한 페이지. 검색 본체를 한 번만 실행해 전체 건수, 모든 토큰이 맞은 결과(tier 2 이하) 유무, 페이지 결과를 함께 만든다.
 -- 결과는 배열로 모으지 않고 materialized CTE(작업 메모리를 넘으면 디스크로 내려간다)에 두고, 페이지는 상위 N 정렬로 자른다.
 -- 일치 구간은 페이지를 자를 때(p_limit 이 있을 때)만 페이지 행에 대해 계산한다.
-CREATE FUNCTION search_products_page(p_query text, p_offset int, p_limit int, p_max_tier int)
+CREATE FUNCTION search_products_page(p_query text, p_offset bigint, p_limit int, p_max_tier int)
     RETURNS TABLE (total bigint, has_full_match boolean, items jsonb)
     LANGUAGE sql STABLE
 AS $$
@@ -454,7 +454,7 @@ $$;
 -- p_limit 이 NULL 이면 전체를 돌려주고 일치 구간은 계산하지 않는다(제품 목록처럼 검색을 필터로만 쓰는 경우).
 -- p_max_tier 이하 결과만 돌려준다. 제품 목록 필터는 2(질의 전체 또는 모든 토큰이 맞은 제품)를 쓴다. 제안·성분 검색은 기본 3.
 -- items 원소: productId, rank(1부터), tier, tokenRatio, recentViews, matchField, matchText, matchRange([시작, 끝) UTF-16 위치).
-CREATE FUNCTION search_products(p_query text, p_offset int DEFAULT 0, p_limit int DEFAULT NULL, p_max_tier int DEFAULT 3)
+CREATE FUNCTION search_products(p_query text, p_offset bigint DEFAULT 0, p_limit int DEFAULT NULL, p_max_tier int DEFAULT 3)
     RETURNS TABLE (total bigint, corrected_query text, items jsonb)
     LANGUAGE plpgsql STABLE
 AS $$

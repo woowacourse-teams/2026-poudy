@@ -16,6 +16,10 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductQuery;
+import com.poudy.product.domain.ProductSort;
+import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.Products;
@@ -31,21 +35,40 @@ public class ProductRepository {
 
     private final Products products;
     private final ProductJpaRepository productJpaRepository;
+    private final ProductQueryRepository queries;
 
     public ProductRepository(
         ProductJpaRepository productJpaRepository,
         BrandRepository brandRepository,
         CategoryRepository categoryRepository,
         IngredientRepository ingredientRepository,
-        SnapshotReader snapshotReader
+        SnapshotReader snapshotReader,
+        ProductQueryRepository queries
     ) {
         this.productJpaRepository = productJpaRepository;
+        this.queries = queries;
         this.products = snapshotReader
             .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository));
     }
 
     public long countContainingIngredient(Long ingredientId) {
         return productJpaRepository.countContainingIngredient(ingredientId);
+    }
+
+    public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
+        return queries.find(query, sort, page, size);
+    }
+
+    public long count(ProductQuery query) {
+        return queries.count(query);
+    }
+
+    public boolean hasConflictingIngredients(ProductQuery query) {
+        return queries.hasConflictingIngredients(query);
+    }
+
+    public ProductSuggestions suggest(String keyword, int page, int size) {
+        return queries.suggest(keyword, page, size);
     }
 
     private static Products load(

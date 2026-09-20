@@ -47,6 +47,10 @@ public class IngredientRepository {
         return load(List.of(id)).stream().findFirst();
     }
 
+    public IngredientCatalog findByIds(List<Long> ids) {
+        return IngredientCatalog.from(load(ids.stream().distinct().toList()));
+    }
+
     public IngredientPage findPage(List<Long> ingredientIds, boolean usedInProducts, int page, int size) {
         if (page < 1 || size < 1) {
             throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
