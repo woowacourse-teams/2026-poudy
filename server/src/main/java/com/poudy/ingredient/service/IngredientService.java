@@ -3,14 +3,16 @@ package com.poudy.ingredient.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.IngredientPage;
-import com.poudy.ingredient.domain.MatchedIngredient;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class IngredientService {
 
     private final IngredientRepository ingredientRepository;
@@ -39,17 +41,10 @@ public class IngredientService {
     }
 
     public IngredientPage find(IngredientQuery query, int page, int size) {
-        IngredientCatalog ingredients = ingredientRepository.findAll();
-        if (query.hasIngredientIds()) {
-            ingredients = ingredients.findAllById(query.ingredientIds());
-        }
-        if (query.usedInProducts()) {
-            ingredients = ingredients.retainIds(ingredientUsage.usedIngredientIds());
-        }
-        return ingredients.page(page, size);
+        return ingredientRepository.findPage(query.ingredientIds(), query.usedInProducts(), page, size);
     }
 
-    public List<MatchedIngredient> suggest(String keyword) {
+    public List<IngredientSuggestion> suggest(String keyword) {
         return ingredientRepository.suggest(keyword);
     }
 }

@@ -8,8 +8,4 @@ public record IngredientQuery(List<Long> ingredientIds, boolean usedInProducts) 
     public IngredientQuery {
         ingredientIds = List.copyOf(Objects.requireNonNullElse(ingredientIds, List.of()));
     }
-
-    public boolean hasIngredientIds() {
-        return !ingredientIds.isEmpty();
-    }
 }

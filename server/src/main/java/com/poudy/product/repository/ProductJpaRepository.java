@@ -7,6 +7,9 @@ import org.springframework.data.repository.Repository;
 
 public interface ProductJpaRepository extends Repository<ProductEntity, Long> {
 
+    @Query(value = "select count(distinct product_id) from product_ingredient where ingredient_id = :ingredientId", nativeQuery = true)
+    long countContainingIngredient(Long ingredientId);
+
     @Query("select product from ProductEntity product order by product.id")
     List<ProductEntity> findAllProducts();
 

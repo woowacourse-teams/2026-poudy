@@ -20,12 +20,14 @@ import org.springframework.stereotype.Repository;
 public class ExcludeCodeRepository {
 
     private final ExcludeCodeIngredients excludeCodeIngredients;
+    private final ExcludeCodeJpaRepository excludeCodeJpaRepository;
 
     public ExcludeCodeRepository(
         ExcludeCodeJpaRepository excludeCodeJpaRepository,
         IngredientRepository ingredientRepository,
         SnapshotReader snapshotReader
     ) {
+        this.excludeCodeJpaRepository = excludeCodeJpaRepository;
         Map<ExcludeCode, List<Long>> ingredientIds = snapshotReader.read(excludeCodeJpaRepository::findAllMappings)
             .stream()
             .map(ExcludeCodeIngredientEntity::id)
@@ -48,5 +50,9 @@ public class ExcludeCodeRepository {
 
     public ExcludeCodeIngredients findAll() {
         return excludeCodeIngredients;
+    }
+
+    public List<ExcludeCode> codesOf(Long ingredientId) {
+        return excludeCodeJpaRepository.findCodesByIngredientId(ingredientId).stream().sorted().toList();
     }
 }

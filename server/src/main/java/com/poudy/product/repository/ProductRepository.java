@@ -30,6 +30,7 @@ import org.springframework.stereotype.Repository;
 public class ProductRepository {
 
     private final Products products;
+    private final ProductJpaRepository productJpaRepository;
 
     public ProductRepository(
         ProductJpaRepository productJpaRepository,
@@ -38,8 +39,13 @@ public class ProductRepository {
         IngredientRepository ingredientRepository,
         SnapshotReader snapshotReader
     ) {
+        this.productJpaRepository = productJpaRepository;
         this.products = snapshotReader
             .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository));
+    }
+
+    public long countContainingIngredient(Long ingredientId) {
+        return productJpaRepository.countContainingIngredient(ingredientId);
     }
 
     private static Products load(
