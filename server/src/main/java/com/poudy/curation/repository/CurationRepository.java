@@ -4,8 +4,10 @@ import com.poudy.common.json.JsonDataReader;
 import com.poudy.curation.domain.Curation;
 import com.poudy.curation.domain.CurationBanner;
 import com.poudy.curation.domain.CurationBlock;
+import com.poudy.curation.domain.CurationDetail;
 import com.poudy.curation.domain.CurationFilter;
 import com.poudy.curation.domain.CurationProductMapping;
+import com.poudy.curation.domain.CurationPublicationStatus;
 import com.poudy.curation.domain.Curations;
 import com.poudy.exception.InfrastructureException;
 import java.util.ArrayList;
@@ -64,36 +66,48 @@ public class CurationRepository {
         }
         return new Curation(
             number(node, "id", context),
+            text(node, "title", context),
+            text(node, "description", context),
             new CurationBanner(
-                text(banner, "title", context),
-                text(banner, "description", context),
+                publicationStatus(banner, context),
                 text(banner, "thumbnail_image_url", context)
             ),
-            text(detail, "title", context),
-            text(detail, "description", context),
-            blocks
+            CurationDetail.from(
+                publicationStatus(detail, context),
+                blocks
+            )
         );
+    }
+
+    private static CurationPublicationStatus publicationStatus(
+        JsonNode node,
+        DeserializationContext context
+    )
+        throws JacksonException {
+        String value = text(node, "status", context);
+        try {
+            return CurationPublicationStatus.valueOf(value);
+        } catch (IllegalArgumentException exception) {
+            return context.reportInputMismatch(Curation.class, "지원하지 않는 큐레이션 게시 상태입니다: %s", value);
+        }
     }
 
     private static CurationBlock block(JsonNode node, DeserializationContext context) throws JacksonException {
         UUID id = UUID.fromString(text(node, "id", context));
         String type = text(node, "type", context);
-        CurationBlock.Status status = CurationBlock.Status.valueOf(text(node, "status", context));
         int top = Math.toIntExact(number(node, "spacing_top", context));
         int bottom = Math.toIntExact(number(node, "spacing_bottom", context));
 
         return switch (type) {
             case "IMAGE" -> CurationBlock.image(
                 id,
-                status,
                 top,
                 bottom,
                 nullableText(node, "image_url", context)
             );
-            case "PRODUCTS" -> CurationBlock.products(id, status, top, bottom, productIds(node, context));
+            case "PRODUCTS" -> CurationBlock.products(id, top, bottom, productIds(node, context));
             case "PRODUCTS_BY_FILTER" -> CurationBlock.productsByFilter(
                 id,
-                status,
                 top,
                 bottom,
                 filters(node, context),

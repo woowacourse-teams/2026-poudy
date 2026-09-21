@@ -21,26 +21,38 @@ class CurationRepositoryTest {
     @Test
     void loadsPublicContentInBannerOrderWithoutResolvingMissingProducts() throws IOException {
         CurationRepository repository = reading(fixture());
-        assertThat(repository.findAll().inOrder()).extracting(Curation::id).containsExactly(12L, 4L);
-        assertThat(repository.findAll().findById(12L).orElseThrow().banner().title())
+        assertThat(repository.findAll().publishedBannersInOrder()).extracting(Curation::id).containsExactly(12L);
+        assertThat(repository.findAll().publishedBannersInOrder().getFirst().title())
             .isEqualTo("환절기 장벽 케어");
+        assertThat(repository.findAll().findPublishedDetailById(4L)).isPresent();
+        assertThat(repository.findAll().findPublishedDetailById(20L)).isEmpty();
     }
 
     @Test
     void permitsEmptyCatalog() {
-        assertThat(reading("{\"curations\":[]}").findAll().inOrder()).isEmpty();
+        assertThat(reading("{\"curations\":[]}").findAll().publishedBannersInOrder()).isEmpty();
     }
 
     @ParameterizedTest
     @CsvSource({
             "thumbnail_image_url,thumbnail_image_typo",
-            "VISIBLE,UNKNOWN",
+            "PUBLISHED,UNKNOWN",
             "IMAGE,UNKNOWN",
             "00000000-0000-4000-8000-000000000012,invalid-uuid",
             "spacing_top,spacing_typo"
     })
     void rejectsInvalidSavedData(String from, String to) throws IOException {
         String invalid = fixture().replaceFirst(from, to);
+        assertThatThrownBy(() -> reading(invalid)).isInstanceOf(InfrastructureException.class);
+    }
+
+    @Test
+    void rejectsPublishedBannerWithoutPublishedDetail() throws IOException {
+        String invalid = fixture().replaceFirst(
+            "\"detail\": \\{\\R        \"status\": \"PUBLISHED\"",
+            "\"detail\": {\n        \"status\": \"UNPUBLISHED\""
+        );
+
         assertThatThrownBy(() -> reading(invalid)).isInstanceOf(InfrastructureException.class);
     }
 

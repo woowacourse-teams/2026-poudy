@@ -2,35 +2,25 @@
   "curations": [
     {
       "id": 12,
+      "title": "환절기 장벽 케어",
+      "description": "환절기를 위한 제품 모음",
       "banner": {
-        "title": "환절기 장벽 케어",
-        "description": "환절기를 위한 제품 모음",
+        "status": "PUBLISHED",
         "thumbnail_image_url": "https://cdn.example.com/curations/banner.png"
       },
       "detail": {
-        "title": "상세 제목",
-        "description": "피부 장벽을 위한 제품 선택 기준",
+        "status": "PUBLISHED",
         "blocks": [
           {
             "id": "00000000-0000-4000-8000-000000000001",
             "type": "IMAGE",
-            "status": "VISIBLE",
             "spacing_top": 8,
             "spacing_bottom": 24,
             "image_url": "https://cdn.example.com/curations/12/detail-1.png"
           },
           {
-            "id": "00000000-0000-4000-8000-000000000002",
-            "type": "IMAGE",
-            "status": "HIDDEN",
-            "spacing_top": 8,
-            "spacing_bottom": 24,
-            "image_url": "https://cdn.example.com/curations/12/detail-2.png"
-          },
-          {
             "id": "00000000-0000-4000-8000-000000000003",
             "type": "PRODUCTS_BY_FILTER",
-            "status": "VISIBLE",
             "spacing_top": 0,
             "spacing_bottom": 16,
             "filters": [
@@ -84,7 +74,6 @@
           {
             "id": "00000000-0000-4000-8000-000000000004",
             "type": "PRODUCTS_BY_FILTER",
-            "status": "VISIBLE",
             "spacing_top": 0,
             "spacing_bottom": 16,
             "filters": [
@@ -105,7 +94,6 @@
           {
             "id": "00000000-0000-4000-8000-000000000005",
             "type": "IMAGE",
-            "status": "VISIBLE",
             "spacing_top": 8,
             "spacing_bottom": 24,
             "image_url": "https://cdn.example.com/curations/12/detail-5.png"
@@ -113,7 +101,6 @@
           {
             "id": "00000000-0000-4000-8000-000000000006",
             "type": "PRODUCTS",
-            "status": "VISIBLE",
             "spacing_top": 0,
             "spacing_bottom": 16,
             "products": [
@@ -127,19 +114,18 @@
     },
     {
       "id": 4,
+      "title": "모두 사라진 제품",
+      "description": "환절기를 위한 제품 모음",
       "banner": {
-        "title": "모두 사라진 제품",
-        "description": "환절기를 위한 제품 모음",
+        "status": "UNPUBLISHED",
         "thumbnail_image_url": "https://cdn.example.com/curations/banner.png"
       },
       "detail": {
-        "title": "상세 제목",
-        "description": "피부 장벽을 위한 제품 선택 기준",
+        "status": "PUBLISHED",
         "blocks": [
           {
             "id": "00000000-0000-4000-8000-000000000007",
             "type": "PRODUCTS",
-            "status": "VISIBLE",
             "spacing_top": 0,
             "spacing_bottom": 16,
             "products": [
@@ -149,6 +135,19 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "id": 20,
+      "title": "미게시 큐레이션",
+      "description": "배너와 상세가 모두 미게시된 큐레이션",
+      "banner": {
+        "status": "UNPUBLISHED",
+        "thumbnail_image_url": "https://cdn.example.com/curations/unpublished-banner.png"
+      },
+      "detail": {
+        "status": "UNPUBLISHED",
+        "blocks": []
       }
     }
   ]
