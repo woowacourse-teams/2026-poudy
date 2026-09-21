@@ -77,7 +77,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 ### Ingredient
 
 `ingredient`는 성분과 근거·태그를 소유하며 API 조회는 DB에서 처리한다. `IngredientCatalog`는
-상품·제외 성분군의 기동 조립에 사용한다. 제품의 `Ingredients`는 전성분 참조의 입력 순서와
+조회 대상 상품·제외 성분군에 필요한 성분을 조립한다. 제품의 `Ingredients`는 전성분 참조의 입력 순서와
 중복을 보존한다.
 
 ### Tag
@@ -89,7 +89,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 ### Product
 
 `Product`는 브랜드, 카테고리, 순서가 보존된 전성분, 판매 옵션과 감각 값을 묶는 중심
-애그리게이트이며 자신의 이름 검색과 필터 조건 판정을 수행한다. 감각 값은 서버 밖에서 계산해 제품
+애그리게이트다. 검색과 필터는 DB에서 판정한다. 감각 값은 서버 밖에서 계산해 제품
 행에 저장한 수분감·유분감 단계를 그대로 읽으며 목록·상세·필터·개수가 같은 값을 사용한다.
 서버는 감각 값을 계산하지 않는다. 지금 저장된 값을 만든 계산 근거와 한계는
 [`sensory-inference-v0.md`](docs/product/sensory-inference-v0.md)가 소유한다.
@@ -98,7 +98,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 
 상품 목록·개수·필터 선택지는 Repository의 공통 SQL 조건으로 조회한다. 선택지는 자신의 필터만
 해제한 후보를 집계하며 첫 페이지에 제공한다. Java는 DB에서 결정한 페이지의 상품을 조립한다.
-`Products`의 메모리 카탈로그는 상세·보관·큐레이션·공유 등 후속 전환 대상에서 사용한다.
+`Products`는 큐레이션이 참조한 상품을 ID로 해석하는 요청 단위 컬렉션이다.
 
 ### ProductView
 
@@ -137,8 +137,8 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 
 ### Share
 
-`share`는 외부 공유 텍스트를 제품 후보로 해석하는 경계다. 제품·브랜드 조회 결과를 사용하지만
-카탈로그 저장소를 새로 소유하지 않는다. 처리 규칙과 평가 근거는
+`share`는 외부 공유 텍스트를 제품 후보로 해석하는 경계다. DB의 제품명 검색과 브랜드별 조회로
+후보를 찾고, Java가 버전·제형·용도 차이를 판정해 확정한다. 처리 규칙과 평가 근거는
 [`share-text-matching.md`](docs/product/share-text-matching.md)가 소유한다.
 
 ## Layer responsibilities
@@ -164,13 +164,10 @@ Hibernate 전용 어노테이션은 도메인에 두지 않는다.
 
 Repository는 DB·S3 같은 저장 표현을 도메인으로 변환하고 저장 실패를 인프라 오류로
 분류한다. 저장 형식 전용 타입과 프로토콜은 구현 내부에 두고 Controller 응답을 만들지 않는다.
-테이블 하나와 그대로 맞는 도메인(`Brand`, `Category`, `Tag`, `ProductVariant`, `ProductRequest`)은
-JPA 매핑을 직접 갖는다. 여러 테이블을 묶거나 한 도메인이 여러 테이블로 나뉘는 경우(`Product`,
-`Ingredient`, `Curation`, `Feedback` 등)는 Repository 패키지에 엔티티를 두고 도메인으로 변환한다.
-JPA로 읽은 도메인의 불변식은 스키마 제약이 보장한다. 성분 API와 상품 목록·검색 제안은 필요한 행을 DB에서 조회하며,
-여러 조회의 일관성은 읽기 전용 REPEATABLE READ 트랜잭션으로 유지한다. 나머지 카탈로그 저장소들은
-기동하는 동안 `SnapshotReader`가 연 읽기 전용 REPEATABLE READ 트랜잭션 하나를 함께 쓰고, 모든 빈이 만들어지면
-그 트랜잭션을 닫는다. 기동 중에 적재가 커밋되어도 저장소마다 다른 시점을 보지 않는다.
+상품·성분은 JDBC 조회 결과로 도메인을 직접 조립한다. 브랜드·카테고리 등 단일 테이블 도메인은
+JPA 매핑을 가지며, 큐레이션·피드백의 저장 형식 전용 엔티티는 Repository 안에 둔다.
+불변식은 도메인과 스키마 제약이 보장한다. 카탈로그는 요청에 필요한 행을 DB에서 조회하며,
+여러 조회의 일관성은 읽기 전용 REPEATABLE READ 트랜잭션으로 유지한다.
 
 스키마는 초기화 시 한 트랜잭션으로 적용한다. 서버는 `ddl-auto: validate`로
 엔티티와 스키마가 맞는지만 확인하고 스키마를 만들거나 바꾸지 않는다. 한 행으로 표현되지 않는 규칙(제품 비삭제·ID 불변,
