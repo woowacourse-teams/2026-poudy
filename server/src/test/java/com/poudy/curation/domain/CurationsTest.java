@@ -10,21 +10,41 @@ import org.junit.jupiter.api.Test;
 class CurationsTest {
 
     @Test
-    void preservesBannerOrder() {
-        Curation high = curation(12L);
+    void selectsPublishedBannersAndDetails() {
+        Curation firstBanner = curation(
+            12L,
+            CurationPublicationStatus.PUBLISHED,
+            CurationPublicationStatus.PUBLISHED
+        );
+        Curation detailOnly = curation(
+            4L,
+            CurationPublicationStatus.UNPUBLISHED,
+            CurationPublicationStatus.PUBLISHED
+        );
+        Curation secondBanner = curation(
+            8L,
+            CurationPublicationStatus.PUBLISHED,
+            CurationPublicationStatus.PUBLISHED
+        );
+        Curation unpublished = curation(
+            20L,
+            CurationPublicationStatus.UNPUBLISHED,
+            CurationPublicationStatus.UNPUBLISHED
+        );
         List<Curation> source = new ArrayList<>(
-            List.of(
-                high,
-                curation(4L)
-            )
+            List.of(firstBanner, detailOnly, secondBanner, unpublished)
         );
         Curations curations = Curations.from(source);
         source.clear();
 
-        assertThat(curations.inOrder()).extracting(Curation::id).containsExactly(12L, 4L);
-        assertThat(curations.findById(12L)).containsSame(high);
-        assertThat(curations.findById(999L)).isEmpty();
-        assertThat(Curations.from(List.of()).inOrder()).isEmpty();
+        assertThat(curations.publishedBannersInOrder())
+            .extracting(Curation::id)
+            .containsExactly(12L, 8L);
+        assertThat(curations.findPublishedDetailById(12L)).containsSame(firstBanner);
+        assertThat(curations.findPublishedDetailById(4L)).containsSame(detailOnly);
+        assertThat(curations.findPublishedDetailById(20L)).isEmpty();
+        assertThat(curations.findPublishedDetailById(999L)).isEmpty();
+        assertThat(Curations.from(List.of()).publishedBannersInOrder()).isEmpty();
     }
 
     @Test
@@ -35,5 +55,19 @@ class CurationsTest {
 
     private static Curation curation(Long id) {
         return CurationTest.curation(id, List.of());
+    }
+
+    private static Curation curation(
+        Long id,
+        CurationPublicationStatus bannerStatus,
+        CurationPublicationStatus detailStatus
+    ) {
+        return new Curation(
+            id,
+            "큐레이션 제목",
+            "큐레이션 설명",
+            new CurationBanner(bannerStatus, "banner.png"),
+            CurationDetail.from(detailStatus, List.of())
+        );
     }
 }

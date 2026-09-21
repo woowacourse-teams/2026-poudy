@@ -501,11 +501,11 @@ export type CurationSummaryResponse = {
    */
   id: number;
   /**
-   * 배너 제목
+   * 큐레이션 제목
    */
   title: string;
   /**
-   * 배너 설명
+   * 큐레이션 설명
    */
   description: string;
   /**
@@ -607,11 +607,11 @@ export type CurationDetailResponse = {
    */
   id: number;
   /**
-   * 큐레이션 상세 제목
+   * 큐레이션 제목
    */
   title: string;
   /**
-   * 큐레이션 상세 설명
+   * 큐레이션 설명
    */
   description: string;
   /**
@@ -1152,7 +1152,7 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * 게시 중인 큐레이션 배너를 지정된 순서로 조회한다.
+ * 배너가 게시 중인 큐레이션을 지정된 순서로 조회한다.
  */
 export type get_FindCurations = {
       method: "GET",
@@ -1166,7 +1166,7 @@ export type get_FindCurations = {
 
     }
 /**
- * 게시 중인 큐레이션의 이미지·제품 블록과 필터를 저장 순서대로 조회한다.
+ * 요청한 ID의 큐레이션 상세를 조회한다. 상세가 게시되지 않은 큐레이션은 조회할 수 없다.
  */
 export type get_FindCuration = {
       method: "GET",

@@ -4,15 +4,27 @@ import com.poudy.product.domain.Products;
 import java.util.List;
 import java.util.Objects;
 
-public record CurationDetail(Curation curation, List<CurationBlockContent> blocks) {
-    public CurationDetail {
-        Objects.requireNonNull(curation);
-        blocks = List.copyOf(blocks);
+public final class CurationDetail {
+    private final CurationPublicationStatus publicationStatus;
+    private final CurationBlocks blocks;
+
+    private CurationDetail(CurationPublicationStatus publicationStatus, CurationBlocks blocks) {
+        this.publicationStatus = publicationStatus;
+        this.blocks = blocks;
     }
 
-    public static CurationDetail from(Curation curation, Products products) {
-        Objects.requireNonNull(curation);
-        Objects.requireNonNull(products);
-        return new CurationDetail(curation, curation.visibleBlocks(products));
+    public static CurationDetail from(CurationPublicationStatus publicationStatus, List<CurationBlock> blocks) {
+        return new CurationDetail(
+            Objects.requireNonNull(publicationStatus),
+            CurationBlocks.from(blocks)
+        );
+    }
+
+    boolean isPublished() {
+        return publicationStatus.isPublished();
+    }
+
+    List<CurationBlockContent> resolveBlocks(Products products) {
+        return blocks.resolveContent(products);
     }
 }
