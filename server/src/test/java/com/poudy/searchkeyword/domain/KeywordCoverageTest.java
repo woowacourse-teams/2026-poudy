@@ -12,8 +12,7 @@ class KeywordCoverageTest {
     private final SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(
         List.of(
             DictionaryEntry.of("term:1", "토너", Status.ACTIVE, true, List.of("토너"))
-        ),
-        keyword -> true
+        )
     );
 
     @Test

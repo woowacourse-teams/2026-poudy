@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 class RankingRefresherTest {
 
-    private final SearchKeywordService service = mock(SearchKeywordService.class);
+    private final SearchKeywordRankingService service = mock(SearchKeywordRankingService.class);
     private final ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
 
     @Test

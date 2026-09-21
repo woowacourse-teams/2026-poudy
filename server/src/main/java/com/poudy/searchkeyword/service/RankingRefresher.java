@@ -7,11 +7,15 @@ import java.util.concurrent.TimeUnit;
 
 public final class RankingRefresher implements Runnable {
 
-    private final SearchKeywordService service;
+    private final SearchKeywordRankingService service;
     private final KeywordBuckets buckets;
     private final ScheduledExecutorService scheduler;
 
-    public RankingRefresher(SearchKeywordService service, KeywordBuckets buckets, ScheduledExecutorService scheduler) {
+    public RankingRefresher(
+        SearchKeywordRankingService service,
+        KeywordBuckets buckets,
+        ScheduledExecutorService scheduler
+    ) {
         this.service = service;
         this.buckets = buckets;
         this.scheduler = scheduler;

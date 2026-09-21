@@ -13,10 +13,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 class CatalogKeywordSearchTest {
     @Autowired
     private ProductRepository repository;
+    @Autowired
+    private com.poudy.searchkeyword.service.KeywordSearch search;
+
     @ParameterizedTest
     @ValueSource(strings = {"다 브랜드 블랙 스네일 토너", "가 브랜드 블랙 스네일 토너", "다 브랜드", "토너", "ㅌㄴ", "toner", "없는상품"})
     void usesSameSearchCandidatesAsProductList(String keyword) {
         ProductQuery query = new ProductQuery(keyword, null, null, null, null, null, null, null, null);
-        assertThat(new CatalogKeywordSearch(repository).hasResults(keyword)).isEqualTo(repository.count(query) > 0);
+        assertThat(search.hasResults(keyword)).isEqualTo(repository.count(query) > 0);
     }
 }

@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.config.CatalogKeywordSearch;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import java.time.LocalDate;
@@ -134,6 +133,6 @@ class ProductRelatedDatabaseQueryTest {
             .extracting(hit -> hit.product().id()).containsExactly(90001L);
 
         assertThat(repository.findByProductName("검증독도", 90000L)).isEmpty();
-        assertThat(new CatalogKeywordSearch(repository).hasResults("검증토너")).isTrue();
+        assertThat(repository.hasSearchResults("검증토너")).isTrue();
     }
 }

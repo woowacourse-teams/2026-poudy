@@ -3,14 +3,15 @@ package com.poudy.config;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.searchkeyword.domain.BucketWindow;
 import com.poudy.searchkeyword.domain.KeywordBuckets;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordBucketRepository;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
+import com.poudy.searchkeyword.service.KeywordSearch;
 import com.poudy.searchkeyword.service.RankingRefresher;
+import com.poudy.searchkeyword.service.SearchKeywordCache;
+import com.poudy.searchkeyword.service.SearchKeywordRankingService;
 import com.poudy.searchkeyword.service.SearchKeywordService;
 import java.time.Clock;
 import java.util.Arrays;
@@ -41,15 +42,12 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordSearch catalogKeywordSearch(ProductRepository products) {
-        return new CatalogKeywordSearch(products);
+        return products::hasSearchResults;
     }
 
     @Bean
-    public SearchKeywordDictionary searchKeywordDictionary(
-        SearchKeywordDictionaryRepository repository,
-        KeywordSearch search
-    ) {
-        return repository.read(search);
+    public SearchKeywordCache searchKeywordCache(SearchKeywordDictionaryRepository repository) {
+        return new SearchKeywordCache(repository.read());
     }
 
     @Bean
@@ -77,18 +75,31 @@ public class SearchKeywordConfig {
 
     @Bean
     public SearchKeywordService searchKeywordService(
+        SearchKeywordCache cache,
+        KeywordBuckets buckets,
+        KeywordSearch search
+    ) {
+        return new SearchKeywordService(cache, buckets, search);
+    }
+
+    @Bean
+    public SearchKeywordRankingService searchKeywordRankingService(
         Environment env,
-        SearchKeywordDictionary dictionary,
+        SearchKeywordDictionaryRepository repository,
         KeywordBuckets buckets,
         KeywordSearch search,
-        RankingPolicy rankingPolicy
+        RankingPolicy rankingPolicy,
+        SearchKeywordCache cache,
+        Clock clock
     ) {
-        return new SearchKeywordService(
-            dictionary,
+        return new SearchKeywordRankingService(
+            repository,
             buckets,
             search,
             rankingPolicy,
-            RankingFallback.of(defaultKeywords(env))
+            RankingFallback.of(defaultKeywords(env)),
+            cache,
+            clock
         );
     }
 
@@ -102,7 +113,7 @@ public class SearchKeywordConfig {
 
     @Bean(destroyMethod = "shutdown")
     public ScheduledExecutorService searchKeywordRankingScheduler(
-        SearchKeywordService service,
+        SearchKeywordRankingService service,
         KeywordBuckets buckets
     ) {
         ScheduledExecutorService scheduler = daemonScheduler("search-keyword-rankings");

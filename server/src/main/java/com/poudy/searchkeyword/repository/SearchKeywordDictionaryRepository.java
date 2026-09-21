@@ -1,7 +1,6 @@
 package com.poudy.searchkeyword.repository;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,15 +22,15 @@ public class SearchKeywordDictionaryRepository {
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-    public SearchKeywordDictionary read(KeywordSearch search) {
-        SearchKeywordDictionary dictionary = load(search);
+    public SearchKeywordDictionary read() {
+        SearchKeywordDictionary dictionary = load();
         logLoaded(dictionary);
         return dictionary;
     }
 
-    private SearchKeywordDictionary load(KeywordSearch search) {
+    private SearchKeywordDictionary load() {
         try {
-            return SearchKeywordDictionary.of(searchKeywordJpaRepository.findAllEntries(), search);
+            return SearchKeywordDictionary.of(searchKeywordJpaRepository.findAllEntries());
         } catch (IllegalArgumentException exception) {
             throw new InfrastructureException("검색어 사전 데이터가 올바르지 않습니다.", exception);
         }

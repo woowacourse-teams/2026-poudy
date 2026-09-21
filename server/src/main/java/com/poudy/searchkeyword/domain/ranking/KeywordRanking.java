@@ -16,39 +16,16 @@ public final class KeywordRanking {
     }
 
     public static List<RankedKeyword> of(
-        Map<String, Long> counts,
-        SearchKeywordDictionary dictionary,
-        RankingPolicy policy,
-        RankingFallback fallback
+        List<String> counted,
+        Optional<List<String>> compared,
+        List<String> fallback,
+        int size
     ) {
-        return published(counts, Optional.empty(), dictionary, policy, fallback);
-    }
-
-    public static List<RankedKeyword> of(
-        Map<String, Long> counts,
-        Map<String, Long> comparedCounts,
-        SearchKeywordDictionary dictionary,
-        RankingPolicy policy,
-        RankingFallback fallback
-    ) {
-        return published(counts, Optional.of(comparedCounts), dictionary, policy, fallback);
-    }
-
-    private static List<RankedKeyword> published(
-        Map<String, Long> counts,
-        Optional<Map<String, Long>> comparedCounts,
-        SearchKeywordDictionary dictionary,
-        RankingPolicy policy,
-        RankingFallback fallback
-    ) {
-        List<String> counted = counted(counts, dictionary, policy);
-        Map<String, Integer> before = comparedCounts
-            .map(compared -> ranksOf(counted(compared, dictionary, policy)))
-            .orElse(null);
+        Map<String, Integer> before = compared.map(KeywordRanking::ranksOf).orElse(null);
         List<String> names = new ArrayList<>(counted);
-        fallback.publishableNames(dictionary).stream()
+        fallback.stream()
             .filter(name -> !names.contains(name))
-            .limit(Math.max(policy.size() - names.size(), 0))
+            .limit(Math.max(size - names.size(), 0))
             .forEach(names::add);
         return IntStream.range(0, names.size())
             .mapToObj(index -> ranked(names.get(index), index + 1, counted, before))
@@ -76,7 +53,7 @@ public final class KeywordRanking {
         return ranks;
     }
 
-    private static List<String> counted(
+    public static List<DictionaryEntry> candidates(
         Map<String, Long> counts,
         SearchKeywordDictionary dictionary,
         RankingPolicy policy
@@ -87,9 +64,7 @@ public final class KeywordRanking {
             .map(Map.Entry::getKey)
             .sorted(order(totals))
             .filter(policy::publishes)
-            .filter(dictionary::canRank)
-            .limit(policy.size())
-            .map(DictionaryEntry::keyword)
+            .filter(DictionaryEntry::isRankable)
             .toList();
     }
 
