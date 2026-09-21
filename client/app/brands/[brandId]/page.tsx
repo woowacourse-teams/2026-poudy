@@ -5,15 +5,18 @@ import { cache } from "react";
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
+import type { InitialPage } from "@/lib/hooks/useProductPages";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { breadcrumbList, itemList } from "@/lib/seo/structured-data";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 const load = cache(async (raw: string) => {
@@ -34,16 +37,23 @@ const load = cache(async (raw: string) => {
  */
 export const dynamic = "force-dynamic";
 
+/** 이 장에 담긴 제품을 구조화 데이터로 싣는다. 번호는 목록 전체에서의 자리로 센다. */
+const pageItemList = (filter: Filter, initialPage: InitialPage | undefined) => {
+  if (!initialPage) return undefined;
+  return itemList(initialPage.response.items, (filter.page - 1) * filter.size + 1);
+};
+
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
   const { page } = parseFilter(toSearchParams(await props.searchParams));
+  // 조회에 실패해도 canonical 은 남긴다. 비워 두면 필터가 붙은 주소가 저마다 원본 행세를 한다.
+  const canonical = pagedCanonical(`/brands/${brandId}`, page);
 
   try {
     const brand = await fetchBrand(Number(brandId));
     const title = `${brand.name} 제품`;
     const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
     const image = `/brands/${brandId}/opengraph-image`;
-    const canonical = pagedCanonical(`/brands/${brandId}`, page);
     return {
       title,
       description,
@@ -52,7 +62,7 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
-    return {};
+    return { alternates: { canonical } };
   }
 }
 
@@ -72,11 +82,17 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
 
   return (
     <section className="flex items-center gap-3 px-4">
+      <JsonLd
+        data={breadcrumbList([
+          { name: "브랜드", path: "/brands" },
+          { name: brand.name, path: `/brands/${brand.id}` },
+        ])}
+      />
       <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
-      <span className="flex flex-col gap-0.5">
-        <span className="text-[18px] font-bold text-text-primary">{brand.name}</span>
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
         <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
-      </span>
+      </div>
     </section>
   );
 }
@@ -107,14 +123,17 @@ async function BrandProducts({
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
   return (
-    <ProductList
-      basePath={`/brands/${brand.id}`}
-      surface="brand"
-      fixedFilter={{ brandIds }}
-      hiddenChips={["brand"]}
-      excludeCodes={excludeCodes.items}
-      initialPage={initialPage}
-    />
+    <>
+      <JsonLd data={pageItemList(filter, initialPage)} />
+      <ProductList
+        basePath={`/brands/${brand.id}`}
+        surface="brand"
+        fixedFilter={{ brandIds }}
+        hiddenChips={["brand"]}
+        excludeCodes={excludeCodes.items}
+        initialPage={initialPage}
+      />
+    </>
   );
 }
 
@@ -128,7 +147,8 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
 
   return (
     <>
-      <TopBar title="브랜드관" variant="sub" />
+      {/* 이 화면의 대표 제목은 본문의 브랜드명이다. 바의 `브랜드관` 은 모양만 그대로 둔다. */}
+      <TopBar title="브랜드관" variant="sub" titleAs="p" />
 
       <StreamBoundary stream={stream} fallback={<BrandSummarySkeleton />}>
         <BrandSummary params={props.params} />

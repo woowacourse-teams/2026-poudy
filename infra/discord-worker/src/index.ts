@@ -5,6 +5,7 @@ import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
 import {
   issueCommentEmbed,
   issueEmbed,
+  isUnmergedClose,
   pullRequestEmbed,
   pullRequestReviewEmbed,
   storedPullRequestEmbed,
@@ -198,6 +199,21 @@ function deliveryResponse(result: DiscordDeliveryResult, webhookKey: string): Re
 
 type WebhookTarget = { readonly url: string; readonly key: string };
 
+// 고칠 메시지가 없으면 닫힘을 새로 알린다. deliverWorkflowRun 과 같은 흐름이다.
+async function closePullRequestMessage(
+  target: WebhookTarget,
+  embed: DiscordEmbed,
+  messageId: string | undefined,
+): Promise<DiscordDeliveryResult> {
+  if (!messageId) {
+    return sendDiscordEmbed(target.url, embed);
+  }
+
+  const edited = await editDiscordEmbed(target.url, messageId, embed);
+
+  return edited.kind === "message-gone" ? sendDiscordEmbed(target.url, embed) : edited;
+}
+
 // PR 알림을 보낸 뒤, 그 PR 에서 도는 CI 가 찾아올 수 있도록 message_id 를 남긴다.
 async function deliverPullRequest(
   payload: PullRequestPayload,
@@ -226,7 +242,11 @@ async function deliverPullRequest(
   }
 
   // 머지나 리뷰 준비 같은 다음 소식은 새 메시지로 알린다. 수정만 하면 알림이 울리지 않는다.
-  const result = await sendDiscordEmbed(target.url, embed);
+  // 머지하지 않은 닫힘만은 새로 알리지 않고, "새로운 Pull Request" 라고 적힌 기존 메시지를
+  // 조용히 고친다. KV 기록이 만료됐거나 메시지가 지워졌으면 그때만 새로 보낸다.
+  const result = isUnmergedClose(payload)
+    ? await closePullRequestMessage(target, embed, previous?.messageId)
+    : await sendDiscordEmbed(target.url, embed);
 
   if (result.kind === "delivered" && result.messageId) {
     await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, pullRequest.head.sha)], {

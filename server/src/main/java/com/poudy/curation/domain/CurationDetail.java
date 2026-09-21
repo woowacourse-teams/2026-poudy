@@ -2,17 +2,19 @@ package com.poudy.curation.domain;
 
 import com.poudy.product.domain.Products;
 import java.util.List;
-import java.util.Objects;
 
-public record CurationDetail(Curation curation, List<CurationBlockContent> blocks) {
-    public CurationDetail {
-        Objects.requireNonNull(curation);
-        blocks = List.copyOf(blocks);
+public final class CurationDetail {
+    private final CurationBlocks blocks;
+
+    private CurationDetail(CurationBlocks blocks) {
+        this.blocks = blocks;
     }
 
-    public static CurationDetail from(Curation curation, Products products) {
-        Objects.requireNonNull(curation);
-        Objects.requireNonNull(products);
-        return new CurationDetail(curation, curation.visibleBlocks(products));
+    public static CurationDetail from(List<CurationBlock> blocks) {
+        return new CurationDetail(CurationBlocks.from(blocks));
+    }
+
+    List<CurationBlockContent> resolveBlocks(Products products) {
+        return blocks.resolveContent(products);
     }
 }

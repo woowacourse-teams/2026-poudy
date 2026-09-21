@@ -258,13 +258,17 @@ CREATE TABLE product_skin_type (
 CREATE TABLE curation (
     id                         BIGINT        NOT NULL, -- 원천이 준 ID. /api/curations/{id} 링크가 유지되도록 다시 적재해도 바꾸지 않는다
     position                   INT           NOT NULL,
-    banner_title               VARCHAR(200)  NOT NULL,
-    banner_description         VARCHAR(500)  NOT NULL,
-    banner_thumbnail_image_url VARCHAR(1000) NOT NULL,
-    detail_title               VARCHAR(200)  NOT NULL,
-    detail_description         TEXT          NOT NULL,
+    title                      VARCHAR(200)  NOT NULL,
+    description                TEXT          NOT NULL,
+    status                     VARCHAR(15)   NOT NULL,
+    banner_visible             BOOLEAN       NOT NULL,
+    banner_thumbnail_image_url VARCHAR(1000) NULL,
     CONSTRAINT pk_curation PRIMARY KEY (id),
-    CONSTRAINT ux_curation_position UNIQUE (position) DEFERRABLE INITIALLY DEFERRED
+    CONSTRAINT ux_curation_position UNIQUE (position) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT ck_curation_status CHECK (status IN ('PUBLISHED', 'UNPUBLISHED')),
+    CONSTRAINT ck_curation_banner CHECK (
+        NOT banner_visible OR (status = 'PUBLISHED' AND banner_thumbnail_image_url IS NOT NULL)
+    )
 );
 
 CREATE TABLE curation_block (
@@ -272,7 +276,6 @@ CREATE TABLE curation_block (
     curation_id    BIGINT        NOT NULL,
     position       INT           NOT NULL,
     type           VARCHAR(30)   NOT NULL,
-    status         VARCHAR(10)   NOT NULL,
     spacing_top    INT           NOT NULL,
     spacing_bottom INT           NOT NULL,
     image_url      VARCHAR(1000) NULL,
@@ -281,10 +284,9 @@ CREATE TABLE curation_block (
     CONSTRAINT ux_curation_block_order UNIQUE (curation_id, position) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_curation_block_curation FOREIGN KEY (curation_id) REFERENCES curation (id) ON DELETE CASCADE,
     CONSTRAINT ck_curation_block_type CHECK (type IN ('IMAGE', 'PRODUCTS', 'PRODUCTS_BY_FILTER')),
-    CONSTRAINT ck_curation_block_status CHECK (status IN ('VISIBLE', 'HIDDEN')),
     CONSTRAINT ck_curation_block_spacing CHECK (spacing_top >= 0 AND spacing_bottom >= 0),
     CONSTRAINT ck_curation_block_image CHECK (
-        (type = 'IMAGE' AND (status = 'HIDDEN' OR image_url IS NOT NULL))
+        (type = 'IMAGE' AND image_url IS NOT NULL)
         OR (type <> 'IMAGE' AND image_url IS NULL)
     )
 );
@@ -324,7 +326,7 @@ CREATE TABLE curation_block_product_filter (
     CONSTRAINT fk_cbpf_filter FOREIGN KEY (block_id, filter_id) REFERENCES curation_block_filter (block_id, id) ON DELETE CASCADE
 );
 
--- 필터형 제품 블록(PRODUCTS_BY_FILTER)은 필터를 하나 이상 가지고, 블록의 모든 제품은 필터에 하나 이상 연결된다(노출 상태와 무관).
+-- 필터형 제품 블록(PRODUCTS_BY_FILTER)은 필터를 하나 이상 가지고, 블록의 모든 제품은 필터에 하나 이상 연결된다.
 -- 블록·필터·제품·연결을 차례로 넣거나 바꾸므로 커밋 시점에 검사하고, 검사 전에 블록 행을 잠가 동시 변경을 차례로 검사한다.
 -- 필터·연결 테이블의 TRUNCATE 는 행 트리거를 거치지 않으므로 거부한다. 큐레이션 전체 교체는 curation 행 DELETE(연쇄 삭제) 후 다시 넣는다.
 CREATE FUNCTION require_curation_block_filters() RETURNS trigger LANGUAGE plpgsql AS $$

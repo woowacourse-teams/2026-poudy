@@ -1,48 +1,47 @@
 package com.poudy.curation.domain;
 
 import com.poudy.product.domain.Products;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 
 public final class Curation {
     private final Long id;
-    private final CurationBanner banner;
     private final String title;
     private final String description;
-    private final List<CurationBlock> blocks;
+    private final CurationPublicationStatus publicationStatus;
+    private final CurationBanner banner;
+    private final CurationDetail detail;
 
     public Curation(
         Long id,
-        CurationBanner banner,
         String title,
         String description,
-        List<CurationBlock> blocks
+        CurationPublicationStatus publicationStatus,
+        CurationBanner banner,
+        CurationDetail detail
     ) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("큐레이션 ID는 양의 정수여야 합니다.");
         }
-        this.id = id;
-        this.banner = Objects.requireNonNull(banner);
-        this.title = requireNonBlank(title, "큐레이션 상세 제목");
-        this.description = requireNonBlank(description, "큐레이션 상세 설명");
-        this.blocks = List.copyOf(blocks);
-        Set<UUID> blockIds = new HashSet<>();
-        for (CurationBlock block : blocks) {
-            if (!blockIds.add(block.id())) {
-                throw new IllegalArgumentException("큐레이션의 블록 ID가 중복됐습니다.");
-            }
+        String validatedTitle = requireNonBlank(title, "큐레이션 제목");
+        String validatedDescription = requireNonBlank(description, "큐레이션 설명");
+        CurationPublicationStatus validatedPublicationStatus = Objects.requireNonNull(publicationStatus);
+        CurationBanner validatedBanner = Objects.requireNonNull(banner);
+        CurationDetail validatedDetail = Objects.requireNonNull(detail);
+        if (validatedBanner.isVisible() && !validatedPublicationStatus.isPublished()) {
+            throw new IllegalArgumentException("미게시 큐레이션은 배너에 노출할 수 없습니다.");
         }
+
+        this.id = id;
+        this.title = validatedTitle;
+        this.description = validatedDescription;
+        this.publicationStatus = validatedPublicationStatus;
+        this.banner = validatedBanner;
+        this.detail = validatedDetail;
     }
 
     public Long id() {
         return id;
-    }
-
-    public CurationBanner banner() {
-        return banner;
     }
 
     public String title() {
@@ -53,15 +52,26 @@ public final class Curation {
         return description;
     }
 
-    List<CurationBlockContent> visibleBlocks(Products products) {
-        return blocks.stream().flatMap(block -> block.visibleContent(products).stream()).toList();
+    public String thumbnailImageUrl() {
+        return banner.thumbnailImageUrl();
     }
 
-    private static String requireNonBlank(String value, String name) {
+    boolean isBannerVisible() {
+        return publicationStatus.isPublished() && banner.isVisible();
+    }
+
+    boolean isPublished() {
+        return publicationStatus.isPublished();
+    }
+
+    List<CurationBlockContent> resolveBlocks(Products products) {
+        return detail.resolveBlocks(products);
+    }
+
+    private static String requireNonBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(name + "이 필요합니다.");
+            throw new IllegalArgumentException(fieldName + "이 필요합니다.");
         }
         return value;
     }
-
 }

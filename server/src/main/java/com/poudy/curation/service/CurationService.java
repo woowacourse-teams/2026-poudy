@@ -1,7 +1,7 @@
 package com.poudy.curation.service;
 
 import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationDetail;
+import com.poudy.curation.domain.ResolvedCurationDetail;
 import com.poudy.curation.repository.CurationRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
@@ -20,12 +20,12 @@ public class CurationService {
     }
 
     public List<Curation> findCurations() {
-        return curationRepository.findAll().inOrder();
+        return curationRepository.findAll().visibleBannersInOrder();
     }
 
-    public CurationDetail findDetail(Long curationId) {
-        Curation curation = curationRepository.findAll().findById(curationId)
+    public ResolvedCurationDetail findDetail(Long curationId) {
+        Curation curation = curationRepository.findAll().findPublishedById(curationId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CURATION_NOT_FOUND));
-        return CurationDetail.from(curation, productRepository.findAll());
+        return ResolvedCurationDetail.from(curation, productRepository.findAll());
     }
 }

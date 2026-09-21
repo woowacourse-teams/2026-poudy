@@ -13,13 +13,12 @@ final class CurationProductsByFilterBlock extends CurationBlock {
 
     CurationProductsByFilterBlock(
         UUID id,
-        Status status,
         int spacingTop,
         int spacingBottom,
         List<CurationFilter> filters,
         List<CurationProductMapping> products
     ) {
-        super(id, status, spacingTop, spacingBottom);
+        super(id, spacingTop, spacingBottom);
         this.filters = List.copyOf(filters);
         this.products = List.copyOf(products);
         validateMappings();
@@ -45,10 +44,7 @@ final class CurationProductsByFilterBlock extends CurationBlock {
     }
 
     @Override
-    Optional<CurationBlockContent> visibleContent(Products catalog) {
-        if (!isVisible()) {
-            return Optional.empty();
-        }
+    Optional<CurationBlockContent> resolveContent(Products catalog) {
         List<CurationBlockContent.FilteredProduct> available = products.stream()
             .flatMap(
                 mapping -> catalog.findById(mapping.productId())

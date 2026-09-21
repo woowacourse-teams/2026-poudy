@@ -10,7 +10,9 @@ import com.poudy.curation.domain.CurationBanner;
 import com.poudy.curation.domain.CurationBlock;
 import com.poudy.curation.domain.CurationBlockContent;
 import com.poudy.curation.domain.CurationDetail;
+import com.poudy.curation.domain.CurationPublicationStatus;
 import com.poudy.curation.domain.Curations;
+import com.poudy.curation.domain.ResolvedCurationDetail;
 import com.poudy.curation.repository.CurationRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
@@ -27,7 +29,6 @@ class CurationServiceTest {
     void usesCurrentProductCatalogOnEveryRead() {
         CurationBlock block = CurationBlock.products(
             UUID.randomUUID(),
-            CurationBlock.Status.VISIBLE,
             0,
             0,
             List.of(15L)
@@ -43,7 +44,7 @@ class CurationServiceTest {
         CurationService service = new CurationService(repository, products);
 
         assertThat(service.findCurations()).containsExactly(curation);
-        CurationDetail first = service.findDetail(12L);
+        ResolvedCurationDetail first = service.findDetail(12L);
         assertThat(first.curation().title()).isEqualTo("상세");
         assertThat(first.blocks()).isEmpty();
         CurationBlockContent.Products productsBlock = (CurationBlockContent.Products) service.findDetail(12L)
@@ -62,13 +63,64 @@ class CurationServiceTest {
             .isEqualTo(ErrorCode.CURATION_NOT_FOUND);
     }
 
+    @Test
+    void appliesCurationPublicationAndBannerVisibility() {
+        Curation published = curation(
+            12L,
+            "게시 및 배너 노출",
+            List.of(),
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+        Curation hiddenBanner = curation(
+            4L,
+            "게시 및 배너 비노출",
+            List.of(),
+            CurationPublicationStatus.PUBLISHED,
+            false
+        );
+        Curation unpublished = curation(
+            20L,
+            "미게시",
+            List.of(),
+            CurationPublicationStatus.UNPUBLISHED,
+            false
+        );
+        CurationRepository repository = mock(CurationRepository.class);
+        given(repository.findAll()).willReturn(Curations.from(List.of(published, hiddenBanner, unpublished)));
+        ProductRepository products = mock(ProductRepository.class);
+        given(products.findAll()).willReturn(Products.from(List.of()));
+        CurationService service = new CurationService(repository, products);
+
+        assertThat(service.findCurations()).containsExactly(published);
+        assertThat(service.findDetail(4L).curation()).isSameAs(hiddenBanner);
+        assertThatThrownBy(() -> service.findDetail(20L)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
     private static Curation curation(Long id, String title, List<CurationBlock> blocks) {
+        return curation(
+            id,
+            title,
+            blocks,
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+    }
+
+    private static Curation curation(
+        Long id,
+        String title,
+        List<CurationBlock> blocks,
+        CurationPublicationStatus publicationStatus,
+        boolean bannerVisible
+    ) {
         return new Curation(
             id,
-            new CurationBanner("배너", "설명", "banner.png"),
             title,
             "설명",
-            blocks
+            publicationStatus,
+            new CurationBanner(bannerVisible, bannerVisible ? "banner.png" : null),
+            CurationDetail.from(blocks)
         );
     }
 }

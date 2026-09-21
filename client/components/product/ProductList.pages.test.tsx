@@ -42,6 +42,33 @@ const threePages = () => {
   return requested;
 };
 
+/** 정해 둔 장은 실패하고, 나머지는 세 장 중 하나를 돌려준다. 실패 횟수만큼만 실패한다. */
+const failingPages = (failures: Record<number, number>) => {
+  const requested: number[] = [];
+  const left = new Map(Object.entries(failures).map(([page, count]) => [Number(page), count]));
+
+  server.use(
+    http.get("*/api/products", ({ request }) => {
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
+      requested.push(page);
+
+      const remaining = left.get(page) ?? 0;
+      if (remaining > 0) {
+        left.set(page, remaining - 1);
+        return HttpResponse.json({ code: "INTERNAL_SERVER_ERROR" }, { status: 500 });
+      }
+
+      return HttpResponse.json({
+        items: products.slice(page - 1, page),
+        pagination: { page, size: 1, totalElements: 3, totalPages: 3, hasNext: page < 3 },
+        brands: [],
+      });
+    }),
+  );
+
+  return requested;
+};
+
 const renderList = () =>
   render(<ProductList excludeCodes={excludeCodes} basePath="/brands/7" fixedFilter={{ brandIds: [7] }} />);
 
@@ -106,5 +133,35 @@ describe("ProductList 장 링크", () => {
 
     const previous = await screen.findByRole("link", { name: "이전 제품 보기" });
     expect(previous).toHaveAttribute("href", "/brands/7?page=3&size=1");
+  });
+
+  it("첫 장을 받지 못하면 제품이 없다고 하지 않고 다시 시도하게 한다", async () => {
+    const requested = failingPages({ 1: 1 });
+    renderList();
+
+    expect(await screen.findByText("제품을 불러오지 못했어요")).toBeInTheDocument();
+    expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(1));
+    expect(requested).toEqual([1, 1]);
+  });
+
+  it("다음 장을 받지 못하면 저절로 다시 부르지 않고, 누르면 같은 장을 다시 부른다", async () => {
+    const requested = failingPages({ 2: 1 });
+    renderList();
+
+    await userEvent.click(await screen.findByRole("link", { name: "제품 더 보기" }));
+
+    const retry = await screen.findByRole("link", { name: "불러오지 못했어요 · 다시 시도" });
+    // 실패한 장을 건너뛰지 않는다. 링크는 여전히 받지 못한 그 장을 가리킨다.
+    expect(retry).toHaveAttribute("href", "/brands/7?page=2&size=1");
+    expect(requested).toEqual([1, 2]);
+
+    await userEvent.click(retry);
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
+    expect(requested).toEqual([1, 2, 2]);
   });
 });

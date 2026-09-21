@@ -28,7 +28,6 @@ class CurationBlockTest {
         );
         CurationBlock block = CurationBlock.productsByFilter(
             UUID.randomUUID(),
-            CurationBlock.Status.VISIBLE,
             8,
             24,
             List.of(new CurationFilter(a, "A"), new CurationFilter(missing, "누락"), new CurationFilter(b, "B")),
@@ -36,7 +35,7 @@ class CurationBlockTest {
         );
         mappings.clear();
 
-        CurationBlockContent.ProductsByFilter content = (CurationBlockContent.ProductsByFilter) block.visibleContent(
+        CurationBlockContent.ProductsByFilter content = (CurationBlockContent.ProductsByFilter) block.resolveContent(
             products(1L, 3L)
         ).orElseThrow();
         assertThat(content.products()).extracting(item -> item.product().id()).containsExactly(3L, 1L);
@@ -44,9 +43,9 @@ class CurationBlockTest {
         assertThat(content.filters()).extracting(CurationFilter::id).containsExactly(a, b);
         assertThat(content.spacingTop()).isEqualTo(8);
         assertThat(content.spacingBottom()).isEqualTo(24);
-        assertThat(block.visibleContent(Products.from(List.of()))).isEmpty();
+        assertThat(block.resolveContent(Products.from(List.of()))).isEmpty();
 
-        CurationBlockContent.ProductsByFilter restored = (CurationBlockContent.ProductsByFilter) block.visibleContent(
+        CurationBlockContent.ProductsByFilter restored = (CurationBlockContent.ProductsByFilter) block.resolveContent(
             products(9L, 1L, 3L)
         ).orElseThrow();
         assertThat(restored.products()).extracting(item -> item.product().id()).containsExactly(3L, 9L, 1L);
@@ -54,33 +53,9 @@ class CurationBlockTest {
     }
 
     @Test
-    void excludesHiddenBlocks() {
-        UUID filterId = UUID.randomUUID();
-        assertThat(
-            CurationBlock.image(UUID.randomUUID(), CurationBlock.Status.HIDDEN, 0, 0, null)
-                .visibleContent(products(1L))
-        ).isEmpty();
-        assertThat(
-            CurationBlock.products(UUID.randomUUID(), CurationBlock.Status.HIDDEN, 0, 0, List.of(1L))
-                .visibleContent(products(1L))
-        ).isEmpty();
-        assertThat(
-            CurationBlock.productsByFilter(
-                UUID.randomUUID(),
-                CurationBlock.Status.HIDDEN,
-                0,
-                0,
-                List.of(new CurationFilter(filterId, "A")),
-                List.of(new CurationProductMapping(1L, List.of(filterId)))
-            ).visibleContent(products(1L))
-        ).isEmpty();
-    }
-
-    @Test
-    void rejectsVisibleImageWithoutUrl() {
-        assertThatThrownBy(
-            () -> CurationBlock.image(UUID.randomUUID(), CurationBlock.Status.VISIBLE, 0, 0, null)
-        ).isInstanceOf(IllegalArgumentException.class);
+    void rejectsImageWithoutUrl() {
+        assertThatThrownBy(() -> CurationBlock.image(UUID.randomUUID(), 0, 0, null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -88,18 +63,17 @@ class CurationBlockTest {
         List<Long> productIds = new ArrayList<>(List.of(3L, 9L, 1L));
         CurationBlock block = CurationBlock.products(
             UUID.randomUUID(),
-            CurationBlock.Status.VISIBLE,
             0,
             16,
             productIds
         );
         productIds.clear();
 
-        CurationBlockContent.Products content = (CurationBlockContent.Products) block.visibleContent(
+        CurationBlockContent.Products content = (CurationBlockContent.Products) block.resolveContent(
             products(1L, 3L)
         ).orElseThrow();
         assertThat(content.products()).extracting(Product::id).containsExactly(3L, 1L);
-        assertThat(block.visibleContent(Products.from(List.of()))).isEmpty();
+        assertThat(block.resolveContent(Products.from(List.of()))).isEmpty();
     }
 
     @Test
@@ -109,7 +83,6 @@ class CurationBlockTest {
         assertThatThrownBy(
             () -> CurationBlock.productsByFilter(
                 UUID.randomUUID(),
-                CurationBlock.Status.VISIBLE,
                 0,
                 0,
                 List.of(),
@@ -119,7 +92,6 @@ class CurationBlockTest {
         assertThatThrownBy(
             () -> CurationBlock.productsByFilter(
                 UUID.randomUUID(),
-                CurationBlock.Status.VISIBLE,
                 0,
                 0,
                 List.of(new CurationFilter(id, "A")),
@@ -133,7 +105,6 @@ class CurationBlockTest {
         assertThatThrownBy(
             () -> CurationBlock.products(
                 UUID.randomUUID(),
-                CurationBlock.Status.VISIBLE,
                 0,
                 0,
                 List.of(1L, 1L)

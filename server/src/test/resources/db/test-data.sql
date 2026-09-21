@@ -722,18 +722,18 @@ INSERT INTO product_skin_type (product_id, skin_type) VALUES
     (15, 'DRY'),
     (15, 'COMBINATION');
 
-INSERT INTO curation (id, position, banner_title, banner_description, banner_thumbnail_image_url, detail_title, detail_description) VALUES
-    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', 'https://cdn.example.com/curations/banner.png', '상세 제목', '피부 장벽을 위한 제품 선택 기준'),
-    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', 'https://cdn.example.com/curations/banner.png', '상세 제목', '피부 장벽을 위한 제품 선택 기준');
+INSERT INTO curation (id, position, title, description, status, banner_visible, banner_thumbnail_image_url) VALUES
+    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', 'PUBLISHED', TRUE, 'https://cdn.example.com/curations/banner.png'),
+    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', 'PUBLISHED', FALSE, NULL),
+    (20, 2, '미게시 큐레이션', '미게시 큐레이션', 'UNPUBLISHED', FALSE, NULL);
 
-INSERT INTO curation_block (id, curation_id, position, type, status, spacing_top, spacing_bottom, image_url) VALUES
-    ('00000000-0000-4000-8000-000000000001', 12, 0, 'IMAGE', 'VISIBLE', 8, 24, 'https://cdn.example.com/curations/12/detail-1.png'),
-    ('00000000-0000-4000-8000-000000000002', 12, 1, 'IMAGE', 'HIDDEN', 8, 24, 'https://cdn.example.com/curations/12/detail-2.png'),
-    ('00000000-0000-4000-8000-000000000003', 12, 2, 'PRODUCTS_BY_FILTER', 'VISIBLE', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000004', 12, 3, 'PRODUCTS_BY_FILTER', 'VISIBLE', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000005', 12, 4, 'IMAGE', 'VISIBLE', 8, 24, 'https://cdn.example.com/curations/12/detail-5.png'),
-    ('00000000-0000-4000-8000-000000000006', 12, 5, 'PRODUCTS', 'VISIBLE', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000007', 4, 0, 'PRODUCTS', 'VISIBLE', 0, 16, NULL);
+INSERT INTO curation_block (id, curation_id, position, type, spacing_top, spacing_bottom, image_url) VALUES
+    ('00000000-0000-4000-8000-000000000001', 12, 0, 'IMAGE', 8, 24, 'https://cdn.example.com/curations/12/detail-1.png'),
+    ('00000000-0000-4000-8000-000000000003', 12, 1, 'PRODUCTS_BY_FILTER', 0, 16, NULL),
+    ('00000000-0000-4000-8000-000000000004', 12, 2, 'PRODUCTS_BY_FILTER', 0, 16, NULL),
+    ('00000000-0000-4000-8000-000000000005', 12, 3, 'IMAGE', 8, 24, 'https://cdn.example.com/curations/12/detail-5.png'),
+    ('00000000-0000-4000-8000-000000000006', 12, 4, 'PRODUCTS', 0, 16, NULL),
+    ('00000000-0000-4000-8000-000000000007', 4, 0, 'PRODUCTS', 0, 16, NULL);
 
 INSERT INTO curation_block_filter (id, block_id, position, label) VALUES
     ('00000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000003', 0, '보습'),

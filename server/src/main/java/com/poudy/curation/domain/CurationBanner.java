@@ -1,16 +1,25 @@
 package com.poudy.curation.domain;
 
-public record CurationBanner(String title, String description, String thumbnailImageUrl) {
-    public CurationBanner {
-        title = requireNonBlank(title, "배너 제목");
-        description = requireNonBlank(description, "배너 설명");
-        thumbnailImageUrl = requireNonBlank(thumbnailImageUrl, "배너 썸네일 URL");
+public final class CurationBanner {
+    private final boolean visible;
+    private final String thumbnailImageUrl;
+
+    public CurationBanner(boolean visible, String thumbnailImageUrl) {
+        if (visible && thumbnailImageUrl == null) {
+            throw new IllegalArgumentException("노출할 배너의 썸네일 URL이 필요합니다.");
+        }
+        if (thumbnailImageUrl != null && thumbnailImageUrl.isBlank()) {
+            throw new IllegalArgumentException("배너 썸네일 URL은 비어 있을 수 없습니다.");
+        }
+        this.visible = visible;
+        this.thumbnailImageUrl = thumbnailImageUrl;
     }
 
-    private static String requireNonBlank(String value, String name) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(name + "이 필요합니다.");
-        }
-        return value;
+    boolean isVisible() {
+        return visible;
+    }
+
+    String thumbnailImageUrl() {
+        return thumbnailImageUrl;
     }
 }

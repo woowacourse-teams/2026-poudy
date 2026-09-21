@@ -3,8 +3,12 @@ package com.poudy.curation.repository;
 import com.poudy.curation.domain.Curation;
 import com.poudy.curation.domain.CurationBanner;
 import com.poudy.curation.domain.CurationBlock;
+import com.poudy.curation.domain.CurationDetail;
+import com.poudy.curation.domain.CurationPublicationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.List;
@@ -21,20 +25,21 @@ public class CurationEntity {
     @Column(name = "position")
     private Integer position;
 
-    @Column(name = "banner_title")
-    private String bannerTitle;
+    @Column(name = "title")
+    private String title;
 
-    @Column(name = "banner_description")
-    private String bannerDescription;
+    @Column(name = "description")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private CurationPublicationStatus status;
+
+    @Column(name = "banner_visible")
+    private Boolean bannerVisible;
 
     @Column(name = "banner_thumbnail_image_url")
     private String bannerThumbnailImageUrl;
-
-    @Column(name = "detail_title")
-    private String detailTitle;
-
-    @Column(name = "detail_description")
-    private String detailDescription;
 
     protected CurationEntity() {
     }
@@ -46,10 +51,11 @@ public class CurationEntity {
     public Curation toDomain(List<CurationBlock> blocks) {
         return new Curation(
             id,
-            new CurationBanner(bannerTitle, bannerDescription, bannerThumbnailImageUrl),
-            detailTitle,
-            detailDescription,
-            blocks
+            title,
+            description,
+            status,
+            new CurationBanner(bannerVisible, bannerThumbnailImageUrl),
+            CurationDetail.from(blocks)
         );
     }
 }

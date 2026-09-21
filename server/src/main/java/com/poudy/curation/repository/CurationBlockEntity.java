@@ -5,8 +5,6 @@ import com.poudy.curation.domain.CurationFilter;
 import com.poudy.curation.domain.CurationProductMapping;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.List;
@@ -30,10 +28,6 @@ public class CurationBlockEntity {
 
     @Column(name = "type")
     private String type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private CurationBlock.Status status;
 
     @Column(name = "spacing_top")
     private Integer spacingTop;
@@ -61,11 +55,10 @@ public class CurationBlockEntity {
         Map<Long, List<UUID>> productFilterIds
     ) {
         return switch (type) {
-            case "IMAGE" -> CurationBlock.image(id, status, spacingTop, spacingBottom, imageUrl);
-            case "PRODUCTS" -> CurationBlock.products(id, status, spacingTop, spacingBottom, productIds);
+            case "IMAGE" -> CurationBlock.image(id, spacingTop, spacingBottom, imageUrl);
+            case "PRODUCTS" -> CurationBlock.products(id, spacingTop, spacingBottom, productIds);
             case "PRODUCTS_BY_FILTER" -> CurationBlock.productsByFilter(
                 id,
-                status,
                 spacingTop,
                 spacingBottom,
                 filters,
