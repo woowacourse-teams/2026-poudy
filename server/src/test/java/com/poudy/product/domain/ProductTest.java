@@ -186,28 +186,6 @@ class ProductTest {
     }
 
     @Test
-    @DisplayName("자신의 제품명과 브랜드명을 함께 해석해 검색 결과를 만든다")
-    void matchesOwnSearchableNames() {
-        Product product = new Product(
-            1L,
-            "수분 토너",
-            brand,
-            category,
-            ingredients,
-            "image",
-            variants,
-            sensory(1, 1),
-            updatedAt,
-            Set.of()
-        );
-
-        assertThat(product.match(new ProductSearchQuery("브랜드 수분토너")))
-            .get()
-            .extracting(MatchedProduct::field)
-            .isEqualTo(ProductMatchField.PRODUCT_NAME);
-    }
-
-    @Test
     @DisplayName("제품에 연결된 피부타입만 일치하고 미지정 조건은 통과한다")
     void matchesAssignedSkinTypes() {
         Product product = productWithSkinTypes(Set.of(SkinType.DRY, SkinType.SENSITIVE));

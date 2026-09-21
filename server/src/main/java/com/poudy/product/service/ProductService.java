@@ -11,7 +11,6 @@ import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
-import com.poudy.product.domain.Products;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import java.util.function.Supplier;
@@ -111,14 +110,14 @@ public class ProductService {
     }
 
     public ProductDetail findDetail(Long productId) {
-        Product product = products().findById(productId)
+        Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
-    }
-
-    private Products products() {
-        return productRepository.findAll();
+        return new ProductDetail(
+            product,
+            categoryRepository.findAll().pathOf(product.category()),
+            excludeCodeRepository.freeCodesOf(product.ingredientIds())
+        );
     }
 
 }

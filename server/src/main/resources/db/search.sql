@@ -637,3 +637,25 @@ BEGIN
     RETURN QUERY SELECT v_page.total, NULL::text, v_page.items;
 END
 $$;
+
+-- 공유 텍스트의 제품명 후보. 브랜드를 분리한 이름 전체로 찾고 자동 교정은 적용하지 않는다.
+-- 문서 인덱스로 후보를 좁힌 뒤 제품명 필드에서만 판정한다. 정규화·읽기·초성 규칙은 공통 함수를 쓴다.
+CREATE FUNCTION search_product_names(p_query text, p_brand_id bigint DEFAULT NULL)
+    RETURNS TABLE (product_id bigint, exact_match boolean)
+    LANGUAGE sql STABLE
+AS $$
+    WITH q AS (
+        SELECT search_norm(p_query) AS n, search_read_query(search_norm(p_query)) AS r,
+               search_match_pattern(search_norm(p_query)) AS pattern,
+               search_match_pattern(search_read_query(search_norm(p_query))) AS reading_pattern
+    )
+    SELECT d.product_id,
+           d.product_norm ~ ('^' || q.pattern || '$')
+               OR d.product_read ~ ('^' || q.pattern || '$')
+               OR d.product_read ~ ('^' || q.reading_pattern || '$')
+    FROM product_search_document d CROSS JOIN q
+    WHERE q.n <> '' AND (p_brand_id IS NULL OR d.brand_id = p_brand_id)
+      AND (d.doc_norm ~ q.pattern OR d.doc_read ~ q.pattern OR d.doc_read ~ q.reading_pattern)
+      AND (d.product_norm ~ q.pattern OR d.product_read ~ q.pattern OR d.product_read ~ q.reading_pattern)
+    ORDER BY d.product_id
+$$;

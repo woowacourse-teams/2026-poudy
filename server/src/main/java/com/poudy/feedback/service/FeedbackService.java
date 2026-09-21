@@ -72,8 +72,7 @@ public class FeedbackService {
         List<UUID> imageIds,
         String clientId
     ) {
-        Product product = productRepository.findAll()
-            .findById(productId)
+        Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         Feedback feedback = Feedback.register(new ProductCorrection(product.id(), product.name()), content, clock);
         receive(feedback, imageIds, clientId);

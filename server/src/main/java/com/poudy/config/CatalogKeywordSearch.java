@@ -1,19 +1,16 @@
 package com.poudy.config;
 
-import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.searchkeyword.domain.KeywordSearch;
 
 public final class CatalogKeywordSearch implements KeywordSearch {
-
-    private final Products products;
-
+    private final ProductRepository repository;
     public CatalogKeywordSearch(ProductRepository repository) {
-        this.products = repository.findAll();
+        this.repository = repository;
     }
 
     @Override
     public boolean hasResults(String keyword) {
-        return products.hasResults(keyword);
+        return repository.hasSearchResults(keyword);
     }
 }

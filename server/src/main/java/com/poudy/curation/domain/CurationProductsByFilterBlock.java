@@ -45,6 +45,11 @@ final class CurationProductsByFilterBlock extends CurationBlock {
     }
 
     @Override
+    List<Long> productIds() {
+        return isVisible() ? products.stream().map(CurationProductMapping::productId).toList() : List.of();
+    }
+
+    @Override
     Optional<CurationBlockContent> visibleContent(Products catalog) {
         if (!isVisible()) {
             return Optional.empty();

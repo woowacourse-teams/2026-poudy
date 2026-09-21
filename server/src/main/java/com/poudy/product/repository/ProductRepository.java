@@ -1,58 +1,60 @@
 package com.poudy.product.repository;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import com.poudy.brand.domain.Brand;
-import com.poudy.brand.domain.Brands;
-import com.poudy.brand.repository.BrandRepository;
+import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.category.domain.Categories;
-import com.poudy.category.domain.Category;
-import com.poudy.category.repository.CategoryRepository;
-import com.poudy.common.persistence.SnapshotReader;
-import com.poudy.exception.InfrastructureException;
-import com.poudy.ingredient.domain.IngredientCatalog;
-import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.category.domain.CategoryProductCount;
+import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCountsByBrand;
+import com.poudy.product.domain.ProductCountsByCategory;
+import com.poudy.product.domain.ProductNameMatch;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
-import com.poudy.product.domain.ProductVariant;
-import com.poudy.product.domain.ProductVariants;
-import com.poudy.product.domain.Products;
-import com.poudy.skintype.domain.SkinType;
-import java.util.EnumSet;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductRepository {
-
-    private final Products products;
-    private final ProductJpaRepository productJpaRepository;
     private final ProductQueryRepository queries;
+    private final ProductLoader loader;
+    private final NamedParameterJdbcTemplate jdbc;
 
-    public ProductRepository(
-        ProductJpaRepository productJpaRepository,
-        BrandRepository brandRepository,
-        CategoryRepository categoryRepository,
-        IngredientRepository ingredientRepository,
-        SnapshotReader snapshotReader,
-        ProductQueryRepository queries
-    ) {
-        this.productJpaRepository = productJpaRepository;
+    public ProductRepository(ProductQueryRepository queries, ProductLoader loader, NamedParameterJdbcTemplate jdbc) {
         this.queries = queries;
-        this.products = snapshotReader
-            .read(() -> load(productJpaRepository, brandRepository, categoryRepository, ingredientRepository));
+        this.loader = loader;
+        this.jdbc = jdbc;
     }
 
-    public long countContainingIngredient(Long ingredientId) {
-        return productJpaRepository.countContainingIngredient(ingredientId);
+    public Optional<Product> findById(Long id) {
+        return loader.load(List.of(id)).stream().findFirst();
+    }
+
+    public List<Product> findAllById(List<Long> ids) {
+        return ids == null ? List.of() : loader.load(ids);
+    }
+
+    public boolean existsById(Long id) {
+        return Boolean.TRUE.equals(
+            jdbc.queryForObject(
+                "select exists(select 1 from product where id = :id)",
+                Map.of("id", id),
+                Boolean.class
+            )
+        );
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
@@ -71,93 +73,94 @@ public class ProductRepository {
         return queries.suggest(keyword, page, size);
     }
 
-    private static Products load(
-        ProductJpaRepository productJpaRepository,
-        BrandRepository brandRepository,
-        CategoryRepository categoryRepository,
-        IngredientRepository ingredientRepository
-    ) {
-        Brands brands = brandRepository.findAll();
-        Categories categories = categoryRepository.findAll();
-        IngredientCatalog ingredients = ingredientRepository.findAll();
-        Map<Long, List<ProductVariant>> variants = productJpaRepository.findAllVariants().stream()
-            .collect(groupingBy(ProductVariant::productId));
-        Map<Long, List<Long>> ingredientIds = productJpaRepository.findAllIngredients().stream()
-            .collect(
-                groupingBy(ProductIngredientEntity::productId, mapping(ProductIngredientEntity::ingredientId, toList()))
-            );
-        Map<Long, Set<SkinType>> skinTypes = productJpaRepository.findAllSkinTypes().stream()
-            .map(ProductSkinTypeEntity::id)
-            .collect(
-                groupingBy(
-                    ProductSkinTypeId::productId,
-                    mapping(ProductSkinTypeId::skinType, toCollection(() -> EnumSet.noneOf(SkinType.class)))
-                )
-            );
-        return Products.from(
-            productJpaRepository.findAllProducts().stream()
-                .map(
-                    product -> product.toDomain(
-                        brandOf(product, brands),
-                        categoryOf(product, categories),
-                        ingredientsOf(product, ingredientIds.getOrDefault(product.id(), List.of()), ingredients),
-                        variantsOf(product, variants.getOrDefault(product.id(), List.of())),
-                        skinTypes.getOrDefault(product.id(), Set.of())
-                    )
-                )
-                .toList()
-        );
-    }
-
-    private static Brand brandOf(ProductEntity product, Brands brands) {
-        return brands.findById(product.brandId()).orElseThrow(
-            () -> new InfrastructureException(
-                "제품이 존재하지 않는 브랜드 ID를 참조합니다. product_id=%d, brand_id=%d"
-                    .formatted(product.id(), product.brandId())
+    public boolean hasSearchResults(String keyword) {
+        return Boolean.TRUE.equals(
+            jdbc.queryForObject(
+                "select total > 0 from search_products(:keyword, 0, 1, 2)",
+                Map.of("keyword", keyword),
+                Boolean.class
             )
         );
     }
 
-    private static Category categoryOf(ProductEntity product, Categories categories) {
-        Category category = categories.findById(product.categoryId()).orElseThrow(
-            () -> new InfrastructureException(
-                "제품이 존재하지 않는 카테고리 ID를 참조합니다. product_id=%d, category_id=%d"
-                    .formatted(product.id(), product.categoryId())
+    public long countContainingIngredient(Long ingredientId) {
+        if (ingredientId == null) {
+            return 0;
+        }
+        return jdbc.queryForObject(
+            "select count(distinct product_id) from product_ingredient where ingredient_id = :id",
+            Map.of("id", ingredientId),
+            Long.class
+        );
+    }
+
+    public List<BrandProductCount> productCountsByBrand(List<Brand> brands) {
+        Map<Long, Long> counts = jdbc
+            .query(
+                "select brand_id, count(*) as total from product group by brand_id",
+                Map.of(),
+                (rs, row) -> Map.entry(rs.getLong("brand_id"), rs.getLong("total"))
+            ).stream()
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new ProductCountsByBrand(counts).countsOf(brands);
+    }
+
+    public List<CategoryProductCount> productCountsByCategory(Categories categories) {
+        return categoryCounts(null).categoriesOf(categories);
+    }
+
+    public BrandProductCounts brandProductCountsOf(Brand brand, Categories categories) {
+        return new BrandProductCounts(brand, categoryCounts(brand.id()).nonEmptyCategoriesOf(categories));
+    }
+
+    private ProductCountsByCategory categoryCounts(Long brandId) {
+        Map<Long, Long> counts = jdbc.query(
+            """
+                select ids.id, count(*) as total from product p join category c on c.id = p.category_id
+                cross join lateral (values (c.id), (c.parent_id)) ids(id)
+                where cast(:brand as bigint) is null or p.brand_id = :brand group by ids.id
+                """,
+            new MapSqlParameterSource("brand", brandId),
+            (rs, row) -> Map.entry(rs.getLong("id"), rs.getLong("total"))
+        ).stream()
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new ProductCountsByCategory(counts);
+    }
+
+    public List<Product> findRankings(List<Long> categoryIds, LocalDate firstDate, LocalDate lastDate) {
+        var parameters = new MapSqlParameterSource("categories", new SqlArrayValue("bigint", categoryIds.toArray()))
+            .addValue("first", firstDate).addValue("last", lastDate);
+        List<Long> ids = jdbc.queryForList("""
+            select p.id from product p join category c on c.id = p.category_id
+            left join product_daily_view v on v.product_id = p.id
+                and (cast(:first as date) is null or v.view_date between :first and :last)
+            where (cardinality(cast(:categories as bigint[])) = 0
+                or c.id = any(:categories) or c.parent_id = any(:categories))
+              and exists(select 1 from product_variant pv where pv.product_id = p.id and pv.status = 'active')
+            group by p.id order by coalesce(sum(v.view_count), 0) desc, p.id limit 6
+            """, parameters, Long.class);
+        return loader.load(ids);
+    }
+
+    public List<Product> findByBrand(Long brandId) {
+        return loader.load(
+            jdbc.queryForList(
+                "select id from product where brand_id = :id order by id",
+                Map.of("id", brandId),
+                Long.class
             )
         );
-        if (category.isParent()) {
-            throw new InfrastructureException(
-                "제품은 소분류 카테고리 ID를 참조해야 합니다. product_id=%d, category_id=%d"
-                    .formatted(product.id(), product.categoryId())
-            );
-        }
-        return category;
     }
 
-    private static Ingredients ingredientsOf(ProductEntity product, List<Long> ids, IngredientCatalog ingredients) {
-        List<Long> unresolved = ids.stream()
-            .filter(id -> ingredients.findById(id).isEmpty())
-            .distinct()
-            .toList();
-        if (!unresolved.isEmpty()) {
-            throw new InfrastructureException(
-                "제품이 존재하지 않는 성분 ID를 참조합니다. product_id=%d, ingredient_ids=%s"
-                    .formatted(product.id(), unresolved)
-            );
-        }
-        return ingredients.resolveInOrder(ids);
-    }
-
-    private static ProductVariants variantsOf(ProductEntity product, List<ProductVariant> variants) {
-        if (variants.isEmpty()) {
-            throw new InfrastructureException(
-                "제품 용량 옵션은 하나 이상이어야 합니다. product_id=%d".formatted(product.id())
-            );
-        }
-        return new ProductVariants(variants);
-    }
-
-    public Products findAll() {
-        return products;
+    public List<ProductNameMatch> findByProductName(String keyword, Long brandId) {
+        var parameters = new MapSqlParameterSource("keyword", keyword).addValue("brand", brandId);
+        var hits = jdbc.query(
+            "select * from search_product_names(:keyword, :brand)",
+            parameters,
+            (rs, row) -> Map.entry(rs.getLong("product_id"), rs.getBoolean("exact_match"))
+        );
+        Map<Long, Product> products = loader.load(hits.stream().map(Map.Entry::getKey).toList()).stream()
+            .collect(toMap(Product::id, product -> product));
+        return hits.stream().map(hit -> new ProductNameMatch(products.get(hit.getKey()), hit.getValue())).toList();
     }
 }

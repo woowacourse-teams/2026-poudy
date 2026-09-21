@@ -38,11 +38,6 @@ public class IngredientRepository {
         this.jdbc = jdbc;
     }
 
-    public IngredientCatalog findAll() {
-        List<Long> ids = jdbc.queryForList("select id from ingredient order by id", Map.of(), Long.class);
-        return IngredientCatalog.from(load(ids));
-    }
-
     public Optional<Ingredient> findById(Long id) {
         return load(List.of(id)).stream().findFirst();
     }

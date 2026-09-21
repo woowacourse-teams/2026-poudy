@@ -2,7 +2,6 @@ package com.poudy.productview.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +15,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,9 +34,9 @@ class ProductViewServiceTest {
         when(second.belongsToAnyCategory(List.of(1L))).thenReturn(true);
         Products products = Products.from(List.of(first, second));
         ProductRepository productRepository = mock(ProductRepository.class);
-        when(productRepository.findAll()).thenReturn(products);
+        when(productRepository.existsById(1L)).thenReturn(true);
         ProductViewRepository productViewRepository = mock(ProductViewRepository.class);
-        when(productViewRepository.sumViewCounts(ViewPeriod.recentDays(today, 7))).thenReturn(Map.of(2L, 3L));
+        when(productRepository.findRankings(List.of(1L), today.minusDays(6), today)).thenReturn(List.of(second, first));
         ProductViewService service = new ProductViewService(
             productRepository,
             productViewRepository,
@@ -46,8 +44,8 @@ class ProductViewServiceTest {
         );
 
         assertThat(service.findRankings(List.of(1L), 7)).containsExactly(second, first);
-        verify(productRepository, times(1)).findAll();
-        verify(productViewRepository, times(1)).sumViewCounts(ViewPeriod.recentDays(today, 7));
+        verify(productRepository).findRankings(List.of(1L), today.minusDays(6), today);
+
     }
 
     @ParameterizedTest
@@ -58,7 +56,7 @@ class ProductViewServiceTest {
     void usesKoreanDateForIncreaseAndPeriodQuery(Instant instant, LocalDate expectedDate) {
         ProductRepository productRepository = mock(ProductRepository.class);
         Products products = mock(Products.class);
-        when(productRepository.findAll()).thenReturn(products);
+        when(productRepository.existsById(1L)).thenReturn(true);
         when(products.findById(1L)).thenReturn(Optional.of(mock(Product.class)));
         ProductViewRepository productViewRepository = mock(ProductViewRepository.class);
         ProductViewService productViewService = new ProductViewService(

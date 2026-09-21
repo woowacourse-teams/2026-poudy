@@ -1,6 +1,5 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.search.domain.SearchKeyword;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,8 +12,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class IngredientCatalog {
-
-    public static final int SEARCH_RESULT_LIMIT = 5;
 
     private final Map<Long, Ingredient> ingredients;
 
@@ -33,23 +30,6 @@ public final class IngredientCatalog {
         }
 
         return new IngredientCatalog(Collections.unmodifiableMap(indexedIngredients));
-    }
-
-    public List<Ingredient> search(String keyword) {
-        return suggest(keyword).stream()
-            .map(MatchedIngredient::ingredient)
-            .toList();
-    }
-
-    public List<MatchedIngredient> suggest(String keyword) {
-        SearchKeyword searchKeyword = new SearchKeyword(keyword);
-
-        return ingredients.values().stream()
-            .map(ingredient -> ingredient.match(searchKeyword))
-            .flatMap(Optional::stream)
-            .sorted(MatchedIngredient.order())
-            .limit(SEARCH_RESULT_LIMIT)
-            .toList();
     }
 
     public Optional<Ingredient> findById(Long id) {

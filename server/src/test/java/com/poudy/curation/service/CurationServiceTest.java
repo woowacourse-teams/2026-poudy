@@ -35,11 +35,12 @@ class CurationServiceTest {
         Curation curation = curation(12L, "상세", List.of(block));
         CurationRepository repository = mock(CurationRepository.class);
         given(repository.findAll()).willReturn(Curations.from(List.of(curation)));
+        given(repository.findById(12L)).willReturn(java.util.Optional.of(curation));
         ProductRepository products = mock(ProductRepository.class);
         Product current = mock(Product.class);
         given(current.id()).willReturn(15L);
         Products currentCatalog = Products.from(List.of(current));
-        given(products.findAll()).willReturn(Products.from(List.of()), currentCatalog);
+        given(products.findAllById(List.of(15L))).willReturn(List.of(), List.of(current));
         CurationService service = new CurationService(repository, products);
 
         assertThat(service.findCurations()).containsExactly(curation);
@@ -54,7 +55,7 @@ class CurationServiceTest {
     @Test
     void rejectsUnavailableCuration() {
         CurationRepository repository = mock(CurationRepository.class);
-        given(repository.findAll()).willReturn(Curations.from(List.of()));
+        given(repository.findById(999L)).willReturn(java.util.Optional.empty());
         CurationService service = new CurationService(repository, mock(ProductRepository.class));
 
         assertThatThrownBy(() -> service.findDetail(999L)).isInstanceOf(ResourceNotFoundException.class)

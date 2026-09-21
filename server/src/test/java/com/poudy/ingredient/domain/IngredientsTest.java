@@ -58,16 +58,16 @@ class IngredientsTest {
     }
 
     @Test
-    @DisplayName("골라낸 성분 목록도 검색할 수 있다")
-    void searchesWithinSelectedIngredients() {
+    @DisplayName("골라낸 성분 목록은 선택한 ID만 가진다")
+    void keepsOnlySelectedIngredients() {
         IngredientCatalog ingredients = IngredientCatalog.from(
             List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance"))
         );
 
         IngredientCatalog found = ingredients.findAllById(List.of(10L));
 
-        assertThat(found.search("글리")).map(Ingredient::id).containsExactly(10L);
-        assertThat(found.search("향료")).isEmpty();
+        assertThat(found.values()).extracting(Ingredient::id).containsExactly(10L);
+
     }
 
     @Test

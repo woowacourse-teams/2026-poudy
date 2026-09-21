@@ -71,4 +71,8 @@ public abstract sealed class CurationBlock permits CurationImageBlock, CurationP
     }
 
     abstract Optional<CurationBlockContent> visibleContent(Products products);
+
+    List<Long> productIds() {
+        return List.of();
+    }
 }

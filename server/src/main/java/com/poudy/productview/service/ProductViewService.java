@@ -31,7 +31,7 @@ public class ProductViewService {
     }
 
     public void increaseViewCount(Long productId) {
-        if (productRepository.findAll().findById(productId).isEmpty()) {
+        if (!productRepository.existsById(productId)) {
             throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         productViewRepository.increaseViewCount(productId, LocalDate.now(clock));
@@ -45,7 +45,11 @@ public class ProductViewService {
     }
 
     public List<Product> findRankings(List<Long> categoryIds, Integer days) {
-        Map<Long, Long> viewCounts = sumViewCounts(days);
-        return productRepository.findAll().rankByViewCounts(categoryIds, viewCounts);
+        ViewPeriod period = days == null ? null : ViewPeriod.recentDays(LocalDate.now(clock), days);
+        return productRepository.findRankings(
+            categoryIds,
+            period == null ? null : period.firstDate(),
+            period == null ? null : period.lastDate()
+        );
     }
 }

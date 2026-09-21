@@ -4,8 +4,11 @@ import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.category.repository.CategoryRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;

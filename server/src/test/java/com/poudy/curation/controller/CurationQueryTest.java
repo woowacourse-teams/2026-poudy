@@ -39,7 +39,7 @@ class CurationQueryTest {
 
     @Test
     void returnsVisibleBlocksFiltersAndProductsInSavedOrder() throws Exception {
-        Product first = products.findAll().findById(15L).orElseThrow();
+        Product first = products.findById(15L).orElseThrow();
         mockMvc.perform(get("/api/curations/12"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.title").value("상세 제목"))

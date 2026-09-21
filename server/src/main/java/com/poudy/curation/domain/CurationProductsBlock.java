@@ -22,6 +22,11 @@ final class CurationProductsBlock extends CurationBlock {
     }
 
     @Override
+    List<Long> productIds() {
+        return isVisible() ? productIds : List.of();
+    }
+
+    @Override
     Optional<CurationBlockContent> visibleContent(Products products) {
         if (!isVisible()) {
             return Optional.empty();

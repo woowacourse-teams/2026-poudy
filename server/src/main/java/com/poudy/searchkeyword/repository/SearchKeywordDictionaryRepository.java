@@ -1,12 +1,13 @@
 package com.poudy.searchkeyword.repository;
 
-import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.searchkeyword.domain.KeywordSearch;
 import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class SearchKeywordDictionaryRepository {
@@ -14,18 +15,16 @@ public class SearchKeywordDictionaryRepository {
     private static final Logger LOG = LoggerFactory.getLogger(SearchKeywordDictionaryRepository.class);
 
     private final SearchKeywordJpaRepository searchKeywordJpaRepository;
-    private final SnapshotReader snapshotReader;
 
     public SearchKeywordDictionaryRepository(
-        SearchKeywordJpaRepository searchKeywordJpaRepository,
-        SnapshotReader snapshotReader
+        SearchKeywordJpaRepository searchKeywordJpaRepository
     ) {
         this.searchKeywordJpaRepository = searchKeywordJpaRepository;
-        this.snapshotReader = snapshotReader;
     }
 
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public SearchKeywordDictionary read(KeywordSearch search) {
-        SearchKeywordDictionary dictionary = snapshotReader.read(() -> load(search));
+        SearchKeywordDictionary dictionary = load(search);
         logLoaded(dictionary);
         return dictionary;
     }

@@ -12,7 +12,7 @@ public class ProductCountsByCategory {
 
     private final Map<Long, Long> countsByCategoryId;
 
-    ProductCountsByCategory(Map<Long, Long> countsByCategoryId) {
+    public ProductCountsByCategory(Map<Long, Long> countsByCategoryId) {
         this.countsByCategoryId = Map.copyOf(Objects.requireNonNullElse(countsByCategoryId, Map.of()));
     }
 

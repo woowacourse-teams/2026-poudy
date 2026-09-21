@@ -28,7 +28,6 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
-import com.poudy.product.domain.Products;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import java.math.BigDecimal;
@@ -51,7 +50,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of(ExcludeCode.HARSH_PRESERVATIVES)))
             .willReturn(Set.of(999L));
@@ -90,7 +89,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(repository, product);
         given(excludeCodeIngredients.freeCodesOf(argThat(ingredients -> ingredients.contains(10L))))
             .willReturn(List.of(ExcludeCode.SULFATES));
@@ -115,7 +114,7 @@ class ProductServiceTest {
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
         Category parent = new Category(1L, null, "스킨케어", 0);
         Category child = new Category(2L, 1L, "토너", 1);
-        given(repository.findAll()).willReturn(Products.from(List.of()));
+        given(repository.findById(999L)).willReturn(java.util.Optional.empty());
         ProductService service = new ProductService(
             repository,
             categoryRepository(Categories.from(List.of(parent, child))),
@@ -135,7 +134,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
@@ -177,7 +176,7 @@ class ProductServiceTest {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodeIngredients excludeCodeIngredients = mock(ExcludeCodeIngredients.class);
-        given(repository.findAll()).willReturn(Products.from(List.of(product)));
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(repository, product);
         given(excludeCodeIngredients.idsOf(List.of())).willReturn(Set.of());
         ProductService service = new ProductService(
@@ -263,6 +262,7 @@ class ProductServiceTest {
     private static ExcludeCodeRepository excludeCodeRepository(ExcludeCodeIngredients excludeCodeIngredients) {
         ExcludeCodeRepository excludeCodeRepository = mock(ExcludeCodeRepository.class);
         given(excludeCodeRepository.findAll()).willReturn(excludeCodeIngredients);
+        given(excludeCodeRepository.freeCodesOf(List.of(10L))).willReturn(List.of(ExcludeCode.SULFATES));
         return excludeCodeRepository;
     }
 

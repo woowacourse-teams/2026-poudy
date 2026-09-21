@@ -192,8 +192,7 @@ class FeedbackServiceTest {
         Product product = mock(Product.class);
         given(product.id()).willReturn(1L);
         given(product.name()).willReturn("블랙 스네일 토너");
-        given(productRepository.findAll()).willReturn(products);
-        given(products.findById(1L)).willReturn(Optional.of(product));
+        given(productRepository.findById(1L)).willReturn(Optional.of(product));
 
         feedbackService.submitProductCorrection(1L, "전성분 표기가 실제 패키지와 달라요.", List.of(), "client-a");
 
@@ -208,8 +207,7 @@ class FeedbackServiceTest {
     @Test
     @DisplayName("없는 제품의 정정 요청은 요청 제한과 저장 없이 거절한다")
     void rejectsCorrectionForUnknownProduct() {
-        given(productRepository.findAll()).willReturn(products);
-        given(products.findById(999999L)).willReturn(Optional.empty());
+        given(productRepository.findById(999999L)).willReturn(Optional.empty());
 
         assertThatThrownBy(
             () -> feedbackService.submitProductCorrection(

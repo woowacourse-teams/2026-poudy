@@ -13,22 +13,25 @@ import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.skintype.domain.SkinType;
-import jakarta.persistence.EntityManager;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Component;
 
 @Component
 class ProductLoader {
-
-    private final EntityManager entityManager;
+    private final NamedParameterJdbcTemplate jdbc;
     private final IngredientRepository ingredientRepository;
 
-    ProductLoader(EntityManager entityManager, IngredientRepository ingredientRepository) {
-        this.entityManager = entityManager;
+    ProductLoader(NamedParameterJdbcTemplate jdbc, IngredientRepository ingredientRepository) {
+        this.jdbc = jdbc;
         this.ingredientRepository = ingredientRepository;
     }
 
@@ -36,64 +39,71 @@ class ProductLoader {
         if (ids.isEmpty()) {
             return List.of();
         }
-        List<ProductEntity> products = query(
-            "select p from ProductEntity p where p.id in :ids",
-            ProductEntity.class,
-            ids
-        );
-        Map<Long, Brand> brands = query(
-            "select b from Brand b where b.id in :ids",
-            Brand.class,
-            products.stream().map(ProductEntity::brandId).distinct().toList()
-        ).stream()
-            .collect(toMap(Brand::id, Function.identity()));
-        Map<Long, Category> categories = query(
-            "select c from Category c where c.id in :ids",
-            Category.class,
-            products.stream().map(ProductEntity::categoryId).distinct().toList()
-        ).stream()
-            .collect(toMap(Category::id, Function.identity()));
-        Map<Long, List<ProductVariant>> variants = query(
-            "select v from ProductVariant v where v.productId in :ids order by v.productId, v.displayOrder",
-            ProductVariant.class,
-            ids
-        ).stream().collect(groupingBy(ProductVariant::productId));
-        List<ProductIngredientEntity> references = query(
-            "select i from ProductIngredientEntity i where i.id.productId in :ids"
-                + " order by i.id.productId, i.id.componentOrder, i.id.displayOrder",
-            ProductIngredientEntity.class,
-            ids
-        );
-        Map<Long, List<Long>> ingredientIds = references.stream()
-            .collect(
-                groupingBy(ProductIngredientEntity::productId, mapping(ProductIngredientEntity::ingredientId, toList()))
-            );
-        IngredientCatalog ingredients = ingredientRepository.findByIds(
-            references.stream().map(ProductIngredientEntity::ingredientId).distinct().toList()
-        );
-        Map<Long, Set<SkinType>> skinTypes = query(
-            "select s from ProductSkinTypeEntity s where s.id.productId in :ids",
-            ProductSkinTypeEntity.class,
-            ids
-        )
-            .stream().map(ProductSkinTypeEntity::id)
-            .collect(groupingBy(ProductSkinTypeId::productId, mapping(ProductSkinTypeId::skinType, toSet())));
-        Map<Long, Product> loaded = products.stream().collect(
-            toMap(
-                ProductEntity::id,
-                p -> p.toDomain(
-                    brands.get(p.brandId()),
-                    categories.get(p.categoryId()),
-                    ingredients.resolveInOrder(ingredientIds.getOrDefault(p.id(), List.of())),
-                    new ProductVariants(variants.get(p.id())),
-                    skinTypes.getOrDefault(p.id(), Set.of())
+        Map<String, Object> parameters = Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray()));
+        Map<Long, List<ProductVariant>> variants = jdbc.query(
+            """
+                select * from product_variant where product_id = any(:ids) order by product_id, display_order
+                """,
+            parameters,
+            (rs, row) -> Map.entry(
+                rs.getLong("product_id"),
+                new ProductVariant(
+                    rs.getLong("id"),
+                    rs.getLong("price"),
+                    rs.getBigDecimal("volume_value"),
+                    rs.getString("volume_unit"),
+                    rs.getString("status")
                 )
             )
+        )
+            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+        Map<Long, List<Long>> ingredientIds = jdbc.query("""
+            select product_id, ingredient_id from product_ingredient where product_id = any(:ids)
+            order by product_id, component_order, display_order
+            """, parameters, (rs, row) -> Map.entry(rs.getLong("product_id"), rs.getLong("ingredient_id")))
+            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+        IngredientCatalog ingredients = ingredientRepository.findByIds(
+            ingredientIds.values().stream()
+                .flatMap(List::stream).distinct().toList()
         );
-        return ids.stream().map(loaded::get).toList();
-    }
-
-    private <T> List<T> query(String jpql, Class<T> type, List<Long> ids) {
-        return entityManager.createQuery(jpql, type).setParameter("ids", ids).getResultList();
+        Map<Long, Set<SkinType>> skinTypes = jdbc.query(
+            "select * from product_skin_type where product_id = any(:ids)",
+            parameters,
+            (rs, row) -> Map.entry(rs.getLong("product_id"), SkinType.valueOf(rs.getString("skin_type")))
+        )
+            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toSet())));
+        Map<Long, Product> loaded = jdbc.query("""
+            select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
+                c.parent_id, c.name as category_name, c.depth from product p
+            join brand b on b.id = p.brand_id join category c on c.id = p.category_id where p.id = any(:ids)
+            """, parameters, (rs, row) -> {
+            long id = rs.getLong("id");
+            return new Product(
+                id,
+                rs.getString("product_name"),
+                new Brand(
+                    rs.getLong("brand_id"),
+                    rs.getString("korean_name"),
+                    rs.getString("english_name"),
+                    rs.getString("brand_image")
+                ),
+                new Category(
+                    rs.getLong("category_id"),
+                    rs.getObject("parent_id", Long.class),
+                    rs.getString("category_name"),
+                    rs.getInt("depth")
+                ),
+                ingredients.resolveInOrder(ingredientIds.getOrDefault(id, List.of())),
+                rs.getString("image_url"),
+                new ProductVariants(variants.get(id)),
+                new ProductSensory(
+                    new MoistureLevel(rs.getInt("moisture_level")),
+                    new OilLevel(rs.getInt("oil_level"))
+                ),
+                rs.getObject("updated_at", OffsetDateTime.class),
+                skinTypes.getOrDefault(id, Set.of())
+            );
+        }).stream().collect(toMap(Product::id, p -> p));
+        return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
     }
 }

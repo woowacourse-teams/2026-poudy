@@ -3,7 +3,6 @@ package com.poudy.ingredient.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import com.poudy.search.domain.SearchKeyword;
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.Tag;
@@ -29,24 +28,20 @@ class IngredientTest {
     }
 
     @Test
-    @DisplayName("표준 자료에 없는 영문명은 빈 문자열로 검색한다")
+    @DisplayName("표준 자료에 없는 영문명은 빈 문자열로 보관한다")
     void fillsMissingTextWithEmptyString() {
         Ingredient ingredient = ingredient(null, List.of());
 
         assertThat(ingredient.englishName()).isEmpty();
-        assertThat(ingredient.match(new SearchKeyword("Glycerin"))).isEmpty();
     }
 
     @Test
-    @DisplayName("영문명이 있으면 이름 검색 행동에 사용한다")
+    @DisplayName("입력한 영문명을 보관한다")
     void keepsPresentText() {
         Ingredient ingredient = ingredient("Glycerin", List.of());
 
         assertThat(ingredient.englishName()).isEqualTo("Glycerin");
-        assertThat(ingredient.match(new SearchKeyword("glycerin")))
-            .get()
-            .extracting(MatchedIngredient::field)
-            .isEqualTo(IngredientMatchField.ENGLISH_NAME);
+
     }
 
     @Test
@@ -171,7 +166,7 @@ class IngredientTest {
     }
 
     @Test
-    @DisplayName("생성에 사용한 별칭과 태그 목록이 바뀌어도 검색과 분류 행동은 유지된다")
+    @DisplayName("생성에 사용한 별칭과 태그 목록이 바뀌어도 별칭과 분류 행동은 유지된다")
     void protectsSearchAndTagBehaviorFromInputMutation() {
         List<String> aliases = new ArrayList<>(List.of("보습 성분"));
         List<IngredientTag> tags = new ArrayList<>(
@@ -191,10 +186,7 @@ class IngredientTest {
         aliases.clear();
         tags.clear();
 
-        assertThat(ingredient.match(new SearchKeyword("보습성분")))
-            .get()
-            .extracting(MatchedIngredient::field)
-            .isEqualTo(IngredientMatchField.ALIAS);
+        assertThat(ingredient.aliases()).containsExactly("보습 성분");
         assertThat(ingredient.formulationRoles()).extracting(FormulationRole::code).containsExactly("HUMECTANT");
     }
 

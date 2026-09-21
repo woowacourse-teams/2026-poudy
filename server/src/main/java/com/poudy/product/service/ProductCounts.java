@@ -23,17 +23,17 @@ public class ProductCounts implements BrandProductCounter, CategoryProductCounte
 
     @Override
     public List<BrandProductCount> countByBrand(List<Brand> brands) {
-        return productRepository.findAll().productCountsByBrand(brands);
+        return productRepository.productCountsByBrand(brands);
     }
 
     @Override
     public BrandProductCounts countByCategory(Brand brand, Categories categories) {
-        return productRepository.findAll().brandProductCountsOf(brand, categories);
+        return productRepository.brandProductCountsOf(brand, categories);
     }
 
     @Override
     public List<CategoryProductCount> countByCategory(Categories categories) {
-        return productRepository.findAll().productCountsByCategory(categories);
+        return productRepository.productCountsByCategory(categories);
     }
 
     @Override

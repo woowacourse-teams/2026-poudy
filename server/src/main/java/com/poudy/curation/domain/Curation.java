@@ -53,6 +53,10 @@ public final class Curation {
         return description;
     }
 
+    public List<Long> productIds() {
+        return blocks.stream().flatMap(block -> block.productIds().stream()).distinct().toList();
+    }
+
     List<CurationBlockContent> visibleBlocks(Products products) {
         return blocks.stream().flatMap(block -> block.visibleContent(products).stream()).toList();
     }
