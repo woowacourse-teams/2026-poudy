@@ -64,36 +64,36 @@ class CurationServiceTest {
     }
 
     @Test
-    void appliesBannerAndDetailPublicationIndependently() {
+    void appliesCurationPublicationAndBannerVisibility() {
         Curation published = curation(
             12L,
-            "전체 게시",
+            "게시 및 배너 노출",
             List.of(),
             CurationPublicationStatus.PUBLISHED,
-            CurationPublicationStatus.PUBLISHED
+            true
         );
-        Curation detailOnly = curation(
+        Curation hiddenBanner = curation(
             4L,
-            "상세만 게시",
+            "게시 및 배너 비노출",
             List.of(),
-            CurationPublicationStatus.UNPUBLISHED,
-            CurationPublicationStatus.PUBLISHED
+            CurationPublicationStatus.PUBLISHED,
+            false
         );
         Curation unpublished = curation(
             20L,
-            "전체 미게시",
+            "미게시",
             List.of(),
             CurationPublicationStatus.UNPUBLISHED,
-            CurationPublicationStatus.UNPUBLISHED
+            false
         );
         CurationRepository repository = mock(CurationRepository.class);
-        given(repository.findAll()).willReturn(Curations.from(List.of(published, detailOnly, unpublished)));
+        given(repository.findAll()).willReturn(Curations.from(List.of(published, hiddenBanner, unpublished)));
         ProductRepository products = mock(ProductRepository.class);
         given(products.findAll()).willReturn(Products.from(List.of()));
         CurationService service = new CurationService(repository, products);
 
         assertThat(service.findCurations()).containsExactly(published);
-        assertThat(service.findDetail(4L).curation()).isSameAs(detailOnly);
+        assertThat(service.findDetail(4L).curation()).isSameAs(hiddenBanner);
         assertThatThrownBy(() -> service.findDetail(20L)).isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -103,7 +103,7 @@ class CurationServiceTest {
             title,
             blocks,
             CurationPublicationStatus.PUBLISHED,
-            CurationPublicationStatus.PUBLISHED
+            true
         );
     }
 
@@ -111,15 +111,16 @@ class CurationServiceTest {
         Long id,
         String title,
         List<CurationBlock> blocks,
-        CurationPublicationStatus bannerStatus,
-        CurationPublicationStatus detailStatus
+        CurationPublicationStatus publicationStatus,
+        boolean bannerVisible
     ) {
         return new Curation(
             id,
             title,
             "설명",
-            new CurationBanner(bannerStatus, "banner.png"),
-            CurationDetail.from(detailStatus, blocks)
+            publicationStatus,
+            new CurationBanner(bannerVisible, bannerVisible ? "banner.png" : null),
+            CurationDetail.from(blocks)
         );
     }
 }

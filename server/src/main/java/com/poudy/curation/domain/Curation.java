@@ -8,6 +8,7 @@ public final class Curation {
     private final Long id;
     private final String title;
     private final String description;
+    private final CurationPublicationStatus publicationStatus;
     private final CurationBanner banner;
     private final CurationDetail detail;
 
@@ -15,6 +16,7 @@ public final class Curation {
         Long id,
         String title,
         String description,
+        CurationPublicationStatus publicationStatus,
         CurationBanner banner,
         CurationDetail detail
     ) {
@@ -23,15 +25,17 @@ public final class Curation {
         }
         String validatedTitle = requireNonBlank(title, "큐레이션 제목");
         String validatedDescription = requireNonBlank(description, "큐레이션 설명");
+        CurationPublicationStatus validatedPublicationStatus = Objects.requireNonNull(publicationStatus);
         CurationBanner validatedBanner = Objects.requireNonNull(banner);
         CurationDetail validatedDetail = Objects.requireNonNull(detail);
-        if (validatedBanner.isPublished() && !validatedDetail.isPublished()) {
-            throw new IllegalArgumentException("상세가 미게시된 큐레이션은 배너를 게시할 수 없습니다.");
+        if (validatedBanner.isVisible() && !validatedPublicationStatus.isPublished()) {
+            throw new IllegalArgumentException("미게시 큐레이션은 배너에 노출할 수 없습니다.");
         }
 
         this.id = id;
         this.title = validatedTitle;
         this.description = validatedDescription;
+        this.publicationStatus = validatedPublicationStatus;
         this.banner = validatedBanner;
         this.detail = validatedDetail;
     }
@@ -52,12 +56,12 @@ public final class Curation {
         return banner.thumbnailImageUrl();
     }
 
-    boolean isBannerPublished() {
-        return banner.isPublished();
+    boolean isBannerVisible() {
+        return publicationStatus.isPublished() && banner.isVisible();
     }
 
-    boolean isDetailPublished() {
-        return detail.isPublished();
+    boolean isPublished() {
+        return publicationStatus.isPublished();
     }
 
     List<CurationBlockContent> resolveBlocks(Products products) {

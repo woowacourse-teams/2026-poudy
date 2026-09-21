@@ -1152,7 +1152,7 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * 배너가 게시 중인 큐레이션을 지정된 순서로 조회한다.
+ * 게시 중이며 배너 노출이 활성화된 큐레이션을 지정된 순서로 조회한다.
  */
 export type get_FindCurations = {
       method: "GET",
@@ -1166,7 +1166,7 @@ export type get_FindCurations = {
 
     }
 /**
- * 요청한 ID의 큐레이션 상세를 조회한다. 상세가 게시되지 않은 큐레이션은 조회할 수 없다.
+ * 요청한 ID의 큐레이션 상세를 조회한다. 큐레이션이 게시되지 않은 경우 조회할 수 없다.
  */
 export type get_FindCuration = {
       method: "GET",

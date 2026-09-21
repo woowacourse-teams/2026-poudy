@@ -68,14 +68,12 @@ public class CurationRepository {
             number(node, "id", context),
             text(node, "title", context),
             text(node, "description", context),
+            publicationStatus(node, context),
             new CurationBanner(
-                publicationStatus(banner, context),
-                text(banner, "thumbnail_image_url", context)
+                booleanValue(banner, "visible", context),
+                nullableText(banner, "thumbnail_image_url", context)
             ),
-            CurationDetail.from(
-                publicationStatus(detail, context),
-                blocks
-            )
+            CurationDetail.from(blocks)
         );
     }
 
@@ -180,6 +178,15 @@ public class CurationRepository {
             return context.reportInputMismatch(Curation.class, "Long 정수가 필요합니다: %s", field);
         }
         return value.asLong();
+    }
+
+    private static boolean booleanValue(JsonNode node, String field, DeserializationContext context)
+        throws JacksonException {
+        JsonNode value = required(node, field, context);
+        if (!value.isBoolean()) {
+            return context.reportInputMismatch(Curation.class, "boolean 값이 필요합니다: %s", field);
+        }
+        return value.asBoolean();
     }
 
     private static String text(JsonNode node, String field, DeserializationContext context) throws JacksonException {

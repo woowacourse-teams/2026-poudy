@@ -1,22 +1,22 @@
 package com.poudy.curation.domain;
 
-import java.util.Objects;
-
 public final class CurationBanner {
-    private final CurationPublicationStatus publicationStatus;
+    private final boolean visible;
     private final String thumbnailImageUrl;
 
-    public CurationBanner(CurationPublicationStatus publicationStatus, String thumbnailImageUrl) {
-        CurationPublicationStatus validatedPublicationStatus = Objects.requireNonNull(publicationStatus);
-        if (thumbnailImageUrl == null || thumbnailImageUrl.isBlank()) {
-            throw new IllegalArgumentException("배너 썸네일 URL이 필요합니다.");
+    public CurationBanner(boolean visible, String thumbnailImageUrl) {
+        if (visible && thumbnailImageUrl == null) {
+            throw new IllegalArgumentException("노출할 배너의 썸네일 URL이 필요합니다.");
         }
-        this.publicationStatus = validatedPublicationStatus;
+        if (thumbnailImageUrl != null && thumbnailImageUrl.isBlank()) {
+            throw new IllegalArgumentException("배너 썸네일 URL은 비어 있을 수 없습니다.");
+        }
+        this.visible = visible;
         this.thumbnailImageUrl = thumbnailImageUrl;
     }
 
-    boolean isPublished() {
-        return publicationStatus.isPublished();
+    boolean isVisible() {
+        return visible;
     }
 
     String thumbnailImageUrl() {

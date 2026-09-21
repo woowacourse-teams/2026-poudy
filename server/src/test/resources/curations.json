@@ -4,12 +4,12 @@
       "id": 12,
       "title": "환절기 장벽 케어",
       "description": "환절기를 위한 제품 모음",
+      "status": "PUBLISHED",
       "banner": {
-        "status": "PUBLISHED",
+        "visible": true,
         "thumbnail_image_url": "https://cdn.example.com/curations/banner.png"
       },
       "detail": {
-        "status": "PUBLISHED",
         "blocks": [
           {
             "id": "00000000-0000-4000-8000-000000000001",
@@ -116,12 +116,12 @@
       "id": 4,
       "title": "모두 사라진 제품",
       "description": "환절기를 위한 제품 모음",
+      "status": "PUBLISHED",
       "banner": {
-        "status": "UNPUBLISHED",
-        "thumbnail_image_url": "https://cdn.example.com/curations/banner.png"
+        "visible": false,
+        "thumbnail_image_url": null
       },
       "detail": {
-        "status": "PUBLISHED",
         "blocks": [
           {
             "id": "00000000-0000-4000-8000-000000000007",
@@ -140,13 +140,13 @@
     {
       "id": 20,
       "title": "미게시 큐레이션",
-      "description": "배너와 상세가 모두 미게시된 큐레이션",
+      "description": "미게시 큐레이션",
+      "status": "UNPUBLISHED",
       "banner": {
-        "status": "UNPUBLISHED",
-        "thumbnail_image_url": "https://cdn.example.com/curations/unpublished-banner.png"
+        "visible": false,
+        "thumbnail_image_url": null
       },
       "detail": {
-        "status": "UNPUBLISHED",
         "blocks": []
       }
     }
