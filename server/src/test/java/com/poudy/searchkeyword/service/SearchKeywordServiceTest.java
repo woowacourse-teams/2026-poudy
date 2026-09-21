@@ -201,7 +201,7 @@ class SearchKeywordServiceTest {
     }
 
     @Test
-    void preservesPreviousCacheWhenRefreshFails() {
+    void preservesPreviousSnapshotWhenRefreshFails() {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(
             throwingClock,
@@ -229,7 +229,7 @@ class SearchKeywordServiceTest {
     }
 
     @Test
-    void refreshAfterRetentionExpiryPublishesEmptyCache() {
+    void refreshAfterRetentionExpiryPublishesEmptySnapshot() {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
         KeywordBuckets ranking = new KeywordBuckets(
             mutable,
@@ -391,10 +391,10 @@ class SearchKeywordServiceTest {
     ) {
         SearchKeywordDictionaryRepository repository = mock(SearchKeywordDictionaryRepository.class);
         when(repository.read()).thenReturn(dictionary);
-        SearchKeywordCache cache = new SearchKeywordCache(dictionary);
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionary);
         return new TestServices(
-            new SearchKeywordService(cache, buckets, CATALOG),
-            new SearchKeywordRankingService(repository, buckets, search, policy, fallback, cache, clock)
+            new SearchKeywordService(snapshot, buckets, CATALOG),
+            new SearchKeywordRankingService(repository, buckets, search, policy, fallback, snapshot, clock)
         );
     }
 

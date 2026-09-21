@@ -18,6 +18,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 
 public class SearchKeywordRankingService {
     private static final Logger log = LoggerFactory.getLogger(SearchKeywordRankingService.class);
@@ -26,8 +29,9 @@ public class SearchKeywordRankingService {
     private final KeywordSearch search;
     private final RankingPolicy policy;
     private final RankingFallback fallback;
-    private final SearchKeywordCache cache;
+    private final SearchKeywordSnapshot snapshot;
     private final Clock clock;
+    private boolean applicationReady;
 
     public SearchKeywordRankingService(
         SearchKeywordDictionaryRepository repository,
@@ -35,7 +39,7 @@ public class SearchKeywordRankingService {
         KeywordSearch search,
         RankingPolicy policy,
         RankingFallback fallback,
-        SearchKeywordCache cache,
+        SearchKeywordSnapshot snapshot,
         Clock clock
     ) {
         this.repository = repository;
@@ -43,8 +47,25 @@ public class SearchKeywordRankingService {
         this.search = search;
         this.policy = policy;
         this.fallback = fallback;
-        this.cache = cache;
+        this.snapshot = snapshot;
         this.clock = clock;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public synchronized void refreshAfterApplicationReady() {
+        if (applicationReady) {
+            return;
+        }
+        refreshRankings();
+        applicationReady = true;
+    }
+
+    @Scheduled(cron = "0 */10 * * * *")
+    public synchronized void refreshOnSchedule() {
+        if (!applicationReady) {
+            return;
+        }
+        refreshRankings();
     }
 
     public synchronized void refreshRankings() {
@@ -64,7 +85,7 @@ public class SearchKeywordRankingService {
                 .limit(policy.size()).toList();
             List<RankedKeyword> rankings = KeywordRanking.of(counted, compared, defaults, policy.size());
             KeywordCoverage coverage = view.coverage(dictionary);
-            cache.replace(dictionary, rankings, clock.instant());
+            snapshot.replace(dictionary, rankings, clock.instant());
             logCoverage(coverage);
         } catch (RuntimeException exception) {
             log.warn("event=search_keyword_rankings_refresh_failed", exception);

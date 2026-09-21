@@ -66,7 +66,4 @@ public final class BucketWindow {
         return !start.isBefore(retainedStart(latestStart)) && !start.isAfter(latestStart);
     }
 
-    public Instant nextStart(Instant instant) {
-        return startOf(instant).plusSeconds(bucketSeconds);
-    }
 }

@@ -38,13 +38,13 @@ class SearchKeywordRankingServiceTest {
     private final SearchKeywordDictionaryRepository repository = mock(SearchKeywordDictionaryRepository.class);
     private final KeywordBuckets buckets = mock(KeywordBuckets.class);
     private final SearchKeywordDictionary oldDictionary = dictionary(entry("old", "이전 이름", true, "이전 표현"));
-    private final SearchKeywordCache cache = new SearchKeywordCache(oldDictionary);
+    private final SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(oldDictionary);
 
     @Test
     @ExtendWith(OutputCaptureExtension.class)
     void refreshReinterpretsCountsAndUpdatesTheDictionaryUsedByTheExistingRecorder(CapturedOutput output) {
         SearchKeywordDictionary changed = dictionary(entry("new", "새 이름", true, "새 표현"));
-        SearchKeywordService recorder = new SearchKeywordService(cache, buckets, ignored -> true);
+        SearchKeywordService recorder = new SearchKeywordService(snapshot, buckets, ignored -> true);
         when(repository.read()).thenReturn(changed);
         when(buckets.view()).thenReturn(new KeywordBucketView(Map.of("새 표현", 5L)));
         when(buckets.comparisonView()).thenReturn(Optional.empty());
@@ -54,9 +54,9 @@ class SearchKeywordRankingServiceTest {
         recorder.record(new SearchKeyword("이전 표현"));
 
         assertThat(recorder.rankings()).extracting(RankedKeyword::keyword).containsExactly("새 이름");
-        assertThat(cache.recognizes("새 표현")).isTrue();
-        assertThat(cache.recognizes("이전 표현")).isFalse();
-        assertThat(cache.refreshedAt()).contains(NOW);
+        assertThat(snapshot.recognizes("새 표현")).isTrue();
+        assertThat(snapshot.recognizes("이전 표현")).isFalse();
+        assertThat(snapshot.refreshedAt()).contains(NOW);
         assertThat(output).contains("event=search_keyword_unresolved keyword=\"이전 표현\"")
             .doesNotContain("event=search_keyword_unresolved keyword=\"새 표현\"");
     }
@@ -65,7 +65,7 @@ class SearchKeywordRankingServiceTest {
     @ValueSource(strings = {"dictionary", "counts", "catalog"})
     void failedRefreshPreservesBothDictionaryAndRankingAndRecoversNextTime(String failure) {
         List<RankedKeyword> previous = List.of(new RankedKeyword(1, "이전 이름", RankingChange.unknown()));
-        cache.replace(oldDictionary, previous, NOW.minusSeconds(600));
+        snapshot.replace(oldDictionary, previous, NOW.minusSeconds(600));
         SearchKeywordDictionary changed = dictionary(entry("new", "새 이름", true, "새 표현"));
         when(repository.read()).thenReturn(changed);
         when(buckets.view()).thenReturn(new KeywordBucketView(Map.of("새 표현", 5L)));
@@ -88,16 +88,16 @@ class SearchKeywordRankingServiceTest {
 
         refresh.refreshRankings();
 
-        assertThat(cache.rankings()).isEqualTo(previous);
-        assertThat(cache.recognizes("이전 표현")).isTrue();
-        assertThat(cache.recognizes("새 표현")).isFalse();
-        assertThat(cache.refreshedAt()).contains(NOW.minusSeconds(600));
+        assertThat(snapshot.rankings()).isEqualTo(previous);
+        assertThat(snapshot.recognizes("이전 표현")).isTrue();
+        assertThat(snapshot.recognizes("새 표현")).isFalse();
+        assertThat(snapshot.refreshedAt()).contains(NOW.minusSeconds(600));
 
         refresh.refreshRankings();
 
-        assertThat(cache.rankings()).extracting(RankedKeyword::keyword).containsExactly("새 이름");
-        assertThat(cache.recognizes("새 표현")).isTrue();
-        assertThat(cache.refreshedAt()).contains(NOW);
+        assertThat(snapshot.rankings()).extracting(RankedKeyword::keyword).containsExactly("새 이름");
+        assertThat(snapshot.recognizes("새 표현")).isTrue();
+        assertThat(snapshot.refreshedAt()).contains(NOW);
     }
 
     @Test
@@ -118,9 +118,9 @@ class SearchKeywordRankingServiceTest {
             return !keyword.equals("토너");
         }, List.of("토너", "세럼", "미등록", "크림", "로션", "로션")).refreshRankings();
 
-        assertThat(cache.rankings()).extracting(RankedKeyword::keyword).containsExactly("크림", "로션");
+        assertThat(snapshot.rankings()).extracting(RankedKeyword::keyword).containsExactly("크림", "로션");
         assertThat(checked).containsExactly("토너", "크림", "로션");
-        assertThat(cache.recognizes("토너")).isTrue();
+        assertThat(snapshot.recognizes("토너")).isTrue();
     }
 
     @Test
@@ -132,16 +132,16 @@ class SearchKeywordRankingServiceTest {
         SearchKeywordRankingService refresh = refresher(keyword -> calls.incrementAndGet() > 1, List.of("토너"));
 
         refresh.refreshRankings();
-        assertThat(cache.rankings()).isEmpty();
+        assertThat(snapshot.rankings()).isEmpty();
         assertThat(calls).hasValue(1);
         refresh.refreshRankings();
-        assertThat(cache.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.moved(1, 1)));
+        assertThat(snapshot.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.moved(1, 1)));
         assertThat(calls).hasValue(2);
     }
 
     @Test
     void readersKeepThePreviousSnapshotUntilTheWholeRefreshCompletes() throws Exception {
-        cache.replace(
+        snapshot.replace(
             oldDictionary,
             List.of(new RankedKeyword(1, "이전 이름", RankingChange.unknown())),
             NOW.minusSeconds(600)
@@ -167,16 +167,16 @@ class SearchKeywordRankingServiceTest {
             var running = executor.submit(refresh::refreshRankings);
             try {
                 assertThat(checking.await(5, TimeUnit.SECONDS)).isTrue();
-                assertThat(cache.rankings()).extracting(RankedKeyword::keyword).containsExactly("이전 이름");
-                assertThat(cache.recognizes("이전 표현")).isTrue();
-                assertThat(cache.recognizes("새 표현")).isFalse();
+                assertThat(snapshot.rankings()).extracting(RankedKeyword::keyword).containsExactly("이전 이름");
+                assertThat(snapshot.recognizes("이전 표현")).isTrue();
+                assertThat(snapshot.recognizes("새 표현")).isFalse();
             } finally {
                 finish.countDown();
             }
             running.get(5, TimeUnit.SECONDS);
         }
-        assertThat(cache.rankings()).extracting(RankedKeyword::keyword).containsExactly("새 이름");
-        assertThat(cache.recognizes("새 표현")).isTrue();
+        assertThat(snapshot.rankings()).extracting(RankedKeyword::keyword).containsExactly("새 이름");
+        assertThat(snapshot.recognizes("새 표현")).isTrue();
     }
 
     private SearchKeywordRankingService refresher(KeywordSearch search, List<String> defaults) {
@@ -186,7 +186,7 @@ class SearchKeywordRankingServiceTest {
             search,
             new RankingPolicy(5, 10, Set.of()),
             RankingFallback.of(defaults),
-            cache,
+            snapshot,
             clock
         );
     }

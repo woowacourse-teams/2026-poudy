@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class SearchKeywordCache {
-    private final AtomicReference<Snapshot> current;
+public final class SearchKeywordSnapshot {
+    private final AtomicReference<State> current;
 
-    public SearchKeywordCache(SearchKeywordDictionary dictionary) {
-        current = new AtomicReference<>(new Snapshot(dictionary, List.of(), null));
+    public SearchKeywordSnapshot(SearchKeywordDictionary dictionary) {
+        current = new AtomicReference<>(new State(dictionary, List.of(), null));
     }
 
     public boolean recognizes(String keyword) {
@@ -27,9 +27,9 @@ public final class SearchKeywordCache {
     }
 
     public void replace(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
-        current.set(new Snapshot(dictionary, List.copyOf(rankings), refreshedAt));
+        current.set(new State(dictionary, List.copyOf(rankings), refreshedAt));
     }
 
-    private record Snapshot(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
+    private record State(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
     }
 }

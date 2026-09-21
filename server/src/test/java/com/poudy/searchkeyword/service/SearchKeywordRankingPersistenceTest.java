@@ -48,16 +48,16 @@ class SearchKeywordRankingPersistenceTest {
 
     @Test
     void databaseDictionaryChangesArePublishedWithoutRecreatingServices() {
-        SearchKeywordCache cache = new SearchKeywordCache(dictionaries.read());
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionaries.read());
         KeywordBuckets buckets = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0), repository);
-        SearchKeywordService reader = new SearchKeywordService(cache, buckets, products::hasSearchResults);
+        SearchKeywordService reader = new SearchKeywordService(snapshot, buckets, products::hasSearchResults);
         SearchKeywordRankingService refresh = new SearchKeywordRankingService(
             dictionaries,
             buckets,
             products::hasSearchResults,
             new RankingPolicy(5, 10, Set.of()),
             RankingFallback.of(List.of()),
-            cache,
+            snapshot,
             AFTER_BOUNDARY
         );
         jdbc.update(
@@ -73,14 +73,14 @@ class SearchKeywordRankingPersistenceTest {
         refresh.refreshRankings();
 
         assertThat(reader.rankings()).extracting(RankedKeyword::keyword).containsExactly("토너");
-        assertThat(cache.recognizes("신규표현")).isTrue();
+        assertThat(snapshot.recognizes("신규표현")).isTrue();
 
         jdbc.update("update search_keyword set status = 'INACTIVE' where id = 'refresh-test'");
         entityManager.clear();
         refresh.refreshRankings();
 
         assertThat(reader.rankings()).isEmpty();
-        assertThat(cache.recognizes("신규표현")).isFalse();
+        assertThat(snapshot.recognizes("신규표현")).isFalse();
     }
 
     @Test
@@ -106,16 +106,16 @@ class SearchKeywordRankingPersistenceTest {
         SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(List.of(entry));
         SearchKeywordDictionaryRepository dictionaries = mock(SearchKeywordDictionaryRepository.class);
         when(dictionaries.read()).thenReturn(dictionary);
-        SearchKeywordCache cache = new SearchKeywordCache(dictionary);
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionary);
         return new TestServices(
-            new SearchKeywordService(cache, buckets, ignored -> true),
+            new SearchKeywordService(snapshot, buckets, ignored -> true),
             new SearchKeywordRankingService(
                 dictionaries,
                 buckets,
                 ignored -> true,
                 new RankingPolicy(5, 10, Set.of()),
                 RankingFallback.of(List.of()),
-                cache,
+                snapshot,
                 AFTER_BOUNDARY
             )
         );

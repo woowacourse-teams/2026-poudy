@@ -10,16 +10,16 @@ import org.slf4j.LoggerFactory;
 public class SearchKeywordService {
 
     private static final Logger log = LoggerFactory.getLogger(SearchKeywordService.class);
-    private final SearchKeywordCache cache;
+    private final SearchKeywordSnapshot snapshot;
     private final KeywordBuckets successful;
     private final KeywordSearch search;
 
     public SearchKeywordService(
-        SearchKeywordCache cache,
+        SearchKeywordSnapshot snapshot,
         KeywordBuckets successful,
         KeywordSearch search
     ) {
-        this.cache = cache;
+        this.snapshot = snapshot;
         this.successful = successful;
         this.search = search;
     }
@@ -33,7 +33,7 @@ public class SearchKeywordService {
     }
 
     private void logWhenUnresolved(String normalizedQuery) {
-        if (cache.recognizes(normalizedQuery)) {
+        if (snapshot.recognizes(normalizedQuery)) {
             return;
         }
         log.info("event=search_keyword_unresolved keyword=\"{}\"", quoted(normalizedQuery));
@@ -44,7 +44,7 @@ public class SearchKeywordService {
     }
 
     public List<RankedKeyword> rankings() {
-        return cache.rankings();
+        return snapshot.rankings();
     }
 
 }
