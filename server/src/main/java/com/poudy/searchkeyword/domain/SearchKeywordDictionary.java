@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class SearchKeywordDictionary {
 
@@ -16,7 +15,6 @@ public final class SearchKeywordDictionary {
     private final int activeEntryCount;
     private final List<String> emptyActiveEntryIds;
     private final KeywordSearch search;
-    private final Map<String, Boolean> catalogEligibility = new ConcurrentHashMap<>();
 
     private SearchKeywordDictionary(
         Map<String, DictionaryEntry> expressions,
@@ -54,7 +52,7 @@ public final class SearchKeywordDictionary {
         if (!entry.isRankable()) {
             return false;
         }
-        return catalogEligibility.computeIfAbsent(entry.id(), ignored -> search.hasResults(entry.keyword()));
+        return search.hasResults(entry.keyword());
     }
 
     public boolean recognizes(String normalizedQuery) {

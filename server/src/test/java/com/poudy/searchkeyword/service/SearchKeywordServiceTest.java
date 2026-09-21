@@ -285,7 +285,7 @@ class SearchKeywordServiceTest {
         assertThat(service.rankings()).hasSize(10);
         assertThat(calls).hasValue(10);
         service.refreshRankings();
-        assertThat(calls).hasValue(10);
+        assertThat(calls).hasValue(20);
     }
 
     @Test

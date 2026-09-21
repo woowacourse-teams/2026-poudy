@@ -88,7 +88,7 @@ class SearchKeywordDictionaryTest {
     }
 
     @Test
-    void cachesTrueAndFalseResultsButRetriesAfterException() {
+    void checksCurrentCatalogAfterFailureAndAfterAnEmptyResult() {
         AtomicInteger calls = new AtomicInteger();
         SearchKeywordDictionary dictionary = dictionary(
             List.of(entry("term", "토너", Status.ACTIVE, true, "토너")),
@@ -96,15 +96,15 @@ class SearchKeywordDictionaryTest {
                 if (calls.incrementAndGet() == 1) {
                     throw new IllegalStateException("transient");
                 }
-                return false;
+                return calls.get() >= 3;
             }
         );
         assertThatThrownBy(() -> dictionary.canRank(dictionary.resolve("토너").orElseThrow()))
             .isInstanceOf(IllegalStateException.class);
         DictionaryEntry entry = dictionary.resolve("토너").orElseThrow();
         assertThat(dictionary.canRank(entry)).isFalse();
-        assertThat(dictionary.canRank(entry)).isFalse();
-        assertThat(calls).hasValue(2);
+        assertThat(dictionary.canRank(entry)).isTrue();
+        assertThat(calls).hasValue(3);
     }
 
     @Test
