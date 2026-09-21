@@ -20,11 +20,11 @@ public class CurationService {
     }
 
     public List<Curation> findCurations() {
-        return curationRepository.findAll().publishedBannersInOrder();
+        return curationRepository.findAll().visibleBannersInOrder();
     }
 
     public ResolvedCurationDetail findDetail(Long curationId) {
-        Curation curation = curationRepository.findAll().findPublishedDetailById(curationId)
+        Curation curation = curationRepository.findAll().findPublishedById(curationId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CURATION_NOT_FOUND));
         return ResolvedCurationDetail.from(curation, productRepository.findAll());
     }

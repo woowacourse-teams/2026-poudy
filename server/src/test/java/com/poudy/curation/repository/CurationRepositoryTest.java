@@ -21,22 +21,23 @@ class CurationRepositoryTest {
     @Test
     void loadsPublicContentInBannerOrderWithoutResolvingMissingProducts() throws IOException {
         CurationRepository repository = reading(fixture());
-        assertThat(repository.findAll().publishedBannersInOrder()).extracting(Curation::id).containsExactly(12L);
-        assertThat(repository.findAll().publishedBannersInOrder().getFirst().title())
+        assertThat(repository.findAll().visibleBannersInOrder()).extracting(Curation::id).containsExactly(12L);
+        assertThat(repository.findAll().visibleBannersInOrder().getFirst().title())
             .isEqualTo("환절기 장벽 케어");
-        assertThat(repository.findAll().findPublishedDetailById(4L)).isPresent();
-        assertThat(repository.findAll().findPublishedDetailById(20L)).isEmpty();
+        assertThat(repository.findAll().findPublishedById(4L)).isPresent();
+        assertThat(repository.findAll().findPublishedById(20L)).isEmpty();
     }
 
     @Test
     void permitsEmptyCatalog() {
-        assertThat(reading("{\"curations\":[]}").findAll().publishedBannersInOrder()).isEmpty();
+        assertThat(reading("{\"curations\":[]}").findAll().visibleBannersInOrder()).isEmpty();
     }
 
     @ParameterizedTest
     @CsvSource({
             "thumbnail_image_url,thumbnail_image_typo",
             "PUBLISHED,UNKNOWN",
+            "true,1",
             "IMAGE,UNKNOWN",
             "00000000-0000-4000-8000-000000000012,invalid-uuid",
             "spacing_top,spacing_typo"
@@ -47,10 +48,17 @@ class CurationRepositoryTest {
     }
 
     @Test
-    void rejectsPublishedBannerWithoutPublishedDetail() throws IOException {
+    void rejectsVisibleBannerForUnpublishedCuration() throws IOException {
+        String invalid = fixture().replaceFirst("\"status\": \"PUBLISHED\"", "\"status\": \"UNPUBLISHED\"");
+
+        assertThatThrownBy(() -> reading(invalid)).isInstanceOf(InfrastructureException.class);
+    }
+
+    @Test
+    void rejectsVisibleBannerWithoutThumbnail() throws IOException {
         String invalid = fixture().replaceFirst(
-            "\"detail\": \\{\\R        \"status\": \"PUBLISHED\"",
-            "\"detail\": {\n        \"status\": \"UNPUBLISHED\""
+            "\"thumbnail_image_url\": \"https://cdn.example.com/curations/banner.png\"",
+            "\"thumbnail_image_url\": null"
         );
 
         assertThatThrownBy(() -> reading(invalid)).isInstanceOf(InfrastructureException.class);

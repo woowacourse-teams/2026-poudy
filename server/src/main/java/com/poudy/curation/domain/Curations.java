@@ -23,11 +23,11 @@ public final class Curations {
         return new Curations(Collections.unmodifiableMap(indexed));
     }
 
-    public List<Curation> publishedBannersInOrder() {
-        return curations.values().stream().filter(Curation::isBannerPublished).toList();
+    public List<Curation> visibleBannersInOrder() {
+        return curations.values().stream().filter(Curation::isBannerVisible).toList();
     }
 
-    public Optional<Curation> findPublishedDetailById(Long id) {
-        return Optional.ofNullable(curations.get(id)).filter(Curation::isDetailPublished);
+    public Optional<Curation> findPublishedById(Long id) {
+        return Optional.ofNullable(curations.get(id)).filter(Curation::isPublished);
     }
 }
