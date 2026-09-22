@@ -25,6 +25,9 @@ spring:
     password: ${POUDY_DB_PASSWORD:}
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000
     hibernate:
       ddl-auto: validate
 
@@ -63,7 +66,7 @@ poudy:
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:
-    s3:
+    image-s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
       region: ${AWS_REGION:ap-northeast-2}
     discord:
@@ -76,10 +79,10 @@ poudy:
       window: PT1H
     image-processing:
       max-concurrency: 1
-    image-reconciliation:
+    image-transfer:
       enabled: false
-      relay-interval: PT5M
-      relay-initial-delay: PT1M
+      interval: PT5M
+      initial-delay: PT1M
     retention:
       enabled: false
       max-age: P83D

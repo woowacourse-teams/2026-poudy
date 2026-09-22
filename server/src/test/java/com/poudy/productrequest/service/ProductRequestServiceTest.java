@@ -3,6 +3,7 @@ package com.poudy.productrequest.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
@@ -12,10 +13,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
-import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
 import com.poudy.productrequest.ratelimit.ProductRequestRateLimiter;
 import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
@@ -32,10 +33,18 @@ import org.mockito.InOrder;
 class ProductRequestServiceTest {
 
     private final ProductRequestRepository repository = mock(ProductRequestRepository.class);
-    private final DiscordProductRequestNotifier notifier = mock(DiscordProductRequestNotifier.class);
+    private static final String WEBHOOK_URL = "https://discord.example/webhook/secret";
+
+    private final DiscordWebhook webhook = mock(DiscordWebhook.class);
     private final ProductRequestRateLimiter rateLimiter = mock(ProductRequestRateLimiter.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-08-23T12:34:56Z"), ZoneOffset.UTC);
-    private final ProductRequestService service = new ProductRequestService(repository, notifier, rateLimiter, clock);
+    private final ProductRequestService service = new ProductRequestService(
+        repository,
+        webhook,
+        WEBHOOK_URL,
+        rateLimiter,
+        clock
+    );
 
     @Test
     @DisplayName("요청 제한 확인 후 저장하고 Discord에 알린다")
@@ -43,13 +52,21 @@ class ProductRequestServiceTest {
         service.submit("제품", "브랜드", "client-a");
 
         ArgumentCaptor<ProductRequest> stored = ArgumentCaptor.forClass(ProductRequest.class);
-        InOrder order = inOrder(rateLimiter, repository, notifier);
+        InOrder order = inOrder(rateLimiter, repository, webhook);
         order.verify(rateLimiter).requireAllowed("client-a");
         order.verify(repository).save(stored.capture());
-        order.verify(notifier).notify(stored.getValue());
+        order.verify(webhook).send(WEBHOOK_URL, "신규 제품 등록 요청\n제품명: 제품\n브랜드명: 브랜드");
         assertThat(stored.getValue().productName()).isEqualTo("제품");
         assertThat(stored.getValue().brandName()).isEqualTo("브랜드");
         assertThat(stored.getValue().requestedAt()).isEqualTo("2026-08-23T12:34:56Z");
+    }
+
+    @Test
+    @DisplayName("브랜드명을 생략한 요청은 제품명만 알린다")
+    void notifiesWithoutBrand() {
+        service.submit("제품", null, "client-a");
+
+        verify(webhook).send(WEBHOOK_URL, "신규 제품 등록 요청\n제품명: 제품");
     }
 
     @Test
@@ -71,7 +88,7 @@ class ProductRequestServiceTest {
 
         assertThatThrownBy(() -> service.submit("제품", null, "client-a"))
             .isInstanceOf(InfrastructureException.class);
-        verify(notifier, never()).notify(org.mockito.ArgumentMatchers.any());
+        verify(webhook, never()).send(anyString(), anyString());
     }
 
     @Test
@@ -79,20 +96,20 @@ class ProductRequestServiceTest {
     void acceptsWithoutRetryWhenOnlyNotificationFails() {
         willDoNothing().given(repository).save(org.mockito.ArgumentMatchers.any());
         willThrow(new InfrastructureException("notification failed"))
-            .given(notifier)
-            .notify(org.mockito.ArgumentMatchers.any());
+            .given(webhook)
+            .send(anyString(), anyString());
 
         assertThatNoException().isThrownBy(() -> service.submit("제품", null, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());
-        verify(notifier, times(1)).notify(org.mockito.ArgumentMatchers.any());
+        verify(webhook, times(1)).send(anyString(), anyString());
     }
 
     @Test
     @DisplayName("S3 저장 후 예기치 않은 Discord 오류도 접수 성공을 바꾸지 않는다")
     void acceptsWhenNotificationThrowsUnexpectedFailure() {
         willThrow(new IllegalArgumentException("webhook-secret"))
-            .given(notifier)
-            .notify(org.mockito.ArgumentMatchers.any());
+            .given(webhook)
+            .send(anyString(), anyString());
 
         assertThatNoException().isThrownBy(() -> service.submit("제품", null, "client-a"));
         verify(repository).save(org.mockito.ArgumentMatchers.any());

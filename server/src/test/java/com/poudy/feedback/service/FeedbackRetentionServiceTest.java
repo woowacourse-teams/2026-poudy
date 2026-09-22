@@ -82,9 +82,10 @@ class FeedbackRetentionServiceTest {
     }
 
     private static Feedback feedbackAt(OffsetDateTime receivedAt) {
-        return new Feedback(
+        return new ServiceFeedback(
             UUID.randomUUID(),
-            new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)),
+            FeedbackType.OTHER,
+            FeedbackPath.from(null),
             new FeedbackContent("충분히 긴 의견 내용입니다."),
             receivedAt,
             List.of(new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG))

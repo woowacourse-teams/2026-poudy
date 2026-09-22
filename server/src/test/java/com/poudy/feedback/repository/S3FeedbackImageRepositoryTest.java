@@ -14,6 +14,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.PendingImage;
 import com.poudy.feedback.domain.image.ProcessedImage;
 import java.time.Instant;
 import java.util.List;
@@ -42,8 +43,7 @@ class S3FeedbackImageRepositoryTest {
     private static final Instant NOW = Instant.parse("2026-08-24T00:00:00Z");
 
     private final S3Client s3Client = mock(S3Client.class);
-    private final S3FeedbackObjectStore objectStore = new S3FeedbackObjectStore(s3Client, BUCKET);
-    private final S3FeedbackImageRepository repository = new S3FeedbackImageRepository(objectStore);
+    private final S3FeedbackImageRepository repository = new S3FeedbackImageRepository(s3Client, BUCKET);
 
     @Test
     @DisplayName("재인코딩 바이트를 추측하기 어려운 pending 키에 비공개 암호화해 저장한다")
@@ -98,7 +98,7 @@ class S3FeedbackImageRepositoryTest {
         )
             .willReturn(HeadObjectResponse.builder().eTag("etag").lastModified(NOW.minusSeconds(60)).build());
 
-        List<S3FeedbackImageRepository.PendingImage> resolved = repository.resolve(List.of(imageId), NOW);
+        List<PendingImage> resolved = repository.resolve(List.of(imageId), NOW);
 
         assertThat(resolved).singleElement().satisfies(image -> {
             assertThat(image.image().id()).isEqualTo(imageId);
@@ -129,7 +129,7 @@ class S3FeedbackImageRepositoryTest {
             .willReturn(
                 HeadObjectResponse.builder()
                     .eTag("etag")
-                    .lastModified(NOW.minus(S3FeedbackImageRepository.PENDING_TTL))
+                    .lastModified(NOW.minus(PendingImage.TTL))
                     .build()
             );
 
@@ -244,16 +244,16 @@ class S3FeedbackImageRepositoryTest {
     @DisplayName("만료 뒤 유예 시간이 지난 pending 만 정리 대상이다")
     void allowsCleanupOnlyAfterGracePeriod() {
         FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG);
-        S3FeedbackImageRepository.PendingImage pending = new S3FeedbackImageRepository.PendingImage(image, "etag", NOW);
-        Instant expiredAt = NOW.plus(S3FeedbackImageRepository.PENDING_TTL);
+        PendingImage pending = new PendingImage(image, "etag", NOW);
+        Instant expiredAt = NOW.plus(PendingImage.TTL);
 
         assertThat(pending.isExpired(expiredAt)).isTrue();
         assertThat(pending.canBeCleanedUp(expiredAt)).isFalse();
-        assertThat(pending.canBeCleanedUp(expiredAt.plus(S3FeedbackImageRepository.CLEANUP_GRACE_PERIOD))).isTrue();
+        assertThat(pending.canBeCleanedUp(expiredAt.plus(PendingImage.CLEANUP_GRACE_PERIOD))).isTrue();
     }
 
     @Test
-    @DisplayName("보유기간이 끝나면 최종 이미지와 기존 의견 문서를 함께 삭제한다")
+    @DisplayName("보유기간이 끝나면 최종 이미지를 삭제한다")
     void deletesRetainedFeedbackData() {
         UUID feedbackId = UUID.randomUUID();
         FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
@@ -261,11 +261,8 @@ class S3FeedbackImageRepositoryTest {
         repository.deleteRetainedData(feedbackId, List.of(image));
 
         ArgumentCaptor<DeleteObjectRequest> requests = ArgumentCaptor.forClass(DeleteObjectRequest.class);
-        verify(s3Client, times(3)).deleteObject(requests.capture());
-        assertThat(requests.getAllValues()).extracting(DeleteObjectRequest::key).containsExactly(
-            "poudy/feedback/" + feedbackId + "/images/" + image.id() + ".png",
-            "poudy/feedback/" + feedbackId + "/feedback.json",
-            "poudy/feedback/" + feedbackId + "/management.json"
-        );
+        verify(s3Client).deleteObject(requests.capture());
+        assertThat(requests.getValue().key())
+            .isEqualTo("poudy/feedback/" + feedbackId + "/images/" + image.id() + ".png");
     }
 }

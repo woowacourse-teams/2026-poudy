@@ -1,7 +1,6 @@
 package com.poudy.searchkeyword.domain.bucket;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -41,12 +40,8 @@ public final class KeywordBuckets {
         return Optional.of(new KeywordBucketView(store.sumBetween(window.oldestStart(comparedStart), comparedStart)));
     }
 
-    public Instant currentBucketStart() {
+    private Instant currentBucketStart() {
         return window.startOf(clock.instant());
-    }
-
-    public Duration untilBucketAfter(Instant bucketStart) {
-        return Duration.between(clock.instant(), window.nextStart(bucketStart));
     }
 
     private Instant observedFrom() {

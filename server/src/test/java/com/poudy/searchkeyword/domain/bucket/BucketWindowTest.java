@@ -32,12 +32,6 @@ class BucketWindowTest {
     }
 
     @Test
-    void countsDownToTheNextStart() {
-        assertThat(window.nextStart(LATEST)).isEqualTo(LATEST.plusSeconds(600));
-        assertThat(window.nextStart(LATEST.plusSeconds(599))).isEqualTo(LATEST.plusSeconds(600));
-    }
-
-    @Test
     void rejectsEmptyWindowsAndBucketsThatDoNotDivideAnHour() {
         assertThatThrownBy(() -> new BucketWindow(0, 600, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new BucketWindow(1, 7, 0)).isInstanceOf(IllegalArgumentException.class);

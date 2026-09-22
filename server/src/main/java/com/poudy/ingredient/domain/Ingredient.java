@@ -6,24 +6,84 @@ import com.poudy.search.domain.SearchableText;
 import com.poudy.search.domain.TextMatch;
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
+import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class Ingredient {
+@Entity
+@Table(name = "ingredient")
+public class Ingredient {
 
-    private final Long id;
-    private final String koreanName;
-    private final String englishName;
-    private final String description;
-    private final List<String> infoSources;
-    private final List<IngredientTag> tags;
-    private final OffsetDateTime updatedAt;
-    private final List<SearchableText> searchableKoreanNames;
-    private final List<SearchableText> searchableEnglishNames;
-    private final List<SearchableText> searchableAliases;
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+
+    @Id
+    private Long id;
+
+    @Column(name = "korean_name")
+    private String koreanName;
+
+    @Column(name = "english_name")
+    private String englishName;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @ElementCollection
+    @CollectionTable(name = "ingredient_alias", joinColumns = @JoinColumn(name = "ingredient_id"))
+    @OrderBy("id")
+    private List<Alias> aliases;
+
+    @ElementCollection
+    @CollectionTable(name = "ingredient_source", joinColumns = @JoinColumn(name = "ingredient_id"))
+    @OrderBy("id")
+    private List<Source> sources;
+
+    @ManyToMany
+    @JoinTable(name = "ingredient_tag", joinColumns = @JoinColumn(name = "ingredient_id"), inverseJoinColumns = @JoinColumn(name = "tag_code"))
+    @OrderColumn(name = "display_order")
+    private List<Tag> tagReferences;
+
+    @Transient
+    private List<String> infoSources;
+
+    @Transient
+    private List<IngredientTag> tags;
+
+    @Transient
+    private List<SearchableText> searchableKoreanNames;
+
+    @Transient
+    private List<SearchableText> searchableEnglishNames;
+
+    @Transient
+    private List<SearchableText> searchableAliases;
+
+    protected Ingredient() {
+    }
 
     public Ingredient(
         Long id,
@@ -37,17 +97,44 @@ public final class Ingredient {
     ) {
         this.id = id;
         this.koreanName = koreanName;
-        this.englishName = Objects.requireNonNullElse(englishName, "");
+        this.englishName = englishName;
         this.description = description;
-        this.infoSources = List.copyOf(Objects.requireNonNullElse(infoSources, List.<String>of()));
-        List<String> copiedAliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
-        this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
-        this.updatedAt = updatedAt;
-        this.searchableKoreanNames = SearchableText.formsOf(koreanName);
-        this.searchableEnglishNames = SearchableText.formsOf(this.englishName);
-        this.searchableAliases = copiedAliases.stream()
-            .flatMap(alias -> SearchableText.formsOf(alias).stream())
+        this.updatedAt = local(updatedAt);
+        this.aliases = Objects.requireNonNullElse(aliases, List.<String>of()).stream()
+            .map(alias -> new Alias(null, alias))
             .toList();
+        this.sources = Objects.requireNonNullElse(infoSources, List.<String>of()).stream()
+            .map(content -> new Source(null, SourceType.INFO, content))
+            .toList();
+        this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
+        index();
+    }
+
+    @PostLoad
+    private void load() {
+        List<String> effectSources = contentsOf(SourceType.EFFECT);
+        this.tags = tagReferences.stream().map(tag -> new IngredientTag(tag, effectSources)).toList();
+        index();
+    }
+
+    private void index() {
+        this.infoSources = contentsOf(SourceType.INFO);
+        this.searchableKoreanNames = SearchableText.formsOf(koreanName);
+        this.searchableEnglishNames = SearchableText.formsOf(englishName());
+        this.searchableAliases = aliases.stream()
+            .flatMap(alias -> SearchableText.formsOf(alias.alias()).stream())
+            .toList();
+    }
+
+    private List<String> contentsOf(SourceType type) {
+        return sources.stream().filter(source -> source.type() == type).map(Source::content).toList();
+    }
+
+    private static LocalDateTime local(OffsetDateTime value) {
+        if (value == null) {
+            return null;
+        }
+        return value.atZoneSameInstant(SEOUL).toLocalDateTime();
     }
 
     public Long id() {
@@ -59,7 +146,7 @@ public final class Ingredient {
     }
 
     public String englishName() {
-        return englishName;
+        return Objects.requireNonNullElse(englishName, "");
     }
 
     public String description() {
@@ -67,7 +154,10 @@ public final class Ingredient {
     }
 
     public OffsetDateTime updatedAt() {
-        return updatedAt;
+        if (updatedAt == null) {
+            return null;
+        }
+        return updatedAt.atZone(SEOUL).toOffsetDateTime();
     }
 
     public boolean hasKoreanName(String candidate) {
@@ -79,7 +169,7 @@ public final class Ingredient {
     }
 
     public boolean hasEnglishName(String candidate) {
-        return candidate.equalsIgnoreCase(englishName);
+        return candidate.equalsIgnoreCase(englishName());
     }
 
     public List<FormulationRole> formulationRoles() {
@@ -152,5 +242,21 @@ public final class Ingredient {
             return false;
         }
         return current.isEmpty() || candidate.get().rank().isBetterThan(current.get().rank());
+    }
+
+    private enum SourceType {
+        INFO,
+        EFFECT
+    }
+
+    @Embeddable
+    private record Alias(@Column(name = "id") Long id, @Column(name = "alias") String alias) {
+    }
+
+    @Embeddable
+    private record Source(
+        @Column(name = "id") Long id,
+        @Enumerated(EnumType.STRING) @Column(name = "type") SourceType type,
+        @Column(name = "content") String content) {
     }
 }

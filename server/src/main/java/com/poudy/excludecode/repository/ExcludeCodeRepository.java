@@ -7,46 +7,58 @@ import static java.util.stream.Collectors.toList;
 import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.excludecode.domain.ExcludeCodeIngredients;
-import com.poudy.excludecode.domain.ExcludeCodeMapping;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
 import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.repository.IngredientRepository;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class ExcludeCodeRepository {
 
+    private static final String MAPPINGS_QUERY = "select exclude_code, ingredient_id from exclude_code_ingredient"
+        + " order by exclude_code, display_order";
+
     private final ExcludeCodeIngredients excludeCodeIngredients;
 
     public ExcludeCodeRepository(
-        ExcludeCodeJpaRepository excludeCodeJpaRepository,
+        JdbcTemplate jdbcTemplate,
         IngredientRepository ingredientRepository,
         SnapshotReader snapshotReader
     ) {
-        Map<ExcludeCode, List<Long>> ingredientIds = snapshotReader.read(excludeCodeJpaRepository::findAllMappings)
+        Map<ExcludeCode, List<Long>> ingredientIds = snapshotReader.read(() -> findAllMappings(jdbcTemplate))
             .stream()
-            .map(ExcludeCodeIngredientEntity::id)
             .collect(
                 groupingBy(
-                    ExcludeCodeIngredientId::excludeCode,
+                    MappingRow::excludeCode,
                     () -> new EnumMap<>(ExcludeCode.class),
-                    mapping(ExcludeCodeIngredientId::ingredientId, toList())
+                    mapping(MappingRow::ingredientId, toList())
                 )
             );
-        List<ExcludeCodeMapping> mappings = ingredientIds.entrySet().stream()
-            .map(entry -> new ExcludeCodeMapping(entry.getKey(), entry.getValue()))
-            .toList();
         try {
-            this.excludeCodeIngredients = ExcludeCodeIngredients.from(mappings, ingredientRepository.findAll());
+            this.excludeCodeIngredients = ExcludeCodeIngredients.from(ingredientIds, ingredientRepository.findAll());
         } catch (InvalidExcludeCodeDefinitionException exception) {
             throw new InfrastructureException(exception.getMessage(), exception);
         }
     }
 
+    private static List<MappingRow> findAllMappings(JdbcTemplate jdbcTemplate) {
+        return jdbcTemplate.query(
+            MAPPINGS_QUERY,
+            (row, rowNumber) -> new MappingRow(
+                ExcludeCode.valueOf(row.getString("exclude_code")),
+                row.getLong("ingredient_id")
+            )
+        );
+    }
+
     public ExcludeCodeIngredients findAll() {
         return excludeCodeIngredients;
+    }
+
+    private record MappingRow(ExcludeCode excludeCode, Long ingredientId) {
     }
 }

@@ -16,9 +16,6 @@ public class ProductVariant {
     @Id
     private Long id;
 
-    @Column(name = "product_id")
-    private Long productId;
-
     @Column(name = "display_order")
     private Integer displayOrder;
 
@@ -69,10 +66,6 @@ public class ProductVariant {
 
     public Long id() {
         return id;
-    }
-
-    public Long productId() {
-        return productId;
     }
 
     public Long price() {

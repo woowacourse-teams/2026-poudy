@@ -40,7 +40,12 @@ public class IngredientController {
     ) {
         return ResponseEntity.ok(
             IngredientPageResponse.from(
-                ingredientService.find(query.toQuery(), pagination.page(), pagination.size()),
+                ingredientService.find(
+                    query.ingredientIds(),
+                    query.usedInProducts(),
+                    pagination.page(),
+                    pagination.size()
+                ),
                 pagination
             )
         );

@@ -12,6 +12,8 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.PendingImage;
+import com.poudy.product.repository.ProductRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.time.Clock;
@@ -22,10 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Stream;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -36,30 +37,31 @@ public class FeedbackRepository {
     private static final String IMAGE_LOCK = "select count(*) from (select pg_advisory_xact_lock(hashtextextended(:imageId, 0))) as image_lock";
     private static final String LISTED = "(select id, created_at, status, subject_type from feedback"
         + " union all select id, created_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
+    private static final List<Class<? extends Feedback>> TYPES = List.of(
+        ServiceFeedback.class,
+        ProductCorrection.class
+    );
+    private static final String IMAGE_OWNERS = "select image_id, feedback_id from feedback_image where image_id in (:imageIds)"
+        + " union all select image_id, request_id from product_correction_request_image where image_id in (:imageIds)";
 
-    private final FeedbackJpaRepository feedbackJpaRepository;
-    private final ProductCorrectionRequestJpaRepository correctionJpaRepository;
     private final S3FeedbackImageRepository imageRepository;
     private final EntityManager entityManager;
     private final TransactionTemplate transactionTemplate;
+    private final ProductRepository productRepository;
     private final Clock clock;
-    private final ZoneId zone;
 
     public FeedbackRepository(
-        FeedbackJpaRepository feedbackJpaRepository,
-        ProductCorrectionRequestJpaRepository correctionJpaRepository,
         S3FeedbackImageRepository imageRepository,
         EntityManager entityManager,
         PlatformTransactionManager transactionManager,
-        @Qualifier("feedbackClock") Clock clock
+        ProductRepository productRepository,
+        Clock clock
     ) {
-        this.feedbackJpaRepository = feedbackJpaRepository;
-        this.correctionJpaRepository = correctionJpaRepository;
         this.imageRepository = imageRepository;
         this.entityManager = entityManager;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.productRepository = productRepository;
         this.clock = clock;
-        this.zone = clock.getZone();
     }
 
     public void save(Feedback feedback) {
@@ -75,9 +77,9 @@ public class FeedbackRepository {
         }
 
         requireUnusedImages(imageIds);
-        List<S3FeedbackImageRepository.PendingImage> pending = imageRepository.resolve(imageIds, clock.instant());
+        List<PendingImage> pending = imageRepository.resolve(imageIds, clock.instant());
         Feedback attached = feedback
-            .attachImages(pending.stream().map(S3FeedbackImageRepository.PendingImage::image).toList());
+            .attachImages(pending.stream().map(PendingImage::image).toList());
         SaveStatus status = insert(attached);
         if (status == SaveStatus.FAILURE) {
             requireUnusedImages(imageIds);
@@ -93,11 +95,12 @@ public class FeedbackRepository {
         if (imageIds.isEmpty()) {
             return Map.of();
         }
-        return Stream.concat(
-            feedbackJpaRepository.findImageOwners(imageIds).stream(),
-            correctionJpaRepository.findImageOwners(imageIds).stream()
-        )
-            .collect(toMap(ImageOwner::imageId, ImageOwner::feedbackId, (first, ignored) -> first));
+        List<?> owners = entityManager.createNativeQuery(IMAGE_OWNERS)
+            .setParameter("imageIds", imageIds)
+            .getResultList();
+        return owners.stream()
+            .map(Object[].class::cast)
+            .collect(toMap(owner -> (UUID) owner[0], owner -> (UUID) owner[1], (first, ignored) -> first));
     }
 
     private void requireUnusedImages(List<UUID> imageIds) {
@@ -107,13 +110,22 @@ public class FeedbackRepository {
     }
 
     public boolean exists(UUID feedbackId) {
-        return feedbackJpaRepository.existsById(feedbackId) || correctionJpaRepository.existsById(feedbackId);
+        return TYPES.stream().anyMatch(type -> existsIn(type, feedbackId));
+    }
+
+    private boolean existsIn(Class<? extends Feedback> type, UUID feedbackId) {
+        return entityManager.createQuery(
+            "select count(feedback) from " + type.getSimpleName() + " feedback where feedback.id = :id",
+            Long.class
+        )
+            .setParameter("id", feedbackId)
+            .getSingleResult() > 0;
     }
 
     public Feedback findById(UUID feedbackId) {
-        return feedbackJpaRepository.findWithImagesById(feedbackId)
+        return findAllStored(List.of(feedbackId)).stream()
+            .findFirst()
             .map(this::toDomain)
-            .or(() -> correctionJpaRepository.findWithImagesById(feedbackId).map(this::toDomain))
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
     }
 
@@ -135,12 +147,7 @@ public class FeedbackRepository {
         if (ids.isEmpty()) {
             return List.of();
         }
-        Map<UUID, Feedback> feedbacks = Stream.concat(
-            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain),
-            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain)
-        )
-            .collect(toMap(Feedback::id, Function.identity()));
-        return ids.stream().map(feedbacks::get).toList();
+        return inOrder(ids);
     }
 
     public List<Feedback> findExpired(OffsetDateTime cutoff, int size) {
@@ -157,19 +164,43 @@ public class FeedbackRepository {
         if (ids.isEmpty()) {
             return List.of();
         }
-        Map<UUID, Feedback> feedbacks = Stream.concat(
-            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain),
-            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain)
-        ).collect(toMap(Feedback::id, Function.identity()));
+        return inOrder(ids);
+    }
+
+    private List<Feedback> inOrder(List<UUID> ids) {
+        Map<UUID, Feedback> feedbacks = findAllStored(ids).stream()
+            .map(this::toDomain)
+            .collect(toMap(Feedback::id, Function.identity()));
         return ids.stream().map(feedbacks::get).toList();
     }
 
+    private List<Feedback> findAllStored(Collection<UUID> ids) {
+        return TYPES.stream()
+            .flatMap(
+                type -> entityManager.createQuery(
+                    "select distinct feedback from " + type.getSimpleName()
+                        + " feedback left join fetch feedback.imageIdRows where feedback.id in :ids",
+                    type
+                )
+                    .setParameter("ids", ids)
+                    .getResultList()
+                    .stream()
+            )
+            .map(Feedback.class::cast)
+            .toList();
+    }
+
     public boolean deleteExpired(Feedback feedback, OffsetDateTime cutoff) {
-        int deleted = switch (feedback.subject()) {
-            case ServiceFeedback ignored -> feedbackJpaRepository.deleteExpired(feedback.id(), local(cutoff));
-            case ProductCorrection ignored -> correctionJpaRepository.deleteExpired(feedback.id(), local(cutoff));
-        };
-        return deleted == 1;
+        Integer deleted = transactionTemplate.execute(
+            status -> entityManager.createQuery(
+                "delete from " + entityNameOf(feedback)
+                    + " feedback where feedback.id = :id and feedback.createdAt <= :cutoff"
+            )
+                .setParameter("id", feedback.id())
+                .setParameter("cutoff", local(cutoff))
+                .executeUpdate()
+        );
+        return Objects.requireNonNullElse(deleted, 0) == 1;
     }
 
     private static String conditionOf(FeedbackStatus status, FeedbackSubjectType type) {
@@ -204,20 +235,23 @@ public class FeedbackRepository {
     }
 
     private int updatedRows(FeedbackStatus expected, Feedback feedback) {
-        return switch (feedback.subject()) {
-            case ServiceFeedback ignored -> feedbackJpaRepository.updateStatus(
-                feedback.id(),
-                expected,
-                feedback.status(),
-                local(feedback.statusChangedAt())
-            );
-            case ProductCorrection ignored -> correctionJpaRepository.updateStatus(
-                feedback.id(),
-                expected,
-                feedback.status(),
-                local(feedback.statusChangedAt())
-            );
-        };
+        Integer updated = transactionTemplate.execute(
+            status -> entityManager.createQuery(
+                "update " + entityNameOf(feedback) + " feedback set feedback.status = :status,"
+                    + " feedback.statusChangedAtValue = :statusChangedAt"
+                    + " where feedback.id = :id and feedback.status = :expected"
+            )
+                .setParameter("status", feedback.status())
+                .setParameter("statusChangedAt", local(feedback.statusChangedAt()))
+                .setParameter("id", feedback.id())
+                .setParameter("expected", expected)
+                .executeUpdate()
+        );
+        return Objects.requireNonNullElse(updated, 0);
+    }
+
+    private static String entityNameOf(Feedback feedback) {
+        return feedback.getClass().getSimpleName();
     }
 
     private SaveStatus insert(Feedback feedback) {
@@ -236,7 +270,7 @@ public class FeedbackRepository {
             List<UUID> imageIds = feedback.images().stream().map(FeedbackImage::id).toList();
             lockImages(imageIds);
             requireUnusedImages(imageIds);
-            entityManager.persist(entityOf(feedback));
+            entityManager.persist(feedback);
         });
     }
 
@@ -251,19 +285,11 @@ public class FeedbackRepository {
             );
     }
 
-    private static Object entityOf(Feedback feedback) {
-        return switch (feedback.subject()) {
-            case ServiceFeedback service -> FeedbackEntity.from(feedback, service);
-            case ProductCorrection correction -> ProductCorrectionRequestEntity.from(feedback, correction);
-        };
-    }
-
-    private Feedback toDomain(FeedbackEntity entity) {
-        return entity.toDomain(zone, imageRepository.findStored(entity.id(), entity.imageIds()));
-    }
-
-    private Feedback toDomain(ProductCorrectionRequestEntity entity) {
-        return entity.toDomain(zone, imageRepository.findStored(entity.id(), entity.imageIds()));
+    private Feedback toDomain(Feedback stored) {
+        return stored.resolve(
+            imageRepository.findStored(stored.id(), stored.storedImageIds()),
+            productRepository.findAll()
+        );
     }
 
     private static LocalDateTime local(OffsetDateTime value) {

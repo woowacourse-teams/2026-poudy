@@ -1,23 +1,16 @@
 package com.poudy.feedback.controller;
 
 import com.poudy.common.dto.PaginationRequest;
-import com.poudy.common.dto.PaginationResponse;
-import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.controller.dto.AdminFeedbackPageResponse;
+import com.poudy.feedback.controller.dto.AdminFeedbackResponse;
+import com.poudy.feedback.controller.dto.AdminFeedbackStatusUpdateRequest;
 import com.poudy.feedback.domain.FeedbackStatus;
-import com.poudy.feedback.domain.FeedbackSubject;
 import com.poudy.feedback.domain.FeedbackSubjectType;
-import com.poudy.feedback.domain.ProductCorrection;
-import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.service.FeedbackService;
-import com.poudy.feedback.service.FeedbackService.FeedbackPage;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,77 +66,5 @@ public class AdminFeedbackController {
         return ResponseEntity.ok(
             AdminFeedbackResponse.from(feedbackService.changeStatus(feedbackId, request.status()))
         );
-    }
-
-    public record AdminFeedbackStatusUpdateRequest(
-        @NotNull(message = "INVALID_REQUEST_BODY") @Schema(example = "IN_PROGRESS") FeedbackStatus status) {
-    }
-
-    public record AdminFeedbackPageResponse(
-        @NotNull List<AdminFeedbackResponse> items,
-        @NotNull PaginationResponse pagination) {
-
-        static AdminFeedbackPageResponse from(FeedbackPage page, PaginationRequest pagination) {
-            return new AdminFeedbackPageResponse(
-                page.items().stream().map(AdminFeedbackResponse::from).toList(),
-                PaginationResponse.of(pagination, page.totalElements())
-            );
-        }
-    }
-
-    public record AdminFeedbackResponse(
-        @NotNull UUID feedbackId,
-        @NotNull FeedbackSubjectType type,
-        @NotNull String content,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String path,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Long productId,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String productName,
-        @NotNull OffsetDateTime receivedAt,
-        @NotNull FeedbackStatus status,
-        @NotNull OffsetDateTime statusChangedAt,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) OffsetDateTime completedAt,
-        @NotNull List<AdminFeedbackImageResponse> images) {
-
-        static AdminFeedbackResponse from(Feedback feedback) {
-            AdminFeedbackSubjectResponse subject = AdminFeedbackSubjectResponse.from(feedback.subject());
-            return new AdminFeedbackResponse(
-                feedback.id(),
-                feedback.type(),
-                feedback.content().value(),
-                subject.path(),
-                subject.productId(),
-                subject.productName(),
-                feedback.receivedAt(),
-                feedback.status(),
-                feedback.statusChangedAt(),
-                feedback.completedAt(),
-                feedback.images().stream().map(AdminFeedbackImageResponse::from).toList()
-            );
-        }
-    }
-
-    private record AdminFeedbackSubjectResponse(String path, Long productId, String productName) {
-
-        private static AdminFeedbackSubjectResponse from(FeedbackSubject subject) {
-            return switch (subject) {
-                case ServiceFeedback service -> new AdminFeedbackSubjectResponse(
-                    service.path().value().orElse(null),
-                    null,
-                    null
-                );
-                case ProductCorrection correction -> new AdminFeedbackSubjectResponse(
-                    null,
-                    correction.productId(),
-                    correction.productName()
-                );
-            };
-        }
-    }
-
-    public record AdminFeedbackImageResponse(@NotNull UUID imageId, @NotNull String extension) {
-
-        static AdminFeedbackImageResponse from(com.poudy.feedback.domain.image.FeedbackImage image) {
-            return new AdminFeedbackImageResponse(image.id(), image.format().extension());
-        }
     }
 }

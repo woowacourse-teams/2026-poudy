@@ -4,7 +4,6 @@ import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
-import com.poudy.product.domain.IngredientFilter;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
@@ -13,8 +12,6 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestionPage;
 import com.poudy.product.domain.Products;
-import com.poudy.product.domain.sensory.MoistureLevel;
-import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import java.util.function.Supplier;
@@ -50,7 +47,7 @@ public class ProductService {
         int page,
         int size
     ) {
-        ProductFilter filter = filterOf(query);
+        ProductFilter filter = query.toFilter(excludeCodeRepository.findAll());
         Products products = products();
 
         if (!query.hasKeyword() || page > 1) {
@@ -98,7 +95,7 @@ public class ProductService {
     }
 
     public long countProducts(ProductQuery query) {
-        return products().count(filterOf(query));
+        return products().count(query.toFilter(excludeCodeRepository.findAll()));
     }
 
     public ProductSuggestionPage suggestProducts(String keyword, int page, int size) {
@@ -114,24 +111,6 @@ public class ProductService {
 
     private Products products() {
         return productRepository.findAll();
-    }
-
-    private ProductFilter filterOf(ProductQuery query) {
-        IngredientFilter ingredientFilter = IngredientFilter.of(
-            query.includeIngredientIds(),
-            query.excludeIngredientIds(),
-            excludeCodeRepository.findAll().idsOf(query.excludeCodes())
-        );
-
-        return new ProductFilter(
-            query.searchKeyword(),
-            query.categoryIds(),
-            query.brandIds(),
-            query.moistureLevels().stream().map(MoistureLevel::new).toList(),
-            query.oilLevels().stream().map(OilLevel::new).toList(),
-            ingredientFilter,
-            query.skinType()
-        );
     }
 
 }

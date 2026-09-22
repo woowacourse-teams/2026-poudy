@@ -14,6 +14,7 @@ import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.domain.image.ProcessedImage;
 import com.poudy.feedback.image.FeedbackImageProcessor;
+import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import java.util.List;
 import java.util.UUID;
@@ -32,11 +33,11 @@ class FeedbackImageUploadServiceTest {
 
     private final FeedbackImageProcessor processor = mock(FeedbackImageProcessor.class);
     private final S3FeedbackImageRepository repository = mock(S3FeedbackImageRepository.class);
-    private final FeedbackImageUploadRateLimiter rateLimiter = mock(FeedbackImageUploadRateLimiter.class);
+    private final FeedbackRateLimits rateLimits = mock(FeedbackRateLimits.class);
     private final FeedbackImageUploadService service = new FeedbackImageUploadService(
         processor,
         repository,
-        rateLimiter,
+        rateLimits,
         1
     );
 
@@ -57,8 +58,8 @@ class FeedbackImageUploadServiceTest {
         List<UUID> result = service.upload(List.of(first, second), "client-a");
 
         assertThat(result).containsExactly(firstStored.id(), secondStored.id());
-        InOrder order = inOrder(rateLimiter, processor, repository);
-        order.verify(rateLimiter).requireAllowed("client-a");
+        InOrder order = inOrder(rateLimits, processor, repository);
+        order.verify(rateLimits).requireImageUploadAllowed("client-a");
         order.verify(processor).process(first);
         order.verify(repository).savePending(firstProcessed);
         order.verify(processor).process(second);
@@ -110,8 +111,8 @@ class FeedbackImageUploadServiceTest {
             releaseProcessing.countDown();
             assertThat(active.get()).containsExactly(stored.id());
         }
-        verify(rateLimiter, times(1)).requireAllowed("client-a");
-        verify(rateLimiter, times(1)).requireAllowed("client-b");
+        verify(rateLimits, times(1)).requireImageUploadAllowed("client-a");
+        verify(rateLimits, times(1)).requireImageUploadAllowed("client-b");
     }
 
     @Test

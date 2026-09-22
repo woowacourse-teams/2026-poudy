@@ -1,6 +1,9 @@
 package com.poudy.product.domain;
 
+import com.poudy.excludecode.domain.ExcludeCodeIngredients;
 import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import java.util.List;
@@ -47,6 +50,24 @@ public record ProductQuery(
             || !includeIngredientIds.isEmpty()
             || !excludeIngredientIds.isEmpty()
             || !excludeCodes.isEmpty();
+    }
+
+    public ProductFilter toFilter(ExcludeCodeIngredients excludeCodeIngredients) {
+        IngredientFilter ingredientFilter = IngredientFilter.of(
+            includeIngredientIds,
+            excludeIngredientIds,
+            excludeCodeIngredients.idsOf(excludeCodes)
+        );
+
+        return new ProductFilter(
+            searchKeyword(),
+            categoryIds,
+            brandIds,
+            moistureLevels.stream().map(MoistureLevel::new).toList(),
+            oilLevels.stream().map(OilLevel::new).toList(),
+            ingredientFilter,
+            skinType
+        );
     }
 
     private static <T> List<T> copyOf(List<T> values) {

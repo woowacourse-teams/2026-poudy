@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.domain.ProductRequestPage;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.service.ProductRequestService;
-import com.poudy.productrequest.service.ProductRequestService.ProductRequestPage;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;

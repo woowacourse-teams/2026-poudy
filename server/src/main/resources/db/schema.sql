@@ -543,6 +543,56 @@ CREATE TABLE product_request (
     CONSTRAINT ck_product_request_status CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'))
 );
 
+-- 서버는 표시 순서를 목록 위치(JPA @OrderColumn)로 읽는다. 순서가 비면 목록에 빈 칸이 생기므로 부모마다 0부터 끊김 없이 이어지는지 커밋 시점에 검사한다.
+-- 인자: 부모 키 컬럼(쉼표로 구분), 순서 컬럼. 순서 중복은 각 테이블의 UNIQUE 제약이 막는다.
+CREATE FUNCTION require_contiguous_order() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_parent_columns TEXT[] := string_to_array(TG_ARGV[0], ',');
+    v_order_column   TEXT := TG_ARGV[1];
+    v_rows           JSONB[];
+    v_row            JSONB;
+    v_condition      TEXT;
+    v_count          BIGINT;
+    v_min            INT;
+    v_max            INT;
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        v_rows := ARRAY[to_jsonb(NEW)];
+    ELSIF TG_OP = 'DELETE' THEN
+        v_rows := ARRAY[to_jsonb(OLD)];
+    ELSE
+        v_rows := ARRAY[to_jsonb(OLD), to_jsonb(NEW)];
+    END IF;
+    FOREACH v_row IN ARRAY v_rows LOOP
+        SELECT string_agg(format('%I = %L', parent_column, v_row ->> parent_column), ' AND ')
+        INTO v_condition
+        FROM unnest(v_parent_columns) AS parent_column;
+        EXECUTE format('SELECT count(*), min(%1$I), max(%1$I) FROM %2$I.%3$I WHERE %4$s',
+                       v_order_column, TG_TABLE_SCHEMA, TG_TABLE_NAME, v_condition)
+        INTO v_count, v_min, v_max;
+        IF v_count > 0 AND (v_min <> 0 OR v_max <> v_count - 1) THEN
+            RAISE EXCEPTION '% 의 % 는 0부터 끊김 없이 이어져야 한다. 대상: %', TG_TABLE_NAME, v_order_column, v_condition
+                USING ERRCODE = '23514';
+        END IF;
+    END LOOP;
+    RETURN NULL;
+END $$;
+
+CREATE CONSTRAINT TRIGGER tg_ingredient_tag_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON ingredient_tag
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('ingredient_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_product_ingredient_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON product_ingredient
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('component_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_curation_block_filter_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_product
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_filter_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_product_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id,product_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_feedback_image_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON feedback_image
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('feedback_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_product_correction_request_image_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON product_correction_request_image
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('request_id', 'display_order');
+
 CREATE INDEX ix_product_daily_view_product ON product_daily_view (product_id, view_date);
 -- 긴 본문은 btree 한 행 한계(약 2.7KB)를 넘을 수 있어 해시로 중복을 막는다.
 CREATE UNIQUE INDEX ux_ingredient_source_content ON ingredient_source (ingredient_id, type, md5(content));

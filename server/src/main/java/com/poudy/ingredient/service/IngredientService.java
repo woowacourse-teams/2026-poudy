@@ -41,12 +41,12 @@ public class IngredientService {
         );
     }
 
-    public IngredientPage find(IngredientQuery query, int page, int size) {
+    public IngredientPage find(List<Long> ingredientIds, boolean usedInProducts, int page, int size) {
         IngredientCatalog ingredients = ingredientRepository.findAll();
-        if (query.hasIngredientIds()) {
-            ingredients = ingredients.findAllById(query.ingredientIds());
+        if (!ingredientIds.isEmpty()) {
+            ingredients = ingredients.findAllById(ingredientIds);
         }
-        if (query.usedInProducts()) {
+        if (usedInProducts) {
             ingredients = ingredients.retainIds(ingredientUsage.usedIngredientIds());
         }
         return ingredients.page(page, size);

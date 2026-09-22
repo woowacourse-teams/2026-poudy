@@ -6,10 +6,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationBanner;
 import com.poudy.curation.domain.CurationBlock;
 import com.poudy.curation.domain.CurationBlockContent;
-import com.poudy.curation.domain.CurationDetail;
 import com.poudy.curation.domain.CurationPublicationStatus;
 import com.poudy.curation.domain.Curations;
 import com.poudy.curation.domain.ResolvedCurationDetail;
@@ -119,8 +117,9 @@ class CurationServiceTest {
             title,
             "설명",
             publicationStatus,
-            new CurationBanner(bannerVisible, bannerVisible ? "banner.png" : null),
-            CurationDetail.from(blocks)
+            bannerVisible,
+            bannerVisible ? "banner.png" : null,
+            blocks
         );
     }
 }

@@ -7,7 +7,9 @@ import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -22,10 +24,10 @@ class ExcludeCodeIngredientsTest {
         return IngredientCatalog.from(values);
     }
 
-    private static List<ExcludeCodeMapping> everyCodeWith(List<Long> ingredientIds) {
-        return Arrays.stream(ExcludeCode.values())
-            .map(code -> new ExcludeCodeMapping(code, ingredientIds))
-            .toList();
+    private static Map<ExcludeCode, List<Long>> everyCodeWith(List<Long> ingredientIds) {
+        Map<ExcludeCode, List<Long>> ingredientIdsByCode = new EnumMap<>(ExcludeCode.class);
+        Arrays.stream(ExcludeCode.values()).forEach(code -> ingredientIdsByCode.put(code, ingredientIds));
+        return ingredientIdsByCode;
     }
 
     @Test
@@ -43,9 +45,8 @@ class ExcludeCodeIngredientsTest {
     @Test
     @DisplayName("성분군 정의가 빠지면 만들 수 없다")
     void rejectsUndefinedCode() {
-        List<ExcludeCodeMapping> withoutSulfates = everyCodeWith(List.of(10L)).stream()
-            .filter(mapping -> mapping.code() != ExcludeCode.SULFATES)
-            .toList();
+        Map<ExcludeCode, List<Long>> withoutSulfates = everyCodeWith(List.of(10L));
+        withoutSulfates.remove(ExcludeCode.SULFATES);
 
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(withoutSulfates, ingredientsOf(10L)))
             .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
@@ -53,34 +54,14 @@ class ExcludeCodeIngredientsTest {
     }
 
     @Test
-    @DisplayName("성분군 정의가 중복되면 만들 수 없다")
-    void rejectsDuplicatedCode() {
-        List<ExcludeCodeMapping> duplicated = new java.util.ArrayList<>(everyCodeWith(List.of(10L)));
-        duplicated.add(new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of(10L)));
-
-        assertThatThrownBy(() -> ExcludeCodeIngredients.from(duplicated, ingredientsOf(10L)))
-            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
-            .hasMessageContaining(ExcludeCode.SULFATES.name());
-    }
-
-    @Test
     @DisplayName("성분이 하나도 없는 성분군이 있으면 만들 수 없다")
     void rejectsEmptyCode() {
-        List<ExcludeCodeMapping> withEmptySulfates = everyCodeWith(List.of(10L)).stream()
-            .map(ExcludeCodeIngredientsTest::emptiedWhenSulfates)
-            .toList();
+        Map<ExcludeCode, List<Long>> withEmptySulfates = everyCodeWith(List.of(10L));
+        withEmptySulfates.put(ExcludeCode.SULFATES, List.of());
 
         assertThatThrownBy(() -> ExcludeCodeIngredients.from(withEmptySulfates, ingredientsOf(10L)))
             .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
             .hasMessageContaining(ExcludeCode.SULFATES.name());
-    }
-
-    private static ExcludeCodeMapping emptiedWhenSulfates(ExcludeCodeMapping mapping) {
-        if (mapping.code() == ExcludeCode.SULFATES) {
-            return new ExcludeCodeMapping(ExcludeCode.SULFATES, List.of());
-        }
-
-        return mapping;
     }
 
     @Test

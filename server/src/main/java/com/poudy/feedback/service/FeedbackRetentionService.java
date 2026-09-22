@@ -9,7 +9,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,7 +30,7 @@ public class FeedbackRetentionService {
     public FeedbackRetentionService(
         FeedbackRepository feedbackRepository,
         S3FeedbackImageRepository imageRepository,
-        @Qualifier("feedbackClock") Clock clock,
+        Clock clock,
         @Value("${poudy.feedback.retention.max-age:P83D}") Duration maxAge,
         @Value("${poudy.feedback.retention.batch-size:500}") int batchSize,
         @Value("${poudy.feedback.retention.max-batches:20}") int maxBatches

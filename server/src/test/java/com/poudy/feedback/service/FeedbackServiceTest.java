@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -15,11 +16,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
+import com.poudy.feedback.domain.FeedbackPage;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackType;
@@ -27,7 +30,7 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.notification.FeedbackNotifier;
+import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
@@ -51,34 +54,42 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @DisplayName("의견 서비스")
 class FeedbackServiceTest {
 
+    private static final String WEBHOOK_URL = "https://discord.example/webhook/secret";
     private static final Clock CLOCK = Clock.fixed(
         Instant.parse("2026-08-23T07:20:30Z"),
         ZoneId.of("Asia/Seoul")
     );
 
     private final FeedbackRepository feedbackRepository = mock(FeedbackRepository.class);
-    private final FeedbackNotifier feedbackNotifier = mock(FeedbackNotifier.class);
-    private final FeedbackRateLimiter rateLimiter = mock(FeedbackRateLimiter.class);
+    private final DiscordWebhook webhook = mock(DiscordWebhook.class);
+    private final FeedbackRateLimits rateLimits = mock(FeedbackRateLimits.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final Products products = mock(Products.class);
-    private final FeedbackImageRelay imageRelay = mock(FeedbackImageRelay.class);
+    private final FeedbackImageTransferService imageTransferService = mock(FeedbackImageTransferService.class);
     private final FeedbackService feedbackService = new FeedbackService(
         feedbackRepository,
-        feedbackNotifier,
-        rateLimiter,
+        webhook,
+        WEBHOOK_URL,
+        rateLimits,
         productRepository,
-        imageRelay,
+        imageTransferService,
         CLOCK
     );
 
     @Test
     @DisplayName("의견 목록은 전체 건수와 요청한 페이지만 저장소에서 읽는다")
     void readsRequestedPageFromRepository() {
-        Feedback feedback = Feedback.register(new ProductCorrection(1L, "블랙 스네일 토너"), "제품 정보가 실제 패키지와 달라요.", CLOCK);
+        Feedback feedback = new ProductCorrection(
+            UUID.randomUUID(),
+            1L,
+            "블랙 스네일 토너",
+            new FeedbackContent("제품 정보가 실제 패키지와 달라요."),
+            OffsetDateTime.now(CLOCK)
+        );
         given(feedbackRepository.count(FeedbackStatus.RECEIVED, null)).willReturn(21L);
         given(feedbackRepository.findPage(FeedbackStatus.RECEIVED, null, 20L, 20)).willReturn(List.of(feedback));
 
-        FeedbackService.FeedbackPage page = feedbackService.findAll(FeedbackStatus.RECEIVED, null, 2, 20);
+        FeedbackPage page = feedbackService.findAll(FeedbackStatus.RECEIVED, null, 2, 20);
 
         assertThat(page.items()).containsExactly(feedback);
         assertThat(page.totalElements()).isEqualTo(21L);
@@ -89,7 +100,7 @@ class FeedbackServiceTest {
     void skipsReadingPageBeyondTotal() {
         given(feedbackRepository.count(null, null)).willReturn(3L);
 
-        FeedbackService.FeedbackPage page = feedbackService.findAll(null, null, 2, 20);
+        FeedbackPage page = feedbackService.findAll(null, null, 2, 20);
 
         assertThat(page.items()).isEmpty();
         assertThat(page.totalElements()).isEqualTo(3L);
@@ -107,12 +118,15 @@ class FeedbackServiceTest {
         );
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
-        InOrder order = inOrder(rateLimiter, feedbackRepository, feedbackNotifier);
-        order.verify(rateLimiter).requireAllowed("client-a");
+        InOrder order = inOrder(rateLimits, feedbackRepository, webhook);
+        order.verify(rateLimits).requireSubmitAllowed("client-a");
         order.verify(feedbackRepository).save(feedbackCaptor.capture());
-        order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
-        assertThat(feedbackCaptor.getValue().subject())
-            .isEqualTo(new ServiceFeedback(FeedbackType.BUG_REPORT, FeedbackPath.from("/products?include=123")));
+        order.verify(webhook)
+            .send(eq(WEBHOOK_URL), argThat(message -> message.contains(feedbackCaptor.getValue().id().toString())));
+        assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ServiceFeedback.class, service -> {
+            assertThat(service.feedbackType()).isEqualTo(FeedbackType.BUG_REPORT);
+            assertThat(service.path()).isEqualTo(FeedbackPath.from("/products?include=123"));
+        });
         assertThat(feedbackCaptor.getValue().receivedAt())
             .isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
     }
@@ -124,8 +138,10 @@ class FeedbackServiceTest {
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture());
-        assertThat(feedbackCaptor.getValue().subject())
-            .isEqualTo(new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)));
+        assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ServiceFeedback.class, service -> {
+            assertThat(service.feedbackType()).isEqualTo(FeedbackType.OTHER);
+            assertThat(service.path()).isEqualTo(FeedbackPath.from(null));
+        });
     }
 
     @Test
@@ -142,7 +158,7 @@ class FeedbackServiceTest {
             )
         )
             .isInstanceOf(InfrastructureException.class);
-        verify(feedbackNotifier, never()).notify(any());
+        verify(webhook, never()).send(anyString(), anyString());
     }
 
     @Test
@@ -150,8 +166,8 @@ class FeedbackServiceTest {
     void keepsSubmissionSuccessfulWhenNotificationFails(CapturedOutput output) {
         String content = "로그에 남으면 안 되는 사용자 의견 원문입니다.";
         willThrow(new RuntimeException("webhook secret"))
-            .given(feedbackNotifier)
-            .notify(any());
+            .given(webhook)
+            .send(anyString(), anyString());
 
         assertThatCode(() -> feedbackService.submit(FeedbackType.OTHER, content, "/", "client-a"))
             .doesNotThrowAnyException();
@@ -181,9 +197,9 @@ class FeedbackServiceTest {
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)));
         Feedback attached = feedbackCaptor.getValue().attachImages(List.of(image));
-        InOrder order = inOrder(imageRelay, feedbackNotifier);
-        order.verify(imageRelay).relay(attached);
-        order.verify(feedbackNotifier).notify(attached);
+        InOrder order = inOrder(imageTransferService, webhook);
+        order.verify(imageTransferService).transfer(attached);
+        order.verify(webhook).send(eq(WEBHOOK_URL), argThat(message -> message.contains("첨부 이미지: 1장")));
     }
 
     @Test
@@ -198,11 +214,52 @@ class FeedbackServiceTest {
         feedbackService.submitProductCorrection(1L, "전성분 표기가 실제 패키지와 달라요.", List.of(), "client-a");
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
-        InOrder order = inOrder(rateLimiter, feedbackRepository, feedbackNotifier);
-        order.verify(rateLimiter).requireAllowed("client-a");
+        InOrder order = inOrder(rateLimits, feedbackRepository, webhook);
+        order.verify(rateLimits).requireSubmitAllowed("client-a");
         order.verify(feedbackRepository).save(feedbackCaptor.capture());
-        order.verify(feedbackNotifier).notify(feedbackCaptor.getValue());
-        assertThat(feedbackCaptor.getValue().subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
+        order.verify(webhook)
+            .send(eq(WEBHOOK_URL), argThat(message -> message.contains(feedbackCaptor.getValue().id().toString())));
+        assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ProductCorrection.class, correction -> {
+            assertThat(correction.productId()).isEqualTo(1L);
+            assertThat(correction.productName()).isEqualTo("블랙 스네일 토너");
+        });
+        verify(webhook).send(
+            eq(WEBHOOK_URL),
+            argThat(message -> message.contains("유형: 제품 정보 정정") && message.contains("제품: 블랙 스네일 토너 (ID 1)"))
+        );
+    }
+
+    @Test
+    @DisplayName("알림은 유형·화면·한국 시각 접수 시각을 담는다")
+    void notifiesTypePathAndKoreanReceivedAt() {
+        feedbackService.submit(FeedbackType.BUG_REPORT, "검색 버튼을 눌러도 반응이 없어요.", null, "client-a");
+
+        String message = sentMessage();
+        assertThat(message).contains("유형: 기능이 제대로 작동하지 않아요", "화면: 알 수 없음", "접수 시각: 2026-08-23 16:20");
+    }
+
+    @Test
+    @DisplayName("알림은 첨부 개수를 알리고 Discord 길이를 넘지 않게 본문을 자른다")
+    void limitsNotificationToDiscordLength() {
+        UUID imageId = UUID.randomUUID();
+        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId))))
+            .willAnswer(
+                invocation -> ((Feedback) invocation.getArgument(0)).attachImages(
+                    List.of(new FeedbackImage(imageId, FeedbackImageFormat.JPEG))
+                )
+            );
+
+        feedbackService.submit(FeedbackType.OTHER, "@everyone " + "가".repeat(1990), "/", List.of(imageId), "client-a");
+
+        String message = sentMessage();
+        assertThat(message).contains("첨부 이미지: 1장", "@everyone");
+        assertThat(message.codePointCount(0, message.length())).isLessThanOrEqualTo(2000);
+    }
+
+    private String sentMessage() {
+        ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+        verify(webhook).send(eq(WEBHOOK_URL), message.capture());
+        return message.getValue();
     }
 
     @Test
@@ -222,7 +279,7 @@ class FeedbackServiceTest {
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting("code")
             .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
-        verify(rateLimiter, never()).requireAllowed(anyString());
+        verify(rateLimits, never()).requireSubmitAllowed(anyString());
         verify(feedbackRepository, never()).save(any());
     }
 
@@ -255,9 +312,10 @@ class FeedbackServiceTest {
     }
 
     private static Feedback feedback(UUID feedbackId) {
-        return new Feedback(
+        return new ServiceFeedback(
             feedbackId,
-            new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from("/")),
+            FeedbackType.OTHER,
+            FeedbackPath.from("/"),
             new FeedbackContent("충분히 긴 기타 의견입니다."),
             OffsetDateTime.parse("2026-08-23T15:00:00+09:00")
         );

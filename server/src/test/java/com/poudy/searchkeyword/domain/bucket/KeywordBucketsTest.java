@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.searchkeyword.support.InMemoryKeywordCountStore;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -133,18 +132,6 @@ class KeywordBucketsTest {
         assertThat(buckets.view().counts()).containsEntry("토너", 1L);
         durationClock.set(Instant.parse("2026-09-06T11:00:00Z").plusSeconds(seconds));
         assertThat(buckets.view().counts()).isEmpty();
-    }
-
-    @Test
-    void measuresTheWaitToTheBoundaryOfAGivenBucket() {
-        KeywordBuckets buckets = buckets(new BucketWindow(168, 600, 0));
-        Instant current = buckets.currentBucketStart();
-
-        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofMinutes(10));
-        clock.set(START.plusSeconds(299));
-        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofSeconds(301));
-        clock.set(START.plusSeconds(601));
-        assertThat(buckets.untilBucketAfter(current)).isEqualTo(Duration.ofSeconds(-1));
     }
 
     @Test
