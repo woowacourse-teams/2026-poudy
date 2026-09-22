@@ -138,6 +138,57 @@ describe("PopularKeywords", () => {
     expect(screen.queryByText(ONLY_WHEN_EXPANDED)).not.toBeInTheDocument();
   });
 
+  /*
+   * 제품명 검색 화면은 인기 검색어를 보러 들어오는 자리라 처음부터 펼쳐 둔다.
+   * 홈은 지나가는 길이라 접은 채로 시작한다.
+   */
+  it("펼친 채로 시작하라고 하면 손을 대지 않아도 전체 순위가 보인다", () => {
+    render(<PopularKeywords items={items} defaultExpanded />);
+
+    expect(screen.getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "인기 검색어 접기" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  /* 펼쳐 두고 시작해도 접을 수 있다. 접으면 한 줄만 도는 평소 모습으로 돌아간다. */
+  it("펼친 채로 시작해도 접을 수 있다", async () => {
+    render(<PopularKeywords items={items} defaultExpanded />);
+
+    await userEvent.click(screen.getByRole("button", { name: "인기 검색어 접기" }));
+
+    expect(screen.queryByText(ONLY_WHEN_EXPANDED)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "인기 검색어 전체 보기" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  /* 펼쳐 두면 전체가 이미 보인다. 그 위에서 한 줄만 따로 도는 것은 볼 데를 흩는다. */
+  it("펼친 채로 시작하면 순위가 넘어가지 않는다", () => {
+    vi.useFakeTimers();
+    render(<PopularKeywords items={items} defaultExpanded />);
+
+    act(() => vi.advanceTimersByTime(9000));
+
+    expect(screen.getByText(`전체 순위 ${items.length}개`)).toBeInTheDocument();
+  });
+
+  /*
+   * 자리를 차지하는 목록은 손이 떠나도 남는다. 커서가 지나갈 때마다 닫히면 처음부터
+   * 펼쳐 둔 뜻이 사라지고, 아래 최근 검색이 밀렸다 돌아오기를 되풀이한다.
+   */
+  it("자리를 차지하는 목록은 손을 떼도 닫히지 않는다", () => {
+    const { container } = render(<PopularKeywords items={items} defaultExpanded flowWhenExpanded />);
+    const section = container.querySelector("section")!;
+
+    fireEvent.mouseLeave(section);
+
+    expect(screen.getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
+  });
+
+  /* 띄워 둔 목록만 아래를 덮으므로, 자리를 차지할 때는 떠 있는 표시를 걷는다. */
+  it("자리를 차지하는 목록은 띄우지 않는다", () => {
+    render(<PopularKeywords items={items} defaultExpanded flowWhenExpanded />);
+
+    expect(screen.getByRole("list")).not.toHaveClass("absolute");
+  });
+
   it("순위가 비면 아무것도 그리지 않는다", () => {
     const { container } = render(<PopularKeywords items={[]} />);
 
