@@ -2,7 +2,7 @@
 
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
-import { type ReactNode, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { IngredientSearchPanel } from "./IngredientSearchPanel";
 
@@ -18,8 +18,6 @@ import { addRecentFilter } from "@/lib/storage/recent-filters";
 
 type IngredientSearchScreenProps = {
   readonly excludeCodes: readonly ExcludeCodeResponse[];
-  /** 조건과 무관하게 본문 아래에 이어 두는 것. 서버가 그려 넘긴다. */
-  readonly children?: ReactNode;
 };
 
 const NO_NAMES: ReadonlyMap<number, string> = new Map();
@@ -33,19 +31,18 @@ const ignore = () => {};
  * 비워 두면 크롤러와 스크립트가 늦은 사람에게는 `불러오는 중…` 만 남는다. 조건이 없는
  * 주소라면 스크립트가 붙어도 모양이 바뀌지 않는다.
  */
-export function IngredientSearchScreenFallback({ excludeCodes, children }: IngredientSearchScreenProps) {
+export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearchScreenProps) {
   return (
     <main className="flex flex-1 flex-col">
       <div className="flex-1">
         <IngredientSearchPanel filter={EMPTY_FILTER} onChange={ignore} excludeCodes={excludeCodes} names={NO_NAMES} />
-        {children}
       </div>
     </main>
   );
 }
 
 /** S03 성분 필터링. 조건은 이 화면의 URL 에 담는다. */
-export function IngredientSearchScreen({ excludeCodes, children }: IngredientSearchScreenProps) {
+export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenProps) {
   const { filter, setCondition } = useFilterQuery("/search/ingredients");
 
   // 조건에는 ID 만 남으므로 이름은 서버에서 가져온다. 링크로 들어와도 이름이 보인다.
@@ -103,7 +100,6 @@ export function IngredientSearchScreen({ excludeCodes, children }: IngredientSea
     <main className="flex flex-1 flex-col">
       <div className="flex-1">
         <IngredientSearchPanel filter={filter} onChange={setCondition} excludeCodes={excludeCodes} names={names} />
-        {children}
       </div>
 
       {/* 하단 내비게이션 높이만큼 띄운다. 0 으로 두면 네비가 이 블록을 가린다. */}
