@@ -42,6 +42,44 @@ describe("trackGoogleAnalytics", () => {
     });
   });
 
+  it("검색 시작에 탐색 경로를 함께 전송한다", async () => {
+    const { trackGoogleAnalytics } = await load();
+
+    trackGoogleAnalytics("search_started", {
+      mode: "product",
+      discovery_id: "journey-1",
+      discovery_method: "search",
+      origin_surface: "search",
+    });
+
+    expect(sendGAEvent).toHaveBeenCalledWith("event", "search_started", {
+      discovery_id: "journey-1",
+      discovery_method: "search",
+      origin_surface: "search",
+      search_mode: "product",
+    });
+  });
+
+  it("카테고리 선택을 경로 시작 이벤트로 전송한다", async () => {
+    const { trackGoogleAnalytics } = await load();
+
+    trackGoogleAnalytics("category_selected", {
+      category_id: 11,
+      category_name: "스킨케어",
+      origin_surface: "home",
+      discovery_id: "journey-2",
+      discovery_method: "category",
+    });
+
+    expect(sendGAEvent).toHaveBeenCalledWith("event", "category_selected", {
+      category_id: "11",
+      category_name: "스킨케어",
+      discovery_id: "journey-2",
+      discovery_method: "category",
+      origin_surface: "home",
+    });
+  });
+
   it("검색 결과 조회에 결과 수와 조건 수를 전송한다", async () => {
     const { trackGoogleAnalytics } = await load();
 

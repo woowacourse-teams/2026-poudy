@@ -26,7 +26,11 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
 }) {
   return (
-    <ProductDetailHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
+    <ProductDetailHeader
+      title="제품 상세"
+      right={<ShareButton />}
+      summary={<CompactSummary product={product} entryPoint={entryPoint} />}
+    >
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
@@ -66,7 +70,7 @@ export function ProductDetail({
 
           <Variants variants={product.variants} />
 
-          <SaveProductButton productId={product.id} productName={product.name} />
+          <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
         </section>
 
         <ProductSummaryEnd />
@@ -92,7 +96,13 @@ export function ProductDetail({
  * 세로로 쌓인 원래 배치를 그대로 붙이면 화면 절반을 차지해 본문을 읽을 자리가 남지 않는다.
  * 그림을 줄이고, 이름은 한 줄로 줄이고, 용량별 가격은 가장 싼 것 하나로 접는다.
  */
-function CompactSummary({ product }: { readonly product: ProductDetailResponse }) {
+function CompactSummary({
+  product,
+  entryPoint,
+}: {
+  readonly product: ProductDetailResponse;
+  readonly entryPoint: ProductEntryPoint;
+}) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
       {/*
@@ -129,7 +139,7 @@ function CompactSummary({ product }: { readonly product: ProductDetailResponse }
         </div>
       </div>
 
-      <SaveProductButton productId={product.id} productName={product.name} variant="icon" />
+      <SaveProductButton productId={product.id} productName={product.name} variant="icon" entryPoint={entryPoint} />
     </div>
   );
 }

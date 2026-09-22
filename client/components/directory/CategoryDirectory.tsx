@@ -4,6 +4,7 @@ import type { CategoryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { DirectoryList } from "@/components/ui/DirectoryList";
+import { track } from "@/lib/analytics/track";
 
 /** S08 카테고리. 대분류를 고르면 오른쪽에 소분류가 나온다. */
 export function CategoryDirectory({ categories }: { readonly categories: readonly CategoryResponse[] }) {
@@ -15,6 +16,14 @@ export function CategoryDirectory({ categories }: { readonly categories: readonl
       rail={categories.map((category) => ({ id: String(category.id), label: category.name }))}
       selectedRailId={selectedId}
       onSelectRail={setSelectedId}
+      onSelectRow={(row) =>
+        track("category_selected", {
+          category_id: Number(row.id === "all" ? selectedId : row.id),
+          category_name:
+            row.id === "all" ? categories.find((category) => String(category.id) === selectedId)?.name : row.label,
+          origin_surface: "category",
+        })
+      }
       panels={categories.map((category) => ({
         railId: String(category.id),
         title: category.name,

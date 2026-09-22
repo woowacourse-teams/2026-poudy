@@ -42,13 +42,21 @@ type DirectoryListProps = {
    */
   readonly panels: readonly DirectoryPanel[];
   readonly railLabel: string;
+  readonly onSelectRow?: (row: DirectoryRowItem) => void;
 };
 
 /**
  * S08(카테고리)과 S10(브랜드)이 함께 쓰는 2 단 디렉터리.
  * 왼쪽 색인 레일과 오른쪽 목록 패널로 나뉜다.
  */
-export function DirectoryList({ rail, selectedRailId, onSelectRail, panels, railLabel }: DirectoryListProps) {
+export function DirectoryList({
+  rail,
+  selectedRailId,
+  onSelectRail,
+  panels,
+  railLabel,
+  onSelectRow,
+}: DirectoryListProps) {
   return (
     <div className="flex flex-1 overflow-hidden rounded-xl bg-white">
       <nav aria-label={railLabel} className="w-[92px] shrink-0 border-r border-border bg-[#F5F6F7] px-1.5 py-2">
@@ -84,7 +92,7 @@ export function DirectoryList({ rail, selectedRailId, onSelectRail, panels, rail
           <ul>
             {rows.map((row) => (
               <li key={row.id}>
-                <DirectoryRow {...row} />
+                <DirectoryRow item={row} onSelect={onSelectRow} />
               </li>
             ))}
           </ul>
@@ -95,9 +103,21 @@ export function DirectoryList({ rail, selectedRailId, onSelectRail, panels, rail
 }
 
 /** `이름 + 개수 + 화살표` 행. 카테고리 소분류와 브랜드 목록이 같은 모양을 쓴다. */
-function DirectoryRow({ label, count, countPrefix, initial, imageUrl, href }: DirectoryRowItem) {
+function DirectoryRow({
+  item,
+  onSelect,
+}: {
+  readonly item: DirectoryRowItem;
+  readonly onSelect?: (row: DirectoryRowItem) => void;
+}) {
+  const { label, count, countPrefix, initial, imageUrl, href } = item;
+
   return (
-    <Link href={href} className="flex h-14 items-center gap-2.5 border-b border-[#ECEDEF] px-4">
+    <Link
+      href={href}
+      onClick={() => onSelect?.(item)}
+      className="flex h-14 items-center gap-2.5 border-b border-[#ECEDEF] px-4"
+    >
       {/* 로고가 있으면 그림으로, 없으면 이름 첫 글자로 자리를 채운다. */}
       {imageUrl ? <BrandLogo name={label} imageUrl={imageUrl} size={32} /> : null}
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { track } from "@/lib/analytics/track";
 import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
 
 type CategoryTrackItem = {
@@ -72,6 +73,13 @@ export function CategoryTrack({
             <li key={item.id} className="shrink-0">
               <Link
                 href={`/categories/${item.id}`}
+                onClick={() =>
+                  track("category_selected", {
+                    category_id: item.id,
+                    category_name: item.name,
+                    origin_surface: "category",
+                  })
+                }
                 aria-current={selected ? "page" : undefined}
                 className={`flex h-10 items-center rounded-xl px-3.5 text-[13px] ${
                   selected

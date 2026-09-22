@@ -62,6 +62,13 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
   const select = (categoryId: number | null) => {
     setSelected(categoryId);
     track("ranking_category_changed", categoryId === null ? {} : { category_id: categoryId });
+    if (categoryId !== null) {
+      track("category_selected", {
+        category_id: categoryId,
+        category_name: categories.find((category) => category.id === categoryId)?.name,
+        origin_surface: "home",
+      });
+    }
   };
 
   return (
@@ -111,7 +118,10 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
         <ul className="grid grid-cols-3 gap-x-2.5 gap-y-4">
           {items.map(({ product }, index) => (
             <li key={product.id}>
-              <Link href={`/products/${product.id}?from=home`} className="flex flex-col gap-0.75">
+              <Link
+                href={`/products/${product.id}?from=${selected === null ? "home_ranking" : "home_category"}`}
+                className="flex flex-col gap-0.75"
+              >
                 <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">
                   <Image
                     src={product.imageUrl || PRODUCT_PLACEHOLDER}

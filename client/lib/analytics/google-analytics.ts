@@ -12,6 +12,33 @@ const browserAllowsTracking = (): boolean => {
   return doNotTrack !== "1" && doNotTrack !== "yes";
 };
 
+type FunnelProperties = {
+  readonly discovery_id?: string;
+  readonly discovery_method?: string;
+  readonly origin_surface?: string;
+};
+
+const discoveryParameters = (properties: FunnelProperties): Record<string, string> => ({
+  ...(properties.discovery_id ? { discovery_id: properties.discovery_id } : {}),
+  ...(properties.discovery_method ? { discovery_method: properties.discovery_method } : {}),
+  ...(properties.origin_surface ? { origin_surface: properties.origin_surface } : {}),
+});
+
+const sendSearchStarted = (properties: EventMap["search_started"]): void => {
+  sendGAEvent("event", "search_started", {
+    ...discoveryParameters(properties),
+    search_mode: properties.mode,
+  });
+};
+
+const sendCategorySelected = (properties: EventMap["category_selected"]): void => {
+  sendGAEvent("event", "category_selected", {
+    ...discoveryParameters(properties),
+    category_id: String(properties.category_id),
+    category_name: properties.category_name,
+  });
+};
+
 const sendSearchSubmitted = (properties: EventMap["search_submitted"]): void => {
   const ingredientCounts =
     properties.mode === "ingredient"
@@ -23,6 +50,7 @@ const sendSearchSubmitted = (properties: EventMap["search_submitted"]): void => 
       : {};
 
   sendGAEvent("event", "search_submitted", {
+    ...discoveryParameters(properties),
     ...ingredientCounts,
     result_count: properties.result_count,
     search_mode: properties.mode,
@@ -31,6 +59,7 @@ const sendSearchSubmitted = (properties: EventMap["search_submitted"]): void => 
 
 const sendSearchResultsViewed = (properties: EventMap["search_results_viewed"]): void => {
   sendGAEvent("event", "search_results_viewed", {
+    ...discoveryParameters(properties),
     exclude_count: properties.exclude_count,
     exclude_group_count: properties.exclude_group_count,
     include_count: properties.include_count,
@@ -41,6 +70,7 @@ const sendSearchResultsViewed = (properties: EventMap["search_results_viewed"]):
 
 const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
   sendGAEvent("event", "view_item", {
+    ...discoveryParameters(properties),
     entry_point: properties.entry_point,
     items: [
       {
@@ -53,6 +83,8 @@ const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
 
 const sendProductSaved = (properties: EventMap["product_saved"]): void => {
   sendGAEvent("event", "add_to_wishlist", {
+    ...discoveryParameters(properties),
+    ...(properties.entry_point ? { entry_point: properties.entry_point } : {}),
     items: [{ item_id: String(properties.product_id) }],
     save_source: properties.save_source,
   });
@@ -63,6 +95,12 @@ export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: 
   if (!enabled() || !browserAllowsTracking()) return;
 
   switch (event) {
+    case "search_started":
+      sendSearchStarted(properties as EventMap["search_started"]);
+      break;
+    case "category_selected":
+      sendCategorySelected(properties as EventMap["category_selected"]);
+      break;
     case "search_submitted":
       sendSearchSubmitted(properties as EventMap["search_submitted"]);
       break;

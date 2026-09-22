@@ -43,6 +43,7 @@ beforeEach(() => {
   posthogCapture.mockClear();
   register.mockClear();
   trackGoogleAnalytics.mockClear();
+  window.sessionStorage.clear();
   window.posthog = { capture, captureException: vi.fn() };
 });
 
@@ -63,6 +64,7 @@ describe("track", () => {
       query: "판테놀",
       query_length: 3,
       result_count: 7,
+      analytics_schema_version: 2,
       environment: "production",
     });
   });
@@ -109,8 +111,46 @@ describe("initAnalytics", () => {
 
     expect(posthogCapture).toHaveBeenCalledWith("page_viewed", {
       page: "home",
+      analytics_schema_version: 2,
       environment: "production",
     });
+  });
+
+  it("같은 검색 탐색 ID를 결과·상세·보관까지 이어 붙인다", async () => {
+    const { initAnalytics, track } = await load("production", "phc_test");
+    initAnalytics();
+
+    track("search_started", { mode: "product" });
+    const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
+    track("search_results_viewed", {
+      mode: "product",
+      result_count: 2,
+      include_count: 0,
+      exclude_count: 0,
+      exclude_group_count: 0,
+    });
+    track("product_viewed", { product_id: 42, entry_point: "search_results" });
+    track("product_saved", { product_id: 42, save_source: "product_detail", entry_point: "search_results" });
+
+    expect(started).toMatchObject({ discovery_method: "search", origin_surface: "search" });
+    expect(started.discovery_id).toEqual(expect.any(String));
+    for (const call of posthogCapture.mock.calls.slice(1)) {
+      expect(call[1]).toMatchObject({
+        discovery_id: started.discovery_id,
+        discovery_method: "search",
+        origin_surface: "search",
+      });
+    }
+  });
+
+  it("다른 진입 경로에는 직전 탐색 ID를 잘못 붙이지 않는다", async () => {
+    const { initAnalytics, track } = await load("production", "phc_test");
+    initAnalytics();
+
+    track("category_selected", { category_id: 11, origin_surface: "home" });
+    track("product_viewed", { product_id: 42, entry_point: "home_ranking" });
+
+    expect(posthogCapture.mock.calls[1]?.[1]).not.toHaveProperty("discovery_id");
   });
 
   it("빈 호스트는 프록시 경로를 쓰고 경로 변경 페이지뷰를 수집한다", async () => {

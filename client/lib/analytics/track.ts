@@ -3,7 +3,8 @@
 import posthog, { type PostHog } from "posthog-js";
 
 import { readAppInfo } from "./app-info";
-import type { EventMap, EventName } from "./events";
+import { beginDiscovery, discoveryMethodOf, readDiscovery } from "./discovery";
+import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
 
 type Posthog = Pick<PostHog, "capture" | "captureException">;
@@ -27,13 +28,35 @@ const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
 const posthogEnabled = key !== undefined && key !== "" && environment !== "development";
 
+const ANALYTICS_SCHEMA_VERSION = 2;
+
+const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): DiscoveryContext | undefined => {
+  if (event === "search_started") return beginDiscovery("search", "search");
+  if (event === "category_selected") {
+    const origin = (properties as EventMap["category_selected"]).origin_surface;
+    return beginDiscovery("category", origin);
+  }
+  if (["search_used", "search_suggestion_selected", "search_submitted", "search_results_viewed"].includes(event)) {
+    return readDiscovery("search");
+  }
+  if (event === "product_viewed" || event === "product_saved" || event === "product_unsaved") {
+    const entryPoint = (properties as EventMap["product_viewed"] | EventMap["product_saved"]).entry_point;
+    const method = entryPoint ? discoveryMethodOf(entryPoint as ProductEntryPoint) : undefined;
+    return method ? readDiscovery(method) : undefined;
+  }
+  return undefined;
+};
+
 /**
  * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
  * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
  */
 export const track = <T extends EventName>(event: T, properties: EventMap[T]): void => {
-  if (posthogEnabled) window.posthog?.capture(event, { ...properties, environment });
-  trackGoogleAnalytics(event, properties);
+  const enriched = { ...properties, ...discoveryOf(event, properties) } as EventMap[T];
+  if (posthogEnabled) {
+    window.posthog?.capture(event, { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment });
+  }
+  trackGoogleAnalytics(event, enriched);
 };
 
 export const initAnalytics = (): void => {

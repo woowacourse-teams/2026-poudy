@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import type { PageName } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
+const HOME_PAGE_VERSION = "main_2026_09";
+
 /** 경로에서 화면 이름을 정한다. 화면마다 호출을 심지 않아도 되게 한다. */
 const pageOf = (pathname: string): PageName | undefined => {
   if (pathname === "/") return "home";
@@ -28,7 +30,7 @@ export function AnalyticsProvider() {
 
   useEffect(() => {
     const page = pageOf(pathname);
-    if (page) track("page_viewed", { page });
+    if (page) track("page_viewed", page === "home" ? { page, page_version: HOME_PAGE_VERSION } : { page });
   }, [pathname]);
 
   return null;

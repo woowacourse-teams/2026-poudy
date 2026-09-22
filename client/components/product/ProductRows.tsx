@@ -10,7 +10,7 @@ import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
-import type { ListSurface, SearchMode } from "@/lib/analytics/events";
+import type { ListSurface, ProductEntryPoint, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, serializeFilter } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
@@ -102,6 +102,7 @@ export function ProductRows({
   // 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
   const empty = loaded && items.length === 0 && !loading;
   const searchMode = searchModeOf(filter);
+  const entryPoint: ProductEntryPoint = searchMode === undefined ? surface : "search_results";
   const trackedResultKey = useRef<string | undefined>(undefined);
 
   const onToggleSave = (productId: number) => {
@@ -109,6 +110,7 @@ export function ProductRows({
     track(isSaved(productId) ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "product_list",
+      entry_point: entryPoint,
     });
   };
 
@@ -209,7 +211,7 @@ export function ProductRows({
                   product={product}
                   saved={isSaved(product.id)}
                   onToggleSave={onToggleSave}
-                  entryPoint={searchMode ? "search_results" : undefined}
+                  entryPoint={entryPoint}
                   imageLoading={index === 0 ? "eager" : "lazy"}
                 />
               </li>

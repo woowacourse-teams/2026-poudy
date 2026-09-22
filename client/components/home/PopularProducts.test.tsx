@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PopularProducts } from "./PopularProducts";
 
+import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -34,6 +35,7 @@ const categories = [
 
 beforeEach(() => {
   vi.mocked(fetchProductRankings).mockReset();
+  vi.mocked(track).mockReset();
 });
 
 describe("PopularProducts", () => {
@@ -51,8 +53,23 @@ describe("PopularProducts", () => {
     await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
 
     expect(fetchProductRankings).toHaveBeenCalledWith([11]);
+    expect(track).toHaveBeenCalledWith("category_selected", {
+      category_id: 11,
+      category_name: "스킨케어",
+      origin_surface: "home",
+    });
     await waitFor(() => expect(screen.getByText(/어성초 토너/)).toBeInTheDocument());
     expect(screen.queryByText(/1025 독도 토너/)).not.toBeInTheDocument();
+  });
+
+  it("고른 카테고리의 제품 링크에 카테고리 경로를 남긴다", async () => {
+    vi.mocked(fetchProductRankings).mockResolvedValue({ items: [rankingOf(3, "어성초 토너")] });
+    render(<PopularProducts initialItems={initialItems} categories={categories} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
+    const product = await screen.findByRole("link", { name: /어성초 토너/ });
+
+    expect(product).toHaveAttribute("href", "/products/3?from=home_category");
   });
 
   it("전체로 되돌리면 서버가 준 첫 화면을 다시 쓴다", async () => {
