@@ -285,34 +285,27 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 
 ## 피드백 보유 기간 관리
 
-운영 프로필은 매일 03:30(Asia/Seoul)에 PostgreSQL `received_at`이 83일 지난 피드백과
-제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 S3 최종 이미지와 전환 전 legacy
-`feedback.json`/`management.json`을 먼저 삭제하고 DB 행을 마지막에 삭제합니다. S3 삭제가
+운영 프로필은 매일 03:30(Asia/Seoul)에 PostgreSQL `created_at`이 83일 지난 피드백과
+제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 S3 최종 이미지를 먼저 삭제하고 DB 행을
+마지막에 삭제합니다. S3 삭제가
 실패하면 DB 행을 남겨 다음 날 재시도하므로 이미지 키를 잃지 않습니다. 이 7일 여유로 일시적인
 실패가 있어도 개인정보 처리방침의 90일 한도 전에 복구할 수 있습니다.
 
 운영자는 최소 주 1회 다음을 확인합니다.
 
 1. `journalctl -u poudy-backend`에서 `만료 의견 보유기간 정리`의 실패 수가 0인지 확인합니다.
-2. DB에서 `received_at <= now() - interval '83 days'`인 `feedback`과
+2. DB에서 `created_at <= now() - interval '83 days'`인 `feedback`과
    `product_correction_request` 행이 남지 않았는지 확인합니다.
 3. 실패가 있으면 S3 delete 권한과 네트워크를 복구하고 서비스를 재시작하거나 다음 예약 실행을
    기다린 뒤, DB 행과 `poudy/feedback/{feedbackId}/images/`가 함께 없어졌는지 재확인합니다.
 4. 점검 시각, cutoff, 선택·삭제·실패 건수와 조치 결과를 운영 기록에 남깁니다. 로그에는 의견
    ID나 내용이 출력되지 않습니다.
 
-pending 이미지는 기존 조정기가 24시간 만료와 유예 시간을 기준으로 별도 정리합니다. 버킷
+pending 이미지는 이미지 옮기기 주기 작업이 24시간 만료와 유예 시간을 기준으로 별도 정리합니다. 버킷
 버전 관리가 비활성화되어 있으므로 일반 삭제는 복구할 수 없습니다.
 
 ## PostgreSQL 최초 전환
 
 1. PostgreSQL 15 이상 UTF-8 DB를 만들고 `/etc/poudy/backend.env`에 DB 접속 값과 초기
    카탈로그 SQL의 `POUDY_DB_INITIAL_DATA_S3_URI`를 넣습니다.
-2. 기존 S3 이력 이관 배포에서는 `POUDY_LEGACY_S3_MIGRATION_ENABLED=true`와 피드백·제품
-   등록 요청 버킷 설정을 넣습니다. CodeDeploy가 스키마·초기 카탈로그를 준비한 뒤 importer가
-   원본, 관리 상태와 이미지 메타데이터를 ID 기준 insert-only로 적재합니다.
-3. 애플리케이션 로그의 이관 건수와 DB의 `feedback`, `product_correction_request`,
-   `product_request` 건수를 S3 원본 수와 대조합니다. 문서 파싱이나 FK 검증이 실패하면 health
-   check 전에 기동이 실패하므로 원인을 고치고 같은 배포를 재실행합니다.
-4. 검증이 끝나면 `POUDY_LEGACY_S3_MIGRATION_ENABLED=false`로 바꾸고 초기 데이터 S3 URI를
-   제거합니다. 기존 S3 원본은 위 보유기간 작업이 만료 시 함께 삭제하므로 즉시 지우지 않습니다.
+2. 배포 후 카탈로그 건수를 확인하고 초기 데이터 S3 URI를 제거합니다.

@@ -470,9 +470,10 @@ heap·RSS 예산을 정의하지 않는다.
 
 기능 패키지 `searchkeyword`에 Controller·Service·도메인·저장소·백그라운드 작성자를 둔다.
 도메인은 Spring·Jackson·파일 API에 의존하지 않는다. 사전 읽기와 변경 상태 저장을 분리한다.
-순위 계산 중 적격성 확인은 도메인의 `KeywordSearch`로 추상화하고, `config`의
-`CatalogKeywordSearch`가 제품 카탈로그 검색으로 구현한다. 기동 시에는 호출하지 않는다.
-`searchkeyword`와 `product`는 서로 import하지 않는다.
+순위 계산 중 적격성 확인은 도메인의 `KeywordSearch`로 추상화하고,
+`SearchKeywordService`가 메모리 제품 카탈로그의 `Products.hasResults`로 구현한다. 사전 적재
+중에는 각 표시어를 검색하지 않는다. `searchkeyword` Service만 `product` Repository를 참조하고
+도메인 간 의존은 만들지 않는다.
 집계는 `SearchKeywordController`의 `POST /api/search-keywords`가 받고, 상품 존재 확인은 `KeywordSearch`로 한다.
 저장 실패는 기존 검색 응답과 메모리 집계를 되돌리지 않으며 다음 주기에 재시도한다.
 관찰 실패도 제품 검색에 전파하지 않는다. 초기 사전·스냅샷의 형식 오류는 기동 실패로

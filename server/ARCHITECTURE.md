@@ -48,7 +48,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
 하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능의 의존 방향은
 `tag ← ingredient ← excludecode ← product → brand → category`다. 제품 수나 성분군처럼 하위 기능이
-상위 기능의 값을 보여 줘야 하면 하위 기능 Service 패키지에 필요한 조회만 담은 인터페이스
+상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
 (`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`, `IngredientGroups`)를 두고 상위
 기능이 구현한다. 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)과 성분군 코드
 `ExcludeCode`는 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
@@ -171,10 +171,15 @@ Hibernate 전용 어노테이션은 도메인에 두지 않는다.
 
 Repository는 DB·S3 같은 저장 표현을 도메인으로 변환하고 저장 실패를 인프라 오류로
 분류한다. 저장 형식 전용 타입과 프로토콜은 구현 내부에 두고 Controller 응답을 만들지 않는다.
-테이블 하나와 그대로 맞는 도메인(`Brand`, `Category`, `Tag`, `ProductVariant`, `ProductRequest`)은
-JPA 매핑을 직접 갖는다. 여러 테이블을 묶거나 한 도메인이 여러 테이블로 나뉘는 경우(`Product`,
-`Ingredient`, `Curation`, `Feedback` 등)는 Repository 패키지에 엔티티를 두고 도메인으로 변환한다.
-DB에서 읽은 도메인은 생성자 검증을 거치지 않으므로 같은 조건을 스키마 제약이 막는다. 카탈로그는 기동 시
+도메인이 JPA 매핑을 직접 갖고, Repository 패키지에 별도 엔티티를 두지 않는다. 여러 테이블에 걸친 도메인은
+값 컬렉션(`@ElementCollection`)과 연관(`@OneToMany`, `@ManyToMany`)으로 묶고, 한 도메인이 여러 테이블로
+나뉘면 상속으로 나눈다(`CurationBlock`은 `type` 컬럼 기준 한 테이블, `Feedback`은 테이블별). 표시 순서는
+0부터 이어지는 순서 컬럼을 `@OrderColumn`으로 읽는다. 영속 컬렉션은 `@PostLoad`에서 일반 컬렉션과 파생 값으로
+옮겨 트랜잭션이 끝난 뒤 지연 로딩이 일어나지 않게 한다. Hibernate 프록시가 상속하지 못하므로 엔티티는
+`sealed`로 선언하지 않는다. 조인 행을 도메인에 붙이면 기능 의존 방향이 뒤집히는 경우(`exclude_code_ingredient`)만
+Repository가 JDBC로 행을 읽는다. DB에서 읽은 도메인은 생성자 검증을 거치지 않으므로 같은 조건을 스키마 제약이
+막고, 스키마로 막지 못하는 조건은 `@PostLoad`에서 다시 검증한다. 기동 시 카탈로그 적재의 N+1은
+`hibernate.default_batch_fetch_size` 설정이 묶는다. 카탈로그는 기동 시
 한 번 읽어 메모리 도메인으로 만들고, 검색·필터·집계는 기존 도메인이 계속 소유한다. 카탈로그 저장소들은
 기동하는 동안 `SnapshotReader`가 연 읽기 전용 REPEATABLE READ 트랜잭션 하나를 함께 쓰고, 모든 빈이 만들어지면
 그 트랜잭션을 닫는다. 기동 중에 적재가 커밋되어도 저장소마다 다른 시점을 보지 않는다.
