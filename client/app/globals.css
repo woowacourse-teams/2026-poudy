@@ -1031,3 +1031,61 @@ body {
   transform: scale(0.875);
   transform-origin: left top;
 }
+
+/*
+ * 성분 분류에 늘어놓은 성분명. 하나하나가 성분 상세로 가는 링크다.
+ *
+ * 맨 글씨로 두면 누를 수 있다는 것이 보이지 않는다. 옆 전성분 목록은 줄 전체가 누를 자리고
+ * 화살표까지 붙어 있어 설명이 필요 없지만, 여기서는 글이 줄줄이 이어져 어디까지가 한 성분인지도
+ * 흐리다. 밑줄을 깔아 누를 자리를 글자 폭만큼 또렷하게 긋는다.
+ *
+ * 선은 글자에서 조금 떨어뜨리고 받침을 비껴가게 둔다. 붙여 그으면 ㄱ·ㅅ 의 아래가 선에 잠겨
+ * 성분명이 읽기 어려워진다.
+ */
+.ingredient-chip-link {
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: auto;
+  transition:
+    color var(--transition-duration-press, 100ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    text-decoration-color var(--transition-duration-press, 100ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸려 뗀 자리에 색이 남는다. 마우스에만 건다. */
+@media (hover: hover) and (pointer: fine) {
+  .ingredient-chip-link:hover {
+    text-decoration-color: currentcolor;
+  }
+}
+
+/*
+ * 누름은 마우스가 없는 환경에도 남겨 두어 손가락으로도 눌린 것이 보이게 한다.
+ *
+ * 크기는 건드리지 않는다. 이름들이 한 줄에 이어 붙어 있어 하나만 줄었다 늘면 옆 이름과의
+ * 간격이 같이 흔들려, 누른 것이 아니라 줄이 움직인 것처럼 보인다. 대신 글자색을 흐리게 해
+ * 누른 그 이름에서만 표가 나게 한다.
+ */
+.ingredient-chip-link:active {
+  color: var(--color-text-secondary);
+  text-decoration-color: var(--color-text-secondary);
+}
+
+/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
+.ingredient-chip-link:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * 움직임을 줄여 달라고 한 사용자에게도 누른 표시는 남긴다. 자리를 옮기는 것이 아니라
+ * 색만 바뀌므로 걷어낼 움직임이 없고, 걷어내면 눌렸는지 알 길이 사라진다.
+ * 색이 서서히 바뀌는 것만 없애 곧바로 바뀌게 둔다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ingredient-chip-link {
+    transition-duration: 0s;
+  }
+}

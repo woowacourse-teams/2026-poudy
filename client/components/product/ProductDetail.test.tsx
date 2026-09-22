@@ -332,3 +332,60 @@ describe("성분 정보 선택 차단", () => {
     expect(screen.getByText("상품 정보 출처 안내").closest("[data-no-select]")).toBeNull();
   });
 });
+
+describe("성분 분류", () => {
+  const taggedProduct = productDetails[0]!;
+
+  /* 같은 말이 유수분 태그에도 있어 분류 영역 안에서만 친다. */
+  const groupRow = (name: string) => {
+    const section = screen.getByRole("heading", { name: "성분 분류" }).closest("section")!;
+
+    return within(section).getByText(name).closest("li")!;
+  };
+
+  it("분류에 묶인 성분마다 성분 상세로 가는 링크를 둔다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = within(groupRow("보습"));
+
+    expect(row.getByRole("link", { name: "부틸렌글라이콜" })).toHaveAttribute("href", "/ingredients/2");
+    expect(row.getByRole("link", { name: "판테놀" })).toHaveAttribute("href", "/ingredients/6");
+  });
+
+  it("이름 사이의 구분 기호는 누를 수 없게 둔다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = groupRow("보습");
+
+    expect(row).toHaveTextContent("부틸렌글라이콜 · 판테놀");
+    expect(within(row).getAllByRole("link")).toHaveLength(2);
+  });
+
+  it("마지막 성분 뒤에는 구분 기호를 붙이지 않는다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    expect(groupRow("각질 케어").textContent?.trim()).toMatch(/프로테아제$/);
+  });
+
+  it("성분명에 누를 수 있다는 표시를 남긴다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = within(groupRow("보습"));
+
+    expect(row.getByRole("link", { name: "판테놀" })).toHaveClass("ingredient-chip-link");
+  });
+
+  it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
+    const product = {
+      ...taggedProduct,
+      skinEffectGroups: [{ id: 1, code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+    };
+
+    render(<ProductDetail product={product} />);
+
+    const row = groupRow("보습");
+
+    expect(within(row).getAllByRole("link")).toHaveLength(1);
+    expect(row.textContent?.trim()).toMatch(/부틸렌글라이콜$/);
+  });
+});
