@@ -21,13 +21,11 @@ const loadKeywords = () =>
 export default async function ProductSearchPage() {
   const keywords = await loadKeywords();
   /*
-   * 인기 검색어를 보러 들어오는 화면이라 펼친 채로 연다. 홈에서는 지나가는 길에 한 줄만
-   * 스치는 것이라 접은 채로 둔다.
-   *
-   * 펼친 목록을 띄워 두면 바로 아래 최근 검색을 첫 화면부터 덮으므로, 여기서는 자리를
-   * 차지하게 두어 최근 검색을 아래로 밀어낸다.
+   * 인기 검색어를 보러 들어오는 화면이라 `panel` 로 둔다. 처음부터 펼쳐 두고, 목록이
+   * 자리를 차지해 최근 검색을 아래로 밀어낸다. 띄워 둔 채로 열어 두면 최근 검색이 첫
+   * 화면부터 가려진다. 홈은 지나가는 길에 한 줄만 스치는 것이라 기본값을 그대로 쓴다.
    */
-  const popular = <PopularKeywords items={keywords} defaultExpanded flowWhenExpanded />;
+  const popular = <PopularKeywords items={keywords} variant="panel" />;
 
   /*
    * 검색어를 주소에서 읽으므로 미리 만든 껍데기 안에서 기다린다. 기다리는 동안에는 검색어가
