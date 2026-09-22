@@ -52,4 +52,16 @@ describe("CurationCarousel", () => {
 
     expect(container.querySelector("section")).toHaveAttribute("aria-hidden", "true");
   });
+
+  /*
+   * 설명 문구에 넣어 둔 줄바꿈이 공백으로 합쳐지면 의도한 두 줄이 한 줄로 붙는다.
+   * 제목과 같은 규칙을 적용해 두었는지 확인한다.
+   */
+  it("설명 문구의 줄바꿈을 살린다", () => {
+    render(<CurationCarousel items={items} />);
+
+    const [description] = screen.getAllByText("보습 성분 모아보기");
+
+    expect(description).toHaveClass("whitespace-pre-line");
+  });
 });

@@ -547,7 +547,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                     <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
                       {curation.title}
                     </h3>
-                    <p className="text-[11px] text-[#624255]">{curation.description}</p>
+                    {/* 제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다. */}
+                    <p className="text-[11px] whitespace-pre-line text-[#624255]">{curation.description}</p>
                   </div>
                 </article>
               </li>
