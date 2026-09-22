@@ -18,6 +18,8 @@ export const ICON_IDS = [
   "search-solid",
   "bookmark",
   "bookmark-solid",
+  "bookmarks",
+  "bookmarks-solid",
   "chevron-down",
   "chevron-up",
   "chevron-right",
@@ -88,14 +90,24 @@ export function IconSprite() {
           <path d="M14 3.072a8 8 0 0 1 2.32 11.834l5.387 5.387a1 1 0 0 1 -1.414 1.414l-5.388 -5.387a8 8 0 1 1 -.905 -13.249" />
         </symbol>
 
-        {/* Tabler · bookmarks */}
+        {/* Tabler · bookmark */}
         <symbol id="icon-bookmark" viewBox="0 0 24 24">
+          <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4" />
+        </symbol>
+
+        {/* Tabler · bookmark (filled) */}
+        <symbol id="icon-bookmark-solid" viewBox="0 0 24 24">
+          <path d="M14 2a5 5 0 0 1 5 5v14a1 1 0 0 1 -1.555 .832l-5.445 -3.63l-5.444 3.63a1 1 0 0 1 -1.55 -.72l-.006 -.112v-14a5 5 0 0 1 5 -5h4z" />
+        </symbol>
+
+        {/* Tabler · bookmarks */}
+        <symbol id="icon-bookmarks" viewBox="0 0 24 24">
           <path d="M15 10v11l-5 -3l-5 3v-11a3 3 0 0 1 3 -3h4a3 3 0 0 1 3 3" />
           <path d="M11 3h5a3 3 0 0 1 3 3v11" />
         </symbol>
 
         {/* Tabler · bookmarks (filled) */}
-        <symbol id="icon-bookmark-solid" viewBox="0 0 24 24">
+        <symbol id="icon-bookmarks-solid" viewBox="0 0 24 24">
           <path d="M12 6a4 4 0 0 1 4 4v11a1 1 0 0 1 -1.514 .857l-4.486 -2.691l-4.486 2.691a1 1 0 0 1 -1.508 -.743l-.006 -.114v-11a4 4 0 0 1 4 -4h4z" />
           <path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" />
         </symbol>
