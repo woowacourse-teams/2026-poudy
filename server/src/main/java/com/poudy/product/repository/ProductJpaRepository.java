@@ -14,7 +14,7 @@ public interface ProductJpaRepository extends Repository<ProductEntity, Long> {
     List<ProductVariant> findAllVariants();
 
     @Query("select ingredient from ProductIngredientEntity ingredient"
-        + " order by ingredient.id.productId, ingredient.id.componentOrder, ingredient.id.displayOrder")
+        + " order by ingredient.component.productId, ingredient.component.displayOrder, ingredient.displayOrder")
     List<ProductIngredientEntity> findAllIngredients();
 
     @Query("select skinType from ProductSkinTypeEntity skinType")

@@ -14,11 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Table(name = "product_correction_request")
@@ -30,24 +32,21 @@ public class ProductCorrectionRequestEntity {
     @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "product_name")
+    @Formula("(select product.product_name from product where product.id = product_id)")
     private String productName;
 
     @Column(name = "content")
     private String content;
 
-    @Column(name = "received_at")
-    private OffsetDateTime receivedAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private FeedbackStatus status;
 
     @Column(name = "status_changed_at")
-    private OffsetDateTime statusChangedAt;
-
-    @Column(name = "completed_at")
-    private OffsetDateTime completedAt;
+    private LocalDateTime statusChangedAt;
 
     @ElementCollection
     @CollectionTable(name = "product_correction_request_image", joinColumns = @JoinColumn(name = "request_id"))
@@ -60,12 +59,10 @@ public class ProductCorrectionRequestEntity {
     private ProductCorrectionRequestEntity(Feedback feedback, ProductCorrection subject) {
         this.id = feedback.id();
         this.productId = subject.productId();
-        this.productName = subject.productName();
         this.content = feedback.content().value();
-        this.receivedAt = feedback.receivedAt();
+        this.createdAt = FeedbackEntity.local(feedback.receivedAt());
         this.status = feedback.status();
-        this.statusChangedAt = feedback.statusChangedAt();
-        this.completedAt = feedback.completedAt();
+        this.statusChangedAt = FeedbackEntity.local(feedback.statusChangedAt());
         this.images = new ArrayList<>(feedback.images().stream().map(FeedbackImageValue::from).toList());
     }
 
@@ -73,16 +70,25 @@ public class ProductCorrectionRequestEntity {
         return new ProductCorrectionRequestEntity(feedback, subject);
     }
 
-    public Feedback toDomain(ZoneId zone) {
+    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.FeedbackImage> resolvedImages) {
+        OffsetDateTime changedAt = FeedbackEntity.atZone(statusChangedAt, zone);
         return new Feedback(
             id,
             new ProductCorrection(productId, productName),
             new FeedbackContent(content),
-            FeedbackEntity.atZone(receivedAt, zone),
-            images.stream().map(FeedbackImageValue::toDomain).toList(),
+            FeedbackEntity.atZone(createdAt, zone),
+            resolvedImages,
             status,
-            FeedbackEntity.atZone(statusChangedAt, zone),
-            FeedbackEntity.atZone(completedAt, zone)
+            changedAt,
+            status == FeedbackStatus.COMPLETED ? changedAt : null
         );
+    }
+
+    public List<UUID> imageIds() {
+        return images.stream().map(FeedbackImageValue::imageId).toList();
+    }
+
+    public UUID id() {
+        return id;
     }
 }

@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -39,18 +40,15 @@ public class FeedbackEntity {
     @Column(name = "page_path")
     private String pagePath;
 
-    @Column(name = "received_at")
-    private OffsetDateTime receivedAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private FeedbackStatus status;
 
     @Column(name = "status_changed_at")
-    private OffsetDateTime statusChangedAt;
-
-    @Column(name = "completed_at")
-    private OffsetDateTime completedAt;
+    private LocalDateTime statusChangedAt;
 
     @ElementCollection
     @CollectionTable(name = "feedback_image", joinColumns = @JoinColumn(name = "feedback_id"))
@@ -65,10 +63,9 @@ public class FeedbackEntity {
         this.subjectType = subject.type();
         this.content = feedback.content().value();
         this.pagePath = subject.path().value().orElse(null);
-        this.receivedAt = feedback.receivedAt();
+        this.createdAt = local(feedback.receivedAt());
         this.status = feedback.status();
-        this.statusChangedAt = feedback.statusChangedAt();
-        this.completedAt = feedback.completedAt();
+        this.statusChangedAt = local(feedback.statusChangedAt());
         this.images = new ArrayList<>(feedback.images().stream().map(FeedbackImageValue::from).toList());
     }
 
@@ -76,23 +73,36 @@ public class FeedbackEntity {
         return new FeedbackEntity(feedback, subject);
     }
 
-    public Feedback toDomain(ZoneId zone) {
+    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.FeedbackImage> resolvedImages) {
+        OffsetDateTime changedAt = atZone(statusChangedAt, zone);
         return new Feedback(
             id,
             new ServiceFeedback(subjectType, FeedbackPath.from(pagePath)),
             new FeedbackContent(content),
-            atZone(receivedAt, zone),
-            images.stream().map(FeedbackImageValue::toDomain).toList(),
+            atZone(createdAt, zone),
+            resolvedImages,
             status,
-            atZone(statusChangedAt, zone),
-            atZone(completedAt, zone)
+            changedAt,
+            status == FeedbackStatus.COMPLETED ? changedAt : null
         );
     }
 
-    static OffsetDateTime atZone(OffsetDateTime value, ZoneId zone) {
+    public List<UUID> imageIds() {
+        return images.stream().map(FeedbackImageValue::imageId).toList();
+    }
+
+    public UUID id() {
+        return id;
+    }
+
+    static OffsetDateTime atZone(LocalDateTime value, ZoneId zone) {
         if (value == null) {
             return null;
         }
-        return value.atZoneSameInstant(zone).toOffsetDateTime();
+        return value.atZone(zone).toOffsetDateTime();
+    }
+
+    static LocalDateTime local(OffsetDateTime value) {
+        return value.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
     }
 }

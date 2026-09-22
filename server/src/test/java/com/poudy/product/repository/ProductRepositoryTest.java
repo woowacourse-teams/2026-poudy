@@ -42,7 +42,7 @@ class ProductRepositoryTest {
             .containsExactly(18000L, new BigDecimal("200"), "ml", "active");
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
-        assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301Z"));
+        assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301+09:00"));
         assertThat(product.contains(4815L)).isTrue();
         assertThat(product.ingredients().findById(4815L))
             .get()

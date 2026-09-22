@@ -79,9 +79,9 @@ class IngredientTest {
         );
 
         assertThat(ingredient.formulationRoles()).extracting(FormulationRole::id, FormulationRole::displayName)
-            .containsExactly(tuple(13L, "습윤제"));
+            .containsExactly(tuple("HUMECTANT", "습윤제"));
         assertThat(ingredient.skinEffects()).extracting(SkinEffect::id, SkinEffect::displayName)
-            .containsExactly(tuple(48L, "피부 장벽 관련"));
+            .containsExactly(tuple("BARRIER_SUPPORT_RELATED", "피부 장벽 관련"));
     }
 
     @Test
@@ -96,9 +96,9 @@ class IngredientTest {
         );
 
         assertThat(ingredient.formulationRoles()).extracting(FormulationRole::id, FormulationRole::displayName)
-            .containsExactly(tuple(75L, "벌킹제"));
+            .containsExactly(tuple("BULKING", "벌킹제"));
         assertThat(ingredient.skinEffects()).extracting(SkinEffect::id, SkinEffect::displayName)
-            .containsExactly(tuple(51L, "탄력 관련"));
+            .containsExactly(tuple("ELASTICITY_RELATED", "탄력 관련"));
     }
 
     @Test
@@ -205,6 +205,6 @@ class IngredientTest {
         TagCategory category,
         List<String> sources
     ) {
-        return new IngredientTag(new Tag(id, category, code, name), sources);
+        return new IngredientTag(new Tag(code, category, name), sources);
     }
 }

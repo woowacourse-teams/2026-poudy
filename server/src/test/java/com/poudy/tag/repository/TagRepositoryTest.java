@@ -18,10 +18,10 @@ class TagRepositoryTest {
     @Test
     @DisplayName("DB의 태그를 ID로 조회한다")
     void findsTagById() {
-        assertThat(tagRepository.findAll().findById(47L))
+        assertThat(tagRepository.findAll().findById("ANTIOXIDANT_RELATED"))
             .get()
             .satisfies(tag -> {
-                assertThat(tag.id()).isEqualTo(47L);
+                assertThat(tag.id()).isEqualTo("ANTIOXIDANT_RELATED");
                 assertThat(tag.isOf(TagCategory.BIOLOGICAL_EFFECT)).isTrue();
                 assertThat(tag.code()).isEqualTo("ANTIOXIDANT_RELATED");
                 assertThat(tag.name()).isEqualTo("항산화 관련");

@@ -9,16 +9,12 @@ public interface IngredientJpaRepository extends Repository<IngredientEntity, Lo
     @Query("select ingredient from IngredientEntity ingredient order by ingredient.id")
     List<IngredientEntity> findAllIngredients();
 
-    @Query("select alias from IngredientAliasEntity alias order by alias.id.ingredientId, alias.id.displayOrder")
+    @Query("select alias from IngredientAliasEntity alias order by alias.ingredientId, alias.id")
     List<IngredientAliasEntity> findAllAliases();
 
     @Query("select tag from IngredientTagEntity tag order by tag.id.ingredientId, tag.displayOrder")
     List<IngredientTagEntity> findAllTags();
 
-    @Query("select evidence from IngredientTagEvidenceEntity evidence"
-        + " order by evidence.id.ingredientId, evidence.id.tagId, evidence.id.displayOrder")
-    List<IngredientTagEvidenceEntity> findAllTagEvidence();
-
-    @Query("select source from IngredientSourceEntity source order by source.id.ingredientId, source.id.displayOrder")
+    @Query("select source from IngredientSourceEntity source order by source.ingredientId, source.id")
     List<IngredientSourceEntity> findAllSources();
 }

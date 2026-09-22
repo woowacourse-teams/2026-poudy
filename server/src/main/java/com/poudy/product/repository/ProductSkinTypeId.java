@@ -10,5 +10,5 @@ import java.io.Serializable;
 @Embeddable
 public record ProductSkinTypeId(
     @Column(name = "product_id") Long productId,
-    @Enumerated(EnumType.STRING) @Column(name = "skin_type") SkinType skinType) implements Serializable {
+    @Enumerated(EnumType.STRING) @Column(name = "skin_type_code") SkinType skinType) implements Serializable {
 }

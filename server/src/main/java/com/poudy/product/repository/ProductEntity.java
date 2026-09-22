@@ -13,7 +13,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Set;
 import org.hibernate.annotations.Immutable;
 
@@ -21,6 +22,8 @@ import org.hibernate.annotations.Immutable;
 @Immutable
 @Table(name = "product")
 public class ProductEntity {
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     @Id
     private Long id;
@@ -44,7 +47,7 @@ public class ProductEntity {
     private Short oilLevel;
 
     @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     protected ProductEntity() {
     }
@@ -77,7 +80,7 @@ public class ProductEntity {
             imageUrl,
             variants,
             new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel)),
-            updatedAt,
+            updatedAt.atZone(SEOUL).toOffsetDateTime(),
             skinTypes
         );
     }

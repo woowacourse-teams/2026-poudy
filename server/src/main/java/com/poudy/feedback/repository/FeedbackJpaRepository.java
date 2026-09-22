@@ -1,7 +1,7 @@
 package com.poudy.feedback.repository;
 
 import com.poudy.feedback.domain.FeedbackStatus;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -29,17 +29,16 @@ public interface FeedbackJpaRepository extends Repository<FeedbackEntity, UUID> 
     @Transactional
     @Modifying
     @Query("update FeedbackEntity feedback set feedback.status = :status,"
-        + " feedback.statusChangedAt = :statusChangedAt, feedback.completedAt = :completedAt where feedback.id = :id and feedback.status = :expected")
+        + " feedback.statusChangedAt = :statusChangedAt where feedback.id = :id and feedback.status = :expected")
     int updateStatus(
         @Param("id") UUID id,
         @Param("expected") FeedbackStatus expected,
         @Param("status") FeedbackStatus status,
-        @Param("statusChangedAt") OffsetDateTime statusChangedAt,
-        @Param("completedAt") OffsetDateTime completedAt
+        @Param("statusChangedAt") LocalDateTime statusChangedAt
     );
 
     @Transactional
     @Modifying
-    @Query("delete from FeedbackEntity feedback where feedback.id = :id and feedback.receivedAt <= :cutoff")
-    int deleteExpired(@Param("id") UUID id, @Param("cutoff") OffsetDateTime cutoff);
+    @Query("delete from FeedbackEntity feedback where feedback.id = :id and feedback.createdAt <= :cutoff")
+    int deleteExpired(@Param("id") UUID id, @Param("cutoff") LocalDateTime cutoff);
 }

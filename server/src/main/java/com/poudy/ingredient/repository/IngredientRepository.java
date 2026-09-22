@@ -39,11 +39,13 @@ public class IngredientRepository {
         Tags tags = tagRepository.findAll();
         Map<Long, List<String>> aliases = ingredientJpaRepository.findAllAliases().stream()
             .collect(groupingBy(IngredientAliasEntity::ingredientId, mapping(IngredientAliasEntity::alias, toList())));
-        Map<IngredientTagId, List<String>> tagEvidence = ingredientJpaRepository.findAllTagEvidence().stream()
+        List<IngredientSourceEntity> allSources = ingredientJpaRepository.findAllSources();
+        Map<Long, List<String>> effectSources = allSources.stream()
+            .filter(IngredientSourceEntity::isEffect)
             .collect(
                 groupingBy(
-                    IngredientTagEvidenceEntity::ingredientTagId,
-                    mapping(IngredientTagEvidenceEntity::content, toList())
+                    IngredientSourceEntity::ingredientId,
+                    mapping(IngredientSourceEntity::content, toList())
                 )
             );
         Map<Long, List<IngredientTag>> tagMappings = ingredientJpaRepository.findAllTags().stream()
@@ -51,10 +53,11 @@ public class IngredientRepository {
             .collect(
                 groupingBy(
                     IngredientTagId::ingredientId,
-                    mapping(id -> ingredientTagOf(id, tags, tagEvidence.get(id)), toList())
+                    mapping(id -> ingredientTagOf(id, tags, effectSources.get(id.ingredientId())), toList())
                 )
             );
-        Map<Long, List<String>> sources = ingredientJpaRepository.findAllSources().stream()
+        Map<Long, List<String>> sources = allSources.stream()
+            .filter(IngredientSourceEntity::isInfo)
             .collect(
                 groupingBy(
                     IngredientSourceEntity::ingredientId,
@@ -78,10 +81,10 @@ public class IngredientRepository {
     }
 
     private static IngredientTag ingredientTagOf(IngredientTagId id, Tags tags, List<String> evidence) {
-        Tag tag = tags.findById(id.tagId()).orElseThrow(
+        Tag tag = tags.findById(id.tagCode()).orElseThrow(
             () -> new InfrastructureException(
-                "성분이 존재하지 않는 태그 ID를 참조합니다. ingredient_id=%d, tag_id=%d"
-                    .formatted(id.ingredientId(), id.tagId())
+                "성분이 존재하지 않는 태그 코드를 참조합니다. ingredient_id=%d, tag_code=%s"
+                    .formatted(id.ingredientId(), id.tagCode())
             )
         );
         try {

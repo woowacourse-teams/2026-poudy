@@ -3,33 +3,33 @@ INSERT INTO brand (id, korean_name, english_name, image_url) VALUES
     (3, '나 브랜드', NULL, NULL),
     (2, '가 브랜드', NULL, NULL);
 
-INSERT INTO category (id, parent_id, parent_depth, name, depth, display_order) VALUES
-    (1, NULL, NULL, '스킨케어', 0, 0),
-    (2, 1, 0, '스킨/토너', 1, 1),
-    (3, 1, 0, '에센스/세럼/앰플', 1, 2),
-    (13, NULL, NULL, '선케어', 0, 3),
-    (14, 13, 0, '선크림', 1, 4);
+INSERT INTO category (id, parent_id, name, depth) VALUES
+    (1, NULL, '스킨케어', 0),
+    (2, 1, '스킨/토너', 1),
+    (3, 1, '에센스/세럼/앰플', 1),
+    (13, NULL, '선케어', 0),
+    (14, 13, '선크림', 1);
 
-INSERT INTO tag (id, category, code, name) VALUES
-    (1, 'FUNCTION', 'ABRASIVE', '연마제'),
-    (3, 'FUNCTION', 'ANTIMICROBIAL', '항균제'),
-    (6, 'FUNCTION', 'BUFFERING', '완충제'),
-    (8, 'FUNCTION', 'CLEANSING', '세정제'),
-    (9, 'FUNCTION', 'COLORANT', '착색제'),
-    (15, 'FUNCTION', 'PERFUMING', '향료'),
-    (16, 'FUNCTION', 'PRESERVATIVE', '보존제'),
-    (18, 'FUNCTION', 'SKIN_CONDITIONING', '피부 컨디셔닝제'),
-    (22, 'FUNCTION', 'SURFACTANT', '계면활성제'),
-    (30, 'INGREDIENT_CLASS', 'ESTER', '에스터류'),
-    (31, 'INGREDIENT_CLASS', 'SILICONE', '실리콘류'),
-    (41, 'INGREDIENT_CLASS', 'BOTANICAL_EXTRACT', '식물 추출물'),
-    (44, 'ALLERGEN', 'FRAGRANCE_ALLERGEN', '향료 알레르겐'),
-    (47, 'BIOLOGICAL_EFFECT', 'ANTIOXIDANT_RELATED', '항산화 관련'),
-    (71, 'FUNCTION', 'HAIR_CONDITIONING', '모발 컨디셔닝제'),
-    (72, 'FUNCTION', 'SURFACTANT_FOAM_BOOSTING', '거품 증진제'),
-    (81, 'SKIN_REACTION', 'IRRITATION_REPORTED', '피부 자극 반응 보고'),
-    (82, 'SKIN_REACTION', 'BARRIER_IMPAIRMENT_REPORTED', '피부 장벽 저하 보고'),
-    (83, 'SKIN_REACTION', 'CONTACT_ALLERGY_REPORTED', '접촉 알레르기 보고');
+INSERT INTO tag (category_code, code, name) VALUES
+    ('FUNCTION', 'ABRASIVE', '연마제'),
+    ('FUNCTION', 'ANTIMICROBIAL', '항균제'),
+    ('FUNCTION', 'BUFFERING', '완충제'),
+    ('FUNCTION', 'CLEANSING', '세정제'),
+    ('FUNCTION', 'COLORANT', '착색제'),
+    ('FUNCTION', 'PERFUMING', '향료'),
+    ('FUNCTION', 'PRESERVATIVE', '보존제'),
+    ('FUNCTION', 'SKIN_CONDITIONING', '피부 컨디셔닝제'),
+    ('FUNCTION', 'SURFACTANT', '계면활성제'),
+    ('INGREDIENT_CLASS', 'ESTER', '에스터류'),
+    ('INGREDIENT_CLASS', 'SILICONE', '실리콘류'),
+    ('INGREDIENT_CLASS', 'BOTANICAL_EXTRACT', '식물 추출물'),
+    ('ALLERGEN', 'FRAGRANCE_ALLERGEN', '향료 알레르겐'),
+    ('BIOLOGICAL_EFFECT', 'ANTIOXIDANT_RELATED', '항산화 관련'),
+    ('FUNCTION', 'HAIR_CONDITIONING', '모발 컨디셔닝제'),
+    ('FUNCTION', 'SURFACTANT_FOAM_BOOSTING', '거품 증진제'),
+    ('SKIN_REACTION', 'IRRITATION_REPORTED', '피부 자극 반응 보고'),
+    ('SKIN_REACTION', 'BARRIER_IMPAIRMENT_REPORTED', '피부 장벽 저하 보고'),
+    ('SKIN_REACTION', 'CONTACT_ALLERGY_REPORTED', '접촉 알레르기 보고');
 
 INSERT INTO ingredient (id, korean_name, english_name, description, updated_at) VALUES
     (1, '가공소금', NULL, '공개된 표준 자료만으로는 피부에서의 구체적인 효과나 화장품 내 용도를 확인하기 어려워요. 정확한 원료 조성이나 출처가 중요한 경우 제조사 정보를 함께 확인하고, 민감한 피부라면 제품 전체 성분과 사용 부위를 살펴보는 것이 좋아요.', '2026-08-13T08:28:29.301Z'),
@@ -155,7 +155,7 @@ INSERT INTO ingredient (id, korean_name, english_name, description, updated_at) 
     (19600, '피그먼트자색23호', 'Pigment Violet 23', '합성 색소 테스트 설명', '2026-08-15T12:29:40.49Z'),
     (19601, '피그먼트녹색7호', 'Pigment Green 7', '합성 색소 테스트 설명', '2026-08-15T12:29:40.49Z');
 
-INSERT INTO ingredient_alias (ingredient_id, display_order, alias) VALUES
+WITH aliases(ingredient_id, display_order, alias) AS (VALUES
     (2, 0, '가지추출물'),
     (213, 0, '메칠파라벤'),
     (535, 0, '변성알코올40-B'),
@@ -171,9 +171,19 @@ INSERT INTO ingredient_alias (ingredient_id, display_order, alias) VALUES
     (2456, 0, '이소부틸파라벤'),
     (2530, 0, '이소프로필알코올'),
     (2535, 0, '이소프로필파라벤'),
-    (4856, 0, '헥실신나몰');
+    (4856, 0, '헥실신나몰')
+)
+INSERT INTO ingredient_alias (ingredient_id, alias)
+SELECT ingredient_id, alias FROM aliases ORDER BY ingredient_id, display_order;
 
-INSERT INTO ingredient_tag (ingredient_id, tag_id, display_order) VALUES
+WITH tag_ids(id, code) AS (VALUES
+    (1, 'ABRASIVE'), (3, 'ANTIMICROBIAL'), (6, 'BUFFERING'), (8, 'CLEANSING'),
+    (9, 'COLORANT'), (15, 'PERFUMING'), (16, 'PRESERVATIVE'), (18, 'SKIN_CONDITIONING'),
+    (22, 'SURFACTANT'), (30, 'ESTER'), (31, 'SILICONE'), (41, 'BOTANICAL_EXTRACT'),
+    (44, 'FRAGRANCE_ALLERGEN'), (47, 'ANTIOXIDANT_RELATED'), (71, 'HAIR_CONDITIONING'),
+    (72, 'SURFACTANT_FOAM_BOOSTING'), (81, 'IRRITATION_REPORTED'),
+    (82, 'BARRIER_IMPAIRMENT_REPORTED'), (83, 'CONTACT_ALLERGY_REPORTED')
+), mappings(ingredient_id, tag_id, display_order) AS (VALUES
     (2, 41, 0),
     (2, 47, 1),
     (9, 15, 0),
@@ -309,9 +319,14 @@ INSERT INTO ingredient_tag (ingredient_id, tag_id, display_order) VALUES
     (4942, 9, 0),
     (4999, 9, 0),
     (5147, 83, 0),
-    (5147, 81, 1);
+    (5147, 81, 1)
+)
+INSERT INTO ingredient_tag (ingredient_id, tag_code, display_order)
+SELECT mappings.ingredient_id, tag_ids.code, mappings.display_order
+FROM mappings JOIN tag_ids ON tag_ids.id = mappings.tag_id
+ORDER BY mappings.ingredient_id, mappings.display_order;
 
-INSERT INTO ingredient_tag_evidence (ingredient_id, tag_id, display_order, content) VALUES
+WITH evidence(ingredient_id, tag_id, display_order, content) AS (VALUES
     (2, 41, 0, '대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)'),
     (2, 41, 1, 'Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)'),
     (2, 47, 0, 'Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)'),
@@ -454,9 +469,16 @@ INSERT INTO ingredient_tag_evidence (ingredient_id, tag_id, display_order, conte
     (4942, 9, 0, '착색·색상 부여 기능이 설명·근거에 명시됨'),
     (4999, 9, 0, '착색·색상 부여 기능이 설명·근거에 명시됨'),
     (5147, 83, 0, 'Contact allergy to and allergic contact dermatitis from formaldehyde and formaldehyde releasers: A clinical review and update (Goossens & Aerts, 2022; 사람 접촉피부염 및 첩포시험 자료 검토)'),
-    (5147, 81, 0, 'Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)');
+    (5147, 81, 0, 'Skin irritation potential of cosmetic preservatives: An exposure-relevant study (Ma et al., 2021; 허용 농도의 phenoxyethanol·methylparaben·propylparaben·imidazolidinyl urea·DMDM hydantoin 사람 첩포·반복 개방 도포시험)')
+)
+INSERT INTO ingredient_source (ingredient_id, type, content)
+SELECT ingredient_id, 'EFFECT', content
+FROM evidence
+GROUP BY ingredient_id, content
+ORDER BY ingredient_id, min(tag_id), min(display_order)
+ON CONFLICT DO NOTHING;
 
-INSERT INTO ingredient_source (ingredient_id, display_order, content) VALUES
+WITH sources(ingredient_id, display_order, content) AS (VALUES
     (1, 0, '대한화장품협회 성분사전 「가공소금」(성분코드 1)'),
     (1, 1, '대한화장품협회 「성분사전 표준화명칭목록」(2026.04.30 기준)'),
     (2, 0, '대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)'),
@@ -561,7 +583,10 @@ INSERT INTO ingredient_source (ingredient_id, display_order, content) VALUES
     (4942, 0, '대한화장품협회 성분사전 「황색407호」(성분코드 4942)'),
     (4999, 0, '대한화장품협회 성분사전 「흑색401호」(성분코드 4999)'),
     (5147, 0, '대한화장품협회 성분사전 「디엠디엠하이단토인」(성분코드 5147)'),
-    (18490, 0, '대한화장품협회 성분사전 「등색401호」(성분코드 18490)');
+    (18490, 0, '대한화장품협회 성분사전 「등색401호」(성분코드 18490)')
+)
+INSERT INTO ingredient_source (ingredient_id, type, content)
+SELECT ingredient_id, 'INFO', content FROM sources ORDER BY ingredient_id, display_order;
 
 INSERT INTO exclude_code_ingredient (exclude_code, ingredient_id, display_order) VALUES
     ('FRAGRANCE_ALLERGENS', 9, 0),
@@ -706,15 +731,29 @@ INSERT INTO product_component (product_id, display_order, name) VALUES
     (13, 0, NULL),
     (15, 0, NULL);
 
-INSERT INTO product_ingredient (product_id, component_order, display_order, ingredient_id) VALUES
+WITH ingredients(product_id, component_order, display_order, ingredient_id) AS (VALUES
     (1, 0, 0, 4815),
     (7, 0, 0, 4815),
     (10, 0, 0, 4815),
     (13, 0, 0, 4815),
     (15, 0, 0, 20),
-    (15, 0, 1, 9);
+    (15, 0, 1, 9)
+)
+INSERT INTO product_ingredient (component_id, ingredient_id, display_order)
+SELECT component.id, ingredients.ingredient_id, ingredients.display_order
+FROM ingredients
+JOIN product_component component
+  ON component.product_id = ingredients.product_id
+ AND component.display_order = ingredients.component_order
+ORDER BY ingredients.product_id, ingredients.component_order, ingredients.display_order;
 
-INSERT INTO product_skin_type (product_id, skin_type) VALUES
+INSERT INTO skin_type (code, name) VALUES
+    ('DRY', '건성'),
+    ('OILY', '지성'),
+    ('SENSITIVE', '민감성'),
+    ('COMBINATION', '복합성');
+
+INSERT INTO product_skin_type (product_id, skin_type_code) VALUES
     (1, 'DRY'),
     (1, 'SENSITIVE'),
     (13, 'DRY'),
@@ -722,10 +761,12 @@ INSERT INTO product_skin_type (product_id, skin_type) VALUES
     (15, 'DRY'),
     (15, 'COMBINATION');
 
-INSERT INTO curation (id, position, title, description, status, banner_visible, banner_thumbnail_image_url) VALUES
-    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', 'PUBLISHED', TRUE, 'https://cdn.example.com/curations/banner.png'),
-    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', 'PUBLISHED', FALSE, NULL),
-    (20, 2, '미게시 큐레이션', '미게시 큐레이션', 'UNPUBLISHED', FALSE, NULL);
+INSERT INTO curation (
+    id, position, title, description, banner_visible, banner_thumbnail_image_url, publication_status
+) VALUES
+    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', TRUE, 'https://cdn.example.com/curations/banner.png', 'PUBLISHED'),
+    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', FALSE, NULL, 'PUBLISHED'),
+    (20, 2, '미게시 큐레이션', '미게시 큐레이션', FALSE, NULL, 'UNPUBLISHED');
 
 INSERT INTO curation_block (id, curation_id, position, type, spacing_top, spacing_bottom, image_url) VALUES
     ('00000000-0000-4000-8000-000000000001', 12, 0, 'IMAGE', 8, 24, 'https://cdn.example.com/curations/12/detail-1.png'),
@@ -741,12 +782,12 @@ INSERT INTO curation_block_filter (id, block_id, position, label) VALUES
     ('00000000-0000-4000-8000-000000000013', '00000000-0000-4000-8000-000000000003', 2, '사라질 필터'),
     ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000004', 0, '이 블록에서만 유효');
 
-INSERT INTO curation_block_product (block_id, block_type, product_id, position) VALUES
-    ('00000000-0000-4000-8000-000000000003', 'PRODUCTS_BY_FILTER', 15, 0),
-    ('00000000-0000-4000-8000-000000000003', 'PRODUCTS_BY_FILTER', 10, 1),
-    ('00000000-0000-4000-8000-000000000003', 'PRODUCTS_BY_FILTER', 7, 2),
-    ('00000000-0000-4000-8000-000000000003', 'PRODUCTS_BY_FILTER', 1, 3),
-    ('00000000-0000-4000-8000-000000000006', 'PRODUCTS', 10, 0);
+INSERT INTO curation_block_product (block_id, product_id, position) VALUES
+    ('00000000-0000-4000-8000-000000000003', 15, 0),
+    ('00000000-0000-4000-8000-000000000003', 10, 1),
+    ('00000000-0000-4000-8000-000000000003', 7, 2),
+    ('00000000-0000-4000-8000-000000000003', 1, 3),
+    ('00000000-0000-4000-8000-000000000006', 10, 0);
 
 INSERT INTO curation_block_product_filter (block_id, product_id, filter_id, position) VALUES
     ('00000000-0000-4000-8000-000000000003', 15, '00000000-0000-4000-8000-000000000012', 0),

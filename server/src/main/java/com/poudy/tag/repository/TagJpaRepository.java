@@ -4,7 +4,7 @@ import com.poudy.tag.domain.Tag;
 import java.util.List;
 import org.springframework.data.repository.Repository;
 
-public interface TagJpaRepository extends Repository<Tag, Long> {
+public interface TagJpaRepository extends Repository<Tag, String> {
 
-    List<Tag> findAllByOrderByIdAsc();
+    List<Tag> findAllByOrderByCodeAsc();
 }

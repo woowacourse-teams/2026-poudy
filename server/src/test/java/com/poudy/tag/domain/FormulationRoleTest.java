@@ -14,10 +14,10 @@ class FormulationRoleTest {
         assertThatThrownBy(() -> new FormulationRole(null, "HUMECTANT", "습윤제"))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("배합 목적 ID가 필요합니다.");
-        assertThatThrownBy(() -> new FormulationRole(1L, " ", "습윤제"))
+        assertThatThrownBy(() -> new FormulationRole("HUMECTANT", " ", "습윤제"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("배합 목적 코드가 필요합니다.");
-        assertThatThrownBy(() -> new FormulationRole(1L, "HUMECTANT", " "))
+        assertThatThrownBy(() -> new FormulationRole("HUMECTANT", "HUMECTANT", " "))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("배합 목적 표시 이름이 필요합니다.");
     }

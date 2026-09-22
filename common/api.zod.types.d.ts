@@ -189,7 +189,7 @@ export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 배합 목적 이름 (CosIng Function)
@@ -222,7 +222,7 @@ export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름
@@ -234,7 +234,7 @@ export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름

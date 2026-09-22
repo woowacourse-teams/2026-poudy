@@ -6,7 +6,6 @@ import java.io.Serializable;
 
 @Embeddable
 public record ProductIngredientId(
-    @Column(name = "product_id") Long productId,
-    @Column(name = "component_order") Integer componentOrder,
-    @Column(name = "display_order") Integer displayOrder) implements Serializable {
+    @Column(name = "component_id") Long componentId,
+    @Column(name = "ingredient_id") Long ingredientId) implements Serializable {
 }

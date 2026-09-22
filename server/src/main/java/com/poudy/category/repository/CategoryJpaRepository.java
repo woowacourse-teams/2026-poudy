@@ -6,5 +6,5 @@ import org.springframework.data.repository.Repository;
 
 public interface CategoryJpaRepository extends Repository<Category, Long> {
 
-    List<Category> findAllByOrderByDisplayOrderAsc();
+    List<Category> findAllByOrderByIdAsc();
 }

@@ -100,7 +100,7 @@ class ProductTest {
     @DisplayName("같은 피부 작용을 가진 성분을 하나의 그룹으로 묶는다")
     void groupsIngredientsBySkinEffect() {
         Ingredient first = ingredient(10L, "HYDRATION_RELATED");
-        Ingredient second = ingredient(20L, "MOISTURE_RELATED");
+        Ingredient second = ingredient(20L, "HYDRATION_RELATED");
         Product product = new Product(
             1L,
             "제품",
@@ -116,7 +116,7 @@ class ProductTest {
 
         assertThat(product.skinEffectGroups()).singleElement()
             .satisfies(group -> {
-                assertThat(group.effect().id()).isEqualTo(57L);
+                assertThat(group.effect().id()).isEqualTo("HYDRATION_RELATED");
                 assertThat(group.ingredientIds()).containsExactly(10L, 20L);
             });
     }
@@ -150,15 +150,15 @@ class ProductTest {
         assertThat(product.skinEffectGroups())
             .satisfiesExactly(
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(20L);
+                    assertThat(group.effect().id()).isEqualTo("MOST_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(1L, 2L, 3L);
                 },
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(30L);
+                    assertThat(group.effect().id()).isEqualTo("SECOND_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(4L, 5L);
                 },
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(10L);
+                    assertThat(group.effect().id()).isEqualTo("TIED_EARLIER_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(7L);
                 }
             );
@@ -265,7 +265,7 @@ class ProductTest {
 
     private static Ingredient ingredient(Long id, Long tagId, String effect) {
         IngredientTag tag = new IngredientTag(
-            new Tag(tagId, TagCategory.BIOLOGICAL_EFFECT, effect, "피부 작용"),
+            new Tag(effect, TagCategory.BIOLOGICAL_EFFECT, "피부 작용"),
             List.of("확인된 근거")
         );
         return new Ingredient(id, "성분 " + id, null, null, null, null, List.of(tag), null);

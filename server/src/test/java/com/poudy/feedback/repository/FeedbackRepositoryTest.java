@@ -246,6 +246,17 @@ class FeedbackRepositoryTest {
                 .map(image -> new S3FeedbackImageRepository.PendingImage(image, "etag", Instant.now()))
                 .toList()
         );
+        given(imageRepository.findStored(any(), any())).willAnswer(invocation -> {
+            List<UUID> imageIds = invocation.getArgument(1);
+            return imageIds.stream()
+                .map(
+                    id -> java.util.Arrays.stream(images)
+                        .filter(image -> image.id().equals(id))
+                        .findFirst()
+                        .orElseThrow()
+                )
+                .toList();
+        });
     }
 
     @Test

@@ -3588,10 +3588,9 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "배합 목적 ID",
-            "example": 14
+            "example": "MOISTURISING"
           },
           "code": {
             "type": "string",
@@ -3815,10 +3814,9 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "피부 작용 ID",
-            "example": 57
+            "example": "HYDRATION_RELATED"
           },
           "code": {
             "type": "string",
@@ -3849,10 +3847,9 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "피부 작용 ID",
-            "example": 57
+            "example": "HYDRATION_RELATED"
           },
           "code": {
             "type": "string",

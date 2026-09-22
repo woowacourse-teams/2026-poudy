@@ -7,5 +7,5 @@ import java.io.Serializable;
 @Embeddable
 public record IngredientTagId(
     @Column(name = "ingredient_id") Long ingredientId,
-    @Column(name = "tag_id") Long tagId) implements Serializable {
+    @Column(name = "tag_code") String tagCode) implements Serializable {
 }

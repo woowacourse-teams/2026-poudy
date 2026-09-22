@@ -10,7 +10,7 @@ public class TagRepository {
     private final Tags tags;
 
     public TagRepository(TagJpaRepository tagJpaRepository, SnapshotReader snapshotReader) {
-        this.tags = snapshotReader.read(() -> Tags.from(tagJpaRepository.findAllByOrderByIdAsc()));
+        this.tags = snapshotReader.read(() -> Tags.from(tagJpaRepository.findAllByOrderByCodeAsc()));
     }
 
     public Tags findAll() {

@@ -174,7 +174,7 @@ public final class Product {
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<Long, SkinEffectGroupAccumulator> groups = new HashMap<>();
+        Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
                 SkinEffectGroupAccumulator group = groups.computeIfAbsent(

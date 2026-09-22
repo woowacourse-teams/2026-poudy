@@ -1,7 +1,7 @@
 package com.poudy.feedback.repository;
 
 import com.poudy.feedback.domain.FeedbackStatus;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -29,17 +29,16 @@ public interface ProductCorrectionRequestJpaRepository extends Repository<Produc
     @Transactional
     @Modifying
     @Query("update ProductCorrectionRequestEntity request set request.status = :status,"
-        + " request.statusChangedAt = :statusChangedAt, request.completedAt = :completedAt where request.id = :id and request.status = :expected")
+        + " request.statusChangedAt = :statusChangedAt where request.id = :id and request.status = :expected")
     int updateStatus(
         @Param("id") UUID id,
         @Param("expected") FeedbackStatus expected,
         @Param("status") FeedbackStatus status,
-        @Param("statusChangedAt") OffsetDateTime statusChangedAt,
-        @Param("completedAt") OffsetDateTime completedAt
+        @Param("statusChangedAt") LocalDateTime statusChangedAt
     );
 
     @Transactional
     @Modifying
-    @Query("delete from ProductCorrectionRequestEntity request where request.id = :id and request.receivedAt <= :cutoff")
-    int deleteExpired(@Param("id") UUID id, @Param("cutoff") OffsetDateTime cutoff);
+    @Query("delete from ProductCorrectionRequestEntity request where request.id = :id and request.createdAt <= :cutoff")
+    int deleteExpired(@Param("id") UUID id, @Param("cutoff") LocalDateTime cutoff);
 }

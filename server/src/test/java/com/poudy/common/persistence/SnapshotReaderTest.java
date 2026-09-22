@@ -67,11 +67,11 @@ class SnapshotReaderTest {
     private void insertRequest() {
         OffsetDateTime now = OffsetDateTime.parse("2026-09-19T00:00:00Z");
         jdbcTemplate.update(
-            "insert into product_request (id, product_name, requested_at, status, status_changed_at) values (?, ?, ?, 'RECEIVED', ?)",
+            "insert into product_request (id, product_name, created_at, status, status_changed_at) values (?, ?, ?, 'RECEIVED', ?)",
             UUID.randomUUID(),
             PRODUCT_NAME,
-            now,
-            now
+            now.atZoneSameInstant(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime(),
+            now.atZoneSameInstant(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime()
         );
     }
 }

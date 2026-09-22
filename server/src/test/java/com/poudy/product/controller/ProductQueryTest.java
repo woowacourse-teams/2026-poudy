@@ -234,7 +234,7 @@ class ProductQueryTest {
                     org.hamcrest.Matchers.hasItem(ExcludeCode.SULFATES.name())
                 )
             )
-            .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301Z"));
+            .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301+09:00"));
     }
 
     @Test

@@ -11,7 +11,7 @@ public class CategoryRepository {
 
     public CategoryRepository(CategoryJpaRepository categoryJpaRepository, SnapshotReader snapshotReader) {
         this.categories = snapshotReader
-            .read(() -> Categories.from(categoryJpaRepository.findAllByOrderByDisplayOrderAsc()));
+            .read(() -> Categories.from(categoryJpaRepository.findAllByOrderByIdAsc()));
     }
 
     public Categories findAll() {

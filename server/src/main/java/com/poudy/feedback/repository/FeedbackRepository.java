@@ -15,6 +15,7 @@ import com.poudy.feedback.domain.ServiceFeedback;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -33,8 +34,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class FeedbackRepository {
 
     private static final String IMAGE_LOCK = "select count(*) from (select pg_advisory_xact_lock(hashtextextended(:imageId, 0))) as image_lock";
-    private static final String LISTED = "(select id, received_at, status, subject_type from feedback"
-        + " union all select id, received_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
+    private static final String LISTED = "(select id, created_at, status, subject_type from feedback"
+        + " union all select id, created_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
 
     private final FeedbackJpaRepository feedbackJpaRepository;
     private final ProductCorrectionRequestJpaRepository correctionJpaRepository;
@@ -111,8 +112,8 @@ public class FeedbackRepository {
 
     public Feedback findById(UUID feedbackId) {
         return feedbackJpaRepository.findWithImagesById(feedbackId)
-            .map(feedback -> feedback.toDomain(zone))
-            .or(() -> correctionJpaRepository.findWithImagesById(feedbackId).map(request -> request.toDomain(zone)))
+            .map(this::toDomain)
+            .or(() -> correctionJpaRepository.findWithImagesById(feedbackId).map(this::toDomain))
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
     }
 
@@ -125,7 +126,7 @@ public class FeedbackRepository {
     public List<Feedback> findPage(FeedbackStatus status, FeedbackSubjectType type, long offset, int size) {
         Query query = entityManager.createNativeQuery(
             "select listed.id from " + LISTED + conditionOf(status, type)
-                + " order by listed.received_at desc, listed.id desc offset :offset limit :size"
+                + " order by listed.created_at desc, listed.id desc offset :offset limit :size"
         );
         bind(query, status, type);
         query.setParameter("offset", offset);
@@ -135,8 +136,8 @@ public class FeedbackRepository {
             return List.of();
         }
         Map<UUID, Feedback> feedbacks = Stream.concat(
-            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(feedback -> feedback.toDomain(zone)),
-            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(request -> request.toDomain(zone))
+            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain),
+            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain)
         )
             .collect(toMap(Feedback::id, Function.identity()));
         return ids.stream().map(feedbacks::get).toList();
@@ -148,25 +149,25 @@ public class FeedbackRepository {
         }
         Query query = entityManager.createNativeQuery(
             "select listed.id from " + LISTED
-                + " where listed.received_at <= :cutoff order by listed.received_at, listed.id limit :size"
+                + " where listed.created_at <= :cutoff order by listed.created_at, listed.id limit :size"
         );
-        query.setParameter("cutoff", cutoff);
+        query.setParameter("cutoff", local(cutoff));
         query.setParameter("size", size);
         List<UUID> ids = ((List<?>) query.getResultList()).stream().map(UUID.class::cast).toList();
         if (ids.isEmpty()) {
             return List.of();
         }
         Map<UUID, Feedback> feedbacks = Stream.concat(
-            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(feedback -> feedback.toDomain(zone)),
-            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(request -> request.toDomain(zone))
+            feedbackJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain),
+            correctionJpaRepository.findAllWithImagesByIdIn(ids).stream().map(this::toDomain)
         ).collect(toMap(Feedback::id, Function.identity()));
         return ids.stream().map(feedbacks::get).toList();
     }
 
     public boolean deleteExpired(Feedback feedback, OffsetDateTime cutoff) {
         int deleted = switch (feedback.subject()) {
-            case ServiceFeedback ignored -> feedbackJpaRepository.deleteExpired(feedback.id(), cutoff);
-            case ProductCorrection ignored -> correctionJpaRepository.deleteExpired(feedback.id(), cutoff);
+            case ServiceFeedback ignored -> feedbackJpaRepository.deleteExpired(feedback.id(), local(cutoff));
+            case ProductCorrection ignored -> correctionJpaRepository.deleteExpired(feedback.id(), local(cutoff));
         };
         return deleted == 1;
     }
@@ -208,15 +209,13 @@ public class FeedbackRepository {
                 feedback.id(),
                 expected,
                 feedback.status(),
-                feedback.statusChangedAt(),
-                feedback.completedAt()
+                local(feedback.statusChangedAt())
             );
             case ProductCorrection ignored -> correctionJpaRepository.updateStatus(
                 feedback.id(),
                 expected,
                 feedback.status(),
-                feedback.statusChangedAt(),
-                feedback.completedAt()
+                local(feedback.statusChangedAt())
             );
         };
     }
@@ -257,6 +256,18 @@ public class FeedbackRepository {
             case ServiceFeedback service -> FeedbackEntity.from(feedback, service);
             case ProductCorrection correction -> ProductCorrectionRequestEntity.from(feedback, correction);
         };
+    }
+
+    private Feedback toDomain(FeedbackEntity entity) {
+        return entity.toDomain(zone, imageRepository.findStored(entity.id(), entity.imageIds()));
+    }
+
+    private Feedback toDomain(ProductCorrectionRequestEntity entity) {
+        return entity.toDomain(zone, imageRepository.findStored(entity.id(), entity.imageIds()));
+    }
+
+    private static LocalDateTime local(OffsetDateTime value) {
+        return value.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
     }
 
     private SaveStatus verifyCommit(UUID feedbackId) {

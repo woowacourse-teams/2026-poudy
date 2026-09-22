@@ -32,8 +32,8 @@ public class CurationEntity {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private CurationPublicationStatus status;
+    @Column(name = "publication_status")
+    private CurationPublicationStatus publicationStatus;
 
     @Column(name = "banner_visible")
     private Boolean bannerVisible;
@@ -53,7 +53,7 @@ public class CurationEntity {
             id,
             title,
             description,
-            status,
+            publicationStatus,
             new CurationBanner(bannerVisible, bannerThumbnailImageUrl),
             CurationDetail.from(blocks)
         );

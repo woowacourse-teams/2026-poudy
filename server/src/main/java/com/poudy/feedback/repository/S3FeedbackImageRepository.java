@@ -59,6 +59,21 @@ public class S3FeedbackImageRepository {
             .toList();
     }
 
+    public List<FeedbackImage> findStored(UUID feedbackId, List<UUID> imageIds) {
+        return imageIds.stream().map(imageId -> findStored(feedbackId, imageId)).toList();
+    }
+
+    private FeedbackImage findStored(UUID feedbackId, UUID imageId) {
+        List<FeedbackImage> found = Stream.of(FeedbackImageFormat.JPEG, FeedbackImageFormat.PNG)
+            .map(format -> new FeedbackImage(imageId, format))
+            .filter(image -> existsExactly(finalKey(feedbackId, image)))
+            .toList();
+        if (found.size() != 1) {
+            throw new InfrastructureException("의견 이미지 형식을 확인하지 못했습니다.");
+        }
+        return found.getFirst();
+    }
+
     public boolean transfer(UUID feedbackId, FeedbackImage image) {
         Optional<PendingImage> pending = head(image);
         if (pending.isEmpty()) {

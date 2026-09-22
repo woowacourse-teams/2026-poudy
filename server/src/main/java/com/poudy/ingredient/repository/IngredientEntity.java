@@ -6,7 +6,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import org.hibernate.annotations.Immutable;
 
@@ -14,6 +15,8 @@ import org.hibernate.annotations.Immutable;
 @Immutable
 @Table(name = "ingredient")
 public class IngredientEntity {
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     @Id
     private Long id;
@@ -28,7 +31,7 @@ public class IngredientEntity {
     private String description;
 
     @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     protected IngredientEntity() {
     }
@@ -46,7 +49,7 @@ public class IngredientEntity {
             infoSources,
             aliases,
             tags,
-            updatedAt
+            updatedAt.atZone(SEOUL).toOffsetDateTime()
         );
     }
 }

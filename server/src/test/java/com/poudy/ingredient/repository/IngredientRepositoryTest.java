@@ -31,7 +31,7 @@ class IngredientRepositoryTest {
         assertThat(ingredient.koreanName()).isEqualTo("가지열매추출물");
         assertThat(ingredient.englishName()).isEqualTo("Solanum Melongena (Eggplant) Fruit Extract");
         assertThat(ingredient.description()).isNotBlank();
-        assertThat(ingredient.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:50:49.068Z"));
+        assertThat(ingredient.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:50:49.068+09:00"));
         assertThat(ingredientRepository.findById(999_999L)).isEmpty();
     }
 
@@ -49,7 +49,7 @@ class IngredientRepositoryTest {
         Ingredient ingredient = ingredientRepository.findById(2L).orElseThrow();
 
         assertThat(ingredient.skinEffects()).extracting(SkinEffect::code).containsExactly("ANTIOXIDANT_RELATED");
-        assertThat(ingredient.effectSources()).containsExactly(MICROWAVE_STUDY, FERMENTED_STUDY);
+        assertThat(ingredient.effectSources()).containsExactly(EGGPLANT_SOURCE, MICROWAVE_STUDY, FERMENTED_STUDY);
     }
 
     @Test
