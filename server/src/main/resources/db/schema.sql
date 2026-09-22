@@ -235,8 +235,8 @@ CREATE TABLE product_ingredient (
     ingredient_id          BIGINT        NOT NULL,
     display_order          INT           NOT NULL,
     disclosed_amount_type  VARCHAR(20)   NULL,
-    value                   NUMERIC(19,9) NULL,
-    unit                    VARCHAR(20)   NULL,
+    disclosed_amount_value NUMERIC(19,9) NULL,
+    disclosed_amount_unit  VARCHAR(20)   NULL,
     created_at             TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     updated_at             TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_ingredient PRIMARY KEY (component_id, ingredient_id),
@@ -244,12 +244,14 @@ CREATE TABLE product_ingredient (
     CONSTRAINT fk_product_ingredient_component FOREIGN KEY (component_id) REFERENCES product_component (id),
     CONSTRAINT fk_product_ingredient_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id),
     CONSTRAINT ck_product_ingredient_amount CHECK (
-        (disclosed_amount_type IS NULL AND value IS NULL AND unit IS NULL)
-        OR (disclosed_amount_type IS NOT NULL AND value IS NOT NULL AND unit IS NOT NULL)
+        (disclosed_amount_type IS NULL AND disclosed_amount_value IS NULL AND disclosed_amount_unit IS NULL)
+        OR (disclosed_amount_type IS NOT NULL AND disclosed_amount_value IS NOT NULL AND disclosed_amount_unit IS NOT NULL)
     ),
-    CONSTRAINT ck_product_ingredient_amount_value CHECK (value IS NULL OR value >= 0),
+    CONSTRAINT ck_product_ingredient_amount_value CHECK (
+        disclosed_amount_value IS NULL OR disclosed_amount_value >= 0
+    ),
     CONSTRAINT ck_product_ingredient_amount_unit CHECK (
-        unit IS NULL OR unit IN ('ppm', 'ppb', 'percent')
+        disclosed_amount_unit IS NULL OR disclosed_amount_unit IN ('ppm', 'ppb', 'percent')
     ),
     CONSTRAINT ck_product_ingredient_amount_type CHECK (
         disclosed_amount_type IS NULL OR disclosed_amount_type IN ('exact')

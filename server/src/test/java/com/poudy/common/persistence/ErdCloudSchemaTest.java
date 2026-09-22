@@ -96,8 +96,8 @@ class ErdCloudSchemaTest {
                 "ingredient_id",
                 "display_order",
                 "disclosed_amount_type",
-                "value",
-                "unit",
+                "disclosed_amount_value",
+                "disclosed_amount_unit",
                 "created_at",
                 "updated_at"
             )
