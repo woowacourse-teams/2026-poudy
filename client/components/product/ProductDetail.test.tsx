@@ -310,3 +310,25 @@ describe("상품 정보 출처 안내", () => {
     );
   });
 });
+
+describe("성분 정보 선택 차단", () => {
+  it("성분 정보 요약과 전체 성분표에 선택을 막는 표시를 단다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { name: "성분 정보" }).closest("section")).toHaveAttribute("data-no-select");
+    expect(screen.getByRole("heading", { name: "전체 성분표" }).closest("section")).toHaveAttribute("data-no-select");
+  });
+
+  it("성분 분류에도 선택을 막는 표시를 단다", () => {
+    render(<ProductDetail product={productDetails[0]} />);
+
+    expect(screen.getByRole("heading", { name: "성분 분류" }).closest("section")).toHaveAttribute("data-no-select");
+  });
+
+  it("제품 이름과 상품 정보 출처 안내는 그대로 선택된다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { level: 1 }).closest("[data-no-select]")).toBeNull();
+    expect(screen.getByText("상품 정보 출처 안내").closest("[data-no-select]")).toBeNull();
+  });
+});

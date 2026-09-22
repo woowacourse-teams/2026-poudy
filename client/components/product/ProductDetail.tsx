@@ -206,7 +206,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
   const nameOf = (id: number) => product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName;
 
   return (
-    <section className="flex flex-col gap-3 pt-5">
+    <section data-no-select className="flex flex-col gap-3 pt-5">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
         <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
@@ -237,7 +237,10 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
+    <section
+      data-no-select
+      className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']"
+    >
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-pretty text-[12px] text-[#72747A]">
@@ -272,7 +275,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
 
 function Ingredients({ ingredients }: { readonly ingredients: ProductDetailResponse["ingredients"] }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section data-no-select className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">전체 성분표</h3>
         <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>

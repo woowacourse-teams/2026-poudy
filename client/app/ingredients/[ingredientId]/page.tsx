@@ -76,7 +76,8 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
         읽을거리는 안쪽 여백을 더해 32px 로 들여 쓰고,
         배경을 가진 덩어리만 안쪽 여백을 빼서 바탕 여백까지 넓힌다.
       */}
-      <main className="flex-1 px-4">
+      {/* 화면 전체가 성분 정보라 본문째 선택을 막는다. 규칙은 globals.css 에 있다. */}
+      <main data-no-select className="flex-1 px-4">
         <section className="flex flex-col gap-2 px-4 pt-4 pb-4">
           <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 
