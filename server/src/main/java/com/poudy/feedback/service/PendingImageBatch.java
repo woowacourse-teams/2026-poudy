@@ -1,6 +1,6 @@
 package com.poudy.feedback.service;
 
-import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.repository.S3FeedbackImageRepository.PendingImage;
 import java.time.Instant;
 import java.util.ArrayList;

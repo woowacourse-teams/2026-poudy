@@ -142,7 +142,7 @@ public class AdminFeedbackController {
 
     public record AdminFeedbackImageResponse(@NotNull UUID imageId, @NotNull String extension) {
 
-        static AdminFeedbackImageResponse from(com.poudy.feedback.domain.FeedbackImage image) {
+        static AdminFeedbackImageResponse from(com.poudy.feedback.domain.image.FeedbackImage image) {
             return new AdminFeedbackImageResponse(image.id(), image.format().extension());
         }
     }

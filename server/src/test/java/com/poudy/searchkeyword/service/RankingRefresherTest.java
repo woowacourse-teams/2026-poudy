@@ -5,8 +5,8 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.poudy.searchkeyword.domain.BucketWindow;
-import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.bucket.BucketWindow;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.support.InMemoryKeywordCountStore;
 import java.time.Clock;
 import java.time.Duration;

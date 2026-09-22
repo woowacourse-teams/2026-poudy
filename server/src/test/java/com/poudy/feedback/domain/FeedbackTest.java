@@ -3,6 +3,7 @@ package com.poudy.feedback.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;

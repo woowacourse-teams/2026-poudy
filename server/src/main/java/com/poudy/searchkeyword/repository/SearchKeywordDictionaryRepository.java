@@ -2,8 +2,8 @@ package com.poudy.searchkeyword.repository;
 
 import com.poudy.common.persistence.SnapshotReader;
 import com.poudy.exception.InfrastructureException;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.dictionary.KeywordSearch;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;

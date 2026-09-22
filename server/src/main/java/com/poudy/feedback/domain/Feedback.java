@@ -1,5 +1,7 @@
 package com.poudy.feedback.domain;
 
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.HashSet;

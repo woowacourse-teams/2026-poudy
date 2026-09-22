@@ -1,6 +1,6 @@
 package com.poudy.searchkeyword.support;
 
-import com.poudy.searchkeyword.domain.KeywordCountStore;
+import com.poudy.searchkeyword.domain.bucket.KeywordCountStore;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,11 +1,11 @@
 package com.poudy.config;
 
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.searchkeyword.domain.BucketWindow;
-import com.poudy.searchkeyword.domain.KeywordBuckets;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
+import com.poudy.searchkeyword.domain.bucket.BucketWindow;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
+import com.poudy.searchkeyword.domain.dictionary.KeywordSearch;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordBucketRepository;

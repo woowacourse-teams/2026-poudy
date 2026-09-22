@@ -1,7 +1,7 @@
 package com.poudy.feedback.service;
 
 import com.poudy.feedback.domain.Feedback;
-import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import com.poudy.feedback.service.PendingImageBatch.OwnedImage;

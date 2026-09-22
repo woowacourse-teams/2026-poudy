@@ -1,7 +1,7 @@
 package com.poudy.searchkeyword.domain.ranking;
 
-import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

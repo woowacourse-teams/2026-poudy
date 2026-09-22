@@ -21,6 +21,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;

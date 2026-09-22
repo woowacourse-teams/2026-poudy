@@ -3,8 +3,8 @@ package com.poudy.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.InvalidFeedbackException;
-import com.poudy.feedback.domain.InvalidFeedbackImageException;
-import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageException;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
 import com.poudy.product.domain.ConflictingIngredientFilterException;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;

@@ -1,6 +1,6 @@
 package com.poudy.searchkeyword.domain.ranking;
 
-import com.poudy.searchkeyword.domain.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
 import java.util.Set;
 
 public final class RankingPolicy {

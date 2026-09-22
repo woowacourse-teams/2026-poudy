@@ -73,7 +73,7 @@ public class FeedbackEntity {
         return new FeedbackEntity(feedback, subject);
     }
 
-    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.FeedbackImage> resolvedImages) {
+    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.image.FeedbackImage> resolvedImages) {
         OffsetDateTime changedAt = atZone(statusChangedAt, zone);
         return new Feedback(
             id,

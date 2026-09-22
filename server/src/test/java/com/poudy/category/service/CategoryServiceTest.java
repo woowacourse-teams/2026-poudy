@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
+import com.poudy.category.domain.CategoryProductCounter;
 import com.poudy.category.repository.CategoryRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

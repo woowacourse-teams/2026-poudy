@@ -11,10 +11,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
-import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
-import com.poudy.feedback.domain.ProcessedImage;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.ProcessedImage;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

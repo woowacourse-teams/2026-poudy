@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackSubject;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;

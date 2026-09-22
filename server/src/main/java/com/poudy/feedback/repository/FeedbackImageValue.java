@@ -1,6 +1,6 @@
 package com.poudy.feedback.repository;
 
-import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImage;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.util.UUID;

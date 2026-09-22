@@ -2,8 +2,8 @@ package com.poudy.feedback.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.repository.S3FeedbackImageRepository.PendingImage;
 import com.poudy.feedback.service.PendingImageBatch.OwnedImage;
 import com.poudy.feedback.service.PendingImageBatch.RelayPlan;

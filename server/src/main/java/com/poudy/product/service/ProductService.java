@@ -9,6 +9,7 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestionPage;
 import com.poudy.product.domain.Products;

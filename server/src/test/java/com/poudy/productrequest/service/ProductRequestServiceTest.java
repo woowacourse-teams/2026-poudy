@@ -16,6 +16,7 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
+import com.poudy.productrequest.ratelimit.ProductRequestRateLimiter;
 import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
 import java.time.Instant;

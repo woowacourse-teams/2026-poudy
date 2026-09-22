@@ -1,6 +1,7 @@
 package com.poudy.category.service;
 
 import com.poudy.category.domain.CategoryProductCount;
+import com.poudy.category.domain.CategoryProductCounter;
 import com.poudy.category.repository.CategoryRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;

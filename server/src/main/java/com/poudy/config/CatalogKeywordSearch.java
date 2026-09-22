@@ -2,7 +2,7 @@ package com.poudy.config;
 
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.searchkeyword.domain.KeywordSearch;
+import com.poudy.searchkeyword.domain.dictionary.KeywordSearch;
 
 public final class CatalogKeywordSearch implements KeywordSearch {
 

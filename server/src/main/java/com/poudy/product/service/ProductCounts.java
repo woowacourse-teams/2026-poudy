@@ -2,12 +2,12 @@ package com.poudy.product.service;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCounter;
 import com.poudy.brand.domain.BrandProductCounts;
-import com.poudy.brand.service.BrandProductCounter;
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.category.service.CategoryProductCounter;
-import com.poudy.ingredient.service.IngredientUsage;
+import com.poudy.category.domain.CategoryProductCounter;
+import com.poudy.ingredient.domain.IngredientUsage;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Set;

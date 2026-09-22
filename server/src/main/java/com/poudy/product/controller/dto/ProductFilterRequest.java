@@ -1,7 +1,7 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.ingredient.domain.ExcludeCode;
-import com.poudy.product.service.ProductQuery;
+import com.poudy.product.domain.ProductQuery;
 import com.poudy.search.validation.ValidSearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

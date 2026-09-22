@@ -2,10 +2,10 @@ package com.poudy.searchkeyword.domain.ranking;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.DictionaryEntry.Status;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry.Status;
+import com.poudy.searchkeyword.domain.dictionary.KeywordSearch;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

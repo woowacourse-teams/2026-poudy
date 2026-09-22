@@ -1,6 +1,6 @@
 package com.poudy.searchkeyword.service;
 
-import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import java.time.Instant;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

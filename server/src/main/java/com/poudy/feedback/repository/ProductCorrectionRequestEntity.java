@@ -70,7 +70,7 @@ public class ProductCorrectionRequestEntity {
         return new ProductCorrectionRequestEntity(feedback, subject);
     }
 
-    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.FeedbackImage> resolvedImages) {
+    public Feedback toDomain(ZoneId zone, List<com.poudy.feedback.domain.image.FeedbackImage> resolvedImages) {
         OffsetDateTime changedAt = FeedbackEntity.atZone(statusChangedAt, zone);
         return new Feedback(
             id,
