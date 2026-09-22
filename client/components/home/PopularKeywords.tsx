@@ -221,7 +221,7 @@ export function PopularKeywords({ items, defaultExpanded = false, flowWhenExpand
           aria-expanded={expanded}
           aria-controls={listId}
           aria-label={expanded ? "인기 검색어 접기" : "인기 검색어 전체 보기"}
-          className="-mr-1.5 flex size-9 shrink-0 items-center justify-center"
+          className="popular-keyword-toggle relative -mr-1.5 flex size-9 shrink-0 items-center justify-center"
         >
           <Icon name={expanded ? "chevron-up" : "chevron-down"} size={18} className="text-text-secondary" />
         </button>
