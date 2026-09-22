@@ -79,17 +79,32 @@ const changeLabel = (change: RankingItem["change"]): string => {
   return "";
 };
 
+type PopularKeywordsProps = {
+  readonly items: readonly RankingItem[];
+  /**
+   * 펼친 채로 시작한다. 인기 검색어를 보러 온 화면에서는 손을 대야 순위가 나오는 것이
+   * 한 번 더 묻는 일이 된다.
+   */
+  readonly defaultExpanded?: boolean;
+  /**
+   * 펼친 목록이 자리를 차지한다. 띄워 두면 바로 아래 영역을 가리므로, 처음부터 펼쳐 두는
+   * 화면에서는 아래를 밀어내고 제 자리를 잡아야 한다.
+   */
+  readonly flowWhenExpanded?: boolean;
+};
+
 /**
  * 디자인 S01·S01a 의 인기 검색어.
  *
  * 접으면 한 줄만 보이고 일정 시간마다 다음 순위로 넘어간다. 넘어갈 때는 다이얼이
  * 구르듯 위로 밀려 올라가고 다음 줄이 아래에서 올라온다.
  *
- * 펼친 목록은 바 아래에 띄워 둔다. 자리를 차지하게 두면 아래 영역이 그만큼 밀려
- * 화면이 통째로 흔들린다.
+ * 펼친 목록은 기본적으로 바 아래에 띄워 둔다. 자리를 차지하게 두면 아래 영역이 그만큼
+ * 밀려 화면이 통째로 흔들린다. 홈이 그렇다. 펼친 채로 시작하는 화면은 반대로 자리를
+ * 차지해야 한다. 띄워 둔 채로 열어 두면 첫 화면부터 아래를 덮고 있다.
  */
-export function PopularKeywords({ items }: { readonly items: readonly RankingItem[] }) {
-  const [expanded, setExpanded] = useState(false);
+export function PopularKeywords({ items, defaultExpanded = false, flowWhenExpanded = false }: PopularKeywordsProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [index, setIndex] = useState(0);
   const listId = useId();
   const reduced = useRef(false);
@@ -130,19 +145,27 @@ export function PopularKeywords({ items }: { readonly items: readonly RankingIte
 
   const cancelHold = () => clearTimeout(hoverTimer.current);
 
+  /*
+   * 손을 얹어 열고 떼어 닫는 것은 띄워 두는 화면의 방식이다. 목록이 자리를 차지하는
+   * 화면에서는 손이 지나갈 때마다 아래 영역이 밀렸다 돌아온다. 접고 펴는 일을 버튼에만
+   * 맡기고, 커서는 아무것도 건드리지 않는다.
+   */
+  const hover = flowWhenExpanded
+    ? undefined
+    : {
+        onMouseEnter: holdToOpen,
+        onMouseLeave: () => {
+          cancelHold();
+          setExpanded(false);
+        },
+      };
+
   return (
     /*
-     * 펼친 목록을 띄워 두므로 이 자리가 기준이 된다. 목록이 아래 영역 위에 얹히도록
-     * 쌓임 순서를 올린다.
+     * 띄워 둔 목록은 이 자리를 기준으로 삼는다. 목록이 아래 영역 위에 얹히도록
+     * 쌓임 순서를 올린다. 자리를 차지하는 목록은 덮을 것이 없어 둘 다 필요 없다.
      */
-    <section
-      className={`relative ${expanded ? "z-10" : ""}`}
-      onMouseEnter={holdToOpen}
-      onMouseLeave={() => {
-        cancelHold();
-        setExpanded(false);
-      }}
-    >
+    <section className={flowWhenExpanded ? undefined : `relative ${expanded ? "z-10" : ""}`} {...hover}>
       <div
         className={`flex h-12.5 items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 ${
           expanded ? "rounded-b-none border-b-transparent" : ""
@@ -198,20 +221,23 @@ export function PopularKeywords({ items }: { readonly items: readonly RankingIte
           aria-expanded={expanded}
           aria-controls={listId}
           aria-label={expanded ? "인기 검색어 접기" : "인기 검색어 전체 보기"}
-          className="-mr-1.5 flex size-9 shrink-0 items-center justify-center"
+          className="popular-keyword-toggle relative -mr-1.5 flex size-9 shrink-0 items-center justify-center"
         >
           <Icon name={expanded ? "chevron-up" : "chevron-down"} size={18} className="text-text-secondary" />
         </button>
       </div>
 
       {/*
-        목록은 바에 이어 붙여 아래로 띄운다. `absolute` 라 자리를 차지하지 않아
-        아래 영역이 밀리지 않는다.
+        목록은 바에 이어 붙인다. 띄워 두면 자리를 차지하지 않아 아래 영역이 밀리지 않고,
+        그림자로 아래 목록과 떨어뜨려 놓는다. 흐름에 놓으면 아래를 밀어내고 제 자리를
+        잡으므로 덮을 것이 없다. 떠 있지 않은 것에 그림자를 드리우면 그 자리만 들려 보인다.
       */}
       {expanded ? (
         <ol
           id={listId}
-          className="absolute inset-x-0 top-full z-10 flex flex-col rounded-b-xl border border-t-0 border-border bg-background pb-1.5 shadow-lg"
+          className={`flex flex-col rounded-b-xl border border-t-0 border-border bg-background pb-1.5 ${
+            flowWhenExpanded ? "" : "absolute inset-x-0 top-full z-10 shadow-lg"
+          }`}
         >
           {items.map((item) => (
             <li key={item.keyword}>
