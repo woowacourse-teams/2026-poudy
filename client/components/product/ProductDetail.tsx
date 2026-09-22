@@ -1,6 +1,7 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { IngredientList } from "./IngredientList";
 import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
@@ -203,7 +204,14 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse }) {
   if (product.skinEffectGroups.length === 0) return null;
 
-  const nameOf = (id: number) => product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName;
+  /*
+   * 이름을 찾지 못한 성분은 목록에서 뺀다. 이전에도 빈 이름은 보이지 않았고,
+   * 누를 수 있게 된 지금은 그 자리를 남겨 두면 빈 화면으로 데려간다.
+   */
+  const named = (ids: readonly number[]) =>
+    ids
+      .map((id) => ({ id, name: product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
+      .filter((ingredient): ingredient is { id: number; name: string } => Boolean(ingredient.name));
 
   return (
     <section data-no-select className="flex flex-col gap-3 pt-5">
@@ -223,8 +231,23 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
               >
                 {group.name}
               </span>
+              {/*
+                이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다.
+
+                구분 기호는 링크 밖에 두어 누를 자리에서 빼두고, 앞 이름과 한 덩어리로 묶어
+                기호만 다음 줄 머리로 넘어가지 않게 한다. 줄은 기호 뒤에서 나뉘어 지금과 같은 자리에서 접힌다.
+              */}
               <span className="flex-1 text-[13px] font-semibold text-[#202124]">
-                {group.ingredientIds.map(nameOf).filter(Boolean).join(" · ")}
+                {named(group.ingredientIds).map((ingredient, index, ingredients) => (
+                  <Fragment key={ingredient.id}>
+                    <span className="whitespace-nowrap">
+                      <Link href={`/ingredients/${ingredient.id}`} prefetch="auto" className="ingredient-chip-link">
+                        {ingredient.name}
+                      </Link>
+                      {index < ingredients.length - 1 && <span aria-hidden="true"> ·</span>}
+                    </span>{" "}
+                  </Fragment>
+                ))}
               </span>
             </li>
           );
