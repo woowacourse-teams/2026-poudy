@@ -20,7 +20,14 @@ const loadKeywords = () =>
 /** S02 제품명 검색 탭. */
 export default async function ProductSearchPage() {
   const keywords = await loadKeywords();
-  const popular = <PopularKeywords items={keywords} />;
+  /*
+   * 인기 검색어를 보러 들어오는 화면이라 펼친 채로 연다. 홈에서는 지나가는 길에 한 줄만
+   * 스치는 것이라 접은 채로 둔다.
+   *
+   * 펼친 목록을 띄워 두면 바로 아래 최근 검색을 첫 화면부터 덮으므로, 여기서는 자리를
+   * 차지하게 두어 최근 검색을 아래로 밀어낸다.
+   */
+  const popular = <PopularKeywords items={keywords} defaultExpanded flowWhenExpanded />;
 
   /*
    * 검색어를 주소에서 읽으므로 미리 만든 껍데기 안에서 기다린다. 기다리는 동안에는 검색어가
