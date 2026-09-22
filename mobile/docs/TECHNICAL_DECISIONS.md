@@ -9,6 +9,16 @@
 
 - WebView를 다시 만들면 브라우저 방문 기록도 비어 있다. 따라서 소스 키가 바뀔 때 네이티브 뒤로 가기 상태를 초기화해, 이전 WebView의 `canGoBack` 상태가 버튼 입력을 소모하지 않도록 한다.
 
+## WebView 화면 확대
+
+- 화면 확대 제한은 앱 WebView 안에서만 적용한다. 일반 브라우저에는 확대 기능을 남겨 두므로 웹의 공통 viewport 설정은 바꾸지 않는다.
+- 확대는 초기화 스크립트가 막는다. viewport 에 `maximum-scale=1, user-scalable=no` 를 붙이고 `<html>` 에 `touch-action: pan-x pan-y` 를 건다. `touch-action` 은 브라우저 기본 핀치 확대만 끄고 터치 이벤트는 그대로 웹에 넘기므로, 웹의 두 손가락 제스처는 살아 있다.
+- 초기화 스크립트는 `MutationObserver` 로 viewport meta 와 `<html>` 의 style 을 계속 지켜본다. App Router 가 페이지를 이동하며 viewport meta 를 다시 그려도 잠금이 풀리지 않게 하기 위해서다.
+- 두 번째 손가락이 닿을 때 네이티브에서 터치를 취소하는 방식은 쓰지 않는다. 확대는 막히지만 웹이 두 손가락 터치를 전혀 받지 못한다.
+- Android 는 `WebSettings` 의 확대 지원, 내장 확대 기능, 화면 확대 컨트롤을 모두 끈다. `react-native-webview` 가 확대 지원 설정을 노출하지 않아, 패키지 패치에서 `setBuiltInZoomControls={false}` 를 `setSupportZoom(false)` 와 함께 적용한다. 다만 Galaxy S24+ (WebView 151) 에서는 이 설정만으로 핀치 확대가 막히지 않았다.
+- `react-native-webview` 는 Android 에서 `injectedJavaScriptBeforeContentLoaded` 를 `onPageStarted` 에서 `evaluateJavascript` 로 실행한다. 이 때문에 첫 화면에 들어온 직후 스크립트가 돌기 전까지 확대가 되는 틈이 있었다. 패치에서 androidx.webkit 의 `addDocumentStartJavaScript` 로 등록해 문서가 만들어지는 시점에 실행하고, 이 기능을 지원하지 않는 WebView 에서만 기존 방식으로 돌아간다.
+- iOS 는 WKWebView 의 핀치 인식기를 끈다. 초기화 스크립트는 `WKUserScript` 로 문서 시작 시점에 실행되므로 Android 와 같은 틈이 없다.
+
 ## 스플래시와 로딩 애니메이션
 
 - Android에서는 네이티브 스플래시를 숨긴 뒤 두 번째 애니메이션 프레임부터 React Native 로더를 실행한다. 전환 프레임에서 두 화면이 겹쳐 보이는 현상을 피하기 위한 순서다.

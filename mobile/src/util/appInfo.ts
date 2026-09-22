@@ -28,4 +28,54 @@ const appInfo = getAppInfo();
 
 export const APPLICATION_NAME = `Poudy/${APP_VERSION}`;
 
-export const APP_INFO_SCRIPT = appInfo ? `window.__POUDY_APP__ = ${JSON.stringify(appInfo)}; true;` : undefined;
+export const WEBVIEW_INIT_SCRIPT = appInfo
+  ? `
+(() => {
+  window.__POUDY_APP__ = ${JSON.stringify(appInfo)};
+
+  const lockViewport = () => {
+    const viewport = document.querySelector('meta[name="viewport"]');
+
+    if (!viewport) {
+      return;
+    }
+
+    const content = viewport.getAttribute('content') ?? '';
+    const settings = content
+      .split(',')
+      .map((setting) => setting.trim())
+      .filter((setting) => setting && !setting.startsWith('maximum-scale') && !setting.startsWith('user-scalable'));
+    const locked = [...settings, 'maximum-scale=1', 'user-scalable=no'].join(', ');
+
+    if (content !== locked) {
+      viewport.setAttribute('content', locked);
+    }
+  };
+
+  const lockTouchAction = () => {
+    const root = document.documentElement;
+
+    if (root && root.style.touchAction !== 'pan-x pan-y') {
+      root.style.touchAction = 'pan-x pan-y';
+    }
+  };
+
+  const lockZoom = () => {
+    lockTouchAction();
+    lockViewport();
+  };
+
+  document.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+
+  new MutationObserver(lockZoom).observe(document, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['content', 'style'],
+  });
+
+  lockZoom();
+})();
+true;
+`.trim()
+  : undefined;

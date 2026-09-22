@@ -1,0 +1,121 @@
+diff --git a/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+index 80c68034b193a47bedb56ca527352de9548e8ac6..df4fb93364d797e746a606fa7135101aad7295bc 100644
+--- a/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
++++ b/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+ import androidx.webkit.JavaScriptReplyProxy;
++import androidx.webkit.ScriptHandler;
+ import androidx.webkit.WebMessageCompat;
+ import androidx.webkit.WebViewCompat;
+ import androidx.webkit.WebViewFeature;
+@@ -44,6 +45,7 @@ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ 
++import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+@@ -78,6 +80,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+     protected boolean hasScrollEvent = false;
+     protected boolean nestedScrollEnabled = false;
+     protected ProgressChangedFilter progressChangedFilter;
++    private @Nullable ScriptHandler documentStartScriptHandler = null;
+ 
+     /**
+      * WebView must be created with an context of the current activity
+@@ -308,7 +311,40 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         }
+     }
+ 
++    public void setInjectedJSBeforeContentLoaded(@Nullable String script) {
++        injectedJSBeforeContentLoaded = script;
++        registerDocumentStartScript();
++    }
++
++    public void setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(boolean mainFrameOnly) {
++        injectedJavaScriptBeforeContentLoadedForMainFrameOnly = mainFrameOnly;
++        registerDocumentStartScript();
++    }
++
++    private void registerDocumentStartScript() {
++        if (documentStartScriptHandler != null) {
++            documentStartScriptHandler.remove();
++            documentStartScriptHandler = null;
++        }
++
++        if (TextUtils.isEmpty(injectedJSBeforeContentLoaded)
++                || !WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
++            return;
++        }
++
++        String script = "(function() {\n" + injectedJSBeforeContentLoaded + ";\n})();";
++        if (injectedJavaScriptBeforeContentLoadedForMainFrameOnly) {
++            script = "if (window === window.top) {\n" + script + "\n}";
++        }
++        documentStartScriptHandler = WebViewCompat.addDocumentStartJavaScript(this, script, Collections.singleton("*"));
++    }
++
+     public void callInjectedJavaScriptBeforeContentLoaded() {
++        if (documentStartScriptHandler != null) {
++            injectJavascriptObject();
++            return;
++        }
++
+         if (getSettings().getJavaScriptEnabled() &&
+                 injectedJSBeforeContentLoaded != null &&
+                 !TextUtils.isEmpty(injectedJSBeforeContentLoaded)) {
+diff --git a/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+index f83033b3597a425da159555233bacce250ccfce0..a8ee2d63c98a322e03129f863929f921edd38495 100644
+--- a/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
++++ b/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+@@ -73,7 +73,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+         context.addLifecycleEventListener(webView)
+         mWebViewConfig.configWebView(webView)
+         val settings = webView.settings
+-        settings.builtInZoomControls = true
++        settings.setSupportZoom(false)
++        settings.builtInZoomControls = false
+         settings.displayZoomControls = false
+         settings.domStorageEnabled = true
+         settings.setSupportMultipleWindows(true)
+@@ -494,7 +495,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setInjectedJavaScriptBeforeContentLoaded(viewWrapper: RNCWebViewWrapper, value: String?) {
+         val view = viewWrapper.webView
+-        view.injectedJSBeforeContentLoaded = value
++        view.setInjectedJSBeforeContentLoaded(value)
+     }
+ 
+     fun setInjectedJavaScriptForMainFrameOnly(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+@@ -504,7 +505,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+         val view = viewWrapper.webView
+-        view.injectedJavaScriptBeforeContentLoadedForMainFrameOnly = value
++        view.setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(value)
+     }
+ 
+     fun setInjectedJavaScriptObject(viewWrapper: RNCWebViewWrapper, value: String?) {
+@@ -687,6 +688,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setSetBuiltInZoomControls(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+         val view = viewWrapper.webView
++        view.settings.setSupportZoom(value)
+         view.settings.builtInZoomControls = value
+     }
+ 
+diff --git a/apple/RNCWebViewImpl.m b/apple/RNCWebViewImpl.m
+index 7f5c24d6e2cfb26eddbc513bf17a81c24a7273e2..b898b2c5cd50803a3943e9963658136340690908 100644
+--- a/apple/RNCWebViewImpl.m
++++ b/apple/RNCWebViewImpl.m
+@@ -522,6 +522,7 @@ RCTAutoInsetsProtocol>
+     _webView.menuItems = _menuItems;
+     _webView.suppressMenuItems = _suppressMenuItems;
+     _webView.scrollView.delegate = self;
++    _webView.scrollView.pinchGestureRecognizer.enabled = NO;
+ #endif // !TARGET_OS_OSX
+     _webView.UIDelegate = self;
+     _webView.navigationDelegate = self;
