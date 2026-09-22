@@ -536,21 +536,18 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                   />
 
                   {/*
-                글자를 그림 위에 얹으므로 아래로 갈수록 짙어지는 막을 한 겹 깐다.
-                그림이 밝아도 흰 글자가 읽힌다.
-              */}
-                  <span aria-hidden="true" className="absolute inset-0 bg-linear-to-b from-transparent to-black/76" />
-
-                  {/*
                     카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
                     `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
                     제자리에 남는다.
+
+                    그림 위에 덮는 막을 두지 않아 썸네일이 그대로 보인다. 그래서 글자는 흰색이
+                    아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
                   */}
                   <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
-                    <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-white">
+                    <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
                       {curation.title}
                     </h3>
-                    <p className="text-[11px] text-white/78">{curation.description}</p>
+                    <p className="text-[11px] text-[#624255]">{curation.description}</p>
                   </div>
                 </article>
               </li>
@@ -566,9 +563,20 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           `9.5%`(좌우 여백과 이웃이 걸친 만큼) 들어온 곳이고, 거기서 카드 안쪽 여백만큼 더 들인다.
         */}
         {items.length > 1 ? (
+          /*
+            숫자를 그림 위에 바로 얹으면 그림의 밝기에 따라 읽히는 정도가 달라진다. 반투명한
+            판을 깔아 어떤 그림 위에서도 같은 또렷함을 유지한다.
+
+            판을 옅게 두는 대신 뒤를 더 흐리게 한다. 농도만으로 글자를 받치면 판이 그림 위에
+            짙은 덩어리로 얹혀 혼자 튀어 보인다. 흐림은 뒤의 무늬만 지우고 밝기는 그대로
+            두므로, 판이 그림에 묻히면서도 글자가 놓인 자리는 차분해진다.
+
+            글자에 옅은 그림자를 함께 둔다. 판이 옅어진 만큼 밝은 그림 위에서 흰 글자의
+            대비가 얕아지는데, 그림자가 획의 경계를 잡아 준다. 테두리는 판의 경계를 알린다.
+          */
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-[calc(9.5%+20px)] bottom-5 text-[11px] font-bold tracking-[0.2px] text-white/85"
+            className="pointer-events-none absolute right-[calc(9.5%+20px)] bottom-5 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
             {current + 1} / {items.length}
           </span>
