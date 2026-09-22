@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+/*
+ * 인기 검색어와 인기 제품이 10분마다 바뀌므로 그 주기로 다시 만든다.
+ *
+ * 이 값이 없으면 라우트 기본값인 `false` 가 적용되어 빌드 때 만든 화면이 다음 배포까지
+ * 그대로 남는다. 각 fetch 에 준 `revalidate` 는 그 요청의 데이터만 담아 둘 뿐,
+ * 화면을 다시 만드는 주기를 정하지는 않는다.
+ */
+export const revalidate = 600;
+
 const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
 
 const organizationId = absoluteUrl("/#organization");
