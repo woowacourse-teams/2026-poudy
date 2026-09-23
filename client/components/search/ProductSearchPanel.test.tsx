@@ -79,7 +79,9 @@ const observeImmediately = () => {
       constructor(private readonly callback: IntersectionObserverCallback) {}
 
       observe() {
-        this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as never);
+        /* 실제 관찰 결과처럼 위치도 함께 준다. 검색바가 붙었는지 볼 때 위치를 읽는다. */
+        const entry = { isIntersecting: true, boundingClientRect: { top: 0 }, rootBounds: null };
+        this.callback([entry as unknown as IntersectionObserverEntry], this as never);
       }
 
       disconnect() {}

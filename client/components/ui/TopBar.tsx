@@ -7,6 +7,7 @@ import { useSyncExternalStore } from "react";
 
 import { Icon } from "./icons/Icon";
 
+import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 
 type TopBarProps = {
@@ -30,7 +31,21 @@ type TopBarProps = {
    */
   readonly titleAs?: "h1" | "p";
   readonly right?: React.ReactNode;
+  /**
+   * 스크롤하면 바 아래에 선을 그을지. 바 아래에 다른 것이 함께 붙는 화면은 그쪽이 선을
+   * 맡으므로 끈다. 바에도 그으면 붙은 것 위아래로 선이 두 줄 생긴다.
+   */
+  readonly edge?: boolean;
+  /** 다른 sticky 묶음 안에서 그릴 때는 그 묶음이 붙는 일을 맡는다. */
+  readonly sticky?: boolean;
 };
+
+/*
+ * 스크롤해도 화면 위에 남는다. `fixed` 는 쓰지 않는다. 본문이 `max-width` 로 가운데 놓인
+ * 카드라 폭이 화면 전체로 벌어지고, 흐름에서 빠진 높이만큼 본문 윗여백을 따로 메워야 한다.
+ * 바텀시트의 딤(z-40)·시트(z-50)보다 아래에 둔다.
+ */
+const STICKY = "sticky top-0 z-30 bg-background";
 
 /* 방문 기록은 스스로 알려 오지 않는다. 그릴 때마다 그때의 기록을 읽는다. */
 const subscribe = () => () => {};
@@ -87,75 +102,100 @@ export function TopBar({
   showLogo = false,
   logoOnly = false,
   titleAs = "h1",
+  edge = true,
+  sticky = true,
 }: TopBarProps) {
   const Title = titleAs;
+  const edgeEnabled = sticky && edge;
+  const { ref, passed } = usePassedTopBoundary<HTMLDivElement>({ enterAt: 0, enabled: edgeEnabled });
+  const position = sticky ? STICKY : "relative z-10 bg-background";
+  const edgeClass = edgeEnabled ? "stuck-edge" : "";
+  const sentinel = edgeEnabled ? <div ref={ref} aria-hidden="true" /> : null;
 
   if (variant === "root") {
     return (
-      <header className="flex h-14 items-center gap-1 px-1">
-        {showBack ? <BackControl iconSize={22} className="flex size-11 shrink-0 items-center justify-center" /> : null}
+      <>
+        {sentinel}
+        <header
+          data-top-bar
+          data-stuck={edgeEnabled ? passed : undefined}
+          className={`${position} ${edgeClass} flex h-14 items-center gap-1 px-1`}
+        >
+          {showBack ? (
+            <BackControl iconSize={22} className="flex size-11 shrink-0 items-center justify-center" />
+          ) : null}
 
-        {/*
-          이름 글자가 함께 있으면 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다.
-          로고만 둘 때는 읽을 글자가 없어 그림이 그 몫을 대신한다.
-        */}
-        {showLogo ? (
-          /*
-            이름 글자와 나란히 설 때는 글자의 아랫줄에 맞춰야 한 낱말로 읽힌다.
-            로고만 둘 때는 맞출 글자가 없으므로 바 높이를 채우고 가운데에 선다.
-          */
-          <Image
-            src="/logo.png"
-            alt={logoOnly ? title : ""}
-            width={80}
-            height={89}
-            draggable={false}
-            loading="eager"
-            className={
-              logoOnly ? "ml-3 h-9 w-auto shrink-0 select-none" : "ml-3 mb-1.5 h-[29px] w-[26px] select-none self-end"
-            }
-          />
-        ) : null}
+          {/*
+            이름 글자가 함께 있으면 제목이 이름을 전하므로 그림에는 대체 텍스트를 비운다.
+            로고만 둘 때는 읽을 글자가 없어 그림이 그 몫을 대신한다.
+          */}
+          {showLogo ? (
+            /*
+              이름 글자와 나란히 설 때는 글자의 아랫줄에 맞춰야 한 낱말로 읽힌다.
+              로고만 둘 때는 맞출 글자가 없으므로 바 높이를 채우고 가운데에 선다.
+            */
+            <Image
+              src="/logo.png"
+              alt={logoOnly ? title : ""}
+              width={80}
+              height={89}
+              draggable={false}
+              loading="eager"
+              className={
+                logoOnly ? "ml-3 h-9 w-auto shrink-0 select-none" : "ml-3 mb-1.5 h-[29px] w-[26px] select-none self-end"
+              }
+            />
+          ) : null}
 
-        {/*
-          로고가 첫 글자 p 를 대신한다. 로고에 바로 이어 붙어 한 낱말로 읽히도록
-          사이를 띄우지 않고 전용 글꼴을 쓴다.
-          아래를 기준으로 맞추되 헤더 바닥에 닿지 않도록 둘 다 같은 만큼 띄운다.
+          {/*
+            로고가 첫 글자 p 를 대신한다. 로고에 바로 이어 붙어 한 낱말로 읽히도록
+            사이를 띄우지 않고 전용 글꼴을 쓴다.
+            아래를 기준으로 맞추되 헤더 바닥에 닿지 않도록 둘 다 같은 만큼 띄운다.
 
-          Foldit 은 글자에 색이 박힌 글꼴이라 color 대신 팔레트로 색을 맞춘다.
+            Foldit 은 글자에 색이 박힌 글꼴이라 color 대신 팔레트로 색을 맞춘다.
 
-          로고만 두는 화면은 그림이 이미 이름을 읽어 주므로 제목을 화면에서만 감춘다.
-          문서에는 대표 제목이 남아 구조가 무너지지 않는다.
-        */}
-        {logoOnly ? (
-          <Title className="sr-only">{title}</Title>
-        ) : (
-          <Title
-            className={
-              showLogo
-                ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
-                : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
-            }
-          >
-            {showLogo ? <span className="sr-only">P</span> : null}
-            {title}
-          </Title>
-        )}
+            로고만 두는 화면은 그림이 이미 이름을 읽어 주므로 제목을 화면에서만 감춘다.
+            문서에는 대표 제목이 남아 구조가 무너지지 않는다.
+          */}
+          {logoOnly ? (
+            <Title className="sr-only">{title}</Title>
+          ) : (
+            <Title
+              className={
+                showLogo
+                  ? "font-brand -ml-1.5 flex-1 cursor-default select-none self-end pb-1.5 text-[26px] leading-none font-bold [font-optical-sizing:auto] [font-palette:--brand-fold]"
+                  : `min-w-0 flex-1 truncate text-[20px] font-bold text-text-primary ${showBack ? "" : "px-3"}`
+              }
+            >
+              {showLogo ? <span className="sr-only">P</span> : null}
+              {title}
+            </Title>
+          )}
 
-        {/* 제목이 자리를 채우지 않으므로 오른쪽 것을 끝으로 밀어 둔다. */}
-        {logoOnly ? <span className="flex-1" /> : null}
-        {right}
-      </header>
+          {/* 제목이 자리를 채우지 않으므로 오른쪽 것을 끝으로 밀어 둔다. */}
+          {logoOnly ? <span className="flex-1" /> : null}
+          {right}
+        </header>
+      </>
     );
   }
 
   return (
-    <header className="flex h-[44px] items-center px-1">
-      <BackControl iconSize={20} className="flex size-11 items-center justify-center" />
+    <>
+      {sentinel}
+      <header
+        data-top-bar
+        data-stuck={edgeEnabled ? passed : undefined}
+        className={`${position} ${edgeClass} flex h-[44px] items-center px-1`}
+      >
+        <BackControl iconSize={20} className="flex size-11 items-center justify-center" />
 
-      <Title className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">{title}</Title>
+        <Title className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-text-primary">
+          {title}
+        </Title>
 
-      <span className="flex size-11 items-center justify-center">{right}</span>
-    </header>
+        <span className="flex size-11 items-center justify-center">{right}</span>
+      </header>
+    </>
   );
 }

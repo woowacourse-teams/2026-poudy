@@ -38,7 +38,7 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
 
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
-  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} />;
+  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} stickyChips />;
 }
 
 export default async function ProductsPage(props: PageProps<"/products">) {
@@ -50,7 +50,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
   return (
     <>
       {/* 제목은 고정된 말이라 기다릴 것이 없다. 목록만 채워지기를 기다린다. */}
-      <TopBar title="조건 일치 제품" variant="sub" />
+      <TopBar title="조건 일치 제품" variant="sub" edge={false} />
 
       <StreamBoundary stream={stream} fallback={<ProductListSkeleton />}>
         <MatchedProducts searchParams={props.searchParams} />
