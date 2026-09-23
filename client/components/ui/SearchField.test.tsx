@@ -98,19 +98,19 @@ describe("SortDropdown", () => {
     expect(screen.getByRole("button", { name: /가격 낮은순/ })).toBeInTheDocument();
   });
 
-  it("열면 정렬 4 종을 보여 준다", async () => {
-    render(<SortDropdown value="NAME_ASC" onChange={() => {}} />);
+  it("열면 정렬 5 종을 보여 준다", async () => {
+    render(<SortDropdown value="DEFAULT" onChange={() => {}} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /제품명 오름차순/ }));
+    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
 
-    expect(screen.getAllByRole("option")).toHaveLength(4);
+    expect(screen.getAllByRole("option")).toHaveLength(5);
   });
 
   it("고른 정렬을 넘기고 닫는다", async () => {
     const onChange = vi.fn();
-    render(<SortDropdown value="NAME_ASC" onChange={onChange} />);
+    render(<SortDropdown value="DEFAULT" onChange={onChange} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /제품명 오름차순/ }));
+    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
     await userEvent.click(screen.getByRole("option", { name: "가격 높은순" }));
 
     expect(onChange).toHaveBeenCalledWith("PRICE_DESC");

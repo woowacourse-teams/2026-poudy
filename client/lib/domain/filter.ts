@@ -1,6 +1,17 @@
+import type { Endpoints } from "@poudy/api/api.zod.types";
+
 import { firstOf, keepIf } from "./optional";
 
-export const SORTS = ["NAME_ASC", "NAME_DESC", "PRICE_ASC", "PRICE_DESC"] as const;
+type ServerSort = NonNullable<NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"]>;
+
+/** 서버가 받지 않는 값이 섞이면 타입 검사에서 걸리게 한다. 순서는 드롭다운에 보이는 순서다. */
+export const SORTS = [
+  "DEFAULT",
+  "PRICE_ASC",
+  "PRICE_DESC",
+  "UNIT_PRICE_ASC",
+  "UNIT_PRICE_DESC",
+] as const satisfies readonly ServerSort[];
 export type Sort = (typeof SORTS)[number];
 
 export const EXCLUDE_CODES = [
@@ -16,7 +27,7 @@ export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
 export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
-export const DEFAULT_SORT: Sort = "NAME_ASC";
+export const DEFAULT_SORT: Sort = "DEFAULT";
 export const DEFAULT_SIZE = 20;
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
