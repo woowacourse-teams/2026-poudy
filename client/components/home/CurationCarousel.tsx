@@ -80,17 +80,17 @@ const SETTLE_DELAY = GLIDE_DURATION + 250;
  */
 const DROP_DURATION = 320;
 
-/** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.95 다. */
-const MIN_SCALE = 0.95;
+/** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.7 이다. */
+const MIN_SCALE = 0.7;
 
 /**
- * 목록 좌우 여백(px). 이만큼이 앞뒤 카드가 걸치는 자리다.
+ * 목록 좌우 여백(px). 이만큼이 앞뒤 카드가 걸치는 자리다. 줄일수록 가운데 카드가 넓어진다.
  *
  * `%` 로 두면 화면 폭에 따라 소수점이 생기고, 칸의 자리도 딱 떨어지지 않는다. 그러면
  * 스크롤 값이 스냅 지점에서 몇 px 어긋나고, 브라우저는 이미 다 왔다고 보아 미끄러지기를
  * 건너뛴다. 고정 px 이면 그런 어긋남이 없다.
  */
-const SIDE_PADDING = 32;
+const SIDE_PADDING = 16;
 
 /**
  * 끌기로 받아들이는 최소 이동 거리(px).
@@ -226,7 +226,18 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * 그림과 배경만 커지고 글자는 제 크기를 지킨다. 카드가 커 보이는 효과는 그대로다.
        */
       const text = box.querySelector<HTMLElement>("[data-curation-text]");
-      if (text) text.style.transform = `scale3d(${1 / size}, ${1 / size}, 1)`;
+      if (text) {
+        text.style.transform = `scale3d(${1 / size}, ${1 / size}, 1)`;
+        /*
+         * 되돌린 만큼 폭도 함께 좁힌다. 글자는 줄어든 카드 안에 있으면서 제 크기를
+         * 지키므로, 폭을 그대로 두면 되돌리는 배율만큼 넓어져 카드 밖으로 밀려난다.
+         * 카드가 많이 줄어들수록 더 밀려나 제목이 한두 글자만 남고 잘린다.
+         *
+         * 줄어든 좌표계에서 이만큼이 카드 안쪽 폭이다. 되돌리고 나면 정확히 카드
+         * 안쪽 폭이 되어, 줄바꿈 자리는 가운데 카드와 같아진다.
+         */
+        text.style.width = `${size * 100}%`;
+      }
       /*
        * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
        * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
@@ -704,8 +715,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       <section aria-label="큐레이션" aria-hidden="true">
         <div className="relative -mx-4">
           {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
-          <div className="px-8">
-            <div className="bg-surface h-52 w-full animate-pulse rounded-[18px]" />
+          <div className="px-4">
+            <div className="bg-surface h-58 w-full animate-pulse rounded-[18px]" />
           </div>
         </div>
       </section>
@@ -740,7 +751,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
-          className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-8"
+          className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4"
         >
           {slides.map(({ curation, itemIndex }, slideIndex) => {
             return (
@@ -779,7 +790,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                   }}
                   className="block"
                 >
-                  <article className="curation-card relative flex h-52 flex-col justify-end overflow-hidden rounded-[18px] p-5">
+                  <article className="curation-card relative flex h-58 flex-col justify-end overflow-hidden rounded-[18px] p-5">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
@@ -821,7 +832,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           그림·제목과 같이 밀려 나가 숫자가 둘로 보인다.
 
           가운데 카드는 줄지 않아 제 크기 그대로다. 오른쪽 가장자리는 이 자리의 오른쪽에서
-          `9.5%`(좌우 여백과 이웃이 걸친 만큼) 들어온 곳이고, 거기서 카드 안쪽 여백만큼 더 들인다.
+          좌우 여백(16px)만큼 들어온 곳이고, 거기서 카드 안쪽 여백(20px)만큼 더 들인다.
         */}
         {items.length > 1 ? (
           /*
@@ -837,7 +848,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           */
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-[calc(9.5%+20px)] bottom-5 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
+            className="pointer-events-none absolute right-9 bottom-5 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
             {current + 1} / {items.length}
           </span>
