@@ -79,6 +79,8 @@ export const initAnalytics = (): void => {
 
   posthog.init(key, {
     api_host: host,
+    // 익명 방문자도 Person 프로필을 만들어 Retention 상세에서 방문자별 행동을 볼 수 있게 한다.
+    person_profiles: "always",
     // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
     ui_host: "https://us.posthog.com",
 

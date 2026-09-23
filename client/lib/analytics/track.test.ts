@@ -220,6 +220,7 @@ describe("initAnalytics", () => {
       "phc_test",
       expect.objectContaining({
         api_host: "/ingest",
+        person_profiles: "always",
         autocapture: false,
         capture_pageleave: true,
         capture_pageview: "history_change",
