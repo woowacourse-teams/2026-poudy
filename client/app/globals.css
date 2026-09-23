@@ -586,6 +586,111 @@ body {
 }
 
 /*
+ * 푸터의 약관 링크.
+ *
+ * 밑줄을 빼는 대신 손이 닿으면 글자색이 본문색까지 진해진다. 가끔 누르는 자리라
+ * 자리를 옮기거나 크기를 바꾸지 않고 색만 바꾼다. 색은 레이아웃을 건드리지 않아
+ * 글자가 흔들리지도 않는다.
+ */
+.footer-link {
+  transition-property: color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .footer-link:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+/* 누름은 hover 보다 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
+.footer-link:active {
+  color: var(--color-text-primary);
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/*
+ * 푸터의 소셜 아이콘. 색은 약관 링크와 같은 결로 움직인다.
+ *
+ * 누를 때 줄어드는 것은 `page.tsx` 에서 utility 로 둔다. 색만 여기서 맡아
+ * 손가락이 잘못 띄우는 hover 를 마우스가 있는 환경으로 가둔다.
+ */
+.footer-icon {
+  /* 색은 약관 링크와 같은 속도로, 누름은 그보다 빠르게 응답한다. */
+  transition-property: color, transform;
+  transition-duration: var(--transition-duration-control-state), var(--transition-duration-press);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer-icon:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+/* 누름은 저장 버튼의 아이콘 단추와 같은 정도로 가라앉는다. */
+.footer-icon:active {
+  color: var(--color-text-primary);
+  transform: scale(0.9);
+  transition-duration: var(--transition-duration-press), var(--transition-duration-press);
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 색만 바뀌어도 손이 닿은 자리는 읽힌다. */
+@media (prefers-reduced-motion: reduce) {
+  .footer-icon {
+    transition-property: color;
+  }
+
+  .footer-icon:active {
+    transform: none;
+  }
+}
+
+/* 지금 보고 있는 문서는 굵기와 함께 색도 본문색으로 둔다. */
+.footer-link[aria-current="page"] {
+  color: var(--color-text-primary);
+}
+
+/* 키보드로 옮겨 다닐 때는 자리를 또렷하게 알린다. */
+.footer-link:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * 홈의 인기 제품 카드.
+ *
+ * 제품 상세로 가는 링크인데 아무 반응이 없어, 옆의 필터 칩이나 인기 검색어 줄과
+ * 어긋난다. 누를 때 그림만 가라앉혀 눌린 것을 알린다.
+ *
+ * 글자는 건드리지 않는다. 두 줄로 끊어 둔 자리가 흔들리고 획도 흐려진다. 3열 격자라
+ * hover 로 카드를 띄우면 그 칸만 줄에서 떠올라 어긋나므로 누름만 둔다.
+ */
+.popular-product-image {
+  transition-property: transform;
+  transition-duration: var(--transition-duration-press, 100ms);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.popular-product:active .popular-product-image {
+  transform: scale(0.97);
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .popular-product-image {
+    transition-property: none;
+  }
+
+  .popular-product:active .popular-product-image {
+    transform: none;
+  }
+}
+
+/*
  * 피부 타입 세그먼트.
  *
  * 칸마다 테두리가 따로 없고 하나의 바를 세로선으로 가른 모양이라, 자리를 옮기거나

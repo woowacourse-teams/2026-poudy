@@ -40,8 +40,13 @@ export function ProductGridCard({
   loading = "lazy",
 }: ProductGridCardProps) {
   return (
-    <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="flex flex-col gap-0.75">
-      <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">
+    /*
+      누르면 그림만 살짝 가라앉는다. 글자까지 줄이면 두 줄로 끊은 자리가 흔들리고 획이
+      흐려진다. 카드를 통째로 띄우는 hover 는 두지 않는다. 여러 칸이 격자로 늘어서는
+      자리라, 한 칸만 떠오르면 줄이 어긋나 보인다.
+    */
+    <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="popular-product flex flex-col gap-0.75">
+      <span className="popular-product-image flex h-28 items-center justify-center overflow-hidden rounded-2xl">
         <Image
           src={imageUrl || PRODUCT_PLACEHOLDER}
           alt=""
