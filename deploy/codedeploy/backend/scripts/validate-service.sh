@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 for attempt in {1..24}; do
     if curl --fail --silent --show-error --max-time 3 \
-        http://127.0.0.1:8080/actuator/health >/dev/null; then
+        http://127.0.0.1:8081/actuator/health >/dev/null; then
         exit 0
     fi
     sleep 5
