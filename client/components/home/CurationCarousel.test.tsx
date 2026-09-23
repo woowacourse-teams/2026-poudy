@@ -1,10 +1,12 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { CurationCarousel } from "./CurationCarousel";
+
+import { track } from "@/lib/analytics/track";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
@@ -239,6 +241,38 @@ describe("CurationCarousel", () => {
 
     for (const image of container.querySelectorAll("img")) {
       expect(image).toHaveAttribute("draggable", "false");
+    }
+  });
+
+  it("실제로 다른 카드에 도착했을 때만 수동 넘김을 기록한다", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const trackElement = container.querySelector(".curation-track");
+      if (!(trackElement instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+      for (const [slot, child] of [...trackElement.children].entries()) {
+        Object.defineProperty(child, "offsetLeft", { value: slot * 400, configurable: true });
+        Object.defineProperty(child, "offsetWidth", { value: 400, configurable: true });
+      }
+      Object.defineProperty(trackElement, "clientWidth", { value: 400, configurable: true });
+      trackElement.scrollLeft = 2 * 400 - 32;
+      vi.mocked(track).mockClear();
+
+      fireEvent.scroll(trackElement);
+      act(() => vi.advanceTimersByTime(1750));
+      expect(track).not.toHaveBeenCalledWith("curation_slide_viewed", expect.anything());
+
+      trackElement.scrollLeft = 3 * 400 - 32;
+      fireEvent.scroll(trackElement);
+      act(() => vi.advanceTimersByTime(1750));
+      expect(track).toHaveBeenCalledWith("curation_slide_viewed", {
+        curation_id: 2,
+        position: 2,
+        transition: "manual",
+      });
+    } finally {
+      vi.useRealTimers();
     }
   });
 });

@@ -65,7 +65,7 @@ export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 
 export const HOME_PAGE_VERSION = "main_2026_09";
 
-export type HomeSection = "popular_keywords" | "skin_types" | "popular_products";
+export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
 export type EventMap = {
   page_viewed: { page: PageName; page_version?: string };
@@ -168,7 +168,9 @@ export type EventMap = {
   } & DiscoveryProperties;
   /** 인기 검색어를 펼쳤을 때. 접힌 줄만으로 충분한지 본다. */
   popular_keywords_expanded: { rank: number };
-  /** 홈의 큐레이션 카드를 눌렀을 때. */
+  /** 캐러셀에서 다른 큐레이션 카드가 가운데 놓였을 때. 자동 재생과 직접 조작을 구분한다. */
+  curation_slide_viewed: { curation_id: number; position: number; transition: "manual" | "autoplay" };
+  /** 큐레이션 상세 화면을 실제로 열었을 때. */
   curation_opened: { curation_id: number; position: number };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
   skin_type_selected: { skin_type: SkinTypeCode } & DiscoveryProperties;

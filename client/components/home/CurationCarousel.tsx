@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import { track } from "@/lib/analytics/track";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
+
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
 };
@@ -138,8 +141,10 @@ const initialOrder = (count: number): readonly number[] => {
  * 상세 화면(#451)이 아직 없다. 생기기 전까지는 카드를 눌러도 이동하지 않는다.
  */
 export function CurationCarousel({ items }: CurationCarouselProps) {
+  const sectionRef = useHomeSectionView("curation", 1);
   const trackRef = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
+  const lastSettledItem = useRef(0);
   /* 손을 대고 있는 동안에는 스스로 넘기지 않는다. */
   const held = useRef(false);
   const reduced = useRef(false);
@@ -502,6 +507,22 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     const wasSelf = selfScrolling.current;
     selfScrolling.current = false;
 
+    const trackElement = trackRef.current;
+    if (trackElement) {
+      const itemIndex = orderRef.current[slideAt(trackElement)] ?? 0;
+      if (itemIndex !== lastSettledItem.current) {
+        const item = items[itemIndex];
+        if (item) {
+          track("curation_slide_viewed", {
+            curation_id: item.id,
+            position: itemIndex + 1,
+            transition: wasSelf ? "autoplay" : "manual",
+          });
+        }
+      }
+      lastSettledItem.current = itemIndex;
+    }
+
     if (loop) recenter();
 
     // 사람이 넘긴 것이다. 넘긴 카드를 볼 시간을 주도록 시계를 처음부터 다시 센다.
@@ -657,7 +678,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   }
 
   return (
-    <section aria-label="큐레이션">
+    <section ref={sectionRef} aria-label="큐레이션">
       {/*
         카드를 본문 폭의 90% 로 두고 남은 10% 를 좌우로 나눠, 앞뒤 카드가 양쪽에 똑같이 걸친다.
         상대 크기라 화면이 좁아져도 걸치는 비율이 그대로 유지된다.
