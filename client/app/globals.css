@@ -612,35 +612,38 @@ body {
 }
 
 /*
- * 푸터의 소셜 아이콘. 색은 약관 링크와 같은 결로 움직인다.
+ * 푸터의 소셜 아이콘. 회색 원 위에 흰 그림을 얹은 단추다.
  *
- * 누를 때 줄어드는 것은 `page.tsx` 에서 utility 로 둔다. 색만 여기서 맡아
- * 손가락이 잘못 띄우는 hover 를 마우스가 있는 환경으로 가둔다.
+ * 글자색이 아니라 원 색이 움직인다. 그림이 흰색이라 색을 건드리면 회색 원 위에서
+ * 도리어 튀고, 원이 덩어리를 이루고 있어 바탕이 진해지는 편이 눌리는 자리로 읽힌다.
+ *
+ * 누를 때는 원째로 살짝 가라앉는다. 약관 링크와 달리 손가락에 닿는 덩어리가 있어
+ * 크기 변화가 어색하지 않다. 저장 버튼의 아이콘 단추가 쓰는 값과 같다.
  */
 .footer-icon {
-  /* 색은 약관 링크와 같은 속도로, 누름은 그보다 빠르게 응답한다. */
-  transition-property: color, transform;
+  transition-property: background-color, transform;
   transition-duration: var(--transition-duration-control-state), var(--transition-duration-press);
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
 @media (hover: hover) and (pointer: fine) {
   .footer-icon:hover {
-    color: var(--color-text-primary);
+    background-color: #b3b6bb;
   }
 }
 
-/* 누름은 저장 버튼의 아이콘 단추와 같은 정도로 가라앉는다. */
+/* 누름은 hover 보다 한 단계 진하고 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
 .footer-icon:active {
-  color: var(--color-text-primary);
-  transform: scale(0.9);
+  background-color: #a3a6ac;
+  transform: scale(0.92);
   transition-duration: var(--transition-duration-press), var(--transition-duration-press);
 }
 
-/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 색만 바뀌어도 손이 닿은 자리는 읽힌다. */
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 바탕색만 바뀌어도 손이 닿은 자리는 읽힌다. */
 @media (prefers-reduced-motion: reduce) {
   .footer-icon {
-    transition-property: color;
+    transition-property: background-color;
   }
 
   .footer-icon:active {
