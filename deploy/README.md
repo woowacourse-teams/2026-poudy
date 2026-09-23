@@ -284,11 +284,14 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 인프라 로그 위치, journald 보존, CloudWatch Agent와 최소 알람 적용 절차는
 [`deploy/monitoring/README.md`](monitoring/README.md)에 정리합니다.
 
+PostgreSQL EC2의 구성·초기 적재·백업 상태는
+[`deploy/postgresql-ec2.md`](postgresql-ec2.md)에 정리합니다.
+
 ## 피드백 보유 기간 관리
 
 운영 프로필은 매일 03:30(Asia/Seoul)에 PostgreSQL `created_at`이 83일 지난 피드백과
-제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 S3 최종 이미지를 먼저 삭제하고 DB 행을
-마지막에 삭제합니다. S3 삭제가
+제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 S3 `poudy/feedback/{feedbackId}/` 아래 객체를 먼저
+삭제하고 DB 행을 마지막에 삭제합니다. S3 삭제가
 실패하면 DB 행을 남겨 다음 날 재시도하므로 이미지 키를 잃지 않습니다. 이 7일 여유로 일시적인
 실패가 있어도 개인정보 처리방침의 90일 한도 전에 복구할 수 있습니다.
 
@@ -298,7 +301,7 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 2. DB에서 `created_at <= now() - interval '83 days'`인 `feedback`과
    `product_correction_request` 행이 남지 않았는지 확인합니다.
 3. 실패가 있으면 S3 delete 권한과 네트워크를 복구하고 서비스를 재시작하거나 다음 예약 실행을
-   기다린 뒤, DB 행과 `poudy/feedback/{feedbackId}/images/`가 함께 없어졌는지 재확인합니다.
+   기다린 뒤, DB 행과 `poudy/feedback/{feedbackId}/`가 함께 없어졌는지 재확인합니다.
 4. 점검 시각, cutoff, 선택·삭제·실패 건수와 조치 결과를 운영 기록에 남깁니다. 로그에는 의견
    ID나 내용이 출력되지 않습니다.
 

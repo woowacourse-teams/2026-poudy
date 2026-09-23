@@ -2,6 +2,7 @@ import {
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
+  CurationDetailResponse,
   CurationListResponse,
   ExcludeCodeListResponse,
   FeedbackImageUploadResponse,
@@ -88,6 +89,7 @@ const cases = [
   ["브랜드 목록", "/brands", BrandOverviewResponse],
   ["브랜드 상세", "/brands/1", BrandDetailResponse],
   ["큐레이션 목록", "/curations", CurationListResponse],
+  ["큐레이션 상세", "/curations/1", CurationDetailResponse],
   ["피부 타입", "/skin-types", SkinTypesResponse],
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
@@ -154,12 +156,15 @@ describe("목 응답과 스키마", () => {
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
   });
 
-  it.each(["/products/9999", "/ingredients/9999", "/brands/9999"])("%s 는 ProblemDetail 을 지킨다", async (path) => {
-    const { status, body } = await get(path);
+  it.each(["/products/9999", "/ingredients/9999", "/brands/9999", "/curations/9999"])(
+    "%s 는 ProblemDetail 을 지킨다",
+    async (path) => {
+      const { status, body } = await get(path);
 
-    expect(status).toBe(404);
-    expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
-  });
+      expect(status).toBe(404);
+      expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
+    },
+  );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
   it("모든 핸들러를 검사한다", () => {

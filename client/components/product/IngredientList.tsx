@@ -39,13 +39,18 @@ export function IngredientList({ ingredients }: IngredientListProps) {
               <Link
                 href={`/ingredients/${ingredient.id}`}
                 prefetch="auto"
-                className="flex h-[60px] items-center gap-2.5 border-b border-border"
+                className="flex min-h-[60px] items-center gap-2.5 border-b border-border py-2"
               >
                 <span className="w-6 shrink-0 font-data text-[10px] text-[#8B8D94]">
                   {String(index + 1).padStart(2, "0")}
                 </span>
 
-                <span className="flex flex-1 flex-col gap-0.5">
+                {/*
+                  이름이 길면 칸이 줄어들게 `min-w-0` 을 준다. `flex-1` 만 있으면 `min-width` 가
+                  `auto` 로 남아 칸이 글자 너비만큼 늘어나고, 그만큼 오른쪽 태그와 화살표가 밀려난다.
+                  칸이 줄어들어야 `body` 에 선언된 `overflow-wrap: break-word` 가 비로소 동작한다.
+                */}
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-[13px] font-semibold text-text-primary">{ingredient.koreanName}</span>
                   <span className="text-[10px] text-text-secondary">
                     {ingredient.formulationRoles.map((role) => role.name).join(" · ")}

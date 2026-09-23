@@ -1,13 +1,12 @@
 "use client";
 
 import type { CategoryResponse, ProductRankingItemResponse } from "@poudy/api/api.zod";
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
+import { ProductGridCard } from "@/components/product/ProductGridCard";
 import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type PopularProductsProps = {
   /** 서버가 미리 받아 둔 첫 화면. 칩을 바꾸기 전까지 이 값을 그대로 쓴다. */
@@ -21,6 +20,9 @@ const CHIP_COUNT = 4;
 /** 서버가 최대 여섯 개를 내려 주므로 기다리는 자리도 같은 수로 잡는다. */
 const SKELETON_COUNT = 6;
 
+/** 3열로 놓으므로 첫 줄은 세 개다. */
+const FIRST_ROW_COUNT = 3;
+
 /**
  * 디자인 S01 의 `지금 사람들이 보고 있어요`.
  *
@@ -28,6 +30,7 @@ const SKELETON_COUNT = 6;
  * 내려 주므로 3열 2행으로 놓는다.
  */
 export function PopularProducts({ initialItems, categories }: PopularProductsProps) {
+  const sectionRef = useHomeSectionView("popular_products", 4);
   const chips = categories.slice(0, CHIP_COUNT);
   /* 고른 카테고리. 아무것도 고르지 않으면 전체다. */
   const [selected, setSelected] = useState<number | null>(null);
@@ -65,7 +68,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section ref={sectionRef} className="flex flex-col gap-4">
       <h2 className="text-[17px] font-bold text-text-primary">지금 사람들이 보고 있어요</h2>
 
       {chips.length > 0 ? (
@@ -111,26 +114,23 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
         <ul className="grid grid-cols-3 gap-x-2.5 gap-y-4">
           {items.map(({ product }, index) => (
             <li key={product.id}>
-              <Link href={`/products/${product.id}?from=home`} className="flex flex-col gap-0.75">
-                <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">
-                  <Image
-                    src={product.imageUrl || PRODUCT_PLACEHOLDER}
-                    alt=""
-                    width={224}
-                    height={224}
-                    loading={index < 3 ? "eager" : "lazy"}
-                    className="size-full object-contain p-2"
-                  />
-                </span>
-
-                {/*
-                  브랜드와 제품명을 한 덩어리로 읽히게 이어 쓰고 브랜드만 옅게 둔다.
-                  두 줄까지만 보여 주고 넘치면 줄임표로 끊는다.
-                */}
-                <span className="line-clamp-2 text-body leading-[1.35] text-text-primary">
-                  <span className="text-text-secondary">{product.brandName}</span> {product.name}
-                </span>
-              </Link>
+              {/* 첫 줄은 열자마자 보이는 자리다. 그만큼은 미루지 않고 받는다. */}
+              <ProductGridCard
+                id={product.id}
+                name={product.name}
+                brandName={product.brandName}
+                imageUrl={product.imageUrl}
+                from={selected === null ? "home_ranking" : "home_category"}
+                loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
+                onClick={() =>
+                  track("home_product_selected", {
+                    product_id: product.id,
+                    position: index + 1,
+                    ranking_scope: selected === null ? "overall" : "category",
+                    ...(selected === null ? {} : { category_id: selected }),
+                  })
+                }
+              />
             </li>
           ))}
         </ul>

@@ -2,8 +2,12 @@
 
 import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+
+import { track } from "@/lib/analytics/track";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
@@ -33,6 +37,21 @@ const slideAt = (track: HTMLElement): number => {
   return nearest;
 };
 
+/**
+ * 한 칸에서 다음 칸까지의 거리.
+ *
+ * 카드 폭에 소수점이 섞여 있어 `너비 + 간격` 으로 셈하면 어긋난다. 실제 두 칸이 놓인
+ * 자리의 차이에서 얻는다. 칸이 하나뿐이면 그 칸의 너비를 쓴다.
+ */
+const slideStep = (track: HTMLElement): number => {
+  const first = track.children[0];
+  const second = track.children[1];
+  if (!(first instanceof HTMLElement)) return 0;
+  if (!(second instanceof HTMLElement)) return first.offsetWidth;
+
+  return second.offsetLeft - first.offsetLeft;
+};
+
 /** 스스로 다음 카드로 넘어가는 간격. */
 const AUTOPLAY_INTERVAL = 5000;
 
@@ -52,6 +71,15 @@ const GLIDE_DURATION = 1500;
  */
 const SETTLE_DELAY = GLIDE_DURATION + 250;
 
+/**
+ * 손을 뗀 뒤 가까운 카드로 붙는 데 걸리는 시간.
+ *
+ * `GLIDE_DURATION` 은 스스로 넘어가는 자리의 값이라 재촉할 이유가 없어 길게 두었다.
+ * 사람이 끌어서 놓은 자리는 다르다. 놓자마자 결과가 보여야 끌어서 옮긴 것으로 느껴지고,
+ * 길게 끌면 손을 뗀 뒤에도 화면이 한참 미끄러져 조작이 무겁게 느껴진다.
+ */
+const DROP_DURATION = 320;
+
 /** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.95 다. */
 const MIN_SCALE = 0.95;
 
@@ -63,6 +91,23 @@ const MIN_SCALE = 0.95;
  * 건너뛴다. 고정 px 이면 그런 어긋남이 없다.
  */
 const SIDE_PADDING = 32;
+
+/**
+ * 끌기로 받아들이는 최소 이동 거리(px).
+ *
+ * 마우스를 누르는 순간 손이 미세하게 흔들린다. 그 흔들림까지 끌기로 받으면 카드를 눌러
+ * 상세 화면으로 갈 때마다 목록이 조금씩 밀린다. 이만큼 넘어야 끌기로 본다.
+ */
+const DRAG_THRESHOLD = 5;
+
+/**
+ * 다음 카드로 넘길지 판정하는 비율. 한 칸 간격에 대한 값이다.
+ *
+ * 놓은 자리에서 가장 가까운 칸을 고르면 한 칸의 절반을 넘겨야 넘어간다. 카드가 화면 폭에
+ * 가까워서 그 절반은 200px 안팎이고, 넘기는 데 힘이 많이 든다. 시작한 칸을 기준으로 이
+ * 비율만 넘기면 넘어가도록 해 조작을 가볍게 한다.
+ */
+const DRAG_SWITCH_RATIO = 0.2;
 
 /**
  * 가운데 칸 양옆에 두는 여유분 수.
@@ -93,12 +138,12 @@ const initialOrder = (count: number): readonly number[] => {
  * 애니메이션 없이 같은 그림의 진짜 자리로 옮겨, 사용자에게는 끝없이 도는 것으로 보인다.
  *
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
- *
- * 상세 화면(#451)이 아직 없다. 생기기 전까지는 카드를 눌러도 이동하지 않는다.
  */
 export function CurationCarousel({ items }: CurationCarouselProps) {
+  const sectionRef = useHomeSectionView("curation", 1);
   const trackRef = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
+  const lastSettledItem = useRef(0);
   /* 손을 대고 있는 동안에는 스스로 넘기지 않는다. */
   const held = useRef(false);
   const reduced = useRef(false);
@@ -112,12 +157,30 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   /* 되돌리느라 옮긴 스크롤인지. 그 한 번은 자리 표시를 다시 세지 않는다. */
   const recentering = useRef(false);
   /*
+   * 마우스로 끄는 동안의 상태.
+   *
+   * 누른 자리와 그때의 스크롤 값을 담아 두고, 포인터가 움직인 만큼을 그 값에서 덜어 낸다.
+   * 프레임마다의 이동량을 더해 나가면 오차가 쌓이므로 누른 순간을 기준으로 삼는다.
+   * `pointerId` 는 끌기를 시작한 포인터만 따라가려고 담아 둔다.
+   */
+  const drag = useRef<
+    { pointerId: number; startX: number; startScroll: number; startSlide: number; moved: boolean } | undefined
+  >(undefined);
+  /*
+   * 방금 끝난 동작이 끌기였는지.
+   *
+   * 브라우저는 끌기가 끝난 자리에서도 클릭을 한 번 보낸다. 카드가 상세로 가는 링크라,
+   * 이것을 가리지 않으면 목록을 밀 때마다 상세 화면이 열린다. 클릭은 `pointerup` 바로
+   * 뒤에 오므로 그때 켜 두었다가 클릭이 지나가면 끈다.
+   */
+  const dragged = useRef(false);
+  /*
    * 멎었을 때 할 일을 담아 둔다. 이벤트를 한 번만 달아 두고 그때그때 최신 것을 부르려면
    * 함수를 그대로 넘길 수 없다. 넘기면 처음 그릴 때의 낡은 값을 계속 붙들고 있는다.
    */
   const settleRef = useRef<() => void>(() => {});
   /* 시계 안에서 부르는 함수. 그릴 때마다 새로 만들어지므로 ref 로 최신 것을 붙든다. */
-  const scrollToSlideRef = useRef<(slideIndex: number, smooth: boolean) => void>(() => {});
+  const scrollToSlideRef = useRef<(slideIndex: number, smooth: boolean, duration?: number) => void>(() => {});
 
   /**
    * 카드가 가운데에서 얼마나 떨어져 있는지에 따라 크기를 정한다.
@@ -131,11 +194,9 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const paintScales = useCallback(() => {
     const track = trackRef.current;
     const first = track?.children[0];
-    const second = track?.children[1];
     if (!track || !(first instanceof HTMLElement)) return;
 
-    /* 한 칸의 너비도 셈하지 않고 실제 두 칸의 거리에서 얻는다. */
-    const step = second instanceof HTMLElement ? second.offsetLeft - first.offsetLeft : first.offsetWidth;
+    const step = slideStep(track);
     if (step === 0) return;
 
     /* 뷰포트의 가운데. 칸도 가운데끼리 견주어야 여백이 있어도 어긋나지 않는다. */
@@ -199,10 +260,15 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    */
   const orderRef = useRef(order);
 
-  /* 자리마다 고른 카드. 여유분이 있어 양 끝에서도 이웃이 보인다. */
-  const slides = order.map((itemIndex) => items[itemIndex]);
+  /*
+   * 자리마다 고른 카드. 여유분이 있어 양 끝에서도 이웃이 보인다.
+   *
+   * 목록에서의 자리를 함께 들고 간다. 복제한 카드가 섞여 있어 그린 순서로는 이것이 몇 번째
+   * 큐레이션인지 알 수 없는데, 눌렀을 때 남기는 이벤트에는 그 번호가 필요하다.
+   */
+  const slides = order.map((itemIndex) => ({ curation: items[itemIndex], itemIndex }));
 
-  const scrollToSlide = (slideIndex: number, smooth: boolean) => {
+  const scrollToSlide = (slideIndex: number, smooth: boolean, duration = GLIDE_DURATION) => {
     const track = trackRef.current;
     const target = track?.children[slideIndex];
     if (!track || !(target instanceof HTMLElement)) return;
@@ -242,7 +308,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     track.style.scrollSnapType = "none";
 
     const step = (now: number) => {
-      const ratio = Math.min(1, (now - startedAt) / GLIDE_DURATION);
+      const ratio = Math.min(1, (now - startedAt) / duration);
       /*
        * 시작과 끝이 모두 느리고 가운데가 빠른 커브다.
        *
@@ -311,6 +377,11 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
      */
     const onScrollEnd = () => {
       if (glide.current !== undefined) return;
+      /*
+       * 끄는 도중에 손을 잠깐 멈추면 브라우저가 스크롤이 멎었다고 보아 이 이벤트를 던진다.
+       * 그때 순서를 되돌리면 붙잡고 있던 카드가 손을 떠난다. 손을 뗄 때 처리한다.
+       */
+      if (drag.current !== undefined) return;
       settleRef.current();
     };
     track.addEventListener("scrollend", onScrollEnd);
@@ -429,22 +500,188 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     /*
      * 순서를 돌리는 일은 스크롤이 완전히 멎은 뒤에 한다. 가는 도중에 손대면 카드가
      * 되돌아온다. 직접 그리는 동안에는 끝나는 때를 알고 있으니 시계를 걸지 않는다.
+     *
+     * 마우스로 끄는 중에도 걸지 않는다. 끄는 동안에도 이 자리가 프레임마다 깨어나므로
+     * 시계를 걸면 손가락이 멈춰 있는 사이에 시계가 차서, 끌고 있는 도중에 `recenter` 가
+     * 순서를 돌리고 스크롤을 되돌린다. 그러면 붙잡고 있던 카드가 손을 떠나 튄다.
+     * 손을 뗄 때 `onPointerUp` 이 이어서 처리한다.
      */
     clearTimeout(settleTimer.current);
-    if (glide.current === undefined) settleTimer.current = setTimeout(settle, SETTLE_DELAY);
+    if (glide.current === undefined && drag.current === undefined) {
+      settleTimer.current = setTimeout(settle, SETTLE_DELAY);
+    }
   };
 
   /** 스크롤이 멎었다. 자리를 되돌리고 시계를 다시 센다. */
   const settle = () => {
     clearTimeout(settleTimer.current);
 
+    const carouselTrack = trackRef.current;
+    if (carouselTrack && !reduced.current) {
+      const slide = slideAt(carouselTrack);
+      const selected = carouselTrack.children[slide];
+      if (
+        selected instanceof HTMLElement &&
+        Math.abs(carouselTrack.scrollLeft - (selected.offsetLeft - SIDE_PADDING)) > 1
+      ) {
+        // 브라우저가 스냅 지점 밖에서 멈췄다면, 재배치 전에 짧게 가운데로 붙인다.
+        scrollToSlide(slide, true, DROP_DURATION);
+        return;
+      }
+    }
+
     const wasSelf = selfScrolling.current;
     selfScrolling.current = false;
+
+    const trackElement = trackRef.current;
+    if (trackElement) {
+      const itemIndex = orderRef.current[slideAt(trackElement)] ?? 0;
+      if (itemIndex !== lastSettledItem.current) {
+        const item = items[itemIndex];
+        if (item) {
+          track("curation_slide_viewed", {
+            curation_id: item.id,
+            position: itemIndex + 1,
+            transition: wasSelf ? "autoplay" : "manual",
+          });
+        }
+      }
+      lastSettledItem.current = itemIndex;
+    }
 
     if (loop) recenter();
 
     // 사람이 넘긴 것이다. 넘긴 카드를 볼 시간을 주도록 시계를 처음부터 다시 센다.
     if (!wasSelf) restartAutoplay();
+  };
+
+  /**
+   * 마우스로 카드를 붙잡는다.
+   *
+   * 손가락과 펜은 브라우저가 미는 동작을 그대로 가로 스크롤로 바꿔 주므로 여기서 손대지
+   * 않는다. 가로채면 이미 잘 동작하는 관성과 스냅을 직접 흉내내야 한다. 마우스만 그 동작이
+   * 없어서 끌어도 아무 일이 일어나지 않으므로, 마우스일 때만 직접 옮긴다.
+   */
+  const onPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
+    held.current = true;
+
+    const track = trackRef.current;
+    if (!track || event.pointerType !== "mouse" || event.button !== 0) return;
+
+    /* 사람이 붙잡았으므로 스스로 가던 움직임을 멈춘다. 그대로 두면 끄는 손과 다툰다. */
+    if (glide.current !== undefined) cancelAnimationFrame(glide.current);
+    glide.current = undefined;
+    selfScrolling.current = false;
+
+    drag.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScroll: track.scrollLeft,
+      startSlide: slideAt(track),
+      moved: false,
+    };
+
+    /*
+     * 끄는 동안에는 스냅을 끈다. 켜 두면 옮겨 적은 자리를 스냅이 곧바로 가까운 칸으로
+     * 끌어당겨, 끈 만큼 따라오지 않고 칸에서 칸으로 튄다.
+     */
+    track.style.scrollSnapType = "none";
+  };
+
+  /** 끈 거리만큼 목록을 옮긴다. */
+  const onPointerMove = (event: React.PointerEvent<HTMLUListElement>) => {
+    const track = trackRef.current;
+    const active = drag.current;
+    if (!track || !active || active.pointerId !== event.pointerId) return;
+
+    const moved = event.clientX - active.startX;
+    /*
+     * 몇 px 안쪽의 움직임은 누름으로 본다. 누를 때 손이 미세하게 흔들리는 것까지 끌기로
+     * 받으면, 카드를 눌러 상세 화면으로 갈 때마다 목록이 조금씩 밀린다.
+     */
+    if (!active.moved && Math.abs(moved) < DRAG_THRESHOLD) return;
+
+    if (!active.moved) {
+      active.moved = true;
+      /*
+       * 이 시점에 포인터를 붙들어 둔다. 목록 밖으로 나가도 끌기가 이어지고, 브라우저가
+       * 카드의 그림을 집어 드는 기본 동작도 함께 막힌다.
+       */
+      track.setPointerCapture(event.pointerId);
+    }
+
+    /* 끈 방향과 반대로 목록이 흘러야 붙잡은 카드가 손을 따라온다. */
+    track.scrollLeft = active.startScroll - moved;
+  };
+
+  /** 손을 뗐다. 가장 가까운 칸으로 붙여 준다. */
+  const onPointerUp = (event: React.PointerEvent<HTMLUListElement>) => {
+    held.current = false;
+
+    const track = trackRef.current;
+    const finished = drag.current;
+    drag.current = undefined;
+    if (!track || !finished || finished.pointerId !== event.pointerId) return;
+
+    if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+
+    /* 끌지 않고 누르기만 했다면 자리를 건드리지 않는다. 껐던 스냅만 돌려 놓는다. */
+    if (!finished.moved) {
+      track.style.scrollSnapType = "";
+      return;
+    }
+
+    /*
+     * 끌었다. 뒤따라오는 클릭 한 번을 링크가 무시하게 표시해 둔다.
+     * 그 클릭이 지나간 뒤에 스스로 풀어, 다음 누름은 정상으로 받는다.
+     */
+    dragged.current = true;
+    setTimeout(() => {
+      dragged.current = false;
+    }, 0);
+
+    /*
+     * 스냅은 여기서 돌려 놓지 않는다. 이어지는 `scrollToSlide` 가 프레임마다 스크롤을 적는
+     * 동안 스냅이 켜져 있으면 그 자리를 곧바로 가까운 칸으로 끌어당겨, 붙는 움직임이
+     * 무효가 된다. 그 함수가 다 그린 뒤에 스스로 돌려 놓는다.
+     */
+
+    /*
+     * 넘길지 제자리로 돌아갈지 정한다.
+     *
+     * 가장 가까운 칸을 고르면 한 칸의 절반을 넘겨야 넘어가는데, 카드가 화면 폭에 가까워서
+     * 그 절반이 멀다. 끌기 시작한 칸에서 한 칸 간격의 `DRAG_SWITCH_RATIO` 만큼만 움직였으면
+     * 넘긴 것으로 본다. 그만큼도 못 움직였으면 시작한 칸으로 되돌린다.
+     *
+     * `scrollToSlide` 는 끝에서 `scrollend` 를 스스로 던지므로, 순서를 되돌리는 `settle`
+     * 까지 이어진다. 끝 칸에 닿아 되감기는 일이 없다.
+     */
+    const step = slideStep(track);
+    /* 끈 거리는 스크롤이 움직인 값으로 읽는다. 포인터 좌표는 붙들기 전후로 기준이 다르다. */
+    const shifted = track.scrollLeft - finished.startScroll;
+    const from = finished.startSlide;
+
+    let target = from;
+    if (step > 0 && Math.abs(shifted) >= step * DRAG_SWITCH_RATIO) {
+      target = from + (shifted > 0 ? 1 : -1);
+    }
+
+    /* 여유분 밖으로는 나가지 않는다. 그 바깥은 카드가 없다. */
+    const last = track.children.length - 1;
+    scrollToSlide(Math.min(last, Math.max(0, target)), true, DROP_DURATION);
+  };
+
+  /** 끌기가 중간에 끊겼다. 잡고 있던 것을 놓고 스냅을 되돌린다. */
+  const onPointerCancel = (event: React.PointerEvent<HTMLUListElement>) => {
+    held.current = false;
+
+    const track = trackRef.current;
+    const stopped = drag.current;
+    drag.current = undefined;
+    if (!track || !stopped) return;
+
+    if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+    track.style.scrollSnapType = "";
   };
 
   /* 붙여 둔 이벤트가 늘 최신 것을 부르도록 그린 뒤에 담아 둔다. */
@@ -476,7 +713,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   }
 
   return (
-    <section aria-label="큐레이션">
+    <section ref={sectionRef} aria-label="큐레이션">
       {/*
         카드를 본문 폭의 90% 로 두고 남은 10% 를 좌우로 나눠, 앞뒤 카드가 양쪽에 똑같이 걸친다.
         상대 크기라 화면이 좁아져도 걸치는 비율이 그대로 유지된다.
@@ -494,18 +731,18 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           /*
            * 끌고 있는 동안에만 멈춘다. 손이 얹혀 있다고 멈추면 마우스를 캐러셀 위에 둔 채
            * 다른 일을 하는 사람에게는 영영 넘어가지 않는다.
+           *
+           * 마우스로 끄는 자리도 이 이벤트들이 함께 맡는다. 손가락과 펜은 브라우저의 기본
+           * 동작을 그대로 쓴다.
            */
-          onPointerDown={() => (held.current = true)}
-          onPointerUp={() => (held.current = false)}
-          onPointerCancel={() => (held.current = false)}
-          /*
-            스냅은 `mandatory` 가 아니라 `proximity` 로 둔다. `mandatory` 는 프레임마다
-            옮겨 놓은 자리를 곧바로 제 자리로 끌어당겨, 직접 그리는 움직임을 무효로 만든다.
-            `proximity` 는 손가락으로 훑다 놓았을 때만 가까운 칸에 붙여 준다.
-          */
-          className="curation-track scrollbar-none flex snap-x snap-proximity items-center gap-2 overflow-x-auto px-8"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
+          className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-8"
         >
-          {slides.map((curation, slideIndex) => {
+          {slides.map(({ curation, itemIndex }, slideIndex) => {
             return (
               /*
                 자리를 key 로 쓴다. 순서가 돌아도 자리는 그대로이므로 React 가 요소를
@@ -525,34 +762,55 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                   크기와 줄어드는 방향은 스크롤 위치를 보고 `paintScales` 가 직접 적는다.
                   미는 만큼 조금씩 자라야 해서 자리마다 정해진 값을 줄 수 없다.
                 */}
-                <article className="curation-card relative flex h-52 flex-col justify-end overflow-hidden rounded-[18px] p-5">
-                  <Image
-                    src={curation.thumbnailImageUrl}
-                    alt=""
-                    fill
-                    sizes="(max-width: 480px) 90vw, 420px"
-                    {...(slideIndex === SPARE ? { priority: true } : { loading: "eager" as const })}
-                    className="object-cover"
-                  />
+                {/*
+                  카드 전체가 상세로 가는 링크다. 그림과 글자 어디를 눌러도 같은 곳으로 간다.
 
-                  {/*
-                글자를 그림 위에 얹으므로 아래로 갈수록 짙어지는 막을 한 겹 깐다.
-                그림이 밝아도 흰 글자가 읽힌다.
-              */}
-                  <span aria-hidden="true" className="absolute inset-0 bg-linear-to-b from-transparent to-black/76" />
+                  끌어서 목록을 넘긴 뒤에는 이동하지 않는다. 브라우저는 끌기가 끝난 자리에서도
+                  클릭을 한 번 보내는데, 그대로 두면 카드를 밀 때마다 상세 화면이 열린다.
+                */}
+                <Link
+                  href={`/curations/${curation.id}`}
+                  onClick={(event) => {
+                    if (dragged.current) {
+                      event.preventDefault();
+                      return;
+                    }
+                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
+                  }}
+                  className="block"
+                >
+                  <article className="curation-card relative flex h-52 flex-col justify-end overflow-hidden rounded-[18px] p-5">
+                    {/*
+                      그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
+                      카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
+                    */}
+                    <Image
+                      src={curation.thumbnailImageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 480px) 90vw, 420px"
+                      {...(slideIndex === SPARE ? { priority: true } : { loading: "eager" as const })}
+                      draggable={false}
+                      className="object-cover select-none"
+                    />
 
-                  {/*
-                    카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
-                    `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
-                    제자리에 남는다.
-                  */}
-                  <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
-                    <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-white">
-                      {curation.title}
-                    </h3>
-                    <p className="text-[11px] text-white/78">{curation.description}</p>
-                  </div>
-                </article>
+                    {/*
+                      카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
+                      `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
+                      제자리에 남는다.
+
+                      그림 위에 덮는 막을 두지 않아 썸네일이 그대로 보인다. 그래서 글자는 흰색이
+                      아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
+                    */}
+                    <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
+                      <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
+                        {curation.title}
+                      </h3>
+                      {/* 제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다. */}
+                      <p className="text-[11px] whitespace-pre-line text-[#624255]">{curation.description}</p>
+                    </div>
+                  </article>
+                </Link>
               </li>
             );
           })}
@@ -566,9 +824,20 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           `9.5%`(좌우 여백과 이웃이 걸친 만큼) 들어온 곳이고, 거기서 카드 안쪽 여백만큼 더 들인다.
         */}
         {items.length > 1 ? (
+          /*
+            숫자를 그림 위에 바로 얹으면 그림의 밝기에 따라 읽히는 정도가 달라진다. 반투명한
+            판을 깔아 어떤 그림 위에서도 같은 또렷함을 유지한다.
+
+            판을 옅게 두는 대신 뒤를 더 흐리게 한다. 농도만으로 글자를 받치면 판이 그림 위에
+            짙은 덩어리로 얹혀 혼자 튀어 보인다. 흐림은 뒤의 무늬만 지우고 밝기는 그대로
+            두므로, 판이 그림에 묻히면서도 글자가 놓인 자리는 차분해진다.
+
+            글자에 옅은 그림자를 함께 둔다. 판이 옅어진 만큼 밝은 그림 위에서 흰 글자의
+            대비가 얕아지는데, 그림자가 획의 경계를 잡아 준다. 테두리는 판의 경계를 알린다.
+          */
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-[calc(9.5%+20px)] bottom-5 text-[11px] font-bold tracking-[0.2px] text-white/85"
+            className="pointer-events-none absolute right-[calc(9.5%+20px)] bottom-5 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
             {current + 1} / {items.length}
           </span>

@@ -1,6 +1,9 @@
 const LOCAL_SITE_URL = "http://localhost:3000";
 
 export const SITE_NAME = "Poudy";
+
+/** 운영 중인 인스타그램. 구조화 데이터의 sameAs 와 footer 가 함께 쓴다. */
+export const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
 export const SITE_ALTERNATE_NAME = "파우디";
 export const SITE_TITLE = `${SITE_NAME}(${SITE_ALTERNATE_NAME}) | 화장품 전성분 검색`;
 export const SITE_DESCRIPTION = `${SITE_NAME}(${SITE_ALTERNATE_NAME})에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.`;
