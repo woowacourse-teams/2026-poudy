@@ -3,12 +3,38 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
+import { useHideOnScrollDown } from "@/lib/hooks/useHideOnScrollDown";
 import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
 
 type CategoryTrackItem = {
   readonly id: number;
   readonly name: string;
 };
+
+/**
+ * 상단바 아래에서 아래로 내릴 때 숨고 위로 올릴 때 다시 나타나는 형제 카테고리 줄.
+ *
+ * 실제 높이는 필터 칩 줄이 붙을 자리를 정하도록 문서에 알린다.
+ */
+export function RevealingCategoryTrack({
+  items,
+  selectedId,
+}: {
+  readonly items: readonly CategoryTrackItem[];
+  readonly selectedId: number;
+}) {
+  const heightRef = useHeightVariable<HTMLDivElement>("--category-track-height");
+  const hidden = useHideOnScrollDown({});
+
+  if (items.length === 0) return null;
+
+  return (
+    <div ref={heightRef} data-hidden={hidden} className="category-track-bar sticky z-20 -my-2 bg-background px-4 py-2">
+      <CategoryTrack items={items} selectedId={selectedId} />
+    </div>
+  );
+}
 
 /**
  * 디자인의 가로 카테고리 선택 행.

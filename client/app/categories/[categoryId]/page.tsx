@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { CategoryTrack } from "@/components/directory/CategoryTrack";
+import { RevealingCategoryTrack } from "@/components/directory/CategoryTrack";
 import { CategoryTrackSkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { StickyBar } from "@/components/ui/StickyBar";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
@@ -105,17 +104,7 @@ async function CategoryTrackContent({ params }: { readonly params: PageProps<"/c
 
   const { trackItems } = await resolveCategory(id);
 
-  /*
-   * 같은 분류의 카테고리를 상단바 아래에 붙여 둔다. 목록을 내려가다가도 옆 카테고리로 바로
-   * 옮길 수 있다. 붙었을 때 칩이 바와 목록에 닿지 않도록 위아래를 띄우되, 음의 여백으로
-   * 그만큼을 되돌려 원래 배치는 움직이지 않는다. 바텀시트의 딤(z-40)과 상단바(z-30) 아래다.
-   * 음의 여백만큼 줄이 앞 자리보다 위에 있어, 붙는 높이(56)에 그 8 을 더한 곳에서 붙는다.
-   */
-  return (
-    <StickyBar stuckAt={64} className="sticky top-14 z-20 -my-2 bg-background px-4 py-2">
-      <CategoryTrack items={trackItems} selectedId={id} />
-    </StickyBar>
-  );
+  return <RevealingCategoryTrack items={trackItems} selectedId={id} />;
 }
 
 /** 필터 재료와 첫 장. 제목을 막지 않고 별도 경계에서 스트리밍한다. */
@@ -153,6 +142,7 @@ async function CategoryProducts({
         surface="category"
         fixedFilter={{ categoryIds }}
         hiddenChips={["category"]}
+        stickyChips="category"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
       />
@@ -186,7 +176,10 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
       </StreamBoundary>
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
-      <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["category"]} />}>
+      <StreamBoundary
+        stream={stream}
+        fallback={<ProductListSkeleton hiddenChips={["category"]} stickyChips="category" />}
+      >
         <CategoryProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
     </>

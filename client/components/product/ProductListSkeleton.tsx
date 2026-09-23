@@ -25,20 +25,33 @@ export function ProductRowsSkeleton({ rows = 20 }: { readonly rows?: number }) {
 }
 
 /** 조건 줄까지 포함한 자리. 필터 재료조차 아직 없을 때 쓴다. */
-export function ProductListSkeleton({ hiddenChips = [] }: { readonly hiddenChips?: readonly string[] }) {
+export function ProductListSkeleton({
+  hiddenChips = [],
+  stickyChips,
+}: {
+  readonly hiddenChips?: readonly string[];
+  readonly stickyChips?: "summary" | "category";
+}) {
+  const stickyClass =
+    stickyChips === "summary"
+      ? "filter-chip-bar sticky z-20"
+      : stickyChips === "category"
+        ? "category-filter-chip-bar sticky z-20"
+        : "";
+
   return (
     <>
-      <div aria-hidden="true" className="flex animate-pulse flex-col gap-3 pt-4">
+      <div aria-hidden="true" className="animate-pulse pt-4">
         <div className="h-3 bg-surface" />
+      </div>
 
-        <div className="bg-white px-4">
-          <div className="flex gap-1.5 pb-2">
-            {["ingredient", "category", "brand", "level", "skinType"]
-              .filter((chip) => !hiddenChips.includes(chip))
-              .map((chip) => (
-                <div key={chip} className="h-8 w-20 shrink-0 rounded-full bg-[#F2F3F5]" />
-              ))}
-          </div>
+      <div aria-hidden="true" className={`${stickyClass} animate-pulse bg-white px-4 pt-3`}>
+        <div className="flex gap-1.5 pb-2">
+          {["ingredient", "category", "brand", "level", "skinType"]
+            .filter((chip) => !hiddenChips.includes(chip))
+            .map((chip) => (
+              <div key={chip} className="h-8 w-20 shrink-0 rounded-full bg-[#F2F3F5]" />
+            ))}
         </div>
       </div>
 

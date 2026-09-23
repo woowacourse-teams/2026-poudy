@@ -31,11 +31,10 @@ type ProductListProps = {
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
   /**
-   * 칩 줄을 상단바(`variant="sub"`) 아래에 붙여 둘지. 조건 일치 제품처럼 조건이 곧 화면의
-   * 주제인 곳에서 쓴다. 머리가 다른 것을 붙여 두는 화면(브랜드관 등)에서는 겹치므로 끈다.
-   * 켜면 `탐색 조건` 요약도 위로 올릴 때만 칩 줄 위에 내려온다.
+   * 칩 줄 위에서 접혔다 펼쳐질 머리. 조건 일치 제품은 `탐색 조건`, 카테고리는 형제
+   * 카테고리 줄을 쓴다. 머리가 다른 것을 붙여 두는 화면(브랜드관 등)에서는 비워 둔다.
    */
-  readonly stickyChips?: boolean;
+  readonly stickyChips?: "summary" | "category";
 };
 
 /**
@@ -51,7 +50,7 @@ export function ProductList({
   hiddenChips = [],
   surface = "product_list",
   initialPage,
-  stickyChips = false,
+  stickyChips,
 }: ProductListProps) {
   const { filter: urlFilter } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
@@ -78,7 +77,7 @@ export function ProductList({
 
         띠는 좌우 끝까지 깔려야 하므로 이 자리에서 벗어나지 않는다.
       */}
-      {stickyChips ? (
+      {stickyChips === "summary" ? (
         <RevealingSummary>
           <FilterSummary filter={summaryFilter} />
           <SectionDivider />
@@ -95,8 +94,12 @@ export function ProductList({
         묶음 안에 두면 묶음이 지나갈 때 함께 올라간다. 묶음의 간격은 위 여백으로 옮긴다.
         바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
       */}
-      {stickyChips ? (
+      {stickyChips === "summary" ? (
         <StickyBar stuckAt={44} className="filter-chip-bar sticky z-20 bg-white px-4 pt-3">
+          {chipBar}
+        </StickyBar>
+      ) : stickyChips === "category" ? (
+        <StickyBar stuckAt={56} className="category-filter-chip-bar sticky z-20 bg-white px-4 pt-3">
           {chipBar}
         </StickyBar>
       ) : (

@@ -725,6 +725,32 @@ body:has(.filter-summary-bar[data-hidden="true"]) .filter-chip-bar {
 }
 
 /*
+ * 카테고리 상세의 형제 카테고리 줄과 필터 칩 줄. 아래로 내리면 카테고리 줄이 상단바
+ * (56px) 뒤로 숨고 필터 칩이 그 자리를 차지한다. 위로 올리거나 숨은 링크에 키보드 초점이
+ * 닿으면 카테고리 줄이 다시 내려오고 필터 칩은 그 아래로 밀린다(`CategoryTrack`).
+ */
+.category-track-bar {
+  top: 3.5rem;
+  transition: top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.category-track-bar[data-hidden="true"]:not(:focus-within) {
+  top: calc(3.5rem - var(--category-track-height, 56px));
+}
+
+.category-filter-chip-bar {
+  top: calc(3.5rem + var(--category-track-height, 56px));
+  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
+  transition:
+    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--transition-duration-control-state) ease-out;
+}
+
+body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-filter-chip-bar {
+  top: 3.5rem;
+}
+
+/*
  * 카테고리·브랜드 탭의 흰 알약. 밑줄과 같은 길이로 미끄러진다.
  *
  * 두 탭 전환이 화면마다 다르게 움직이면 같은 일을 하는 자리로 읽히지 않는다.
