@@ -195,16 +195,21 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 중복되므로 추가하지 않습니다.
 
 `trackGoogleAnalytics`는 유입부터 제품 저장까지의 핵심 퍼널만 GA4에도 전송합니다. 검색어 원문은
-URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. 검색 또는 카테고리 탐색을 시작하면
+URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. 검색·카테고리·인기 검색어·피부 타입·홈 랭킹 탐색을 시작하면
 세션 저장소에 30분짜리 임의 `discovery_id`를 만들고, 결과·상세·보관 이벤트에 같은 값을 붙입니다.
 이 값은 이름·연락처·계정과 연결하지 않으며 URL에도 넣지 않습니다.
 
 | Poudy 이벤트            | GA4 이벤트              | 전송 항목                                       |
 | ----------------------- | ----------------------- | ----------------------------------------------- |
+| `home_search_selected`  | `home_search_selected`  | 검색 버튼 위치, 탐색 경로                       |
 | `search_started`        | `search_started`        | 검색 방식, 탐색 경로                            |
 | `category_selected`     | `category_selected`     | 카테고리 ID·이름, 시작 화면, 탐색 경로          |
+| `popular_keyword_used`  | `popular_keyword_used`  | 순위·표시 위치, 탐색 경로. 검색어 원문은 제외   |
+| `skin_type_selected`    | `skin_type_selected`    | 피부 타입, 탐색 경로                            |
 | `search_submitted`      | `search_submitted`      | 검색 방식, 결과 수, 성분 조건 수, 탐색 경로     |
 | `search_results_viewed` | `search_results_viewed` | 검색 방식, 결과 수, 성분 조건 수, 탐색 경로     |
+| `product_list_viewed`   | `product_list_viewed`   | 목록 진입 경로, 결과·조건 수, 탐색 경로         |
+| `home_product_selected` | `select_item`           | 제품 ID·노출 위치·랭킹 범위, 탐색 경로          |
 | `product_viewed`        | `view_item`             | 제품 ID, 카테고리, 진입 경로, 탐색 경로         |
 | `product_saved`         | `add_to_wishlist`       | 제품 ID, 저장한 화면, 상세 진입 경로, 탐색 경로 |
 
@@ -219,7 +224,8 @@ URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. �
 - Google 신호 데이터 수집과 광고 개인 최적화는 사용하지 않습니다.
 - 이벤트 데이터 보관 기간을 14개월 이내로 설정합니다.
 - `add_to_wishlist`를 핵심 이벤트로 지정합니다.
-- `search_mode`, `entry_point`, `save_source`, `discovery_method`, `origin_surface`를 이벤트 범위 맞춤
+- `search_mode`, `entry_point`, `save_source`, `discovery_method`, `origin_surface`, `list_source`,
+  `ranking_scope`, `placement`, `skin_type`을 이벤트 범위 맞춤
   측정기준으로 등록합니다. `discovery_id`는 값 종류가 많으므로 맞춤 측정기준으로 등록하지 않습니다.
 - `result_count`를 이벤트 범위 맞춤 측정항목으로 등록합니다.
 - DebugView와 실시간 보고서에서 최초 진입과 클라이언트 라우트 이동마다 `page_view`가 한 번씩만 오는지
