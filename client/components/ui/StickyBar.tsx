@@ -1,6 +1,6 @@
 "use client";
 
-import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
+import { BOUNDARY_MARKER_CLASS, usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 
 type StickyBarProps = {
   /**
@@ -24,7 +24,7 @@ export function StickyBar({ stuckAt, className, children }: StickyBarProps) {
 
   return (
     <>
-      <div ref={ref} aria-hidden="true" />
+      <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER_CLASS} />
       <div data-stuck={passed} className={`stuck-edge ${className}`}>
         {children}
       </div>

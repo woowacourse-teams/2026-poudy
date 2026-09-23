@@ -7,7 +7,7 @@ import { useSyncExternalStore } from "react";
 
 import { Icon } from "./icons/Icon";
 
-import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
+import { BOUNDARY_MARKER_CLASS, usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 
 type TopBarProps = {
@@ -115,7 +115,7 @@ export function TopBar({
    * 스크롤을 맞추는데, sticky 요소는 건너뛴다. 표식이 없으면 바 다음 요소가 이미 화면 안에
    * 있어 앞 화면에서 내려간 만큼 새 화면도 내려간 채 열린다.
    */
-  const sentinel = sticky ? <div ref={ref} aria-hidden="true" /> : null;
+  const sentinel = sticky ? <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER_CLASS} /> : null;
 
   if (variant === "root") {
     return (

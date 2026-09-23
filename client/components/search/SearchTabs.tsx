@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useHideOnScrollDown } from "@/lib/hooks/useHideOnScrollDown";
-import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
+import { BOUNDARY_MARKER_CLASS, usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 
 const PRODUCT_SEARCH_HREF = "/search/products";
 
@@ -45,7 +45,7 @@ export function SearchTabs() {
 
   return (
     <>
-      <div ref={ref} aria-hidden="true" />
+      <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER_CLASS} />
       <nav
         ref={navRef}
         aria-label="검색 방식"

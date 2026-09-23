@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * 흐름 안에 두는 표식의 모양. 1px 높이를 주고 음의 여백으로 되돌려 배치는 움직이지 않는다.
+ *
+ * 높이가 0이면 맨 위에서 표식이 경계선에 정확히 걸린다. WebKit 은 이때 보인다고 알려 주지
+ * 않아, 앞 화면에서 스크롤된 채 넘어온 뒤 맨 위로 돌아가도 지나간 상태가 풀리지 않는다.
+ * 1px 이 있으면 맨 위에서 경계 안쪽에 확실히 걸친다.
+ */
+export const BOUNDARY_MARKER_CLASS = "h-px -mb-px";
+
 type TopBoundaryOptions = {
   /** 이 높이보다 위로 지나가면 `passed` 가 된다(px). */
   readonly enterAt: number;

@@ -130,7 +130,7 @@ function SearchFieldBar({ children }: { readonly children: ReactNode }) {
 
   return (
     <>
-      <div ref={ref} aria-hidden="true" className="absolute inset-x-0 top-0" />
+      <div ref={ref} aria-hidden="true" className="absolute inset-x-0 top-0 h-px" />
       <div
         data-stuck={passed}
         className="search-field-bar stuck-edge sticky z-10 -mx-4 -mt-4 -mb-2 bg-background px-4 pt-4 pb-2"
