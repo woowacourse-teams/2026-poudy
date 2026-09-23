@@ -36,6 +36,9 @@ sh ./scripts/init-db.sh -d poudy
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 ```
 
+새 DB는 `db/schema.sql`로 생성하고 초기 데이터에 `exclude_code` 정의와 성분 매핑을
+포함해야 합니다. 기존 DB에는 스키마를 다시 적용하지 않습니다.
+
 | DB | 쓰는 곳 | 스키마·데이터 |
 | --- | --- | --- |
 | `poudy` | `bootRun` (`dev`), 운영 (`prod`) | 직접 적용하고 데이터를 적재한다 |

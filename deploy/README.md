@@ -50,8 +50,9 @@ sudo chmod 0640 /etc/poudy/backend.env
 
 빈 DB의 첫 CodeDeploy는 artifact의 `schema.sql`을 한 트랜잭션으로 적용하고,
 `POUDY_DB_INITIAL_DATA_S3_URI`의 카탈로그 SQL을 적용합니다. 이후 필수 테이블과 카탈로그
-행을 검사합니다. 기존 DB는 같은 검증만 수행하며, 실패하면 실행 중이던 서비스를 재시작하지
-않고 배포를 중단합니다.
+행을 검사합니다. 초기 카탈로그 SQL에는 `exclude_code` 정의를 성분 매핑보다 먼저 포함해야 합니다.
+기존 DB는 스키마를 변경하지 않고 같은 검증만 수행합니다.
+실패하면 실행 중이던 서비스를 재시작하지 않고 배포를 중단합니다.
 
 ## EC2 프론트 구성
 

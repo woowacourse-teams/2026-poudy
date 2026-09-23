@@ -46,12 +46,13 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 도메인 규칙은 저장·전송 타입으로 확산하지 않는다. 기능·계층 패키지(`brand.domain`,
 `feedback.service` 등) 사이의 순환 참조도 `ArchitectureTest`가 막는다. `exception` 패키지는 기능
 패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
-하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능의 의존 방향은
-`tag ← ingredient ← excludecode ← product → brand → category`다. 제품 수나 성분군처럼 하위 기능이
+하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능에서
+`ingredient → tag`, `ingredient → excludecode ← product`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
 상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
-(`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`, `IngredientGroups`)를 두고 상위
-기능이 구현한다. 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)과 성분군 코드
-`ExcludeCode`는 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
+(`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`)를 두고 상위
+기능이 구현한다. 성분군 조회 포트 `IngredientGroups`는 값을 소유한 `excludecode` 도메인에 둔다.
+집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)은 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
+성분군 코드는 성분 도메인까지 `ExcludeCode` 값 객체로 전달하고 HTTP 경계에서 문자열로 직렬화한다.
 
 새 저장 구현이 실제로 필요해질 때 Service와 Repository 사이의 포트를 함께 결정한다. 교체
 가능성만으로 인터페이스나 빈 계층을 미리 만들지 않는다.
@@ -118,9 +119,12 @@ Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 �
 
 ### ExcludeCode
 
-`excludecode`는 빠른 제외 성분군의 식별자와 성분 매핑을 소유한다. 성분군은 서버에서 성분으로
-해석하며, 데이터에 빠지거나 중복된 정의가 있으면 기동을 실패시킨다. 포함 범위는 DB 데이터의
-책임이며 서버 상수나 패턴으로 추론하지 않는다.
+`excludecode`는 DB의 빠른 제외 성분군 코드·표시명·설명과 성분 매핑을 소유한다. 성분군은 서버에서
+성분으로 해석하며, 성분이 없는 정의는 기동을 실패시킨다. 포함 범위와 목록은 DB 데이터의
+책임이며 서버 enum이나 패턴으로 추론하지 않는다. 목록은 코드 순서로 공개한다.
+저장소가 SQL 조인으로 성분 ID를 표시 정보로 해석하고, 도메인 `ExcludeCodeGroup`은 정의와
+소속 성분을 함께 소유해 포함 여부를 판정한다. `ExcludeCodes`는 공개 순서의 성분군 목록만
+보관한다. `excludecode`는 `ingredient` 코드에 의존하지 않는다.
 
 ### SkinType
 
