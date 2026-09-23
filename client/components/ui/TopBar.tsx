@@ -110,7 +110,12 @@ export function TopBar({
   const { ref, passed } = usePassedTopBoundary<HTMLDivElement>({ enterAt: 0, enabled: edgeEnabled });
   const position = sticky ? STICKY : "relative z-10 bg-background";
   const edgeClass = edgeEnabled ? "stuck-edge" : "";
-  const sentinel = edgeEnabled ? <div ref={ref} aria-hidden="true" /> : null;
+  /*
+   * 붙는 바 앞에는 그림자를 드리우지 않아도 표식을 둔다. 화면을 옮길 때 Next 는 새 화면의 첫 요소로
+   * 스크롤을 맞추는데, sticky 요소는 건너뛴다. 표식이 없으면 바 다음 요소가 이미 화면 안에
+   * 있어 앞 화면에서 내려간 만큼 새 화면도 내려간 채 열린다.
+   */
+  const sentinel = sticky ? <div ref={ref} aria-hidden="true" /> : null;
 
   if (variant === "root") {
     return (
