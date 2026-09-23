@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { ExcludeCodeGuide } from "@/components/search/ExcludeCodeGuide";
 import { IngredientSearchScreen, IngredientSearchScreenFallback } from "@/components/search/IngredientSearchScreen";
 import { fetchExcludeCodes } from "@/lib/api/products";
 
@@ -18,19 +17,14 @@ export const revalidate = 86400;
 /** S03 성분 필터링 탭. */
 export default async function IngredientSearchPage() {
   const excludeCodes = await fetchExcludeCodes();
-  const guide = <ExcludeCodeGuide excludeCodes={excludeCodes.items} />;
 
   /*
-   * 조건을 읽기 전에는 조건 없는 화면을 그대로 그린다. 미리 만든 HTML 에 본문과 성분 링크가
-   * 담겨 크롤러도 읽고, 조건 없이 들어온 사람은 스크립트가 붙어도 화면이 바뀌지 않는다.
+   * 조건을 읽기 전에는 조건 없는 화면을 그대로 그린다. 조건 없이 들어온 사람은 스크립트가
+   * 붙어도 화면이 바뀌지 않는다.
    */
   return (
-    <Suspense
-      fallback={
-        <IngredientSearchScreenFallback excludeCodes={excludeCodes.items}>{guide}</IngredientSearchScreenFallback>
-      }
-    >
-      <IngredientSearchScreen excludeCodes={excludeCodes.items}>{guide}</IngredientSearchScreen>
+    <Suspense fallback={<IngredientSearchScreenFallback excludeCodes={excludeCodes.items} />}>
+      <IngredientSearchScreen excludeCodes={excludeCodes.items} />
     </Suspense>
   );
 }

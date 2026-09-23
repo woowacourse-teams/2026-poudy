@@ -15,7 +15,7 @@ import { useHardwareBack } from '@/hooks/useHardwareBack';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 import type { WebViewErrorEvent, WebViewNavigationRequest } from '@/types/webView';
-import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
+import { APPLICATION_NAME, WEBVIEW_INIT_SCRIPT } from '@/util/appInfo';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
@@ -116,7 +116,7 @@ export default function WebAppShell() {
           ref={webViewRef}
           allowsBackForwardNavigationGestures
           applicationNameForUserAgent={APPLICATION_NAME}
-          injectedJavaScriptBeforeContentLoaded={APP_INFO_SCRIPT}
+          injectedJavaScriptBeforeContentLoaded={WEBVIEW_INIT_SCRIPT}
           javaScriptCanOpenWindowsAutomatically={false}
           mixedContentMode='never'
           onError={handleError}
@@ -127,6 +127,8 @@ export default function WebAppShell() {
           onNavigationStateChange={handleNavigationChange}
           onShouldStartLoadWithRequest={handleShouldStartLoad}
           originWhitelist={[serviceOrigin]}
+          setBuiltInZoomControls={false}
+          setDisplayZoomControls={false}
           setSupportMultipleWindows={false}
           sharedCookiesEnabled
           source={{ uri: navigation.url }}

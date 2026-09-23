@@ -1,6 +1,7 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { IngredientList } from "./IngredientList";
 import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
@@ -213,10 +214,17 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse }) {
   if (product.skinEffectGroups.length === 0) return null;
 
-  const nameOf = (id: number) => product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName;
+  /*
+   * 이름을 찾지 못한 성분은 목록에서 뺀다. 이전에도 빈 이름은 보이지 않았고,
+   * 누를 수 있게 된 지금은 그 자리를 남겨 두면 빈 화면으로 데려간다.
+   */
+  const named = (ids: readonly number[]) =>
+    ids
+      .map((id) => ({ id, name: product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
+      .filter((ingredient): ingredient is { id: number; name: string } => Boolean(ingredient.name));
 
   return (
-    <section className="flex flex-col gap-3 pt-5">
+    <section data-no-select className="flex flex-col gap-3 pt-5">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
         <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
@@ -233,8 +241,23 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
               >
                 {group.name}
               </span>
+              {/*
+                이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다.
+
+                구분 기호는 링크 밖에 두어 누를 자리에서 빼두고, 앞 이름과 한 덩어리로 묶어
+                기호만 다음 줄 머리로 넘어가지 않게 한다. 줄은 기호 뒤에서 나뉘어 지금과 같은 자리에서 접힌다.
+              */}
               <span className="flex-1 text-[13px] font-semibold text-[#202124]">
-                {group.ingredientIds.map(nameOf).filter(Boolean).join(" · ")}
+                {named(group.ingredientIds).map((ingredient, index, ingredients) => (
+                  <Fragment key={ingredient.id}>
+                    <span className="whitespace-nowrap">
+                      <Link href={`/ingredients/${ingredient.id}`} prefetch="auto" className="ingredient-chip-link">
+                        {ingredient.name}
+                      </Link>
+                      {index < ingredients.length - 1 && <span aria-hidden="true"> ·</span>}
+                    </span>{" "}
+                  </Fragment>
+                ))}
               </span>
             </li>
           );
@@ -247,7 +270,10 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
+    <section
+      data-no-select
+      className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']"
+    >
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-pretty text-[12px] text-[#72747A]">
@@ -282,7 +308,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
 
 function Ingredients({ ingredients }: { readonly ingredients: ProductDetailResponse["ingredients"] }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section data-no-select className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">전체 성분표</h3>
         <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>

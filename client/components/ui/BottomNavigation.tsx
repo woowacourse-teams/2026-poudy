@@ -27,7 +27,7 @@ const TABS = [
       matchesPathSegment(path, "/products") ||
       matchesPathSegment(path, "/ingredients"),
   },
-  { href: "/saved", label: "저장", icon: "bookmark", match: (path: string) => matchesPathSegment(path, "/saved") },
+  { href: "/saved", label: "저장", icon: "bookmarks", match: (path: string) => matchesPathSegment(path, "/saved") },
 ] as const;
 
 type TabIcon = (typeof TABS)[number]["icon"];

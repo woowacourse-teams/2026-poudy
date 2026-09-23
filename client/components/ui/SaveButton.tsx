@@ -79,7 +79,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
             data-popped={popping}
             onTransitionEnd={finishPop}
           >
-            <Icon name="bookmark" size={18} filled={saved} strokeWidth={2.5} />
+            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={18} strokeWidth={2.5} />
           </span>
           <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
         </span>
@@ -106,7 +106,11 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         data-popped={popping}
         onTransitionEnd={finishPop}
       >
-        <Icon name="bookmark" size={20} filled={saved} className={saved ? "text-[#F04465]" : "text-text-secondary"} />
+        <Icon
+          name={saved ? "bookmark-solid" : "bookmark"}
+          size={20}
+          className={saved ? "text-[#F04465]" : "text-text-secondary"}
+        />
       </span>
       <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
     </button>
