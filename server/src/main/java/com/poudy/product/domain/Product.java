@@ -10,20 +10,6 @@ import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.SkinEffect;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -35,70 +21,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-@Entity
-@Table(name = "product")
 public class Product {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
-    @Id
-    private Long id;
-
-    @Column(name = "product_name")
-    private String name;
-
-    @ManyToOne
-    @JoinColumn(name = "brand_id")
-    private Brand brand;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
-
-    @Column(name = "image_url")
-    private String imageUrl;
-
-    @Column(name = "moisture_level")
-    private Short moistureLevel;
-
-    @Column(name = "oil_level")
-    private Short oilLevel;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @ElementCollection
-    @CollectionTable(name = "product_skin_type", joinColumns = @JoinColumn(name = "product_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "skin_type_code")
-    private Set<SkinType> skinTypeRows;
-
-    @OneToMany
-    @JoinColumn(name = "product_id")
-    @OrderBy("displayOrder")
-    private List<ProductComponent> components;
-
-    @OneToMany
-    @JoinColumn(name = "product_id")
-    @OrderBy("displayOrder")
-    private List<ProductVariant> variantRows;
-
-    @Transient
-    private Set<SkinType> skinTypes;
-
-    @Transient
-    private Ingredients ingredients;
-
-    @Transient
-    private ProductVariants variants;
-
-    @Transient
-    private ProductSensory sensory;
-
-    protected Product() {
-    }
+    private final Long id;
+    private final String name;
+    private final Brand brand;
+    private final Category category;
+    private final Ingredients ingredients;
+    private final String imageUrl;
+    private final ProductVariants variants;
+    private final ProductSensory sensory;
+    private final LocalDateTime updatedAt;
+    private final Set<SkinType> skinTypes;
 
     public Product(
         Long id,
@@ -136,7 +74,6 @@ public class Product {
         }
 
         this.skinTypes = Set.copyOf(skinTypes);
-        this.skinTypeRows = this.skinTypes;
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -145,22 +82,7 @@ public class Product {
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
-        this.moistureLevel = (short) sensory.moisture().value();
-        this.oilLevel = (short) sensory.oil().value();
         this.updatedAt = updatedAt.atZoneSameInstant(SEOUL).toLocalDateTime();
-        this.components = List.of();
-        this.variantRows = variants.values();
-    }
-
-    @PostLoad
-    private void load() {
-        requireLeafCategory(category);
-        this.skinTypes = Set.copyOf(skinTypeRows);
-        this.ingredients = new Ingredients(
-            components.stream().flatMap(component -> component.ingredients().stream()).toList()
-        );
-        this.variants = new ProductVariants(variantRows);
-        this.sensory = new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel));
     }
 
     private static void requireLeafCategory(Category category) {

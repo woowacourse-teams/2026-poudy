@@ -1,29 +1,13 @@
 package com.poudy.category.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.util.Objects;
 
-@Entity
-@Table(name = "category")
 public class Category {
 
-    @Id
-    private Long id;
-
-    @Column(name = "parent_id")
-    private Long parentId;
-
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "depth")
-    private Integer depth;
-
-    protected Category() {
-    }
+    private final Long id;
+    private final Long parentId;
+    private final String name;
+    private final Integer depth;
 
     public Category(Long id, Long parentId, String name, Integer depth) {
         validateDepth(depth);

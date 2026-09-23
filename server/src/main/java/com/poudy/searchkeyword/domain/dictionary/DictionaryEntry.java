@@ -1,24 +1,10 @@
 package com.poudy.searchkeyword.domain.dictionary;
 
 import com.poudy.search.domain.SearchKeyword;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Entity
-@Table(name = "search_keyword")
 public class DictionaryEntry implements Comparable<DictionaryEntry> {
 
     public enum Status {
@@ -26,32 +12,12 @@ public class DictionaryEntry implements Comparable<DictionaryEntry> {
         INACTIVE
     }
 
-    @Id
-    private String id;
-
-    @Column(name = "keyword")
-    private String keyword;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private Status status;
-
-    @Column(name = "ranking_eligible")
-    private boolean rankingEligible;
-
-    @ElementCollection
-    @CollectionTable(name = "search_keyword_expression", joinColumns = @JoinColumn(name = "keyword_id"))
-    @Column(name = "expression_key")
-    private Set<String> expressionKeys = new HashSet<>();
-
-    @Transient
-    private String normalizedKeyword;
-
-    @Transient
-    private Set<String> expressions;
-
-    protected DictionaryEntry() {
-    }
+    private final String id;
+    private final String keyword;
+    private final String normalizedKeyword;
+    private final Status status;
+    private final boolean rankingEligible;
+    private final Set<String> expressions;
 
     private DictionaryEntry(
         String id,
@@ -66,7 +32,6 @@ public class DictionaryEntry implements Comparable<DictionaryEntry> {
         this.normalizedKeyword = normalizedKeyword;
         this.status = status;
         this.rankingEligible = rankingEligible;
-        this.expressionKeys = new HashSet<>(expressions);
         this.expressions = expressions;
     }
 
@@ -83,14 +48,6 @@ public class DictionaryEntry implements Comparable<DictionaryEntry> {
             .map(DictionaryEntry::normalizedText)
             .collect(Collectors.toUnmodifiableSet());
         return new DictionaryEntry(id, keyword, normalizedKeyword, status, rankingEligible, normalizedExpressions);
-    }
-
-    @PostLoad
-    private void normalize() {
-        this.normalizedKeyword = normalizedText(keyword);
-        this.expressions = expressionKeys.stream()
-            .map(DictionaryEntry::normalizedText)
-            .collect(Collectors.toUnmodifiableSet());
     }
 
     private static String normalizedText(String text) {

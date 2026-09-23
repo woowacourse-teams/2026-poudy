@@ -1,11 +1,5 @@
 package com.poudy.productrequest.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -13,34 +7,16 @@ import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
 
-@Entity
-@Table(name = "product_request")
 public class ProductRequest {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
-    @Id
-    @Column(name = "id")
-    private UUID requestId;
-
-    @Column(name = "product_name")
-    private String productName;
-
-    @Column(name = "brand_name")
-    private String brandName;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private ProductRequestStatus status;
-
-    @Column(name = "status_changed_at")
-    private LocalDateTime statusChangedAt;
-
-    protected ProductRequest() {
-    }
+    private final UUID requestId;
+    private final String productName;
+    private final String brandName;
+    private final LocalDateTime createdAt;
+    private final ProductRequestStatus status;
+    private final LocalDateTime statusChangedAt;
 
     public ProductRequest(
         UUID requestId,

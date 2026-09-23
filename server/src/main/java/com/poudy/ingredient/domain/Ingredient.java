@@ -2,74 +2,25 @@ package com.poudy.ingredient.domain;
 
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
-import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "ingredient")
 public class Ingredient {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
-    @Id
-    private Long id;
-
-    @Column(name = "korean_name")
-    private String koreanName;
-
-    @Column(name = "english_name")
-    private String englishName;
-
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @ElementCollection
-    @CollectionTable(name = "ingredient_alias", joinColumns = @JoinColumn(name = "ingredient_id"))
-    @OrderBy("id")
-    private List<Alias> aliases;
-
-    @ElementCollection
-    @CollectionTable(name = "ingredient_source", joinColumns = @JoinColumn(name = "ingredient_id"))
-    @OrderBy("id")
-    private List<Source> sources;
-
-    @ManyToMany
-    @JoinTable(name = "ingredient_tag", joinColumns = @JoinColumn(name = "ingredient_id"), inverseJoinColumns = @JoinColumn(name = "tag_code"))
-    @OrderColumn(name = "display_order")
-    private List<Tag> tagReferences;
-
-    @Transient
-    private List<String> infoSources;
-
-    @Transient
-    private List<IngredientTag> tags;
-
-    protected Ingredient() {
-    }
+    private final Long id;
+    private final String koreanName;
+    private final String englishName;
+    private final String description;
+    private final LocalDateTime updatedAt;
+    private final List<String> aliases;
+    private final List<String> infoSources;
+    private final List<IngredientTag> tags;
 
     public Ingredient(
         Long id,
@@ -86,25 +37,9 @@ public class Ingredient {
         this.englishName = englishName;
         this.description = description;
         this.updatedAt = local(updatedAt);
-        this.aliases = Objects.requireNonNullElse(aliases, List.<String>of()).stream()
-            .map(alias -> new Alias(null, alias))
-            .toList();
-        this.sources = Objects.requireNonNullElse(infoSources, List.<String>of()).stream()
-            .map(content -> new Source(null, SourceType.INFO, content))
-            .toList();
+        this.aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
+        this.infoSources = List.copyOf(Objects.requireNonNullElse(infoSources, List.of()));
         this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
-        this.infoSources = contentsOf(SourceType.INFO);
-    }
-
-    @PostLoad
-    private void load() {
-        List<String> effectSources = contentsOf(SourceType.EFFECT);
-        this.tags = tagReferences.stream().map(tag -> new IngredientTag(tag, effectSources)).toList();
-        this.infoSources = contentsOf(SourceType.INFO);
-    }
-
-    private List<String> contentsOf(SourceType type) {
-        return sources.stream().filter(source -> source.type() == type).map(Source::content).toList();
     }
 
     private static LocalDateTime local(OffsetDateTime value) {
@@ -168,7 +103,7 @@ public class Ingredient {
     }
 
     public List<String> aliases() {
-        return aliases.stream().map(Alias::alias).toList();
+        return aliases;
     }
 
     public List<String> effectSources() {
@@ -177,21 +112,5 @@ public class Ingredient {
             .flatMap(tag -> tag.sources().stream())
             .distinct()
             .toList();
-    }
-
-    private enum SourceType {
-        INFO,
-        EFFECT
-    }
-
-    @Embeddable
-    private record Alias(@Column(name = "id") Long id, @Column(name = "alias") String alias) {
-    }
-
-    @Embeddable
-    private record Source(
-        @Column(name = "id") Long id,
-        @Enumerated(EnumType.STRING) @Column(name = "type") SourceType type,
-        @Column(name = "content") String content) {
     }
 }

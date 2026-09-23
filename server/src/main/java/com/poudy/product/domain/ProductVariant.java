@@ -1,38 +1,16 @@
 package com.poudy.product.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Table;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "product_variant")
 public class ProductVariant {
 
     private static final String DISCONTINUED = "discontinued";
 
-    @Id
-    private Long id;
-
-    @Column(name = "display_order")
-    private Integer displayOrder;
-
-    @Column(name = "price")
-    private Long price;
-
-    @Column(name = "volume_value")
-    private BigDecimal volumeValue;
-
-    @Column(name = "volume_unit")
-    private String volumeUnit;
-
-    @Column(name = "status")
-    private String status;
-
-    protected ProductVariant() {
-    }
+    private final Long id;
+    private final Long price;
+    private final BigDecimal volumeValue;
+    private final String volumeUnit;
+    private final String status;
 
     public ProductVariant(Long id, Long price, BigDecimal volumeValue, String volumeUnit, String status) {
         if (price == null || price < 0) {
@@ -50,19 +28,17 @@ public class ProductVariant {
 
         this.id = id;
         this.price = price;
-        this.volumeValue = volumeValue;
+        this.volumeValue = stripTrailingZeros(volumeValue);
         this.volumeUnit = volumeUnit;
         this.status = status;
-        stripVolumeTrailingZeros();
     }
 
-    @PostLoad
-    private void stripVolumeTrailingZeros() {
+    private static BigDecimal stripTrailingZeros(BigDecimal volumeValue) {
         BigDecimal stripped = volumeValue.stripTrailingZeros();
         if (stripped.scale() < 0) {
-            stripped = stripped.setScale(0);
+            return stripped.setScale(0);
         }
-        this.volumeValue = stripped;
+        return stripped;
     }
 
     public Long id() {

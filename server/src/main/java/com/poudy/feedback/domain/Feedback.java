@@ -3,13 +3,6 @@ package com.poudy.feedback.domain;
 import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
 import com.poudy.product.domain.Products;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Transient;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -19,40 +12,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-@MappedSuperclass
 public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection {
 
     public static final int MAX_IMAGE_COUNT = 5;
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
-    @Id
-    private UUID id;
-
-    @Column(name = "content")
-    private String contentText;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private FeedbackStatus status;
-
-    @Column(name = "status_changed_at")
-    private LocalDateTime statusChangedAtValue;
-
-    @Transient
-    private FeedbackContent content;
-
-    @Transient
-    private List<FeedbackImage> images;
-
-    @Transient
-    private OffsetDateTime completedAt;
-
-    protected Feedback() {
-    }
+    private final UUID id;
+    private final FeedbackContent content;
+    private final LocalDateTime createdAt;
+    private final List<FeedbackImage> images;
+    private final FeedbackStatus status;
+    private final LocalDateTime statusChangedAt;
+    private final OffsetDateTime completedAt;
 
     protected Feedback(
         UUID id,
@@ -65,7 +37,6 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
     ) {
         this.id = Objects.requireNonNull(id, "의견 접수 ID가 필요합니다.");
         this.content = Objects.requireNonNull(content, "의견 내용이 필요합니다.");
-        this.contentText = content.value();
         this.createdAt = local(Objects.requireNonNull(receivedAt, "의견 접수 시각이 필요합니다."));
         this.images = List.copyOf(Objects.requireNonNull(images, "의견 이미지 목록이 필요합니다."));
         if (this.images.size() > MAX_IMAGE_COUNT) {
@@ -75,25 +46,12 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
             throw new InvalidFeedbackImageIdException();
         }
         this.status = Objects.requireNonNull(status, "의견 처리 상태가 필요합니다.");
-        this.statusChangedAtValue = local(Objects.requireNonNull(statusChangedAt, "의견 상태 변경 시각이 필요합니다."));
-        if (completedAt != null) {
-            this.completedAt = completedAt.atZoneSameInstant(SEOUL).toOffsetDateTime();
-        }
+        this.statusChangedAt = local(Objects.requireNonNull(statusChangedAt, "의견 상태 변경 시각이 필요합니다."));
+        this.completedAt = inSeoul(completedAt);
         validateCompletedAt();
     }
 
-    @PostLoad
-    private void loadFeedback() {
-        this.content = new FeedbackContent(contentText);
-        this.images = List.of();
-        if (status == FeedbackStatus.COMPLETED) {
-            this.completedAt = statusChangedAt();
-        }
-    }
-
     public abstract FeedbackSubjectType type();
-
-    public abstract List<UUID> storedImageIds();
 
     public abstract Feedback resolve(List<FeedbackImage> storedImages, Products products);
 
@@ -127,7 +85,7 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
     }
 
     public OffsetDateTime statusChangedAt() {
-        return statusChangedAtValue.atZone(SEOUL).toOffsetDateTime();
+        return statusChangedAt.atZone(SEOUL).toOffsetDateTime();
     }
 
     public OffsetDateTime completedAt() {
@@ -166,12 +124,15 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         }
     }
 
-    protected final List<UUID> imageIds() {
-        return images.stream().map(FeedbackImage::id).toList();
-    }
-
     private static LocalDateTime local(OffsetDateTime value) {
         return value.atZoneSameInstant(SEOUL).toLocalDateTime();
+    }
+
+    private static OffsetDateTime inSeoul(OffsetDateTime value) {
+        if (value == null) {
+            return null;
+        }
+        return value.atZoneSameInstant(SEOUL).toOffsetDateTime();
     }
 
     @Override

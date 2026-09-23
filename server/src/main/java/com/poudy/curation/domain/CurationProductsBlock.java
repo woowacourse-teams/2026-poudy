@@ -2,47 +2,18 @@ package com.poudy.curation.domain;
 
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Entity
-@DiscriminatorValue("PRODUCTS")
 final class CurationProductsBlock extends CurationBlock {
 
-    @ElementCollection
-    @CollectionTable(name = "curation_block_product", joinColumns = @JoinColumn(name = "block_id"))
-    @OrderColumn(name = "position")
-    @Column(name = "product_id")
-    private List<Long> productIdRows;
-
-    @Transient
-    private List<Long> productIds;
-
-    protected CurationProductsBlock() {
-    }
+    private final List<Long> productIds;
 
     CurationProductsBlock(UUID id, int spacingTop, int spacingBottom, List<Long> productIds) {
         super(id, spacingTop, spacingBottom);
         this.productIds = List.copyOf(productIds);
-        this.productIdRows = this.productIds;
-        validate();
-    }
-
-    @PostLoad
-    private void load() {
-        validateBlock();
-        this.productIds = List.copyOf(productIdRows);
         validate();
     }
 

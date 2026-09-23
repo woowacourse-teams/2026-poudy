@@ -1,29 +1,12 @@
 package com.poudy.tag.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.util.Objects;
 
-@Entity
-@Table(name = "tag")
 public class Tag {
 
-    @Id
-    private String code;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category_code")
-    private TagCategory category;
-
-    @Column(name = "name")
-    private String name;
-
-    protected Tag() {
-    }
+    private final String code;
+    private final TagCategory category;
+    private final String name;
 
     public Tag(String code, TagCategory category, String name) {
         validateCategory(category);

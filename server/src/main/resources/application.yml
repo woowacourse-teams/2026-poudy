@@ -18,18 +18,11 @@ spring:
   # 배포 중 인스턴스가 교체될 때 처리 중이던 요청을 끊지 않는다.
   lifecycle:
     timeout-per-shutdown-phase: 20s
-  # db/schema.sql, db/search.sql 순서로 DB 에 직접 적용해 둔다. 서버는 스키마를 만들거나 바꾸지 않고 검증만 한다.
+  # db/schema.sql, db/search.sql 순서로 DB 에 직접 적용해 둔다. 서버는 스키마를 만들거나 바꾸지 않는다.
   datasource:
     url: ${POUDY_DB_URL:jdbc:postgresql://localhost:5432/poudy}
     username: ${POUDY_DB_USERNAME:${USER:postgres}}
     password: ${POUDY_DB_PASSWORD:}
-  jpa:
-    open-in-view: false
-    properties:
-      hibernate:
-        default_batch_fetch_size: 1000
-    hibernate:
-      ddl-auto: validate
 
 server:
   shutdown: graceful

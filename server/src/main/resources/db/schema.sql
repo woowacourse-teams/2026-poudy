@@ -551,7 +551,7 @@ CREATE TABLE product_request (
     CONSTRAINT ck_product_request_status CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'))
 );
 
--- 서버는 표시 순서를 목록 위치(JPA @OrderColumn)로 읽는다. 순서가 비면 목록에 빈 칸이 생기므로 부모마다 0부터 끊김 없이 이어지는지 커밋 시점에 검사한다.
+-- 서버는 표시 순서를 목록 위치로 읽는다. 순서가 비면 목록에 빈 칸이 생기므로 부모마다 0부터 끊김 없이 이어지는지 커밋 시점에 검사한다.
 -- 인자: 부모 키 컬럼(쉼표로 구분), 순서 컬럼. 순서 중복은 각 테이블의 UNIQUE 제약이 막는다.
 CREATE FUNCTION require_contiguous_order() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE

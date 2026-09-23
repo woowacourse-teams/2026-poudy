@@ -1,38 +1,16 @@
 package com.poudy.curation.domain;
 
 import com.poudy.product.domain.Products;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.Table;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@Entity
-@Table(name = "curation_block")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "type")
 public abstract class CurationBlock {
 
-    @Id
-    private UUID id;
-
-    @Column(name = "position")
-    private Integer position;
-
-    @Column(name = "spacing_top")
-    private int spacingTop;
-
-    @Column(name = "spacing_bottom")
-    private int spacingBottom;
-
-    protected CurationBlock() {
-    }
+    private final UUID id;
+    private final int spacingTop;
+    private final int spacingBottom;
 
     protected CurationBlock(UUID id, int spacingTop, int spacingBottom) {
         this.id = id;
@@ -41,7 +19,7 @@ public abstract class CurationBlock {
         validateBlock();
     }
 
-    protected final void validateBlock() {
+    private void validateBlock() {
         Objects.requireNonNull(id);
         if (spacingTop < 0 || spacingBottom < 0) {
             throw new IllegalArgumentException("블록 여백은 음수일 수 없습니다.");
