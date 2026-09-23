@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   fetchBrand: vi.fn(),
   fetchCategories: vi.fn(),
+  fetchCuration: vi.fn(),
   fetchProductDetail: vi.fn(),
   fetchIngredientDetail: vi.fn(),
 }));
@@ -42,6 +43,7 @@ import { generateMetadata as brandMetadata } from "@/app/brands/[brandId]/page";
 import { metadata as brandsMetadata } from "@/app/brands/page";
 import { generateMetadata as categoryMetadata } from "@/app/categories/[categoryId]/page";
 import { metadata as categoriesMetadata } from "@/app/categories/page";
+import { generateMetadata as curationMetadata } from "@/app/curations/[curationId]/page";
 import IngredientOpenGraphImage, {
   revalidate as ingredientImageRevalidate,
 } from "@/app/ingredients/[ingredientId]/opengraph-image";
@@ -252,19 +254,91 @@ describe("공유 메타데이터", () => {
     api.fetchBrand.mockRejectedValue(new Error("down"));
     api.fetchProductDetail.mockRejectedValue(new Error("down"));
     api.fetchIngredientDetail.mockRejectedValue(new Error("down"));
+    api.fetchCuration.mockRejectedValue(new Error("down"));
 
-    const [brand, product, ingredient] = await Promise.all([
+    const [brand, product, ingredient, curation] = await Promise.all([
       brandMetadata({ params: Promise.resolve({ brandId: "7" }), searchParams: Promise.resolve({ page: "2" }) }),
       productMetadata({
         params: Promise.resolve({ productId: "101" }),
         searchParams: Promise.resolve({ from: "search_results" }),
       }),
       ingredientMetadata({ params: Promise.resolve({ ingredientId: "12" }), searchParams: Promise.resolve({}) }),
+      curationMetadata({ params: Promise.resolve({ curationId: "5" }), searchParams: Promise.resolve({}) }),
     ]);
 
     expect(brand).toEqual({ alternates: { canonical: "/brands/7?page=2" } });
     expect(product).toEqual({ alternates: { canonical: "/products/101" } });
     expect(ingredient).toEqual({ alternates: { canonical: "/ingredients/12" } });
+    expect(curation).toEqual({ alternates: { canonical: "/curations/5" } });
+  });
+
+  it("기획전 상세가 제목과 설명을 그대로 쓰고 canonical 을 맞춘다", async () => {
+    api.fetchCuration.mockResolvedValue({
+      id: 5,
+      title: "가을바람에 지친 피부, 장벽부터 채워요",
+      description: "세라마이드·판테놀 보습 성분 모아보기",
+      blocks: [],
+    });
+
+    const metadata = await curationMetadata({
+      params: Promise.resolve({ curationId: "5" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    expect(metadata).toMatchObject({
+      title: "가을바람에 지친 피부, 장벽부터 채워요",
+      description: "세라마이드·판테놀 보습 성분 모아보기",
+      alternates: { canonical: "/curations/5" },
+    });
+    /* 문서 제목은 템플릿이 사이트 이름을 붙이고, 공유 카드는 어떤 화면인지를 함께 적는다. */
+    expect(metadata.openGraph).toMatchObject({
+      title: "가을바람에 지친 피부, 장벽부터 채워요 | 파우디 큐레이션",
+      url: "/curations/5",
+      siteName: "Poudy",
+      locale: "ko_KR",
+    });
+    /* 이미지 블록이 없으면 루트 값이 통째로 바뀐 자리에 기본 그림을 다시 채운다. */
+    expect(metadata.openGraph?.images).toEqual([{ url: "/opengraph-image", alt: SITE_DESCRIPTION }]);
+  });
+
+  /* 서버는 캐러셀 카드의 줄을 나누려고 제목에 줄바꿈을 넣어 내려 준다. 문서 제목에는 한 줄로 싣는다. */
+  it("기획전 제목의 줄바꿈을 공백으로 합친다", async () => {
+    api.fetchCuration.mockResolvedValue({
+      id: 1,
+      title: "왜 발라도\n다시 건조할까?",
+      description: "가을 보습을 이해하는 작은 안내서",
+      blocks: [],
+    });
+
+    const metadata = await curationMetadata({
+      params: Promise.resolve({ curationId: "1" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    expect(metadata.title).toBe("왜 발라도 다시 건조할까?");
+    expect(metadata.openGraph).toMatchObject({ title: "왜 발라도 다시 건조할까? | 파우디 큐레이션" });
+    expect(metadata.twitter).toMatchObject({ title: "왜 발라도 다시 건조할까? | 파우디 큐레이션" });
+  });
+
+  /* 기획전 이미지는 세로로 긴 안내서라 가로 카드에서 잘린다. 이미지 블록이 있어도 기본 그림을 쓴다. */
+  it("기획전 이미지가 있어도 공유 미리보기에는 기본 그림을 쓴다", async () => {
+    api.fetchCuration.mockResolvedValue({
+      id: 5,
+      title: "순한 클렌징",
+      description: "설페이트 뺀 클렌저 모아보기",
+      blocks: [
+        { id: "b", type: "IMAGE", spacingTop: 0, spacingBottom: 0, imageUrl: "https://images.example/first.jpg" },
+      ],
+    });
+
+    const metadata = await curationMetadata({
+      params: Promise.resolve({ curationId: "5" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    const image = { url: "/opengraph-image", alt: SITE_DESCRIPTION };
+    expect(metadata.openGraph?.images).toEqual([image]);
+    expect(metadata.twitter?.images).toEqual([image]);
   });
 
   it("브랜드·카테고리 목록의 뒤쪽 장은 자기 주소를 canonical 로 둔다", async () => {

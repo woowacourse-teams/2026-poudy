@@ -354,7 +354,92 @@ const curations = [
     description: "지성 피부를 위한 가벼운 보습",
     thumbnailImageUrl: "/images/curations/light-moisture.jpg",
   },
+  /* 상세 아래의 다른 큐레이션이 여러 장 이어지는 모습을 보려고 더한다. 썸네일은 앞의 그림을 돌려 쓴다. */
+  {
+    id: 4,
+    title: "환절기에 붉어지는 볼,\n진정부터 챙겨요",
+    description: "병풀·판테놀 진정 성분 모아보기",
+    thumbnailImageUrl: "/images/curations/autumn-barrier.jpg",
+  },
+  {
+    id: 5,
+    title: "민감한 날엔\n향 없는 제품으로",
+    description: "무향료 보습제 모아보기",
+    thumbnailImageUrl: "/images/curations/gentle-cleansing.jpg",
+  },
+  {
+    id: 6,
+    title: "아침에 바르기 좋은\n산뜻한 선크림",
+    description: "백탁 적은 데일리 선크림 모아보기",
+    thumbnailImageUrl: "/images/curations/light-moisture.jpg",
+  },
 ] as const;
+
+/** 상세 블록의 제품 칸. 목록 응답의 제품을 큐레이션이 쓰는 모양으로 옮긴다. */
+const curationProduct = (product: (typeof allProducts)[number]) => ({
+  id: product.id,
+  name: product.name,
+  brandName: product.brand.name,
+  imageUrl: product.imageUrl,
+  price: product.price,
+  volumeValue: product.volumeValue,
+  volumeUnit: product.volumeUnit,
+  moistureLevel: product.moistureLevel,
+  oilLevel: product.oilLevel,
+});
+
+/*
+ * 블록 ID 와 필터 ID 는 스키마가 UUID 를 요구한다. 목에서 새로 만들면 다시 그릴 때마다
+ * 값이 달라져, 고른 필터가 풀리거나 스냅샷 검사가 흔들린다. 손으로 적어 고정해 둔다.
+ */
+const CURATION_BLOCK_IDS = {
+  image: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e01",
+  products: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e02",
+  productsByFilter: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e03",
+} as const;
+
+const CURATION_FILTER_IDS = {
+  toner: "3f7c2e18-91a5-4c63-8d2b-6e1f9a4c5b01",
+  cream: "3f7c2e18-91a5-4c63-8d2b-6e1f9a4c5b02",
+} as const;
+
+/**
+ * 큐레이션 상세. 세 가지 블록이 모두 들어간 한 벌을 둔다.
+ *
+ * 목록의 큐레이션은 셋이지만 상세는 첫 번째만 손으로 적는다. 나머지는 같은 블록 구성을
+ * 제목만 바꿔 돌려주어, 어느 카드로 들어와도 화면이 그려진다.
+ */
+const curationBlocks = [
+  {
+    id: CURATION_BLOCK_IDS.image,
+    type: "IMAGE" as const,
+    spacingTop: 0,
+    spacingBottom: 24,
+    imageUrl: "/images/curations/autumn-barrier.jpg",
+  },
+  {
+    id: CURATION_BLOCK_IDS.products,
+    type: "PRODUCTS" as const,
+    spacingTop: 0,
+    spacingBottom: 32,
+    products: allProducts.slice(0, 4).map(curationProduct),
+  },
+  {
+    id: CURATION_BLOCK_IDS.productsByFilter,
+    type: "PRODUCTS_BY_FILTER" as const,
+    spacingTop: 0,
+    spacingBottom: 40,
+    filters: [
+      { id: CURATION_FILTER_IDS.toner, label: "토너" },
+      { id: CURATION_FILTER_IDS.cream, label: "크림" },
+    ],
+    /* 앞의 둘은 토너, 뒤의 둘은 크림에 넣어 필터를 눌렀을 때 목록이 실제로 갈린다. */
+    products: allProducts.slice(0, 4).map((product, index) => ({
+      product: curationProduct(product),
+      filterIds: [index < 2 ? CURATION_FILTER_IDS.toner : CURATION_FILTER_IDS.cream],
+    })),
+  },
+];
 
 /** 인기 제품은 목록 앞에서 잘라 쓴다. 목에는 조회수가 없어 순위를 만들 기준이 없다. */
 const RANKING_SIZE = 6;
@@ -363,6 +448,19 @@ export const handlers = [
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
 
   http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
+
+  http.get("*/api/curations/:curationId", ({ params }) => {
+    const curation = curations.find(({ id }) => id === Number(params.curationId));
+    if (!curation) return notFound("큐레이션을 찾을 수 없습니다.", "CURATION_NOT_FOUND");
+
+    return HttpResponse.json({
+      id: curation.id,
+      /* 실제 서버처럼 목록과 같은 제목을 줄바꿈까지 그대로 내려 준다. */
+      title: curation.title,
+      description: curation.description,
+      blocks: curationBlocks,
+    });
+  }),
 
   http.get("*/api/skin-types", () => HttpResponse.json({ items: skinTypes })),
 

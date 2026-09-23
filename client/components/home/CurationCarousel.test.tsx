@@ -2,11 +2,17 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CurationCarousel } from "./CurationCarousel";
 
+import { track } from "@/lib/analytics/track";
+
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
+beforeEach(() => {
+  vi.mocked(track).mockClear();
+});
 
 const items = [
   {
@@ -66,6 +72,52 @@ describe("CurationCarousel", () => {
     const [description] = screen.getAllByText("보습 성분 모아보기");
 
     expect(description).toHaveClass("whitespace-pre-line");
+  });
+
+  /* 캐러셀은 상세 화면으로 가는 입구다. 카드가 실제로 그 주소를 가리키는지 본다. */
+  it("카드가 큐레이션 상세로 이어진다", () => {
+    render(<CurationCarousel items={items} />);
+
+    /* 앞뒤로 여벌 카드를 두어 같은 링크가 여러 번 나온다. 가리키는 곳만 본다. */
+    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
+
+    expect(link).toHaveAttribute("href", "/curations/1");
+  });
+
+  it("카드를 누르면 몇 번째 큐레이션인지와 함께 남긴다", () => {
+    render(<CurationCarousel items={items} />);
+
+    const [link] = screen.getAllByRole("link", { name: /순한 클렌징/ });
+    fireEvent.click(link);
+
+    /* 자리는 사람이 세는 대로 1 부터 센다. 두 번째 카드이므로 2 다. */
+    expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
+  });
+
+  /*
+   * 브라우저는 끌기가 끝난 자리에서도 클릭을 한 번 보낸다. 막아 두지 않으면 목록을
+   * 밀어 넘길 때마다 상세 화면이 열려, 카드를 넘겨 볼 수가 없다.
+   */
+  it("끌어서 넘긴 뒤에는 상세로 가지 않는다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+
+    const list = container.querySelector(".curation-track");
+    if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+    list.setPointerCapture = vi.fn();
+    list.hasPointerCapture = vi.fn(() => false);
+    list.scrollLeft = 100;
+
+    fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 200 });
+    fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
+    fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
+
+    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
+    const clicked = fireEvent.click(link);
+
+    /* 기본 동작이 막혔으면 이동하지 않는다. 이벤트도 남기지 않는다. */
+    expect(clicked).toBe(false);
+    expect(track).not.toHaveBeenCalled();
   });
 
   /*

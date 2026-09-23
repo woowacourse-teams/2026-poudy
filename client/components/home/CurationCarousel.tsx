@@ -2,8 +2,11 @@
 
 import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+
+import { track } from "@/lib/analytics/track";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
@@ -134,8 +137,6 @@ const initialOrder = (count: number): readonly number[] => {
  * 애니메이션 없이 같은 그림의 진짜 자리로 옮겨, 사용자에게는 끝없이 도는 것으로 보인다.
  *
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
- *
- * 상세 화면(#451)이 아직 없다. 생기기 전까지는 카드를 눌러도 이동하지 않는다.
  */
 export function CurationCarousel({ items }: CurationCarouselProps) {
   const trackRef = useRef<HTMLUListElement>(null);
@@ -162,6 +163,14 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const drag = useRef<
     { pointerId: number; startX: number; startScroll: number; startSlide: number; moved: boolean } | undefined
   >(undefined);
+  /*
+   * 방금 끝난 동작이 끌기였는지.
+   *
+   * 브라우저는 끌기가 끝난 자리에서도 클릭을 한 번 보낸다. 카드가 상세로 가는 링크라,
+   * 이것을 가리지 않으면 목록을 밀 때마다 상세 화면이 열린다. 클릭은 `pointerup` 바로
+   * 뒤에 오므로 그때 켜 두었다가 클릭이 지나가면 끈다.
+   */
+  const dragged = useRef(false);
   /*
    * 멎었을 때 할 일을 담아 둔다. 이벤트를 한 번만 달아 두고 그때그때 최신 것을 부르려면
    * 함수를 그대로 넘길 수 없다. 넘기면 처음 그릴 때의 낡은 값을 계속 붙들고 있는다.
@@ -248,8 +257,13 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    */
   const orderRef = useRef(order);
 
-  /* 자리마다 고른 카드. 여유분이 있어 양 끝에서도 이웃이 보인다. */
-  const slides = order.map((itemIndex) => items[itemIndex]);
+  /*
+   * 자리마다 고른 카드. 여유분이 있어 양 끝에서도 이웃이 보인다.
+   *
+   * 목록에서의 자리를 함께 들고 간다. 복제한 카드가 섞여 있어 그린 순서로는 이것이 몇 번째
+   * 큐레이션인지 알 수 없는데, 눌렀을 때 남기는 이벤트에는 그 번호가 필요하다.
+   */
+  const slides = order.map((itemIndex) => ({ curation: items[itemIndex], itemIndex }));
 
   const scrollToSlide = (slideIndex: number, smooth: boolean, duration = GLIDE_DURATION) => {
     const track = trackRef.current;
@@ -585,6 +599,15 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     }
 
     /*
+     * 끌었다. 뒤따라오는 클릭 한 번을 링크가 무시하게 표시해 둔다.
+     * 그 클릭이 지나간 뒤에 스스로 풀어, 다음 누름은 정상으로 받는다.
+     */
+    dragged.current = true;
+    setTimeout(() => {
+      dragged.current = false;
+    }, 0);
+
+    /*
      * 스냅은 여기서 돌려 놓지 않는다. 이어지는 `scrollToSlide` 가 프레임마다 스크롤을 적는
      * 동안 스냅이 켜져 있으면 그 자리를 곧바로 가까운 칸으로 끌어당겨, 붙는 움직임이
      * 무효가 된다. 그 함수가 다 그린 뒤에 스스로 돌려 놓는다.
@@ -690,7 +713,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           */
           className="curation-track scrollbar-none flex snap-x snap-proximity items-center gap-2 overflow-x-auto px-8"
         >
-          {slides.map((curation, slideIndex) => {
+          {slides.map(({ curation, itemIndex }, slideIndex) => {
             return (
               /*
                 자리를 key 로 쓴다. 순서가 돌아도 자리는 그대로이므로 React 가 요소를
@@ -710,37 +733,55 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                   크기와 줄어드는 방향은 스크롤 위치를 보고 `paintScales` 가 직접 적는다.
                   미는 만큼 조금씩 자라야 해서 자리마다 정해진 값을 줄 수 없다.
                 */}
-                <article className="curation-card relative flex h-52 flex-col justify-end overflow-hidden rounded-[18px] p-5">
-                  {/*
-                    그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
-                    카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
-                  */}
-                  <Image
-                    src={curation.thumbnailImageUrl}
-                    alt=""
-                    fill
-                    sizes="(max-width: 480px) 90vw, 420px"
-                    {...(slideIndex === SPARE ? { priority: true } : { loading: "eager" as const })}
-                    draggable={false}
-                    className="object-cover select-none"
-                  />
+                {/*
+                  카드 전체가 상세로 가는 링크다. 그림과 글자 어디를 눌러도 같은 곳으로 간다.
 
-                  {/*
-                    카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
-                    `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
-                    제자리에 남는다.
+                  끌어서 목록을 넘긴 뒤에는 이동하지 않는다. 브라우저는 끌기가 끝난 자리에서도
+                  클릭을 한 번 보내는데, 그대로 두면 카드를 밀 때마다 상세 화면이 열린다.
+                */}
+                <Link
+                  href={`/curations/${curation.id}`}
+                  onClick={(event) => {
+                    if (dragged.current) {
+                      event.preventDefault();
+                      return;
+                    }
+                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
+                  }}
+                  className="block"
+                >
+                  <article className="curation-card relative flex h-52 flex-col justify-end overflow-hidden rounded-[18px] p-5">
+                    {/*
+                      그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
+                      카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
+                    */}
+                    <Image
+                      src={curation.thumbnailImageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 480px) 90vw, 420px"
+                      {...(slideIndex === SPARE ? { priority: true } : { loading: "eager" as const })}
+                      draggable={false}
+                      className="object-cover select-none"
+                    />
 
-                    그림 위에 덮는 막을 두지 않아 썸네일이 그대로 보인다. 그래서 글자는 흰색이
-                    아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
-                  */}
-                  <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
-                    <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
-                      {curation.title}
-                    </h3>
-                    {/* 제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다. */}
-                    <p className="text-[11px] whitespace-pre-line text-[#624255]">{curation.description}</p>
-                  </div>
-                </article>
+                    {/*
+                      카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
+                      `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
+                      제자리에 남는다.
+
+                      그림 위에 덮는 막을 두지 않아 썸네일이 그대로 보인다. 그래서 글자는 흰색이
+                      아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
+                    */}
+                    <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
+                      <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
+                        {curation.title}
+                      </h3>
+                      {/* 제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다. */}
+                      <p className="text-[11px] whitespace-pre-line text-[#624255]">{curation.description}</p>
+                    </div>
+                  </article>
+                </Link>
               </li>
             );
           })}

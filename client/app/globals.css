@@ -324,6 +324,32 @@ body {
 }
 
 /*
+ * 내려 읽을 때 물러나는 상단바. 큐레이션 상세처럼 위에서 아래로 길게 읽는 화면에서만 쓴다.
+ *
+ * 다른 화면의 숨는 줄과 같은 방식으로 붙는 높이(`top`)를 제 높이만큼 올려 화면 밖으로 보낸다.
+ * 높이를 줄이지 않아 아래 본문이 끌려 올라가지 않는다. `.stuck-edge` 의 그림자 전환을
+ * 덮어쓰지 않도록 함께 적고, 그 규칙보다
+ * 뒤에 두어 전환이 덮이지 않게 한다.
+ */
+.hiding-top-bar {
+  transition:
+    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--transition-duration-control-state) ease-out;
+}
+
+/* 키보드로 바 안의 단추에 닿으면 숨은 채로 초점만 들어가지 않도록 다시 내려온다. */
+.hiding-top-bar[data-hidden="true"]:not(:focus-within) {
+  top: -2.75rem;
+}
+
+/* 줄이기를 켠 사용자에게는 미끄러지는 움직임 없이 곧바로 자리를 바꾼다. */
+@media (prefers-reduced-motion: reduce) {
+  .hiding-top-bar {
+    transition-duration: 0s;
+  }
+}
+
+/*
  * 앱 WebView 에서 네이티브 대신 그리는 스크롤 막대(`AppScrollIndicator`). 트랙은 상단바와
  * 하단 내비게이션 사이를 차지하고, thumb 은 그 안에서만 오간다.
  * 딤(z-40)보다 아래에 두어 시트가 열리면 함께 덮인다.
