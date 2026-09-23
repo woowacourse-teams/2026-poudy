@@ -38,7 +38,7 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
 
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
-  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} stickyChips />;
+  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} stickyChips="summary" />;
 }
 
 export default async function ProductsPage(props: PageProps<"/products">) {
