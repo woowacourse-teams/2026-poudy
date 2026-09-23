@@ -16,6 +16,9 @@ import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductQueryRepository {
 
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+    private static final int DEFAULT_SORT_VIEW_DAYS = 30;
+
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
     private static final String CANDIDATES = """
         with searched as materialized (%s), candidates as materialized (
-            select p.*, c.parent_id,
+            select p.*, c.parent_id, searched.search_rank,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
@@ -58,8 +64,9 @@ public class ProductQueryRepository {
     private static final String PAGE = """
         , page as (
             select m.id, row_number() over (order by %s, m.id) as position
-            from matched m join lateral (select price from product_variant v
+            from matched m join lateral (select price, volume_value, volume_unit from product_variant v
                 where v.product_id = m.id order by v.display_order limit 1) v on true
+            %s
             order by %s, m.id limit :size offset :offset
         ), scopes as materialized (
             select p.*, scope.name from candidates p
@@ -84,24 +91,33 @@ public class ProductQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
+    private final Clock clock;
 
-    public ProductQueryRepository(NamedParameterJdbcTemplate jdbc, ProductLoader loader) {
+    public ProductQueryRepository(NamedParameterJdbcTemplate jdbc, ProductLoader loader, Clock clock) {
         this.jdbc = jdbc;
         this.loader = loader;
+        this.clock = clock.withZone(SEOUL);
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
         validatePage(page, size);
         MapSqlParameterSource parameters = parameters(query)
             .addValue("size", size).addValue("offset", (long) (page - 1) * size).addValue("options", page == 1);
-        String order = switch (ProductSort.orDefault(sort)) {
-            case NAME_ASC -> "m.product_name collate \"C\" asc";
-            case NAME_DESC -> "m.product_name collate \"C\" desc";
-            case PRICE_ASC -> "v.price asc";
-            case PRICE_DESC -> "v.price desc";
-        };
+        ProductSort selectedSort = ProductSort.orDefault(sort);
+        String order = orderBy(query, selectedSort);
+        String viewsJoin = "";
+        if (selectedSort == ProductSort.DEFAULT && !query.hasKeyword()) {
+            LocalDate yesterday = LocalDate.now(clock).minusDays(1);
+            parameters.addValue("viewStart", yesterday.minusDays(DEFAULT_SORT_VIEW_DAYS - 1L))
+                .addValue("viewEnd", yesterday);
+            viewsJoin = """
+                left join (select product_id, sum(view_count) as view_count from product_daily_view
+                    where view_date between :viewStart and :viewEnd group by product_id) views
+                    on views.product_id = m.id
+                """;
+        }
         List<Aggregate> rows = jdbc.query(
-            candidates(query) + PAGE.formatted(order, order),
+            candidates(query) + PAGE.formatted(order, viewsJoin, order),
             parameters,
             (rs, row) -> new Aggregate(rs.getString("section"), rs.getString("id"), rs.getLong("amount"))
         );
@@ -172,10 +188,26 @@ public class ProductQueryRepository {
 
     private String candidates(ProductQuery query) {
         String searched = query.hasKeyword() ? """
-            select (item ->> 'productId')::bigint as id
+            select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
             from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "select id from product";
+            """ : "select id, null::bigint as search_rank from product";
         return CANDIDATES.formatted(searched);
+    }
+
+    private static String orderBy(ProductQuery query, ProductSort sort) {
+        return switch (sort) {
+            case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case PRICE_DESC -> "v.price desc";
+            case PRICE_ASC -> "v.price asc";
+            case UNIT_PRICE_DESC -> unitPriceOrder("desc");
+            case UNIT_PRICE_ASC -> unitPriceOrder("asc");
+        };
+    }
+
+    private static String unitPriceOrder(String direction) {
+        return "case when v.volume_unit = 'ea' or v.volume_value = 0 then 1 else 0 end asc, "
+            + "case when v.volume_unit <> 'ea' and v.volume_value > 0 "
+            + "then v.price::numeric / nullif(v.volume_value, 0) end " + direction + " nulls last";
     }
 
     private MapSqlParameterSource parameters(ProductQuery query) {

@@ -73,13 +73,13 @@ class ProductServiceTest {
 
         ProductPage found = service.findProducts(
             query,
-            ProductSort.NAME_ASC,
+            ProductSort.DEFAULT,
             1,
             20
         );
 
         assertThat(found.items()).containsExactly(product);
-        verify(repository).find(query, ProductSort.NAME_ASC, 1, 20);
+        verify(repository).find(query, ProductSort.DEFAULT, 1, 20);
     }
 
     @Test
@@ -168,7 +168,7 @@ class ProductServiceTest {
             null
         );
 
-        ProductPage found = service.findProducts(query, ProductSort.NAME_ASC, 1, 20);
+        ProductPage found = service.findProducts(query, ProductSort.DEFAULT, 1, 20);
 
         assertThat(found.totalElements()).isEqualTo(1);
         assertThat(output.getOut()).containsOnlyOnce("event=search_completed");
@@ -176,7 +176,7 @@ class ProductServiceTest {
             "searchType=PRODUCT_SEARCH",
             "keyword=\"제품\"",
             "page=1",
-            "sort=NAME_ASC",
+            "sort=DEFAULT",
             "filtered=true",
             "resultCount=1",
             "outcome=SUCCESS"
@@ -200,7 +200,7 @@ class ProductServiceTest {
         ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
         ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
 
-        service.findProducts(browse, ProductSort.NAME_ASC, 1, 20);
+        service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
         service.countProducts(search);
         service.suggestProducts("제품", 1, 20);
@@ -229,7 +229,7 @@ class ProductServiceTest {
 
         ProductPage result = service.findProducts(
             new ProductQuery("제품", null, null, null, null, null, null, null, null),
-            ProductSort.NAME_ASC,
+            ProductSort.DEFAULT,
             1,
             20
         );
