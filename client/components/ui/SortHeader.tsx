@@ -6,7 +6,7 @@ type SortHeaderProps<T extends string> = {
   readonly total: number;
   readonly sort: T;
   readonly onChangeSort: (sort: T) => void;
-  /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 4 종이다. */
+  /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 5 종이다. */
   readonly options?: readonly SortOption<T>[];
 };
 

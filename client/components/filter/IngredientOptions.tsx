@@ -11,6 +11,7 @@ import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientSuggestions } from "@/lib/api/products";
+import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { splitByRange } from "@/lib/domain/highlight";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
@@ -195,7 +196,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             </h3>
 
             <ul className="grid grid-cols-2 gap-2 pt-2">
-              {excludeCodes.map((code) => {
+              {knownExcludeCodes(excludeCodes).map((code) => {
                 const checked = draft.excludeCodes.includes(code.code);
 
                 return (

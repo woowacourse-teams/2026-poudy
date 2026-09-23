@@ -1,6 +1,7 @@
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 
 import type { FilterChipItem } from "@/components/ui/FilterChipBar";
+import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
 
 /**
@@ -10,7 +11,7 @@ import type { Filter } from "@/lib/domain/filter";
 const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): number => {
   const picked = new Set<number>(filter.excludeIngredientIds);
 
-  for (const code of excludeCodes) {
+  for (const code of knownExcludeCodes(excludeCodes)) {
     if (!filter.excludeCodes.includes(code.code)) continue;
     for (const ingredient of code.ingredients) picked.add(ingredient.id);
   }

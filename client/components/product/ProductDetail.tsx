@@ -14,7 +14,6 @@ import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
@@ -284,15 +283,33 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         </p>
       </div>
 
-      {product.freeOfCodes.length > 0 ? (
-        <ul className="flex flex-wrap gap-1.5">
-          {product.freeOfCodes.map((code) => (
-            <li key={code} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
-              {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
-              <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
-              <span className="text-[12px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
-            </li>
-          ))}
+      {product.excludeGroups.length > 0 ? (
+        /*
+          이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
+          세 칸은 모바일 폭에서 거의 모든 이름이 두 줄로 꺾여 두 칸으로 둔다.
+        */
+        <ul className="grid grid-cols-2 gap-1.5">
+          {/*
+            제외한 성분군을 강조한다. 들어 있는 성분군은 비활성 버튼처럼 흐리게 둔다.
+            서버는 성분군 이름만 주므로 "제외" 는 화면에서 붙인다.
+          */}
+          {product.excludeGroups.map((group) =>
+            group.contains ? (
+              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#F2F3F5] px-2.5 py-1">
+                {/* 체크가 없어도 이웃 칸과 글자 시작점이 맞도록 체크 자리를 비워 둔다. */}
+                <span aria-hidden="true" className="size-3 shrink-0" />
+                <span className="text-[12px] leading-tight font-semibold text-[#C2C5CA]">{group.name} 제외</span>
+                <span className="sr-only"> 있음</span>
+              </li>
+            ) : (
+              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5 py-1">
+                {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
+                <Icon name="check" size={12} strokeWidth={4} className="shrink-0 text-[#F04465]" />
+                <span className="text-[12px] leading-tight font-semibold text-[#54575C]">{group.name} 제외</span>
+                <span className="sr-only"> 없음</span>
+              </li>
+            ),
+          )}
         </ul>
       ) : null}
 

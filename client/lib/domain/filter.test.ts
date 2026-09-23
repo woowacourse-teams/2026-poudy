@@ -43,6 +43,11 @@ describe("parseFilter", () => {
     expect(parse("sort=PRICE_DESC").sort).toBe("PRICE_DESC");
   });
 
+  it("서버가 더는 받지 않는 예전 정렬 링크는 기본순으로 연다", () => {
+    expect(parse("sort=NAME_ASC").sort).toBe("DEFAULT");
+    expect(parse("sort=NAME_DESC").sort).toBe("DEFAULT");
+  });
+
   it("알 수 없는 빠른 필터 코드는 버린다", () => {
     expect(parse("excludeCodes=SULFATES,NOPE").excludeCodes).toEqual(["SULFATES"]);
   });
