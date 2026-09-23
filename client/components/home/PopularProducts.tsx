@@ -1,11 +1,9 @@
 "use client";
 
 import type { CategoryResponse, ProductRankingItemResponse } from "@poudy/api/api.zod";
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
+import { ProductGridCard } from "@/components/product/ProductGridCard";
 import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
 
@@ -20,6 +18,9 @@ const CHIP_COUNT = 4;
 
 /** 서버가 최대 여섯 개를 내려 주므로 기다리는 자리도 같은 수로 잡는다. */
 const SKELETON_COUNT = 6;
+
+/** 3열로 놓으므로 첫 줄은 세 개다. */
+const FIRST_ROW_COUNT = 3;
 
 /**
  * 디자인 S01 의 `지금 사람들이 보고 있어요`.
@@ -111,26 +112,15 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
         <ul className="grid grid-cols-3 gap-x-2.5 gap-y-4">
           {items.map(({ product }, index) => (
             <li key={product.id}>
-              <Link href={`/products/${product.id}?from=home`} className="flex flex-col gap-0.75">
-                <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">
-                  <Image
-                    src={product.imageUrl || PRODUCT_PLACEHOLDER}
-                    alt=""
-                    width={224}
-                    height={224}
-                    loading={index < 3 ? "eager" : "lazy"}
-                    className="size-full object-contain p-2"
-                  />
-                </span>
-
-                {/*
-                  브랜드와 제품명을 한 덩어리로 읽히게 이어 쓰고 브랜드만 옅게 둔다.
-                  두 줄까지만 보여 주고 넘치면 줄임표로 끊는다.
-                */}
-                <span className="line-clamp-2 text-body leading-[1.35] text-text-primary">
-                  <span className="text-text-secondary">{product.brandName}</span> {product.name}
-                </span>
-              </Link>
+              {/* 첫 줄은 열자마자 보이는 자리다. 그만큼은 미루지 않고 받는다. */}
+              <ProductGridCard
+                id={product.id}
+                name={product.name}
+                brandName={product.brandName}
+                imageUrl={product.imageUrl}
+                from="home"
+                loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
+              />
             </li>
           ))}
         </ul>

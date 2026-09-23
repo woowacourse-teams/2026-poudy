@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { fetchBrands, fetchCategories, fetchIngredients, fetchProducts } from "@/lib/api/products";
+import { fetchBrands, fetchCategories, fetchCurations, fetchIngredients, fetchProducts } from "@/lib/api/products";
 import { EMPTY_FILTER, FIRST_PAGE } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
@@ -50,13 +50,15 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
     // 저장함은 기기마다 담긴 것이 달라 크롤러에게는 늘 빈 화면이다. 색인을 바라지 않으니 알리지 않는다.
     entry("/brands", "weekly", 0.8),
   ];
-  const [categories, brands] = await Promise.all([fetchCategories(), fetchBrands()]);
+  const [categories, brands, curations] = await Promise.all([fetchCategories(), fetchBrands(), fetchCurations()]);
 
   entries.push(
     ...categories.items
       .flatMap((category) => [category, ...category.children])
       .map(({ id }) => entry(`/categories/${id}`, "weekly", 0.7)),
     ...brands.items.map(({ id }) => entry(`/brands/${id}`, "weekly", 0.7)),
+    /* 게시 중인 기획전만 목록에 오르므로 받은 것을 그대로 싣는다. */
+    ...curations.items.map(({ id }) => entry(`/curations/${id}`, "weekly", 0.7)),
   );
 
   if (entries.length > SITEMAP_URL_LIMIT) throw new Error("페이지 사이트맵이 URL 50,000개 제한을 초과했습니다.");

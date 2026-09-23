@@ -7,7 +7,7 @@ import type { PageName } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
 /** 경로에서 화면 이름을 정한다. 화면마다 호출을 심지 않아도 되게 한다. */
-const pageOf = (pathname: string): PageName | undefined => {
+export const pageOf = (pathname: string): PageName | undefined => {
   if (pathname === "/") return "home";
   if (pathname.startsWith("/search")) return "search";
   if (/^\/products\/[^/]+$/.test(pathname)) return "product_detail";
@@ -16,6 +16,7 @@ const pageOf = (pathname: string): PageName | undefined => {
   if (pathname.startsWith("/saved")) return "saved";
   if (pathname.startsWith("/categories")) return "category";
   if (pathname.startsWith("/brands")) return "brand";
+  if (/^\/curations\/[^/]+$/.test(pathname)) return "curation_detail";
   return undefined;
 };
 

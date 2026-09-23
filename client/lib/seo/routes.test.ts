@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   fetchBrands: vi.fn(),
   fetchCategories: vi.fn(),
+  fetchCurations: vi.fn(),
   fetchIngredients: vi.fn(),
   fetchProducts: vi.fn(),
 }));
@@ -102,6 +103,7 @@ describe("sitemap", () => {
   it("운영 분할 사이트맵이 완성된 API 결과만 XML 200으로 반환한다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
     api.fetchProducts.mockResolvedValue({ items: [{ id: 30 }], pagination: { hasNext: false } });
     api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: false } });
 
@@ -111,6 +113,7 @@ describe("sitemap", () => {
     expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
     expect(xml[0]).toContain("<loc>https://poudy.site/categories/10</loc>");
     expect(xml[0]).toContain("<loc>https://poudy.site/brands/20</loc>");
+    expect(xml[0]).toContain("<loc>https://poudy.site/curations/50</loc>");
     expect(xml[1]).toContain("<loc>https://poudy.site/products/30</loc>");
     expect(xml[2]).toContain("<loc>https://poudy.site/ingredients/40</loc>");
   });
@@ -118,6 +121,7 @@ describe("sitemap", () => {
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
     api.fetchProducts.mockResolvedValue({ items: [{ id: 30 }], pagination: { hasNext: false } });
     api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({
@@ -137,6 +141,7 @@ describe("sitemap", () => {
         "https://poudy.site/categories/10",
         "https://poudy.site/categories/11",
         "https://poudy.site/brands/20",
+        "https://poudy.site/curations/50",
         "https://poudy.site/products/30",
         "https://poudy.site/ingredients/40",
         "https://poudy.site/ingredients/5001",
@@ -150,6 +155,7 @@ describe("sitemap", () => {
   it("문구가 바뀐 날을 아는 화면에만 lastmod 를 싣는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
 
     const entries = await pageEntries();
     const lastModifiedOf = (path: string) =>
@@ -162,11 +168,13 @@ describe("sitemap", () => {
     expect(lastModifiedOf("/brands")).toBeUndefined();
     expect(lastModifiedOf("/categories/10")).toBeUndefined();
     expect(lastModifiedOf("/brands/20")).toBeUndefined();
+    expect(lastModifiedOf("/curations/50")).toBeUndefined();
   });
 
   it("사이트맵 XML 이 lastmod 를 스키마 순서대로 적는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
 
     const xml = await (await pagesSitemap()).text();
 
@@ -180,6 +188,7 @@ describe("sitemap", () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
+    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
 
     const response = await pagesSitemap();
 

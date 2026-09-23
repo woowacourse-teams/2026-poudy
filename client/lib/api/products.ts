@@ -2,6 +2,7 @@ import type {
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
+  CurationDetailResponse,
   CurationListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
@@ -106,7 +107,15 @@ export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
 export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>
   apiGet("/api/storage", new URLSearchParams(productIds.map((id) => ["productIds", String(id)])));
 
-export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", undefined, CATALOG_TTL);
+/*
+ * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을
+ * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
+ */
+export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations");
+
+/** 큐레이션 상세. 이미지와 제품이 모두 blocks 에 담겨 한 번에 온다. */
+export const fetchCuration = (curationId: number): Promise<CurationDetailResponse> =>
+  apiGet(`/api/curations/${curationId}`);
 
 export const fetchSkinTypes = (): Promise<SkinTypesResponse> => apiGet("/api/skin-types", undefined, CATALOG_TTL);
 
