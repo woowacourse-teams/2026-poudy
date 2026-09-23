@@ -235,6 +235,10 @@ Discord 알림이 같으므로 `feedback` 안에서 `FeedbackSubject`로만 구�
 남은 pending이 미처리 표시다. 요청 안에서 옮기지 못했거나 서버가 멈춘 경우는 스케줄러가 pending 목록과
 DB 이미지 행을 대조해 다시 옮긴다. 옮기기는 같은 원본 ETag 조건 복사라 여러 번 실행해도 결과가 같다.
 DB에 없는 pending은 만료 후 유예 시간이 지나야 지워, 만료 직전에 커밋된 접수 건의 원본을 지우지 않는다.
+정리 작업은 자기 DB만 보고 소유자가 없는 pending을 지우므로, 같은 버킷을 쓰는 환경끼리는
+pending 경로(`poudy.feedback.image-s3.pending-prefix`)를 서로 겹치지 않게 나눈다. 운영은
+`poudy/feedback/pending/`, 스테이징은 `poudy/staging/feedback/pending/`을 쓴다. 최종 경로는 접수 건
+ID가 DB마다 달라 겹치지 않으므로 나누지 않는다.
 이미지 ID의 고유 제약은 두 이미지 테이블에 따로 걸려 있으므로, 저장 트랜잭션 안에서 이미지 ID마다
 advisory lock을 잡은 뒤 두 테이블을 확인해 이미 쓰인 ID를 거절한다. 같은 ID로 동시에 들어온 요청은
 앞선 요청의 커밋을 기다린 뒤 그 행을 보고 거절되므로, 한 이미지는 접수 건 하나에만 귀속된다.
