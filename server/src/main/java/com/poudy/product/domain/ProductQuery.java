@@ -1,6 +1,6 @@
 package com.poudy.product.domain;
 
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import java.util.List;

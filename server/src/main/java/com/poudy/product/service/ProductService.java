@@ -2,6 +2,7 @@ package com.poudy.product.service;
 
 import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
+import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.product.domain.ConflictingIngredientFilterException;
@@ -100,6 +101,9 @@ public class ProductService {
     }
 
     private void validate(ProductQuery query) {
+        if (!excludeCodeRepository.containsAll(query.excludeCodes())) {
+            throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
+        }
         if (productRepository.hasConflictingIngredients(query)) {
             throw new ConflictingIngredientFilterException();
         }
@@ -113,11 +117,7 @@ public class ProductService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return new ProductDetail(
-            product,
-            categoryRepository.findAll().pathOf(product.category()),
-            excludeCodeRepository.freeCodesOf(product.ingredientIds())
-        );
+        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
     }
 
 }

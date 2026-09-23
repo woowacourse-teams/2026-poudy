@@ -428,7 +428,7 @@ export type IngredientDetailResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
    */
   skinEffects: Array<SkinEffectResponse>;
-  groupCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  groupCodes: Array<string>;
   /**
    * 이 성분을 포함한 제품 수
    */
@@ -485,7 +485,7 @@ export type ExcludeCodeResponse = {
   /**
    * 성분군을 구분하는 값
    */
-  code: ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS");
+  code: string;
   /**
    * 제외 성분군 이름
    */
@@ -922,7 +922,7 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -1061,7 +1061,7 @@ export type get_CountProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */

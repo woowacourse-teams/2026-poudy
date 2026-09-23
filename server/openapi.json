@@ -1130,14 +1130,6 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
                 "example": "HARSH_PRESERVATIVES"
               },
               "uniqueItems": true
@@ -1713,14 +1705,6 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
                 "example": "HARSH_PRESERVATIVES"
               },
               "uniqueItems": true
@@ -4187,15 +4171,7 @@
           "groupCodes": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "FRAGRANCE_ALLERGENS",
-                "DRYING_ALCOHOLS",
-                "HARSH_PRESERVATIVES",
-                "SULFATES",
-                "CYCLIC_SILICONES",
-                "SYNTHETIC_COLORANTS"
-              ]
+              "type": "string"
             }
           },
           "productCount": {
@@ -4352,14 +4328,6 @@
           "code": {
             "type": "string",
             "description": "성분군을 구분하는 값",
-            "enum": [
-              "FRAGRANCE_ALLERGENS",
-              "DRYING_ALCOHOLS",
-              "HARSH_PRESERVATIVES",
-              "SULFATES",
-              "CYCLIC_SILICONES",
-              "SYNTHETIC_COLORANTS"
-            ],
             "example": "HARSH_PRESERVATIVES"
           },
           "name": {

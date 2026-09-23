@@ -2,9 +2,9 @@ package com.poudy.ingredient.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.excludecode.domain.IngredientGroups;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
-import com.poudy.ingredient.domain.IngredientGroups;
 import com.poudy.ingredient.domain.IngredientPage;
 import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.domain.IngredientUsage;

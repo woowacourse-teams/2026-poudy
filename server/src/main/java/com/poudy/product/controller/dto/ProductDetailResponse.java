@@ -41,7 +41,7 @@ public record ProductDetailResponse(
             product.oilLevel(),
             SkinEffectGroupResponse.from(product.skinEffectGroups()),
             ProductIngredientResponse.from(product.ingredients().values()),
-            ExcludeGroupResponse.from(detail.freeOfCodes()),
+            ExcludeGroupResponse.from(detail),
             product.updatedAt()
         );
     }

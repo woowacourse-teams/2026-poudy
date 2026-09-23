@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.ErrorCode;
-import com.poudy.ingredient.domain.ExcludeCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,14 @@ class ProductQueryTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    @DisplayName("DB에 없는 제외 성분군 코드는 잘못된 필터로 거절한다")
+    void rejectsUnknownExcludeCode() throws Exception {
+        mockMvc.perform(get("/api/products").param("excludeCodes", "UNKNOWN_CODE"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
 
     @Test
     @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과의 브랜드와 카테고리를 함께 반환한다")
@@ -224,11 +231,12 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.variants[1].price").value(23000L))
             .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
             .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
-            .andExpect(jsonPath("$.excludeGroups.length()").value(ExcludeCode.values().length))
-            .andExpect(jsonPath("$.excludeGroups[0].name").value("향료/알레르기 성분"))
-            .andExpect(jsonPath("$.excludeGroups[0].contains").value(true))
-            .andExpect(jsonPath("$.excludeGroups[3].name").value("설페이트 성분"))
-            .andExpect(jsonPath("$.excludeGroups[3].contains").value(false))
+            .andExpect(jsonPath("$.excludeGroups.length()").value(6))
+            .andExpect(jsonPath("$.excludeGroups[2].name").value("향료/알레르기 성분"))
+            .andExpect(jsonPath("$.excludeGroups[2].contains").value(true))
+            .andExpect(jsonPath("$.excludeGroups[3].name").value("자극성 방부제"))
+            .andExpect(jsonPath("$.excludeGroups[4].name").value("설페이트 성분"))
+            .andExpect(jsonPath("$.excludeGroups[4].contains").value(false))
             .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301+09:00"));
     }
 

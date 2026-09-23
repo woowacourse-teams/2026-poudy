@@ -106,6 +106,15 @@ CREATE TABLE ingredient_source (
     CONSTRAINT fk_ingredient_source_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id) ON DELETE CASCADE
 );
 
+CREATE TABLE exclude_code (
+    code         VARCHAR(50)  NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    description  VARCHAR(500) NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at   TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_exclude_code PRIMARY KEY (code)
+);
+
 CREATE TABLE exclude_code_ingredient (
     exclude_code  VARCHAR(50) NOT NULL,
     ingredient_id BIGINT      NOT NULL,
@@ -115,10 +124,7 @@ CREATE TABLE exclude_code_ingredient (
     CONSTRAINT pk_exclude_code_ingredient PRIMARY KEY (exclude_code, ingredient_id),
     CONSTRAINT ux_exclude_code_ingredient_order UNIQUE (exclude_code, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_exclude_code_ingredient_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id),
-    CONSTRAINT ck_exclude_code CHECK (exclude_code IN (
-        'FRAGRANCE_ALLERGENS', 'DRYING_ALCOHOLS', 'HARSH_PRESERVATIVES',
-        'SULFATES', 'CYCLIC_SILICONES', 'SYNTHETIC_COLORANTS'
-    ))
+    CONSTRAINT fk_exclude_code_ingredient_code FOREIGN KEY (exclude_code) REFERENCES exclude_code (code)
 );
 
 CREATE TABLE product (

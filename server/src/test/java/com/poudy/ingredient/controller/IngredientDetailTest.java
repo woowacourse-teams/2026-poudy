@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.ErrorCode;
-import com.poudy.ingredient.domain.ExcludeCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,7 @@ class IngredientDetailTest {
             .andExpect(jsonPath("$.formulationRoles[0].code").value("PERFUMING"))
             .andExpect(jsonPath("$.formulationRoles[0].name").value("향료"))
             .andExpect(jsonPath("$.skinEffects").isEmpty())
-            .andExpect(jsonPath("$.groupCodes[0]").value(ExcludeCode.FRAGRANCE_ALLERGENS.name()))
+            .andExpect(jsonPath("$.groupCodes[0]").value("FRAGRANCE_ALLERGENS"))
             .andExpect(jsonPath("$.productCount").value(1))
             .andExpect(jsonPath("$.infoSources[0]").value("대한화장품협회 성분사전 「리날룰」(성분코드 9)"))
             .andExpect(jsonPath("$.infoSources.length()").value(4)).andExpect(jsonPath("$.effectSources").isEmpty())

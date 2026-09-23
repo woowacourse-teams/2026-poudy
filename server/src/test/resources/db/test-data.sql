@@ -588,6 +588,14 @@ WITH sources(ingredient_id, display_order, content) AS (VALUES
 INSERT INTO ingredient_source (ingredient_id, type, content)
 SELECT ingredient_id, 'INFO', content FROM sources ORDER BY ingredient_id, display_order;
 
+INSERT INTO exclude_code (code, display_name, description) VALUES
+    ('FRAGRANCE_ALLERGENS', '향료/알레르기 성분', '향료와 알레르기 유발 향료 성분을 제외합니다.'),
+    ('DRYING_ALCOHOLS', '건조 알코올', '피부를 건조하게 만들 수 있는 알코올 성분을 제외합니다.'),
+    ('HARSH_PRESERVATIVES', '자극성 방부제', '자극을 유발할 수 있는 방부제 성분을 제외합니다.'),
+    ('SULFATES', '설페이트 성분', '설페이트 계열 계면활성제 성분을 제외합니다.'),
+    ('CYCLIC_SILICONES', '실리콘 자극원', '환상형 실리콘 성분을 제외합니다.'),
+    ('SYNTHETIC_COLORANTS', '합성 색소', '합성 색소 성분을 제외합니다.');
+
 INSERT INTO exclude_code_ingredient (exclude_code, ingredient_id, display_order) VALUES
     ('FRAGRANCE_ALLERGENS', 9, 0),
     ('FRAGRANCE_ALLERGENS', 20, 1),

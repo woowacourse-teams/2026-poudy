@@ -1,6 +1,6 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.search.validation.ValidSearchKeyword;
 import com.poudy.skintype.domain.SkinType;
@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
@@ -22,7 +23,7 @@ public record ProductFilterRequest(
     @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<@NotNull @Min(0) @Max(3) Integer> oilLevel,
     @UniqueElements @ArraySchema(schema = @Schema(example = "1012"), uniqueItems = true) List<@NotNull Long> includeIngredientIds,
     @UniqueElements @ArraySchema(schema = @Schema(example = "3551"), uniqueItems = true) List<@NotNull Long> excludeIngredientIds,
-    @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<@NotNull ExcludeCode> excludeCodes,
+    @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<@NotBlank String> excludeCodes,
     @Schema(description = "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다", example = "DRY") SkinType skinType) {
 
     public ProductFilterRequest {
@@ -48,7 +49,7 @@ public record ProductFilterRequest(
             oilLevel,
             includeIngredientIds,
             excludeIngredientIds,
-            excludeCodes,
+            excludeCodes.stream().map(ExcludeCode::new).toList(),
             skinType
         );
     }

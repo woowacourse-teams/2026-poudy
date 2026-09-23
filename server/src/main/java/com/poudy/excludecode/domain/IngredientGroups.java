@@ -1,4 +1,4 @@
-package com.poudy.ingredient.domain;
+package com.poudy.excludecode.domain;
 
 import java.util.List;
 

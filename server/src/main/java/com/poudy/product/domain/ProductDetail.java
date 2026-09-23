@@ -2,22 +2,28 @@ package com.poudy.product.domain;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCodeGroup;
+import com.poudy.excludecode.domain.ExcludeCodes;
 import java.util.List;
 import java.util.Objects;
 
-public record ProductDetail(Product product, List<Category> categoryPath, List<ExcludeCode> freeOfCodes) {
+public record ProductDetail(
+    Product product,
+    List<Category> categoryPath,
+    List<ExcludeCodeGroup> excludeCodes,
+    List<ExcludeCode> freeOfCodes) {
 
     public ProductDetail {
         categoryPath = List.copyOf(categoryPath);
+        excludeCodes = List.copyOf(excludeCodes);
         freeOfCodes = List.copyOf(freeOfCodes);
     }
 
     public static ProductDetail from(
         Product product,
         Categories categories,
-        ExcludeCodeIngredients excludeCodeIngredients
+        ExcludeCodes excludeCodeIngredients
     ) {
         Objects.requireNonNull(product, "상세 조회할 제품이 필요합니다.");
         Objects.requireNonNull(categories, "카테고리 목록이 필요합니다.");
@@ -26,7 +32,12 @@ public record ProductDetail(Product product, List<Category> categoryPath, List<E
         return new ProductDetail(
             product,
             categories.pathOf(product.category()),
-            excludeCodeIngredients.freeCodesOf(product.ingredients())
+            excludeCodeIngredients.groups(),
+            excludeCodeIngredients.freeCodesOf(product.ingredientIds()).stream().map(ExcludeCodeGroup::code).toList()
         );
+    }
+
+    public boolean containsIngredientFrom(ExcludeCodeGroup group) {
+        return !freeOfCodes.contains(group.code());
     }
 }

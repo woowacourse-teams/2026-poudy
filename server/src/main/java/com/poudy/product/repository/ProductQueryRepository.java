@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
@@ -185,7 +186,7 @@ public class ProductQueryRepository {
             .addValue("oil", array("integer", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
-            .addValue("codes", array("text", query.excludeCodes().stream().map(Enum::name).toList()))
+            .addValue("codes", array("text", query.excludeCodes().stream().map(ExcludeCode::value).toList()))
             .addValue("skin", query.skinType() == null ? null : query.skinType().name());
     }
 

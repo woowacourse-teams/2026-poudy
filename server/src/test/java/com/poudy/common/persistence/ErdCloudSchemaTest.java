@@ -52,6 +52,7 @@ class ErdCloudSchemaTest {
             "curation_block_product_filter",
             List.of("block_id", "product_id", "filter_id", "position", "created_at", "updated_at")
         ),
+        entry("exclude_code", List.of("code", "display_name", "description", "created_at", "updated_at")),
         entry(
             "exclude_code_ingredient",
             List.of("exclude_code", "ingredient_id", "display_order", "created_at", "updated_at")
@@ -136,6 +137,7 @@ class ErdCloudSchemaTest {
         entry("curation_block_filter", List.of("id", "block_id")),
         entry("curation_block_product", List.of("block_id", "product_id")),
         entry("curation_block_product_filter", List.of("block_id", "product_id", "filter_id")),
+        entry("exclude_code", List.of("code")),
         entry("exclude_code_ingredient", List.of("exclude_code", "ingredient_id")),
         entry("feedback", List.of("id")),
         entry("feedback_image", List.of("image_id")),

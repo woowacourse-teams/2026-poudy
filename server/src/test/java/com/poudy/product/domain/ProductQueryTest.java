@@ -3,7 +3,7 @@ package com.poudy.product.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.poudy.ingredient.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +68,7 @@ class ProductQueryTest {
             null,
             null,
             null,
-            List.of(ExcludeCode.SULFATES),
+            List.of(new ExcludeCode("SULFATES")),
             null
         );
 
