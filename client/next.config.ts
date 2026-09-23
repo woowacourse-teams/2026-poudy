@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
 
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
