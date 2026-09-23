@@ -20,18 +20,8 @@ const nextConfig: NextConfig = {
 
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
-    /*
-     * Vercel 에 올릴 때는 최적화를 건너뛴다.
-     *
-     * Vercel 의 이미지 최적화는 계정 단위로 양이 정해져 있다. preview 는 Pull Request 마다
-     * 새로 배포되어 같은 이미지를 다시 최적화하므로 그 양을 빠르게 써 버리고, 다 쓰고 나면
-     * `/_next/image` 가 402 를 내려보내 화면의 그림이 전부 깨진다. 확인해야 할 것은 화면의
-     * 구성이지 이미지가 얼마나 줄어드는지가 아니므로, 원본을 그대로 내려보낸다.
-     *
-     * 운영은 EC2 에서 standalone 으로 띄워 Vercel 의 양을 쓰지 않으므로 그대로 최적화한다.
-     * 로컬 개발도 마찬가지라 운영과 같은 조건에서 화면을 본다.
-     */
-    unoptimized: isVercel,
+    // EC2의 이미지 변환 부담과 Vercel의 최적화 사용량을 줄이기 위해 변환을 건너뛴다.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
