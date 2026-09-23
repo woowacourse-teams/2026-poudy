@@ -24,6 +24,9 @@ export const EXCLUDE_CODES = [
 ] as const;
 export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
 
+/** 서버는 성분군 코드를 문자열로 준다. 화면이 아는 성분군인지 여기서 가른다. */
+export const isExcludeCode = (value: string): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode);
+
 export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
@@ -100,7 +103,7 @@ const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
       .getAll("excludeCodes")
       .flatMap((value) => value.split(","))
       .map((value) => value.trim()),
-  ).filter((value): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode));
+  ).filter(isExcludeCode);
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
 
