@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type PopularProductsProps = {
   /** 서버가 미리 받아 둔 첫 화면. 칩을 바꾸기 전까지 이 값을 그대로 쓴다. */
@@ -28,6 +29,7 @@ const SKELETON_COUNT = 6;
  * 내려 주므로 3열 2행으로 놓는다.
  */
 export function PopularProducts({ initialItems, categories }: PopularProductsProps) {
+  const sectionRef = useHomeSectionView("popular_products", 4);
   const chips = categories.slice(0, CHIP_COUNT);
   /* 고른 카테고리. 아무것도 고르지 않으면 전체다. */
   const [selected, setSelected] = useState<number | null>(null);
@@ -62,17 +64,10 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
   const select = (categoryId: number | null) => {
     setSelected(categoryId);
     track("ranking_category_changed", categoryId === null ? {} : { category_id: categoryId });
-    if (categoryId !== null) {
-      track("category_selected", {
-        category_id: categoryId,
-        category_name: categories.find((category) => category.id === categoryId)?.name,
-        origin_surface: "home",
-      });
-    }
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section ref={sectionRef} className="flex flex-col gap-4">
       <h2 className="text-[17px] font-bold text-text-primary">지금 사람들이 보고 있어요</h2>
 
       {chips.length > 0 ? (
@@ -120,6 +115,14 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
             <li key={product.id}>
               <Link
                 href={`/products/${product.id}?from=${selected === null ? "home_ranking" : "home_category"}`}
+                onClick={() =>
+                  track("home_product_selected", {
+                    product_id: product.id,
+                    position: index + 1,
+                    ranking_scope: selected === null ? "overall" : "category",
+                    ...(selected === null ? {} : { category_id: selected }),
+                  })
+                }
                 className="flex flex-col gap-0.75"
               >
                 <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">

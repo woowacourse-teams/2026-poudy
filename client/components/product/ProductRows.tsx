@@ -10,7 +10,7 @@ import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
-import type { ListSurface, ProductEntryPoint, SearchMode } from "@/lib/analytics/events";
+import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, serializeFilter } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
@@ -24,6 +24,7 @@ type ProductRowsProps = {
   readonly filter: Filter;
   readonly basePath: string;
   readonly surface: ListSurface;
+  readonly entryPoint?: ProductEntryPoint;
   readonly excludeCodes: readonly ExcludeCodeResponse[];
   readonly openSheet: SheetKind | undefined;
   readonly onCloseSheet: () => void;
@@ -72,6 +73,7 @@ export function ProductRows({
   filter,
   basePath,
   surface,
+  entryPoint: requestedEntryPoint,
   excludeCodes,
   openSheet,
   onCloseSheet,
@@ -102,7 +104,9 @@ export function ProductRows({
   // 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
   const empty = loaded && items.length === 0 && !loading;
   const searchMode = searchModeOf(filter);
-  const entryPoint: ProductEntryPoint = searchMode === undefined ? surface : "search_results";
+  const entryPoint: ProductEntryPoint = requestedEntryPoint ?? (searchMode === undefined ? surface : "search_results");
+  const listSource: ProductListSource =
+    entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);
 
   const onToggleSave = (productId: number) => {
@@ -153,18 +157,27 @@ export function ProductRows({
   };
 
   useEffect(() => {
-    if (!searchMode || !loaded || loading || page !== first || trackedResultKey.current === key) return;
+    if (!loaded || loading || page !== first || trackedResultKey.current === key) return;
     trackedResultKey.current = key;
 
-    track("search_results_viewed", {
-      mode: searchMode,
-      ...(filter.keyword ? { query: filter.keyword } : {}),
+    if (searchMode && requestedEntryPoint !== "popular_keyword") {
+      track("search_results_viewed", {
+        mode: searchMode,
+        ...(filter.keyword ? { query: filter.keyword } : {}),
+        result_count: total,
+        include_count: filter.includeIngredientIds.length,
+        exclude_count: filter.excludeIngredientIds.length,
+        exclude_group_count: filter.excludeCodes.length,
+      });
+      return;
+    }
+
+    track("product_list_viewed", {
+      source: listSource,
       result_count: total,
-      include_count: filter.includeIngredientIds.length,
-      exclude_count: filter.excludeIngredientIds.length,
-      exclude_group_count: filter.excludeCodes.length,
+      condition_count: countConditions(filter) + (filter.skinType ? 1 : 0),
     });
-  }, [filter, first, key, loaded, loading, page, searchMode, total]);
+  }, [filter, first, key, listSource, loaded, loading, page, requestedEntryPoint, searchMode, total]);
 
   // 시작한 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {

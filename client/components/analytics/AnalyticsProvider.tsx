@@ -3,10 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-import type { PageName } from "@/lib/analytics/events";
+import { HOME_PAGE_VERSION, type PageName } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-
-const HOME_PAGE_VERSION = "main_2026_09";
 
 /** 경로에서 화면 이름을 정한다. 화면마다 호출을 심지 않아도 되게 한다. */
 const pageOf = (pathname: string): PageName | undefined => {

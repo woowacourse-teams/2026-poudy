@@ -3,7 +3,13 @@
 import posthog, { type PostHog } from "posthog-js";
 
 import { readAppInfo } from "./app-info";
-import { beginDiscovery, discoveryMethodOf, readDiscovery } from "./discovery";
+import {
+  beginDiscovery,
+  beginHomeSearchDiscovery,
+  discoveryMethodOf,
+  readDiscovery,
+  startSearchDiscovery,
+} from "./discovery";
 import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
 
@@ -28,16 +34,25 @@ const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
 const posthogEnabled = key !== undefined && key !== "" && environment !== "development";
 
-const ANALYTICS_SCHEMA_VERSION = 2;
+const ANALYTICS_SCHEMA_VERSION = 3;
 
 const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): DiscoveryContext | undefined => {
-  if (event === "search_started") return beginDiscovery("search", "search");
+  if (event === "home_search_selected") return beginHomeSearchDiscovery();
+  if (event === "search_started") return startSearchDiscovery();
+  if (event === "popular_keyword_used") return beginDiscovery("popular_keyword", "home");
+  if (event === "skin_type_selected") return beginDiscovery("skin_type", "home");
+  if (event === "home_product_selected") return beginDiscovery("home_ranking", "home");
   if (event === "category_selected") {
     const origin = (properties as EventMap["category_selected"]).origin_surface;
     return beginDiscovery("category", origin);
   }
   if (["search_used", "search_suggestion_selected", "search_submitted", "search_results_viewed"].includes(event)) {
     return readDiscovery("search");
+  }
+  if (event === "product_list_viewed") {
+    const source = (properties as EventMap["product_list_viewed"]).source;
+    const method = source === "popular_keyword" || source === "skin_type" || source === "category" ? source : undefined;
+    return method ? readDiscovery(method) : undefined;
   }
   if (event === "product_viewed" || event === "product_saved" || event === "product_unsaved") {
     const entryPoint = (properties as EventMap["product_viewed"] | EventMap["product_saved"]).entry_point;

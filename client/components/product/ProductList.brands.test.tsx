@@ -118,6 +118,31 @@ describe("ProductList 브랜드 시트", () => {
     expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=search_results");
   });
 
+  it("인기 검색어에서 온 목록은 별도 경로로 결과와 제품 링크를 남긴다", async () => {
+    searchParams.current = new URLSearchParams("keyword=독도&from=popular_keyword");
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: products.slice(0, 2),
+          pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+          brands: [],
+        }),
+      ),
+    );
+
+    render(<ProductList excludeCodes={excludeCodes} entryPoint="popular_keyword" />);
+
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith("product_list_viewed", {
+        source: "popular_keyword",
+        result_count: 2,
+        condition_count: 1,
+      }),
+    );
+    expect(track).not.toHaveBeenCalledWith("search_results_viewed", expect.anything());
+    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=popular_keyword");
+  });
+
   it("첫 제품 이미지만 즉시 받고 다음 제품부터 지연한다", async () => {
     server.use(
       http.get("*/api/products", () =>

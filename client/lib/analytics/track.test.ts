@@ -64,7 +64,7 @@ describe("track", () => {
       query: "판테놀",
       query_length: 3,
       result_count: 7,
-      analytics_schema_version: 2,
+      analytics_schema_version: 3,
       environment: "production",
     });
   });
@@ -111,7 +111,7 @@ describe("initAnalytics", () => {
 
     expect(posthogCapture).toHaveBeenCalledWith("page_viewed", {
       page: "home",
-      analytics_schema_version: 2,
+      analytics_schema_version: 3,
       environment: "production",
     });
   });
@@ -143,11 +143,68 @@ describe("initAnalytics", () => {
     }
   });
 
+  it("홈 검색 버튼에서 시작한 탐색 경로를 실제 검색까지 보존한다", async () => {
+    const { initAnalytics, track } = await load("production", "phc_test");
+    initAnalytics();
+
+    track("home_search_selected", { placement: "top_bar" });
+    const selected = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
+    track("search_started", { mode: "product" });
+
+    expect(selected).toMatchObject({ discovery_method: "search", origin_surface: "home" });
+    expect(posthogCapture.mock.calls[1]?.[1]).toMatchObject({
+      discovery_id: selected.discovery_id,
+      discovery_method: "search",
+      origin_surface: "home",
+    });
+
+    track("search_started", { mode: "product" });
+    const restarted = posthogCapture.mock.calls[2]?.[1] as Record<string, unknown>;
+    expect(restarted).toMatchObject({ discovery_method: "search", origin_surface: "search" });
+    expect(restarted.discovery_id).not.toBe(selected.discovery_id);
+  });
+
+  it("인기 검색어 선택을 목록·상세·보관까지 이어 붙인다", async () => {
+    const { initAnalytics, track } = await load("production", "phc_test");
+    initAnalytics();
+
+    track("popular_keyword_used", { keyword: "독도", rank: 1, placement: "ticker" });
+    const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
+    track("product_list_viewed", { source: "popular_keyword", result_count: 6, condition_count: 1 });
+    track("product_viewed", { product_id: 42, entry_point: "popular_keyword" });
+    track("product_saved", { product_id: 42, save_source: "product_detail", entry_point: "popular_keyword" });
+
+    expect(started).toMatchObject({ discovery_method: "popular_keyword", origin_surface: "home" });
+    for (const call of posthogCapture.mock.calls.slice(1)) {
+      expect(call[1]).toMatchObject({
+        discovery_id: started.discovery_id,
+        discovery_method: "popular_keyword",
+        origin_surface: "home",
+      });
+    }
+  });
+
+  it("홈 기본 랭킹 제품 선택을 상세와 보관까지 이어 붙인다", async () => {
+    const { initAnalytics, track } = await load("production", "phc_test");
+    initAnalytics();
+
+    track("home_product_selected", { product_id: 42, position: 1, ranking_scope: "overall" });
+    const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
+    track("product_viewed", { product_id: 42, entry_point: "home_ranking" });
+
+    expect(started).toMatchObject({ discovery_method: "home_ranking", origin_surface: "home" });
+    expect(posthogCapture.mock.calls[1]?.[1]).toMatchObject({
+      discovery_id: started.discovery_id,
+      discovery_method: "home_ranking",
+      origin_surface: "home",
+    });
+  });
+
   it("다른 진입 경로에는 직전 탐색 ID를 잘못 붙이지 않는다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
 
-    track("category_selected", { category_id: 11, origin_surface: "home" });
+    track("category_selected", { category_id: 11, origin_surface: "category" });
     track("product_viewed", { product_id: 42, entry_point: "home_ranking" });
 
     expect(posthogCapture.mock.calls[1]?.[1]).not.toHaveProperty("discovery_id");

@@ -4,6 +4,7 @@ import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
+import { productEntryPointOf, type ProductEntryPoint } from "@/lib/analytics/events";
 import { fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
@@ -24,8 +25,13 @@ export const dynamic = "force-dynamic";
 
 /** 필터 재료와 첫 장. 제목은 조건과 무관해 이미 떠 있다. */
 async function MatchedProducts({ searchParams }: { readonly searchParams: SearchParams }) {
-  const filter = parseFilter(toSearchParams(await searchParams));
+  const entries = await searchParams;
+  const filter = parseFilter(toSearchParams(entries));
   const key = productPagesKey(filter);
+  const requestedEntryPoint = productEntryPointOf(entries.from);
+  const entryPoint: ProductEntryPoint | undefined = ["popular_keyword", "skin_type"].includes(requestedEntryPoint)
+    ? requestedEntryPoint
+    : undefined;
 
   /*
    * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄은 제외 성분군만 있으면 그릴 수 있어
@@ -38,7 +44,7 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
 
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
-  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} />;
+  return <ProductList excludeCodes={excludeCodes.items} initialPage={initialPage} entryPoint={entryPoint} />;
 }
 
 export default async function ProductsPage(props: PageProps<"/products">) {

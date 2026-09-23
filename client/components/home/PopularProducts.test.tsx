@@ -53,11 +53,8 @@ describe("PopularProducts", () => {
     await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
 
     expect(fetchProductRankings).toHaveBeenCalledWith([11]);
-    expect(track).toHaveBeenCalledWith("category_selected", {
-      category_id: 11,
-      category_name: "스킨케어",
-      origin_surface: "home",
-    });
+    expect(track).toHaveBeenCalledWith("ranking_category_changed", { category_id: 11 });
+    expect(track).not.toHaveBeenCalledWith("category_selected", expect.anything());
     await waitFor(() => expect(screen.getByText(/어성초 토너/)).toBeInTheDocument());
     expect(screen.queryByText(/1025 독도 토너/)).not.toBeInTheDocument();
   });
@@ -70,6 +67,33 @@ describe("PopularProducts", () => {
     const product = await screen.findByRole("link", { name: /어성초 토너/ });
 
     expect(product).toHaveAttribute("href", "/products/3?from=home_category");
+  });
+
+  it("기본 랭킹 제품을 누르면 전체 순위와 노출 위치를 남긴다", async () => {
+    render(<PopularProducts initialItems={initialItems} categories={categories} />);
+
+    await userEvent.click(screen.getByRole("link", { name: /1025 독도 토너/ }));
+
+    expect(track).toHaveBeenCalledWith("home_product_selected", {
+      product_id: 1,
+      position: 1,
+      ranking_scope: "overall",
+    });
+  });
+
+  it("카테고리 랭킹 제품을 누르면 선택한 카테고리를 함께 남긴다", async () => {
+    vi.mocked(fetchProductRankings).mockResolvedValue({ items: [rankingOf(3, "어성초 토너")] });
+    render(<PopularProducts initialItems={initialItems} categories={categories} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
+    await userEvent.click(await screen.findByRole("link", { name: /어성초 토너/ }));
+
+    expect(track).toHaveBeenCalledWith("home_product_selected", {
+      product_id: 3,
+      position: 1,
+      ranking_scope: "category",
+      category_id: 11,
+    });
   });
 
   it("전체로 되돌리면 서버가 준 첫 화면을 다시 쓴다", async () => {

@@ -8,7 +8,7 @@ import { ProductRows } from "./ProductRows";
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
-import type { ListSurface } from "@/lib/analytics/events";
+import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
@@ -25,6 +25,8 @@ type ProductListProps = {
   readonly hiddenChips?: readonly string[];
   /** 같은 목록을 여러 화면이 쓰므로 분석 이벤트에 어디인지 남긴다. */
   readonly surface?: ListSurface;
+  /** 홈의 바로가기처럼 일반 목록과 구분해야 하는 진입 경로. */
+  readonly entryPoint?: ProductEntryPoint;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
 };
@@ -41,6 +43,7 @@ export function ProductList({
   fixedFilter,
   hiddenChips = [],
   surface = "product_list",
+  entryPoint,
   initialPage,
 }: ProductListProps) {
   const { filter: urlFilter } = useFilterQuery(basePath);
@@ -77,6 +80,7 @@ export function ProductList({
         filter={filter}
         basePath={basePath}
         surface={surface}
+        entryPoint={entryPoint}
         excludeCodes={excludeCodes}
         openSheet={openSheet}
         onCloseSheet={() => setOpenSheet(undefined)}

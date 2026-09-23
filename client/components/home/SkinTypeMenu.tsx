@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
 import type { SkinType } from "@/lib/domain/filter";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
  * 타일 그림은 서버가 주지 않는다. `/api/skin-types` 는 코드와 이름만 내려 주므로
@@ -23,17 +24,18 @@ type SkinTypeMenuProps = {
 
 /** 디자인 S01 의 피부 타입 빠른 메뉴. 고른 타입을 조건으로 걸어 목록으로 보낸다. */
 export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
+  const sectionRef = useHomeSectionView("skin_types", 3);
   if (items.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-2.5">
+    <section ref={sectionRef} className="flex flex-col gap-2.5">
       <h2 className="text-[17px] font-bold text-text-primary">피부 타입별로 찾아보세요</h2>
 
       <ul className="flex gap-2">
         {items.map(({ code, name }) => (
           <li key={code} className="flex-1">
             <Link
-              href={`/products?skinType=${code}`}
+              href={`/products?skinType=${code}&from=skin_type`}
               onClick={() => track("skin_type_selected", { skin_type: code })}
               className="skin-type-link flex flex-col items-center gap-2"
             >

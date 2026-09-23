@@ -31,6 +31,28 @@ const sendSearchStarted = (properties: EventMap["search_started"]): void => {
   });
 };
 
+const sendHomeSearchSelected = (properties: EventMap["home_search_selected"]): void => {
+  sendGAEvent("event", "home_search_selected", {
+    ...discoveryParameters(properties),
+    placement: properties.placement,
+  });
+};
+
+const sendPopularKeywordUsed = (properties: EventMap["popular_keyword_used"]): void => {
+  sendGAEvent("event", "popular_keyword_used", {
+    ...discoveryParameters(properties),
+    placement: properties.placement,
+    rank: properties.rank,
+  });
+};
+
+const sendSkinTypeSelected = (properties: EventMap["skin_type_selected"]): void => {
+  sendGAEvent("event", "skin_type_selected", {
+    ...discoveryParameters(properties),
+    skin_type: properties.skin_type,
+  });
+};
+
 const sendCategorySelected = (properties: EventMap["category_selected"]): void => {
   sendGAEvent("event", "category_selected", {
     ...discoveryParameters(properties),
@@ -68,6 +90,30 @@ const sendSearchResultsViewed = (properties: EventMap["search_results_viewed"]):
   });
 };
 
+const sendProductListViewed = (properties: EventMap["product_list_viewed"]): void => {
+  sendGAEvent("event", "product_list_viewed", {
+    ...discoveryParameters(properties),
+    condition_count: properties.condition_count,
+    list_source: properties.source,
+    result_count: properties.result_count,
+  });
+};
+
+const sendHomeProductSelected = (properties: EventMap["home_product_selected"]): void => {
+  sendGAEvent("event", "select_item", {
+    ...discoveryParameters(properties),
+    item_list_name: properties.ranking_scope === "overall" ? "home_ranking" : "home_category",
+    items: [
+      {
+        index: properties.position,
+        ...(properties.category_id === undefined ? {} : { item_category_id: String(properties.category_id) }),
+        item_id: String(properties.product_id),
+      },
+    ],
+    ranking_scope: properties.ranking_scope,
+  });
+};
+
 const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
   sendGAEvent("event", "view_item", {
     ...discoveryParameters(properties),
@@ -90,22 +136,41 @@ const sendProductSaved = (properties: EventMap["product_saved"]): void => {
   });
 };
 
-/** 유입 퍼널에 필요한 핵심 행동만 GA4에도 전송한다. 검색어 원문은 보내지 않는다. */
-export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: EventMap[T]): void => {
-  if (!enabled() || !browserAllowsTracking()) return;
-
+const sendDiscoveryStart = <T extends EventName>(event: T, properties: EventMap[T]): boolean => {
   switch (event) {
+    case "home_search_selected":
+      sendHomeSearchSelected(properties as EventMap["home_search_selected"]);
+      return true;
     case "search_started":
       sendSearchStarted(properties as EventMap["search_started"]);
-      break;
+      return true;
     case "category_selected":
       sendCategorySelected(properties as EventMap["category_selected"]);
-      break;
+      return true;
+    case "popular_keyword_used":
+      sendPopularKeywordUsed(properties as EventMap["popular_keyword_used"]);
+      return true;
+    case "skin_type_selected":
+      sendSkinTypeSelected(properties as EventMap["skin_type_selected"]);
+      return true;
+    case "home_product_selected":
+      sendHomeProductSelected(properties as EventMap["home_product_selected"]);
+      return true;
+    default:
+      return false;
+  }
+};
+
+const sendDiscoveryOutcome = <T extends EventName>(event: T, properties: EventMap[T]): void => {
+  switch (event) {
     case "search_submitted":
       sendSearchSubmitted(properties as EventMap["search_submitted"]);
       break;
     case "search_results_viewed":
       sendSearchResultsViewed(properties as EventMap["search_results_viewed"]);
+      break;
+    case "product_list_viewed":
+      sendProductListViewed(properties as EventMap["product_list_viewed"]);
       break;
     case "product_viewed":
       sendProductViewed(properties as EventMap["product_viewed"]);
@@ -114,4 +179,10 @@ export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: 
       sendProductSaved(properties as EventMap["product_saved"]);
       break;
   }
+};
+
+/** 유입 퍼널에 필요한 핵심 행동만 GA4에도 전송한다. 검색어 원문은 보내지 않는다. */
+export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: EventMap[T]): void => {
+  if (!enabled() || !browserAllowsTracking()) return;
+  if (!sendDiscoveryStart(event, properties)) sendDiscoveryOutcome(event, properties);
 };

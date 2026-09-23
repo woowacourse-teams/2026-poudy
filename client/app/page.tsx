@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
+import { HomeSearchLink } from "@/components/home/HomeSearchLink";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
@@ -75,17 +76,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c") }}
       />
 
-      <TopBar
-        title={SITE_NAME}
-        variant="root"
-        showLogo
-        logoOnly
-        right={
-          <Link href="/search/products" aria-label="검색" className="flex size-11 items-center justify-center">
-            <Icon name="search" size={22} className="text-text-primary" />
-          </Link>
-        }
-      />
+      <TopBar title={SITE_NAME} variant="root" showLogo logoOnly right={<HomeSearchLink />} />
 
       {/* 디자인(S01)은 영역 사이를 32, 아래 여백을 40 으로 둔다. */}
       <main className="flex flex-1 flex-col gap-8 px-4 pt-1 pb-10">
