@@ -311,6 +311,9 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 인프라 로그 위치, journald 보존, CloudWatch Agent와 최소 알람 적용 절차는
 [`deploy/monitoring/README.md`](monitoring/README.md)에 정리합니다.
 
+PostgreSQL EC2의 구성·초기 적재·백업 상태는
+[`deploy/postgresql-ec2.md`](postgresql-ec2.md)에 정리합니다.
+
 ## 피드백 S3 수동 보유 기간 관리
 
 피드백 버킷은 버전 관리가 비활성화되어 있고 운영 계정에는 S3 lifecycle 설정 권한이 없다고
