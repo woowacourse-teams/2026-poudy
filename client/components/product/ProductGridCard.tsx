@@ -11,6 +11,8 @@ type ProductGridCardProps = {
   readonly imageUrl: string;
   /** 어느 화면에서 제품으로 들어갔는지. 제품 상세가 주소의 from 에서 읽는다. */
   readonly from: ProductEntryPoint;
+  /** 카드 선택을 수집해야 하는 화면에서만 전달한다. */
+  readonly onClick?: () => void;
   /**
    * 첫 화면에 바로 보이는 자리인지. 보이는 자리는 미루지 않고 곧바로 받는다.
    *
@@ -28,9 +30,17 @@ type ProductGridCardProps = {
  * 저장 버튼은 두지 않는다. 한 화면에 여럿이 늘어서는 자리라, 카드마다 단추가 붙으면
  * 무엇을 누르는 자리인지 흐려진다.
  */
-export function ProductGridCard({ id, name, brandName, imageUrl, from, loading = "lazy" }: ProductGridCardProps) {
+export function ProductGridCard({
+  id,
+  name,
+  brandName,
+  imageUrl,
+  from,
+  onClick,
+  loading = "lazy",
+}: ProductGridCardProps) {
   return (
-    <Link href={`/products/${id}?from=${from}`} className="flex flex-col gap-0.75">
+    <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="flex flex-col gap-0.75">
       <span className="flex h-28 items-center justify-center overflow-hidden rounded-2xl">
         <Image
           src={imageUrl || PRODUCT_PLACEHOLDER}

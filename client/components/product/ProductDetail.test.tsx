@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { act, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductDetail } from "./ProductDetail";
@@ -27,6 +28,18 @@ describe("제품 성분 요약", () => {
         entry_point: "saved",
       }),
     );
+  });
+
+  it("상세에서 보관할 때도 상세 진입 경로를 남긴다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} entryPoint="home_category" />);
+
+    await userEvent.click(screen.getAllByRole("button", { name: /저장$/ })[0]);
+
+    expect(track).toHaveBeenCalledWith("product_saved", {
+      product_id: untaggedProductDetail.id,
+      save_source: "product_detail",
+      entry_point: "home_category",
+    });
   });
 
   it("피부 작용 태그가 없으면 전성분 수만 안내한다", () => {

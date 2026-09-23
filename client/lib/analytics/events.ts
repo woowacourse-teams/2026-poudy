@@ -20,6 +20,21 @@ export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | 
 
 export type SearchMode = "product" | "ingredient";
 
+/** 검색과 카테고리 탐색을 서로 다른 퍼널로 나누는 값. */
+export type DiscoveryMethod = "search" | "category" | "popular_keyword" | "skin_type" | "home_ranking";
+
+/** 탐색을 시작한 화면. */
+export type DiscoveryOrigin = "home" | "search" | "category";
+
+/** 같은 탐색 안에서 발생한 결과·상세·보관 이벤트를 이어 붙인다. */
+export type DiscoveryContext = {
+  discovery_id: string;
+  discovery_method: DiscoveryMethod;
+  origin_surface: DiscoveryOrigin;
+};
+
+export type DiscoveryProperties = Partial<DiscoveryContext>;
+
 /** 피부 타입 코드. 조건 타입과 같은 값이지만 이벤트 정의는 스스로 서게 둔다. */
 export type SkinTypeCode = "DRY" | "OILY" | "SENSITIVE" | "COMBINATION";
 
@@ -27,6 +42,13 @@ export const PRODUCT_ENTRY_POINTS = [
   "search_results",
   "suggestion",
   "home",
+  "home_category",
+  "home_ranking",
+  "popular_keyword",
+  "skin_type",
+  "category",
+  "brand",
+  "product_list",
   "saved",
   "recent_search",
   "curation",
@@ -47,15 +69,35 @@ export type IngredientEntryPoint = "product_detail" | "search" | "ingredient_fil
 /** 목록을 그리는 화면. 같은 ProductList 를 여러 화면이 함께 쓴다. */
 export type ListSurface = "product_list" | "category" | "brand";
 
+/** 제품 목록까지 들어온 구체적인 시작 경로. */
+export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
+
+export const HOME_PAGE_VERSION = "main_2026_09";
+
+export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
+
 export type EventMap = {
-  page_viewed: { page: PageName };
+  page_viewed: { page: PageName; page_version?: string };
+  /** 홈 섹션이 절반 이상 0.5초 동안 보여 실제 노출로 볼 수 있을 때 한 번 남긴다. */
+  home_section_viewed: {
+    section: HomeSection;
+    position: number;
+    page_version: typeof HOME_PAGE_VERSION;
+  };
+  /** 홈 머리의 검색 버튼을 눌러 검색 흐름으로 들어갔을 때. */
+  home_search_selected: { placement: "top_bar" } & DiscoveryProperties;
   /** 검색 화면에서 첫 유효 입력이나 첫 성분 조건 조작이 일어났을 때 한 번만 남긴다. */
-  search_started: { mode: SearchMode };
+  search_started: { mode: SearchMode } & DiscoveryProperties;
   /**
    * 검색어를 그대로 남긴다. 무엇을 찾는지 알아야 어떤 제품·성분을 채울지 정할 수 있다.
    * 길이도 함께 남겨 검색어 없이도 집계할 수 있게 둔다.
    */
-  search_used: { mode: "product" | "ingredient"; query: string; query_length: number; result_count: number };
+  search_used: {
+    mode: "product" | "ingredient";
+    query: string;
+    query_length: number;
+    result_count: number;
+  } & DiscoveryProperties;
   /** 검색 결과가 실제로 화면에 반영된 뒤 남긴다. 0건도 결과로 기록한다. */
   search_results_viewed: {
     mode: SearchMode;
@@ -64,7 +106,13 @@ export type EventMap = {
     include_count: number;
     exclude_count: number;
     exclude_group_count: number;
-  };
+  } & DiscoveryProperties;
+  /** 검색 화면 밖의 탐색 경로가 제품 목록까지 도달했을 때. */
+  product_list_viewed: {
+    source: ProductListSource;
+    result_count: number;
+    condition_count: number;
+  } & DiscoveryProperties;
   /** 어떤 검색어에서 무엇을 골랐는지 남겨야 자동완성이 쓸모 있는지 알 수 있다. */
   search_suggestion_selected: {
     mode: "product" | "ingredient";
@@ -72,9 +120,9 @@ export type EventMap = {
     position: number;
     product_id?: number;
     ingredient_id?: number;
-  };
+  } & DiscoveryProperties;
   /** 자동완성을 고르지 않고 검색 결과 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
-  search_submitted:
+  search_submitted: (
     | { mode: "product"; query: string; result_count: number }
     | {
         mode: "ingredient";
@@ -82,13 +130,23 @@ export type EventMap = {
         include_count: number;
         exclude_count: number;
         exclude_group_count: number;
-      };
+      }
+  ) &
+    DiscoveryProperties;
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
   sort_applied: { sort: string };
-  product_viewed: { product_id: number; category?: string; entry_point: ProductEntryPoint };
-  product_saved: { product_id: number; save_source: SaveSource };
-  product_unsaved: { product_id: number; save_source: SaveSource };
+  product_viewed: {
+    product_id: number;
+    category?: string;
+    entry_point: ProductEntryPoint;
+  } & DiscoveryProperties;
+  product_saved: { product_id: number; save_source: SaveSource; entry_point?: ProductEntryPoint } & DiscoveryProperties;
+  product_unsaved: {
+    product_id: number;
+    save_source: SaveSource;
+    entry_point?: ProductEntryPoint;
+  } & DiscoveryProperties;
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
@@ -112,9 +170,15 @@ export type EventMap = {
     | { target_type: "product"; position: number; product_id: number }
     | { target_type: "keyword"; position: number; query: string };
   /** 홈의 인기 검색어를 눌렀을 때. 접힌 줄과 펼친 목록을 가리지 않고 남긴다. */
-  popular_keyword_used: { keyword: string; rank: number };
+  popular_keyword_used: {
+    keyword: string;
+    rank: number;
+    placement: "ticker" | "expanded";
+  } & DiscoveryProperties;
   /** 인기 검색어를 펼쳤을 때. 접힌 줄만으로 충분한지 본다. */
   popular_keywords_expanded: { rank: number };
+  /** 캐러셀에서 다른 큐레이션 카드가 가운데 놓였을 때. 자동 재생과 직접 조작을 구분한다. */
+  curation_slide_viewed: { curation_id: number; position: number; transition: "manual" | "autoplay" };
   /**
    * 큐레이션 카드를 눌렀을 때. 홈 캐러셀과 큐레이션 상세 아래의 `다른 큐레이션` 이 함께 남긴다.
    * position 은 그 목록 안에서 1 부터 센 자리다.
@@ -129,9 +193,22 @@ export type EventMap = {
    */
   curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
-  skin_type_selected: { skin_type: SkinTypeCode };
+  skin_type_selected: { skin_type: SkinTypeCode } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
   ranking_category_changed: { category_id?: number };
+  /** 홈 인기 제품에서 제품을 눌렀을 때. 카테고리 변경 여부는 속성으로 나눈다. */
+  home_product_selected: {
+    product_id: number;
+    position: number;
+    ranking_scope: "overall" | "category";
+    category_id?: number;
+  } & DiscoveryProperties;
+  /** 카테고리를 선택해 제품 탐색을 시작했을 때. 같은 선택 안의 후속 행동과 연결한다. */
+  category_selected: {
+    category_id: number;
+    category_name?: string;
+    origin_surface: "home" | "category";
+  } & DiscoveryProperties;
   /** 성분을 포함·제외 조건으로 켜고 끌 때. 어떤 성분이 실제로 쓰이는지 본다. */
   ingredient_condition_toggled:
     | {

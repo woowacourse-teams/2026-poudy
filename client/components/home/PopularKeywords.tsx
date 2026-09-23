@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
  * 접힌 줄이 다음 순위로 넘어가는 간격. 올라오는 데 420ms 를 쓰므로 한 줄이 멈춰 선 시간은
@@ -20,7 +21,7 @@ const ROTATE_INTERVAL = 3500;
 const HOVER_DELAY = 200;
 
 /** 검색 결과 화면으로 바로 보낸다. 조건을 고르는 화면을 거치지 않는다. */
-const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}`;
+const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}&from=popular_keyword`;
 
 /**
  * 순위가 지난 집계에서 얼마나 움직였는지 알린다.
@@ -113,6 +114,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
   const [expanded, setExpanded] = useState(panel);
   const [index, setIndex] = useState(0);
   const listId = useId();
+  const sectionRef = useHomeSectionView("popular_keywords", 2);
   const reduced = useRef(false);
   /* 손을 얹은 채 머무는 시간을 잰다. 떼면 취소한다. */
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -171,7 +173,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
      * 띄워 둔 목록은 이 자리를 기준으로 삼는다. 목록이 아래 영역 위에 얹히도록
      * 쌓임 순서를 올린다. `panel` 은 덮을 것이 없어 둘 다 필요 없다.
      */
-    <section className={panel ? undefined : `relative ${expanded ? "z-10" : ""}`} {...hover}>
+    <section ref={sectionRef} className={panel ? undefined : `relative ${expanded ? "z-10" : ""}`} {...hover}>
       <div
         className={`flex h-12.5 items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 ${
           expanded ? "rounded-b-none border-b-transparent" : ""
@@ -208,7 +210,9 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
             <Link
               key={index}
               href={searchHref(current.keyword)}
-              onClick={() => track("popular_keyword_used", { keyword: current.keyword, rank: current.rank })}
+              onClick={() =>
+                track("popular_keyword_used", { keyword: current.keyword, rank: current.rank, placement: "ticker" })
+              }
               className={`relative flex h-6 items-center gap-2.5 ${index === 0 ? "" : "popular-keyword-rise"}`}
             >
               <span className="text-[16px] font-bold text-brand">{current.rank}</span>
@@ -250,7 +254,9 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
             <li key={item.keyword}>
               <Link
                 href={searchHref(item.keyword)}
-                onClick={() => track("popular_keyword_used", { keyword: item.keyword, rank: item.rank })}
+                onClick={() =>
+                  track("popular_keyword_used", { keyword: item.keyword, rank: item.rank, placement: "expanded" })
+                }
                 className="popular-keyword-row flex h-10 items-center gap-2.5 px-3.5 motion-reduce:transition-none"
               >
                 <span className="w-4.5 shrink-0 text-[14px] font-bold text-brand">{item.rank}</span>

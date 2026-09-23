@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PopularKeywords } from "./PopularKeywords";
 
+import { track } from "@/lib/analytics/track";
+
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 /*
@@ -35,6 +37,7 @@ const matchMedia = (reduced: boolean) =>
 
 beforeEach(() => {
   vi.stubGlobal("matchMedia", matchMedia(false));
+  vi.mocked(track).mockClear();
 });
 
 afterEach(() => {
@@ -72,7 +75,22 @@ describe("PopularKeywords", () => {
   it("검색어를 누르면 그 말의 검색 결과로 간다", () => {
     render(<PopularKeywords items={items} />);
 
-    expect(currentRow()).toHaveAttribute("href", `/products?keyword=${encodeURIComponent("나이아신아마이드")}`);
+    expect(currentRow()).toHaveAttribute(
+      "href",
+      `/products?keyword=${encodeURIComponent("나이아신아마이드")}&from=popular_keyword`,
+    );
+  });
+
+  it("접힌 인기 검색어를 누르면 표시 위치와 순위를 남긴다", async () => {
+    render(<PopularKeywords items={items} />);
+
+    await userEvent.click(currentRow()!);
+
+    expect(track).toHaveBeenCalledWith("popular_keyword_used", {
+      keyword: "나이아신아마이드",
+      rank: 1,
+      placement: "ticker",
+    });
   });
 
   it("시간이 지나면 다음 순위로 넘어간다", () => {

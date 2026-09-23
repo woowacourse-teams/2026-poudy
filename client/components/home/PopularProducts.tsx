@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ProductGridCard } from "@/components/product/ProductGridCard";
 import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type PopularProductsProps = {
   /** 서버가 미리 받아 둔 첫 화면. 칩을 바꾸기 전까지 이 값을 그대로 쓴다. */
@@ -29,6 +30,7 @@ const FIRST_ROW_COUNT = 3;
  * 내려 주므로 3열 2행으로 놓는다.
  */
 export function PopularProducts({ initialItems, categories }: PopularProductsProps) {
+  const sectionRef = useHomeSectionView("popular_products", 4);
   const chips = categories.slice(0, CHIP_COUNT);
   /* 고른 카테고리. 아무것도 고르지 않으면 전체다. */
   const [selected, setSelected] = useState<number | null>(null);
@@ -66,7 +68,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section ref={sectionRef} className="flex flex-col gap-4">
       <h2 className="text-[17px] font-bold text-text-primary">지금 사람들이 보고 있어요</h2>
 
       {chips.length > 0 ? (
@@ -118,8 +120,16 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
                 name={product.name}
                 brandName={product.brandName}
                 imageUrl={product.imageUrl}
-                from="home"
+                from={selected === null ? "home_ranking" : "home_category"}
                 loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
+                onClick={() =>
+                  track("home_product_selected", {
+                    product_id: product.id,
+                    position: index + 1,
+                    ranking_scope: selected === null ? "overall" : "category",
+                    ...(selected === null ? {} : { category_id: selected }),
+                  })
+                }
               />
             </li>
           ))}

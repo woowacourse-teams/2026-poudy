@@ -12,6 +12,16 @@ const browserAllowsTracking = (): boolean => {
   return doNotTrack !== "1" && doNotTrack !== "yes";
 };
 
+type FunnelProperties = {
+  readonly discovery_method?: string;
+  readonly origin_surface?: string;
+};
+
+const discoveryParameters = (properties: FunnelProperties): Record<string, string> => ({
+  ...(properties.discovery_method ? { discovery_method: properties.discovery_method } : {}),
+  ...(properties.origin_surface ? { origin_surface: properties.origin_surface } : {}),
+});
+
 const sendSearchSubmitted = (properties: EventMap["search_submitted"]): void => {
   const ingredientCounts =
     properties.mode === "ingredient"
@@ -23,17 +33,8 @@ const sendSearchSubmitted = (properties: EventMap["search_submitted"]): void => 
       : {};
 
   sendGAEvent("event", "search_submitted", {
+    ...discoveryParameters(properties),
     ...ingredientCounts,
-    result_count: properties.result_count,
-    search_mode: properties.mode,
-  });
-};
-
-const sendSearchResultsViewed = (properties: EventMap["search_results_viewed"]): void => {
-  sendGAEvent("event", "search_results_viewed", {
-    exclude_count: properties.exclude_count,
-    exclude_group_count: properties.exclude_group_count,
-    include_count: properties.include_count,
     result_count: properties.result_count,
     search_mode: properties.mode,
   });
@@ -41,6 +42,7 @@ const sendSearchResultsViewed = (properties: EventMap["search_results_viewed"]):
 
 const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
   sendGAEvent("event", "view_item", {
+    ...discoveryParameters(properties),
     entry_point: properties.entry_point,
     items: [
       {
@@ -53,21 +55,17 @@ const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
 
 const sendProductSaved = (properties: EventMap["product_saved"]): void => {
   sendGAEvent("event", "add_to_wishlist", {
+    ...discoveryParameters(properties),
+    ...(properties.entry_point ? { entry_point: properties.entry_point } : {}),
     items: [{ item_id: String(properties.product_id) }],
     save_source: properties.save_source,
   });
 };
 
-/** 유입 퍼널에 필요한 핵심 행동만 GA4에도 전송한다. 검색어 원문은 보내지 않는다. */
-export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: EventMap[T]): void => {
-  if (!enabled() || !browserAllowsTracking()) return;
-
+const sendAcquisitionOutcome = <T extends EventName>(event: T, properties: EventMap[T]): void => {
   switch (event) {
     case "search_submitted":
       sendSearchSubmitted(properties as EventMap["search_submitted"]);
-      break;
-    case "search_results_viewed":
-      sendSearchResultsViewed(properties as EventMap["search_results_viewed"]);
       break;
     case "product_viewed":
       sendProductViewed(properties as EventMap["product_viewed"]);
@@ -76,4 +74,10 @@ export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: 
       sendProductSaved(properties as EventMap["product_saved"]);
       break;
   }
+};
+
+/** 획득 채널의 품질을 평가할 핵심 도달점만 GA4에도 전송한다. 제품 안의 세부 행동은 PostHog에 남긴다. */
+export const trackGoogleAnalytics = <T extends EventName>(event: T, properties: EventMap[T]): void => {
+  if (!enabled() || !browserAllowsTracking()) return;
+  sendAcquisitionOutcome(event, properties);
 };

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { track } from "@/lib/analytics/track";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
@@ -139,8 +140,10 @@ const initialOrder = (count: number): readonly number[] => {
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
  */
 export function CurationCarousel({ items }: CurationCarouselProps) {
+  const sectionRef = useHomeSectionView("curation", 1);
   const trackRef = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
+  const lastSettledItem = useRef(0);
   /* 손을 대고 있는 동안에는 스스로 넘기지 않는다. */
   const held = useRef(false);
   const reduced = useRef(false);
@@ -513,11 +516,14 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const settle = () => {
     clearTimeout(settleTimer.current);
 
-    const track = trackRef.current;
-    if (track && !reduced.current) {
-      const slide = slideAt(track);
-      const selected = track.children[slide];
-      if (selected instanceof HTMLElement && Math.abs(track.scrollLeft - (selected.offsetLeft - SIDE_PADDING)) > 1) {
+    const carouselTrack = trackRef.current;
+    if (carouselTrack && !reduced.current) {
+      const slide = slideAt(carouselTrack);
+      const selected = carouselTrack.children[slide];
+      if (
+        selected instanceof HTMLElement &&
+        Math.abs(carouselTrack.scrollLeft - (selected.offsetLeft - SIDE_PADDING)) > 1
+      ) {
         // 브라우저가 스냅 지점 밖에서 멈췄다면, 재배치 전에 짧게 가운데로 붙인다.
         scrollToSlide(slide, true, DROP_DURATION);
         return;
@@ -526,6 +532,22 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     const wasSelf = selfScrolling.current;
     selfScrolling.current = false;
+
+    const trackElement = trackRef.current;
+    if (trackElement) {
+      const itemIndex = orderRef.current[slideAt(trackElement)] ?? 0;
+      if (itemIndex !== lastSettledItem.current) {
+        const item = items[itemIndex];
+        if (item) {
+          track("curation_slide_viewed", {
+            curation_id: item.id,
+            position: itemIndex + 1,
+            transition: wasSelf ? "autoplay" : "manual",
+          });
+        }
+      }
+      lastSettledItem.current = itemIndex;
+    }
 
     if (loop) recenter();
 
@@ -691,7 +713,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   }
 
   return (
-    <section aria-label="큐레이션">
+    <section ref={sectionRef} aria-label="큐레이션">
       {/*
         카드를 본문 폭의 90% 로 두고 남은 10% 를 좌우로 나눠, 앞뒤 카드가 양쪽에 똑같이 걸친다.
         상대 크기라 화면이 좁아져도 걸치는 비율이 그대로 유지된다.
