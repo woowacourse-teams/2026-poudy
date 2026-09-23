@@ -136,6 +136,7 @@ export default function WebAppShell() {
           setDisplayZoomControls={false}
           setSupportMultipleWindows={false}
           sharedCookiesEnabled
+          showsVerticalScrollIndicator={false}
           source={{ uri: navigation.url }}
           style={styles.webView}
         />

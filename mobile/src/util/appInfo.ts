@@ -32,6 +32,7 @@ export const WEBVIEW_INIT_SCRIPT = appInfo
   ? `
 (() => {
   window.__POUDY_APP__ = ${JSON.stringify(appInfo)};
+  window.__POUDY_WEB_SCROLL_INDICATOR__ = true;
 
   const lockViewport = () => {
     const viewport = document.querySelector('meta[name="viewport"]');

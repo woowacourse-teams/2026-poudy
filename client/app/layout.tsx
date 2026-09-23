@@ -8,6 +8,7 @@ import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { AppInstallBanner } from "@/components/ui/AppInstallBanner";
 import { AppQrPanel } from "@/components/ui/AppQrPanel";
+import { AppScrollIndicator } from "@/components/ui/AppScrollIndicator";
 import { BottomNavigationSlot } from "@/components/ui/BottomNavigationSlot";
 import { IconSprite } from "@/components/ui/icons/sprite";
 import { InquiryButtonSlot } from "@/components/ui/InquiryButtonSlot";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BottomNavigationSlot />
         <InquiryButtonSlot />
         <AppQrPanel />
+        <AppScrollIndicator />
       </body>
 
       <HistoryDepthTracker />

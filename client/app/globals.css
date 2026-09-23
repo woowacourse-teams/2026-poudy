@@ -324,6 +324,58 @@ body {
 }
 
 /*
+ * 앱 WebView 에서 네이티브 대신 그리는 스크롤 막대(`AppScrollIndicator`). 트랙은 상단바와
+ * 하단 내비게이션 사이를 차지하고, thumb 은 그 안에서만 오간다.
+ * 딤(z-40)보다 아래에 두어 시트가 열리면 함께 덮인다.
+ *
+ * thumb 의 위치는 문서 스크롤에 묶인 애니메이션이 옮긴다. 이동 거리(`--app-scroll-travel`)만
+ * JS 가 크기가 바뀔 때 정한다. 스크롤 타임라인이 없으면 JS 가 transform 을 직접 쓴다.
+ */
+.app-scroll-track {
+  position: fixed;
+  right: 2px;
+  z-index: 35;
+  width: 3px;
+  pointer-events: none;
+}
+
+.app-scroll-thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 0.35);
+  transition: opacity 300ms ease-out;
+}
+
+@supports (animation-timeline: scroll()) {
+  .app-scroll-thumb {
+    animation: app-scroll-thumb linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes app-scroll-thumb {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(var(--app-scroll-travel, 0px));
+  }
+}
+
+.app-scroll-thumb[data-visible="false"] {
+  opacity: 0;
+}
+
+.app-scroll-thumb[data-visible="true"] {
+  opacity: 1;
+  transition-duration: 0ms;
+}
+
+/*
  * 본문 윗부분을 축약한 머리. 원래 배치가 머리 아래로 지나가는 순간 그 자리를 이어받는다.
  *
  * 두 배치를 각각 그려 두고 바꿔 끼우면 그 순간이 눈에 띈다. 아래로 지나간 원래 배치가

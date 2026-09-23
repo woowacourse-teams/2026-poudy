@@ -111,6 +111,7 @@ export function BottomNavigation() {
     <div className={`${styles.space} mt-auto shrink-0`}>
       <nav
         aria-label="주요 메뉴"
+        data-bottom-navigation
         className={`${styles.navigation} fixed bottom-0 z-20 border-t border-border bg-background`}
       >
         <ul className={`${styles.list} flex px-2 py-2`}>
