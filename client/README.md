@@ -194,26 +194,25 @@ Do Not Track 값이 `1` 또는 `yes`이면 태그 자체를 불러오지 않습�
 Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수집합니다. 수동 `page_view`를 함께 보내면
 중복되므로 추가하지 않습니다.
 
-`trackGoogleAnalytics`는 유입부터 제품 저장까지의 핵심 퍼널만 GA4에도 전송합니다. 검색어 원문은
-URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. 검색·카테고리·인기 검색어·피부 타입·홈 랭킹 탐색을 시작하면
-세션 저장소에 30분짜리 임의 `discovery_id`를 만들고, 결과·상세·보관 이벤트에 같은 값을 붙입니다.
-이 값은 이름·연락처·계정과 연결하지 않으며 URL에도 넣지 않습니다.
+`trackGoogleAnalytics`는 유입 채널이 가치 있는 방문을 만들었는지 판단할 핵심 도달점만 GA4에도
+전송합니다. 검색어 원문은 URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. 사용자의 제품 내
+행동을 이어 붙이는 고유한 `discovery_id`도 GA4에는 보내지 않습니다.
 
-| Poudy 이벤트            | GA4 이벤트              | 전송 항목                                       |
-| ----------------------- | ----------------------- | ----------------------------------------------- |
-| `home_search_selected`  | `home_search_selected`  | 검색 버튼 위치, 탐색 경로                       |
-| `search_started`        | `search_started`        | 검색 방식, 탐색 경로                            |
-| `category_selected`     | `category_selected`     | 카테고리 ID·이름, 시작 화면, 탐색 경로          |
-| `popular_keyword_used`  | `popular_keyword_used`  | 순위·표시 위치, 탐색 경로. 검색어 원문은 제외   |
-| `skin_type_selected`    | `skin_type_selected`    | 피부 타입, 탐색 경로                            |
-| `search_submitted`      | `search_submitted`      | 검색 방식, 결과 수, 성분 조건 수, 탐색 경로     |
-| `search_results_viewed` | `search_results_viewed` | 검색 방식, 결과 수, 성분 조건 수, 탐색 경로     |
-| `product_list_viewed`   | `product_list_viewed`   | 목록 진입 경로, 결과·조건 수, 탐색 경로         |
-| `home_product_selected` | `select_item`           | 제품 ID·노출 위치·랭킹 범위, 탐색 경로          |
-| `product_viewed`        | `view_item`             | 제품 ID, 카테고리, 진입 경로, 탐색 경로         |
-| `product_saved`         | `add_to_wishlist`       | 제품 ID, 저장한 화면, 상세 진입 경로, 탐색 경로 |
+| 책임                | Poudy 이벤트       | GA4 이벤트         | GA4 전송 항목                                  |
+| ------------------- | ------------------ | ------------------ | ---------------------------------------------- |
+| 유효한 검색 완료    | `search_submitted` | `search_submitted` | 검색 방식, 결과·성분 조건 수, 낮은 범주의 경로 |
+| 제품 상세 도달      | `product_viewed`   | `view_item`        | 제품 ID·카테고리, 진입 경로                    |
+| 제품 보관 가치 행동 | `product_saved`    | `add_to_wishlist`  | 제품 ID, 저장 화면과 상세 진입 경로            |
+| 방문·랜딩·유입 문맥 | 해당 없음          | 자동 `page_view`   | 화면 주소·제목·이전 주소, 획득 채널            |
 
-필터 조작, 정렬, 자동완성 선택, 무한 스크롤, 오류와 세션 녹화는 PostHog에만 남깁니다.
+다음 이벤트는 제품 경험을 진단하기 위한 것이므로 PostHog에만 남깁니다.
+
+- 홈 노출과 선택 — `home_section_viewed`, `home_search_selected`, `popular_keyword_used`,
+  `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`, `home_product_selected`
+- 검색 과정 — `search_started`, `search_used`, `search_results_viewed`, `search_suggestion_selected`
+- 목록과 조건 조작 — `product_list_viewed`, `filter_applied`, `filter_reset`, `sort_applied`,
+  `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`
+- 제품 진단 — `product_unsaved`, `ingredient_viewed`, `ingredient_condition_toggled`, `error_occurred`, 세션 녹화
 
 운영 측정 ID를 배포하기 전에 GA4 관리 화면에서 다음 설정을 확인합니다.
 
@@ -221,12 +220,14 @@ URL 매개변수 삭제를 우회해 GA4에 남지 않도록 제외합니다. �
 - 데이터 수정의 데이터 삭제에서 이메일 주소 삭제를 켭니다.
 - URL 쿼리 매개변수 삭제 목록에 `keyword`, `q`, `query`, `search`를 추가합니다. 제품 검색어와 이전
   사이트의 검색어가 `page_location`과 `page_referrer`에 남지 않는지 미리보기로 확인합니다.
-- Google 신호 데이터 수집과 광고 개인 최적화는 사용하지 않습니다.
+- 연령대·성별·관심사는 코드에서 직접 수집하거나 이벤트 속성으로 보내지 않습니다. 참고용 집계 보고서가
+  필요하면 이용자 동의 절차와 처리방침을 먼저 반영한 뒤 Google Signals를 켭니다. 값은 일부 동의 사용자의
+  집계이며 `unknown`과 데이터 임계치가 생길 수 있으므로 전체 방문자의 정확한 구성으로 해석하지 않습니다.
+- Google Signals를 켜더라도 광고 개인 최적화와 리마케팅에는 사용하지 않습니다.
 - 이벤트 데이터 보관 기간을 14개월 이내로 설정합니다.
 - `add_to_wishlist`를 핵심 이벤트로 지정합니다.
-- `search_mode`, `entry_point`, `save_source`, `discovery_method`, `origin_surface`, `list_source`,
-  `ranking_scope`, `placement`, `skin_type`을 이벤트 범위 맞춤
-  측정기준으로 등록합니다. `discovery_id`는 값 종류가 많으므로 맞춤 측정기준으로 등록하지 않습니다.
+- `search_mode`, `entry_point`, `save_source`, `discovery_method`, `origin_surface`를 이벤트 범위 맞춤
+  측정기준으로 등록합니다. `discovery_id`는 GA4에 전송하지 않습니다.
 - `result_count`를 이벤트 범위 맞춤 측정항목으로 등록합니다.
 - DebugView와 실시간 보고서에서 최초 진입과 클라이언트 라우트 이동마다 `page_view`가 한 번씩만 오는지
   확인하고, 검색·제품 조회·저장 이벤트가 각각 한 번씩 오는지 확인합니다.
