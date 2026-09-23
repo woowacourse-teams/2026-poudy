@@ -8,10 +8,13 @@ import { ProductRows } from "./ProductRows";
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
+import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface } from "@/lib/analytics/events";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
+import { useHideOnScrollDown } from "@/lib/hooks/useHideOnScrollDown";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import type { InitialPage } from "@/lib/hooks/useProductPages";
 
@@ -27,6 +30,12 @@ type ProductListProps = {
   readonly surface?: ListSurface;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
+  /**
+   * 칩 줄을 상단바(`variant="sub"`) 아래에 붙여 둘지. 조건 일치 제품처럼 조건이 곧 화면의
+   * 주제인 곳에서 쓴다. 머리가 다른 것을 붙여 두는 화면(브랜드관 등)에서는 겹치므로 끈다.
+   * 켜면 `탐색 조건` 요약도 위로 올릴 때만 칩 줄 위에 내려온다.
+   */
+  readonly stickyChips?: boolean;
 };
 
 /**
@@ -42,6 +51,7 @@ export function ProductList({
   hiddenChips = [],
   surface = "product_list",
   initialPage,
+  stickyChips = false,
 }: ProductListProps) {
   const { filter: urlFilter } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
@@ -52,6 +62,13 @@ export function ProductList({
   // 화면이 고정한 조건은 제목과 탭이 이미 알려 주므로 요약에서 뺀다(디자인 S09·S11).
   const summaryFilter = { ...filter, ...blankFilter(fixedFilter) };
 
+  const chipBar = (
+    <FilterChipBar
+      chips={chipsOf(filter, excludeCodes).filter((chip) => !hiddenChips.includes(chip.id))}
+      onOpen={(id) => setOpenSheet(id as SheetKind)}
+    />
+  );
+
   return (
     <>
       {/*
@@ -61,17 +78,30 @@ export function ProductList({
 
         띠는 좌우 끝까지 깔려야 하므로 이 자리에서 벗어나지 않는다.
       */}
-      <div className="flex flex-col gap-3 pt-4">
-        <FilterSummary filter={summaryFilter} />
-        <SectionDivider />
-
-        <div className="bg-white px-4">
-          <FilterChipBar
-            chips={chipsOf(filter, excludeCodes).filter((chip) => !hiddenChips.includes(chip.id))}
-            onOpen={(id) => setOpenSheet(id as SheetKind)}
-          />
+      {stickyChips ? (
+        <RevealingSummary>
+          <FilterSummary filter={summaryFilter} />
+          <SectionDivider />
+        </RevealingSummary>
+      ) : (
+        <div className="flex flex-col gap-3 pt-4">
+          <FilterSummary filter={summaryFilter} />
+          <SectionDivider />
         </div>
-      </div>
+      )}
+
+      {/*
+        칩 줄은 붙을 수 있도록 위 묶음 밖에 둔다. sticky 는 부모 안에서만 붙어 있어,
+        묶음 안에 두면 묶음이 지나갈 때 함께 올라간다. 묶음의 간격은 위 여백으로 옮긴다.
+        바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
+      */}
+      {stickyChips ? (
+        <StickyBar stuckAt={44} className="filter-chip-bar sticky z-20 bg-white px-4 pt-3">
+          {chipBar}
+        </StickyBar>
+      ) : (
+        <div className="bg-white px-4 pt-3">{chipBar}</div>
+      )}
 
       <ProductRows
         filter={filter}
@@ -83,6 +113,29 @@ export function ProductList({
         initialPage={initialPage}
       />
     </>
+  );
+}
+
+/**
+ * 위로 올릴 때만 상단바 아래로 내려오는 `탐색 조건` 요약.
+ *
+ * 아래로 내리면 흐름대로 올라가 상단바 뒤에 머물고, 위로 올리면 칩 줄을 밀어내며
+ * 내려온다(`.filter-summary-bar`). 요약은 조건에 따라 높이가 달라, 숨는 거리와 칩 줄이
+ * 붙는 자리를 정하도록 높이를 재어 문서에 알린다.
+ */
+function RevealingSummary({ children }: { readonly children: React.ReactNode }) {
+  const ref = useHeightVariable<HTMLDivElement>("--filter-summary-height");
+  const hidden = useHideOnScrollDown({});
+
+  /* 바텀시트의 딤(z-40)과 상단바(z-30) 아래, 칩 줄(z-20)과 같은 층에 둔다. */
+  return (
+    <div
+      ref={ref}
+      data-hidden={hidden}
+      className="filter-summary-bar sticky z-20 flex flex-col gap-3 bg-background pt-4"
+    >
+      {children}
+    </div>
   );
 }
 

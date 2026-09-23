@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Fragment } from "react";
 
 import { IngredientList } from "./IngredientList";
-import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
 
@@ -13,6 +12,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
@@ -27,7 +27,7 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
 }) {
   return (
-    <ProductDetailHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
+    <SummaryHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
@@ -70,20 +70,20 @@ export function ProductDetail({
           <SaveProductButton productId={product.id} productName={product.name} />
         </section>
 
-        <ProductSummaryEnd />
+        <SummaryEnd />
 
         {/*
           맨 아래의 출처 안내는 문의 버튼이 덮는 자리에 놓인다. 버튼이 가리는 만큼
           아래를 비워 `정보 수정 제안` 이 눌리게 한다.
         */}
-        <div className="flex flex-col gap-6 px-4 pb-[var(--inquiry-button-clearance)]">
+        <div className="flex flex-col gap-6 px-4 pb-(--inquiry-button-clearance)">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
-    </ProductDetailHeader>
+    </SummaryHeader>
   );
 }
 

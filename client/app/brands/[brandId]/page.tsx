@@ -8,7 +8,7 @@ import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
-import { TopBar } from "@/components/ui/TopBar";
+import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
@@ -81,19 +81,42 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
     .join(" · ");
 
   return (
-    <section className="flex items-center gap-3 px-4">
-      <JsonLd
-        data={breadcrumbList([
-          { name: "브랜드", path: "/brands" },
-          { name: brand.name, path: `/brands/${brand.id}` },
-        ])}
-      />
-      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
-        <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
-      </div>
-    </section>
+    <>
+      <section className="flex items-center gap-3 px-4">
+        <JsonLd
+          data={breadcrumbList([
+            { name: "브랜드", path: "/brands" },
+            { name: brand.name, path: `/brands/${brand.id}` },
+          ])}
+        />
+        <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
+          <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
+        </div>
+      </section>
+
+      {/* 소개의 아래 끝. 여기가 머리 아래로 지나가면 축약형이 나타난다. */}
+      <SummaryEnd />
+    </>
+  );
+}
+
+/**
+ * 브랜드 소개가 머리 아래로 지나간 뒤 그 자리를 대신하는 축약형.
+ * 바의 `브랜드관` 만 남으면 어느 브랜드의 목록을 보고 있는지 알 수 없다.
+ *
+ * 로고는 원래 배치와 같은 크기로 받는다. 줄여 받으면 같은 그림을 한 번 더 내려받는다.
+ */
+async function BrandCompact({ params }: { readonly params: PageProps<"/brands/[brandId]">["params"] }) {
+  const { brandId } = await params;
+  const brand = await load(brandId);
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-2">
+      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
+      <p className="truncate text-body font-bold text-text-primary">{brand.name}</p>
+    </div>
   );
 }
 
@@ -146,10 +169,15 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
   if (!stream && Number.isInteger(id)) await requireProductPage({ ...filter, brandIds: [id] });
 
   return (
-    <>
-      {/* 이 화면의 대표 제목은 본문의 브랜드명이다. 바의 `브랜드관` 은 모양만 그대로 둔다. */}
-      <TopBar title="브랜드관" variant="sub" titleAs="p" />
-
+    /* 이 화면의 대표 제목은 본문의 브랜드명이다. 바의 `브랜드관` 은 모양만 그대로 둔다. */
+    <SummaryHeader
+      title="브랜드관"
+      summary={
+        <StreamBoundary stream={stream} fallback={null}>
+          <BrandCompact params={props.params} />
+        </StreamBoundary>
+      }
+    >
       <StreamBoundary stream={stream} fallback={<BrandSummarySkeleton />}>
         <BrandSummary params={props.params} />
       </StreamBoundary>
@@ -158,6 +186,6 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
       <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
-    </>
+    </SummaryHeader>
   );
 }

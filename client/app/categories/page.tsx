@@ -19,10 +19,10 @@ export default async function CategoriesPage() {
 
   return (
     <>
-      <TopBar title="카테고리" variant="root" />
-      {/* 디자인의 본문 여백. 탭과 디렉터리를 함께 감싼다. */}
-      <div className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-4">
-        <DirectoryTabs current="category" />
+      <TopBar title="카테고리" variant="root" edge={false} />
+      {/* 탭은 상단바와 함께 붙도록 본문 묶음 밖에 두고, 본문 윗여백과 사이 간격은 탭 줄이 들고 있다. */}
+      <DirectoryTabs current="category" />
+      <div className="flex flex-1 flex-col px-4 pb-4">
         <CategoryDirectory categories={categories.items} />
       </div>
     </>
