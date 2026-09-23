@@ -182,6 +182,55 @@ describe("CurationCarousel", () => {
     expect(track.scrollLeft).toBe(100);
   });
 
+  it("스냅 지점에서 벗어나 멈추면 가운데로 정렬한 뒤 재배치한다", () => {
+    vi.useFakeTimers();
+    const raf = vi
+      .spyOn(globalThis, "requestAnimationFrame")
+      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
+    const caf = vi
+      .spyOn(globalThis, "cancelAnimationFrame")
+      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
+    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+    const previousScrollEnd = Object.getOwnPropertyDescriptor(window, "onscrollend");
+    Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const track = container.querySelector(".curation-track");
+      if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+      const step = 400;
+      for (const [slot, child] of [...track.children].entries()) {
+        Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
+        Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
+      }
+      Object.defineProperty(track, "clientWidth", { value: step, configurable: true });
+
+      // 세 번째 칸이 중심에 가장 가깝지만 스냅 지점보다 120px 앞에서 멈춘 상황이다.
+      track.scrollLeft = 3 * step - 32 - 120;
+      fireEvent.scroll(track);
+      vi.advanceTimersByTime(1750);
+
+      // 종료 시점에 즉시 순간이동하지 않고, 먼저 남은 거리를 움직인다.
+      expect(track.scrollLeft).toBe(3 * step - 32 - 120);
+      vi.advanceTimersByTime(DROP_MS / 2);
+      expect(track.scrollLeft).toBeGreaterThan(3 * step - 32 - 120);
+      vi.advanceTimersByTime(DROP_MS / 2);
+
+      // 가운데에 도착한 뒤에만 순서를 바꾼다.
+      expect(track.scrollLeft).toBe(2 * step - 32);
+      expect(track.children[2]).toHaveTextContent("순한 클렌징");
+      expect(track).toHaveClass("snap-mandatory");
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      now.mockRestore();
+      if (previousScrollEnd) Object.defineProperty(window, "onscrollend", previousScrollEnd);
+      else Reflect.deleteProperty(window, "onscrollend");
+      vi.useRealTimers();
+    }
+  });
+
   /*
    * 끄는 도중에는 카드 순서를 되돌리지 않는다.
    *

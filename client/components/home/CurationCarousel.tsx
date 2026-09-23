@@ -513,6 +513,17 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const settle = () => {
     clearTimeout(settleTimer.current);
 
+    const track = trackRef.current;
+    if (track && !reduced.current) {
+      const slide = slideAt(track);
+      const selected = track.children[slide];
+      if (selected instanceof HTMLElement && Math.abs(track.scrollLeft - (selected.offsetLeft - SIDE_PADDING)) > 1) {
+        // 브라우저가 스냅 지점 밖에서 멈췄다면, 재배치 전에 짧게 가운데로 붙인다.
+        scrollToSlide(slide, true, DROP_DURATION);
+        return;
+      }
+    }
+
     const wasSelf = selfScrolling.current;
     selfScrolling.current = false;
 
@@ -706,12 +717,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
-          /*
-            스냅은 `mandatory` 가 아니라 `proximity` 로 둔다. `mandatory` 는 프레임마다
-            옮겨 놓은 자리를 곧바로 제 자리로 끌어당겨, 직접 그리는 움직임을 무효로 만든다.
-            `proximity` 는 손가락으로 훑다 놓았을 때만 가까운 칸에 붙여 준다.
-          */
-          className="curation-track scrollbar-none flex snap-x snap-proximity items-center gap-2 overflow-x-auto px-8"
+          /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
+          className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-8"
         >
           {slides.map(({ curation, itemIndex }, slideIndex) => {
             return (
