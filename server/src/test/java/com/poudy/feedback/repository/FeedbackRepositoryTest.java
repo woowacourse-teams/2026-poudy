@@ -11,15 +11,17 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackSubjectType;
 import com.poudy.feedback.domain.FeedbackType;
-import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.PendingImage;
+import com.poudy.product.repository.ProductRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
@@ -53,12 +55,6 @@ class FeedbackRepositoryTest {
     private static final OffsetDateTime RECEIVED_AT = OffsetDateTime.now(CLOCK);
 
     @Autowired
-    private FeedbackJpaRepository feedbackJpaRepository;
-
-    @Autowired
-    private ProductCorrectionRequestJpaRepository correctionJpaRepository;
-
-    @Autowired
     private EntityManager entityManager;
 
     @Autowired
@@ -67,6 +63,9 @@ class FeedbackRepositoryTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     private final S3FeedbackImageRepository imageRepository = mock(S3FeedbackImageRepository.class);
 
     private FeedbackRepository repository;
@@ -74,11 +73,10 @@ class FeedbackRepositoryTest {
     @BeforeEach
     void setUp() {
         repository = new FeedbackRepository(
-            feedbackJpaRepository,
-            correctionJpaRepository,
             imageRepository,
             entityManager,
             transactionManager,
+            productRepository,
             CLOCK
         );
     }
@@ -96,6 +94,19 @@ class FeedbackRepositoryTest {
     }
 
     @Test
+    @DisplayName("UTC 시계로 접수한 의견도 같은 순간의 한국 시각으로 읽는다")
+    void readsUtcReceivedAtAsSameInstant() {
+        OffsetDateTime receivedAt = OffsetDateTime.parse("2026-09-10T01:02:03Z");
+        Feedback feedback = serviceFeedback(FeedbackType.BUG_REPORT, "/products/1", receivedAt);
+
+        repository.save(feedback);
+        clear();
+
+        assertThat(repository.findById(feedback.id()).receivedAt())
+            .isEqualTo(OffsetDateTime.parse("2026-09-10T10:02:03+09:00"));
+    }
+
+    @Test
     @DisplayName("화면 경로가 없는 의견을 저장한다")
     void storesUnknownPath() {
         Feedback feedback = serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT);
@@ -109,9 +120,10 @@ class FeedbackRepositoryTest {
     @Test
     @DisplayName("제품 정보 정정 요청은 대상 제품과 함께 따로 저장한다")
     void roundTripsProductCorrection() {
-        Feedback correction = new Feedback(
+        Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("표시된 용량이 실제 제품과 달라요"),
             RECEIVED_AT
         );
@@ -120,8 +132,8 @@ class FeedbackRepositoryTest {
         clear();
 
         assertThat(repository.findById(correction.id())).isEqualTo(correction);
-        assertThat(correctionJpaRepository.existsById(correction.id())).isTrue();
-        assertThat(feedbackJpaRepository.existsById(correction.id())).isFalse();
+        assertThat(rowCount("product_correction_request", correction.id())).isOne();
+        assertThat(rowCount("feedback", correction.id())).isZero();
     }
 
     @Test
@@ -147,9 +159,10 @@ class FeedbackRepositoryTest {
         FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
         givenPending(image);
         repository.save(serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT), List.of(image.id()));
-        Feedback correction = new Feedback(
+        Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("전성분 정보를 정정해 주세요"),
             RECEIVED_AT
         );
@@ -162,9 +175,10 @@ class FeedbackRepositoryTest {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @DisplayName("의견 행 저장이 확정 실패하면 인프라 오류로 알린다")
     void reportsDefiniteFailure() {
-        Feedback correction = new Feedback(
+        Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(999_999L, "없는 제품"),
+            999_999L,
+            "없는 제품",
             new FeedbackContent("전성분 정보를 정정해 주세요"),
             RECEIVED_AT
         );
@@ -181,7 +195,7 @@ class FeedbackRepositoryTest {
         given(imageRepository.resolve(any(), any())).willAnswer(
             invocation -> ((List<UUID>) invocation.getArgument(0)).stream()
                 .map(
-                    id -> new S3FeedbackImageRepository.PendingImage(
+                    id -> new PendingImage(
                         new FeedbackImage(id, FeedbackImageFormat.PNG),
                         "etag",
                         Instant.now()
@@ -208,9 +222,10 @@ class FeedbackRepositoryTest {
 
     private int successesOfConcurrentPair(ExecutorService executor, UUID imageId, List<UUID> savedIds) {
         Feedback service = serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT);
-        Feedback correction = new Feedback(
+        Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("전성분 정보를 정정해 주세요"),
             RECEIVED_AT
         );
@@ -243,9 +258,20 @@ class FeedbackRepositoryTest {
     private void givenPending(FeedbackImage... images) {
         given(imageRepository.resolve(any(), any())).willReturn(
             java.util.Arrays.stream(images)
-                .map(image -> new S3FeedbackImageRepository.PendingImage(image, "etag", Instant.now()))
+                .map(image -> new PendingImage(image, "etag", Instant.now()))
                 .toList()
         );
+        given(imageRepository.findStored(any(), any())).willAnswer(invocation -> {
+            List<UUID> imageIds = invocation.getArgument(1);
+            return imageIds.stream()
+                .map(
+                    id -> java.util.Arrays.stream(images)
+                        .filter(image -> image.id().equals(id))
+                        .findFirst()
+                        .orElseThrow()
+                )
+                .toList();
+        });
     }
 
     @Test
@@ -284,9 +310,10 @@ class FeedbackRepositoryTest {
     @DisplayName("목록은 두 종류를 합쳐 최근 접수부터 돌려주고 상태와 유형으로 거른다")
     void listsBothKindsNewestFirst() {
         Feedback older = serviceFeedback(FeedbackType.BUG_REPORT, null, RECEIVED_AT);
-        Feedback newer = new Feedback(
+        Feedback newer = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("전성분 순서가 실제와 달라요"),
             RECEIVED_AT.plusHours(1)
         );
@@ -314,9 +341,10 @@ class FeedbackRepositoryTest {
             serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT.minusDays(100)),
             List.of(image.id())
         );
-        Feedback correction = new Feedback(
+        Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("전성분 정보를 정확하게 정정해 주세요"),
             RECEIVED_AT.minusDays(90)
         );
@@ -372,12 +400,17 @@ class FeedbackRepositoryTest {
     }
 
     private static Feedback serviceFeedback(FeedbackType type, String path, OffsetDateTime receivedAt) {
-        return new Feedback(
+        return new ServiceFeedback(
             UUID.randomUUID(),
-            new ServiceFeedback(type, FeedbackPath.from(path)),
+            type,
+            FeedbackPath.from(path),
             new FeedbackContent("검색 결과가 제대로 나오지 않아요"),
             receivedAt
         );
+    }
+
+    private int rowCount(String table, UUID id) {
+        return jdbcTemplate.queryForObject("select count(*) from " + table + " where id = ?", Integer.class, id);
     }
 
     private void clear() {

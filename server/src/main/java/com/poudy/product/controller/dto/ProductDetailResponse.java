@@ -1,7 +1,6 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
-import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,7 +24,7 @@ public record ProductDetailResponse(
     @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel,
     @NotNull @Schema(description = "연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)") List<SkinEffectGroupResponse> skinEffectGroups,
     @NotNull @Schema(description = "표시 순서대로 정렬된 전체 성분") List<ProductIngredientResponse> ingredients,
-    @NotNull @Schema(description = "이 제품이 포함하지 않는 성분군 (프리 뱃지)") List<ExcludeCode> freeOfCodes,
+    @NotNull @Schema(description = "제외 성분군별 포함 여부") List<ExcludeGroupResponse> excludeGroups,
     @NotNull @Schema(description = "제품 정보를 마지막으로 갱신한 시각", example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 
     public static ProductDetailResponse from(ProductDetail detail) {
@@ -42,7 +41,7 @@ public record ProductDetailResponse(
             product.oilLevel(),
             SkinEffectGroupResponse.from(product.skinEffectGroups()),
             ProductIngredientResponse.from(product.ingredients().values()),
-            detail.freeOfCodes(),
+            ExcludeGroupResponse.from(detail.freeOfCodes()),
             product.updatedAt()
         );
     }

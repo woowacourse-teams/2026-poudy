@@ -1,27 +1,65 @@
 package com.poudy.curation.domain;
 
 import com.poudy.product.domain.Products;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@Entity
+@DiscriminatorValue("PRODUCTS_BY_FILTER")
 final class CurationProductsByFilterBlock extends CurationBlock {
-    private final List<CurationFilter> filters;
-    private final List<CurationProductMapping> products;
+
+    @ElementCollection
+    @CollectionTable(name = "curation_block_filter", joinColumns = @JoinColumn(name = "block_id"))
+    @OrderColumn(name = "position")
+    private List<CurationFilter> filterRows;
+
+    @OneToMany
+    @JoinColumn(name = "block_id", insertable = false, updatable = false)
+    @OrderBy("position")
+    private List<CurationProductMapping> productRows;
+
+    @Transient
+    private List<CurationFilter> filters;
+
+    @Transient
+    private List<CurationProductMapping> products;
+
+    protected CurationProductsByFilterBlock() {
+    }
 
     CurationProductsByFilterBlock(
         UUID id,
-        Status status,
         int spacingTop,
         int spacingBottom,
         List<CurationFilter> filters,
         List<CurationProductMapping> products
     ) {
-        super(id, status, spacingTop, spacingBottom);
+        super(id, spacingTop, spacingBottom);
         this.filters = List.copyOf(filters);
         this.products = List.copyOf(products);
+        this.filterRows = this.filters;
+        this.productRows = this.products;
+        validateMappings();
+    }
+
+    @PostLoad
+    private void load() {
+        validateBlock();
+        this.filters = List.copyOf(filterRows);
+        this.products = List.copyOf(productRows);
         validateMappings();
     }
 
@@ -46,14 +84,11 @@ final class CurationProductsByFilterBlock extends CurationBlock {
 
     @Override
     List<Long> productIds() {
-        return isVisible() ? products.stream().map(CurationProductMapping::productId).toList() : List.of();
+        return products.stream().map(CurationProductMapping::productId).toList();
     }
 
     @Override
-    Optional<CurationBlockContent> visibleContent(Products catalog) {
-        if (!isVisible()) {
-            return Optional.empty();
-        }
+    Optional<CurationBlockContent> resolveContent(Products catalog) {
         List<CurationBlockContent.FilteredProduct> available = products.stream()
             .flatMap(
                 mapping -> catalog.findById(mapping.productId())

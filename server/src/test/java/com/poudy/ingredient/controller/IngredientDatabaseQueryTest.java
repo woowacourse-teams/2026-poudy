@@ -88,10 +88,20 @@ class IngredientDatabaseQueryTest {
     void readsCurrentDetail() throws Exception {
         addProductIngredients();
         jdbc.update("update ingredient set description = '수정된 설명' where id = 90002");
-        jdbc.update("insert into ingredient_source values (90002, 1, '두 번째'), (90002, 0, '첫 번째')");
-        jdbc.update("insert into ingredient_tag values (90002, 47, 0)");
-        jdbc.update("insert into ingredient_tag_evidence values (90002, 47, 1, '근거 둘'), (90002, 47, 0, '근거 하나')");
-        jdbc.update("insert into exclude_code_ingredient values ('FRAGRANCE_ALLERGENS', 90002, 90002)");
+        jdbc.update("""
+            insert into ingredient_source (ingredient_id, type, content) values
+            (90002, 'INFO', '첫 번째'), (90002, 'INFO', '두 번째'),
+            (90002, 'EFFECT', '근거 하나'), (90002, 'EFFECT', '근거 둘')
+            """);
+        jdbc.update("""
+            insert into ingredient_tag (ingredient_id, tag_code, display_order)
+            values (90002, 'ANTIOXIDANT_RELATED', 0)
+            """);
+        jdbc.update("""
+            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            select 'FRAGRANCE_ALLERGENS', 90002, coalesce(max(display_order), -1) + 1
+            from exclude_code_ingredient where exclude_code = 'FRAGRANCE_ALLERGENS'
+            """);
 
         mockMvc.perform(get("/api/ingredients/90002"))
             .andExpect(status().isOk())
@@ -100,7 +110,7 @@ class IngredientDatabaseQueryTest {
             .andExpect(jsonPath("$.groupCodes[0]").value("FRAGRANCE_ALLERGENS"))
             .andExpect(jsonPath("$.infoSources[0]").value("첫 번째"))
             .andExpect(jsonPath("$.infoSources[1]").value("두 번째"))
-            .andExpect(jsonPath("$.skinEffects[0].id").value(47))
+            .andExpect(jsonPath("$.skinEffects[0].id").value("ANTIOXIDANT_RELATED"))
             .andExpect(jsonPath("$.effectSources[0]").value("근거 하나"))
             .andExpect(jsonPath("$.effectSources[1]").value("근거 둘"));
     }
@@ -111,8 +121,17 @@ class IngredientDatabaseQueryTest {
                 + " values (90001, 0, '첫 구성품'), (90001, 1, '둘째 구성품'), (90002, 0, null)"
         );
         jdbc.update("""
-            insert into product_ingredient (product_id, component_order, display_order, ingredient_id)
-            values (90001, 0, 0, 90002), (90001, 1, 0, 90002), (90002, 0, 0, 90002), (90002, 0, 1, 90001)
+            insert into product_ingredient (component_id, display_order, ingredient_id)
+            select pc.id, mapping.ingredient_order, mapping.ingredient_id
+            from (values
+                (90001::bigint, 0, 0, 90002::bigint),
+                (90001::bigint, 1, 0, 90002::bigint),
+                (90002::bigint, 0, 0, 90002::bigint),
+                (90002::bigint, 0, 1, 90001::bigint)
+            ) mapping(product_id, component_order, ingredient_order, ingredient_id)
+            join product_component pc
+              on pc.product_id = mapping.product_id
+             and pc.display_order = mapping.component_order
             """);
     }
 }

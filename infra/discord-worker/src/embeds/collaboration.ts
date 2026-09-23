@@ -30,6 +30,8 @@ const pullRequestStateByAction: Readonly<Record<string, EmbedState>> = {
 };
 
 const mergedState: EmbedState = ["🎉 Pull Request 머지 완료", embedColors.purple];
+// 머지하지 않고 닫은 PR. red 는 배포·CI 실패에만 쓰므로, 닫힌 이슈와 같은 gray 를 쓴다.
+const closedState: EmbedState = ["🚫 Pull Request 닫힘", embedColors.gray];
 
 const markByConclusion: Readonly<Record<string, string>> = {
   success: "✅",
@@ -54,13 +56,31 @@ function checkField(outcomes: readonly WorkflowOutcome[]): DiscordField | undefi
   return { name: "CI", value: truncateText(lines.join("\n"), 1024), inline: false };
 }
 
+// 머지하지 않은 닫힘은 새 소식이 아니라 먼저 보낸 알림이 틀렸다는 뜻이다. 부르는 쪽은
+// 이 값을 보고 새 메시지를 보내는 대신 기존 메시지를 고친다.
+// 초안은 열릴 때 알리지 않으므로 닫힐 때도 알리지 않는다.
+export function isUnmergedClose(payload: PullRequestPayload): boolean {
+  return payload.action === "closed" && !payload.pull_request.merged && !payload.pull_request.draft;
+}
+
+function closingState(payload: PullRequestPayload): EmbedState | undefined {
+  if (payload.action !== "closed") {
+    return undefined;
+  }
+
+  if (payload.pull_request.merged) {
+    return mergedState;
+  }
+
+  return isUnmergedClose(payload) ? closedState : undefined;
+}
+
 export function pullRequestEmbed(
   payload: PullRequestPayload,
   outcomes: readonly WorkflowOutcome[] = [],
 ): DiscordEmbed | undefined {
   const pullRequest = payload.pull_request;
-  const state =
-    payload.action === "closed" && pullRequest.merged ? mergedState : pullRequestStateByAction[payload.action];
+  const state = closingState(payload) ?? pullRequestStateByAction[payload.action];
 
   if (!state || (payload.action === "opened" && pullRequest.draft)) {
     return undefined;

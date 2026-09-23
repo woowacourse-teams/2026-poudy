@@ -1,6 +1,6 @@
 package com.poudy.searchkeyword.service;
 
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import java.time.Instant;
 import java.util.List;

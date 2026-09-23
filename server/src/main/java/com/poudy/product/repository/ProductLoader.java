@@ -17,7 +17,8 @@ import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.skintype.domain.SkinType;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 class ProductLoader {
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+
     private final NamedParameterJdbcTemplate jdbc;
     private final IngredientRepository ingredientRepository;
 
@@ -58,8 +61,11 @@ class ProductLoader {
         )
             .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
         Map<Long, List<Long>> ingredientIds = jdbc.query("""
-            select product_id, ingredient_id from product_ingredient where product_id = any(:ids)
-            order by product_id, component_order, display_order
+            select component.product_id, ingredient.ingredient_id
+            from product_component component
+            join product_ingredient ingredient on ingredient.component_id = component.id
+            where component.product_id = any(:ids)
+            order by component.product_id, component.display_order, ingredient.display_order
             """, parameters, (rs, row) -> Map.entry(rs.getLong("product_id"), rs.getLong("ingredient_id")))
             .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
         IngredientCatalog ingredients = ingredientRepository.findByIds(
@@ -69,7 +75,7 @@ class ProductLoader {
         Map<Long, Set<SkinType>> skinTypes = jdbc.query(
             "select * from product_skin_type where product_id = any(:ids)",
             parameters,
-            (rs, row) -> Map.entry(rs.getLong("product_id"), SkinType.valueOf(rs.getString("skin_type")))
+            (rs, row) -> Map.entry(rs.getLong("product_id"), SkinType.valueOf(rs.getString("skin_type_code")))
         )
             .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toSet())));
         Map<Long, Product> loaded = jdbc.query("""
@@ -100,7 +106,7 @@ class ProductLoader {
                     new MoistureLevel(rs.getInt("moisture_level")),
                     new OilLevel(rs.getInt("oil_level"))
                 ),
-                rs.getObject("updated_at", OffsetDateTime.class),
+                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime(),
                 skinTypes.getOrDefault(id, Set.of())
             );
         }).stream().collect(toMap(Product::id, p -> p));

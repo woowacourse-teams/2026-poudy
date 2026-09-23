@@ -1,46 +1,66 @@
 package com.poudy.feedback.repository;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
-import com.poudy.feedback.domain.InvalidFeedbackImageIdException;
-import com.poudy.feedback.domain.ProcessedImage;
-import com.poudy.feedback.repository.S3FeedbackObjectStore.FailureKind;
-import com.poudy.feedback.repository.S3FeedbackObjectStore.ObjectStoreException;
-import com.poudy.feedback.repository.S3FeedbackObjectStore.StoredObject;
-import java.time.Duration;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.feedback.domain.image.PendingImage;
+import com.poudy.feedback.domain.image.ProcessedImage;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 
 @Repository
 public class S3FeedbackImageRepository {
 
-    static final Duration PENDING_TTL = Duration.ofHours(24);
-    static final Duration CLEANUP_GRACE_PERIOD = Duration.ofMinutes(10);
-
     private static final String PENDING_PREFIX = "poudy/feedback/pending/";
     private static final String FEEDBACK_PREFIX = "poudy/feedback/";
 
-    private final S3FeedbackObjectStore objectStore;
+    private final S3Client s3Client;
+    private final String bucket;
 
-    public S3FeedbackImageRepository(S3FeedbackObjectStore objectStore) {
-        this.objectStore = objectStore;
+    public S3FeedbackImageRepository(
+        @Qualifier("feedbackImageS3Client") S3Client s3Client,
+        @Value("${poudy.feedback.image-s3.bucket:}") String bucket
+    ) {
+        this.s3Client = s3Client;
+        this.bucket = bucket;
     }
 
     public FeedbackImage savePending(ProcessedImage processed) {
         FeedbackImage image = FeedbackImage.create(processed.format());
         try {
-            objectStore.putIfAbsent(
-                pendingKey(image),
-                image.format().contentType(),
-                processed.bytes()
-            );
+            PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(pendingKey(image))
+                .contentType(image.format().contentType())
+                .serverSideEncryption(ServerSideEncryption.AES256)
+                .ifNoneMatch("*")
+                .build();
+            s3Client.putObject(request, RequestBody.fromBytes(processed.bytes()));
             return image;
-        } catch (ObjectStoreException exception) {
+        } catch (SdkException exception) {
             throw infrastructure();
         }
     }
@@ -59,23 +79,44 @@ public class S3FeedbackImageRepository {
             .toList();
     }
 
+    public List<FeedbackImage> findStored(UUID feedbackId, List<UUID> imageIds) {
+        return imageIds.stream().map(imageId -> findStored(feedbackId, imageId)).toList();
+    }
+
+    private FeedbackImage findStored(UUID feedbackId, UUID imageId) {
+        List<FeedbackImage> found = Stream.of(FeedbackImageFormat.JPEG, FeedbackImageFormat.PNG)
+            .map(format -> new FeedbackImage(imageId, format))
+            .filter(image -> existsExactly(finalKey(feedbackId, image)))
+            .toList();
+        if (found.size() != 1) {
+            throw new InfrastructureException("의견 이미지 형식을 확인하지 못했습니다.");
+        }
+        return found.getFirst();
+    }
+
     public boolean transfer(UUID feedbackId, FeedbackImage image) {
         Optional<PendingImage> pending = head(image);
         if (pending.isEmpty()) {
             return existsExactly(finalKey(feedbackId, image));
         }
         try {
-            objectStore.copy(
-                pendingKey(image),
-                pending.get().eTag(),
-                finalKey(feedbackId, image),
-                image.format().contentType()
+            s3Client.copyObject(
+                CopyObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(finalKey(feedbackId, image))
+                    .copySource(encode(bucket + "/" + pendingKey(image)))
+                    .copySourceIfMatch(pending.get().eTag())
+                    .contentType(image.format().contentType())
+                    .serverSideEncryption(ServerSideEncryption.AES256)
+                    .build()
             );
-        } catch (ObjectStoreException exception) {
-            if (exception.kind() != FailureKind.NOT_FOUND && exception.kind() != FailureKind.PRECONDITION_FAILED) {
+        } catch (S3Exception exception) {
+            if (exception.statusCode() != 404 && exception.statusCode() != 412) {
                 throw infrastructure();
             }
             return existsExactly(finalKey(feedbackId, image));
+        } catch (SdkException exception) {
+            throw infrastructure();
         }
         deleteRequired(pendingKey(image));
         return true;
@@ -87,8 +128,6 @@ public class S3FeedbackImageRepository {
 
     public void deleteRetainedData(UUID feedbackId, List<FeedbackImage> images) {
         images.forEach(image -> deleteRequired(finalKey(feedbackId, image)));
-        deleteRequired(FEEDBACK_PREFIX + feedbackId + "/feedback.json");
-        deleteRequired(FEEDBACK_PREFIX + feedbackId + "/management.json");
     }
 
     private PendingImage resolve(UUID imageId, Instant now) {
@@ -103,14 +142,24 @@ public class S3FeedbackImageRepository {
 
     private Optional<PendingImage> head(FeedbackImage image) {
         try {
-            return objectStore.head(pendingKey(image))
-                .map(metadata -> new PendingImage(image, metadata.eTag(), metadata.lastModified()));
-        } catch (ObjectStoreException exception) {
+            HeadObjectResponse response = s3Client.headObject(
+                HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(pendingKey(image))
+                    .build()
+            );
+            return Optional.of(new PendingImage(image, response.eTag(), response.lastModified()));
+        } catch (S3Exception exception) {
+            if (exception.statusCode() == 404) {
+                return Optional.empty();
+            }
+            throw infrastructure();
+        } catch (SdkException exception) {
             throw infrastructure();
         }
     }
 
-    private static Optional<PendingImage> pendingImageOf(StoredObject object) {
+    private static Optional<PendingImage> pendingImageOf(S3Object object) {
         String fileName = object.key().substring(PENDING_PREFIX.length());
         int extensionStart = fileName.lastIndexOf('.');
         if (extensionStart <= 0 || extensionStart == fileName.length() - 1) {
@@ -129,34 +178,58 @@ public class S3FeedbackImageRepository {
 
     private boolean existsExactly(String key) {
         try {
-            return objectStore.existsExactly(key);
-        } catch (ObjectStoreException exception) {
+            ListObjectsV2Response response = s3Client.listObjectsV2(
+                ListObjectsV2Request.builder()
+                    .bucket(bucket)
+                    .prefix(key)
+                    .maxKeys(1)
+                    .build()
+            );
+            return response.contents().stream().anyMatch(object -> key.equals(object.key()));
+        } catch (SdkException exception) {
             throw infrastructure();
         }
     }
 
-    private List<StoredObject> listAll(String prefix) {
+    private List<S3Object> listAll(String prefix) {
+        List<S3Object> objects = new ArrayList<>();
+        String continuationToken = null;
         try {
-            return objectStore.listAll(prefix);
-        } catch (ObjectStoreException exception) {
+            do {
+                ListObjectsV2Response response = s3Client.listObjectsV2(
+                    ListObjectsV2Request.builder()
+                        .bucket(bucket)
+                        .prefix(prefix)
+                        .continuationToken(continuationToken)
+                        .build()
+                );
+                objects.addAll(response.contents());
+                continuationToken = response.nextContinuationToken();
+            } while (continuationToken != null);
+            return List.copyOf(objects);
+        } catch (SdkException exception) {
             throw infrastructure();
         }
     }
 
     private void deleteQuietly(String key) {
         try {
-            objectStore.delete(key);
-        } catch (ObjectStoreException exception) {
+            delete(key);
+        } catch (SdkException exception) {
             return;
         }
     }
 
     private void deleteRequired(String key) {
         try {
-            objectStore.delete(key);
-        } catch (ObjectStoreException exception) {
+            delete(key);
+        } catch (SdkException exception) {
             throw infrastructure();
         }
+    }
+
+    private void delete(String key) {
+        s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
     private static String pendingKey(FeedbackImage image) {
@@ -167,18 +240,13 @@ public class S3FeedbackImageRepository {
         return FEEDBACK_PREFIX + feedbackId + "/images/" + image.id() + "." + image.format().extension();
     }
 
-    private static InfrastructureException infrastructure() {
-        return new InfrastructureException("의견 이미지 저장소를 처리하지 못했습니다.");
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8)
+            .replace("+", "%20")
+            .replace("%2F", "/");
     }
 
-    public record PendingImage(FeedbackImage image, String eTag, Instant lastModified) {
-
-        public boolean isExpired(Instant now) {
-            return !now.isBefore(lastModified.plus(PENDING_TTL));
-        }
-
-        public boolean canBeCleanedUp(Instant now) {
-            return !now.isBefore(lastModified.plus(PENDING_TTL).plus(CLEANUP_GRACE_PERIOD));
-        }
+    private static InfrastructureException infrastructure() {
+        return new InfrastructureException("의견 이미지 저장소를 처리하지 못했습니다.");
     }
 }

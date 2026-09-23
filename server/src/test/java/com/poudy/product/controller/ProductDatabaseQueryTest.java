@@ -138,7 +138,11 @@ class ProductDatabaseQueryTest {
     @DisplayName("DB에서 변경한 제외 성분군 매핑을 필터와 충돌 검사에 함께 반영한다")
     void readsCurrentExcludeGroup() throws Exception {
         addIngredients();
-        jdbc.update("insert into exclude_code_ingredient values ('SULFATES', 90002, 999)");
+        jdbc.update("""
+            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            select 'SULFATES', 90002, coalesce(max(display_order), -1) + 1
+            from exclude_code_ingredient where exclude_code = 'SULFATES'
+            """);
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("excludeCodes", "SULFATES"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(4));
         for (String path : List.of("/api/products", "/api/products/count")) {
@@ -160,10 +164,21 @@ class ProductDatabaseQueryTest {
     }
 
     private void addIngredients() {
-        jdbc.update("insert into product_component values (90001, 0, '첫 구성품'), (90001, 1, '둘째 구성품')");
         jdbc.update("""
-            insert into product_ingredient (product_id, component_order, display_order, ingredient_id) values
-            (90001, 0, 0, 90002), (90001, 0, 1, 90001), (90001, 1, 0, 90002)
+            insert into product_component (product_id, display_order, name)
+            values (90001, 0, '첫 구성품'), (90001, 1, '둘째 구성품')
+            """);
+        jdbc.update("""
+            insert into product_ingredient (component_id, display_order, ingredient_id)
+            select pc.id, mapping.ingredient_order, mapping.ingredient_id
+            from (values
+                (90001::bigint, 0, 0, 90002::bigint),
+                (90001::bigint, 0, 1, 90001::bigint),
+                (90001::bigint, 1, 0, 90002::bigint)
+            ) mapping(product_id, component_order, ingredient_order, ingredient_id)
+            join product_component pc
+              on pc.product_id = mapping.product_id
+             and pc.display_order = mapping.component_order
             """);
     }
 }

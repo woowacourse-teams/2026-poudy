@@ -122,7 +122,11 @@ FROM (
     UNION ALL
     SELECT id, 'ENGLISH_NAME', 0, english_name FROM ingredient WHERE english_name IS NOT NULL
     UNION ALL
-    SELECT ingredient_id, 'ALIAS', display_order, alias FROM ingredient_alias
+    SELECT ingredient_id,
+           'ALIAS',
+           (row_number() OVER (PARTITION BY ingredient_id ORDER BY id) - 1)::int,
+           alias
+    FROM ingredient_alias
 ) t;
 
 CREATE INDEX ix_ingredient_search_term_norm ON ingredient_search_term USING gin (norm gin_trgm_ops);

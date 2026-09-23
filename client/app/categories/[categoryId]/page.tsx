@@ -6,13 +6,16 @@ import { CategoryTrack } from "@/components/directory/CategoryTrack";
 import { CategoryTrackSkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
+import type { InitialPage } from "@/lib/hooks/useProductPages";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { breadcrumbList, itemList, type Crumb } from "@/lib/seo/structured-data";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 /*
@@ -20,6 +23,12 @@ import { productPagesKey } from "@/lib/storage/product-pages-cache";
  * 카탈로그 조회의 fetch 캐시는 이 설정과 무관하게 그대로 동작한다.
  */
 export const dynamic = "force-dynamic";
+
+/** 이 장에 담긴 제품을 구조화 데이터로 싣는다. 번호는 목록 전체에서의 자리로 센다. */
+const pageItemList = (filter: Filter, initialPage: InitialPage | undefined) => {
+  if (!initialPage) return undefined;
+  return itemList(initialPage.response.items, (filter.page - 1) * filter.size + 1);
+};
 
 /** 두 조각이 같은 목록을 본다. 한 요청 안에서는 한 번만 받는다. */
 const categoriesOnce = cache(fetchCategories);
@@ -79,6 +88,14 @@ export async function generateMetadata(props: PageProps<"/categories/[categoryId
   }
 }
 
+/** 카테고리 목록 아래 대분류, 소분류를 보고 있으면 그 아래 소분류까지 거친다. */
+const categoryCrumbs = (id: number, name: string, top: { readonly id: number; readonly name: string } | undefined) => {
+  const crumbs: Crumb[] = [{ name: "카테고리", path: "/categories" }];
+  if (top) crumbs.push({ name: top.name, path: `/categories/${top.id}` });
+  if (top?.id !== id) crumbs.push({ name, path: `/categories/${id}` });
+  return crumbs;
+};
+
 /** 형제 카테고리 줄은 제품 목록과 별개로 스트리밍한다. */
 async function CategoryTrackContent({ params }: { readonly params: PageProps<"/categories/[categoryId]">["params"] }) {
   const { categoryId } = await params;
@@ -122,32 +139,40 @@ async function CategoryProducts({
   const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
   return (
-    <ProductList
-      basePath={`/categories/${id}`}
-      surface="category"
-      fixedFilter={{ categoryIds }}
-      hiddenChips={["category"]}
-      excludeCodes={excludeCodes.items}
-      initialPage={initialPage}
-    />
+    <>
+      <JsonLd data={pageItemList(filter, initialPage)} />
+      <ProductList
+        basePath={`/categories/${id}`}
+        surface="category"
+        fixedFilter={{ categoryIds }}
+        hiddenChips={["category"]}
+        excludeCodes={excludeCodes.items}
+        initialPage={initialPage}
+      />
+    </>
   );
 }
 
 export default async function CategoryProductsPage(props: PageProps<"/categories/[categoryId]">) {
   const [{ categoryId }, searchParams] = await Promise.all([props.params, props.searchParams]);
   const id = Number(categoryId);
+  if (!Number.isInteger(id)) notFound();
+
+  /*
+   * 카테고리 이름이 이 화면의 대표 제목이라 바에 먼저 그린다. 카테고리 목록은 오래 캐시되어
+   * 셸을 거의 늦추지 않고, 없는 카테고리면 스트리밍 전이라 404 를 낼 수 있다.
+   */
+  const { name, top, categoryIds } = await resolveCategory(id);
   const filter = parseFilter(toSearchParams(searchParams));
 
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
-  if (!stream && Number.isInteger(id)) {
-    const { categoryIds } = await resolveCategory(id);
-    await requireProductPage({ ...filter, categoryIds });
-  }
+  if (!stream) await requireProductPage({ ...filter, categoryIds });
 
   return (
     <>
-      <TopBar title="카테고리" variant="root" showBack />
+      <TopBar title={name} variant="root" showBack />
+      <JsonLd data={breadcrumbList(categoryCrumbs(id, name, top))} />
 
       <StreamBoundary stream={stream} fallback={<CategoryTrackSkeleton />}>
         <CategoryTrackContent params={props.params} />

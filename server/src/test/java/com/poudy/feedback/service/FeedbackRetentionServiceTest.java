@@ -12,11 +12,11 @@ import static org.mockito.Mockito.verify;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
-import com.poudy.feedback.domain.FeedbackImage;
-import com.poudy.feedback.domain.FeedbackImageFormat;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ServiceFeedback;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import java.time.Clock;
@@ -82,9 +82,10 @@ class FeedbackRetentionServiceTest {
     }
 
     private static Feedback feedbackAt(OffsetDateTime receivedAt) {
-        return new Feedback(
+        return new ServiceFeedback(
             UUID.randomUUID(),
-            new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)),
+            FeedbackType.OTHER,
+            FeedbackPath.from(null),
             new FeedbackContent("충분히 긴 의견 내용입니다."),
             receivedAt,
             List.of(new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG))

@@ -14,7 +14,8 @@ import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class IngredientRepository {
 
     private static final int SUGGESTION_LIMIT = 5;
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -104,21 +106,22 @@ public class IngredientRepository {
         Map<String, Object> parameters = Map.of("ids", new SqlArrayValue("bigint", ids.toArray()));
         Map<Long, List<String>> aliases = texts(
             "select ingredient_id, alias as content from ingredient_alias"
-                + " where ingredient_id = any(cast(:ids as bigint[])) order by ingredient_id, display_order",
+                + " where ingredient_id = any(cast(:ids as bigint[])) order by ingredient_id, id",
             parameters
         );
         Map<Long, List<String>> sources = texts(
             "select ingredient_id, content from ingredient_source"
-                + " where ingredient_id = any(cast(:ids as bigint[])) order by ingredient_id, display_order",
+                + " where ingredient_id = any(cast(:ids as bigint[])) and type = 'INFO'"
+                + " order by ingredient_id, id",
             parameters
         );
         Map<Long, List<IngredientTag>> tags = jdbc.query(
             """
-                select it.ingredient_id, t.id, t.category, t.code, t.name,
-                       array(select e.content from ingredient_tag_evidence e
-                             where e.ingredient_id = it.ingredient_id and e.tag_id = it.tag_id
-                             order by e.display_order) as evidence
-                from ingredient_tag it join tag t on t.id = it.tag_id
+                select it.ingredient_id, t.code, t.category_code, t.name,
+                       array(select s.content from ingredient_source s
+                             where s.ingredient_id = it.ingredient_id and s.type = 'EFFECT'
+                             order by s.id) as evidence
+                from ingredient_tag it join tag t on t.code = it.tag_code
                 where it.ingredient_id = any(cast(:ids as bigint[]))
                 order by it.ingredient_id, it.display_order
                 """,
@@ -127,9 +130,8 @@ public class IngredientRepository {
                 row.getLong("ingredient_id"),
                 new IngredientTag(
                     new Tag(
-                        row.getLong("id"),
-                        TagCategory.valueOf(row.getString("category")),
                         row.getString("code"),
+                        TagCategory.valueOf(row.getString("category_code")),
                         row.getString("name")
                     ),
                     List.of((String[]) row.getArray("evidence").getArray())
@@ -149,7 +151,7 @@ public class IngredientRepository {
                     sources.getOrDefault(id, List.of()),
                     aliases.getOrDefault(id, List.of()),
                     tags.getOrDefault(id, List.of()),
-                    row.getObject("updated_at", OffsetDateTime.class)
+                    row.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
                 );
             }
         ).stream().collect(toMap(Ingredient::id, ingredient -> ingredient));

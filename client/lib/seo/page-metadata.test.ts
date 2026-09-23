@@ -248,6 +248,25 @@ describe("공유 메타데이터", () => {
     expect(brand.openGraph).toMatchObject({ url: "/brands/7" });
   });
 
+  it("상세 조회에 실패해도 canonical 은 남긴다", async () => {
+    api.fetchBrand.mockRejectedValue(new Error("down"));
+    api.fetchProductDetail.mockRejectedValue(new Error("down"));
+    api.fetchIngredientDetail.mockRejectedValue(new Error("down"));
+
+    const [brand, product, ingredient] = await Promise.all([
+      brandMetadata({ params: Promise.resolve({ brandId: "7" }), searchParams: Promise.resolve({ page: "2" }) }),
+      productMetadata({
+        params: Promise.resolve({ productId: "101" }),
+        searchParams: Promise.resolve({ from: "search_results" }),
+      }),
+      ingredientMetadata({ params: Promise.resolve({ ingredientId: "12" }), searchParams: Promise.resolve({}) }),
+    ]);
+
+    expect(brand).toEqual({ alternates: { canonical: "/brands/7?page=2" } });
+    expect(product).toEqual({ alternates: { canonical: "/products/101" } });
+    expect(ingredient).toEqual({ alternates: { canonical: "/ingredients/12" } });
+  });
+
   it("브랜드·카테고리 목록의 뒤쪽 장은 자기 주소를 canonical 로 둔다", async () => {
     api.fetchBrand.mockResolvedValue({ name: "파우디" });
     api.fetchCategories.mockResolvedValue({ items: [{ id: 4, name: "메이크업", children: [] }] });
@@ -336,6 +355,8 @@ describe("공유 메타데이터", () => {
       name: "장벽 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "https://images.example/cream.png",
+      categories: [],
+      variants: [],
       ingredients: [{ id: 1 }, { id: 2 }],
     });
 
@@ -345,7 +366,7 @@ describe("공유 메타데이터", () => {
     });
     const markup = renderToStaticMarkup(element);
 
-    expect(markup).not.toContain("application/ld+json");
+    expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).not.toContain('"@type":"Product"');
   });
 });

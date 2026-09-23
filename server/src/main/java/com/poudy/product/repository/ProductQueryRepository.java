@@ -38,14 +38,16 @@ public class ProductQueryRepository {
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
-                    where s.product_id = p.id and s.skin_type = :skin)) as skin_ok
+                    where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
             from product p join searched on searched.id = p.id join category c on c.id = p.category_id
             where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
               and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
               and not exists (select 1 from unnest(cast(:included as bigint[])) wanted(id)
-                  where not exists (select 1 from product_ingredient pi
-                      where pi.product_id = p.id and pi.ingredient_id = wanted.id))
-              and not exists (select 1 from product_ingredient pi where pi.product_id = p.id
+                  where not exists (select 1 from product_component pc
+                      join product_ingredient pi on pi.component_id = pc.id
+                      where pc.product_id = p.id and pi.ingredient_id = wanted.id))
+              and not exists (select 1 from product_component pc
+                  join product_ingredient pi on pi.component_id = pc.id where pc.product_id = p.id
                   and (pi.ingredient_id = any(:excluded) or exists (
                       select 1 from exclude_code_ingredient e where e.ingredient_id = pi.ingredient_id
                           and e.exclude_code = any(:codes))))
@@ -74,9 +76,9 @@ public class ProductQueryRepository {
         union all select name || '_CATEGORY', category.id::text, count(*) from scopes
             cross join lateral (values (category_id), (parent_id)) category(id)
             where name in ('MATCH', 'CATEGORY_OPTION') group by name, category.id
-        union all select name || '_SKIN', s.skin_type, count(*) from scopes p
+        union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
             join product_skin_type s on s.product_id = p.id
-            where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type
+            where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -211,7 +213,7 @@ public class ProductQueryRepository {
             )
         );
         List<Category> categories = jdbc.query(
-            "select * from category order by display_order, id",
+            "select * from category order by id",
             Map.of(),
             (rs, row) -> new Category(
                 rs.getLong("id"),

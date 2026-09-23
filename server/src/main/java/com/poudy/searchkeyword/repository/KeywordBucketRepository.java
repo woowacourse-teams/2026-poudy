@@ -1,9 +1,9 @@
 package com.poudy.searchkeyword.repository;
 
-import com.poudy.searchkeyword.domain.KeywordCountStore;
+import com.poudy.searchkeyword.domain.bucket.KeywordCountStore;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class KeywordBucketRepository implements KeywordCountStore {
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private static final String INCREASE = "insert into search_keyword_bucket (bucket_start, keyword_key, hit_count)"
         + " values (?, ?, 1) on conflict (bucket_start, keyword_key)"
@@ -48,8 +50,8 @@ public class KeywordBucketRepository implements KeywordCountStore {
 
     @Override
     public Optional<Instant> earliestBucketStart() {
-        return Optional.ofNullable(jdbcTemplate.queryForObject(EARLIEST_START, OffsetDateTime.class))
-            .map(OffsetDateTime::toInstant);
+        return Optional.ofNullable(jdbcTemplate.queryForObject(EARLIEST_START, LocalDateTime.class))
+            .map(timestamp -> timestamp.atZone(SEOUL).toInstant());
     }
 
     @Override
@@ -57,7 +59,7 @@ public class KeywordBucketRepository implements KeywordCountStore {
         jdbcTemplate.update(REMOVE_BEFORE, timestampOf(bucketStart));
     }
 
-    private static OffsetDateTime timestampOf(Instant instant) {
-        return instant.atOffset(ZoneOffset.UTC);
+    private static LocalDateTime timestampOf(Instant instant) {
+        return LocalDateTime.ofInstant(instant, SEOUL);
     }
 }

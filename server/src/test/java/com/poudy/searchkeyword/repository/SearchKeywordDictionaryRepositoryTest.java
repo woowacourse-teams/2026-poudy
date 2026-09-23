@@ -2,7 +2,7 @@ package com.poudy.searchkeyword.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

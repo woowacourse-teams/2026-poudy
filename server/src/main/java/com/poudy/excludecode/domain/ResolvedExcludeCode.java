@@ -18,17 +18,17 @@ public final class ResolvedExcludeCode {
         this.missing = List.copyOf(missing);
     }
 
-    public static ResolvedExcludeCode of(ExcludeCodeMapping mapping, IngredientCatalog ingredients) {
+    public static ResolvedExcludeCode of(ExcludeCode code, List<Long> ingredientIds, IngredientCatalog ingredients) {
         List<ExcludeCodeIngredient> found = new ArrayList<>();
         List<Long> missing = new ArrayList<>();
 
-        for (Long ingredientId : mapping.ingredientIds()) {
+        for (Long ingredientId : ingredientIds) {
             ingredients.findById(ingredientId)
                 .map(ExcludeCodeIngredient::from)
                 .ifPresentOrElse(found::add, () -> missing.add(ingredientId));
         }
 
-        return new ResolvedExcludeCode(mapping.code(), found, missing);
+        return new ResolvedExcludeCode(code, found, missing);
     }
 
     public ExcludeCode code() {

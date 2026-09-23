@@ -32,11 +32,11 @@ INSERT INTO ingredient (id, korean_name, english_name, description, updated_at) 
     (90007, 'PDRN 검증성분', 'PDRN TEST', '', now()),
     (90008, '검증단독영문', 'Only Latin', '', now());
 
-INSERT INTO ingredient_alias (ingredient_id, display_order, alias) VALUES
-    (90002, 0, '계약성분'),
-    (90003, 0, '계약수분'),
-    (90003, 1, '계약진정'),
-    (90007, 0, '피디알엔 검증성분');
+INSERT INTO ingredient_alias (ingredient_id, alias) VALUES
+    (90002, '계약성분'),
+    (90003, '계약수분'),
+    (90003, '계약진정'),
+    (90007, '피디알엔 검증성분');
 
 INSERT INTO product_daily_view (view_date, product_id, view_count) VALUES
     ((now() AT TIME ZONE 'Asia/Seoul')::date - 30, 90002, 10000),

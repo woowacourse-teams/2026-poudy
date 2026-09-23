@@ -20,10 +20,7 @@ public class Category {
     private String name;
 
     @Column(name = "depth")
-    private Short depth;
-
-    @Column(name = "display_order")
-    private Integer displayOrder;
+    private Integer depth;
 
     protected Category() {
     }
@@ -35,7 +32,7 @@ public class Category {
         this.id = id;
         this.parentId = parentId;
         this.name = name;
-        this.depth = depth.shortValue();
+        this.depth = depth;
     }
 
     public boolean isParent() {

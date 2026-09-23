@@ -5,6 +5,8 @@ import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
@@ -38,8 +40,7 @@ public class ProductRequestRepository {
             request.requestId(),
             expected,
             request.status(),
-            request.statusChangedAt(),
-            request.completedAt()
+            LocalDateTime.ofInstant(request.statusChangedAt().toInstant(), ZoneId.of("Asia/Seoul"))
         ) == 1;
     }
 
@@ -50,8 +51,8 @@ public class ProductRequestRepository {
 
     public List<ProductRequest> findAll(ProductRequestStatus status) {
         if (status == null) {
-            return productRequestJpaRepository.findAllByOrderByRequestedAtDescRequestIdDesc();
+            return productRequestJpaRepository.findAllByOrderByCreatedAtDescRequestIdDesc();
         }
-        return productRequestJpaRepository.findAllByStatusOrderByRequestedAtDescRequestIdDesc(status);
+        return productRequestJpaRepository.findAllByStatusOrderByCreatedAtDescRequestIdDesc(status);
     }
 }

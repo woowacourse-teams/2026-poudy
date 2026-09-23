@@ -88,7 +88,9 @@ public class ProductRepository {
             return 0;
         }
         return jdbc.queryForObject(
-            "select count(distinct product_id) from product_ingredient where ingredient_id = :id",
+            "select count(distinct component.product_id) from product_component component"
+                + " join product_ingredient ingredient on ingredient.component_id = component.id"
+                + " where ingredient.ingredient_id = :id",
             Map.of("id", ingredientId),
             Long.class
         );

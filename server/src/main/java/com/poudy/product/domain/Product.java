@@ -7,30 +7,98 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
+import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.SkinEffect;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-public final class Product {
+@Entity
+@Table(name = "product")
+public class Product {
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
-    private final Set<SkinType> skinTypes;
-    private final Long id;
-    private final String name;
-    private final Brand brand;
-    private final Category category;
-    private final Ingredients ingredients;
-    private final String imageUrl;
-    private final ProductVariants variants;
-    private final ProductSensory sensory;
-    private final OffsetDateTime updatedAt;
+    @Id
+    private Long id;
+
+    @Column(name = "product_name")
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "moisture_level")
+    private Short moistureLevel;
+
+    @Column(name = "oil_level")
+    private Short oilLevel;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @ElementCollection
+    @CollectionTable(name = "product_skin_type", joinColumns = @JoinColumn(name = "product_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "skin_type_code")
+    private Set<SkinType> skinTypeRows;
+
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    @OrderBy("displayOrder")
+    private List<ProductComponent> components;
+
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    @OrderBy("displayOrder")
+    private List<ProductVariant> variantRows;
+
+    @Transient
+    private Set<SkinType> skinTypes;
+
+    @Transient
+    private Ingredients ingredients;
+
+    @Transient
+    private ProductVariants variants;
+
+    @Transient
+    private ProductSensory sensory;
+
+    protected Product() {
+    }
 
     public Product(
         Long id,
@@ -53,14 +121,9 @@ public final class Product {
         if (category == null) {
             throw new IllegalArgumentException("제품은 카테고리를 가져야 합니다.");
         }
-        if (category.isParent()) {
-            throw new IllegalArgumentException("제품은 소분류 카테고리를 가져야 합니다.");
-        }
+        requireLeafCategory(category);
         if (ingredients == null) {
             ingredients = new Ingredients(List.of());
-        }
-        if (imageUrl == null) {
-            imageUrl = "";
         }
         if (variants == null) {
             throw new IllegalArgumentException("제품은 용량 옵션을 가져야 합니다.");
@@ -73,6 +136,7 @@ public final class Product {
         }
 
         this.skinTypes = Set.copyOf(skinTypes);
+        this.skinTypeRows = this.skinTypes;
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -81,7 +145,28 @@ public final class Product {
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
-        this.updatedAt = updatedAt;
+        this.moistureLevel = (short) sensory.moisture().value();
+        this.oilLevel = (short) sensory.oil().value();
+        this.updatedAt = updatedAt.atZoneSameInstant(SEOUL).toLocalDateTime();
+        this.components = List.of();
+        this.variantRows = variants.values();
+    }
+
+    @PostLoad
+    private void load() {
+        requireLeafCategory(category);
+        this.skinTypes = Set.copyOf(skinTypeRows);
+        this.ingredients = new Ingredients(
+            components.stream().flatMap(component -> component.ingredients().stream()).toList()
+        );
+        this.variants = new ProductVariants(variantRows);
+        this.sensory = new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel));
+    }
+
+    private static void requireLeafCategory(Category category) {
+        if (category.isParent()) {
+            throw new IllegalArgumentException("제품은 소분류 카테고리를 가져야 합니다.");
+        }
     }
 
     public Long id() {
@@ -105,7 +190,7 @@ public final class Product {
     }
 
     public String imageUrl() {
-        return imageUrl;
+        return Objects.requireNonNullElse(imageUrl, "");
     }
 
     public ProductVariants variants() {
@@ -113,7 +198,7 @@ public final class Product {
     }
 
     public OffsetDateTime updatedAt() {
-        return updatedAt;
+        return updatedAt.atZone(SEOUL).toOffsetDateTime();
     }
 
     public List<Long> ingredientIds() {
@@ -144,6 +229,10 @@ public final class Product {
         return category.belongsTo(categoryId);
     }
 
+    public boolean matchesNameExactly(SearchKeyword keyword) {
+        return keyword.matchesExactly(name);
+    }
+
     public Integer moistureLevel() {
         return sensory.moisture().value();
     }
@@ -161,7 +250,7 @@ public final class Product {
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
-        Map<Long, SkinEffectGroupAccumulator> groups = new HashMap<>();
+        Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
                 SkinEffectGroupAccumulator group = groups.computeIfAbsent(

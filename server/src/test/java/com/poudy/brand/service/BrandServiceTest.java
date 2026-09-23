@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCounter;
 import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.brand.domain.Brands;
 import com.poudy.brand.repository.BrandRepository;

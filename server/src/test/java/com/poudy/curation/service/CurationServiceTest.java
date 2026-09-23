@@ -6,11 +6,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationBanner;
 import com.poudy.curation.domain.CurationBlock;
 import com.poudy.curation.domain.CurationBlockContent;
-import com.poudy.curation.domain.CurationDetail;
+import com.poudy.curation.domain.CurationPublicationStatus;
 import com.poudy.curation.domain.Curations;
+import com.poudy.curation.domain.ResolvedCurationDetail;
 import com.poudy.curation.repository.CurationRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
@@ -27,7 +27,6 @@ class CurationServiceTest {
     void usesCurrentProductCatalogOnEveryRead() {
         CurationBlock block = CurationBlock.products(
             UUID.randomUUID(),
-            CurationBlock.Status.VISIBLE,
             0,
             0,
             List.of(15L)
@@ -35,7 +34,7 @@ class CurationServiceTest {
         Curation curation = curation(12L, "상세", List.of(block));
         CurationRepository repository = mock(CurationRepository.class);
         given(repository.findAll()).willReturn(Curations.from(List.of(curation)));
-        given(repository.findById(12L)).willReturn(java.util.Optional.of(curation));
+        given(repository.findPublishedById(12L)).willReturn(java.util.Optional.of(curation));
         ProductRepository products = mock(ProductRepository.class);
         Product current = mock(Product.class);
         given(current.id()).willReturn(15L);
@@ -44,7 +43,7 @@ class CurationServiceTest {
         CurationService service = new CurationService(repository, products);
 
         assertThat(service.findCurations()).containsExactly(curation);
-        CurationDetail first = service.findDetail(12L);
+        ResolvedCurationDetail first = service.findDetail(12L);
         assertThat(first.curation().title()).isEqualTo("상세");
         assertThat(first.blocks()).isEmpty();
         CurationBlockContent.Products productsBlock = (CurationBlockContent.Products) service.findDetail(12L)
@@ -55,7 +54,7 @@ class CurationServiceTest {
     @Test
     void rejectsUnavailableCuration() {
         CurationRepository repository = mock(CurationRepository.class);
-        given(repository.findById(999L)).willReturn(java.util.Optional.empty());
+        given(repository.findPublishedById(999L)).willReturn(java.util.Optional.empty());
         CurationService service = new CurationService(repository, mock(ProductRepository.class));
 
         assertThatThrownBy(() -> service.findDetail(999L)).isInstanceOf(ResourceNotFoundException.class)
@@ -63,12 +62,66 @@ class CurationServiceTest {
             .isEqualTo(ErrorCode.CURATION_NOT_FOUND);
     }
 
+    @Test
+    void appliesCurationPublicationAndBannerVisibility() {
+        Curation published = curation(
+            12L,
+            "게시 및 배너 노출",
+            List.of(),
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+        Curation hiddenBanner = curation(
+            4L,
+            "게시 및 배너 비노출",
+            List.of(),
+            CurationPublicationStatus.PUBLISHED,
+            false
+        );
+        Curation unpublished = curation(
+            20L,
+            "미게시",
+            List.of(),
+            CurationPublicationStatus.UNPUBLISHED,
+            false
+        );
+        CurationRepository repository = mock(CurationRepository.class);
+        given(repository.findAll()).willReturn(Curations.from(List.of(published, hiddenBanner, unpublished)));
+        given(repository.findPublishedById(4L)).willReturn(java.util.Optional.of(hiddenBanner));
+        given(repository.findPublishedById(20L)).willReturn(java.util.Optional.empty());
+        ProductRepository products = mock(ProductRepository.class);
+        given(products.findAllById(List.of())).willReturn(List.of());
+        CurationService service = new CurationService(repository, products);
+
+        assertThat(service.findCurations()).containsExactly(published);
+        assertThat(service.findDetail(4L).curation()).isSameAs(hiddenBanner);
+        assertThatThrownBy(() -> service.findDetail(20L)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
     private static Curation curation(Long id, String title, List<CurationBlock> blocks) {
+        return curation(
+            id,
+            title,
+            blocks,
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+    }
+
+    private static Curation curation(
+        Long id,
+        String title,
+        List<CurationBlock> blocks,
+        CurationPublicationStatus publicationStatus,
+        boolean bannerVisible
+    ) {
         return new Curation(
             id,
-            new CurationBanner("배너", "설명", "banner.png"),
             title,
             "설명",
+            publicationStatus,
+            bannerVisible,
+            bannerVisible ? "banner.png" : null,
             blocks
         );
     }

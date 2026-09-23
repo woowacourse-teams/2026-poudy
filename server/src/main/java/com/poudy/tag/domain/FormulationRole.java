@@ -4,11 +4,11 @@ import java.util.Objects;
 
 public class FormulationRole {
 
-    private final Long id;
+    private final String id;
     private final String code;
     private final String displayName;
 
-    public FormulationRole(Long id, String code, String displayName) {
+    public FormulationRole(String id, String code, String displayName) {
         validateId(id);
         validateCode(code);
         validateDisplayName(displayName);
@@ -22,7 +22,7 @@ public class FormulationRole {
         return code.equals(candidate);
     }
 
-    private static void validateId(Long id) {
+    private static void validateId(String id) {
         Objects.requireNonNull(id, "배합 목적 ID가 필요합니다.");
     }
 
@@ -38,7 +38,7 @@ public class FormulationRole {
         }
     }
 
-    public Long id() {
+    public String id() {
         return id;
     }
 

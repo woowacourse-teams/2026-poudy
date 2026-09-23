@@ -25,6 +25,9 @@ spring:
     password: ${POUDY_DB_PASSWORD:}
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000
     hibernate:
       ddl-auto: validate
 
@@ -57,15 +60,13 @@ springdoc:
 # CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
 # 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
 poudy:
-  legacy-s3-migration:
-    enabled: ${POUDY_LEGACY_S3_MIGRATION_ENABLED:false}
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:
-    s3:
+    image-s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
       region: ${AWS_REGION:ap-northeast-2}
     discord:
@@ -78,10 +79,10 @@ poudy:
       window: PT1H
     image-processing:
       max-concurrency: 1
-    image-reconciliation:
+    image-transfer:
       enabled: false
-      relay-interval: PT5M
-      relay-initial-delay: PT1M
+      interval: PT5M
+      initial-delay: PT1M
     retention:
       enabled: false
       max-age: P83D
@@ -89,10 +90,6 @@ poudy:
       max-batches: 20
       cron: "0 30 3 * * *"
   product-request:
-    legacy-s3:
-      bucket: ${POUDY_PRODUCT_REQUEST_S3_BUCKET:}
-      prefix: ${POUDY_PRODUCT_REQUEST_S3_PREFIX:product-requests}
-      region: ${POUDY_PRODUCT_REQUEST_S3_REGION:${AWS_REGION:ap-northeast-2}}
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
     rate-limit:

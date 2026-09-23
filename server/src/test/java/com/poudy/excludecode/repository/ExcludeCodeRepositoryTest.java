@@ -2,6 +2,8 @@ package com.poudy.excludecode.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -19,6 +21,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @SpringBootTest
 @DisplayName("제외 성분군 저장소")
@@ -56,13 +60,20 @@ class ExcludeCodeRepositoryTest {
     @Test
     @DisplayName("성분군 정의 오류를 조회 실패용 인프라 예외로 변환한다")
     void translatesInvalidDefinitionForQuery() {
-        ExcludeCodeJpaRepository excludeCodeJpaRepository = mock(ExcludeCodeJpaRepository.class);
+        NamedParameterJdbcTemplate jdbc = mock(NamedParameterJdbcTemplate.class);
         IngredientRepository ingredientRepository = mock(IngredientRepository.class);
-        given(excludeCodeJpaRepository.findAllMappings()).willReturn(List.of());
+        given(
+            jdbc.query(
+                anyString(),
+                any(MapSqlParameterSource.class),
+                any(org.springframework.jdbc.core.RowMapper.class)
+            )
+        )
+            .willReturn(List.of());
         given(ingredientRepository.findByIds(List.of())).willReturn(IngredientCatalog.from(List.of()));
 
         assertThatThrownBy(
-            () -> new ExcludeCodeRepository(excludeCodeJpaRepository, ingredientRepository).findAll()
+            () -> new ExcludeCodeRepository(jdbc, ingredientRepository).findAll()
         )
             .isInstanceOf(InfrastructureException.class)
             .hasCauseInstanceOf(InvalidExcludeCodeDefinitionException.class);

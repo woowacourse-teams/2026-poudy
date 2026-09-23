@@ -185,11 +185,21 @@ export type DisclosedAmountResponse = {
    */
   unit: string;
 }
+export type ExcludeGroupResponse = {
+  /**
+   * 제외 성분군 이름
+   */
+  name: string;
+  /**
+   * 제품의 해당 성분군 포함 여부
+   */
+  contains: boolean;
+}
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 배합 목적 이름 (CosIng Function)
@@ -222,7 +232,7 @@ export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름
@@ -234,7 +244,7 @@ export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름
@@ -294,9 +304,9 @@ export type ProductDetailResponse = {
    */
   ingredients: Array<ProductIngredientResponse>;
   /**
-   * 이 제품이 포함하지 않는 성분군 (프리 뱃지)
+   * 제외 성분군별 포함 여부
    */
-  freeOfCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeGroups: Array<ExcludeGroupResponse>;
   /**
    * 제품 정보를 마지막으로 갱신한 시각
    */
@@ -477,7 +487,7 @@ export type ExcludeCodeResponse = {
    */
   code: ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS");
   /**
-   * 빠른 필터에 표시할 이름
+   * 제외 성분군 이름
    */
   name: string;
   /**
@@ -501,11 +511,11 @@ export type CurationSummaryResponse = {
    */
   id: number;
   /**
-   * 배너 제목
+   * 큐레이션 제목
    */
   title: string;
   /**
-   * 배너 설명
+   * 큐레이션 설명
    */
   description: string;
   /**
@@ -607,11 +617,11 @@ export type CurationDetailResponse = {
    */
   id: number;
   /**
-   * 큐레이션 상세 제목
+   * 큐레이션 제목
    */
   title: string;
   /**
-   * 큐레이션 상세 설명
+   * 큐레이션 설명
    */
   description: string;
   /**
@@ -1152,7 +1162,7 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * 게시 중인 큐레이션 배너를 지정된 순서로 조회한다.
+ * 게시 중이며 배너 노출이 활성화된 큐레이션을 지정된 순서로 조회한다.
  */
 export type get_FindCurations = {
       method: "GET",
@@ -1166,7 +1176,7 @@ export type get_FindCurations = {
 
     }
 /**
- * 게시 중인 큐레이션의 이미지·제품 블록과 필터를 저장 순서대로 조회한다.
+ * 요청한 ID의 큐레이션 상세를 조회한다. 큐레이션이 게시되지 않은 경우 조회할 수 없다.
  */
 export type get_FindCuration = {
       method: "GET",

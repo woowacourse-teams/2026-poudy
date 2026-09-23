@@ -7,13 +7,17 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(name = "product_request")
 public class ProductRequest {
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     @Id
     @Column(name = "id")
@@ -25,18 +29,15 @@ public class ProductRequest {
     @Column(name = "brand_name")
     private String brandName;
 
-    @Column(name = "requested_at")
-    private OffsetDateTime requestedAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ProductRequestStatus status;
 
     @Column(name = "status_changed_at")
-    private OffsetDateTime statusChangedAt;
-
-    @Column(name = "completed_at")
-    private OffsetDateTime completedAt;
+    private LocalDateTime statusChangedAt;
 
     protected ProductRequest() {
     }
@@ -70,11 +71,10 @@ public class ProductRequest {
         this.requestId = Objects.requireNonNull(requestId, "제품 등록 요청 ID가 필요합니다.");
         this.productName = productName;
         this.brandName = brandName;
-        this.requestedAt = Objects.requireNonNull(requestedAt, "제품 등록 요청 시각이 필요합니다.");
+        this.createdAt = local(Objects.requireNonNull(requestedAt, "제품 등록 요청 시각이 필요합니다."));
         this.status = Objects.requireNonNull(status, "제품 등록 요청 상태가 필요합니다.");
-        this.statusChangedAt = Objects.requireNonNull(statusChangedAt, "상태 변경 시각이 필요합니다.");
-        this.completedAt = completedAt;
-        validateCompletedAt();
+        this.statusChangedAt = local(Objects.requireNonNull(statusChangedAt, "상태 변경 시각이 필요합니다."));
+        validateCompletedAt(completedAt);
     }
 
     public static ProductRequest create(String productName, String brandName, Clock clock) {
@@ -103,7 +103,7 @@ public class ProductRequest {
     }
 
     public OffsetDateTime requestedAt() {
-        return requestedAt;
+        return offset(createdAt);
     }
 
     public ProductRequestStatus status() {
@@ -111,11 +111,14 @@ public class ProductRequest {
     }
 
     public OffsetDateTime statusChangedAt() {
-        return statusChangedAt;
+        return offset(statusChangedAt);
     }
 
     public OffsetDateTime completedAt() {
-        return completedAt;
+        if (status != ProductRequestStatus.COMPLETED) {
+            return null;
+        }
+        return statusChangedAt();
     }
 
     public boolean hasStatus(ProductRequestStatus expected) {
@@ -129,10 +132,10 @@ public class ProductRequest {
         return requestId.equals(other.requestId)
             && Objects.equals(productName, other.productName)
             && Objects.equals(brandName, other.brandName)
-            && requestedAt.equals(other.requestedAt)
+            && requestedAt().equals(other.requestedAt())
             && status == other.status
-            && statusChangedAt.equals(other.statusChangedAt)
-            && Objects.equals(completedAt, other.completedAt);
+            && statusChangedAt().equals(other.statusChangedAt())
+            && Objects.equals(completedAt(), other.completedAt());
     }
 
     public ProductRequest changeStatus(ProductRequestStatus target, Clock clock) {
@@ -147,19 +150,27 @@ public class ProductRequest {
             requestId,
             productName,
             brandName,
-            requestedAt,
+            requestedAt(),
             target,
             changedAt,
             target == ProductRequestStatus.COMPLETED ? changedAt : null
         );
     }
 
-    private void validateCompletedAt() {
+    private void validateCompletedAt(OffsetDateTime completedAt) {
         if (status == ProductRequestStatus.COMPLETED && completedAt == null) {
             throw new IllegalArgumentException("완료된 제품 등록 요청에는 완료 시각이 필요합니다.");
         }
         if (status != ProductRequestStatus.COMPLETED && completedAt != null) {
             throw new IllegalArgumentException("완료되지 않은 제품 등록 요청에는 완료 시각을 기록할 수 없습니다.");
         }
+    }
+
+    private static LocalDateTime local(OffsetDateTime value) {
+        return value.atZoneSameInstant(SEOUL).toLocalDateTime();
+    }
+
+    private static OffsetDateTime offset(LocalDateTime value) {
+        return value.atZone(SEOUL).toOffsetDateTime();
     }
 }

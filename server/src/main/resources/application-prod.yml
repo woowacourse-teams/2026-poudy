@@ -12,7 +12,7 @@ poudy:
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:
-    image-reconciliation:
+    image-transfer:
       enabled: true
     retention:
       enabled: true

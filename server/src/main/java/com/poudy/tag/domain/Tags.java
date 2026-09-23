@@ -8,14 +8,14 @@ import java.util.Optional;
 
 public final class Tags {
 
-    private final Map<Long, Tag> tags;
+    private final Map<String, Tag> tags;
 
-    private Tags(Map<Long, Tag> tags) {
+    private Tags(Map<String, Tag> tags) {
         this.tags = tags;
     }
 
     public static Tags from(List<Tag> tags) {
-        Map<Long, Tag> indexedTags = new LinkedHashMap<>();
+        Map<String, Tag> indexedTags = new LinkedHashMap<>();
         for (Tag tag : tags) {
             if (indexedTags.putIfAbsent(tag.id(), tag) != null) {
                 throw new IllegalArgumentException("태그 ID는 중복될 수 없습니다.");
@@ -25,7 +25,7 @@ public final class Tags {
         return new Tags(Collections.unmodifiableMap(indexedTags));
     }
 
-    public Optional<Tag> findById(Long id) {
+    public Optional<Tag> findById(String id) {
         return Optional.ofNullable(tags.get(id));
     }
 }

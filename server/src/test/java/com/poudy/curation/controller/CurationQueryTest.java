@@ -29,8 +29,10 @@ class CurationQueryTest {
     void returnsPublicBannerInConfiguredOrder() throws Exception {
         mockMvc.perform(get("/api/curations"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", contains(12, 4)))
+            .andExpect(jsonPath("$.items[*].id", contains(12)))
             .andExpect(jsonPath("$.items[*].slug").doesNotExist())
+            .andExpect(jsonPath("$.items[*].status").isEmpty())
+            .andExpect(jsonPath("$.items[*].bannerVisible").isEmpty())
             .andExpect(jsonPath("$.items[0].title").value("환절기 장벽 케어"))
             .andExpect(jsonPath("$.items[0].description").value("환절기를 위한 제품 모음"))
             .andExpect(jsonPath("$.items[0].thumbnailImageUrl").value("https://cdn.example.com/curations/banner.png"))
@@ -42,8 +44,8 @@ class CurationQueryTest {
         Product first = products.findById(15L).orElseThrow();
         mockMvc.perform(get("/api/curations/12"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.title").value("상세 제목"))
-            .andExpect(jsonPath("$.description").value("피부 장벽을 위한 제품 선택 기준"))
+            .andExpect(jsonPath("$.title").value("환절기 장벽 케어"))
+            .andExpect(jsonPath("$.description").value("환절기를 위한 제품 모음"))
             .andExpect(jsonPath("$.blocks[*].id", contains(uuid(1), uuid(3), uuid(5), uuid(6))))
             .andExpect(jsonPath("$.blocks[0].type").value("IMAGE"))
             .andExpect(jsonPath("$.blocks[0].imageUrl").value("https://cdn.example.com/curations/12/detail-1.png"))
@@ -77,6 +79,7 @@ class CurationQueryTest {
             .andExpect(jsonPath("$.blocks[3].products[0].filterIds").doesNotExist())
             .andExpect(jsonPath("$.imageUrls").doesNotExist())
             .andExpect(jsonPath("$.categories").doesNotExist())
+            .andExpect(jsonPath("$.status").doesNotExist())
             .andExpect(jsonPath("$.blocks[*].status").isEmpty())
             .andExpect(jsonPath("$.blocks[*].imageId").isEmpty())
             .andExpect(jsonPath("$.blocks[*].position").isEmpty());

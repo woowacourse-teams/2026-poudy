@@ -5,7 +5,6 @@ import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.Ingredients;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +25,11 @@ public class ExcludeCodeIngredients {
     }
 
     public static ExcludeCodeIngredients from(
-        List<ExcludeCodeMapping> mappings,
+        Map<ExcludeCode, List<Long>> ingredientIds,
         IngredientCatalog allIngredients
     ) {
-        List<ResolvedExcludeCode> resolved = resolveAll(byCode(mappings), allIngredients);
+        requireEveryCodeDefined(ingredientIds);
+        List<ResolvedExcludeCode> resolved = resolveAll(ingredientIds, allIngredients);
         requireEveryReferenceResolved(resolved);
 
         return new ExcludeCodeIngredients(index(resolved), indexCodes(resolved));
@@ -56,34 +56,27 @@ public class ExcludeCodeIngredients {
             .toList();
     }
 
-    private static Map<ExcludeCode, ExcludeCodeMapping> byCode(List<ExcludeCodeMapping> mappings) {
-        Map<ExcludeCode, ExcludeCodeMapping> byCode = new EnumMap<>(ExcludeCode.class);
-
-        for (ExcludeCodeMapping mapping : mappings) {
-            if (mapping.ingredientIds().isEmpty()) {
-                throw new InvalidExcludeCodeDefinitionException("제외 성분군에 속한 성분이 없습니다: " + mapping.code());
-            }
-            if (byCode.put(mapping.code(), mapping) != null) {
-                throw new InvalidExcludeCodeDefinitionException("제외 성분군 정의가 중복됐습니다: " + mapping.code());
-            }
-        }
-
+    private static void requireEveryCodeDefined(Map<ExcludeCode, List<Long>> ingredientIds) {
         List<ExcludeCode> undefined = Arrays.stream(ExcludeCode.values())
-            .filter(code -> !byCode.containsKey(code))
+            .filter(code -> !ingredientIds.containsKey(code))
             .toList();
         if (!undefined.isEmpty()) {
             throw new InvalidExcludeCodeDefinitionException("제외 성분군 정의를 찾지 못했습니다: " + undefined);
         }
-
-        return byCode;
+        Arrays.stream(ExcludeCode.values())
+            .filter(code -> ingredientIds.get(code).isEmpty())
+            .findFirst()
+            .ifPresent(code -> {
+                throw new InvalidExcludeCodeDefinitionException("제외 성분군에 속한 성분이 없습니다: " + code);
+            });
     }
 
     private static List<ResolvedExcludeCode> resolveAll(
-        Map<ExcludeCode, ExcludeCodeMapping> byCode,
+        Map<ExcludeCode, List<Long>> ingredientIds,
         IngredientCatalog ingredients
     ) {
         return Arrays.stream(ExcludeCode.values())
-            .map(code -> ResolvedExcludeCode.of(byCode.get(code), ingredients))
+            .map(code -> ResolvedExcludeCode.of(code, ingredientIds.get(code), ingredients))
             .toList();
     }
 

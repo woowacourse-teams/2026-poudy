@@ -13,7 +13,7 @@ public class CategoryRepository {
     }
 
     public Categories findAll() {
-        return Categories.from(repository.findAllByOrderByDisplayOrderAsc());
+        return Categories.from(repository.findAllByOrderByIdAsc());
     }
 
 }

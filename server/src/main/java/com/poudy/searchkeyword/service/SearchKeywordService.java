@@ -1,7 +1,7 @@
 package com.poudy.searchkeyword.service;
 
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.searchkeyword.domain.KeywordBuckets;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import java.util.List;
 import org.slf4j.Logger;

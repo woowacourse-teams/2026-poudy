@@ -1,5 +1,6 @@
 package com.poudy.curation.domain;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
@@ -9,21 +10,79 @@ import org.junit.jupiter.api.Test;
 class CurationTest {
 
     @Test
-    void rejectsMissingBannerThumbnail() {
-        assertThatThrownBy(() -> new CurationBanner("배너", "설명", null))
-            .isInstanceOf(IllegalArgumentException.class);
+    void rejectsVisibleBannerWithoutThumbnail() {
+        assertThatThrownBy(() -> publishedWithBanner(true, null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> publishedWithBanner(true, " ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void permitsHiddenBannerWithoutThumbnail() {
+        assertThatCode(() -> publishedWithBanner(false, null)).doesNotThrowAnyException();
+    }
+
+    private static Curation publishedWithBanner(boolean visible, String thumbnailImageUrl) {
+        return new Curation(
+            12L,
+            "제목",
+            "설명",
+            CurationPublicationStatus.PUBLISHED,
+            visible,
+            thumbnailImageUrl,
+            List.of()
+        );
+    }
+
+    @Test
+    void rejectsVisibleBannerForUnpublishedCuration() {
+        assertThatThrownBy(
+            () -> new Curation(
+                12L,
+                "제목",
+                "설명",
+                CurationPublicationStatus.UNPUBLISHED,
+                true,
+                "banner.png",
+                List.of()
+            )
+        ).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void permitsPublishedCurationWithHiddenBanner() {
+        assertThatCode(
+            () -> new Curation(
+                12L,
+                "제목",
+                "설명",
+                CurationPublicationStatus.PUBLISHED,
+                false,
+                null,
+                List.of()
+            )
+        ).doesNotThrowAnyException();
     }
 
     @Test
     void rejectsBlankPublicText() {
-        assertThatThrownBy(() -> new CurationBanner(" ", "설명", "banner.png"))
-            .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
             () -> new Curation(
                 12L,
-                new CurationBanner("배너", "설명", "banner.png"),
                 " ",
                 "설명",
+                CurationPublicationStatus.PUBLISHED,
+                true,
+                "banner.png",
+                List.of()
+            )
+        ).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(
+            () -> new Curation(
+                12L,
+                "제목",
+                " ",
+                CurationPublicationStatus.PUBLISHED,
+                true,
+                "banner.png",
                 List.of()
             )
         ).isInstanceOf(IllegalArgumentException.class);
@@ -31,19 +90,14 @@ class CurationTest {
             .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test
-    void rejectsDuplicateBlocks() {
-        CurationBlock block = CurationBlock.image(UUID.randomUUID(), CurationBlock.Status.VISIBLE, 0, 0, "image");
-        assertThatThrownBy(() -> curation(12L, List.of(block, block)))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
     public static Curation curation(Long id, List<CurationBlock> blocks) {
         return new Curation(
             id,
-            new CurationBanner("배너 제목", "배너 설명", "banner.png"),
-            "상세 제목",
-            "상세 설명",
+            "큐레이션 제목",
+            "큐레이션 설명",
+            CurationPublicationStatus.PUBLISHED,
+            true,
+            "banner.png",
             blocks
         );
     }

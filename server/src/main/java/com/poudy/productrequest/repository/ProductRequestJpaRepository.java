@@ -2,7 +2,7 @@ package com.poudy.productrequest.repository;
 
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,19 +18,18 @@ public interface ProductRequestJpaRepository extends Repository<ProductRequest, 
 
     Optional<ProductRequest> findById(UUID id);
 
-    List<ProductRequest> findAllByOrderByRequestedAtDescRequestIdDesc();
+    List<ProductRequest> findAllByOrderByCreatedAtDescRequestIdDesc();
 
-    List<ProductRequest> findAllByStatusOrderByRequestedAtDescRequestIdDesc(ProductRequestStatus status);
+    List<ProductRequest> findAllByStatusOrderByCreatedAtDescRequestIdDesc(ProductRequestStatus status);
 
     @Transactional
     @Modifying
-    @Query("update ProductRequest request set request.status = :status, request.statusChangedAt = :statusChangedAt,"
-        + " request.completedAt = :completedAt where request.requestId = :id and request.status = :expected")
+    @Query("update ProductRequest request set request.status = :status, request.statusChangedAt = :statusChangedAt"
+        + " where request.requestId = :id and request.status = :expected")
     int updateStatus(
         @Param("id") UUID id,
         @Param("expected") ProductRequestStatus expected,
         @Param("status") ProductRequestStatus status,
-        @Param("statusChangedAt") OffsetDateTime statusChangedAt,
-        @Param("completedAt") OffsetDateTime completedAt
+        @Param("statusChangedAt") LocalDateTime statusChangedAt
     );
 }

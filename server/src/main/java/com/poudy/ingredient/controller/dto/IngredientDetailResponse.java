@@ -2,7 +2,7 @@ package com.poudy.ingredient.controller.dto;
 
 import com.poudy.ingredient.domain.ExcludeCode;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.service.IngredientDetail;
+import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.tag.controller.dto.FormulationRoleResponse;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

@@ -13,8 +13,8 @@ class TagsTest {
     @DisplayName("같은 ID의 태그를 가질 수 없다")
     void rejectsDuplicateIds() {
         List<Tag> tags = List.of(
-            new Tag(1L, TagCategory.FUNCTION, "ABRASIVE", "연마제"),
-            new Tag(1L, TagCategory.FUNCTION, "ABSORBENT", "흡수제")
+            new Tag("ABRASIVE", TagCategory.FUNCTION, "연마제"),
+            new Tag("ABRASIVE", TagCategory.FUNCTION, "흡수제")
         );
 
         assertThatThrownBy(() -> Tags.from(tags))

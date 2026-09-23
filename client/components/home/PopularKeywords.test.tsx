@@ -81,7 +81,7 @@ describe("PopularKeywords", () => {
 
     expect(currentRow()).toHaveTextContent("나이아신아마이드");
 
-    act(() => vi.advanceTimersByTime(6000));
+    act(() => vi.advanceTimersByTime(3500));
 
     expect(currentRow()).toHaveTextContent("어성초");
   });
@@ -103,11 +103,26 @@ describe("PopularKeywords", () => {
     const section = container.querySelector("section")!;
 
     fireEvent.mouseEnter(section);
-    act(() => vi.advanceTimersByTime(200));
+    act(() => vi.advanceTimersByTime(150));
     expect(screen.queryByText(ONLY_WHEN_EXPANDED)).not.toBeInTheDocument();
 
-    act(() => vi.advanceTimersByTime(400));
+    act(() => vi.advanceTimersByTime(50));
     expect(screen.getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
+  });
+
+  /* 화면을 가로질러 지나가는 손은 바 위를 스치기만 한다. 그때 목록이 튀어나오면 안 된다. */
+  it("스치고 지나가면 목록이 열리지 않는다", () => {
+    vi.useFakeTimers();
+    const { container } = render(<PopularKeywords items={items} />);
+    const section = container.querySelector("section")!;
+
+    fireEvent.mouseEnter(section);
+    act(() => vi.advanceTimersByTime(100));
+    fireEvent.mouseLeave(section);
+
+    /* 떠난 뒤로는 아무리 기다려도 열리지 않는다. 머문 시간을 재던 시계를 껐기 때문이다. */
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.queryByText(ONLY_WHEN_EXPANDED)).not.toBeInTheDocument();
   });
 
   it("손을 떼면 목록이 닫힌다", () => {
@@ -116,7 +131,7 @@ describe("PopularKeywords", () => {
     const section = container.querySelector("section")!;
 
     fireEvent.mouseEnter(section);
-    act(() => vi.advanceTimersByTime(600));
+    act(() => vi.advanceTimersByTime(200));
     expect(screen.getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
 
     fireEvent.mouseLeave(section);

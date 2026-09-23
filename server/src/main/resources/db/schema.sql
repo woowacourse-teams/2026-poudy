@@ -20,6 +20,8 @@ CREATE TABLE brand (
     korean_name  VARCHAR(100)  NOT NULL,
     english_name VARCHAR(200)  NULL,
     image_url    VARCHAR(1000) NULL,
+    created_at   TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at   TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_brand PRIMARY KEY (id),
     CONSTRAINT ck_brand_name_nfc CHECK (korean_name IS NFC NORMALIZED AND (english_name IS NULL OR english_name IS NFC NORMALIZED)),
     CONSTRAINT ux_brand_korean_name UNIQUE (korean_name),
@@ -27,33 +29,31 @@ CREATE TABLE brand (
 );
 
 CREATE TABLE category (
-    id            BIGINT       NOT NULL,
-    parent_id     BIGINT       NULL,
-    parent_depth  SMALLINT     NULL,
-    name          VARCHAR(100) NOT NULL,
-    depth         SMALLINT     NOT NULL,
-    display_order INT          NOT NULL,
+    id         BIGINT       NOT NULL,
+    parent_id  BIGINT       NULL,
+    name       VARCHAR(100) NOT NULL,
+    depth      INT          NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_category PRIMARY KEY (id),
-    CONSTRAINT ux_category_id_depth UNIQUE (id, depth),
-    CONSTRAINT ux_category_order UNIQUE (display_order) DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT fk_category_parent FOREIGN KEY (parent_id, parent_depth) REFERENCES category (id, depth),
+    CONSTRAINT fk_category_parent FOREIGN KEY (parent_id) REFERENCES category (id),
     CONSTRAINT ck_category_name_not_blank CHECK (name !~ '^\s*$'),
     CONSTRAINT ck_category_depth CHECK (
-        (depth = 0 AND parent_id IS NULL AND parent_depth IS NULL)
-        OR (depth = 1 AND parent_id IS NOT NULL AND parent_depth = 0)
+        (depth = 0 AND parent_id IS NULL)
+        OR (depth = 1 AND parent_id IS NOT NULL)
     )
 );
 
 CREATE TABLE tag (
-    id         BIGINT       NOT NULL,
-    category   VARCHAR(30)  NOT NULL,
-    code       VARCHAR(100) NOT NULL,
-    name       VARCHAR(100) NOT NULL,
-    CONSTRAINT pk_tag PRIMARY KEY (id),
-    CONSTRAINT ux_tag_category_code UNIQUE (category, code),
+    code          VARCHAR(100) NOT NULL,
+    category_code VARCHAR(30)  NOT NULL,
+    name          VARCHAR(100) NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_tag PRIMARY KEY (code),
     CONSTRAINT ck_tag_code_not_blank CHECK (code !~ '^\s*$'),
     CONSTRAINT ck_tag_name_not_blank CHECK (name !~ '^\s*$'),
-    CONSTRAINT ck_tag_category CHECK (category IN (
+    CONSTRAINT ck_tag_category CHECK (category_code IN (
         'FUNCTION', 'BIOLOGICAL_EFFECT', 'INGREDIENT_CLASS', 'ALLERGEN', 'REGULATORY', 'SKIN_REACTION'
     ))
 );
@@ -63,46 +63,46 @@ CREATE TABLE ingredient (
     korean_name       VARCHAR(600)  NOT NULL,
     english_name      VARCHAR(2000) NULL,
     description       VARCHAR(1000) NOT NULL,
-    updated_at        TIMESTAMPTZ   NOT NULL,
+    updated_at        TIMESTAMP     NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_ingredient PRIMARY KEY (id),
     CONSTRAINT ck_ingredient_name_nfc CHECK (korean_name IS NFC NORMALIZED AND (english_name IS NULL OR english_name IS NFC NORMALIZED))
 );
 
 CREATE TABLE ingredient_alias (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY,
     ingredient_id BIGINT       NOT NULL,
-    display_order INT          NOT NULL,
     alias         VARCHAR(300) NOT NULL,
-    CONSTRAINT pk_ingredient_alias PRIMARY KEY (ingredient_id, display_order),
+    created_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_ingredient_alias PRIMARY KEY (id),
     CONSTRAINT ux_ingredient_alias_alias UNIQUE (ingredient_id, alias),
     CONSTRAINT ck_ingredient_alias_nfc CHECK (alias IS NFC NORMALIZED),
     CONSTRAINT fk_ingredient_alias_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id) ON DELETE CASCADE
 );
 
 CREATE TABLE ingredient_tag (
-    ingredient_id BIGINT NOT NULL,
-    tag_id        BIGINT NOT NULL,
-    display_order INT    NOT NULL,
-    CONSTRAINT pk_ingredient_tag PRIMARY KEY (ingredient_id, tag_id),
+    ingredient_id BIGINT       NOT NULL,
+    tag_code      VARCHAR(100) NOT NULL,
+    display_order INT          NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_ingredient_tag PRIMARY KEY (ingredient_id, tag_code),
     CONSTRAINT ux_ingredient_tag_order UNIQUE (ingredient_id, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_ingredient_tag_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id) ON DELETE CASCADE,
-    CONSTRAINT fk_ingredient_tag_tag FOREIGN KEY (tag_id) REFERENCES tag (id)
-);
-
-CREATE TABLE ingredient_tag_evidence (
-    ingredient_id BIGINT      NOT NULL,
-    tag_id        BIGINT      NOT NULL,
-    display_order INT         NOT NULL,
-    content       TEXT        NOT NULL,
-    CONSTRAINT pk_ingredient_tag_evidence PRIMARY KEY (ingredient_id, tag_id, display_order),
-    CONSTRAINT fk_ingredient_tag_evidence_tag FOREIGN KEY (ingredient_id, tag_id) REFERENCES ingredient_tag (ingredient_id, tag_id) ON DELETE CASCADE,
-    CONSTRAINT ck_ingredient_tag_evidence_not_deferred CHECK (content NOT LIKE '태그 보류%') -- 서버가 기동 시 거부하는 보류 근거
+    CONSTRAINT fk_ingredient_tag_tag FOREIGN KEY (tag_code) REFERENCES tag (code)
 );
 
 CREATE TABLE ingredient_source (
-    ingredient_id BIGINT NOT NULL,
-    display_order INT    NOT NULL,
-    content       TEXT   NOT NULL,
-    CONSTRAINT pk_ingredient_source PRIMARY KEY (ingredient_id, display_order),
+    id            BIGINT GENERATED ALWAYS AS IDENTITY,
+    ingredient_id BIGINT      NOT NULL,
+    type          VARCHAR(10) NOT NULL,
+    content       TEXT        NOT NULL,
+    created_at    TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_ingredient_source PRIMARY KEY (id),
+    CONSTRAINT ck_ingredient_source_type CHECK (type IN ('INFO', 'EFFECT')),
+    CONSTRAINT ck_ingredient_source_not_deferred CHECK (content NOT LIKE '태그 보류%'),
     CONSTRAINT fk_ingredient_source_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id) ON DELETE CASCADE
 );
 
@@ -110,6 +110,8 @@ CREATE TABLE exclude_code_ingredient (
     exclude_code  VARCHAR(50) NOT NULL,
     ingredient_id BIGINT      NOT NULL,
     display_order INT         NOT NULL,
+    created_at    TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_exclude_code_ingredient PRIMARY KEY (exclude_code, ingredient_id),
     CONSTRAINT ux_exclude_code_ingredient_order UNIQUE (exclude_code, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_exclude_code_ingredient_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id),
@@ -123,18 +125,17 @@ CREATE TABLE product (
     id             BIGINT        NOT NULL,
     brand_id       BIGINT        NOT NULL,
     category_id    BIGINT        NOT NULL,
-    category_depth SMALLINT      NOT NULL DEFAULT 1,
     product_name   VARCHAR(300)  NOT NULL,
     image_url      VARCHAR(1000) NULL,
     moisture_level SMALLINT      NOT NULL, -- 외부에서 계산한 결과를 저장한다
     oil_level      SMALLINT      NOT NULL, -- 외부에서 계산한 결과를 저장한다
-    updated_at     TIMESTAMPTZ   NOT NULL,
+    updated_at     TIMESTAMP     NOT NULL,
+    created_at     TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product PRIMARY KEY (id),
     CONSTRAINT ux_product_brand_name UNIQUE (brand_id, product_name),
     CONSTRAINT ck_product_name_nfc CHECK (product_name IS NFC NORMALIZED),
     CONSTRAINT fk_product_brand FOREIGN KEY (brand_id) REFERENCES brand (id),
-    CONSTRAINT fk_product_category FOREIGN KEY (category_id, category_depth) REFERENCES category (id, depth),
-    CONSTRAINT ck_product_category_depth CHECK (category_depth = 1),
+    CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES category (id),
     CONSTRAINT ck_product_moisture_level CHECK (moisture_level BETWEEN 0 AND 3),
     CONSTRAINT ck_product_oil_level CHECK (oil_level BETWEEN 0 AND 3)
 );
@@ -171,6 +172,8 @@ CREATE TABLE product_variant (
     volume_value  NUMERIC(10,2) NOT NULL,
     volume_unit   VARCHAR(20)   NOT NULL,
     status        VARCHAR(20)   NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_variant PRIMARY KEY (id),
     CONSTRAINT ux_product_variant_order UNIQUE (product_id, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_product_variant_product FOREIGN KEY (product_id) REFERENCES product (id),
@@ -215,30 +218,38 @@ CREATE TRIGGER tg_product_variant_reject_truncate BEFORE TRUNCATE ON product_var
     FOR EACH STATEMENT EXECUTE FUNCTION require_product_variant();
 
 CREATE TABLE product_component (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY,
     product_id    BIGINT       NOT NULL,
     display_order INT          NOT NULL,
     name          VARCHAR(100) NULL,
-    CONSTRAINT pk_product_component PRIMARY KEY (product_id, display_order),
+    created_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_product_component PRIMARY KEY (id),
+    CONSTRAINT ux_product_component_order UNIQUE (product_id, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT ux_product_component_name UNIQUE NULLS NOT DISTINCT (product_id, name),
     CONSTRAINT fk_product_component_product FOREIGN KEY (product_id) REFERENCES product (id)
 );
 
 CREATE TABLE product_ingredient (
-    product_id             BIGINT        NOT NULL,
-    component_order        INT           NOT NULL,
-    display_order          INT           NOT NULL,
+    component_id           BIGINT        NOT NULL,
     ingredient_id          BIGINT        NOT NULL,
+    display_order          INT           NOT NULL,
     disclosed_amount_type  VARCHAR(20)   NULL,
     disclosed_amount_value NUMERIC(19,9) NULL,
     disclosed_amount_unit  VARCHAR(20)   NULL,
-    CONSTRAINT pk_product_ingredient PRIMARY KEY (product_id, component_order, display_order),
-    CONSTRAINT fk_product_ingredient_component FOREIGN KEY (product_id, component_order) REFERENCES product_component (product_id, display_order),
+    created_at             TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at             TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_product_ingredient PRIMARY KEY (component_id, ingredient_id),
+    CONSTRAINT ux_product_ingredient_order UNIQUE (component_id, display_order) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_product_ingredient_component FOREIGN KEY (component_id) REFERENCES product_component (id),
     CONSTRAINT fk_product_ingredient_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient (id),
     CONSTRAINT ck_product_ingredient_amount CHECK (
         (disclosed_amount_type IS NULL AND disclosed_amount_value IS NULL AND disclosed_amount_unit IS NULL)
         OR (disclosed_amount_type IS NOT NULL AND disclosed_amount_value IS NOT NULL AND disclosed_amount_unit IS NOT NULL)
     ),
-    CONSTRAINT ck_product_ingredient_amount_value CHECK (disclosed_amount_value IS NULL OR disclosed_amount_value >= 0),
+    CONSTRAINT ck_product_ingredient_amount_value CHECK (
+        disclosed_amount_value IS NULL OR disclosed_amount_value >= 0
+    ),
     CONSTRAINT ck_product_ingredient_amount_unit CHECK (
         disclosed_amount_unit IS NULL OR disclosed_amount_unit IN ('ppm', 'ppb', 'percent')
     ),
@@ -247,24 +258,41 @@ CREATE TABLE product_ingredient (
     )
 );
 
+CREATE TABLE skin_type (
+    code       VARCHAR(20) NOT NULL,
+    name       VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_skin_type PRIMARY KEY (code),
+    CONSTRAINT ck_skin_type_name_not_blank CHECK (name !~ '^\s*$')
+);
+
 CREATE TABLE product_skin_type (
-    product_id BIGINT      NOT NULL,
-    skin_type  VARCHAR(20) NOT NULL,
-    CONSTRAINT pk_product_skin_type PRIMARY KEY (product_id, skin_type),
+    product_id     BIGINT      NOT NULL,
+    skin_type_code VARCHAR(20) NOT NULL,
+    created_at     TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at     TIMESTAMP   NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_product_skin_type PRIMARY KEY (product_id, skin_type_code),
     CONSTRAINT fk_product_skin_type_product FOREIGN KEY (product_id) REFERENCES product (id),
-    CONSTRAINT ck_product_skin_type CHECK (skin_type IN ('DRY', 'OILY', 'SENSITIVE', 'COMBINATION'))
+    CONSTRAINT fk_product_skin_type_definition FOREIGN KEY (skin_type_code) REFERENCES skin_type (code)
 );
 
 CREATE TABLE curation (
     id                         BIGINT        NOT NULL, -- 원천이 준 ID. /api/curations/{id} 링크가 유지되도록 다시 적재해도 바꾸지 않는다
     position                   INT           NOT NULL,
-    banner_title               VARCHAR(200)  NOT NULL,
-    banner_description         VARCHAR(500)  NOT NULL,
-    banner_thumbnail_image_url VARCHAR(1000) NOT NULL,
-    detail_title               VARCHAR(200)  NOT NULL,
-    detail_description         TEXT          NOT NULL,
+    title                      VARCHAR(200)  NOT NULL,
+    description                TEXT          NOT NULL,
+    banner_visible             BOOLEAN       NOT NULL,
+    banner_thumbnail_image_url VARCHAR(1000) NULL,
+    publication_status         VARCHAR(20)   NOT NULL,
+    created_at                 TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at                 TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_curation PRIMARY KEY (id),
-    CONSTRAINT ux_curation_position UNIQUE (position) DEFERRABLE INITIALLY DEFERRED
+    CONSTRAINT ux_curation_position UNIQUE (position) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT ck_curation_publication_status CHECK (publication_status IN ('PUBLISHED', 'UNPUBLISHED')),
+    CONSTRAINT ck_curation_banner CHECK (
+        NOT banner_visible OR (publication_status = 'PUBLISHED' AND banner_thumbnail_image_url IS NOT NULL)
+    )
 );
 
 CREATE TABLE curation_block (
@@ -272,44 +300,43 @@ CREATE TABLE curation_block (
     curation_id    BIGINT        NOT NULL,
     position       INT           NOT NULL,
     type           VARCHAR(30)   NOT NULL,
-    status         VARCHAR(10)   NOT NULL,
     spacing_top    INT           NOT NULL,
     spacing_bottom INT           NOT NULL,
     image_url      VARCHAR(1000) NULL,
+    created_at     TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at     TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_curation_block PRIMARY KEY (id),
-    CONSTRAINT ux_curation_block_id_type UNIQUE (id, type),
     CONSTRAINT ux_curation_block_order UNIQUE (curation_id, position) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_curation_block_curation FOREIGN KEY (curation_id) REFERENCES curation (id) ON DELETE CASCADE,
     CONSTRAINT ck_curation_block_type CHECK (type IN ('IMAGE', 'PRODUCTS', 'PRODUCTS_BY_FILTER')),
-    CONSTRAINT ck_curation_block_status CHECK (status IN ('VISIBLE', 'HIDDEN')),
     CONSTRAINT ck_curation_block_spacing CHECK (spacing_top >= 0 AND spacing_bottom >= 0),
     CONSTRAINT ck_curation_block_image CHECK (
-        (type = 'IMAGE' AND (status = 'HIDDEN' OR image_url IS NOT NULL))
+        (type = 'IMAGE' AND image_url IS NOT NULL)
         OR (type <> 'IMAGE' AND image_url IS NULL)
     )
 );
 
 CREATE TABLE curation_block_filter (
-    id         UUID         NOT NULL,
-    block_id   UUID         NOT NULL,
-    block_type VARCHAR(30)  NOT NULL DEFAULT 'PRODUCTS_BY_FILTER',
-    position   INT          NOT NULL,
+    id         UUID      NOT NULL,
+    block_id   UUID      NOT NULL,
+    position   INT       NOT NULL,
     label      VARCHAR(100) NOT NULL,
-    CONSTRAINT pk_curation_block_filter PRIMARY KEY (block_id, id),
+    created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    CONSTRAINT pk_curation_block_filter PRIMARY KEY (id, block_id),
     CONSTRAINT ux_curation_block_filter_order UNIQUE (block_id, position) DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT fk_curation_block_filter_block FOREIGN KEY (block_id, block_type) REFERENCES curation_block (id, type) ON DELETE CASCADE,
-    CONSTRAINT ck_curation_block_filter_block_type CHECK (block_type = 'PRODUCTS_BY_FILTER')
+    CONSTRAINT fk_curation_block_filter_block FOREIGN KEY (block_id) REFERENCES curation_block (id) ON DELETE CASCADE
 );
 
 CREATE TABLE curation_block_product (
-    block_id   UUID        NOT NULL,
-    block_type VARCHAR(30) NOT NULL,
-    product_id BIGINT      NOT NULL,
-    position   INT         NOT NULL,
+    block_id   UUID      NOT NULL,
+    product_id BIGINT    NOT NULL,
+    position   INT       NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_curation_block_product PRIMARY KEY (block_id, product_id),
     CONSTRAINT ux_curation_block_product_order UNIQUE (block_id, position) DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT fk_curation_block_product_block FOREIGN KEY (block_id, block_type) REFERENCES curation_block (id, type) ON DELETE CASCADE,
-    CONSTRAINT ck_curation_block_product_block_type CHECK (block_type IN ('PRODUCTS', 'PRODUCTS_BY_FILTER')),
+    CONSTRAINT fk_curation_block_product_block FOREIGN KEY (block_id) REFERENCES curation_block (id) ON DELETE CASCADE,
     CONSTRAINT fk_curation_block_product_product FOREIGN KEY (product_id) REFERENCES product (id)
 );
 
@@ -318,13 +345,52 @@ CREATE TABLE curation_block_product_filter (
     product_id BIGINT NOT NULL,
     filter_id  UUID   NOT NULL,
     position   INT    NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_curation_block_product_filter PRIMARY KEY (block_id, product_id, filter_id),
     CONSTRAINT ux_curation_block_product_filter_order UNIQUE (block_id, product_id, position) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_cbpf_product FOREIGN KEY (block_id, product_id) REFERENCES curation_block_product (block_id, product_id) ON DELETE CASCADE,
     CONSTRAINT fk_cbpf_filter FOREIGN KEY (block_id, filter_id) REFERENCES curation_block_filter (block_id, id) ON DELETE CASCADE
 );
 
--- 필터형 제품 블록(PRODUCTS_BY_FILTER)은 필터를 하나 이상 가지고, 블록의 모든 제품은 필터에 하나 이상 연결된다(노출 상태와 무관).
+-- block_type 컬럼을 자식 테이블에 중복하지 않고 부모 블록의 type을 검사한다.
+CREATE FUNCTION require_curation_block_child_type() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_type VARCHAR(30);
+BEGIN
+    IF TG_TABLE_NAME = 'curation_block' THEN
+        IF NEW.type <> 'PRODUCTS_BY_FILTER'
+            AND EXISTS (SELECT 1 FROM curation_block_filter WHERE block_id = NEW.id) THEN
+            RAISE EXCEPTION '필터가 있는 큐레이션 블록 % 타입은 PRODUCTS_BY_FILTER 여야 한다.', NEW.id
+                USING ERRCODE = '23514';
+        END IF;
+        IF NEW.type NOT IN ('PRODUCTS', 'PRODUCTS_BY_FILTER')
+            AND EXISTS (SELECT 1 FROM curation_block_product WHERE block_id = NEW.id) THEN
+            RAISE EXCEPTION '제품이 있는 큐레이션 블록 % 타입은 PRODUCTS 또는 PRODUCTS_BY_FILTER 여야 한다.', NEW.id
+                USING ERRCODE = '23514';
+        END IF;
+        RETURN NEW;
+    END IF;
+    SELECT type INTO v_type FROM curation_block WHERE id = NEW.block_id;
+    IF TG_TABLE_NAME = 'curation_block_filter' AND v_type <> 'PRODUCTS_BY_FILTER' THEN
+        RAISE EXCEPTION '큐레이션 필터의 블록 % 타입은 PRODUCTS_BY_FILTER 여야 한다.', NEW.block_id
+            USING ERRCODE = '23514';
+    END IF;
+    IF TG_TABLE_NAME = 'curation_block_product' AND v_type NOT IN ('PRODUCTS', 'PRODUCTS_BY_FILTER') THEN
+        RAISE EXCEPTION '큐레이션 제품의 블록 % 타입은 PRODUCTS 또는 PRODUCTS_BY_FILTER 여야 한다.', NEW.block_id
+            USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+END $$;
+
+CREATE TRIGGER tg_curation_block_child_type BEFORE UPDATE OF type ON curation_block
+    FOR EACH ROW EXECUTE FUNCTION require_curation_block_child_type();
+CREATE TRIGGER tg_curation_block_filter_type BEFORE INSERT OR UPDATE ON curation_block_filter
+    FOR EACH ROW EXECUTE FUNCTION require_curation_block_child_type();
+CREATE TRIGGER tg_curation_block_product_type BEFORE INSERT OR UPDATE ON curation_block_product
+    FOR EACH ROW EXECUTE FUNCTION require_curation_block_child_type();
+
+-- 필터형 제품 블록(PRODUCTS_BY_FILTER)은 필터를 하나 이상 가지고, 블록의 모든 제품은 필터에 하나 이상 연결된다.
 -- 블록·필터·제품·연결을 차례로 넣거나 바꾸므로 커밋 시점에 검사하고, 검사 전에 블록 행을 잠가 동시 변경을 차례로 검사한다.
 -- 필터·연결 테이블의 TRUNCATE 는 행 트리거를 거치지 않으므로 거부한다. 큐레이션 전체 교체는 curation 행 DELETE(연쇄 삭제) 후 다시 넣는다.
 CREATE FUNCTION require_curation_block_filters() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -379,9 +445,11 @@ CREATE TRIGGER tg_curation_block_product_filter_reject_truncate BEFORE TRUNCATE 
     FOR EACH STATEMENT EXECUTE FUNCTION require_curation_block_filters();
 
 CREATE TABLE product_daily_view (
-    view_date  DATE   NOT NULL,
-    product_id BIGINT NOT NULL,
-    view_count BIGINT NOT NULL DEFAULT 0,
+    view_date  DATE      NOT NULL,
+    product_id BIGINT    NOT NULL,
+    view_count BIGINT    NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_daily_view PRIMARY KEY (view_date, product_id),
     CONSTRAINT fk_product_daily_view_product FOREIGN KEY (product_id) REFERENCES product (id),
     CONSTRAINT ck_product_daily_view_count CHECK (view_count >= 0)
@@ -392,6 +460,8 @@ CREATE TABLE search_keyword (
     keyword          VARCHAR(100) NOT NULL,
     status           VARCHAR(10)  NOT NULL,
     ranking_eligible BOOLEAN      NOT NULL,
+    created_at       TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at       TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_search_keyword PRIMARY KEY (id),
     CONSTRAINT ck_search_keyword_status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
@@ -399,14 +469,18 @@ CREATE TABLE search_keyword (
 CREATE TABLE search_keyword_expression (
     expression_key VARCHAR(300) COLLATE "C" NOT NULL,
     keyword_id     VARCHAR(100) NOT NULL,
+    created_at     TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at     TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_search_keyword_expression PRIMARY KEY (expression_key),
     CONSTRAINT fk_search_keyword_expression_keyword FOREIGN KEY (keyword_id) REFERENCES search_keyword (id) ON DELETE CASCADE
 );
 
 CREATE TABLE search_keyword_bucket (
-    bucket_start TIMESTAMPTZ  NOT NULL,
+    bucket_start TIMESTAMP    NOT NULL,
     keyword_key  VARCHAR(300) COLLATE "C" NOT NULL,
     hit_count    BIGINT       NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at   TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_search_keyword_bucket PRIMARY KEY (bucket_start, keyword_key),
     CONSTRAINT ck_search_keyword_bucket_count CHECK (hit_count > 0)
 );
@@ -416,62 +490,47 @@ CREATE TABLE feedback (
     subject_type      VARCHAR(30)   NOT NULL,
     content           VARCHAR(2000) NOT NULL,
     page_path         VARCHAR(500)  NULL,
-    received_at       TIMESTAMPTZ   NOT NULL,
     status            VARCHAR(20)   NOT NULL DEFAULT 'RECEIVED',
-    status_changed_at TIMESTAMPTZ   NOT NULL,
-    completed_at      TIMESTAMPTZ   NULL,
+    status_changed_at TIMESTAMP     NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_feedback PRIMARY KEY (id),
     CONSTRAINT ck_feedback_subject_type CHECK (subject_type IN ('BUG_REPORT', 'IMPROVEMENT', 'OTHER')),
-    CONSTRAINT ck_feedback_status CHECK (
-        status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED')
-    ),
-    CONSTRAINT ck_feedback_completed_at CHECK (
-        (status = 'COMPLETED' AND completed_at IS NOT NULL)
-        OR (status <> 'COMPLETED' AND completed_at IS NULL)
-    )
+    CONSTRAINT ck_feedback_status CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'))
 );
 
 CREATE TABLE feedback_image (
-    image_id      UUID        NOT NULL,
-    feedback_id   UUID        NOT NULL,
-    display_order INT         NOT NULL,
-    extension     VARCHAR(10) NOT NULL,
+    image_id      UUID      NOT NULL,
+    feedback_id   UUID      NOT NULL,
+    display_order INT       NOT NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_feedback_image PRIMARY KEY (image_id),
     CONSTRAINT ux_feedback_image_order UNIQUE (feedback_id, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_feedback_image_feedback FOREIGN KEY (feedback_id) REFERENCES feedback (id) ON DELETE CASCADE,
-    CONSTRAINT ck_feedback_image_extension CHECK (extension IN ('jpg', 'png')),
     CONSTRAINT ck_feedback_image_order CHECK (display_order BETWEEN 0 AND 4)
 );
 
 CREATE TABLE product_correction_request (
     id                UUID          NOT NULL,
     product_id        BIGINT        NOT NULL,
-    product_name      VARCHAR(300)  NOT NULL,
     content           VARCHAR(2000) NOT NULL,
-    received_at       TIMESTAMPTZ   NOT NULL,
     status            VARCHAR(20)   NOT NULL DEFAULT 'RECEIVED',
-    status_changed_at TIMESTAMPTZ   NOT NULL,
-    completed_at      TIMESTAMPTZ   NULL,
+    status_changed_at TIMESTAMP     NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_correction_request PRIMARY KEY (id),
     CONSTRAINT fk_product_correction_request_product FOREIGN KEY (product_id) REFERENCES product (id),
-    CONSTRAINT ck_product_correction_request_status CHECK (
-        status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED')
-    ),
-    CONSTRAINT ck_product_correction_request_completed_at CHECK (
-        (status = 'COMPLETED' AND completed_at IS NOT NULL)
-        OR (status <> 'COMPLETED' AND completed_at IS NULL)
-    )
+    CONSTRAINT ck_product_correction_request_status CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'))
 );
 
 CREATE TABLE product_correction_request_image (
-    image_id      UUID        NOT NULL,
-    request_id    UUID        NOT NULL,
-    display_order INT         NOT NULL,
-    extension     VARCHAR(10) NOT NULL,
+    image_id      UUID      NOT NULL,
+    request_id    UUID      NOT NULL,
+    display_order INT       NOT NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
+    updated_at    TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_correction_request_image PRIMARY KEY (image_id),
     CONSTRAINT ux_product_correction_request_image_order UNIQUE (request_id, display_order) DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_product_correction_request_image_request FOREIGN KEY (request_id) REFERENCES product_correction_request (id) ON DELETE CASCADE,
-    CONSTRAINT ck_product_correction_request_image_extension CHECK (extension IN ('jpg', 'png')),
     CONSTRAINT ck_product_correction_request_image_order CHECK (display_order BETWEEN 0 AND 4)
 );
 
@@ -479,28 +538,71 @@ CREATE TABLE product_request (
     id                UUID         NOT NULL,
     product_name      VARCHAR(200) NOT NULL,
     brand_name        VARCHAR(100) NULL,
-    requested_at      TIMESTAMPTZ  NOT NULL,
     status            VARCHAR(20)  NOT NULL DEFAULT 'RECEIVED',
-    status_changed_at TIMESTAMPTZ  NOT NULL,
-    completed_at      TIMESTAMPTZ  NULL,
+    status_changed_at TIMESTAMP    NOT NULL,
+    created_at        TIMESTAMP    NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Seoul'),
     CONSTRAINT pk_product_request PRIMARY KEY (id),
-    CONSTRAINT ck_product_request_status CHECK (
-        status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED')
-    ),
-    CONSTRAINT ck_product_request_completed_at CHECK (
-        (status = 'COMPLETED' AND completed_at IS NOT NULL)
-        OR (status <> 'COMPLETED' AND completed_at IS NULL)
-    )
+    CONSTRAINT ck_product_request_status CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'))
 );
+
+-- 서버는 표시 순서를 목록 위치(JPA @OrderColumn)로 읽는다. 순서가 비면 목록에 빈 칸이 생기므로 부모마다 0부터 끊김 없이 이어지는지 커밋 시점에 검사한다.
+-- 인자: 부모 키 컬럼(쉼표로 구분), 순서 컬럼. 순서 중복은 각 테이블의 UNIQUE 제약이 막는다.
+CREATE FUNCTION require_contiguous_order() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_parent_columns TEXT[] := string_to_array(TG_ARGV[0], ',');
+    v_order_column   TEXT := TG_ARGV[1];
+    v_rows           JSONB[];
+    v_row            JSONB;
+    v_condition      TEXT;
+    v_count          BIGINT;
+    v_min            INT;
+    v_max            INT;
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        v_rows := ARRAY[to_jsonb(NEW)];
+    ELSIF TG_OP = 'DELETE' THEN
+        v_rows := ARRAY[to_jsonb(OLD)];
+    ELSE
+        v_rows := ARRAY[to_jsonb(OLD), to_jsonb(NEW)];
+    END IF;
+    FOREACH v_row IN ARRAY v_rows LOOP
+        SELECT string_agg(format('%I = %L', parent_column, v_row ->> parent_column), ' AND ')
+        INTO v_condition
+        FROM unnest(v_parent_columns) AS parent_column;
+        EXECUTE format('SELECT count(*), min(%1$I), max(%1$I) FROM %2$I.%3$I WHERE %4$s',
+                       v_order_column, TG_TABLE_SCHEMA, TG_TABLE_NAME, v_condition)
+        INTO v_count, v_min, v_max;
+        IF v_count > 0 AND (v_min <> 0 OR v_max <> v_count - 1) THEN
+            RAISE EXCEPTION '% 의 % 는 0부터 끊김 없이 이어져야 한다. 대상: %', TG_TABLE_NAME, v_order_column, v_condition
+                USING ERRCODE = '23514';
+        END IF;
+    END LOOP;
+    RETURN NULL;
+END $$;
+
+CREATE CONSTRAINT TRIGGER tg_ingredient_tag_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON ingredient_tag
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('ingredient_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_product_ingredient_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON product_ingredient
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('component_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_curation_block_filter_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_product
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_curation_block_product_filter_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON curation_block_product_filter
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('block_id,product_id', 'position');
+CREATE CONSTRAINT TRIGGER tg_feedback_image_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON feedback_image
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('feedback_id', 'display_order');
+CREATE CONSTRAINT TRIGGER tg_product_correction_request_image_contiguous_order AFTER INSERT OR UPDATE OR DELETE ON product_correction_request_image
+    DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION require_contiguous_order('request_id', 'display_order');
 
 CREATE INDEX ix_product_daily_view_product ON product_daily_view (product_id, view_date);
 -- 긴 본문은 btree 한 행 한계(약 2.7KB)를 넘을 수 있어 해시로 중복을 막는다.
-CREATE UNIQUE INDEX ux_ingredient_tag_evidence_content ON ingredient_tag_evidence (ingredient_id, tag_id, md5(content));
-CREATE UNIQUE INDEX ux_ingredient_source_content ON ingredient_source (ingredient_id, md5(content));
+CREATE UNIQUE INDEX ux_ingredient_source_content ON ingredient_source (ingredient_id, type, md5(content));
 CREATE INDEX ix_ingredient_korean_name ON ingredient (korean_name, id);
 -- 영문명 정확 조회(대소문자 무시)용. 로케일과 무관하게 A-Z 만 소문자로 바꾼다. 조회도 같은 식으로 해야 인덱스를 탄다.
 CREATE INDEX ix_ingredient_english_name ON ingredient (translate(english_name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), id);
-CREATE INDEX ix_product_category ON product (category_id, category_depth);
+CREATE INDEX ix_product_category ON product (category_id);
 CREATE INDEX ix_product_ingredient_ingredient ON product_ingredient (ingredient_id);
-CREATE INDEX ix_feedback_received_at ON feedback (received_at, id);
-CREATE INDEX ix_product_correction_request_received_at ON product_correction_request (received_at, id);
+CREATE INDEX ix_feedback_created_at ON feedback (created_at, id);
+CREATE INDEX ix_product_correction_request_created_at ON product_correction_request (created_at, id);
+CREATE INDEX ix_search_keyword_expression_keyword ON search_keyword_expression (keyword_id);

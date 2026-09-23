@@ -1,53 +1,65 @@
 package com.poudy.feedback.service;
 
+import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.Feedback;
+import com.poudy.feedback.domain.FeedbackPage;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackSubjectType;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
-import com.poudy.feedback.notification.FeedbackNotifier;
+import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FeedbackService {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackService.class);
+    private static final int DISCORD_CONTENT_MAX_LENGTH = 2000;
+    private static final DateTimeFormatter RECEIVED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        .withZone(ZoneId.of("Asia/Seoul"));
+    private static final String UNKNOWN_PATH = "알 수 없음";
+    private static final String PRODUCT_CORRECTION_NAME = "제품 정보 정정";
 
     private final FeedbackRepository feedbackRepository;
-    private final FeedbackNotifier feedbackNotifier;
-    private final FeedbackRateLimiter rateLimiter;
+    private final DiscordWebhook webhook;
+    private final String webhookUrl;
+    private final FeedbackRateLimits rateLimits;
     private final ProductRepository productRepository;
-    private final FeedbackImageRelay imageRelay;
+    private final FeedbackImageTransferService imageTransferService;
     private final Clock clock;
 
     public FeedbackService(
         FeedbackRepository feedbackRepository,
-        FeedbackNotifier feedbackNotifier,
-        FeedbackRateLimiter rateLimiter,
+        DiscordWebhook webhook,
+        @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl,
+        FeedbackRateLimits rateLimits,
         ProductRepository productRepository,
-        FeedbackImageRelay imageRelay,
-        @Qualifier("feedbackClock") Clock clock
+        FeedbackImageTransferService imageTransferService,
+        Clock clock
     ) {
         this.feedbackRepository = feedbackRepository;
-        this.feedbackNotifier = feedbackNotifier;
-        this.rateLimiter = rateLimiter;
+        this.webhook = webhook;
+        this.webhookUrl = webhookUrl;
+        this.rateLimits = rateLimits;
         this.productRepository = productRepository;
-        this.imageRelay = imageRelay;
+        this.imageTransferService = imageTransferService;
         this.clock = clock;
     }
 
@@ -62,7 +74,7 @@ public class FeedbackService {
         List<UUID> imageIds,
         String clientId
     ) {
-        Feedback feedback = Feedback.register(new ServiceFeedback(type, FeedbackPath.from(path)), content, clock);
+        Feedback feedback = ServiceFeedback.register(type, FeedbackPath.from(path), content, clock);
         receive(feedback, imageIds, clientId);
     }
 
@@ -74,20 +86,20 @@ public class FeedbackService {
     ) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        Feedback feedback = Feedback.register(new ProductCorrection(product.id(), product.name()), content, clock);
+        Feedback feedback = ProductCorrection.register(product, content, clock);
         receive(feedback, imageIds, clientId);
     }
 
     private void receive(Feedback feedback, List<UUID> imageIds, String clientId) {
         List<UUID> normalizedImageIds = Feedback.normalizeImageIds(imageIds);
-        rateLimiter.requireAllowed(clientId);
+        rateLimits.requireSubmitAllowed(clientId);
         Feedback saved;
         if (normalizedImageIds.isEmpty()) {
             feedbackRepository.save(feedback);
             saved = feedback;
         } else {
             saved = feedbackRepository.save(feedback, normalizedImageIds);
-            imageRelay.relay(saved);
+            imageTransferService.transfer(saved);
         }
         notifySafely(saved);
     }
@@ -130,16 +142,50 @@ public class FeedbackService {
 
     private void notifySafely(Feedback feedback) {
         try {
-            feedbackNotifier.notify(feedback);
+            webhook.send(webhookUrl, messageOf(feedback));
         } catch (RuntimeException exception) {
             log.error("Discord 의견 알림 전송에 실패했습니다. feedbackId={}", feedback.id());
         }
     }
 
-    public record FeedbackPage(List<Feedback> items, long totalElements) {
+    private static String messageOf(Feedback feedback) {
+        String header = """
+            💬 새로운 사용자 의견
 
-        public FeedbackPage {
-            items = List.copyOf(items);
+            %s
+            접수 시각: %s
+            접수 ID: %s
+            첨부 이미지: %d장
+
+            """.formatted(
+            subjectLinesOf(feedback),
+            feedback.receivedAt().format(RECEIVED_AT_FORMAT),
+            feedback.id(),
+            feedback.images().size()
+        );
+
+        return appendWithinLimit(header, feedback.content().value());
+    }
+
+    private static String subjectLinesOf(Feedback feedback) {
+        return switch (feedback) {
+            case ServiceFeedback service -> "유형: " + service.feedbackType().displayName()
+                + "\n화면: " + service.path().value().orElse(UNKNOWN_PATH);
+            case ProductCorrection correction -> "유형: " + PRODUCT_CORRECTION_NAME
+                + "\n제품: " + correction.productName() + " (ID " + correction.productId() + ")";
+        };
+    }
+
+    private static String appendWithinLimit(String header, String content) {
+        int headerLength = header.codePointCount(0, header.length());
+        int available = DISCORD_CONTENT_MAX_LENGTH - headerLength;
+        int contentLength = content.codePointCount(0, content.length());
+
+        if (contentLength <= available) {
+            return header + content;
         }
+
+        int end = content.offsetByCodePoints(0, available - 1);
+        return header + content.substring(0, end) + "…";
     }
 }
