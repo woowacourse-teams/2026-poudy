@@ -255,6 +255,19 @@ const CATEGORY_TREE: readonly {
   },
 ];
 
+/** 서버처럼 성분군마다 제품에 들어 있는지를 담는다. 이름은 서버가 내려 주는 표시명이다. */
+const EXCLUDE_GROUP_NAMES = [
+  ["FRAGRANCE_ALLERGENS", "향료/알레르기 성분"],
+  ["DRYING_ALCOHOLS", "건조 알코올"],
+  ["HARSH_PRESERVATIVES", "자극성 방부제"],
+  ["SULFATES", "설페이트 성분"],
+  ["CYCLIC_SILICONES", "실리콘 자극원"],
+  ["SYNTHETIC_COLORANTS", "합성 색소"],
+] as const;
+
+export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductDetailResponse["excludeGroups"] =>
+  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
+
 export const excludeCodes: ExcludeCodeResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
@@ -326,7 +339,13 @@ export const untaggedProductDetail: ProductDetailResponse = {
     formulationRoles: [],
     skinEffects: [],
   })),
-  freeOfCodes: ["DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"],
+  excludeGroups: excludeGroupsOf([
+    "DRYING_ALCOHOLS",
+    "HARSH_PRESERVATIVES",
+    "SULFATES",
+    "CYCLIC_SILICONES",
+    "SYNTHETIC_COLORANTS",
+  ]),
   updatedAt: "2026-08-20T00:00:00+09:00",
 };
 
@@ -418,14 +437,14 @@ export const productDetails: ProductDetailResponse[] = [
         skinEffects: [각질케어],
       },
     ],
-    freeOfCodes: [
+    excludeGroups: excludeGroupsOf([
       "FRAGRANCE_ALLERGENS",
       "DRYING_ALCOHOLS",
       "HARSH_PRESERVATIVES",
       "SULFATES",
       "CYCLIC_SILICONES",
       "SYNTHETIC_COLORANTS",
-    ],
+    ]),
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
   untaggedProductDetail,

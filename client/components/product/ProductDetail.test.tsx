@@ -310,3 +310,21 @@ describe("상품 정보 출처 안내", () => {
     );
   });
 });
+
+describe("제외 성분군 표시", () => {
+  const chipOf = (name: string) => screen.getByText(`${name} 제외`).closest("li");
+
+  it("제품에 없는 성분군은 체크와 함께 강조한다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("건조 알코올")).toHaveTextContent("건조 알코올 제외 없음");
+    expect(chipOf("건조 알코올")?.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("제품에 들어 있는 성분군은 체크 없이 흐리게 둔다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("향료/알레르기 성분")).toHaveTextContent("향료/알레르기 성분 제외 있음");
+    expect(chipOf("향료/알레르기 성분")?.querySelector("svg")).not.toBeInTheDocument();
+  });
+});
