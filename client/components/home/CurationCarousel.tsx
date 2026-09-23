@@ -716,7 +716,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
         <div className="relative -mx-4">
           {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
           <div className="px-4">
-            <div className="bg-surface h-58 w-full animate-pulse rounded-[18px]" />
+            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-[18px]" />
           </div>
         </div>
       </section>
@@ -790,7 +790,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                   }}
                   className="block"
                 >
-                  <article className="curation-card relative flex h-58 flex-col justify-end overflow-hidden rounded-[18px] p-5">
+                  <article className="curation-card relative flex aspect-[15/8] flex-col justify-end overflow-hidden rounded-[18px] px-5 py-4">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
@@ -832,7 +832,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           그림·제목과 같이 밀려 나가 숫자가 둘로 보인다.
 
           가운데 카드는 줄지 않아 제 크기 그대로다. 오른쪽 가장자리는 이 자리의 오른쪽에서
-          좌우 여백(16px)만큼 들어온 곳이고, 거기서 카드 안쪽 여백(20px)만큼 더 들인다.
+          좌우 여백(16px)만큼 들어온 곳이고, 거기서 카드 좌우 안쪽 여백(20px)만큼 더 들인다.
         */}
         {items.length > 1 ? (
           /*
@@ -848,7 +848,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           */
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-9 bottom-5 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
+            className="pointer-events-none absolute right-9 bottom-4 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
             {current + 1} / {items.length}
           </span>
