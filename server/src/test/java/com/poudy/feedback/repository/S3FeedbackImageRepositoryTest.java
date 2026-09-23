@@ -40,10 +40,16 @@ import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 class S3FeedbackImageRepositoryTest {
 
     private static final String BUCKET = "poudy-bucket";
+    private static final String PENDING_PREFIX = "poudy/feedback/pending/";
+    private static final String STAGING_PENDING_PREFIX = "poudy/staging/feedback/pending/";
     private static final Instant NOW = Instant.parse("2026-08-24T00:00:00Z");
 
     private final S3Client s3Client = mock(S3Client.class);
-    private final S3FeedbackImageRepository repository = new S3FeedbackImageRepository(s3Client, BUCKET);
+    private final S3FeedbackImageRepository repository = new S3FeedbackImageRepository(
+        s3Client,
+        BUCKET,
+        PENDING_PREFIX
+    );
 
     @Test
     @DisplayName("재인코딩 바이트를 추측하기 어려운 pending 키에 비공개 암호화해 저장한다")
@@ -238,6 +244,36 @@ class S3FeedbackImageRepositoryTest {
             assertThat(pending.image()).isEqualTo(new FeedbackImage(imageId, FeedbackImageFormat.JPEG));
             assertThat(pending.lastModified()).isEqualTo(NOW);
         });
+    }
+
+    @Test
+    @DisplayName("버킷을 함께 쓰는 환경은 설정한 pending 경로에만 저장하고 그 경로만 조회·삭제한다")
+    void isolatesPendingImagesByConfiguredPrefix() {
+        S3FeedbackImageRepository staging = new S3FeedbackImageRepository(s3Client, BUCKET, STAGING_PENDING_PREFIX);
+        UUID imageId = UUID.randomUUID();
+        given(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).willReturn(
+            ListObjectsV2Response.builder()
+                .contents(
+                    S3Object.builder().key(STAGING_PENDING_PREFIX + imageId + ".jpg").eTag("etag").lastModified(NOW)
+                        .build()
+                )
+                .build()
+        );
+
+        FeedbackImage saved = staging.savePending(new ProcessedImage(FeedbackImageFormat.PNG, new byte[] {1}));
+        List<PendingImage> pending = staging.findAllPending();
+        staging.deletePending(pending.getFirst().image());
+
+        verify(s3Client).putObject(
+            argThat((PutObjectRequest request) -> request.key().equals(STAGING_PENDING_PREFIX + saved.id() + ".png")),
+            any(RequestBody.class)
+        );
+        verify(s3Client).listObjectsV2(
+            argThat((ListObjectsV2Request request) -> request.prefix().equals(STAGING_PENDING_PREFIX))
+        );
+        verify(s3Client).deleteObject(
+            argThat((DeleteObjectRequest request) -> request.key().equals(STAGING_PENDING_PREFIX + imageId + ".jpg"))
+        );
     }
 
     @Test

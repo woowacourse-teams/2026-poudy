@@ -68,6 +68,7 @@ poudy:
   feedback:
     image-s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
+      pending-prefix: ${POUDY_FEEDBACK_S3_PENDING_PREFIX}
       region: ${AWS_REGION:ap-northeast-2}
     discord:
       webhook-url: ${POUDY_DISCORD_FEEDBACK_WEBHOOK_URL:}

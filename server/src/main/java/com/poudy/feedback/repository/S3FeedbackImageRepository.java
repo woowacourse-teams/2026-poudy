@@ -34,18 +34,20 @@ import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 @Repository
 public class S3FeedbackImageRepository {
 
-    private static final String PENDING_PREFIX = "poudy/feedback/pending/";
     private static final String FEEDBACK_PREFIX = "poudy/feedback/";
 
     private final S3Client s3Client;
     private final String bucket;
+    private final String pendingPrefix;
 
     public S3FeedbackImageRepository(
         @Qualifier("feedbackImageS3Client") S3Client s3Client,
-        @Value("${poudy.feedback.image-s3.bucket:}") String bucket
+        @Value("${poudy.feedback.image-s3.bucket:}") String bucket,
+        @Value("${poudy.feedback.image-s3.pending-prefix}") String pendingPrefix
     ) {
         this.s3Client = s3Client;
         this.bucket = bucket;
+        this.pendingPrefix = pendingPrefix;
     }
 
     public FeedbackImage savePending(ProcessedImage processed) {
@@ -74,7 +76,7 @@ public class S3FeedbackImageRepository {
     }
 
     public List<PendingImage> findAllPending() {
-        return listAll(PENDING_PREFIX).stream()
+        return listAll(pendingPrefix).stream()
             .flatMap(object -> pendingImageOf(object).stream())
             .toList();
     }
@@ -159,8 +161,8 @@ public class S3FeedbackImageRepository {
         }
     }
 
-    private static Optional<PendingImage> pendingImageOf(S3Object object) {
-        String fileName = object.key().substring(PENDING_PREFIX.length());
+    private Optional<PendingImage> pendingImageOf(S3Object object) {
+        String fileName = object.key().substring(pendingPrefix.length());
         int extensionStart = fileName.lastIndexOf('.');
         if (extensionStart <= 0 || extensionStart == fileName.length() - 1) {
             return Optional.empty();
@@ -232,8 +234,8 @@ public class S3FeedbackImageRepository {
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
-    private static String pendingKey(FeedbackImage image) {
-        return PENDING_PREFIX + image.id() + "." + image.format().extension();
+    private String pendingKey(FeedbackImage image) {
+        return pendingPrefix + image.id() + "." + image.format().extension();
     }
 
     private static String finalKey(UUID feedbackId, FeedbackImage image) {
