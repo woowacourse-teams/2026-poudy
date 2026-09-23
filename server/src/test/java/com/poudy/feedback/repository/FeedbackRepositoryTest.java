@@ -345,9 +345,10 @@ class FeedbackRepositoryTest {
         repository.save(fresh);
         OffsetDateTime cutoff = RECEIVED_AT.minusDays(83);
 
-        assertThat(repository.findExpired(cutoff, 10)).extracting(Feedback::id)
-            .containsExactly(oldest.id(), correction.id());
-        assertThat(repository.deleteExpired(oldest, cutoff)).isTrue();
+        assertThat(repository.findExpiredIds(cutoff, 10)).containsExactly(oldest.id(), correction.id());
+        assertThat(repository.deleteExpired(oldest.id(), cutoff)).isTrue();
+        assertThat(repository.deleteExpired(correction.id(), cutoff)).isTrue();
+        assertThat(repository.deleteExpired(fresh.id(), cutoff)).isFalse();
 
         assertThat(repository.exists(oldest.id())).isFalse();
         assertThat(

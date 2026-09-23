@@ -1,12 +1,12 @@
 package com.poudy.feedback.service;
 
-import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,13 +59,13 @@ public class FeedbackRetentionService {
         int deleted = 0;
         int failed = 0;
         for (int batch = 0; batch < maxBatches; batch++) {
-            List<Feedback> expired = feedbackRepository.findExpired(cutoff, batchSize);
+            List<UUID> expired = feedbackRepository.findExpiredIds(cutoff, batchSize);
             selected += expired.size();
             int batchFailures = 0;
-            for (Feedback feedback : expired) {
+            for (UUID feedbackId : expired) {
                 try {
-                    imageRepository.deleteRetainedData(feedback.id(), feedback.images());
-                    if (feedbackRepository.deleteExpired(feedback, cutoff)) {
+                    imageRepository.deleteRetainedData(feedbackId);
+                    if (feedbackRepository.deleteExpired(feedbackId, cutoff)) {
                         deleted++;
                     }
                 } catch (RuntimeException exception) {

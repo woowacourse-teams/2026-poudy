@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -153,17 +154,16 @@ public class FeedbackRepository {
         return inOrder(ids);
     }
 
-    public List<Feedback> findExpired(OffsetDateTime cutoff, int size) {
+    public List<UUID> findExpiredIds(OffsetDateTime cutoff, int size) {
         if (size < 1) {
             throw new IllegalArgumentException("조회 개수는 1 이상이어야 합니다.");
         }
-        List<UUID> ids = jdbc.query(
+        return jdbc.query(
             "select listed.id from " + LISTED
                 + " where listed.created_at <= :cutoff order by listed.created_at, listed.id limit :size",
             new MapSqlParameterSource().addValue("cutoff", local(cutoff)).addValue("size", size),
             (rs, row) -> rs.getObject("id", UUID.class)
         );
-        return inOrder(ids);
     }
 
     private List<Feedback> inOrder(List<UUID> ids) {
@@ -173,7 +173,7 @@ public class FeedbackRepository {
         Map<UUID, Feedback> feedbacks = findAllStored(ids).stream()
             .map(this::toDomain)
             .collect(toMap(Feedback::id, Function.identity()));
-        return ids.stream().map(feedbacks::get).toList();
+        return ids.stream().filter(feedbacks::containsKey).map(feedbacks::get).toList();
     }
 
     private List<StoredFeedback> findAllStored(Collection<UUID> ids) {
@@ -252,12 +252,19 @@ public class FeedbackRepository {
         );
     }
 
-    public boolean deleteExpired(Feedback feedback, OffsetDateTime cutoff) {
+    public boolean deleteExpired(UUID feedbackId, OffsetDateTime cutoff) {
+        MapSqlParameterSource parameters = new MapSqlParameterSource()
+            .addValue("id", feedbackId)
+            .addValue("cutoff", local(cutoff));
         Integer deleted = transactionTemplate.execute(
-            status -> jdbc.update(
-                "delete from " + tableOf(feedback) + " where id = :id and created_at <= :cutoff",
-                new MapSqlParameterSource().addValue("id", feedback.id()).addValue("cutoff", local(cutoff))
-            )
+            status -> Stream.of("feedback", "product_correction_request")
+                .mapToInt(
+                    table -> jdbc.update(
+                        "delete from " + table + " where id = :id and created_at <= :cutoff",
+                        parameters
+                    )
+                )
+                .sum()
         );
         return Objects.requireNonNullElse(deleted, 0) == 1;
     }

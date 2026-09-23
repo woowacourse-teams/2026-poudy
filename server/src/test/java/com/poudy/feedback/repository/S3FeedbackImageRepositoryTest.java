@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -289,16 +290,61 @@ class S3FeedbackImageRepositoryTest {
     }
 
     @Test
-    @DisplayName("보유기간이 끝나면 최종 이미지를 삭제한다")
+    @DisplayName("보유기간이 끝나면 형식을 몰라도 의견 경로 아래 파일을 모두 삭제한다")
     void deletesRetainedFeedbackData() {
         UUID feedbackId = UUID.randomUUID();
-        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
+        String imageKey = "poudy/feedback/" + feedbackId + "/images/" + UUID.randomUUID() + ".png";
+        given(
+            s3Client.listObjectsV2(
+                argThat(
+                    (ListObjectsV2Request request) -> request != null
+                        && request.prefix().equals("poudy/feedback/" + feedbackId + "/")
+                )
+            )
+        ).willReturn(ListObjectsV2Response.builder().contents(S3Object.builder().key(imageKey).build()).build());
 
-        repository.deleteRetainedData(feedbackId, List.of(image));
+        repository.deleteRetainedData(feedbackId);
 
-        ArgumentCaptor<DeleteObjectRequest> requests = ArgumentCaptor.forClass(DeleteObjectRequest.class);
-        verify(s3Client).deleteObject(requests.capture());
-        assertThat(requests.getValue().key())
-            .isEqualTo("poudy/feedback/" + feedbackId + "/images/" + image.id() + ".png");
+        verify(s3Client).deleteObject(argThat((DeleteObjectRequest request) -> request.key().equals(imageKey)));
+    }
+
+    @Test
+    @DisplayName("저장된 이미지 형식은 최종 경로에서 찾고, 아직 옮기지 못한 이미지는 pending 에서 찾고, 파일이 없는 이미지는 뺀다")
+    void findsStoredImagesFromFinalOrPending() {
+        UUID feedbackId = UUID.randomUUID();
+        UUID transferred = UUID.randomUUID();
+        UUID pending = UUID.randomUUID();
+        UUID lost = UUID.randomUUID();
+        given(
+            s3Client.listObjectsV2(
+                argThat(
+                    (ListObjectsV2Request request) -> request != null
+                        && request.prefix().equals("poudy/feedback/" + feedbackId + "/images/")
+                )
+            )
+        ).willReturn(
+            ListObjectsV2Response.builder()
+                .contents(
+                    S3Object.builder().key("poudy/feedback/" + feedbackId + "/images/" + transferred + ".jpg").build()
+                )
+                .build()
+        );
+        given(s3Client.headObject(any(HeadObjectRequest.class)))
+            .willThrow(S3Exception.builder().statusCode(404).message("missing").build());
+        willReturn(HeadObjectResponse.builder().eTag("etag").lastModified(NOW).build())
+            .given(s3Client)
+            .headObject(
+                argThat(
+                    (HeadObjectRequest request) -> request != null
+                        && request.key().equals(PENDING_PREFIX + pending + ".png")
+                )
+            );
+
+        List<FeedbackImage> found = repository.findStored(feedbackId, List.of(pending, lost, transferred));
+
+        assertThat(found).containsExactly(
+            new FeedbackImage(pending, FeedbackImageFormat.PNG),
+            new FeedbackImage(transferred, FeedbackImageFormat.JPEG)
+        );
     }
 }

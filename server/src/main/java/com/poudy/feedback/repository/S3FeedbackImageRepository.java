@@ -11,9 +11,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -33,6 +38,8 @@ import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 
 @Repository
 public class S3FeedbackImageRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(S3FeedbackImageRepository.class);
 
     private static final String FEEDBACK_PREFIX = "poudy/feedback/";
 
@@ -82,18 +89,31 @@ public class S3FeedbackImageRepository {
     }
 
     public List<FeedbackImage> findStored(UUID feedbackId, List<UUID> imageIds) {
-        return imageIds.stream().map(imageId -> findStored(feedbackId, imageId)).toList();
+        if (imageIds.isEmpty()) {
+            return List.of();
+        }
+        String prefix = imagesPrefix(feedbackId);
+        Map<UUID, FeedbackImage> transferred = listAll(prefix).stream()
+            .flatMap(object -> imageOf(object.key().substring(prefix.length())).stream())
+            .collect(Collectors.toMap(FeedbackImage::id, Function.identity(), (first, ignored) -> first));
+        return imageIds.stream()
+            .flatMap(imageId -> findStored(feedbackId, imageId, transferred).stream())
+            .toList();
     }
 
-    private FeedbackImage findStored(UUID feedbackId, UUID imageId) {
-        List<FeedbackImage> found = Stream.of(FeedbackImageFormat.JPEG, FeedbackImageFormat.PNG)
-            .map(format -> new FeedbackImage(imageId, format))
-            .filter(image -> existsExactly(finalKey(feedbackId, image)))
-            .toList();
-        if (found.size() != 1) {
-            throw new InfrastructureException("의견 이미지 형식을 확인하지 못했습니다.");
+    private Optional<FeedbackImage> findStored(UUID feedbackId, UUID imageId, Map<UUID, FeedbackImage> transferred) {
+        Optional<FeedbackImage> found = Optional.ofNullable(transferred.get(imageId)).or(() -> findPending(imageId));
+        if (found.isEmpty()) {
+            log.error("의견 이미지 파일을 찾지 못했습니다. feedbackId={}, imageId={}", feedbackId, imageId);
         }
-        return found.getFirst();
+        return found;
+    }
+
+    private Optional<FeedbackImage> findPending(UUID imageId) {
+        return Stream.of(FeedbackImageFormat.JPEG, FeedbackImageFormat.PNG)
+            .flatMap(format -> head(new FeedbackImage(imageId, format)).stream())
+            .map(PendingImage::image)
+            .findFirst();
     }
 
     public boolean transfer(UUID feedbackId, FeedbackImage image) {
@@ -128,8 +148,8 @@ public class S3FeedbackImageRepository {
         deleteRequired(pendingKey(image));
     }
 
-    public void deleteRetainedData(UUID feedbackId, List<FeedbackImage> images) {
-        images.forEach(image -> deleteRequired(finalKey(feedbackId, image)));
+    public void deleteRetainedData(UUID feedbackId) {
+        listAll(FEEDBACK_PREFIX + feedbackId + "/").forEach(object -> deleteRequired(object.key()));
     }
 
     private PendingImage resolve(UUID imageId, Instant now) {
@@ -162,17 +182,22 @@ public class S3FeedbackImageRepository {
     }
 
     private Optional<PendingImage> pendingImageOf(S3Object object) {
-        String fileName = object.key().substring(pendingPrefix.length());
+        return imageOf(object.key().substring(pendingPrefix.length()))
+            .map(image -> new PendingImage(image, object.eTag(), object.lastModified()));
+    }
+
+    private static Optional<FeedbackImage> imageOf(String fileName) {
         int extensionStart = fileName.lastIndexOf('.');
         if (extensionStart <= 0 || extensionStart == fileName.length() - 1) {
             return Optional.empty();
         }
         try {
-            FeedbackImage image = new FeedbackImage(
-                UUID.fromString(fileName.substring(0, extensionStart)),
-                FeedbackImageFormat.fromExtension(fileName.substring(extensionStart + 1))
+            return Optional.of(
+                new FeedbackImage(
+                    UUID.fromString(fileName.substring(0, extensionStart)),
+                    FeedbackImageFormat.fromExtension(fileName.substring(extensionStart + 1))
+                )
             );
-            return Optional.of(new PendingImage(image, object.eTag(), object.lastModified()));
         } catch (IllegalArgumentException exception) {
             return Optional.empty();
         }
@@ -238,8 +263,12 @@ public class S3FeedbackImageRepository {
         return pendingPrefix + image.id() + "." + image.format().extension();
     }
 
+    private static String imagesPrefix(UUID feedbackId) {
+        return FEEDBACK_PREFIX + feedbackId + "/images/";
+    }
+
     private static String finalKey(UUID feedbackId, FeedbackImage image) {
-        return FEEDBACK_PREFIX + feedbackId + "/images/" + image.id() + "." + image.format().extension();
+        return imagesPrefix(feedbackId) + image.id() + "." + image.format().extension();
     }
 
     private static String encode(String value) {
