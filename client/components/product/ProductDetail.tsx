@@ -13,7 +13,6 @@ import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
@@ -248,15 +247,24 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         </p>
       </div>
 
-      {product.freeOfCodes.length > 0 ? (
+      {product.excludeGroups.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5">
-          {product.freeOfCodes.map((code) => (
-            <li key={code} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
-              {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
-              <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
-              <span className="text-[12px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
-            </li>
-          ))}
+          {/* 제외한 성분군을 강조한다. 들어 있는 성분군은 비활성 버튼처럼 흐리게 둔다. */}
+          {product.excludeGroups.map((group) =>
+            group.contains ? (
+              <li key={group.name} className="flex h-7 items-center rounded-[14px] bg-[#ECEDEF] px-2.5">
+                <span className="text-[12px] font-semibold text-[#A0A3A9]">{group.name}</span>
+                <span className="sr-only"> 있음</span>
+              </li>
+            ) : (
+              <li key={group.name} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
+                {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
+                <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
+                <span className="text-[12px] font-semibold text-[#54575C]">{group.name}</span>
+                <span className="sr-only"> 없음</span>
+              </li>
+            ),
+          )}
         </ul>
       ) : null}
 

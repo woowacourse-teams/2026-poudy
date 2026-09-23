@@ -11,6 +11,7 @@ import {
   categories,
   excludeCodeIngredientIds,
   excludeCodes,
+  excludeGroupsOf,
   ingredientDetails,
   pipelineIngredientSummaries,
   pipelineProductIngredients,
@@ -252,7 +253,8 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   oilLevel: product.oilLevel,
   skinEffectGroups: [],
   ingredients: [],
-  freeOfCodes: [],
+  // 목록에는 성분이 없어 어느 성분군이 빠졌는지 알 수 없다. 모두 들어 있는 것으로 둔다.
+  excludeGroups: excludeGroupsOf([]),
   updatedAt: "2026-08-01T00:00:00+09:00",
 });
 
