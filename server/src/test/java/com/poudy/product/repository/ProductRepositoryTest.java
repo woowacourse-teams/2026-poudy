@@ -26,7 +26,8 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("DB의 참조 ID 를 도메인 객체로 풀어 제품을 세운다")
     void resolvesReferenceIdsIntoObjects() {
-        List<Product> found = productRepository.findAll().search("블랙 스네일 토너");
+        List<Product> found = productRepository.findByProductName("블랙 스네일 토너", null).stream()
+            .map(com.poudy.product.domain.ProductNameMatch::product).toList();
 
         assertThat(found).hasSize(1);
         Product product = found.getFirst();
@@ -53,7 +54,7 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("DB에 저장된 수분감·유분감 단계를 그대로 읽는다")
     void readsStoredSensoryLevels() {
-        Product product = productRepository.findAll().findById(10L).orElseThrow();
+        Product product = productRepository.findById(10L).orElseThrow();
 
         assertThat(product.moistureLevel()).isEqualTo(1);
         assertThat(product.oilLevel()).isEqualTo(2);
@@ -62,8 +63,8 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("성분을 포함한 제품 수는 조립된 성분으로 센다")
     void countsWithResolvedIngredients() {
-        assertThat(productRepository.findAll().countContaining(4815L)).isPositive();
-        assertThat(productRepository.findAll().countContaining(999999L)).isZero();
+        assertThat(productRepository.countContainingIngredient(4815L)).isPositive();
+        assertThat(productRepository.countContainingIngredient(999999L)).isZero();
     }
 
     @Test
@@ -75,7 +76,7 @@ class ProductRepositoryTest {
             new Brand(999L, "없는 브랜드", null, null)
         );
 
-        assertThat(productRepository.findAll().productCountsByBrand(brands))
+        assertThat(productRepository.productCountsByBrand(brands))
             .extracting(BrandProductCount::id, BrandProductCount::productCount)
             .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
     }
@@ -83,7 +84,7 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("제품의 복수 피부타입을 로딩하고 선택한 타입을 판정한다")
     void loadsSkinTypes() {
-        Product product = productRepository.findAll().findById(1L).orElseThrow();
+        Product product = productRepository.findById(1L).orElseThrow();
 
         assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
         assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
@@ -94,7 +95,7 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("피부타입이 없는 제품은 미분류 제품으로 로딩한다")
     void loadsUnclassifiedProduct() {
-        Product product = productRepository.findAll().findById(7L).orElseThrow();
+        Product product = productRepository.findById(7L).orElseThrow();
 
         assertThat(product.matchesSkinType(null)).isTrue();
         assertThat(SkinType.values()).allSatisfy(skinType -> assertThat(product.matchesSkinType(skinType)).isFalse());

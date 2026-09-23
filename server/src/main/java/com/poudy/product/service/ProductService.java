@@ -4,22 +4,24 @@ import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
-import com.poudy.product.domain.ProductFilter;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
-import com.poudy.product.domain.ProductSuggestionPage;
-import com.poudy.product.domain.Products;
+import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
@@ -47,21 +49,19 @@ public class ProductService {
         int page,
         int size
     ) {
-        ProductFilter filter = query.toFilter(excludeCodeRepository.findAll());
-        Products products = products();
-
+        validate(query);
         if (!query.hasKeyword() || page > 1) {
-            return products.find(filter, sort, page, size, categoryRepository.findAll());
+            return productRepository.find(query, sort, page, size);
         }
 
         ProductSearchLogger.Context context = new ProductSearchLogger.Context(
-            filter.keyword(),
+            query.searchKeyword(),
             page,
             size,
             ProductSort.orDefault(sort),
             query.hasFilters()
         );
-        return recordedSearch(context, () -> products.find(filter, sort, page, size, categoryRepository.findAll()));
+        return recordedSearch(context, () -> productRepository.find(query, sort, page, size));
     }
 
     private ProductPage recordedSearch(ProductSearchLogger.Context context, Supplier<ProductPage> search) {
@@ -95,22 +95,29 @@ public class ProductService {
     }
 
     public long countProducts(ProductQuery query) {
-        return products().count(query.toFilter(excludeCodeRepository.findAll()));
+        validate(query);
+        return productRepository.count(query);
     }
 
-    public ProductSuggestionPage suggestProducts(String keyword, int page, int size) {
-        return products().suggest(keyword, page, size);
+    private void validate(ProductQuery query) {
+        if (productRepository.hasConflictingIngredients(query)) {
+            throw new ConflictingIngredientFilterException();
+        }
+    }
+
+    public ProductSuggestions suggestProducts(String keyword, int page, int size) {
+        return productRepository.suggest(keyword, page, size);
     }
 
     public ProductDetail findDetail(Long productId) {
-        Product product = products().findById(productId)
+        Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
-    }
-
-    private Products products() {
-        return productRepository.findAll();
+        return new ProductDetail(
+            product,
+            categoryRepository.findAll().pathOf(product.category()),
+            excludeCodeRepository.freeCodesOf(product.ingredientIds())
+        );
     }
 
 }

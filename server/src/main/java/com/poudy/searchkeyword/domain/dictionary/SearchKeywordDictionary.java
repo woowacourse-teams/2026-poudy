@@ -8,29 +8,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class SearchKeywordDictionary {
 
     private final Map<String, DictionaryEntry> expressions;
     private final int activeEntryCount;
     private final List<String> emptyActiveEntryIds;
-    private final KeywordSearch search;
-    private final Map<String, Boolean> catalogEligibility = new ConcurrentHashMap<>();
 
     private SearchKeywordDictionary(
         Map<String, DictionaryEntry> expressions,
         int activeEntryCount,
-        List<String> emptyActiveEntryIds,
-        KeywordSearch search
+        List<String> emptyActiveEntryIds
     ) {
         this.expressions = expressions;
         this.activeEntryCount = activeEntryCount;
         this.emptyActiveEntryIds = emptyActiveEntryIds;
-        this.search = search;
     }
 
-    public static SearchKeywordDictionary of(List<DictionaryEntry> entries, KeywordSearch search) {
+    public static SearchKeywordDictionary of(List<DictionaryEntry> entries) {
         List<DictionaryEntry> copied = List.copyOf(entries);
         requireUniqueIds(copied);
         List<DictionaryEntry> activeEntries = copied.stream().filter(DictionaryEntry::isActive).toList();
@@ -41,20 +36,12 @@ public final class SearchKeywordDictionary {
         return new SearchKeywordDictionary(
             indexExpressions(activeEntries),
             activeEntries.size(),
-            emptyActiveEntryIds,
-            search
+            emptyActiveEntryIds
         );
     }
 
     public Optional<DictionaryEntry> resolve(String normalizedQuery) {
         return Optional.ofNullable(expressions.get(matchKey(normalizedQuery)));
-    }
-
-    public boolean canRank(DictionaryEntry entry) {
-        if (!entry.isRankable()) {
-            return false;
-        }
-        return catalogEligibility.computeIfAbsent(entry.id(), ignored -> search.hasResults(entry.keyword()));
     }
 
     public boolean recognizes(String normalizedQuery) {

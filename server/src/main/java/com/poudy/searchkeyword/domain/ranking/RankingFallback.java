@@ -19,12 +19,11 @@ public final class RankingFallback {
         return new RankingFallback(normalized);
     }
 
-    List<String> publishableNames(SearchKeywordDictionary dictionary) {
+    public List<DictionaryEntry> candidates(SearchKeywordDictionary dictionary) {
         return keywords.stream()
             .map(dictionary::resolve)
             .flatMap(Optional::stream)
-            .filter(dictionary::canRank)
-            .map(DictionaryEntry::keyword)
+            .filter(DictionaryEntry::isRankable)
             .distinct()
             .toList();
     }

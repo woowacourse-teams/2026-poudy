@@ -18,15 +18,15 @@ class SearchKeywordDictionaryRepositoryTest {
     @Test
     @DisplayName("DB의 대표어와 표현을 사전으로 읽는다")
     void readsKeywordsAndExpressions() {
-        SearchKeywordDictionary dictionary = repository.read(keyword -> true);
+        SearchKeywordDictionary dictionary = repository.read();
 
         assertThat(dictionary.activeEntryCount()).isEqualTo(3);
         assertThat(dictionary.expressionCount()).isEqualTo(4);
         assertThat(dictionary.resolve("독도토너")).hasValueSatisfying(entry -> {
             assertThat(entry.keyword()).isEqualTo("라운드랩 1025 독도 토너");
-            assertThat(dictionary.canRank(entry)).isTrue();
+            assertThat(entry.isRankable()).isTrue();
         });
         assertThat(dictionary.resolve("pdrn"))
-            .hasValueSatisfying(entry -> assertThat(dictionary.canRank(entry)).isTrue());
+            .hasValueSatisfying(entry -> assertThat(entry.isRankable()).isTrue());
     }
 }

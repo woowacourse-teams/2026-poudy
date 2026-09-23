@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,5 +59,14 @@ class IngredientRepositoryTest {
         assertThat(ingredientRepository.suggest("가지추출물"))
             .extracting(matched -> matched.ingredient().id())
             .contains(2L);
+    }
+
+    @Test
+    @DisplayName("ID 중복과 없는 성분을 제외하고 첫 요청 순서대로 페이지를 조회한다")
+    void pagesDistinctRequestedIngredients() {
+        var page = ingredientRepository.findPage(List.of(9L, 2L, 9L, 999999L, 1L), false, 2, 1);
+
+        assertThat(page.items()).extracting(Ingredient::id).containsExactly(2L);
+        assertThat(page.totalElements()).isEqualTo(3);
     }
 }

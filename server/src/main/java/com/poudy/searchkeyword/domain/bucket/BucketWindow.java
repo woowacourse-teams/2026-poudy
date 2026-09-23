@@ -65,4 +65,5 @@ public final class BucketWindow {
     public boolean covers(Instant latestStart, Instant start) {
         return !start.isBefore(retainedStart(latestStart)) && !start.isAfter(latestStart);
     }
+
 }

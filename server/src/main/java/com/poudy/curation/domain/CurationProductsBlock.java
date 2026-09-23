@@ -56,6 +56,11 @@ final class CurationProductsBlock extends CurationBlock {
     }
 
     @Override
+    List<Long> productIds() {
+        return productIds;
+    }
+
+    @Override
     Optional<CurationBlockContent> resolveContent(Products products) {
         List<Product> available = productIds.stream().flatMap(id -> products.findById(id).stream()).toList();
         if (available.isEmpty()) {

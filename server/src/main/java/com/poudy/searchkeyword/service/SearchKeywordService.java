@@ -1,82 +1,27 @@
 package com.poudy.searchkeyword.service;
 
-import com.poudy.product.repository.ProductRepository;
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
-import com.poudy.searchkeyword.domain.bucket.BucketWindow;
-import com.poudy.searchkeyword.domain.bucket.KeywordBucketView;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
-import com.poudy.searchkeyword.domain.bucket.KeywordCountStore;
-import com.poudy.searchkeyword.domain.dictionary.KeywordCoverage;
-import com.poudy.searchkeyword.domain.dictionary.KeywordSearch;
-import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
-import com.poudy.searchkeyword.domain.ranking.RankingFallback;
-import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
-import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import java.time.Clock;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
-@Service
 public class SearchKeywordService {
 
     private static final Logger log = LoggerFactory.getLogger(SearchKeywordService.class);
-    private final SearchKeywordDictionary dictionary;
+    private final SearchKeywordSnapshot snapshot;
     private final KeywordBuckets successful;
     private final KeywordSearch search;
-    private final RankingPolicy rankingPolicy;
-    private final RankingFallback rankingFallback;
-    private final AtomicReference<List<RankedKeyword>> cachedRankings = new AtomicReference<>(List.of());
-
-    @Autowired
-    public SearchKeywordService(
-        ProductRepository productRepository,
-        SearchKeywordDictionaryRepository dictionaryRepository,
-        KeywordCountStore bucketStore,
-        Clock clock
-    ) {
-        this(
-            dictionaryRepository.read(productRepository.findAll()::hasResults),
-            new KeywordBuckets(
-                clock,
-                new BucketWindow(
-                    SearchKeywordPolicy.RANKING_HOURS,
-                    SearchKeywordPolicy.BUCKET_SECONDS,
-                    SearchKeywordPolicy.COMPARISON_BUCKETS
-                ),
-                bucketStore
-            ),
-            productRepository.findAll()::hasResults,
-            new RankingPolicy(
-                SearchKeywordPolicy.MIN_COUNT,
-                SearchKeywordPolicy.RANKING_SIZE,
-                Set.of()
-            ),
-            RankingFallback.of(SearchKeywordPolicy.DEFAULT_KEYWORDS)
-        );
-    }
 
     public SearchKeywordService(
-        SearchKeywordDictionary dictionary,
+        SearchKeywordSnapshot snapshot,
         KeywordBuckets successful,
-        KeywordSearch search,
-        RankingPolicy rankingPolicy,
-        RankingFallback rankingFallback
+        KeywordSearch search
     ) {
-        this.dictionary = dictionary;
+        this.snapshot = snapshot;
         this.successful = successful;
         this.search = search;
-        this.rankingPolicy = rankingPolicy;
-        this.rankingFallback = rankingFallback;
     }
 
     public void record(SearchKeyword keyword) {
@@ -88,7 +33,7 @@ public class SearchKeywordService {
     }
 
     private void logWhenUnresolved(String normalizedQuery) {
-        if (dictionary.recognizes(normalizedQuery)) {
+        if (snapshot.recognizes(normalizedQuery)) {
             return;
         }
         log.info("event=search_keyword_unresolved keyword=\"{}\"", quoted(normalizedQuery));
@@ -99,35 +44,7 @@ public class SearchKeywordService {
     }
 
     public List<RankedKeyword> rankings() {
-        return cachedRankings.get();
-    }
-
-    @EventListener(ApplicationReadyEvent.class)
-    @Scheduled(cron = SearchKeywordPolicy.REFRESH_CRON)
-    public void refreshRankings() {
-        try {
-            KeywordBucketView view = successful.view();
-            cachedRankings.set(ranked(view));
-            logCoverage(view.coverage(dictionary));
-        } catch (RuntimeException exception) {
-            log.warn("event=search_keyword_rankings_refresh_failed");
-        }
-    }
-
-    private List<RankedKeyword> ranked(KeywordBucketView view) {
-        return successful.comparisonView()
-            .map(compared -> view.rank(dictionary, rankingPolicy, rankingFallback, compared))
-            .orElseGet(() -> view.rank(dictionary, rankingPolicy, rankingFallback));
-    }
-
-    private static void logCoverage(KeywordCoverage coverage) {
-        log.info(
-            "event=search_keyword_coverage total={} resolved={} ratio={} keys={}",
-            coverage.total(),
-            coverage.resolved(),
-            "%.3f".formatted(coverage.ratio()),
-            coverage.distinctKeys()
-        );
+        return snapshot.rankings();
     }
 
 }

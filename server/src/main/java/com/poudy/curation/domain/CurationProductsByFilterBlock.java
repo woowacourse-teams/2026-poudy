@@ -83,6 +83,11 @@ final class CurationProductsByFilterBlock extends CurationBlock {
     }
 
     @Override
+    List<Long> productIds() {
+        return products.stream().map(CurationProductMapping::productId).toList();
+    }
+
+    @Override
     Optional<CurationBlockContent> resolveContent(Products catalog) {
         List<CurationBlockContent.FilteredProduct> available = products.stream()
             .flatMap(

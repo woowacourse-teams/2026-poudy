@@ -6,6 +6,7 @@ import com.poudy.ingredient.controller.dto.IngredientDetailResponse;
 import com.poudy.ingredient.controller.dto.IngredientListResponse;
 import com.poudy.ingredient.controller.dto.IngredientPageResponse;
 import com.poudy.ingredient.controller.dto.IngredientQueryRequest;
+import com.poudy.ingredient.service.IngredientQuery;
 import com.poudy.ingredient.service.IngredientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,8 +42,7 @@ public class IngredientController {
         return ResponseEntity.ok(
             IngredientPageResponse.from(
                 ingredientService.find(
-                    query.ingredientIds(),
-                    query.usedInProducts(),
+                    new IngredientQuery(query.ingredientIds(), query.usedInProducts()),
                     pagination.page(),
                     pagination.size()
                 ),

@@ -1,9 +1,5 @@
 package com.poudy.ingredient.domain;
 
-import com.poudy.search.domain.NameRank;
-import com.poudy.search.domain.SearchKeyword;
-import com.poudy.search.domain.SearchableText;
-import com.poudy.search.domain.TextMatch;
 import com.poudy.tag.domain.FormulationRole;
 import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.Tag;
@@ -29,7 +25,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @Table(name = "ingredient")
@@ -73,15 +68,6 @@ public class Ingredient {
     @Transient
     private List<IngredientTag> tags;
 
-    @Transient
-    private List<SearchableText> searchableKoreanNames;
-
-    @Transient
-    private List<SearchableText> searchableEnglishNames;
-
-    @Transient
-    private List<SearchableText> searchableAliases;
-
     protected Ingredient() {
     }
 
@@ -107,23 +93,14 @@ public class Ingredient {
             .map(content -> new Source(null, SourceType.INFO, content))
             .toList();
         this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
-        index();
+        this.infoSources = contentsOf(SourceType.INFO);
     }
 
     @PostLoad
     private void load() {
         List<String> effectSources = contentsOf(SourceType.EFFECT);
         this.tags = tagReferences.stream().map(tag -> new IngredientTag(tag, effectSources)).toList();
-        index();
-    }
-
-    private void index() {
         this.infoSources = contentsOf(SourceType.INFO);
-        this.searchableKoreanNames = SearchableText.formsOf(koreanName);
-        this.searchableEnglishNames = SearchableText.formsOf(englishName());
-        this.searchableAliases = aliases.stream()
-            .flatMap(alias -> SearchableText.formsOf(alias.alias()).stream())
-            .toList();
     }
 
     private List<String> contentsOf(SourceType type) {
@@ -190,58 +167,16 @@ public class Ingredient {
         return infoSources;
     }
 
+    public List<String> aliases() {
+        return aliases.stream().map(Alias::alias).toList();
+    }
+
     public List<String> effectSources() {
         return tags.stream()
             .filter(IngredientTag::isDisplayedSkinEffect)
             .flatMap(tag -> tag.sources().stream())
             .distinct()
             .toList();
-    }
-
-    public Optional<MatchedIngredient> match(SearchKeyword keyword) {
-        NameRank nameRank = nameRank(keyword);
-        Optional<IngredientTextMatch> nameMatch = findNameMatch(keyword);
-        if (nameMatch.isPresent()) {
-            return Optional.of(matched(nameMatch.get(), nameRank));
-        }
-        return findAliasMatch(keyword)
-            .map(match -> matched(match, nameRank));
-    }
-
-    private Optional<IngredientTextMatch> findNameMatch(SearchKeyword keyword) {
-        Optional<TextMatch> koreanNameMatch = TextMatch.best(searchableKoreanNames, keyword);
-        Optional<TextMatch> englishNameMatch = TextMatch.best(searchableEnglishNames, keyword);
-
-        if (isBetterThan(englishNameMatch, koreanNameMatch)) {
-            return englishNameMatch.map(match -> new IngredientTextMatch(IngredientMatchField.ENGLISH_NAME, match));
-        }
-        return koreanNameMatch.map(match -> new IngredientTextMatch(IngredientMatchField.KOREAN_NAME, match));
-    }
-
-    private Optional<IngredientTextMatch> findAliasMatch(SearchKeyword keyword) {
-        return TextMatch.best(searchableAliases, keyword)
-            .map(match -> new IngredientTextMatch(IngredientMatchField.ALIAS, match));
-    }
-
-    private NameRank nameRank(SearchKeyword keyword) {
-        NameRank koreanNameRank = NameRank.best(searchableKoreanNames, keyword);
-        NameRank englishNameRank = NameRank.best(searchableEnglishNames, keyword);
-
-        if (englishNameRank.isBetterThan(koreanNameRank)) {
-            return englishNameRank;
-        }
-        return koreanNameRank;
-    }
-
-    private MatchedIngredient matched(IngredientTextMatch match, NameRank nameRank) {
-        return new MatchedIngredient(this, match.field(), match.textMatch(), nameRank);
-    }
-
-    private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {
-        if (candidate.isEmpty()) {
-            return false;
-        }
-        return current.isEmpty() || candidate.get().rank().isBetterThan(current.get().rank());
     }
 
     private enum SourceType {

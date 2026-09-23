@@ -1,4 +1,4 @@
--- 적용: psql -X -v ON_ERROR_STOP=1 --single-transaction -f src/main/resources/db/schema.sql
+-- 적용: sh ./scripts/init-db.sh -d poudy
 -- 한 트랜잭션으로 적용해 중간에 실패하면 아무것도 남지 않게 한다. 테스트는 spring.sql.init 이 파일 전체를 한 문장 묶음으로 실행한다.
 
 -- preflight. ASCII 로만 쓴다. UTF8 이 아닌 DB 는 한글이 든 문장을 변환하다 먼저 실패하기 때문이다.

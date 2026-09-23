@@ -1,5 +1,6 @@
 package com.poudy.product.controller;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.nullValue;
@@ -131,7 +132,7 @@ class ProductQueryTest {
     }
 
     @Test
-    @DisplayName("제품명 검색 제안의 페이지를 나눠도 목록과 같은 순서를 유지한다")
+    @DisplayName("제품명 검색 제안의 페이지를 나눠도 DB 검색 순위를 유지한다")
     void keepsSuggestionOrderAcrossPages() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("size", "1"))
             .andExpect(status().isOk())
@@ -139,19 +140,20 @@ class ProductQueryTest {
 
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "3").param("size", "1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[0].id").value(10));
+            .andExpect(jsonPath("$.items[0].id").value(7));
     }
 
     @Test
-    @DisplayName("브랜드명 검색 제안도 해당 브랜드의 제품으로 반환한다")
+    @DisplayName("브랜드명 정확 일치 상품을 먼저 제안하고 일부 토큰 일치 상품을 뒤에 둔다")
     void suggestsProductsByBrandName() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-            .andExpect(
-                jsonPath("$.items[*].brandName")
-                    .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드")))
-            )
+            .andExpect(jsonPath("$.items[*].id").value(contains(1, 10, 7, 15, 13)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(5))
+            .andExpect(jsonPath("$.items[0:3].brandName").value(contains("다 브랜드", "다 브랜드", "다 브랜드")))
+            .andExpect(jsonPath("$.items[3].match.text").value("나 브랜드"))
+            .andExpect(jsonPath("$.items[3].match.startIndex").value(2))
+            .andExpect(jsonPath("$.items[3].match.endIndexExclusive").value(5))
             .andExpect(jsonPath("$.items[0].match.field").value("BRAND_NAME"))
             .andExpect(jsonPath("$.items[0].match.text").value("다 브랜드"))
             .andExpect(jsonPath("$.items[0].match.startIndex").value(0))

@@ -22,6 +22,6 @@ public class ExcludeCodeService implements IngredientGroups {
 
     @Override
     public List<ExcludeCode> codesOf(Long ingredientId) {
-        return excludeCodeRepository.findAll().codesOf(ingredientId);
+        return excludeCodeRepository.codesOf(ingredientId);
     }
 }

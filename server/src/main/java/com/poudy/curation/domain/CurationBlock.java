@@ -84,4 +84,8 @@ public abstract class CurationBlock {
     }
 
     abstract Optional<CurationBlockContent> resolveContent(Products products);
+
+    List<Long> productIds() {
+        return List.of();
+    }
 }

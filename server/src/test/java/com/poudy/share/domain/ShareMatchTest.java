@@ -9,9 +9,10 @@ import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductNameMatch;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
-import com.poudy.product.domain.Products;
+import com.poudy.search.domain.SearchKeyword;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -43,6 +44,23 @@ class ShareMatchTest {
             OffsetDateTime.parse("2026-08-01T00:00:00Z"),
             java.util.Set.of()
         );
+    }
+
+    private record Products(List<Product> values) implements SharedProductLookup {
+        static Products from(List<Product> values) {
+            return new Products(values);
+        }
+
+        public List<ProductNameMatch> findByName(String keyword, Long brandId) {
+            return values.stream().filter(p -> brandId == null || p.hasBrandId(brandId))
+                .filter(p -> new SearchKeyword(keyword).matches(p.name()))
+                .map(p -> new ProductNameMatch(p, new SearchKeyword(keyword).matchesExactly(p.name()))).toList();
+        }
+
+        public List<Product> findByBrand(Long brandId) {
+            return values.stream().filter(p -> p.hasBrandId(brandId)).toList();
+        }
+
     }
 
     private static ShareMatch match(String productPhrase, Products products) {

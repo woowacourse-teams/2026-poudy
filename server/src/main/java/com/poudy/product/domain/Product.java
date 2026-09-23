@@ -7,10 +7,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
-import com.poudy.search.domain.NameMatch;
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.search.domain.SearchableText;
-import com.poudy.search.domain.TextMatch;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.SkinEffect;
 import jakarta.persistence.CollectionTable;
@@ -36,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -44,8 +40,6 @@ import java.util.Set;
 public class Product {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
-
-    private static final int MINIMUM_BRAND_PREFIX_LENGTH = 2;
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
 
@@ -103,9 +97,6 @@ public class Product {
     @Transient
     private ProductSensory sensory;
 
-    @Transient
-    private List<SearchableText> searchableNames;
-
     protected Product() {
     }
 
@@ -159,7 +150,6 @@ public class Product {
         this.updatedAt = updatedAt.atZoneSameInstant(SEOUL).toLocalDateTime();
         this.components = List.of();
         this.variantRows = variants.values();
-        this.searchableNames = SearchableText.formsOf(name);
     }
 
     @PostLoad
@@ -171,7 +161,6 @@ public class Product {
         );
         this.variants = new ProductVariants(variantRows);
         this.sensory = new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel));
-        this.searchableNames = SearchableText.formsOf(name);
     }
 
     private static void requireLeafCategory(Category category) {
@@ -283,62 +272,6 @@ public class Product {
             .toList();
     }
 
-    public Optional<MatchedProduct> match(ProductSearchQuery query) {
-        Optional<MatchedProduct> direct = matchDirectly(query.whole());
-        if (direct.isPresent()) {
-            return direct;
-        }
-
-        return query.parts().stream()
-            .map(this::matchCombined)
-            .flatMap(Optional::stream)
-            .min(CombinedMatch.ORDER)
-            .map(match -> MatchedProduct.combined(this, match.brand(), match.product()));
-    }
-
-    public Optional<MatchedProduct> matchByProductName(SearchKeyword keyword) {
-        return findProductNameMatch(keyword)
-            .map(match -> new MatchedProduct(this, ProductMatchField.PRODUCT_NAME, match));
-    }
-
-    private Optional<MatchedProduct> matchDirectly(SearchKeyword keyword) {
-        Optional<TextMatch> productNameMatch = findProductNameMatch(keyword);
-        Optional<TextMatch> brandNameMatch = brand.findMatch(keyword);
-
-        if (isBetterThan(brandNameMatch, productNameMatch)) {
-            return brandNameMatch.map(match -> new MatchedProduct(this, ProductMatchField.BRAND_NAME, match));
-        }
-        return productNameMatch.map(match -> new MatchedProduct(this, ProductMatchField.PRODUCT_NAME, match));
-    }
-
-    private Optional<CombinedMatch> matchCombined(ProductSearchQuery.Parts parts) {
-        Optional<TextMatch> brandMatch = brand.findMatch(parts.brand());
-        if (brandMatch.isEmpty() || !matchesBrandPrefix(parts.brand(), brandMatch.get())) {
-            return Optional.empty();
-        }
-
-        return findProductNameMatch(parts.product())
-            .map(productMatch -> new CombinedMatch(brandMatch.get(), productMatch));
-    }
-
-    private Optional<TextMatch> findProductNameMatch(SearchKeyword keyword) {
-        return TextMatch.best(searchableNames, keyword);
-    }
-
-    private static boolean matchesBrandPrefix(SearchKeyword searched, TextMatch match) {
-        if (match.is(NameMatch.EXACT)) {
-            return true;
-        }
-        return match.is(NameMatch.PREFIX) && searched.hasAtLeastLetters(MINIMUM_BRAND_PREFIX_LENGTH);
-    }
-
-    private static boolean isBetterThan(Optional<TextMatch> candidate, Optional<TextMatch> current) {
-        if (candidate.isEmpty()) {
-            return false;
-        }
-        return current.isEmpty() || candidate.get().rank().isBetterThan(current.get().rank());
-    }
-
     private static class SkinEffectGroupAccumulator {
 
         private final SkinEffect effect;
@@ -355,13 +288,6 @@ public class Product {
         private SkinEffectGroup toGroup() {
             return new SkinEffectGroup(effect, ingredientIds);
         }
-    }
-
-    private record CombinedMatch(TextMatch brand, TextMatch product) {
-
-        private static final Comparator<CombinedMatch> ORDER = Comparator
-            .comparing((CombinedMatch match) -> match.brand().rank())
-            .thenComparing(match -> match.product().rank());
     }
 
     public boolean belongsToAnyCategory(List<Long> categoryIds) {
@@ -384,7 +310,4 @@ public class Product {
         return skinType == null || skinTypes.contains(skinType);
     }
 
-    public boolean matchesIngredients(IngredientFilter filter) {
-        return filter.matches(ingredients);
-    }
 }

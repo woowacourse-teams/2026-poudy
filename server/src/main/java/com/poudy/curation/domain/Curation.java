@@ -112,6 +112,10 @@ public class Curation {
         return bannerThumbnailImageUrl;
     }
 
+    public List<Long> productIds() {
+        return blockGroup.productIds();
+    }
+
     boolean isBannerVisible() {
         return publicationStatus.isPublished() && bannerVisible;
     }

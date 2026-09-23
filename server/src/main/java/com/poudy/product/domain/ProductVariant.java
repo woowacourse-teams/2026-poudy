@@ -53,6 +53,7 @@ public class ProductVariant {
         this.volumeValue = volumeValue;
         this.volumeUnit = volumeUnit;
         this.status = status;
+        stripVolumeTrailingZeros();
     }
 
     @PostLoad

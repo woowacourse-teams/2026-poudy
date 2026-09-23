@@ -286,9 +286,12 @@ public class FeedbackRepository {
     }
 
     private Feedback toDomain(Feedback stored) {
+        List<Long> productIds = stored instanceof ProductCorrection correction
+            ? List.of(correction.productId())
+            : List.of();
         return stored.resolve(
             imageRepository.findStored(stored.id(), stored.storedImageIds()),
-            productRepository.findAll()
+            com.poudy.product.domain.Products.from(productRepository.findAllById(productIds))
         );
     }
 

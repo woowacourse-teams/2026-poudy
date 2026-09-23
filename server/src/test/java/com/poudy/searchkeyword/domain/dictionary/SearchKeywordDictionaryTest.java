@@ -7,9 +7,7 @@ import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry.Status;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -19,7 +17,7 @@ class SearchKeywordDictionaryTest {
     @Test
     void resolvesOnlyProvidedWholeExpressionsWithoutFuzzyOrImplicitKeywordExpansion() {
         DictionaryEntry product = entry("product:1", "라운드랩 1025 독도 토너", Status.ACTIVE, true, "독도토너");
-        SearchKeywordDictionary dictionary = dictionary(List.of(product), keyword -> true);
+        SearchKeywordDictionary dictionary = dictionary(List.of(product));
 
         assertThat(dictionary.resolve("독도토너")).contains(product);
         assertThat(dictionary.resolve("독도")).isEmpty();
@@ -30,7 +28,7 @@ class SearchKeywordDictionaryTest {
     @Test
     void resolvesSpacingVariantsThroughTheSameExpressionKey() {
         DictionaryEntry product = entry("product:1", "라운드랩 1025 독도 토너", Status.ACTIVE, true, "독도토너");
-        SearchKeywordDictionary dictionary = dictionary(List.of(product), keyword -> true);
+        SearchKeywordDictionary dictionary = dictionary(List.of(product));
 
         assertThat(dictionary.resolve("독도 토너")).contains(product);
         assertThat(dictionary.resolve("독도토너")).contains(product);
@@ -41,9 +39,9 @@ class SearchKeywordDictionaryTest {
     @Test
     void mergesNormalizedDuplicatesWithinEntryButRejectsActiveConflicts() {
         DictionaryEntry term = DictionaryEntry.of("term:1", "PDRN", Status.ACTIVE, true, List.of("PDRN", " pdrn "));
-        assertThat(dictionary(List.of(term), keyword -> true).expressionCount()).isEqualTo(1);
+        assertThat(dictionary(List.of(term)).expressionCount()).isEqualTo(1);
         DictionaryEntry conflict = entry("term:2", "다른 항목", Status.ACTIVE, true, "pdrn");
-        assertThatThrownBy(() -> dictionary(List.of(term, conflict), keyword -> true))
+        assertThatThrownBy(() -> dictionary(List.of(term, conflict)))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -51,60 +49,11 @@ class SearchKeywordDictionaryTest {
     void inactiveConflictDoesNotClaimAnExpressionAndEligibilityNeverRemovesResolution() {
         DictionaryEntry active = entry("term:1", "PDRN", Status.ACTIVE, false, "pdrn");
         DictionaryEntry inactive = entry("term:2", "다른 항목", Status.INACTIVE, true, "pdrn");
-        SearchKeywordDictionary dictionary = dictionary(List.of(active, inactive), keyword -> true);
+        SearchKeywordDictionary dictionary = dictionary(List.of(active, inactive));
 
         assertThat(dictionary.resolve("pdrn")).contains(active);
-        assertThat(dictionary.canRank(active)).isFalse();
-        assertThat(dictionary.canRank(inactive)).isFalse();
-    }
-
-    @Test
-    void keepsZeroResultEntryResolvableAndValidatesOnlyWhenRankingRefreshes() {
-        List<String> searches = new ArrayList<>();
-        DictionaryEntry product = entry("product:1", "사라진 상품", Status.ACTIVE, true, "상품");
-        SearchKeywordDictionary dictionary = dictionary(List.of(product), keyword -> {
-            searches.add(keyword);
-            return false;
-        });
-        for (int index = 0; index < 10; index++) {
-            assertThat(dictionary.resolve("상품")).contains(product);
-        }
-        assertThat(searches).isEmpty();
-        assertThat(dictionary.canRank(product)).isFalse();
-        assertThat(searches).containsExactly("사라진 상품");
-    }
-
-    @Test
-    void largeDictionaryConstructionDoesNotQueryCatalog() {
-        AtomicInteger calls = new AtomicInteger();
-        List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 10_000)
-            .mapToObj(i -> entry("term:" + i, "검색어" + i, Status.ACTIVE, true, "표현" + i)).toList();
-        SearchKeywordDictionary dictionary = dictionary(entries, keyword -> {
-            calls.incrementAndGet();
-            return true;
-        });
-        assertThat(dictionary.expressionCount()).isEqualTo(10_000);
-        assertThat(calls).hasValue(0);
-    }
-
-    @Test
-    void cachesTrueAndFalseResultsButRetriesAfterException() {
-        AtomicInteger calls = new AtomicInteger();
-        SearchKeywordDictionary dictionary = dictionary(
-            List.of(entry("term", "토너", Status.ACTIVE, true, "토너")),
-            keyword -> {
-                if (calls.incrementAndGet() == 1) {
-                    throw new IllegalStateException("transient");
-                }
-                return false;
-            }
-        );
-        assertThatThrownBy(() -> dictionary.canRank(dictionary.resolve("토너").orElseThrow()))
-            .isInstanceOf(IllegalStateException.class);
-        DictionaryEntry entry = dictionary.resolve("토너").orElseThrow();
-        assertThat(dictionary.canRank(entry)).isFalse();
-        assertThat(dictionary.canRank(entry)).isFalse();
-        assertThat(calls).hasValue(2);
+        assertThat(active.isRankable()).isFalse();
+        assertThat(inactive.isRankable()).isFalse();
     }
 
     @Test
@@ -112,9 +61,9 @@ class SearchKeywordDictionaryTest {
         DictionaryEntry brand = entry("brand:1", "라운드랩", Status.ACTIVE, true, "라운드랩");
         DictionaryEntry product = entry("product:1", "라운드랩 토너", Status.ACTIVE, true, "독도토너");
         DictionaryEntry term = entry("term:1", "토너", Status.ACTIVE, true, "토너");
-        SearchKeywordDictionary dictionary = dictionary(List.of(brand, product, term), keyword -> true);
+        SearchKeywordDictionary dictionary = dictionary(List.of(brand, product, term));
 
-        assertThat(List.of(brand, product, term)).allMatch(dictionary::canRank);
+        assertThat(List.of(brand, product, term)).allMatch(DictionaryEntry::isRankable);
         assertThat(dictionary.resolve("독도토너")).contains(product);
         assertThat(dictionary.resolve("토너")).contains(term);
     }
@@ -123,9 +72,9 @@ class SearchKeywordDictionaryTest {
     void replacementDictionaryReinterpretsExistingNormalizedInput() {
         DictionaryEntry before = entry("old-id", "이전 이름", Status.ACTIVE, true, "별칭");
         DictionaryEntry after = entry("new-id", "변경 이름", Status.ACTIVE, true, "별칭");
-        assertThat(dictionary(List.of(before), keyword -> true).resolve("별칭")).contains(before);
-        assertThat(dictionary(List.of(after), keyword -> true).resolve("별칭")).contains(after);
-        assertThat(dictionary(List.of(), keyword -> true).resolve("별칭")).isEmpty();
+        assertThat(dictionary(List.of(before)).resolve("별칭")).contains(before);
+        assertThat(dictionary(List.of(after)).resolve("별칭")).contains(after);
+        assertThat(dictionary(List.of()).resolve("별칭")).isEmpty();
     }
 
     @Test
@@ -138,8 +87,8 @@ class SearchKeywordDictionaryTest {
         }
     }
 
-    private SearchKeywordDictionary dictionary(List<DictionaryEntry> entries, KeywordSearch search) {
-        return SearchKeywordDictionary.of(entries, search);
+    private SearchKeywordDictionary dictionary(List<DictionaryEntry> entries) {
+        return SearchKeywordDictionary.of(entries);
     }
 
     private DictionaryEntry entry(

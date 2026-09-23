@@ -1,0 +1,11 @@
+package com.poudy.ingredient.service;
+
+import java.util.List;
+import java.util.Objects;
+
+public record IngredientQuery(List<Long> ingredientIds, boolean usedInProducts) {
+
+    public IngredientQuery {
+        ingredientIds = List.copyOf(Objects.requireNonNullElse(ingredientIds, List.of()));
+    }
+}

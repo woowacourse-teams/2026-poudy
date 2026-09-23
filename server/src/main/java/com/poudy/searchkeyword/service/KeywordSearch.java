@@ -1,4 +1,4 @@
-package com.poudy.searchkeyword.domain.dictionary;
+package com.poudy.searchkeyword.service;
 
 @FunctionalInterface
 public interface KeywordSearch {

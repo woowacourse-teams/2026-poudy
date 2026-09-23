@@ -10,7 +10,6 @@ import com.poudy.category.domain.CategoryProductCounter;
 import com.poudy.ingredient.domain.IngredientUsage;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
-import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,26 +23,21 @@ public class ProductCountService implements BrandProductCounter, CategoryProduct
 
     @Override
     public List<BrandProductCount> countByBrand(List<Brand> brands) {
-        return productRepository.findAll().productCountsByBrand(brands);
+        return productRepository.productCountsByBrand(brands);
     }
 
     @Override
     public BrandProductCounts countByCategory(Brand brand, Categories categories) {
-        return productRepository.findAll().brandProductCountsOf(brand, categories);
+        return productRepository.brandProductCountsOf(brand, categories);
     }
 
     @Override
     public List<CategoryProductCount> countByCategory(Categories categories) {
-        return productRepository.findAll().productCountsByCategory(categories);
+        return productRepository.productCountsByCategory(categories);
     }
 
     @Override
     public long countProductsContaining(Long ingredientId) {
-        return productRepository.findAll().countContaining(ingredientId);
-    }
-
-    @Override
-    public Set<Long> usedIngredientIds() {
-        return productRepository.findAll().containedIngredientIds();
+        return productRepository.countContainingIngredient(ingredientId);
     }
 }
