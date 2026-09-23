@@ -39,6 +39,13 @@
 - edge-to-edge(`edgeToEdgeEnabled=true`)에서는 `adjustResize` 가 창을 줄이지 않는다. 셸이 비우지 않으면 WebView 크기는 그대로이고, Galaxy S24+ (WebView 151) 에서 입력창을 누르면 위에 붙은 상단바가 화면 밖으로 밀려났다. 셸이 비운 뒤에는 WebView 높이가 키보드만큼 줄어(840 → 477) 상단바가 제자리에 남았다.
 - iOS 는 WKWebView 가 키보드를 직접 다뤄 셸이 관여하지 않는다.
 
+## 세로 스크롤 막대
+
+- 앱에서는 WebView 의 네이티브 세로 스크롤 막대를 끄고 웹이 직접 그린다. 네이티브 막대는 WebView 전체 높이를 기준으로 그려져, 위에 붙은 상단바와 아래 하단 내비게이션 뒤까지 지나간다.
+- 네이티브 막대의 구간을 좁히는 방법은 iOS 에만 있다. iOS 는 `UIScrollView.scrollIndicatorInsets` 로 좁힐 수 있지만 `react-native-webview` 가 이 값을 노출하지 않아 패치가 필요하다. Android `WebView` 는 막대 인셋 API가 없고, 막대를 그리는 `View.onDrawVerticalScrollBar` 는 `@hide` 라 공개 SDK로 재정의할 수 없다.
+- 어차피 Android 는 웹 막대가 필요하므로 iOS 만 네이티브로 나누지 않는다. 플랫폼별 구현 두 벌과 라이브러리 패치를 늘리는 대신 웹 막대 한 벌로 맞춘다. 두 바의 높이와 유무도 화면마다 달라 웹만 알고 있다.
+- 웹은 초기화 스크립트가 `window.__POUDY_WEB_SCROLL_INDICATOR__` 를 켰을 때만 막대를 그린다. 이 값이 없는 예전 앱은 네이티브 막대가 그대로 살아 있어, 웹이 그리면 막대가 둘이 된다.
+
 ## 햅틱
 
 - Android는 시스템 터치 피드백 설정을 따르며, 지원되는 기기에서는 메뉴 선택에 맞는 `Virtual_Key`를 사용한다.
