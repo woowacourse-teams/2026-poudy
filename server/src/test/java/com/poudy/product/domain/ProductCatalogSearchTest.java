@@ -2,7 +2,7 @@ package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.repository.ProductQueryRepository;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class CatalogKeywordSearchTest {
     @Autowired
-    private ProductRepository repository;
+    private ProductQueryRepository repository;
     @Autowired
     private com.poudy.searchkeyword.service.KeywordSearch search;
 

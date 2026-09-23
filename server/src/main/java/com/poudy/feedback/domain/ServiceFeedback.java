@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public non-sealed class ServiceFeedback extends Feedback {
+public final class ServiceFeedback extends Feedback {
 
     private final FeedbackType feedbackType;
     private final FeedbackPath path;

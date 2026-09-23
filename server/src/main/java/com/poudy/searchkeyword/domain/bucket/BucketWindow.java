@@ -25,25 +25,9 @@ public final class BucketWindow {
         this.comparisonBuckets = comparisonBuckets;
     }
 
-    public int bucketSeconds() {
-        return bucketSeconds;
-    }
-
-    public boolean hasBucketSeconds(int seconds) {
-        return bucketSeconds == seconds;
-    }
-
-    public boolean canRetain(int bucketCount) {
-        return bucketCount <= Math.addExact(Math.addExact(windowBuckets, comparisonBuckets), 1);
-    }
-
     public Instant startOf(Instant instant) {
         long startSecond = Math.floorDiv(instant.getEpochSecond(), bucketSeconds) * bucketSeconds;
         return Instant.ofEpochSecond(startSecond);
-    }
-
-    public boolean isStart(Instant instant) {
-        return startOf(instant).equals(instant);
     }
 
     public Instant oldestStart(Instant latestStart) {
@@ -61,9 +45,4 @@ public final class BucketWindow {
     public boolean comparesWithPast() {
         return comparisonBuckets > 0;
     }
-
-    public boolean covers(Instant latestStart, Instant start) {
-        return !start.isBefore(retainedStart(latestStart)) && !start.isAfter(latestStart);
-    }
-
 }

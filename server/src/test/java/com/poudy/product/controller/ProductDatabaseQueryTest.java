@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.poudy.exception.ErrorCode;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
-import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.repository.ProductQueryRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -39,7 +39,7 @@ class ProductDatabaseQueryTest {
     private JdbcTemplate jdbc;
 
     @Autowired
-    private ProductRepository repository;
+    private ProductQueryRepository repository;
 
     @Test
     @DisplayName("검색 후 DB 필터를 적용하고 페이지를 자르며 목록·count와 선택지의 집계가 일치한다")

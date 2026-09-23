@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public non-sealed class ProductCorrection extends Feedback {
+public final class ProductCorrection extends Feedback {
 
     private final Long productId;
     private final String productName;

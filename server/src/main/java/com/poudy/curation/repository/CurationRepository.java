@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -22,6 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class CurationRepository {
+
+    private static final RowMapper<CurationRow> CURATION = (rs, row) -> new CurationRow(
+        rs.getLong("id"),
+        rs.getString("title"),
+        rs.getString("description"),
+        CurationPublicationStatus.valueOf(rs.getString("publication_status")),
+        rs.getBoolean("banner_visible"),
+        rs.getString("banner_thumbnail_image_url")
+    );
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -33,14 +43,7 @@ public class CurationRepository {
         return load(
             jdbc.query(
                 "select * from curation order by position",
-                (rs, row) -> new CurationRow(
-                    rs.getLong("id"),
-                    rs.getString("title"),
-                    rs.getString("description"),
-                    CurationPublicationStatus.valueOf(rs.getString("publication_status")),
-                    rs.getBoolean("banner_visible"),
-                    rs.getString("banner_thumbnail_image_url")
-                )
+                CURATION
             )
         );
     }
@@ -49,14 +52,7 @@ public class CurationRepository {
         List<CurationRow> rows = jdbc.query(
             "select * from curation where id = :id",
             new MapSqlParameterSource("id", id),
-            (rs, row) -> new CurationRow(
-                rs.getLong("id"),
-                rs.getString("title"),
-                rs.getString("description"),
-                CurationPublicationStatus.valueOf(rs.getString("publication_status")),
-                rs.getBoolean("banner_visible"),
-                rs.getString("banner_thumbnail_image_url")
-            )
+            CURATION
         );
         return load(rows).findPublishedById(id);
     }

@@ -4,11 +4,8 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.product.domain.sensory.MoistureLevel;
-import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -19,9 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
-public class Product {
+public final class Product {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
@@ -36,7 +32,6 @@ public class Product {
     private final ProductVariants variants;
     private final ProductSensory sensory;
     private final LocalDateTime updatedAt;
-    private final Set<SkinType> skinTypes;
 
     public Product(
         Long id,
@@ -47,8 +42,7 @@ public class Product {
         String imageUrl,
         ProductVariants variants,
         ProductSensory sensory,
-        OffsetDateTime updatedAt,
-        Set<SkinType> skinTypes
+        OffsetDateTime updatedAt
     ) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("제품 이름이 필요합니다.");
@@ -73,7 +67,6 @@ public class Product {
             throw new IllegalArgumentException("제품 갱신 시각이 필요합니다.");
         }
 
-        this.skinTypes = Set.copyOf(skinTypes);
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -139,14 +132,6 @@ public class Product {
         return variants.allDiscontinued();
     }
 
-    public boolean hasBrand(Brand other) {
-        return brand.equals(other);
-    }
-
-    public boolean hasBrandId(Long brandId) {
-        return brand.hasId(brandId);
-    }
-
     public boolean belongsToCategory(Long categoryId) {
         return category.belongsTo(categoryId);
     }
@@ -161,10 +146,6 @@ public class Product {
 
     public Integer oilLevel() {
         return sensory.oil().value();
-    }
-
-    public Set<SkinType> getSkinTypes() {
-        return Set.copyOf(skinTypes);
     }
 
     public ProductVariant representativeVariant() {
@@ -211,25 +192,4 @@ public class Product {
             return new SkinEffectGroup(effect, ingredientIds);
         }
     }
-
-    public boolean belongsToAnyCategory(List<Long> categoryIds) {
-        return categoryIds.isEmpty() || categoryIds.stream().anyMatch(this::belongsToCategory);
-    }
-
-    public boolean belongsToAnyBrand(List<Long> brandIds) {
-        return brandIds.isEmpty() || brandIds.stream().anyMatch(brand::hasId);
-    }
-
-    public boolean hasAnyMoistureLevel(List<MoistureLevel> levels) {
-        return levels.isEmpty() || levels.contains(sensory.moisture());
-    }
-
-    public boolean hasAnyOilLevel(List<OilLevel> levels) {
-        return levels.isEmpty() || levels.contains(sensory.oil());
-    }
-
-    public boolean matchesSkinType(SkinType skinType) {
-        return skinType == null || skinTypes.contains(skinType);
-    }
-
 }

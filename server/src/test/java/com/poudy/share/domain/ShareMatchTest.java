@@ -41,8 +41,7 @@ class ShareMatchTest {
             "",
             new ProductVariants(List.of(new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active"))),
             sensory(1, 1),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
-            java.util.Set.of()
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }
 
@@ -52,13 +51,13 @@ class ShareMatchTest {
         }
 
         public List<ProductNameMatch> findByName(String keyword, Long brandId) {
-            return values.stream().filter(p -> brandId == null || p.hasBrandId(brandId))
+            return values.stream().filter(p -> brandId == null || p.brand().hasId(brandId))
                 .filter(p -> new SearchKeyword(keyword).matches(p.name()))
                 .map(p -> new ProductNameMatch(p, new SearchKeyword(keyword).matchesExactly(p.name()))).toList();
         }
 
         public List<Product> findByBrand(Long brandId) {
-            return values.stream().filter(p -> p.hasBrandId(brandId)).toList();
+            return values.stream().filter(p -> p.brand().hasId(brandId)).toList();
         }
 
     }

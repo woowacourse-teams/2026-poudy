@@ -1,4 +1,4 @@
-package com.poudy.productview.domain;
+package com.poudy.product.domain;
 
 import java.time.LocalDate;
 import java.util.Objects;

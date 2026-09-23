@@ -9,7 +9,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
-public class Ingredient {
+public final class Ingredient {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
@@ -72,16 +72,8 @@ public class Ingredient {
         return updatedAt.atZone(SEOUL).toOffsetDateTime();
     }
 
-    public boolean hasKoreanName(String candidate) {
-        return candidate.equals(koreanName);
-    }
-
     public boolean hasId(Long ingredientId) {
         return Objects.equals(id, ingredientId);
-    }
-
-    public boolean hasEnglishName(String candidate) {
-        return candidate.equalsIgnoreCase(englishName());
     }
 
     public List<FormulationRole> formulationRoles() {

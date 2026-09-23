@@ -7,7 +7,6 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.product.domain.Product;
-import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -81,23 +80,4 @@ class ProductRepositoryTest {
             .containsExactly(tuple(1L, 3L), tuple(3L, 2L), tuple(999L, 0L));
     }
 
-    @Test
-    @DisplayName("제품의 복수 피부타입을 로딩하고 선택한 타입을 판정한다")
-    void loadsSkinTypes() {
-        Product product = productRepository.findById(1L).orElseThrow();
-
-        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
-        assertThat(product.matchesSkinType(null)).isTrue();
-    }
-
-    @Test
-    @DisplayName("피부타입이 없는 제품은 미분류 제품으로 로딩한다")
-    void loadsUnclassifiedProduct() {
-        Product product = productRepository.findById(7L).orElseThrow();
-
-        assertThat(product.matchesSkinType(null)).isTrue();
-        assertThat(SkinType.values()).allSatisfy(skinType -> assertThat(product.matchesSkinType(skinType)).isFalse());
-    }
 }

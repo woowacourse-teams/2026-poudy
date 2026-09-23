@@ -11,89 +11,15 @@ import org.junit.jupiter.api.Test;
 class IngredientsTest {
 
     @Test
-    @DisplayName("이름이 다른 성분의 영문명과 겹치면 한글명 일치를 고른다")
-    void prefersKoreanNameOverEnglishName() {
-        IngredientCatalog ingredients = IngredientCatalog.from(
-            List.of(ingredient(10L, "정제수", "향료"), ingredient(20L, "향료", "Fragrance"))
-        );
-
-        assertThat(ingredients.findByName("향료")).map(Ingredient::id).contains(20L);
-    }
-
-    @Test
-    @DisplayName("한글명으로 찾지 못하면 영문명을 대소문자 없이 맞춘다")
-    void fallsBackToEnglishName() {
-        IngredientCatalog ingredients = IngredientCatalog.from(List.of(ingredient(10L, "글리세린", "Glycerin")));
-
-        assertThat(ingredients.findByName("GLYCERIN")).map(Ingredient::id).contains(10L);
-    }
-
-    @Test
-    @DisplayName("같은 이름을 가진 성분이 여럿이면 ID 가 작은 성분을 고른다")
-    void picksSmallestIdAmongSameNames() {
-        IngredientCatalog ingredients = IngredientCatalog.from(
-            List.of(ingredient(30L, "향료", "Fragrance"), ingredient(20L, "향료", "Parfum"))
-        );
-
-        assertThat(ingredients.findByName("향료")).map(Ingredient::id).contains(20L);
-    }
-
-    @Test
-    @DisplayName("영문명이 없는 성분은 빈 이름으로 찾히지 않는다")
-    void doesNotMatchEmptyName() {
-        IngredientCatalog ingredients = IngredientCatalog.from(List.of(ingredient(10L, "정제수", null)));
-
-        assertThat(ingredients.findByName("")).isEmpty();
-    }
-
-    @Test
-    @DisplayName("찾지 못한 ID 는 결과에서 뺀다")
-    void skipsUnknownIds() {
-        IngredientCatalog ingredients = IngredientCatalog.from(List.of(ingredient(10L, "글리세린", "Glycerin")));
-
-        IngredientCatalog found = ingredients.findAllById(List.of(10L, 999L));
-
-        assertThat(found.findById(10L)).isPresent();
-        assertThat(found.findById(999L)).isEmpty();
-    }
-
-    @Test
-    @DisplayName("골라낸 성분 목록은 선택한 ID만 가진다")
-    void keepsOnlySelectedIngredients() {
+    @DisplayName("찾지 못한 ID 는 결과에서 빼고 요청 순서를 지킨다")
+    void resolvesKnownIdsInRequestedOrder() {
         IngredientCatalog ingredients = IngredientCatalog.from(
             List.of(ingredient(10L, "글리세린", "Glycerin"), ingredient(20L, "향료", "Fragrance"))
         );
 
-        IngredientCatalog found = ingredients.findAllById(List.of(10L));
-
-        assertThat(found.values()).extracting(Ingredient::id).containsExactly(10L);
-
-    }
-
-    @Test
-    @DisplayName("요청한 페이지의 성분과 전체 개수를 함께 반환한다")
-    void pagesIngredients() {
-        IngredientCatalog ingredients = IngredientCatalog.from(
-            List.of(
-                ingredient(10L, "글리세린", "Glycerin"),
-                ingredient(20L, "향료", "Fragrance"),
-                ingredient(30L, "정제수", "Water")
-            )
-        );
-
-        IngredientPage page = ingredients.page(2, 2);
-
-        assertThat(page.items()).map(Ingredient::id).containsExactly(30L);
-        assertThat(page.totalElements()).isEqualTo(3);
-    }
-
-    @Test
-    @DisplayName("페이지 조건이 올바르지 않으면 거절한다")
-    void rejectsInvalidPageCondition() {
-        IngredientCatalog ingredients = IngredientCatalog.from(List.of());
-
-        assertThatThrownBy(() -> ingredients.page(0, 20)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> ingredients.page(1, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(ingredients.resolveInOrder(List.of(20L, 999L, 10L)).values())
+            .extracting(Ingredient::id)
+            .containsExactly(20L, 10L);
     }
 
     @Test

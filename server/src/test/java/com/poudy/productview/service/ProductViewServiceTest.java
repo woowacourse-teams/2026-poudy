@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.productview.domain.ViewPeriod;
 import com.poudy.productview.repository.ProductViewRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,9 +29,6 @@ class ProductViewServiceTest {
         Product second = mock(Product.class);
         when(first.id()).thenReturn(1L);
         when(second.id()).thenReturn(2L);
-        when(first.belongsToAnyCategory(List.of(1L))).thenReturn(true);
-        when(second.belongsToAnyCategory(List.of(1L))).thenReturn(true);
-        Products products = Products.from(List.of(first, second));
         ProductRepository productRepository = mock(ProductRepository.class);
         when(productRepository.existsById(1L)).thenReturn(true);
         ProductViewRepository productViewRepository = mock(ProductViewRepository.class);
@@ -53,7 +49,7 @@ class ProductViewServiceTest {
             "2026-09-11T14:59:59Z, 2026-09-11",
             "2026-09-11T15:00:00Z, 2026-09-12"
     })
-    void usesKoreanDateForIncreaseAndPeriodQuery(Instant instant, LocalDate expectedDate) {
+    void usesKoreanDateForIncrease(Instant instant, LocalDate expectedDate) {
         ProductRepository productRepository = mock(ProductRepository.class);
         Products products = mock(Products.class);
         when(productRepository.existsById(1L)).thenReturn(true);
@@ -66,11 +62,7 @@ class ProductViewServiceTest {
         );
 
         productViewService.increaseViewCount(1L);
-        productViewService.sumViewCounts(7);
-        productViewService.sumViewCounts(null);
 
         verify(productViewRepository).increaseViewCount(1L, expectedDate);
-        verify(productViewRepository).sumViewCounts(ViewPeriod.recentDays(expectedDate, 7));
-        verify(productViewRepository).sumAllViewCounts();
     }
 }

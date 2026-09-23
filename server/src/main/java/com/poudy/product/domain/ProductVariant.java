@@ -2,7 +2,7 @@ package com.poudy.product.domain;
 
 import java.math.BigDecimal;
 
-public class ProductVariant {
+public final class ProductVariant {
 
     private static final String DISCONTINUED = "discontinued";
 

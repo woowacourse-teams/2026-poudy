@@ -15,20 +15,13 @@ class BucketWindowTest {
     @Test
     void alignsInstantsToTenMinuteStarts() {
         assertThat(window.startOf(Instant.parse("2026-09-11T10:39:59Z"))).isEqualTo(LATEST);
-        assertThat(window.isStart(LATEST)).isTrue();
-        assertThat(window.isStart(LATEST.plusSeconds(1))).isFalse();
+        assertThat(window.startOf(LATEST)).isEqualTo(LATEST);
     }
 
     @Test
-    void coversCompletedWeekAndTheBucketInProgress() {
+    void startsWindowOneWeekBeforeLatestBucket() {
         Instant oldest = LATEST.minus(168, ChronoUnit.HOURS);
         assertThat(window.oldestStart(LATEST)).isEqualTo(oldest);
-        assertThat(window.covers(LATEST, oldest)).isTrue();
-        assertThat(window.covers(LATEST, LATEST)).isTrue();
-        assertThat(window.covers(LATEST, oldest.minusSeconds(600))).isFalse();
-        assertThat(window.covers(LATEST, LATEST.plusSeconds(600))).isFalse();
-        assertThat(window.canRetain(1_009)).isTrue();
-        assertThat(window.canRetain(1_010)).isFalse();
     }
 
     @Test

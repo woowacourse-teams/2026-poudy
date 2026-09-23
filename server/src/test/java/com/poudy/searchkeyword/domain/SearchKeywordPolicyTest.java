@@ -25,6 +25,6 @@ class SearchKeywordPolicyTest {
 
         assertThat(next).isEqualTo(start.plusSeconds(SearchKeywordPolicy.BUCKET_SECONDS));
         assertThat(afterNext).isEqualTo(next.plusSeconds(SearchKeywordPolicy.BUCKET_SECONDS));
-        assertThat(window.isStart(next.toInstant(ZoneOffset.UTC))).isTrue();
+        assertThat(window.startOf(next.toInstant(ZoneOffset.UTC))).isEqualTo(next.toInstant(ZoneOffset.UTC));
     }
 }

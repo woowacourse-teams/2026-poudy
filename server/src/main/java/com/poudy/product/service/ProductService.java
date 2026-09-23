@@ -13,6 +13,7 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -28,17 +29,20 @@ public class ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
+    private final ProductQueryRepository productQueries;
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final ProductSearchLogger searchLogger;
 
     public ProductService(
         ProductRepository productRepository,
+        ProductQueryRepository productQueries,
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
         ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
+        this.productQueries = productQueries;
         this.categoryRepository = categoryRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.searchLogger = searchLogger;
@@ -52,7 +56,7 @@ public class ProductService {
     ) {
         validate(query);
         if (!query.hasKeyword() || page > 1) {
-            return productRepository.find(query, sort, page, size);
+            return productQueries.find(query, sort, page, size);
         }
 
         ProductSearchLogger.Context context = new ProductSearchLogger.Context(
@@ -62,7 +66,7 @@ public class ProductService {
             ProductSort.orDefault(sort),
             query.hasFilters()
         );
-        return recordedSearch(context, () -> productRepository.find(query, sort, page, size));
+        return recordedSearch(context, () -> productQueries.find(query, sort, page, size));
     }
 
     private ProductPage recordedSearch(ProductSearchLogger.Context context, Supplier<ProductPage> search) {
@@ -97,20 +101,20 @@ public class ProductService {
 
     public long countProducts(ProductQuery query) {
         validate(query);
-        return productRepository.count(query);
+        return productQueries.count(query);
     }
 
     private void validate(ProductQuery query) {
         if (!excludeCodeRepository.containsAll(query.excludeCodes())) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
-        if (productRepository.hasConflictingIngredients(query)) {
+        if (productQueries.hasConflictingIngredients(query)) {
             throw new ConflictingIngredientFilterException();
         }
     }
 
     public ProductSuggestions suggestProducts(String keyword, int page, int size) {
-        return productRepository.suggest(keyword, page, size);
+        return productQueries.suggest(keyword, page, size);
     }
 
     public ProductDetail findDetail(Long productId) {

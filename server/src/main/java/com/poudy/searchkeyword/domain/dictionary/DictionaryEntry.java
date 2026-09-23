@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DictionaryEntry implements Comparable<DictionaryEntry> {
+public final class DictionaryEntry implements Comparable<DictionaryEntry> {
 
     public enum Status {
         ACTIVE,

@@ -41,17 +41,12 @@ public class ExcludeCodeRepository {
         try {
             Map<ExcludeCode, List<ExcludeCodeIngredient>> members = jdbc.query(
                 "select e.exclude_code, e.ingredient_id, i.korean_name, i.english_name"
-                    + " from exclude_code_ingredient e left join ingredient i on i.id = e.ingredient_id"
+                    + " from exclude_code_ingredient e join ingredient i on i.id = e.ingredient_id"
                     + " order by e.exclude_code, e.display_order",
                 new MapSqlParameterSource(),
                 (row, number) -> {
                     ExcludeCode code = new ExcludeCode(row.getString("exclude_code"));
                     Long id = row.getLong("ingredient_id");
-                    if (row.getString("korean_name") == null) {
-                        throw new InvalidExcludeCodeDefinitionException(
-                            "성분 데이터에서 제외 성분군의 성분을 찾지 못했습니다: " + code.value() + " 의 성분 ID " + id
-                        );
-                    }
                     return new MappingRow(
                         code,
                         new ExcludeCodeIngredient(

@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
@@ -16,12 +15,10 @@ import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.sensory.MoistureLevel;
 import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
-import com.poudy.skintype.domain.SkinType;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Component;
@@ -72,12 +69,6 @@ class ProductLoader {
             ingredientIds.values().stream()
                 .flatMap(List::stream).distinct().toList()
         );
-        Map<Long, Set<SkinType>> skinTypes = jdbc.query(
-            "select * from product_skin_type where product_id = any(:ids)",
-            parameters,
-            (rs, row) -> Map.entry(rs.getLong("product_id"), SkinType.valueOf(rs.getString("skin_type_code")))
-        )
-            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toSet())));
         Map<Long, Product> loaded = jdbc.query("""
             select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
                 c.parent_id, c.name as category_name, c.depth from product p
@@ -106,8 +97,7 @@ class ProductLoader {
                     new MoistureLevel(rs.getInt("moisture_level")),
                     new OilLevel(rs.getInt("oil_level"))
                 ),
-                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime(),
-                skinTypes.getOrDefault(id, Set.of())
+                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             );
         }).stream().collect(toMap(Product::id, p -> p));
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();

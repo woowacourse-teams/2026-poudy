@@ -1,4 +1,4 @@
-package com.poudy.productview.domain;
+package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;

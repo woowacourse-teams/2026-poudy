@@ -6,7 +6,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class CurationBlock {
+public abstract sealed class CurationBlock permits CurationImageBlock, CurationProductsBlock,
+    CurationProductsByFilterBlock {
 
     private final UUID id;
     private final int spacingTop;

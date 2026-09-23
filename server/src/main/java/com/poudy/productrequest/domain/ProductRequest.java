@@ -7,7 +7,7 @@ import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ProductRequest {
+public final class ProductRequest {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
@@ -99,19 +99,6 @@ public class ProductRequest {
 
     public boolean hasStatus(ProductRequestStatus expected) {
         return status == expected;
-    }
-
-    public boolean hasSameHistoryAs(ProductRequest other) {
-        if (other == null) {
-            return false;
-        }
-        return requestId.equals(other.requestId)
-            && Objects.equals(productName, other.productName)
-            && Objects.equals(brandName, other.brandName)
-            && requestedAt().equals(other.requestedAt())
-            && status == other.status
-            && statusChangedAt().equals(other.statusChangedAt())
-            && Objects.equals(completedAt(), other.completedAt());
     }
 
     public ProductRequest changeStatus(ProductRequestStatus target, Clock clock) {

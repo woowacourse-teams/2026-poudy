@@ -3,6 +3,7 @@ package com.poudy.product.repository;
 import static java.util.stream.Collectors.toMap;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.excludecode.domain.ExcludeCode;
@@ -14,6 +15,7 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.ViewPeriod;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
@@ -91,11 +93,18 @@ public class ProductQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
+    private final BrandRepository brandRepository;
     private final Clock clock;
 
-    public ProductQueryRepository(NamedParameterJdbcTemplate jdbc, ProductLoader loader, Clock clock) {
+    public ProductQueryRepository(
+        NamedParameterJdbcTemplate jdbc,
+        ProductLoader loader,
+        BrandRepository brandRepository,
+        Clock clock
+    ) {
         this.jdbc = jdbc;
         this.loader = loader;
+        this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
     }
 
@@ -107,9 +116,8 @@ public class ProductQueryRepository {
         String order = orderBy(query, selectedSort);
         String viewsJoin = "";
         if (selectedSort == ProductSort.DEFAULT && !query.hasKeyword()) {
-            LocalDate yesterday = LocalDate.now(clock).minusDays(1);
-            parameters.addValue("viewStart", yesterday.minusDays(DEFAULT_SORT_VIEW_DAYS - 1L))
-                .addValue("viewEnd", yesterday);
+            ViewPeriod period = ViewPeriod.recentDays(LocalDate.now(clock).minusDays(1), DEFAULT_SORT_VIEW_DAYS);
+            parameters.addValue("viewStart", period.firstDate()).addValue("viewEnd", period.lastDate());
             viewsJoin = """
                 left join (select product_id, sum(view_count) as view_count from product_daily_view
                     where view_date between :viewStart and :viewEnd group by product_id) views
@@ -233,18 +241,7 @@ public class ProductQueryRepository {
     private Facets facets(List<Aggregate> rows) {
         List<Long> brandIds = rows.stream().filter(r -> r.section().endsWith("_BRAND"))
             .map(r -> Long.valueOf(r.id())).distinct().toList();
-        List<Brand> brands = jdbc.query(
-            """
-                select * from brand where id = any(:ids) order by korean_name collate "C", id
-                """,
-            new MapSqlParameterSource("ids", array("bigint", brandIds)),
-            (rs, row) -> new Brand(
-                rs.getLong("id"),
-                rs.getString("korean_name"),
-                rs.getString("english_name"),
-                rs.getString("image_url")
-            )
-        );
+        List<Brand> brands = brandRepository.findAllByIdOrderByName(brandIds);
         List<Category> categories = jdbc.query(
             "select * from category order by id",
             Map.of(),

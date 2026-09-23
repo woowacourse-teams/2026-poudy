@@ -11,10 +11,6 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductCountsByBrand;
 import com.poudy.product.domain.ProductCountsByCategory;
 import com.poudy.product.domain.ProductNameMatch;
-import com.poudy.product.domain.ProductPage;
-import com.poudy.product.domain.ProductQuery;
-import com.poudy.product.domain.ProductSort;
-import com.poudy.product.domain.ProductSuggestions;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductRepository {
-    private final ProductQueryRepository queries;
     private final ProductLoader loader;
     private final NamedParameterJdbcTemplate jdbc;
 
-    public ProductRepository(ProductQueryRepository queries, ProductLoader loader, NamedParameterJdbcTemplate jdbc) {
-        this.queries = queries;
+    public ProductRepository(ProductLoader loader, NamedParameterJdbcTemplate jdbc) {
         this.loader = loader;
         this.jdbc = jdbc;
     }
@@ -55,22 +49,6 @@ public class ProductRepository {
                 Boolean.class
             )
         );
-    }
-
-    public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
-        return queries.find(query, sort, page, size);
-    }
-
-    public long count(ProductQuery query) {
-        return queries.count(query);
-    }
-
-    public boolean hasConflictingIngredients(ProductQuery query) {
-        return queries.hasConflictingIngredients(query);
-    }
-
-    public ProductSuggestions suggest(String keyword, int page, int size) {
-        return queries.suggest(keyword, page, size);
     }
 
     public boolean hasSearchResults(String keyword) {

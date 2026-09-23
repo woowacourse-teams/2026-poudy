@@ -2,8 +2,9 @@ package com.poudy.productview.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.productview.domain.ViewPeriod;
+import com.poudy.product.domain.ViewPeriod;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -35,7 +36,7 @@ class ProductViewRepositoryTest {
     @Test
     @DisplayName("날짜별로 기록하고 오늘을 포함한 기간의 조회수를 합산한다")
     void increasesByDateAndSumsPeriodIncludingToday() {
-        Map<Long, Long> before = productViewRepository.sumAllViewCounts();
+        Map<Long, Long> before = allViewCounts();
         productViewRepository.increaseViewCount(1L, LocalDate.of(1999, 1, 1));
         productViewRepository.increaseViewCount(1L, TODAY.minusDays(7));
         productViewRepository.increaseViewCount(1L, TODAY.minusDays(6));
@@ -44,13 +45,13 @@ class ProductViewRepositoryTest {
         productViewRepository.increaseViewCount(7L, TODAY);
         productViewRepository.increaseViewCount(7L, TODAY);
 
-        assertThat(productViewRepository.sumViewCounts(ViewPeriod.recentDays(TODAY, 1)))
+        assertThat(viewCounts(ViewPeriod.recentDays(TODAY, 1)))
             .containsExactlyInAnyOrderEntriesOf(Map.of(1L, 1L, 7L, 2L));
-        assertThat(productViewRepository.sumViewCounts(ViewPeriod.recentDays(TODAY, 7)))
+        assertThat(viewCounts(ViewPeriod.recentDays(TODAY, 7)))
             .containsExactlyInAnyOrderEntriesOf(Map.of(1L, 3L, 7L, 2L));
-        assertThat(productViewRepository.sumViewCounts(ViewPeriod.recentDays(TODAY, Integer.MAX_VALUE)))
+        assertThat(viewCounts(ViewPeriod.recentDays(TODAY, Integer.MAX_VALUE)))
             .containsExactlyInAnyOrderEntriesOf(Map.of(1L, 5L, 7L, 2L));
-        assertThat(productViewRepository.sumAllViewCounts())
+        assertThat(allViewCounts())
             .containsEntry(1L, before.getOrDefault(1L, 0L) + 5)
             .containsEntry(7L, before.getOrDefault(7L, 0L) + 2);
     }
@@ -58,11 +59,11 @@ class ProductViewRepositoryTest {
     @Test
     @DisplayName("기간 합산은 미래 날짜를 빼고 전체 합산은 포함한다")
     void boundedPeriodExcludesFutureDatesAndAllTimeIncludesThem() {
-        Map<Long, Long> before = productViewRepository.sumAllViewCounts();
+        Map<Long, Long> before = allViewCounts();
         productViewRepository.increaseViewCount(10L, TODAY.plusDays(1));
 
-        assertThat(productViewRepository.sumViewCounts(ViewPeriod.recentDays(TODAY, 7))).doesNotContainKey(10L);
-        assertThat(productViewRepository.sumAllViewCounts())
+        assertThat(viewCounts(ViewPeriod.recentDays(TODAY, 7))).doesNotContainKey(10L);
+        assertThat(allViewCounts())
             .containsEntry(10L, before.getOrDefault(10L, 0L) + 1);
     }
 
@@ -81,11 +82,32 @@ class ProductViewRepositoryTest {
         try {
             executor.invokeAll(increases).forEach(ProductViewRepositoryTest::awaitResult);
 
-            assertThat(productViewRepository.sumViewCounts(ViewPeriod.recentDays(date, 1))).containsEntry(13L, 50L);
+            assertThat(viewCounts(ViewPeriod.recentDays(date, 1))).containsEntry(13L, 50L);
         } finally {
             executor.shutdownNow();
             jdbcTemplate.update("delete from product_daily_view where view_date = ?", date);
         }
+    }
+
+    private Map<Long, Long> allViewCounts() {
+        return viewCounts("", new Object[] {});
+    }
+
+    private Map<Long, Long> viewCounts(ViewPeriod period) {
+        return viewCounts(" where view_date between ? and ?", period.firstDate(), period.lastDate());
+    }
+
+    private Map<Long, Long> viewCounts(String condition, Object... arguments) {
+        Map<Long, Long> counts = new HashMap<>();
+        jdbcTemplate.query(
+            "select product_id, sum(view_count) as view_count from product_daily_view" + condition
+                + " group by product_id",
+            row -> {
+                counts.put(row.getLong("product_id"), row.getLong("view_count"));
+            },
+            arguments
+        );
+        return counts;
     }
 
     private static void awaitResult(Future<Void> result) {

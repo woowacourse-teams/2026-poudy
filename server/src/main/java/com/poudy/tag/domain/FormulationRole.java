@@ -18,10 +18,6 @@ public class FormulationRole {
         this.displayName = displayName;
     }
 
-    public boolean hasCode(String candidate) {
-        return code.equals(candidate);
-    }
-
     private static void validateId(String id) {
         Objects.requireNonNull(id, "배합 목적 ID가 필요합니다.");
     }

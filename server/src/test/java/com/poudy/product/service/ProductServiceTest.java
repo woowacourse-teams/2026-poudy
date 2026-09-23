@@ -31,6 +31,7 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -45,6 +46,8 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @DisplayName("제품 서비스")
 class ProductServiceTest {
 
+    private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
+
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
     void delegatesProductQuery() {
@@ -52,9 +55,10 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
-        stubPage(repository, product);
+        stubPage(product);
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
@@ -79,7 +83,7 @@ class ProductServiceTest {
         );
 
         assertThat(found.items()).containsExactly(product);
-        verify(repository).find(query, ProductSort.DEFAULT, 1, 20);
+        verify(queries).find(query, ProductSort.DEFAULT, 1, 20);
     }
 
     @Test
@@ -89,7 +93,7 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
-        stubPage(repository, product);
+        stubPage(product);
         ExcludeCodeGroup sulfates = new ExcludeCodeGroup(
             new ExcludeCode("SULFATES"),
             "설페이트 성분",
@@ -107,6 +111,7 @@ class ProductServiceTest {
         given(excludeCodeIngredients.groups()).willReturn(List.of(fragrance, sulfates));
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
@@ -131,6 +136,7 @@ class ProductServiceTest {
         given(repository.findById(999L)).willReturn(java.util.Optional.empty());
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
@@ -149,9 +155,10 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
-        stubPage(repository, product);
+        stubPage(product);
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
@@ -190,9 +197,10 @@ class ProductServiceTest {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
-        stubPage(repository, product);
+        stubPage(product);
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             new ProductSearchLogger()
@@ -213,7 +221,7 @@ class ProductServiceTest {
     void keepsResponseWhenLoggingFails(CapturedOutput output) {
         ProductRepository repository = mock(ProductRepository.class);
         ExcludeCodes excludes = mock(ExcludeCodes.class);
-        stubPage(repository, product(1L));
+        stubPage(product(1L));
         ProductSearchLogger logger = new ProductSearchLogger() {
             @Override
             public void completed(Context context, long elapsedNanos, long resultCount) {
@@ -222,6 +230,7 @@ class ProductServiceTest {
         };
         ProductService service = new ProductService(
             repository,
+            queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
             logger
@@ -238,8 +247,8 @@ class ProductServiceTest {
         assertThat(output).contains("event=search_recording_failed").doesNotContain("outcome=ERROR");
     }
 
-    private static void stubPage(ProductRepository repository, Product product) {
-        given(repository.find(any(ProductQuery.class), any(), anyInt(), anyInt()))
+    private void stubPage(Product product) {
+        given(queries.find(any(ProductQuery.class), any(), anyInt(), anyInt()))
             .willReturn(new ProductPage(List.of(product), 1, List.of(), List.of(), List.of(), null));
     }
 
@@ -259,8 +268,7 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
-            OffsetDateTime.parse("2026-08-01T00:00:00Z"),
-            java.util.Set.of()
+            OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }
 

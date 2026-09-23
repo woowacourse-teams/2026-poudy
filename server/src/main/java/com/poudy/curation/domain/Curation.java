@@ -4,7 +4,7 @@ import com.poudy.product.domain.Products;
 import java.util.List;
 import java.util.Objects;
 
-public class Curation {
+public final class Curation {
 
     private final Long id;
     private final String title;

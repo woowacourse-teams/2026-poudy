@@ -9,14 +9,11 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +41,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -65,8 +61,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -88,8 +83,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -110,8 +104,7 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt,
-            Set.of()
+            updatedAt
         );
 
         assertThat(product.skinEffectGroups()).singleElement()
@@ -143,8 +136,7 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt,
-            Set.of()
+            updatedAt
         );
 
         assertThat(product.skinEffectGroups())
@@ -177,64 +169,11 @@ class ProductTest {
                 "image",
                 variants,
                 null,
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("제품 수분감·유분감 단계가 필요합니다.");
-    }
-
-    @Test
-    @DisplayName("제품에 연결된 피부타입만 일치하고 미지정 조건은 통과한다")
-    void matchesAssignedSkinTypes() {
-        Product product = productWithSkinTypes(Set.of(SkinType.DRY, SkinType.SENSITIVE));
-
-        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
-        assertThat(product.matchesSkinType(SkinType.COMBINATION)).isFalse();
-        assertThat(product.matchesSkinType(null)).isTrue();
-    }
-
-    @Test
-    @DisplayName("미분류 제품은 피부타입을 지정하지 않았을 때만 통과한다")
-    void matchesOnlyMissingSkinTypeForUnclassifiedProduct() {
-        Product product = productWithSkinTypes(Set.of());
-
-        assertThat(product.matchesSkinType(null)).isTrue();
-        for (SkinType skinType : SkinType.values()) {
-            assertThat(product.matchesSkinType(skinType)).isFalse();
-        }
-    }
-
-    @Test
-    @DisplayName("생성 후 입력 집합을 변경해도 제품의 피부타입 판정은 유지된다")
-    void preservesSkinTypesAfterInputMutation() {
-        Set<SkinType> skinTypes = EnumSet.of(SkinType.DRY, SkinType.SENSITIVE);
-        Product product = productWithSkinTypes(skinTypes);
-
-        skinTypes.clear();
-        skinTypes.add(SkinType.OILY);
-
-        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
-    }
-
-    private Product productWithSkinTypes(Set<SkinType> skinTypes) {
-        return new Product(
-            1L,
-            "제품",
-            brand,
-            category,
-            ingredients,
-            "image",
-            variants,
-            sensory(1, 1),
-            updatedAt,
-            skinTypes
-        );
     }
 
     private static Ingredient ingredient(Long id, String effect) {
