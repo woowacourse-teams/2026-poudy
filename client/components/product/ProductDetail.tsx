@@ -259,10 +259,10 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
           */}
           {product.excludeGroups.map((group) =>
             group.contains ? (
-              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#ECEDEF] px-2.5 py-1">
+              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#F2F3F5] px-2.5 py-1">
                 {/* 체크가 없어도 이웃 칸과 글자 시작점이 맞도록 체크 자리를 비워 둔다. */}
                 <span aria-hidden="true" className="size-3 shrink-0" />
-                <span className="text-[12px] leading-tight font-semibold text-[#A0A3A9]">{group.name} 제외</span>
+                <span className="text-[12px] leading-tight font-semibold text-[#C2C5CA]">{group.name} 제외</span>
                 <span className="sr-only"> 있음</span>
               </li>
             ) : (
