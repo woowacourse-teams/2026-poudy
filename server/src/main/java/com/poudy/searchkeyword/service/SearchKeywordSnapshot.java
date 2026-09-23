@@ -10,6 +10,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class SearchKeywordSnapshot {
     private final AtomicReference<State> current;
 
+    public SearchKeywordSnapshot() {
+        this(SearchKeywordDictionary.of(List.of()));
+    }
+
     public SearchKeywordSnapshot(SearchKeywordDictionary dictionary) {
         current = new AtomicReference<>(new State(dictionary, List.of(), null));
     }
@@ -28,6 +32,10 @@ public final class SearchKeywordSnapshot {
 
     public void replace(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
         current.set(new State(dictionary, List.copyOf(rankings), refreshedAt));
+    }
+
+    public void initialize(SearchKeywordDictionary dictionary) {
+        current.set(new State(dictionary, List.of(), null));
     }
 
     private record State(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {

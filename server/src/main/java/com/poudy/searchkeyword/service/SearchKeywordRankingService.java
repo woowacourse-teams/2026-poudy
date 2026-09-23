@@ -1,5 +1,6 @@
 package com.poudy.searchkeyword.service;
 
+import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.bucket.KeywordBucketView;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
@@ -10,6 +11,7 @@ import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
+import jakarta.annotation.PostConstruct;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SearchKeywordRankingService {
     private static final Logger log = LoggerFactory.getLogger(SearchKeywordRankingService.class);
     private final SearchKeywordDictionaryRepository repository;
@@ -51,6 +55,11 @@ public class SearchKeywordRankingService {
         this.clock = clock;
     }
 
+    @PostConstruct
+    void initializeDictionary() {
+        snapshot.initialize(repository.read());
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public synchronized void refreshAfterApplicationReady() {
         if (applicationReady) {
@@ -60,7 +69,7 @@ public class SearchKeywordRankingService {
         applicationReady = true;
     }
 
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = SearchKeywordPolicy.REFRESH_CRON)
     public synchronized void refreshOnSchedule() {
         if (!applicationReady) {
             return;

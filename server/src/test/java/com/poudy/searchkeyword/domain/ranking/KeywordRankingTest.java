@@ -16,6 +16,18 @@ class KeywordRankingTest {
     private static final RankingPolicy POLICY = new RankingPolicy(5, 10, Set.of());
 
     @Test
+    void configuredFallbackUsesDefaultsForBlankValueAndParsesCustomKeywords() {
+        SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
+
+        assertThat(RankingFallback.configured(" ").candidates(dictionary))
+            .extracting(DictionaryEntry::keyword)
+            .containsExactly("토너", "크림");
+        assertThat(RankingFallback.configured(" 크림, , 토너 ").candidates(dictionary))
+            .extracting(DictionaryEntry::keyword)
+            .containsExactly("크림", "토너");
+    }
+
+    @Test
     void countsBelowTheMinimumAreCollectedButNotPublished() {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 

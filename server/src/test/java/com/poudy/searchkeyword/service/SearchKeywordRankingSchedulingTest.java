@@ -1,6 +1,7 @@
 package com.poudy.searchkeyword.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.poudy.searchkeyword.domain.bucket.KeywordBucketView;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry.Status;
 import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
@@ -35,6 +38,33 @@ class SearchKeywordRankingSchedulingTest {
     private final KeywordBuckets buckets = mock(KeywordBuckets.class);
     private final SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(List.of());
     private final SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionary);
+
+    @Test
+    void initializesDictionaryFromRepositoryBeforeRankingRefresh() {
+        SearchKeywordRankingService service = service();
+        SearchKeywordDictionary loaded = SearchKeywordDictionary.of(
+            List.of(
+                DictionaryEntry.of("term:1", "토너", Status.ACTIVE, true, List.of("토너"))
+            )
+        );
+        when(repository.read()).thenReturn(loaded);
+
+        service.initializeDictionary();
+
+        verify(repository).read();
+        assertThat(snapshot.recognizes("토너")).isTrue();
+        assertThat(snapshot.refreshedAt()).isEmpty();
+    }
+
+    @Test
+    void failsInitializationWhenDictionaryCannotBeLoaded() {
+        SearchKeywordRankingService service = service();
+        when(repository.read()).thenThrow(new IllegalStateException("dictionary unavailable"));
+
+        assertThatThrownBy(service::initializeDictionary)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("dictionary unavailable");
+    }
 
     @Test
     void ignoresScheduleBeforeStartupAndRefreshesOnceWhenTheApplicationIsReady() {
@@ -87,12 +117,12 @@ class SearchKeywordRankingSchedulingTest {
                         .isEqualTo(LocalDateTime.parse("2026-09-21T10:40:00"));
                 });
             });
-            verifyNoInteractions(repository);
-
-            context.publishEvent(mock(ApplicationReadyEvent.class));
-            context.publishEvent(mock(ApplicationReadyEvent.class));
-
             verify(repository).read();
+
+            context.publishEvent(mock(ApplicationReadyEvent.class));
+            context.publishEvent(mock(ApplicationReadyEvent.class));
+
+            verify(repository, times(2)).read();
         }
     }
 

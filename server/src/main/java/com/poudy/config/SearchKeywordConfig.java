@@ -1,51 +1,20 @@
 package com.poudy.config;
 
-import com.poudy.product.repository.ProductRepository;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
 import com.poudy.searchkeyword.domain.bucket.BucketWindow;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordBucketRepository;
-import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import com.poudy.searchkeyword.service.KeywordSearch;
-import com.poudy.searchkeyword.service.SearchKeywordRankingService;
-import com.poudy.searchkeyword.service.SearchKeywordService;
 import com.poudy.searchkeyword.service.SearchKeywordSnapshot;
 import java.time.Clock;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 
 @Configuration
 public class SearchKeywordConfig {
-
-    private static final String PROPERTY_PREFIX = "poudy.search-keywords.";
-    private static final List<String> DEFAULT_KEYWORDS = List.of(
-        "토너",
-        "선크림",
-        "크림",
-        "로션",
-        "클렌징",
-        "선스틱",
-        "패드",
-        "패치",
-        "앰플",
-        "에센스"
-    );
-
-    @Bean
-    public KeywordSearch catalogKeywordSearch(ProductRepository products) {
-        return products::hasSearchResults;
-    }
-
-    @Bean
-    public SearchKeywordSnapshot searchKeywordSnapshot(SearchKeywordDictionaryRepository repository) {
-        return new SearchKeywordSnapshot(repository.read());
-    }
 
     @Bean
     public BucketWindow searchKeywordWindow() {
@@ -71,41 +40,13 @@ public class SearchKeywordConfig {
     }
 
     @Bean
-    public SearchKeywordService searchKeywordService(
-        SearchKeywordSnapshot snapshot,
-        KeywordBuckets buckets,
-        KeywordSearch search
-    ) {
-        return new SearchKeywordService(snapshot, buckets, search);
+    public SearchKeywordSnapshot searchKeywordSnapshot() {
+        return new SearchKeywordSnapshot();
     }
 
     @Bean
-    public SearchKeywordRankingService searchKeywordRankingService(
-        Environment env,
-        SearchKeywordDictionaryRepository repository,
-        KeywordBuckets buckets,
-        KeywordSearch search,
-        RankingPolicy rankingPolicy,
-        SearchKeywordSnapshot snapshot,
-        Clock clock
-    ) {
-        return new SearchKeywordRankingService(
-            repository,
-            buckets,
-            search,
-            rankingPolicy,
-            RankingFallback.of(defaultKeywords(env)),
-            snapshot,
-            clock
-        );
-    }
-
-    private static List<String> defaultKeywords(Environment env) {
-        String configured = env.getProperty(PROPERTY_PREFIX + "default-keywords", "");
-        if (configured.isBlank()) {
-            return DEFAULT_KEYWORDS;
-        }
-        return Arrays.stream(configured.split(",")).map(String::trim).filter(keyword -> !keyword.isBlank()).toList();
+    public RankingFallback rankingFallback(@Value("${poudy.search-keywords.default-keywords:}") String configured) {
+        return RankingFallback.configured(configured);
     }
 
 }
