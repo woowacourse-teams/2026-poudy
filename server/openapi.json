@@ -3584,6 +3584,25 @@
           "value"
         ]
       },
+      "ExcludeGroupResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "제외 성분군 이름",
+            "example": "향료/알레르기 성분"
+          },
+          "contains": {
+            "type": "boolean",
+            "description": "제품의 해당 성분군 포함 여부",
+            "example": false
+          }
+        },
+        "required": [
+          "contains",
+          "name"
+        ]
+      },
       "FormulationRoleResponse": {
         "type": "object",
         "properties": {
@@ -3691,19 +3710,11 @@
               "$ref": "#/components/schemas/ProductIngredientResponse"
             }
           },
-          "freeOfCodes": {
+          "excludeGroups": {
             "type": "array",
-            "description": "이 제품이 포함하지 않는 성분군 (프리 뱃지)",
+            "description": "제외 성분군별 포함 여부",
             "items": {
-              "type": "string",
-              "enum": [
-                "FRAGRANCE_ALLERGENS",
-                "DRYING_ALCOHOLS",
-                "HARSH_PRESERVATIVES",
-                "SULFATES",
-                "CYCLIC_SILICONES",
-                "SYNTHETIC_COLORANTS"
-              ]
+              "$ref": "#/components/schemas/ExcludeGroupResponse"
             }
           },
           "updatedAt": {
@@ -3716,7 +3727,7 @@
         "required": [
           "brand",
           "categories",
-          "freeOfCodes",
+          "excludeGroups",
           "id",
           "imageUrl",
           "ingredients",
@@ -4353,8 +4364,8 @@
           },
           "name": {
             "type": "string",
-            "description": "빠른 필터에 표시할 이름",
-            "example": "자극성 방부제 제외"
+            "description": "제외 성분군 이름",
+            "example": "자극성 방부제"
           },
           "description": {
             "type": "string",

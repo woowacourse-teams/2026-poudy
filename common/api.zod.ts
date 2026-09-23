@@ -85,6 +85,9 @@ export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.str
 export type DisclosedAmountResponse = __TypedOpenapi.Schemas.DisclosedAmountResponse;
 export const DisclosedAmountResponse = z.object({ type: z.string(), value: z.number(), unit: z.string() });
 
+export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
+export const ExcludeGroupResponse = z.object({ name: z.string(), contains: z.boolean() });
+
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
@@ -101,7 +104,7 @@ export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredient
 export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), disclosedAmount: DisclosedAmountResponse.optional() });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), skinEffectGroups: z.array(SkinEffectGroupResponse), ingredients: z.array(ProductIngredientResponse), freeOfCodes: z.array(z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"])), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), skinEffectGroups: z.array(SkinEffectGroupResponse), ingredients: z.array(ProductIngredientResponse), excludeGroups: z.array(ExcludeGroupResponse), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
 export const ProductSuggestionMatchResponse = z.object({ field: z.enum(["PRODUCT_NAME", "BRAND_NAME"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(0) });
