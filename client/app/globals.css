@@ -586,65 +586,146 @@ body {
 }
 
 /*
- * 피부 타입 타일. 빠른 필터 타일과 같은 결로 움직인다.
+ * 푸터의 약관 링크.
  *
- * 다만 이쪽은 바탕이 비어 있고 테두리만 있어, 뜨는 것만으로는 눌러지는 자리라는 것이
- * 잘 드러나지 않는다. 테두리와 바탕색을 함께 바꿔 손이 닿은 자리를 알린다.
+ * 밑줄을 빼는 대신 손이 닿으면 글자색이 본문색까지 진해진다. 가끔 누르는 자리라
+ * 자리를 옮기거나 크기를 바꾸지 않고 색만 바꾼다. 색은 레이아웃을 건드리지 않아
+ * 글자가 흔들리지도 않는다.
  */
-.skin-type-tile {
-  transition-property: transform, box-shadow, background-color, border-color;
+.footer-link {
+  transition-property: color;
   transition-duration: var(--transition-duration-control-state);
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
 @media (hover: hover) and (pointer: fine) {
-  .skin-type-tile:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
-    background-color: var(--color-surface-subtle);
-    /*
-     * 기본 테두리에서 한 단계만 진해진다. 글자색까지 끌어올리면 타일이 눌린 것처럼
-     * 도드라져, 손이 닿았다는 신호보다 먼저 눈에 들어온다. 필터 칩이 쓰는 값과 같다.
-     */
-    border-color: #d1d3d8;
+  .footer-link:hover {
+    color: var(--color-text-primary);
   }
 }
 
-/*
- * 누름은 hover 와 반대로 가라앉는다. 마우스가 없는 환경에도 남겨 두어
- * 손가락으로도 눌린 것이 보이게 한다.
- */
-.skin-type-tile:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: none;
-  background-color: var(--color-surface);
+/* 누름은 hover 보다 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
+.footer-link:active {
+  color: var(--color-text-primary);
   transition-duration: var(--transition-duration-press, 100ms);
 }
 
-/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
-.skin-type-link:focus-visible {
-  outline: none;
+/*
+ * 푸터의 소셜 아이콘. 회색 원 위에 흰 그림을 얹은 단추다.
+ *
+ * 글자색이 아니라 원 색이 움직인다. 그림이 흰색이라 색을 건드리면 회색 원 위에서
+ * 도리어 튀고, 원이 덩어리를 이루고 있어 바탕이 진해지는 편이 눌리는 자리로 읽힌다.
+ *
+ * 누를 때는 원째로 살짝 가라앉는다. 약관 링크와 달리 손가락에 닿는 덩어리가 있어
+ * 크기 변화가 어색하지 않다. 저장 버튼의 아이콘 단추가 쓰는 값과 같다.
+ */
+.footer-icon {
+  transition-property: background-color, transform;
+  transition-duration: var(--transition-duration-control-state), var(--transition-duration-press);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
-.skin-type-link:focus-visible .skin-type-tile {
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .footer-icon:hover {
+    background-color: #b3b6bb;
+  }
+}
+
+/* 누름은 hover 보다 한 단계 진하고 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
+.footer-icon:active {
+  background-color: #a3a6ac;
+  transform: scale(0.92);
+  transition-duration: var(--transition-duration-press), var(--transition-duration-press);
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 바탕색만 바뀌어도 손이 닿은 자리는 읽힌다. */
+@media (prefers-reduced-motion: reduce) {
+  .footer-icon {
+    transition-property: background-color;
+  }
+
+  .footer-icon:active {
+    transform: none;
+  }
+}
+
+/* 지금 보고 있는 문서는 굵기와 함께 색도 본문색으로 둔다. */
+.footer-link[aria-current="page"] {
+  color: var(--color-text-primary);
+}
+
+/* 키보드로 옮겨 다닐 때는 자리를 또렷하게 알린다. */
+.footer-link:focus-visible {
   outline: 2px solid var(--color-text-primary);
   outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /*
- * 움직임을 줄인 환경에서는 자리를 옮기지 않는다. 색만 바뀌어도 손이 닿은 자리는 읽힌다.
+ * 홈의 인기 제품 카드.
+ *
+ * 제품 상세로 가는 링크인데 아무 반응이 없어, 옆의 필터 칩이나 인기 검색어 줄과
+ * 어긋난다. 누를 때 그림만 가라앉혀 눌린 것을 알린다.
+ *
+ * 글자는 건드리지 않는다. 두 줄로 끊어 둔 자리가 흔들리고 획도 흐려진다. 3열 격자라
+ * hover 로 카드를 띄우면 그 칸만 줄에서 떠올라 어긋나므로 누름만 둔다.
  */
+.popular-product-image {
+  transition-property: transform;
+  transition-duration: var(--transition-duration-press, 100ms);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.popular-product:active .popular-product-image {
+  transform: scale(0.97);
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. */
 @media (prefers-reduced-motion: reduce) {
-  .skin-type-tile {
-    transition-property: background-color, border-color;
+  .popular-product-image {
+    transition-property: none;
   }
 
-  .skin-type-tile:hover,
-  .skin-type-tile:active {
+  .popular-product:active .popular-product-image {
     transform: none;
-    box-shadow: none;
   }
+}
+
+/*
+ * 피부 타입 세그먼트.
+ *
+ * 칸마다 테두리가 따로 없고 하나의 바를 세로선으로 가른 모양이라, 자리를 옮기거나
+ * 그림자를 두면 칸 하나만 바에서 떠올라 줄이 어긋나 보인다. 바탕색만 바꿔
+ * 손이 닿은 칸을 알린다.
+ */
+.skin-type-segment {
+  transition-property: background-color;
+  transition-duration: var(--transition-duration-control-state);
+  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
+@media (hover: hover) and (pointer: fine) {
+  .skin-type-segment:hover {
+    background-color: var(--color-surface-subtle);
+  }
+}
+
+/* 누름은 hover 보다 한 단계 진하다. 마우스가 없는 환경에도 남겨 둔다. */
+.skin-type-segment:active {
+  background-color: #f1f2f4;
+  transition-duration: var(--transition-duration-press, 100ms);
+}
+
+/*
+ * 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 바깥쪽으로 그리면 바의 `overflow-hidden`
+ * 에 잘리므로 안쪽으로 들여 그린다.
+ */
+.skin-type-segment:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -2px;
 }
 
 /*
