@@ -13,8 +13,6 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -69,15 +67,6 @@ class ProductRelatedDatabaseQueryTest {
             .containsExactly(90004L, 1L, 7L, 13L, 15L, 90002L);
         assertThat(repository.findRankings(List.of(2L), null, null).getFirst().id()).isEqualTo(90002L);
         assertThat(repository.findRankings(List.of(999999L), null, null)).isEmpty();
-    }
-
-    @ParameterizedTest
-    @CsvSource({"NAME_ASC,90008", "NAME_DESC,90003"})
-    @DisplayName("이름 정렬 방향을 DB에서 적용한 뒤 첫 페이지를 고른다")
-    void sortsNamesBeforePaging(String sort, long firstId) throws Exception {
-        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", sort).param("size", "1"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].id").value(firstId))
-            .andExpect(jsonPath("$.pagination.totalElements").value(5));
     }
 
     @Test

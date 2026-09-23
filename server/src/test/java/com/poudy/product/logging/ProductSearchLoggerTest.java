@@ -40,7 +40,7 @@ class ProductSearchLoggerTest {
     @Test
     @DisplayName("검색 결과가 없으면 결과 없음으로 기록한다")
     void logsSearchWithoutResult(CapturedOutput output) {
-        logger.completed(context("없는 제품", ProductSort.NAME_ASC, false), ELAPSED_NANOS, 0);
+        logger.completed(context("없는 제품", ProductSort.DEFAULT, false), ELAPSED_NANOS, 0);
 
         assertThat(output).contains("resultCount=0", "outcome=NO_RESULT");
     }
@@ -48,7 +48,7 @@ class ProductSearchLoggerTest {
     @Test
     @DisplayName("검색 오류는 안전한 오류 코드만 기록한다")
     void logsSearchErrorWithoutExceptionDetail(CapturedOutput output) {
-        logger.failed(context("토너", ProductSort.NAME_ASC, false), ELAPSED_NANOS);
+        logger.failed(context("토너", ProductSort.DEFAULT, false), ELAPSED_NANOS);
 
         assertThat(output).contains(
             "keyword=\"토너\"",
@@ -64,7 +64,7 @@ class ProductSearchLoggerTest {
     void logsSafeKeyword(CapturedOutput output) {
         String keyword = " 토 너\\\"" + "가".repeat(ProductSearchLogger.MAX_KEYWORD_CODE_POINTS + 1);
 
-        logger.completed(context(keyword, ProductSort.NAME_ASC, false), ELAPSED_NANOS, 1);
+        logger.completed(context(keyword, ProductSort.DEFAULT, false), ELAPSED_NANOS, 1);
 
         assertThat(output).contains(
             "keyword=\"토너\\\\\\\"" + "가".repeat(ProductSearchLogger.MAX_KEYWORD_CODE_POINTS - 4)
@@ -79,7 +79,7 @@ class ProductSearchLoggerTest {
     @DisplayName("검색어의 생김새와 무관하게 입력을 그대로 기록한다")
     void logsEveryKeyword(CapturedOutput output) {
         for (String keyword : java.util.List.of("person@example.com", "010-1234-5678")) {
-            logger.completed(context(keyword, ProductSort.NAME_ASC, false), ELAPSED_NANOS, 1);
+            logger.completed(context(keyword, ProductSort.DEFAULT, false), ELAPSED_NANOS, 1);
 
             assertThat(output).contains("keyword=\"" + keyword + "\"");
         }

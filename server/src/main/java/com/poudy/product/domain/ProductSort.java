@@ -1,12 +1,13 @@
 package com.poudy.product.domain;
 
 public enum ProductSort {
-    NAME_ASC,
-    NAME_DESC,
+    DEFAULT,
+    PRICE_DESC,
     PRICE_ASC,
-    PRICE_DESC;
-    public static final String DEFAULT_NAME = "NAME_ASC";
+    UNIT_PRICE_DESC,
+    UNIT_PRICE_ASC;
+    public static final String DEFAULT_NAME = "DEFAULT";
     public static ProductSort orDefault(ProductSort sort) {
-        return sort == null ? NAME_ASC : sort;
+        return sort == null ? DEFAULT : sort;
     }
 }

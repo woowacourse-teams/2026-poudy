@@ -6,9 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.exception.ErrorCode;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.repository.ProductRepository;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,7 +47,7 @@ class ProductDatabaseQueryTest {
         jdbc.update("update product set moisture_level = 2 where id in (90002, 90004)");
         mockMvc.perform(
             get("/api/products").param("keyword", "검증토너").param("moistureLevel", "2")
-                .param("sort", "NAME_ASC").param("page", "2").param("size", "1")
+                .param("sort", "DEFAULT").param("page", "2").param("size", "1")
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(90002)))
@@ -53,6 +56,105 @@ class ProductDatabaseQueryTest {
             .andExpect(jsonPath("$.filterOptions").doesNotExist());
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+    }
+
+    @Test
+    @DisplayName("검색어가 있으면 기본순이 DB 관련도 순서를 필터와 페이지 이후에도 보존한다")
+    void defaultsToSearchRank() throws Exception {
+        jdbc.update("update product set moisture_level = 2 where id in (90001, 90004)");
+        for (String sort : List.of("", "DEFAULT")) {
+            var request = get("/api/products").param("keyword", "검증토너")
+                .param("moistureLevel", "2").param("size", "1");
+            if (!sort.isEmpty()) {
+                request.param("sort", sort);
+            }
+            mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id").value(contains(90001)))
+                .andExpect(jsonPath("$.pagination.totalElements").value(2));
+            mockMvc.perform(request.param("page", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id").value(contains(90004)));
+        }
+    }
+
+    @Test
+    @DisplayName("검색어 없는 기본순은 한국 시간 어제까지 30일 조회수로 필터 후 페이지를 정한다")
+    void defaultsToThirtyCompletedDaysOfViews() throws Exception {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        jdbc.update("delete from product_daily_view");
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count) values (?, 90001, 2)",
+            today.minusDays(30)
+        );
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count) values (?, 90004, 2)",
+            today.minusDays(1)
+        );
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count) values (?, 90002, 10000)",
+            today.minusDays(31)
+        );
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count) values (?, 90003, 10000)",
+            today
+        );
+
+        for (int page = 1; page <= 3; page++) {
+            long expected = switch (page) {
+                case 1 -> 90001L;
+                case 2 -> 90004L;
+                default -> 90002L;
+            };
+            mockMvc.perform(
+                get("/api/products").param("brandIds", "90000")
+                    .param("page", String.valueOf(page)).param("size", "1")
+            )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(expected));
+        }
+    }
+
+    @Test
+    @DisplayName("단가는 대표 옵션의 ml·g 수치를 비교하고 ea·0은 양방향 모두 ID순으로 뒤에 둔다")
+    void sortsByRepresentativeUnitPrice() throws Exception {
+        jdbc.update(
+            "update product_variant set price = 1000, volume_value = 10, volume_unit = 'ml' where product_id = 90001"
+        );
+        jdbc.update(
+            "update product_variant set price = 2000, volume_value = 20, volume_unit = 'g' where product_id = 90002"
+        );
+        jdbc.update(
+            "update product_variant set price = 3000, volume_value = 10, volume_unit = 'g' where product_id = 90003"
+        );
+        jdbc.update(
+            "update product_variant set price = 100, volume_value = 1, volume_unit = 'ea' where product_id = 90004"
+        );
+        jdbc.update(
+            "update product_variant set price = 100, volume_value = 0, volume_unit = 'ml' where product_id = 90008"
+        );
+
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "UNIT_PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90001, 90002, 90003, 90004, 90008)));
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "UNIT_PRICE_DESC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90003, 90001, 90002, 90004, 90008)));
+        mockMvc.perform(
+            get("/api/products").param("keyword", "검증토너").param("sort", "UNIT_PRICE_ASC")
+                .param("page", "2").param("size", "2")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90003, 90004)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"NAME_ASC", "NAME_DESC", "UNKNOWN"})
+    @DisplayName("새 계약에 없는 정렬값은 요청 검증 오류로 거절한다")
+    void rejectsUnsupportedSort(String sort) throws Exception {
+        mockMvc.perform(get("/api/products").param("sort", sort))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
     }
 
     @Test
@@ -122,7 +224,7 @@ class ProductDatabaseQueryTest {
             null,
             null
         );
-        var page = repository.find(query, ProductSort.NAME_ASC, 1, 1);
+        var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(repository.count(query)).isEqualTo(1);
         assertThat(page.items().getFirst().ingredients().values()).extracting("id")

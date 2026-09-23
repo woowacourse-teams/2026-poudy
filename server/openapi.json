@@ -1160,13 +1160,14 @@
             "required": false,
             "schema": {
               "type": "string",
-              "default": "NAME_ASC",
+              "default": "DEFAULT",
               "description": "정렬 조건",
               "enum": [
-                "NAME_ASC",
-                "NAME_DESC",
+                "DEFAULT",
+                "PRICE_DESC",
                 "PRICE_ASC",
-                "PRICE_DESC"
+                "UNIT_PRICE_DESC",
+                "UNIT_PRICE_ASC"
               ]
             }
           },
