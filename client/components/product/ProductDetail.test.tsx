@@ -391,7 +391,7 @@ describe("성분 분류", () => {
   it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
     const product = {
       ...taggedProduct,
-      skinEffectGroups: [{ id: 1, code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+      skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
     };
 
     render(<ProductDetail product={product} />);
