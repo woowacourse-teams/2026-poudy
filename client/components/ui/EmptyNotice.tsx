@@ -55,6 +55,10 @@ export function EmptyNotice({ icon, image, title, detail, size = "section", clas
       } ${className}`}
     >
       {image ? (
+        /*
+         * 그리는 크기의 두 배를 적는다. next/image 는 1 배와 2 배 사본만 만들어,
+         * 그대로 적으면 3 배 화면이 작은 사본을 늘려 쓰며 가장자리가 뭉갠다.
+         */
         <Image
           src={image.src}
           alt=""

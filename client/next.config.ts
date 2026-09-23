@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
         outputFileTracingRoot: path.join(__dirname, ".."),
       }),
 
+  // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
     // EC2의 이미지 변환 부담과 Vercel의 최적화 사용량을 줄이기 위해 변환을 건너뛴다.
     unoptimized: true,

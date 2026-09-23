@@ -444,7 +444,7 @@ export function SavedScreen() {
         <div className="flex flex-1 flex-col py-4">
           <EmptyNotice
             icon="bookmark"
-            image={{ src: "/images/empty-states/no-saved-products-watermark.webp", size: 170, loading: "eager" }}
+            image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170, loading: "eager" }}
             title={
               current.missingIds.length > 0 ? "저장한 제품을 지금은 불러올 수 없어요" : "아직 저장한 제품이 없어요"
             }
