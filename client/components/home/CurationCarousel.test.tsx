@@ -2,13 +2,17 @@
  * @vitest-environment jsdom
  */
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CurationCarousel } from "./CurationCarousel";
 
 import { track } from "@/lib/analytics/track";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
+beforeEach(() => {
+  vi.mocked(track).mockClear();
+});
 
 const items = [
   {
@@ -68,6 +72,52 @@ describe("CurationCarousel", () => {
     const [description] = screen.getAllByText("보습 성분 모아보기");
 
     expect(description).toHaveClass("whitespace-pre-line");
+  });
+
+  /* 캐러셀은 상세 화면으로 가는 입구다. 카드가 실제로 그 주소를 가리키는지 본다. */
+  it("카드가 큐레이션 상세로 이어진다", () => {
+    render(<CurationCarousel items={items} />);
+
+    /* 앞뒤로 여벌 카드를 두어 같은 링크가 여러 번 나온다. 가리키는 곳만 본다. */
+    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
+
+    expect(link).toHaveAttribute("href", "/curations/1");
+  });
+
+  it("카드를 누르면 몇 번째 큐레이션인지와 함께 남긴다", () => {
+    render(<CurationCarousel items={items} />);
+
+    const [link] = screen.getAllByRole("link", { name: /순한 클렌징/ });
+    fireEvent.click(link);
+
+    /* 자리는 사람이 세는 대로 1 부터 센다. 두 번째 카드이므로 2 다. */
+    expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
+  });
+
+  /*
+   * 브라우저는 끌기가 끝난 자리에서도 클릭을 한 번 보낸다. 막아 두지 않으면 목록을
+   * 밀어 넘길 때마다 상세 화면이 열려, 카드를 넘겨 볼 수가 없다.
+   */
+  it("끌어서 넘긴 뒤에는 상세로 가지 않는다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+
+    const list = container.querySelector(".curation-track");
+    if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+    list.setPointerCapture = vi.fn();
+    list.hasPointerCapture = vi.fn(() => false);
+    list.scrollLeft = 100;
+
+    fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 200 });
+    fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
+    fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
+
+    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
+    const clicked = fireEvent.click(link);
+
+    /* 기본 동작이 막혔으면 이동하지 않는다. 이벤트도 남기지 않는다. */
+    expect(clicked).toBe(false);
+    expect(track).not.toHaveBeenCalled();
   });
 
   /*
@@ -130,6 +180,55 @@ describe("CurationCarousel", () => {
     fireEvent.pointerMove(track, { pointerId: 1, pointerType: "touch", clientX: 140 });
 
     expect(track.scrollLeft).toBe(100);
+  });
+
+  it("스냅 지점에서 벗어나 멈추면 가운데로 정렬한 뒤 재배치한다", () => {
+    vi.useFakeTimers();
+    const raf = vi
+      .spyOn(globalThis, "requestAnimationFrame")
+      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
+    const caf = vi
+      .spyOn(globalThis, "cancelAnimationFrame")
+      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
+    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+    const previousScrollEnd = Object.getOwnPropertyDescriptor(window, "onscrollend");
+    Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const track = container.querySelector(".curation-track");
+      if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+      const step = 400;
+      for (const [slot, child] of [...track.children].entries()) {
+        Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
+        Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
+      }
+      Object.defineProperty(track, "clientWidth", { value: step, configurable: true });
+
+      // 세 번째 칸이 중심에 가장 가깝지만 스냅 지점보다 120px 앞에서 멈춘 상황이다.
+      track.scrollLeft = 3 * step - 32 - 120;
+      fireEvent.scroll(track);
+      vi.advanceTimersByTime(1750);
+
+      // 종료 시점에 즉시 순간이동하지 않고, 먼저 남은 거리를 움직인다.
+      expect(track.scrollLeft).toBe(3 * step - 32 - 120);
+      vi.advanceTimersByTime(DROP_MS / 2);
+      expect(track.scrollLeft).toBeGreaterThan(3 * step - 32 - 120);
+      vi.advanceTimersByTime(DROP_MS / 2);
+
+      // 가운데에 도착한 뒤에만 순서를 바꾼다.
+      expect(track.scrollLeft).toBe(2 * step - 32);
+      expect(track.children[2]).toHaveTextContent("순한 클렌징");
+      expect(track).toHaveClass("snap-mandatory");
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      now.mockRestore();
+      if (previousScrollEnd) Object.defineProperty(window, "onscrollend", previousScrollEnd);
+      else Reflect.deleteProperty(window, "onscrollend");
+      vi.useRealTimers();
+    }
   });
 
   /*

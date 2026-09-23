@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { CategoryTrack } from "@/components/directory/CategoryTrack";
+import { RevealingCategoryTrack } from "@/components/directory/CategoryTrack";
 import { CategoryTrackSkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
@@ -104,11 +104,7 @@ async function CategoryTrackContent({ params }: { readonly params: PageProps<"/c
 
   const { trackItems } = await resolveCategory(id);
 
-  return (
-    <div className="px-4">
-      <CategoryTrack items={trackItems} selectedId={id} />
-    </div>
-  );
+  return <RevealingCategoryTrack items={trackItems} selectedId={id} />;
 }
 
 /** 필터 재료와 첫 장. 제목을 막지 않고 별도 경계에서 스트리밍한다. */
@@ -146,6 +142,7 @@ async function CategoryProducts({
         surface="category"
         fixedFilter={{ categoryIds }}
         hiddenChips={["category"]}
+        stickyChips="category"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
       />
@@ -171,7 +168,7 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
 
   return (
     <>
-      <TopBar title={name} variant="root" showBack />
+      <TopBar title={name} variant="root" showBack edge={false} />
       <JsonLd data={breadcrumbList(categoryCrumbs(id, name, top))} />
 
       <StreamBoundary stream={stream} fallback={<CategoryTrackSkeleton />}>
@@ -179,7 +176,10 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
       </StreamBoundary>
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
-      <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["category"]} />}>
+      <StreamBoundary
+        stream={stream}
+        fallback={<ProductListSkeleton hiddenChips={["category"]} stickyChips="category" />}
+      >
         <CategoryProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
     </>

@@ -15,6 +15,7 @@ import { recordSearchKeyword } from "@/lib/api/products";
 import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
+import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
 import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -80,6 +81,66 @@ type ProductSearchPanelProps = {
 
 const ignore = () => {};
 
+/** 탭 줄이 붙는 높이. 상단바(`variant="root"`)의 높이다. */
+const TOP_BAR_HEIGHT = 56;
+
+/** 탭 줄을 재기 전의 높이. `.search-field-bar` 의 기본값과 같다. */
+const SEARCH_TABS_HEIGHT = 46;
+
+/**
+ * 묶음이 붙는 높이. 탭 줄 바로 아래다.
+ *
+ * 탭 줄의 높이는 글자 크기 설정에 따라 기기마다 달라 직접 잰다. 어림값을 쓰면 탭 줄이 낮은
+ * 기기에서는 맨 위에서도 붙은 것으로 보여 그림자가 드리운다. 소수점은 버려, 맨 위에서
+ * 1px 도 안 되게 어긋난 것으로 붙었다고 보지 않는다.
+ */
+function useSearchFieldBarTop() {
+  const [top, setTop] = useState(TOP_BAR_HEIGHT + SEARCH_TABS_HEIGHT);
+
+  useEffect(() => {
+    const tabs = document.querySelector<HTMLElement>("[data-search-tabs]");
+    if (!tabs) return;
+
+    const measure = () => setTop(Math.floor(TOP_BAR_HEIGHT + tabs.getBoundingClientRect().height));
+    const observer = new ResizeObserver(measure);
+
+    measure();
+    observer.observe(tabs);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return top;
+}
+
+/**
+ * 입력 묶음. 탭 줄 아래에 붙는다. 목록을 내려 보다가도 바로 다시 찾을 수 있다.
+ *
+ * 붙는 자리는 `.search-field-bar` 가 탭 줄의 상태를 보고 정한다. 붙었을 때 입력창이 탭 줄에
+ * 닿지 않도록 위아래를 띄우되, 음의 여백으로 그만큼을 되돌려 원래 배치는 움직이지 않는다.
+ * 바텀시트의 딤(z-40)과 탭 줄(z-20) 아래에 둔다. 입력창 아래의 안내 문구는 목록과 함께
+ * 흘러가도록 묶음 밖에 둔다. 붙은 줄이 두꺼워지면 목록을 볼 자리가 그만큼 줄어든다.
+ *
+ * 처음부터 붙는 자리에 놓여 있어, 패널 윗끝이 그 자리를 지나가면 붙은 것으로 보고 아래
+ * 그림자를 드리운다. 표식은 패널 윗끝에 겹쳐 두어 묶음 사이 간격에 끼지 않게 한다.
+ */
+function SearchFieldBar({ children }: { readonly children: ReactNode }) {
+  const top = useSearchFieldBarTop();
+  const { ref, passed } = usePassedTopBoundary<HTMLDivElement>({ enterAt: top });
+
+  return (
+    <>
+      <div ref={ref} aria-hidden="true" className="absolute inset-x-0 top-0 h-px" />
+      <div
+        data-stuck={passed}
+        className="search-field-bar stuck-edge sticky z-10 -mx-4 -mt-4 -mb-2 bg-background px-4 pt-4 pb-2"
+      >
+        {children}
+      </div>
+    </>
+  );
+}
+
 /**
  * 검색어를 읽기 전의 S02. 검색어가 없을 때와 같은 모양이다.
  *
@@ -88,10 +149,10 @@ const ignore = () => {};
  */
 export function ProductSearchPanelFallback({ children }: ProductSearchPanelProps) {
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <div className="flex flex-col gap-2">
+    <div className="relative flex flex-col gap-6 p-4">
+      <SearchFieldBar>
         <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
-      </div>
+      </SearchFieldBar>
       {children}
     </div>
   );
@@ -194,8 +255,8 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
 
   return (
     /* 입력 묶음과 그 아래 목록은 서로 다른 덩어리라 넉넉히 벌린다. */
-    <div className="flex flex-col gap-6 p-4">
-      <div className="flex flex-col gap-2">
+    <div className="relative flex flex-col gap-6 p-4">
+      <SearchFieldBar>
         <SearchField
           value={keyword}
           onChange={changeKeyword}
@@ -203,19 +264,17 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
           label={LABEL}
           onSubmit={handleSubmit}
         />
-        {/*
-          입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
-          자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
-          검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
-        */}
-        <p aria-live="polite" className="text-[12px] text-text-secondary empty:hidden">
-          {waiting
-            ? "검색 결과를 확인하고 있어요…"
-            : typing
-              ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
-              : ""}
-        </p>
-      </div>
+      </SearchFieldBar>
+
+      {/*
+        입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
+        자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
+        검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
+        입력창에 붙어 읽히도록 묶음 사이 간격(24px)을 8px 로 좁힌다.
+      */}
+      <p aria-live="polite" className="-mt-4 text-[12px] text-text-secondary empty:hidden">
+        {waiting ? "검색 결과를 확인하고 있어요…" : typing ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요." : ""}
+      </p>
 
       {typing && searching ? (
         <p className="flex min-h-60 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>

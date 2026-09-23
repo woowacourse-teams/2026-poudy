@@ -6,7 +6,15 @@
  */
 
 export type PageName =
-  "home" | "search" | "product_list" | "product_detail" | "ingredient_detail" | "saved" | "category" | "brand";
+  | "home"
+  | "search"
+  | "product_list"
+  | "product_detail"
+  | "ingredient_detail"
+  | "saved"
+  | "category"
+  | "brand"
+  | "curation_detail";
 
 export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
 
@@ -43,6 +51,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "product_list",
   "saved",
   "recent_search",
+  "curation",
   "direct",
 ] as const;
 
@@ -170,8 +179,19 @@ export type EventMap = {
   popular_keywords_expanded: { rank: number };
   /** 캐러셀에서 다른 큐레이션 카드가 가운데 놓였을 때. 자동 재생과 직접 조작을 구분한다. */
   curation_slide_viewed: { curation_id: number; position: number; transition: "manual" | "autoplay" };
-  /** 큐레이션 상세 화면을 실제로 열었을 때. */
-  curation_opened: { curation_id: number; position: number };
+  /**
+   * 큐레이션 카드를 눌렀을 때. 홈 캐러셀과 큐레이션 상세 아래의 `다른 큐레이션` 이 함께 남긴다.
+   * position 은 그 목록 안에서 1 부터 센 자리다.
+   */
+  curation_opened: { curation_id: number; position: number; surface: "home" | "curation_detail" };
+  /** 큐레이션 상세가 그려졌을 때. 캐러셀 밖(공유 링크, 검색)에서 들어온 경우까지 센다. */
+  curation_viewed: { curation_id: number };
+  /**
+   * 큐레이션 상세의 필터 칩을 바꿨을 때. 전체는 filter_id 를 두지 않는다.
+   *
+   * 필터 ID 는 UUID 라 집계 화면에서 무엇인지 알아보기 어렵다. 기획자가 붙인 이름을 함께 남긴다.
+   */
+  curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
   skin_type_selected: { skin_type: SkinTypeCode } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */

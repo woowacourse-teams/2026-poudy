@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
 import { HomeSearchLink } from "@/components/home/HomeSearchLink";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
-import { OPERATOR } from "@/components/legal/operator";
-import { Icon } from "@/components/ui/icons/Icon";
+import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
 import {
   fetchCategories,
@@ -16,7 +14,7 @@ import {
   fetchSearchKeywordRankings,
   fetchSkinTypes,
 } from "@/lib/api/products";
-import { absoluteUrl, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
+import { absoluteUrl, INSTAGRAM_URL, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -30,8 +28,6 @@ export const metadata: Metadata = {
  * 화면을 다시 만드는 주기를 정하지는 않는다.
  */
 export const revalidate = 600;
-
-const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
 
 const organizationId = absoluteUrl("/#organization");
 const websiteStructuredData = {
@@ -95,44 +91,7 @@ export default async function Home() {
         <PopularProducts initialItems={rankings} categories={categories} />
       </main>
 
-      <footer className="flex flex-col items-center gap-2 bg-surface-subtle px-4 py-9 text-center text-[11px] text-text-secondary">
-        <p className="flex items-center justify-center gap-2">
-          <Link href="/privacy" className="underline">
-            개인정보 처리방침
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/terms" className="underline">
-            이용약관
-          </Link>
-        </p>
-
-        <ul className="flex items-center gap-2">
-          <li>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label={`${OPERATOR.serviceName} 인스타그램 (새 창)`}
-              className="flex size-9 items-center justify-center"
-            >
-              <Icon name="instagram" size={18} />
-            </a>
-          </li>
-          <li>
-            <a
-              href={`mailto:${OPERATOR.officer.email}`}
-              aria-label={`${OPERATOR.serviceName} 에 메일 보내기`}
-              className="flex size-9 items-center justify-center"
-            >
-              <Icon name="mail" size={18} />
-            </a>
-          </li>
-        </ul>
-
-        <p className="text-[10px]">
-          당신의 피부를 생각하는 {OPERATOR.name} <span aria-hidden="true">💗</span>
-        </p>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

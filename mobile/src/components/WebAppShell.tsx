@@ -12,6 +12,7 @@ import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 import type { WebViewErrorEvent, WebViewNavigationRequest } from '@/types/webView';
@@ -35,6 +36,7 @@ export default function WebAppShell() {
   const [isLoadingAnimationRunning, setIsLoadingAnimationRunning] = useState(Platform.OS !== 'android');
 
   const navigation = useWebViewNavigation(serviceBaseUrl);
+  const keyboardInset = useKeyboardInset();
   const { fail } = navigation;
 
   useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
@@ -110,12 +112,16 @@ export default function WebAppShell() {
 
   return (
     <View onLayout={handleRootLayout} style={styles.root}>
-      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={[styles.safeArea, { paddingBottom: keyboardInset }]}
+      >
         <WebView
           key={navigation.key}
           ref={webViewRef}
           allowsBackForwardNavigationGestures
           applicationNameForUserAgent={APPLICATION_NAME}
+          bottomBounces={false}
           injectedJavaScriptBeforeContentLoaded={WEBVIEW_INIT_SCRIPT}
           javaScriptCanOpenWindowsAutomatically={false}
           mixedContentMode='never'
@@ -131,6 +137,7 @@ export default function WebAppShell() {
           setDisplayZoomControls={false}
           setSupportMultipleWindows={false}
           sharedCookiesEnabled
+          showsVerticalScrollIndicator={false}
           source={{ uri: navigation.url }}
           style={styles.webView}
         />
