@@ -45,8 +45,12 @@ export function ProductGridCard({ id, name, brandName, imageUrl, from, loading =
       {/*
         브랜드와 제품명을 한 덩어리로 읽히게 이어 쓰고 브랜드만 옅게 둔다.
         두 줄까지만 보여 주고 넘치면 줄임표로 끊는다.
+
+        한국어를 글자 단위로 끊어 줄 끝까지 채운다. 사이트 전체의 keep-all 을 따르면 긴 낱말이
+        통째로 다음 줄로 넘어가 칸 오른쪽이 비고, 사진은 가운데인데 글자만 왼쪽으로 쏠려 보인다.
+        영문과 숫자는 낱말 단위를 지키도록 break-all 대신 normal 로 둔다.
       */}
-      <span className="line-clamp-2 text-body leading-[1.35] text-text-primary">
+      <span className="line-clamp-2 text-body leading-[1.35] [word-break:normal] text-text-primary">
         <span className="text-text-secondary">{brandName}</span> {name}
       </span>
     </Link>
