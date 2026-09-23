@@ -58,12 +58,12 @@ const ACTIONS = [
 ] as const;
 
 const QUICK_FILTERS: Record<(typeof EXCLUDE_CODES)[number], { label: string; image: string }> = {
-  FRAGRANCE_ALLERGENS: { label: "향료·알레르기", image: "/images/quick-filters/fragrance-allergens.png" },
-  DRYING_ALCOHOLS: { label: "건조 알코올", image: "/images/quick-filters/drying-alcohols.png" },
-  HARSH_PRESERVATIVES: { label: "자극성 방부제", image: "/images/quick-filters/harsh-preservatives.png" },
-  SULFATES: { label: "설페이트", image: "/images/quick-filters/sulfates.png" },
-  CYCLIC_SILICONES: { label: "실리콘", image: "/images/quick-filters/cyclic-silicones.png" },
-  SYNTHETIC_COLORANTS: { label: "합성 색소", image: "/images/quick-filters/synthetic-colorants.png" },
+  FRAGRANCE_ALLERGENS: { label: "향료·알레르기", image: "/images/quick-filters/fragrance-allergens.webp" },
+  DRYING_ALCOHOLS: { label: "건조 알코올", image: "/images/quick-filters/drying-alcohols.webp" },
+  HARSH_PRESERVATIVES: { label: "자극성 방부제", image: "/images/quick-filters/harsh-preservatives.webp" },
+  SULFATES: { label: "설페이트", image: "/images/quick-filters/sulfates.webp" },
+  CYCLIC_SILICONES: { label: "실리콘", image: "/images/quick-filters/cyclic-silicones.webp" },
+  SYNTHETIC_COLORANTS: { label: "합성 색소", image: "/images/quick-filters/synthetic-colorants.webp" },
 };
 
 export default function Home() {
@@ -115,13 +115,6 @@ export default function Home() {
                   href={`/products?excludeCodes=${code}`}
                   className="quick-filter-link flex flex-col items-center gap-1"
                 >
-                  {/*
-                    그림은 60px 로 그려지지만 그 값을 그대로 적으면 next/image 가 1배와
-                    2배, 곧 64px 와 128px 사본만 만든다. 3배 화면은 180px 가 필요한데
-                    128px 를 늘려 쓰게 되어 가장자리가 뭉개진다.
-                    두 배로 적어 2배 사본이 256px 가 되게 한다. 그리는 크기는 아래
-                    className 이 정하므로 화면은 달라지지 않는다.
-                  */}
                   <Image
                     src={QUICK_FILTERS[code].image}
                     alt=""
