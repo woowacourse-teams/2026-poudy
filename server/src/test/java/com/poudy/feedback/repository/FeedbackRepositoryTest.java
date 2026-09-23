@@ -22,7 +22,6 @@ import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
 import com.poudy.feedback.domain.image.PendingImage;
 import com.poudy.product.repository.ProductRepository;
-import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -41,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,13 +55,13 @@ class FeedbackRepositoryTest {
     private static final OffsetDateTime RECEIVED_AT = OffsetDateTime.now(CLOCK);
 
     @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
     private PlatformTransactionManager transactionManager;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbc;
 
     @Autowired
     private ProductRepository productRepository;
@@ -74,7 +74,7 @@ class FeedbackRepositoryTest {
     void setUp() {
         repository = new FeedbackRepository(
             imageRepository,
-            entityManager,
+            namedJdbc,
             transactionManager,
             productRepository,
             CLOCK
@@ -87,7 +87,6 @@ class FeedbackRepositoryTest {
         Feedback feedback = serviceFeedback(FeedbackType.BUG_REPORT, "/products/1", RECEIVED_AT);
 
         repository.save(feedback);
-        clear();
 
         assertThat(repository.findById(feedback.id())).isEqualTo(feedback);
         assertThat(repository.findById(feedback.id()).receivedAt().getOffset()).isEqualTo(RECEIVED_AT.getOffset());
@@ -100,7 +99,6 @@ class FeedbackRepositoryTest {
         Feedback feedback = serviceFeedback(FeedbackType.BUG_REPORT, "/products/1", receivedAt);
 
         repository.save(feedback);
-        clear();
 
         assertThat(repository.findById(feedback.id()).receivedAt())
             .isEqualTo(OffsetDateTime.parse("2026-09-10T10:02:03+09:00"));
@@ -112,7 +110,6 @@ class FeedbackRepositoryTest {
         Feedback feedback = serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT);
 
         repository.save(feedback);
-        clear();
 
         assertThat(repository.findById(feedback.id())).isEqualTo(feedback);
     }
@@ -129,7 +126,6 @@ class FeedbackRepositoryTest {
         );
 
         repository.save(correction);
-        clear();
 
         assertThat(repository.findById(correction.id())).isEqualTo(correction);
         assertThat(rowCount("product_correction_request", correction.id())).isOne();
@@ -145,7 +141,6 @@ class FeedbackRepositoryTest {
         Feedback feedback = serviceFeedback(FeedbackType.IMPROVEMENT, null, RECEIVED_AT);
 
         Feedback saved = repository.save(feedback, List.of(first.id(), second.id()));
-        clear();
 
         assertThat(saved.images()).containsExactly(first, second);
         assertThat(repository.findById(feedback.id()).images()).containsExactly(first, second);
@@ -283,7 +278,6 @@ class FeedbackRepositoryTest {
 
         Feedback completed = feedback.changeStatus(FeedbackStatus.COMPLETED, later);
         assertThat(repository.updateStatus(FeedbackStatus.RECEIVED, completed)).isTrue();
-        clear();
 
         assertThat(repository.findById(feedback.id())).isEqualTo(completed);
     }
@@ -300,7 +294,6 @@ class FeedbackRepositoryTest {
             FeedbackStatus.RECEIVED,
             feedback.changeStatus(FeedbackStatus.COMPLETED, later)
         );
-        clear();
 
         assertThat(updated).isFalse();
         assertThat(repository.findById(feedback.id()).status()).isEqualTo(FeedbackStatus.IN_PROGRESS);
@@ -319,7 +312,6 @@ class FeedbackRepositoryTest {
         );
         repository.save(older);
         repository.save(newer);
-        clear();
 
         assertThat(repository.findPage(null, null, 0, 100)).extracting(Feedback::id)
             .containsSubsequence(newer.id(), older.id());
@@ -351,13 +343,11 @@ class FeedbackRepositoryTest {
         Feedback fresh = serviceFeedback(FeedbackType.BUG_REPORT, null, RECEIVED_AT.minusDays(82));
         repository.save(correction);
         repository.save(fresh);
-        clear();
         OffsetDateTime cutoff = RECEIVED_AT.minusDays(83);
 
         assertThat(repository.findExpired(cutoff, 10)).extracting(Feedback::id)
             .containsExactly(oldest.id(), correction.id());
         assertThat(repository.deleteExpired(oldest, cutoff)).isTrue();
-        clear();
 
         assertThat(repository.exists(oldest.id())).isFalse();
         assertThat(
@@ -378,7 +368,6 @@ class FeedbackRepositoryTest {
             .mapToObj(index -> serviceFeedback(FeedbackType.BUG_REPORT, null, RECEIVED_AT.plusDays(10 + index)))
             .toList();
         saved.forEach(repository::save);
-        clear();
 
         assertThat(repository.count(null, FeedbackSubjectType.BUG_REPORT)).isEqualTo(before + 3);
         assertThat(repository.findPage(null, FeedbackSubjectType.BUG_REPORT, 0, 2)).extracting(Feedback::id)
@@ -413,8 +402,4 @@ class FeedbackRepositoryTest {
         return jdbcTemplate.queryForObject("select count(*) from " + table + " where id = ?", Integer.class, id);
     }
 
-    private void clear() {
-        entityManager.flush();
-        entityManager.clear();
-    }
 }

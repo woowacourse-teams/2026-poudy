@@ -7,7 +7,6 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestStatus;
-import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -30,16 +29,12 @@ class ProductRequestRepositoryTest {
     @Autowired
     private ProductRequestRepository repository;
 
-    @Autowired
-    private EntityManager entityManager;
-
     @Test
     @DisplayName("저장한 요청을 같은 값으로 다시 읽는다")
     void roundTripsRequest() {
         ProductRequest request = new ProductRequest(UUID.randomUUID(), "독도 토너", "라운드랩", REQUESTED_AT);
 
         repository.save(request);
-        clear();
         ProductRequest found = repository.findById(request.requestId());
 
         assertThat(found.requestId()).isEqualTo(request.requestId());
@@ -64,7 +59,6 @@ class ProductRequestRepositoryTest {
             )
         )
             .isTrue();
-        clear();
         ProductRequest found = repository.findById(request.requestId());
 
         assertThat(found.status()).isEqualTo(ProductRequestStatus.COMPLETED);
@@ -82,7 +76,6 @@ class ProductRequestRepositoryTest {
         repository.save(newer);
         repository
             .updateStatus(ProductRequestStatus.RECEIVED, older.changeStatus(ProductRequestStatus.REJECTED, LATER));
-        clear();
 
         assertThat(repository.findAll(null)).extracting(ProductRequest::requestId)
             .containsSubsequence(newer.requestId(), older.requestId());
@@ -103,7 +96,6 @@ class ProductRequestRepositoryTest {
             ProductRequestStatus.RECEIVED,
             request.changeStatus(ProductRequestStatus.COMPLETED, LATER)
         );
-        clear();
 
         assertThat(updated).isFalse();
         assertThat(repository.findById(request.requestId()).status()).isEqualTo(ProductRequestStatus.IN_PROGRESS);
@@ -118,8 +110,4 @@ class ProductRequestRepositoryTest {
             .isEqualTo(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
     }
 
-    private void clear() {
-        entityManager.flush();
-        entityManager.clear();
-    }
 }

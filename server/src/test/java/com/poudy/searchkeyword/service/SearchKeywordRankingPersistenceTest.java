@@ -16,7 +16,6 @@ import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.KeywordBucketRepository;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -43,8 +42,6 @@ class SearchKeywordRankingPersistenceTest {
     private ProductRepository products;
     @Autowired
     private JdbcTemplate jdbc;
-    @Autowired
-    private EntityManager entityManager;
 
     @Test
     void databaseDictionaryChangesArePublishedWithoutRecreatingServices() {
@@ -76,7 +73,6 @@ class SearchKeywordRankingPersistenceTest {
         assertThat(snapshot.recognizes("신규표현")).isTrue();
 
         jdbc.update("update search_keyword set status = 'INACTIVE' where id = 'refresh-test'");
-        entityManager.clear();
         refresh.refreshRankings();
 
         assertThat(reader.rankings()).isEmpty();
