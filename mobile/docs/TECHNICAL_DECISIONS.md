@@ -33,6 +33,12 @@
 - iOS 는 WKWebView 가 뷰의 안전 영역을 따라 0 을 내주므로 셸 설정만으로 맞는다. 어긋나는 것은 Android 뿐이다.
 - 웹에 아래로 붙는 요소를 더할 때 안전 영역을 계산하지 않아도 된다. 계산하면 Android 앱에서만 어긋난다.
 
+## 키보드
+
+- Android 는 키보드가 뜨면 셸이 WebView 아래를 키보드 높이만큼 비운다(`useKeyboardInset`). `SafeAreaView` 의 아래 여백에 더해, 시스템 내비게이션 바만큼은 이미 비운 채로 그 위에 키보드 높이를 얹는다. React Native 가 알려 주는 키보드 높이는 시스템 바를 뺀 값이다.
+- edge-to-edge(`edgeToEdgeEnabled=true`)에서는 `adjustResize` 가 창을 줄이지 않는다. 셸이 비우지 않으면 WebView 크기는 그대로이고, Galaxy S24+ (WebView 151) 에서 입력창을 누르면 위에 붙은 상단바가 화면 밖으로 밀려났다. 셸이 비운 뒤에는 WebView 높이가 키보드만큼 줄어(840 → 477) 상단바가 제자리에 남았다.
+- iOS 는 WKWebView 가 키보드를 직접 다뤄 셸이 관여하지 않는다.
+
 ## 햅틱
 
 - Android는 시스템 터치 피드백 설정을 따르며, 지원되는 기기에서는 메뉴 선택에 맞는 `Virtual_Key`를 사용한다.
