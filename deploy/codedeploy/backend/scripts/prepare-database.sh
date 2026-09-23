@@ -67,6 +67,7 @@ readonly REQUIRED_TABLES=(
     category
     tag
     ingredient
+    exclude_code
     exclude_code_ingredient
     product
     feedback
@@ -81,7 +82,7 @@ for table in "${REQUIRED_TABLES[@]}"; do
         || fail "필수 테이블이 없습니다: ${table}"
 done
 
-readonly REQUIRED_CATALOG_TABLES=(brand category tag ingredient exclude_code_ingredient product)
+readonly REQUIRED_CATALOG_TABLES=(brand category tag ingredient exclude_code exclude_code_ingredient product)
 for table in "${REQUIRED_CATALOG_TABLES[@]}"; do
     [[ "$(scalar "select exists(select 1 from ${table})")" == 't' ]] \
         || fail "초기 카탈로그 데이터가 없습니다: ${table}"
