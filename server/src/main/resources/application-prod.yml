@@ -19,6 +19,16 @@ poudy:
 server:
   forward-headers-strategy: native
 
+# 모니터링 에이전트가 로컬에서만 접근하도록 Actuator 전용 포트를 분리한다.
+management:
+  server:
+    port: 8081
+    address: 127.0.0.1
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
 # API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
 # /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
 springdoc:
