@@ -107,11 +107,43 @@ index f83033b3597a425da159555233bacce250ccfce0..a8ee2d63c98a322e03129f863929f921
          view.settings.builtInZoomControls = value
      }
  
+diff --git a/apple/RNCWebView.mm b/apple/RNCWebView.mm
+index c0816b6320820a8586f3735b7971790cac8704fa..64671185e54030d707e2d6824dbcff25ab17cb3b 100644
+--- a/apple/RNCWebView.mm
++++ b/apple/RNCWebView.mm
+@@ -322,6 +322,7 @@ static inline std::string nullSafeStringWithLength(id value) {
+     REMAP_WEBVIEW_PROP(pullToRefreshEnabled)
+     REMAP_WEBVIEW_PROP(refreshControlLightMode)
+     REMAP_WEBVIEW_PROP(bounces)
++    REMAP_WEBVIEW_PROP(bottomBounces)
+     REMAP_WEBVIEW_PROP(useSharedProcessPool)
+     REMAP_WEBVIEW_STRING_PROP(userAgent)
+     REMAP_WEBVIEW_PROP(sharedCookiesEnabled)
+diff --git a/apple/RNCWebViewImpl.h b/apple/RNCWebViewImpl.h
+index 1f6bbfd697a4e0b0aef2db344386b786839a1969..6b587b6e1df3c6d0f87b243384e37acb2248ca58 100644
+--- a/apple/RNCWebViewImpl.h
++++ b/apple/RNCWebViewImpl.h
+@@ -84,6 +84,7 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+ @property (nonatomic, assign) BOOL webviewDebuggingEnabled;
+ @property (nonatomic, assign) BOOL allowsAirPlayForMediaPlayback;
+ @property (nonatomic, assign) BOOL bounces;
++@property (nonatomic, assign) BOOL bottomBounces;
+ @property (nonatomic, assign) BOOL mediaPlaybackRequiresUserAction;
+ @property (nonatomic, assign) UIEdgeInsets contentInset;
+ @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
 diff --git a/apple/RNCWebViewImpl.m b/apple/RNCWebViewImpl.m
-index 7f5c24d6e2cfb26eddbc513bf17a81c24a7273e2..b898b2c5cd50803a3943e9963658136340690908 100644
+index 7f5c24d6e2cfb26eddbc513bf17a81c24a7273e2..3b13d1b384e804be2d155c4df93dff43b155705b 100644
 --- a/apple/RNCWebViewImpl.m
 +++ b/apple/RNCWebViewImpl.m
-@@ -522,6 +522,7 @@ RCTAutoInsetsProtocol>
+@@ -163,6 +163,7 @@ RCTAutoInsetsProtocol>
+     super.backgroundColor = [RCTUIColor clearColor];
+ #endif // !TARGET_OS_OSX
+     _bounces = YES;
++    _bottomBounces = YES;
+     _scrollEnabled = YES;
+     _showsHorizontalScrollIndicator = YES;
+     _javaScriptEnabled = YES;
+@@ -522,6 +523,7 @@ RCTAutoInsetsProtocol>
      _webView.menuItems = _menuItems;
      _webView.suppressMenuItems = _suppressMenuItems;
      _webView.scrollView.delegate = self;
@@ -119,3 +151,114 @@ index 7f5c24d6e2cfb26eddbc513bf17a81c24a7273e2..b898b2c5cd50803a3943e99636581363
  #endif // !TARGET_OS_OSX
      _webView.UIDelegate = self;
      _webView.navigationDelegate = self;
+@@ -1050,7 +1052,15 @@ RCTAutoInsetsProtocol>
+   if (!_scrollEnabled) {
+     scrollView.bounds = _webView.bounds;
+   }
+-  else if (_onScroll != nil) {
++  else if (!_bottomBounces) {
++    UIEdgeInsets inset = scrollView.adjustedContentInset;
++    CGFloat maxOffsetY = MAX(scrollView.contentSize.height + inset.bottom - scrollView.bounds.size.height, -inset.top);
++    if (scrollView.contentOffset.y > maxOffsetY) {
++      scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, maxOffsetY);
++    }
++  }
++
++  if (_scrollEnabled && _onScroll != nil) {
+     NSDictionary *event = @{
+       @"contentOffset": @{
+         @"x": @(scrollView.contentOffset.x),
+diff --git a/apple/RNCWebViewManager.mm b/apple/RNCWebViewManager.mm
+index f8f375f23b12039b64b7900034c8978e0235a8e7..975fdfb074f90438c0b576339d64ff218c388e38 100644
+--- a/apple/RNCWebViewManager.mm
++++ b/apple/RNCWebViewManager.mm
+@@ -133,6 +133,10 @@ RCT_CUSTOM_VIEW_PROPERTY(bounces, BOOL, RNCWebViewImpl) {
+   view.bounces = json == nil ? true : [RCTConvert BOOL: json];
+ }
+ 
++RCT_CUSTOM_VIEW_PROPERTY(bottomBounces, BOOL, RNCWebViewImpl) {
++  view.bottomBounces = json == nil ? true : [RCTConvert BOOL: json];
++}
++
+ RCT_CUSTOM_VIEW_PROPERTY(useSharedProcessPool, BOOL, RNCWebViewImpl) {
+   view.useSharedProcessPool = json == nil ? true : [RCTConvert BOOL: json];
+ }
+diff --git a/lib/RNCWebViewNativeComponent.d.ts b/lib/RNCWebViewNativeComponent.d.ts
+index 8dd6cef93c86f32c0358b5762a20d2f5f65a8cee..163d83a4c30c1f3069434347397089746eecc057 100644
+--- a/lib/RNCWebViewNativeComponent.d.ts
++++ b/lib/RNCWebViewNativeComponent.d.ts
+@@ -147,6 +147,7 @@ export interface NativeProps extends ViewProps {
+     automaticallyAdjustContentInsets?: WithDefault<boolean, true>;
+     autoManageStatusBarEnabled?: WithDefault<boolean, true>;
+     bounces?: WithDefault<boolean, true>;
++    bottomBounces?: WithDefault<boolean, true>;
+     contentInset?: Readonly<{
+         top?: Double;
+         left?: Double;
+diff --git a/lib/WebViewTypes.d.ts b/lib/WebViewTypes.d.ts
+index 998cc88f03f3fbcd0a47f227c01f738dbf4c58bf..11c3d5dffe7b226ba8d055caed960545b94a1605 100644
+--- a/lib/WebViewTypes.d.ts
++++ b/lib/WebViewTypes.d.ts
+@@ -224,6 +224,7 @@ export interface MacOSNativeWebViewProps extends CommonNativeWebViewProps {
+     allowsLinkPreview?: boolean;
+     automaticallyAdjustContentInsets?: boolean;
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     contentInset?: ContentInsetProp;
+     contentInsetAdjustmentBehavior?: ContentInsetAdjustmentBehavior;
+     directionalLockEnabled?: boolean;
+@@ -277,6 +278,7 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+      * @platform ios
+      */
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     /**
+      * A floating-point number that determines how quickly the scroll view
+      * decelerates after the user lifts their finger. You may also use the
+@@ -626,6 +628,7 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+      * @platform macos
+      */
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     /**
+      * Boolean value that determines whether scrolling is enabled in the
+      * `WebView`. The default value is `true`.
+diff --git a/src/RNCWebViewNativeComponent.ts b/src/RNCWebViewNativeComponent.ts
+index 7f4e6c4f73506efa9517314a3ff89f91b097763e..dc1be5b721441bfc411a0f075478d505c6c31a21 100644
+--- a/src/RNCWebViewNativeComponent.ts
++++ b/src/RNCWebViewNativeComponent.ts
+@@ -188,6 +188,7 @@ export interface NativeProps extends ViewProps {
+   automaticallyAdjustContentInsets?: WithDefault<boolean, true>;
+   autoManageStatusBarEnabled?: WithDefault<boolean, true>;
+   bounces?: WithDefault<boolean, true>;
++  bottomBounces?: WithDefault<boolean, true>;
+   contentInset?: Readonly<{
+     top?: Double;
+     left?: Double;
+diff --git a/src/WebViewTypes.ts b/src/WebViewTypes.ts
+index eca81415ab48676da18fc2be13b84e60fe5cb3f5..31cac62a0924c768cbc194fc4df7d9c3c1e38f19 100644
+--- a/src/WebViewTypes.ts
++++ b/src/WebViewTypes.ts
+@@ -346,6 +346,7 @@ export interface MacOSNativeWebViewProps extends CommonNativeWebViewProps {
+   allowsLinkPreview?: boolean;
+   automaticallyAdjustContentInsets?: boolean;
+   bounces?: boolean;
++  bottomBounces?: boolean;
+   contentInset?: ContentInsetProp;
+   contentInsetAdjustmentBehavior?: ContentInsetAdjustmentBehavior;
+   directionalLockEnabled?: boolean;
+@@ -405,6 +406,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+    */
+   bounces?: boolean;
+ 
++  /**
++   * Boolean value that determines whether the web view bounces
++   * when it reaches the bottom edge of the content. The top edge keeps
++   * following `bounces`. The default value is `true`.
++   * @platform ios
++   */
++  bottomBounces?: boolean;
++
+   /**
+    * A floating-point number that determines how quickly the scroll view
+    * decelerates after the user lifts their finger. You may also use the

@@ -121,6 +121,7 @@ export default function WebAppShell() {
           ref={webViewRef}
           allowsBackForwardNavigationGestures
           applicationNameForUserAgent={APPLICATION_NAME}
+          bottomBounces={false}
           injectedJavaScriptBeforeContentLoaded={WEBVIEW_INIT_SCRIPT}
           javaScriptCanOpenWindowsAutomatically={false}
           mixedContentMode='never'
