@@ -222,18 +222,11 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.variants[1].price").value(23000L))
             .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
             .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
-            .andExpect(
-                jsonPath("$.freeOfCodes").value(
-                    org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.hasItem(ExcludeCode.FRAGRANCE_ALLERGENS.name())
-                    )
-                )
-            )
-            .andExpect(
-                jsonPath("$.freeOfCodes").value(
-                    org.hamcrest.Matchers.hasItem(ExcludeCode.SULFATES.name())
-                )
-            )
+            .andExpect(jsonPath("$.excludeGroups.length()").value(ExcludeCode.values().length))
+            .andExpect(jsonPath("$.excludeGroups[0].name").value("향료/알레르기 성분"))
+            .andExpect(jsonPath("$.excludeGroups[0].contains").value(true))
+            .andExpect(jsonPath("$.excludeGroups[3].name").value("설페이트 성분"))
+            .andExpect(jsonPath("$.excludeGroups[3].contains").value(false))
             .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301+09:00"));
     }
 

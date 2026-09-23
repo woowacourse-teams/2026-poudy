@@ -185,6 +185,16 @@ export type DisclosedAmountResponse = {
    */
   unit: string;
 }
+export type ExcludeGroupResponse = {
+  /**
+   * 제외 성분군 이름
+   */
+  name: string;
+  /**
+   * 제품의 해당 성분군 포함 여부
+   */
+  contains: boolean;
+}
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
@@ -294,9 +304,9 @@ export type ProductDetailResponse = {
    */
   ingredients: Array<ProductIngredientResponse>;
   /**
-   * 이 제품이 포함하지 않는 성분군 (프리 뱃지)
+   * 제외 성분군별 포함 여부
    */
-  freeOfCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeGroups: Array<ExcludeGroupResponse>;
   /**
    * 제품 정보를 마지막으로 갱신한 시각
    */
@@ -477,7 +487,7 @@ export type ExcludeCodeResponse = {
    */
   code: ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS");
   /**
-   * 빠른 필터에 표시할 이름
+   * 제외 성분군 이름
    */
   name: string;
   /**
