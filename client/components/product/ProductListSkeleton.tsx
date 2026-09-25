@@ -1,3 +1,5 @@
+import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
+
 import { ProductCardSkeleton } from "@/components/ui/ProductCardSkeleton";
 
 /** 정렬 줄과 제품 행의 자리. 높이를 실제와 맞춰 두어 내용이 들어와도 아래가 밀리지 않는다. */
@@ -24,22 +26,20 @@ export function ProductRowsSkeleton({ rows = 20 }: { readonly rows?: number }) {
   );
 }
 
+const stickyClassOf = (sticky?: StickyChips): string => {
+  if (!sticky) return "";
+  return `${STICKY_CHIP_BARS[sticky].className} sticky z-20`;
+};
+
 /** 조건 줄까지 포함한 자리. 필터 재료조차 아직 없을 때 쓴다. */
 export function ProductListSkeleton({
   hiddenChips = [],
   stickyChips,
 }: {
   readonly hiddenChips?: readonly string[];
-  readonly stickyChips?: "summary" | "category" | "brand";
+  readonly stickyChips?: StickyChips;
 }) {
-  const stickyClass =
-    stickyChips === "summary"
-      ? "filter-chip-bar sticky z-20"
-      : stickyChips === "category"
-        ? "category-filter-chip-bar sticky z-20"
-        : stickyChips === "brand"
-          ? "brand-filter-chip-bar sticky z-20"
-          : "";
+  const stickyClass = stickyClassOf(stickyChips);
 
   return (
     <>
