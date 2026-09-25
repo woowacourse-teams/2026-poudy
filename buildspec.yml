@@ -28,7 +28,6 @@ phases:
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/backend/app" "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/backend/systemd"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/lib" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/frontend/systemd"
       - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/app.jar" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
-      - cp "${CODEBUILD_SRC_DIR}/.poudy-package/backend/schema.sql" "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/schema.sql"
       - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/"
       - cp deploy/codedeploy/backend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/backend/appspec.yml"
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/frontend/appspec.yml"
@@ -43,7 +42,7 @@ phases:
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
-      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/schema.sql"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/validate-database.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
 
 artifacts:
