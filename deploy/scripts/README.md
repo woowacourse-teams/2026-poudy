@@ -28,9 +28,10 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 
 `deploy/config/backend.env.example`을 참고해 `/etc/poudy/backend.env`에
 `POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD`를 반드시 설정합니다. 파일은
-`root:poudy`, `0640`을 유지합니다. 최초 빈 DB 배포에는 초기 카탈로그 SQL의 S3 URI도
-`POUDY_DB_INITIAL_DATA_S3_URI`로 설정합니다. CodeDeploy는 스키마와 초기 데이터를 적용한 뒤
-필수 테이블과 카탈로그 행을 확인하고, 하나라도 빠지면 기존 서비스를 재시작하지 않습니다.
+`root:poudy`, `0640`을 유지합니다. 해당 환경의 `POUDY_FEEDBACK_S3_BUCKET`과
+`POUDY_FEEDBACK_S3_PENDING_PREFIX`도 설정합니다. 스키마·검색 객체·카탈로그는 배포 전에
+별도로 준비하며, CodeDeploy는 이를 변경하지 않고 검증만 합니다. 빠진 항목이 있으면
+원인을 로그에 남기고 기존 서비스를 재시작하지 않습니다.
 
 ### HEIC 런타임
 

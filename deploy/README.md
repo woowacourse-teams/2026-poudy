@@ -29,7 +29,6 @@ HTTPS 통신을 위해 유지할 수 있지만, 프론트 프록시·DNS·외부
 생성 결과:
 
 - `backend/app.jar`
-- `backend/schema.sql`
 - `frontend/server.js`, `.next/`, `public/`
 
 ## EC2 초기화
@@ -38,7 +37,7 @@ EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고�
 스크립트는 Java·Node.js·Nginx 설치와 systemd 등록만 수행하고 애플리케이션 산출물은
 배포하지 않습니다.
 
-백엔드 초기화 스크립트는 PostgreSQL 15 client를 설치하고 기존 JSON 동기화 timer를
+백엔드 초기화 스크립트는 PostgreSQL client를 설치하고 기존 JSON 동기화 timer를
 비활성화합니다. 이어서 `deploy/config/backend.env.example`을 참고해
 `/etc/poudy/backend.env`의 예시 값을 실제 DB와 S3 설정으로 교체합니다.
 
@@ -48,11 +47,16 @@ sudo chown root:poudy /etc/poudy/backend.env
 sudo chmod 0640 /etc/poudy/backend.env
 ```
 
-빈 DB의 첫 CodeDeploy는 artifact의 `schema.sql`을 한 트랜잭션으로 적용하고,
-`POUDY_DB_INITIAL_DATA_S3_URI`의 카탈로그 SQL을 적용합니다. 이후 필수 테이블과 카탈로그
-행을 검사합니다. 초기 카탈로그 SQL에는 `exclude_code` 정의를 성분 매핑보다 먼저 포함해야 합니다.
-기존 DB는 스키마를 변경하지 않고 같은 검증만 수행합니다.
-실패하면 실행 중이던 서비스를 재시작하지 않고 배포를 중단합니다.
+PostgreSQL 스키마·검색 객체·카탈로그 적재는 배포 전에 별도로 완료합니다. CodeDeploy는
+기존 서비스를 중지하기 전에 DB 연결·필수 객체·카탈로그 데이터를 읽기 전용으로 검증하고,
+기존 JSON 동기화 timer를 끕니다. 검증 실패 시 이유를 배포 로그에 남기고 기존 서비스를
+유지합니다. DB를 자동 생성하거나 SQL을 자동 적용하지 않으므로, DB 손상·유실은 S3의
+pg_dump 백업으로 별도 복구합니다.
+
+- 배포 artifact의 독립 `backend/schema.sql` 파일과 초기 적재 S3 URI를 제거했습니다. 두 DB는 이미 수동으로
+  구성·적재됐고, 앱 배포가 DB 상태를 변경하면 코드 배포와 데이터 복구의 책임이 섞입니다.
+- 기존 JSON 동기화 timer는 배포 중 비활성화합니다. DB 전환 후 JSON 변경을 감지해
+  백엔드를 다시 시작하는 동작은 불필요합니다.
 
 ## EC2 프론트 구성
 
@@ -308,8 +312,11 @@ PostgreSQL EC2의 구성·초기 적재·백업 상태는
 pending 이미지는 이미지 옮기기 주기 작업이 24시간 만료와 유예 시간을 기준으로 별도 정리합니다. 버킷
 버전 관리가 비활성화되어 있으므로 일반 삭제는 복구할 수 없습니다.
 
-## PostgreSQL 최초 전환
+## PostgreSQL 배포 전 확인
 
-1. PostgreSQL 15 이상 UTF-8 DB를 만들고 `/etc/poudy/backend.env`에 DB 접속 값과 초기
-   카탈로그 SQL의 `POUDY_DB_INITIAL_DATA_S3_URI`를 넣습니다.
-2. 배포 후 카탈로그 건수를 확인하고 초기 데이터 S3 URI를 제거합니다.
+`/etc/poudy/backend.env`에 해당 환경의 `POUDY_DB_URL`, `POUDY_DB_USERNAME`,
+`POUDY_DB_PASSWORD`, `POUDY_FEEDBACK_S3_BUCKET`, `POUDY_FEEDBACK_S3_PENDING_PREFIX`를
+설정합니다. DB에 스키마·검색 객체·카탈로그가 준비되지 않았다면 배포가 실패합니다.
+실패 원인은 CodeDeploy 콘솔의 해당 hook 로그 또는 EC2의
+`/opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log`에서
+확인합니다. 백엔드 시작 실패 시 `poudy-backend.service` 최근 로그도 함께 출력합니다.

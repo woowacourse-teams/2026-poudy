@@ -43,7 +43,7 @@ secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
 - frontend: "s3://techcourse-project-2026/poudy/frontend/"
 
 운영 artifact에는 애플리케이션과 함께 호스트 설정도 포함합니다. backend artifact는
-DB `schema.sql`, `poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
+`poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
 HTTP·HTTPS 서버 설정, `poudy-frontend.service`와 frontend hook을 포함합니다.
 CodeDeploy hook은 파일을 각 호스트 경로에 반영한 뒤 `daemon-reload`, Nginx 검증 및
 서비스 재시작을 수행합니다.
@@ -90,18 +90,16 @@ staging 백엔드는 다음 검증을 완료했습니다.
 ### Staging PostgreSQL
 
 staging도 `/etc/poudy/backend.env`의 `POUDY_DB_*`로 별도 PostgreSQL DB에 연결합니다.
-CodeDeploy `AfterInstall`은 서비스 재시작 전에 연결, 스키마와 초기 카탈로그를 검증합니다.
-빈 DB라면 artifact의 `schema.sql`과 `POUDY_DB_INITIAL_DATA_S3_URI`의 SQL을 적용합니다.
+CodeDeploy `BeforeInstall`은 서비스 중지 전에 DB 연결,
+스키마·검색 객체·카탈로그를 읽기 전용으로 검증합니다. 빈 DB를 자동 구성하지 않습니다.
+검증을 통과하면 기존 JSON 동기화 timer를 끄고 배포를 계속합니다.
 
-운영과 staging의 피드백·제품 등록 요청 데이터는 팀 결정에 따라 별도 분리하지 않습니다.
-피드백 S3 설정은 허용된 `techcourse-project-2026` 버킷을 사용하며, 현재 애플리케이션의
-피드백 prefix도 운영과 같은 `poudy/feedback/`을 사용합니다.
+운영과 staging은 별도 DB를 사용합니다. 피드백 S3 pending prefix도 운영은
+`poudy/feedback/pending/`, staging은 `poudy/staging/feedback/pending/`으로 구분합니다.
 
 ### Staging 보류 사항
 
 - Spring Boot `:8080` 외부 직접 접근 차단은 후순위로 보류합니다.
-- staging의 피드백 이미지 기능은 운영과 데이터를 공유하므로, 테스트 데이터도 운영
-  피드백 저장소에 남을 수 있습니다.
 - staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy를 실행하고, 프론트엔드는 Vercel
   staging workflow가 별도로 배포합니다.
 
