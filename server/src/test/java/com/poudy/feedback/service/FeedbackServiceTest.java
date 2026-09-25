@@ -145,9 +145,9 @@ class FeedbackServiceTest {
     }
 
     @Test
-    @DisplayName("S3 저장이 실패하면 Discord 알림을 전송하지 않는다")
+    @DisplayName("DB 저장이 실패하면 Discord 알림을 전송하지 않는다")
     void skipsNotificationWhenStorageFails() {
-        willThrow(new InfrastructureException("S3 실패")).given(feedbackRepository).save(any());
+        willThrow(new InfrastructureException("DB 실패")).given(feedbackRepository).save(any());
 
         assertThatThrownBy(
             () -> feedbackService.submit(

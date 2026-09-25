@@ -81,7 +81,7 @@ class ProductRequestServiceTest {
     }
 
     @Test
-    @DisplayName("S3 저장이 실패하면 Discord를 호출하지 않고 실패를 반환한다")
+    @DisplayName("DB 저장이 실패하면 Discord를 호출하지 않고 실패를 반환한다")
     void stopsWhenStorageFails() {
         willThrow(new InfrastructureException("storage failed")).given(repository)
             .save(org.mockito.ArgumentMatchers.any());
@@ -92,7 +92,7 @@ class ProductRequestServiceTest {
     }
 
     @Test
-    @DisplayName("S3 저장 후 Discord만 실패하면 재시도 없이 접수 성공을 유지한다")
+    @DisplayName("DB 저장 후 Discord만 실패하면 재시도 없이 접수 성공을 유지한다")
     void acceptsWithoutRetryWhenOnlyNotificationFails() {
         willDoNothing().given(repository).save(org.mockito.ArgumentMatchers.any());
         willThrow(new InfrastructureException("notification failed"))
@@ -105,7 +105,7 @@ class ProductRequestServiceTest {
     }
 
     @Test
-    @DisplayName("S3 저장 후 예기치 않은 Discord 오류도 접수 성공을 바꾸지 않는다")
+    @DisplayName("DB 저장 후 예기치 않은 Discord 오류도 접수 성공을 바꾸지 않는다")
     void acceptsWhenNotificationThrowsUnexpectedFailure() {
         willThrow(new IllegalArgumentException("webhook-secret"))
             .given(webhook)

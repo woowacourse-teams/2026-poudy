@@ -233,9 +233,9 @@ class FeedbackControllerTest {
     }
 
     @Test
-    @DisplayName("S3 저장에 실패하면 500을 반환하고 Discord를 호출하지 않는다")
+    @DisplayName("DB 저장에 실패하면 500을 반환하고 Discord를 호출하지 않는다")
     void returnsServerErrorWhenStorageFails() throws Exception {
-        willThrow(new InfrastructureException("S3 실패")).given(feedbackRepository).save(any());
+        willThrow(new InfrastructureException("DB 실패")).given(feedbackRepository).save(any());
 
         mockMvc.perform(
             post(PATH)
