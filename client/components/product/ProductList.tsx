@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRows } from "./ProductRows";
+import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
@@ -34,9 +35,9 @@ type ProductListProps = {
   readonly initialPage?: InitialPage;
   /**
    * 칩 줄 위에서 접혔다 펼쳐질 머리. 조건 일치 제품은 `탐색 조건`, 카테고리는 형제
-   * 카테고리 줄을 쓴다. 머리가 다른 것을 붙여 두는 화면(브랜드관 등)에서는 비워 둔다.
+   * 카테고리 줄을 쓴다. 브랜드관은 머리가 붙여 두는 브랜드 축약형 아래에 칩 줄을 붙인다.
    */
-  readonly stickyChips?: "summary" | "category";
+  readonly stickyChips?: StickyChips;
 };
 
 /**
@@ -97,17 +98,7 @@ export function ProductList({
         묶음 안에 두면 묶음이 지나갈 때 함께 올라간다. 묶음의 간격은 위 여백으로 옮긴다.
         바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
       */}
-      {stickyChips === "summary" ? (
-        <StickyBar stuckAt={44} className="filter-chip-bar sticky z-20 bg-white px-4 pt-3">
-          {chipBar}
-        </StickyBar>
-      ) : stickyChips === "category" ? (
-        <StickyBar stuckAt={56} className="category-filter-chip-bar sticky z-20 bg-white px-4 pt-3">
-          {chipBar}
-        </StickyBar>
-      ) : (
-        <div className="bg-white px-4 pt-3">{chipBar}</div>
-      )}
+      <ChipBarSlot sticky={stickyChips}>{chipBar}</ChipBarSlot>
 
       <ProductRows
         filter={filter}
@@ -162,6 +153,18 @@ const blankFilter = (fixed: Partial<Filter> = {}): Partial<Filter> =>
  *
  * 뜻을 전하지 않는 장식이라 보조 기술에서는 감춘다.
  */
+/** 칩 줄 자리. 붙는 화면이면 그 화면의 자리에 붙인다. */
+function ChipBarSlot({ sticky, children }: { readonly sticky?: StickyChips; readonly children: React.ReactNode }) {
+  if (!sticky) return <div className="bg-white px-4 pt-3">{children}</div>;
+
+  const { stuckAt, className } = STICKY_CHIP_BARS[sticky];
+  return (
+    <StickyBar stuckAt={stuckAt} className={`${className} sticky z-20 bg-white px-4 pt-3`}>
+      {children}
+    </StickyBar>
+  );
+}
+
 function SectionDivider() {
   return <div className="h-3 bg-surface" aria-hidden="true" />;
 }

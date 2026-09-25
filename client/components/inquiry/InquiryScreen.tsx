@@ -6,7 +6,8 @@ import { TopBar } from "@/components/ui/TopBar";
 export function InquiryScreen({ originPath }: { readonly originPath?: string }) {
   return (
     <>
-      <TopBar title="문의하기" variant="sub" />
+      {/* 폼은 화면보다 조금 길 뿐이라 살짝만 움직여도 그림자가 나타났다 사라진다. 깜빡이지 않도록 끈다. */}
+      <TopBar title="문의하기" variant="sub" edge={false} />
       <InquiryForm originPath={originPath} />
     </>
   );

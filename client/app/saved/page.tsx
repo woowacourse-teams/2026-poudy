@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 export default function SavedPage() {
   return (
     <>
-      <TopBar title="저장함" variant="root" />
+      {/* 아래에 붙는 찾는 칸이 그림자를 맡는다. */}
+      <TopBar title="저장함" variant="root" edge={false} />
       <SavedScreen />
     </>
   );

@@ -158,8 +158,9 @@
   /*
    * 위에 붙은 줄이 본문과 갈리는 그림자. 선으로 그으면 흰 목록 위에서 잘 안 보이고,
    * 떠 있는 것이 무엇인지 드러나지 않는다. 떠 있는 버튼들의 그림자와 같은 결로 둔다.
+   * 퍼짐을 음수로 줄여 아래로만 드리운다. 위로 번지면 바로 위에 붙은 줄에 얼룩이 진다.
    */
-  --shadow-sticky-edge: 0 2px 8px rgb(0 0 0 / 0.1);
+  --shadow-sticky-edge: 0 6px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 /*
@@ -855,6 +856,23 @@ body:has(.filter-summary-bar[data-hidden="true"]) .filter-chip-bar {
 
 body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-filter-chip-bar {
   top: 3.5rem;
+}
+
+/*
+ * 브랜드관의 필터 칩 줄. 상단바(44px)와 브랜드 축약형(56px) 아래에 붙는다(`SummaryHeader`).
+ *
+ * 축약형은 브랜드 소개가 지나간 뒤에 나타나는데, 소개 끝과 칩 줄 사이가 축약형 높이보다
+ * 짧아 칩 줄이 먼저 붙는다. 그 사이 칩 줄 위로 목록이 비쳐 보이지 않도록 칩 줄이 붙으면
+ * 축약형도 함께 내려오게 한다. 그림자는 칩 줄 아래 한 줄만 남긴다.
+ */
+.brand-filter-chip-bar {
+  top: calc(2.75rem + 3.5rem);
+}
+
+body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
+  opacity: 1;
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 /*
