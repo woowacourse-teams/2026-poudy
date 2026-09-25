@@ -30,14 +30,16 @@ export function ProductListSkeleton({
   stickyChips,
 }: {
   readonly hiddenChips?: readonly string[];
-  readonly stickyChips?: "summary" | "category";
+  readonly stickyChips?: "summary" | "category" | "brand";
 }) {
   const stickyClass =
     stickyChips === "summary"
       ? "filter-chip-bar sticky z-20"
       : stickyChips === "category"
         ? "category-filter-chip-bar sticky z-20"
-        : "";
+        : stickyChips === "brand"
+          ? "brand-filter-chip-bar sticky z-20"
+          : "";
 
   return (
     <>

@@ -153,6 +153,7 @@ async function BrandProducts({
         surface="brand"
         fixedFilter={{ brandIds }}
         hiddenChips={["brand"]}
+        stickyChips="brand"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
       />
@@ -183,7 +184,7 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
       </StreamBoundary>
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
-      <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} />}>
+      <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} stickyChips="brand" />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
     </SummaryHeader>

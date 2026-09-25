@@ -34,9 +34,9 @@ type ProductListProps = {
   readonly initialPage?: InitialPage;
   /**
    * 칩 줄 위에서 접혔다 펼쳐질 머리. 조건 일치 제품은 `탐색 조건`, 카테고리는 형제
-   * 카테고리 줄을 쓴다. 머리가 다른 것을 붙여 두는 화면(브랜드관 등)에서는 비워 둔다.
+   * 카테고리 줄을 쓴다. 브랜드관은 머리가 붙여 두는 브랜드 축약형 아래에 칩 줄을 붙인다.
    */
-  readonly stickyChips?: "summary" | "category";
+  readonly stickyChips?: "summary" | "category" | "brand";
 };
 
 /**
@@ -103,6 +103,10 @@ export function ProductList({
         </StickyBar>
       ) : stickyChips === "category" ? (
         <StickyBar stuckAt={56} className="category-filter-chip-bar sticky z-20 bg-white px-4 pt-3">
+          {chipBar}
+        </StickyBar>
+      ) : stickyChips === "brand" ? (
+        <StickyBar stuckAt={100} className="brand-filter-chip-bar sticky z-20 bg-white px-4 pt-3">
           {chipBar}
         </StickyBar>
       ) : (

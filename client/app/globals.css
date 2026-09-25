@@ -859,6 +859,23 @@ body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-f
 }
 
 /*
+ * 브랜드관의 필터 칩 줄. 상단바(44px)와 브랜드 축약형(56px) 아래에 붙는다(`SummaryHeader`).
+ *
+ * 축약형은 브랜드 소개가 지나간 뒤에 나타나는데, 소개 끝과 칩 줄 사이가 축약형 높이보다
+ * 짧아 칩 줄이 먼저 붙는다. 그 사이 칩 줄 위로 목록이 비쳐 보이지 않도록 칩 줄이 붙으면
+ * 축약형도 함께 내려오게 한다. 그림자는 칩 줄 아래 한 줄만 남긴다.
+ */
+.brand-filter-chip-bar {
+  top: calc(2.75rem + 3.5rem);
+}
+
+body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
+  opacity: 1;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/*
  * 카테고리·브랜드 탭의 흰 알약. 밑줄과 같은 길이로 미끄러진다.
  *
  * 두 탭 전환이 화면마다 다르게 움직이면 같은 일을 하는 자리로 읽히지 않는다.
