@@ -420,7 +420,6 @@ export function SavedScreen() {
       {/*
         제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다.
         찾는 칸은 내려 읽는 중에도 바로 고쳐 쓸 수 있도록 상단바(56px) 아래에 붙인다.
-        바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
       */}
       {current.items.length > removingIds.length ? (
         <>
