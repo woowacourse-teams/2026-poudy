@@ -27,4 +27,8 @@ final class CurationBlocks {
     List<CurationBlockContent> resolveContent(Products products) {
         return blocks.stream().flatMap(block -> block.resolveContent(products).stream()).toList();
     }
+
+    List<Long> productIds() {
+        return blocks.stream().flatMap(block -> block.productIds().stream()).distinct().toList();
+    }
 }

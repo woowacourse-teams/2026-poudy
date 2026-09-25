@@ -10,11 +10,8 @@ Type=simple
 User=poudy
 Group=poudy
 WorkingDirectory=/opt/poudy/backend
-Environment=POUDY_PRODUCT_VIEWS_FILE=/opt/poudy/state/product-views/daily-counts.json
-Environment=POUDY_SEARCH_KEYWORDS_STATE_FILE=/opt/poudy/state/search-ranking/buckets.json
-EnvironmentFile=-/etc/poudy/backend.env
+EnvironmentFile=/etc/poudy/backend.env
 Environment=SPRING_PROFILES_ACTIVE=prod
-Environment=POUDY_DATA_DIR=/opt/poudy/data
 Environment=SERVER_PORT=8080
 ExecStart=/usr/bin/java -Xms128m -Xmx768m -jar /opt/poudy/backend/app.jar
 SuccessExitStatus=143
@@ -26,8 +23,6 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=full
-ReadOnlyPaths=/opt/poudy/data
-ReadWritePaths=/opt/poudy/state
 MemoryMax=1G
 CPUQuota=100%
 TasksMax=256

@@ -215,7 +215,7 @@
           "피드백"
         ],
         "summary": "제품 정보 정정 요청",
-        "description": "존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.",
+        "description": "존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.",
         "operationId": "submitProductCorrection",
         "parameters": [
           {
@@ -518,7 +518,7 @@
           "피드백"
         ],
         "summary": "의견 등록",
-        "description": "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.",
+        "description": "의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.",
         "operationId": "submit_1",
         "requestBody": {
           "content": {
@@ -1130,14 +1130,6 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
                 "example": "HARSH_PRESERVATIVES"
               },
               "uniqueItems": true
@@ -1168,13 +1160,14 @@
             "required": false,
             "schema": {
               "type": "string",
-              "default": "NAME_ASC",
+              "default": "DEFAULT",
               "description": "정렬 조건",
               "enum": [
-                "NAME_ASC",
-                "NAME_DESC",
+                "DEFAULT",
+                "PRICE_DESC",
                 "PRICE_ASC",
-                "PRICE_DESC"
+                "UNIT_PRICE_DESC",
+                "UNIT_PRICE_ASC"
               ]
             }
           },
@@ -1713,14 +1706,6 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
                 "example": "HARSH_PRESERVATIVES"
               },
               "uniqueItems": true
@@ -3584,14 +3569,32 @@
           "value"
         ]
       },
+      "ExcludeGroupResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "제외 성분군 이름",
+            "example": "향료/알레르기 성분"
+          },
+          "contains": {
+            "type": "boolean",
+            "description": "제품의 해당 성분군 포함 여부",
+            "example": false
+          }
+        },
+        "required": [
+          "contains",
+          "name"
+        ]
+      },
       "FormulationRoleResponse": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "배합 목적 ID",
-            "example": 14
+            "example": "MOISTURISING"
           },
           "code": {
             "type": "string",
@@ -3692,19 +3695,11 @@
               "$ref": "#/components/schemas/ProductIngredientResponse"
             }
           },
-          "freeOfCodes": {
+          "excludeGroups": {
             "type": "array",
-            "description": "이 제품이 포함하지 않는 성분군 (프리 뱃지)",
+            "description": "제외 성분군별 포함 여부",
             "items": {
-              "type": "string",
-              "enum": [
-                "FRAGRANCE_ALLERGENS",
-                "DRYING_ALCOHOLS",
-                "HARSH_PRESERVATIVES",
-                "SULFATES",
-                "CYCLIC_SILICONES",
-                "SYNTHETIC_COLORANTS"
-              ]
+              "$ref": "#/components/schemas/ExcludeGroupResponse"
             }
           },
           "updatedAt": {
@@ -3717,7 +3712,7 @@
         "required": [
           "brand",
           "categories",
-          "freeOfCodes",
+          "excludeGroups",
           "id",
           "imageUrl",
           "ingredients",
@@ -3815,10 +3810,9 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "피부 작용 ID",
-            "example": 57
+            "example": "HYDRATION_RELATED"
           },
           "code": {
             "type": "string",
@@ -3849,10 +3843,9 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "type": "string",
             "description": "피부 작용 ID",
-            "example": 57
+            "example": "HYDRATION_RELATED"
           },
           "code": {
             "type": "string",
@@ -4179,15 +4172,7 @@
           "groupCodes": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "FRAGRANCE_ALLERGENS",
-                "DRYING_ALCOHOLS",
-                "HARSH_PRESERVATIVES",
-                "SULFATES",
-                "CYCLIC_SILICONES",
-                "SYNTHETIC_COLORANTS"
-              ]
+              "type": "string"
             }
           },
           "productCount": {
@@ -4344,20 +4329,12 @@
           "code": {
             "type": "string",
             "description": "성분군을 구분하는 값",
-            "enum": [
-              "FRAGRANCE_ALLERGENS",
-              "DRYING_ALCOHOLS",
-              "HARSH_PRESERVATIVES",
-              "SULFATES",
-              "CYCLIC_SILICONES",
-              "SYNTHETIC_COLORANTS"
-            ],
             "example": "HARSH_PRESERVATIVES"
           },
           "name": {
             "type": "string",
-            "description": "빠른 필터에 표시할 이름",
-            "example": "자극성 방부제 제외"
+            "description": "제외 성분군 이름",
+            "example": "자극성 방부제"
           },
           "description": {
             "type": "string",

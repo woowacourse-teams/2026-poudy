@@ -11,6 +11,7 @@ import {
   categories,
   excludeCodeIngredientIds,
   excludeCodes,
+  excludeGroupsOf,
   ingredientDetails,
   pipelineIngredientSummaries,
   pipelineProductIngredients,
@@ -197,17 +198,35 @@ const filterProducts = (url: URL) => {
   });
 };
 
+/** 서버처럼 ea 와 용량 0 은 단가를 셈하지 않는다. */
+const unitPriceOf = (product: (typeof allProducts)[number]) =>
+  product.volumeUnit === "ea" || product.volumeValue === 0 ? undefined : product.price / product.volumeValue;
+
+/** 단가를 셈할 수 없는 제품은 방향과 관계없이 뒤로 보낸다. */
+const byUnitPrice = (direction: 1 | -1) => (a: (typeof allProducts)[number], b: (typeof allProducts)[number]) => {
+  const left = unitPriceOf(a);
+  const right = unitPriceOf(b);
+  if (left === undefined || right === undefined) return Number(left === undefined) - Number(right === undefined);
+  return (left - right) * direction;
+};
+
+/**
+ * 동점은 서버처럼 ID 오름차순이다.
+ * 목에는 조회수와 검색 관련도가 없어 기본순은 ID 순서로 대신한다.
+ */
 const sortProducts = (items: typeof allProducts, sort: string | null) => {
-  const sorted = [...items];
+  const sorted = items.toSorted((a, b) => a.id - b.id);
   switch (sort) {
-    case "NAME_DESC":
-      return sorted.sort((a, b) => b.name.localeCompare(a.name, "ko"));
     case "PRICE_ASC":
       return sorted.sort((a, b) => a.price - b.price);
     case "PRICE_DESC":
       return sorted.sort((a, b) => b.price - a.price);
+    case "UNIT_PRICE_ASC":
+      return sorted.sort(byUnitPrice(1));
+    case "UNIT_PRICE_DESC":
+      return sorted.sort(byUnitPrice(-1));
     default:
-      return sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+      return sorted;
   }
 };
 
@@ -234,7 +253,8 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   oilLevel: product.oilLevel,
   skinEffectGroups: [],
   ingredients: [],
-  freeOfCodes: [],
+  // 목록에는 성분이 없어 어느 성분군이 빠졌는지 알 수 없다. 모두 들어 있는 것으로 둔다.
+  excludeGroups: excludeGroupsOf([]),
   updatedAt: "2026-08-01T00:00:00+09:00",
 });
 

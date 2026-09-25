@@ -1,6 +1,6 @@
 package com.poudy.brand.controller.dto;
 
-import com.poudy.product.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCount;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 

@@ -1,139 +1,27 @@
 package com.poudy.product.domain;
 
-import com.poudy.brand.domain.Brand;
-import com.poudy.category.domain.Categories;
-import com.poudy.category.domain.Category;
-import com.poudy.search.domain.SearchKeyword;
-import com.poudy.skintype.domain.SkinType;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+/** 요청에서 참조한 상품을 ID와 요청 순서로 해석한다. */
 public final class Products {
-
-    private static final int MAX_RANKING_SIZE = 6;
-
     private final Map<Long, Product> products;
-
     private Products(Map<Long, Product> products) {
         this.products = products;
     }
 
     public static Products from(List<Product> products) {
-        Map<Long, Product> indexedProducts = new LinkedHashMap<>();
+        Map<Long, Product> indexed = new LinkedHashMap<>();
         for (Product product : Objects.requireNonNullElse(products, List.<Product>of())) {
-            if (indexedProducts.putIfAbsent(product.id(), product) != null) {
+            if (indexed.putIfAbsent(product.id(), product) != null) {
                 throw new IllegalArgumentException("제품 ID가 중복됐습니다: " + product.id());
             }
         }
-
-        return new Products(Collections.unmodifiableMap(indexedProducts));
-    }
-
-    public List<Product> search(SearchKeyword keyword) {
-        return matched(new ProductSearchQuery(keyword)).stream()
-            .map(MatchedProduct::product)
-            .toList();
-    }
-
-    public List<Product> search(String keyword) {
-        return search(new SearchKeyword(keyword));
-    }
-
-    public boolean hasResults(String keyword) {
-        ProductSearchQuery query = new ProductSearchQuery(keyword);
-        return products.values().stream().anyMatch(product -> product.match(query).isPresent());
-    }
-
-    public List<Product> searchByProductName(String keyword) {
-        ProductSearchQuery query = new ProductSearchQuery(keyword);
-        return products.values().stream()
-            .map(product -> product.matchByProductName(query.whole()))
-            .flatMap(Optional::stream)
-            .sorted(MatchedProduct.order())
-            .map(MatchedProduct::product)
-            .toList();
-    }
-
-    public List<Product> findAllByBrand(Brand brand) {
-        return values().stream()
-            .filter(product -> product.hasBrand(brand))
-            .toList();
-    }
-
-    private List<MatchedProduct> matched(ProductSearchQuery query) {
-        return products.values().stream()
-            .map(product -> product.match(query))
-            .flatMap(Optional::stream)
-            .sorted(MatchedProduct.order())
-            .toList();
-    }
-
-    public long countContaining(Long ingredientId) {
-        if (ingredientId == null) {
-            return 0;
-        }
-
-        return values().stream()
-            .filter(product -> product.contains(ingredientId))
-            .count();
-    }
-
-    public Set<Long> containedIngredientIds() {
-        return values().stream()
-            .flatMap(product -> product.ingredientIds().stream())
-            .collect(Collectors.toUnmodifiableSet());
-    }
-
-    public ProductPage find(ProductFilter filter, ProductSort sort, int page, int size, Categories categories) {
-        requireValidPageCondition(page, size);
-
-        List<Product> candidates = candidatesOf(filter);
-        List<Product> matched = matching(candidates, filter);
-        List<Product> sorted = matched.stream()
-            .sorted(ProductSort.orDefault(sort).comparator())
-            .toList();
-
-        return new ProductPage(
-            pageOf(sorted, page, size),
-            matched.size(),
-            brandsOf(matched),
-            countsByCategory(matched).nonEmptyCategoriesOf(categories),
-            skinTypesOf(matched),
-            page == 1 ? filterOptions(candidates, filter, categories) : null
-        );
-    }
-
-    public ProductSuggestionPage suggest(String keyword, int page, int size) {
-        requireValidPageCondition(page, size);
-
-        List<MatchedProduct> found = matched(new ProductSearchQuery(keyword));
-
-        return new ProductSuggestionPage(pageOf(found, page, size), found.size());
-    }
-
-    private static void requireValidPageCondition(int page, int size) {
-        if (page < 1 || size < 1) {
-            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
-        }
-    }
-
-    private static <T> List<T> pageOf(List<T> values, int page, int size) {
-        return values.stream()
-            .skip((long) (page - 1) * size)
-            .limit(size)
-            .toList();
-    }
-
-    public long count(ProductFilter filter) {
-        return matchedBy(filter).size();
+        return new Products(Collections.unmodifiableMap(indexed));
     }
 
     public Optional<Product> findById(Long id) {
@@ -141,123 +29,6 @@ public final class Products {
     }
 
     public List<Product> findAllById(List<Long> ids) {
-        if (ids == null) {
-            return List.of();
-        }
-
-        return ids.stream()
-            .map(products::get)
-            .filter(Objects::nonNull)
-            .toList();
-    }
-
-    public List<Product> rankByViewCounts(List<Long> categoryIds, Map<Long, Long> viewCounts) {
-        List<Product> rankingCandidates = values().stream()
-            .filter(product -> product.belongsToAnyCategory(categoryIds))
-            .toList();
-        Comparator<Product> byViewCountDescending = Comparator
-            .comparingLong((Product product) -> viewCounts.getOrDefault(product.id(), 0L))
-            .reversed();
-
-        return rankingCandidates.stream()
-            .sorted(byViewCountDescending)
-            .limit(MAX_RANKING_SIZE)
-            .toList();
-    }
-
-    private List<Product> matchedBy(ProductFilter filter) {
-        return matching(candidatesOf(filter), filter);
-    }
-
-    private static List<Product> matching(List<Product> candidates, ProductFilter filter) {
-        return candidates.stream()
-            .filter(filter::matches)
-            .toList();
-    }
-
-    private static ProductFilterOptions filterOptions(
-        List<Product> candidates,
-        ProductFilter filter,
-        Categories categories
-    ) {
-        List<Product> brandCandidates = matching(candidates, filter.withoutBrands());
-        List<Product> categoryCandidates = matching(candidates, filter.withoutCategories());
-        List<Product> skinTypeCandidates = matching(candidates, filter.withoutSkinType());
-
-        return new ProductFilterOptions(
-            brandsOf(brandCandidates),
-            countsByCategory(categoryCandidates).nonEmptyCategoriesOf(categories),
-            skinTypesOf(skinTypeCandidates)
-        );
-    }
-
-    private List<Product> candidatesOf(ProductFilter filter) {
-        if (filter.hasKeyword()) {
-            return search(filter.keyword());
-        }
-
-        return values();
-    }
-
-    private static List<Brand> brandsOf(List<Product> products) {
-        return products.stream()
-            .map(Product::brand)
-            .distinct()
-            .sorted(Brand::compareOrderByName)
-            .toList();
-    }
-
-    private static List<SkinType> skinTypesOf(List<Product> products) {
-        return products.stream()
-            .flatMap(product -> product.getSkinTypes().stream())
-            .distinct()
-            .sorted()
-            .toList();
-    }
-
-    public List<CategoryProductCount> productCountsByCategory(Categories categories) {
-        return countsByCategory(values()).categoriesOf(categories);
-    }
-
-    private ProductCountsByCategory countsByCategoryInBrand(Long brandId) {
-        List<Product> productsInBrand = values().stream()
-            .filter(product -> product.hasBrandId(brandId))
-            .toList();
-
-        return countsByCategory(productsInBrand);
-    }
-
-    public List<BrandProductCount> productCountsByBrand(List<Brand> brands) {
-        return productCountsByBrandOf(values()).countsOf(brands);
-    }
-
-    public BrandProductCounts brandProductCountsOf(Brand brand, Categories categories) {
-        return new BrandProductCounts(
-            brand,
-            countsByCategoryInBrand(brand.id()).nonEmptyCategoriesOf(categories)
-        );
-    }
-
-    private static ProductCountsByCategory countsByCategory(List<Product> products) {
-        Map<Long, Long> countsByCategoryId = products.stream()
-            .flatMap(product -> categoryIdsOf(product.category()))
-            .collect(Collectors.toUnmodifiableMap(categoryId -> categoryId, categoryId -> 1L, Long::sum));
-
-        return new ProductCountsByCategory(countsByCategoryId);
-    }
-
-    private static Stream<Long> categoryIdsOf(Category category) {
-        return Stream.of(category.id(), category.parentId())
-            .filter(Objects::nonNull);
-    }
-
-    private static ProductCountsByBrand productCountsByBrandOf(List<Product> products) {
-        Map<Long, Long> countsByBrandId = products.stream()
-            .collect(Collectors.toUnmodifiableMap(product -> product.brand().id(), product -> 1L, Long::sum));
-        return new ProductCountsByBrand(countsByBrandId);
-    }
-
-    private List<Product> values() {
-        return List.copyOf(products.values());
+        return ids == null ? List.of() : ids.stream().filter(products::containsKey).map(products::get).toList();
     }
 }

@@ -31,6 +31,7 @@ phases:
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/validate-database.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/application-start.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/systemd/poudy-backend.service"

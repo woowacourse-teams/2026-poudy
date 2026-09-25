@@ -1,9 +1,11 @@
 package com.poudy.feedback.service;
 
 import com.poudy.exception.TooManyRequestsException;
-import com.poudy.feedback.domain.FeedbackImage;
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.ProcessedImage;
+import com.poudy.feedback.image.FeedbackImageProcessor;
+import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.service.FeedbackImageProcessor.ProcessedImage;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +20,13 @@ public class FeedbackImageUploadService {
 
     private final FeedbackImageProcessor imageProcessor;
     private final S3FeedbackImageRepository imageRepository;
-    private final FeedbackImageUploadRateLimiter rateLimiter;
+    private final FeedbackRateLimits rateLimits;
     private final Semaphore processingPermits;
 
     public FeedbackImageUploadService(
         FeedbackImageProcessor imageProcessor,
         S3FeedbackImageRepository imageRepository,
-        FeedbackImageUploadRateLimiter rateLimiter,
+        FeedbackRateLimits rateLimits,
         @Value("${poudy.feedback.image-processing.max-concurrency:1}") int maxConcurrency
     ) {
         if (maxConcurrency < 1) {
@@ -32,13 +34,13 @@ public class FeedbackImageUploadService {
         }
         this.imageProcessor = imageProcessor;
         this.imageRepository = imageRepository;
-        this.rateLimiter = rateLimiter;
+        this.rateLimits = rateLimits;
         this.processingPermits = new Semaphore(maxConcurrency, true);
     }
 
     public List<UUID> upload(List<MultipartFile> files, String clientId) {
         imageProcessor.validateBatch(files);
-        rateLimiter.requireAllowed(clientId);
+        rateLimits.requireImageUploadAllowed(clientId);
 
         List<FeedbackImage> stored = new ArrayList<>();
         try {

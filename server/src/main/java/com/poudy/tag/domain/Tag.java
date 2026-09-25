@@ -4,18 +4,15 @@ import java.util.Objects;
 
 public class Tag {
 
-    private final Long id;
-    private final TagCategory category;
     private final String code;
+    private final TagCategory category;
     private final String name;
 
-    public Tag(Long id, TagCategory category, String code, String name) {
-        validateId(id);
+    public Tag(String code, TagCategory category, String name) {
         validateCategory(category);
         validateCode(code);
         validateName(name);
 
-        this.id = id;
         this.category = category;
         this.code = code;
         this.name = name;
@@ -25,16 +22,13 @@ public class Tag {
         return category == other;
     }
 
-    private static void validateId(Long id) {
-        Objects.requireNonNull(id, "태그 ID가 필요합니다.");
-    }
-
     private static void validateCategory(TagCategory category) {
         Objects.requireNonNull(category, "태그 구분이 필요합니다.");
     }
 
     private static void validateCode(String code) {
-        if (code == null || code.isBlank()) {
+        Objects.requireNonNull(code, "태그 코드가 필요합니다.");
+        if (code.isBlank()) {
             throw new IllegalArgumentException("태그 코드가 필요합니다.");
         }
     }
@@ -45,8 +39,8 @@ public class Tag {
         }
     }
 
-    public Long id() {
-        return id;
+    public String id() {
+        return code;
     }
 
     public String code() {

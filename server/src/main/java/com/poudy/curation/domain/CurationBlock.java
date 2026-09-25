@@ -14,12 +14,17 @@ public abstract sealed class CurationBlock permits CurationImageBlock, CurationP
     private final int spacingBottom;
 
     protected CurationBlock(UUID id, int spacingTop, int spacingBottom) {
-        this.id = Objects.requireNonNull(id);
+        this.id = id;
+        this.spacingTop = spacingTop;
+        this.spacingBottom = spacingBottom;
+        validateBlock();
+    }
+
+    private void validateBlock() {
+        Objects.requireNonNull(id);
         if (spacingTop < 0 || spacingBottom < 0) {
             throw new IllegalArgumentException("블록 여백은 음수일 수 없습니다.");
         }
-        this.spacingTop = spacingTop;
-        this.spacingBottom = spacingBottom;
     }
 
     public static CurationBlock image(UUID id, int spacingTop, int spacingBottom, String imageUrl) {
@@ -58,4 +63,8 @@ public abstract sealed class CurationBlock permits CurationImageBlock, CurationP
     }
 
     abstract Optional<CurationBlockContent> resolveContent(Products products);
+
+    List<Long> productIds() {
+        return List.of();
+    }
 }

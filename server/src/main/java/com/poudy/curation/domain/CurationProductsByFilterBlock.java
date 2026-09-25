@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 final class CurationProductsByFilterBlock extends CurationBlock {
+
     private final List<CurationFilter> filters;
     private final List<CurationProductMapping> products;
 
@@ -41,6 +42,11 @@ final class CurationProductsByFilterBlock extends CurationBlock {
                 throw new IllegalArgumentException("블록의 제품 ID가 중복됐거나 다른 블록의 필터를 참조합니다.");
             }
         }
+    }
+
+    @Override
+    List<Long> productIds() {
+        return products.stream().map(CurationProductMapping::productId).toList();
     }
 
     @Override

@@ -9,13 +9,15 @@ import java.util.Objects;
 
 public final class IngredientTag {
 
-    private final Tag tag;
-    private final String source;
+    private static final String DEFERRED_PREFIX = "태그 보류";
 
-    public IngredientTag(Tag tag, String source) {
+    private final Tag tag;
+    private final List<String> sources;
+
+    public IngredientTag(Tag tag, List<String> sources) {
         this.tag = Objects.requireNonNull(tag, "성분 태그가 필요합니다.");
-        this.source = source;
-        if (Evidence.ofTag(source).isDeferred()) {
+        this.sources = List.copyOf(Objects.requireNonNullElse(sources, List.<String>of()));
+        if (this.sources.stream().anyMatch(source -> source.strip().startsWith(DEFERRED_PREFIX))) {
             throw new DeferredTagEvidenceException();
         }
     }
@@ -45,6 +47,6 @@ public final class IngredientTag {
     }
 
     public List<String> sources() {
-        return Evidence.ofTag(source).sources();
+        return sources;
     }
 }

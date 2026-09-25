@@ -8,17 +8,27 @@ import java.util.Optional;
 import java.util.UUID;
 
 final class CurationProductsBlock extends CurationBlock {
+
     private final List<Long> productIds;
 
     CurationProductsBlock(UUID id, int spacingTop, int spacingBottom, List<Long> productIds) {
         super(id, spacingTop, spacingBottom);
         this.productIds = List.copyOf(productIds);
-        if (this.productIds.stream().anyMatch(productId -> productId == null || productId <= 0)) {
+        validate();
+    }
+
+    private void validate() {
+        if (productIds.stream().anyMatch(productId -> productId == null || productId <= 0)) {
             throw new IllegalArgumentException("제품 ID는 양의 정수여야 합니다.");
         }
-        if (new HashSet<>(this.productIds).size() != this.productIds.size()) {
+        if (new HashSet<>(productIds).size() != productIds.size()) {
             throw new IllegalArgumentException("블록의 제품 ID가 중복됐습니다.");
         }
+    }
+
+    @Override
+    List<Long> productIds() {
+        return productIds;
     }
 
     @Override

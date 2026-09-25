@@ -1,38 +1,33 @@
 package com.poudy.feedback.domain;
 
+import com.poudy.feedback.domain.image.FeedbackImage;
+import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.product.domain.Products;
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class Feedback {
+public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection {
 
     public static final int MAX_IMAGE_COUNT = 5;
 
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+
     private final UUID id;
-    private final FeedbackSubject subject;
     private final FeedbackContent content;
-    private final OffsetDateTime receivedAt;
+    private final LocalDateTime createdAt;
     private final List<FeedbackImage> images;
     private final FeedbackStatus status;
-    private final OffsetDateTime statusChangedAt;
+    private final LocalDateTime statusChangedAt;
     private final OffsetDateTime completedAt;
 
-    public Feedback(
+    protected Feedback(
         UUID id,
-        FeedbackSubject subject,
-        FeedbackContent content,
-        OffsetDateTime receivedAt,
-        List<FeedbackImage> images
-    ) {
-        this(id, subject, content, receivedAt, images, FeedbackStatus.RECEIVED, receivedAt, null);
-    }
-
-    public Feedback(
-        UUID id,
-        FeedbackSubject subject,
         FeedbackContent content,
         OffsetDateTime receivedAt,
         List<FeedbackImage> images,
@@ -41,9 +36,8 @@ public final class Feedback {
         OffsetDateTime completedAt
     ) {
         this.id = Objects.requireNonNull(id, "의견 접수 ID가 필요합니다.");
-        this.subject = Objects.requireNonNull(subject, "의견 대상이 필요합니다.");
         this.content = Objects.requireNonNull(content, "의견 내용이 필요합니다.");
-        this.receivedAt = Objects.requireNonNull(receivedAt, "의견 접수 시각이 필요합니다.");
+        this.createdAt = local(Objects.requireNonNull(receivedAt, "의견 접수 시각이 필요합니다."));
         this.images = List.copyOf(Objects.requireNonNull(images, "의견 이미지 목록이 필요합니다."));
         if (this.images.size() > MAX_IMAGE_COUNT) {
             throw new InvalidFeedbackException("의견 이미지는 최대 " + MAX_IMAGE_COUNT + "개까지 첨부할 수 있습니다.");
@@ -52,36 +46,26 @@ public final class Feedback {
             throw new InvalidFeedbackImageIdException();
         }
         this.status = Objects.requireNonNull(status, "의견 처리 상태가 필요합니다.");
-        this.statusChangedAt = Objects.requireNonNull(statusChangedAt, "의견 상태 변경 시각이 필요합니다.");
-        this.completedAt = completedAt;
+        this.statusChangedAt = local(Objects.requireNonNull(statusChangedAt, "의견 상태 변경 시각이 필요합니다."));
+        this.completedAt = inSeoul(completedAt);
         validateCompletedAt();
     }
 
-    public Feedback(
-        UUID id,
-        FeedbackSubject subject,
-        FeedbackContent content,
-        OffsetDateTime receivedAt
-    ) {
-        this(id, subject, content, receivedAt, List.of());
-    }
+    public abstract FeedbackSubjectType type();
 
-    public static Feedback register(FeedbackSubject subject, String content, Clock clock) {
-        return new Feedback(
-            UUID.randomUUID(),
-            subject,
-            new FeedbackContent(content),
-            OffsetDateTime.now(clock),
-            List.of()
-        );
-    }
+    public abstract Feedback resolve(List<FeedbackImage> storedImages, Products products);
+
+    protected abstract Feedback copy(
+        List<FeedbackImage> images,
+        FeedbackStatus status,
+        OffsetDateTime statusChangedAt,
+        OffsetDateTime completedAt
+    );
+
+    protected abstract boolean hasSameSubjectAs(Feedback other);
 
     public UUID id() {
         return id;
-    }
-
-    public FeedbackSubject subject() {
-        return subject;
     }
 
     public FeedbackContent content() {
@@ -89,7 +73,7 @@ public final class Feedback {
     }
 
     public OffsetDateTime receivedAt() {
-        return receivedAt;
+        return createdAt.atZone(SEOUL).toOffsetDateTime();
     }
 
     public List<FeedbackImage> images() {
@@ -101,7 +85,7 @@ public final class Feedback {
     }
 
     public OffsetDateTime statusChangedAt() {
-        return statusChangedAt;
+        return statusChangedAt.atZone(SEOUL).toOffsetDateTime();
     }
 
     public OffsetDateTime completedAt() {
@@ -112,17 +96,8 @@ public final class Feedback {
         return status == expected;
     }
 
-    public FeedbackSubjectType type() {
-        return FeedbackSubjectType.from(subject);
-    }
-
-    public boolean matches(FeedbackStatus expectedStatus, FeedbackSubjectType expectedType) {
-        return (expectedStatus == null || hasStatus(expectedStatus))
-            && (expectedType == null || type() == expectedType);
-    }
-
     public Feedback attachImages(List<FeedbackImage> images) {
-        return new Feedback(id, subject, content, receivedAt, images, status, statusChangedAt, completedAt);
+        return copy(images, status, statusChangedAt(), completedAt);
     }
 
     public Feedback changeStatus(FeedbackStatus target, Clock clock) {
@@ -133,16 +108,11 @@ public final class Feedback {
         }
 
         OffsetDateTime changedAt = OffsetDateTime.now(clock);
-        return new Feedback(
-            id,
-            subject,
-            content,
-            receivedAt,
-            images,
-            target,
-            changedAt,
-            target == FeedbackStatus.COMPLETED ? changedAt : null
-        );
+        OffsetDateTime changedCompletedAt = null;
+        if (target == FeedbackStatus.COMPLETED) {
+            changedCompletedAt = changedAt;
+        }
+        return copy(images, target, changedAt, changedCompletedAt);
     }
 
     private void validateCompletedAt() {
@@ -154,6 +124,17 @@ public final class Feedback {
         }
     }
 
+    private static LocalDateTime local(OffsetDateTime value) {
+        return value.atZoneSameInstant(SEOUL).toLocalDateTime();
+    }
+
+    private static OffsetDateTime inSeoul(OffsetDateTime value) {
+        if (value == null) {
+            return null;
+        }
+        return value.atZoneSameInstant(SEOUL).toOffsetDateTime();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -163,18 +144,18 @@ public final class Feedback {
             return false;
         }
         return id.equals(that.id)
-            && subject.equals(that.subject)
+            && hasSameSubjectAs(that)
             && content.equals(that.content)
-            && receivedAt.equals(that.receivedAt)
+            && receivedAt().isEqual(that.receivedAt())
             && images.equals(that.images)
             && status == that.status
-            && statusChangedAt.equals(that.statusChangedAt)
+            && statusChangedAt().isEqual(that.statusChangedAt())
             && Objects.equals(completedAt, that.completedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, subject, content, receivedAt, images, status, statusChangedAt, completedAt);
+        return Objects.hash(id, content, images, status);
     }
 
     public static List<UUID> normalizeImageIds(List<UUID> imageIds) {

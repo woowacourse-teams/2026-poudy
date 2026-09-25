@@ -391,7 +391,7 @@ describe("성분 분류", () => {
   it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
     const product = {
       ...taggedProduct,
-      skinEffectGroups: [{ id: 1, code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+      skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
     };
 
     render(<ProductDetail product={product} />);
@@ -400,5 +400,23 @@ describe("성분 분류", () => {
 
     expect(within(row).getAllByRole("link")).toHaveLength(1);
     expect(row.textContent?.trim()).toMatch(/부틸렌글라이콜$/);
+  });
+});
+
+describe("제외 성분군 표시", () => {
+  const chipOf = (name: string) => screen.getByText(`${name} 제외`).closest("li");
+
+  it("제품에 없는 성분군은 체크와 함께 강조한다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("건조 알코올")).toHaveTextContent("건조 알코올 제외 없음");
+    expect(chipOf("건조 알코올")?.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("제품에 들어 있는 성분군은 체크 없이 흐리게 둔다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("향료/알레르기 성분")).toHaveTextContent("향료/알레르기 성분 제외 있음");
+    expect(chipOf("향료/알레르기 성분")?.querySelector("svg")).not.toBeInTheDocument();
   });
 });

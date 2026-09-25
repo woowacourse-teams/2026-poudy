@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.domain.ProductRequestPage;
 import com.poudy.productrequest.domain.ProductRequestStatus;
 import com.poudy.productrequest.service.ProductRequestService;
-import com.poudy.productrequest.service.ProductRequestService.ProductRequestPage;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -64,7 +64,7 @@ class AdminProductRequestControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.requestId").value(REQUEST_ID.toString()))
             .andExpect(jsonPath("$.productName").value("제품"))
-            .andExpect(jsonPath("$.statusChangedAt").value("2026-09-15T09:00:00Z"));
+            .andExpect(jsonPath("$.statusChangedAt").value("2026-09-15T18:00:00+09:00"));
     }
 
     @Test
@@ -84,7 +84,7 @@ class AdminProductRequestControllerTest {
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("COMPLETED"))
-            .andExpect(jsonPath("$.completedAt").value("2026-09-15T10:00:00Z"));
+            .andExpect(jsonPath("$.completedAt").value("2026-09-15T19:00:00+09:00"));
 
         verify(productRequestService).changeStatus(REQUEST_ID, ProductRequestStatus.COMPLETED);
     }

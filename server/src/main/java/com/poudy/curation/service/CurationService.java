@@ -5,6 +5,7 @@ import com.poudy.curation.domain.ResolvedCurationDetail;
 import com.poudy.curation.repository.CurationRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,11 @@ public class CurationService {
     }
 
     public ResolvedCurationDetail findDetail(Long curationId) {
-        Curation curation = curationRepository.findAll().findPublishedById(curationId)
+        Curation curation = curationRepository.findPublishedById(curationId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CURATION_NOT_FOUND));
-        return ResolvedCurationDetail.from(curation, productRepository.findAll());
+        return ResolvedCurationDetail.from(
+            curation,
+            Products.from(productRepository.findAllById(curation.productIds()))
+        );
     }
 }

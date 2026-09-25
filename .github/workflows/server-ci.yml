@@ -45,6 +45,27 @@ jobs:
     # 생성 태스크는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20
 
+    # 테스트와 OpenAPI 생성은 test 프로필로 poudy_test 에 붙는다. 스키마는 테스트가 매번 다시 넣는다.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: poudy_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POUDY_DB_USERNAME: postgres
+      POUDY_DB_PASSWORD: postgres
+
     defaults:
       run:
         working-directory: server

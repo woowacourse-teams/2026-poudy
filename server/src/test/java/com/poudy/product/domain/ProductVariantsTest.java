@@ -28,7 +28,20 @@ class ProductVariantsTest {
             .hasMessage("제품은 하나 이상의 용량 옵션을 가져야 합니다.");
     }
 
+    @Test
+    @DisplayName("모든 옵션이 단종돼야 단종이다")
+    void isDiscontinuedOnlyWhenAllVariantsAreDiscontinued() {
+        ProductVariant discontinued = variant(1L, 18000L, "discontinued");
+
+        assertThat(new ProductVariants(List.of(discontinued, variant(2L, 27000L))).allDiscontinued()).isFalse();
+        assertThat(new ProductVariants(List.of(discontinued)).allDiscontinued()).isTrue();
+    }
+
     private static ProductVariant variant(Long id, Long price) {
-        return new ProductVariant(id, price, new BigDecimal("200"), "ml", "active");
+        return variant(id, price, "active");
+    }
+
+    private static ProductVariant variant(Long id, Long price, String status) {
+        return new ProductVariant(id, price, new BigDecimal("200"), "ml", status);
     }
 }

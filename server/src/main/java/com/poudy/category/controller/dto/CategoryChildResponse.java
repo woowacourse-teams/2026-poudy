@@ -1,6 +1,6 @@
 package com.poudy.category.controller.dto;
 
-import com.poudy.product.domain.CategoryProductCount;
+import com.poudy.category.domain.CategoryProductCount;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 

@@ -14,7 +14,7 @@ const ingredient = (id: number, koreanName: string): ProductDetailResponse["ingr
   id,
   koreanName,
   englishName: `Ingredient ${id}`,
-  formulationRoles: [{ id: 1, code: "SKIN_CONDITIONING", name: "보습제" }],
+  formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "보습제" }],
   skinEffects: [],
 });
 

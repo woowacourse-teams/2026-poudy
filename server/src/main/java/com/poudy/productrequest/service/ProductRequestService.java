@@ -1,16 +1,19 @@
 package com.poudy.productrequest.service;
 
+import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.productrequest.domain.ProductRequest;
+import com.poudy.productrequest.domain.ProductRequestPage;
 import com.poudy.productrequest.domain.ProductRequestStatus;
-import com.poudy.productrequest.notification.DiscordProductRequestNotifier;
-import com.poudy.productrequest.repository.S3ProductRequestRepository;
+import com.poudy.productrequest.ratelimit.ProductRequestRateLimiter;
+import com.poudy.productrequest.repository.ProductRequestRepository;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,19 +21,22 @@ public class ProductRequestService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductRequestService.class);
 
-    private final S3ProductRequestRepository repository;
-    private final DiscordProductRequestNotifier notifier;
+    private final ProductRequestRepository repository;
+    private final DiscordWebhook webhook;
+    private final String webhookUrl;
     private final ProductRequestRateLimiter rateLimiter;
     private final Clock clock;
 
     public ProductRequestService(
-        S3ProductRequestRepository repository,
-        DiscordProductRequestNotifier notifier,
+        ProductRequestRepository repository,
+        DiscordWebhook webhook,
+        @Value("${poudy.product-request.discord.webhook-url:}") String webhookUrl,
         ProductRequestRateLimiter rateLimiter,
-        @Qualifier("productRequestClock") Clock clock
+        Clock clock
     ) {
         this.repository = repository;
-        this.notifier = notifier;
+        this.webhook = webhook;
+        this.webhookUrl = webhookUrl;
         this.rateLimiter = rateLimiter;
         this.clock = clock;
     }
@@ -41,7 +47,7 @@ public class ProductRequestService {
         repository.save(request);
 
         try {
-            notifier.notify(request);
+            webhook.send(webhookUrl, messageOf(request));
         } catch (RuntimeException exception) {
             log.error(
                 "Product request was stored but Discord notification failed: requestId={}, detail={}",
@@ -63,14 +69,21 @@ public class ProductRequestService {
     }
 
     public ProductRequest changeStatus(UUID requestId, ProductRequestStatus status) {
+        return tryChangeStatus(requestId, status)
+            .or(() -> tryChangeStatus(requestId, status))
+            .orElseThrow(() -> new InfrastructureException("제품 등록 요청 상태가 동시에 바뀌어 저장하지 못했습니다."));
+    }
+
+    private Optional<ProductRequest> tryChangeStatus(UUID requestId, ProductRequestStatus status) {
         ProductRequest current = repository.findById(requestId);
         ProductRequest changed = current.changeStatus(status, clock);
         if (changed == current) {
-            return current;
+            return Optional.of(current);
         }
-
-        repository.update(changed);
-        return changed;
+        if (repository.updateStatus(current.status(), changed)) {
+            return Optional.of(changed);
+        }
+        return Optional.empty();
     }
 
     private static String notificationFailureDetail(RuntimeException exception) {
@@ -88,10 +101,15 @@ public class ProductRequestService {
         return Math.toIntExact(offset);
     }
 
-    public record ProductRequestPage(List<ProductRequest> items, long totalElements) {
+    private static String messageOf(ProductRequest request) {
+        return "신규 제품 등록 요청\n제품명: " + request.productName() + brandLineOf(request);
+    }
 
-        public ProductRequestPage {
-            items = List.copyOf(items);
+    private static String brandLineOf(ProductRequest request) {
+        if (request.brandName() == null) {
+            return "";
         }
+
+        return "\n브랜드명: " + request.brandName();
     }
 }

@@ -7,66 +7,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.productview.service.ProductViewService;
-import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class ProductViewControllerTest {
-
-    @TempDir
-    static Path directory;
 
     @Autowired
     private MockMvc mvc;
 
     @Autowired
-    private ProductViewService productViewService;
-
-    @DynamicPropertySource
-    static void properties(DynamicPropertyRegistry registry) {
-        registry.add("poudy.product-views.file", () -> directory.resolve("views.json").toString());
-    }
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void repeatedUnauthenticatedRequestsIncreaseEachViewAndReturnEmpty204() throws Exception {
-        long before = productViewService.sumViewCounts(null).getOrDefault(1L, 0L);
+        long before = viewCounts().getOrDefault(1L, 0L);
         for (int request = 0; request < 2; request++) {
             mvc.perform(post("/api/products/1/views"))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
         }
-        assertThat(productViewService.sumViewCounts(null)).containsEntry(1L, before + 2);
+        assertThat(viewCounts()).containsEntry(1L, before + 2);
     }
 
     @Test
     void nonexistentAndMalformedProductIdsDoNotIncreaseViews() throws Exception {
-        Map<Long, Long> before = productViewService.sumViewCounts(null);
+        Map<Long, Long> before = viewCounts();
         mvc.perform(post("/api/products/999999/views"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
         mvc.perform(post("/api/products/invalid/views"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
-        assertThat(productViewService.sumViewCounts(null)).isEqualTo(before);
+        assertThat(viewCounts()).isEqualTo(before);
     }
 
     @Test
     void readApisDoNotIncreaseViews() throws Exception {
-        Map<Long, Long> before = productViewService.sumViewCounts(null);
+        Map<Long, Long> before = viewCounts();
         mvc.perform(get("/api/products/1")).andExpect(status().isOk());
         mvc.perform(get("/api/products/1")).andExpect(status().isOk());
         mvc.perform(get("/api/products")).andExpect(status().isOk());
@@ -74,7 +61,7 @@ class ProductViewControllerTest {
         mvc.perform(get("/api/products/suggestions").param("keyword", "토너"))
             .andExpect(status().isOk());
         mvc.perform(get("/api/products/rankings")).andExpect(status().isOk());
-        assertThat(productViewService.sumViewCounts(null)).isEqualTo(before);
+        assertThat(viewCounts()).isEqualTo(before);
     }
 
     @Test
@@ -132,5 +119,16 @@ class ProductViewControllerTest {
                 jsonPath("$.paths['/api/products/{productId}/views'].post.responses['204'].content").doesNotExist()
             )
             .andExpect(jsonPath("$.paths['/api/products/{productId}/views'].post.responses['404']").exists());
+    }
+
+    private Map<Long, Long> viewCounts() {
+        Map<Long, Long> counts = new HashMap<>();
+        jdbcTemplate.query(
+            "select product_id, sum(view_count) as view_count from product_daily_view group by product_id",
+            row -> {
+                counts.put(row.getLong("product_id"), row.getLong("view_count"));
+            }
+        );
+        return counts;
     }
 }

@@ -4,11 +4,11 @@ import java.util.Objects;
 
 public class SkinEffect {
 
-    private final Long id;
+    private final String id;
     private final String code;
     private final String displayName;
 
-    public SkinEffect(Long id, String code, String displayName) {
+    public SkinEffect(String id, String code, String displayName) {
         validateId(id);
         validateCode(code);
         validateDisplayName(displayName);
@@ -18,7 +18,7 @@ public class SkinEffect {
         this.displayName = displayName;
     }
 
-    private static void validateId(Long id) {
+    private static void validateId(String id) {
         Objects.requireNonNull(id, "피부 작용 ID가 필요합니다.");
     }
 
@@ -34,7 +34,7 @@ public class SkinEffect {
         }
     }
 
-    public Long id() {
+    public String id() {
         return id;
     }
 

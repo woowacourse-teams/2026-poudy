@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
+import com.poudy.feedback.domain.FeedbackPage;
 import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackSubjectType;
@@ -16,7 +17,6 @@ import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.service.FeedbackService;
-import com.poudy.feedback.service.FeedbackService.FeedbackPage;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -70,15 +70,16 @@ class AdminFeedbackControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.feedbackId").value(feedback.id().toString()))
             .andExpect(jsonPath("$.content").value(feedback.content().value()))
-            .andExpect(jsonPath("$.statusChangedAt").value("2026-08-23T12:34:56Z"));
+            .andExpect(jsonPath("$.statusChangedAt").value("2026-08-23T21:34:56+09:00"));
     }
 
     @Test
     @DisplayName("제품 정보 정정 요청은 대상 제품 정보와 함께 조회한다")
     void findsProductCorrection() throws Exception {
-        Feedback feedback = new Feedback(
+        Feedback feedback = new ProductCorrection(
             UUID.randomUUID(),
-            new ProductCorrection(1L, "블랙 스네일 토너"),
+            1L,
+            "블랙 스네일 토너",
             new FeedbackContent("전성분 표기가 실제 패키지와 달라요."),
             OffsetDateTime.parse("2026-08-23T12:34:56Z")
         );
@@ -109,9 +110,10 @@ class AdminFeedbackControllerTest {
     }
 
     private static Feedback feedback() {
-        return new Feedback(
+        return new ServiceFeedback(
             UUID.randomUUID(),
-            new ServiceFeedback(FeedbackType.BUG_REPORT, FeedbackPath.from("/products/1")),
+            FeedbackType.BUG_REPORT,
+            FeedbackPath.from("/products/1"),
             new FeedbackContent("충분히 긴 피드백 내용입니다."),
             OffsetDateTime.parse("2026-08-23T12:34:56Z")
         );

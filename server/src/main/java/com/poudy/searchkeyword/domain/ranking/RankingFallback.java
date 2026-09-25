@@ -1,8 +1,10 @@
 package com.poudy.searchkeyword.domain.ranking;
 
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,12 +21,22 @@ public final class RankingFallback {
         return new RankingFallback(normalized);
     }
 
-    List<String> publishableNames(SearchKeywordDictionary dictionary) {
+    public static RankingFallback configured(String configured) {
+        if (configured.isBlank()) {
+            return of(SearchKeywordPolicy.DEFAULT_KEYWORDS);
+        }
+        List<String> keywords = Arrays.stream(configured.split(","))
+            .map(String::trim)
+            .filter(keyword -> !keyword.isBlank())
+            .toList();
+        return of(keywords);
+    }
+
+    public List<DictionaryEntry> candidates(SearchKeywordDictionary dictionary) {
         return keywords.stream()
             .map(dictionary::resolve)
             .flatMap(Optional::stream)
-            .filter(dictionary::canRank)
-            .map(DictionaryEntry::keyword)
+            .filter(DictionaryEntry::isRankable)
             .distinct()
             .toList();
     }

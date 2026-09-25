@@ -9,14 +9,11 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientTag;
 import com.poudy.ingredient.domain.Ingredients;
-import com.poudy.skintype.domain.SkinType;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +41,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -65,8 +61,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -88,8 +83,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -100,7 +94,7 @@ class ProductTest {
     @DisplayName("같은 피부 작용을 가진 성분을 하나의 그룹으로 묶는다")
     void groupsIngredientsBySkinEffect() {
         Ingredient first = ingredient(10L, "HYDRATION_RELATED");
-        Ingredient second = ingredient(20L, "MOISTURE_RELATED");
+        Ingredient second = ingredient(20L, "HYDRATION_RELATED");
         Product product = new Product(
             1L,
             "제품",
@@ -110,13 +104,12 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt,
-            Set.of()
+            updatedAt
         );
 
         assertThat(product.skinEffectGroups()).singleElement()
             .satisfies(group -> {
-                assertThat(group.effect().id()).isEqualTo(57L);
+                assertThat(group.effect().id()).isEqualTo("HYDRATION_RELATED");
                 assertThat(group.ingredientIds()).containsExactly(10L, 20L);
             });
     }
@@ -143,22 +136,21 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
-            updatedAt,
-            Set.of()
+            updatedAt
         );
 
         assertThat(product.skinEffectGroups())
             .satisfiesExactly(
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(20L);
+                    assertThat(group.effect().id()).isEqualTo("MOST_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(1L, 2L, 3L);
                 },
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(30L);
+                    assertThat(group.effect().id()).isEqualTo("SECOND_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(4L, 5L);
                 },
                 group -> {
-                    assertThat(group.effect().id()).isEqualTo(10L);
+                    assertThat(group.effect().id()).isEqualTo("TIED_EARLIER_RELATED");
                     assertThat(group.ingredientIds()).containsExactly(7L);
                 }
             );
@@ -177,86 +169,11 @@ class ProductTest {
                 "image",
                 variants,
                 null,
-                updatedAt,
-                Set.of()
+                updatedAt
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("제품 감각 추론 결과가 필요합니다.");
-    }
-
-    @Test
-    @DisplayName("자신의 제품명과 브랜드명을 함께 해석해 검색 결과를 만든다")
-    void matchesOwnSearchableNames() {
-        Product product = new Product(
-            1L,
-            "수분 토너",
-            brand,
-            category,
-            ingredients,
-            "image",
-            variants,
-            sensory(1, 1),
-            updatedAt,
-            Set.of()
-        );
-
-        assertThat(product.match(new ProductSearchQuery("브랜드 수분토너")))
-            .get()
-            .extracting(MatchedProduct::field)
-            .isEqualTo(ProductMatchField.PRODUCT_NAME);
-    }
-
-    @Test
-    @DisplayName("제품에 연결된 피부타입만 일치하고 미지정 조건은 통과한다")
-    void matchesAssignedSkinTypes() {
-        Product product = productWithSkinTypes(Set.of(SkinType.DRY, SkinType.SENSITIVE));
-
-        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
-        assertThat(product.matchesSkinType(SkinType.COMBINATION)).isFalse();
-        assertThat(product.matchesSkinType(null)).isTrue();
-    }
-
-    @Test
-    @DisplayName("미분류 제품은 피부타입을 지정하지 않았을 때만 통과한다")
-    void matchesOnlyMissingSkinTypeForUnclassifiedProduct() {
-        Product product = productWithSkinTypes(Set.of());
-
-        assertThat(product.matchesSkinType(null)).isTrue();
-        for (SkinType skinType : SkinType.values()) {
-            assertThat(product.matchesSkinType(skinType)).isFalse();
-        }
-    }
-
-    @Test
-    @DisplayName("생성 후 입력 집합을 변경해도 제품의 피부타입 판정은 유지된다")
-    void preservesSkinTypesAfterInputMutation() {
-        Set<SkinType> skinTypes = EnumSet.of(SkinType.DRY, SkinType.SENSITIVE);
-        Product product = productWithSkinTypes(skinTypes);
-
-        skinTypes.clear();
-        skinTypes.add(SkinType.OILY);
-
-        assertThat(product.matchesSkinType(SkinType.DRY)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.SENSITIVE)).isTrue();
-        assertThat(product.matchesSkinType(SkinType.OILY)).isFalse();
-    }
-
-    private Product productWithSkinTypes(Set<SkinType> skinTypes) {
-        return new Product(
-            1L,
-            "제품",
-            brand,
-            category,
-            ingredients,
-            "image",
-            variants,
-            sensory(1, 1),
-            updatedAt,
-            skinTypes
-        );
+            .hasMessage("제품 수분감·유분감 단계가 필요합니다.");
     }
 
     private static Ingredient ingredient(Long id, String effect) {
@@ -265,9 +182,9 @@ class ProductTest {
 
     private static Ingredient ingredient(Long id, Long tagId, String effect) {
         IngredientTag tag = new IngredientTag(
-            new Tag(tagId, TagCategory.BIOLOGICAL_EFFECT, effect, "피부 작용"),
-            "확인된 근거"
+            new Tag(effect, TagCategory.BIOLOGICAL_EFFECT, "피부 작용"),
+            List.of("확인된 근거")
         );
-        return new Ingredient(id, "성분 " + id, null, null, null, null, null, List.of(tag), null, null);
+        return new Ingredient(id, "성분 " + id, null, null, null, null, List.of(tag), null);
     }
 }

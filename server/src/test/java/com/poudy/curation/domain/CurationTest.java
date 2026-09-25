@@ -11,15 +11,25 @@ class CurationTest {
 
     @Test
     void rejectsVisibleBannerWithoutThumbnail() {
-        assertThatThrownBy(() -> new CurationBanner(true, null))
-            .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new CurationBanner(true, " "))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> publishedWithBanner(true, null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> publishedWithBanner(true, " ")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void permitsHiddenBannerWithoutThumbnail() {
-        assertThatCode(() -> new CurationBanner(false, null)).doesNotThrowAnyException();
+        assertThatCode(() -> publishedWithBanner(false, null)).doesNotThrowAnyException();
+    }
+
+    private static Curation publishedWithBanner(boolean visible, String thumbnailImageUrl) {
+        return new Curation(
+            12L,
+            "제목",
+            "설명",
+            CurationPublicationStatus.PUBLISHED,
+            visible,
+            thumbnailImageUrl,
+            List.of()
+        );
     }
 
     @Test
@@ -30,8 +40,9 @@ class CurationTest {
                 "제목",
                 "설명",
                 CurationPublicationStatus.UNPUBLISHED,
-                new CurationBanner(true, "banner.png"),
-                CurationDetail.from(List.of())
+                true,
+                "banner.png",
+                List.of()
             )
         ).isInstanceOf(IllegalArgumentException.class);
     }
@@ -44,8 +55,9 @@ class CurationTest {
                 "제목",
                 "설명",
                 CurationPublicationStatus.PUBLISHED,
-                new CurationBanner(false, null),
-                CurationDetail.from(List.of())
+                false,
+                null,
+                List.of()
             )
         ).doesNotThrowAnyException();
     }
@@ -58,8 +70,9 @@ class CurationTest {
                 " ",
                 "설명",
                 CurationPublicationStatus.PUBLISHED,
-                new CurationBanner(true, "banner.png"),
-                CurationDetail.from(List.of())
+                true,
+                "banner.png",
+                List.of()
             )
         ).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
@@ -68,8 +81,9 @@ class CurationTest {
                 "제목",
                 " ",
                 CurationPublicationStatus.PUBLISHED,
-                new CurationBanner(true, "banner.png"),
-                CurationDetail.from(List.of())
+                true,
+                "banner.png",
+                List.of()
             )
         ).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new CurationFilter(UUID.randomUUID(), " "))
@@ -82,8 +96,9 @@ class CurationTest {
             "큐레이션 제목",
             "큐레이션 설명",
             CurationPublicationStatus.PUBLISHED,
-            new CurationBanner(true, "banner.png"),
-            CurationDetail.from(blocks)
+            true,
+            "banner.png",
+            blocks
         );
     }
 }

@@ -3,8 +3,8 @@ package com.poudy.brand.controller.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.brand.domain.Brands;
-import com.poudy.product.domain.BrandProductCount;
 import com.poudy.product.domain.ProductCountsByBrand;
 import java.util.List;
 import java.util.Map;

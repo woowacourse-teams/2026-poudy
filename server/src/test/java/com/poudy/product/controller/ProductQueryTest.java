@@ -1,5 +1,6 @@
 package com.poudy.product.controller;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.nullValue;
@@ -8,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.ErrorCode;
-import com.poudy.excludecode.domain.ExcludeCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +23,14 @@ class ProductQueryTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    @DisplayName("DB에 없는 제외 성분군 코드는 잘못된 필터로 거절한다")
+    void rejectsUnknownExcludeCode() throws Exception {
+        mockMvc.perform(get("/api/products").param("excludeCodes", "UNKNOWN_CODE"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
 
     @Test
     @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과의 브랜드와 카테고리를 함께 반환한다")
@@ -131,7 +139,7 @@ class ProductQueryTest {
     }
 
     @Test
-    @DisplayName("제품명 검색 제안의 페이지를 나눠도 목록과 같은 순서를 유지한다")
+    @DisplayName("제품명 검색 제안의 페이지를 나눠도 DB 검색 순위를 유지한다")
     void keepsSuggestionOrderAcrossPages() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("size", "1"))
             .andExpect(status().isOk())
@@ -139,19 +147,20 @@ class ProductQueryTest {
 
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "블랙").param("page", "3").param("size", "1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[0].id").value(10));
+            .andExpect(jsonPath("$.items[0].id").value(7));
     }
 
     @Test
-    @DisplayName("브랜드명 검색 제안도 해당 브랜드의 제품으로 반환한다")
+    @DisplayName("브랜드명 정확 일치 상품을 먼저 제안하고 일부 토큰 일치 상품을 뒤에 둔다")
     void suggestsProductsByBrandName() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
-            .andExpect(
-                jsonPath("$.items[*].brandName")
-                    .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("다 브랜드")))
-            )
+            .andExpect(jsonPath("$.items[*].id").value(contains(1, 10, 7, 15, 13)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(5))
+            .andExpect(jsonPath("$.items[0:3].brandName").value(contains("다 브랜드", "다 브랜드", "다 브랜드")))
+            .andExpect(jsonPath("$.items[3].match.text").value("나 브랜드"))
+            .andExpect(jsonPath("$.items[3].match.startIndex").value(2))
+            .andExpect(jsonPath("$.items[3].match.endIndexExclusive").value(5))
             .andExpect(jsonPath("$.items[0].match.field").value("BRAND_NAME"))
             .andExpect(jsonPath("$.items[0].match.text").value("다 브랜드"))
             .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
@@ -222,19 +231,13 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.variants[1].price").value(23000L))
             .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
             .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
-            .andExpect(
-                jsonPath("$.freeOfCodes").value(
-                    org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.hasItem(ExcludeCode.FRAGRANCE_ALLERGENS.name())
-                    )
-                )
-            )
-            .andExpect(
-                jsonPath("$.freeOfCodes").value(
-                    org.hamcrest.Matchers.hasItem(ExcludeCode.SULFATES.name())
-                )
-            )
-            .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301Z"));
+            .andExpect(jsonPath("$.excludeGroups.length()").value(6))
+            .andExpect(jsonPath("$.excludeGroups[2].name").value("향료/알레르기 성분"))
+            .andExpect(jsonPath("$.excludeGroups[2].contains").value(true))
+            .andExpect(jsonPath("$.excludeGroups[3].name").value("자극성 방부제"))
+            .andExpect(jsonPath("$.excludeGroups[4].name").value("설페이트 성분"))
+            .andExpect(jsonPath("$.excludeGroups[4].contains").value(false))
+            .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301+09:00"));
     }
 
     @Test

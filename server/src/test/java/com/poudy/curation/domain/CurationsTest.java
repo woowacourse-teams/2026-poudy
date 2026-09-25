@@ -67,8 +67,9 @@ class CurationsTest {
             "큐레이션 제목",
             "큐레이션 설명",
             publicationStatus,
-            new CurationBanner(bannerVisible, bannerVisible ? "banner.png" : null),
-            CurationDetail.from(List.of())
+            bannerVisible,
+            bannerVisible ? "banner.png" : null,
+            List.of()
         );
     }
 }

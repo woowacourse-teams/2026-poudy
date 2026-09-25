@@ -14,10 +14,10 @@ class SkinEffectTest {
         assertThatThrownBy(() -> new SkinEffect(null, "HYDRATION_RELATED", "피부 수분 관련"))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("피부 작용 ID가 필요합니다.");
-        assertThatThrownBy(() -> new SkinEffect(1L, " ", "피부 수분 관련"))
+        assertThatThrownBy(() -> new SkinEffect("HYDRATION_RELATED", " ", "피부 수분 관련"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("피부 작용 코드가 필요합니다.");
-        assertThatThrownBy(() -> new SkinEffect(1L, "HYDRATION_RELATED", " "))
+        assertThatThrownBy(() -> new SkinEffect("HYDRATION_RELATED", "HYDRATION_RELATED", " "))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("피부 작용 표시 이름이 필요합니다.");
     }

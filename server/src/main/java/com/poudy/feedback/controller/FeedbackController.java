@@ -38,7 +38,7 @@ public class FeedbackController {
         this.imageUploadService = imageUploadService;
     }
 
-    @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.")
+    @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "의견 등록 완료")
     @PostMapping("/api/feedbacks")
     public ResponseEntity<Void> submit(
@@ -56,7 +56,7 @@ public class FeedbackController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "제품 정보 정정 요청", description = "존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.")
+    @Operation(summary = "제품 정보 정정 요청", description = "존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "정정 요청 접수 완료")
     @PostMapping("/api/products/{productId}/correction-requests")
     public ResponseEntity<Void> submitProductCorrection(

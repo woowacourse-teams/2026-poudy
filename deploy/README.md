@@ -9,7 +9,7 @@ MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다
 - 공개 브라우저 API: Nginx `:443/api/*` → 백엔드 EC2 사설 IP `:8080`
 - Next.js 서버 API: Nginx `127.0.0.1:8081/api/*` → 같은 백엔드 upstream
 - 백엔드: Spring Boot JAR `:8080` → systemd
-- 데이터: S3 JSON을 `/opt/poudy/data`에 주기적으로 동기화
+- 데이터: PostgreSQL 15 이상. 피드백 이미지만 비공개 S3에 저장
 
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
 사용하고, 백엔드 요청은 백엔드 EC2의 안정적인 사설 IP로 전달합니다. Nginx는
@@ -37,48 +37,26 @@ EC2 호스트별 최초 1회 초기화는 `deploy/scripts/README.md`를 참고�
 스크립트는 Java·Node.js·Nginx 설치와 systemd 등록만 수행하고 애플리케이션 산출물은
 배포하지 않습니다.
 
-백엔드 초기화 스크립트는 `s3://techcourse-project-2026/poudy/data/`를 확인하는
-`poudy-data-sync.timer`도 등록합니다. 기본 주기는 부팅 2분 후 최초 실행하고, 이후
-약 5분마다입니다. S3 데이터 변경이 있을 때만 staging 검증과 백엔드 재시작을 수행하며,
-변경이 없으면 S3 목록 확인 후 종료합니다.
-
-초기화 후 첫 동기화와 상태 확인:
+백엔드 초기화 스크립트는 PostgreSQL client를 설치하고 기존 JSON 동기화 timer를
+비활성화합니다. 이어서 `deploy/config/backend.env.example`을 참고해
+`/etc/poudy/backend.env`의 예시 값을 실제 DB와 S3 설정으로 교체합니다.
 
 ```bash
-sudo systemctl start poudy-data-sync.service
-sudo systemctl status poudy-data-sync.timer --no-pager
-sudo journalctl -u poudy-data-sync.service -n 100 --no-pager
-sudo systemctl list-timers poudy-data-sync.timer
+sudoedit /etc/poudy/backend.env
+sudo chown root:poudy /etc/poudy/backend.env
+sudo chmod 0640 /etc/poudy/backend.env
 ```
 
-이미 초기화가 끝난 백엔드 EC2에만 적용할 때는 다음 순서로 실행합니다.
+PostgreSQL 스키마·검색 객체·카탈로그 적재는 배포 전에 별도로 완료합니다. CodeDeploy는
+기존 서비스를 중지하기 전에 DB 연결·필수 객체·카탈로그 데이터를 읽기 전용으로 검증하고,
+기존 JSON 동기화 timer를 끕니다. 검증 실패 시 이유를 배포 로그에 남기고 기존 서비스를
+유지합니다. DB를 자동 생성하거나 SQL을 자동 적용하지 않으므로, DB 손상·유실은 S3의
+pg_dump 백업으로 별도 복구합니다.
 
-```bash
-cd /opt/poudy/repository
-sudo dnf install -y awscli-2 jq
-sudo install -d -o root -g root -m 0755 /var/lib/poudy/backend-data
-sudo install -D -o root -g poudy -m 0640 \
-  deploy/config/backend-data.env \
-  /etc/poudy/backend-data.env
-sudo install -o root -g root -m 0750 \
-  deploy/scripts/sync-backend-data.sh \
-  /usr/local/sbin/poudy-sync-backend-data
-sudo install -o root -g root -m 0644 \
-  deploy/systemd/poudy-data-sync.service \
-  /etc/systemd/system/poudy-data-sync.service
-sudo install -o root -g root -m 0644 \
-  deploy/systemd/poudy-data-sync.timer \
-  /etc/systemd/system/poudy-data-sync.timer
-sudo systemctl daemon-reload
-sudo systemctl enable --now poudy-data-sync.timer
-sudo systemctl start poudy-data-sync.service
-```
-
-동기화 스크립트는 필수 JSON 파일과 각 파일의 최상위 배열을 검증한 뒤
-`/opt/poudy/data`를 교체합니다. 백엔드 health check가 실패하면 이전 데이터로
-복구합니다. S3에 파일을 여러 개 올릴 때는 모든 JSON 업로드가 끝난 뒤 더 이상 해당
-prefix를 수정하지 않는 방식으로 배포해야 합니다. 장기적으로는 versioned prefix와
-`_READY` marker를 두고 marker가 생긴 데이터만 동기화하는 방식이 더 안전합니다.
+- 배포 artifact의 독립 `backend/schema.sql` 파일과 초기 적재 S3 URI를 제거했습니다. 두 DB는 이미 수동으로
+  구성·적재됐고, 앱 배포가 DB 상태를 변경하면 코드 배포와 데이터 복구의 책임이 섞입니다.
+- 기존 JSON 동기화 timer는 배포 중 비활성화합니다. DB 전환 후 JSON 변경을 감지해
+  백엔드를 다시 시작하는 동작은 불필요합니다.
 
 ## EC2 프론트 구성
 
@@ -305,7 +283,6 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 
 - 애플리케이션은 `poudy` 전용 사용자로 실행합니다.
 - systemd에 `NoNewPrivileges`, 파일 시스템 보호, CPU·메모리·프로세스 제한을 적용합니다.
-- 백엔드 데이터 디렉터리는 systemd에서 읽기 전용으로 설정합니다.
 - AWS 자격 증명과 환경별 비밀 값은 저장소와 배포 산출물에 포함하지 않습니다.
 
 인프라 로그 위치, journald 보존, CloudWatch Agent와 최소 알람 적용 절차는
@@ -314,40 +291,32 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 PostgreSQL EC2의 구성·초기 적재·백업 상태는
 [`deploy/postgresql-ec2.md`](postgresql-ec2.md)에 정리합니다.
 
-## 피드백 S3 수동 보유 기간 관리
+## 피드백 보유 기간 관리
 
-공유 S3 버킷은 버전 관리가 비활성화되어 있고 `poudy/feedback/`에는 자동 만료 규칙을
-두지 않았습니다. 애플리케이션은 버킷 설정을 바꾸지 않습니다. 대신 서버의 정기 정리 작업이 24시간
-지난 pending 이미지와 피드백 JSON이 없는 고아 최종 이미지를 정리하고, 10분 이상 지난
-claim을 commit 또는 rollback으로 조정합니다.
+운영 프로필은 매일 03:30(Asia/Seoul)에 PostgreSQL `created_at`이 83일 지난 피드백과
+제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 S3 `poudy/feedback/{feedbackId}/` 아래 객체를 먼저
+삭제하고 DB 행을 마지막에 삭제합니다. S3 삭제가
+실패하면 DB 행을 남겨 다음 날 재시도하므로 이미지 키를 잃지 않습니다. 이 7일 여유로 일시적인
+실패가 있어도 개인정보 처리방침의 90일 한도 전에 복구할 수 있습니다.
 
-접수된 피드백 JSON과 연결된 최종 이미지는 운영자가 AWS S3 콘솔에서 최소 주 1회 다음과 같이
-삭제합니다. 주간 실행 사이의 최대 7일을 고려해 접수일로부터 83일 이상 지난 항목을 삭제하면
-개인정보 처리방침의 90일 이내 보유 기준을 지킬 수 있습니다.
+운영자는 최소 주 1회 다음을 확인합니다.
 
-1. `poudy/feedback/`에서 `pending/`, `claims/`와 `*/images/`를 제외한
-   `{feedbackId}.json` 객체를 확인합니다.
-2. S3 `Last modified`가 실행 시각 기준 83일 이상 지난 JSON의 `feedbackId`를 기록합니다.
-3. 각 ID의 `poudy/feedback/{feedbackId}/images/` 아래 객체와
-   `poudy/feedback/{feedbackId}.json`을 모두 삭제합니다.
-4. 같은 ID로 검색해 JSON과 이미지 객체가 하나도 남지 않았는지 확인합니다. 일부 삭제가
-   실패하면 해당 ID 전체를 즉시 다시 확인하고 남은 객체를 삭제합니다.
-5. 실행 시각, 83일 기준 시각, 대상 feedback ID, 삭제 객체 수, 실패와 재확인 결과를 운영
-   기록에 남깁니다.
+1. `journalctl -u poudy-backend`에서 `만료 의견 보유기간 정리`의 실패 수가 0인지 확인합니다.
+2. DB에서 `created_at <= now() - interval '83 days'`인 `feedback`과
+   `product_correction_request` 행이 남지 않았는지 확인합니다.
+3. 실패가 있으면 S3 delete 권한과 네트워크를 복구하고 서비스를 재시작하거나 다음 예약 실행을
+   기다린 뒤, DB 행과 `poudy/feedback/{feedbackId}/`가 함께 없어졌는지 재확인합니다.
+4. 점검 시각, cutoff, 선택·삭제·실패 건수와 조치 결과를 운영 기록에 남깁니다. 로그에는 의견
+   ID나 내용이 출력되지 않습니다.
 
-같은 주간 작업에서 `pending/`의 24시간 초과 객체와 `claims/`의 7일 초과 객체도 확인합니다.
-정상 상태라면 서버가 이미 정리했어야 하므로 남은 객체는 스케줄러 장애, S3 권한 오류 또는
-commit 판정 불명 신호입니다. claim의 `feedbackId`에 해당하는 피드백 JSON과 서버 로그를
-확인해 다음과 같이 처리합니다.
+pending 이미지는 이미지 옮기기 주기 작업이 24시간 만료와 유예 시간을 기준으로 별도 정리합니다. 버킷
+버전 관리가 비활성화되어 있으므로 일반 삭제는 복구할 수 없습니다.
 
-- 피드백 JSON 저장이 확정된 경우: 최종 이미지는 보존하고 해당 pending과 claim만 삭제합니다.
-- 피드백 JSON이 없는 rollback 상태가 확정된 경우: 해당 pending, 최종 이미지와 claim을 모두
-  삭제합니다.
-- 권한 오류, JSON hash 불일치 등으로 상태를 확정할 수 없는 경우: 객체를 추측으로 삭제하지
-  않고 원인을 복구한 뒤 서버 조정 작업의 성공을 확인합니다.
+## PostgreSQL 배포 전 확인
 
-이 점검의 대상 ID, 판정 근거, 삭제 객체와 미해결 사유도 같은 운영 기록에 남깁니다.
-
-버전 관리가 비활성화되어 있으므로 일반 삭제가 영구 삭제이며 이전 버전이나 delete marker를
-별도로 정리하지 않습니다. 주 1회 실행과 기록을 유지하기 어려우면 lifecycle 권한을 확보하거나
-별도 자동 정리를 마련하기 전까지 피드백 이미지 첨부 기능을 운영에 노출하지 않습니다.
+`/etc/poudy/backend.env`에 해당 환경의 `POUDY_DB_URL`, `POUDY_DB_USERNAME`,
+`POUDY_DB_PASSWORD`, `POUDY_FEEDBACK_S3_BUCKET`, `POUDY_FEEDBACK_S3_PENDING_PREFIX`를
+설정합니다. DB에 스키마·검색 객체·카탈로그가 준비되지 않았다면 배포가 실패합니다.
+실패 원인은 CodeDeploy 콘솔의 해당 hook 로그 또는 EC2의
+`/opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log`에서
+확인합니다. 백엔드 시작 실패 시 `poudy-backend.service` 최근 로그도 함께 출력합니다.

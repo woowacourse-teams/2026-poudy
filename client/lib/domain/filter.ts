@@ -1,6 +1,17 @@
+import type { Endpoints } from "@poudy/api/api.zod.types";
+
 import { firstOf, keepIf } from "./optional";
 
-export const SORTS = ["NAME_ASC", "NAME_DESC", "PRICE_ASC", "PRICE_DESC"] as const;
+type ServerSort = NonNullable<NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"]>;
+
+/** 서버가 받지 않는 값이 섞이면 타입 검사에서 걸리게 한다. 순서는 드롭다운에 보이는 순서다. */
+export const SORTS = [
+  "DEFAULT",
+  "PRICE_ASC",
+  "PRICE_DESC",
+  "UNIT_PRICE_ASC",
+  "UNIT_PRICE_DESC",
+] as const satisfies readonly ServerSort[];
 export type Sort = (typeof SORTS)[number];
 
 export const EXCLUDE_CODES = [
@@ -13,10 +24,13 @@ export const EXCLUDE_CODES = [
 ] as const;
 export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
 
+/** 서버는 성분군 코드를 문자열로 준다. 화면이 아는 성분군인지 여기서 가른다. */
+export const isExcludeCode = (value: string): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode);
+
 export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
-export const DEFAULT_SORT: Sort = "NAME_ASC";
+export const DEFAULT_SORT: Sort = "DEFAULT";
 export const DEFAULT_SIZE = 20;
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
@@ -89,7 +103,7 @@ const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
       .getAll("excludeCodes")
       .flatMap((value) => value.split(","))
       .map((value) => value.trim()),
-  ).filter((value): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode));
+  ).filter(isExcludeCode);
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
 
