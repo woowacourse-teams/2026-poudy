@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-readonly HEALTH_URL='http://127.0.0.1:8080/actuator/health'
+readonly HEALTH_URL='http://127.0.0.1:8081/actuator/health'
 
 for attempt in {1..24}; do
     if curl --fail --silent --show-error --max-time 3 \

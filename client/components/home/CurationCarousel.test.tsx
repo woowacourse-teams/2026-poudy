@@ -52,7 +52,7 @@ describe("CurationCarousel", () => {
 
     expect(section).not.toBeNull();
     /* 카드와 같은 높이여야 들어왔을 때 자리가 그대로다. */
-    expect(container.querySelector(".h-52")).not.toBeNull();
+    expect(container.querySelector(".aspect-\\[15\\/8\\]")).not.toBeNull();
   });
 
   /* 사람이 할 일이 없는 자리라 낭독기에서는 읽어 줄 것이 없다. */
@@ -207,18 +207,18 @@ describe("CurationCarousel", () => {
       Object.defineProperty(track, "clientWidth", { value: step, configurable: true });
 
       // 세 번째 칸이 중심에 가장 가깝지만 스냅 지점보다 120px 앞에서 멈춘 상황이다.
-      track.scrollLeft = 3 * step - 32 - 120;
+      track.scrollLeft = 3 * step - 16 - 120;
       fireEvent.scroll(track);
       vi.advanceTimersByTime(1750);
 
       // 종료 시점에 즉시 순간이동하지 않고, 먼저 남은 거리를 움직인다.
-      expect(track.scrollLeft).toBe(3 * step - 32 - 120);
+      expect(track.scrollLeft).toBe(3 * step - 16 - 120);
       vi.advanceTimersByTime(DROP_MS / 2);
-      expect(track.scrollLeft).toBeGreaterThan(3 * step - 32 - 120);
+      expect(track.scrollLeft).toBeGreaterThan(3 * step - 16 - 120);
       vi.advanceTimersByTime(DROP_MS / 2);
 
       // 가운데에 도착한 뒤에만 순서를 바꾼다.
-      expect(track.scrollLeft).toBe(2 * step - 32);
+      expect(track.scrollLeft).toBe(2 * step - 16);
       expect(track.children[2]).toHaveTextContent("순한 클렌징");
       expect(track).toHaveClass("snap-mandatory");
     } finally {
@@ -314,7 +314,7 @@ describe("CurationCarousel", () => {
     track.setPointerCapture = vi.fn();
     track.hasPointerCapture = vi.fn(() => false);
     /* 가운데 칸(SPARE=2)에서 시작한다. 그 칸을 가운데로 보내는 스크롤 값이다. */
-    track.scrollLeft = 2 * step - 32;
+    track.scrollLeft = 2 * step - 16;
 
     fireEvent.pointerDown(track, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
     /* 한 칸의 20%(80px) 를 갓 넘긴다. 절반(200px) 에는 크게 못 미치는 거리다. */
@@ -355,14 +355,14 @@ describe("CurationCarousel", () => {
         Object.defineProperty(child, "offsetWidth", { value: 400, configurable: true });
       }
       Object.defineProperty(trackElement, "clientWidth", { value: 400, configurable: true });
-      trackElement.scrollLeft = 2 * 400 - 32;
+      trackElement.scrollLeft = 2 * 400 - 16;
       vi.mocked(track).mockClear();
 
       fireEvent.scroll(trackElement);
       act(() => vi.advanceTimersByTime(1750));
       expect(track).not.toHaveBeenCalledWith("curation_slide_viewed", expect.anything());
 
-      trackElement.scrollLeft = 3 * 400 - 32;
+      trackElement.scrollLeft = 3 * 400 - 16;
       fireEvent.scroll(trackElement);
       act(() => vi.advanceTimersByTime(1750));
       expect(track).toHaveBeenCalledWith("curation_slide_viewed", {
