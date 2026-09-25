@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import type { SortOption } from "@/components/ui/SortDropdown";
 import { SortHeader } from "@/components/ui/SortHeader";
+import { StickyBar } from "@/components/ui/StickyBar";
 import { track } from "@/lib/analytics/track";
 import { fetchStorage } from "@/lib/api/products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
@@ -416,16 +417,22 @@ export function SavedScreen() {
         />
       ) : null}
 
-      {/* 제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다. */}
+      {/*
+        제품 목록과 같은 차례로 둔다. 찾는 칸이 위에 서고 그 아래에 개수와 차례가 온다.
+        찾는 칸은 내려 읽는 중에도 바로 고쳐 쓸 수 있도록 상단바(56px) 아래에 붙인다.
+        바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
+      */}
       {current.items.length > removingIds.length ? (
-        <div className="pt-3">
-          <SearchField
-            value={keyword}
-            onChange={setKeyword}
-            onChangeComposing={setComposing}
-            placeholder="저장한 제품 검색"
-            label="저장한 제품 검색"
-          />
+        <>
+          <StickyBar stuckAt={56} className="sticky top-14 z-20 -mx-4 -mb-2 bg-background px-4 pt-3 pb-2">
+            <SearchField
+              value={keyword}
+              onChange={setKeyword}
+              onChangeComposing={setComposing}
+              placeholder="저장한 제품 검색"
+              label="저장한 제품 검색"
+            />
+          </StickyBar>
           {/* 되돌리기가 남은 자리는 이미 저장을 푼 것이라 개수에서 뺀다. */}
           <SortHeader
             total={ordered.filter((product) => !removingIds.includes(product.id)).length}
@@ -433,7 +440,7 @@ export function SavedScreen() {
             onChangeSort={setSort}
             options={SAVED_SORT_OPTIONS}
           />
-        </div>
+        </>
       ) : null}
 
       {/*
