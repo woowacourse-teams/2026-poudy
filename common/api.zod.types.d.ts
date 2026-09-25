@@ -722,7 +722,7 @@ export type post_IncreaseViewCount = {
 
     }
 /**
- * 존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.
+ * 존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.
  */
 export type post_SubmitProductCorrection = {
       method: "POST",
@@ -783,7 +783,7 @@ export type post_UploadImages = {
 
     }
 /**
- * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
+ * 의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.
  */
 export type post_Submit_1 = {
       method: "POST",

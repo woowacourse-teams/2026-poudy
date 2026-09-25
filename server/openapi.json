@@ -215,7 +215,7 @@
           "피드백"
         ],
         "summary": "제품 정보 정정 요청",
-        "description": "존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.",
+        "description": "존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.",
         "operationId": "submitProductCorrection",
         "parameters": [
           {
@@ -518,7 +518,7 @@
           "피드백"
         ],
         "summary": "의견 등록",
-        "description": "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.",
+        "description": "의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.",
         "operationId": "submit_1",
         "requestBody": {
           "content": {
