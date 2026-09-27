@@ -234,7 +234,10 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
           const color = effectColor(group.code);
 
           return (
-            <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
+            <li
+              key={group.id}
+              className="flex min-h-[52px] items-center gap-3 border-b border-border py-2.5 last:border-b-0"
+            >
               <span
                 className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
               >
