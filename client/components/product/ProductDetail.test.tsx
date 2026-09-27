@@ -365,19 +365,13 @@ describe("성분 분류", () => {
     expect(row.getByRole("link", { name: "판테놀" })).toHaveAttribute("href", "/ingredients/6");
   });
 
-  it("이름 사이의 구분 기호는 누를 수 없게 둔다", () => {
+  it("성분 이름 사이에 구분 기호를 두지 않는다", () => {
     render(<ProductDetail product={taggedProduct} />);
 
     const row = groupRow("보습");
 
-    expect(row).toHaveTextContent("부틸렌글라이콜 · 판테놀");
+    expect(row).not.toHaveTextContent("·");
     expect(within(row).getAllByRole("link")).toHaveLength(2);
-  });
-
-  it("마지막 성분 뒤에는 구분 기호를 붙이지 않는다", () => {
-    render(<ProductDetail product={taggedProduct} />);
-
-    expect(groupRow("각질 케어").textContent?.trim()).toMatch(/프로테아제$/);
   });
 
   it("성분명에 누를 수 있다는 표시를 남긴다", () => {

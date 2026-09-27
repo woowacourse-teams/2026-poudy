@@ -1,7 +1,6 @@
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment } from "react";
 
 import { IngredientList } from "./IngredientList";
 import { ProductViewRecorder } from "./ProductViewRecorder";
@@ -234,28 +233,26 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
           const color = effectColor(group.code);
 
           return (
-            <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
+            <li
+              key={group.id}
+              className="flex min-h-[52px] items-center gap-3 border-b border-border py-2.5 last:border-b-0"
+            >
               <span
                 className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
               >
                 {group.name}
               </span>
-              {/*
-                이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다.
-
-                구분 기호는 링크 밖에 두어 누를 자리에서 빼두고, 앞 이름과 한 덩어리로 묶어
-                기호만 다음 줄 머리로 넘어가지 않게 한다. 줄은 기호 뒤에서 나뉘어 지금과 같은 자리에서 접힌다.
-              */}
-              <span className="flex-1 text-[13px] font-semibold text-[#202124]">
-                {named(group.ingredientIds).map((ingredient, index, ingredients) => (
-                  <Fragment key={ingredient.id}>
-                    <span className="whitespace-nowrap">
-                      <Link href={`/ingredients/${ingredient.id}`} prefetch="auto" className="ingredient-chip-link">
-                        {ingredient.name}
-                      </Link>
-                      {index < ingredients.length - 1 && <span aria-hidden="true"> ·</span>}
-                    </span>{" "}
-                  </Fragment>
+              {/* 이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다. 구분 기호 없이 간격으로만 나눈다. */}
+              <span className="flex flex-1 flex-wrap gap-x-2 gap-y-1 text-[13px] font-semibold text-[#202124]">
+                {named(group.ingredientIds).map((ingredient) => (
+                  <Link
+                    key={ingredient.id}
+                    href={`/ingredients/${ingredient.id}`}
+                    prefetch="auto"
+                    className="ingredient-chip-link"
+                  >
+                    {ingredient.name}
+                  </Link>
                 ))}
               </span>
             </li>
