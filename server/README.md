@@ -36,8 +36,9 @@ createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 ```
 
 스키마는 서버가 기동할 때 Flyway가 `src/main/resources/db/migration`의 파일을 버전 순서로
-적용합니다. 빈 DB에는 `V1`부터 적용하고, Flyway 도입 전부터 쓰던 DB는 `V2`까지 적용된 것으로
-등록한 뒤 이후 버전만 적용합니다. 서버가 뜨려면 `exclude_code` 정의와 성분 매핑 데이터가
+적용합니다. 빈 DB에는 `V1`부터 적용합니다. Flyway 도입 전부터 쓰던 DB는 스키마가 `V2`와 같은지
+확인한 뒤, 첫 기동에만 `SPRING_FLYWAY_BASELINE_ON_MIGRATE=true`를 주어 `V2`까지 적용된 것으로
+등록합니다. 이 값을 켜지 않으면 이력 없는 기존 DB에서는 서버가 뜨지 않습니다. 서버가 뜨려면 `exclude_code` 정의와 성분 매핑 데이터가
 있어야 합니다.
 
 스키마를 바꿀 때는 적용된 파일을 고치지 않고 `V3__설명.sql`처럼 다음 버전 파일을 추가합니다.
