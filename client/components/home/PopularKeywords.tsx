@@ -201,8 +201,10 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
                 aria-hidden="true"
                 className="popular-keyword-fade absolute inset-0 flex h-6 items-center gap-2.5"
               >
-                <span className="text-[16px] font-bold text-brand">{previous.rank}</span>
-                <span className="truncate text-[14px] font-semibold text-text-primary">{previous.keyword}</span>
+                <span className="flex min-w-0 items-baseline gap-2.5">
+                  <span className="text-[16px] font-bold text-brand">{previous.rank}</span>
+                  <span className="truncate text-[14px] font-semibold text-text-primary">{previous.keyword}</span>
+                </span>
                 <RankChange change={previous.change} />
               </span>
             ) : null}
@@ -215,8 +217,10 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
               }
               className={`relative flex h-6 items-center gap-2.5 ${index === 0 ? "" : "popular-keyword-rise"}`}
             >
-              <span className="text-[16px] font-bold text-brand">{current.rank}</span>
-              <span className="truncate text-[14px] font-semibold text-text-primary">{current.keyword}</span>
+              <span className="flex min-w-0 items-baseline gap-2.5">
+                <span className="text-[16px] font-bold text-brand">{current.rank}</span>
+                <span className="truncate text-[14px] font-semibold text-text-primary">{current.keyword}</span>
+              </span>
               <RankChange change={current.change} />
               <span className="sr-only">{changeLabel(current.change)}</span>
             </Link>
@@ -260,15 +264,22 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
                 className="popular-keyword-row flex h-10 items-center gap-2.5 px-3.5 motion-reduce:transition-none"
               >
                 {/*
+                  순위와 검색어는 가운데가 아니라 글자의 기준선을 맞춘다. 한글이 기기 글꼴로
+                  대신 그려지면 숫자와 한글의 글꼴이 갈리는데, 글꼴마다 줄 상자의 위아래 여백이
+                  달라 상자끼리 가운데를 맞추면 글자가 서로 어긋난다. 둘을 묶은 줄은 행의
+                  가운데에 둔다.
+
                   순위 칸은 두 자리 숫자가 들어갈 폭으로 고정해 검색어가 시작하는 자리를 맞춘다.
                   폭을 px 로 두면 기기의 글꼴이나 글자 크기 설정에 따라 `10` 이 넘쳐 두 줄로
                   갈라진다. 숫자 너비(`ch`)로 재고 고정폭 숫자를 쓰면 글꼴이 바뀌어도 꼭 맞는다.
                   한 자리와 두 자리 순위가 섞이므로 칸 안에서는 가운데에 둔다.
                 */}
-                <span className="w-[2ch] shrink-0 whitespace-nowrap text-center text-[14px] font-bold tabular-nums text-brand">
-                  {item.rank}
+                <span className="flex min-w-0 flex-1 items-baseline gap-2.5">
+                  <span className="w-[2ch] shrink-0 whitespace-nowrap text-center text-[14px] font-bold tabular-nums text-brand">
+                    {item.rank}
+                  </span>
+                  <span className="flex-1 truncate text-[14px] font-medium text-text-primary">{item.keyword}</span>
                 </span>
-                <span className="flex-1 truncate text-[14px] font-medium text-text-primary">{item.keyword}</span>
                 <RankChange change={item.change} />
                 <span className="sr-only">{changeLabel(item.change)}</span>
               </Link>
