@@ -2,7 +2,7 @@ import type { BrandResponse, CategoryResponse, SkinTypeResponse } from "@poudy/a
 
 import type { SheetKind } from "./FilterSheets";
 
-import type { Filter, SkinType } from "@/lib/domain/filter";
+import { type Filter, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
 
 type Props = {
   readonly kind: SheetKind;
@@ -11,13 +11,6 @@ type Props = {
   readonly categories: readonly CategoryResponse[];
   readonly skinTypes: readonly SkinTypeResponse[];
   readonly onChange: (filter: Filter) => void;
-};
-
-const SKIN_TYPE_NAMES: Record<SkinType, string> = {
-  DRY: "건성",
-  OILY: "지성",
-  SENSITIVE: "민감성",
-  COMBINATION: "복합성",
 };
 
 const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChange }: Props) => {

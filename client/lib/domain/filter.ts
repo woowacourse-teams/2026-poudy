@@ -30,6 +30,14 @@ export const isExcludeCode = (value: string): value is ExcludeCode => EXCLUDE_CO
 export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
+/** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
+export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
+  DRY: "건성",
+  OILY: "지성",
+  SENSITIVE: "민감성",
+  COMBINATION: "복합성",
+};
+
 export const DEFAULT_SORT: Sort = "DEFAULT";
 export const DEFAULT_SIZE = 20;
 /** API 와 URL 모두 페이지를 1 부터 센다. */
