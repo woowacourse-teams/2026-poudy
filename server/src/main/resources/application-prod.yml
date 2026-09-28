@@ -23,6 +23,14 @@ server:
 
 # 모니터링 에이전트가 로컬에서만 접근하도록 Actuator 전용 포트를 분리한다.
 management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      minimum-expected-value:
+        http.server.requests: 10ms
+      maximum-expected-value:
+        http.server.requests: 5s
   server:
     port: 8081
     address: 127.0.0.1
