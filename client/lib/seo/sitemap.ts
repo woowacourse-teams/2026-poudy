@@ -26,7 +26,7 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
  * 목록이 API 에서 오는 화면은 언제 바뀌었는지 여기서 알 수 없어 담지 않는다.
  */
 const CONTENT_UPDATED_AT: Readonly<Record<string, string>> = {
-  "/": "2026-09-05",
+  "/": "2026-09-26",
   "/search/products": "2026-08-30",
   "/search/ingredients": "2026-08-30",
 };

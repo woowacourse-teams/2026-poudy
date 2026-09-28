@@ -1,6 +1,30 @@
-import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import type { CurationDetailResponse, IngredientDetailResponse, ProductDetailResponse } from "@poudy/api/api.zod";
 
 import { absoluteUrl } from "./site";
+
+import { curationOneLine } from "@/lib/domain/curation-text";
+import { productIngredientDescription } from "@/lib/domain/product-display";
+
+/** 성분 화면에 표시하는 설명·출처·갱신일을 그대로 전달한다. */
+export const ingredientStructuredData = (ingredient: IngredientDetailResponse) => ({
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": absoluteUrl(`/ingredients/${ingredient.id}#webpage`),
+  url: absoluteUrl(`/ingredients/${ingredient.id}`),
+  name: `${ingredient.koreanName} 성분 정보`,
+  description: ingredient.description,
+  inLanguage: "ko-KR",
+  dateModified: ingredient.updatedAt,
+  isPartOf: { "@id": absoluteUrl("/#website") },
+  mainEntity: {
+    "@type": "DefinedTerm",
+    "@id": absoluteUrl(`/ingredients/${ingredient.id}#ingredient`),
+    name: ingredient.koreanName,
+    alternateName: ingredient.englishName,
+    description: ingredient.description,
+  },
+  citation: [...new Set([...ingredient.infoSources, ...ingredient.effectSources])],
+});
 
 /** 이동 경로의 한 칸. 주소는 사이트 안의 경로로 받고 절대 주소로 바꿔 싣는다. */
 export type Crumb = {
@@ -40,6 +64,51 @@ export const itemList = (
   })),
 });
 
+export const curationStructuredData = (curation: CurationDetailResponse) => {
+  const products = curation.blocks.flatMap((block) => {
+    if (block.type === "IMAGE") return [];
+    if (block.type === "PRODUCTS_BY_FILTER") return block.products.map(({ product }) => product);
+    return block.products;
+  });
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": absoluteUrl(`/curations/${curation.id}#webpage`),
+    url: absoluteUrl(`/curations/${curation.id}`),
+    name: curationOneLine(curation.title),
+    description: curation.description,
+    inLanguage: "ko-KR",
+    isPartOf: { "@id": absoluteUrl("/#website") },
+    publisher: { "@id": absoluteUrl("/#organization") },
+    mainEntity: itemList(products, 1),
+  };
+};
+
+export const collectionPageStructuredData = ({
+  path,
+  title,
+  description,
+  products,
+  firstPosition,
+}: {
+  readonly path: string;
+  readonly title: string;
+  readonly description: string;
+  readonly products: readonly { readonly id: number; readonly name: string }[];
+  readonly firstPosition: number;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${absoluteUrl(path)}#webpage`,
+  url: absoluteUrl(path),
+  name: title,
+  description,
+  inLanguage: "ko-KR",
+  isPartOf: { "@id": absoluteUrl("/#website") },
+  publisher: { "@id": absoluteUrl("/#organization") },
+  mainEntity: itemList(products, firstPosition),
+});
+
 const DISCONTINUED = "discontinued";
 
 /**
@@ -61,7 +130,14 @@ export const productStructuredData = (product: ProductDetailResponse) => {
   return {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": absoluteUrl(`/products/${product.id}#product`),
     name: product.name,
+    description: productIngredientDescription({
+      brandName: product.brand.name,
+      productName: product.name,
+      ingredientCount: product.ingredients.length,
+      effectNames: product.skinEffectGroups.map((group) => group.name),
+    }),
     brand: { "@type": "Brand", name: product.brand.name },
     url: absoluteUrl(`/products/${product.id}`),
     ...(product.imageUrl ? { image: product.imageUrl } : {}),

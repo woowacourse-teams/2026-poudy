@@ -10,12 +10,11 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { fetchCategories, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
-import type { InitialPage } from "@/lib/hooks/useProductPages";
+import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
-import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
-import { breadcrumbList, itemList, type Crumb } from "@/lib/seo/structured-data";
+import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { breadcrumbList, collectionPageStructuredData, type Crumb } from "@/lib/seo/structured-data";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 /*
@@ -23,12 +22,6 @@ import { productPagesKey } from "@/lib/storage/product-pages-cache";
  * 카탈로그 조회의 fetch 캐시는 이 설정과 무관하게 그대로 동작한다.
  */
 export const dynamic = "force-dynamic";
-
-/** 이 장에 담긴 제품을 구조화 데이터로 싣는다. 번호는 목록 전체에서의 자리로 센다. */
-const pageItemList = (filter: Filter, initialPage: InitialPage | undefined) => {
-  if (!initialPage) return undefined;
-  return itemList(initialPage.response.items, (filter.page - 1) * filter.size + 1);
-};
 
 /** 두 조각이 같은 목록을 본다. 한 요청 안에서는 한 번만 받는다. */
 const categoriesOnce = cache(fetchCategories);
@@ -61,7 +54,8 @@ const resolveCategory = async (id: number) => {
 
 export async function generateMetadata(props: PageProps<"/categories/[categoryId]">): Promise<Metadata> {
   const { categoryId } = await props.params;
-  const { page } = parseFilter(toSearchParams(await props.searchParams));
+  const urlFilter = parseFilter(toSearchParams(await props.searchParams));
+  const { page } = urlFilter;
   const canonical = pagedCanonical(`/categories/${categoryId}`, page);
   const id = Number(categoryId);
 
@@ -75,13 +69,15 @@ export async function generateMetadata(props: PageProps<"/categories/[categoryId
 
     if (!name) return { alternates: { canonical } };
 
-    const title = `${name} 화장품`;
-    const description = `${name} 카테고리의 화장품과 전성분 정보를 확인해 보세요.`;
+    const categoryIds = child ? [child.id] : (parent?.children ?? []).map((category) => category.id);
+    const products = await fetchProducts({ ...urlFilter, categoryIds }).catch(() => undefined);
+    const { title, description } = directoryPageContent("category", name, products?.items);
     return {
       title,
       description,
       alternates: { canonical },
       openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: ["/opengraph-image"] },
+      twitter: { card: "summary_large_image", title, description, images: ["/opengraph-image"] },
     };
   } catch {
     return { alternates: { canonical } };
@@ -119,7 +115,7 @@ async function CategoryProducts({
   const id = Number(categoryId);
   if (!Number.isInteger(id)) notFound();
 
-  const { categoryIds } = await resolveCategory(id);
+  const { categoryIds, name } = await resolveCategory(id);
   const urlFilter = parseFilter(toSearchParams(await searchParams));
   const filter = { ...urlFilter, categoryIds };
   const key = productPagesKey(filter);
@@ -136,7 +132,18 @@ async function CategoryProducts({
 
   return (
     <>
-      <JsonLd data={pageItemList(filter, initialPage)} />
+      <JsonLd
+        data={
+          initialPage
+            ? collectionPageStructuredData({
+                path: pagedCanonical(`/categories/${id}`, filter.page),
+                ...directoryPageContent("category", name, initialPage.response.items),
+                products: initialPage.response.items,
+                firstPosition: (filter.page - 1) * filter.size + 1,
+              })
+            : undefined
+        }
+      />
       <ProductList
         basePath={`/categories/${id}`}
         surface="category"
