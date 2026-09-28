@@ -161,7 +161,7 @@ describe("sitemap", () => {
     const lastModifiedOf = (path: string) =>
       entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
 
-    expect(lastModifiedOf("/")).toBe("2026-09-05");
+    expect(lastModifiedOf("/")).toBe("2026-09-26");
     expect(lastModifiedOf("/search/products")).toBe("2026-08-30");
     expect(lastModifiedOf("/search/ingredients")).toBe("2026-08-30");
     expect(lastModifiedOf("/categories")).toBeUndefined();
@@ -179,7 +179,7 @@ describe("sitemap", () => {
     const xml = await (await pagesSitemap()).text();
 
     expect(xml).toContain(
-      "<url><loc>https://poudy.site/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>",
+      "<url><loc>https://poudy.site/</loc><lastmod>2026-09-26</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>",
     );
     expect(xml).toContain("<url><loc>https://poudy.site/brands/20</loc><changefreq>weekly</changefreq>");
   });

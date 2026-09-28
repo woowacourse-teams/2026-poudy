@@ -13,7 +13,7 @@ import { fetchCuration, fetchCurations } from "@/lib/api/products";
 import { curationOneLine } from "@/lib/domain/curation-text";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_DESCRIPTION } from "@/lib/seo/site";
-import { breadcrumbList } from "@/lib/seo/structured-data";
+import { breadcrumbList, curationStructuredData } from "@/lib/seo/structured-data";
 
 const load = async (raw: string) => {
   const curationId = Number(raw);
@@ -50,7 +50,7 @@ export async function generateMetadata(props: PageProps<"/curations/[curationId]
     const image = { url: "/opengraph-image", alt: SITE_DESCRIPTION };
     /*
      * 공유 카드의 제목에는 어떤 화면인지를 덧붙인다. 기획전 제목만 두면 링크를 받은 사람이
-     * 무슨 페이지인지 알기 어렵다. 문서 제목은 템플릿이 사이트 이름을 이미 붙이므로 그대로 둔다.
+     * 무슨 페이지인지 알기 어렵다. 문서 제목은 기획전 제목을 그대로 쓴다.
      */
     const shareTitle = `${title} | 파우디 큐레이션`;
     return {
@@ -87,6 +87,7 @@ export default async function CurationDetailPage(props: PageProps<"/curations/[c
 
       <main className="flex-1 pb-10">
         <JsonLd data={breadcrumbList([{ name: curationOneLine(curation.title), path: `/curations/${curation.id}` }])} />
+        <JsonLd data={curationStructuredData(curation)} />
 
         {/* 좌우 여백은 블록이 스스로 정한다. 기획전 이미지는 화면 폭을 채우고 제품 블록만 안쪽으로 들인다. */}
         {/*

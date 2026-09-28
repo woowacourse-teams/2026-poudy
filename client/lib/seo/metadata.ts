@@ -62,12 +62,11 @@ const icons: Metadata["icons"] = {
 /**
  * 모든 화면이 물려받는 기본값. 화면은 필요한 것만 덮어쓴다.
  *
- * title 의 template 이 화면 제목 뒤에 서비스 이름을 붙인다. 제목을 적지 않은
- * 화면은 default 를 그대로 쓴다.
+ * 제목을 적지 않은 화면은 default 를 그대로 쓴다.
  */
 export const rootMetadata = (): Metadata => ({
   metadataBase: siteUrl(),
-  title: { default: SITE_TITLE, template: `%s | ${SITE_NAME}` },
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   verification: { other: { "naver-site-verification": NAVER_SITE_VERIFICATION } },
   openGraph,
@@ -75,3 +74,25 @@ export const rootMetadata = (): Metadata => ({
   robots: defaultRobots(),
   icons,
 });
+
+export const directoryPageContent = (
+  kind: "brand" | "category",
+  name: string,
+  products: readonly { readonly name: string }[] = [],
+) => {
+  const names = products.slice(0, 2).map((product) => product.name);
+  const examples = `${names.join(", ")}${products.length > names.length ? " 등" : ""}`;
+  if (kind === "brand")
+    return {
+      title: `${name} 화장품의 전성분과 제품 정보를 확인해 보세요`,
+      description: names.length
+        ? `${name}의 ${examples} 화장품을 살펴보세요. 제품별 전성분을 확인하고 원하는 성분으로 찾아보세요.`
+        : `${name}의 제품을 성분으로 살펴봅니다.`,
+    };
+  return {
+    title: `${name} 전성분을 확인하고 원하는 화장품을 찾아보세요`,
+    description: names.length
+      ? `${examples} ${name} 제품을 살펴보세요. 원하는 성분은 포함하고 피하고 싶은 성분은 제외해 찾아보세요.`
+      : `${name} 카테고리의 화장품과 전성분 정보를 확인해 보세요.`,
+  };
+};

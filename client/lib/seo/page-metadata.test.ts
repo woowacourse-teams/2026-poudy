@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
   fetchBrand: vi.fn(),
+  fetchProducts: vi.fn().mockResolvedValue({ items: [] }),
   fetchCategories: vi.fn(),
   fetchCuration: vi.fn(),
   fetchProductDetail: vi.fn(),
@@ -58,7 +59,7 @@ import { metadata as savedMetadata } from "@/app/saved/page";
 import { metadata as ingredientSearchMetadata } from "@/app/search/ingredients/page";
 import { metadata as productSearchMetadata } from "@/app/search/products/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from "@/lib/seo/site";
+import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo/site";
 import { SOCIAL_IMAGE_CACHE_CONTROL } from "@/lib/seo/social-image";
 
 afterEach(() => {
@@ -137,12 +138,12 @@ describe("색인 메타데이터", () => {
     });
 
     expect(metadata).toMatchObject({
-      title: "립 메이크업 화장품",
+      title: "립 메이크업 전성분을 확인하고 원하는 화장품을 찾아보세요",
       description: "립 메이크업 카테고리의 화장품과 전성분 정보를 확인해 보세요.",
       alternates: { canonical: "/categories/42" },
     });
     expect(metadata.openGraph).toMatchObject({
-      title: "립 메이크업 화장품",
+      title: "립 메이크업 전성분을 확인하고 원하는 화장품을 찾아보세요",
       url: "/categories/42",
       siteName: "Poudy",
       locale: "ko_KR",
@@ -153,7 +154,7 @@ describe("색인 메타데이터", () => {
 describe("공유 메타데이터", () => {
   it("루트가 절대 주소 기준과 기본 Open Graph·Twitter 값을 가진다", () => {
     expect(rootMetadata.metadataBase?.toString()).toBe("http://localhost:3000/");
-    expect(rootMetadata.title).toEqual({ default: SITE_TITLE, template: `%s | ${SITE_NAME}` });
+    expect(rootMetadata.title).toBe(SITE_TITLE);
     expect(rootMetadata.description).toBe(SITE_DESCRIPTION);
     expect(rootMetadata.verification).toEqual({
       other: { "naver-site-verification": "f61dfe971733b0d1d2e8b1a8e3cda559b5b62264" },
@@ -178,14 +179,17 @@ describe("공유 메타데이터", () => {
     expect(markup).toContain('type="application/ld+json"');
     expect(markup).toContain('"@type":"WebSite"');
     expect(markup).toContain('"@id":"http://localhost:3000/#website"');
-    expect(markup).toContain('"name":"Poudy"');
-    expect(markup).toContain('"alternateName":["파우디"]');
+    expect(markup).toContain('"name":"파우디"');
+    expect(markup).toContain('"alternateName":["Poudy"]');
     expect(markup).toContain('"inLanguage":"ko-KR"');
     expect(markup).toContain('"@type":"Organization"');
     expect(markup).toContain('"@id":"http://localhost:3000/#organization"');
-    expect(markup).toContain('"alternateName":"파우디"');
-    expect(markup).toContain('"logo":"http://localhost:3000/favicon.png"');
-    expect(markup).toContain('"sameAs":["https://www.instagram.com/poudy.official"]');
+    expect(markup).toContain('"alternateName":"Poudy"');
+    expect(markup).toContain('"logo":"http://localhost:3000/favicon.ico"');
+    expect(markup).toContain(
+      '"sameAs":["https://www.instagram.com/poudy.official","https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share"]',
+    );
+    expect(markup).toContain('"email":"poudy.official@gmail.com"');
     expect(markup).toContain(`"description":"${SITE_DESCRIPTION}"`);
     expect(markup).toContain('"url":"http://localhost:3000/"');
     expect(markup).toContain(SITE_DESCRIPTION);
@@ -376,7 +380,7 @@ describe("공유 메타데이터", () => {
       searchParams: Promise.resolve({}),
     });
 
-    const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인하세요.";
+    const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요.";
     expect(metadata.description).toBe(description);
     expect(metadata.openGraph).toMatchObject({ description, url: "/products/104", siteName: "Poudy", locale: "ko_KR" });
     expect(metadata.alternates?.canonical).toBe("/products/104");
@@ -442,5 +446,37 @@ describe("공유 메타데이터", () => {
 
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).not.toContain('"@type":"Product"');
+  });
+});
+
+describe("directory descriptions", () => {
+  it("uses the requested brand page and at most two displayed products", async () => {
+    api.fetchBrand.mockResolvedValueOnce({ id: 23, name: "라운드랩" });
+    api.fetchProducts.mockResolvedValueOnce({
+      items: [{ name: "독도 로션" }, { name: "독도 토너" }, { name: "세럼" }],
+    });
+    const metadata = await brandMetadata({
+      params: Promise.resolve({ brandId: "23" }),
+      searchParams: Promise.resolve({ page: "2" }),
+    });
+    expect(api.fetchProducts).toHaveBeenCalledWith(expect.objectContaining({ brandIds: [23], page: 2 }));
+    expect(metadata.description).toBe(
+      "라운드랩의 독도 로션, 독도 토너 등 화장품을 살펴보세요. 제품별 전성분을 확인하고 원하는 성분으로 찾아보세요.",
+    );
+    expect(metadata.twitter).toMatchObject({ description: metadata.description });
+  });
+
+  it("uses child categories for a parent category and keeps metadata when products fail", async () => {
+    api.fetchCategories.mockResolvedValueOnce({
+      items: [{ id: 1, name: "스킨케어", children: [{ id: 2, name: "토너" }] }],
+    });
+    api.fetchProducts.mockRejectedValueOnce(new Error("unavailable"));
+    const metadata = await categoryMetadata({
+      params: Promise.resolve({ categoryId: "1" }),
+      searchParams: Promise.resolve({ page: "2" }),
+    });
+    expect(api.fetchProducts).toHaveBeenCalledWith(expect.objectContaining({ categoryIds: [2], page: 2 }));
+    expect(metadata.description).toBe("스킨케어 카테고리의 화장품과 전성분 정보를 확인해 보세요.");
+    expect(metadata.alternates).toMatchObject({ canonical: "/categories/1?page=2" });
   });
 });

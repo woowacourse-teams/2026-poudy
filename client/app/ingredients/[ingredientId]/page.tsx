@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
@@ -13,7 +14,9 @@ import { fetchIngredientDetail } from "@/lib/api/products";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { isExcludeCode } from "@/lib/domain/filter";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
+import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
+import { ingredientStructuredData } from "@/lib/seo/structured-data";
 
 // 성분 설명은 거의 바뀌지 않고 검색 노출 대상이다.
 export const revalidate = 86400;
@@ -45,7 +48,7 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
     return {
       title,
       description,
-      alternates: { canonical },
+      alternates: markdownAlternates(canonical),
       openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [image] },
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
@@ -67,6 +70,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
   return (
     <>
+      <JsonLd data={ingredientStructuredData(ingredient)} />
       {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
       <TopBar title={ingredient.koreanName} variant="sub" right={<ShareButton />} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}

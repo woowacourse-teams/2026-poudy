@@ -57,6 +57,6 @@ export const productIngredientDescription = ({
 }): string => {
   const effects = [...new Set(effectNames)].slice(0, 2);
 
-  if (effects.length === 0) return `${brandName} ${productName}의 전성분 ${ingredientCount}개를 확인하세요.`;
-  return `${brandName} ${productName}의 전성분 ${ingredientCount}개와 ${effects.join("·")} 관련 성분을 확인하세요.`;
+  if (effects.length === 0) return `${brandName} ${productName}의 전성분 ${ingredientCount}개를 확인해 보세요.`;
+  return `${brandName} ${productName}의 전성분 ${ingredientCount}개와 ${effects.join("·")} 관련 성분을 확인해 보세요.`;
 };

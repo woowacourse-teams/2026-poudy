@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
 import { HomeSearchLink } from "@/components/home/HomeSearchLink";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
+import { OPERATOR } from "@/components/legal/operator";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
 import {
@@ -36,8 +38,8 @@ const websiteStructuredData = {
     {
       "@type": "WebSite",
       "@id": absoluteUrl("/#website"),
-      name: SITE_NAME,
-      alternateName: [SITE_ALTERNATE_NAME],
+      name: SITE_ALTERNATE_NAME,
+      alternateName: [SITE_NAME],
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
       inLanguage: "ko-KR",
@@ -46,12 +48,18 @@ const websiteStructuredData = {
     {
       "@type": "Organization",
       "@id": organizationId,
-      name: SITE_NAME,
-      alternateName: SITE_ALTERNATE_NAME,
+      name: SITE_ALTERNATE_NAME,
+      alternateName: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
-      logo: absoluteUrl("/favicon.png"),
-      sameAs: [INSTAGRAM_URL],
+      logo: absoluteUrl("/favicon.ico"),
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: OPERATOR.officer.email,
+        availableLanguage: ["ko"],
+      },
+      sameAs: [INSTAGRAM_URL, "https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share"],
     },
   ],
 };
@@ -89,6 +97,20 @@ export default async function Home() {
         <PopularKeywords items={keywords} />
         <SkinTypeMenu items={skinTypes} />
         <PopularProducts initialItems={rankings} categories={categories} />
+        <section aria-labelledby="service-description" className="flex flex-col gap-3">
+          <h2 id="service-description" className="text-[18px] font-bold text-text-primary">
+            화장품 전성분을 검색해 보세요
+          </h2>
+          <p className="text-[13px] leading-relaxed text-text-secondary">{SITE_DESCRIPTION}</p>
+          <nav aria-label="화장품과 성분 검색" className="flex gap-4 text-[13px] font-semibold">
+            <Link href="/search/products" className="underline underline-offset-4">
+              화장품 검색
+            </Link>
+            <Link href="/search/ingredients" className="underline underline-offset-4">
+              성분 검색
+            </Link>
+          </nav>
+        </section>
       </main>
 
       <SiteFooter />
