@@ -96,7 +96,20 @@ export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientD
 export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> =>
   apiGet("/api/exclude-codes", undefined, CATALOG_TTL);
 
-export const fetchCategories = (): Promise<CategoryListResponse> => apiGet("/api/categories", undefined, CATALOG_TTL);
+/**
+ * 제품이 없는 카테고리는 눌러도 빈 목록만 나오므로 받은 자리에서 뺀다. 디렉터리, 홈 칩,
+ * 상세의 형제 줄, 사이트맵이 모두 이 목록을 보므로 한 곳에서 거른다.
+ */
+export const fetchCategories = async (): Promise<CategoryListResponse> => {
+  const response = await apiGet<CategoryListResponse>("/api/categories", undefined, CATALOG_TTL);
+
+  return {
+    items: response.items.flatMap((category) => {
+      const children = category.children.filter((child) => child.productCount > 0);
+      return category.productCount > 0 && children.length > 0 ? [{ ...category, children }] : [];
+    }),
+  };
+};
 
 export const fetchBrands = (): Promise<BrandOverviewResponse> => apiGet("/api/brands", undefined, CATALOG_TTL);
 

@@ -76,6 +76,7 @@ describe("fetchIngredientsByIds", () => {
 
 describe("목록 화면 fetch cache", () => {
   it("제품과 필터 재료를 12시간마다 재검증한다", () => {
+    client.apiGet.mockResolvedValue({ items: [] });
     void fetchProducts(EMPTY_FILTER);
     void fetchExcludeCodes();
     void fetchCategories();
@@ -89,5 +90,29 @@ describe("목록 화면 fetch cache", () => {
       12 * 60 * 60,
       12 * 60 * 60,
     ]);
+  });
+});
+
+describe("fetchCategories", () => {
+  it("제품이 없는 소분류와 대분류를 뺀다", async () => {
+    client.apiGet.mockResolvedValue({
+      items: [
+        {
+          id: 1,
+          name: "스킨케어",
+          productCount: 3,
+          children: [
+            { id: 2, name: "토너", productCount: 3 },
+            { id: 3, name: "미스트", productCount: 0 },
+          ],
+        },
+        { id: 4, name: "선케어", productCount: 0, children: [{ id: 5, name: "선크림", productCount: 0 }] },
+        { id: 6, name: "바디", productCount: 0, children: [] },
+      ],
+    });
+
+    await expect(fetchCategories()).resolves.toEqual({
+      items: [{ id: 1, name: "스킨케어", productCount: 3, children: [{ id: 2, name: "토너", productCount: 3 }] }],
+    });
   });
 });
