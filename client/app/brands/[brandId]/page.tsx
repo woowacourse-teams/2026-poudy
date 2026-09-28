@@ -11,12 +11,11 @@ import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
-import { FIRST_PAGE, type Filter, parseFilter } from "@/lib/domain/filter";
-import type { InitialPage } from "@/lib/hooks/useProductPages";
+import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
-import { OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
-import { breadcrumbList, itemList } from "@/lib/seo/structured-data";
+import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
+import { breadcrumbList, collectionPageStructuredData } from "@/lib/seo/structured-data";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
 
 const load = cache(async (raw: string) => {
@@ -37,22 +36,17 @@ const load = cache(async (raw: string) => {
  */
 export const dynamic = "force-dynamic";
 
-/** 이 장에 담긴 제품을 구조화 데이터로 싣는다. 번호는 목록 전체에서의 자리로 센다. */
-const pageItemList = (filter: Filter, initialPage: InitialPage | undefined) => {
-  if (!initialPage) return undefined;
-  return itemList(initialPage.response.items, (filter.page - 1) * filter.size + 1);
-};
-
 export async function generateMetadata(props: PageProps<"/brands/[brandId]">): Promise<Metadata> {
   const { brandId } = await props.params;
-  const { page } = parseFilter(toSearchParams(await props.searchParams));
+  const urlFilter = parseFilter(toSearchParams(await props.searchParams));
+  const { page } = urlFilter;
   // 조회에 실패해도 canonical 은 남긴다. 비워 두면 필터가 붙은 주소가 저마다 원본 행세를 한다.
   const canonical = pagedCanonical(`/brands/${brandId}`, page);
 
   try {
     const brand = await fetchBrand(Number(brandId));
-    const title = `${brand.name} 제품`;
-    const description = `${brand.name}의 제품을 성분으로 살펴봅니다.`;
+    const products = await fetchProducts({ ...urlFilter, brandIds: [brand.id] }).catch(() => undefined);
+    const { title, description } = directoryPageContent("brand", brand.name, products?.items);
     const image = `/brands/${brandId}/opengraph-image`;
     return {
       title,
@@ -147,7 +141,18 @@ async function BrandProducts({
 
   return (
     <>
-      <JsonLd data={pageItemList(filter, initialPage)} />
+      <JsonLd
+        data={
+          initialPage
+            ? collectionPageStructuredData({
+                path: pagedCanonical(`/brands/${brand.id}`, filter.page),
+                ...directoryPageContent("brand", brand.name, initialPage.response.items),
+                products: initialPage.response.items,
+                firstPosition: (filter.page - 1) * filter.size + 1,
+              })
+            : undefined
+        }
+      />
       <ProductList
         basePath={`/brands/${brand.id}`}
         surface="brand"

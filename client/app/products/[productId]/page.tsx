@@ -7,6 +7,7 @@ import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
 import { productIngredientDescription } from "@/lib/domain/product-display";
+import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_DESCRIPTION } from "@/lib/seo/site";
 import { breadcrumbList, productCrumbs, productStructuredData } from "@/lib/seo/structured-data";
@@ -44,7 +45,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 
   try {
     const product = await fetchProductDetail(Number(productId));
-    const title = `${product.brand.name} ${product.name} 전성분`;
+    const title = `${product.brand.name} ${product.name} 전성분과 제품 정보를 확인해 보세요`;
     // 제품마다 성분 수와 대표 작용이 달라 설명문이 겹치지 않는다.
     const description = productIngredientDescription({
       brandName: product.brand.name,
@@ -57,7 +58,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
     return {
       title,
       description,
-      alternates: { canonical },
+      alternates: markdownAlternates(canonical),
       openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [{ url: image, alt: imageAlt }] },
       twitter: { card: "summary_large_image", title, description, images: [{ url: image, alt: imageAlt }] },
     };

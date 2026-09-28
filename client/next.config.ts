@@ -43,6 +43,24 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async headers() {
+    if (process.env.NEXT_PUBLIC_ENVIRONMENT !== "production") return [];
+
+    return [
+      "/",
+      "/brands",
+      "/brands/:brandId",
+      "/categories",
+      "/categories/:categoryId",
+      "/products/:productId",
+      "/ingredients/:ingredientId",
+      "/curations/:curationId",
+    ].map((source) => ({
+      source,
+      headers: [{ key: "Link", value: '</llms.txt>; rel="describedby"' }],
+    }));
+  },
+
   // 이벤트 수집 주소가 /i/v0/e/ 처럼 슬래시로 끝난다.
   // 기본 동작대로 슬래시를 떼면 요청이 리다이렉트되어 실패한다.
   skipTrailingSlashRedirect: true,
