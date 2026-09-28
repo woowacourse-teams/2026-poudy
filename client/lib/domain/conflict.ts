@@ -1,10 +1,10 @@
-import type { ExcludeCode, Filter } from "./filter";
+import type { Filter } from "./filter";
 
-/** 성분군 코드에 속한 성분 ID 목록. /api/exclude-codes 응답에서 만든다. */
-export type ExcludeCodeIngredients = ReadonlyMap<ExcludeCode, readonly number[]>;
+/** 성분군 코드에 속한 성분 ID 목록. 빠른 필터와 검색으로 고른 성분군 응답에서 만든다. */
+export type ExcludeCodeIngredients = ReadonlyMap<string, readonly number[]>;
 
 export type Conflict = {
-  readonly code: ExcludeCode;
+  readonly code: string;
   readonly ingredientIds: readonly number[];
 };
 
@@ -13,7 +13,7 @@ export type Conflict = {
  * 서버도 CONFLICTING_INGREDIENT_FILTER 로 400 을 돌려주므로 화면에서 먼저 막는다.
  */
 export const findConflicts = (filter: Filter, codeIngredients: ExcludeCodeIngredients): readonly Conflict[] =>
-  filter.excludeCodes
+  [...filter.excludeCodes, ...filter.excludeGroupCodes]
     .map((code) => ({
       code,
       ingredientIds: (codeIngredients.get(code) ?? []).filter((id) => filter.includeIngredientIds.includes(id)),

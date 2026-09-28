@@ -2,6 +2,7 @@ import type { ProductDetailResponse, ProductPartResponse } from "@poudy/api/api.
 import Image from "next/image";
 import Link from "next/link";
 
+import { EffectIngredients } from "./EffectIngredients";
 import { IngredientList } from "./IngredientList";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
@@ -277,15 +278,6 @@ function SelectedPart({ part }: { readonly part: ProductPartResponse | undefined
 function SkinEffectGroups({ part }: { readonly part: ProductPartResponse }) {
   if (part.skinEffectGroups.length === 0) return null;
 
-  /*
-   * 이름을 찾지 못한 성분은 목록에서 뺀다. 이전에도 빈 이름은 보이지 않았고,
-   * 누를 수 있게 된 지금은 그 자리를 남겨 두면 빈 화면으로 데려간다.
-   */
-  const named = (ids: readonly number[]) =>
-    ids
-      .map((id) => ({ id, name: part.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
-      .filter((ingredient): ingredient is { id: number; name: string } => Boolean(ingredient.name));
-
   return (
     <section data-no-select className="flex flex-col gap-3 pt-5">
       <div className="flex flex-col gap-1">
@@ -300,7 +292,7 @@ function SkinEffectGroups({ part }: { readonly part: ProductPartResponse }) {
           return (
             <li
               key={group.id}
-              className="flex min-h-[52px] items-center gap-3 border-b border-border py-2.5 last:border-b-0"
+              className="flex min-h-[52px] items-start gap-3 border-b border-border py-2.5 last:border-b-0"
             >
               <span
                 className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
@@ -308,18 +300,7 @@ function SkinEffectGroups({ part }: { readonly part: ProductPartResponse }) {
                 {group.name}
               </span>
               {/* 이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다. 구분 기호 없이 간격으로만 나눈다. */}
-              <span className="flex flex-1 flex-wrap gap-x-2 gap-y-1 text-[13px] font-semibold text-[#202124]">
-                {named(group.ingredientIds).map((ingredient) => (
-                  <Link
-                    key={ingredient.id}
-                    href={`/ingredients/${ingredient.id}`}
-                    prefetch="auto"
-                    className="ingredient-chip-link"
-                  >
-                    {ingredient.name}
-                  </Link>
-                ))}
-              </span>
+              <EffectIngredients rowId={group.id} items={group.items} />
             </li>
           );
         })}

@@ -1,4 +1,5 @@
 import { type Filter, SKIN_TYPE_NAMES, SKIN_TYPES } from "./filter";
+import { groupLabel, type IngredientGroups } from "./ingredient-groups";
 import { firstOf, keepIf, pick } from "./optional";
 import { LEVEL_LABELS } from "./product-display";
 
@@ -6,6 +7,17 @@ import { LEVEL_LABELS } from "./product-display";
 export type IngredientNames = ReadonlyMap<number, string>;
 
 const nameOf = (names: IngredientNames, id: number): string => names.get(id) ?? `성분 ${id}`;
+
+const groupNameOf = (groups: IngredientGroups, code: string): string => {
+  const group = groups.get(code);
+  if (!group) return code;
+  return groupLabel(group);
+};
+
+const groupParts = (filter: Filter, groups: IngredientGroups): readonly string[] => [
+  ...filter.includeGroupCodes.map((code) => `${groupNameOf(groups, code)} 포함`),
+  ...filter.excludeGroupCodes.map((code) => `${groupNameOf(groups, code)} 제외`),
+];
 
 const ingredientParts = (filter: Filter, names: IngredientNames): readonly string[] => [
   ...filter.includeIngredientIds.map((id) => `${nameOf(names, id)} 포함`),
@@ -30,10 +42,15 @@ const countPart = (label: string, count: number): readonly string[] => keepIf(co
  * 디자인의 `판테놀 포함 · 리모넨 제외 · 빠른 필터 2개`.
  * 성분은 이름을 그대로 쓰고, 개수가 늘어나는 조건은 개수로 줄인다.
  */
-export const summarizeFilter = (filter: Filter, names: IngredientNames = new Map()): string =>
+export const summarizeFilter = (
+  filter: Filter,
+  names: IngredientNames = new Map(),
+  groups: IngredientGroups = new Map(),
+): string =>
   [
     ...keepIf(Boolean(filter.keyword), `'${filter.keyword}'`),
     ...skinTypePart(filter),
+    ...groupParts(filter, groups),
     ...ingredientParts(filter, names),
     ...levelPart("수분", filter.moistureLevel),
     ...levelPart("유분", filter.oilLevel),
@@ -54,5 +71,7 @@ export const countConditions = (filter: Filter): number =>
   filter.includeIngredientIds.length +
   filter.excludeIngredientIds.length +
   filter.excludeCodes.length +
+  filter.includeGroupCodes.length +
+  filter.excludeGroupCodes.length +
   countAsOne(filter.moistureLevel) +
   countAsOne(filter.oilLevel);

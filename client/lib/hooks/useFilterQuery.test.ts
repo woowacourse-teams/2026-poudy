@@ -103,6 +103,8 @@ describe("useFilterQuery", () => {
       includeIngredientIds: [6],
       excludeIngredientIds: [7],
       excludeCodes: ["SULFATES"],
+      includeGroupCodes: ["CERAMIDES"],
+      excludeGroupCodes: ["LIPIDS"],
       skinType: "DRY",
       sort: "PRICE_ASC",
       page: 2,

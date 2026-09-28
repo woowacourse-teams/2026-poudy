@@ -34,6 +34,8 @@ const FILTER_KEYS = new Set(
     includeIngredientIds: [1],
     excludeIngredientIds: [1],
     excludeCodes: [EXCLUDE_CODES[0]],
+    includeGroupCodes: ["x"],
+    excludeGroupCodes: ["x"],
     skinType: SKIN_TYPES[0],
     /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */
     sort: SORTS.find((sort) => sort !== DEFAULT_SORT) ?? DEFAULT_SORT,
