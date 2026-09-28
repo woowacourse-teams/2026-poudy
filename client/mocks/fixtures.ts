@@ -6,6 +6,7 @@ import type {
   ExcludeCodeResponse,
   IngredientDetailResponse,
   ProductDetailResponse,
+  ProductPartResponse,
   ProductResponse,
 } from "@poudy/api/api.zod";
 
@@ -265,7 +266,7 @@ const EXCLUDE_GROUP_NAMES = [
   ["SYNTHETIC_COLORANTS", "합성 색소"],
 ] as const;
 
-export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductDetailResponse["excludeGroups"] =>
+export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
   EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
 
 export const excludeCodes: ExcludeCodeResponse[] = [
@@ -331,21 +332,25 @@ export const untaggedProductDetail: ProductDetailResponse = {
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
   oilLevel: 2,
-  skinEffectGroups: [],
-  ingredients: Array.from({ length: 24 }, (_, index) => ({
-    id: 1001 + index,
-    koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
-    englishName: `Ingredient ${index + 1}`,
-    formulationRoles: [],
-    skinEffects: [],
-  })),
-  excludeGroups: excludeGroupsOf([
-    "DRYING_ALCOHOLS",
-    "HARSH_PRESERVATIVES",
-    "SULFATES",
-    "CYCLIC_SILICONES",
-    "SYNTHETIC_COLORANTS",
-  ]),
+  productParts: [{ id: 6, cautionCount: 1 }],
+  selectedPart: {
+    id: 6,
+    skinEffectGroups: [],
+    ingredients: Array.from({ length: 24 }, (_, index) => ({
+      id: 1001 + index,
+      koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
+      englishName: `Ingredient ${index + 1}`,
+      formulationRoles: [],
+      skinEffects: [],
+    })),
+    excludeGroups: excludeGroupsOf([
+      "DRYING_ALCOHOLS",
+      "HARSH_PRESERVATIVES",
+      "SULFATES",
+      "CYCLIC_SILICONES",
+      "SYNTHETIC_COLORANTS",
+    ]),
+  },
   updatedAt: "2026-08-20T00:00:00+09:00",
 };
 
@@ -362,89 +367,93 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     moistureLevel: 3,
     oilLevel: 1,
-    skinEffectGroups: [
-      { id: "1", code: "HYDRATION_RELATED", name: "보습", ingredientIds: [2, 6] },
-      { id: "2", code: "SOOTHING_RELATED", name: "진정", ingredientIds: [7, 6] },
-      { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어", ingredientIds: [8] },
-    ],
-    ingredients: [
-      {
-        id: 1,
-        koreanName: "정제수",
-        englishName: "Water",
-        formulationRoles: [
-          { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [],
-      },
-      {
-        id: 2,
-        koreanName: "부틸렌글라이콜",
-        englishName: "Butylene Glycol",
-        formulationRoles: [
-          { id: "3", code: "MOISTURISING", name: "보습제" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 3,
-        koreanName: "글리세린",
-        englishName: "Glycerin",
-        formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
-        skinEffects: [보습],
-      },
-      {
-        id: 4,
-        koreanName: "펜틸렌글라이콜",
-        englishName: "Pentylene Glycol",
-        formulationRoles: [
-          { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 5,
-        koreanName: "프로판다이올",
-        englishName: "Propanediol",
-        formulationRoles: [
-          { id: "2", code: "SOLVENT", name: "용제" },
-          { id: "4", code: "HUMECTANT", name: "보습 보조" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 6,
-        koreanName: "판테놀",
-        englishName: "Panthenol",
-        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
-        skinEffects: [보습, 진정],
-      },
-      {
-        id: 7,
-        koreanName: "아이리쉬모스추출물",
-        englishName: "Chondrus Crispus Extract",
-        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
-        skinEffects: [진정],
-      },
-      {
-        id: 8,
-        koreanName: "프로테아제",
-        englishName: "Protease",
-        formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
-        skinEffects: [각질케어],
-      },
-    ],
-    excludeGroups: excludeGroupsOf([
-      "FRAGRANCE_ALLERGENS",
-      "DRYING_ALCOHOLS",
-      "HARSH_PRESERVATIVES",
-      "SULFATES",
-      "CYCLIC_SILICONES",
-      "SYNTHETIC_COLORANTS",
-    ]),
+    productParts: [{ id: 1, cautionCount: 0 }],
+    selectedPart: {
+      id: 1,
+      skinEffectGroups: [
+        { id: "1", code: "HYDRATION_RELATED", name: "보습", ingredientIds: [2, 6] },
+        { id: "2", code: "SOOTHING_RELATED", name: "진정", ingredientIds: [7, 6] },
+        { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어", ingredientIds: [8] },
+      ],
+      ingredients: [
+        {
+          id: 1,
+          koreanName: "정제수",
+          englishName: "Water",
+          formulationRoles: [
+            { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [],
+        },
+        {
+          id: 2,
+          koreanName: "부틸렌글라이콜",
+          englishName: "Butylene Glycol",
+          formulationRoles: [
+            { id: "3", code: "MOISTURISING", name: "보습제" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 3,
+          koreanName: "글리세린",
+          englishName: "Glycerin",
+          formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
+          skinEffects: [보습],
+        },
+        {
+          id: 4,
+          koreanName: "펜틸렌글라이콜",
+          englishName: "Pentylene Glycol",
+          formulationRoles: [
+            { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 5,
+          koreanName: "프로판다이올",
+          englishName: "Propanediol",
+          formulationRoles: [
+            { id: "2", code: "SOLVENT", name: "용제" },
+            { id: "4", code: "HUMECTANT", name: "보습 보조" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 6,
+          koreanName: "판테놀",
+          englishName: "Panthenol",
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [보습, 진정],
+        },
+        {
+          id: 7,
+          koreanName: "아이리쉬모스추출물",
+          englishName: "Chondrus Crispus Extract",
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [진정],
+        },
+        {
+          id: 8,
+          koreanName: "프로테아제",
+          englishName: "Protease",
+          formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
+          skinEffects: [각질케어],
+        },
+      ],
+      excludeGroups: excludeGroupsOf([
+        "FRAGRANCE_ALLERGENS",
+        "DRYING_ALCOHOLS",
+        "HARSH_PRESERVATIVES",
+        "SULFATES",
+        "CYCLIC_SILICONES",
+        "SYNTHETIC_COLORANTS",
+      ]),
+    },
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
   untaggedProductDetail,

@@ -1,4 +1,4 @@
-import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import type { ProductDetailResponse, ProductPartResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -79,9 +79,8 @@ export function ProductDetail({
           아래를 비워 `정보 수정 제안` 이 눌리게 한다.
         */}
         <div className="flex flex-col gap-6 px-4 pb-(--inquiry-button-clearance)">
-          <SkinEffectGroups product={product} />
-          <IngredientSummary product={product} />
-          <Ingredients ingredients={product.ingredients} />
+          <PartTabs product={product} entryPoint={entryPoint} />
+          <SelectedPart part={product.selectedPart} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
@@ -209,8 +208,74 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
   );
 }
 
-function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse }) {
-  if (product.skinEffectGroups.length === 0) return null;
+/**
+ * 구성품이 둘 이상인 제품만 탭을 둔다. 탭은 `partId` 를 붙인 주소로 가는 링크라
+ * 서버가 고른 구성품을 그린 화면이 그대로 온다. 진입 경로는 그대로 넘겨 조회 이벤트가 다시 나가지 않게 한다.
+ */
+function PartTabs({
+  product,
+  entryPoint,
+}: {
+  readonly product: ProductDetailResponse;
+  readonly entryPoint: ProductEntryPoint;
+}) {
+  if (product.productParts.length < 2) return null;
+
+  return (
+    <nav aria-label="구성품" className="pt-5">
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
+        {product.productParts.map((part, index) => {
+          const selected = part.id === product.selectedPart?.id;
+
+          return (
+            <li key={part.id} className="shrink-0">
+              <Link
+                href={partHref(product.id, part.id, entryPoint)}
+                scroll={false}
+                aria-current={selected && "page"}
+                className={partTabClass(selected)}
+              >
+                {part.name ?? `구성품 ${index + 1}`} <CautionBadge count={part.cautionCount} />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+const partHref = (productId: number, partId: number, entryPoint: ProductEntryPoint) => {
+  const query = new URLSearchParams({ partId: String(partId) });
+  if (entryPoint !== "direct") query.set("from", entryPoint);
+  return `/products/${productId}?${query}`;
+};
+
+const partTabClass = (selected: boolean) => {
+  const base = "flex h-9 items-center gap-1.5 rounded-[18px] px-3.5 text-[13px] font-semibold";
+  if (selected) return `${base} bg-[#202124] text-white`;
+  return `${base} border border-border text-text-primary`;
+};
+
+function CautionBadge({ count }: { readonly count: number }) {
+  if (count === 0) return null;
+  return <span className="text-[12px] font-bold text-[#E8590C]">주의 {count}</span>;
+}
+
+function SelectedPart({ part }: { readonly part: ProductPartResponse | undefined }) {
+  if (!part) return null;
+
+  return (
+    <>
+      <SkinEffectGroups part={part} />
+      <IngredientSummary part={part} />
+      <Ingredients ingredients={part.ingredients} />
+    </>
+  );
+}
+
+function SkinEffectGroups({ part }: { readonly part: ProductPartResponse }) {
+  if (part.skinEffectGroups.length === 0) return null;
 
   /*
    * 이름을 찾지 못한 성분은 목록에서 뺀다. 이전에도 빈 이름은 보이지 않았고,
@@ -218,7 +283,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
    */
   const named = (ids: readonly number[]) =>
     ids
-      .map((id) => ({ id, name: product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
+      .map((id) => ({ id, name: part.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
       .filter((ingredient): ingredient is { id: number; name: string } => Boolean(ingredient.name));
 
   return (
@@ -229,7 +294,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
       </div>
 
       <ul>
-        {product.skinEffectGroups.map((group) => {
+        {part.skinEffectGroups.map((group) => {
           const color = effectColor(group.code);
 
           return (
@@ -264,7 +329,7 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 }
 
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
-function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
+function IngredientSummary({ part }: { readonly part: ProductPartResponse }) {
   return (
     <section
       data-no-select
@@ -274,13 +339,13 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-pretty text-[12px] text-[#72747A]">
           {ingredientSummary(
-            product.ingredients.length,
-            product.skinEffectGroups.map((group) => group.name),
+            part.ingredients.length,
+            part.skinEffectGroups.map((group) => group.name),
           )}
         </p>
       </div>
 
-      {product.excludeGroups.length > 0 ? (
+      {part.excludeGroups.length > 0 ? (
         /*
           이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
           세 칸은 모바일 폭에서 거의 모든 이름이 두 줄로 꺾여 두 칸으로 둔다.
@@ -290,7 +355,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
             제외한 성분군을 강조한다. 들어 있는 성분군은 비활성 버튼처럼 흐리게 둔다.
             서버는 성분군 이름만 주므로 "제외" 는 화면에서 붙인다.
           */}
-          {product.excludeGroups.map((group) =>
+          {part.excludeGroups.map((group) =>
             group.contains ? (
               <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#F2F3F5] px-2.5 py-1">
                 {/* 체크가 없어도 이웃 칸과 글자 시작점이 맞도록 체크 자리를 비워 둔다. */}
@@ -320,7 +385,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
   );
 }
 
-function Ingredients({ ingredients }: { readonly ingredients: ProductDetailResponse["ingredients"] }) {
+function Ingredients({ ingredients }: { readonly ingredients: ProductPartResponse["ingredients"] }) {
   return (
     <section data-no-select className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">

@@ -31,7 +31,7 @@ export const productMarkdown = (product: ProductDetailResponse): string => {
     ),
     section(
       "전성분",
-      product.ingredients.map(
+      (product.selectedPart?.ingredients ?? []).map(
         (ingredient, index) =>
           `${index + 1}. [${heading(ingredient.koreanName)}](${absoluteUrl(`/ingredients/${ingredient.id}`)})${ingredient.englishName ? ` (${heading(ingredient.englishName)})` : ""}`,
       ),
