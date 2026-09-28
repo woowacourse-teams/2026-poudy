@@ -18,7 +18,11 @@ spring:
   # 배포 중 인스턴스가 교체될 때 처리 중이던 요청을 끊지 않는다.
   lifecycle:
     timeout-per-shutdown-phase: 20s
-  # db/schema.sql, db/search.sql 순서로 DB 에 직접 적용해 둔다. 서버는 스키마를 만들거나 바꾸지 않는다.
+  # 스키마는 서버가 기동할 때 Flyway 가 db/migration 의 버전 순서로 적용한다.
+  # Flyway 도입 전부터 운영하던 DB 는 V2 까지 적용된 것으로 보고 baseline 으로 등록한다.
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 2
   datasource:
     url: ${POUDY_DB_URL:jdbc:postgresql://localhost:5432/poudy}
     username: ${POUDY_DB_USERNAME:${USER:postgres}}

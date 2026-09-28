@@ -1,6 +1,6 @@
 -- ===================== 검색 =====================
 
--- 카탈로그 검색 함수와 파생 뷰. schema.sql 다음에 같은 트랜잭션으로 적용한다.
+-- 카탈로그 검색 함수와 파생 뷰. V1__schema.sql 다음에 적용한다.
 -- 대상 테이블(brand, product, ingredient, ingredient_alias, product_daily_view)은 schema.sql 이 만든다.
 -- 카탈로그 적재 트랜잭션의 맨 끝에서 검색 뷰 3개를 이 순서로 갱신한다:
 --   REFRESH MATERIALIZED VIEW product_search_document;
