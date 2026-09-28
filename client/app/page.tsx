@@ -52,7 +52,7 @@ const websiteStructuredData = {
       alternateName: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
-      logo: absoluteUrl("/favicon.ico"),
+      logo: absoluteUrl("/favicon.png"),
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer support",
