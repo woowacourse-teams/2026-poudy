@@ -1,6 +1,6 @@
 # Phase 0 전체 진단: 2026-09-28 재점검
 
-> 아래 「2026-09-26 최초 진단」은 당시 기록으로 보존했습니다. 이 절은 2026-09-28의 공개 응답, `feat/client-search-visibility` 워크트리, 기존 Search Console 자료를 구분해 다시 판정한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 아직 열려 있어 새 메타데이터·JSON-LD·`llms.txt`·Markdown 경로가 운영에 배포되었다고 볼 수 없습니다.
+> 아래 「2026-09-26 최초 진단」은 당시 기록으로 보존했습니다. 이 절은 2026-09-28의 공개 응답, `feat/client-search-visibility` 워크트리, 기존 Search Console 자료를 구분해 다시 판정한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 `dev`에 병합됐지만 새 메타데이터·JSON-LD·`llms.txt`·Markdown 경로의 운영 배포는 확인되지 않았습니다.
 
 ## 2026-09-28 검사 범위
 

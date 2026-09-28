@@ -1,6 +1,6 @@
 # Phase 3·4 진단: 2026-09-28 재점검
 
-> 아래 「2026-09-26 최초 진단」은 당시 기록으로 남겼습니다. 이 절은 2026-09-28의 운영·staging HTTP와 `feat/client-search-visibility` 워크트리를 대조한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 아직 열려 있습니다. 코드의 변경을 운영 성과로 계산하지 않습니다.
+> 아래 「2026-09-26 최초 진단」은 당시 기록으로 남겼습니다. 이 절은 2026-09-28의 운영·staging HTTP와 `feat/client-search-visibility` 워크트리를 대조한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 `dev`에 병합됐지만, 코드의 변경을 운영 성과로 계산하지 않습니다.
 
 ## 현재 판정
 
