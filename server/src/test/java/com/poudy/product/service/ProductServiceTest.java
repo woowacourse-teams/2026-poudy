@@ -22,6 +22,8 @@ import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
+import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
@@ -61,6 +63,7 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -71,7 +74,9 @@ class ProductServiceTest {
             null,
             null,
             null,
-            List.of(new ExcludeCode("HARSH_PRESERVATIVES")),
+            List.of(ExcludeCode.HARSH_PRESERVATIVES),
+            null,
+            null,
             null
         );
 
@@ -95,13 +100,13 @@ class ProductServiceTest {
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(product);
         ExcludeCodeGroup sulfates = new ExcludeCodeGroup(
-            new ExcludeCode("SULFATES"),
+            ExcludeCode.SULFATES,
             "설페이트 성분",
             "설명",
             List.of(new ExcludeCodeIngredient(20L, "성분", null))
         );
         ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
-            new ExcludeCode("FRAGRANCE_ALLERGENS"),
+            ExcludeCode.FRAGRANCE_ALLERGENS,
             "향료",
             "설명",
             List.of(new ExcludeCodeIngredient(10L, "성분", null))
@@ -112,6 +117,7 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
 
@@ -136,6 +142,7 @@ class ProductServiceTest {
             queries,
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
 
@@ -156,6 +163,7 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
 
@@ -178,12 +186,15 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             "제품",
             null,
             List.of(1L),
+            null,
+            null,
             null,
             null,
             null,
@@ -220,10 +231,11 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null);
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -250,11 +262,12 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
+            ingredientGroupRepository(),
             logger
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null),
             ProductSort.DEFAULT,
             1,
             20
@@ -302,8 +315,14 @@ class ProductServiceTest {
     private static ExcludeCodeRepository excludeCodeRepository(ExcludeCodes excludeCodeIngredients) {
         ExcludeCodeRepository excludeCodeRepository = mock(ExcludeCodeRepository.class);
         given(excludeCodeRepository.findAll()).willReturn(excludeCodeIngredients);
-        given(excludeCodeRepository.containsAll(any())).willReturn(true);
         return excludeCodeRepository;
+    }
+
+    private static IngredientGroupRepository ingredientGroupRepository() {
+        IngredientGroupRepository ingredientGroupRepository = mock(IngredientGroupRepository.class);
+        given(ingredientGroupRepository.findBundlingGroups()).willReturn(IngredientGroupCatalog.empty());
+        given(ingredientGroupRepository.containsAll(List.of())).willReturn(true);
+        return ingredientGroupRepository;
     }
 
     private static Categories categories() {

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ExcludeCodesTest {
 
     private static final ExcludeCodeGroup SULFATES = new ExcludeCodeGroup(
-        new ExcludeCode("SULFATES"),
+        ExcludeCode.SULFATES,
         "설페이트 성분",
         "설페이트 성분을 제외합니다.",
         List.of(
@@ -25,7 +25,7 @@ class ExcludeCodesTest {
     @DisplayName("DB 정의와 성분 순서를 그대로 유지한다")
     void keepsDefinitionAndIngredientOrder() {
         ExcludeCodeGroup newCode = new ExcludeCodeGroup(
-            new ExcludeCode("NEW_CODE"),
+            ExcludeCode.FRAGRANCE_ALLERGENS,
             "새 성분군",
             "새 설명",
             List.of(new ExcludeCodeIngredient(10L, "성분 10", null))
@@ -35,13 +35,13 @@ class ExcludeCodesTest {
         assertThat(resolved.groups()).containsExactly(newCode, SULFATES);
         assertThat(SULFATES.ingredients()).extracting(ExcludeCodeIngredient::id)
             .containsExactly(30L, 10L, 20L);
-        assertThat(resolved.codesOf(10L)).containsExactly(new ExcludeCode("NEW_CODE"), new ExcludeCode("SULFATES"));
+        assertThat(resolved.codesOf(10L)).containsExactly(ExcludeCode.FRAGRANCE_ALLERGENS, ExcludeCode.SULFATES);
     }
 
     @Test
     @DisplayName("DB 정의에 성분이 없으면 만들 수 없다")
     void rejectsEmptyCode() {
-        assertThatThrownBy(() -> new ExcludeCodeGroup(new ExcludeCode("SULFATES"), "설페이트", "설명", List.of()))
+        assertThatThrownBy(() -> new ExcludeCodeGroup(ExcludeCode.SULFATES, "설페이트", "설명", List.of()))
             .isInstanceOf(InvalidExcludeCodeDefinitionException.class).hasMessageContaining("SULFATES");
     }
 }

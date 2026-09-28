@@ -1,0 +1,17 @@
+ALTER TABLE exclude_code RENAME TO ingredient_group;
+ALTER TABLE ingredient_group RENAME CONSTRAINT pk_exclude_code TO pk_ingredient_group;
+
+ALTER TABLE exclude_code_ingredient RENAME TO ingredient_group_ingredient;
+ALTER TABLE ingredient_group_ingredient RENAME COLUMN exclude_code TO group_code;
+ALTER TABLE ingredient_group_ingredient RENAME CONSTRAINT pk_exclude_code_ingredient TO pk_ingredient_group_ingredient;
+ALTER TABLE ingredient_group_ingredient RENAME CONSTRAINT ux_exclude_code_ingredient_order TO ux_ingredient_group_ingredient_order;
+ALTER TABLE ingredient_group_ingredient RENAME CONSTRAINT fk_exclude_code_ingredient_ingredient TO fk_ingredient_group_ingredient_ingredient;
+ALTER TABLE ingredient_group_ingredient RENAME CONSTRAINT fk_exclude_code_ingredient_code TO fk_ingredient_group_ingredient_group;
+
+CREATE VIEW exclude_code AS
+SELECT code, display_name, description, created_at, updated_at
+FROM ingredient_group;
+
+CREATE VIEW exclude_code_ingredient AS
+SELECT group_code AS exclude_code, ingredient_id, display_order, created_at, updated_at
+FROM ingredient_group_ingredient;

@@ -23,7 +23,7 @@ public record ProductPartResponse(
             part.id(),
             part.name(),
             ProductIngredientResponse.from(part.ingredients().values()),
-            SkinEffectGroupResponse.from(part.skinEffectGroups()),
+            SkinEffectGroupResponse.from(part.skinEffectGroups(), detail.ingredientGroups(), part.ingredients()),
             ExcludeGroupResponse.from(detail.excludeCodes(), part)
         );
     }
