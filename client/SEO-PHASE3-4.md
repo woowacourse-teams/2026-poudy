@@ -1,6 +1,6 @@
 # Phase 3·4 진단: 2026-09-28 재점검
 
-> 아래 「2026-09-26 최초 진단」은 당시 기록으로 남겼습니다. 이 절은 2026-09-28의 운영·staging HTTP와 `feat/client-search-visibility` 워크트리를 대조한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 아직 열려 있습니다. 코드의 변경을 운영 성과로 계산하지 않습니다.
+> 아래 「2026-09-26 최초 진단」은 당시 기록으로 남겼습니다. 이 절은 2026-09-28의 운영·staging HTTP와 `feat/client-search-visibility` 워크트리를 대조한 결과입니다. [PR #562](https://github.com/woowacourse-teams/2026-poudy/pull/562)는 `dev`에 병합됐지만, 코드의 변경을 운영 성과로 계산하지 않습니다.
 
 ## 현재 판정
 
@@ -9,7 +9,7 @@
 | Phase 3 AEO  | 성분 `WebPage`·`DefinedTerm`, 큐레이션·브랜드·카테고리 `CollectionPage`, 제품 `Product`의 설명과 고정 ID를 추가했습니다. 화면에 쓰는 데이터를 구조화 데이터에서도 사용합니다.                                                           | 운영 제품 `/312`·성분 `/2`에는 새 JSON-LD가 없고, 큐레이션 `/1`은 404입니다. 성분 출처 정확성과 큐레이션 설명의 본문 표시·이미지 대체 텍스트 문제는 남아 있습니다.                                                                              |
 | Phase 3 GEO  | `/llms.txt`에 핵심 가치·기능·출처 확인 방법을 기록하고, 제품·성분 Markdown과 HTML의 `text/markdown` 대체 링크, 운영 페이지의 `rel="describedby"` 응답 헤더를 구현했습니다. Markdown에는 원본 HTML canonical과 `noindex`를 설정했습니다. | 운영 `/llms.txt`와 두 Markdown 표본은 404입니다. 실제 AI 크롤러의 사용·인용은 미측정입니다. 사용자가 알려 준 `utm_source=chatgpt` 유입의 건수와 답변별 출처도 확인하지 못했습니다.                                                              |
 | Phase 3 LLMO | 홈 `WebSite`·`Organization`의 대표 이름을 `파우디`, 다른 이름을 `Poudy`로 바꾸고 공식 Instagram·Google Play·문의 이메일을 연결했습니다.                                                                                                 | 운영 홈은 아직 이전 이름 배치를 반환합니다. `Organization.logo`를 256×256 `favicon.png`로 바꿨습니다. 배포 후 공개 JSON-LD와 Google의 실제 로고 표시는 미확인입니다. 독립 모델의 무검색 인지도와 통합된 서비스·데이터 운영 설명은 미측정입니다. |
-| Phase 4 NEO  | 새 홈 제목은 21자, 설명은 62자로 네이버의 제목 40자·설명 80자 이내 권고에 들어갑니다. 검색 링크와 페이지별 제목·설명, 사이트맵·robots 설정도 코드에 있습니다.                                                                           | 운영 홈은 이전 82자 설명을 반환합니다. 네이버 소유자 계정의 수집·색인·사이트맵 처리 지표에 접근할 수 없어 문구 변경의 효과나 하루 50건 수동 요청의 결과를 판정할 수 없습니다. staging은 `noindex, nofollow`와 전체 robots 차단을 유지합니다.    |
+| Phase 4 NEO  | 새 홈 제목은 21자, 설명은 62자로 네이버의 제목 40자·설명 80자 이내 권고에 들어갑니다. 페이지별 제목·설명과 사이트맵·robots 설정도 코드에 있습니다.                                                                                      | 운영 홈은 이전 82자 설명을 반환합니다. 네이버 소유자 계정의 수집·색인·사이트맵 처리 지표에 접근할 수 없어 문구 변경의 효과나 하루 50건 수동 요청의 결과를 판정할 수 없습니다. staging은 `noindex, nofollow`와 전체 robots 차단을 유지합니다.    |
 
 ## Phase 3에서 발견한 위험
 
