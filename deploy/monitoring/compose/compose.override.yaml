@@ -1,0 +1,11 @@
+services:
+  blackbox-exporter:
+    image: quay.io/prometheus/blackbox-exporter:v0.28.0
+    container_name: poudy-blackbox-exporter
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+    restart: unless-stopped
+    volumes:
+      - /opt/poudy-monitoring/config/blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    mem_limit: 128m
+    mem_reservation: 32m

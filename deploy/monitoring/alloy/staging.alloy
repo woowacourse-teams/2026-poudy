@@ -1,0 +1,131 @@
+// Grafana Alloy configuration for the staging backend EC2.
+// Supply CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET through the Alloy
+// systemd environment; never put the service token in this file.
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = "https://metrics-write.poudy.site/api/v1/write"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+prometheus.relabel "staging" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    action       = "replace"
+    target_label = "environment"
+    replacement  = "staging"
+  }
+}
+
+prometheus.exporter.unix "staging" {
+  enable_collectors = ["systemd"]
+
+  systemd {
+    enable_restarts = true
+    unit_include    = "poudy-backend\\.service"
+  }
+}
+
+prometheus.scrape "unix" {
+  job_name   = "integrations/unix"
+  targets   = prometheus.exporter.unix.staging.targets
+  forward_to = [prometheus.relabel.staging.receiver]
+
+  scrape_interval = "60s"
+}
+
+prometheus.exporter.process "backend" {
+  matcher {
+    comm = ["java"]
+    name = "poudy-backend"
+  }
+}
+
+prometheus.scrape "process" {
+  job_name   = "integrations/process"
+  targets   = prometheus.exporter.process.backend.targets
+  forward_to = [prometheus.relabel.staging.receiver]
+
+  scrape_interval = "60s"
+}
+
+prometheus.scrape "actuator" {
+  job_name = "poudy_backend_actuator"
+  targets = [
+    {
+      "__address__" = "127.0.0.1:8081",
+      "environment" = "staging",
+      "service"     = "poudy-backend",
+    },
+  ]
+  metrics_path = "/actuator/prometheus"
+  forward_to   = [prometheus.relabel.staging.receiver]
+
+  scrape_interval = "60s"
+}
+
+// Probe the readiness endpoint separately from /actuator/prometheus so the
+// health panel and alert reflect the backend's HTTP health response.
+prometheus.exporter.blackbox "actuator_health" {
+  config = "{ modules: { http_2xx: { prober: http, timeout: 5s } } }"
+
+  target {
+    name    = "poudy_backend_actuator_health"
+    address = "http://127.0.0.1:8081/actuator/health"
+    module  = "http_2xx"
+    labels = {
+      "environment" = "staging",
+      "service"     = "poudy-backend",
+    }
+  }
+}
+
+prometheus.scrape "actuator_health" {
+  job_name        = "poudy_backend_actuator_health"
+  targets         = prometheus.exporter.blackbox.actuator_health.targets
+  forward_to      = [prometheus.relabel.staging.receiver]
+  scrape_interval = "60s"
+}
+
+loki.write "central" {
+  endpoint {
+    url = "https://logs-write.poudy.site/loki/api/v1/push"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+loki.process "backend" {
+  forward_to = [loki.write.central.receiver]
+
+  // Keep the same privacy boundary as production: omit search events,
+  // exception messages, and stack frames before sending logs to Loki.
+  stage.drop {
+    expression = "(?i).*(PRODUCT_SEARCH|searchKeyword|search_keyword).*"
+    drop_counter_reason = "sensitive_search_event"
+  }
+
+  stage.drop {
+    expression = "(?i).*(Exception|Error|Caused by:|Suppressed:).*"
+    drop_counter_reason = "exception_details"
+  }
+
+  stage.drop {
+    expression = "^\\s+at\\s+.*"
+    drop_counter_reason = "stack_frame"
+  }
+}
+
+loki.source.journal "backend" {
+  matches    = "_SYSTEMD_UNIT=poudy-backend.service"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "poudy-backend" }
+  forward_to = [loki.process.backend.receiver]
+}
