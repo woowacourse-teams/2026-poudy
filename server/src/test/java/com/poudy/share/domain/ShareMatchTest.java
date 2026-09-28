@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
 import com.poudy.category.domain.Category;
-import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductNameMatch;
 import com.poudy.product.domain.ProductVariant;
@@ -37,7 +36,7 @@ class ShareMatchTest {
             name,
             brand,
             new Category(1L, 100L, "토너", 1),
-            new Ingredients(List.of()),
+            List.of(),
             "",
             new ProductVariants(List.of(new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active"))),
             sensory(1, 1),

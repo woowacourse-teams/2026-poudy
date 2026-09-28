@@ -50,12 +50,6 @@ class ProductsTest {
             .hasMessageContaining("1");
     }
 
-    @Test
-    @DisplayName("성분 ID 가 없어도 제품은 포함 여부를 거짓으로 답한다")
-    void answersFalseForMissingId() {
-        assertThat(product(1L, 100L).contains(null)).isFalse();
-    }
-
     private static Product productOfBrand(Long id, Long brandId) {
         return product(id, brand(brandId), category(1L), new Ingredients(List.of()));
     }
@@ -84,7 +78,7 @@ class ProductsTest {
             "제품 " + id,
             brand,
             category,
-            ingredients,
+            List.of(new ProductPart(id, null, ingredients)),
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
