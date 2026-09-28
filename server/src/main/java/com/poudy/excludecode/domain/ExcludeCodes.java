@@ -1,6 +1,7 @@
 package com.poudy.excludecode.domain;
 
 import java.util.List;
+import java.util.Set;
 
 public final class ExcludeCodes {
 
@@ -21,6 +22,13 @@ public final class ExcludeCodes {
         return groups.stream()
             .filter(group -> group.containsIngredient(ingredientId))
             .map(ExcludeCodeGroup::code)
+            .toList();
+    }
+
+    public List<ExcludeCodeGroup> freeCodesOf(List<Long> productIngredientIds) {
+        Set<Long> present = Set.copyOf(productIngredientIds);
+        return groups.stream()
+            .filter(group -> !group.containsAnyIngredient(present))
             .toList();
     }
 }

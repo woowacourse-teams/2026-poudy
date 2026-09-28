@@ -9,7 +9,6 @@ import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
-import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
@@ -118,25 +117,11 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
-    public ProductDetail findDetail(Long productId, Long partId) {
+    public ProductDetail findDetail(Long productId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return ProductDetail.from(
-            product,
-            selectPart(product, partId),
-            categoryRepository.findAll(),
-            excludeCodeRepository.findAll()
-        );
-    }
-
-    private ProductPart selectPart(Product product, Long partId) {
-        if (partId == null) {
-            return product.firstPart().orElse(null);
-        }
-
-        return product.findPart(partId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
+        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
     }
 
 }

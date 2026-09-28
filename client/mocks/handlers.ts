@@ -251,9 +251,10 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   ],
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
-  productParts: [{ id: product.id, cautionCount: 6 }],
+  skinEffectGroups: [],
+  ingredients: [],
   // 목록에는 성분이 없어 어느 성분군이 빠졌는지 알 수 없다. 모두 들어 있는 것으로 둔다.
-  selectedPart: { id: product.id, ingredients: [], skinEffectGroups: [], excludeGroups: excludeGroupsOf([]) },
+  excludeGroups: excludeGroupsOf([]),
   updatedAt: "2026-08-01T00:00:00+09:00",
 });
 

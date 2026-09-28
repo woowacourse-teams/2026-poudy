@@ -1,6 +1,5 @@
 package com.poudy.product.repository;
 
-import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -11,7 +10,6 @@ import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.sensory.MoistureLevel;
@@ -19,10 +17,8 @@ import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Component;
@@ -61,36 +57,18 @@ class ProductLoader {
             )
         )
             .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
-        List<PartIngredientRow> partRows = jdbc.query(
-            """
-                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id
-                from product_component component
-                left join product_ingredient ingredient on ingredient.component_id = component.id
-                where component.product_id = any(:ids)
-                order by component.product_id, component.display_order, ingredient.display_order
-                """,
-            parameters,
-            (rs, row) -> new PartIngredientRow(
-                rs.getLong("product_id"),
-                rs.getLong("component_id"),
-                rs.getString("name"),
-                rs.getObject("ingredient_id", Long.class)
-            )
-        );
+        Map<Long, List<Long>> ingredientIds = jdbc.query("""
+            select component.product_id, ingredient.ingredient_id
+            from product_component component
+            join product_ingredient ingredient on ingredient.component_id = component.id
+            where component.product_id = any(:ids)
+            order by component.product_id, component.display_order, ingredient.display_order
+            """, parameters, (rs, row) -> Map.entry(rs.getLong("product_id"), rs.getLong("ingredient_id")))
+            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
         IngredientCatalog ingredients = ingredientRepository.findByIds(
-            partRows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).distinct()
-                .toList()
+            ingredientIds.values().stream()
+                .flatMap(List::stream).distinct().toList()
         );
-        Map<Long, List<ProductPart>> parts = partRows.stream()
-            .collect(
-                groupingBy(
-                    PartIngredientRow::productId,
-                    collectingAndThen(
-                        groupingBy(PartIngredientRow::partId, LinkedHashMap::new, toList()),
-                        grouped -> grouped.values().stream().map(rows -> toPart(rows, ingredients)).toList()
-                    )
-                )
-            );
         Map<Long, Product> loaded = jdbc.query("""
             select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
                 c.parent_id, c.name as category_name, c.depth from product p
@@ -112,7 +90,7 @@ class ProductLoader {
                     rs.getString("category_name"),
                     rs.getInt("depth")
                 ),
-                parts.getOrDefault(id, List.of()),
+                ingredients.resolveInOrder(ingredientIds.getOrDefault(id, List.of())),
                 rs.getString("image_url"),
                 new ProductVariants(variants.get(id)),
                 new ProductSensory(
@@ -123,20 +101,5 @@ class ProductLoader {
             );
         }).stream().collect(toMap(Product::id, p -> p));
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
-    }
-
-    private static ProductPart toPart(List<PartIngredientRow> rows, IngredientCatalog ingredients) {
-        PartIngredientRow first = rows.getFirst();
-
-        return new ProductPart(
-            first.partId(),
-            first.name(),
-            ingredients.resolveInOrder(
-                rows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).toList()
-            )
-        );
-    }
-
-    private record PartIngredientRow(long productId, long partId, String name, Long ingredientId) {
     }
 }
