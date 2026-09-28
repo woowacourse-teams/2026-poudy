@@ -1,5 +1,7 @@
 # 검색 노출 진단 기록: 2026-09-26
 
+> 2026-09-28에 홈 화면에 추가했던 서비스 설명과 검색 링크 섹션을 사용자 흐름에 맞지 않아 철회했습니다. 아래 「당시 적용한 변경」은 최초 진단의 기록이며, 현재 PR에는 해당 섹션이 포함되지 않습니다. 홈 사이트맵의 `lastmod`도 기존 `2026-09-05`를 유지합니다.
+
 작업 공간은 `2026-poudy-seo`, 브랜치는 `feat/client-search-visibility`입니다. 진단 당시 팀 저장소의 `upstream/dev` 커밋 `b5864f1c`을 기준으로 작업했습니다. [fire-your-seo-agency](https://github.com/leopard627/fire-your-seo-agency) 스킬에 따라 JavaScript를 실행하지 않는 크롤러의 관점에서 점검했습니다.
 
 ## 변경 전 기준선
@@ -31,7 +33,7 @@
 - 2026-09-26에 요청받은 staging 주소 `https://poudy-staging.vercel.app`를 확인했습니다. 홈과 `/ingredients/1`은 200을 반환했고, 홈 canonical은 staging을 가리켰으며 robots 메타 태그는 `noindex, nofollow`였습니다. robots.txt는 `/`를 차단했고, 사이트맵과 llms.txt는 404를 반환했습니다. 홈 응답에는 `X-Robots-Tag` 헤더가 없었습니다. 새 홈 섹션과 성분 JSON-LD가 없었으므로 당시 staging 배포에는 작업 공간의 변경이 반영되지 않았습니다. staging 배포 워크플로는 `dev` 푸시로 실행되며, 이 진단 중에는 배포하지 않았습니다.
 - 기존 SEO 테스트와 새로 추가한 공개 경로 정책·성분 데이터 테스트로 운영과 staging의 동작 및 데이터 전달을 확인했습니다. 설치된 Next.js `16.3.0`을 기준으로 라우트 타입 생성, TypeScript 검사, 린트 검사도 실행했습니다.
 - 변경 전 운영 응답은 curl로 확인했습니다. 변경 후 HTTP 응답은 당시 검증하지 못했습니다. 로컬 서버 실행에 추가 권한이 필요했고 사용자가 실행을 거절했으므로, 단위 테스트를 실제 HTTP 검증의 대체 근거로 삼지 않습니다.
-- 배포 후 curl로 `/`, `/ingredients/1`, `/llms.txt`, `/robots.txt`와 사이트맵의 모든 부분을 확인해야 합니다. 홈 본문의 설명과 검색 링크, 성분 JSON-LD, canonical, `index, follow`, `X-Robots-Tag` 헤더를 점검하고 존재하지 않는 경로가 404를 반환하는지 확인해야 합니다. 성분 구조화 데이터는 Schema.org Validator로도 검사해야 합니다.
+- 배포 후 curl로 `/`, `/ingredients/1`, `/llms.txt`, `/robots.txt`와 사이트맵의 모든 부분을 확인해야 합니다. 홈 메타데이터와 기존 화면 구성, 성분 JSON-LD, canonical, `index, follow`, `X-Robots-Tag` 헤더를 점검하고 존재하지 않는 경로가 404를 반환하는지 확인해야 합니다. 성분 구조화 데이터는 Schema.org Validator로도 검사해야 합니다.
 - staging에서는 `/llms.txt`와 사이트맵이 404를 반환하고 `noindex`가 유지되는지 확인해야 합니다.
 
 ## 재측정 계획
