@@ -34,6 +34,12 @@ describe("summarizeFilter", () => {
     expect(summarizeFilter(filterWith({ oilLevel: [0] }), names)).toBe("유분 없음");
   });
 
+  it("피부 타입은 이름으로 적고 검색어 다음에 둔다", () => {
+    expect(summarizeFilter(filterWith({ keyword: "토너", skinType: "SENSITIVE", brandIds: [1] }), names)).toBe(
+      "'토너' · 민감성 피부 · 브랜드 1개",
+    );
+  });
+
   it("검색어를 앞에 둔다", () => {
     expect(summarizeFilter(filterWith({ keyword: "토너", brandIds: [1] }), names)).toBe("'토너' · 브랜드 1개");
   });
@@ -46,6 +52,10 @@ describe("countConditions", () => {
 
   it("수분과 유분은 값이 몇 개든 각각 하나로 센다", () => {
     expect(countConditions(filterWith({ moistureLevel: [1, 2, 3], oilLevel: [0] }))).toBe(2);
+  });
+
+  it("피부 타입은 하나로 센다", () => {
+    expect(countConditions(filterWith({ skinType: "DRY" }))).toBe(1);
   });
 
   it("나머지는 값의 개수로 센다", () => {

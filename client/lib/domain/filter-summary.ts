@@ -1,4 +1,4 @@
-import type { Filter } from "./filter";
+import { type Filter, SKIN_TYPE_NAMES, SKIN_TYPES } from "./filter";
 import { firstOf, keepIf, pick } from "./optional";
 import { LEVEL_LABELS } from "./product-display";
 
@@ -21,6 +21,9 @@ const rangeLabel = (levels: readonly number[]): string => {
 const levelPart = (label: string, levels: readonly number[]): readonly string[] =>
   keepIf(levels.length > 0, `${label} ${rangeLabel(levels)}`);
 
+const skinTypePart = (filter: Filter): readonly string[] =>
+  SKIN_TYPES.filter((skinType) => skinType === filter.skinType).map((skinType) => `${SKIN_TYPE_NAMES[skinType]} 피부`);
+
 const countPart = (label: string, count: number): readonly string[] => keepIf(count > 0, `${label} ${count}개`);
 
 /**
@@ -30,6 +33,7 @@ const countPart = (label: string, count: number): readonly string[] => keepIf(co
 export const summarizeFilter = (filter: Filter, names: IngredientNames = new Map()): string =>
   [
     ...keepIf(Boolean(filter.keyword), `'${filter.keyword}'`),
+    ...skinTypePart(filter),
     ...ingredientParts(filter, names),
     ...levelPart("수분", filter.moistureLevel),
     ...levelPart("유분", filter.oilLevel),
@@ -44,6 +48,7 @@ const countAsOne = (levels: readonly number[]): number => firstOf(keepIf(levels.
 /** 적용 조건 개수. 디자인의 `탐색 조건 8` 배지에 쓴다. */
 export const countConditions = (filter: Filter): number =>
   firstOf(keepIf(Boolean(filter.keyword), 1), 0) +
+  firstOf(keepIf(Boolean(filter.skinType), 1), 0) +
   filter.categoryIds.length +
   filter.brandIds.length +
   filter.includeIngredientIds.length +
