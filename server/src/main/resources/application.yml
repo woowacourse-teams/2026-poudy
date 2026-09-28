@@ -19,9 +19,10 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 20s
   # 스키마는 서버가 기동할 때 Flyway 가 db/migration 의 버전 순서로 적용한다.
-  # Flyway 도입 전부터 운영하던 DB 는 스키마가 V2 와 같은지 확인한 뒤, 첫 기동에만
-  # SPRING_FLYWAY_BASELINE_ON_MIGRATE=true 로 V2 baseline 을 등록한다. 기본값으로 켜 두면 스키마가 다른 DB 도 조용히 등록된다.
+  # Flyway 도입 전부터 운영하던 DB 는 첫 기동에 V2 까지 적용된 것으로 baseline 을 등록한다.
+  # 이력이 없는 DB 에서만 동작하므로, 새 환경의 DB 는 첫 배포 전에 스키마가 V2 와 같은지 확인한다.
   flyway:
+    baseline-on-migrate: true
     baseline-version: 2
   datasource:
     url: ${POUDY_DB_URL:jdbc:postgresql://localhost:5432/poudy}
