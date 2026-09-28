@@ -2,7 +2,6 @@ package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,9 +41,7 @@ class ProductRelatedDatabaseQueryTest {
         jdbc.update("update product_variant set price = 4321 where product_id = 90001");
         mockMvc.perform(get("/api/products/90001"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("갱신된 검증토너"))
-            .andExpect(jsonPath("$.variants[0].price").value(4321))
-            .andExpect(jsonPath("$.productParts").isEmpty())
-            .andExpect(jsonPath("$.selectedPart").value(nullValue()));
+            .andExpect(jsonPath("$.variants[0].price").value(4321));
         mockMvc.perform(get("/api/storage").param("productIds", "90002,999999,90001"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90002, 90001)))
             .andExpect(jsonPath("$.items[1].name").value("갱신된 검증토너"));

@@ -229,18 +229,14 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.variants.length()").value(2))
             .andExpect(jsonPath("$.variants[0].price").value(15000L))
             .andExpect(jsonPath("$.variants[1].price").value(23000L))
-            .andExpect(jsonPath("$.productParts.length()").value(1))
-            .andExpect(jsonPath("$.productParts[0].name").value(nullValue()))
-            .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(20, 9)))
-            .andExpect(
-                jsonPath("$.selectedPart.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING"))
-            )
-            .andExpect(jsonPath("$.selectedPart.excludeGroups.length()").value(6))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[2].name").value("향료/알레르기 성분"))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[2].contains").value(true))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[3].name").value("자극성 방부제"))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[4].name").value("설페이트 성분"))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[4].contains").value(false))
+            .andExpect(jsonPath("$.ingredients[*].id").value(containsInAnyOrder(20, 9)))
+            .andExpect(jsonPath("$.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING")))
+            .andExpect(jsonPath("$.excludeGroups.length()").value(6))
+            .andExpect(jsonPath("$.excludeGroups[2].name").value("향료/알레르기 성분"))
+            .andExpect(jsonPath("$.excludeGroups[2].contains").value(true))
+            .andExpect(jsonPath("$.excludeGroups[3].name").value("자극성 방부제"))
+            .andExpect(jsonPath("$.excludeGroups[4].name").value("설페이트 성분"))
+            .andExpect(jsonPath("$.excludeGroups[4].contains").value(false))
             .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:28:29.301+09:00"));
     }
 

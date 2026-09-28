@@ -47,13 +47,8 @@ export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
 export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
   apiGet("/api/products/count", serializeFilter(filter));
 
-export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`, partQuery(partId));
-
-const partQuery = (partId: number | undefined) => {
-  if (partId === undefined) return undefined;
-  return new URLSearchParams({ partId: String(partId) });
-};
+export const fetchProductDetail = (productId: number): Promise<ProductDetailResponse> =>
+  apiGet(`/api/products/${productId}`);
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 

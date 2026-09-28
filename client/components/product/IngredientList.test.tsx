@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { ProductPartResponse } from "@poudy/api/api.zod";
+import type { ProductDetailResponse } from "@poudy/api/api.zod";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -10,7 +10,7 @@ import { IngredientList } from "./IngredientList";
 /** 실제 제품에 쓰이는 이름 가운데 끊을 자리가 없는 가장 긴 축에 속한다. */
 const LONG_NAME = "폴리글리세릴-3메틸글루코오스다이스테아레이트";
 
-const ingredient = (id: number, koreanName: string): ProductPartResponse["ingredients"][number] => ({
+const ingredient = (id: number, koreanName: string): ProductDetailResponse["ingredients"][number] => ({
   id,
   koreanName,
   englishName: `Ingredient ${id}`,

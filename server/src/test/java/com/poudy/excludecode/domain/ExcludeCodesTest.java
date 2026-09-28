@@ -44,4 +44,19 @@ class ExcludeCodesTest {
         assertThatThrownBy(() -> new ExcludeCodeGroup(new ExcludeCode("SULFATES"), "설페이트", "설명", List.of()))
             .isInstanceOf(InvalidExcludeCodeDefinitionException.class).hasMessageContaining("SULFATES");
     }
+
+    @Test
+    @DisplayName("제품 성분과 겹치지 않는 성분군만 반환한다")
+    void findsFreeCodesFromMembers() {
+        ExcludeCodeGroup custom = new ExcludeCodeGroup(
+            new ExcludeCode("CUSTOM"),
+            "새 성분군",
+            "새 설명",
+            List.of(new ExcludeCodeIngredient(10L, "성분 10", null))
+        );
+        ExcludeCodes groups = new ExcludeCodes(List.of(custom, SULFATES));
+
+        assertThat(groups.freeCodesOf(List.of(20L, 20L))).containsExactly(custom);
+        assertThat(groups.freeCodesOf(List.of())).containsExactly(custom, SULFATES);
+    }
 }

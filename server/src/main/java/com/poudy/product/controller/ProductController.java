@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "제품", description = "제품 조회 API")
@@ -77,14 +76,11 @@ public class ProductController {
         );
     }
 
-    @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보를 조회한다. "
-        + "productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. "
-        + "partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.")
+    @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
-        @Parameter(example = "101") @PathVariable Long productId,
-        @Parameter(example = "473") @RequestParam(required = false) Long partId
+        @Parameter(example = "101") @PathVariable Long productId
     ) {
-        return ResponseEntity.ok(ProductDetailResponse.from(productService.findDetail(productId, partId)));
+        return ResponseEntity.ok(ProductDetailResponse.from(productService.findDetail(productId)));
     }
 }

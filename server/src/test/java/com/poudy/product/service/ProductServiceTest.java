@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -25,7 +26,6 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
-import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
@@ -87,7 +87,7 @@ class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("제품 상세에 카테고리 경로와 제외 성분군 정의를 함께 담는다")
+    @DisplayName("제품 상세에 카테고리 경로와 포함하지 않는 성분군을 함께 담는다")
     void findsProductDetail() {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
@@ -106,6 +106,8 @@ class ProductServiceTest {
             "설명",
             List.of(new ExcludeCodeIngredient(10L, "성분", null))
         );
+        given(excludeCodeIngredients.freeCodesOf(argThat(ingredients -> ingredients.contains(10L))))
+            .willReturn(List.of(sulfates));
         given(excludeCodeIngredients.groups()).willReturn(List.of(fragrance, sulfates));
         ProductService service = new ProductService(
             repository,
@@ -115,12 +117,13 @@ class ProductServiceTest {
             new ProductSearchLogger()
         );
 
-        ProductDetail detail = service.findDetail(1L, null);
+        ProductDetail detail = service.findDetail(1L);
 
         assertThat(detail.product()).isEqualTo(product);
-        assertThat(detail.selectedPart()).isEqualTo(product.parts().getFirst());
         assertThat(detail.categoryPath()).extracting(Category::id).containsExactly(1L, 2L);
-        assertThat(detail.excludeCodes()).containsExactly(fragrance, sulfates);
+        assertThat(detail.freeOfCodes()).containsExactly(new ExcludeCode("SULFATES"));
+        assertThat(detail.containsIngredientFrom(sulfates)).isFalse();
+        assertThat(detail.containsIngredientFrom(fragrance)).isTrue();
     }
 
     @Test
@@ -139,30 +142,10 @@ class ProductServiceTest {
             new ProductSearchLogger()
         );
 
-        assertThatThrownBy(() -> service.findDetail(999L, null))
+        assertThatThrownBy(() -> service.findDetail(999L))
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("제품에 없는 구성품 ID를 고르면 구성품 없음 예외를 던진다")
-    void rejectsUnknownPart() {
-        ProductRepository repository = mock(ProductRepository.class);
-        ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
-        given(repository.findById(1L)).willReturn(java.util.Optional.of(product(1L)));
-        ProductService service = new ProductService(
-            repository,
-            queries,
-            categoryRepository(categories()),
-            excludeCodeRepository(excludeCodeIngredients),
-            new ProductSearchLogger()
-        );
-
-        assertThatThrownBy(() -> service.findDetail(1L, 999L))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .extracting(exception -> ((ResourceNotFoundException) exception).code())
-            .isEqualTo(ErrorCode.PRODUCT_PART_NOT_FOUND);
     }
 
     @Test
@@ -279,12 +262,8 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
-            List.of(
-                new ProductPart(
-                    1L,
-                    null,
-                    new Ingredients(List.of(new Ingredient(10L, "성분", null, null, null, null, null, null)))
-                )
+            new Ingredients(
+                List.of(new Ingredient(10L, "성분", null, null, null, null, null, null))
             ),
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),

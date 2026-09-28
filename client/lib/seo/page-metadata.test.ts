@@ -201,7 +201,8 @@ describe("공유 메타데이터", () => {
       name: "수분 세럼",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "https://images.example/product.png",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      ingredients: [],
+      skinEffectGroups: [],
     });
 
     const metadata = await productMetadata({
@@ -224,7 +225,8 @@ describe("공유 메타데이터", () => {
       name: "진정 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      ingredients: [],
+      skinEffectGroups: [],
     });
 
     const metadata = await productMetadata({
@@ -369,10 +371,8 @@ describe("공유 메타데이터", () => {
       name: "약콩 판테놀 마스크",
       brand: { id: 2, name: "라운드랩", englishName: "Round Lab", imageUrl: "" },
       imageUrl: "",
-      selectedPart: {
-        ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
-        skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
-      },
+      ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
     });
 
     const metadata = await productMetadata({
