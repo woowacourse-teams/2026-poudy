@@ -1,52 +1,47 @@
-# Search visibility audit — 2026-09-26
+# 검색 노출 진단 기록: 2026-09-26
 
-Worktree: `2026-poudy-seo`; branch: `feat/client-search-visibility`.
-Rebased onto team repository `upstream/dev`, commit `b5864f1c`.
-Method: [fire-your-seo-agency](https://github.com/leopard627/fire-your-seo-agency), crawler-first audit.
+작업 공간은 `2026-poudy-seo`, 브랜치는 `feat/client-search-visibility`입니다. 진단 당시 팀 저장소의 `upstream/dev` 커밋 `b5864f1c`을 기준으로 작업했습니다. [fire-your-seo-agency](https://github.com/leopard627/fire-your-seo-agency) 스킬에 따라 JavaScript를 실행하지 않는 크롤러의 관점에서 점검했습니다.
 
-## Baseline
+## 변경 전 기준선
 
-Public HTTP responses were fetched without JavaScript from `https://poudy.site`.
+`https://poudy.site`의 공개 HTTP 응답을 JavaScript 실행 없이 확인했습니다.
 
-| Lane    | Status        | Evidence before changes                                                                                                                                                                      |
-| ------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SEO     | Partial       | Home is rendered in HTML; robots meta is `index, follow`. Sitemap index links three parts. Product sitemap has 472 URLs; ingredient sitemap has 1,398 URLs. Home h1 contains only the brand. |
-| AEO     | Partial       | `/ingredients/1` renders its description, source labels and update date, but has no JSON-LD. No search-answer citation measurement is available.                                             |
-| GEO     | Missing guide | `/llms.txt` returns HTTP 404. Wildcard robots policy permits public detail pages, including for AI crawlers.                                                                                 |
-| LLMO    | Partial       | Home includes WebSite/Organization JSON-LD and official Instagram identity. Model recognition has not been measured.                                                                         |
-| Naver   | Partial       | Site verification meta exists and robots allows Yeti via the wildcard policy. Ownership verification and sitemap submission in Search Advisor cannot be established from HTML.               |
-| Content | Partial       | Existing curations and ingredient reference pages provide content. No blog/feed workflow exists in this project. Search query analytics are needed before choosing new landing pages.        |
+| 영역   | 상태           | 변경 전 관찰한 근거                                                                                                                                                                                                      |
+| ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SEO    | 일부 보완 필요 | 홈 본문은 HTML로 제공되며 robots 메타 태그는 `index, follow`입니다. 사이트맵 인덱스는 세 부분을 연결합니다. 제품 사이트맵에는 URL 472개, 성분 사이트맵에는 URL 1,398개가 있습니다. 홈의 `h1`에는 브랜드 이름만 있습니다. |
+| AEO    | 일부 보완 필요 | `/ingredients/1`에 설명, 출처 이름, 업데이트 날짜가 표시되지만 JSON-LD는 없습니다. 검색 답변에서 인용된 횟수는 측정하지 못했습니다.                                                                                      |
+| GEO    | 안내 문서 없음 | `/llms.txt`는 HTTP 404를 반환합니다. robots.txt의 공통 규칙은 AI 크롤러를 포함해 공개 상세 페이지의 접근을 허용합니다.                                                                                                   |
+| LLMO   | 일부 보완 필요 | 홈에 `WebSite`·`Organization` JSON-LD와 공식 Instagram 주소가 있습니다. 모델이 파우디를 알고 있는지는 측정하지 못했습니다.                                                                                               |
+| 네이버 | 일부 보완 필요 | 사이트 소유 확인 메타 태그가 있고 robots.txt의 공통 규칙은 Yeti의 접근을 허용합니다. HTML만으로는 서치어드바이저의 소유 확인 상태와 사이트맵 제출 여부를 알 수 없습니다.                                                 |
+| 콘텐츠 | 일부 보완 필요 | 기존 큐레이션과 성분 설명 페이지에 콘텐츠가 있습니다. 이 프로젝트에는 블로그·피드 운영 절차가 없습니다. 새 검색 유입 페이지를 정하려면 검색어 자료가 필요합니다.                                                         |
 
-Home title: `Poudy(파우디) | 화장품 전성분 검색`.
-Ingredient sample title: `가공소금 성분 정보 | Poudy`.
-These are technical observations, not a traffic or ranking baseline.
+변경 전 홈 제목은 `Poudy(파우디) | 화장품 전성분 검색`이고, 검사한 성분 페이지의 제목은 `가공소금 성분 정보 | Poudy`입니다. 이는 기술적으로 확인한 값이며, 트래픽이나 검색 순위의 기준선은 아닙니다.
 
-## Changes
+## 당시 적용한 변경
 
-1. Home now renders the existing service description and direct product/ingredient search links as visible HTML. Its sitemap lastmod reflects this content change.
-2. Ingredient detail now renders WebPage/DefinedTerm JSON-LD using the same API object as the visible page: Korean/English name, description, source labels and recorded update time. No source URLs, medical claims, ratings or authors are invented. Stable IDs reference the existing WebSite entity.
-3. `/llms.txt` provides a concise Korean directory using the configured canonical origin. It explains how to locate and cite detail-page sources and dates. Nonproduction deployments return an empty, noncached 404, matching the sitemap discovery policy.
+1. 홈 HTML 본문에 서비스 설명과 화장품·성분 검색 링크를 표시했습니다. 페이지 사이트맵의 홈 갱신일에도 본문 변경을 반영했습니다.
+2. 성분 상세 페이지에 화면과 같은 API 데이터로 `WebPage`·`DefinedTerm` JSON-LD를 추가했습니다. 한글·영문 이름, 설명, 출처 이름, 기록된 업데이트 날짜를 사용하며, 확인되지 않은 출처 URL·의료 효능·평점·작성자는 만들지 않았습니다. 안정적인 식별자로 기존 `WebSite` 엔티티를 참조합니다.
+3. `/llms.txt`에 설정된 대표 도메인을 사용하는 한국어 안내 문서를 추가했습니다. 상세 페이지의 출처와 날짜를 찾고 인용하는 방법을 설명합니다. 운영 환경이 아닌 배포에서는 사이트맵 정책과 마찬가지로 본문이 없는 404를 반환하며 응답을 캐시하지 않습니다.
 
-Schema references: [WebPage](https://schema.org/WebPage), [DefinedTerm](https://schema.org/DefinedTerm).
-The [llms.txt proposal](https://llmstxt.org/) is a discovery aid; its presence does not establish crawler adoption or citations.
+구조화 데이터 참고 문서: [WebPage](https://schema.org/WebPage), [DefinedTerm](https://schema.org/DefinedTerm).
+[llms.txt 제안](https://llmstxt.org/)은 사이트를 안내하는 방법이며, 파일이 있다는 사실만으로 크롤러의 채택이나 실제 인용을 입증할 수는 없습니다.
 
-## Verification and deployment gate
+## 검증 상태와 배포 후 확인할 항목
 
-- The requested staging target `https://poudy-staging.vercel.app` was inspected on 2026-09-26: home and `/ingredients/1` return 200; home canonical points to staging and robots meta is `noindex, nofollow`; robots.txt disallows `/`; sitemap and llms.txt return 404. No `X-Robots-Tag` header was present on the home response. The new home section and ingredient JSON-LD are absent, so this deployment does not yet contain the worktree changes. The staging workflow deploys on pushes to `dev`; no deployment was triggered during this audit.
-- Existing SEO tests plus new discovery-policy and ingredient-data checks cover production/staging behavior and fact propagation.
-- Next.js route types, TypeScript and lint checks run against the installed version (`16.3.0`).
-- Before-change production responses were inspected with curl. After-change HTTP validation remains pending: local server execution required elevated permission and was declined. Unit tests do not substitute for this gate.
-- After deployment, fetch `/`, `/ingredients/1`, `/llms.txt`, `/robots.txt` and all sitemap parts with curl. Check for visible description/search links, parse the ingredient JSON-LD, verify canonical URLs, confirm `index, follow` and inspect `X-Robots-Tag` headers. Confirm an unknown route returns 404. Validate the ingredient schema with Schema.org Validator.
-- Verify `/llms.txt` and sitemap return 404 on staging, and staging retains `noindex`.
+- 2026-09-26에 요청받은 staging 주소 `https://poudy-staging.vercel.app`를 확인했습니다. 홈과 `/ingredients/1`은 200을 반환했고, 홈 canonical은 staging을 가리켰으며 robots 메타 태그는 `noindex, nofollow`였습니다. robots.txt는 `/`를 차단했고, 사이트맵과 llms.txt는 404를 반환했습니다. 홈 응답에는 `X-Robots-Tag` 헤더가 없었습니다. 새 홈 섹션과 성분 JSON-LD가 없었으므로 당시 staging 배포에는 작업 공간의 변경이 반영되지 않았습니다. staging 배포 워크플로는 `dev` 푸시로 실행되며, 이 진단 중에는 배포하지 않았습니다.
+- 기존 SEO 테스트와 새로 추가한 공개 경로 정책·성분 데이터 테스트로 운영과 staging의 동작 및 데이터 전달을 확인했습니다. 설치된 Next.js `16.3.0`을 기준으로 라우트 타입 생성, TypeScript 검사, 린트 검사도 실행했습니다.
+- 변경 전 운영 응답은 curl로 확인했습니다. 변경 후 HTTP 응답은 당시 검증하지 못했습니다. 로컬 서버 실행에 추가 권한이 필요했고 사용자가 실행을 거절했으므로, 단위 테스트를 실제 HTTP 검증의 대체 근거로 삼지 않습니다.
+- 배포 후 curl로 `/`, `/ingredients/1`, `/llms.txt`, `/robots.txt`와 사이트맵의 모든 부분을 확인해야 합니다. 홈 본문의 설명과 검색 링크, 성분 JSON-LD, canonical, `index, follow`, `X-Robots-Tag` 헤더를 점검하고 존재하지 않는 경로가 404를 반환하는지 확인해야 합니다. 성분 구조화 데이터는 Schema.org Validator로도 검사해야 합니다.
+- staging에서는 `/llms.txt`와 사이트맵이 404를 반환하고 `noindex`가 유지되는지 확인해야 합니다.
 
-## Measurement plan
+## 재측정 계획
 
-Record the deployment date as D0. If deployed on 2026-09-26, review on **2026-10-10**; otherwise use D0 + 14 days. No reminder has been scheduled.
+배포일을 D0로 기록합니다. 2026-09-26에 배포했다면 **2026-10-10**에 다시 확인하고, 다른 날 배포했다면 D0부터 14일 후에 확인합니다. 알림은 예약하지 않았습니다.
 
-1. At D0 export the previous 28 days of Google Search Console impressions, clicks, CTR, position and indexed pages, separated into home/products/ingredients/curations. Export the equivalent Naver Search Advisor metrics and top queries. Record missing access as unknown, never zero.
-2. Confirm verified ownership and sitemap submission in Google, Bing Webmaster Tools and Naver Search Advisor using the owner's accounts.
-3. At D0 and D0 + 14 days test the same five questions in ChatGPT search, Perplexity and Naver AI Briefing. Save the exact prompt, date, answer and cited URLs: what is Poudy; where to search cosmetic ingredients; how to find cosmetics excluding an ingredient; what processed salt does in cosmetics; how to find products containing a particular ingredient. Keep product/ingredient names constant between runs.
-4. At D0 + 14 days compare equal-length windows before and after deployment, excluding the latest three days and matching weekdays. Review 28-day trends again at D0 + 28 days. Track citations independently from traffic. Use dated hosting logs to monitor AI crawler visits when available.
-5. Build the next content backlog from actual query exports: query, intent, current landing URL, impressions/clicks, factual source, owner and review date. Publish new pages only after factual review, SSR/meta/canonical validation, internal links and sitemap inclusion.
+1. D0에 Google Search Console에서 직전 28일의 노출, 클릭, CTR, 평균 게재 순위, 색인 페이지 수를 홈·제품·성분·큐레이션별로 내려받습니다. 네이버 서치어드바이저에서도 같은 종류의 지표와 주요 검색어를 확보합니다. 계정에 접근할 수 없어 값을 확인하지 못하면 0으로 기록하지 않고 미확인으로 남깁니다.
+2. Google, Bing Webmaster Tools, 네이버 서치어드바이저에서 소유자 계정으로 사이트 소유 확인과 사이트맵 제출 상태를 점검합니다.
+3. D0와 D0+14일에 ChatGPT 검색, Perplexity, 네이버 AI 브리핑에서 같은 질문 다섯 개를 확인합니다. 질문 문구, 날짜, 답변, 인용 URL을 그대로 기록합니다. 질문은 파우디가 무엇인지, 화장품 성분을 어디서 검색하는지, 특정 성분을 제외한 화장품을 어떻게 찾는지, 화장품에서 가공소금의 역할이 무엇인지, 특정 성분이 포함된 제품을 어떻게 찾는지입니다. 두 차례 검사에서 제품명과 성분명은 같게 유지합니다.
+4. D0+14일에 배포 전후의 같은 길이 기간을 비교합니다. 최근 3일의 집계 지연을 제외하고 요일을 맞춥니다. D0+28일에는 28일 추세를 다시 살펴봅니다. AI 인용과 사이트 유입은 별도로 추적하고, 날짜가 기록된 호스팅 로그를 사용할 수 있다면 AI 크롤러 방문도 확인합니다.
+5. 실제 검색어 자료를 바탕으로 검색어, 의도, 현재 유입 페이지, 노출·클릭, 사실 근거, 담당자, 검토일이 들어간 콘텐츠 작업 목록을 만듭니다. 사실 검토, 서버 렌더링과 메타데이터·canonical 검사, 내부 링크, 사이트맵 반영을 마친 뒤에 새 페이지를 공개합니다.
 
-Account-only analytics, actual AI citations, IndexNow credentials and new editorial content remain unverified or unconfigured. Creating a blog or medical FAQ without reviewed source material is outside this technical change. Search ranking improvement has not yet been measured.
+소유자 계정에서만 확인할 수 있는 지표, 실제 AI 인용, IndexNow 인증 정보와 새 편집 콘텐츠는 당시 확인하거나 설정하지 못했습니다. 검토된 근거 없이 블로그나 의료 FAQ를 만드는 일은 이 기술 변경의 범위에 포함하지 않았습니다. 검색 순위 개선도 아직 측정하지 못했습니다.
