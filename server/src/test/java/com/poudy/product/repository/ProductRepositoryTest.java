@@ -43,8 +43,7 @@ class ProductRepositoryTest {
         assertThat(product.moistureLevel()).isEqualTo(2);
         assertThat(product.oilLevel()).isZero();
         assertThat(product.updatedAt()).isEqualTo(OffsetDateTime.parse("2026-08-13T08:28:29.301+09:00"));
-        assertThat(product.contains(4815L)).isTrue();
-        assertThat(product.ingredients().findById(4815L))
+        assertThat(product.firstPart().orElseThrow().ingredients().findById(4815L))
             .get()
             .extracting(Ingredient::koreanName)
             .isEqualTo("향료");

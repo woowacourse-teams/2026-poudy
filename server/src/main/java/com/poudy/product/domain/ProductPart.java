@@ -11,9 +11,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record ProductPart(Long id, String name, Ingredients ingredients) {
+public final class ProductPart {
 
     private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
+
+    private final Long id;
+    private final String name;
+    private final Ingredients ingredients;
+
+    public ProductPart(Long id, String name, Ingredients ingredients) {
+        this.id = id;
+        this.name = name;
+        this.ingredients = ingredients;
+    }
+
+    public Long id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Ingredients ingredients() {
+        return ingredients;
+    }
+
+    public boolean hasId(Long partId) {
+        return id.equals(partId);
+    }
 
     public boolean containsIngredientFrom(ExcludeCodeGroup group) {
         return group.containsAnyIngredient(Set.copyOf(ingredients.ids()));

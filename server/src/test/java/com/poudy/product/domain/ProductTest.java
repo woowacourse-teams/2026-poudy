@@ -91,8 +91,8 @@ class ProductTest {
     }
 
     @Test
-    @DisplayName("여러 구성품에 겹친 성분은 제품 성분에 한 번만 담는다")
-    void mergesDuplicateIngredientsAcrossParts() {
+    @DisplayName("구성품을 표시 순서대로 갖고 ID로 찾는다")
+    void findsPartsInDisplayOrder() {
         Ingredient shared = ingredient(1L, "SHARED");
         Ingredient onlySecond = ingredient(2L, "ONLY_SECOND");
         Product product = new Product(
@@ -110,7 +110,6 @@ class ProductTest {
             updatedAt
         );
 
-        assertThat(product.ingredientIds()).containsExactly(1L, 2L);
         assertThat(product.parts()).extracting(ProductPart::name).containsExactly("본품", "리필");
         assertThat(product.firstPart()).map(ProductPart::name).contains("본품");
         assertThat(product.findPart(2L)).map(ProductPart::name).contains("리필");

@@ -75,6 +75,16 @@ class ProductPartTest {
         assertThat(cream.containsIngredientFrom(fragrance)).isTrue();
     }
 
+    @Test
+    @DisplayName("자기 ID와 같은지 판단한다")
+    void matchesOwnId() {
+        ProductPart part = new ProductPart(7L, "본품", new Ingredients(List.of()));
+
+        assertThat(part.hasId(7L)).isTrue();
+        assertThat(part.hasId(8L)).isFalse();
+        assertThat(part.hasId(null)).isFalse();
+    }
+
     private static ProductPart partOf(Ingredient... ingredients) {
         return new ProductPart(1L, null, new Ingredients(List.of(ingredients)));
     }

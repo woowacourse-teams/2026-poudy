@@ -2,20 +2,14 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
-import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public final class Product {
 
@@ -26,7 +20,6 @@ public final class Product {
     private final Brand brand;
     private final Category category;
     private final List<ProductPart> parts;
-    private final Ingredients ingredients;
     private final String imageUrl;
     private final ProductVariants variants;
     private final ProductSensory sensory;
@@ -71,7 +64,6 @@ public final class Product {
         this.brand = brand;
         this.category = category;
         this.parts = List.copyOf(parts);
-        this.ingredients = distinctIngredientsOf(this.parts);
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
@@ -82,16 +74,6 @@ public final class Product {
         if (category.isParent()) {
             throw new IllegalArgumentException("제품은 소분류 카테고리를 가져야 합니다.");
         }
-    }
-
-    private static Ingredients distinctIngredientsOf(List<ProductPart> parts) {
-        Map<Long, Ingredient> distinct = parts.stream()
-            .flatMap(part -> part.ingredients().values().stream())
-            .collect(
-                Collectors.toMap(Ingredient::id, Function.identity(), (first, ignored) -> first, LinkedHashMap::new)
-            );
-
-        return new Ingredients(List.copyOf(distinct.values()));
     }
 
     public Long id() {
@@ -119,11 +101,7 @@ public final class Product {
     }
 
     public Optional<ProductPart> findPart(Long partId) {
-        return parts.stream().filter(part -> part.id().equals(partId)).findFirst();
-    }
-
-    public Ingredients ingredients() {
-        return ingredients;
+        return parts.stream().filter(part -> part.hasId(partId)).findFirst();
     }
 
     public String imageUrl() {
@@ -136,18 +114,6 @@ public final class Product {
 
     public OffsetDateTime updatedAt() {
         return updatedAt.atZone(SEOUL).toOffsetDateTime();
-    }
-
-    public List<Long> ingredientIds() {
-        return ingredients.ids();
-    }
-
-    public boolean contains(Long ingredientId) {
-        if (ingredientId == null) {
-            return false;
-        }
-
-        return ingredients.contains(ingredientId);
     }
 
     public boolean isDiscontinued() {

@@ -227,7 +227,8 @@ class ProductDatabaseQueryTest {
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(repository.count(query)).isEqualTo(1);
-        assertThat(page.items().getFirst().ingredientIds()).containsExactly(90002L, 90001L);
+        assertThat(page.items().getFirst().firstPart().orElseThrow().ingredients().ids())
+            .containsExactly(90002L, 90001L);
         mockMvc.perform(
             get("/api/products/count").param("includeIngredientIds", "90001")
                 .param("excludeIngredientIds", "90002")
