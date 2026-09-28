@@ -185,16 +185,7 @@ export type DisclosedAmountResponse = {
    */
   unit: string;
 }
-export type ExcludeGroupResponse = {
-  /**
-   * 제외 성분군 이름
-   */
-  name: string;
-  /**
-   * 제품의 해당 성분군 포함 여부
-   */
-  contains: boolean;
-}
+export type ExcludeGroupResponse = { name: string, contains: boolean }
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
@@ -228,18 +219,7 @@ export type ProductVariantResponse = {
    */
   status: string;
 }
-export type SkinEffectGroupResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-  ingredientIds: Array<number>;
-}
+export type ProductPartSummaryResponse = { id: number, name?: string, cautionCount: number }
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -265,53 +245,20 @@ export type ProductIngredientResponse = {
   skinEffects: Array<SkinEffectResponse>;
   disclosedAmount?: DisclosedAmountResponse;
 }
-export type ProductDetailResponse = {
+export type SkinEffectGroupResponse = {
   /**
-   * 제품 ID
+   * 피부 작용 ID
    */
-  id: number;
+  id: string;
+  code: string;
   /**
-   * 제품명
+   * 피부 작용 이름
    */
   name: string;
-  brand: BrandResponse;
-  /**
-   * 제품 카테고리 목록
-   */
-  categories: Array<CategoryPathResponse>;
-  /**
-   * 제품 대표 이미지 URL
-   */
-  imageUrl: string;
-  /**
-   * 같은 제품의 용량 옵션 전체. 가격과 용량은 옵션마다 따로 있다
-   */
-  variants: Array<ProductVariantResponse>;
-  /**
-   * 수분감 단계 (0~3)
-   */
-  moistureLevel: number;
-  /**
-   * 유분감 단계 (0~3)
-   */
-  oilLevel: number;
-  /**
-   * 연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)
-   */
-  skinEffectGroups: Array<SkinEffectGroupResponse>;
-  /**
-   * 표시 순서대로 정렬된 전체 성분
-   */
-  ingredients: Array<ProductIngredientResponse>;
-  /**
-   * 제외 성분군별 포함 여부
-   */
-  excludeGroups: Array<ExcludeGroupResponse>;
-  /**
-   * 제품 정보를 마지막으로 갱신한 시각
-   */
-  updatedAt: string;
+  ingredientIds: Array<number>;
 }
+export type ProductPartResponse = { id: number, name?: string, ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
+export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart?: ProductPartResponse, updatedAt: string }
 export type ProductSuggestionMatchResponse = {
   /**
    * 검색어가 일치한 제품 필드
@@ -677,7 +624,7 @@ export type BrandDetailResponse = {
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -949,7 +896,7 @@ export type get_FindProducts = {
 
     }
 /**
- * 제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.
+ * 제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
  */
 export type get_FindProductDetail = {
       method: "GET",
@@ -957,7 +904,7 @@ export type get_FindProductDetail = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
+            query?:  Partial<{ partId: number }>,
         path:  { productId: number },
 
           }

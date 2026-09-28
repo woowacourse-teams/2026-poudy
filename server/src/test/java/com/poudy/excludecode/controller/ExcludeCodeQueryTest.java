@@ -54,8 +54,8 @@ class ExcludeCodeQueryTest {
             .andExpect(jsonPath("$.items[0].name").value("새 성분군"))
             .andExpect(jsonPath("$.items[0].description").value("DB에서 추가한 성분군"));
         mockMvc.perform(get("/api/products/15")).andExpect(status().isOk())
-            .andExpect(jsonPath("$.excludeGroups[0].name").value("새 성분군"))
-            .andExpect(jsonPath("$.excludeGroups[0].contains").value(true));
+            .andExpect(jsonPath("$.selectedPart.excludeGroups[0].name").value("새 성분군"))
+            .andExpect(jsonPath("$.selectedPart.excludeGroups[0].contains").value(true));
         mockMvc.perform(get("/api/products").param("excludeCodes", "AAA_CUSTOM"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id", not(hasItem(15))));

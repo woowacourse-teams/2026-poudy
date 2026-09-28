@@ -22,7 +22,7 @@ class ProductTest {
 
     private final Brand brand = new Brand(1L, "브랜드", null, null);
     private final Category category = new Category(2L, 1L, "카테고리", 1);
-    private final Ingredients ingredients = new Ingredients(List.of());
+    private final List<ProductPart> parts = List.of();
     private final ProductVariants variants = new ProductVariants(
         List.of(new ProductVariant(1L, 10000L, new BigDecimal("100"), "ml", "active"))
     );
@@ -37,7 +37,7 @@ class ProductTest {
                 "제품",
                 null,
                 category,
-                ingredients,
+                parts,
                 "image",
                 variants,
                 sensory(1, 1),
@@ -57,7 +57,7 @@ class ProductTest {
                 "제품",
                 brand,
                 null,
-                ingredients,
+                parts,
                 "image",
                 variants,
                 sensory(1, 1),
@@ -79,7 +79,7 @@ class ProductTest {
                 "제품",
                 brand,
                 parent,
-                ingredients,
+                parts,
                 "image",
                 variants,
                 sensory(1, 1),
@@ -91,47 +91,18 @@ class ProductTest {
     }
 
     @Test
-    @DisplayName("같은 피부 작용을 가진 성분을 하나의 그룹으로 묶는다")
-    void groupsIngredientsBySkinEffect() {
-        Ingredient first = ingredient(10L, "HYDRATION_RELATED");
-        Ingredient second = ingredient(20L, "HYDRATION_RELATED");
+    @DisplayName("여러 구성품에 겹친 성분은 제품 성분에 한 번만 담는다")
+    void mergesDuplicateIngredientsAcrossParts() {
+        Ingredient shared = ingredient(1L, "SHARED");
+        Ingredient onlySecond = ingredient(2L, "ONLY_SECOND");
         Product product = new Product(
             1L,
             "제품",
             brand,
             category,
-            new Ingredients(List.of(first, second)),
-            "image",
-            variants,
-            sensory(1, 1),
-            updatedAt
-        );
-
-        assertThat(product.skinEffectGroups()).singleElement()
-            .satisfies(group -> {
-                assertThat(group.effect().id()).isEqualTo("HYDRATION_RELATED");
-                assertThat(group.ingredientIds()).containsExactly(10L, 20L);
-            });
-    }
-
-    @Test
-    @DisplayName("연관 성분이 많은 피부 작용 그룹을 태그 ID 동률 순서로 최대 3개 반환한다")
-    void returnsTopThreeSkinEffectGroupsByIngredientCount() {
-        Product product = new Product(
-            1L,
-            "제품",
-            brand,
-            category,
-            new Ingredients(
-                List.of(
-                    ingredient(1L, 20L, "MOST_RELATED"),
-                    ingredient(2L, 20L, "MOST_RELATED"),
-                    ingredient(3L, 20L, "MOST_RELATED"),
-                    ingredient(4L, 30L, "SECOND_RELATED"),
-                    ingredient(5L, 30L, "SECOND_RELATED"),
-                    ingredient(6L, 40L, "TIED_RELATED"),
-                    ingredient(7L, 10L, "TIED_EARLIER_RELATED")
-                )
+            List.of(
+                new ProductPart(1L, "본품", new Ingredients(List.of(shared))),
+                new ProductPart(2L, "리필", new Ingredients(List.of(onlySecond, shared)))
             ),
             "image",
             variants,
@@ -139,21 +110,11 @@ class ProductTest {
             updatedAt
         );
 
-        assertThat(product.skinEffectGroups())
-            .satisfiesExactly(
-                group -> {
-                    assertThat(group.effect().id()).isEqualTo("MOST_RELATED");
-                    assertThat(group.ingredientIds()).containsExactly(1L, 2L, 3L);
-                },
-                group -> {
-                    assertThat(group.effect().id()).isEqualTo("SECOND_RELATED");
-                    assertThat(group.ingredientIds()).containsExactly(4L, 5L);
-                },
-                group -> {
-                    assertThat(group.effect().id()).isEqualTo("TIED_EARLIER_RELATED");
-                    assertThat(group.ingredientIds()).containsExactly(7L);
-                }
-            );
+        assertThat(product.ingredientIds()).containsExactly(1L, 2L);
+        assertThat(product.parts()).extracting(ProductPart::name).containsExactly("본품", "리필");
+        assertThat(product.firstPart()).map(ProductPart::name).contains("본품");
+        assertThat(product.findPart(2L)).map(ProductPart::name).contains("리필");
+        assertThat(product.findPart(9L)).isEmpty();
     }
 
     @Test
@@ -165,7 +126,7 @@ class ProductTest {
                 "제품",
                 brand,
                 category,
-                ingredients,
+                parts,
                 "image",
                 variants,
                 null,
@@ -177,10 +138,6 @@ class ProductTest {
     }
 
     private static Ingredient ingredient(Long id, String effect) {
-        return ingredient(id, 57L, effect);
-    }
-
-    private static Ingredient ingredient(Long id, Long tagId, String effect) {
         IngredientTag tag = new IngredientTag(
             new Tag(effect, TagCategory.BIOLOGICAL_EFFECT, "피부 작용"),
             List.of("확인된 근거")

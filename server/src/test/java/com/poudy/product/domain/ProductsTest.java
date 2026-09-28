@@ -84,7 +84,7 @@ class ProductsTest {
             "제품 " + id,
             brand,
             category,
-            ingredients,
+            List.of(new ProductPart(id, null, ingredients)),
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),

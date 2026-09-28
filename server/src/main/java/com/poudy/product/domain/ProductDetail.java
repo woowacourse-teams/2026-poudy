@@ -2,7 +2,6 @@ package com.poudy.product.domain;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import java.util.List;
@@ -10,18 +9,18 @@ import java.util.Objects;
 
 public record ProductDetail(
     Product product,
+    ProductPart selectedPart,
     List<Category> categoryPath,
-    List<ExcludeCodeGroup> excludeCodes,
-    List<ExcludeCode> freeOfCodes) {
+    List<ExcludeCodeGroup> excludeCodes) {
 
     public ProductDetail {
         categoryPath = List.copyOf(categoryPath);
         excludeCodes = List.copyOf(excludeCodes);
-        freeOfCodes = List.copyOf(freeOfCodes);
     }
 
     public static ProductDetail from(
         Product product,
+        ProductPart selectedPart,
         Categories categories,
         ExcludeCodes excludeCodeIngredients
     ) {
@@ -31,13 +30,13 @@ public record ProductDetail(
 
         return new ProductDetail(
             product,
+            selectedPart,
             categories.pathOf(product.category()),
-            excludeCodeIngredients.groups(),
-            excludeCodeIngredients.freeCodesOf(product.ingredientIds()).stream().map(ExcludeCodeGroup::code).toList()
+            excludeCodeIngredients.groups()
         );
     }
 
-    public boolean containsIngredientFrom(ExcludeCodeGroup group) {
-        return !freeOfCodes.contains(group.code());
+    public long cautionCountOf(ProductPart part) {
+        return part.countContainedFrom(excludeCodes);
     }
 }

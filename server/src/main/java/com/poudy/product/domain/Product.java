@@ -6,27 +6,26 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.tag.domain.SkinEffect;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class Product {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
-    private static final int MAIN_SKIN_EFFECT_GROUP_LIMIT = 3;
-
     private final Long id;
     private final String name;
     private final Brand brand;
     private final Category category;
+    private final List<ProductPart> parts;
     private final Ingredients ingredients;
     private final String imageUrl;
     private final ProductVariants variants;
@@ -38,7 +37,7 @@ public final class Product {
         String name,
         Brand brand,
         Category category,
-        Ingredients ingredients,
+        List<ProductPart> parts,
         String imageUrl,
         ProductVariants variants,
         ProductSensory sensory,
@@ -54,8 +53,8 @@ public final class Product {
             throw new IllegalArgumentException("제품은 카테고리를 가져야 합니다.");
         }
         requireLeafCategory(category);
-        if (ingredients == null) {
-            ingredients = new Ingredients(List.of());
+        if (parts == null) {
+            parts = List.of();
         }
         if (variants == null) {
             throw new IllegalArgumentException("제품은 용량 옵션을 가져야 합니다.");
@@ -71,7 +70,8 @@ public final class Product {
         this.name = name;
         this.brand = brand;
         this.category = category;
-        this.ingredients = ingredients;
+        this.parts = List.copyOf(parts);
+        this.ingredients = distinctIngredientsOf(this.parts);
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
@@ -82,6 +82,16 @@ public final class Product {
         if (category.isParent()) {
             throw new IllegalArgumentException("제품은 소분류 카테고리를 가져야 합니다.");
         }
+    }
+
+    private static Ingredients distinctIngredientsOf(List<ProductPart> parts) {
+        Map<Long, Ingredient> distinct = parts.stream()
+            .flatMap(part -> part.ingredients().values().stream())
+            .collect(
+                Collectors.toMap(Ingredient::id, Function.identity(), (first, ignored) -> first, LinkedHashMap::new)
+            );
+
+        return new Ingredients(List.copyOf(distinct.values()));
     }
 
     public Long id() {
@@ -98,6 +108,18 @@ public final class Product {
 
     public Category category() {
         return category;
+    }
+
+    public List<ProductPart> parts() {
+        return parts;
+    }
+
+    public Optional<ProductPart> firstPart() {
+        return parts.stream().findFirst();
+    }
+
+    public Optional<ProductPart> findPart(Long partId) {
+        return parts.stream().filter(part -> part.id().equals(partId)).findFirst();
     }
 
     public Ingredients ingredients() {
@@ -150,46 +172,5 @@ public final class Product {
 
     public ProductVariant representativeVariant() {
         return variants.representative();
-    }
-
-    public List<SkinEffectGroup> skinEffectGroups() {
-        Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
-        for (Ingredient ingredient : ingredients.values()) {
-            for (SkinEffect effect : ingredient.skinEffects()) {
-                SkinEffectGroupAccumulator group = groups.computeIfAbsent(
-                    effect.id(),
-                    ignored -> new SkinEffectGroupAccumulator(effect)
-                );
-                group.add(ingredient.id());
-            }
-        }
-
-        return groups.values().stream()
-            .map(SkinEffectGroupAccumulator::toGroup)
-            .sorted(
-                Comparator.comparingInt((SkinEffectGroup group) -> group.ingredientIds().size())
-                    .reversed()
-                    .thenComparing(group -> group.effect().id())
-            )
-            .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
-            .toList();
-    }
-
-    private static class SkinEffectGroupAccumulator {
-
-        private final SkinEffect effect;
-        private final List<Long> ingredientIds = new ArrayList<>();
-
-        private SkinEffectGroupAccumulator(SkinEffect effect) {
-            this.effect = effect;
-        }
-
-        private void add(Long ingredientId) {
-            ingredientIds.add(ingredientId);
-        }
-
-        private SkinEffectGroup toGroup() {
-            return new SkinEffectGroup(effect, ingredientIds);
-        }
     }
 }

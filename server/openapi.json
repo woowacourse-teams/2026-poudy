@@ -1263,7 +1263,7 @@
           "제품"
         ],
         "summary": "제품 상세 조회",
-        "description": "제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.",
+        "description": "제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
         "operationId": "findProductDetail",
         "parameters": [
           {
@@ -1275,6 +1275,16 @@
               "format": "int64"
             },
             "example": 101
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 473
           }
         ],
         "responses": {
@@ -3574,12 +3584,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "제외 성분군 이름",
             "example": "향료/알레르기 성분"
           },
           "contains": {
             "type": "boolean",
-            "description": "제품의 해당 성분군 포함 여부",
             "example": false
           }
         },
@@ -3618,33 +3626,27 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "description": "제품 ID",
             "example": 101
           },
           "name": {
             "type": "string",
-            "description": "제품명",
             "example": "스킨케어 이름"
           },
           "brand": {
-            "$ref": "#/components/schemas/BrandResponse",
-            "description": "브랜드 정보"
+            "$ref": "#/components/schemas/BrandResponse"
           },
           "categories": {
             "type": "array",
-            "description": "제품 카테고리 목록",
             "items": {
               "$ref": "#/components/schemas/CategoryPathResponse"
             }
           },
           "imageUrl": {
             "type": "string",
-            "description": "제품 대표 이미지 URL",
             "example": "https://cdn.example.com/products/101.png"
           },
           "variants": {
             "type": "array",
-            "description": "같은 제품의 용량 옵션 전체. 가격과 용량은 옵션마다 따로 있다",
             "example": [
               {
                 "id": 1,
@@ -3668,7 +3670,6 @@
           "moistureLevel": {
             "type": "integer",
             "format": "int32",
-            "description": "수분감 단계 (0~3)",
             "example": 3,
             "maximum": 3,
             "minimum": 0
@@ -3676,50 +3677,34 @@
           "oilLevel": {
             "type": "integer",
             "format": "int32",
-            "description": "유분감 단계 (0~3)",
             "example": 1,
             "maximum": 3,
             "minimum": 0
           },
-          "skinEffectGroups": {
+          "productParts": {
             "type": "array",
-            "description": "연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)",
             "items": {
-              "$ref": "#/components/schemas/SkinEffectGroupResponse"
+              "$ref": "#/components/schemas/ProductPartSummaryResponse"
             }
           },
-          "ingredients": {
-            "type": "array",
-            "description": "표시 순서대로 정렬된 전체 성분",
-            "items": {
-              "$ref": "#/components/schemas/ProductIngredientResponse"
-            }
-          },
-          "excludeGroups": {
-            "type": "array",
-            "description": "제외 성분군별 포함 여부",
-            "items": {
-              "$ref": "#/components/schemas/ExcludeGroupResponse"
-            }
+          "selectedPart": {
+            "$ref": "#/components/schemas/ProductPartResponse"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "제품 정보를 마지막으로 갱신한 시각",
             "example": "2026-08-01T09:30:00+09:00"
           }
         },
         "required": [
           "brand",
           "categories",
-          "excludeGroups",
           "id",
           "imageUrl",
-          "ingredients",
           "moistureLevel",
           "name",
           "oilLevel",
-          "skinEffectGroups",
+          "productParts",
           "updatedAt",
           "variants"
         ]
@@ -3765,6 +3750,67 @@
           "id",
           "koreanName",
           "skinEffects"
+        ]
+      },
+      "ProductPartResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 473
+          },
+          "name": {
+            "type": "string",
+            "example": "아쿠아 세럼"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductIngredientResponse"
+            }
+          },
+          "skinEffectGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectGroupResponse"
+            }
+          },
+          "excludeGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcludeGroupResponse"
+            }
+          }
+        },
+        "required": [
+          "excludeGroups",
+          "id",
+          "ingredients",
+          "skinEffectGroups"
+        ]
+      },
+      "ProductPartSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 473
+          },
+          "name": {
+            "type": "string",
+            "example": "아쿠아 세럼"
+          },
+          "cautionCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          }
+        },
+        "required": [
+          "cautionCount",
+          "id"
         ]
       },
       "ProductVariantResponse": {
@@ -4911,6 +4957,7 @@
               "PRODUCT_REQUEST_NOT_FOUND",
               "CURATION_NOT_FOUND",
               "PRODUCT_NOT_FOUND",
+              "PRODUCT_PART_NOT_FOUND",
               "BRAND_NOT_FOUND",
               "INGREDIENT_NOT_FOUND",
               "ENDPOINT_NOT_FOUND",
