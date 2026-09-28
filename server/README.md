@@ -27,22 +27,29 @@ JDK 21 이상, Node.js 22, POSIX `sh` (Windows는 Git Bash).
 PostgreSQL에서 읽습니다. 카탈로그는 요청에 필요한 데이터를 조회하며, 검색용 뷰는 적재 후 갱신합니다.
 인기 검색어 사전과 순위는 10분마다 함께 갱신하며, 갱신 실패 시 이전 결과를 유지합니다.
 
-PostgreSQL 15 이상과 `psql`이 필요합니다. UTF-8 및 한글·자모를 인식하는 로케일로 DB를 만들고,
-초기화·테스트 계정에 `pg_trgm` 확장 생성 권한을 부여합니다. 빈 DB의 최초 초기화는 다음과 같습니다.
+PostgreSQL 15 이상이 필요합니다. UTF-8 및 한글·자모를 인식하는 로케일로 DB를 만들고,
+서버·테스트 계정에 테이블 생성과 `pg_trgm` 확장 생성 권한을 부여합니다. DB는 다음처럼 만듭니다.
 
 ```bash
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy
-sh ./scripts/init-db.sh -d poudy
 createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 ```
 
-새 DB는 `db/schema.sql`로 생성하고 초기 데이터에 `exclude_code` 정의와 성분 매핑을
-포함해야 합니다. 기존 DB에는 스키마를 다시 적용하지 않습니다.
+스키마는 서버가 기동할 때 Flyway가 `src/main/resources/db/migration`의 파일을 버전 순서로
+적용합니다. 빈 DB에는 `V1`부터 적용하고, Flyway 도입 전부터 쓰던 DB는 첫 기동에 `V2`까지 적용된
+것으로 등록합니다. 이 등록은 스키마를 검사하지 않으므로, 이력 없는 DB에 처음 배포하기 전에는
+스키마가 `V2`와 같은지 확인합니다. 서버가 뜨려면 `exclude_code` 정의와 성분 매핑 데이터가
+있어야 합니다.
+
+스키마를 바꿀 때는 적용된 파일을 고치지 않고 `V3__설명.sql`처럼 다음 버전 파일을 추가합니다.
+배포 중에는 기존 서버와 새 서버가 같은 DB를 함께 쓰므로, 테이블·컬럼 삭제와 이름 변경은 새
+구조를 추가하는 배포와 옛 구조를 지우는 배포로 나눕니다. 마이그레이션이 포함된 배포 전에는
+`pg_dump`로 백업합니다.
 
 | DB | 쓰는 곳 | 스키마·데이터 |
 | --- | --- | --- |
-| `poudy` | `bootRun` (`dev`), 운영 (`prod`) | 직접 적용하고 데이터를 적재한다 |
-| `poudy_test` | 테스트, OpenAPI 생성 (`test`) | 스키마와 테스트 데이터를 자동으로 초기화한다 |
+| `poudy` | `bootRun` (`dev`), 운영 (`prod`) | 서버가 마이그레이션을 적용하고 데이터는 따로 적재한다 |
+| `poudy_test` | 테스트, OpenAPI 생성 (`test`) | 컨텍스트마다 스키마를 비우고 마이그레이션과 테스트 데이터를 다시 넣는다 |
 
 접속 정보는 `POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD` 로 바꿉니다. 사용자명 기본값은
 OS 사용자명이고 비밀번호는 비어 있습니다. 테스트 DB 주소는 `POUDY_TEST_DB_URL` 로 바꿉니다.

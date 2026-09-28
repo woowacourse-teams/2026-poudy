@@ -201,6 +201,7 @@ class ErdCloudSchemaTest {
                 FROM information_schema.tables
                 WHERE table_schema = current_schema()
                   AND table_type = 'BASE TABLE'
+                  AND table_name <> 'flyway_schema_history'
                 ORDER BY table_name
                 """,
             String.class
