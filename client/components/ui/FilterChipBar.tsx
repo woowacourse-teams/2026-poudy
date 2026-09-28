@@ -8,6 +8,11 @@ export type FilterChipItem = {
   readonly id: string;
   readonly label: string;
   readonly count: number;
+  /**
+   * 개수를 칩에 적을지. 고를 수 있는 값이 하나뿐인 조건은 숫자가 뜻을 더하지 않는다.
+   * `피부 타입 1` 은 걸렸다는 것만 알리는데, 그 일은 색이 이미 하고 있다.
+   */
+  readonly showCount?: boolean;
 };
 
 type FilterChipBarProps = {
@@ -38,7 +43,7 @@ export function FilterChipBar({ chips, onOpen }: FilterChipBarProps) {
           <FilterChip
             key={chip.id}
             label={chip.label}
-            count={chip.count}
+            count={chip.showCount === false ? 0 : chip.count}
             selected={chip.count > 0}
             onClick={() => onOpen(chip.id)}
           />

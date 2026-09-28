@@ -1,7 +1,7 @@
 package com.poudy.brand.controller.dto;
 
+import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.category.controller.dto.CategoryResponse;
-import com.poudy.product.domain.BrandProductCounts;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

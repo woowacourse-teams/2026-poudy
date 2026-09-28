@@ -111,11 +111,11 @@ dictionary_version은 불투명한 제공 버전이다. 표시명이나 표현 �
 - 순위 후보에 오른 대표어만 제공된 keyword로 재검색한다. 기동 시 사전 전체를 재검색하지 않고,
   후보를 순위순으로 확인하다 10개가 차면 멈춘다. 결과는 사전 인스턴스에 캐시한다.
   이 확인은 집계·관찰을 증가시키지 않는다. `ProductService.findProducts`를 쓰지 않는다.
-  그 메서드는 keyword가 있고 첫 페이지이면 검색 로그와 집계 기록을 타기 때문이다. 대신 구성
-  계층의 읽기 전용 어댑터 `CatalogKeywordSearch`가 도메인 `Products.hasResults(keyword)`를 호출해
-  첫 일치에서 멈춘다. 사전 도메인은 `KeywordSearch` 인터페이스만 알고 `ProductRepository`·Spring·
-  검색 구현에 직접 의존하지 않는다. 어댑터는 생성할 때 카탈로그를 한 번 받아 보관하므로
-  재검색마다 파일을 다시 읽지 않는다.
+  그 메서드는 keyword가 있고 첫 페이지이면 검색 로그와 집계 기록을 타기 때문이다. 대신
+  `SearchKeywordService`가 생성될 때 메모리 카탈로그의 `Products.hasResults(keyword)`를
+  `KeywordSearch`로 연결해 첫 일치에서 멈춘다. 사전 도메인은 `KeywordSearch` 인터페이스만
+  알고 `ProductRepository`·Spring·검색 구현에 직접 의존하지 않는다. 카탈로그는 기동 시
+  이미 메모리에 적재되므로 재검색할 때 저장소를 다시 읽지 않는다.
 - 재검색 0건 항목은 공개에서 제외하지만 입력별 기록과 해석 인덱스는 유지한다.
 - 제품 표시명은 브랜드를 포함하며 실제 검색에서 브랜드 의도가 유지되는지 fixture로 검증한다.
 - 참조 배열로 결과를 강제 제한하거나 일반어를 categoryIds 조건으로 바꾸지 않는다.

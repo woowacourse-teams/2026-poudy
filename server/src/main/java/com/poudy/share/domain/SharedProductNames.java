@@ -1,7 +1,7 @@
 package com.poudy.share.domain;
 
 import com.poudy.brand.domain.Brands;
-import com.poudy.product.domain.Products;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ public class SharedProductNames {
         return values.isEmpty();
     }
 
-    public ShareMatch matchIn(Products products) {
+    public ShareMatch matchIn(SharedProductLookup products) {
         ShareMatch unmatched = ShareMatch.notFound("");
 
         for (SharedProductName name : values) {

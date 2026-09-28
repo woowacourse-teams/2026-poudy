@@ -364,3 +364,129 @@ test("links the commit and shows the commit subject for a direct push", async ()
   assert.ok(commit);
   assert.match(commit.value, /\/commit\/abcdef1234567890/);
 });
+
+test("edits the open message into a closed one when a pull request is closed without merging", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  const response = await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  // 닫힘은 새 알림을 울리지 않고 기존 메시지만 고친다.
+  assert.deepEqual(
+    sent.map((request) => request.method),
+    ["POST", "PATCH", "PATCH"],
+  );
+  assert.match(sent.at(-1)?.url ?? "", /\/messages\/msg-1/);
+
+  const embed = sent.at(-1)?.body.embeds[0];
+  assert.ok(embed);
+  assert.match(embed.title, /🚫 Pull Request 닫힘/);
+  // red 는 배포·CI 실패의 색이라 머지하지 않은 닫힘에는 gray 를 쓴다.
+  assert.equal(embed.color, 9807270);
+  // 이미 붙은 CI 결과는 그대로 남는다.
+  assert.match(embed.fields?.find((field) => field.name === "CI")?.value ?? "", /✅ \[Server CI\]/);
+});
+
+test("sends a closing message when the stored pull request record has expired", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // KV 기록 없이 닫힘만 도착한 상황이다. TTL 이 지난 오래된 PR 이 여기에 해당한다.
+  const response = await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0]?.method, "POST");
+  assert.match(sent[0]?.body.embeds[0]?.title ?? "", /🚫 Pull Request 닫힘/);
+});
+
+test("sends a closing message when the stored message was deleted", async () => {
+  const kv = fakeKv();
+  const methods: string[] = [];
+  const realFetch = globalThis.fetch;
+
+  globalThis.fetch = async (_input, init) => {
+    const method = init?.method ?? "GET";
+    methods.push(method);
+
+    // 지워진 메시지를 고치려 하면 404 가 온다.
+    if (method === "PATCH") {
+      return new Response("not found", { status: 404 });
+    }
+    return new Response(JSON.stringify({ id: "msg-1" }), { status: 200 });
+  };
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  const response = await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(methods, ["POST", "PATCH", "POST"]);
+});
+
+test("keeps sending a new message when a pull request is merged", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  const merged = { ...pullRequest, merged: true, merged_by: user("inaemin") };
+  const response = await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: merged, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  // 머지는 알릴 만한 소식이라 예전처럼 새 메시지를 보낸다.
+  assert.deepEqual(
+    sent.map((request) => request.method),
+    ["POST", "POST"],
+  );
+  assert.match(sent.at(-1)?.body.embeds[0]?.title ?? "", /🎉 Pull Request 머지 완료/);
+});
+
+test("stays silent when a draft pull request is closed without merging", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // 초안은 열릴 때 알리지 않으므로 닫힐 때도 고칠 메시지가 없다.
+  const response = await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: { ...pullRequest, draft: true }, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, 0);
+});

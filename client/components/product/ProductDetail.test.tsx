@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { act, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductDetail } from "./ProductDetail";
@@ -27,6 +28,18 @@ describe("제품 성분 요약", () => {
         entry_point: "saved",
       }),
     );
+  });
+
+  it("상세에서 보관할 때도 상세 진입 경로를 남긴다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} entryPoint="home_category" />);
+
+    await userEvent.click(screen.getAllByRole("button", { name: /저장$/ })[0]);
+
+    expect(track).toHaveBeenCalledWith("product_saved", {
+      product_id: untaggedProductDetail.id,
+      save_source: "product_detail",
+      entry_point: "home_category",
+    });
   });
 
   it("피부 작용 태그가 없으면 전성분 수만 안내한다", () => {
@@ -103,8 +116,8 @@ describe("제품 성분 요약", () => {
 
     const path = screen.getByRole("navigation", { name: "카테고리 경로" });
 
-    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveAttribute("href", "/categories/2");
-    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveAttribute("href", "/categories/21");
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveAttribute("href", "/categories/13");
+    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveAttribute("href", "/categories/14");
   });
 
   it("브랜드명을 브랜드관으로 잇는다", () => {
@@ -308,5 +321,96 @@ describe("상품 정보 출처 안내", () => {
       "href",
       `/inquiry/products/${untaggedProductDetail.id}`,
     );
+  });
+});
+
+describe("성분 정보 선택 차단", () => {
+  it("성분 정보 요약과 전체 성분표에 선택을 막는 표시를 단다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { name: "성분 정보" }).closest("section")).toHaveAttribute("data-no-select");
+    expect(screen.getByRole("heading", { name: "전체 성분표" }).closest("section")).toHaveAttribute("data-no-select");
+  });
+
+  it("성분 분류에도 선택을 막는 표시를 단다", () => {
+    render(<ProductDetail product={productDetails[0]} />);
+
+    expect(screen.getByRole("heading", { name: "성분 분류" }).closest("section")).toHaveAttribute("data-no-select");
+  });
+
+  it("제품 이름과 상품 정보 출처 안내는 그대로 선택된다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.getByRole("heading", { level: 1 }).closest("[data-no-select]")).toBeNull();
+    expect(screen.getByText("상품 정보 출처 안내").closest("[data-no-select]")).toBeNull();
+  });
+});
+
+describe("성분 분류", () => {
+  const taggedProduct = productDetails[0]!;
+
+  /* 같은 말이 유수분 태그에도 있어 분류 영역 안에서만 친다. */
+  const groupRow = (name: string) => {
+    const section = screen.getByRole("heading", { name: "성분 분류" }).closest("section")!;
+
+    return within(section).getByText(name).closest("li")!;
+  };
+
+  it("분류에 묶인 성분마다 성분 상세로 가는 링크를 둔다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = within(groupRow("보습"));
+
+    expect(row.getByRole("link", { name: "부틸렌글라이콜" })).toHaveAttribute("href", "/ingredients/2");
+    expect(row.getByRole("link", { name: "판테놀" })).toHaveAttribute("href", "/ingredients/6");
+  });
+
+  it("성분 이름 사이에 구분 기호를 두지 않는다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = groupRow("보습");
+
+    expect(row).not.toHaveTextContent("·");
+    expect(within(row).getAllByRole("link")).toHaveLength(2);
+  });
+
+  it("성분명에 누를 수 있다는 표시를 남긴다", () => {
+    render(<ProductDetail product={taggedProduct} />);
+
+    const row = within(groupRow("보습"));
+
+    expect(row.getByRole("link", { name: "판테놀" })).toHaveClass("ingredient-chip-link");
+  });
+
+  it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
+    const product = {
+      ...taggedProduct,
+      skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+    };
+
+    render(<ProductDetail product={product} />);
+
+    const row = groupRow("보습");
+
+    expect(within(row).getAllByRole("link")).toHaveLength(1);
+    expect(row.textContent?.trim()).toMatch(/부틸렌글라이콜$/);
+  });
+});
+
+describe("제외 성분군 표시", () => {
+  const chipOf = (name: string) => screen.getByText(`${name} 제외`).closest("li");
+
+  it("제품에 없는 성분군은 체크와 함께 강조한다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("건조 알코올")).toHaveTextContent("건조 알코올 제외 없음");
+    expect(chipOf("건조 알코올")?.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("제품에 들어 있는 성분군은 체크 없이 흐리게 둔다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(chipOf("향료/알레르기 성분")).toHaveTextContent("향료/알레르기 성분 제외 있음");
+    expect(chipOf("향료/알레르기 성분")?.querySelector("svg")).not.toBeInTheDocument();
   });
 });

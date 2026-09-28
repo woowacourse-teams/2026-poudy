@@ -3,14 +3,13 @@ package com.poudy.productview.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ViewPeriod;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.productview.repository.ProductViewRepository;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,31 +17,31 @@ public class ProductViewService {
 
     private final ProductRepository productRepository;
     private final ProductViewRepository productViewRepository;
-    private final Clock productViewClock;
+    private final Clock clock;
 
     public ProductViewService(
         ProductRepository productRepository,
         ProductViewRepository productViewRepository,
-        @Qualifier("productViewClock") Clock productViewClock
+        Clock clock
     ) {
         this.productRepository = productRepository;
         this.productViewRepository = productViewRepository;
-        this.productViewClock = productViewClock.withZone(ZoneId.of("Asia/Seoul"));
+        this.clock = clock.withZone(ZoneId.of("Asia/Seoul"));
     }
 
     public void increaseViewCount(Long productId) {
-        if (productRepository.findAll().findById(productId).isEmpty()) {
+        if (!productRepository.existsById(productId)) {
             throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
         }
-        productViewRepository.increaseViewCount(productId, LocalDate.now(productViewClock));
-    }
-
-    public Map<Long, Long> sumViewCounts(Integer days) {
-        return productViewRepository.sumViewCounts(LocalDate.now(productViewClock), days);
+        productViewRepository.increaseViewCount(productId, LocalDate.now(clock));
     }
 
     public List<Product> findRankings(List<Long> categoryIds, Integer days) {
-        Map<Long, Long> viewCounts = sumViewCounts(days);
-        return productRepository.findAll().rankByViewCounts(categoryIds, viewCounts);
+        ViewPeriod period = days == null ? null : ViewPeriod.recentDays(LocalDate.now(clock), days);
+        return productRepository.findRankings(
+            categoryIds,
+            period == null ? null : period.firstDate(),
+            period == null ? null : period.lastDate()
+        );
     }
 }

@@ -1,0 +1,490 @@
+{
+  "date": "2026-09-26",
+  "method": "curl without JavaScript; Googlebot User-Agent; not a verified Googlebot request",
+  "responses": [
+    {
+      "url": "https://poudy.site/",
+      "result": "200 https://poudy.site/ 0",
+      "error": "",
+      "title": ["Poudy(파우디) | 화장품 전성분 검색"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site\"/>"],
+      "h1": ["<span class=\"sr-only\">P</span>oudy"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://poudy.site/#website",
+              "name": "Poudy",
+              "alternateName": ["파우디"],
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "inLanguage": "ko-KR",
+              "publisher": {
+                "@id": "https://poudy.site/#organization"
+              }
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://poudy.site/#organization",
+              "name": "Poudy",
+              "alternateName": "파우디",
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "logo": "https://poudy.site/favicon.png",
+              "sameAs": ["https://www.instagram.com/poudy.official"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://poudy.site/robots.txt",
+      "result": "200 https://poudy.site/robots.txt 0",
+      "error": "",
+      "title": [],
+      "robots": [],
+      "canonical": [],
+      "h1": [],
+      "description": [],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/sitemap.xml",
+      "result": "200 https://poudy.site/sitemap.xml 0",
+      "error": "",
+      "title": [],
+      "robots": [],
+      "canonical": [],
+      "h1": [],
+      "description": [],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "lastmods": [],
+      "x_robots_tag": [],
+      "jsonld": [],
+      "sitemap_url_count": 3,
+      "sitemap_unique_url_count": 3
+    },
+    {
+      "url": "https://poudy.site/sitemap-pages.xml",
+      "result": "200 https://poudy.site/sitemap-pages.xml 0",
+      "error": "",
+      "title": [],
+      "robots": [],
+      "canonical": [],
+      "h1": [],
+      "description": [],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "lastmods": ["2026-09-05", "2026-08-30", "2026-08-30"],
+      "x_robots_tag": [],
+      "jsonld": [],
+      "sitemap_url_count": 44,
+      "sitemap_unique_url_count": 44
+    },
+    {
+      "url": "https://poudy.site/sitemap-products.xml",
+      "result": "200 https://poudy.site/sitemap-products.xml 0",
+      "error": "",
+      "title": [],
+      "robots": [],
+      "canonical": [],
+      "h1": [],
+      "description": [],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "lastmods": [],
+      "x_robots_tag": [],
+      "jsonld": [],
+      "sitemap_url_count": 472,
+      "sitemap_unique_url_count": 472
+    },
+    {
+      "url": "https://poudy.site/sitemap-ingredients.xml",
+      "result": "200 https://poudy.site/sitemap-ingredients.xml 0",
+      "error": "",
+      "title": [],
+      "robots": [],
+      "canonical": [],
+      "h1": [],
+      "description": [],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "lastmods": [],
+      "x_robots_tag": [],
+      "jsonld": [],
+      "sitemap_url_count": 1398,
+      "sitemap_unique_url_count": 1398
+    },
+    {
+      "url": "https://poudy.site/products/312",
+      "result": "200 https://poudy.site/products/312 0",
+      "error": "",
+      "title": ["라운드랩 1025 독도 로션 전성분 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/products/312\"/>"],
+      "h1": ["1025 독도 로션"],
+      "description": [
+        "<meta name=\"description\" content=\"라운드랩 1025 독도 로션의 전성분 27개와 수분·피부 장벽 관련 성분을 확인하세요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 27,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/ingredients/2",
+      "result": "200 https://poudy.site/ingredients/2 0",
+      "error": "",
+      "title": ["가지열매추출물 성분 정보 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/ingredients/2\"/>"],
+      "h1": ["가지열매추출물"],
+      "description": [
+        "<meta name=\"description\" content=\"피부를 부드럽게 관리하는 컨디셔닝 성분으로, 항산화 작용을 통해 외부 자극으로 지친 피부를 보호하는 데 도움을 줄 수 있어요. 식물 추출물이나 가지과 식물에 알레르기 경험이 있다면 원료 유래를 확인하고, 새로운 제품은 좁은 부위부터 사용해 보세요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/brands/23",
+      "result": "200 https://poudy.site/brands/23 0",
+      "error": "",
+      "title": ["구달 제품 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/brands/23\"/>"],
+      "h1": ["브랜드관"],
+      "description": ["<meta name=\"description\" content=\"구달의 제품을 성분으로 살펴봅니다.\"/>"],
+      "product_links": 20,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/categories/1",
+      "result": "200 https://poudy.site/categories/1 0",
+      "error": "",
+      "title": ["스킨케어 화장품 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/categories/1\"/>"],
+      "h1": ["카테고리"],
+      "description": [
+        "<meta name=\"description\" content=\"스킨케어 카테고리의 화장품과 전성분 정보를 확인해 보세요.\"/>"
+      ],
+      "product_links": 20,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/search/ingredients",
+      "result": "200 https://poudy.site/search/ingredients 0",
+      "error": "",
+      "title": ["성분 검색 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/search/ingredients\"/>"],
+      "h1": ["탐색"],
+      "description": [
+        "<meta name=\"description\" content=\"포함하거나 제외할 성분을 골라 조건에 맞는 화장품을 찾아보세요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/search/products",
+      "result": "200 https://poudy.site/search/products 0",
+      "error": "",
+      "title": ["제품 검색 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/search/products\"/>"],
+      "h1": ["탐색"],
+      "description": [
+        "<meta name=\"description\" content=\"제품명이나 브랜드로 화장품과 전성분 정보를 찾아보세요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/blog",
+      "result": "404 https://poudy.site/blog 0",
+      "error": "",
+      "title": ["찾을 수 없는 화면 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex\"/>", "<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": [],
+      "h1": ["찾을 수 없어요"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/feed.xml",
+      "result": "404 https://poudy.site/feed.xml 0",
+      "error": "",
+      "title": ["찾을 수 없는 화면 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex\"/>", "<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": [],
+      "h1": ["찾을 수 없어요"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/llms.txt",
+      "result": "404 https://poudy.site/llms.txt 0",
+      "error": "",
+      "title": ["찾을 수 없는 화면 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex\"/>", "<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": [],
+      "h1": ["찾을 수 없어요"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/phase0-nonexistent-20260926",
+      "result": "404 https://poudy.site/phase0-nonexistent-20260926 0",
+      "error": "",
+      "title": ["찾을 수 없는 화면 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex\"/>", "<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": [],
+      "h1": ["찾을 수 없어요"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/products/999999999",
+      "result": "404 https://poudy.site/products/999999999 0",
+      "error": "",
+      "title": ["찾을 수 없는 화면 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex\"/>", "<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": [],
+      "h1": [],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/products?keyword=toner",
+      "result": "200 https://poudy.site/products?keyword=toner 0",
+      "error": "",
+      "title": ["조건 일치 제품 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"noindex, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/products\"/>"],
+      "h1": ["조건 일치 제품"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "https://poudy.site/brands/23?page=2",
+      "result": "200 https://poudy.site/brands/23?page=2 0",
+      "error": "",
+      "title": ["구달 제품 | Poudy"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site/brands/23\"/>"],
+      "h1": ["브랜드관"],
+      "description": ["<meta name=\"description\" content=\"구달의 제품을 성분으로 살펴봅니다.\"/>"],
+      "product_links": 20,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": []
+    },
+    {
+      "url": "http://poudy.site/",
+      "result": "200 https://poudy.site/ 1",
+      "error": "",
+      "title": ["Poudy(파우디) | 화장품 전성분 검색"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site\"/>"],
+      "h1": ["<span class=\"sr-only\">P</span>oudy"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://poudy.site/#website",
+              "name": "Poudy",
+              "alternateName": ["파우디"],
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "inLanguage": "ko-KR",
+              "publisher": {
+                "@id": "https://poudy.site/#organization"
+              }
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://poudy.site/#organization",
+              "name": "Poudy",
+              "alternateName": "파우디",
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "logo": "https://poudy.site/favicon.png",
+              "sameAs": ["https://www.instagram.com/poudy.official"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.poudy.site/",
+      "result": "200 https://poudy.site/ 1",
+      "error": "",
+      "title": ["Poudy(파우디) | 화장품 전성분 검색"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site\"/>"],
+      "h1": ["<span class=\"sr-only\">P</span>oudy"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://poudy.site/#website",
+              "name": "Poudy",
+              "alternateName": ["파우디"],
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "inLanguage": "ko-KR",
+              "publisher": {
+                "@id": "https://poudy.site/#organization"
+              }
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://poudy.site/#organization",
+              "name": "Poudy",
+              "alternateName": "파우디",
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "logo": "https://poudy.site/favicon.png",
+              "sameAs": ["https://www.instagram.com/poudy.official"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "http://www.poudy.site/",
+      "result": "200 https://poudy.site/ 1",
+      "error": "",
+      "title": ["Poudy(파우디) | 화장품 전성분 검색"],
+      "robots": ["<meta name=\"robots\" content=\"index, follow\"/>"],
+      "canonical": ["<link rel=\"canonical\" href=\"https://poudy.site\"/>"],
+      "h1": ["<span class=\"sr-only\">P</span>oudy"],
+      "description": [
+        "<meta name=\"description\" content=\"Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.\"/>"
+      ],
+      "product_links": 0,
+      "ingredient_links": 0,
+      "page_links": [],
+      "x_robots_tag": [],
+      "jsonld": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://poudy.site/#website",
+              "name": "Poudy",
+              "alternateName": ["파우디"],
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "inLanguage": "ko-KR",
+              "publisher": {
+                "@id": "https://poudy.site/#organization"
+              }
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://poudy.site/#organization",
+              "name": "Poudy",
+              "alternateName": "파우디",
+              "description": "Poudy(파우디)에서 화장품 전성분을 확인해 보세요. 제품명·브랜드로 검색하거나, 포함하거나 제외할 성분을 골라 원하는 화장품을 찾을 수 있어요.",
+              "url": "https://poudy.site/",
+              "logo": "https://poudy.site/favicon.png",
+              "sameAs": ["https://www.instagram.com/poudy.official"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

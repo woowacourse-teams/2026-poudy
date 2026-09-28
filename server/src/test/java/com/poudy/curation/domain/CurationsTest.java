@@ -3,51 +3,73 @@ package com.poudy.curation.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("큐레이션 목록")
 class CurationsTest {
 
     @Test
-    @DisplayName("게시 중인 큐레이션만 ID 오름차순으로 조회한다")
-    void findsPublishedCurationsSortedById() {
-        Curation highId = curation(12L, CurationStatus.PUBLISHED);
-        Curation draft = curation(20L, CurationStatus.DRAFT);
-        Curation lowId = curation(4L, CurationStatus.PUBLISHED);
-        Curation archived = curation(30L, CurationStatus.ARCHIVED);
-        Curations curations = Curations.from(List.of(highId, draft, lowId, archived));
+    void selectsVisibleBannersAndPublishedCurations() {
+        Curation firstBanner = curation(
+            12L,
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+        Curation hiddenBanner = curation(
+            4L,
+            CurationPublicationStatus.PUBLISHED,
+            false
+        );
+        Curation secondBanner = curation(
+            8L,
+            CurationPublicationStatus.PUBLISHED,
+            true
+        );
+        Curation unpublished = curation(
+            20L,
+            CurationPublicationStatus.UNPUBLISHED,
+            false
+        );
+        List<Curation> source = new ArrayList<>(
+            List.of(firstBanner, hiddenBanner, secondBanner, unpublished)
+        );
+        Curations curations = Curations.from(source);
+        source.clear();
 
-        assertThat(curations.publishedSortedById())
+        assertThat(curations.visibleBannersInOrder())
             .extracting(Curation::id)
-            .containsExactly(4L, 12L);
-        assertThat(curations.findPublishedById(12L)).contains(highId);
+            .containsExactly(12L, 8L);
+        assertThat(curations.findPublishedById(12L)).containsSame(firstBanner);
+        assertThat(curations.findPublishedById(4L)).containsSame(hiddenBanner);
         assertThat(curations.findPublishedById(20L)).isEmpty();
-        assertThat(curations.findPublishedById(30L)).isEmpty();
         assertThat(curations.findPublishedById(999L)).isEmpty();
+        assertThat(Curations.from(List.of()).visibleBannersInOrder()).isEmpty();
     }
 
     @Test
-    @DisplayName("큐레이션 ID는 중복될 수 없다")
-    void rejectsDuplicateIds() {
-        assertThatThrownBy(
-            () -> Curations.from(
-                List.of(curation(12L, CurationStatus.DRAFT), curation(12L, CurationStatus.PUBLISHED))
-            )
-        ).isInstanceOf(IllegalArgumentException.class);
+    void rejectsDuplicateCurationIds() {
+        assertThatThrownBy(() -> Curations.from(List.of(curation(12L), curation(12L))))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private static Curation curation(Long id, CurationStatus status) {
+    private static Curation curation(Long id) {
+        return CurationTest.curation(id, List.of());
+    }
+
+    private static Curation curation(
+        Long id,
+        CurationPublicationStatus publicationStatus,
+        boolean bannerVisible
+    ) {
         return new Curation(
             id,
-            "제목",
-            "간단 설명",
-            "상세 설명",
-            List.of("https://example.com/main.png"),
-            List.of(),
-            List.of(),
-            status
+            "큐레이션 제목",
+            "큐레이션 설명",
+            publicationStatus,
+            bannerVisible,
+            bannerVisible ? "banner.png" : null,
+            List.of()
         );
     }
 }

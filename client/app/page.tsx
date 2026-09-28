@@ -1,19 +1,38 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
-import { RecentFilters, SavedPreview } from "@/components/home/PersonalSections";
+import { CurationCarousel } from "@/components/home/CurationCarousel";
+import { HomeSearchLink } from "@/components/home/HomeSearchLink";
+import { PopularKeywords } from "@/components/home/PopularKeywords";
+import { PopularProducts } from "@/components/home/PopularProducts";
+import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
 import { OPERATOR } from "@/components/legal/operator";
-import { Icon } from "@/components/ui/icons/Icon";
+import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
-import { EXCLUDE_CODES } from "@/lib/domain/filter";
-import { absoluteUrl, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
+import {
+  fetchCategories,
+  fetchCurations,
+  fetchProductRankings,
+  fetchSearchKeywordRankings,
+  fetchSkinTypes,
+} from "@/lib/api/products";
+import { absoluteUrl, INSTAGRAM_URL, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const INSTAGRAM_URL = "https://www.instagram.com/poudy.official";
+/*
+ * 인기 검색어와 인기 제품이 10분마다 바뀌므로 그 주기로 다시 만든다.
+ *
+ * 이 값이 없으면 라우트 기본값인 `false` 가 적용되어 빌드 때 만든 화면이 다음 배포까지
+ * 그대로 남는다. 각 fetch 에 준 `revalidate` 는 그 요청의 데이터만 담아 둘 뿐,
+ * 화면을 다시 만드는 주기를 정하지는 않는다.
+ */
+export const revalidate = 600;
+
+// 화면 구성에 맞춰 다시 노출하기 전까지 홈 안내 섹션은 렌더링하지 않는다.
+const showServiceDescription = false;
 
 const organizationId = absoluteUrl("/#organization");
 const websiteStructuredData = {
@@ -22,8 +41,8 @@ const websiteStructuredData = {
     {
       "@type": "WebSite",
       "@id": absoluteUrl("/#website"),
-      name: SITE_NAME,
-      alternateName: [SITE_ALTERNATE_NAME],
+      name: SITE_ALTERNATE_NAME,
+      alternateName: [SITE_NAME],
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
       inLanguage: "ko-KR",
@@ -32,148 +51,74 @@ const websiteStructuredData = {
     {
       "@type": "Organization",
       "@id": organizationId,
-      name: SITE_NAME,
-      alternateName: SITE_ALTERNATE_NAME,
+      name: SITE_ALTERNATE_NAME,
+      alternateName: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
       logo: absoluteUrl("/favicon.png"),
-      sameAs: [INSTAGRAM_URL],
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: OPERATOR.officer.email,
+        availableLanguage: ["ko"],
+      },
+      sameAs: [INSTAGRAM_URL, "https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share"],
     },
   ],
 };
 
-const ACTIONS = [
-  {
-    href: "/search/products",
-    icon: "search",
-    label: "제품명·브랜드로 찾기",
-    tone: "dark",
-  },
-  {
-    href: "/search/ingredients",
-    icon: "sliders",
-    label: "성분·조건으로 찾기",
-    tone: "light",
-  },
-] as const;
+/**
+ * 한 곳이라도 무너지면 홈 전체가 빈 화면이 된다. 영역마다 따로 받아서
+ * 실패한 자리만 비우고 나머지는 그대로 그린다.
+ */
+const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promise<readonly T[]> =>
+  load()
+    .then((response) => response.items)
+    .catch(() => []);
 
-const QUICK_FILTERS: Record<(typeof EXCLUDE_CODES)[number], { label: string; image: string }> = {
-  FRAGRANCE_ALLERGENS: { label: "향료·알레르기", image: "/images/quick-filters/fragrance-allergens.webp" },
-  DRYING_ALCOHOLS: { label: "건조 알코올", image: "/images/quick-filters/drying-alcohols.webp" },
-  HARSH_PRESERVATIVES: { label: "자극성 방부제", image: "/images/quick-filters/harsh-preservatives.webp" },
-  SULFATES: { label: "설페이트", image: "/images/quick-filters/sulfates.webp" },
-  CYCLIC_SILICONES: { label: "실리콘", image: "/images/quick-filters/cyclic-silicones.webp" },
-  SYNTHETIC_COLORANTS: { label: "합성 색소", image: "/images/quick-filters/synthetic-colorants.webp" },
-};
+export default async function Home() {
+  const [curations, keywords, skinTypes, rankings, categories] = await Promise.all([
+    orEmpty(fetchCurations),
+    orEmpty(fetchSearchKeywordRankings),
+    orEmpty(fetchSkinTypes),
+    orEmpty(() => fetchProductRankings()),
+    orEmpty(fetchCategories),
+  ]);
 
-export default function Home() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c") }}
       />
-      <TopBar title="oudy" variant="root" showLogo />
 
-      <main className="flex flex-1 flex-col gap-7 px-4 pt-4 pb-3.5">
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[18px] font-bold text-text-primary">궁금한 제품이나 성분이 있나요?</h2>
+      <TopBar title={SITE_NAME} variant="root" showLogo logoOnly right={<HomeSearchLink />} />
 
-          <div className="grid grid-cols-2 gap-3">
-            {ACTIONS.map((action) => {
-              const dark = action.tone === "dark";
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  data-tone={action.tone}
-                  className={`action-card flex h-full flex-col gap-5 rounded-2xl p-3.5 ${dark ? "bg-action" : "bg-surface"}`}
-                >
-                  <span className="flex items-center justify-between">
-                    <Icon name={action.icon} size={28} className={dark ? "text-action-text" : "text-text-primary"} />
-                    <Icon
-                      name="chevron-right"
-                      size={18}
-                      className={`action-card-arrow ${dark ? "text-white/60" : "text-text-secondary"}`}
-                    />
-                  </span>
-                  <span className={`text-[15px] font-bold ${dark ? "text-action-text" : "text-text-primary"}`}>
-                    {action.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[16px] font-bold text-text-primary">이 성분 빼고 찾기</h2>
-          <ul className="grid grid-cols-3 gap-3">
-            {EXCLUDE_CODES.map((code) => (
-              <li key={code}>
-                <Link
-                  href={`/products?excludeCodes=${code}`}
-                  className="quick-filter-link flex flex-col items-center gap-1"
-                >
-                  <Image
-                    src={QUICK_FILTERS[code].image}
-                    alt=""
-                    width={120}
-                    height={120}
-                    loading="eager"
-                    className="quick-filter-tile size-17 rounded-[20px] bg-linear-to-br from-[#FBFBFC] to-[#EFF0F3] p-1"
-                  />
-                  <span className="text-center text-[13px] font-semibold text-text-primary">
-                    {QUICK_FILTERS[code].label}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <RecentFilters />
-        <SavedPreview />
+      {/* 디자인(S01)은 영역 사이를 32, 아래 여백을 40 으로 둔다. */}
+      <main className="flex flex-1 flex-col gap-8 px-4 pt-1 pb-10">
+        <CurationCarousel items={curations} />
+        <PopularKeywords items={keywords} />
+        <SkinTypeMenu items={skinTypes} />
+        <PopularProducts initialItems={rankings} categories={categories} />
+        {showServiceDescription && (
+          <section aria-labelledby="service-description" className="flex flex-col gap-3">
+            <h2 id="service-description" className="text-[18px] font-bold text-text-primary">
+              화장품 전성분을 검색해 보세요
+            </h2>
+            <p className="text-[13px] leading-relaxed text-text-secondary">{SITE_DESCRIPTION}</p>
+            <nav aria-label="화장품과 성분 검색" className="flex gap-4 text-[13px] font-semibold">
+              <Link href="/search/products" className="underline underline-offset-4">
+                화장품 검색
+              </Link>
+              <Link href="/search/ingredients" className="underline underline-offset-4">
+                성분 검색
+              </Link>
+            </nav>
+          </section>
+        )}
       </main>
 
-      <footer className="flex flex-col items-center gap-2 bg-surface-subtle px-4 py-9 text-center text-[11px] text-text-secondary">
-        <p className="flex items-center justify-center gap-2">
-          <Link href="/privacy" className="underline">
-            개인정보 처리방침
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/terms" className="underline">
-            이용약관
-          </Link>
-        </p>
-
-        <ul className="flex items-center gap-2">
-          <li>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label={`${OPERATOR.serviceName} 인스타그램 (새 창)`}
-              className="flex size-9 items-center justify-center"
-            >
-              <Icon name="instagram" size={18} />
-            </a>
-          </li>
-          <li>
-            <a
-              href={`mailto:${OPERATOR.officer.email}`}
-              aria-label={`${OPERATOR.serviceName} 에 메일 보내기`}
-              className="flex size-9 items-center justify-center"
-            >
-              <Icon name="mail" size={18} />
-            </a>
-          </li>
-        </ul>
-
-        <p className="text-[10px]">
-          당신의 피부를 생각하는 {OPERATOR.name} <span aria-hidden="true">💗</span>
-        </p>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

@@ -1,194 +1,183 @@
 package com.poudy.curation.repository;
 
-import com.poudy.category.domain.Categories;
-import com.poudy.category.domain.Category;
-import com.poudy.common.json.JsonDataReader;
 import com.poudy.curation.domain.Curation;
-import com.poudy.curation.domain.CurationStatus;
+import com.poudy.curation.domain.CurationBlock;
+import com.poudy.curation.domain.CurationFilter;
+import com.poudy.curation.domain.CurationProductMapping;
+import com.poudy.curation.domain.CurationPublicationStatus;
 import com.poudy.curation.domain.Curations;
 import com.poudy.exception.InfrastructureException;
-import com.poudy.product.domain.Product;
-import com.poudy.product.domain.Products;
-import com.poudy.product.repository.ProductRepository;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JacksonModule;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.module.SimpleModule;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class CurationRepository {
 
-    private static final String CURATIONS_FILE_NAME = "curations.json";
-    private static final String ID_FIELD = "id";
-    private static final String TITLE_FIELD = "title";
-    private static final String SUMMARY_FIELD = "summary";
-    private static final String DESCRIPTION_FIELD = "description";
-    private static final String IMAGE_URLS_FIELD = "image_urls";
-    private static final String CATEGORY_IDS_FIELD = "category_ids";
-    private static final String PRODUCT_IDS_FIELD = "product_ids";
-    private static final String STATUS_FIELD = "status";
+    private static final RowMapper<CurationRow> CURATION = (rs, row) -> new CurationRow(
+        rs.getLong("id"),
+        rs.getString("title"),
+        rs.getString("description"),
+        CurationPublicationStatus.valueOf(rs.getString("publication_status")),
+        rs.getBoolean("banner_visible"),
+        rs.getString("banner_thumbnail_image_url")
+    );
 
-    private final Curations curations;
+    private final NamedParameterJdbcTemplate jdbc;
 
-    public CurationRepository(
-        JsonDataReader jsonDataReader,
-        Categories categories,
-        ProductRepository productRepository
-    ) {
+    public CurationRepository(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    public Curations findAll() {
+        return load(
+            jdbc.query(
+                "select * from curation order by position",
+                CURATION
+            )
+        );
+    }
+
+    public Optional<Curation> findPublishedById(Long id) {
+        List<CurationRow> rows = jdbc.query(
+            "select * from curation where id = :id",
+            new MapSqlParameterSource("id", id),
+            CURATION
+        );
+        return load(rows).findPublishedById(id);
+    }
+
+    private Curations load(List<CurationRow> curations) {
         try {
-            this.curations = Curations.from(
-                jsonDataReader.readList(
-                    CURATIONS_FILE_NAME,
-                    Curation.class,
-                    resolvedWith(categories, productRepository.findAll())
-                )
-            );
-        } catch (InfrastructureException exception) {
-            throw exception;
+            return assemble(curations);
         } catch (IllegalArgumentException exception) {
             throw new InfrastructureException("큐레이션 데이터가 올바르지 않습니다.", exception);
         }
     }
 
-    private static JacksonModule resolvedWith(Categories categories, Products products) {
-        SimpleModule resolution = new SimpleModule("큐레이션 참조 해석");
-        resolution.addDeserializer(Curation.class, new ValueDeserializer<Curation>() {
-
-            @Override
-            public Curation deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
-                JsonNode curation = context.readTree(parser);
-
-                return new Curation(
-                    longOf(curation, ID_FIELD, context),
-                    requiredTextOf(curation, TITLE_FIELD, context),
-                    requiredTextOf(curation, SUMMARY_FIELD, context),
-                    requiredTextOf(curation, DESCRIPTION_FIELD, context),
-                    textListOf(curation, IMAGE_URLS_FIELD, context),
-                    categoriesOf(curation, categories, context),
-                    productsOf(curation, products, context),
-                    statusOf(curation, context)
+    private Curations assemble(List<CurationRow> curations) {
+        if (curations.isEmpty()) {
+            return Curations.from(List.of());
+        }
+        List<Long> curationIds = curations.stream().map(CurationRow::id).toList();
+        List<BlockRow> blocks = jdbc.query(
+            """
+                select id, curation_id, type, spacing_top, spacing_bottom, image_url
+                from curation_block where curation_id in (:ids) order by curation_id, position
+                """,
+            new MapSqlParameterSource("ids", curationIds),
+            (rs, row) -> new BlockRow(
+                rs.getObject("id", UUID.class),
+                rs.getLong("curation_id"),
+                rs.getString("type"),
+                rs.getInt("spacing_top"),
+                rs.getInt("spacing_bottom"),
+                rs.getString("image_url")
+            )
+        );
+        List<UUID> blockIds = blocks.stream().map(BlockRow::id).toList();
+        Map<UUID, List<CurationFilter>> filters = loadFilters(blockIds);
+        Map<UUID, LinkedHashMap<Long, List<UUID>>> products = loadProducts(blockIds);
+        Map<Long, List<CurationBlock>> assembledBlocks = new LinkedHashMap<>();
+        for (BlockRow block : blocks) {
+            List<CurationBlock> group = assembledBlocks
+                .computeIfAbsent(block.curationId(), ignored -> new ArrayList<>());
+            LinkedHashMap<Long, List<UUID>> mappings = products.getOrDefault(block.id(), new LinkedHashMap<>());
+            group.add(switch (block.type()) {
+                case "IMAGE" -> CurationBlock.image(block.id(), block.top(), block.bottom(), block.imageUrl());
+                case "PRODUCTS" -> CurationBlock.products(
+                    block.id(),
+                    block.top(),
+                    block.bottom(),
+                    List.copyOf(mappings.keySet())
                 );
+                case "PRODUCTS_BY_FILTER" -> CurationBlock.productsByFilter(
+                    block.id(),
+                    block.top(),
+                    block.bottom(),
+                    filters.getOrDefault(block.id(), List.of()),
+                    mappings.entrySet().stream()
+                        .map(entry -> new CurationProductMapping(entry.getKey(), entry.getValue()))
+                        .toList()
+                );
+                default -> throw new IllegalArgumentException("알 수 없는 큐레이션 블록 타입: " + block.type());
+            });
+        }
+        return Curations.from(
+            curations.stream().map(
+                row -> new Curation(
+                    row.id(),
+                    row.title(),
+                    row.description(),
+                    row.status(),
+                    row.bannerVisible(),
+                    row.thumbnail(),
+                    assembledBlocks.getOrDefault(row.id(), List.of())
+                )
+            ).toList()
+        );
+    }
+
+    private Map<UUID, List<CurationFilter>> loadFilters(List<UUID> blockIds) {
+        if (blockIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, List<CurationFilter>> filters = new LinkedHashMap<>();
+        jdbc.query("""
+            select block_id, id, label from curation_block_filter
+            where block_id in (:ids) order by block_id, position
+            """, new MapSqlParameterSource("ids", blockIds), rs -> {
+            UUID blockId = rs.getObject("block_id", UUID.class);
+            filters.computeIfAbsent(blockId, ignored -> new ArrayList<>())
+                .add(new CurationFilter(rs.getObject("id", UUID.class), rs.getString("label")));
+        });
+        return filters;
+    }
+
+    private Map<UUID, LinkedHashMap<Long, List<UUID>>> loadProducts(List<UUID> blockIds) {
+        if (blockIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, LinkedHashMap<Long, List<UUID>>> products = new LinkedHashMap<>();
+        jdbc.query("""
+            select product.block_id, product.product_id, filter.filter_id
+            from curation_block_product product
+            left join curation_block_product_filter filter
+                on filter.block_id = product.block_id and filter.product_id = product.product_id
+            where product.block_id in (:ids)
+            order by product.block_id, product.position, filter.position
+            """, new MapSqlParameterSource("ids", blockIds), rs -> {
+            UUID blockId = rs.getObject("block_id", UUID.class);
+            Long productId = rs.getLong("product_id");
+            List<UUID> filterIds = products.computeIfAbsent(blockId, ignored -> new LinkedHashMap<>())
+                .computeIfAbsent(productId, ignored -> new ArrayList<>());
+            UUID filterId = rs.getObject("filter_id", UUID.class);
+            if (filterId != null) {
+                filterIds.add(filterId);
             }
         });
-
-        return resolution;
+        return products;
     }
 
-    private static List<Category> categoriesOf(
-        JsonNode curation,
-        Categories categories,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        List<Long> ids = idListOf(curation, CATEGORY_IDS_FIELD, context);
-        List<Category> resolved = new ArrayList<>();
-        for (Long id : ids) {
-            Category category = categories.findById(id).orElse(null);
-            if (category == null) {
-                return context.reportInputMismatch(Curation.class, "큐레이션이 존재하지 않는 카테고리 ID를 참조합니다: %d", id);
-            }
-            resolved.add(category);
-        }
-        return resolved;
+    private record CurationRow(
+        Long id,
+        String title,
+        String description,
+        CurationPublicationStatus status,
+        boolean bannerVisible,
+        String thumbnail) {
     }
 
-    private static List<Product> productsOf(
-        JsonNode curation,
-        Products products,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        List<Long> ids = idListOf(curation, PRODUCT_IDS_FIELD, context);
-        List<Product> resolved = new ArrayList<>();
-        for (Long id : ids) {
-            Product product = products.findById(id).orElse(null);
-            if (product == null) {
-                return context.reportInputMismatch(Curation.class, "큐레이션이 존재하지 않는 제품 ID를 참조합니다: %d", id);
-            }
-            resolved.add(product);
-        }
-        return resolved;
-    }
-
-    private static CurationStatus statusOf(JsonNode curation, DeserializationContext context) throws JacksonException {
-        String status = requiredTextOf(curation, STATUS_FIELD, context);
-        try {
-            return CurationStatus.valueOf(status);
-        } catch (IllegalArgumentException exception) {
-            return context.reportInputMismatch(Curation.class, "큐레이션 상태가 올바르지 않습니다: %s", status);
-        }
-    }
-
-    private static Long longOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
-        JsonNode number = value.get(field);
-        if (number == null || !number.isIntegralNumber()) {
-            return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 필드는 정수여야 합니다.", field);
-        }
-        return number.asLong();
-    }
-
-    private static String requiredTextOf(
-        JsonNode value,
-        String field,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        JsonNode text = value.get(field);
-        if (text == null || !text.isString() || text.asString().isBlank()) {
-            return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 필드는 문자열이어야 합니다.", field);
-        }
-        return text.asString();
-    }
-
-    private static List<String> textListOf(
-        JsonNode value,
-        String field,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        JsonNode values = value.get(field);
-        if (values == null || !values.isArray()) {
-            return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 필드는 배열이어야 합니다.", field);
-        }
-
-        List<String> texts = new ArrayList<>();
-        for (JsonNode text : values) {
-            if (!text.isString() || text.asString().isBlank()) {
-                return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 값은 문자열이어야 합니다.", field);
-            }
-            texts.add(text.asString());
-        }
-        return texts;
-    }
-
-    private static List<Long> idListOf(
-        JsonNode value,
-        String field,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        JsonNode values = value.get(field);
-        if (values == null || !values.isArray()) {
-            return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 필드는 배열이어야 합니다.", field);
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (JsonNode id : values) {
-            if (!id.isIntegralNumber()) {
-                return context.reportInputMismatch(Curation.class, "큐레이션의 \"%s\" 값은 정수여야 합니다.", field);
-            }
-            ids.add(id.asLong());
-        }
-        return ids;
-    }
-
-    public Curations findAll() {
-        return curations;
+    private record BlockRow(UUID id, Long curationId, String type, int top, int bottom, String imageUrl) {
     }
 }

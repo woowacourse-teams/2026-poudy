@@ -27,7 +27,7 @@ const TABS = [
       matchesPathSegment(path, "/products") ||
       matchesPathSegment(path, "/ingredients"),
   },
-  { href: "/saved", label: "저장", icon: "bookmark", match: (path: string) => matchesPathSegment(path, "/saved") },
+  { href: "/saved", label: "저장", icon: "bookmarks", match: (path: string) => matchesPathSegment(path, "/saved") },
 ] as const;
 
 type TabIcon = (typeof TABS)[number]["icon"];
@@ -52,6 +52,12 @@ type NavigationIconProps = {
   readonly onAnimationEnd: () => void;
 };
 
+/**
+ * 고른 탭은 채운 아이콘으로 바꿔 그린다.
+ *
+ * 선으로 그린 아이콘에 `fill` 만 입히면 획 사이의 빈 곳까지 메워져 뭉개진다. 집 아이콘이
+ * 지붕과 문을 잃고 덩어리로 보이던 것이 그 경우다. 채움은 모양이 따로 그려져 있어야 한다.
+ */
 function NavigationIcon({ activated, filled, name, onAnimationEnd }: NavigationIconProps) {
   return (
     <span
@@ -61,7 +67,7 @@ function NavigationIcon({ activated, filled, name, onAnimationEnd }: NavigationI
         if (event.currentTarget === event.target) onAnimationEnd();
       }}
     >
-      <Icon name={name} size={20} filled={filled} />
+      <Icon name={filled ? `${name}-solid` : name} size={20} filled={filled} />
     </span>
   );
 }
@@ -105,6 +111,7 @@ export function BottomNavigation() {
     <div className={`${styles.space} mt-auto shrink-0`}>
       <nav
         aria-label="주요 메뉴"
+        data-bottom-navigation
         className={`${styles.navigation} fixed bottom-0 z-20 border-t border-border bg-background`}
       >
         <ul className={`${styles.list} flex px-2 py-2`}>

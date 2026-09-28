@@ -38,7 +38,7 @@ public class FeedbackController {
         this.imageUploadService = imageUploadService;
     }
 
-    @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.")
+    @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "의견 등록 완료")
     @PostMapping("/api/feedbacks")
     public ResponseEntity<Void> submit(
@@ -56,7 +56,7 @@ public class FeedbackController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "제품 정보 정정 요청", description = "존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.")
+    @Operation(summary = "제품 정보 정정 요청", description = "존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.")
     @ApiResponse(responseCode = "204", description = "정정 요청 접수 완료")
     @PostMapping("/api/products/{productId}/correction-requests")
     public ResponseEntity<Void> submitProductCorrection(
@@ -74,9 +74,9 @@ public class FeedbackController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "문의 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.")
+    @Operation(summary = "임시 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. HEIC는 JPEG로 저장한다.")
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
-    @PostMapping(path = "/api/inquiry-images", consumes = "multipart/form-data")
+    @PostMapping(path = "/api/pending-images", consumes = "multipart/form-data")
     public ResponseEntity<FeedbackImageUploadResponse> uploadImages(
         @ArraySchema(minItems = 1, maxItems = Feedback.MAX_IMAGE_COUNT) @RequestPart("images") List<MultipartFile> images,
         HttpServletRequest httpRequest

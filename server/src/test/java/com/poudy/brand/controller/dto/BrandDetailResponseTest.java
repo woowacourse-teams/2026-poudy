@@ -3,11 +3,11 @@ package com.poudy.brand.controller.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.category.controller.dto.CategoryChildResponse;
 import com.poudy.category.controller.dto.CategoryResponse;
 import com.poudy.category.domain.Category;
-import com.poudy.product.domain.BrandProductCounts;
-import com.poudy.product.domain.CategoryProductCount;
+import com.poudy.category.domain.CategoryProductCount;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

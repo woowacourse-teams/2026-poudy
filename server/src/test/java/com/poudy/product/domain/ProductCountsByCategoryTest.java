@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryProductCount;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;

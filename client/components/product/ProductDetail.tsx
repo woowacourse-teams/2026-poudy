@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { IngredientList } from "./IngredientList";
-import { ProductDetailHeader, ProductSummaryEnd } from "./ProductDetailHeader";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
 
@@ -12,8 +11,8 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
 import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
@@ -26,7 +25,11 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
 }) {
   return (
-    <ProductDetailHeader title="제품 상세" right={<ShareButton />} summary={<CompactSummary product={product} />}>
+    <SummaryHeader
+      title="제품 상세"
+      right={<ShareButton />}
+      summary={<CompactSummary product={product} entryPoint={entryPoint} />}
+    >
       <TrackView
         event="product_viewed"
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
@@ -66,19 +69,23 @@ export function ProductDetail({
 
           <Variants variants={product.variants} />
 
-          <SaveProductButton productId={product.id} productName={product.name} />
+          <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
         </section>
 
-        <ProductSummaryEnd />
+        <SummaryEnd />
 
-        <div className="flex flex-col gap-6 px-4 pb-4">
+        {/*
+          맨 아래의 출처 안내는 문의 버튼이 덮는 자리에 놓인다. 버튼이 가리는 만큼
+          아래를 비워 `정보 수정 제안` 이 눌리게 한다.
+        */}
+        <div className="flex flex-col gap-6 px-4 pb-(--inquiry-button-clearance)">
           <SkinEffectGroups product={product} />
           <IngredientSummary product={product} />
           <Ingredients ingredients={product.ingredients} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
-    </ProductDetailHeader>
+    </SummaryHeader>
   );
 }
 
@@ -88,7 +95,13 @@ export function ProductDetail({
  * 세로로 쌓인 원래 배치를 그대로 붙이면 화면 절반을 차지해 본문을 읽을 자리가 남지 않는다.
  * 그림을 줄이고, 이름은 한 줄로 줄이고, 용량별 가격은 가장 싼 것 하나로 접는다.
  */
-function CompactSummary({ product }: { readonly product: ProductDetailResponse }) {
+function CompactSummary({
+  product,
+  entryPoint,
+}: {
+  readonly product: ProductDetailResponse;
+  readonly entryPoint: ProductEntryPoint;
+}) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
       {/*
@@ -125,7 +138,7 @@ function CompactSummary({ product }: { readonly product: ProductDetailResponse }
         </div>
       </div>
 
-      <SaveProductButton productId={product.id} productName={product.name} variant="icon" />
+      <SaveProductButton productId={product.id} productName={product.name} variant="icon" entryPoint={entryPoint} />
     </div>
   );
 }
@@ -199,10 +212,17 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse }) {
   if (product.skinEffectGroups.length === 0) return null;
 
-  const nameOf = (id: number) => product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName;
+  /*
+   * 이름을 찾지 못한 성분은 목록에서 뺀다. 이전에도 빈 이름은 보이지 않았고,
+   * 누를 수 있게 된 지금은 그 자리를 남겨 두면 빈 화면으로 데려간다.
+   */
+  const named = (ids: readonly number[]) =>
+    ids
+      .map((id) => ({ id, name: product.ingredients.find((ingredient) => ingredient.id === id)?.koreanName }))
+      .filter((ingredient): ingredient is { id: number; name: string } => Boolean(ingredient.name));
 
   return (
-    <section className="flex flex-col gap-3 pt-5">
+    <section data-no-select className="flex flex-col gap-3 pt-5">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
         <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
@@ -213,14 +233,27 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
           const color = effectColor(group.code);
 
           return (
-            <li key={group.id} className="flex h-[52px] items-center gap-3 border-b border-border last:border-b-0">
+            <li
+              key={group.id}
+              className="flex min-h-[52px] items-center gap-3 border-b border-border py-2.5 last:border-b-0"
+            >
               <span
                 className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
               >
                 {group.name}
               </span>
-              <span className="flex-1 text-[13px] font-semibold text-[#202124]">
-                {group.ingredientIds.map(nameOf).filter(Boolean).join(" · ")}
+              {/* 이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다. 구분 기호 없이 간격으로만 나눈다. */}
+              <span className="flex flex-1 flex-wrap gap-x-2 gap-y-1 text-[13px] font-semibold text-[#202124]">
+                {named(group.ingredientIds).map((ingredient) => (
+                  <Link
+                    key={ingredient.id}
+                    href={`/ingredients/${ingredient.id}`}
+                    prefetch="auto"
+                    className="ingredient-chip-link"
+                  >
+                    {ingredient.name}
+                  </Link>
+                ))}
               </span>
             </li>
           );
@@ -233,7 +266,10 @@ function SkinEffectGroups({ product }: { readonly product: ProductDetailResponse
 /** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
 function IngredientSummary({ product }: { readonly product: ProductDetailResponse }) {
   return (
-    <section className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
+    <section
+      data-no-select
+      className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']"
+    >
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
         <p className="text-pretty text-[12px] text-[#72747A]">
@@ -244,15 +280,33 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
         </p>
       </div>
 
-      {product.freeOfCodes.length > 0 ? (
-        <ul className="flex flex-wrap gap-1.5">
-          {product.freeOfCodes.map((code) => (
-            <li key={code} className="flex h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5">
-              {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
-              <Icon name="check" size={12} strokeWidth={4} className="text-[#F04465]" />
-              <span className="text-[12px] font-semibold text-[#54575C]">{EXCLUDE_CODE_LABELS[code]}</span>
-            </li>
-          ))}
+      {product.excludeGroups.length > 0 ? (
+        /*
+          이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
+          세 칸은 모바일 폭에서 거의 모든 이름이 두 줄로 꺾여 두 칸으로 둔다.
+        */
+        <ul className="grid grid-cols-2 gap-1.5">
+          {/*
+            제외한 성분군을 강조한다. 들어 있는 성분군은 비활성 버튼처럼 흐리게 둔다.
+            서버는 성분군 이름만 주므로 "제외" 는 화면에서 붙인다.
+          */}
+          {product.excludeGroups.map((group) =>
+            group.contains ? (
+              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#F2F3F5] px-2.5 py-1">
+                {/* 체크가 없어도 이웃 칸과 글자 시작점이 맞도록 체크 자리를 비워 둔다. */}
+                <span aria-hidden="true" className="size-3 shrink-0" />
+                <span className="text-[12px] leading-tight font-semibold text-[#C2C5CA]">{group.name} 제외</span>
+                <span className="sr-only"> 있음</span>
+              </li>
+            ) : (
+              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5 py-1">
+                {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
+                <Icon name="check" size={12} strokeWidth={4} className="shrink-0 text-[#F04465]" />
+                <span className="text-[12px] leading-tight font-semibold text-[#54575C]">{group.name} 제외</span>
+                <span className="sr-only"> 없음</span>
+              </li>
+            ),
+          )}
         </ul>
       ) : null}
 
@@ -268,7 +322,7 @@ function IngredientSummary({ product }: { readonly product: ProductDetailRespons
 
 function Ingredients({ ingredients }: { readonly ingredients: ProductDetailResponse["ingredients"] }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section data-no-select className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-[18px] font-bold text-[#202124]">전체 성분표</h3>
         <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>

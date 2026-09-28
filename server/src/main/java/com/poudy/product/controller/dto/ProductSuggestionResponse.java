@@ -1,7 +1,7 @@
 package com.poudy.product.controller.dto;
 
-import com.poudy.product.domain.MatchedProduct;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductSuggestion;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,7 +12,7 @@ public record ProductSuggestionResponse(
     @NotNull @Schema(description = "브랜드 한글명", example = "브랜드 이름") String brandName,
     @NotNull @Schema(description = "검색어가 실제로 일치한 필드와 원문 구간") ProductSuggestionMatchResponse match) {
 
-    public static ProductSuggestionResponse from(MatchedProduct matched) {
+    public static ProductSuggestionResponse from(ProductSuggestion matched) {
         Product product = matched.product();
         return new ProductSuggestionResponse(
             product.id(),

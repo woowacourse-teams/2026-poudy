@@ -12,6 +12,7 @@ import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientSuggestions } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
+import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { useSuggestions } from "@/lib/hooks/useSuggestions";
 
@@ -57,8 +58,9 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
     };
   }, []);
 
+  const quickFilters = knownExcludeCodes(excludeCodes);
   const codeIngredients: ExcludeCodeIngredients = new Map(
-    excludeCodes.map((code) => [code.code, code.ingredients.map((item) => item.id)]),
+    quickFilters.map((code) => [code.code, code.ingredients.map((item) => item.id)]),
   );
   const conflicts = findConflicts(filter, codeIngredients);
 
@@ -227,7 +229,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
         </div>
 
         <ul className="grid grid-cols-2 gap-2">
-          {excludeCodes.map((code) => {
+          {quickFilters.map((code) => {
             const checked = filter.excludeCodes.includes(code.code);
             return (
               <li key={code.code}>

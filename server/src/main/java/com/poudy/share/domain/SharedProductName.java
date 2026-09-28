@@ -3,7 +3,8 @@ package com.poudy.share.domain;
 import com.poudy.brand.domain.Brand;
 import com.poudy.brand.domain.Brands;
 import com.poudy.product.domain.Product;
-import com.poudy.product.domain.Products;
+import com.poudy.product.domain.ProductNameMatch;
+
 import com.poudy.search.domain.SearchKeyword;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -102,11 +103,11 @@ public final class SharedProductName {
         return brand.map(Brand::koreanName).orElse(UNKNOWN_BRAND);
     }
 
-    public ShareMatch matchIn(Products products) {
+    public ShareMatch matchIn(SharedProductLookup products) {
         List<String> matchingKeywords = matchingKeywords(products);
 
         for (String searched : matchingKeywords) {
-            Optional<Product> confirmed = confirm(candidatesIn(products, searched), searched);
+            Optional<Product> confirmed = confirm(candidatesIn(products, searched));
 
             if (confirmed.isPresent()) {
                 return ShareMatch.matched(confirmed.get());
@@ -115,7 +116,7 @@ public final class SharedProductName {
 
         for (String searched : matchingKeywords) {
             Optional<Product> similar = brand
-                .flatMap(owner -> confirmSimilar(products.findAllByBrand(owner), searched));
+                .flatMap(owner -> confirmSimilar(products.findByBrand(owner.id()), searched));
 
             if (similar.isPresent()) {
                 return ShareMatch.matched(similar.get());
@@ -140,7 +141,7 @@ public final class SharedProductName {
             .toList();
     }
 
-    private List<String> matchingKeywords(Products products) {
+    private List<String> matchingKeywords(SharedProductLookup products) {
         String fallback = fallbackKeyword();
 
         if (keyword.equals(fallback) || !candidatesIn(products, keyword).isEmpty()) {
@@ -162,36 +163,19 @@ public final class SharedProductName {
         return !words.isEmpty() && words.getFirst().equalsIgnoreCase(NEW_PRODUCT_MARKER);
     }
 
-    private List<Product> candidatesIn(Products products, String searched) {
-        List<Product> found = products.searchByProductName(searched);
-
-        return brand.map(owner -> found.stream().filter(product -> product.hasBrand(owner)).toList())
-            .orElse(found);
+    private List<ProductNameMatch> candidatesIn(SharedProductLookup products, String searched) {
+        return products.findByName(searched, brand.map(Brand::id).orElse(null));
     }
 
-    private static Optional<Product> confirm(List<Product> candidates, String searched) {
-        Optional<Product> exact = confirmExact(candidates, searched);
-
-        if (exact.isPresent()) {
-            return exact;
-        }
-        if (candidates.size() == 1) {
-            return Optional.of(candidates.getFirst());
-        }
-
-        return Optional.empty();
-    }
-
-    private static Optional<Product> confirmExact(List<Product> candidates, String searched) {
-        SearchKeyword searchKeyword = new SearchKeyword(searched);
-        List<Product> exact = candidates.stream()
-            .filter(product -> product.matchesNameExactly(searchKeyword))
+    private static Optional<Product> confirm(List<ProductNameMatch> candidates) {
+        List<Product> exact = candidates.stream().filter(ProductNameMatch::exact).map(ProductNameMatch::product)
             .toList();
-
         if (exact.size() == 1) {
             return Optional.of(exact.getFirst());
         }
-
+        if (candidates.size() == 1) {
+            return Optional.of(candidates.getFirst().product());
+        }
         return Optional.empty();
     }
 

@@ -1,85 +1,20 @@
 package com.poudy.config;
 
-import com.poudy.product.repository.ProductRepository;
-import com.poudy.searchkeyword.domain.BucketWindow;
-import com.poudy.searchkeyword.domain.KeywordBuckets;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.SearchKeywordPolicy;
+import com.poudy.searchkeyword.domain.bucket.BucketWindow;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
-import com.poudy.searchkeyword.logging.KeywordStoreMonitor;
-import com.poudy.searchkeyword.repository.KeywordSnapshotRepository;
-import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import com.poudy.searchkeyword.service.KeywordMaintenance;
-import com.poudy.searchkeyword.service.KeywordSnapshotWriter;
-import com.poudy.searchkeyword.service.RankingRefresher;
-import com.poudy.searchkeyword.service.SearchKeywordService;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
+import com.poudy.searchkeyword.repository.KeywordBucketRepository;
+import com.poudy.searchkeyword.service.SearchKeywordSnapshot;
 import java.time.Clock;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 public class SearchKeywordConfig {
-
-    private static final String PROPERTY_PREFIX = "poudy.search-keywords.";
-    private static final String DICTIONARY_FILE = "search_keywords.json";
-    private static final List<String> DEFAULT_KEYWORDS = List.of(
-        "토너",
-        "선크림",
-        "크림",
-        "로션",
-        "클렌징",
-        "선스틱",
-        "패드",
-        "패치",
-        "앰플",
-        "에센스"
-    );
-
-    @Bean
-    public Clock searchKeywordClock() {
-        return Clock.systemUTC();
-    }
-
-    @Bean
-    public KeywordSearch catalogKeywordSearch(ProductRepository products) {
-        return new CatalogKeywordSearch(products);
-    }
-
-    @Bean
-    public SearchKeywordDictionary searchKeywordDictionary(
-        Environment env,
-        ResourceLoader resources,
-        KeywordSearch search
-    )
-        throws IOException {
-        SearchKeywordDictionaryRepository repository = new SearchKeywordDictionaryRepository();
-        String dataDirectory = dataDirectory(env);
-        if (!dataDirectory.isBlank()) {
-            return repository.read(Path.of(dataDirectory).resolve(DICTIONARY_FILE), search);
-        }
-        try (InputStream input = resources.getResource("classpath:" + DICTIONARY_FILE).getInputStream()) {
-            return repository.read(input, search);
-        }
-    }
-
-    @Bean
-    public KeywordSnapshotRepository keywordSnapshotRepository(Environment env) {
-        return new KeywordSnapshotRepository(Path.of(env.getRequiredProperty(PROPERTY_PREFIX + "state-file")));
-    }
 
     @Bean
     public BucketWindow searchKeywordWindow() {
@@ -97,81 +32,21 @@ public class SearchKeywordConfig {
 
     @Bean
     public KeywordBuckets keywordBuckets(
-        @Qualifier("searchKeywordClock") Clock clock,
+        Clock clock,
         BucketWindow window,
-        KeywordSnapshotRepository repository
+        KeywordBucketRepository repository
     ) {
-        KeywordBuckets buckets = new KeywordBuckets(clock, window);
-        repository.restoreInto(buckets);
-        return buckets;
+        return new KeywordBuckets(clock, window, repository);
     }
 
     @Bean
-    public SearchKeywordService searchKeywordService(
-        Environment env,
-        SearchKeywordDictionary dictionary,
-        KeywordBuckets buckets,
-        KeywordSearch search,
-        RankingPolicy rankingPolicy
-    ) {
-        return new SearchKeywordService(
-            dictionary,
-            buckets,
-            search,
-            rankingPolicy,
-            RankingFallback.of(defaultKeywords(env))
-        );
-    }
-
-    private static List<String> defaultKeywords(Environment env) {
-        String configured = env.getProperty(PROPERTY_PREFIX + "default-keywords", "");
-        if (configured.isBlank()) {
-            return DEFAULT_KEYWORDS;
-        }
-        return Arrays.stream(configured.split(",")).map(String::trim).filter(keyword -> !keyword.isBlank()).toList();
-    }
-
-    @Bean(destroyMethod = "saveBeforeShutdown")
-    public KeywordSnapshotWriter keywordSnapshotWriter(KeywordBuckets buckets, KeywordSnapshotRepository repository) {
-        return new KeywordSnapshotWriter(buckets, repository);
+    public SearchKeywordSnapshot searchKeywordSnapshot() {
+        return new SearchKeywordSnapshot();
     }
 
     @Bean
-    public KeywordMaintenance keywordMaintenance(KeywordBuckets buckets, KeywordSnapshotWriter writer) {
-        return new KeywordMaintenance(writer, new KeywordStoreMonitor(buckets));
+    public RankingFallback rankingFallback(@Value("${poudy.search-keywords.default-keywords:}") String configured) {
+        return RankingFallback.configured(configured);
     }
 
-    @Bean(destroyMethod = "shutdown")
-    public ScheduledExecutorService searchKeywordScheduler(KeywordMaintenance maintenance) {
-        ScheduledExecutorService scheduler = daemonScheduler("search-keyword-snapshot");
-        scheduler.scheduleWithFixedDelay(
-            maintenance,
-            SearchKeywordPolicy.SAVE_INTERVAL_SECONDS,
-            SearchKeywordPolicy.SAVE_INTERVAL_SECONDS,
-            TimeUnit.SECONDS
-        );
-        return scheduler;
-    }
-
-    @Bean(destroyMethod = "shutdown")
-    public ScheduledExecutorService searchKeywordRankingScheduler(
-        SearchKeywordService service,
-        KeywordBuckets buckets
-    ) {
-        ScheduledExecutorService scheduler = daemonScheduler("search-keyword-rankings");
-        scheduler.execute(new RankingRefresher(service, buckets, scheduler));
-        return scheduler;
-    }
-
-    private static String dataDirectory(Environment env) {
-        return env.getProperty("poudy.data-dir", "");
-    }
-
-    private static ScheduledExecutorService daemonScheduler(String name) {
-        return Executors.newSingleThreadScheduledExecutor(task -> {
-            Thread thread = new Thread(task, name);
-            thread.setDaemon(true);
-            return thread;
-        });
-    }
 }

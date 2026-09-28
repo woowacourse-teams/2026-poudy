@@ -8,6 +8,7 @@ import { useDebouncedValue } from "./useDebouncedValue";
 
 import { track } from "@/lib/analytics/track";
 import { fetchProductSuggestions } from "@/lib/api/products";
+import { FIRST_PAGE } from "@/lib/domain/filter";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
 import { STALE_MS } from "@/lib/storage/list-cache";
 import {
@@ -35,12 +36,12 @@ type SetState = Dispatch<SetStateAction<State>>;
 
 const blank = (keyword: string): State => ({
   keyword,
-  page: 0,
+  page: FIRST_PAGE,
   items: [],
   total: undefined,
   hasNext: false,
   loading: Boolean(keyword),
-  pendingPage: keyword ? 0 : undefined,
+  pendingPage: keyword ? FIRST_PAGE : undefined,
   restored: false,
   revalidating: false,
 });
@@ -69,7 +70,7 @@ const initial = (keyword: string): State => {
 
 const appended = (previous: State, response: ProductSuggestionPageResponse, page: number): State => ({
   ...previous,
-  items: page === 0 ? response.items : [...previous.items, ...response.items],
+  items: page === FIRST_PAGE ? response.items : [...previous.items, ...response.items],
   total: response.pagination.totalElements,
   hasNext: response.pagination.hasNext,
   loading: false,
@@ -95,7 +96,7 @@ const useFetchPage = (keyword: string, state: State, setState: SetState) => {
     fetchProductSuggestions(keyword, pendingPage)
       .then((response) => {
         keep((previous) => appended(previous, response, pendingPage));
-        if (!controller.signal.aborted && pendingPage === 0) {
+        if (!controller.signal.aborted && pendingPage === FIRST_PAGE) {
           trackSearch(keyword, response.pagination.totalElements);
         }
       })
@@ -107,7 +108,7 @@ const useFetchPage = (keyword: string, state: State, setState: SetState) => {
 
 /** 쌓아 둔 장을 전부 다시 받는다. 첫 장만 받으면 이어 붙인 결과가 덮인다. */
 const refetchPages = (keyword: string, lastPage: number): Promise<readonly ProductSuggestionPageResponse[]> =>
-  Promise.all(Array.from({ length: lastPage + 1 }, (_, page) => fetchProductSuggestions(keyword, page)));
+  Promise.all(Array.from({ length: lastPage }, (_, index) => fetchProductSuggestions(keyword, FIRST_PAGE + index)));
 
 const revalidated = (previous: State, responses: readonly ProductSuggestionPageResponse[]): State => {
   const last = responses[responses.length - 1];

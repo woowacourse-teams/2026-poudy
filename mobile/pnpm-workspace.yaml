@@ -4,3 +4,6 @@ packages:
 
 allowBuilds:
   esbuild: true
+
+patchedDependencies:
+  react-native-webview@13.16.1: patches/react-native-webview@13.16.1.patch

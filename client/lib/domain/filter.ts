@@ -1,6 +1,17 @@
+import type { Endpoints } from "@poudy/api/api.zod.types";
+
 import { firstOf, keepIf } from "./optional";
 
-export const SORTS = ["NAME_ASC", "NAME_DESC", "PRICE_ASC", "PRICE_DESC"] as const;
+type ServerSort = NonNullable<NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"]>;
+
+/** 서버가 받지 않는 값이 섞이면 타입 검사에서 걸리게 한다. 순서는 드롭다운에 보이는 순서다. */
+export const SORTS = [
+  "DEFAULT",
+  "PRICE_ASC",
+  "PRICE_DESC",
+  "UNIT_PRICE_ASC",
+  "UNIT_PRICE_DESC",
+] as const satisfies readonly ServerSort[];
 export type Sort = (typeof SORTS)[number];
 
 export const EXCLUDE_CODES = [
@@ -13,8 +24,24 @@ export const EXCLUDE_CODES = [
 ] as const;
 export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
 
-export const DEFAULT_SORT: Sort = "NAME_ASC";
+/** 서버는 성분군 코드를 문자열로 준다. 화면이 아는 성분군인지 여기서 가른다. */
+export const isExcludeCode = (value: string): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode);
+
+export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
+export type SkinType = (typeof SKIN_TYPES)[number];
+
+/** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
+export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
+  DRY: "건성",
+  OILY: "지성",
+  SENSITIVE: "민감성",
+  COMBINATION: "복합성",
+};
+
+export const DEFAULT_SORT: Sort = "DEFAULT";
 export const DEFAULT_SIZE = 20;
+/** API 와 URL 모두 페이지를 1 부터 센다. */
+export const FIRST_PAGE = 1;
 
 /** 수분감·유분감은 0~3 단계다. */
 const LEVEL_MIN = 0;
@@ -33,6 +60,8 @@ export type Filter = {
   readonly includeIngredientIds: readonly number[];
   readonly excludeIngredientIds: readonly number[];
   readonly excludeCodes: readonly ExcludeCode[];
+  /** 서버가 한 번에 하나만 받는다. 다른 조건과 AND 로 묶인다. */
+  readonly skinType?: SkinType;
   readonly sort: Sort;
   readonly page: number;
   readonly size: number;
@@ -47,7 +76,7 @@ export const EMPTY_FILTER: Filter = {
   excludeIngredientIds: [],
   excludeCodes: [],
   sort: DEFAULT_SORT,
-  page: 0,
+  page: FIRST_PAGE,
   size: DEFAULT_SIZE,
 };
 
@@ -82,9 +111,13 @@ const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
       .getAll("excludeCodes")
       .flatMap((value) => value.split(","))
       .map((value) => value.trim()),
-  ).filter((value): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode));
+  ).filter(isExcludeCode);
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
+
+/** 서버가 단일 값만 받으므로 첫 값만 쓴다. 정해진 코드가 아니면 조건이 없는 것으로 본다. */
+const readSkinType = (params: URLSearchParams): SkinType | undefined =>
+  SKIN_TYPES.find((skinType) => skinType === params.get("skinType"));
 
 /** 정수이고 최솟값 이상일 때만 쓴다. 아니면 기본값으로 되돌린다. */
 const readCount = (
@@ -102,10 +135,13 @@ const readKeyword = (params: URLSearchParams): string | undefined => params.get(
 /** 잘못된 값은 버리고 기본값으로 되돌린다. 링크를 직접 고쳐 들어와도 화면이 깨지지 않게 한다. */
 export const parseFilter = (params: URLSearchParams): Filter => {
   const keyword = readKeyword(params);
+  const skinType = readSkinType(params);
 
   return {
     // 검색어가 없을 때 keyword 키 자체를 두지 않아 EMPTY_FILTER 와 같은 모양이 되게 한다.
     ...Object.fromEntries(keepIf(Boolean(keyword), ["keyword", keyword])),
+    // 피부 타입도 같은 이유로 조건이 없으면 키를 두지 않는다.
+    ...Object.fromEntries(keepIf(Boolean(skinType), ["skinType", skinType])),
     categoryIds: readIds(params, "categoryIds"),
     brandIds: readIds(params, "brandIds"),
     moistureLevel: readLevels(params, "moistureLevel"),
@@ -114,8 +150,7 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeIngredientIds: readIds(params, "excludeIngredientIds"),
     excludeCodes: readCodes(params),
     sort: readSort(params),
-    // 페이지는 0 부터 시작하지만, 한 페이지에 0 개를 담을 수는 없다.
-    page: readCount(params, "page", { fallback: 0, min: 0 }),
+    page: readCount(params, "page", { fallback: FIRST_PAGE, min: FIRST_PAGE }),
     size: readCount(params, "size", { fallback: DEFAULT_SIZE, min: 1 }),
   };
 };
@@ -137,8 +172,9 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("includeIngredientIds", filter.includeIngredientIds),
     ...listEntries("excludeIngredientIds", filter.excludeIngredientIds),
     ...listEntries("excludeCodes", filter.excludeCodes),
+    ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
-    ...keepIf<Entry>(filter.page !== 0, ["page", String(filter.page)]),
+    ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
   ]);
 
@@ -151,11 +187,12 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.oilLevel.length > 0 ||
   filter.includeIngredientIds.length > 0 ||
   filter.excludeIngredientIds.length > 0 ||
-  filter.excludeCodes.length > 0;
+  filter.excludeCodes.length > 0 ||
+  Boolean(filter.skinType);
 
 /** 조건을 바꾸면 페이지를 처음으로 되돌린다. 2 페이지에서 조건을 바꿔 빈 목록이 나오는 것을 막는다. */
 export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter => ({
   ...filter,
   ...changed,
-  page: 0,
+  page: FIRST_PAGE,
 });

@@ -1,6 +1,8 @@
 package com.poudy;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -24,13 +26,15 @@ class ArchitectureTest {
         .that()
         .resideInAPackage("..domain..")
         .should()
-        .dependOnClassesThat()
-        .resideInAnyPackage(
-            "org.springframework..",
-            "jakarta..",
-            "software.amazon.awssdk..",
-            "com.fasterxml.jackson..",
-            "tools.jackson.."
+        .dependOnClassesThat(
+            resideInAnyPackage(
+                "org.springframework..",
+                "jakarta..",
+                "org.hibernate..",
+                "software.amazon.awssdk..",
+                "com.fasterxml.jackson..",
+                "tools.jackson.."
+            )
         )
         .because("도메인 모델은 프레임워크 없이 실행하고 검증할 수 있어야 한다");
 
@@ -42,4 +46,18 @@ class ArchitectureTest {
         .dependOnClassesThat()
         .resideInAPackage("..controller..")
         .because("도메인과 유스케이스는 HTTP 전송 모델과 독립적이어야 한다");
+
+    @ArchTest
+    static final ArchRule LAYER_PACKAGES_ARE_FREE_OF_CYCLES = slices()
+        .matching("com.poudy.(*).(*)..")
+        .should()
+        .beFreeOfCycles()
+        .because("기능 안팎의 계층 패키지가 서로를 참조하면 한쪽만 바꿀 수 없다");
+
+    @ArchTest
+    static final ArchRule FEATURE_PACKAGES_ARE_FREE_OF_CYCLES = slices()
+        .matching("com.poudy.(*)..")
+        .should()
+        .beFreeOfCycles()
+        .because("기능 패키지가 서로를 참조하면 한 기능만 떼어 바꿀 수 없다");
 }

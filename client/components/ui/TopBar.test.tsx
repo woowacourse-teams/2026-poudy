@@ -67,6 +67,21 @@ describe("TopBar 제목", () => {
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
   });
 
+  /* 홈은 로고만 두고 이름 글자를 그리지 않는다(디자인 S01). */
+  it("로고만 둘 때는 그림이 서비스 이름을 대신 읽는다", () => {
+    const { container } = render(<TopBar title="Poudy" variant="root" showLogo logoOnly />);
+
+    expect(container.querySelector("img")).toHaveAttribute("alt", "Poudy");
+    // 이름이 두 번 읽히지 않도록 제목은 화면에서만 감춘다. 문서 구조에는 남는다.
+    expect(screen.getByRole("heading", { name: "Poudy" })).toHaveClass("sr-only");
+  });
+
+  it("로고만 둘 때도 오른쪽 자리를 함께 그린다", () => {
+    render(<TopBar title="Poudy" variant="root" showLogo logoOnly right={<button type="button">검색</button>} />);
+
+    expect(screen.getByRole("button", { name: "검색" })).toBeInTheDocument();
+  });
+
   // 성분·브랜드·카테고리는 이름을 그대로 넘긴다. 긴 이름이 좌우 버튼을 밀면 안 된다.
   it.each(["root", "sub"] as const)("%s 형태의 긴 제목은 넘치는 만큼 줄인다", (variant) => {
     render(<TopBar title="사이클로펜타실록세인" variant={variant} />);

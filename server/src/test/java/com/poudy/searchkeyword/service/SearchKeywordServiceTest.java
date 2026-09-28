@@ -2,17 +2,20 @@ package com.poudy.searchkeyword.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.poudy.search.domain.SearchKeyword;
-import com.poudy.searchkeyword.domain.BucketWindow;
-import com.poudy.searchkeyword.domain.DictionaryEntry;
-import com.poudy.searchkeyword.domain.KeywordBuckets;
-import com.poudy.searchkeyword.domain.KeywordSearch;
-import com.poudy.searchkeyword.domain.SearchKeywordDictionary;
+import com.poudy.searchkeyword.domain.bucket.BucketWindow;
+import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
+import com.poudy.searchkeyword.domain.dictionary.DictionaryEntry;
+import com.poudy.searchkeyword.domain.dictionary.SearchKeywordDictionary;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingChange;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
+import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
+import com.poudy.searchkeyword.support.InMemoryKeywordCountStore;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,11 +37,15 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class SearchKeywordServiceTest {
     private static final KeywordSearch CATALOG = keyword -> !keyword.equals("없는검색");
     private final MutableClock clock = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-    private final KeywordBuckets successful = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
+    private final KeywordBuckets successful = new KeywordBuckets(
+        clock,
+        new BucketWindow(168, 600, 0),
+        new InMemoryKeywordCountStore()
+    );
 
     @Test
     void mergesAliasesAcrossKindsButKeepsProductAndGeneralTermSeparate() {
-        SearchKeywordService service = service(
+        TestServices service = service(
             List.of(
                 entry("term", "PDRN", "PDRN"),
                 entry("brand", "라운드랩", "라운드랩"),
@@ -69,7 +76,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void mergesSpacingVariantsOfOneInputIntoTheSameKeyword() {
-        SearchKeywordService service = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
+        TestServices service = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         for (int i = 0; i < 3; i++) {
             service.record(new SearchKeyword("독도 토너"));
         }
@@ -86,14 +93,14 @@ class SearchKeywordServiceTest {
 
     @Test
     void retainsUnresolvedSuccessfulInputsAndReinterpretsThemAfterDictionaryReplacement() {
-        SearchKeywordService old = service(List.of(entry("term", "토너", "토너")), Set.of());
+        TestServices old = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 5; i++) {
             old.record(new SearchKeyword("독도 토너"));
         }
         closeBucket();
         old.refreshRankings();
         assertThat(old.rankings()).isEmpty();
-        SearchKeywordService updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
+        TestServices updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         updated.refreshRankings();
         assertThat(updated.rankings())
             .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unknown()));
@@ -102,7 +109,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void keepsOnlyInputsWithResults() {
-        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        TestServices service = service(List.of(entry("term", "토너", "토너")), Set.of());
         for (int i = 0; i < 20; i++) {
             service.record(new SearchKeyword("없는검색"));
             service.record(new SearchKeyword("미등록"));
@@ -116,7 +123,7 @@ class SearchKeywordServiceTest {
     @Test
     @ExtendWith(OutputCaptureExtension.class)
     void logsRecordedInputsThatTheDictionaryCannotResolve(CapturedOutput output) {
-        SearchKeywordService service = service(List.of(entry("term", "토너", "토너")), Set.of());
+        TestServices service = service(List.of(entry("term", "토너", "토너")), Set.of());
 
         service.record(new SearchKeyword("토너"));
         service.record(new SearchKeyword(" 독도  \"토너\" "));
@@ -132,7 +139,7 @@ class SearchKeywordServiceTest {
     void appliesBlockBeforeTopTenAndUsesIdsForFinalTie() {
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 12)
             .mapToObj(i -> entry("id%02d".formatted(i), "토너", "표현" + (char) ('a' + i))).toList();
-        SearchKeywordService service = service(entries, Set.of("id00"));
+        TestServices service = service(entries, Set.of("id00"));
         for (DictionaryEntry entry : entries) {
             for (int i = 0; i < 5; i++) {
                 service.record(new SearchKeyword(entry.expressions().iterator().next()));
@@ -148,7 +155,7 @@ class SearchKeywordServiceTest {
 
     @Test
     void servesImmutableLastRefreshWhileReadersRaceWithRefresh() throws Exception {
-        SearchKeywordService service = service(
+        TestServices service = service(
             List.of(entry("term", "토너", "토너"), entry("cream", "크림", "크림")),
             Set.of()
         );
@@ -194,11 +201,15 @@ class SearchKeywordServiceTest {
     }
 
     @Test
-    void preservesPreviousCacheWhenRefreshFails() {
+    void preservesPreviousSnapshotWhenRefreshFails() {
         ThrowingClock throwingClock = new ThrowingClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(throwingClock, new BucketWindow(168, 600, 0));
-        SearchKeywordService failing = new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+        KeywordBuckets ranking = new KeywordBuckets(
+            throwingClock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
+        TestServices failing = services(
+            SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너"))),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -218,11 +229,15 @@ class SearchKeywordServiceTest {
     }
 
     @Test
-    void refreshAfterRetentionExpiryPublishesEmptyCache() {
+    void refreshAfterRetentionExpiryPublishesEmptySnapshot() {
         MutableClock mutable = new MutableClock(Instant.parse("2026-09-08T10:30:00Z"));
-        KeywordBuckets ranking = new KeywordBuckets(mutable, new BucketWindow(1, 60, 0));
-        SearchKeywordService service = new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", List.of(entry("term", "토너", "토너")), ignored -> true),
+        KeywordBuckets ranking = new KeywordBuckets(
+            mutable,
+            new BucketWindow(1, 60, 0),
+            new InMemoryKeywordCountStore()
+        );
+        TestServices service = services(
+            SearchKeywordDictionary.of(List.of(entry("term", "토너", "토너"))),
             ranking,
             CATALOG,
             new RankingPolicy(5, 10, Set.of()),
@@ -244,15 +259,20 @@ class SearchKeywordServiceTest {
         AtomicInteger calls = new AtomicInteger();
         List<DictionaryEntry> entries = java.util.stream.IntStream.range(0, 20)
             .mapToObj(i -> entry("term%02d".formatted(i), "검색어%02d".formatted(i), "표현%02d".formatted(i))).toList();
-        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(entries);
+        KeywordSearch countedSearch = ignored -> {
             calls.incrementAndGet();
             return true;
-        });
-        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
-        SearchKeywordService service = new SearchKeywordService(
+        };
+        KeywordBuckets ranking = new KeywordBuckets(
+            clock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
+        TestServices service = services(
             dictionary,
             ranking,
-            CATALOG,
+            countedSearch,
             new RankingPolicy(5, 10, Set.of()),
             RankingFallback.of(List.of())
         );
@@ -268,7 +288,7 @@ class SearchKeywordServiceTest {
         assertThat(service.rankings()).hasSize(10);
         assertThat(calls).hasValue(10);
         service.refreshRankings();
-        assertThat(calls).hasValue(10);
+        assertThat(calls).hasValue(20);
     }
 
     @Test
@@ -279,15 +299,20 @@ class SearchKeywordServiceTest {
             entry("below", "부족", "부족"),
             entry("blocked", "차단", "차단")
         );
-        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of("v1", entries, ignored -> {
+        SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(entries);
+        KeywordSearch countedSearch = ignored -> {
             calls.incrementAndGet();
             return true;
-        });
-        KeywordBuckets ranking = new KeywordBuckets(clock, new BucketWindow(168, 600, 0));
-        SearchKeywordService service = new SearchKeywordService(
+        };
+        KeywordBuckets ranking = new KeywordBuckets(
+            clock,
+            new BucketWindow(168, 600, 0),
+            new InMemoryKeywordCountStore()
+        );
+        TestServices service = services(
             dictionary,
             ranking,
-            CATALOG,
+            countedSearch,
             new RankingPolicy(5, 10, Set.of("blocked")),
             RankingFallback.of(List.of())
         );
@@ -347,14 +372,44 @@ class SearchKeywordServiceTest {
         clock.now = clock.now.plus(10, ChronoUnit.MINUTES);
     }
 
-    private SearchKeywordService service(List<DictionaryEntry> entries, Set<String> blocked) {
-        return new SearchKeywordService(
-            SearchKeywordDictionary.of("v1", entries, ignored -> true),
+    private TestServices service(List<DictionaryEntry> entries, Set<String> blocked) {
+        return services(
+            SearchKeywordDictionary.of(entries),
             successful,
             CATALOG,
             new RankingPolicy(5, 10, blocked),
             RankingFallback.of(List.of())
         );
+    }
+
+    private TestServices services(
+        SearchKeywordDictionary dictionary,
+        KeywordBuckets buckets,
+        KeywordSearch search,
+        RankingPolicy policy,
+        RankingFallback fallback
+    ) {
+        SearchKeywordDictionaryRepository repository = mock(SearchKeywordDictionaryRepository.class);
+        when(repository.read()).thenReturn(dictionary);
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionary);
+        return new TestServices(
+            new SearchKeywordService(snapshot, buckets, CATALOG),
+            new SearchKeywordRankingService(repository, buckets, search, policy, fallback, snapshot, clock)
+        );
+    }
+
+    private record TestServices(SearchKeywordService service, SearchKeywordRankingService refresh) {
+        void record(SearchKeyword keyword) {
+            service.record(keyword);
+        }
+
+        List<RankedKeyword> rankings() {
+            return service.rankings();
+        }
+
+        void refreshRankings() {
+            refresh.refreshRankings();
+        }
     }
 
     private DictionaryEntry entry(String id, String keyword, String... aliases) {

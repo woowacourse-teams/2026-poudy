@@ -66,6 +66,28 @@ export const buildAndroidIntentUrl = (webUrl: string): string => {
 export const buildOpenAppUrl = (webUrl: string, browser: AndroidMobileBrowser): string =>
   browser === "kakao" ? buildKakaoExternalUrl(webUrl) : buildAndroidIntentUrl(webUrl);
 
+export const APP_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}&pcampaignid=web_share`;
+
+/**
+ * 설치 배너가 쓰는 주소. 보던 화면을 그대로 이어 열되, 앱이 없으면 스토어로 보낸다.
+ *
+ * `buildAndroidIntentUrl` 과 경로를 담는 방식은 같고 되돌아갈 곳만 다르다. 그쪽은
+ * 공유로 들어온 사람을 원래 웹 화면에 남기지만, 배너는 설치를 권하는 자리라 받을 수
+ * 있는 곳으로 보내야 한다.
+ *
+ * https 가 아니면 스토어 주소를 그대로 내준다. intent 는 `scheme=https` 로 앱을
+ * 찾으므로 http 인 localhost 에서는 가리킬 곳이 없다. 개발 중에 눌러도 아무 일이
+ * 일어나지 않아 고장처럼 보이던 자리다. App Links 도 https 로만 검증된다.
+ */
+export const buildInstallIntentUrl = (webUrl: string): string => {
+  const url = new URL(webUrl);
+  if (url.protocol !== "https:") return APP_STORE_URL;
+
+  const destination = `${url.host}${url.pathname}${url.search}`;
+
+  return `intent://${destination}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(APP_STORE_URL)};end`;
+};
+
 export const planAppOpen = (webUrl: string, userAgent: string, isPoudyApp: boolean): AppOpenPlan => {
   const fallbackWebUrl = consumeFallbackMarker(webUrl);
   const cleanWebUrl = consumeShareMarker(fallbackWebUrl ?? webUrl);

@@ -5,7 +5,7 @@
 
 .navigation {
   left: 0;
-  right: var(--scrollbar-width, 0px);
+  right: 0;
   max-width: var(--container-md);
   margin-inline: auto;
   height: var(--bottom-navigation-height);

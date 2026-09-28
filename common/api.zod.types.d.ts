@@ -128,6 +128,20 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
+export type ProductFilterOptionsResponse = {
+  /**
+   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
+   */
+  brands: Array<BrandResponse>;
+  /**
+   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
+   */
+  categories: Array<CategoryResponse>;
+  /**
+   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   */
+  skinTypes: Array<SkinTypeResponse>;
+}
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
   pagination: PaginationResponse;
@@ -139,6 +153,11 @@ export type ProductPageResponse = {
    * 조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
    */
   categories: Array<CategoryResponse>;
+  /**
+   * 조회 조건에 해당하는 제품 전체의 피부타입. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
+   */
+  skinTypes: Array<SkinTypeResponse>;
+  filterOptions?: ProductFilterOptionsResponse;
 }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
@@ -166,11 +185,21 @@ export type DisclosedAmountResponse = {
    */
   unit: string;
 }
+export type ExcludeGroupResponse = {
+  /**
+   * 제외 성분군 이름
+   */
+  name: string;
+  /**
+   * 제품의 해당 성분군 포함 여부
+   */
+  contains: boolean;
+}
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 배합 목적 이름 (CosIng Function)
@@ -203,7 +232,7 @@ export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름
@@ -215,7 +244,7 @@ export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
    */
-  id: number;
+  id: string;
   code: string;
   /**
    * 피부 작용 이름
@@ -275,9 +304,9 @@ export type ProductDetailResponse = {
    */
   ingredients: Array<ProductIngredientResponse>;
   /**
-   * 이 제품이 포함하지 않는 성분군 (프리 뱃지)
+   * 제외 성분군별 포함 여부
    */
-  freeOfCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeGroups: Array<ExcludeGroupResponse>;
   /**
    * 제품 정보를 마지막으로 갱신한 시각
    */
@@ -399,7 +428,7 @@ export type IngredientDetailResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
    */
   skinEffects: Array<SkinEffectResponse>;
-  groupCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  groupCodes: Array<string>;
   /**
    * 이 성분을 포함한 제품 수
    */
@@ -456,9 +485,9 @@ export type ExcludeCodeResponse = {
   /**
    * 성분군을 구분하는 값
    */
-  code: ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS");
+  code: string;
   /**
-   * 빠른 필터에 표시할 이름
+   * 제외 성분군 이름
    */
   name: string;
   /**
@@ -486,46 +515,27 @@ export type CurationSummaryResponse = {
    */
   title: string;
   /**
-   * 큐레이션 간단 설명
+   * 큐레이션 설명
    */
   description: string;
   /**
-   * 목록 대표 이미지 URL
+   * 상세 이미지와 독립적인 배너 썸네일 URL
    */
-  imageUrl: string;
+  thumbnailImageUrl: string;
 }
 export type CurationListResponse = { items: Array<CurationSummaryResponse> }
-export type CurationCategoryResponse = {
+export type CurationImageBlockResponse = {
+  id: string;
+  type: "IMAGE";
   /**
-   * 카테고리 ID
+   * 위 여백 (px)
    */
-  id: number;
+  spacingTop: number;
   /**
-   * 카테고리 이름
+   * 아래 여백 (px)
    */
-  name: string;
-}
-export type CurationDetailResponse = {
-  /**
-   * 큐레이션 ID
-   */
-  id: number;
-  /**
-   * 큐레이션 제목
-   */
-  title: string;
-  /**
-   * 큐레이션 상세 설명
-   */
-  description: string;
-  /**
-   * 상세 화면 이미지 URL 목록
-   */
-  imageUrls: Array<string>;
-  /**
-   * 제품 필터에 사용할 카테고리 목록
-   */
-  categories: Array<CurationCategoryResponse>;
+  spacingBottom: number;
+  imageUrl: string;
 }
 export type CurationProductResponse = {
   /**
@@ -565,7 +575,60 @@ export type CurationProductResponse = {
    */
   oilLevel: number;
 }
-export type CurationProductListResponse = { items: Array<CurationProductResponse> }
+export type CurationProductsBlockResponse = {
+  id: string;
+  type: "PRODUCTS";
+  /**
+   * 위 여백 (px)
+   */
+  spacingTop: number;
+  /**
+   * 아래 여백 (px)
+   */
+  spacingBottom: number;
+  products: Array<CurationProductResponse>;
+}
+export type CurationFilterResponse = { id: string, label: string }
+export type CurationProductItemResponse = {
+  product: CurationProductResponse;
+  /**
+   * 제품이 속한 블록 내 필터 ID. 하나 이상
+   */
+  filterIds: Array<string>;
+}
+export type CurationProductsByFilterBlockResponse = {
+  id: string;
+  type: "PRODUCTS_BY_FILTER";
+  /**
+   * 위 여백 (px)
+   */
+  spacingTop: number;
+  /**
+   * 아래 여백 (px)
+   */
+  spacingBottom: number;
+  filters: Array<CurationFilterResponse>;
+  products: Array<CurationProductItemResponse>;
+}
+export type CurationBlockResponse = (CurationImageBlockResponse | CurationProductsBlockResponse | CurationProductsByFilterBlockResponse)
+export type CurationDetailResponse = {
+  /**
+   * 큐레이션 ID
+   */
+  id: number;
+  /**
+   * 큐레이션 제목
+   */
+  title: string;
+  /**
+   * 큐레이션 설명
+   */
+  description: string;
+  /**
+   * 노출 가능한 블록 목록. 저장 순서를 유지하며 빈 배열일 수 있다.
+   */
+  blocks: Array<CurationBlockResponse>;
+}
 export type CategoryListResponse = { items: Array<CategoryResponse> }
 export type BrandSummaryResponse = {
   /**
@@ -659,7 +722,7 @@ export type post_IncreaseViewCount = {
 
     }
 /**
- * 존재하는 제품의 정보 정정 요청을 S3에 저장하고 Discord로 알린다.
+ * 존재하는 제품의 정보 정정 요청을 DB에 저장하고 Discord로 알린다.
  */
 export type post_SubmitProductCorrection = {
       method: "POST",
@@ -704,7 +767,7 @@ export type post_Submit = {
  */
 export type post_UploadImages = {
       method: "POST",
-      path: "/api/inquiry-images",
+      path: "/api/pending-images",
       requestFormat: "form-data",
       responseFormat: "json",
       parameters: {
@@ -720,7 +783,7 @@ export type post_UploadImages = {
 
     }
 /**
- * 의견과 작성 화면 경로를 S3에 저장하고 Discord로 알린다.
+ * 의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.
  */
 export type post_Submit_1 = {
       method: "POST",
@@ -859,7 +922,7 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -867,9 +930,9 @@ export type get_FindProducts = {
   /**
    * 정렬 조건
    */
-  sort: ("NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC");
+  sort: ("DEFAULT" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -920,7 +983,7 @@ export type get_SuggestProducts = {
    */
   keyword: string;
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page?: number;
   /**
@@ -998,7 +1061,7 @@ export type get_CountProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -1025,7 +1088,7 @@ export type get_FindIngredients = {
   ingredientIds: Array<number>;
   usedInProducts: boolean;
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -1099,7 +1162,7 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * PUBLISHED 상태의 큐레이션을 ID 오름차순으로 조회한다.
+ * 게시 중이며 배너 노출이 활성화된 큐레이션을 지정된 순서로 조회한다.
  */
 export type get_FindCurations = {
       method: "GET",
@@ -1113,7 +1176,7 @@ export type get_FindCurations = {
 
     }
 /**
- * PUBLISHED 상태인 큐레이션의 상세 정보와 제품 필터용 카테고리를 조회한다.
+ * 요청한 ID의 큐레이션 상세를 조회한다. 큐레이션이 게시되지 않은 경우 조회할 수 없다.
  */
 export type get_FindCuration = {
       method: "GET",
@@ -1126,26 +1189,6 @@ export type get_FindCuration = {
 
           }
       responses: {200: Schemas.CurationDetailResponse,
-400: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * PUBLISHED 상태인 큐레이션의 제품을 등록 순서로 조회한다. categoryId로 필터해도 순서를 유지한다.
- */
-export type get_FindCurationProducts = {
-      method: "GET",
-      path: "/api/curations/{curationId}/products",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-            query?:  Partial<{ categoryId: number }>,
-        path:  { curationId: number },
-
-          }
-      responses: {200: Schemas.CurationProductListResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1209,7 +1252,7 @@ export type get_FindAll = {
             query?:  Partial<{
   status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -1252,7 +1295,7 @@ export type get_FindAll_1 = {
   status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
   type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION");
   /**
-   * 조회할 페이지 번호 (0부터 시작)
+   * 조회할 페이지 번호 (1부터 시작)
    */
   page: number;
   /**
@@ -1294,7 +1337,7 @@ export type get_FindById_1 = {
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
 "/api/products/registration-requests": Endpoints.post_Submit,
-"/api/inquiry-images": Endpoints.post_UploadImages,
+"/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
 "/api/admin/login": Endpoints.post_Login
          },
@@ -1318,7 +1361,6 @@ get: {
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/curations": Endpoints.get_FindCurations,
 "/api/curations/{curationId}": Endpoints.get_FindCuration,
-"/api/curations/{curationId}/products": Endpoints.get_FindCurationProducts,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand,

@@ -87,25 +87,19 @@ staging 백엔드는 다음 검증을 완료했습니다.
 - Nginx HTTPS 및 Let’s Encrypt 자동 갱신 확인
 - CodeDeploy Agent 정상 실행 확인
 
-### Staging 데이터 동기화
+### Staging PostgreSQL
 
-staging EC2의 `poudy-data-sync.timer`가 다음 위치의 JSON을 `/opt/poudy/data`로
-동기화합니다.
+staging도 `/etc/poudy/backend.env`의 `POUDY_DB_*`로 별도 PostgreSQL DB에 연결합니다.
+CodeDeploy `BeforeInstall`은 서비스 중지 전에 DB 연결,
+스키마·검색 객체·카탈로그를 읽기 전용으로 검증합니다. 빈 DB를 자동 구성하지 않습니다.
+검증을 통과하면 기존 JSON 동기화 timer를 끄고 배포를 계속합니다.
 
-```text
-s3://techcourse-project-2026/poudy/staging/
-  → /opt/poudy/data
-```
-
-운영과 staging의 피드백·제품 등록 요청 데이터는 팀 결정에 따라 별도 분리하지 않습니다.
-피드백 S3 설정은 허용된 `techcourse-project-2026` 버킷을 사용하며, 현재 애플리케이션의
-피드백 prefix도 운영과 같은 `poudy/feedback/`을 사용합니다.
+운영과 staging은 별도 DB를 사용합니다. 피드백 S3 pending prefix도 운영은
+`poudy/feedback/pending/`, staging은 `poudy/staging/feedback/pending/`으로 구분합니다.
 
 ### Staging 보류 사항
 
 - Spring Boot `:8080` 외부 직접 접근 차단은 후순위로 보류합니다.
-- staging의 피드백 이미지 기능은 운영과 데이터를 공유하므로, 테스트 데이터도 운영
-  피드백 저장소에 남을 수 있습니다.
 - staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy를 실행하고, 프론트엔드는 Vercel
   staging workflow가 별도로 배포합니다.
 

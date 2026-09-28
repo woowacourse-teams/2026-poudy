@@ -17,18 +17,18 @@ const countingSuggestions = () => {
 
   server.use(
     http.get("*/api/products/suggestions", ({ request }) => {
-      const page = Number(new URL(request.url).searchParams.get("page") ?? 0);
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
       pages.push(page);
 
       return HttpResponse.json({
-        items: [page * 2 + 1, page * 2 + 2].map((id) => ({
+        items: [page * 2 - 1, page * 2].map((id) => ({
           id,
           name: `제품 ${id}`,
           imageUrl: "",
           brandName: "브랜드",
           match: { field: "PRODUCT_NAME", text: `제품 ${id}`, startIndex: 0, endIndexExclusive: 2 },
         })),
-        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 2 },
+        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },
       });
     }),
   );
@@ -108,7 +108,7 @@ describe("useProductSuggestions", () => {
     expect(again.result.current.items).toHaveLength(4);
 
     await waitFor(() => expect(again.result.current.revalidating).toBe(false));
-    expect(pages).toEqual([0, 1]);
+    expect(pages).toEqual([1, 2]);
     expect(again.result.current.items).toHaveLength(4);
     vi.useRealTimers();
   });
@@ -127,7 +127,7 @@ describe("useProductSuggestions", () => {
 
     await waitFor(() => expect(result.current.keyword).toBe("수분"));
     await waitFor(() => expect(result.current.items).toHaveLength(2));
-    expect(pages.at(-1)).toBe(0);
+    expect(pages.at(-1)).toBe(1);
   });
 
   it("검색어가 비면 아무것도 부르지 않는다", async () => {

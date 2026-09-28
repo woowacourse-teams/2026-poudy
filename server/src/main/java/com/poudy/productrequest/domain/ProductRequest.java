@@ -1,19 +1,22 @@
 package com.poudy.productrequest.domain;
 
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
 
 public final class ProductRequest {
 
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+
     private final UUID requestId;
     private final String productName;
     private final String brandName;
-    private final OffsetDateTime requestedAt;
+    private final LocalDateTime createdAt;
     private final ProductRequestStatus status;
-    private final OffsetDateTime statusChangedAt;
-    private final OffsetDateTime completedAt;
+    private final LocalDateTime statusChangedAt;
 
     public ProductRequest(
         UUID requestId,
@@ -44,11 +47,10 @@ public final class ProductRequest {
         this.requestId = Objects.requireNonNull(requestId, "제품 등록 요청 ID가 필요합니다.");
         this.productName = productName;
         this.brandName = brandName;
-        this.requestedAt = Objects.requireNonNull(requestedAt, "제품 등록 요청 시각이 필요합니다.");
+        this.createdAt = local(Objects.requireNonNull(requestedAt, "제품 등록 요청 시각이 필요합니다."));
         this.status = Objects.requireNonNull(status, "제품 등록 요청 상태가 필요합니다.");
-        this.statusChangedAt = Objects.requireNonNull(statusChangedAt, "상태 변경 시각이 필요합니다.");
-        this.completedAt = completedAt;
-        validateCompletedAt();
+        this.statusChangedAt = local(Objects.requireNonNull(statusChangedAt, "상태 변경 시각이 필요합니다."));
+        validateCompletedAt(completedAt);
     }
 
     public static ProductRequest create(String productName, String brandName, Clock clock) {
@@ -77,7 +79,7 @@ public final class ProductRequest {
     }
 
     public OffsetDateTime requestedAt() {
-        return requestedAt;
+        return offset(createdAt);
     }
 
     public ProductRequestStatus status() {
@@ -85,11 +87,14 @@ public final class ProductRequest {
     }
 
     public OffsetDateTime statusChangedAt() {
-        return statusChangedAt;
+        return offset(statusChangedAt);
     }
 
     public OffsetDateTime completedAt() {
-        return completedAt;
+        if (status != ProductRequestStatus.COMPLETED) {
+            return null;
+        }
+        return statusChangedAt();
     }
 
     public boolean hasStatus(ProductRequestStatus expected) {
@@ -108,19 +113,27 @@ public final class ProductRequest {
             requestId,
             productName,
             brandName,
-            requestedAt,
+            requestedAt(),
             target,
             changedAt,
             target == ProductRequestStatus.COMPLETED ? changedAt : null
         );
     }
 
-    private void validateCompletedAt() {
+    private void validateCompletedAt(OffsetDateTime completedAt) {
         if (status == ProductRequestStatus.COMPLETED && completedAt == null) {
             throw new IllegalArgumentException("완료된 제품 등록 요청에는 완료 시각이 필요합니다.");
         }
         if (status != ProductRequestStatus.COMPLETED && completedAt != null) {
             throw new IllegalArgumentException("완료되지 않은 제품 등록 요청에는 완료 시각을 기록할 수 없습니다.");
         }
+    }
+
+    private static LocalDateTime local(OffsetDateTime value) {
+        return value.atZoneSameInstant(SEOUL).toLocalDateTime();
+    }
+
+    private static OffsetDateTime offset(LocalDateTime value) {
+        return value.atZone(SEOUL).toOffsetDateTime();
     }
 }

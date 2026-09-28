@@ -15,6 +15,6 @@ public class StorageService {
     }
 
     public List<Product> findProducts(List<Long> productIds) {
-        return productRepository.findAll().findAllById(productIds);
+        return productRepository.findAllById(productIds);
     }
 }

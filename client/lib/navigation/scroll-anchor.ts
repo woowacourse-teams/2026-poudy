@@ -55,3 +55,23 @@ export const applyScrollPosition = (position: ScrollPosition): void => {
 
   if (position.scrollY > 0) window.scrollTo(0, position.scrollY);
 };
+
+const anchorElement = (id: number): HTMLElement | undefined => {
+  const element = document.querySelector(`[${ANCHOR_ATTRIBUTE}="${id}"]`);
+  if (element instanceof HTMLElement) return element;
+  return undefined;
+};
+
+/**
+ * 항목 위에 다른 항목을 끼워 넣어도 그 항목이 화면의 같은 높이에 머물게 한다.
+ * 끼워 넣기 전에 부르고, 돌려받은 함수를 그려진 뒤에 부른다.
+ */
+export const holdAnchor = (id: number): (() => void) => {
+  const before = anchorElement(id)?.getBoundingClientRect().top;
+
+  return () => {
+    const after = anchorElement(id)?.getBoundingClientRect().top;
+    if (before === undefined || after === undefined) return;
+    window.scrollBy(0, after - before);
+  };
+};

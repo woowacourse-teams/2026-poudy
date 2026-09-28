@@ -1,6 +1,7 @@
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 
 import type { FilterChipItem } from "@/components/ui/FilterChipBar";
+import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
 
 /**
@@ -10,7 +11,7 @@ import type { Filter } from "@/lib/domain/filter";
 const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): number => {
   const picked = new Set<number>(filter.excludeIngredientIds);
 
-  for (const code of excludeCodes) {
+  for (const code of knownExcludeCodes(excludeCodes)) {
     if (!filter.excludeCodes.includes(code.code)) continue;
     for (const ingredient of code.ingredients) picked.add(ingredient.id);
   }
@@ -31,4 +32,6 @@ export const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeRespon
     label: "유수분",
     count: (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0),
   },
+  // 피부 타입은 한 번에 하나만 걸 수 있어 숫자가 늘 1 이다. 세어 보여 주지 않는다.
+  { id: "skinType", label: "피부 타입", count: filter.skinType ? 1 : 0, showCount: false },
 ];

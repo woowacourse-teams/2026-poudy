@@ -17,6 +17,10 @@ public class ProductVariants {
         return values.getFirst();
     }
 
+    public boolean allDiscontinued() {
+        return values.stream().allMatch(ProductVariant::isDiscontinued);
+    }
+
     public List<ProductVariant> values() {
         return values;
     }

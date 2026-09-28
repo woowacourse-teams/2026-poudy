@@ -2,6 +2,7 @@ package com.poudy.product.domain;
 
 import com.poudy.category.domain.Categories;
 import com.poudy.category.domain.Category;
+import com.poudy.category.domain.CategoryProductCount;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,7 +12,7 @@ public class ProductCountsByCategory {
 
     private final Map<Long, Long> countsByCategoryId;
 
-    ProductCountsByCategory(Map<Long, Long> countsByCategoryId) {
+    public ProductCountsByCategory(Map<Long, Long> countsByCategoryId) {
         this.countsByCategoryId = Map.copyOf(Objects.requireNonNullElse(countsByCategoryId, Map.of()));
     }
 

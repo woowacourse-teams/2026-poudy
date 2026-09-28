@@ -1,6 +1,7 @@
 "use client";
 
 import { SaveButton } from "@/components/ui/SaveButton";
+import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 
@@ -8,10 +9,11 @@ type SaveProductButtonProps = {
   readonly productId: number;
   readonly productName: string;
   readonly variant?: "icon" | "wide";
+  readonly entryPoint?: ProductEntryPoint;
 };
 
 /** 서버 컴포넌트인 상세 화면에서 저장 상태만 클라이언트로 떼어낸다. */
-export function SaveProductButton({ productId, productName, variant = "wide" }: SaveProductButtonProps) {
+export function SaveProductButton({ productId, productName, variant = "wide", entryPoint }: SaveProductButtonProps) {
   const { isSaved, toggle } = useSavedProducts();
   const saved = isSaved(productId);
 
@@ -20,6 +22,7 @@ export function SaveProductButton({ productId, productName, variant = "wide" }: 
     track(saved ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "product_detail",
+      entry_point: entryPoint,
     });
   };
 

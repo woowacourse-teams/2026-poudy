@@ -5,14 +5,18 @@ import { Suspense } from "react";
 
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
+import { isExcludeCode } from "@/lib/domain/filter";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
+import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
+import { ingredientStructuredData } from "@/lib/seo/structured-data";
 
 // 성분 설명은 거의 바뀌지 않고 검색 노출 대상이다.
 export const revalidate = 86400;
@@ -33,27 +37,31 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
   const { ingredientId } = await props.params;
 
   // 여기서 notFound() 를 부르면 렌더링 경로 밖이라 404 상태가 전해지지 않는다.
+  // 조회에 실패해도 canonical 은 남긴다.
+  const canonical = `/ingredients/${ingredientId}`;
+
   try {
     const ingredient = await fetchIngredientDetail(Number(ingredientId));
     const title = `${ingredient.koreanName} 성분 정보`;
     const description = ingredient.description;
     const image = `/ingredients/${ingredientId}/opengraph-image`;
-    const canonical = `/ingredients/${ingredientId}`;
     return {
       title,
       description,
-      alternates: { canonical },
+      alternates: markdownAlternates(canonical),
       openGraph: { ...OPEN_GRAPH_BASE, title, description, url: canonical, images: [image] },
       twitter: { card: "summary_large_image", title, description, images: [image] },
     };
   } catch {
-    return {};
+    return { alternates: { canonical } };
   }
 }
 
 export default async function IngredientDetailPage(props: PageProps<"/ingredients/[ingredientId]">) {
   const { ingredientId } = await props.params;
   const ingredient = await load(ingredientId);
+  // 이름표가 있는 성분군만 보여 준다.
+  const groupCodes = ingredient.groupCodes.filter(isExcludeCode);
 
   const updatedAt = new Date(ingredient.updatedAt)
     .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
@@ -62,6 +70,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
   return (
     <>
+      <JsonLd data={ingredientStructuredData(ingredient)} />
       {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
       <TopBar title={ingredient.koreanName} variant="sub" right={<ShareButton />} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
@@ -74,7 +83,8 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
         읽을거리는 안쪽 여백을 더해 32px 로 들여 쓰고,
         배경을 가진 덩어리만 안쪽 여백을 빼서 바탕 여백까지 넓힌다.
       */}
-      <main className="flex-1 px-4">
+      {/* 화면 전체가 성분 정보라 본문째 선택을 막는다. 규칙은 globals.css 에 있다. */}
+      <main data-no-select className="flex-1 px-4">
         <section className="flex flex-col gap-2 px-4 pt-4 pb-4">
           <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 
@@ -134,11 +144,11 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             </span>
           </p>
 
-          {ingredient.groupCodes.length > 0 ? (
+          {groupCodes.length > 0 ? (
             <section className="flex flex-col gap-2.5">
               <h3 className="text-[18px] font-bold text-[#202124]">포함된 성분군</h3>
               <ul>
-                {ingredient.groupCodes.map((code) => (
+                {groupCodes.map((code) => (
                   <li
                     key={code}
                     className="flex h-12 items-center border-b border-[#E8E9EC] px-0.5 text-[14px] font-semibold text-[#202124]"

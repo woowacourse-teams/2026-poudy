@@ -1,58 +1,23 @@
 package com.poudy.productview.repository;
 
-import com.poudy.productview.domain.ProductViews;
-import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Map;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class ProductViewRepository {
 
-    private final ProductViews productViews;
-    private final ProductViewFileRepository productViewFileRepository;
-    private final Object stateLock = new Object();
-    private final Object saveLock = new Object();
-    private long revision;
-    private long savedRevision;
+    private static final String INCREASE = "insert into product_daily_view (view_date, product_id, view_count)"
+        + " values (?, ?, 1) on conflict (view_date, product_id)"
+        + " do update set view_count = product_daily_view.view_count + 1";
 
-    private ProductViewRepository(ProductViews productViews, ProductViewFileRepository productViewFileRepository) {
-        this.productViews = productViews;
-        this.productViewFileRepository = productViewFileRepository;
-    }
+    private final JdbcTemplate jdbcTemplate;
 
-    public static ProductViewRepository restore(ProductViewFileRepository productViewFileRepository)
-        throws IOException {
-        ProductViews productViews = productViewFileRepository.load();
-        return new ProductViewRepository(productViews, productViewFileRepository);
+    public ProductViewRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void increaseViewCount(Long productId, LocalDate date) {
-        synchronized (stateLock) {
-            productViews.increaseViewCount(productId, date);
-            revision++;
-        }
-    }
-
-    public Map<Long, Long> sumViewCounts(LocalDate today, Integer days) {
-        ProductViews snapshot;
-        synchronized (stateLock) {
-            snapshot = productViews.copy();
-        }
-        return snapshot.sumViewCounts(today, days);
-    }
-
-    public void saveChanges() throws IOException {
-        synchronized (saveLock) {
-            ProductViews snapshot;
-            long snapshotRevision;
-            synchronized (stateLock) {
-                if (revision == savedRevision) {
-                    return;
-                }
-                snapshot = productViews.copy();
-                snapshotRevision = revision;
-            }
-            productViewFileRepository.save(snapshot);
-            savedRevision = snapshotRevision;
-        }
+        jdbcTemplate.update(INCREASE, date, productId);
     }
 }

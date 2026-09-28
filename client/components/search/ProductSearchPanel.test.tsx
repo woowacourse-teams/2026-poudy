@@ -36,7 +36,7 @@ const suggestionsAre = (items: readonly { id: number; name: string; brandName: s
       HttpResponse.json({
         items: items.map((item) => ({ ...item, imageUrl: "", match: nameMatch(item.name) })),
         pagination: {
-          page: 0,
+          page: 1,
           size: 20,
           totalElements: items.length,
           totalPages: Math.ceil(items.length / 20),
@@ -49,8 +49,8 @@ const suggestionsAre = (items: readonly { id: number; name: string; brandName: s
 const pagedSuggestionsAre = (total: number, size: number) =>
   server.use(
     http.get("*/api/products/suggestions", ({ request }) => {
-      const page = Number(new URL(request.url).searchParams.get("page") ?? 0);
-      const start = page * size;
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
+      const start = (page - 1) * size;
       const items = Array.from({ length: Math.max(0, Math.min(size, total - start)) }, (_, index) => ({
         id: start + index + 1,
         name: `제품 ${start + index + 1}`,
@@ -79,7 +79,9 @@ const observeImmediately = () => {
       constructor(private readonly callback: IntersectionObserverCallback) {}
 
       observe() {
-        this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as never);
+        /* 실제 관찰 결과처럼 위치도 함께 준다. 검색바가 붙었는지 볼 때 위치를 읽는다. */
+        const entry = { isIntersecting: true, boundingClientRect: { top: 0 }, rootBounds: null };
+        this.callback([entry as unknown as IntersectionObserverEntry], this as never);
       }
 
       disconnect() {}
@@ -143,7 +145,7 @@ describe("ProductSearchPanel", () => {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         return HttpResponse.json({
           items: [],
-          pagination: { page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+          pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
         });
       }),
     );

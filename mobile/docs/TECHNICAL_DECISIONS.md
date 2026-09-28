@@ -9,6 +9,16 @@
 
 - WebView를 다시 만들면 브라우저 방문 기록도 비어 있다. 따라서 소스 키가 바뀔 때 네이티브 뒤로 가기 상태를 초기화해, 이전 WebView의 `canGoBack` 상태가 버튼 입력을 소모하지 않도록 한다.
 
+## WebView 화면 확대
+
+- 화면 확대 제한은 앱 WebView 안에서만 적용한다. 일반 브라우저에는 확대 기능을 남겨 두므로 웹의 공통 viewport 설정은 바꾸지 않는다.
+- 확대는 초기화 스크립트가 막는다. viewport 에 `maximum-scale=1, user-scalable=no` 를 붙이고 `<html>` 에 `touch-action: pan-x pan-y` 를 건다. `touch-action` 은 브라우저 기본 핀치 확대만 끄고 터치 이벤트는 그대로 웹에 넘기므로, 웹의 두 손가락 제스처는 살아 있다.
+- 초기화 스크립트는 `MutationObserver` 로 viewport meta 와 `<html>` 의 style 을 계속 지켜본다. App Router 가 페이지를 이동하며 viewport meta 를 다시 그려도 잠금이 풀리지 않게 하기 위해서다.
+- 두 번째 손가락이 닿을 때 네이티브에서 터치를 취소하는 방식은 쓰지 않는다. 확대는 막히지만 웹이 두 손가락 터치를 전혀 받지 못한다.
+- Android 는 `WebSettings` 의 확대 지원, 내장 확대 기능, 화면 확대 컨트롤을 모두 끈다. `react-native-webview` 가 확대 지원 설정을 노출하지 않아, 패키지 패치에서 `setBuiltInZoomControls={false}` 를 `setSupportZoom(false)` 와 함께 적용한다. 다만 Galaxy S24+ (WebView 151) 에서는 이 설정만으로 핀치 확대가 막히지 않았다.
+- `react-native-webview` 는 Android 에서 `injectedJavaScriptBeforeContentLoaded` 를 `onPageStarted` 에서 `evaluateJavascript` 로 실행한다. 이 때문에 첫 화면에 들어온 직후 스크립트가 돌기 전까지 확대가 되는 틈이 있었다. 패치에서 androidx.webkit 의 `addDocumentStartJavaScript` 로 등록해 문서가 만들어지는 시점에 실행하고, 이 기능을 지원하지 않는 WebView 에서만 기존 방식으로 돌아간다.
+- iOS 는 WKWebView 의 핀치 인식기를 끈다. 초기화 스크립트는 `WKUserScript` 로 문서 시작 시점에 실행되므로 Android 와 같은 틈이 없다.
+
 ## 스플래시와 로딩 애니메이션
 
 - Android에서는 네이티브 스플래시를 숨긴 뒤 두 번째 애니메이션 프레임부터 React Native 로더를 실행한다. 전환 프레임에서 두 화면이 겹쳐 보이는 현상을 피하기 위한 순서다.
@@ -22,6 +32,26 @@
 - 그래서 **웹은 `env(safe-area-inset-*)` 을 쓰지 않는다.** Android WebView 는 뷰가 아니라 창을 기준으로 인셋을 내주기 때문에, 셸이 이미 피해 둔 자리를 웹이 한 번 더 피해 여백이 두 번 잡힌다. 브라우저에서는 툴바가 그 자리를 차지해 값이 0 이라 쓸 이유도 없다.
 - iOS 는 WKWebView 가 뷰의 안전 영역을 따라 0 을 내주므로 셸 설정만으로 맞는다. 어긋나는 것은 Android 뿐이다.
 - 웹에 아래로 붙는 요소를 더할 때 안전 영역을 계산하지 않아도 된다. 계산하면 Android 앱에서만 어긋난다.
+
+## 키보드
+
+- Android 는 키보드가 뜨면 셸이 WebView 아래를 키보드 높이만큼 비운다(`useKeyboardInset`). `SafeAreaView` 의 아래 여백에 더해, 시스템 내비게이션 바만큼은 이미 비운 채로 그 위에 키보드 높이를 얹는다. React Native 가 알려 주는 키보드 높이는 시스템 바를 뺀 값이다.
+- edge-to-edge(`edgeToEdgeEnabled=true`)에서는 `adjustResize` 가 창을 줄이지 않는다. 셸이 비우지 않으면 WebView 크기는 그대로이고, Galaxy S24+ (WebView 151) 에서 입력창을 누르면 위에 붙은 상단바가 화면 밖으로 밀려났다. 셸이 비운 뒤에는 WebView 높이가 키보드만큼 줄어(840 → 477) 상단바가 제자리에 남았다.
+- iOS 는 WKWebView 가 키보드를 직접 다뤄 셸이 관여하지 않는다.
+
+## 세로 스크롤 막대
+
+- 앱에서는 WebView 의 네이티브 세로 스크롤 막대를 끄고 웹이 직접 그린다. 네이티브 막대는 WebView 전체 높이를 기준으로 그려져, 위에 붙은 상단바와 아래 하단 내비게이션 뒤까지 지나간다.
+- 네이티브 막대의 구간을 좁히는 방법은 iOS 에만 있다. iOS 는 `UIScrollView.scrollIndicatorInsets` 로 좁힐 수 있지만 `react-native-webview` 가 이 값을 노출하지 않아 패치가 필요하다. Android `WebView` 는 막대 인셋 API가 없고, 막대를 그리는 `View.onDrawVerticalScrollBar` 는 `@hide` 라 공개 SDK로 재정의할 수 없다.
+- 어차피 Android 는 웹 막대가 필요하므로 iOS 만 네이티브로 나누지 않는다. 플랫폼별 구현 두 벌과 라이브러리 패치를 늘리는 대신 웹 막대 한 벌로 맞춘다. 두 바의 높이와 유무도 화면마다 달라 웹만 알고 있다.
+- 웹은 초기화 스크립트가 `window.__POUDY_WEB_SCROLL_INDICATOR__` 를 켰을 때만 막대를 그린다. 이 값이 없는 예전 앱은 네이티브 막대가 그대로 살아 있어, 웹이 그리면 막대가 둘이 된다.
+
+## iOS 스크롤 튕김
+
+- iOS WebView 는 바닥에서만 튕기지 않게 한다(`bottomBounces={false}`). 맨 위의 튕김은 그대로 둔다. `react-native-webview` 가 한쪽만 끄는 설정을 노출하지 않아, 패키지 패치에서 스크롤이 바닥을 넘으면 끝 위치로 붙잡는다.
+- WKWebView 는 끝을 넘긴 스크롤 위치를 범위 안으로 잘라 sticky 위치를 계산한다. 튕기는 동안 위에 붙은 상단바가 넘친 만큼 내용과 함께 움직이고, 스크롤이 짧은 화면(탐색은 102px)을 바닥에서 세게 튕기면 상단바와 탭이 화면 밖으로 밀려났다. iPhone 17 시뮬레이터(iOS 26.5)에서 바닥을 2px 넘기자 상단바가 -2, 맨 위를 42px 당기자 +42 로 함께 움직였다.
+- 맨 위의 튕김은 상단바가 내용과 함께 내려왔다 돌아올 뿐 가려지지 않아 남긴다.
+- Android 는 끝에서 스크롤 위치가 넘지 않고 화면만 늘어나 보여 sticky 가 제자리에 있다. 셸이 관여하지 않는다. 웹 브라우저의 튕김도 그대로 둔다.
 
 ## 햅틱
 

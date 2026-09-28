@@ -42,6 +42,7 @@ phases:
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/validate-database.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
 
 artifacts:

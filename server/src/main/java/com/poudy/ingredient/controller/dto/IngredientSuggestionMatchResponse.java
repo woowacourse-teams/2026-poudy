@@ -1,7 +1,7 @@
 package com.poudy.ingredient.controller.dto;
 
 import com.poudy.ingredient.domain.IngredientMatchField;
-import com.poudy.ingredient.domain.MatchedIngredient;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.search.domain.MatchRange;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -14,11 +14,11 @@ public record IngredientSuggestionMatchResponse(
     @NotNull @PositiveOrZero @Schema(description = "일치 구간의 UTF-16 시작 인덱스", example = "0") Integer startIndex,
     @NotNull @Positive @Schema(description = "일치 구간의 UTF-16 종료 제외 인덱스", example = "2") Integer endIndexExclusive) {
 
-    public static IngredientSuggestionMatchResponse from(MatchedIngredient matched) {
-        MatchRange range = matched.textMatch().range();
+    public static IngredientSuggestionMatchResponse from(IngredientSuggestion matched) {
+        MatchRange range = matched.range();
         return new IngredientSuggestionMatchResponse(
             matched.field(),
-            matched.textMatch().text(),
+            matched.text(),
             range.startIndex(),
             range.endIndexExclusive()
         );

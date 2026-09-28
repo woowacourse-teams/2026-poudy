@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
 
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
+    // EC2의 이미지 변환 부담과 Vercel의 최적화 사용량을 줄이기 위해 변환을 건너뛴다.
     unoptimized: true,
     remotePatterns: [
       {
@@ -40,6 +41,24 @@ const nextConfig: NextConfig = {
       // 이벤트는 수집 도메인으로 보낸다.
       { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
     ];
+  },
+
+  async headers() {
+    if (process.env.NEXT_PUBLIC_ENVIRONMENT !== "production") return [];
+
+    return [
+      "/",
+      "/brands",
+      "/brands/:brandId",
+      "/categories",
+      "/categories/:categoryId",
+      "/products/:productId",
+      "/ingredients/:ingredientId",
+      "/curations/:curationId",
+    ].map((source) => ({
+      source,
+      headers: [{ key: "Link", value: '</llms.txt>; rel="describedby"' }],
+    }));
   },
 
   // 이벤트 수집 주소가 /i/v0/e/ 처럼 슬래시로 끝난다.

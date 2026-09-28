@@ -4,16 +4,18 @@ import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
+import { recordSearchKeyword } from "@/lib/api/products";
 import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
+import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
 import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -44,6 +46,17 @@ const nameParts = (item: ProductSuggestionResponse) => {
   return splitByRange(item.match);
 };
 
+/**
+ * 검색어를 인기 검색어 집계에 남긴다.
+ *
+ * 실제로 검색을 보낸 말만 남긴다. 자동완성을 위해 치는 도중의 값까지 세면
+ * 순위가 사람이 찾은 말이 아니라 타이핑 조각으로 채워진다.
+ * 집계는 부수적인 일이라 실패해도 검색을 막지 않는다.
+ */
+const recordKeyword = (keyword: string): void => {
+  void recordSearchKeyword(keyword).catch(() => undefined);
+};
+
 /** S02 제품명 검색 탭. 문구는 design/v1.pen 을 따른다. */
 /*
  * 홈의 최근 검색 카드에도 남긴다. 카드는 `/products?쿼리` 로 목록을 다시 열어 주므로
@@ -58,7 +71,94 @@ const rememberFilter = (keyword: string) => {
   });
 };
 
-export function ProductSearchPanel() {
+const PLACEHOLDER = "브랜드 또는 제품명을 입력해 주세요";
+const LABEL = "제품명 검색";
+
+type ProductSearchPanelProps = {
+  /** 검색어가 없을 때 최근 검색 위에 두는 것. 서버가 그려 넘긴다. */
+  readonly children?: ReactNode;
+};
+
+const ignore = () => {};
+
+/** 탭 줄이 붙는 높이. 상단바(`variant="root"`)의 높이다. */
+const TOP_BAR_HEIGHT = 56;
+
+/** 탭 줄을 재기 전의 높이. `.search-field-bar` 의 기본값과 같다. */
+const SEARCH_TABS_HEIGHT = 46;
+
+/**
+ * 묶음이 붙는 높이. 탭 줄 바로 아래다.
+ *
+ * 탭 줄의 높이는 글자 크기 설정에 따라 기기마다 달라 직접 잰다. 어림값을 쓰면 탭 줄이 낮은
+ * 기기에서는 맨 위에서도 붙은 것으로 보여 그림자가 드리운다. 소수점은 버려, 맨 위에서
+ * 1px 도 안 되게 어긋난 것으로 붙었다고 보지 않는다.
+ */
+function useSearchFieldBarTop() {
+  const [top, setTop] = useState(TOP_BAR_HEIGHT + SEARCH_TABS_HEIGHT);
+
+  useEffect(() => {
+    const tabs = document.querySelector<HTMLElement>("[data-search-tabs]");
+    if (!tabs) return;
+
+    const measure = () => setTop(Math.floor(TOP_BAR_HEIGHT + tabs.getBoundingClientRect().height));
+    const observer = new ResizeObserver(measure);
+
+    measure();
+    observer.observe(tabs);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return top;
+}
+
+/**
+ * 입력 묶음. 탭 줄 아래에 붙는다. 목록을 내려 보다가도 바로 다시 찾을 수 있다.
+ *
+ * 붙는 자리는 `.search-field-bar` 가 탭 줄의 상태를 보고 정한다. 붙었을 때 입력창이 탭 줄에
+ * 닿지 않도록 위아래를 띄우되, 음의 여백으로 그만큼을 되돌려 원래 배치는 움직이지 않는다.
+ * 바텀시트의 딤(z-40)과 탭 줄(z-20) 아래에 둔다. 입력창 아래의 안내 문구는 목록과 함께
+ * 흘러가도록 묶음 밖에 둔다. 붙은 줄이 두꺼워지면 목록을 볼 자리가 그만큼 줄어든다.
+ *
+ * 처음부터 붙는 자리에 놓여 있어, 패널 윗끝이 그 자리를 지나가면 붙은 것으로 보고 아래
+ * 그림자를 드리운다. 표식은 패널 윗끝에 겹쳐 두어 묶음 사이 간격에 끼지 않게 한다.
+ */
+function SearchFieldBar({ children }: { readonly children: ReactNode }) {
+  const top = useSearchFieldBarTop();
+  const { ref, passed } = usePassedTopBoundary<HTMLDivElement>({ enterAt: top });
+
+  return (
+    <>
+      <div ref={ref} aria-hidden="true" className="absolute inset-x-0 top-0 h-px" />
+      <div
+        data-stuck={passed}
+        className="search-field-bar stuck-edge sticky z-10 -mx-4 -mt-4 -mb-2 bg-background px-4 pt-4 pb-2"
+      >
+        {children}
+      </div>
+    </>
+  );
+}
+
+/**
+ * 검색어를 읽기 전의 S02. 검색어가 없을 때와 같은 모양이다.
+ *
+ * 검색어는 주소에서 읽어 브라우저에서만 알 수 있어, 미리 만든 HTML 에는 이 모양이 담긴다.
+ * 최근 검색은 기기에만 있어 여기서는 그리지 않는다.
+ */
+export function ProductSearchPanelFallback({ children }: ProductSearchPanelProps) {
+  return (
+    <div className="relative flex flex-col gap-6 p-4">
+      <SearchFieldBar>
+        <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
+      </SearchFieldBar>
+      {children}
+    </div>
+  );
+}
+
+export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   // 상세로 갔다 돌아왔을 때 주소에 남은 검색어로 다시 시작한다.
@@ -102,6 +202,7 @@ export function ProductSearchPanel() {
     sent.current = trimmed;
     track("search_submitted", { mode: "product", query: trimmed, result_count: total });
     addRecentSearch({ kind: "keyword", keyword: trimmed });
+    recordKeyword(trimmed);
     rememberFilter(trimmed);
     router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
   }, [router, total, trimmed]);
@@ -154,28 +255,26 @@ export function ProductSearchPanel() {
 
   return (
     /* 입력 묶음과 그 아래 목록은 서로 다른 덩어리라 넉넉히 벌린다. */
-    <div className="flex flex-col gap-6 p-4">
-      <div className="flex flex-col gap-2">
+    <div className="relative flex flex-col gap-6 p-4">
+      <SearchFieldBar>
         <SearchField
           value={keyword}
           onChange={changeKeyword}
-          placeholder="브랜드 또는 제품명을 입력해 주세요"
-          label="제품명 검색"
+          placeholder={PLACEHOLDER}
+          label={LABEL}
           onSubmit={handleSubmit}
         />
-        {/*
-          입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
-          자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
-          검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
-        */}
-        <p aria-live="polite" className="text-[12px] text-text-secondary empty:hidden">
-          {waiting
-            ? "검색 결과를 확인하고 있어요…"
-            : typing
-              ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요."
-              : ""}
-        </p>
-      </div>
+      </SearchFieldBar>
+
+      {/*
+        입력 전에는 아무 말도 하지 않는다. 입력창의 안내 문구가 이미 무엇을 넣는
+        자리인지 말하고 있어, 그 아래에 한 번 더 얹으면 같은 말이 겹친다.
+        검색 중이나 입력 중처럼 상태가 바뀌는 동안에만 낭독기에 알린다.
+        입력창에 붙어 읽히도록 묶음 사이 간격(24px)을 8px 로 좁힌다.
+      */}
+      <p aria-live="polite" className="-mt-4 text-[12px] text-text-secondary empty:hidden">
+        {waiting ? "검색 결과를 확인하고 있어요…" : typing ? "검색어로 전체 목록을 보거나 제품을 바로 선택하세요." : ""}
+      </p>
 
       {typing && searching ? (
         <p className="flex min-h-60 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
@@ -191,6 +290,7 @@ export function ProductSearchPanel() {
               onClick={() => {
                 track("search_submitted", { mode: "product", query: trimmed, result_count: total ?? 0 });
                 addRecentSearch({ kind: "keyword", keyword: trimmed });
+                recordKeyword(trimmed);
                 rememberFilter(trimmed);
               }}
               className="flex items-center gap-3 rounded-xl bg-surface p-3"
@@ -278,7 +378,10 @@ export function ProductSearchPanel() {
           )}
         </>
       ) : (
-        <RecentSearches items={recent} />
+        <>
+          {children}
+          <RecentSearches items={recent} />
+        </>
       )}
     </div>
   );

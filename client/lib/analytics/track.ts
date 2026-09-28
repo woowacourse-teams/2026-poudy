@@ -3,7 +3,14 @@
 import posthog, { type PostHog } from "posthog-js";
 
 import { readAppInfo } from "./app-info";
-import type { EventMap, EventName } from "./events";
+import {
+  beginDiscovery,
+  beginHomeSearchDiscovery,
+  discoveryMethodOf,
+  readDiscovery,
+  startSearchDiscovery,
+} from "./discovery";
+import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
 
 type Posthog = Pick<PostHog, "capture" | "captureException">;
@@ -27,13 +34,44 @@ const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
 const posthogEnabled = key !== undefined && key !== "" && environment !== "development";
 
+const ANALYTICS_SCHEMA_VERSION = 3;
+
+const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): DiscoveryContext | undefined => {
+  if (event === "home_search_selected") return beginHomeSearchDiscovery();
+  if (event === "search_started") return startSearchDiscovery();
+  if (event === "popular_keyword_used") return beginDiscovery("popular_keyword", "home");
+  if (event === "skin_type_selected") return beginDiscovery("skin_type", "home");
+  if (event === "home_product_selected") return beginDiscovery("home_ranking", "home");
+  if (event === "category_selected") {
+    const origin = (properties as EventMap["category_selected"]).origin_surface;
+    return beginDiscovery("category", origin);
+  }
+  if (["search_used", "search_suggestion_selected", "search_submitted", "search_results_viewed"].includes(event)) {
+    return readDiscovery("search");
+  }
+  if (event === "product_list_viewed") {
+    const source = (properties as EventMap["product_list_viewed"]).source;
+    const method = source === "popular_keyword" || source === "skin_type" || source === "category" ? source : undefined;
+    return method ? readDiscovery(method) : undefined;
+  }
+  if (event === "product_viewed" || event === "product_saved" || event === "product_unsaved") {
+    const entryPoint = (properties as EventMap["product_viewed"] | EventMap["product_saved"]).entry_point;
+    const method = entryPoint ? discoveryMethodOf(entryPoint as ProductEntryPoint) : undefined;
+    return method ? readDiscovery(method) : undefined;
+  }
+  return undefined;
+};
+
 /**
  * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
  * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
  */
 export const track = <T extends EventName>(event: T, properties: EventMap[T]): void => {
-  if (posthogEnabled) window.posthog?.capture(event, { ...properties, environment });
-  trackGoogleAnalytics(event, properties);
+  const enriched = { ...properties, ...discoveryOf(event, properties) } as EventMap[T];
+  if (posthogEnabled) {
+    window.posthog?.capture(event, { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment });
+  }
+  trackGoogleAnalytics(event, enriched);
 };
 
 export const initAnalytics = (): void => {
@@ -41,6 +79,8 @@ export const initAnalytics = (): void => {
 
   posthog.init(key, {
     api_host: host,
+    // 익명 방문자도 Person 프로필을 만들어 Retention 상세에서 방문자별 행동을 볼 수 있게 한다.
+    person_profiles: "always",
     // 프록시를 쓰면 SDK 가 대시보드 주소를 알 수 없다. 따로 알려 준다.
     ui_host: "https://us.posthog.com",
 

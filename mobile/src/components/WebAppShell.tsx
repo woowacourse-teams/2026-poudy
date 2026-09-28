@@ -12,10 +12,11 @@ import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import { useExternalEntry } from '@/hooks/useExternalEntry';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useQuickActions } from '@/hooks/useQuickActions';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 import type { WebViewErrorEvent, WebViewNavigationRequest } from '@/types/webView';
-import { APPLICATION_NAME, APP_INFO_SCRIPT } from '@/util/appInfo';
+import { APPLICATION_NAME, WEBVIEW_INIT_SCRIPT } from '@/util/appInfo';
 import { playSelectionHaptic } from '@/util/haptic';
 import { failureOf } from '@/util/webViewFailure';
 import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
@@ -35,6 +36,7 @@ export default function WebAppShell() {
   const [isLoadingAnimationRunning, setIsLoadingAnimationRunning] = useState(Platform.OS !== 'android');
 
   const navigation = useWebViewNavigation(serviceBaseUrl);
+  const keyboardInset = useKeyboardInset();
   const { fail } = navigation;
 
   useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
@@ -110,13 +112,17 @@ export default function WebAppShell() {
 
   return (
     <View onLayout={handleRootLayout} style={styles.root}>
-      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={[styles.safeArea, { paddingBottom: keyboardInset }]}
+      >
         <WebView
           key={navigation.key}
           ref={webViewRef}
           allowsBackForwardNavigationGestures
           applicationNameForUserAgent={APPLICATION_NAME}
-          injectedJavaScriptBeforeContentLoaded={APP_INFO_SCRIPT}
+          bottomBounces={false}
+          injectedJavaScriptBeforeContentLoaded={WEBVIEW_INIT_SCRIPT}
           javaScriptCanOpenWindowsAutomatically={false}
           mixedContentMode='never'
           onError={handleError}
@@ -127,8 +133,11 @@ export default function WebAppShell() {
           onNavigationStateChange={handleNavigationChange}
           onShouldStartLoadWithRequest={handleShouldStartLoad}
           originWhitelist={[serviceOrigin]}
+          setBuiltInZoomControls={false}
+          setDisplayZoomControls={false}
           setSupportMultipleWindows={false}
           sharedCookiesEnabled
+          showsVerticalScrollIndicator={false}
           source={{ uri: navigation.url }}
           style={styles.webView}
         />

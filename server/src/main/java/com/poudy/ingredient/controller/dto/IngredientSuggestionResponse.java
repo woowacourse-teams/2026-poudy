@@ -1,7 +1,7 @@
 package com.poudy.ingredient.controller.dto;
 
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.MatchedIngredient;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +14,7 @@ public record IngredientSuggestionResponse(
     @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT)") List<SkinEffectResponse> skinEffects,
     @NotNull @Schema(description = "검색어가 실제로 일치한 필드와 원문 구간") IngredientSuggestionMatchResponse match) {
 
-    public static IngredientSuggestionResponse from(MatchedIngredient matched) {
+    public static IngredientSuggestionResponse from(IngredientSuggestion matched) {
         Ingredient ingredient = matched.ingredient();
         return new IngredientSuggestionResponse(
             ingredient.id(),

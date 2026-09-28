@@ -16,6 +16,8 @@ vi.mock("next/navigation", () => ({
 
 import { useFilterQuery } from "./useFilterQuery";
 
+import { serializeFilter } from "@/lib/domain/filter";
+
 const query = () => new URL(window.location.href).searchParams;
 
 describe("useFilterQuery", () => {
@@ -71,5 +73,50 @@ describe("useFilterQuery", () => {
     act(() => result.current.setCondition({ includeIngredientIds: [] }));
 
     expect(query().has("includeIngredientIds")).toBe(false);
+  });
+
+  /*
+   * 조건을 바꿀 때 옛 값이 `extra` 로 새어 들어가면 새 값 옆에 그대로 남는다. 피부 타입은
+   * 하나만 고르는 조건이라 `skinType=OILY&skinType=DRY` 가 되어, 주소만 보아서는 무엇을
+   * 골랐는지 알 수 없고 뒤로 가기로 돌아왔을 때 앞의 값을 읽는다.
+   */
+  it("한 번만 고르는 조건을 바꾸면 앞의 값이 남지 않는다", () => {
+    searchParams.current = new URLSearchParams("skinType=OILY");
+    const { result } = renderHook(() => useFilterQuery("/products"));
+
+    act(() => result.current.setCondition({ skinType: "DRY" }));
+
+    expect(query().getAll("skinType")).toEqual(["DRY"]);
+  });
+
+  /*
+   * 조건을 새로 더할 때 키를 빠뜨리면 위와 같은 일이 생긴다. 직렬화가 만드는 키를 모두
+   * 조건으로 알아보는지 여기에서 한꺼번에 지킨다.
+   */
+  it("직렬화가 만드는 키를 모두 조건으로 알아본다", () => {
+    const serialized = serializeFilter({
+      keyword: "토너",
+      categoryIds: [3],
+      brandIds: [1],
+      moistureLevel: [2],
+      oilLevel: [1],
+      includeIngredientIds: [6],
+      excludeIngredientIds: [7],
+      excludeCodes: ["SULFATES"],
+      skinType: "DRY",
+      sort: "PRICE_ASC",
+      page: 2,
+      size: 40,
+    });
+
+    searchParams.current = new URLSearchParams(serialized.toString());
+    const { result } = renderHook(() => useFilterQuery("/products"));
+
+    act(() => result.current.setCondition({ keyword: "세럼" }));
+
+    /* 조건으로 알아보지 못한 키는 옛 값과 새 값이 겹쳐 두 번 담긴다. */
+    for (const key of new Set(serialized.keys())) {
+      expect(query().getAll(key).length).toBeLessThanOrEqual(1);
+    }
   });
 });

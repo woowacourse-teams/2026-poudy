@@ -36,7 +36,7 @@ const suggestionsAre = (total: number, delayMs = 0) =>
           // 이름 앞 두 글자 `제품` 이 맞은 것으로 둔다. 서버가 주는 모양과 같다.
           match: { field: "PRODUCT_NAME" as const, text: `제품 ${index + 1}`, startIndex: 0, endIndexExclusive: 2 },
         })),
-        pagination: { page: 0, size: 20, totalElements: total, totalPages: 1, hasNext: false },
+        pagination: { page: 1, size: 20, totalElements: total, totalPages: 1, hasNext: false },
       });
     }),
   );

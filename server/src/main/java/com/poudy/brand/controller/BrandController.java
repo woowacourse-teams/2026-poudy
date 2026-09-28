@@ -2,9 +2,9 @@ package com.poudy.brand.controller;
 
 import com.poudy.brand.controller.dto.BrandDetailResponse;
 import com.poudy.brand.controller.dto.BrandOverviewResponse;
+import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.brand.domain.BrandProductCounts;
 import com.poudy.brand.service.BrandService;
-import com.poudy.product.domain.BrandProductCount;
-import com.poudy.product.domain.BrandProductCounts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

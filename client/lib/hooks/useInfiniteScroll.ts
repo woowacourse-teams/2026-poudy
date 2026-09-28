@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 
 /** 목록 끝이 보이면 다음 페이지를 부른다. */
-export const useInfiniteScroll = (enabled: boolean, onReach: () => void) => {
-  const ref = useRef<HTMLDivElement>(null);
+/** 표식은 빈 칸일 수도, 크롤러가 따라갈 다음 장 링크일 수도 있다. */
+export const useInfiniteScroll = <T extends HTMLElement = HTMLDivElement>(enabled: boolean, onReach: () => void) => {
+  const ref = useRef<T>(null);
 
   useEffect(() => {
     const target = ref.current;

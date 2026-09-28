@@ -1,6 +1,5 @@
 package com.poudy.ingredient.controller.dto;
 
-import com.poudy.ingredient.service.IngredientQuery;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -15,9 +14,5 @@ public record IngredientQueryRequest(
     public IngredientQueryRequest {
         ingredientIds = Objects.requireNonNullElse(ingredientIds, List.of());
         usedInProducts = Objects.requireNonNullElse(usedInProducts, false);
-    }
-
-    public IngredientQuery toQuery() {
-        return new IngredientQuery(ingredientIds, usedInProducts);
     }
 }

@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.TooManyRequestsException;
 import com.poudy.feedback.domain.Feedback;
@@ -21,11 +22,10 @@ import com.poudy.feedback.domain.FeedbackPath;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
-import com.poudy.feedback.notification.FeedbackNotifier;
+import com.poudy.feedback.ratelimit.FeedbackRateLimits;
+import com.poudy.feedback.repository.FeedbackRepository;
 import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.repository.S3FeedbackRepository;
 import com.poudy.feedback.service.FeedbackImageUploadService;
-import com.poudy.feedback.service.FeedbackRateLimiter;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -47,22 +47,22 @@ import org.springframework.test.web.servlet.MockMvc;
 class FeedbackControllerTest {
 
     private static final String PATH = "/api/feedbacks";
-    private static final String IMAGES_PATH = "/api/inquiry-images";
+    private static final String IMAGES_PATH = "/api/pending-images";
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private S3FeedbackRepository feedbackRepository;
+    private FeedbackRepository feedbackRepository;
 
     @MockitoBean
     private S3FeedbackImageRepository imageRepository;
 
     @MockitoBean
-    private FeedbackNotifier feedbackNotifier;
+    private DiscordWebhook webhook;
 
     @MockitoBean
-    private FeedbackRateLimiter rateLimiter;
+    private FeedbackRateLimits rateLimits;
 
     @MockitoBean
     private FeedbackImageUploadService imageUploadService;
@@ -85,13 +85,13 @@ class FeedbackControllerTest {
             .andExpect(status().isNoContent());
 
         verify(feedbackRepository).save(any());
-        verify(feedbackNotifier).notify(any());
-        verify(rateLimiter).requireAllowed("203.0.113.7");
+        verify(webhook).send(any(), any());
+        verify(rateLimits).requireSubmitAllowed("203.0.113.7");
     }
 
     @Test
     @DisplayName("유효한 이미지 배치를 업로드하면 요청 순서의 ID와 201을 반환한다")
-    void uploadsFeedbackImages() throws Exception {
+    void uploadsPendingImages() throws Exception {
         UUID first = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
         UUID second = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
         given(
@@ -233,9 +233,9 @@ class FeedbackControllerTest {
     }
 
     @Test
-    @DisplayName("S3 저장에 실패하면 500을 반환하고 Discord를 호출하지 않는다")
+    @DisplayName("DB 저장에 실패하면 500을 반환하고 Discord를 호출하지 않는다")
     void returnsServerErrorWhenStorageFails() throws Exception {
-        willThrow(new InfrastructureException("S3 실패")).given(feedbackRepository).save(any());
+        willThrow(new InfrastructureException("DB 실패")).given(feedbackRepository).save(any());
 
         mockMvc.perform(
             post(PATH)
@@ -251,13 +251,13 @@ class FeedbackControllerTest {
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"));
 
-        verify(feedbackNotifier, never()).notify(any());
+        verify(webhook, never()).send(any(), any());
     }
 
     @Test
     @DisplayName("Discord 알림에 실패해도 204를 반환한다")
     void keepsSuccessWhenNotificationFails() throws Exception {
-        willThrow(new RuntimeException("Discord 실패")).given(feedbackNotifier).notify(any());
+        willThrow(new RuntimeException("Discord 실패")).given(webhook).send(any(), any());
 
         mockMvc.perform(
             post(PATH)
@@ -277,8 +277,8 @@ class FeedbackControllerTest {
     @DisplayName("요청 제한을 넘으면 외부 호출 없이 429와 Retry-After를 반환한다")
     void rejectsTooManyRequests() throws Exception {
         willThrow(new TooManyRequestsException(Duration.ofSeconds(30)))
-            .given(rateLimiter)
-            .requireAllowed(anyString());
+            .given(rateLimits)
+            .requireSubmitAllowed(anyString());
 
         mockMvc.perform(
             post(PATH)
@@ -296,7 +296,7 @@ class FeedbackControllerTest {
             .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"));
 
         verify(feedbackRepository, never()).save(any());
-        verify(feedbackNotifier, never()).notify(any());
+        verify(webhook, never()).send(any(), any());
     }
 
     @Test
@@ -316,8 +316,10 @@ class FeedbackControllerTest {
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture());
-        assertThat(feedbackCaptor.getValue().subject())
-            .isEqualTo(new ServiceFeedback(FeedbackType.OTHER, FeedbackPath.from(null)));
+        assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ServiceFeedback.class, service -> {
+            assertThat(service.feedbackType()).isEqualTo(FeedbackType.OTHER);
+            assertThat(service.path()).isEqualTo(FeedbackPath.from(null));
+        });
     }
 
     @Test
@@ -377,9 +379,12 @@ class FeedbackControllerTest {
 
         ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
         verify(feedbackRepository).save(feedbackCaptor.capture());
-        assertThat(feedbackCaptor.getValue().subject()).isEqualTo(new ProductCorrection(1L, "블랙 스네일 토너"));
-        verify(rateLimiter).requireAllowed("203.0.113.7");
-        verify(feedbackNotifier).notify(any());
+        assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ProductCorrection.class, correction -> {
+            assertThat(correction.productId()).isEqualTo(1L);
+            assertThat(correction.productName()).isEqualTo("블랙 스네일 토너");
+        });
+        verify(rateLimits).requireSubmitAllowed("203.0.113.7");
+        verify(webhook).send(any(), any());
     }
 
     @Test
@@ -397,7 +402,7 @@ class FeedbackControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
 
-        verify(rateLimiter, never()).requireAllowed(anyString());
+        verify(rateLimits, never()).requireSubmitAllowed(anyString());
         verify(feedbackRepository, never()).save(any());
     }
 
@@ -451,7 +456,8 @@ class FeedbackControllerTest {
             .andExpect(
                 jsonPath("$.paths['/api/products/{productId}/correction-requests'].post.responses['429']").exists()
             )
-            .andExpect(jsonPath("$.paths['/api/inquiry-images'].post.responses['413']").exists())
+            .andExpect(jsonPath("$.paths['/api/pending-images'].post.responses['413']").exists())
+            .andExpect(jsonPath("$.paths['/api/inquiry-images']").doesNotExist())
             .andExpect(jsonPath("$.paths['/api/feedback/images']").doesNotExist());
     }
 }

@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 
 public final class ProductVariant {
 
+    private static final String DISCONTINUED = "discontinued";
+
     private final Long id;
     private final Long price;
     private final BigDecimal volumeValue;
@@ -26,9 +28,17 @@ public final class ProductVariant {
 
         this.id = id;
         this.price = price;
-        this.volumeValue = volumeValue;
+        this.volumeValue = stripTrailingZeros(volumeValue);
         this.volumeUnit = volumeUnit;
         this.status = status;
+    }
+
+    private static BigDecimal stripTrailingZeros(BigDecimal volumeValue) {
+        BigDecimal stripped = volumeValue.stripTrailingZeros();
+        if (stripped.scale() < 0) {
+            return stripped.setScale(0);
+        }
+        return stripped;
     }
 
     public Long id() {
@@ -49,5 +59,9 @@ public final class ProductVariant {
 
     public String status() {
         return status;
+    }
+
+    public boolean isDiscontinued() {
+        return DISCONTINUED.equals(status);
     }
 }

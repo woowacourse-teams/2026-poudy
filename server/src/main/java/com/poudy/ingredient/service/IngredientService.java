@@ -2,32 +2,34 @@ package com.poudy.ingredient.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.excludecode.domain.ExcludeCodeIngredients;
+import com.poudy.excludecode.domain.IngredientGroups;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
-import com.poudy.ingredient.domain.MatchedIngredient;
+import com.poudy.ingredient.domain.IngredientSuggestion;
+import com.poudy.ingredient.domain.IngredientUsage;
 import com.poudy.ingredient.repository.IngredientRepository;
-import com.poudy.product.repository.ProductRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class IngredientService {
 
     private final IngredientRepository ingredientRepository;
-    private final ProductRepository productRepository;
-    private final ExcludeCodeIngredients excludeCodeIngredients;
+    private final IngredientUsage ingredientUsage;
+    private final IngredientGroups ingredientGroups;
 
     public IngredientService(
         IngredientRepository ingredientRepository,
-        ProductRepository productRepository,
-        ExcludeCodeIngredients excludeCodeIngredients
+        IngredientUsage ingredientUsage,
+        IngredientGroups ingredientGroups
     ) {
         this.ingredientRepository = ingredientRepository;
-        this.productRepository = productRepository;
-        this.excludeCodeIngredients = excludeCodeIngredients;
+        this.ingredientUsage = ingredientUsage;
+        this.ingredientGroups = ingredientGroups;
     }
 
     public IngredientDetail findDetail(Long ingredientId) {
@@ -36,23 +38,16 @@ public class IngredientService {
 
         return new IngredientDetail(
             ingredient,
-            excludeCodeIngredients.codesOf(ingredientId),
-            productRepository.countContaining(ingredientId)
+            ingredientGroups.codesOf(ingredientId),
+            ingredientUsage.countProductsContaining(ingredientId)
         );
     }
 
     public IngredientPage find(IngredientQuery query, int page, int size) {
-        IngredientCatalog ingredients = ingredientRepository.findAll();
-        if (query.hasIngredientIds()) {
-            ingredients = ingredients.findAllById(query.ingredientIds());
-        }
-        if (query.usedInProducts()) {
-            ingredients = ingredients.retainIds(productRepository.containedIngredientIds());
-        }
-        return ingredients.page(page, size);
+        return ingredientRepository.findPage(query.ingredientIds(), query.usedInProducts(), page, size);
     }
 
-    public List<MatchedIngredient> suggest(String keyword) {
+    public List<IngredientSuggestion> suggest(String keyword) {
         return ingredientRepository.suggest(keyword);
     }
 }

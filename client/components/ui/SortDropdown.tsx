@@ -4,18 +4,16 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { Icon } from "./icons/Icon";
 
-import type { Sort } from "@/lib/domain/filter";
+import { SORTS, type Sort } from "@/lib/domain/filter";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
 export const SORT_LABELS: Record<Sort, string> = {
-  NAME_ASC: "제품명 오름차순",
-  NAME_DESC: "제품명 내림차순",
-  PRICE_DESC: "가격 높은순",
+  DEFAULT: "기본순",
   PRICE_ASC: "가격 낮은순",
+  PRICE_DESC: "가격 높은순",
+  UNIT_PRICE_ASC: "용량별 가격 낮은순",
+  UNIT_PRICE_DESC: "용량별 가격 높은순",
 };
-
-// 디자인의 드롭다운 순서다. API 의 열거 순서와 다르다.
-const SORT_ORDER: readonly Sort[] = ["NAME_ASC", "NAME_DESC", "PRICE_DESC", "PRICE_ASC"];
 
 /**
  * 고를 수 있는 값과 화면에 적을 이름의 짝.
@@ -26,7 +24,7 @@ export type SortOption<T extends string> = {
   readonly label: string;
 };
 
-export const PRODUCT_SORT_OPTIONS: readonly SortOption<Sort>[] = SORT_ORDER.map((sort) => ({
+export const PRODUCT_SORT_OPTIONS: readonly SortOption<Sort>[] = SORTS.map((sort) => ({
   value: sort,
   label: SORT_LABELS[sort],
 }));
@@ -34,11 +32,11 @@ export const PRODUCT_SORT_OPTIONS: readonly SortOption<Sort>[] = SORT_ORDER.map(
 type SortDropdownProps<T extends string> = {
   readonly value: T;
   readonly onChange: (sort: T) => void;
-  /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 4 종이다. */
+  /** 고를 수 있는 목록. 기본은 제품 목록이 쓰는 정렬 5 종이다. */
   readonly options?: readonly SortOption<T>[];
 };
 
-/** 디자인 C07. 제품 목록에서는 정렬 4 종이 API 의 sort 와 1:1 로 맞는다. */
+/** 디자인 C07. 제품 목록에서는 정렬 5 종이 API 의 sort 와 1:1 로 맞는다. */
 export function SortDropdown<T extends string = Sort>({
   value,
   onChange,

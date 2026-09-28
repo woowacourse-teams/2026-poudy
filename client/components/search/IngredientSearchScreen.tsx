@@ -9,15 +9,40 @@ import { IngredientSearchPanel } from "./IngredientSearchPanel";
 import { Button } from "@/components/ui/Button";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
-import { serializeFilter } from "@/lib/domain/filter";
+import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useCountState } from "@/lib/hooks/useProductCount";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
+type IngredientSearchScreenProps = {
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
+};
+
+const NO_NAMES: ReadonlyMap<number, string> = new Map();
+
+const ignore = () => {};
+
+/**
+ * 조건을 읽기 전의 S03. 조건이 없을 때와 같은 모양이다.
+ *
+ * 조건은 주소에서 읽어 브라우저에서만 알 수 있어, 미리 만든 HTML 에는 이 모양이 담긴다.
+ * 비워 두면 크롤러와 스크립트가 늦은 사람에게는 `불러오는 중…` 만 남는다. 조건이 없는
+ * 주소라면 스크립트가 붙어도 모양이 바뀌지 않는다.
+ */
+export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearchScreenProps) {
+  return (
+    <main className="flex flex-1 flex-col">
+      <div className="flex-1">
+        <IngredientSearchPanel filter={EMPTY_FILTER} onChange={ignore} excludeCodes={excludeCodes} names={NO_NAMES} />
+      </div>
+    </main>
+  );
+}
+
 /** S03 성분 필터링. 조건은 이 화면의 URL 에 담는다. */
-export function IngredientSearchScreen({ excludeCodes }: { readonly excludeCodes: readonly ExcludeCodeResponse[] }) {
+export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenProps) {
   const { filter, setCondition } = useFilterQuery("/search/ingredients");
 
   // 조건에는 ID 만 남으므로 이름은 서버에서 가져온다. 링크로 들어와도 이름이 보인다.

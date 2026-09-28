@@ -1,195 +1,184 @@
 package com.poudy.ingredient.repository;
 
-import com.poudy.common.json.JsonDataReader;
-import com.poudy.exception.InfrastructureException;
-import com.poudy.ingredient.domain.DeferredTagEvidenceException;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientCatalog;
+import com.poudy.ingredient.domain.IngredientMatchField;
+import com.poudy.ingredient.domain.IngredientPage;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.domain.IngredientTag;
-import com.poudy.ingredient.domain.MatchedIngredient;
+import com.poudy.search.domain.MatchRange;
 import com.poudy.tag.domain.Tag;
-import com.poudy.tag.domain.Tags;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
+import com.poudy.tag.domain.TagCategory;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Repository;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JacksonModule;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.module.SimpleModule;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class IngredientRepository {
 
-    private static final String INGREDIENTS_FILE_NAME = "ingredients.json";
-    private static final String ID_FIELD = "id";
-    private static final String KOREAN_NAME_FIELD = "korean_name";
-    private static final String ENGLISH_NAME_FIELD = "english_name";
-    private static final String ORIGIN_DEFINITION_FIELD = "origin_definition";
-    private static final String DESCRIPTION_FIELD = "description";
-    private static final String DESCRIPTION_EVIDENCE_FIELD = "description_evidence";
-    private static final String ALIASES_FIELD = "aliases";
-    private static final String TAG_MAPPINGS_FIELD = "tag_mappings";
-    private static final String TAG_ID_FIELD = "tag_id";
-    private static final String SOURCE_FIELD = "source";
-    private static final String CREATED_AT_FIELD = "created_at";
-    private static final String UPDATED_AT_FIELD = "updated_at";
+    private static final int SUGGESTION_LIMIT = 5;
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
-    private final IngredientCatalog ingredients;
+    private final NamedParameterJdbcTemplate jdbc;
 
-    public IngredientRepository(JsonDataReader jsonDataReader, Tags tags) {
-        List<Ingredient> values = jsonDataReader.readList(INGREDIENTS_FILE_NAME, Ingredient.class, resolvedWith(tags));
-        validateDetailFields(values);
-        try {
-            this.ingredients = IngredientCatalog.from(values);
-        } catch (IllegalArgumentException exception) {
-            throw new InfrastructureException(exception.getMessage(), exception);
-        }
-    }
-
-    private static JacksonModule resolvedWith(Tags tags) {
-        SimpleModule resolution = new SimpleModule("성분 태그 참조 해석");
-        resolution.addDeserializer(Ingredient.class, new ValueDeserializer<Ingredient>() {
-
-            @Override
-            public Ingredient deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
-                JsonNode ingredient = context.readTree(parser);
-                Long ingredientId = longOf(ingredient, ID_FIELD, context);
-
-                try {
-                    return new Ingredient(
-                        ingredientId,
-                        nullableTextOf(ingredient, KOREAN_NAME_FIELD, context),
-                        nullableTextOf(ingredient, ENGLISH_NAME_FIELD, context),
-                        nullableTextOf(ingredient, ORIGIN_DEFINITION_FIELD, context),
-                        nullableTextOf(ingredient, DESCRIPTION_FIELD, context),
-                        nullableTextOf(ingredient, DESCRIPTION_EVIDENCE_FIELD, context),
-                        aliasesOf(ingredient, context),
-                        tagMappingsOf(ingredient, ingredientId, tags, context),
-                        dateTimeOf(ingredient, CREATED_AT_FIELD, context),
-                        dateTimeOf(ingredient, UPDATED_AT_FIELD, context)
-                    );
-                } catch (DeferredTagEvidenceException exception) {
-                    throw new InfrastructureException(
-                        "성분의 태그 근거를 해석하지 못했습니다. ingredient_id=%d".formatted(ingredientId),
-                        exception
-                    );
-                }
-            }
-        });
-
-        return resolution;
-    }
-
-    private static List<String> aliasesOf(JsonNode ingredient, DeserializationContext context)
-        throws JacksonException {
-        JsonNode aliases = ingredient.get(ALIASES_FIELD);
-        if (aliases == null || aliases.isNull()) {
-            return List.of();
-        }
-        if (!aliases.isArray()) {
-            return context.reportInputMismatch(Ingredient.class, "성분의 aliases 필드는 배열이어야 합니다.");
-        }
-
-        List<String> values = new ArrayList<>();
-        for (JsonNode alias : aliases) {
-            if (!alias.isTextual()) {
-                return context.reportInputMismatch(Ingredient.class, "성분의 aliases 항목은 문자열이어야 합니다.");
-            }
-            values.add(alias.asText());
-        }
-        return values;
-    }
-
-    private static List<IngredientTag> tagMappingsOf(
-        JsonNode ingredient,
-        Long ingredientId,
-        Tags tags,
-        DeserializationContext context
-    )
-        throws JacksonException {
-        JsonNode mappings = ingredient.get(TAG_MAPPINGS_FIELD);
-        if (mappings == null || mappings.isNull()) {
-            return List.of();
-        }
-        if (!mappings.isArray()) {
-            return context.reportInputMismatch(Ingredient.class, "성분의 tag_mappings 필드는 배열이어야 합니다.");
-        }
-
-        List<IngredientTag> values = new ArrayList<>();
-        for (JsonNode mapping : mappings) {
-            Long tagId = longOf(mapping, TAG_ID_FIELD, context);
-            Tag tag = tags.findById(tagId).orElseThrow(
-                () -> new InfrastructureException(
-                    "성분이 존재하지 않는 태그 ID를 참조합니다. ingredient_id=%d, tag_id=%s"
-                        .formatted(ingredientId, tagId)
-                )
-            );
-            values.add(new IngredientTag(tag, nullableTextOf(mapping, SOURCE_FIELD, context)));
-        }
-        return values;
-    }
-
-    private static Long longOf(JsonNode value, String field, DeserializationContext context) throws JacksonException {
-        JsonNode number = value.get(field);
-        if (number == null || !number.isIntegralNumber()) {
-            return context.reportInputMismatch(Ingredient.class, "성분의 \"%s\" 필드는 정수여야 합니다.", field);
-        }
-        return number.asLong();
-    }
-
-    private static String nullableTextOf(JsonNode value, String field, DeserializationContext context)
-        throws JacksonException {
-        JsonNode text = value.get(field);
-        if (text == null || text.isNull()) {
-            return null;
-        }
-        if (!text.isTextual()) {
-            return context.reportInputMismatch(Ingredient.class, "성분의 \"%s\" 필드는 문자열 또는 null이어야 합니다.", field);
-        }
-        return text.asText();
-    }
-
-    private static OffsetDateTime dateTimeOf(JsonNode value, String field, DeserializationContext context)
-        throws JacksonException {
-        String dateTime = nullableTextOf(value, field, context);
-        if (dateTime == null) {
-            return null;
-        }
-        try {
-            return OffsetDateTime.parse(dateTime);
-        } catch (DateTimeParseException exception) {
-            return context.reportInputMismatch(Ingredient.class, "성분의 \"%s\" 필드는 날짜와 시간이어야 합니다.", field);
-        }
-    }
-
-    public IngredientCatalog findAll() {
-        return ingredients;
-    }
-
-    public List<MatchedIngredient> suggest(String keyword) {
-        return ingredients.suggest(keyword);
+    public IngredientRepository(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
     public Optional<Ingredient> findById(Long id) {
-        return ingredients.findById(id);
+        return load(List.of(id)).stream().findFirst();
     }
 
-    private static void validateDetailFields(List<Ingredient> values) {
-        List<Long> invalidIds = values.stream()
-            .filter(ingredient -> ingredient.description() == null || ingredient.updatedAt() == null)
-            .map(Ingredient::id)
+    public IngredientCatalog findByIds(List<Long> ids) {
+        return IngredientCatalog.from(load(ids.stream().distinct().toList()));
+    }
+
+    public IngredientPage findPage(List<Long> ingredientIds, boolean usedInProducts, int page, int size) {
+        if (page < 1 || size < 1) {
+            throw new IllegalArgumentException("페이지 조건이 올바르지 않습니다.");
+        }
+        MapSqlParameterSource parameters = new MapSqlParameterSource()
+            .addValue("offset", (long) (page - 1) * size)
+            .addValue("size", size);
+        String condition = " where true";
+        String order = "i.id";
+        if (!ingredientIds.isEmpty()) {
+            parameters.addValue("ids", new SqlArrayValue("bigint", ingredientIds.toArray()));
+            parameters.addValue("orderedIds", new SqlArrayValue("bigint", ingredientIds.toArray()));
+            condition += " and i.id = any(cast(:ids as bigint[]))";
+            order = "array_position(cast(:orderedIds as bigint[]), i.id)";
+        }
+        if (usedInProducts) {
+            condition += " and exists (select 1 from product_ingredient pi where pi.ingredient_id = i.id)";
+        }
+        long total = jdbc.queryForObject("select count(*) from ingredient i" + condition, parameters, Long.class);
+        List<Long> ids = jdbc.queryForList(
+            "select i.id from ingredient i" + condition + " order by " + order + " limit :size offset :offset",
+            parameters,
+            Long.class
+        );
+        return new IngredientPage(load(ids), total);
+    }
+
+    public List<IngredientSuggestion> suggest(String keyword) {
+        List<SearchHit> hits = jdbc.query(
+            """
+                select (hit->>'ingredientId')::bigint as id, hit->>'matchField' as field,
+                       hit->>'matchText' as text, (hit->'matchRange'->>0)::int as start_index,
+                       (hit->'matchRange'->>1)::int as end_index
+                from search_ingredients(:keyword, 0, :limit)
+                cross join lateral jsonb_array_elements(items) with ordinality as results(hit, position)
+                order by position
+                """,
+            new MapSqlParameterSource("keyword", keyword).addValue("limit", SUGGESTION_LIMIT),
+            (row, index) -> new SearchHit(
+                row.getLong("id"),
+                IngredientMatchField.valueOf(row.getString("field")),
+                row.getString("text"),
+                new MatchRange(row.getInt("start_index"), row.getInt("end_index"))
+            )
+        );
+        List<Ingredient> ingredients = load(hits.stream().map(SearchHit::id).toList());
+        return IntStream.range(0, hits.size())
+            .mapToObj(index -> hits.get(index).withIngredient(ingredients.get(index)))
             .toList();
-        if (!invalidIds.isEmpty()) {
-            throw new InfrastructureException(
-                "성분 상세 필수값(description, updated_at)이 누락되었습니다: %s".formatted(invalidIds)
-            );
+    }
+
+    private List<Ingredient> load(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Object> parameters = Map.of("ids", new SqlArrayValue("bigint", ids.toArray()));
+        Map<Long, List<String>> aliases = texts(
+            "select ingredient_id, alias as content from ingredient_alias"
+                + " where ingredient_id = any(cast(:ids as bigint[])) order by ingredient_id, id",
+            parameters
+        );
+        Map<Long, List<String>> sources = texts(
+            "select ingredient_id, content from ingredient_source"
+                + " where ingredient_id = any(cast(:ids as bigint[])) and type = 'INFO'"
+                + " order by ingredient_id, id",
+            parameters
+        );
+        Map<Long, List<IngredientTag>> tags = jdbc.query(
+            """
+                select it.ingredient_id, t.code, t.category_code, t.name,
+                       array(select s.content from ingredient_source s
+                             where s.ingredient_id = it.ingredient_id and s.type = 'EFFECT'
+                             order by s.id) as evidence
+                from ingredient_tag it join tag t on t.code = it.tag_code
+                where it.ingredient_id = any(cast(:ids as bigint[]))
+                order by it.ingredient_id, it.display_order
+                """,
+            parameters,
+            (row, index) -> new TagRow(
+                row.getLong("ingredient_id"),
+                new IngredientTag(
+                    new Tag(
+                        row.getString("code"),
+                        TagCategory.valueOf(row.getString("category_code")),
+                        row.getString("name")
+                    ),
+                    List.of((String[]) row.getArray("evidence").getArray())
+                )
+            )
+        ).stream().collect(groupingBy(TagRow::ingredientId, mapping(TagRow::tag, toList())));
+        Map<Long, Ingredient> ingredients = jdbc.query(
+            "select * from ingredient where id = any(cast(:ids as bigint[]))",
+            parameters,
+            (row, index) -> {
+                long id = row.getLong("id");
+                return new Ingredient(
+                    id,
+                    row.getString("korean_name"),
+                    row.getString("english_name"),
+                    row.getString("description"),
+                    sources.getOrDefault(id, List.of()),
+                    aliases.getOrDefault(id, List.of()),
+                    tags.getOrDefault(id, List.of()),
+                    row.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
+                );
+            }
+        ).stream().collect(toMap(Ingredient::id, ingredient -> ingredient));
+        return ids.stream().filter(ingredients::containsKey).map(ingredients::get).toList();
+    }
+
+    private Map<Long, List<String>> texts(String sql, Map<String, Object> parameters) {
+        return jdbc.query(
+            sql,
+            parameters,
+            (row, index) -> new TextRow(
+                row.getLong("ingredient_id"),
+                row.getString("content")
+            )
+        ).stream().collect(groupingBy(TextRow::ingredientId, mapping(TextRow::content, toList())));
+    }
+
+    private record TextRow(long ingredientId, String content) {
+    }
+
+    private record TagRow(long ingredientId, IngredientTag tag) {
+    }
+
+    private record SearchHit(long id, IngredientMatchField field, String text, MatchRange range) {
+
+        IngredientSuggestion withIngredient(Ingredient ingredient) {
+            return new IngredientSuggestion(ingredient, field, text, range);
         }
     }
-
 }

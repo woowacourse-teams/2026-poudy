@@ -1,0 +1,264 @@
+diff --git a/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+index 80c68034b193a47bedb56ca527352de9548e8ac6..df4fb93364d797e746a606fa7135101aad7295bc 100644
+--- a/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
++++ b/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+ import androidx.webkit.JavaScriptReplyProxy;
++import androidx.webkit.ScriptHandler;
+ import androidx.webkit.WebMessageCompat;
+ import androidx.webkit.WebViewCompat;
+ import androidx.webkit.WebViewFeature;
+@@ -44,6 +45,7 @@ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ 
++import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+@@ -78,6 +80,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+     protected boolean hasScrollEvent = false;
+     protected boolean nestedScrollEnabled = false;
+     protected ProgressChangedFilter progressChangedFilter;
++    private @Nullable ScriptHandler documentStartScriptHandler = null;
+ 
+     /**
+      * WebView must be created with an context of the current activity
+@@ -308,7 +311,40 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         }
+     }
+ 
++    public void setInjectedJSBeforeContentLoaded(@Nullable String script) {
++        injectedJSBeforeContentLoaded = script;
++        registerDocumentStartScript();
++    }
++
++    public void setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(boolean mainFrameOnly) {
++        injectedJavaScriptBeforeContentLoadedForMainFrameOnly = mainFrameOnly;
++        registerDocumentStartScript();
++    }
++
++    private void registerDocumentStartScript() {
++        if (documentStartScriptHandler != null) {
++            documentStartScriptHandler.remove();
++            documentStartScriptHandler = null;
++        }
++
++        if (TextUtils.isEmpty(injectedJSBeforeContentLoaded)
++                || !WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
++            return;
++        }
++
++        String script = "(function() {\n" + injectedJSBeforeContentLoaded + ";\n})();";
++        if (injectedJavaScriptBeforeContentLoadedForMainFrameOnly) {
++            script = "if (window === window.top) {\n" + script + "\n}";
++        }
++        documentStartScriptHandler = WebViewCompat.addDocumentStartJavaScript(this, script, Collections.singleton("*"));
++    }
++
+     public void callInjectedJavaScriptBeforeContentLoaded() {
++        if (documentStartScriptHandler != null) {
++            injectJavascriptObject();
++            return;
++        }
++
+         if (getSettings().getJavaScriptEnabled() &&
+                 injectedJSBeforeContentLoaded != null &&
+                 !TextUtils.isEmpty(injectedJSBeforeContentLoaded)) {
+diff --git a/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+index f83033b3597a425da159555233bacce250ccfce0..a8ee2d63c98a322e03129f863929f921edd38495 100644
+--- a/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
++++ b/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+@@ -73,7 +73,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+         context.addLifecycleEventListener(webView)
+         mWebViewConfig.configWebView(webView)
+         val settings = webView.settings
+-        settings.builtInZoomControls = true
++        settings.setSupportZoom(false)
++        settings.builtInZoomControls = false
+         settings.displayZoomControls = false
+         settings.domStorageEnabled = true
+         settings.setSupportMultipleWindows(true)
+@@ -494,7 +495,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setInjectedJavaScriptBeforeContentLoaded(viewWrapper: RNCWebViewWrapper, value: String?) {
+         val view = viewWrapper.webView
+-        view.injectedJSBeforeContentLoaded = value
++        view.setInjectedJSBeforeContentLoaded(value)
+     }
+ 
+     fun setInjectedJavaScriptForMainFrameOnly(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+@@ -504,7 +505,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+         val view = viewWrapper.webView
+-        view.injectedJavaScriptBeforeContentLoadedForMainFrameOnly = value
++        view.setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(value)
+     }
+ 
+     fun setInjectedJavaScriptObject(viewWrapper: RNCWebViewWrapper, value: String?) {
+@@ -687,6 +688,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+ 
+     fun setSetBuiltInZoomControls(viewWrapper: RNCWebViewWrapper, value: Boolean) {
+         val view = viewWrapper.webView
++        view.settings.setSupportZoom(value)
+         view.settings.builtInZoomControls = value
+     }
+ 
+diff --git a/apple/RNCWebView.mm b/apple/RNCWebView.mm
+index c0816b6320820a8586f3735b7971790cac8704fa..64671185e54030d707e2d6824dbcff25ab17cb3b 100644
+--- a/apple/RNCWebView.mm
++++ b/apple/RNCWebView.mm
+@@ -322,6 +322,7 @@ static inline std::string nullSafeStringWithLength(id value) {
+     REMAP_WEBVIEW_PROP(pullToRefreshEnabled)
+     REMAP_WEBVIEW_PROP(refreshControlLightMode)
+     REMAP_WEBVIEW_PROP(bounces)
++    REMAP_WEBVIEW_PROP(bottomBounces)
+     REMAP_WEBVIEW_PROP(useSharedProcessPool)
+     REMAP_WEBVIEW_STRING_PROP(userAgent)
+     REMAP_WEBVIEW_PROP(sharedCookiesEnabled)
+diff --git a/apple/RNCWebViewImpl.h b/apple/RNCWebViewImpl.h
+index 1f6bbfd697a4e0b0aef2db344386b786839a1969..6b587b6e1df3c6d0f87b243384e37acb2248ca58 100644
+--- a/apple/RNCWebViewImpl.h
++++ b/apple/RNCWebViewImpl.h
+@@ -84,6 +84,7 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+ @property (nonatomic, assign) BOOL webviewDebuggingEnabled;
+ @property (nonatomic, assign) BOOL allowsAirPlayForMediaPlayback;
+ @property (nonatomic, assign) BOOL bounces;
++@property (nonatomic, assign) BOOL bottomBounces;
+ @property (nonatomic, assign) BOOL mediaPlaybackRequiresUserAction;
+ @property (nonatomic, assign) UIEdgeInsets contentInset;
+ @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
+diff --git a/apple/RNCWebViewImpl.m b/apple/RNCWebViewImpl.m
+index 7f5c24d6e2cfb26eddbc513bf17a81c24a7273e2..3b13d1b384e804be2d155c4df93dff43b155705b 100644
+--- a/apple/RNCWebViewImpl.m
++++ b/apple/RNCWebViewImpl.m
+@@ -163,6 +163,7 @@ RCTAutoInsetsProtocol>
+     super.backgroundColor = [RCTUIColor clearColor];
+ #endif // !TARGET_OS_OSX
+     _bounces = YES;
++    _bottomBounces = YES;
+     _scrollEnabled = YES;
+     _showsHorizontalScrollIndicator = YES;
+     _javaScriptEnabled = YES;
+@@ -522,6 +523,7 @@ RCTAutoInsetsProtocol>
+     _webView.menuItems = _menuItems;
+     _webView.suppressMenuItems = _suppressMenuItems;
+     _webView.scrollView.delegate = self;
++    _webView.scrollView.pinchGestureRecognizer.enabled = NO;
+ #endif // !TARGET_OS_OSX
+     _webView.UIDelegate = self;
+     _webView.navigationDelegate = self;
+@@ -1050,7 +1052,15 @@ RCTAutoInsetsProtocol>
+   if (!_scrollEnabled) {
+     scrollView.bounds = _webView.bounds;
+   }
+-  else if (_onScroll != nil) {
++  else if (!_bottomBounces) {
++    UIEdgeInsets inset = scrollView.adjustedContentInset;
++    CGFloat maxOffsetY = MAX(scrollView.contentSize.height + inset.bottom - scrollView.bounds.size.height, -inset.top);
++    if (scrollView.contentOffset.y > maxOffsetY) {
++      scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, maxOffsetY);
++    }
++  }
++
++  if (_scrollEnabled && _onScroll != nil) {
+     NSDictionary *event = @{
+       @"contentOffset": @{
+         @"x": @(scrollView.contentOffset.x),
+diff --git a/apple/RNCWebViewManager.mm b/apple/RNCWebViewManager.mm
+index f8f375f23b12039b64b7900034c8978e0235a8e7..975fdfb074f90438c0b576339d64ff218c388e38 100644
+--- a/apple/RNCWebViewManager.mm
++++ b/apple/RNCWebViewManager.mm
+@@ -133,6 +133,10 @@ RCT_CUSTOM_VIEW_PROPERTY(bounces, BOOL, RNCWebViewImpl) {
+   view.bounces = json == nil ? true : [RCTConvert BOOL: json];
+ }
+ 
++RCT_CUSTOM_VIEW_PROPERTY(bottomBounces, BOOL, RNCWebViewImpl) {
++  view.bottomBounces = json == nil ? true : [RCTConvert BOOL: json];
++}
++
+ RCT_CUSTOM_VIEW_PROPERTY(useSharedProcessPool, BOOL, RNCWebViewImpl) {
+   view.useSharedProcessPool = json == nil ? true : [RCTConvert BOOL: json];
+ }
+diff --git a/lib/RNCWebViewNativeComponent.d.ts b/lib/RNCWebViewNativeComponent.d.ts
+index 8dd6cef93c86f32c0358b5762a20d2f5f65a8cee..163d83a4c30c1f3069434347397089746eecc057 100644
+--- a/lib/RNCWebViewNativeComponent.d.ts
++++ b/lib/RNCWebViewNativeComponent.d.ts
+@@ -147,6 +147,7 @@ export interface NativeProps extends ViewProps {
+     automaticallyAdjustContentInsets?: WithDefault<boolean, true>;
+     autoManageStatusBarEnabled?: WithDefault<boolean, true>;
+     bounces?: WithDefault<boolean, true>;
++    bottomBounces?: WithDefault<boolean, true>;
+     contentInset?: Readonly<{
+         top?: Double;
+         left?: Double;
+diff --git a/lib/WebViewTypes.d.ts b/lib/WebViewTypes.d.ts
+index 998cc88f03f3fbcd0a47f227c01f738dbf4c58bf..11c3d5dffe7b226ba8d055caed960545b94a1605 100644
+--- a/lib/WebViewTypes.d.ts
++++ b/lib/WebViewTypes.d.ts
+@@ -224,6 +224,7 @@ export interface MacOSNativeWebViewProps extends CommonNativeWebViewProps {
+     allowsLinkPreview?: boolean;
+     automaticallyAdjustContentInsets?: boolean;
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     contentInset?: ContentInsetProp;
+     contentInsetAdjustmentBehavior?: ContentInsetAdjustmentBehavior;
+     directionalLockEnabled?: boolean;
+@@ -277,6 +278,7 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+      * @platform ios
+      */
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     /**
+      * A floating-point number that determines how quickly the scroll view
+      * decelerates after the user lifts their finger. You may also use the
+@@ -626,6 +628,7 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+      * @platform macos
+      */
+     bounces?: boolean;
++    bottomBounces?: boolean;
+     /**
+      * Boolean value that determines whether scrolling is enabled in the
+      * `WebView`. The default value is `true`.
+diff --git a/src/RNCWebViewNativeComponent.ts b/src/RNCWebViewNativeComponent.ts
+index 7f4e6c4f73506efa9517314a3ff89f91b097763e..dc1be5b721441bfc411a0f075478d505c6c31a21 100644
+--- a/src/RNCWebViewNativeComponent.ts
++++ b/src/RNCWebViewNativeComponent.ts
+@@ -188,6 +188,7 @@ export interface NativeProps extends ViewProps {
+   automaticallyAdjustContentInsets?: WithDefault<boolean, true>;
+   autoManageStatusBarEnabled?: WithDefault<boolean, true>;
+   bounces?: WithDefault<boolean, true>;
++  bottomBounces?: WithDefault<boolean, true>;
+   contentInset?: Readonly<{
+     top?: Double;
+     left?: Double;
+diff --git a/src/WebViewTypes.ts b/src/WebViewTypes.ts
+index eca81415ab48676da18fc2be13b84e60fe5cb3f5..31cac62a0924c768cbc194fc4df7d9c3c1e38f19 100644
+--- a/src/WebViewTypes.ts
++++ b/src/WebViewTypes.ts
+@@ -346,6 +346,7 @@ export interface MacOSNativeWebViewProps extends CommonNativeWebViewProps {
+   allowsLinkPreview?: boolean;
+   automaticallyAdjustContentInsets?: boolean;
+   bounces?: boolean;
++  bottomBounces?: boolean;
+   contentInset?: ContentInsetProp;
+   contentInsetAdjustmentBehavior?: ContentInsetAdjustmentBehavior;
+   directionalLockEnabled?: boolean;
+@@ -405,6 +406,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+    */
+   bounces?: boolean;
+ 
++  /**
++   * Boolean value that determines whether the web view bounces
++   * when it reaches the bottom edge of the content. The top edge keeps
++   * following `bounces`. The default value is `true`.
++   * @platform ios
++   */
++  bottomBounces?: boolean;
++
+   /**
+    * A floating-point number that determines how quickly the scroll view
+    * decelerates after the user lifts their finger. You may also use the

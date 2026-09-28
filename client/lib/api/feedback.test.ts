@@ -86,7 +86,7 @@ describe("이미지 업로드", () => {
     const result = await uploadFeedbackImages(files);
 
     const sent = fetchMock.mock.calls[0][1].body as FormData;
-    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/inquiry-images");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/pending-images");
     expect(sent.getAll("images")).toHaveLength(2);
     expect(result.imageIds).toEqual(["one", "two"]);
   });

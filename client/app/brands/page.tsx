@@ -19,9 +19,9 @@ export default async function BrandsPage() {
 
   return (
     <>
-      <TopBar title="브랜드" variant="root" />
-      <div className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-4">
-        <DirectoryTabs current="brand" />
+      <TopBar title="브랜드" variant="root" edge={false} />
+      <DirectoryTabs current="brand" />
+      <div className="flex flex-1 flex-col px-4 pb-4">
         <BrandDirectory brands={brands.items} />
       </div>
     </>

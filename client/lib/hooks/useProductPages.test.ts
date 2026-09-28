@@ -16,12 +16,12 @@ const countingProducts = () => {
 
   server.use(
     http.get("*/api/products", ({ request }) => {
-      const page = Number(new URL(request.url).searchParams.get("page") ?? 0);
+      const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
       pages.push(page);
 
       return HttpResponse.json({
-        items: [{ id: page * 2 + 1 }, { id: page * 2 + 2 }],
-        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 2 },
+        items: [{ id: page * 2 - 1 }, { id: page * 2 }],
+        pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },
         brands: [],
       });
     }),
@@ -59,7 +59,35 @@ describe("useProductPages", () => {
     await waitFor(() => expect(result.current.items).toHaveLength(4));
 
     expect(result.current.items.map((item) => item.id)).toEqual([1, 2, 3, 4]);
-    expect(result.current.page).toBe(1);
+    expect(result.current.page).toBe(2);
+  });
+
+  it("조건의 장에서 시작하고 앞쪽 장은 위에 붙인다", async () => {
+    const pages = countingProducts();
+    const { result } = renderHook(() => useProductPages({ ...filterOf("a"), page: 3 }));
+
+    await waitFor(() => expect(result.current.items).toHaveLength(2));
+    expect(pages).toEqual([3]);
+    expect(result.current.first).toBe(3);
+    expect(result.current.items.map((item) => item.id)).toEqual([5, 6]);
+
+    act(() => result.current.loadPrevious());
+    await waitFor(() => expect(result.current.items).toHaveLength(4));
+
+    expect(result.current.first).toBe(2);
+    expect(result.current.page).toBe(3);
+    expect(result.current.items.map((item) => item.id)).toEqual([3, 4, 5, 6]);
+  });
+
+  it("첫 장에서는 앞쪽 장을 부르지 않는다", async () => {
+    const pages = countingProducts();
+    const { result } = renderHook(() => useProductPages(filterOf("a")));
+
+    await waitFor(() => expect(result.current.items).toHaveLength(2));
+    act(() => result.current.loadPrevious());
+
+    expect(result.current.loadingPrevious).toBe(false);
+    expect(pages).toEqual([1]);
   });
 
   it("떠났다 돌아오면 이어 붙인 목록을 그대로 되살리고 다시 부르지 않는다", async () => {
@@ -76,7 +104,7 @@ describe("useProductPages", () => {
 
     // 첫 그리기부터 목록이 있어야 문서 높이가 살아 스크롤을 되돌릴 수 있다.
     expect(again.result.current.items).toHaveLength(4);
-    expect(again.result.current.page).toBe(1);
+    expect(again.result.current.page).toBe(2);
     expect(again.result.current.loading).toBe(false);
     expect(pages).toHaveLength(called);
   });
@@ -107,8 +135,8 @@ describe("useProductPages", () => {
 
     rerender({ keyword: "b" });
 
-    await waitFor(() => expect(result.current.page).toBe(0));
-    expect(pages.at(-1)).toBe(0);
+    await waitFor(() => expect(result.current.page).toBe(1));
+    expect(pages.at(-1)).toBe(1);
   });
 
   it("되살린 조건의 스크롤 위치를 되돌린다", async () => {
@@ -158,7 +186,7 @@ describe("useProductPages", () => {
     expect(again.result.current.items).toHaveLength(4);
 
     await waitFor(() => expect(again.result.current.revalidating).toBe(false));
-    expect(pages).toEqual([0, 1]);
+    expect(pages).toEqual([1, 2]);
     expect(again.result.current.items).toHaveLength(4);
     vi.useRealTimers();
   });

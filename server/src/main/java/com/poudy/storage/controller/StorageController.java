@@ -1,5 +1,6 @@
 package com.poudy.storage.controller;
 
+import com.poudy.storage.controller.dto.StorageResponse;
 import com.poudy.storage.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

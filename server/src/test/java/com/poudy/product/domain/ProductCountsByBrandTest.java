@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.brand.domain.Brands;
 import java.util.List;
 import java.util.Map;

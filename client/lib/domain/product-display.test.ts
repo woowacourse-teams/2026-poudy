@@ -63,7 +63,7 @@ describe("productIngredientDescription", () => {
         ingredientCount: 42,
         effectNames: ["보습", "진정", "각질 케어"],
       }),
-    ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인하세요.");
+    ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인해 보세요.");
   });
 
   it("성분 분류가 없으면 전성분 수만 설명한다", () => {
@@ -74,6 +74,6 @@ describe("productIngredientDescription", () => {
         ingredientCount: 24,
         effectNames: [],
       }),
-    ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인하세요.");
+    ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요.");
   });
 });

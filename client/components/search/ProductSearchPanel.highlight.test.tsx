@@ -23,7 +23,7 @@ const suggestion = (match: Match) =>
     http.get("*/api/products/suggestions", () =>
       HttpResponse.json({
         items: [{ id: 1, name: "1025 독도 토너", brandName: "라운드랩", imageUrl: "", match }],
-        pagination: { page: 0, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
+        pagination: { page: 1, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
       }),
     ),
   );
