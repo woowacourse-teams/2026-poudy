@@ -64,7 +64,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
       action: pick(draft[key].includes(group.code), "remove", "add"),
       surface: "filter_sheet",
     });
-    setDraft({ ...draft, ...toggleGroup(draft, key, group.code) });
+    setDraft({ ...draft, ...toggleGroup(draft, key, group) });
   };
 
   const removeGroup = (key: GroupConditionKey, code: string) => {

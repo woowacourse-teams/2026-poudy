@@ -37,13 +37,16 @@ const otherKey = (key: GroupConditionKey): GroupConditionKey => {
   return "includeGroupCodes";
 };
 
-export const toggleGroup = (filter: Filter, key: GroupConditionKey, code: string): Partial<Filter> => {
+export const toggleGroup = (filter: Filter, key: GroupConditionKey, group: IngredientGroup): Partial<Filter> => {
   const other = otherKey(key);
-  if (filter[key].includes(code)) {
-    return { [key]: filter[key].filter((value) => value !== code) };
+  if (filter[key].includes(group.code)) {
+    return { [key]: filter[key].filter((value) => value !== group.code) };
   }
+  const outsideGroup = (id: number) => !group.ingredientIds.includes(id);
   return {
-    [key]: [...filter[key], code],
-    [other]: filter[other].filter((value) => value !== code),
+    [key]: [...filter[key], group.code],
+    [other]: filter[other].filter((value) => value !== group.code),
+    includeIngredientIds: filter.includeIngredientIds.filter(outsideGroup),
+    excludeIngredientIds: filter.excludeIngredientIds.filter(outsideGroup),
   };
 };

@@ -190,7 +190,12 @@ describe("IngredientSearchPanel", () => {
 
       await userEvent.click(row.getByRole("button", { name: "판테놀 2종 포함" }));
 
-      expect(onChange).toHaveBeenCalledWith({ includeGroupCodes: ["PANTHENOLS"], excludeGroupCodes: [] });
+      expect(onChange).toHaveBeenCalledWith({
+        includeGroupCodes: ["PANTHENOLS"],
+        excludeGroupCodes: [],
+        includeIngredientIds: [],
+        excludeIngredientIds: [],
+      });
     });
 
     it("이미 고른 성분군에 속한 성분은 검색 결과에서 뺀다", async () => {
