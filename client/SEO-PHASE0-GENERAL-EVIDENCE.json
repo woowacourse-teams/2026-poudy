@@ -1,0 +1,444 @@
+{
+  "date": "2026-09-26",
+  "search_probes": [
+    {
+      "engine": "Google",
+      "query": "파우디 화장품",
+      "url": "https://www.google.com/search?q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "http": "200 https://www.google.com/search?q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "error": "",
+      "title": ["Google Search"],
+      "text_sample": "Google Search | 몇 초 안에 이동하지 않는 경우 | 여기 | 를 클릭하세요. | Google 검색에 액세스하는 데 문제가 있으면 | 여기를 클릭 | 하거나 | 의견 | 을 보내 주세요.",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: JavaScript/access intermediary"
+    },
+    {
+      "engine": "Google",
+      "query": "site:poudy.site",
+      "url": "https://www.google.com/search?q=site%3Apoudy.site",
+      "http": "200 https://www.google.com/search?q=site%3Apoudy.site",
+      "error": "",
+      "title": ["Google Search"],
+      "text_sample": "Google Search | 몇 초 안에 이동하지 않는 경우 | 여기 | 를 클릭하세요. | Google 검색에 액세스하는 데 문제가 있으면 | 여기를 클릭 | 하거나 | 의견 | 을 보내 주세요.",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: JavaScript/access intermediary"
+    },
+    {
+      "engine": "Google",
+      "query": "1025 독도 로션 전성분",
+      "url": "https://www.google.com/search?q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "http": "200 https://www.google.com/search?q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "error": "",
+      "title": ["Google Search"],
+      "text_sample": "Google Search | 몇 초 안에 이동하지 않는 경우 | 여기 | 를 클릭하세요. | Google 검색에 액세스하는 데 문제가 있으면 | 여기를 클릭 | 하거나 | 의견 | 을 보내 주세요.",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: JavaScript/access intermediary"
+    },
+    {
+      "engine": "Google",
+      "query": "가지열매추출물 역할",
+      "url": "https://www.google.com/search?q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "http": "200 https://www.google.com/search?q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "error": "",
+      "title": ["Google Search"],
+      "text_sample": "Google Search | 몇 초 안에 이동하지 않는 경우 | 여기 | 를 클릭하세요. | Google 검색에 액세스하는 데 문제가 있으면 | 여기를 클릭 | 하거나 | 의견 | 을 보내 주세요.",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: JavaScript/access intermediary"
+    },
+    {
+      "engine": "Google",
+      "query": "향료 없는 화장품 찾기",
+      "url": "https://www.google.com/search?q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "http": "200 https://www.google.com/search?q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "error": "",
+      "title": ["Google Search"],
+      "text_sample": "Google Search | 몇 초 안에 이동하지 않는 경우 | 여기 | 를 클릭하세요. | Google 검색에 액세스하는 데 문제가 있으면 | 여기를 클릭 | 하거나 | 의견 | 을 보내 주세요.",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: JavaScript/access intermediary"
+    },
+    {
+      "engine": "Bing",
+      "query": "파우디 화장품",
+      "url": "https://www.bing.com/search?q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "http": "200 https://www.bing.com/search?q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "error": "",
+      "title": ["파우디 화장품 - 검색"],
+      "text_sample": "파우디 화장품 - 검색 | 콘텐츠로 건너뛰기 | 접근성 피드백 | English | 전체 | 이미지 | 동영상 | 지도 | 뉴스 | 더 보기 | 항공편 | 도구 | 약 79,200개의 결과 | 새 탭에서 링크를 여세요. | 날짜 | google.co.kr | https://www. | google | .co.kr › index.html | Google | Search the world's information, including webpages, images, videos and more. Google has many special features to help you find … | google.com | https://www. | google | .com | Google | Google 지원 언어: English 광고 Google 정보 Google.com in English | google.com | https://images. | google | .com | Google | 이미지 | Google 이미지 - 가장 광범위한 이미지 검색 | google.co.kr | https://translate. | google | .co.kr | Google | 번역",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: results unrelated to query; do not infer ranking or indexing"
+    },
+    {
+      "engine": "Bing",
+      "query": "site:poudy.site",
+      "url": "https://www.bing.com/search?q=site%3Apoudy.site",
+      "http": "200 https://www.bing.com/search?q=site%3Apoudy.site",
+      "error": "",
+      "title": ["site:poudy.site - 검색"],
+      "text_sample": "site:poudy.site - 검색 | 콘텐츠로 건너뛰기 | 접근성 피드백 | English | 전체 | 웹 | 이미지 | 동영상 | 지도 | 더 보기 | 뉴스 | 항공편 | 도구 | 약 88개의 결과 | 새 탭에서 링크를 여세요. | 날짜 | ganghwa.go.kr | https://www.ganghwa.go.kr › manisan › facility › campsite.jsp | 함허동천 야영장 | | 강화 마니산>시설 이용안내 | 성수기 및 비수기, 주중 및 주말 야영료는 동일하나, 예약취소 시에는 환불 비율이 달리 적용되오니 하단의 반환기준을 참고하시기 … | 자세히 읽기 | naver.com | https://blog.naver.com › y_yyyyyj | 함허동천 야영장 | 예약 총정리! 예약방법·이용요금·주차까지 ... | 2026년 6월 29일 · 여름이면 강화도에서 가장 먼저 예약이 마감되는. 캠핑장 중 하나가 바로 함허동천 야영장입니다. 계곡과 숲, 마니산이 … | 자세히 읽기 | naver.com | https://blog.naver.com | 강화도 | 함허동천 | 1 | 야영장 | 후기 명당 자리, 예약, 꿀팁 총정리 | 2026",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: results unrelated to query; do not infer ranking or indexing"
+    },
+    {
+      "engine": "Bing",
+      "query": "1025 독도 로션 전성분",
+      "url": "https://www.bing.com/search?q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "http": "200 https://www.bing.com/search?q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "error": "",
+      "title": ["1025 독도 로션 전성분 - 검색"],
+      "text_sample": "1025 독도 로션 전성분 - 검색 | 콘텐츠로 건너뛰기 | 접근성 피드백 | English | 전체 | 웹 | 이미지 | 동영상 | 지도 | 더 보기 | 뉴스 | 항공편 | 도구 | 917,000결과 | 새 탭에서 링크를 여세요. | 날짜 | naver.com | https://www.naver.com | NAVER | 네이버는 다양한 정보와 유용한 컨텐츠를 제공하는 대한민국 대표 포털 사이트입니다. | naver.com | https://map.naver.com | 네이버 | 지도 | 2026년 9월 17일 · 네이버 지도는 다양한 위치 검색과 길찾기 서비스를 제공합니다. | naver.com | http://nid.naver.com › nidlogin.login | NAVER 로그인 | 스마트봇 상담 고객센터 한국어 한국어 English 中文 (简体) 中文 (繁體) 日本語 Tiếng Việt | naver.com | https://land.naver.com | 네이버 | 페이 부동산 | 매물신고운영 부동산 고객센터 네이버파이낸셜 (주)가 제공하는 부동산 정보는 각 콘텐츠 제공업체로부터 받는 정보로 참고용입니다. … | naver.com | https:/",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: results unrelated to query; do not infer ranking or indexing"
+    },
+    {
+      "engine": "Bing",
+      "query": "가지열매추출물 역할",
+      "url": "https://www.bing.com/search?q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "http": "200 https://www.bing.com/search?q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "error": "",
+      "title": ["가지열매추출물 역할 - 검색"],
+      "text_sample": "가지열매추출물 역할 - 검색 | 콘텐츠로 건너뛰기 | 접근성 피드백 | English | 전체 | 이미지 | 동영상 | 지도 | 뉴스 | 더 보기 | 항공편 | 도구 | 약 76,800개의 결과 | 새 탭에서 링크를 여세요. | 날짜 | namu.wiki | https://namu.wiki › | 가지 | (채소) | 가지 | (채소) - 나무위키 | 2026년 9월 15일 · 1. 개요 [편집] 가지 (Eggplant, Aubergine, 🍆)는 속씨식물문 쌍떡잎식물강 가지목 가지과 가지속에 속하는 여러해살이 … | 자세히 읽기 | naver.com | https://m.blog.naver.com | 가지 | 효능 10가지와 부작용 꼭 확인하세요! - 네이버 블로그 | 2024년 8월 29일 · 가지 대표 효능 10가지 1. 항산화 작용으로 노화 방지 가지의 보랏빛 껍질에는 강력한 항산화 물질인 안토시아닌이 … | 자세히 읽기 | tistory.com | https://foodymedy.tistory.com › entry › | 가지 | -효능... | 가지 | 효능 놀라운 9 | 가지 | 효과 | 2026년 2월 14일 · 가지 효능 중 가장 대표적인 효",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: results unrelated to query; do not infer ranking or indexing"
+    },
+    {
+      "engine": "Bing",
+      "query": "향료 없는 화장품 찾기",
+      "url": "https://www.bing.com/search?q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "http": "200 https://www.bing.com/search?q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "error": "",
+      "title": ["향료 없는 화장품 찾기 - 검색"],
+      "text_sample": "향료 없는 화장품 찾기 - 검색 | 콘텐츠로 건너뛰기 | 접근성 피드백 | English | 전체 | 이미지 | 동영상 | 지도 | 뉴스 | 더 보기 | 항공편 | 도구 | 약 81개의 결과 | 새 탭에서 링크를 여세요. | 날짜 | miricanvas.com | https://www.miricanvas.com › ko | 디자인 플랫폼 미리캔버스 | 세상의 모든 디자인, 미리캔버스로 완성! PPT, 카드뉴스, 동영상, 소셜 미디어 콘텐츠까지 수많은 템플릿과 디자인 요소로 쉽고 빠르게 … | 자세히 읽기 | miricanvas.com | https://www.miricanvas.com › ko › workspace | 워크스페이스 - 미리캔버스 | 손쉽게 협업 가능한 간편한 무료 디자인 플랫폼, 미리캔버스에 초대합니다. | 자세히 읽기 | miricanvas.com | https://www.miricanvas.com | 미리캔버스 - MiriCanvas | Free design tool with unique templates | Start talking visually. Make your message even more persuasive with MiriC",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: results unrelated to query; do not infer ranking or indexing"
+    },
+    {
+      "engine": "Naver",
+      "query": "파우디 화장품",
+      "url": "https://search.naver.com/search.naver?query=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "http": "200 https://search.naver.com/search.naver?query=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "error": "",
+      "title": ["파우디 화장품 : 네이버 검색"],
+      "text_sample": "파우디 화장품 : 네이버 검색 | 메뉴 영역으로 바로가기 | 본문 영역으로 바로가기 | 현재 PC에 최적화된 브라우저 | 웨일을 설치하세요 | 다운로드 | 닫기 | NAVER | 검색 | 한글 입력기 | 입력도구 | 검색 | 검색 | AI | new | 블로그 | 카페 | 클립 | 이미지 | 지식iN | 동영상 | 쇼핑 | 새 창 열림 | 뉴스 | 어학사전 | 새 창 열림 | 더보기 | 지도 | 새 창 열림 | 인플루언서 | 검색옵션 | 공유 | 파우디 화장품 검색 결과 | 검색옵션 닫기 | 정렬 | 관련도순 | 최신순 | 기간 | 전체 | 1시간 | 1일 | 1주 | 1개월 | 3개월 | 6개월 | 1년 | 직접입력 | 옵션 | 펼치기 | 접기 | 기간 설정시작 | ~ | 기간 설정끝 | 년(Year) | 월(Month) | 일(Day) | 적용 | 옵션 초기화 | 검색옵션 가이드 | 새 창 열림 | 제안 | 도움말 | 새 창 열림 | 파우더화장품 | 으로 검색한 결과입니다. | 파우디 화장품 | 검색결과 보기 | 파우더화장품 | 관련 광고 | 이 광고가 표시된 이유 | 등록 안내 | 이 광고는 사이트검색광고(파워링크)로, 검색어와 광고의 연관도, 광고주의",
+      "poudy_target_links": [],
+      "observed_poudy_urls": [],
+      "assessment": "no public poudy result link observed in fetched sample; not proof of non-indexing"
+    },
+    {
+      "engine": "Naver",
+      "query": "site:poudy.site",
+      "url": "https://search.naver.com/search.naver?query=site%3Apoudy.site",
+      "http": "200 https://search.naver.com/search.naver?query=site%3Apoudy.site",
+      "error": "",
+      "title": ["site:poudy.site : 네이버 검색"],
+      "text_sample": "site:poudy.site : 네이버 검색 | 메뉴 영역으로 바로가기 | 본문 영역으로 바로가기 | 현재 PC에 최적화된 브라우저 | 웨일을 설치하세요 | 다운로드 | 닫기 | NAVER | 검색 | 한글 입력기 | 입력도구 | 검색 | 검색 | AI | new | 블로그 | 카페 | 클립 | 이미지 | 지식iN | 동영상 | 쇼핑 | 새 창 열림 | 뉴스 | 어학사전 | 새 창 열림 | 더보기 | 지도 | 새 창 열림 | 인플루언서 | 검색옵션 | 공유 | site:poudy.site 검색 결과 | 검색옵션 닫기 | 정렬 | 관련도순 | 최신순 | 기간 | 전체 | 1시간 | 1일 | 1주 | 1개월 | 3개월 | 6개월 | 1년 | 직접입력 | 옵션 | 펼치기 | 접기 | 기간 설정시작 | ~ | 기간 설정끝 | 년(Year) | 월(Month) | 일(Day) | 적용 | 옵션 초기화 | 검색옵션 가이드 | 새 창 열림 | poudy.site | poudy.site | 새 창 열림 | Keep에 저장 | Keep에 바로가기 | 새 창 열림 | Poudy(파우디) | 화장품 전성분 검색 | 새 창 열림 | 탐색 | 새 창 열림 | 성분·조건으로 찾기 |",
+      "poudy_target_links": [
+        "?ssc=tab.ait.all&sm=tab_jum&dtm_source=search&dtm_medium=tab&query=site%3Apoudy.site",
+        "?ssc=tab.blog.all&sm=tab_jum&query=site%3Apoudy.site",
+        "?ssc=tab.cafe.all&sm=tab_jum&query=site%3Apoudy.site",
+        "?ssc=tab.clip.all&sm=tab_jum&query=site%3Apoudy.site",
+        "?ssc=tab.image.all&where=image&sm=tab_jum&query=site%3Apoudy.site",
+        "?ssc=tab.kin.kqna&where=kin&sm=tab_jum&query=site%3Apoudy.site",
+        "?ssc=tab.video.all&where=video&sm=tab_jum&query=site%3Apoudy.site",
+        "https://search.shopping.naver.com/search/all?where=all&frm=NVSCTAB&query=site%3Apoudy.site",
+        "?ssc=tab.news.all&where=news&sm=tab_jum&query=site%3Apoudy.site",
+        "https://map.naver.com/v5/search/site%3Apoudy.site"
+      ],
+      "observed_poudy_urls": [
+        "https://poudy.site/",
+        "https://poudy.site/brands",
+        "https://poudy.site/products/4",
+        "https://poudy.site/products/5",
+        "https://poudy.site/products/7",
+        "https://poudy.site/products/8",
+        "https://poudy.site/products?excludeCodes=DRYING_ALCOHOLS",
+        "https://poudy.site/products?excludeCodes=FRAGRANCE_ALLERGENS",
+        "https://poudy.site/products?excludeCodes=HARSH_PRESERVATIVES",
+        "https://poudy.site/products?excludeCodes=SULFATES",
+        "https://poudy.site/search/ingredients",
+        "https://poudy.site/search/products"
+      ],
+      "assessment": "observed public result links"
+    },
+    {
+      "engine": "Naver",
+      "query": "1025 독도 로션 전성분",
+      "url": "https://search.naver.com/search.naver?query=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "http": "200 https://search.naver.com/search.naver?query=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "error": "",
+      "title": ["1025 독도 로션 전성분 : 네이버 검색"],
+      "text_sample": "1025 독도 로션 전성분 : 네이버 검색 | 메뉴 영역으로 바로가기 | 본문 영역으로 바로가기 | 현재 PC에 최적화된 브라우저 | 웨일을 설치하세요 | 다운로드 | 닫기 | NAVER | 검색 | 한글 입력기 | 입력도구 | 검색 | 검색 | AI | new | 블로그 | 카페 | 클립 | 이미지 | 지식iN | 동영상 | 쇼핑 | 새 창 열림 | 뉴스 | 어학사전 | 새 창 열림 | 더보기 | 지도 | 새 창 열림 | 인플루언서 | 검색옵션 | 공유 | 1025 독도 로션 전성분 검색 결과 | 검색옵션 닫기 | 정렬 | 관련도순 | 최신순 | 기간 | 전체 | 1시간 | 1일 | 1주 | 1개월 | 3개월 | 6개월 | 1년 | 직접입력 | 옵션 | 펼치기 | 접기 | 기간 설정시작 | ~ | 기간 설정끝 | 년(Year) | 월(Month) | 일(Day) | 적용 | 옵션 초기화 | 검색옵션 가이드 | 새 창 열림 | 1025독도로션전성분 | 관련 광고 | 이 광고가 표시된 이유 | 등록 안내 | 이 광고는 사이트검색광고(파워링크)로, 검색어와 광고의 연관도, 광고주의 입찰가 등에 의해 광고 노출 여부와 순위가 결정됩니다. | 도움말 | 정보확인 레",
+      "poudy_target_links": [
+        "https://poudy.site/products/312",
+        "https://poudy.site/products/312",
+        "https://poudy.site/products/312"
+      ],
+      "observed_poudy_urls": ["https://poudy.site/products/312"],
+      "assessment": "observed public result links"
+    },
+    {
+      "engine": "Naver",
+      "query": "가지열매추출물 역할",
+      "url": "https://search.naver.com/search.naver?query=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "http": "200 https://search.naver.com/search.naver?query=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "error": "",
+      "title": ["가지열매추출물 역할 : 네이버 검색"],
+      "text_sample": "가지열매추출물 역할 : 네이버 검색 | 메뉴 영역으로 바로가기 | 본문 영역으로 바로가기 | 현재 PC에 최적화된 브라우저 | 웨일을 설치하세요 | 다운로드 | 닫기 | NAVER | 검색 | 한글 입력기 | 입력도구 | 검색 | 검색 | AI | new | 블로그 | 카페 | 클립 | 이미지 | 지식iN | 동영상 | 쇼핑 | 새 창 열림 | 뉴스 | 어학사전 | 새 창 열림 | 더보기 | 지도 | 새 창 열림 | 인플루언서 | 검색옵션 | 공유 | 가지열매추출물 역할 검색 결과 | 검색옵션 닫기 | 정렬 | 관련도순 | 최신순 | 기간 | 전체 | 1시간 | 1일 | 1주 | 1개월 | 3개월 | 6개월 | 1년 | 직접입력 | 옵션 | 펼치기 | 접기 | 기간 설정시작 | ~ | 기간 설정끝 | 년(Year) | 월(Month) | 일(Day) | 적용 | 옵션 초기화 | 검색옵션 가이드 | 새 창 열림 | AI 브리핑 | K-Beauty Digest | kbeauty-digest.com | › | 성분 검색 | › | 가지열매추출물 | 새 창 열림 | Keep에 저장 | Keep에 바로가기 | 새 창 열림 | 가지열매추출물 | 성분 | 새 창 열림 |",
+      "poudy_target_links": [],
+      "observed_poudy_urls": [],
+      "assessment": "no public poudy result link observed in fetched sample; not proof of non-indexing"
+    },
+    {
+      "engine": "Naver",
+      "query": "향료 없는 화장품 찾기",
+      "url": "https://search.naver.com/search.naver?query=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "http": "200 https://search.naver.com/search.naver?query=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "error": "",
+      "title": ["향료 없는 화장품 찾기 : 네이버 검색"],
+      "text_sample": "향료 없는 화장품 찾기 : 네이버 검색 | 메뉴 영역으로 바로가기 | 본문 영역으로 바로가기 | 현재 PC에 최적화된 브라우저 | 웨일을 설치하세요 | 다운로드 | 닫기 | NAVER | 검색 | 한글 입력기 | 입력도구 | 검색 | 검색 | AI | new | 블로그 | 카페 | 클립 | 이미지 | 지식iN | 동영상 | 쇼핑 | 새 창 열림 | 뉴스 | 어학사전 | 새 창 열림 | 더보기 | 지도 | 새 창 열림 | 인플루언서 | 검색옵션 | 공유 | 향료 없는 화장품 찾기 검색 결과 | 검색옵션 닫기 | 정렬 | 관련도순 | 최신순 | 기간 | 전체 | 1시간 | 1일 | 1주 | 1개월 | 3개월 | 6개월 | 1년 | 직접입력 | 옵션 | 펼치기 | 접기 | 기간 설정시작 | ~ | 기간 설정끝 | 년(Year) | 월(Month) | 일(Day) | 적용 | 옵션 초기화 | 검색옵션 가이드 | 새 창 열림 | AI 브리핑 | 향료없는화장품찾기 | 관련 광고 | 이 광고가 표시된 이유 | 등록 안내 | 이 광고는 사이트검색광고(파워링크)로, 검색어와 광고의 연관도, 광고주의 입찰가 등에 의해 광고 노출 여부와 순위가 결정됩니다. | 도움말 | 정보확",
+      "poudy_target_links": [],
+      "observed_poudy_urls": [],
+      "assessment": "no public poudy result link observed in fetched sample; not proof of non-indexing"
+    },
+    {
+      "engine": "Daum",
+      "query": "파우디 화장품",
+      "url": "https://search.daum.net/search?q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "http": "200 https://search.daum.net/search?w=tot&q=%ED%8C%8C%EC%9A%B0%EB%94%94%20%ED%99%94%EC%9E%A5%ED%92%88",
+      "error": "",
+      "title": [],
+      "text_sample": "",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: empty response body; browser retry did not yield a reliable queried result"
+    },
+    {
+      "engine": "Daum",
+      "query": "site:poudy.site",
+      "url": "https://search.daum.net/search?q=site%3Apoudy.site",
+      "http": "200 https://search.daum.net/search?w=tot&q=site%3Apoudy.site",
+      "error": "",
+      "title": [],
+      "text_sample": "",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: empty response body; browser retry did not yield a reliable queried result"
+    },
+    {
+      "engine": "Daum",
+      "query": "1025 독도 로션 전성분",
+      "url": "https://search.daum.net/search?q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "http": "200 https://search.daum.net/search?w=tot&q=1025%20%EB%8F%85%EB%8F%84%20%EB%A1%9C%EC%85%98%20%EC%A0%84%EC%84%B1%EB%B6%84",
+      "error": "",
+      "title": [],
+      "text_sample": "",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: empty response body; browser retry did not yield a reliable queried result"
+    },
+    {
+      "engine": "Daum",
+      "query": "가지열매추출물 역할",
+      "url": "https://search.daum.net/search?q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "http": "200 https://search.daum.net/search?w=tot&q=%EA%B0%80%EC%A7%80%EC%97%B4%EB%A7%A4%EC%B6%94%EC%B6%9C%EB%AC%BC%20%EC%97%AD%ED%95%A0",
+      "error": "",
+      "title": [],
+      "text_sample": "",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: empty response body; browser retry did not yield a reliable queried result"
+    },
+    {
+      "engine": "Daum",
+      "query": "향료 없는 화장품 찾기",
+      "url": "https://search.daum.net/search?q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "http": "200 https://search.daum.net/search?w=tot&q=%ED%96%A5%EB%A3%8C%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "error": "",
+      "title": [],
+      "text_sample": "",
+      "poudy_target_links": [],
+      "assessment": "indeterminate: empty response body; browser retry did not yield a reliable queried result"
+    },
+    {
+      "engine": "Naver",
+      "query": "비타민나무수 역할",
+      "url": "https://search.naver.com/search.naver?query=%EB%B9%84%ED%83%80%EB%AF%BC%EB%82%98%EB%AC%B4%EC%88%98%20%EC%97%AD%ED%95%A0",
+      "observed_poudy_urls": [],
+      "assessment": "no public poudy result link observed in fetched sample; not proof of non-indexing"
+    },
+    {
+      "engine": "Naver",
+      "query": "실리콘 없는 화장품 찾기",
+      "url": "https://search.naver.com/search.naver?query=%EC%8B%A4%EB%A6%AC%EC%BD%98%20%EC%97%86%EB%8A%94%20%ED%99%94%EC%9E%A5%ED%92%88%20%EC%B0%BE%EA%B8%B0",
+      "observed_poudy_urls": [],
+      "assessment": "no public poudy result link observed in fetched sample; not proof of non-indexing"
+    }
+  ],
+  "agent_probes": [
+    {
+      "user_agent": "Yeti",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "Daum",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "bingbot",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "OAI-SearchBot",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "ChatGPT-User",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "PerplexityBot",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "Claude-SearchBot",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    },
+    {
+      "user_agent": "GPTBot",
+      "url": "https://poudy.site/products/312",
+      "http": "200",
+      "error": "",
+      "note": "User-Agent spoof; not a request from the provider IP"
+    }
+  ],
+  "content_probes": [
+    {
+      "path": "/api/curations",
+      "status": 200,
+      "data": {
+        "items": []
+      }
+    },
+    {
+      "path": "/api/products/312",
+      "status": 200,
+      "keys": [
+        "id",
+        "name",
+        "brand",
+        "categories",
+        "imageUrl",
+        "variants",
+        "moistureLevel",
+        "oilLevel",
+        "skinEffectGroups",
+        "ingredients",
+        "freeOfCodes",
+        "updatedAt"
+      ],
+      "name": "1025 독도 로션",
+      "sources": {
+        "updatedAt": "2026-09-21T08:54:11.076Z"
+      },
+      "ingredient_count": 27
+    },
+    {
+      "path": "/api/ingredients/2",
+      "status": 200,
+      "data": {
+        "id": 2,
+        "koreanName": "가지열매추출물",
+        "englishName": "Solanum Melongena (Eggplant) Fruit Extract",
+        "description": "피부를 부드럽게 관리하는 컨디셔닝 성분으로, 항산화 작용을 통해 외부 자극으로 지친 피부를 보호하는 데 도움을 줄 수 있어요. 식물 추출물이나 가지과 식물에 알레르기 경험이 있다면 원료 유래를 확인하고, 새로운 제품은 좁은 부위부터 사용해 보세요.",
+        "formulationRoles": [],
+        "skinEffects": [
+          {
+            "id": 47,
+            "code": "ANTIOXIDANT_RELATED",
+            "name": "항산화"
+          }
+        ],
+        "groupCodes": [],
+        "productCount": 17,
+        "infoSources": [
+          "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)",
+          "Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)",
+          "Enhanced Antioxidant and Protective Effects of Fermented Solanum melongena L. Peel Extracts Against Ultraviolet B-Induced Skin Damage (Lee et al., 2025)"
+        ],
+        "effectSources": [
+          "Antioxidant Activity and Phenolic Content of Microwave-Assisted Solanum melongena Extracts (Salerno et al., 2014)",
+          "Enhanced Antioxidant and Protective Effects of Fermented Solanum melongena L. Peel Extracts Against Ultraviolet B-Induced Skin Damage (Lee et al., 2025)"
+        ],
+        "updatedAt": "2026-08-19T04:29:59.472Z"
+      }
+    },
+    {
+      "path": "/api/ingredients/6313",
+      "status": 200,
+      "data": {
+        "id": 6313,
+        "koreanName": "비타민나무수",
+        "englishName": "Hippophae Rhamnoides Water",
+        "description": "산성 유기화합물 계열의 원료로, 피부 표면을 정돈하거나 제품의 pH를 조절하는 데에 활용돼요. 산도와 함량에 따라 각질·따가움 등 사용감이 달라질 수 있어요. 산도와 함량에 따라 따가움·건조함이 생길 수 있어 민감하거나 장벽이 약한 피부는 사용 후 반응을 살펴보세요.",
+        "formulationRoles": [
+          {
+            "id": 1,
+            "code": "ABRASIVE",
+            "name": "연마제"
+          },
+          {
+            "id": 6,
+            "code": "BUFFERING",
+            "name": "완충제"
+          }
+        ],
+        "skinEffects": [],
+        "groupCodes": [],
+        "productCount": 10,
+        "infoSources": ["대한화장품협회 성분사전 「비타민나무수」(성분코드 6313)"],
+        "effectSources": [],
+        "updatedAt": "2026-08-19T04:29:59.472Z"
+      }
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "title": ["개인정보 처리방침 | Poudy"],
+      "jsonld": 0
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "title": ["이용약관 | Poudy"],
+      "jsonld": 0
+    },
+    {
+      "path": "/about",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "/llms-full.txt",
+      "error": "HTTP Error 404: Not Found"
+    }
+  ],
+  "independent_ai_citation_status": "unmeasured",
+  "independent_model_recognition_status": "unmeasured",
+  "official_ingredient_source": "https://kcia.or.kr/cid/search/ingd_view.php?no=6366",
+  "source_mismatch_visible_in_html": true
+}
