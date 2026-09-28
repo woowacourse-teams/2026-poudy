@@ -33,26 +33,34 @@ const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(
  * `SAME` 도 같은 자리를 차지한다. 변동이 없다는 것과 견줄 것이 없다는 것은 다른 뜻이라
  * 가로줄로 구분해 보여 준다.
  */
+/** 오름·내림 아이콘의 크기. 글자 크기(11px)에서 13×8px 이다. */
+const TREND_ICON = "h-[calc(8em/11)] w-[calc(13em/11)]";
+
 function RankChange({ change }: { readonly change: RankingItem["change"] }) {
   const movement = change?.movement;
 
   /* 오름은 빨강, 내림은 파랑. 실시간 순위에서 널리 쓰는 짝이라 뜻을 따로 익히지 않아도 된다. */
   const mark =
     movement === "UP" ? (
-      <span className="flex items-center gap-1 text-[#e5484d]">
+      <span className="flex items-center gap-[max(4px,calc(4em/11))] text-[#e5484d]">
         {/*
           높이를 계단 수의 글자 높이에 맞춘다. 글자 크기(11px)는 줄 높이라 실제 숫자가
           차지하는 높이는 8px 남짓인데, 아이콘은 지정한 높이를 꽉 채운다. 11 로 두면
           아이콘만 한 눈금 커 보인다. 폭은 그림 비율(20.5:12.5)을 따른다.
 
           선이 가늘면 이 크기에서 흐려지므로 굵기로 무게를 맞춘다.
+
+          크기와 간격은 글자 크기(11px)를 기준으로 `em` 으로도 준다. 기기의 글자 크기
+          설정이 계단 수를 키우면 아이콘도 같은 비율로 커진다. CSS 크기가 SVG 의 크기
+          속성보다 우선하므로, 기본 크기에서는 13×8 그대로 그려진다. 간격은 `calc(4em/11)`
+          만 두면 반올림으로 4px 에 조금 못 미쳐 글자가 옮겨 가므로 4px 을 아래 한계로 둔다.
         */}
-        <Icon name="trending-up" width={13} height={8} preserveRatio strokeWidth={2.5} />
+        <Icon name="trending-up" width={13} height={8} preserveRatio strokeWidth={2.5} className={TREND_ICON} />
         {change?.steps}
       </span>
     ) : movement === "DOWN" ? (
-      <span className="flex items-center gap-1 text-[#3b82f6]">
-        <Icon name="trending-down" width={13} height={8} preserveRatio strokeWidth={2.5} />
+      <span className="flex items-center gap-[max(4px,calc(4em/11))] text-[#3b82f6]">
+        <Icon name="trending-down" width={13} height={8} preserveRatio strokeWidth={2.5} className={TREND_ICON} />
         {change?.steps}
       </span>
     ) : movement === "NEW" ? (
@@ -61,10 +69,14 @@ function RankChange({ change }: { readonly change: RankingItem["change"] }) {
       <span className="text-text-secondary">−</span>
     ) : null;
 
+  /*
+   * 폭은 글자 크기에 맞춰 늘어나도록 `em` 으로 잡는다(11px 에서 꼭 36px). 기기의 글자 크기
+   * 설정은 글자만 키우고 px 폭은 그대로 두므로, px 로 두면 `NEW` 가 칸 밖으로 넘친다.
+   */
   return (
     <span
       aria-hidden="true"
-      className="flex w-9 shrink-0 items-center justify-center text-[11px] font-bold tabular-nums"
+      className="flex w-[calc(36em/11)] shrink-0 items-center justify-center text-[11px] font-bold tabular-nums"
     >
       {mark}
     </span>
@@ -174,67 +186,108 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
      * 쌓임 순서를 올린다. `panel` 은 덮을 것이 없어 둘 다 필요 없다.
      */
     <section ref={sectionRef} className={panel ? undefined : `relative ${expanded ? "z-10" : ""}`} {...hover}>
+      {/*
+        기기의 글자 크기 설정을 키워도 겹치지 않도록 높이는 최소값만 두고, 한 줄에 다
+        들어가지 않으면 다음 줄로 넘긴다. 기본 크기에서는 한 줄에 들어간다.
+      */}
       <div
-        className={`flex h-12.5 items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 ${
+        className={`@container flex min-h-12.5 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border border-border bg-background px-3.5 py-1.5 ${
           expanded ? "rounded-b-none border-b-transparent" : ""
         }`}
       >
-        <span className="shrink-0 rounded-full bg-brand-soft px-2 py-1 text-[12px] font-semibold text-brand">
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-brand-soft px-2 py-1 text-[12px] font-semibold text-brand">
           인기 검색어
         </span>
 
-        {expanded ? (
-          <span className="flex-1 text-[14px] font-semibold text-text-primary">전체 순위 {items.length}개</span>
-        ) : (
-          /* 창 하나를 뚫어 두고 그 안에서만 글자가 오간다. */
-          <span className="relative h-6 min-w-0 flex-1 overflow-hidden">
-            {/*
-              지나가는 검색어는 제자리에서 옅어지고, 다음 검색어가 아래에서 올라온다.
-              둘을 같은 자리에 겹쳐 두어 자리를 밀지 않는다. 지나가는 쪽은 자리만 차지하지
-              않도록 띄워 두고, 낭독기에서도 감춘다.
+        {/*
+          검색어 자리와 단추는 한 틀에 묶어 줄이 넘어갈 때 함께 넘어가게 한다. 따로 두면
+          앞에서부터 채워지는 순서 때문에 검색어가 들어간 뒤 단추만 홀로 다음 줄로 떨어진다.
+          이 틀이 줄어들 수 있는 가장 작은 폭은 안쪽 최소 폭의 합이라, 그만큼 남지 않으면
+          통째로 넘어간다.
+        */}
+        <div className="flex flex-1 items-center gap-2.5">
+          {expanded ? (
+            /*
+              최소 폭은 글자가 한 줄에 다 들어가는 만큼이다. 그만큼이 남지 않으면 단추와 함께
+              다음 줄로 넘어간다. 최소 폭을 두지 않으면 단추만 홀로 다음 줄로 떨어진다.
+            */
+            <span className="min-w-[6.5em] flex-1 text-[14px] font-semibold text-text-primary">
+              전체 순위 {items.length}개
+            </span>
+          ) : (
+            /*
+              창 하나를 뚫어 두고 그 안에서만 글자가 오간다. 창의 높이와 최소 폭은 순위 글자
+              (16px)를 기준으로 `em` 으로 잡아, 글자가 커지면 창도 함께 커진다. 최소 폭이
+              남지 않으면 창이 단추와 함께 다음 줄로 넘어가 한 줄을 모두 쓴다. 검색어가 한두 글자로
+              줄거나 단추만 홀로 떨어지지 않는다. 최소 폭(112px)은 가장 좁은 화면(320px)의 기본
+              크기에서 "실시간" 을 감추면 한 줄에 들어가는 만큼이다. 폭을 0 으로 두어, 줄을
+            나눌 때 검색어 글자의 길이가 아니라 이 최소 폭만 따지게 한다.
+            */
+            <span className="relative h-[1.5em] w-0 min-w-[7em] flex-1 overflow-hidden text-[16px]">
+              {/*
+                지나가는 검색어는 제자리에서 옅어지고, 다음 검색어가 아래에서 올라온다.
+                둘을 같은 자리에 겹쳐 두어 자리를 밀지 않는다. 지나가는 쪽은 자리만 차지하지
+                않도록 띄워 두고, 낭독기에서도 감춘다.
 
-              자리마다 새 `key` 를 주어 React 가 다시 그리므로 애니메이션이 매번 처음부터 돈다.
-            */}
-            {previous ? (
-              <span
-                key={`gone-${index}`}
-                aria-hidden="true"
-                className="popular-keyword-fade absolute inset-0 flex h-6 items-center gap-2.5"
+                자리마다 새 `key` 를 주어 React 가 다시 그리므로 애니메이션이 매번 처음부터 돈다.
+              */}
+              {previous ? (
+                <span
+                  key={`gone-${index}`}
+                  aria-hidden="true"
+                  className="popular-keyword-fade absolute inset-0 flex items-center gap-2.5"
+                >
+                  <span className="flex min-w-0 items-baseline gap-2.5">
+                    <span className="text-[16px] font-bold text-brand">{previous.rank}</span>
+                    <span className="truncate text-[14px] font-semibold text-text-primary">{previous.keyword}</span>
+                  </span>
+                  <RankChange change={previous.change} />
+                </span>
+              ) : null}
+
+              <Link
+                key={index}
+                href={searchHref(current.keyword)}
+                onClick={() =>
+                  track("popular_keyword_used", { keyword: current.keyword, rank: current.rank, placement: "ticker" })
+                }
+                className={`relative flex h-full items-center gap-2.5 ${index === 0 ? "" : "popular-keyword-rise"}`}
               >
-                <span className="text-[16px] font-bold text-brand">{previous.rank}</span>
-                <span className="truncate text-[14px] font-semibold text-text-primary">{previous.keyword}</span>
-                <RankChange change={previous.change} />
-              </span>
-            ) : null}
+                <span className="flex min-w-0 items-baseline gap-2.5">
+                  <span className="text-[16px] font-bold text-brand">{current.rank}</span>
+                  <span className="truncate text-[14px] font-semibold text-text-primary">{current.keyword}</span>
+                </span>
+                <RankChange change={current.change} />
+                <span className="sr-only">{changeLabel(current.change)}</span>
+              </Link>
+            </span>
+          )}
 
-            <Link
-              key={index}
-              href={searchHref(current.keyword)}
-              onClick={() =>
-                track("popular_keyword_used", { keyword: current.keyword, rank: current.rank, placement: "ticker" })
-              }
-              className={`relative flex h-6 items-center gap-2.5 ${index === 0 ? "" : "popular-keyword-rise"}`}
+          {/*
+            "실시간" 과 단추는 묶어 오른쪽 끝에 붙인다.
+
+            "실시간" 은 자리가 모자라면 가장 먼저 내려놓는다. 이 글자 때문에 바가 두 줄로
+            넘어가는 것보다 낫다. 검색어 창이 최소 폭(7em)보다 좁아질 폭이면 감춘다. 기준 폭은 글자를 따라 커지는 몫(em)과 여백·단추처럼 고정된 몫(px)을
+            나눠 잡아, 기기의 글자 크기 설정을 키워도 같은 자리에서 감춰진다. 기본 크기에서는
+            360px 이상의 화면에서 보이고, 320px 화면에서는 감춰진다.
+          */}
+          <span className="-mr-1.5 ml-auto flex shrink-0 items-center gap-2.5">
+            <span className="whitespace-nowrap text-[12px] font-medium text-text-secondary @max-[calc(76px_+_12.75em)]:hidden">
+              실시간
+            </span>
+
+            <button
+              type="button"
+              onClick={() => (expanded ? setExpanded(false) : open())}
+              aria-expanded={expanded}
+              aria-controls={listId}
+              aria-label={expanded ? "인기 검색어 접기" : "인기 검색어 전체 보기"}
+              className="popular-keyword-toggle relative flex size-9 shrink-0 items-center justify-center"
             >
-              <span className="text-[16px] font-bold text-brand">{current.rank}</span>
-              <span className="truncate text-[14px] font-semibold text-text-primary">{current.keyword}</span>
-              <RankChange change={current.change} />
-              <span className="sr-only">{changeLabel(current.change)}</span>
-            </Link>
+              <Icon name={expanded ? "chevron-up" : "chevron-down"} size={18} className="text-text-secondary" />
+            </button>
           </span>
-        )}
-
-        <span className="shrink-0 text-[12px] font-medium text-text-secondary">실시간</span>
-
-        <button
-          type="button"
-          onClick={() => (expanded ? setExpanded(false) : open())}
-          aria-expanded={expanded}
-          aria-controls={listId}
-          aria-label={expanded ? "인기 검색어 접기" : "인기 검색어 전체 보기"}
-          className="popular-keyword-toggle relative -mr-1.5 flex size-9 shrink-0 items-center justify-center"
-        >
-          <Icon name={expanded ? "chevron-up" : "chevron-down"} size={18} className="text-text-secondary" />
-        </button>
+        </div>
       </div>
 
       {/*
@@ -257,10 +310,25 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
                 onClick={() =>
                   track("popular_keyword_used", { keyword: item.keyword, rank: item.rank, placement: "expanded" })
                 }
-                className="popular-keyword-row flex h-10 items-center gap-2.5 px-3.5 motion-reduce:transition-none"
+                className="popular-keyword-row flex min-h-10 items-center gap-2.5 px-3.5 motion-reduce:transition-none"
               >
-                <span className="w-4.5 shrink-0 text-[14px] font-bold text-brand">{item.rank}</span>
-                <span className="flex-1 truncate text-[14px] font-medium text-text-primary">{item.keyword}</span>
+                {/*
+                  순위와 검색어는 가운데가 아니라 글자의 기준선을 맞춘다. 한글이 기기 글꼴로
+                  대신 그려지면 숫자와 한글의 글꼴이 갈리는데, 글꼴마다 줄 상자의 위아래 여백이
+                  달라 상자끼리 가운데를 맞추면 글자가 서로 어긋난다. 둘을 묶은 줄은 행의
+                  가운데에 둔다.
+
+                  순위 칸은 두 자리 숫자가 들어갈 폭으로 고정해 검색어가 시작하는 자리를 맞춘다.
+                  폭을 px 로 두면 기기의 글꼴이나 글자 크기 설정에 따라 `10` 이 넘쳐 두 줄로
+                  갈라진다. 숫자 너비(`ch`)로 재고 고정폭 숫자를 쓰면 글꼴이 바뀌어도 꼭 맞는다.
+                  한 자리와 두 자리 순위가 섞이므로 칸 안에서는 가운데에 둔다.
+                */}
+                <span className="flex min-w-0 flex-1 items-baseline gap-2.5">
+                  <span className="w-[2ch] shrink-0 whitespace-nowrap text-center text-[14px] font-bold tabular-nums text-brand">
+                    {item.rank}
+                  </span>
+                  <span className="flex-1 truncate text-[14px] font-medium text-text-primary">{item.keyword}</span>
+                </span>
                 <RankChange change={item.change} />
                 <span className="sr-only">{changeLabel(item.change)}</span>
               </Link>
