@@ -259,7 +259,15 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
                 }
                 className="popular-keyword-row flex h-10 items-center gap-2.5 px-3.5 motion-reduce:transition-none"
               >
-                <span className="w-4.5 shrink-0 text-[14px] font-bold text-brand">{item.rank}</span>
+                {/*
+                  순위 칸은 두 자리 숫자가 들어갈 폭으로 고정해 검색어가 시작하는 자리를 맞춘다.
+                  폭을 px 로 두면 기기의 글꼴이나 글자 크기 설정에 따라 `10` 이 넘쳐 두 줄로
+                  갈라진다. 숫자 너비(`ch`)로 재고 고정폭 숫자를 쓰면 글꼴이 바뀌어도 꼭 맞는다.
+                  한 자리와 두 자리 순위가 섞이므로 칸 안에서는 가운데에 둔다.
+                */}
+                <span className="w-[2ch] shrink-0 whitespace-nowrap text-center text-[14px] font-bold tabular-nums text-brand">
+                  {item.rank}
+                </span>
                 <span className="flex-1 truncate text-[14px] font-medium text-text-primary">{item.keyword}</span>
                 <RankChange change={item.change} />
                 <span className="sr-only">{changeLabel(item.change)}</span>
