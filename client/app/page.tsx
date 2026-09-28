@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
 import { HomeSearchLink } from "@/components/home/HomeSearchLink";
@@ -29,6 +30,9 @@ export const metadata: Metadata = {
  * 화면을 다시 만드는 주기를 정하지는 않는다.
  */
 export const revalidate = 600;
+
+// 화면 구성에 맞춰 다시 노출하기 전까지 홈 안내 섹션은 렌더링하지 않는다.
+const showServiceDescription = false;
 
 const organizationId = absoluteUrl("/#organization");
 const websiteStructuredData = {
@@ -96,6 +100,22 @@ export default async function Home() {
         <PopularKeywords items={keywords} />
         <SkinTypeMenu items={skinTypes} />
         <PopularProducts initialItems={rankings} categories={categories} />
+        {showServiceDescription && (
+          <section aria-labelledby="service-description" className="flex flex-col gap-3">
+            <h2 id="service-description" className="text-[18px] font-bold text-text-primary">
+              화장품 전성분을 검색해 보세요
+            </h2>
+            <p className="text-[13px] leading-relaxed text-text-secondary">{SITE_DESCRIPTION}</p>
+            <nav aria-label="화장품과 성분 검색" className="flex gap-4 text-[13px] font-semibold">
+              <Link href="/search/products" className="underline underline-offset-4">
+                화장품 검색
+              </Link>
+              <Link href="/search/ingredients" className="underline underline-offset-4">
+                성분 검색
+              </Link>
+            </nav>
+          </section>
+        )}
       </main>
 
       <SiteFooter />
