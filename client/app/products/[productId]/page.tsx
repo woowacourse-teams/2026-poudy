@@ -15,13 +15,20 @@ import { breadcrumbList, productCrumbs, productStructuredData } from "@/lib/seo/
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
 export const revalidate = 86400;
 
-/** 없는 제품이면 404 화면을 보여 준다. */
-const load = async (raw: string) => {
+/** 구성품 탭이 붙이는 `partId` 를 읽는다. 숫자가 아니면 첫 구성품을 보여 준다. */
+const partIdOf = (value: unknown): number | undefined => {
+  const partId = Number(value);
+  if (typeof value !== "string" || !Number.isInteger(partId)) return undefined;
+  return partId;
+};
+
+/** 없는 제품이나 그 제품에 없는 구성품이면 404 화면을 보여 준다. */
+const load = async (raw: string, partId: number | undefined) => {
   const productId = Number(raw);
   if (!Number.isInteger(productId)) notFound();
 
   try {
-    return await fetchProductDetail(productId);
+    return await fetchProductDetail(productId, partId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
@@ -43,8 +50,8 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
     const description = productIngredientDescription({
       brandName: product.brand.name,
       productName: product.name,
-      ingredientCount: product.ingredients.length,
-      effectNames: product.skinEffectGroups.map((group) => group.name),
+      ingredientCount: product.selectedPart?.ingredients.length ?? 0,
+      effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
     });
     const image = product.imageUrl || "/opengraph-image";
     const imageAlt = product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : SITE_DESCRIPTION;
@@ -63,7 +70,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 export default async function ProductDetailPage(props: PageProps<"/products/[productId]">) {
   const { productId } = await props.params;
   const searchParams = (await props.searchParams) ?? {};
-  const product = await load(productId);
+  const product = await load(productId, partIdOf(searchParams.partId));
 
   return (
     <>

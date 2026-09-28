@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import type { ProductPartResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -11,7 +11,7 @@ import { effectColor } from "@/lib/domain/skin-effect-colors";
 const COLLAPSED_COUNT = 5;
 
 type IngredientListProps = {
-  readonly ingredients: ProductDetailResponse["ingredients"];
+  readonly ingredients: ProductPartResponse["ingredients"];
 };
 
 /**

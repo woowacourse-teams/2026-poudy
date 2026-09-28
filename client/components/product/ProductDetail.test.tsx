@@ -102,7 +102,7 @@ describe("제품 성분 요약", () => {
     const links = container.querySelectorAll('a[href^="/ingredients/"]');
     const sixth = links[5]?.closest("li");
 
-    expect(links).toHaveLength(untaggedProductDetail.ingredients.length);
+    expect(links).toHaveLength(untaggedProductDetail.selectedPart?.ingredients.length ?? 0);
     expect(links[0]?.closest("li")).not.toHaveAttribute("hidden");
     expect(sixth).toHaveAttribute("hidden");
 
@@ -385,7 +385,10 @@ describe("성분 분류", () => {
   it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
     const product = {
       ...taggedProduct,
-      skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+      selectedPart: {
+        ...taggedProduct.selectedPart!,
+        skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
+      },
     };
 
     render(<ProductDetail product={product} />);
@@ -412,5 +415,47 @@ describe("제외 성분군 표시", () => {
 
     expect(chipOf("향료/알레르기 성분")).toHaveTextContent("향료/알레르기 성분 제외 있음");
     expect(chipOf("향료/알레르기 성분")?.querySelector("svg")).not.toBeInTheDocument();
+  });
+});
+
+describe("구성품 탭", () => {
+  const setProduct = {
+    ...productDetails[0]!,
+    productParts: [
+      { id: 11, name: "아쿠아 세럼", cautionCount: 0 },
+      { id: 12, name: "인텐스 크림", cautionCount: 2 },
+    ],
+    selectedPart: { ...productDetails[0]!.selectedPart!, id: 12, name: "인텐스 크림" },
+  };
+
+  it("구성품이 하나면 탭을 두지 않는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(screen.queryByRole("navigation", { name: "구성품" })).not.toBeInTheDocument();
+  });
+
+  it("구성품마다 그 구성품을 고른 주소로 가는 탭을 두고 고른 탭을 표시한다", () => {
+    render(<ProductDetail product={setProduct} />);
+
+    const tabs = within(screen.getByRole("navigation", { name: "구성품" }));
+
+    expect(tabs.getByRole("link", { name: "아쿠아 세럼" })).toHaveAttribute("href", "/products/1?partId=11");
+    expect(tabs.getByRole("link", { name: "인텐스 크림 주의 2" })).toHaveAttribute("aria-current", "page");
+    expect(tabs.getByRole("link", { name: "아쿠아 세럼" })).toHaveAttribute("aria-current", "false");
+  });
+
+  it("탭 주소에 진입 경로를 이어 붙여 조회 이벤트가 다시 나가지 않게 한다", () => {
+    render(<ProductDetail product={setProduct} entryPoint="saved" />);
+
+    const tabs = within(screen.getByRole("navigation", { name: "구성품" }));
+
+    expect(tabs.getByRole("link", { name: "아쿠아 세럼" })).toHaveAttribute("href", "/products/1?partId=11&from=saved");
+  });
+
+  it("고른 구성품이 없으면 성분 구역을 그리지 않는다", () => {
+    render(<ProductDetail product={{ ...untaggedProductDetail, productParts: [], selectedPart: undefined }} />);
+
+    expect(screen.queryByRole("heading", { name: "성분 정보" })).not.toBeInTheDocument();
+    expect(screen.getByText("상품 정보 출처 안내")).toBeInTheDocument();
   });
 });

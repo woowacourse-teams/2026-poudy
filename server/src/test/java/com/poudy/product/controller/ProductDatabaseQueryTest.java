@@ -210,7 +210,7 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
-    @DisplayName("여러 구성품의 중복 성분은 상품 개수를 늘리지 않고 전성분 순서는 보존한다")
+    @DisplayName("여러 구성품의 중복 성분은 상품 개수를 늘리지 않고 구성품별 전성분 순서는 보존한다")
     void preservesIngredientOrderAndCountsProducts() throws Exception {
         addIngredients();
         ProductQuery query = new ProductQuery(
@@ -227,13 +227,63 @@ class ProductDatabaseQueryTest {
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(repository.count(query)).isEqualTo(1);
-        assertThat(page.items().getFirst().ingredients().values()).extracting("id")
-            .containsExactly(90002L, 90001L, 90002L);
+        assertThat(page.items().getFirst().firstPart().orElseThrow().ingredients().ids())
+            .containsExactly(90002L, 90001L);
         mockMvc.perform(
             get("/api/products/count").param("includeIngredientIds", "90001")
                 .param("excludeIngredientIds", "90002")
         )
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        mockMvc.perform(get("/api/products/90001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.productParts[*].name").value(contains("첫 구성품", "둘째 구성품")))
+            .andExpect(jsonPath("$.productParts[0].ingredients").doesNotExist())
+            .andExpect(jsonPath("$.selectedPart.name").value("첫 구성품"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(90002, 90001)))
+            .andExpect(jsonPath("$.ingredients").doesNotExist())
+            .andExpect(jsonPath("$.skinEffectGroups").doesNotExist())
+            .andExpect(jsonPath("$.excludeGroups").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("구성품마다 자기 성분만으로 제외 성분군 포함 여부를 판정한다")
+    void judgesExcludeGroupsPerPart() throws Exception {
+        addIngredients();
+        jdbc.update("""
+            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            select 'SULFATES', 90001, coalesce(max(display_order), -1) + 1
+            from exclude_code_ingredient where exclude_code = 'SULFATES'
+            """);
+        mockMvc.perform(get("/api/products/90001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.productParts[*].cautionCount").value(contains(1, 0)))
+            .andExpect(
+                jsonPath("$.selectedPart.excludeGroups[?(@.name == '설페이트 성분')].contains").value(contains(true))
+            );
+        mockMvc.perform(get("/api/products/90001").param("partId", String.valueOf(partIdAt(1))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.name").value("둘째 구성품"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(90002)))
+            .andExpect(
+                jsonPath("$.selectedPart.excludeGroups[?(@.name == '설페이트 성분')].contains").value(contains(false))
+            );
+    }
+
+    @Test
+    @DisplayName("다른 제품의 구성품을 고르면 구성품 없음으로 404를 반환한다")
+    void rejectsPartOfOtherProduct() throws Exception {
+        addIngredients();
+        mockMvc.perform(get("/api/products/90002").param("partId", String.valueOf(partIdAt(0))))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value(ErrorCode.PRODUCT_PART_NOT_FOUND.name()));
+    }
+
+    private long partIdAt(int displayOrder) {
+        return jdbc.queryForObject(
+            "select id from product_component where product_id = 90001 and display_order = ?",
+            Long.class,
+            displayOrder
+        );
     }
 
     @Test
