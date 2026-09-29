@@ -222,6 +222,8 @@ class ProductDatabaseQueryTest {
             List.of(90001L, 90002L),
             null,
             null,
+            null,
+            null,
             null
         );
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
@@ -250,9 +252,9 @@ class ProductDatabaseQueryTest {
     void judgesExcludeGroupsPerPart() throws Exception {
         addIngredients();
         jdbc.update("""
-            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
             select 'SULFATES', 90001, coalesce(max(display_order), -1) + 1
-            from exclude_code_ingredient where exclude_code = 'SULFATES'
+            from ingredient_group_ingredient where group_code = 'SULFATES'
             """);
         mockMvc.perform(get("/api/products/90001"))
             .andExpect(status().isOk())
@@ -291,9 +293,9 @@ class ProductDatabaseQueryTest {
     void readsCurrentExcludeGroup() throws Exception {
         addIngredients();
         jdbc.update("""
-            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
             select 'SULFATES', 90002, coalesce(max(display_order), -1) + 1
-            from exclude_code_ingredient where exclude_code = 'SULFATES'
+            from ingredient_group_ingredient where group_code = 'SULFATES'
             """);
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("excludeCodes", "SULFATES"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(4));

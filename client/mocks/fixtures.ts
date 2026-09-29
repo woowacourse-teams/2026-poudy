@@ -5,6 +5,7 @@ import type {
   CategoryResponse,
   ExcludeCodeResponse,
   IngredientDetailResponse,
+  IngredientGroupResponse,
   ProductDetailResponse,
   ProductPartResponse,
   ProductResponse,
@@ -269,6 +270,18 @@ const EXCLUDE_GROUP_NAMES = [
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
   EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
 
+export const ingredientGroups: IngredientGroupResponse[] = [
+  {
+    code: "CERAMIDES",
+    name: "세라마이드",
+    description: "피부 장벽을 이루는 지질 성분입니다.",
+    ingredients: [
+      { id: 2, koreanName: "부틸렌글라이콜", englishName: "Butylene Glycol" },
+      { id: 3, koreanName: "글리세린", englishName: "Glycerin" },
+    ],
+  },
+];
+
 export const excludeCodes: ExcludeCodeResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
@@ -310,6 +323,10 @@ export const excludeCodes: ExcludeCodeResponse[] = [
     ingredients: [{ id: 151, koreanName: "적색201호", englishName: "Red 201" }],
   },
 ];
+
+/** 성분군으로 묶이지 않은 성분을 하나씩 담는다. */
+const singleItems = (ingredients: ReadonlyArray<readonly [number, string]>) =>
+  ingredients.map(([id, koreanName]) => ({ ingredients: [{ id, koreanName }] }));
 
 const 보습 = { id: "1", code: "HYDRATION_RELATED", name: "보습" };
 const 진정 = { id: "2", code: "SOOTHING_RELATED", name: "진정" };
@@ -371,9 +388,33 @@ export const productDetails: ProductDetailResponse[] = [
     selectedPart: {
       id: 1,
       skinEffectGroups: [
-        { id: "1", code: "HYDRATION_RELATED", name: "보습", ingredientIds: [2, 6] },
-        { id: "2", code: "SOOTHING_RELATED", name: "진정", ingredientIds: [7, 6] },
-        { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어", ingredientIds: [8] },
+        {
+          id: "1",
+          code: "HYDRATION_RELATED",
+          name: "보습",
+          ingredientIds: [2, 6],
+          items: singleItems([
+            [2, "부틸렌글라이콜"],
+            [6, "판테놀"],
+          ]),
+        },
+        {
+          id: "2",
+          code: "SOOTHING_RELATED",
+          name: "진정",
+          ingredientIds: [7, 6],
+          items: singleItems([
+            [7, "아이리쉬모스추출물"],
+            [6, "판테놀"],
+          ]),
+        },
+        {
+          id: "3",
+          code: "EXFOLIATION_RELATED",
+          name: "각질 케어",
+          ingredientIds: [8],
+          items: singleItems([[8, "프로테아제"]]),
+        },
       ],
       ingredients: [
         {

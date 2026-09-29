@@ -24,6 +24,8 @@ public final class ErrorResponseCodes {
         ErrorCode.CURATION_NOT_FOUND,
         "ingredients",
         ErrorCode.INGREDIENT_NOT_FOUND,
+        "ingredient-groups",
+        ErrorCode.INGREDIENT_GROUP_NOT_FOUND,
         "products",
         ErrorCode.PRODUCT_NOT_FOUND
     );

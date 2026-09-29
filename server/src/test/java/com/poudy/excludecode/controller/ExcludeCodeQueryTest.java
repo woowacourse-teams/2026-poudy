@@ -33,32 +33,30 @@ class ExcludeCodeQueryTest {
 
     @Test
     @Transactional
-    @DisplayName("DB에 새 성분군을 추가하면 목록·제품 상세·필터에 반영한다")
-    void reflectsNewDatabaseCode() throws Exception {
+    @DisplayName("제외 성분군 enum에 없는 성분군은 목록·제품 상세·필터에 쓰지 않는다")
+    void ignoresGroupOutsideExcludeCodes() throws Exception {
         jdbc.update(
-            "insert into exclude_code (code, display_name, description) values (?, ?, ?)",
+            "insert into ingredient_group (code, display_name, description) values (?, ?, ?)",
             "AAA_CUSTOM",
             "새 성분군",
             "DB에서 추가한 성분군"
         );
         jdbc.update(
-            "insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order) values (?, ?, ?)",
+            "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values (?, ?, ?)",
             "AAA_CUSTOM",
             9L,
             0
         );
 
         mockMvc.perform(get("/api/exclude-codes")).andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(7))
-            .andExpect(jsonPath("$.items[0].code").value("AAA_CUSTOM"))
-            .andExpect(jsonPath("$.items[0].name").value("새 성분군"))
-            .andExpect(jsonPath("$.items[0].description").value("DB에서 추가한 성분군"));
+            .andExpect(jsonPath("$.items.length()").value(CODE_COUNT))
+            .andExpect(jsonPath("$.items[*].code", not(hasItem("AAA_CUSTOM"))));
         mockMvc.perform(get("/api/products/15")).andExpect(status().isOk())
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[0].name").value("새 성분군"))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[0].contains").value(true));
+            .andExpect(jsonPath("$.selectedPart.excludeGroups.length()").value(CODE_COUNT))
+            .andExpect(jsonPath("$.selectedPart.excludeGroups[*].name", not(hasItem("새 성분군"))));
         mockMvc.perform(get("/api/products").param("excludeCodes", "AAA_CUSTOM"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", not(hasItem(15))));
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
 
     @Test
@@ -79,7 +77,7 @@ class ExcludeCodeQueryTest {
     void findsDisplayNameAndDescription() throws Exception {
         mockMvc.perform(get("/api/exclude-codes")).andExpect(status().isOk())
             .andExpect(jsonPath("$.items[3].name").value("자극성 방부제"))
-            .andExpect(jsonPath("$.items[3].description").value("자극을 유발할 수 있는 방부제 성분을 제외합니다."))
+            .andExpect(jsonPath("$.items[3].description").value("자극을 유발할 수 있는 방부제 성분을 제외해요."))
             .andExpect(jsonPath("$.items[*].name", everyItem(not(blankOrNullString()))))
             .andExpect(jsonPath("$.items[*].description", everyItem(not(blankOrNullString()))));
     }

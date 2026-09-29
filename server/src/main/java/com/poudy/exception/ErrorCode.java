@@ -23,6 +23,7 @@ public enum ErrorCode {
     PRODUCT_PART_NOT_FOUND("제품 구성품을 찾을 수 없습니다."),
     BRAND_NOT_FOUND("브랜드를 찾을 수 없습니다."),
     INGREDIENT_NOT_FOUND("성분을 찾을 수 없습니다."),
+    INGREDIENT_GROUP_NOT_FOUND("성분군을 찾을 수 없습니다."),
     ENDPOINT_NOT_FOUND("요청한 경로를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR("서버에서 요청을 처리하지 못했습니다.");
 

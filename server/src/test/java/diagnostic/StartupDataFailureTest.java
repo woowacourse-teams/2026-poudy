@@ -119,10 +119,8 @@ class StartupDataFailureTest {
         @Bean
         NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
             NamedParameterJdbcTemplate jdbc = mock(NamedParameterJdbcTemplate.class);
-            when(jdbc.queryForObject(anyString(), any(MapSqlParameterSource.class), eq(Long.class)))
-                .thenReturn(0L, 1L);
             when(jdbc.queryForList(anyString(), any(MapSqlParameterSource.class), eq(String.class)))
-                .thenReturn(List.of());
+                .thenReturn(List.of("SULFATES"), List.of());
             return jdbc;
         }
     }

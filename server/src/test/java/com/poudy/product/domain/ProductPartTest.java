@@ -63,7 +63,7 @@ class ProductPartTest {
     @DisplayName("자기 성분 중 제외 성분군에 속한 것이 있을 때만 포함으로 판정한다")
     void judgesExcludeGroupByOwnIngredients() {
         ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
-            new ExcludeCode("FRAGRANCE_ALLERGENS"),
+            ExcludeCode.FRAGRANCE_ALLERGENS,
             "향료",
             "설명",
             List.of(new ExcludeCodeIngredient(20L, "향료 성분", null))

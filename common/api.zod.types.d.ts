@@ -197,6 +197,7 @@ export type FormulationRoleResponse = {
    */
   name: string;
 }
+export type IngredientGroupSummaryResponse = { code: string, name: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -245,6 +246,8 @@ export type ProductIngredientResponse = {
   skinEffects: Array<SkinEffectResponse>;
   disclosedAmount?: DisclosedAmountResponse;
 }
+export type SkinEffectIngredientResponse = { id: number, koreanName: string }
+export type SkinEffectItemResponse = { ingredientGroup?: IngredientGroupSummaryResponse, ingredients: Array<SkinEffectIngredientResponse> }
 export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
@@ -256,6 +259,7 @@ export type SkinEffectGroupResponse = {
    */
   name: string;
   ingredientIds: Array<number>;
+  items: Array<SkinEffectItemResponse>;
 }
 export type ProductPartResponse = { id: number, name?: string, ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
 export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart?: ProductPartResponse, updatedAt: string }
@@ -384,6 +388,7 @@ export type IngredientDetailResponse = {
   effectSources: Array<string>;
   updatedAt: string;
 }
+export type IngredientGroupSuggestionResponse = { code: string, name: string, ingredientIds: Array<number> }
 export type IngredientSuggestionMatchResponse = {
   /**
    * 검색어가 일치한 성분 필드
@@ -426,7 +431,10 @@ export type IngredientListResponse = {
    * 검색어에 일치한 성분
    */
   items: Array<IngredientSuggestionResponse>;
+  groups: Array<IngredientGroupSuggestionResponse>;
 }
+export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName?: string }
+export type IngredientGroupResponse = { code: string, name: string, englishName?: string, description: string, ingredients: Array<IngredientGroupMemberResponse> }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
   /**
@@ -624,7 +632,7 @@ export type BrandDetailResponse = {
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -869,7 +877,9 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<string>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  includeGroupCodes: Array<string>;
+  excludeGroupCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -1008,7 +1018,9 @@ export type get_CountProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<string>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  includeGroupCodes: Array<string>;
+  excludeGroupCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -1072,7 +1084,7 @@ export type get_FindIngredientDetail = {
 
     }
 /**
- * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.
+ * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. groups 는 이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 담는다. 제외 성분군은 빠른 필터로만 쓰므로 담지 않는다.
  */
 export type get_SuggestIngredients = {
       method: "GET",
@@ -1090,6 +1102,26 @@ export type get_SuggestIngredients = {
           }
       responses: {200: Schemas.IngredientListResponse,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 성분군 코드에 해당하는 성분군의 이름, 설명과 속한 성분을 조회한다.
+ */
+export type get_FindIngredientGroup = {
+      method: "GET",
+      path: "/api/ingredient-groups/{code}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { code: string },
+
+          }
+      responses: {200: Schemas.IngredientGroupResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1305,6 +1337,7 @@ get: {
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
+"/api/ingredient-groups/{code}": Endpoints.get_FindIngredientGroup,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/curations": Endpoints.get_FindCurations,
 "/api/curations/{curationId}": Endpoints.get_FindCuration,

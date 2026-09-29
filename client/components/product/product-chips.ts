@@ -16,7 +16,7 @@ const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResp
     for (const ingredient of code.ingredients) picked.add(ingredient.id);
   }
 
-  return picked.size;
+  return picked.size + filter.excludeGroupCodes.length;
 };
 
 export const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): readonly FilterChipItem[] => [

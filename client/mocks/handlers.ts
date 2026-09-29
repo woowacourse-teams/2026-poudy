@@ -11,6 +11,7 @@ import {
   categories,
   excludeCodeIngredientIds,
   excludeCodes,
+  ingredientGroups,
   excludeGroupsOf,
   ingredientDetails,
   pipelineIngredientSummaries,
@@ -606,7 +607,16 @@ export const handlers = [
         ]),
       }));
 
-    return HttpResponse.json({ items });
+    const compact = keyword.replace(/\s/g, "");
+    const groups = ingredientGroups
+      .filter((group) => group.name.replace(/\s/g, "").includes(compact))
+      .map((group) => ({
+        code: group.code,
+        name: group.name,
+        ingredientIds: group.ingredients.map((item) => item.id),
+      }));
+
+    return HttpResponse.json({ items, groups });
   }),
 
   http.get("*/api/ingredients/:ingredientId", ({ params }) => {
@@ -617,6 +627,12 @@ export const handlers = [
   }),
 
   http.get("*/api/exclude-codes", () => HttpResponse.json({ items: excludeCodes })),
+
+  http.get("*/api/ingredient-groups/:code", ({ params }) => {
+    const group = ingredientGroups.find((found) => found.code === params.code);
+    if (!group) return notFound("성분군을 찾을 수 없습니다.", "INGREDIENT_GROUP_NOT_FOUND");
+    return HttpResponse.json(group);
+  }),
 
   http.get("*/api/categories", () => HttpResponse.json({ items: categories })),
 

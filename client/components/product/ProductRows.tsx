@@ -37,7 +37,11 @@ const searchModeOf = (filter: Filter): SearchMode | undefined => {
   if (filter.keyword) return "product";
 
   const ingredientCount =
-    filter.includeIngredientIds.length + filter.excludeIngredientIds.length + filter.excludeCodes.length;
+    filter.includeIngredientIds.length +
+    filter.excludeIngredientIds.length +
+    filter.excludeCodes.length +
+    filter.includeGroupCodes.length +
+    filter.excludeGroupCodes.length;
   if (ingredientCount > 0) return "ingredient";
 
   return undefined;

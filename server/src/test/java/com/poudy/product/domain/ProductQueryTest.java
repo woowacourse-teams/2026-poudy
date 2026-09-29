@@ -24,6 +24,8 @@ class ProductQueryTest {
             null,
             null,
             null,
+            null,
+            null,
             com.poudy.skintype.domain.SkinType.DRY
         );
         assertThat(query.hasFilters()).isTrue();
@@ -32,7 +34,7 @@ class ProductQueryTest {
     @Test
     @DisplayName("누락된 목록 조건을 빈 목록으로 다룬다")
     void defaultsMissingListsToEmpty() {
-        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null);
 
         assertThat(query.categoryIds()).isEmpty();
         assertThat(query.brandIds()).isEmpty();
@@ -47,7 +49,7 @@ class ProductQueryTest {
     @DisplayName("목록 조건을 방어적으로 복사한다")
     void copiesListConditions() {
         List<Long> categoryIds = new ArrayList<>(List.of(1L));
-        ProductQuery query = new ProductQuery("토너", categoryIds, null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", categoryIds, null, null, null, null, null, null, null, null, null);
 
         categoryIds.add(2L);
 
@@ -59,7 +61,7 @@ class ProductQueryTest {
     @Test
     @DisplayName("목록 조건 중 하나라도 있으면 필터가 있다고 판단한다")
     void checksWhetherItHasFilters() {
-        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null, null);
+        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null);
         ProductQuery withFilter = new ProductQuery(
             "토너",
             null,
@@ -68,11 +70,61 @@ class ProductQueryTest {
             null,
             null,
             null,
-            List.of(new ExcludeCode("SULFATES")),
+            List.of(ExcludeCode.SULFATES),
+            null,
+            null,
             null
         );
 
         assertThat(noFilters.hasFilters()).isFalse();
         assertThat(withFilter.hasFilters()).isTrue();
+    }
+
+    @Test
+    @DisplayName("포함 성분이나 포함 성분군이 있을 때만 포함 조건이 있다고 판단한다")
+    void recognizesIncludeConditions() {
+        ProductQuery excludeOnly = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(1L),
+            null,
+            null,
+            List.of("CERAMIDES"),
+            null
+        );
+        ProductQuery includeIngredient = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(1L),
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+        ProductQuery includeGroup = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of("CERAMIDES"),
+            null,
+            null
+        );
+
+        assertThat(excludeOnly.hasIncludeConditions()).isFalse();
+        assertThat(includeIngredient.hasIncludeConditions()).isTrue();
+        assertThat(includeGroup.hasIncludeConditions()).isTrue();
     }
 }

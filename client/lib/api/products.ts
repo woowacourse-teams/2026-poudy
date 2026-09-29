@@ -6,6 +6,7 @@ import type {
   CurationListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
+  IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
   ProductCountResponse,
@@ -75,6 +76,9 @@ export const fetchIngredients = (query: {
 };
 
 /** ID 조건에 해당하는 성분을 마지막 페이지까지 조회해 하나의 목록으로 합친다. */
+export const fetchIngredientGroup = (code: string): Promise<IngredientGroupResponse> =>
+  apiGet(`/api/ingredient-groups/${encodeURIComponent(code)}`);
+
 export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): Promise<IngredientItemsResponse> => {
   if (ingredientIds.length === 0) return { items: [] };
 

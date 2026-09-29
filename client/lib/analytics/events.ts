@@ -224,6 +224,13 @@ export type EventMap = {
         condition: "exclude";
         action: "add" | "remove";
         surface: "ingredient_search" | "filter_sheet";
+      }
+    | {
+        target_type: "ingredient_group";
+        group_code: string;
+        condition: "include" | "exclude";
+        action: "add" | "remove";
+        surface: "ingredient_search" | "filter_sheet";
       };
 };
 

@@ -32,6 +32,10 @@
       "description": "빠른 필터 조회 API"
     },
     {
+      "name": "성분군",
+      "description": "성분군 조회 API"
+    },
+    {
       "name": "피부타입",
       "description": "피부타입 조회 API"
     },
@@ -1130,7 +1134,41 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
+                "enum": [
+                  "FRAGRANCE_ALLERGENS",
+                  "DRYING_ALCOHOLS",
+                  "HARSH_PRESERVATIVES",
+                  "SULFATES",
+                  "CYCLIC_SILICONES",
+                  "SYNTHETIC_COLORANTS"
+                ],
                 "example": "HARSH_PRESERVATIVES"
+              },
+              "uniqueItems": true
+            }
+          },
+          {
+            "name": "includeGroupCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "example": "CERAMIDES"
+              },
+              "uniqueItems": true
+            }
+          },
+          {
+            "name": "excludeGroupCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "example": "CERAMIDES"
               },
               "uniqueItems": true
             }
@@ -1716,7 +1754,41 @@
               "items": {
                 "type": "string",
                 "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
+                "enum": [
+                  "FRAGRANCE_ALLERGENS",
+                  "DRYING_ALCOHOLS",
+                  "HARSH_PRESERVATIVES",
+                  "SULFATES",
+                  "CYCLIC_SILICONES",
+                  "SYNTHETIC_COLORANTS"
+                ],
                 "example": "HARSH_PRESERVATIVES"
+              },
+              "uniqueItems": true
+            }
+          },
+          {
+            "name": "includeGroupCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "example": "CERAMIDES"
+              },
+              "uniqueItems": true
+            }
+          },
+          {
+            "name": "excludeGroupCodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "example": "CERAMIDES"
               },
               "uniqueItems": true
             }
@@ -1992,7 +2064,7 @@
           "성분"
         ],
         "summary": "성분 검색 제안 조회",
-        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.",
+        "description": "검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. groups 는 이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 담는다. 제외 성분군은 빠른 필터로만 쓰므로 담지 않는다.",
         "operationId": "suggestIngredients",
         "parameters": [
           {
@@ -2031,6 +2103,87 @@
                   "status": 400,
                   "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingredient-groups/{code}": {
+      "get": {
+        "tags": [
+          "성분군"
+        ],
+        "summary": "성분군 상세 조회",
+        "description": "성분군 코드에 해당하는 성분군의 이름, 설명과 속한 성분을 조회한다.",
+        "operationId": "findIngredientGroup",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "CERAMIDES"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "성분군을 찾을 수 없습니다.",
+                  "code": "INGREDIENT_GROUP_NOT_FOUND"
                 }
               }
             }
@@ -3620,6 +3773,23 @@
           "name"
         ]
       },
+      "IngredientGroupSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CERAMIDES"
+          },
+          "name": {
+            "type": "string",
+            "example": "세라마이드"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
       "ProductDetailResponse": {
         "type": "object",
         "properties": {
@@ -3876,13 +4046,55 @@
               "format": "int64",
               "example": 1012
             }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectItemResponse"
+            }
           }
         },
         "required": [
           "code",
           "id",
           "ingredientIds",
+          "items",
           "name"
+        ]
+      },
+      "SkinEffectIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 7130
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "세라마이드엔피"
+          }
+        },
+        "required": [
+          "id",
+          "koreanName"
+        ]
+      },
+      "SkinEffectItemResponse": {
+        "type": "object",
+        "properties": {
+          "ingredientGroup": {
+            "$ref": "#/components/schemas/IngredientGroupSummaryResponse"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectIngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "ingredients"
         ]
       },
       "SkinEffectResponse": {
@@ -4261,6 +4473,32 @@
           "updatedAt"
         ]
       },
+      "IngredientGroupSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CERAMIDES"
+          },
+          "name": {
+            "type": "string",
+            "example": "세라마이드"
+          },
+          "ingredientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "example": 7130
+            }
+          }
+        },
+        "required": [
+          "code",
+          "ingredientIds",
+          "name"
+        ]
+      },
       "IngredientListResponse": {
         "type": "object",
         "properties": {
@@ -4270,9 +4508,16 @@
             "items": {
               "$ref": "#/components/schemas/IngredientSuggestionResponse"
             }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientGroupSuggestionResponse"
+            }
           }
         },
         "required": [
+          "groups",
           "items"
         ]
       },
@@ -4354,6 +4599,61 @@
           "skinEffects"
         ]
       },
+      "IngredientGroupMemberResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 7130
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "세라마이드엔피"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Ceramide NP"
+          }
+        },
+        "required": [
+          "id",
+          "koreanName"
+        ]
+      },
+      "IngredientGroupResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CERAMIDES"
+          },
+          "name": {
+            "type": "string",
+            "example": "세라마이드"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Ceramides"
+          },
+          "description": {
+            "type": "string",
+            "example": "피부 장벽을 구성하는 지질 성분으로 수분 손실을 막아요."
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientGroupMemberResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "ingredients",
+          "name"
+        ]
+      },
       "ExcludeCodeListResponse": {
         "type": "object",
         "properties": {
@@ -4385,7 +4685,7 @@
           "description": {
             "type": "string",
             "description": "성분군 설명",
-            "example": "자극을 유발할 수 있는 방부제 성분을 제외합니다."
+            "example": "자극을 유발할 수 있는 방부제 성분을 제외해요."
           },
           "ingredients": {
             "type": "array",
@@ -4960,6 +5260,7 @@
               "PRODUCT_PART_NOT_FOUND",
               "BRAND_NOT_FOUND",
               "INGREDIENT_NOT_FOUND",
+              "INGREDIENT_GROUP_NOT_FOUND",
               "ENDPOINT_NOT_FOUND",
               "INTERNAL_SERVER_ERROR"
             ]

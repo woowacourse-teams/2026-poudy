@@ -11,7 +11,9 @@ import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
+import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useCountState } from "@/lib/hooks/useProductCount";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -49,7 +51,8 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   const names = useIngredientNames([...filter.includeIngredientIds, ...filter.excludeIngredientIds]);
 
   const total = countConditions(filter);
-  const summary = summarizeFilter(filter, names);
+  const groups = useIngredientGroups(selectedGroupCodes(filter));
+  const summary = summarizeFilter(filter, names, groups);
 
   // 바텀시트와 같은 문구를 쓴다. 조건을 바꾸면 개수가 따라 바뀐다.
   const { count, counting } = useCountState(filter);

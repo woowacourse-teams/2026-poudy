@@ -1,26 +1,22 @@
 package com.poudy.excludecode.domain;
 
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
 
-public final class ExcludeCode {
+public enum ExcludeCode {
 
-    private final String code;
+    FRAGRANCE_ALLERGENS,
+    DRYING_ALCOHOLS,
+    HARSH_PRESERVATIVES,
+    SULFATES,
+    CYCLIC_SILICONES,
+    SYNTHETIC_COLORANTS;
 
-    public ExcludeCode(String code) {
-        this.code = Objects.requireNonNull(code, "제외 성분군 코드가 필요합니다.");
+    public static List<String> codeValues() {
+        return Arrays.stream(values()).map(ExcludeCode::value).toList();
     }
 
     public String value() {
-        return code;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof ExcludeCode that && code.equals(that.code);
-    }
-
-    @Override
-    public int hashCode() {
-        return code.hashCode();
+        return name();
     }
 }

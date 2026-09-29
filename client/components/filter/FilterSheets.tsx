@@ -112,7 +112,15 @@ function SheetBody({
       ...(kind === "brand" ? { brandIds: [] } : {}),
       ...(kind === "level" ? { moistureLevel: [], oilLevel: [] } : {}),
       ...(kind === "skinType" ? { skinType: undefined } : {}),
-      ...(kind === "ingredient" ? { excludeCodes: [], excludeIngredientIds: [], includeIngredientIds: [] } : {}),
+      ...(kind === "ingredient"
+        ? {
+            excludeCodes: [],
+            excludeIngredientIds: [],
+            includeIngredientIds: [],
+            includeGroupCodes: [],
+            excludeGroupCodes: [],
+          }
+        : {}),
     });
   };
 

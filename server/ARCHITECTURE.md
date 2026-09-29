@@ -47,10 +47,10 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 `feedback.service` 등) 사이의 순환 참조도 `ArchitectureTest`가 막는다. `exception` 패키지는 기능
 패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
 하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능에서
-`ingredient → tag`, `ingredient → excludecode ← product`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
+`ingredient → tag`, `ingredient → excludecode ← product`, `product → ingredientgroup → excludecode`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
 상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
 (`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`)를 두고 상위
-기능이 구현한다. 성분군 조회 포트 `IngredientGroups`는 값을 소유한 `excludecode` 도메인에 둔다.
+기능이 구현한다. 성분이 속한 제외 성분군을 찾는 포트 `ExcludeCodeLookup`은 값을 소유한 `excludecode` 도메인에 둔다.
 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)은 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
 성분군 코드는 성분 도메인까지 `ExcludeCode` 값 객체로 전달하고 HTTP 경계에서 문자열로 직렬화한다.
 
@@ -123,12 +123,28 @@ Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 �
 
 ### ExcludeCode
 
-`excludecode`는 DB의 빠른 제외 성분군 코드·표시명·설명과 성분 매핑을 소유한다. 성분군은 서버에서
-성분으로 해석하며, 성분이 없는 정의는 기동을 실패시킨다. 포함 범위와 목록은 DB 데이터의
-책임이며 서버 enum이나 패턴으로 추론하지 않는다. 목록은 코드 순서로 공개한다.
+`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·설명과 성분 매핑은
+DB의 `ingredient_group`, `ingredient_group_ingredient`가 소유하고, 그중 제외 성분군은 서버의
+`ExcludeCode` enum이 고정한다. 제외 성분군 목록, `excludeCodes` 필터, 제품 상세의 주의 판정은
+enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문구가 함께 바뀌어야 하므로 DB 행
+추가만으로 늘리지 않는다. enum 코드 중 DB에 성분이 없는 것이 있으면 기동을 실패시킨다. 목록은 코드
+순서로 공개한다.
 저장소가 SQL 조인으로 성분 ID를 표시 정보로 해석하고, 도메인 `ExcludeCodeGroup`은 정의와
 소속 성분을 함께 소유해 포함 여부를 판정한다. `ExcludeCodes`는 공개 순서의 성분군 목록만
 보관한다. `excludecode`는 `ingredient` 코드에 의존하지 않는다.
+
+### IngredientGroup
+
+`ingredientgroup`은 성분군 상세 조회와 제품 상세 주요 성분의 묶음을 맡는다. 주요 성분은 제외
+성분군을 뺀 성분군으로 묶는다. 한 피부 작용 그룹 안에서 같은 성분군 성분이 2개 이상일 때만 처음
+나온 자리에 하나로 묶고, 한 성분이 여러 성분군에 속하면 더 많은 성분을 묶는 성분군을, 같으면 코드
+순서가 앞선 성분군을 고른다. 배정한 뒤 성분이 하나만 남은 성분군은 묶지 않는다. 전체 성분표는 묶지 않는다.
+성분군 목록과 소속 성분은 `V4__insert_ingredient_groups.sql`이 성분 영문명 규칙으로 넣는다.
+
+성분 검색에는 이름이 검색어를 포함하는 성분군을 함께 제안한다. 제외 성분군은 빠른 필터로만 쓰므로 제안하지
+않고, 제품 목록의 `includeGroupCodes`·`excludeGroupCodes`에도 받지 않는다. 포함 성분군은 속한 성분을 하나라도
+가진 제품을, 제외 성분군은 하나도 없는 제품을 남긴다. 제외 성분군은 빠른 제외 성분군과 같은 경로로 걸러서,
+제외한 성분군의 성분을 포함 조건으로 고르거나 같은 성분군을 포함과 제외에 함께 넣으면 필터 충돌로 거절한다.
 
 ### SkinType
 

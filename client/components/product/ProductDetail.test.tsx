@@ -381,22 +381,65 @@ describe("성분 분류", () => {
 
     expect(row.getByRole("link", { name: "판테놀" })).toHaveClass("ingredient-chip-link");
   });
+});
 
-  it("이름을 찾지 못한 성분은 목록에서 빼고 구분 기호도 남기지 않는다", () => {
-    const product = {
-      ...taggedProduct,
-      selectedPart: {
-        ...taggedProduct.selectedPart!,
-        skinEffectGroups: [{ id: "1", code: "HYDRATION_RELATED" as const, name: "보습", ingredientIds: [2, 9999] }],
-      },
-    };
+describe("성분군 묶음", () => {
+  const bundledProduct = {
+    ...productDetails[0]!,
+    selectedPart: {
+      ...productDetails[0]!.selectedPart!,
+      skinEffectGroups: [
+        {
+          id: "1",
+          code: "HYDRATION_RELATED" as const,
+          name: "보습",
+          ingredientIds: [2, 3, 6],
+          items: [
+            {
+              ingredientGroup: { code: "GLYCOLS", name: "글라이콜 계열" },
+              ingredients: [
+                { id: 2, koreanName: "부틸렌글라이콜" },
+                { id: 3, koreanName: "글리세린" },
+              ],
+            },
+            { ingredients: [{ id: 6, koreanName: "판테놀" }] },
+          ],
+        },
+      ],
+    },
+  };
 
-    render(<ProductDetail product={product} />);
+  const groupRow = () => screen.getByRole("heading", { name: "성분 분류" }).closest("section")!;
 
-    const row = groupRow("보습");
+  it("같은 성분군 성분을 개수를 붙인 칩 하나로 묶고 나머지는 성분 링크로 둔다", () => {
+    render(<ProductDetail product={bundledProduct} />);
 
-    expect(within(row).getAllByRole("link")).toHaveLength(1);
-    expect(row.textContent?.trim()).toMatch(/부틸렌글라이콜$/);
+    const row = within(groupRow());
+
+    expect(row.getByRole("button", { name: "글라이콜 2종" })).toHaveAttribute("aria-expanded", "false");
+    expect(row.getByRole("link", { name: "판테놀" })).toHaveAttribute("href", "/ingredients/6");
+  });
+
+  it("묶음 칩을 누르면 속한 성분을 펼치고 다시 누르면 접는다", async () => {
+    render(<ProductDetail product={bundledProduct} />);
+
+    const chip = within(groupRow()).getByRole("button", { name: "글라이콜 2종" });
+    const panel = document.getElementById(chip.getAttribute("aria-controls")!)!;
+
+    expect(panel).toHaveAttribute("hidden");
+    expect(within(panel).getByRole("link", { name: "부틸렌글라이콜", hidden: true })).toHaveAttribute(
+      "href",
+      "/ingredients/2",
+    );
+
+    await userEvent.click(chip);
+
+    expect(panel).not.toHaveAttribute("hidden");
+    expect(within(panel).getByRole("link", { name: "글리세린" })).toHaveAttribute("href", "/ingredients/3");
+
+    await userEvent.click(chip);
+
+    expect(panel).toHaveAttribute("hidden");
   });
 });
 

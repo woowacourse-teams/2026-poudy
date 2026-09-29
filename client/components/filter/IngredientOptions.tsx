@@ -3,6 +3,7 @@
 import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
+import { IngredientGroupRows } from "@/components/search/IngredientGroupRows";
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
@@ -10,21 +11,28 @@ import { MatchedText } from "@/components/ui/MatchedText";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
-import { fetchIngredientSuggestions } from "@/lib/api/products";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
 import { splitByRange } from "@/lib/domain/highlight";
+import {
+  coveredIngredientIds,
+  groupCondition,
+  type GroupConditionKey,
+  groupLabel,
+  type IngredientGroup,
+  selectedGroupCodes,
+  toggleGroup,
+} from "@/lib/domain/ingredient-groups";
 import { ingredientCountLabel } from "@/lib/domain/ingredient-search";
+import { pick } from "@/lib/domain/optional";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
-import { useSuggestions } from "@/lib/hooks/useSuggestions";
+import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
+import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 
 /** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
 const VISIBLE_EFFECTS = 3;
 
-const fetcher = async (keyword: string): Promise<readonly IngredientSuggestionResponse[]> => {
-  const response = await fetchIngredientSuggestions(keyword);
-  return response.items;
-};
+const ROW_CLASS = "flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] py-2";
 
 type IngredientOptionsProps = {
   readonly draft: Filter;
@@ -36,10 +44,38 @@ type IngredientOptionsProps = {
 /** 디자인의 성분 시트. 검색하면 자동완성이 선택 목록 자리를 대신한다. */
 export function IngredientOptions({ draft, setDraft, excludeCodes, names }: IngredientOptionsProps) {
   const [keyword, setKeyword] = useState("");
-  const { items, loading } = useSuggestions(keyword, fetcher, "ingredient");
+  const { items, groups: groupItems, loading } = useIngredientSearch(keyword);
   const typing = keyword.trim().length > 0;
+  const groups = useIngredientGroups(selectedGroupCodes(draft), groupItems);
+  const coveredIds = coveredIngredientIds(draft, groups);
+  const visibleItems = items.filter((item) => !coveredIds.has(item.id));
 
-  const selectedCount = draft.includeIngredientIds.length + draft.excludeIngredientIds.length;
+  const selectedCount =
+    draft.includeIngredientIds.length +
+    draft.excludeIngredientIds.length +
+    draft.includeGroupCodes.length +
+    draft.excludeGroupCodes.length;
+
+  const toggleGroupCondition = (key: GroupConditionKey, group: IngredientGroup) => {
+    track("ingredient_condition_toggled", {
+      target_type: "ingredient_group",
+      group_code: group.code,
+      condition: groupCondition(key),
+      action: pick(draft[key].includes(group.code), "remove", "add"),
+      surface: "filter_sheet",
+    });
+    setDraft({ ...draft, ...toggleGroup(draft, key, group.code) });
+  };
+
+  const removeGroup = (key: GroupConditionKey, code: string) => {
+    setDraft({ ...draft, [key]: draft[key].filter((value) => value !== code) });
+  };
+
+  const groupName = (code: string) => {
+    const group = groups.get(code);
+    if (!group) return code;
+    return groupLabel(group);
+  };
 
   /** 포함과 제외는 한쪽만 걸린다. */
   const toggleIngredient = (
@@ -110,7 +146,7 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             <span className="truncate text-[14px] font-bold text-[#212124]">‘{keyword.trim()}’이 포함된 성분</span>
             {loading ? null : (
               <span className="shrink-0 text-[12px] font-medium text-[#868B94]">
-                {ingredientCountLabel(items.length)}
+                {ingredientCountLabel(visibleItems.length)}
               </span>
             )}
           </h3>
@@ -119,12 +155,19 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             <p className="flex min-h-50 items-center justify-center text-[13px] text-[#868B94]">검색하는 중…</p>
           ) : (
             <ul aria-label="성분 검색 결과">
-              {items.map((item) => {
+              <IngredientGroupRows
+                groups={groupItems}
+                includedCodes={draft.includeGroupCodes}
+                excludedCodes={draft.excludeGroupCodes}
+                onToggle={toggleGroupCondition}
+                rowClassName={ROW_CLASS}
+              />
+              {visibleItems.map((item) => {
                 const included = draft.includeIngredientIds.includes(item.id);
                 const excluded = draft.excludeIngredientIds.includes(item.id);
 
                 return (
-                  <li key={item.id} className="flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] py-2">
+                  <li key={item.id} className={ROW_CLASS}>
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       {/* 자동완성과 같다. 긴 이름은 두 줄까지 보이고 거기서 줄인다. */}
                       <IngredientName item={item} />
@@ -165,6 +208,24 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
               <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
             ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
+                {draft.includeGroupCodes.map((code) => (
+                  <li key={`in-group-${code}`}>
+                    <SelectedIngredientChip
+                      kind="include"
+                      name={groupName(code)}
+                      onRemove={() => removeGroup("includeGroupCodes", code)}
+                    />
+                  </li>
+                ))}
+                {draft.excludeGroupCodes.map((code) => (
+                  <li key={`ex-group-${code}`}>
+                    <SelectedIngredientChip
+                      kind="exclude"
+                      name={groupName(code)}
+                      onRemove={() => removeGroup("excludeGroupCodes", code)}
+                    />
+                  </li>
+                ))}
                 {draft.includeIngredientIds.map((id) => (
                   <li key={`in-${id}`}>
                     <SelectedIngredientChip

@@ -10,18 +10,24 @@ import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
-import { fetchIngredientSuggestions } from "@/lib/api/products";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import type { ExcludeCode, Filter } from "@/lib/domain/filter";
-import { useSuggestions } from "@/lib/hooks/useSuggestions";
+import {
+  coveredIngredientIds,
+  excludedGroupIngredients,
+  groupCondition,
+  type GroupConditionKey,
+  groupLabel,
+  type IngredientGroup,
+  selectedGroupCodes,
+  toggleGroup,
+} from "@/lib/domain/ingredient-groups";
+import { pick } from "@/lib/domain/optional";
+import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
+import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 
 type ConditionKey = "includeIngredientIds" | "excludeIngredientIds";
-
-const fetcher = async (keyword: string): Promise<readonly IngredientSuggestionResponse[]> => {
-  const response = await fetchIngredientSuggestions(keyword);
-  return response.items;
-};
 
 type IngredientSearchPanelProps = {
   readonly filter: Filter;
@@ -35,8 +41,11 @@ type IngredientSearchPanelProps = {
 export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }: IngredientSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const started = useRef(false);
-  const { items, loading } = useSuggestions(keyword, fetcher, "ingredient");
+  const { items, groups: groupItems, loading } = useIngredientSearch(keyword);
   const typing = keyword.trim().length > 0;
+  const groups = useIngredientGroups(selectedGroupCodes(filter), groupItems);
+  const coveredIds = coveredIngredientIds(filter, groups);
+  const visibleItems = items.filter((item) => !coveredIds.has(item.id));
 
   // 바깥을 누르면 자동완성을 닫는다. 입력과 목록을 함께 감싼 자리를 기준으로 삼는다.
   const searchRef = useRef<HTMLDivElement>(null);
@@ -59,12 +68,17 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
   }, []);
 
   const quickFilters = knownExcludeCodes(excludeCodes);
-  const codeIngredients: ExcludeCodeIngredients = new Map(
-    quickFilters.map((code) => [code.code, code.ingredients.map((item) => item.id)]),
-  );
+  const codeIngredients: ExcludeCodeIngredients = new Map([
+    ...quickFilters.map((code): [string, readonly number[]] => [code.code, code.ingredients.map((item) => item.id)]),
+    ...excludedGroupIngredients(filter, groups),
+  ]);
   const conflicts = findConflicts(filter, codeIngredients);
 
-  const selectedCount = filter.includeIngredientIds.length + filter.excludeIngredientIds.length;
+  const selectedCount =
+    filter.includeIngredientIds.length +
+    filter.excludeIngredientIds.length +
+    filter.includeGroupCodes.length +
+    filter.excludeGroupCodes.length;
 
   // 경고가 떠 있는 동안 다시 그려도 한 번만 남도록 걸린 성분으로 묶는다.
   const conflictKey = conflicts.flatMap((conflict) => conflict.ingredientIds).join(",");
@@ -135,6 +149,29 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
     });
   };
 
+  const toggleGroupCondition = (key: GroupConditionKey, group: IngredientGroup) => {
+    markStarted();
+    track("ingredient_condition_toggled", {
+      target_type: "ingredient_group",
+      group_code: group.code,
+      condition: groupCondition(key),
+      action: pick(filter[key].includes(group.code), "remove", "add"),
+      surface: "ingredient_search",
+    });
+    onChange(toggleGroup(filter, key, group.code));
+  };
+
+  const removeGroup = (key: GroupConditionKey, code: string) => {
+    markStarted();
+    onChange({ [key]: filter[key].filter((value) => value !== code) });
+  };
+
+  const groupName = (code: string) => {
+    const group = groups.get(code);
+    if (!group) return code;
+    return groupLabel(group);
+  };
+
   const toggleCode = (code: ExcludeCode) => {
     const had = filter.excludeCodes.includes(code);
     markStarted();
@@ -166,11 +203,15 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
 
           {typing ? (
             <IngredientSuggestions
-              items={items}
+              items={visibleItems}
               loading={loading}
               includedIds={filter.includeIngredientIds}
               excludedIds={filter.excludeIngredientIds}
               onToggle={toggleIngredient}
+              groups={groupItems}
+              includedGroupCodes={filter.includeGroupCodes}
+              excludedGroupCodes={filter.excludeGroupCodes}
+              onToggleGroup={toggleGroupCondition}
             />
           ) : null}
         </div>
@@ -192,6 +233,24 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
           <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
         ) : (
           <ul className="grid grid-cols-2 gap-2">
+            {filter.includeGroupCodes.map((code) => (
+              <li key={`in-group-${code}`}>
+                <SelectedIngredientChip
+                  kind="include"
+                  name={groupName(code)}
+                  onRemove={() => removeGroup("includeGroupCodes", code)}
+                />
+              </li>
+            ))}
+            {filter.excludeGroupCodes.map((code) => (
+              <li key={`ex-group-${code}`}>
+                <SelectedIngredientChip
+                  kind="exclude"
+                  name={groupName(code)}
+                  onRemove={() => removeGroup("excludeGroupCodes", code)}
+                />
+              </li>
+            ))}
             {filter.includeIngredientIds.map((id) => (
               <li key={`in-${id}`}>
                 <SelectedIngredientChip
