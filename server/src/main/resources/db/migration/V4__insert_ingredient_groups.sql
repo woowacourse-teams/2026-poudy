@@ -42,7 +42,7 @@ WITH rules (code, rule) AS (VALUES
     ('MADECASSOSIDE', '^madecassoside$'),
     ('AZULENE', '^(guai|cham)?azulene$|azulene sulfonate$'),
     ('AHA', '^(glycolic|lactic|mandelic|malic|tartaric) acid$'),
-    ('BHA', '^salicylic acid$|^betaine salicylate$'),
+    ('BHA', '^salicylic acid$|^betaine salicylate$|^salix [a-z]+ \(willow\) bark (extract|water)$'),
     ('PHA', '^gluconolactone$|^lactobionic acid$'),
     ('LHA', '^capryloyl salicylic acid$')
 ), candidates AS (
