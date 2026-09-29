@@ -11,11 +11,15 @@ public final class SearchKeywordSnapshot {
     private final AtomicReference<State> current;
 
     public SearchKeywordSnapshot() {
-        this(SearchKeywordDictionary.of(List.of()));
+        current = new AtomicReference<>(new State(SearchKeywordDictionary.of(List.of()), List.of(), null, false));
     }
 
     public SearchKeywordSnapshot(SearchKeywordDictionary dictionary) {
-        current = new AtomicReference<>(new State(dictionary, List.of(), null));
+        current = new AtomicReference<>(new State(dictionary, List.of(), null, true));
+    }
+
+    public boolean isInitialized() {
+        return current.get().initialized();
     }
 
     public boolean recognizes(String keyword) {
@@ -31,13 +35,13 @@ public final class SearchKeywordSnapshot {
     }
 
     public void replace(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
-        current.set(new State(dictionary, List.copyOf(rankings), refreshedAt));
+        current.set(new State(dictionary, List.copyOf(rankings), refreshedAt, true));
     }
 
-    public void initialize(SearchKeywordDictionary dictionary) {
-        current.set(new State(dictionary, List.of(), null));
-    }
-
-    private record State(SearchKeywordDictionary dictionary, List<RankedKeyword> rankings, Instant refreshedAt) {
+    private record State(
+        SearchKeywordDictionary dictionary,
+        List<RankedKeyword> rankings,
+        Instant refreshedAt,
+        boolean initialized) {
     }
 }

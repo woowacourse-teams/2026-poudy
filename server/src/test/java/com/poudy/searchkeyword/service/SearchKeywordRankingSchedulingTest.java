@@ -1,7 +1,6 @@
 package com.poudy.searchkeyword.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,10 +36,10 @@ class SearchKeywordRankingSchedulingTest {
     private final SearchKeywordDictionaryRepository repository = mock(SearchKeywordDictionaryRepository.class);
     private final KeywordBuckets buckets = mock(KeywordBuckets.class);
     private final SearchKeywordDictionary dictionary = SearchKeywordDictionary.of(List.of());
-    private final SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionary);
+    private final SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot();
 
     @Test
-    void initializesDictionaryFromRepositoryBeforeRankingRefresh() {
+    void loadsDictionaryAfterApplicationReadyInsteadOfDuringBeanCreation() {
         SearchKeywordRankingService service = service();
         SearchKeywordDictionary loaded = SearchKeywordDictionary.of(
             List.of(
@@ -49,21 +48,28 @@ class SearchKeywordRankingSchedulingTest {
         );
         when(repository.read()).thenReturn(loaded);
 
-        service.initializeDictionary();
+        verifyNoInteractions(repository);
+        assertThat(snapshot.isInitialized()).isFalse();
+
+        service.refreshAfterApplicationReady();
 
         verify(repository).read();
         assertThat(snapshot.recognizes("토너")).isTrue();
-        assertThat(snapshot.refreshedAt()).isEmpty();
+        assertThat(snapshot.refreshedAt()).isPresent();
+        assertThat(snapshot.isInitialized()).isTrue();
     }
 
     @Test
-    void failsInitializationWhenDictionaryCannotBeLoaded() {
+    void failedInitialRefreshKeepsDictionaryUnavailableUntilScheduledRetry() {
         SearchKeywordRankingService service = service();
-        when(repository.read()).thenThrow(new IllegalStateException("dictionary unavailable"));
+        when(repository.read()).thenThrow(new IllegalStateException("dictionary unavailable")).thenReturn(dictionary);
 
-        assertThatThrownBy(service::initializeDictionary)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("dictionary unavailable");
+        service.refreshAfterApplicationReady();
+        assertThat(snapshot.isInitialized()).isFalse();
+
+        service.refreshOnSchedule();
+        assertThat(snapshot.isInitialized()).isTrue();
+        verify(repository, times(2)).read();
     }
 
     @Test
@@ -92,18 +98,6 @@ class SearchKeywordRankingSchedulingTest {
     }
 
     @Test
-    void retriesOnTheNextScheduleWhenTheStartupRefreshFails() {
-        SearchKeywordRankingService service = service();
-        when(repository.read()).thenThrow(new IllegalStateException("dictionary unavailable")).thenReturn(dictionary);
-
-        service.refreshAfterApplicationReady();
-        service.refreshOnSchedule();
-
-        verify(repository, times(2)).read();
-        assertThat(snapshot.refreshedAt()).isPresent();
-    }
-
-    @Test
     void springRegistersOneTenMinuteCronAndRefreshesOnceOnApplicationReady() {
         try (var context = new AnnotationConfigApplicationContext(SchedulingTestConfig.class)) {
             var processor = context.getBean(ScheduledAnnotationBeanPostProcessor.class);
@@ -117,12 +111,12 @@ class SearchKeywordRankingSchedulingTest {
                         .isEqualTo(LocalDateTime.parse("2026-09-21T10:40:00"));
                 });
             });
+            verifyNoInteractions(repository);
+
+            context.publishEvent(mock(ApplicationReadyEvent.class));
+            context.publishEvent(mock(ApplicationReadyEvent.class));
+
             verify(repository).read();
-
-            context.publishEvent(mock(ApplicationReadyEvent.class));
-            context.publishEvent(mock(ApplicationReadyEvent.class));
-
-            verify(repository, times(2)).read();
         }
     }
 
