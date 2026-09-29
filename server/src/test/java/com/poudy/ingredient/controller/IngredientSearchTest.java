@@ -32,16 +32,13 @@ class IngredientSearchTest {
     @DisplayName("이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 제안한다")
     void suggestsIngredientGroupsByName() throws Exception {
         jdbc.update(
-            "insert into ingredient_group (code, display_name, description) values ('CERAMIDES', '세라마이드 계열', '설명')"
-        );
-        jdbc.update(
             "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values ('CERAMIDES', 20, 0), ('CERAMIDES', 9, 1)"
         );
 
         mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "세라 마이드"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.groups[*].code").value(contains("CERAMIDES")))
-            .andExpect(jsonPath("$.groups[0].name").value("세라마이드 계열"))
+            .andExpect(jsonPath("$.groups[0].name").value("세라마이드"))
             .andExpect(jsonPath("$.groups[0].ingredientIds").value(contains(20, 9)));
     }
 

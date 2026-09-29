@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.ErrorCode;
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.ingredientgroup.domain.IngredientBundle;
 import com.poudy.ingredientgroup.domain.IngredientGroup;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
@@ -43,9 +44,21 @@ class IngredientGroupQueryTest {
         mockMvc.perform(get("/api/ingredient-groups/CERAMIDES"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("CERAMIDES"))
-            .andExpect(jsonPath("$.name").value("세라마이드 계열"))
-            .andExpect(jsonPath("$.description").value("피부 장벽을 이루는 지질 성분입니다."))
+            .andExpect(jsonPath("$.name").value("세라마이드"))
+            .andExpect(jsonPath("$.description").value("피부 장벽을 구성하는 지질 성분으로 수분 손실을 막음."))
             .andExpect(jsonPath("$.ingredients[*].id").value(contains(20, 9)));
+    }
+
+    @Test
+    @DisplayName("마이그레이션이 제외 성분군 외에 성분군 22개를 넣는다")
+    void insertsIngredientGroupsByMigration() {
+        Long count = jdbc.queryForObject(
+            "select count(*) from ingredient_group where code <> all(cast(? as text[]))",
+            Long.class,
+            (Object) ExcludeCode.codeValues().toArray(String[]::new)
+        );
+
+        assertThat(count).isEqualTo(22);
     }
 
     @Test
@@ -83,12 +96,6 @@ class IngredientGroupQueryTest {
     }
 
     private void addCeramides() {
-        jdbc.update(
-            "insert into ingredient_group (code, display_name, description) values (?, ?, ?)",
-            "CERAMIDES",
-            "세라마이드 계열",
-            "피부 장벽을 이루는 지질 성분입니다."
-        );
         jdbc.update(
             "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values (?, ?, 0), (?, ?, 1)",
             "CERAMIDES",
