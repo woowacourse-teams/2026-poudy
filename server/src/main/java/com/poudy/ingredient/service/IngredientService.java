@@ -2,7 +2,7 @@ package com.poudy.ingredient.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.excludecode.domain.IngredientGroups;
+import com.poudy.excludecode.domain.ExcludeCodeLookup;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
@@ -20,18 +20,18 @@ public class IngredientService {
 
     private final IngredientRepository ingredientRepository;
     private final IngredientUsage ingredientUsage;
-    private final IngredientGroups ingredientGroups;
+    private final ExcludeCodeLookup excludeCodeLookup;
     private final IngredientGroupRepository ingredientGroupRepository;
 
     public IngredientService(
         IngredientRepository ingredientRepository,
         IngredientUsage ingredientUsage,
-        IngredientGroups ingredientGroups,
+        ExcludeCodeLookup excludeCodeLookup,
         IngredientGroupRepository ingredientGroupRepository
     ) {
         this.ingredientRepository = ingredientRepository;
         this.ingredientUsage = ingredientUsage;
-        this.ingredientGroups = ingredientGroups;
+        this.excludeCodeLookup = excludeCodeLookup;
         this.ingredientGroupRepository = ingredientGroupRepository;
     }
 
@@ -41,7 +41,7 @@ public class IngredientService {
 
         return new IngredientDetail(
             ingredient,
-            ingredientGroups.codesOf(ingredientId),
+            excludeCodeLookup.codesOf(ingredientId),
             ingredientUsage.countProductsContaining(ingredientId)
         );
     }
