@@ -8,7 +8,6 @@ import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
-import jakarta.annotation.PostConstruct;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +80,7 @@ public class ExcludeCodeRepository {
         }
     }
 
-    @PostConstruct
-    void validateDefinitions() {
+    private void validateDefinitions() {
         List<String> missing = jdbc.queryForList(
             "select code from unnest(cast(:codes as text[])) as code"
                 + " where not exists (select 1 from ingredient_group_ingredient i where i.group_code = code)"
@@ -96,6 +94,7 @@ public class ExcludeCodeRepository {
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
+        validateDefinitions();
         return jdbc.queryForList(
             "select distinct group_code from ingredient_group_ingredient"
                 + " where ingredient_id = :id and group_code = any(:codes) order by group_code",

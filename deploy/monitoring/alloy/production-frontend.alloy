@@ -1,0 +1,66 @@
+// Grafana Alloy configuration for the production frontend EC2.
+// Supply CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET through the Alloy
+// systemd environment; never put the service token in this file.
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = "https://metrics-write.poudy.site/api/v1/write"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+prometheus.relabel "production_frontend" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    action       = "replace"
+    target_label = "environment"
+    replacement  = "prod"
+  }
+
+  rule {
+    action       = "replace"
+    target_label = "service"
+    replacement  = "poudy-frontend"
+  }
+}
+
+prometheus.exporter.unix "production_frontend" {
+  enable_collectors = ["systemd"]
+
+  systemd {
+    enable_restarts = true
+    unit_include    = "(nginx|poudy-frontend)\\.service"
+  }
+}
+
+prometheus.scrape "unix" {
+  job_name   = "integrations/unix"
+  targets    = prometheus.exporter.unix.production_frontend.targets
+  forward_to = [prometheus.relabel.production_frontend.receiver]
+
+  scrape_interval = "60s"
+}
+
+prometheus.exporter.process "frontend" {
+  matcher {
+    comm = ["next-server (v1"]
+    name = "poudy-frontend"
+  }
+
+  matcher {
+    comm = ["nginx"]
+    name = "nginx"
+  }
+}
+
+prometheus.scrape "process" {
+  job_name   = "integrations/process"
+  targets    = prometheus.exporter.process.frontend.targets
+  forward_to = [prometheus.relabel.production_frontend.receiver]
+
+  scrape_interval = "60s"
+}
