@@ -13,27 +13,31 @@ describe("성분군 조건", () => {
   });
 
   it("포함을 고르면 제외 조건에서 같은 성분군을 뺀다", () => {
-    expect(toggleGroup(filterWith({ excludeGroupCodes: ["CERAMIDES"] }), "includeGroupCodes", ceramides)).toEqual({
+    expect(toggleGroup(filterWith({ excludeGroupCodes: ["CERAMIDES"] }), "includeGroupCodes", "CERAMIDES")).toEqual({
       includeGroupCodes: ["CERAMIDES"],
       excludeGroupCodes: [],
-      includeIngredientIds: [],
-      excludeIngredientIds: [],
     });
   });
 
-  it("성분군을 고르면 이미 고른 소속 성분을 포함·제외 양쪽에서 뺀다", () => {
-    const filter = filterWith({ includeIngredientIds: [7130, 3500], excludeIngredientIds: [8322, 1012] });
+  it("성분군을 고르거나 풀어도 이미 고른 소속 성분은 그대로 둔다", () => {
+    const filter = filterWith({ includeIngredientIds: [7130], excludeIngredientIds: [8322] });
+    const selected = { ...filter, ...toggleGroup(filter, "includeGroupCodes", "CERAMIDES") };
+    const released = { ...selected, ...toggleGroup(selected, "includeGroupCodes", "CERAMIDES") };
 
-    expect(toggleGroup(filter, "excludeGroupCodes", ceramides)).toEqual({
-      excludeGroupCodes: ["CERAMIDES"],
+    expect(selected).toMatchObject({
+      includeGroupCodes: ["CERAMIDES"],
+      includeIngredientIds: [7130],
+      excludeIngredientIds: [8322],
+    });
+    expect(released).toMatchObject({
       includeGroupCodes: [],
-      includeIngredientIds: [3500],
-      excludeIngredientIds: [1012],
+      includeIngredientIds: [7130],
+      excludeIngredientIds: [8322],
     });
   });
 
   it("이미 고른 쪽을 다시 누르면 뺀다", () => {
-    expect(toggleGroup(filterWith({ includeGroupCodes: ["CERAMIDES"] }), "includeGroupCodes", ceramides)).toEqual({
+    expect(toggleGroup(filterWith({ includeGroupCodes: ["CERAMIDES"] }), "includeGroupCodes", "CERAMIDES")).toEqual({
       includeGroupCodes: [],
     });
   });

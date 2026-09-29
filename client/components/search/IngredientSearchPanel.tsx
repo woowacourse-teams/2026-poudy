@@ -158,7 +158,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
       action: pick(filter[key].includes(group.code), "remove", "add"),
       surface: "ingredient_search",
     });
-    onChange(toggleGroup(filter, key, group));
+    onChange(toggleGroup(filter, key, group.code));
   };
 
   const removeGroup = (key: GroupConditionKey, code: string) => {
