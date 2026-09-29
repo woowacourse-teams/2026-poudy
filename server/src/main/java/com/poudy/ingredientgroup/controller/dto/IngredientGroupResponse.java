@@ -7,8 +7,8 @@ import java.util.List;
 
 public record IngredientGroupResponse(
     @NotNull @Schema(example = "CERAMIDES") String code,
-    @NotNull @Schema(example = "세라마이드 계열") String name,
-    @NotNull @Schema(example = "피부 장벽을 이루는 지질 성분입니다.") String description,
+    @NotNull @Schema(example = "세라마이드") String name,
+    @NotNull @Schema(example = "피부 장벽을 구성하는 지질 성분으로 수분 손실을 막음.") String description,
     @NotNull List<IngredientGroupMemberResponse> ingredients) {
 
     public static IngredientGroupResponse from(IngredientGroupDetail detail) {

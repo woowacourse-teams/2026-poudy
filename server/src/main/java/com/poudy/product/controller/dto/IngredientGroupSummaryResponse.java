@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record IngredientGroupSummaryResponse(
     @NotNull @Schema(example = "CERAMIDES") String code,
-    @NotNull @Schema(example = "세라마이드 계열") String name) {
+    @NotNull @Schema(example = "세라마이드") String name) {
 
     public static IngredientGroupSummaryResponse from(IngredientGroup group) {
         if (group == null) {
