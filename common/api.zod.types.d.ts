@@ -434,7 +434,7 @@ export type IngredientListResponse = {
   groups: Array<IngredientGroupSuggestionResponse>;
 }
 export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName?: string }
-export type IngredientGroupResponse = { code: string, name: string, description: string, ingredients: Array<IngredientGroupMemberResponse> }
+export type IngredientGroupResponse = { code: string, name: string, englishName?: string, description: string, ingredients: Array<IngredientGroupMemberResponse> }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
   /**

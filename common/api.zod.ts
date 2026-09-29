@@ -170,7 +170,7 @@ export type IngredientGroupMemberResponse = __TypedOpenapi.Schemas.IngredientGro
 export const IngredientGroupMemberResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string().optional() });
 
 export type IngredientGroupResponse = __TypedOpenapi.Schemas.IngredientGroupResponse;
-export const IngredientGroupResponse = z.object({ code: z.string(), name: z.string(), description: z.string(), ingredients: z.array(IngredientGroupMemberResponse) });
+export const IngredientGroupResponse = z.object({ code: z.string(), name: z.string(), englishName: z.string().optional(), description: z.string(), ingredients: z.array(IngredientGroupMemberResponse) });
 
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string() });

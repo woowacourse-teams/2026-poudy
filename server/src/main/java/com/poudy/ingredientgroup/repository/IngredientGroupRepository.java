@@ -74,11 +74,12 @@ public class IngredientGroupRepository {
         );
 
         return jdbc.query(
-            "select code, display_name, description from ingredient_group where code = :code",
+            "select code, display_name, english_name, description from ingredient_group where code = :code",
             parameters,
             (row, number) -> new IngredientGroupDetail(
                 row.getString("code"),
                 row.getString("display_name"),
+                row.getString("english_name"),
                 row.getString("description"),
                 members
             )

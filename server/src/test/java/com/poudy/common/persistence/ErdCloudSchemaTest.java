@@ -52,7 +52,10 @@ class ErdCloudSchemaTest {
             "curation_block_product_filter",
             List.of("block_id", "product_id", "filter_id", "position", "created_at", "updated_at")
         ),
-        entry("ingredient_group", List.of("code", "display_name", "description", "created_at", "updated_at")),
+        entry(
+            "ingredient_group",
+            List.of("code", "display_name", "description", "created_at", "updated_at", "english_name")
+        ),
         entry(
             "ingredient_group_ingredient",
             List.of("group_code", "ingredient_id", "display_order", "created_at", "updated_at")
