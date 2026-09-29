@@ -4685,7 +4685,7 @@
           "description": {
             "type": "string",
             "description": "성분군 설명",
-            "example": "자극을 유발할 수 있는 방부제 성분을 제외합니다."
+            "example": "자극을 유발할 수 있는 방부제 성분을 제외해요."
           },
           "ingredients": {
             "type": "array",

@@ -589,12 +589,12 @@ INSERT INTO ingredient_source (ingredient_id, type, content)
 SELECT ingredient_id, 'INFO', content FROM sources ORDER BY ingredient_id, display_order;
 
 INSERT INTO ingredient_group (code, display_name, english_name, description) VALUES
-    ('FRAGRANCE_ALLERGENS', '향료/알레르기 성분', 'Fragrance Allergens', '향료와 알레르기 유발 향료 성분을 제외합니다.'),
-    ('DRYING_ALCOHOLS', '건조 알코올', 'Drying Alcohols', '피부를 건조하게 만들 수 있는 알코올 성분을 제외합니다.'),
-    ('HARSH_PRESERVATIVES', '자극성 방부제', 'Harsh Preservatives', '자극을 유발할 수 있는 방부제 성분을 제외합니다.'),
-    ('SULFATES', '설페이트 성분', 'Sulfates', '설페이트 계열 계면활성제 성분을 제외합니다.'),
-    ('CYCLIC_SILICONES', '실리콘 자극원', 'Cyclic Silicones', '환상형 실리콘 성분을 제외합니다.'),
-    ('SYNTHETIC_COLORANTS', '합성 색소', 'Synthetic Colorants', '합성 색소 성분을 제외합니다.');
+    ('FRAGRANCE_ALLERGENS', '향료/알레르기 성분', 'Fragrance Allergens', '향료와 알레르기 유발 향료 성분을 제외해요.'),
+    ('DRYING_ALCOHOLS', '건조 알코올', 'Drying Alcohols', '피부를 건조하게 만들 수 있는 알코올 성분을 제외해요.'),
+    ('HARSH_PRESERVATIVES', '자극성 방부제', 'Harsh Preservatives', '자극을 유발할 수 있는 방부제 성분을 제외해요.'),
+    ('SULFATES', '설페이트 성분', 'Sulfates', '설페이트 계열 계면활성제 성분을 제외해요.'),
+    ('CYCLIC_SILICONES', '실리콘 자극원', 'Cyclic Silicones', '환상형 실리콘 성분을 제외해요.'),
+    ('SYNTHETIC_COLORANTS', '합성 색소', 'Synthetic Colorants', '합성 색소 성분을 제외해요.');
 
 INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_order) VALUES
     ('FRAGRANCE_ALLERGENS', 9, 0),

@@ -77,7 +77,7 @@ class ExcludeCodeQueryTest {
     void findsDisplayNameAndDescription() throws Exception {
         mockMvc.perform(get("/api/exclude-codes")).andExpect(status().isOk())
             .andExpect(jsonPath("$.items[3].name").value("자극성 방부제"))
-            .andExpect(jsonPath("$.items[3].description").value("자극을 유발할 수 있는 방부제 성분을 제외합니다."))
+            .andExpect(jsonPath("$.items[3].description").value("자극을 유발할 수 있는 방부제 성분을 제외해요."))
             .andExpect(jsonPath("$.items[*].name", everyItem(not(blankOrNullString()))))
             .andExpect(jsonPath("$.items[*].description", everyItem(not(blankOrNullString()))));
     }

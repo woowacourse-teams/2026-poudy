@@ -7,7 +7,8 @@ UPDATE ingredient_group SET english_name = CASE code
     WHEN 'SULFATES' THEN 'Sulfates'
     WHEN 'CYCLIC_SILICONES' THEN 'Cyclic Silicones'
     WHEN 'SYNTHETIC_COLORANTS' THEN 'Synthetic Colorants'
-END;
+END,
+description = regexp_replace(description, '합니다\.$', '해요.');
 
 INSERT INTO ingredient_group (code, display_name, english_name, description) VALUES
     ('CERAMIDES', '세라마이드', 'Ceramides', '피부 장벽을 구성하는 지질 성분으로 수분 손실을 막아요.'),

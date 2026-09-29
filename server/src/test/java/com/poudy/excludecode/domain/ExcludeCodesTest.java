@@ -13,7 +13,7 @@ class ExcludeCodesTest {
     private static final ExcludeCodeGroup SULFATES = new ExcludeCodeGroup(
         ExcludeCode.SULFATES,
         "설페이트 성분",
-        "설페이트 성분을 제외합니다.",
+        "설페이트 성분을 제외해요.",
         List.of(
             new ExcludeCodeIngredient(30L, "성분 30", null),
             new ExcludeCodeIngredient(10L, "성분 10", null),
