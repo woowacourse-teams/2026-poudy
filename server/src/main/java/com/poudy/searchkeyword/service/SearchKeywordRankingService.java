@@ -11,7 +11,6 @@ import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
 import com.poudy.searchkeyword.domain.ranking.RankingFallback;
 import com.poudy.searchkeyword.domain.ranking.RankingPolicy;
 import com.poudy.searchkeyword.repository.SearchKeywordDictionaryRepository;
-import jakarta.annotation.PostConstruct;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -53,11 +52,6 @@ public class SearchKeywordRankingService {
         this.fallback = fallback;
         this.snapshot = snapshot;
         this.clock = clock;
-    }
-
-    @PostConstruct
-    void initializeDictionary() {
-        snapshot.initialize(repository.read());
     }
 
     @EventListener(ApplicationReadyEvent.class)

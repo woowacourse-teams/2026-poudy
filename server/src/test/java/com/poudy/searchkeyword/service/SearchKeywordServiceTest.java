@@ -3,8 +3,10 @@ package com.poudy.searchkeyword.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.bucket.BucketWindow;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
@@ -133,6 +135,27 @@ class SearchKeywordServiceTest {
             .contains("event=search_keyword_unresolved keyword=\"독도 \\\"토너\\\"\"")
             .doesNotContain("keyword=\"토너\"")
             .doesNotContain("keyword=\"없는검색\"");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void unavailableDictionaryFailsRankingsButStillRecordsWithoutFalseUnresolvedLog(CapturedOutput output) {
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot();
+        KeywordBuckets buckets = mock(KeywordBuckets.class);
+        SearchKeywordService service = new SearchKeywordService(snapshot, buckets, ignored -> true);
+
+        assertThatThrownBy(service::rankings)
+            .isInstanceOf(InfrastructureException.class)
+            .hasMessageContaining("검색어 사전");
+        service.record(new SearchKeyword("토너"));
+
+        verify(buckets).record("토너");
+        assertThat(output).doesNotContain("event=search_keyword_unresolved");
+
+        snapshot.replace(SearchKeywordDictionary.of(List.of()), List.of(), clock.instant());
+        assertThat(service.rankings()).isEmpty();
+        service.record(new SearchKeyword("크림"));
+        assertThat(output).contains("event=search_keyword_unresolved keyword=\"크림\"");
     }
 
     @Test

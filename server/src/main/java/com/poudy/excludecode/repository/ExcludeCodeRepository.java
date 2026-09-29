@@ -8,7 +8,6 @@ import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
-import jakarta.annotation.PostConstruct;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +78,7 @@ public class ExcludeCodeRepository {
         }
     }
 
-    @PostConstruct
-    void validateDefinitions() {
+    private void validateDefinitions() {
         Long definitionCount = jdbc.queryForObject(
             "select count(*) from exclude_code",
             new MapSqlParameterSource(),
@@ -101,6 +99,7 @@ public class ExcludeCodeRepository {
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
+        validateDefinitions();
         return jdbc.queryForList(
             "select distinct exclude_code from exclude_code_ingredient where ingredient_id = :id order by exclude_code",
             Map.of("id", ingredientId),
@@ -112,6 +111,7 @@ public class ExcludeCodeRepository {
         if (codes.isEmpty()) {
             return true;
         }
+        validateDefinitions();
         Long count = jdbc.queryForObject(
             "select count(*) from exclude_code where code = any(cast(:codes as text[]))",
             new MapSqlParameterSource(
