@@ -50,7 +50,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 `ingredient → tag`, `ingredient → excludecode ← product`, `product → ingredientgroup → excludecode`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
 상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
 (`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`)를 두고 상위
-기능이 구현한다. 성분군 조회 포트 `IngredientGroups`는 값을 소유한 `excludecode` 도메인에 둔다.
+기능이 구현한다. 성분이 속한 제외 성분군을 찾는 포트 `ExcludeCodeLookup`은 값을 소유한 `excludecode` 도메인에 둔다.
 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)은 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
 성분군 코드는 성분 도메인까지 `ExcludeCode` 값 객체로 전달하고 HTTP 경계에서 문자열로 직렬화한다.
 
