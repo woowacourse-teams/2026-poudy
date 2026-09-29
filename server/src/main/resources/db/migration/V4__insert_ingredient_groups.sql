@@ -33,7 +33,7 @@ WITH rules (code, rule) AS (VALUES
     ('ARBUTIN', 'arbutin'),
     ('GLUTATHIONE', 'glutathione'),
     ('RETINOIDS', '\m(retinol|retinal|retinyl|retinoate|retinamide)'),
-    ('PEPTIDES', '(di|tri|tetra|penta|hexa|hepta|octa|nona|deca|oligo)peptide-[0-9]'),
+    ('PEPTIDES', '(di|tri|tetra|penta|hexa|hepta|octa|nona|deca|oligo)peptide-[0-9]|^dipeptide diaminobutyroyl benzylamide diacetate$'),
     ('ADENOSINE', '^adenosine$'),
     ('COLLAGEN', '^(hydrolyzed |soluble |succinoyl )?(atelo)?collagen( extract| amino acids)?$'),
     ('CENTELLA', 'centella asiatica|^asiaticoside$|^asiatic acid$|^madecassic acid$'),
@@ -54,7 +54,8 @@ WITH rules (code, rule) AS (VALUES
     JOIN candidates c
       ON c.english_name ~* r.rule
       OR (r.code = 'SQUALANE' AND c.korean_name ~ '스쿠알')
-    WHERE c.english_name !~* 'ferment|filtrate|polymer|vesicles'
+    WHERE c.english_name !~* 'ferment|filtrate'
+      AND c.english_name !~* '^hyaluronidase$|^niacinamide riboside chloride$'
       AND NOT (
           c.english_name ~ '/'
           AND c.english_name !~* '^[^/]*(flower|leaf|stem|root|seed|fruit)(/(flower|leaf|stem|root|seed|fruit))+ '
