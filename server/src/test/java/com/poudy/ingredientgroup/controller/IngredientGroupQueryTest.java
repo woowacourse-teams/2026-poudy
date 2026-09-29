@@ -62,6 +62,21 @@ class IngredientGroupQueryTest {
     }
 
     @Test
+    @DisplayName("옛 이름 호환 뷰는 제외 성분군만 보여 준다")
+    void exposesOnlyExcludeCodesThroughCompatibilityViews() {
+        addCeramides();
+
+        List<String> codes = jdbc.queryForList("select code from exclude_code order by code", String.class);
+        List<String> memberCodes = jdbc.queryForList(
+            "select distinct exclude_code from exclude_code_ingredient order by exclude_code",
+            String.class
+        );
+
+        assertThat(codes).containsExactlyInAnyOrderElementsOf(ExcludeCode.codeValues());
+        assertThat(memberCodes).doesNotContain("CERAMIDES");
+    }
+
+    @Test
     @DisplayName("제외 성분군도 성분군으로 조회한다")
     void findsExcludeCodeAsGroup() throws Exception {
         mockMvc.perform(get("/api/ingredient-groups/SULFATES"))

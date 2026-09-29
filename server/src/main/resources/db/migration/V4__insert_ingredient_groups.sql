@@ -64,3 +64,17 @@ WITH rules (code, rule) AS (VALUES
 INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_order)
 SELECT code, id, row_number() OVER (PARTITION BY code ORDER BY id) - 1
 FROM members;
+
+CREATE OR REPLACE VIEW exclude_code AS
+SELECT code, display_name, description, created_at, updated_at
+FROM ingredient_group
+WHERE code IN (
+    'FRAGRANCE_ALLERGENS', 'DRYING_ALCOHOLS', 'HARSH_PRESERVATIVES', 'SULFATES', 'CYCLIC_SILICONES', 'SYNTHETIC_COLORANTS'
+);
+
+CREATE OR REPLACE VIEW exclude_code_ingredient AS
+SELECT group_code AS exclude_code, ingredient_id, display_order, created_at, updated_at
+FROM ingredient_group_ingredient
+WHERE group_code IN (
+    'FRAGRANCE_ALLERGENS', 'DRYING_ALCOHOLS', 'HARSH_PRESERVATIVES', 'SULFATES', 'CYCLIC_SILICONES', 'SYNTHETIC_COLORANTS'
+);
