@@ -4638,7 +4638,7 @@
           },
           "description": {
             "type": "string",
-            "example": "피부 장벽을 구성하는 지질 성분으로 수분 손실을 막음."
+            "example": "피부 장벽을 구성하는 지질 성분으로 수분 손실을 막아요."
           },
           "ingredients": {
             "type": "array",

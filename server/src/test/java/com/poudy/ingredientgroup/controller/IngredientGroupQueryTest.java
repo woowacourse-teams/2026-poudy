@@ -46,7 +46,7 @@ class IngredientGroupQueryTest {
             .andExpect(jsonPath("$.code").value("CERAMIDES"))
             .andExpect(jsonPath("$.name").value("세라마이드"))
             .andExpect(jsonPath("$.englishName").value("Ceramides"))
-            .andExpect(jsonPath("$.description").value("피부 장벽을 구성하는 지질 성분으로 수분 손실을 막음."))
+            .andExpect(jsonPath("$.description").value("피부 장벽을 구성하는 지질 성분으로 수분 손실을 막아요."))
             .andExpect(jsonPath("$.ingredients[*].id").value(contains(20, 9)));
     }
 
