@@ -22,45 +22,45 @@ INSERT INTO ingredient_group (code, display_name, description) VALUES
     ('PHA', 'PHA', 'AHA보다 분자가 커 자극이 적고 보습 효과가 있는 차세대 각질 제거 성분.'),
     ('LHA', 'LHA', '약산성 성분으로 자극이 매우 적어 민감성 피부용 각질 케어에 사용.');
 
-WITH rules (code, rule) AS (VALUES
-    ('CERAMIDES', 'ceramide'),
-    ('HYALURONIC_ACID', 'hyalur'),
-    ('GLYCERIN', '^glycerin$'),
-    ('PANTHENOL', '^(dex)?panthenol$|^panthenyl (ethyl ether|triacetate)$'),
-    ('SQUALANE', 'squal'),
-    ('NIACINAMIDE', '^niacinamide'),
-    ('VITAMIN_C', 'ascorb'),
-    ('ARBUTIN', 'arbutin'),
-    ('GLUTATHIONE', 'glutathione'),
-    ('RETINOIDS', '\m(retinol|retinal|retinyl|retinoate|retinamide)'),
-    ('PEPTIDES', '(di|tri|tetra|penta|hexa|hepta|octa|nona|deca|oligo)peptide-[0-9]|^dipeptide diaminobutyroyl benzylamide diacetate$'),
-    ('ADENOSINE', '^adenosine$'),
-    ('COLLAGEN', '^(hydrolyzed |soluble |succinoyl )?(atelo)?collagen( extract| amino acids)?$'),
-    ('CENTELLA', 'centella asiatica|^asiaticoside$|^asiatic acid$|^madecassic acid$'),
-    ('TEA_TREE', 'melaleuca alternifolia'),
-    ('HOUTTUYNIA', 'houttuynia cordata'),
-    ('MADECASSOSIDE', '^madecassoside$'),
-    ('AZULENE', '^(guai|cham)?azulene$|azulene sulfonate$'),
-    ('AHA', '^(glycolic|lactic|mandelic|malic|tartaric) acid$'),
-    ('BHA', '^salicylic acid$|^betaine salicylate$|^salix [a-z]+ \(willow\) bark (extract|water)$'),
-    ('PHA', '^gluconolactone$|^lactobionic acid$'),
-    ('LHA', '^capryloyl salicylic acid$')
+WITH rules (code, rule, korean_rule) AS (VALUES
+    ('CERAMIDES', 'ceramide', '세라마이드'),
+    ('HYALURONIC_ACID', 'hyalur', '하이알루로|히알루론'),
+    ('GLYCERIN', '^glycerin$', '^글리세린$'),
+    ('PANTHENOL', '^(dex)?panthenol$|^panthenyl (ethyl ether|triacetate)$', '^(덱스)?판테놀$|^판테닐(에틸에터|트라이아세테이트)$'),
+    ('SQUALANE', 'squalane', '스쿠알란'),
+    ('NIACINAMIDE', '^niacinamide', '^나이아신아마이드'),
+    ('VITAMIN_C', '(?<!iso)ascorb', '(?<!아이소)(아스코빅|아스코빌|아스코베이트)'),
+    ('ARBUTIN', 'arbutin', '알부틴'),
+    ('GLUTATHIONE', 'glutathione', '글루타(티|치)온'),
+    ('RETINOIDS', '\m(retinol|retinal|retinyl|retinamide|retinoyl)|retinoate', '레티놀|레틴알|레티닐|레틴아마이드|레티노일|레티노에이트'),
+    ('PEPTIDES', '(di|tri|tetra|penta|hexa|hepta|octa|nona|deca|oligo)peptide-[0-9]|^palmitoyl oligopeptide$|^dipeptide diaminobutyroyl benzylamide diacetate$', '(다이|트라이|테트라|펜타|헥사|헵타|옥타|노나|데카|올리고)펩타이드'),
+    ('ADENOSINE', '^adenosine$', '^아데노신$'),
+    ('COLLAGEN', '^(hydrolyzed |soluble |succinoyl |desamido )?(atelo)?collagen( extract| amino acids| crosspolymer)?$', '콜라겐'),
+    ('CENTELLA', 'centella asiatica|^asiaticoside$|^asiatic acid$|^madecassic acid$', '병풀|^아시아티코사이드$|^아시아틱애씨드$|^마데카식애씨드$'),
+    ('TEA_TREE', 'melaleuca alternifolia', '^티트리'),
+    ('HOUTTUYNIA', 'houttuynia cordata', '약모밀|어성초'),
+    ('MADECASSOSIDE', '^madecassoside$', '^마데카소사이드$'),
+    ('AZULENE', '^(guai|cham)?azulene$|azulene sulfonate$', '아줄렌'),
+    ('AHA', '^(glycolic|lactic|mandelic|malic|tartaric) acid$', '^(글라이콜릭|락틱|만델릭|말릭|타타릭)애씨드$'),
+    ('BHA', '^salicylic acid$|^betaine salicylate$', '^살리실릭애씨드$|^베타인살리실레이트$'),
+    ('PHA', '^gluconolactone$|^lactobionic acid$', '^글루코노락톤$|^락토바이오닉애씨드$'),
+    ('LHA', '^capryloyl salicylic acid$', '^카프릴로일살리실릭애씨드$')
 ), candidates AS (
-    SELECT i.id, i.korean_name, replace(coalesce(i.english_name, ''), E'\n', ' ') AS english_name
+    SELECT i.id, replace(i.korean_name, E'\n', '') AS korean_name, replace(coalesce(i.english_name, ''), E'\n', ' ') AS english_name
     FROM ingredient i
 ), members AS (
     SELECT r.code, c.id
     FROM rules r
     JOIN candidates c
-      ON c.english_name ~* r.rule
-      OR (r.code = 'SQUALANE' AND c.korean_name ~ '스쿠알')
+      ON (c.english_name <> '' AND c.english_name ~* r.rule)
+      OR (c.english_name = '' AND c.korean_name ~ r.korean_rule)
     WHERE c.english_name !~* 'ferment|filtrate'
       AND c.english_name !~* '^hyaluronidase$|^niacinamide riboside chloride$'
       AND NOT (
           c.english_name ~ '/'
           AND c.english_name !~* '^[^/]*(flower|leaf|stem|root|seed|fruit)(/(flower|leaf|stem|root|seed|fruit))+ '
       )
-      AND NOT (c.english_name = '' AND c.korean_name ~ '/')
+      AND NOT (c.english_name = '' AND c.korean_name ~ '/|발효|여과물')
 )
 INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_order)
 SELECT code, id, row_number() OVER (PARTITION BY code ORDER BY id) - 1
