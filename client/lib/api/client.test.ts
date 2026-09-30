@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
-import { apiPost, apiUrl } from "./client";
+import { apiGet, apiPost, apiUrl, INVALID_RESPONSE } from "./client";
 
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("API 주소", () => {
@@ -72,5 +74,41 @@ describe("POST 요청", () => {
     await apiPost("/api/products/42/views");
 
     expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/products/42/views", { method: "POST" });
+  });
+});
+
+describe("응답 검증", () => {
+  const Item = z.object({ id: z.number(), name: z.string() });
+
+  const respondWith = (body: unknown) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status: 200 })));
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+  };
+
+  it("계약과 맞는 응답은 그대로 돌려준다", async () => {
+    respondWith({ id: 1, name: "토너" });
+
+    await expect(apiGet("/api/items/1", Item)).resolves.toEqual({ id: 1, name: "토너" });
+  });
+
+  it("production 이 아니면 계약과 다른 응답을 실패로 처리한다", async () => {
+    respondWith({ id: 1, name: null });
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "staging");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(apiGet("/api/items/1", Item)).rejects.toMatchObject({ status: 200, code: INVALID_RESPONSE });
+  });
+
+  it("production 에서는 계약과 다른 응답도 그대로 쓰고 어긋난 필드를 남긴다", async () => {
+    respondWith({ id: 1, name: null });
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(apiGet("/api/items/1", Item)).resolves.toEqual({ id: 1, name: null });
+    expect(JSON.parse(logged.mock.calls[0][0] as string)).toEqual({
+      kind: "invalid_response",
+      path: "/api/items/1",
+      fields: ["name"],
+    });
   });
 });

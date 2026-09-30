@@ -36,36 +36,40 @@ describe("fetchIngredientsByIds", () => {
   it("성분 ID 조회의 모든 페이지를 순서대로 합친다", async () => {
     const ingredientIds = Array.from({ length: 205 }, (_, index) => index + 1);
 
-    client.apiGet.mockImplementation((_path: string, params: URLSearchParams) => {
-      const requestedIds = params.getAll("ingredientIds").map(Number);
-      const page = Number(params.get("page"));
-      const size = Number(params.get("size"));
-      const items = requestedIds.slice((page - 1) * size, page * size).map((id) => ({
-        id,
-        koreanName: `성분 ${id}`,
-        englishName: `Ingredient ${id}`,
-        skinEffects: [],
-      }));
+    client.apiGet.mockImplementation(
+      (_path: string, _schema: unknown, { query: params }: { query: URLSearchParams }) => {
+        const requestedIds = params.getAll("ingredientIds").map(Number);
+        const page = Number(params.get("page"));
+        const size = Number(params.get("size"));
+        const items = requestedIds.slice((page - 1) * size, page * size).map((id) => ({
+          id,
+          koreanName: `성분 ${id}`,
+          englishName: `Ingredient ${id}`,
+          skinEffects: [],
+        }));
 
-      return Promise.resolve({
-        items,
-        pagination: {
-          page,
-          size,
-          totalElements: requestedIds.length,
-          totalPages: Math.ceil(requestedIds.length / size),
-          hasNext: page * size < requestedIds.length,
-        },
-      });
-    });
+        return Promise.resolve({
+          items,
+          pagination: {
+            page,
+            size,
+            totalElements: requestedIds.length,
+            totalPages: Math.ceil(requestedIds.length / size),
+            hasNext: page * size < requestedIds.length,
+          },
+        });
+      },
+    );
 
     const response = await fetchIngredientsByIds(ingredientIds);
 
     expect(response.items.map(({ id }) => id)).toEqual(ingredientIds);
     expect(client.apiGet).toHaveBeenCalledTimes(3);
-    expect(client.apiGet.mock.calls.map(([, params]) => params.get("page"))).toEqual(["1", "2", "3"]);
-    expect(client.apiGet.mock.calls.every(([, params]) => params.get("size") === "100")).toBe(true);
-    expect(client.apiGet.mock.calls.every(([, params]) => params.getAll("ingredientIds").length === 205)).toBe(true);
+    expect(client.apiGet.mock.calls.map(([, , { query }]) => query.get("page"))).toEqual(["1", "2", "3"]);
+    expect(client.apiGet.mock.calls.every(([, , { query }]) => query.get("size") === "100")).toBe(true);
+    expect(client.apiGet.mock.calls.every(([, , { query }]) => query.getAll("ingredientIds").length === 205)).toBe(
+      true,
+    );
   });
 
   it("ID가 없으면 전체 성분을 조회하지 않는다", async () => {
@@ -83,7 +87,7 @@ describe("목록 화면 fetch cache", () => {
     void fetchBrands();
     void fetchBrand(1);
 
-    expect(client.apiGet.mock.calls.map(([, , revalidate]) => revalidate)).toEqual([
+    expect(client.apiGet.mock.calls.map(([, , options]) => options?.revalidate)).toEqual([
       12 * 60 * 60,
       12 * 60 * 60,
       12 * 60 * 60,

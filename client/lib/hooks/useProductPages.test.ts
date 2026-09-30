@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { useProductPages } from "@/lib/hooks/useProductPages";
 import { clearProductPages } from "@/lib/storage/product-pages-cache";
+import { products } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
 /** 장마다 두 건씩 돌려주고 몇 번 불렸는지 센다. */
@@ -20,9 +21,14 @@ const countingProducts = () => {
       pages.push(page);
 
       return HttpResponse.json({
-        items: [{ id: page * 2 - 1 }, { id: page * 2 }],
+        items: [
+          { ...products[0], id: page * 2 - 1 },
+          { ...products[0], id: page * 2 },
+        ],
         pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },
         brands: [],
+        categories: [],
+        skinTypes: [],
       });
     }),
   );

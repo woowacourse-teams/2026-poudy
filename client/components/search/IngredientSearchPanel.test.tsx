@@ -166,7 +166,15 @@ describe("IngredientSearchPanel", () => {
       server.use(
         http.get("*/api/ingredients/suggestions", () =>
           HttpResponse.json({
-            items: [{ id: 6, koreanName: "판테놀", englishName: "Panthenol", skinEffects: [] }],
+            items: [
+              {
+                id: 6,
+                koreanName: "판테놀",
+                englishName: "Panthenol",
+                skinEffects: [],
+                match: { field: "KOREAN_NAME", text: "판테놀", startIndex: 0, endIndexExclusive: 3 },
+              },
+            ],
             groups: [pantheonGroup],
           }),
         ),

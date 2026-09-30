@@ -76,10 +76,13 @@ describe("의견 보내기", () => {
 describe("이미지 업로드", () => {
   it("여러 장을 images 라는 이름으로 함께 담는다", async () => {
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ imageIds: ["one", "two"] }), {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      }),
+      new Response(
+        JSON.stringify({ imageIds: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"] }),
+        {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
 
     const files = [new File(["a"], "a.png", { type: "image/png" }), new File(["b"], "b.jpg", { type: "image/jpeg" })];
@@ -88,12 +91,12 @@ describe("이미지 업로드", () => {
     const sent = fetchMock.mock.calls[0][1].body as FormData;
     expect(fetchMock.mock.calls[0][0]).toBe("https://poudy.site/api/pending-images");
     expect(sent.getAll("images")).toHaveLength(2);
-    expect(result.imageIds).toEqual(["one", "two"]);
+    expect(result.imageIds).toEqual(["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"]);
   });
 
   it("Content-Type 을 직접 정하지 않는다", async () => {
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ imageIds: ["one"] }), {
+      new Response(JSON.stringify({ imageIds: ["11111111-1111-4111-8111-111111111111"] }), {
         status: 201,
         headers: { "Content-Type": "application/json" },
       }),
