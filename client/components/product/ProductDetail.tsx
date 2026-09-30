@@ -263,7 +263,7 @@ function CautionBadge({ count }: { readonly count: number }) {
   return <span className="text-[12px] font-bold text-[#E8590C]">주의 {count}</span>;
 }
 
-function SelectedPart({ part }: { readonly part: ProductPartResponse | undefined }) {
+function SelectedPart({ part }: { readonly part: ProductPartResponse | null }) {
   if (!part) return null;
 
   return (
