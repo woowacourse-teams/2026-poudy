@@ -62,14 +62,24 @@ const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): Di
   return undefined;
 };
 
+export type TrackOptions = {
+  /**
+   * 화면을 떠나는 순간에 보내는 이벤트는 모아 두지 않고 바로 비콘으로 보낸다.
+   * PostHog 가 pagehide 에서 대기열을 비운 뒤에 쌓인 이벤트는 전송되지 않는다.
+   */
+  readonly beacon?: boolean;
+};
+
 /**
  * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
  * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
  */
-export const track = <T extends EventName>(event: T, properties: EventMap[T]): void => {
+export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
   const enriched = { ...properties, ...discoveryOf(event, properties) } as EventMap[T];
   if (posthogEnabled) {
-    window.posthog?.capture(event, { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment });
+    const payload = { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment };
+    if (options?.beacon) window.posthog?.capture(event, payload, { send_instantly: true, transport: "sendBeacon" });
+    else window.posthog?.capture(event, payload);
   }
   trackGoogleAnalytics(event, enriched);
 };

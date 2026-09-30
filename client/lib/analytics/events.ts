@@ -74,6 +74,12 @@ export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 
 export const HOME_PAGE_VERSION = "main_2026_09";
 
+/** 활성 체류시간을 재는 상세 화면. */
+export type DetailPageType = "product_detail" | "ingredient_detail";
+
+/** 활성 체류시간을 보낸 시점. */
+export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "pagehide" | "unmount";
+
 export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
 export type EventMap = {
@@ -150,6 +156,21 @@ export type EventMap = {
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
+  };
+  /**
+   * 상세 화면을 실제로 들여다본 시간. 탭이 보이고 창에 포커스가 있으며 최근 60초 안에 입력이 있을 때만 센다.
+   * $prev_pageview_duration 은 자리 비움과 숨은 탭까지 포함하므로 이 이벤트로 대신한다.
+   *
+   * active_seconds 는 직전 전송 뒤에 늘어난 만큼만 담아 합산해도 겹치지 않는다.
+   * elapsed_seconds 와 max_scroll_percentage 는 화면에 들어온 뒤로 누적한 값이다.
+   */
+  detail_active_time_recorded: {
+    page_type: DetailPageType;
+    entity_id: number;
+    active_seconds: number;
+    elapsed_seconds: number;
+    max_scroll_percentage: number;
+    flush_reason: ActiveTimeFlushReason;
   };
   /** status 는 404 와 500 을 가른다. code 만으로는 서버가 무엇을 돌려줬는지 알기 어렵다. */
   error_occurred: { error_code: string; status: number; surface: string };
