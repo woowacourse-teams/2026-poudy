@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@poudy/api/*": ["../common/*"]
+      "@poudy/api/*": ["../common/*"],
+      "zod": ["./node_modules/zod"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "**/*.mts"],
