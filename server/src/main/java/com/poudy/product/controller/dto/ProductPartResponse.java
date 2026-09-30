@@ -1,6 +1,5 @@
 package com.poudy.product.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPart;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,7 +8,7 @@ import java.util.List;
 
 public record ProductPartResponse(
     @NotNull @Schema(example = "473") Long id,
-    @JsonInclude(JsonInclude.Include.NON_NULL) @Schema(example = "아쿠아 세럼") String name,
+    @Schema(example = "아쿠아 세럼", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String name,
     @NotNull List<ProductIngredientResponse> ingredients,
     @NotNull List<SkinEffectGroupResponse> skinEffectGroups,
     @NotNull List<ExcludeGroupResponse> excludeGroups) {

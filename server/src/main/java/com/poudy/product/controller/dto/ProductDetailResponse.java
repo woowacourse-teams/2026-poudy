@@ -1,6 +1,5 @@
 package com.poudy.product.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
@@ -24,7 +23,7 @@ public record ProductDetailResponse(
     @NotNull @Min(0) @Max(3) @Schema(example = "3") Integer moistureLevel,
     @NotNull @Min(0) @Max(3) @Schema(example = "1") Integer oilLevel,
     @NotNull List<ProductPartSummaryResponse> productParts,
-    @JsonInclude(JsonInclude.Include.NON_NULL) ProductPartResponse selectedPart,
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) ProductPartResponse selectedPart,
     @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 
     public static ProductDetailResponse from(ProductDetail detail) {
