@@ -21,6 +21,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -28,8 +30,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @SpringBootTest(properties = {
         "spring.profiles.include=prod",
         "POUDY_DB_URL=${POUDY_TEST_DB_URL:jdbc:postgresql://localhost:5432/poudy_test}",
-        "POUDY_DB_USERNAME=${POUDY_TEST_DB_USERNAME:postgres}",
-        "POUDY_DB_PASSWORD=${POUDY_TEST_DB_PASSWORD:}",
         "POUDY_DB_STATEMENT_TIMEOUT_MS=300",
         "spring.datasource.hikari.maximum-pool-size=2",
         "spring.datasource.hikari.minimum-idle=0",
@@ -40,6 +40,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 @DirtiesContext
 @DisplayName("운영 DB 연결의 쿼리 실행 상한")
 class DatabaseStatementTimeoutTest {
+
+    @DynamicPropertySource
+    static void databaseCredentials(DynamicPropertyRegistry properties) {
+        properties.add("POUDY_DB_USERNAME", () -> System.getenv().getOrDefault("POUDY_DB_USERNAME", "postgres"));
+        properties.add("POUDY_DB_PASSWORD", () -> System.getenv().getOrDefault("POUDY_DB_PASSWORD", ""));
+    }
 
     @Autowired
     private HikariDataSource dataSource;

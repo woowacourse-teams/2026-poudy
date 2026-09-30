@@ -35,13 +35,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
         "spring.profiles.include=prod",
         "POUDY_DB_URL=${POUDY_TEST_DB_URL:jdbc:postgresql://localhost:5432/poudy_test}",
-        "POUDY_DB_USERNAME=${POUDY_TEST_DB_USERNAME:postgres}",
-        "POUDY_DB_PASSWORD=${POUDY_TEST_DB_PASSWORD:}",
         "POUDY_DB_STATEMENT_TIMEOUT_MS=1000",
         "spring.datasource.hikari.maximum-pool-size=2",
         "spring.datasource.hikari.minimum-idle=0",
@@ -54,6 +54,12 @@ import org.springframework.test.web.servlet.MockMvc;
 class DatabaseStatementTimeoutWorkloadTest {
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-30T06:07:00Z"), ZoneId.of("Asia/Seoul"));
+
+    @DynamicPropertySource
+    static void databaseCredentials(DynamicPropertyRegistry properties) {
+        properties.add("POUDY_DB_USERNAME", () -> System.getenv().getOrDefault("POUDY_DB_USERNAME", "postgres"));
+        properties.add("POUDY_DB_PASSWORD", () -> System.getenv().getOrDefault("POUDY_DB_PASSWORD", ""));
+    }
 
     @Autowired
     private JdbcTemplate jdbc;
