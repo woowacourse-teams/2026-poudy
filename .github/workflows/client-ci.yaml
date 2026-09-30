@@ -1,11 +1,12 @@
 name: Client CI
 
+# dev 로 가는 PR 은 클라이언트가 바뀔 때만, main 으로 가는 릴리스 PR 은 항상 검사한다.
+# 서버가 API 계약을 바꾸면 common/ 의 생성물이 달라져 클라이언트가 깨질 수 있는데, 이를
+# 서버 PR 마다 확인하지 않고 production 에 나가기 전 릴리스 PR 에서 한 번에 확인한다.
+# 워크플로 수준 paths 로는 대상 브랜치마다 조건을 달리할 수 없어, changes 가 판단한다.
 on:
   pull_request:
-    branches: [dev]
-    paths:
-      - "client/**"
-      - ".github/workflows/client-ci.yaml"
+    branches: [dev, main]
 
 permissions:
   contents: read
@@ -19,8 +20,31 @@ defaults:
     working-directory: client
 
 jobs:
+  # 클라이언트와 관련된 변경이 있는지만 판단한다. 이 잡은 항상 돈다.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - '.github/workflows/client-ci.yaml'
+
+  # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
   check:
     name: Client checks
+    needs: changes
+    if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
 
     steps:
