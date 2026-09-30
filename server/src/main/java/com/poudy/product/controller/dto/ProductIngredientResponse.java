@@ -12,8 +12,7 @@ public record ProductIngredientResponse(
     @NotNull @Schema(example = "글리세린") String koreanName,
     @NotNull @Schema(example = "Glycerin") String englishName,
     @NotNull @Schema(description = "배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제") List<FormulationRoleResponse> formulationRoles,
-    @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects,
-    @Schema(description = "공개된 함량. 공개하지 않은 성분은 비어 있다") DisclosedAmountResponse disclosedAmount) {
+    @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects) {
 
     public static List<ProductIngredientResponse> from(List<Ingredient> ingredients) {
         return ingredients.stream()
@@ -23,8 +22,7 @@ public record ProductIngredientResponse(
                     ingredient.koreanName(),
                     ingredient.englishName(),
                     FormulationRoleResponse.from(ingredient.formulationRoles()),
-                    SkinEffectResponse.from(ingredient.skinEffects()),
-                    null
+                    SkinEffectResponse.from(ingredient.skinEffects())
                 )
             )
             .toList();

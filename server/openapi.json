@@ -113,8 +113,8 @@
                 "example": {
                   "title": "Bad Request",
                   "status": 400,
-                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                  "code": "INVALID_QUERY_PARAMETER"
+                  "detail": "요청 본문 값이 올바르지 않습니다.",
+                  "code": "INVALID_REQUEST_BODY"
                 }
               }
             }
@@ -1359,11 +1359,23 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "example": {
-                  "title": "Not Found",
-                  "status": 404,
-                  "detail": "제품을 찾을 수 없습니다.",
-                  "code": "PRODUCT_NOT_FOUND"
+                "examples": {
+                  "PRODUCT_NOT_FOUND": {
+                    "value": {
+                      "title": "Not Found",
+                      "status": 404,
+                      "detail": "제품을 찾을 수 없습니다.",
+                      "code": "PRODUCT_NOT_FOUND"
+                    }
+                  },
+                  "PRODUCT_PART_NOT_FOUND": {
+                    "value": {
+                      "title": "Not Found",
+                      "status": 404,
+                      "detail": "제품 구성품을 찾을 수 없습니다.",
+                      "code": "PRODUCT_PART_NOT_FOUND"
+                    }
+                  }
                 }
               }
             }
@@ -1499,7 +1511,7 @@
               "type": "string",
               "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc",
               "maxLength": 500,
-              "minLength": 0
+              "minLength": 1
             },
             "example": "[튜브타입/단독기획] 닥터지 레드 블레미쉬 클리어 수딩크림 EX 70ml 튜브 기획 (+30ml+세럼10ml*2ea) 올리브영에서 다양한 뷰티 제품을 만나보세요!\nhttps://oy.run/WUJMmVgJuA6yGc"
           }
@@ -2592,23 +2604,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "examples": {
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                      "code": "INVALID_QUERY_PARAMETER"
-                    }
-                  },
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  }
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }
@@ -2668,23 +2668,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "examples": {
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                      "code": "INVALID_QUERY_PARAMETER"
-                    }
-                  },
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  }
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }
@@ -2806,23 +2794,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "examples": {
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                      "code": "INVALID_QUERY_PARAMETER"
-                    }
-                  },
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  }
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }
@@ -2882,23 +2858,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
-                "examples": {
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                      "code": "INVALID_QUERY_PARAMETER"
-                    }
-                  },
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  }
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
                 }
               }
             }
@@ -3707,31 +3671,6 @@
           "name"
         ]
       },
-      "DisclosedAmountResponse": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "공개 형태",
-            "example": "exact"
-          },
-          "value": {
-            "type": "number",
-            "description": "함량 값",
-            "example": 10500
-          },
-          "unit": {
-            "type": "string",
-            "description": "함량 단위",
-            "example": "ppm"
-          }
-        },
-        "required": [
-          "type",
-          "unit",
-          "value"
-        ]
-      },
       "ExcludeGroupResponse": {
         "type": "object",
         "properties": {
@@ -3908,10 +3847,6 @@
             "items": {
               "$ref": "#/components/schemas/SkinEffectResponse"
             }
-          },
-          "disclosedAmount": {
-            "$ref": "#/components/schemas/DisclosedAmountResponse",
-            "description": "공개된 함량. 공개하지 않은 성분은 비어 있다"
           }
         },
         "required": [
@@ -4149,7 +4084,7 @@
             "format": "int32",
             "description": "일치 구간의 UTF-16 종료 제외 인덱스",
             "example": 2,
-            "minimum": 0
+            "minimum": 1
           }
         },
         "required": [
@@ -4550,7 +4485,7 @@
             "format": "int32",
             "description": "일치 구간의 UTF-16 종료 제외 인덱스",
             "example": 2,
-            "minimum": 0
+            "minimum": 1
           }
         },
         "required": [

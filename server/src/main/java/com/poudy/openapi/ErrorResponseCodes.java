@@ -1,9 +1,9 @@
 package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
+import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class ErrorResponseCodes {
 
@@ -33,8 +33,8 @@ public final class ErrorResponseCodes {
     private ErrorResponseCodes() {
     }
 
-    public static List<ErrorCode> badRequest(String path) {
-        if (PRODUCT_REQUESTS_PATH.equals(path)) {
+    public static List<ErrorCode> badRequest(String path, HttpMethod method) {
+        if (PRODUCT_REQUESTS_PATH.equals(path) || "/api/search-keywords".equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (FEEDBACK_PATH.equals(path)) {
@@ -54,7 +54,9 @@ public final class ErrorResponseCodes {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
-            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+            return method == HttpMethod.GET
+                ? List.of(ErrorCode.INVALID_QUERY_PARAMETER)
+                : List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
         }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
@@ -74,25 +76,30 @@ public final class ErrorResponseCodes {
         return PENDING_IMAGES_PATH.equals(path);
     }
 
-    public static Optional<ErrorCode> notFound(String path) {
+    public static List<ErrorCode> notFound(String path) {
         if (!path.contains("{")) {
-            return Optional.empty();
+            return List.of();
         }
 
         if (path.startsWith("/api/admin/feedbacks/")) {
-            return Optional.of(ErrorCode.FEEDBACK_NOT_FOUND);
+            return List.of(ErrorCode.FEEDBACK_NOT_FOUND);
         }
         if (path.startsWith("/api/admin/product-requests/")) {
-            return Optional.of(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
+            return List.of(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
+        }
+
+        if ("/api/products/{productId}".equals(path)) {
+            return List.of(ErrorCode.PRODUCT_NOT_FOUND, ErrorCode.PRODUCT_PART_NOT_FOUND);
         }
 
         String[] segments = path.split("/");
 
         if (segments.length <= 2) {
-            return Optional.empty();
+            return List.of();
         }
 
-        return Optional.ofNullable(NOT_FOUND_CODES.get(segments[2]));
+        ErrorCode code = NOT_FOUND_CODES.get(segments[2]);
+        return code == null ? List.of() : List.of(code);
     }
 
     private static boolean isProductFilterPath(String path) {
