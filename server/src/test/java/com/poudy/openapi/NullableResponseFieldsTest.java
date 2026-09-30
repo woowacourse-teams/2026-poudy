@@ -15,19 +15,20 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
-class OptionalResponseFieldsTest {
+class NullableResponseFieldsTest {
 
     private final JsonMapper mapper = JsonMapper.builder().build();
 
     @Test
-    void omitsMissingObjectsButKeepsPresentObjects() {
-        assertThat(mapper.valueToTree(new RankingItem(1, "토너", null)).has("change")).isFalse();
+    void writesNullForMissingValuesAndKeepsPresentObjects() {
+        assertThat(mapper.valueToTree(new RankingItem(1, "토너", null)).path("change").isNull()).isTrue();
         assertThat(
             mapper.valueToTree(new RankingItem(1, "토너", new RankingChangeItem("UP", 1)))
                 .path("change").path("steps").asInt()
         ).isEqualTo(1);
 
-        assertThat(mapper.valueToTree(new SkinEffectItemResponse(null, List.of())).has("ingredientGroup")).isFalse();
+        assertThat(mapper.valueToTree(new SkinEffectItemResponse(null, List.of())).path("ingredientGroup").isNull())
+            .isTrue();
         assertThat(
             mapper.valueToTree(
                 new SkinEffectItemResponse(
@@ -38,20 +39,20 @@ class OptionalResponseFieldsTest {
                 .path("ingredientGroup").path("code").asString()
         ).isEqualTo("CERAMIDES");
 
-        assertThat(mapper.valueToTree(detail(null)).has("selectedPart")).isFalse();
+        assertThat(mapper.valueToTree(detail(null)).path("selectedPart").isNull()).isTrue();
         var part = mapper.valueToTree(detail(new ProductPartResponse(1L, null, List.of(), List.of(), List.of())))
             .path("selectedPart");
         assertThat(part.path("id").asLong()).isEqualTo(1L);
-        assertThat(part.has("name")).isFalse();
-        assertThat(mapper.valueToTree(new ProductPartSummaryResponse(1L, null, 0L)).has("name")).isFalse();
+        assertThat(part.path("name").isNull()).isTrue();
+        assertThat(mapper.valueToTree(new ProductPartSummaryResponse(1L, null, 0L)).path("name").isNull()).isTrue();
         assertThat(
             mapper.valueToTree(new IngredientGroupResponse("TEST", "성분군", null, "", List.of()))
-                .has("englishName")
-        ).isFalse();
+                .path("englishName").isNull()
+        ).isTrue();
         assertThat(
             mapper.valueToTree(new IngredientGroupMemberResponse(1L, "성분", null))
-                .has("englishName")
-        ).isFalse();
+                .path("englishName").isNull()
+        ).isTrue();
     }
 
     private ProductDetailResponse detail(ProductPartResponse part) {
