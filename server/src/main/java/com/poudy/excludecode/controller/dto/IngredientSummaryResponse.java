@@ -11,7 +11,11 @@ public record IngredientSummaryResponse(
     @NotNull @Schema(example = "Phenoxyethanol") String englishName) {
 
     public static IngredientSummaryResponse from(ExcludeCodeIngredient ingredient) {
-        return new IngredientSummaryResponse(ingredient.id(), ingredient.koreanName(), ingredient.englishName());
+        return new IngredientSummaryResponse(
+            ingredient.id(),
+            ingredient.koreanName(),
+            ingredient.englishName() == null ? "" : ingredient.englishName()
+        );
     }
 
     public static List<IngredientSummaryResponse> from(List<ExcludeCodeIngredient> ingredients) {

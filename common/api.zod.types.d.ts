@@ -171,20 +171,6 @@ export type CategoryPathResponse = {
   name: string;
   child: CategorySummaryResponse;
 }
-export type DisclosedAmountResponse = {
-  /**
-   * 공개 형태
-   */
-  type: string;
-  /**
-   * 함량 값
-   */
-  value: number;
-  /**
-   * 함량 단위
-   */
-  unit: string;
-}
 export type ExcludeGroupResponse = { name: string, contains: boolean }
 export type FormulationRoleResponse = {
   /**
@@ -244,7 +230,6 @@ export type ProductIngredientResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
    */
   skinEffects: Array<SkinEffectResponse>;
-  disclosedAmount?: DisclosedAmountResponse;
 }
 export type SkinEffectIngredientResponse = { id: number, koreanName: string }
 export type SkinEffectItemResponse = { ingredientGroup?: IngredientGroupSummaryResponse, ingredients: Array<SkinEffectIngredientResponse> }

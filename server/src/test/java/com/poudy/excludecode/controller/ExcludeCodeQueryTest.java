@@ -100,6 +100,17 @@ class ExcludeCodeQueryTest {
     }
 
     @Test
+    @Transactional
+    @DisplayName("영문명이 없는 성분은 빈 문자열로 반환한다")
+    void returnsEmptyEnglishNameWhenMissing() throws Exception {
+        jdbc.update("update ingredient set english_name = null where id = ?", 3551L);
+
+        mockMvc.perform(get("/api/exclude-codes"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[3].ingredients[7].englishName").value(""));
+    }
+
+    @Test
     @DisplayName("성분이 비어 있는 성분군은 없다")
     void findsNoEmptyExcludeCode() throws Exception {
         mockMvc.perform(get("/api/exclude-codes")).andExpect(status().isOk())

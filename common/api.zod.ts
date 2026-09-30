@@ -82,9 +82,6 @@ export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
 
-export type DisclosedAmountResponse = __TypedOpenapi.Schemas.DisclosedAmountResponse;
-export const DisclosedAmountResponse = z.object({ type: z.string(), value: z.number(), unit: z.string() });
-
 export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
 export const ExcludeGroupResponse = z.object({ name: z.string(), contains: z.boolean() });
 
@@ -104,7 +101,7 @@ export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredientResponse;
-export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), disclosedAmount: DisclosedAmountResponse.optional() });
+export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
 
 export type SkinEffectIngredientResponse = __TypedOpenapi.Schemas.SkinEffectIngredientResponse;
 export const SkinEffectIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string() });
@@ -122,7 +119,7 @@ export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.optional(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
-export const ProductSuggestionMatchResponse = z.object({ field: z.enum(["PRODUCT_NAME", "BRAND_NAME"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(0) });
+export const ProductSuggestionMatchResponse = z.object({ field: z.enum(["PRODUCT_NAME", "BRAND_NAME"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
 export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string(), brandName: z.string(), match: ProductSuggestionMatchResponse });
@@ -158,7 +155,7 @@ export type IngredientGroupSuggestionResponse = __TypedOpenapi.Schemas.Ingredien
 export const IngredientGroupSuggestionResponse = z.object({ code: z.string(), name: z.string(), ingredientIds: z.array(z.number().int()) });
 
 export type IngredientSuggestionMatchResponse = __TypedOpenapi.Schemas.IngredientSuggestionMatchResponse;
-export const IngredientSuggestionMatchResponse = z.object({ field: z.enum(["KOREAN_NAME", "ENGLISH_NAME", "ALIAS"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(0) });
+export const IngredientSuggestionMatchResponse = z.object({ field: z.enum(["KOREAN_NAME", "ENGLISH_NAME", "ALIAS"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type IngredientSuggestionResponse = __TypedOpenapi.Schemas.IngredientSuggestionResponse;
 export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse), match: IngredientSuggestionMatchResponse });

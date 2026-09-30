@@ -12,7 +12,7 @@ public record ProductSuggestionMatchResponse(
     @NotNull @Schema(description = "검색어가 일치한 제품 필드") ProductMatchField field,
     @NotNull @Schema(description = "검색어가 일치한 원문", example = "블랙 토너") String text,
     @NotNull @PositiveOrZero @Schema(description = "일치 구간의 UTF-16 시작 인덱스", example = "0") Integer startIndex,
-    @NotNull @Positive @Schema(description = "일치 구간의 UTF-16 종료 제외 인덱스", example = "2") Integer endIndexExclusive) {
+    @NotNull @Positive @Schema(description = "일치 구간의 UTF-16 종료 제외 인덱스", example = "2", minimum = "1") Integer endIndexExclusive) {
 
     public static ProductSuggestionMatchResponse from(ProductSuggestion matched) {
         MatchRange range = matched.range();
