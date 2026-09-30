@@ -1,7 +1,7 @@
 package com.poudy.openapi;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,23 +20,39 @@ class OpenApiContractTest {
     private MockMvc mockMvc;
 
     @Test
-    void documentsOptionalFieldsAndRemovesUnusedAmount() throws Exception {
+    void documentsNullableFieldsAsRequired() throws Exception {
         var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         for (String schema : new String[] {"ProductPartSummaryResponse", "ProductPartResponse"}) {
-            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", not(hasItem("name"))))
-                .andExpect(jsonPath("$.components.schemas." + schema + ".properties.name.type").value("string"));
-        }
-        for (String schema : new String[] {"IngredientGroupResponse", "IngredientGroupMemberResponse"}) {
-            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", not(hasItem("englishName"))))
+            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", hasItem("name")))
                 .andExpect(
-                    jsonPath("$.components.schemas." + schema + ".properties.englishName.type").value("string")
+                    jsonPath("$.components.schemas." + schema + ".properties.name.type")
+                        .value(contains("string", "null"))
                 );
         }
-        result.andExpect(jsonPath("$.components.schemas.ProductDetailResponse.required", not(hasItem("selectedPart"))))
-            .andExpect(
-                jsonPath("$.components.schemas.SkinEffectItemResponse.required", not(hasItem("ingredientGroup")))
-            )
-            .andExpect(jsonPath("$.components.schemas.RankingItem.required", not(hasItem("change"))))
+        for (String schema : new String[] {"IngredientGroupResponse", "IngredientGroupMemberResponse"}) {
+            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", hasItem("englishName")))
+                .andExpect(
+                    jsonPath("$.components.schemas." + schema + ".properties.englishName.type")
+                        .value(contains("string", "null"))
+                );
+        }
+        String[][] references = {
+                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"},
+                {"SkinEffectItemResponse", "ingredientGroup", "IngredientGroupSummaryResponse"},
+                {"RankingItem", "change", "RankingChangeItem"}
+        };
+        for (String[] reference : references) {
+            String property = "$.components.schemas." + reference[0] + ".properties." + reference[1];
+            result.andExpect(jsonPath("$.components.schemas." + reference[0] + ".required", hasItem(reference[1])))
+                .andExpect(jsonPath(property + ".anyOf[0].$ref").value("#/components/schemas/" + reference[2]))
+                .andExpect(jsonPath(property + ".anyOf[1].type").value("null"));
+        }
+    }
+
+    @Test
+    void removesUnusedAmount() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
             .andExpect(
                 jsonPath("$.components.schemas.ProductIngredientResponse.properties.disclosedAmount").doesNotExist()
             )

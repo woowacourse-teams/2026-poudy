@@ -3438,10 +3438,18 @@
             "example": "토너"
           },
           "change": {
-            "$ref": "#/components/schemas/RankingChangeItem"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RankingChangeItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
+          "change",
           "keyword",
           "rank"
         ]
@@ -3797,7 +3805,14 @@
             }
           },
           "selectedPart": {
-            "$ref": "#/components/schemas/ProductPartResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductPartResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "updatedAt": {
             "type": "string",
@@ -3814,6 +3829,7 @@
           "name",
           "oilLevel",
           "productParts",
+          "selectedPart",
           "updatedAt",
           "variants"
         ]
@@ -3866,7 +3882,10 @@
             "example": 473
           },
           "name": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "아쿠아 세럼"
           },
           "ingredients": {
@@ -3892,6 +3911,7 @@
           "excludeGroups",
           "id",
           "ingredients",
+          "name",
           "skinEffectGroups"
         ]
       },
@@ -3904,7 +3924,10 @@
             "example": 473
           },
           "name": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "아쿠아 세럼"
           },
           "cautionCount": {
@@ -3915,7 +3938,8 @@
         },
         "required": [
           "cautionCount",
-          "id"
+          "id",
+          "name"
         ]
       },
       "ProductVariantResponse": {
@@ -4019,7 +4043,14 @@
         "type": "object",
         "properties": {
           "ingredientGroup": {
-            "$ref": "#/components/schemas/IngredientGroupSummaryResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IngredientGroupSummaryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "ingredients": {
             "type": "array",
@@ -4029,6 +4060,7 @@
           }
         },
         "required": [
+          "ingredientGroup",
           "ingredients"
         ]
       },
@@ -4547,11 +4579,15 @@
             "example": "세라마이드엔피"
           },
           "englishName": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "Ceramide NP"
           }
         },
         "required": [
+          "englishName",
           "id",
           "koreanName"
         ]
@@ -4568,7 +4604,10 @@
             "example": "세라마이드"
           },
           "englishName": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "Ceramides"
           },
           "description": {
@@ -4585,6 +4624,7 @@
         "required": [
           "code",
           "description",
+          "englishName",
           "ingredients",
           "name"
         ]

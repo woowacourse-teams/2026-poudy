@@ -123,7 +123,7 @@ export type SkinTypesResponse = {
   items: Array<SkinTypeResponse>;
 }
 export type RankingChangeItem = { movement: string, steps: number }
-export type RankingItem = { rank: number, keyword: string, change?: RankingChangeItem }
+export type RankingItem = { rank: number, keyword: string, change: (RankingChangeItem | null) }
 export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
@@ -206,7 +206,7 @@ export type ProductVariantResponse = {
    */
   status: string;
 }
-export type ProductPartSummaryResponse = { id: number, name?: string, cautionCount: number }
+export type ProductPartSummaryResponse = { id: number, name: (string | null), cautionCount: number }
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -232,7 +232,7 @@ export type ProductIngredientResponse = {
   skinEffects: Array<SkinEffectResponse>;
 }
 export type SkinEffectIngredientResponse = { id: number, koreanName: string }
-export type SkinEffectItemResponse = { ingredientGroup?: IngredientGroupSummaryResponse, ingredients: Array<SkinEffectIngredientResponse> }
+export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
 export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
@@ -246,8 +246,8 @@ export type SkinEffectGroupResponse = {
   ingredientIds: Array<number>;
   items: Array<SkinEffectItemResponse>;
 }
-export type ProductPartResponse = { id: number, name?: string, ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
-export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart?: ProductPartResponse, updatedAt: string }
+export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
+export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
 export type ProductSuggestionMatchResponse = {
   /**
    * 검색어가 일치한 제품 필드
@@ -418,8 +418,8 @@ export type IngredientListResponse = {
   items: Array<IngredientSuggestionResponse>;
   groups: Array<IngredientGroupSuggestionResponse>;
 }
-export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName?: string }
-export type IngredientGroupResponse = { code: string, name: string, englishName?: string, description: string, ingredients: Array<IngredientGroupMemberResponse> }
+export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName: (string | null) }
+export type IngredientGroupResponse = { code: string, name: string, englishName: (string | null), description: string, ingredients: Array<IngredientGroupMemberResponse> }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
   /**
