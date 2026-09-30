@@ -230,7 +230,9 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.variants[0].price").value(15000L))
             .andExpect(jsonPath("$.variants[1].price").value(23000L))
             .andExpect(jsonPath("$.productParts.length()").value(1))
-            .andExpect(jsonPath("$.productParts[0].name").value(nullValue()))
+            .andExpect(jsonPath("$.productParts[0].name").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.selectedPart.name").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].disclosedAmount").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(20, 9)))
             .andExpect(
                 jsonPath("$.selectedPart.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING"))
