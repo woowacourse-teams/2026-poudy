@@ -1,3 +1,5 @@
+import type { ZodType } from "zod";
+
 /**
  * 브라우저는 공개 Nginx를, 서버 컴포넌트와 런타임 sitemap은 프론트 EC2의
  * 로컬 전용 Nginx listener를 사용한다. 서버 전용 값은 standalone 프로세스가
@@ -51,7 +53,39 @@ export class ApiError extends Error {
  */
 type CacheSeconds = number;
 
-export const apiGet = async <T>(path: string, query?: URLSearchParams, revalidate?: CacheSeconds): Promise<T> => {
+type GetOptions = {
+  readonly query?: URLSearchParams;
+  readonly revalidate?: CacheSeconds;
+};
+
+export const INVALID_RESPONSE = "INVALID_RESPONSE";
+
+/**
+ * 응답이 API 계약과 맞는지 생성된 Zod 스키마로 확인한다. 타입은 빌드가 끝나면 사라지므로,
+ * 서버가 계약과 다른 모양을 내려 주면 여기서 확인하지 않는 한 아무도 알 수 없다.
+ *
+ * production 이 아니면 어긋난 응답을 실패로 처리해, staging 에서 먼저 드러나게 한다.
+ * production 에서는 화면을 막지 않고 받은 값을 그대로 쓰되, 어긋났다는 사실은 남긴다.
+ */
+const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: string): Promise<T> => {
+  const body: unknown = await response.json();
+  const result = schema.safeParse(body);
+  if (result.success) return result.data;
+
+  // 어느 필드가 어긋났는지만 남긴다. 값은 검색어 같은 입력을 담을 수 있어 남기지 않는다.
+  const fields = result.error.issues.map((issue) => issue.path.join(".") || "(root)");
+  console.error(JSON.stringify({ kind: "invalid_response", path, fields }));
+  reportError(INVALID_RESPONSE, response.status, path);
+
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT === "production") return body as T;
+  throw new ApiError(response.status, INVALID_RESPONSE, `응답이 API 계약과 다릅니다: ${fields.join(", ")}`);
+};
+
+export const apiGet = async <T>(
+  path: string,
+  schema: ZodType<T>,
+  { query, revalidate }: GetOptions = {},
+): Promise<T> => {
   const response = await fetch(apiUrl(path, query), { next: { revalidate } }).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);
@@ -66,7 +100,7 @@ export const apiGet = async <T>(path: string, query?: URLSearchParams, revalidat
     throw new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
   }
 
-  return response.json() as Promise<T>;
+  return checkResponse(schema, response, path);
 };
 
 /**
@@ -110,12 +144,12 @@ export const apiPost = async (path: string, body?: unknown): Promise<void> => {
  * 파일을 보내고 결과를 받는 요청. Content-Type 을 직접 정하지 않는다.
  * FormData 를 넘기면 브라우저가 multipart 경계 문자열까지 붙여 준다.
  */
-export const apiPostForm = async <T>(path: string, form: FormData): Promise<T> => {
+export const apiPostForm = async <T>(path: string, schema: ZodType<T>, form: FormData): Promise<T> => {
   const response = await fetch(apiUrl(path), { method: "POST", body: form }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });
 
   if (!response.ok) throw await toApiError(response, path);
 
-  return response.json() as Promise<T>;
+  return checkResponse(schema, response, path);
 };
