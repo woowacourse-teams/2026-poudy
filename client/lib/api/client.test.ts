@@ -3,6 +3,9 @@ import { z } from "zod";
 
 import { apiGet, apiPost, apiUrl, INVALID_RESPONSE } from "./client";
 
+// 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
@@ -110,5 +113,26 @@ describe("응답 검증", () => {
       path: "/api/items/1",
       fields: ["name"],
     });
+  });
+
+  it("브라우저에서는 계약과 다른 응답을 PostHog 예외로도 보내고, 경로의 ID 와 목록 순서는 지운다", async () => {
+    const List = z.object({ items: z.array(Item) });
+    respondWith({
+      items: [
+        { id: 1, name: null },
+        { id: 2, name: null },
+      ],
+    });
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const captureException = vi.fn();
+    vi.stubGlobal("window", { location: { origin: "https://browser.example" }, posthog: { captureException } });
+
+    await apiGet("/api/brands/7/items", List);
+
+    expect(captureException).toHaveBeenCalledTimes(1);
+    const [error, properties] = captureException.mock.calls[0];
+    expect((error as Error).message).toBe(`${INVALID_RESPONSE} /api/brands/:id/items: items.*.name`);
+    expect(properties).toEqual({ surface: "/api/brands/:id/items", fields: ["items.*.name"] });
   });
 });
