@@ -25,12 +25,13 @@ export const apiUrl = (path: string, query?: URLSearchParams) => {
  * surface 에는 경로 그대로가 아니라 ID 를 지운 모양을 넣는다. 제품·성분 ID 까지 남기면
  * 값이 잘게 갈라져 어느 API 가 무너졌는지 한눈에 보이지 않는다.
  */
+const surfaceOf = (path: string): string => path.replace(/\/\d+(?=\/|$)/g, "/:id");
+
 const reportError = (code: string, status: number, path: string): void => {
   if (typeof window === "undefined") return;
 
-  const surface = path.replace(/\/\d+(?=\/|$)/g, "/:id");
   void import("@/lib/analytics/track").then(({ track }) => {
-    track("error_occurred", { error_code: code, status, surface });
+    track("error_occurred", { error_code: code, status, surface: surfaceOf(path) });
   });
 };
 
@@ -61,6 +62,21 @@ type GetOptions = {
 export const INVALID_RESPONSE = "INVALID_RESPONSE";
 
 /**
+ * 계약과 다른 응답을 PostHog 예외로도 보낸다. 예외 목록에서 같은 불일치를 한데 묶어 보고,
+ * 그 세션의 리플레이로 어느 화면에서 났는지 확인할 수 있다. 메시지가 같아야 한 묶음으로
+ * 모이므로 경로의 ID 는 지운다. 서버에는 브라우저 SDK 가 없어 로그만 남는다.
+ */
+const captureInvalidResponse = (path: string, fields: readonly string[]): void => {
+  if (typeof window === "undefined") return;
+
+  const surface = surfaceOf(path);
+  window.posthog?.captureException?.(new Error(`${INVALID_RESPONSE} ${surface}: ${fields.join(", ")}`), {
+    surface,
+    fields,
+  });
+};
+
+/**
  * 응답이 API 계약과 맞는지 생성된 Zod 스키마로 확인한다. 타입은 빌드가 끝나면 사라지므로,
  * 서버가 계약과 다른 모양을 내려 주면 여기서 확인하지 않는 한 아무도 알 수 없다.
  *
@@ -73,9 +89,17 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
   if (result.success) return result.data;
 
   // 어느 필드가 어긋났는지만 남긴다. 값은 검색어 같은 입력을 담을 수 있어 남기지 않는다.
-  const fields = result.error.issues.map((issue) => issue.path.join(".") || "(root)");
+  // 목록의 몇 번째 항목인지는 지워, 같은 필드가 항목 수만큼 되풀이되지 않게 한다.
+  const fields = [
+    ...new Set(
+      result.error.issues.map(
+        (issue) => issue.path.map((key) => (typeof key === "number" ? "*" : String(key))).join(".") || "(root)",
+      ),
+    ),
+  ];
   console.error(JSON.stringify({ kind: "invalid_response", path, fields }));
   reportError(INVALID_RESPONSE, response.status, path);
+  captureInvalidResponse(path, fields);
 
   if (process.env.NEXT_PUBLIC_ENVIRONMENT === "production") return body as T;
   throw new ApiError(response.status, INVALID_RESPONSE, `응답이 API 계약과 다릅니다: ${fields.join(", ")}`);
