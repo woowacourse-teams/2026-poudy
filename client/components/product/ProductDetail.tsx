@@ -7,6 +7,7 @@ import { IngredientList } from "./IngredientList";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
 
+import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
@@ -36,6 +37,7 @@ export function ProductDetail({
         properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
       />
       <ProductViewRecorder productId={product.id} />
+      <TrackActiveTime pageType="product_detail" entityId={product.id} />
 
       <main className="flex-1 px-4">
         <div className="flex flex-col gap-4 pt-4 pb-3">
