@@ -112,6 +112,14 @@ import type { ProductResponse } from "@poudy/api/api.zod";
 
 `@poudy/api/*`는 저장소 루트의 `common/`을 가리키는 경로 별칭입니다.
 
+같은 파일에는 응답 타입과 이름이 같은 Zod 스키마도 들어 있습니다. API를 호출할 때는 이 스키마를 `apiGet`, `apiPostForm`에 넘겨 응답을 런타임에 검증합니다. 기준과 이유는 [AGENTS.md](AGENTS.md)의 「TypeScript 기준」을 참고하세요.
+
+```ts
+import { BrandOverviewResponse } from "@poudy/api/api.zod";
+
+apiGet("/api/brands", BrandOverviewResponse);
+```
+
 API 타입 생성 방법은 [Server README](../server/README.md#api-타입-생성)를 참고하세요.
 
 ## 디렉터리 구조

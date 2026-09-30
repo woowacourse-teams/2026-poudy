@@ -85,9 +85,14 @@ jobs:
       #
       # 미리 만드는 화면은 빌드하며 API 를 부르므로 주소를 준다. 목으로는 이 요청을
       # 받을 수 없어, 목을 켠 빌드를 재면 데이터가 빈 화면을 재게 된다.
+      #
+      # Vercel 명령은 저장소 루트에서 실행한다. 공유 API 스키마(common/)를 client 가 불러오므로
+      # 빌드가 client/ 밖을 읽어야 한다. Vercel 프로젝트의 Root Directory 를 client 로 두고
+      # 루트에서 실행해야, 산출물 경로가 client/client 처럼 겹치지 않는다.
       - name: Build preview
         id: build
         continue-on-error: true
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -111,6 +116,7 @@ jobs:
         id: preview
         if: steps.build.outcome == 'success'
         continue-on-error: true
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

@@ -48,6 +48,8 @@ describe("ProductList 브랜드 시트", () => {
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
+          categories: [],
+          skinTypes: [],
         });
       }),
     );
@@ -79,7 +81,13 @@ describe("ProductList 브랜드 시트", () => {
           items: [],
           pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
           brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
-          filterOptions: { brands: [{ id: 1, name: "라운드랩" }], categories: [], skinTypes: [] },
+          categories: [],
+          skinTypes: [],
+          filterOptions: {
+            brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
+            categories: [],
+            skinTypes: [],
+          },
         }),
       ),
     );
@@ -99,6 +107,8 @@ describe("ProductList 브랜드 시트", () => {
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
+          categories: [],
+          skinTypes: [],
         }),
       ),
     );
@@ -126,6 +136,8 @@ describe("ProductList 브랜드 시트", () => {
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
+          categories: [],
+          skinTypes: [],
         }),
       ),
     );
@@ -150,6 +162,8 @@ describe("ProductList 브랜드 시트", () => {
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
           brands: [],
+          categories: [],
+          skinTypes: [],
         }),
       ),
     );

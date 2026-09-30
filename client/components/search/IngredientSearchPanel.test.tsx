@@ -166,7 +166,15 @@ describe("IngredientSearchPanel", () => {
       server.use(
         http.get("*/api/ingredients/suggestions", () =>
           HttpResponse.json({
-            items: [{ id: 6, koreanName: "판테놀", englishName: "Panthenol", skinEffects: [] }],
+            items: [
+              {
+                id: 6,
+                koreanName: "판테놀",
+                englishName: "Panthenol",
+                skinEffects: [],
+                match: { field: "KOREAN_NAME", text: "판테놀", startIndex: 0, endIndexExclusive: 3 },
+              },
+            ],
             groups: [pantheonGroup],
           }),
         ),
@@ -174,10 +182,11 @@ describe("IngredientSearchPanel", () => {
           HttpResponse.json({
             code: "PANTHENOLS",
             name: "판테놀 계열",
+            englishName: "Panthenols",
             description: "설명",
             ingredients: [
-              { id: 6, koreanName: "판테놀" },
-              { id: 7, koreanName: "덱스판테놀" },
+              { id: 6, koreanName: "판테놀", englishName: "Panthenol" },
+              { id: 7, koreanName: "덱스판테놀", englishName: "Dexpanthenol" },
             ],
           }),
         ),

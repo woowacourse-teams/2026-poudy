@@ -10,7 +10,11 @@ import { STALE_MS } from "@/lib/storage/list-cache";
 import { clearProductPages } from "@/lib/storage/product-pages-cache";
 import { server } from "@/mocks/server";
 
-const options = (id: number) => ({ brands: [{ id, name: `브랜드 ${id}` }], categories: [], skinTypes: [] });
+const options = (id: number) => ({
+  brands: [{ id, name: `브랜드 ${id}`, englishName: `Brand ${id}`, imageUrl: "" }],
+  categories: [],
+  skinTypes: [],
+});
 
 beforeEach(() => clearProductPages());
 

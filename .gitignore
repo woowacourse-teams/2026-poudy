@@ -13,6 +13,10 @@
 ### 패키지 매니저 ###
 .pnpm-store/
 
+### 배포 도구 ###
+# Vercel CLI 를 저장소 루트에서 실행하면 설정과 산출물이 여기에 생긴다.
+.vercel
+
 ### OS ###
 .DS_Store
 Thumbs.db
