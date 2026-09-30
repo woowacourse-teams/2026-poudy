@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -77,6 +78,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />
       </Suspense>
+      <TrackActiveTime pageType="ingredient_detail" entityId={ingredient.id} />
 
       {/*
         바탕은 화면 여백인 16px 만 둔다.

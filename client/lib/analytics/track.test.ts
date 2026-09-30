@@ -85,6 +85,32 @@ describe("track", () => {
     expect(capture).not.toHaveBeenCalled();
   });
 
+  it("beacon 을 켜면 모아 두지 않고 비콘으로 바로 보낸다", async () => {
+    const { track } = await load("production", "phc_test");
+
+    track(
+      "detail_active_time_recorded",
+      {
+        page_type: "product_detail",
+        entity_id: 42,
+        active_seconds: 8,
+        elapsed_seconds: 10,
+        max_scroll_percentage: 60,
+        flush_reason: "pagehide",
+      },
+      { beacon: true },
+    );
+
+    expect(capture).toHaveBeenCalledWith(
+      "detail_active_time_recorded",
+      expect.objectContaining({ active_seconds: 8 }),
+      {
+        send_instantly: true,
+        transport: "sendBeacon",
+      },
+    );
+  });
+
   it("PostHog 키와 관계없이 GA4 전송을 독립적으로 호출한다", async () => {
     const { track } = await load("production");
 

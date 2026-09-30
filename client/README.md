@@ -221,6 +221,13 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 - 목록과 조건 조작 — `product_list_viewed`, `filter_applied`, `filter_reset`, `sort_applied`,
   `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`
 - 제품 진단 — `product_unsaved`, `ingredient_viewed`, `ingredient_condition_toggled`, `error_occurred`, 세션 녹화
+- 상세 탐색 시간 — `detail_active_time_recorded`
+
+`detail_active_time_recorded`는 제품 상세와 성분 상세에서 사용자가 실제로 화면을 본 시간을 기록합니다.
+탭이 보이고 창에 포커스가 있으며 마지막 입력 후 60초가 지나지 않은 동안에만 시간을 누적합니다.
+`$prev_pageview_duration`은 숨은 탭과 자리를 비운 시간까지 포함하므로 활성 체류시간 지표로 쓰지 않습니다.
+30초마다, 그리고 탭이 가려지거나 경로가 바뀌거나 화면을 떠날 때 직전 전송 이후에 늘어난 시간만
+`active_seconds`로 보냅니다. 따라서 여러 이벤트의 `active_seconds`를 더해도 같은 시간이 두 번 집계되지 않습니다.
 
 큐레이션 캐러셀은 `home_section_viewed.section = curation`으로 실제 섹션 노출을 기록하고,
 `curation_slide_viewed`로 가운데 카드가 바뀐 시점과 `transition = manual | autoplay`를 남깁니다.
