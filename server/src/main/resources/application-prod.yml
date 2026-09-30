@@ -5,6 +5,14 @@ spring:
     url: ${POUDY_DB_URL}
     username: ${POUDY_DB_USERNAME}
     password: ${POUDY_DB_PASSWORD}
+    hikari:
+      # API·배치 연결의 SQL 실행 상한. 정상 실행 시간을 측정한 밀리초 값을 환경별로 제공한다.
+      connection-init-sql: "SET statement_timeout = '${POUDY_DB_STATEMENT_TIMEOUT_MS}'"
+  # Flyway는 API·배치 풀의 짧은 상한을 상속하지 않는 별도 연결을 사용한다.
+  flyway:
+    url: ${POUDY_DB_URL}
+    user: ${POUDY_DB_USERNAME}
+    password: ${POUDY_DB_PASSWORD}
 
 poudy:
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.

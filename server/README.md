@@ -54,6 +54,24 @@ createdb -T template0 -E UTF8 --locale=ko_KR.UTF-8 poudy_test
 OS 사용자명이고 비밀번호는 비어 있습니다. 테스트 DB 주소는 `POUDY_TEST_DB_URL` 로 바꿉니다.
 테스트, `verify.sh`, `pre-push` 훅은 PostgreSQL 이 떠 있어야 통과합니다.
 
+### 운영·스테이징 쿼리 실행 상한
+
+`prod` 프로필은 `POUDY_DB_STATEMENT_TIMEOUT_MS`를 필수로 받습니다. 운영·스테이징 각각
+배포 전에 `/etc/poudy/backend.env`에 설정합니다. CodeDeploy는 이 파일을 자동 갱신하지 않습니다.
+
+```dotenv
+POUDY_DB_STATEMENT_TIMEOUT_MS=1000
+```
+
+- API·배치의 SQL 한 건에 실행·잠금 대기 상한을 적용합니다. Flyway는 별도 연결을 사용합니다.
+- 설정 변경은 새 연결부터 반영되므로 배포 또는 재시작이 필요합니다.
+- 적용 후 실제 앱 연결의 `SHOW statement_timeout`과 정상 요청·배치, 오류율을 확인합니다.
+  관리자 psql 연결의 설정값은 앱 연결의 적용값과 다를 수 있습니다.
+- 원복은 이전 값으로 되돌린 뒤 재시작합니다. 임시로 해제하려면 `0`을 설정합니다.
+  코드 버전을 원복하면 외부 `config/application-prod.yml`도 해당 버전에 맞춰 복원합니다.
+
+1초 선정 근거와 검증 결과는 [#584 코멘트](https://github.com/woowacourse-teams/2026-poudy/issues/584#issuecomment-5904967372)에 기록했습니다.
+
 ## 실행
 
 ```bash
