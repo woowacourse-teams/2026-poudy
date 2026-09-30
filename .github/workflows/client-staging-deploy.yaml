@@ -1,11 +1,12 @@
 name: Client Staging Deploy
 
+# 서버만 바뀐 병합에서는 배포하지 않는다. common/ 의 생성물이 바뀌어도 클라이언트 코드가
+# 그대로라면 다시 올리지 않고, 계약 변경에 따른 클라이언트 확인은 릴리스 PR 의 Client CI 가 맡는다.
 on:
   push:
     branches: [dev]
     paths:
       - "client/**"
-      - "common/**"
       - ".github/workflows/client-staging-deploy.yaml"
 
 permissions:
