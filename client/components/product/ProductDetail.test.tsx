@@ -402,7 +402,7 @@ describe("성분군 묶음", () => {
                 { id: 3, koreanName: "글리세린" },
               ],
             },
-            { ingredients: [{ id: 6, koreanName: "판테놀" }] },
+            { ingredientGroup: null, ingredients: [{ id: 6, koreanName: "판테놀" }] },
           ],
         },
       ],
@@ -496,7 +496,7 @@ describe("구성품 탭", () => {
   });
 
   it("고른 구성품이 없으면 성분 구역을 그리지 않는다", () => {
-    render(<ProductDetail product={{ ...untaggedProductDetail, productParts: [], selectedPart: undefined }} />);
+    render(<ProductDetail product={{ ...untaggedProductDetail, productParts: [], selectedPart: null }} />);
 
     expect(screen.queryByRole("heading", { name: "성분 정보" })).not.toBeInTheDocument();
     expect(screen.getByText("상품 정보 출처 안내")).toBeInTheDocument();

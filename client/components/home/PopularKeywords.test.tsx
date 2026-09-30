@@ -17,10 +17,10 @@ vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
  * 마지막 순위가 지나간 줄로 함께 있으므로, 펼쳐야만 보이는 말을 가운데에 하나 둔다.
  */
 const items: readonly RankingItem[] = [
-  { rank: 1, keyword: "나이아신아마이드" },
-  { rank: 2, keyword: "어성초" },
-  { rank: 3, keyword: "레티놀" },
-  { rank: 4, keyword: "세라마이드" },
+  { rank: 1, keyword: "나이아신아마이드", change: null },
+  { rank: 2, keyword: "어성초", change: null },
+  { rank: 3, keyword: "레티놀", change: null },
+  { rank: 4, keyword: "세라마이드", change: null },
 ];
 
 /** 접힌 줄에는 없고 펼친 목록에만 있는 말. */

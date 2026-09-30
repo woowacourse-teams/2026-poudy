@@ -274,6 +274,7 @@ export const ingredientGroups: IngredientGroupResponse[] = [
   {
     code: "CERAMIDES",
     name: "세라마이드",
+    englishName: "Ceramides",
     description: "피부 장벽을 이루는 지질 성분입니다.",
     ingredients: [
       { id: 2, koreanName: "부틸렌글라이콜", englishName: "Butylene Glycol" },
@@ -326,7 +327,8 @@ export const excludeCodes: ExcludeCodeResponse[] = [
 
 /** 성분군으로 묶이지 않은 성분을 하나씩 담는다. */
 const singleItems = (ingredients: ReadonlyArray<readonly [number, string]>) =>
-  ingredients.map(([id, koreanName]) => ({ ingredients: [{ id, koreanName }] }));
+  // 성분군에 묶이지 않은 성분 하나짜리 항목이다. 서버는 이때 ingredientGroup 을 null 로 보낸다.
+  ingredients.map(([id, koreanName]) => ({ ingredientGroup: null, ingredients: [{ id, koreanName }] }));
 
 const 보습 = { id: "1", code: "HYDRATION_RELATED", name: "보습" };
 const 진정 = { id: "2", code: "SOOTHING_RELATED", name: "진정" };
@@ -349,9 +351,10 @@ export const untaggedProductDetail: ProductDetailResponse = {
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
   oilLevel: 2,
-  productParts: [{ id: 6, cautionCount: 1 }],
+  productParts: [{ id: 6, name: null, cautionCount: 1 }],
   selectedPart: {
     id: 6,
+    name: null,
     skinEffectGroups: [],
     ingredients: Array.from({ length: 24 }, (_, index) => ({
       id: 1001 + index,
@@ -384,9 +387,10 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     moistureLevel: 3,
     oilLevel: 1,
-    productParts: [{ id: 1, cautionCount: 0 }],
+    productParts: [{ id: 1, name: null, cautionCount: 0 }],
     selectedPart: {
       id: 1,
+      name: null,
       skinEffectGroups: [
         {
           id: "1",
