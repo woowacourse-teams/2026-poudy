@@ -2,7 +2,9 @@
 
 ## 배포 실행 방식
 
-MVP 운영 환경은 Docker 없이 EC2 호스트 프로세스로 실행합니다.
+Production MVP는 Docker 없이 EC2 호스트 프로세스로 실행합니다. Staging Backend는 별도
+CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업을 진행 중이며, 이 전환이
+실제 staging health 검증을 통과하기 전까지 현재 적용 상태는 기존 호스트 JAR입니다.
 
 - 프론트엔드: Nginx `:443` → Next.js standalone `127.0.0.1:3000`
 - HTTP `:80` → HTTPS `:443` 리다이렉트

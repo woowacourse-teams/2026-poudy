@@ -59,10 +59,11 @@ staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBu
 - Build output artifact: `BuildArtifact`
 - Deploy input artifact: `BuildArtifact`
 
-`buildspec-staging-backend.yml`은 백엔드 JAR, systemd unit, 백엔드 `appspec.yml`,
-CodeDeploy hook을 포함하는 단일 배포 패키지를 생성합니다. CodeDeploy는 buildspec을 사용하지 않으며,
-패키지 루트의 `appspec.yml`은 기존 `deploy/codedeploy/backend/appspec.yml`을 그대로
-사용합니다.
+`buildspec-staging-backend.yml`은 staging 백엔드 JAR로 ARM64 Docker image를 빌드한 뒤,
+압축 image archive, systemd unit, staging 전용 `appspec.yml`과 CodeDeploy hook을 포함하는
+단일 배포 패키지를 생성합니다. 기존 Pipeline과 S3 artifact 경로는 유지합니다. CodeDeploy는
+buildspec을 사용하지 않으며 패키지 루트 `appspec.yml`이 컨테이너 적용 hook을 선택합니다.
+이 변경은 staging 백엔드에만 적용하고 production은 기존 JAR 배포를 유지합니다.
 
 ## Staging 운영 상태
 
@@ -93,6 +94,11 @@ staging도 `/etc/poudy/backend.env`의 `POUDY_DB_*`로 별도 PostgreSQL DB에 �
 CodeDeploy `BeforeInstall`은 서비스 중지 전에 DB 연결,
 스키마·검색 객체·카탈로그를 읽기 전용으로 검증합니다. 빈 DB를 자동 구성하지 않습니다.
 검증을 통과하면 기존 JSON 동기화 timer를 끄고 배포를 계속합니다.
+
+컨테이너 배포에서도 이 사전 검증과 timer 정리를 유지합니다. 새 image를 로드하고 참조가
+확인된 다음 기존 백엔드 서비스를 정지하며, 컨테이너는 host networking으로 기존 `:8080`
+API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성공하기 전까지는 전환
+완료로 간주하지 않습니다.
 
 운영과 staging은 별도 DB를 사용합니다. 피드백 S3 pending prefix도 운영은
 `poudy/feedback/pending/`, staging은 `poudy/staging/feedback/pending/`으로 구분합니다.
