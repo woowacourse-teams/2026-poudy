@@ -6,13 +6,15 @@ phases:
       java: corretto21
   pre_build:
     commands:
-      # 백엔드 JAR는 JVM 바이트코드이므로 x86_64 CodeBuild에서도 ARM64 EC2에 배포할 수 있습니다.
-      - rm -rf "${CODEBUILD_SRC_DIR}/.artifacts"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
+      - command -v docker
+      - docker info >/dev/null
+      - rm -rf "${CODEBUILD_SRC_DIR}/.artifacts" "${CODEBUILD_SRC_DIR}/.docker-context"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/systemd" "${CODEBUILD_SRC_DIR}/.docker-context/backend"
   build:
     commands:
       - cd "${CODEBUILD_SRC_DIR}/server" && ./gradlew bootJar --no-daemon
       - |
+        set -Eeuo pipefail
         mapfile -t backend_jars < <(
           find "${CODEBUILD_SRC_DIR}/server/build/libs" \
             -maxdepth 1 \
@@ -22,17 +24,29 @@ phases:
             -print
         )
         test "${#backend_jars[@]}" -eq 1
-        cp "${backend_jars[0]}" "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
-      - cp "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/appspec.yml" "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
-      - cp -R "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/scripts/." "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
-      - cp "${CODEBUILD_SRC_DIR}/deploy/systemd/poudy-backend.service" "${CODEBUILD_SRC_DIR}/.artifacts/systemd/"
-      - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"*.sh
-      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
+
+        context="${CODEBUILD_SRC_DIR}/.docker-context/backend"
+        image_tag="poudy-backend:${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+        cp "${backend_jars[0]}" "${context}/app.jar"
+        cp "${CODEBUILD_SRC_DIR}/server/src/main/resources/application-prod.yml" "${context}/application-prod.yml"
+        cp "${CODEBUILD_SRC_DIR}/deploy/docker/backend/Dockerfile" "${context}/Dockerfile"
+
+        docker build --pull --platform linux/arm64 --tag "${image_tag}" "${context}"
+        docker save "${image_tag}" | gzip -1 > "${CODEBUILD_SRC_DIR}/.artifacts/app/image.tar.gz"
+        printf '%s\n' "${image_tag}" > "${CODEBUILD_SRC_DIR}/.artifacts/app/image-reference.txt"
+
+        cp "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend-container/appspec.yml" "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+        cp -R "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend-container/scripts/." "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
+        cp "${CODEBUILD_SRC_DIR}/deploy/codedeploy/backend/scripts/validate-database.sh" "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
+        cp "${CODEBUILD_SRC_DIR}/deploy/systemd/poudy-backend-container.service" "${CODEBUILD_SRC_DIR}/.artifacts/systemd/poudy-backend.service"
+        chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"*.sh
+        printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
   post_build:
     commands:
-      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/app.jar"
-      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/validate-database.sh"
+      - test -s "${CODEBUILD_SRC_DIR}/.artifacts/app/image.tar.gz"
+      - test -s "${CODEBUILD_SRC_DIR}/.artifacts/app/image-reference.txt"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/validate-database.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/application-start.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/systemd/poudy-backend.service"
 
