@@ -38,8 +38,7 @@ class OpenApiContractTest {
         }
         String[][] references = {
                 {"ProductDetailResponse", "selectedPart", "ProductPartResponse"},
-                {"SkinEffectItemResponse", "ingredientGroup", "IngredientGroupSummaryResponse"},
-                {"RankingItem", "change", "RankingChangeItem"}
+                {"SkinEffectItemResponse", "ingredientGroup", "IngredientGroupSummaryResponse"}
         };
         for (String[] reference : references) {
             String property = "$.components.schemas." + reference[0] + ".properties." + reference[1];
@@ -47,6 +46,18 @@ class OpenApiContractTest {
                 .andExpect(jsonPath(property + ".anyOf[0].$ref").value("#/components/schemas/" + reference[2]))
                 .andExpect(jsonPath(property + ".anyOf[1].type").value("null"));
         }
+    }
+
+    @Test
+    void documentsRankingChangeAsRequiredReference() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.RankingItem.required", hasItem("change")))
+            .andExpect(
+                jsonPath("$.components.schemas.RankingItem.properties.change.$ref")
+                    .value("#/components/schemas/RankingChangeItem")
+            )
+            .andExpect(jsonPath("$.components.schemas.RankingItem.properties.change.anyOf").doesNotExist());
     }
 
     @Test

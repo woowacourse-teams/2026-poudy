@@ -9,8 +9,6 @@ import com.poudy.product.controller.dto.ProductDetailResponse;
 import com.poudy.product.controller.dto.ProductPartResponse;
 import com.poudy.product.controller.dto.ProductPartSummaryResponse;
 import com.poudy.product.controller.dto.SkinEffectItemResponse;
-import com.poudy.searchkeyword.controller.dto.RankingChangeItem;
-import com.poudy.searchkeyword.controller.dto.RankingItem;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
@@ -21,12 +19,6 @@ class NullableResponseFieldsTest {
 
     @Test
     void writesNullForMissingValuesAndKeepsPresentObjects() {
-        assertThat(mapper.valueToTree(new RankingItem(1, "토너", null)).path("change").isNull()).isTrue();
-        assertThat(
-            mapper.valueToTree(new RankingItem(1, "토너", new RankingChangeItem("UP", 1)))
-                .path("change").path("steps").asInt()
-        ).isEqualTo(1);
-
         assertThat(mapper.valueToTree(new SkinEffectItemResponse(null, List.of())).path("ingredientGroup").isNull())
             .isTrue();
         assertThat(

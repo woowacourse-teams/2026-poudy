@@ -64,7 +64,7 @@ class SearchKeywordRankingServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"dictionary", "counts", "catalog"})
     void failedRefreshPreservesBothDictionaryAndRankingAndRecoversNextTime(String failure) {
-        List<RankedKeyword> previous = List.of(new RankedKeyword(1, "이전 이름", RankingChange.unknown()));
+        List<RankedKeyword> previous = List.of(new RankedKeyword(1, "이전 이름", RankingChange.unchanged()));
         snapshot.replace(oldDictionary, previous, NOW.minusSeconds(600));
         SearchKeywordDictionary changed = dictionary(entry("new", "새 이름", true, "새 표현"));
         when(repository.read()).thenReturn(changed);
@@ -143,7 +143,7 @@ class SearchKeywordRankingServiceTest {
     void readersKeepThePreviousSnapshotUntilTheWholeRefreshCompletes() throws Exception {
         snapshot.replace(
             oldDictionary,
-            List.of(new RankedKeyword(1, "이전 이름", RankingChange.unknown())),
+            List.of(new RankedKeyword(1, "이전 이름", RankingChange.unchanged())),
             NOW.minusSeconds(600)
         );
         when(repository.read()).thenReturn(dictionary(entry("new", "새 이름", true, "새 표현")));

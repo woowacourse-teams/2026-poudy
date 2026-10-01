@@ -3438,14 +3438,7 @@
             "example": "토너"
           },
           "change": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RankingChangeItem"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/RankingChangeItem"
           }
         },
         "required": [
