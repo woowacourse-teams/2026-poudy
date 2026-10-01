@@ -1,5 +1,4 @@
 import type { ProductDetailResponse, ProductPartResponse } from "@poudy/api/api.zod";
-import Image from "next/image";
 import Link from "next/link";
 
 import { EffectIngredients } from "./EffectIngredients";
@@ -12,6 +11,7 @@ import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
@@ -45,11 +45,10 @@ export function ProductDetail({
         </div>
 
         <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-          <Image
+          <ProductImage
             src={product.imageUrl || PRODUCT_PLACEHOLDER}
             alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-            width={184}
-            height={184}
+            size={184}
             className="size-[184px] object-contain"
             loading="eager"
           />
@@ -113,11 +112,10 @@ function CompactSummary({
         옆 글(제품명·유수분 두 줄)이 차지하는 높이에 맞춘다. 그림에 높이를 재게 두면 그 높이가
         줄을 다시 늘려 끝없이 커지므로, 자라는 쪽을 글로 정해 두고 그림은 그 값을 받아 쓴다.
       */}
-      <Image
+      <ProductImage
         src={product.imageUrl || PRODUCT_PLACEHOLDER}
         alt=""
-        width={184}
-        height={184}
+        size={42}
         loading="lazy"
         className="size-[42px] shrink-0 object-contain"
       />
