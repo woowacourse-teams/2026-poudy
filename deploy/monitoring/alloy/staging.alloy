@@ -124,7 +124,8 @@ loki.process "backend" {
 }
 
 loki.source.journal "backend" {
-  matches    = "_SYSTEMD_UNIT=poudy-backend.service"
+  // Keep service-manager logs and collect Docker's journald stdout under the same app label.
+  matches    = "_SYSTEMD_UNIT=poudy-backend.service OR SYSLOG_IDENTIFIER=poudy-backend"
   max_age    = "1h"
   labels     = { environment = "staging", service = "poudy-backend" }
   forward_to = [loki.process.backend.receiver]
