@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { ProductImage } from "@/components/ui/ProductImage";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 
@@ -47,11 +47,10 @@ export function ProductGridCard({
     */
     <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="popular-product flex flex-col gap-0.75">
       <span className="popular-product-image flex h-28 items-center justify-center overflow-hidden rounded-2xl">
-        <Image
+        <ProductImage
           src={imageUrl || PRODUCT_PLACEHOLDER}
           alt=""
-          width={224}
-          height={224}
+          size={96}
           loading={loading}
           className="size-full object-contain p-2"
         />
