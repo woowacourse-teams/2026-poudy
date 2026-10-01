@@ -123,7 +123,7 @@ export type SkinTypesResponse = {
   items: Array<SkinTypeResponse>;
 }
 export type RankingChangeItem = { movement: string, steps: number }
-export type RankingItem = { rank: number, keyword: string, change: (RankingChangeItem | null) }
+export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }

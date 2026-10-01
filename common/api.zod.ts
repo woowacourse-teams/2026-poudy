@@ -56,7 +56,7 @@ export type RankingChangeItem = __TypedOpenapi.Schemas.RankingChangeItem;
 export const RankingChangeItem = z.object({ movement: z.string(), steps: z.number().int() });
 
 export type RankingItem = __TypedOpenapi.Schemas.RankingItem;
-export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(), change: RankingChangeItem.nullable() });
+export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(), change: RankingChangeItem });
 
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });

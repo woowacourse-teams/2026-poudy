@@ -38,7 +38,7 @@ public final class KeywordRanking {
 
     private static RankingChange change(String name, int rank, List<String> counted, Map<String, Integer> before) {
         if (before == null || !counted.contains(name)) {
-            return RankingChange.unknown();
+            return RankingChange.unchanged();
         }
         Integer previousRank = before.get(name);
         if (previousRank == null) {
