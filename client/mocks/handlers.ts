@@ -1,4 +1,4 @@
-import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import type { ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -299,8 +299,8 @@ const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => 
  * 순위 변동은 오름과 내림, 유지와 새로 든 것을 모두 한 번씩 담아 화면을 확인할 수 있게 한다.
  */
 /*
- * 변동은 이전 집계와 견주어 나온다. 서버는 견줄 것이 없으면 `change` 를 null 로 내려보내므로
- * (`RankingChange.isKnown`), 마지막 하나는 null 로 두어 화면이 그때도 서는지 본다.
+ * 비교할 이전 집계가 없거나 기본 검색어로 채운 항목도 서버는 SAME 과 0 을 내려보낸다.
+ * 마지막 항목도 이 응답 형식에 맞춘다.
  */
 const searchKeywordRankings = [
   { rank: 1, keyword: "나이아신아마이드", change: { movement: "UP", steps: 2 } },
@@ -312,8 +312,8 @@ const searchKeywordRankings = [
   { rank: 7, keyword: "히알루론산", change: { movement: "DOWN", steps: 2 } },
   { rank: 8, keyword: "무기자차", change: { movement: "UP", steps: 1 } },
   { rank: 9, keyword: "클렌징오일", change: { movement: "SAME", steps: 0 } },
-  { rank: 10, keyword: "마스크팩", change: null },
-] as const;
+  { rank: 10, keyword: "마스크팩", change: { movement: "SAME", steps: 0 } },
+] as const satisfies readonly RankingItem[];
 
 const skinTypes = [
   { code: "DRY", name: "건성" },
