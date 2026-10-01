@@ -1,8 +1,7 @@
 name: Client CI
 
 # dev 로 가는 PR 은 클라이언트가 바뀔 때만, main 으로 가는 릴리스 PR 은 항상 검사한다.
-# 서버가 API 계약을 바꾸면 common/ 의 생성물이 달라져 클라이언트가 깨질 수 있는데, 이를
-# 서버 PR 마다 확인하지 않고 production 에 나가기 전 릴리스 PR 에서 한 번에 확인한다.
+# common/ 변경만 있는 dev 대상 PR은 client-common-ci.yaml이 Lighthouse 없이 검사한다.
 # 워크플로 수준 paths 로는 대상 브랜치마다 조건을 달리할 수 없어, changes 가 판단한다.
 on:
   pull_request:
