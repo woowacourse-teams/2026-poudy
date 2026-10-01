@@ -94,7 +94,7 @@ class SearchKeywordRankingPersistenceTest {
         assertThat(restarted.rankings()).isEmpty();
         restarted.refreshRankings();
 
-        assertThat(restarted.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThat(restarted.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
     }
 
     private static TestServices service(KeywordBuckets buckets) {

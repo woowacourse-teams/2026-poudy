@@ -23,12 +23,16 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class SearchKeywordControllerTest {
     @Test
-    void exposesOnlyRankAndKeywordAndEmptyArray() throws Exception {
+    void exposesRankKeywordChangeAndEmptyArray() throws Exception {
         SearchKeywordService service = mock(SearchKeywordService.class);
         MockMvc mvc = MockMvcBuilders.standaloneSetup(new SearchKeywordController(service)).build();
-        given(service.rankings()).willReturn(List.of(new RankedKeyword(1, "토너", RankingChange.unknown())));
+        given(service.rankings()).willReturn(List.of(new RankedKeyword(1, "토너", RankingChange.unchanged())));
         mvc.perform(get("/api/search-keywords/rankings?limit=100"))
-            .andExpect(status().isOk()).andExpect(content().json("{\"items\":[{\"rank\":1,\"keyword\":\"토너\"}]}"));
+            .andExpect(status().isOk()).andExpect(
+                content().json(
+                    "{\"items\":[{\"rank\":1,\"keyword\":\"토너\",\"change\":{\"movement\":\"SAME\",\"steps\":0}}]}"
+                )
+            );
         given(service.rankings()).willReturn(List.of());
         mvc.perform(get("/api/search-keywords/rankings")).andExpect(status().isOk())
             .andExpect(content().json("{\"items\":[]}"));
