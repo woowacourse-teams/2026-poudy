@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
+import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 
 type OtherCurationsProps = {
   /** 지금 보고 있는 큐레이션. 목록에서 뺀다. */
@@ -48,7 +49,7 @@ export function OtherCurations({ currentId, curations }: OtherCurationsProps) {
               */}
               <article className="relative flex h-32 flex-col justify-end overflow-hidden rounded-[18px] p-5">
                 <Image
-                  src={curation.thumbnailImageUrl}
+                  src={imageDeliveryUrl(curation.thumbnailImageUrl)}
                   alt=""
                   fill
                   sizes="(max-width: 448px) calc(100vw - 32px), 416px"
