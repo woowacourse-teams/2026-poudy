@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { track } from "@/lib/analytics/track";
+import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
@@ -796,7 +797,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
                     */}
                     <Image
-                      src={curation.thumbnailImageUrl}
+                      src={imageDeliveryUrl(curation.thumbnailImageUrl)}
                       alt=""
                       fill
                       sizes="(max-width: 480px) 90vw, 420px"

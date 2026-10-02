@@ -4,6 +4,8 @@ import Image from "next/image";
 import { CurationFilterBlock } from "./CurationFilterBlock";
 import { CurationProductGrid } from "./CurationProductGrid";
 
+import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
+
 type CurationBlocksProps = {
   readonly curationId: number;
   readonly blocks: readonly CurationBlockResponse[];
@@ -36,7 +38,7 @@ function CurationBlock({
        */
       return (
         <Image
-          src={block.imageUrl}
+          src={imageDeliveryUrl(block.imageUrl)}
           alt=""
           width={1080}
           height={1080}
