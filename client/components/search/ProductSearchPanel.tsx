@@ -1,7 +1,6 @@
 "use client";
 
 import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -9,6 +8,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExtern
 import { Icon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
@@ -339,11 +339,10 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                       }}
                       className="flex items-center gap-3 py-3"
                     >
-                      <Image
+                      <ProductImage
                         src={item.imageUrl || PRODUCT_PLACEHOLDER}
                         alt=""
-                        width={40}
-                        height={40}
+                        size={40}
                         loading="lazy"
                         className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
                       />
