@@ -16,7 +16,8 @@ export function InquiryButtonSlot() {
   const pathname = usePathname();
 
   /* 문의하기 화면에서는 감춘다. 이미 그 안에 있는데 들어가는 버튼을 둘 이유가 없다. */
-  if (isInquiryPath(pathname)) return null;
+  if (isInquiryPath(pathname) || matchesPathSegment(pathname, "/login") || matchesPathSegment(pathname, "/onboarding"))
+    return null;
 
   return <InquiryButton liftedAboveNavigation={isBottomNavigationPath(pathname)} />;
 }
