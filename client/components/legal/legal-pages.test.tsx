@@ -6,12 +6,17 @@ vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 import PrivacyPage from "@/app/privacy/page";
 import TermsPage from "@/app/terms/page";
 
-describe("인기 검색어와 인기 제품 법정 문서", () => {
+describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 9월 14일");
-    expect(markup).toContain("2026년 9월 23일 개정 시행 예정");
+    expect(markup).toContain("시행일 2026년 10월 4일");
+    expect(markup).not.toContain("시행 예정");
+    expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
+    expect(markup).toContain("제공자가 인증한 이메일");
+    expect(markup).toContain("회원 저장함");
+    expect(markup).toContain("복구 요청만으로 보관 기간이 연장되지 않습니다");
+    expect(markup).toContain("JSESSIONID");
     expect(markup).toContain("인기 검색어 집계");
     expect(markup).toContain("계산에는 제출한 때로부터 최대 7일 20분 사용");
     expect(markup).toContain("다음 상태 저장에 성공하면 파일에서 제거");
@@ -24,8 +29,13 @@ describe("인기 검색어와 인기 제품 법정 문서", () => {
   it("이용약관에 순위 산정 기준과 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(TermsPage());
 
-    expect(markup).toContain("시행일 2026년 9월 1일");
-    expect(markup).toContain("2026년 10월 7일 개정 시행 예정");
+    expect(markup).toContain("시행일 2026년 10월 4일");
+    expect(markup).not.toContain("시행 예정");
+    expect(markup).not.toContain("계속 이용하면 바뀐 약관에 동의한 것으로 봅니다");
+    expect(markup).toContain("회원가입은 만 14세 이상");
+    expect(markup).toContain("탈퇴 후 30일 보관");
+    expect(markup).toContain("운영자가 복구를 완료하면");
+    expect(markup).toContain("법령상 책임을 배제하거나");
     expect(markup).toContain("팀이 정한 기본 검색어가 함께 표시될 수 있습니다");
     expect(markup).toContain("제품 상세 화면 조회 횟수를 기준으로 최대 6개를 보여 줍니다");
     expect(markup).toContain("판매량, 품질, 효능, 안전성 또는 팀의 추천을 뜻하지 않습니다");
