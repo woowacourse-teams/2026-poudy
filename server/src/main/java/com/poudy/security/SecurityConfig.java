@@ -5,6 +5,7 @@ import com.poudy.exception.RuleViolationException;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
+import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.oauth.DiscardingAuthorizedClientRepository;
 import com.poudy.security.oauth.RegisteredProviderRequestResolver;
 import com.poudy.security.session.LoginSession;
@@ -97,6 +98,10 @@ public class SecurityConfig {
                         exception
                     )
                 )
+            )
+            .addFilterBefore(
+                new ForeignOriginFilter(clientOrigins, handlerExceptionResolver),
+                SecurityContextHolderFilter.class
             )
             .addFilterBefore(
                 (request, response, chain) -> {

@@ -47,6 +47,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem(HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED, ErrorCode.UNAUTHORIZED.message());
     }
 
+    @ExceptionHandler(ForbiddenRequestException.class)
+    public ResponseEntity<ProblemDetail> handleForbiddenRequestException(ForbiddenRequestException exception) {
+        return problem(HttpStatus.FORBIDDEN, exception.code(), exception.getMessage());
+    }
+
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ProblemDetail> handleTooManyRequestsException(TooManyRequestsException exception) {
         long retryAfterSeconds = exception.retryAfter().getSeconds();

@@ -2,7 +2,9 @@ package com.poudy.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.DisplayName;
@@ -66,5 +68,29 @@ class CorsTest {
     void omitsAllowHeaderForDisallowedOrigin() throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, DISALLOWED_ORIGIN))
             .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://evil.example.com", "null", "https://poudy.example.com.evil.com"})
+    @DisplayName("허용하지 않은 출처의 상태 변경 요청을 403으로 거절한다")
+    void rejectsForeignStateChange(String origin) throws Exception {
+        mockMvc.perform(post("/api/auth/logout").header(HttpHeaders.ORIGIN, origin))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("FORBIDDEN_ORIGIN"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost", "https://poudy.example.com", "https://pr-12.preview.example.com"})
+    @DisplayName("같은 출처와 허용한 출처의 상태 변경 요청은 통과시킨다")
+    void allowsKnownOriginStateChange(String origin) throws Exception {
+        mockMvc.perform(post("/api/auth/logout").header(HttpHeaders.ORIGIN, origin))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("출처 헤더가 없는 상태 변경 요청은 브라우저 요청이 아니므로 통과시킨다")
+    void allowsStateChangeWithoutOrigin() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+            .andExpect(status().isNoContent());
     }
 }

@@ -17,6 +17,7 @@ public enum ErrorCode {
     TOO_MANY_REQUESTS("요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."),
     UNSUPPORTED_REQUEST("지원하지 않는 요청입니다."),
     UNAUTHORIZED("로그인이 필요합니다."),
+    FORBIDDEN_ORIGIN("허용하지 않은 출처의 요청입니다."),
     OAUTH_LOGIN_FAILED("소셜 로그인에 실패했습니다."),
     OAUTH_EMAIL_NOT_VERIFIED("인증된 이메일이 있는 계정으로만 가입할 수 있습니다."),
     MEMBER_EMAIL_ALREADY_REGISTERED("다른 로그인 방식으로 이미 가입한 이메일입니다."),
