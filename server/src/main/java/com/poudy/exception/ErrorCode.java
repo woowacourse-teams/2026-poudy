@@ -23,6 +23,7 @@ public enum ErrorCode {
     MEMBER_EMAIL_ALREADY_REGISTERED("다른 로그인 방식으로 이미 가입한 이메일입니다."),
     FEEDBACK_NOT_FOUND("피드백을 찾을 수 없습니다."),
     MEMBER_NOT_FOUND("회원을 찾을 수 없습니다."),
+    WITHDRAWN_MEMBER_NOT_FOUND("복구를 요청할 탈퇴 계정을 찾을 수 없습니다. 다시 로그인해 주세요."),
     PRODUCT_REQUEST_NOT_FOUND("제품 등록 요청을 찾을 수 없습니다."),
     CURATION_NOT_FOUND("큐레이션을 찾을 수 없습니다."),
     PRODUCT_NOT_FOUND("제품을 찾을 수 없습니다."),

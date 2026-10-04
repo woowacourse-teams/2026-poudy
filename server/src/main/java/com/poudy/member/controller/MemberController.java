@@ -4,13 +4,17 @@ import com.poudy.member.controller.dto.MemberProfileRequest;
 import com.poudy.member.controller.dto.MemberResponse;
 import com.poudy.member.service.MemberService;
 import com.poudy.security.session.LoginMember;
+import com.poudy.security.session.LoginSession;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final MemberService memberService;
+    private final LoginSession loginSession;
 
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, LoginSession loginSession) {
         this.memberService = memberService;
+        this.loginSession = loginSession;
     }
 
     @Operation(summary = "내 정보 조회", description = "로그인한 회원 정보와 초기 정보 입력 완료 여부를 조회한다.")
@@ -58,5 +64,18 @@ public class MemberController {
                     )
                 )
             );
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "회원 정보를 지우고 로그인 세션을 끝낸다.")
+    @ApiResponse(responseCode = "204", description = "탈퇴 성공")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdraw(
+        @AuthenticationPrincipal LoginMember loginMember,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
+        memberService.withdraw(loginMember.id());
+        loginSession.signOut(request, response);
+        return ResponseEntity.noContent().build();
     }
 }

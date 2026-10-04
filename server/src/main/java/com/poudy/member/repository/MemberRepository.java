@@ -5,6 +5,7 @@ import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
+import com.poudy.member.domain.MemberStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import java.sql.ResultSet;
@@ -19,14 +20,22 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class MemberRepository {
 
-    private static final String COLUMNS = "id, oauth_provider, email, gender, age_range, skin_type";
+    private static final String COLUMNS = """
+        id, oauth_provider, email, gender, age_range, skin_type,
+        case
+            when restore_requested_at is not null then 'RESTORE_REQUESTED'
+            when deleted_at is not null then 'WITHDRAWN'
+            else 'ACTIVE'
+        end as status
+        """;
     private static final RowMapper<Member> MEMBER = (rs, row) -> new Member(
         rs.getLong("id"),
         OAuthProvider.valueOf(rs.getString("oauth_provider")),
         rs.getString("email"),
         enumOrNull(rs, "gender", Gender::valueOf),
         enumOrNull(rs, "age_range", AgeRange::valueOf),
-        enumOrNull(rs, "skin_type", MemberSkinType::valueOf)
+        enumOrNull(rs, "skin_type", MemberSkinType::valueOf),
+        MemberStatus.valueOf(rs.getString("status"))
     );
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -37,7 +46,7 @@ public class MemberRepository {
 
     public Optional<Member> findById(long id) {
         return jdbc.query(
-            "select " + COLUMNS + " from member where id = :id",
+            "select " + COLUMNS + " from member where id = :id and deleted_at is null",
             new MapSqlParameterSource("id", id),
             MEMBER
         ).stream().findFirst();
@@ -81,7 +90,7 @@ public class MemberRepository {
                 update member
                 set gender = :gender, age_range = :ageRange, skin_type = :skinType,
                     updated_at = (now() AT TIME ZONE 'Asia/Seoul')
-                where id = :id
+                where id = :id and deleted_at is null
                 returning\s""" + COLUMNS,
             new MapSqlParameterSource()
                 .addValue("id", id)
@@ -90,6 +99,29 @@ public class MemberRepository {
                 .addValue("skinType", skinType.name()),
             MEMBER
         ).stream().findFirst();
+    }
+
+    public boolean withdraw(long id) {
+        return jdbc.update(
+            """
+                update member
+                set deleted_at = (now() AT TIME ZONE 'Asia/Seoul'), updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                where id = :id and deleted_at is null
+                """,
+            new MapSqlParameterSource("id", id)
+        ) == 1;
+    }
+
+    public boolean requestRestore(long id) {
+        return jdbc.update(
+            """
+                update member
+                set restore_requested_at = coalesce(restore_requested_at, (now() AT TIME ZONE 'Asia/Seoul')),
+                    updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                where id = :id and deleted_at is not null
+                """,
+            new MapSqlParameterSource("id", id)
+        ) == 1;
     }
 
     private static <T> T enumOrNull(ResultSet rs, String column, Function<String, T> parse) throws SQLException {

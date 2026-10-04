@@ -8,7 +8,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public final class ClientOrigins {
 
     private static final String API_PATH_PATTERN = "/api/**";
-    private static final List<String> ALLOWED_METHODS = List.of("GET", "HEAD", "POST", "PATCH", "OPTIONS");
+    private static final List<String> ALLOWED_METHODS = List.of("GET", "HEAD", "POST", "PATCH", "DELETE", "OPTIONS");
     private static final long PREFLIGHT_MAX_AGE_SECONDS = 3600;
     private static final String ORIGIN_WILDCARD = "*";
 

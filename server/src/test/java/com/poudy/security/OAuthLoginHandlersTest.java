@@ -11,6 +11,7 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.domain.SocialSignIn;
+import com.poudy.security.domain.SocialSignInResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import com.poudy.security.session.LoginMember;
 import com.poudy.security.session.LoginSession;
@@ -65,7 +66,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("로그인에 성공하면 회원 ID만 세션에 남기고 프론트로 보낸다")
     void signsInMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(7L);
+        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.signedIn(7L));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -140,7 +141,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("프론트 오리진이 없으면 같은 오리진의 콜백으로 보낸다")
     void redirectsToSameOriginWithoutClientOrigin() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(7L);
+        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.signedIn(7L));
 
         successHandlerFor(List.of()).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -162,6 +163,37 @@ class OAuthLoginHandlersTest {
 
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?error=OAUTH_LOGIN_FAILED");
         assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 계정이면 로그인시키지 않고 탈퇴 회원만 세션에 둔 채 탈퇴 안내로 보낸다")
+    void holdsWithdrawnMember() throws Exception {
+        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.withdrawn(7L));
+
+        successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
+
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?withdrawn=true");
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(loginSession.releaseWithdrawnMember(request)).contains(7L);
+    }
+
+    @Test
+    @DisplayName("이미 복구를 요청한 탈퇴 계정이면 세션에 아무것도 두지 않고 복구 요청 중 안내로 보낸다")
+    void redirectsRestoreRequestedMember() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(
+            HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+            new SecurityContextImpl(kakaoToken())
+        );
+        request.setSession(session);
+        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.restoreRequested(7L));
+
+        successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
+
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?withdrawn=true&restoreRequested=true");
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(loginSession.releaseWithdrawnMember(request)).isEmpty();
     }
 
     private AuthenticationSuccessHandler successHandlerFor(List<String> clientOrigins) {

@@ -88,6 +88,21 @@ class LoginSessionTest {
         assertThat(session.isInvalid()).isFalse();
     }
 
+    @Test
+    @DisplayName("탈퇴 회원을 맡겨 두면 로그인하지 않은 새 세션에 두고, 한 번 꺼내면 다시 꺼낼 수 없다")
+    void holdsWithdrawnMemberOnce() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession signedInSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+
+        assertThat(signedInSession.isInvalid()).isTrue();
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).contains(MEMBER_ID);
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+    }
+
     private MockHttpServletRequest signedInRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());

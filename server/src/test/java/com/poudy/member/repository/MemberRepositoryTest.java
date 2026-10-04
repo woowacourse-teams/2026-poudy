@@ -80,6 +80,32 @@ class MemberRepositoryTest {
             .isEmpty();
     }
 
+    @Test
+    @DisplayName("탈퇴하면 행은 남기되 회원 조회에서 빠지고, 계정으로는 탈퇴 회원을 찾는다")
+    void withdrawsMemberSoftly() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "4321", "member@example.com"));
+
+        assertThat(repository.withdraw(saved.id())).isTrue();
+
+        assertThat(repository.findById(saved.id())).isEmpty();
+        assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com")))
+            .get().extracting(member -> member.signInResult().isWithdrawn()).isEqualTo(true);
+        assertThat(repository.withdraw(saved.id())).isFalse();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원만 복구를 요청할 수 있다")
+    void requestsRestoreOnlyForWithdrawnMember() {
+        Member saved = repository.save(signup(OAuthProvider.GOOGLE, "sub", "member@example.com"));
+
+        assertThat(repository.requestRestore(saved.id())).isFalse();
+        repository.withdraw(saved.id());
+        assertThat(repository.requestRestore(saved.id())).isTrue();
+        assertThat(repository.requestRestore(saved.id())).isTrue();
+        assertThat(repository.findByAccount(account(OAuthProvider.GOOGLE, "sub", "member@example.com")))
+            .get().extracting(member -> member.signInResult().isRestoreRequested()).isEqualTo(true);
+    }
+
     private MemberSignup signup(OAuthProvider provider, String providerId, String email) {
         return MemberSignup.from(account(provider, providerId, email));
     }

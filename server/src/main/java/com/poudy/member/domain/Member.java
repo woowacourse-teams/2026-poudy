@@ -1,6 +1,7 @@
 package com.poudy.member.domain;
 
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.SocialSignInResult;
 
 public final class Member {
 
@@ -10,6 +11,7 @@ public final class Member {
     private final Gender gender;
     private final AgeRange ageRange;
     private final MemberSkinType skinType;
+    private final MemberStatus status;
 
     public Member(
         long id,
@@ -17,7 +19,8 @@ public final class Member {
         String email,
         Gender gender,
         AgeRange ageRange,
-        MemberSkinType skinType
+        MemberSkinType skinType,
+        MemberStatus status
     ) {
         this.id = id;
         this.provider = provider;
@@ -25,6 +28,15 @@ public final class Member {
         this.gender = gender;
         this.ageRange = ageRange;
         this.skinType = skinType;
+        this.status = status;
+    }
+
+    public SocialSignInResult signInResult() {
+        return switch (status) {
+            case ACTIVE -> SocialSignInResult.signedIn(id);
+            case WITHDRAWN -> SocialSignInResult.withdrawn(id);
+            case RESTORE_REQUESTED -> SocialSignInResult.restoreRequested(id);
+        };
     }
 
     public boolean isProfileCompleted() {

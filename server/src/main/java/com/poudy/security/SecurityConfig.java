@@ -5,6 +5,7 @@ import com.poudy.exception.RuleViolationException;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
+import com.poudy.security.domain.SocialSignInResult;
 import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.oauth.DiscardingAuthorizedClientRepository;
 import com.poudy.security.oauth.RegisteredProviderRequestResolver;
@@ -49,6 +50,8 @@ public class SecurityConfig {
     private static final String LOGIN_CALLBACK_PATH = "/login/callback";
     private static final String ERROR_PARAMETER = "error";
     private static final String PROVIDER_PARAMETER = "provider";
+    private static final String WITHDRAWN_PARAMETER = "withdrawn";
+    private static final String RESTORE_REQUESTED_PARAMETER = "restoreRequested";
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
@@ -184,7 +187,27 @@ public class SecurityConfig {
                 token.getAuthorizedClientRegistrationId(),
                 token.getPrincipal().getAttributes()
             );
-            loginSession.signIn(socialSignIn.signIn(account), request, response);
+            SocialSignInResult result = socialSignIn.signIn(account);
+            if (result.isRestoreRequested()) {
+                loginSession.signOut(request, response);
+                response.sendRedirect(
+                    UriComponentsBuilder.fromUriString(loginCallback)
+                        .queryParam(WITHDRAWN_PARAMETER, true)
+                        .queryParam(RESTORE_REQUESTED_PARAMETER, true)
+                        .toUriString()
+                );
+                return;
+            }
+            if (result.isWithdrawn()) {
+                loginSession.holdWithdrawnMember(result.memberId(), request, response);
+                response.sendRedirect(
+                    UriComponentsBuilder.fromUriString(loginCallback)
+                        .queryParam(WITHDRAWN_PARAMETER, true)
+                        .toUriString()
+                );
+                return;
+            }
+            loginSession.signIn(result.memberId(), request, response);
             response.sendRedirect(loginCallback);
         } catch (RuntimeException exception) {
             rejectSocialLogin(loginSession, request, response, loginFailureUriOf(loginCallback, exception));

@@ -139,7 +139,9 @@ class ErdCloudSchemaTest {
                 "gender",
                 "skin_type",
                 "created_at",
-                "updated_at"
+                "updated_at",
+                "deleted_at",
+                "restore_requested_at"
             )
         ),
         entry("skin_type", List.of("code", "name", "created_at", "updated_at")),

@@ -11,6 +11,7 @@ import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
+import com.poudy.security.domain.SocialSignInResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +26,16 @@ public class MemberService implements SocialSignIn {
 
     @Override
     @Transactional
-    public long signIn(OAuthAccount account) {
-        return memberRepository.findByAccount(account)
-            .orElseGet(() -> register(account))
-            .id();
+    public SocialSignInResult signIn(OAuthAccount account) {
+        return memberRepository.findByAccount(account).orElseGet(() -> register(account)).signInResult();
+    }
+
+    @Override
+    @Transactional
+    public void requestRestore(long withdrawnMemberId) {
+        if (!memberRepository.requestRestore(withdrawnMemberId)) {
+            throw new ResourceNotFoundException(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);
+        }
     }
 
     public Member findById(long memberId) {
@@ -40,6 +47,13 @@ public class MemberService implements SocialSignIn {
     public Member updateProfile(long memberId, Gender gender, AgeRange ageRange, MemberSkinType skinType) {
         return memberRepository.updateProfile(memberId, gender, ageRange, skinType)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    @Transactional
+    public void withdraw(long memberId) {
+        if (!memberRepository.withdraw(memberId)) {
+            throw new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
+        }
     }
 
     private Member register(OAuthAccount account) {

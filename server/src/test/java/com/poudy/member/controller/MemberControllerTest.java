@@ -1,6 +1,8 @@
 package com.poudy.member.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -22,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,6 +119,31 @@ class MemberControllerTest {
                     {"gender":"FEMALE","ageRange":"TWENTIES","skinType":"COMBINATION"}
                     """)
         )
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("탈퇴하면 회원을 지우고 세션을 버린 뒤 204를 돌려준다")
+    void withdraws() throws Exception {
+        Member member = memberRepository
+            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true)));
+        MockHttpSession session = new MockHttpSession();
+
+        mockMvc.perform(
+            delete("/api/members/me")
+                .session(session)
+                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+        )
+            .andExpect(status().isNoContent());
+
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(memberRepository.findById(member.id())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("로그인하지 않았으면 탈퇴를 401로 거절한다")
+    void rejectsAnonymousWithdrawal() throws Exception {
+        mockMvc.perform(delete("/api/members/me"))
             .andExpect(status().isUnauthorized());
     }
 }
