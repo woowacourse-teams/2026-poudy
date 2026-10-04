@@ -35,6 +35,13 @@ class RegisteredProviderRequestResolverTest {
     }
 
     @Test
+    @DisplayName("로그인된 제공자 계정이 있어도 계정을 고르게 한다")
+    void asksToSelectAccount() {
+        assertThat(resolver.resolve(request(BASE_URI + "/kakao")).getAuthorizationRequestUri())
+            .contains("prompt=select_account");
+    }
+
+    @Test
     @DisplayName("등록되지 않은 제공자는 예외 대신 요청을 만들지 않는다")
     void skipsUnregisteredProvider() {
         assertThat(resolver.resolve(request(BASE_URI + "/naver"))).isNull();

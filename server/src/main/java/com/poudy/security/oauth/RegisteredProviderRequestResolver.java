@@ -11,6 +11,9 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 
 public class RegisteredProviderRequestResolver implements OAuth2AuthorizationRequestResolver {
 
+    private static final String PROMPT = "prompt";
+    private static final String SELECT_ACCOUNT = "select_account";
+
     private final DefaultOAuth2AuthorizationRequestResolver resolver;
 
     public RegisteredProviderRequestResolver(
@@ -20,6 +23,9 @@ public class RegisteredProviderRequestResolver implements OAuth2AuthorizationReq
         this.resolver = new DefaultOAuth2AuthorizationRequestResolver(
             clientRegistrationRepository,
             authorizationBaseUri
+        );
+        this.resolver.setAuthorizationRequestCustomizer(
+            request -> request.additionalParameters(parameters -> parameters.put(PROMPT, SELECT_ACCOUNT))
         );
     }
 
