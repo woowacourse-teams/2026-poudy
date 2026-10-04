@@ -155,6 +155,73 @@ describe("저장함 검색", () => {
 });
 
 describe("저장을 풀 때", () => {
+  it("삭제와 재조회가 모두 실패해도 삭제 표시를 되돌린다", async () => {
+    await seed(1, 3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+    server.use(
+      http.delete(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.get(`${SAVED_PATH}/ids`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    await waitFor(() => expect(getSavedProductsSnapshot().status).toBe("failed"));
+    await waitFor(() => expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument());
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+  });
+
+  it("삭제가 실패하면 제품과 개수를 되돌린다", async () => {
+    await seed(1, 3);
+    server.use(http.delete(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    await waitFor(() => expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument());
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" })).toBeInTheDocument();
+    expect(getSavedProductsSnapshot().ids).toContain(1);
+  });
+
+  it("되돌리기가 실패하면 삭제 상태와 개수를 유지한다", async () => {
+    await seed(1, 3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await reloadSavedProducts();
+    server.use(http.put(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
+
+    await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
+
+    expect(await screen.findByRole("button", { name: /되돌리기/ })).toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
+    expect(getSavedProductsSnapshot().ids).not.toContain(1);
+  });
+
+  it("삭제와 되돌리기가 모두 실패해도 실제 서버의 저장 상태로 복원한다", async () => {
+    await seed(1, 3);
+    const release = Promise.withResolvers<void>();
+    server.use(
+      http.delete(`${SAVED_PATH}/1`, async () => {
+        await release.promise;
+        return problem(500, "INTERNAL_SERVER_ERROR");
+      }),
+      http.put(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+    );
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
+    release.resolve();
+    await reloadSavedProducts();
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" })).toBeInTheDocument());
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+    expect(getSavedProductsSnapshot().ids).toContain(1);
+  });
+
   it("그 자리에 되돌리기를 남기고 개수에서 빼며 서버에서도 지운다", async () => {
     await seed(1, 3);
     render(<SavedScreen />);

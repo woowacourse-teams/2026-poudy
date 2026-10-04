@@ -114,7 +114,7 @@ export function ProductRows({
   const trackedResultKey = useRef<string | undefined>(undefined);
 
   const onToggleSave = (productId: number) => {
-    if (!toggle(productId)) return;
+    if (toggle(productId) === null) return;
     track(isSaved(productId) ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "product_list",

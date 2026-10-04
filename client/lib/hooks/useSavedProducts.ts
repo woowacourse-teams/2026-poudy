@@ -19,15 +19,15 @@ const useSignedInRequest = (status: SavedProductsStatus) => {
   const router = useRouter();
 
   return useCallback(
-    (request: (productId: number) => Promise<SaveResult>, productId: number): boolean => {
+    (request: (productId: number) => Promise<SaveResult>, productId: number): Promise<SaveResult> | null => {
       if (status === "signedOut") {
         router.push(LOGIN_PATH);
-        return false;
+        return null;
       }
-      void request(productId).then((result) => {
+      return request(productId).then((result) => {
         if (result === "signedOut") router.push(LOGIN_PATH);
+        return result;
       });
-      return true;
     },
     [status, router],
   );
@@ -46,7 +46,7 @@ export const useSavedProducts = () => {
   const unsave = useCallback((productId: number) => run(unsaveProduct, productId), [run]);
 
   const toggle = useCallback(
-    (productId: number): boolean => {
+    (productId: number): Promise<SaveResult> | null => {
       if (ids.includes(productId)) return unsave(productId);
       return save(productId);
     },

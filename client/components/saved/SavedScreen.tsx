@@ -2,7 +2,7 @@
 
 import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
@@ -16,7 +16,7 @@ import { isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
+import { getSavedProductsSnapshot, reloadSavedProducts, type SaveResult } from "@/lib/storage/saved-products";
 
 type Status = "loading" | "error" | "ready";
 
@@ -139,6 +139,7 @@ export function SavedScreen() {
   const [status, setStatus] = useState<Status>("loading");
   const [items, setItems] = useState<readonly ProductResponse[]>([]);
   const [removedIds, setRemovedIds] = useState<readonly number[]>([]);
+  const pendingChanges = useRef(new Map<number, Promise<SaveResult>>());
   const [retry, setRetry] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [composing, setComposing] = useState(false);
@@ -170,24 +171,29 @@ export function SavedScreen() {
     };
   }, [signedOut, retry]);
 
-  const remove = (productId: number) => {
-    if (!unsave(productId)) return;
-    setRemovedIds((previous) => [...previous, productId]);
-    track("product_unsaved", { product_id: productId, save_source: "saved" });
-  };
-
-  const restore = (productId: number) => {
-    if (!save(productId)) return;
-    setRemovedIds((previous) => previous.filter((id) => id !== productId));
-    track("product_saved", { product_id: productId, save_source: "saved" });
+  const changeSaved = (productId: number, removed: boolean) => {
+    const request = removed ? unsave(productId) : save(productId);
+    if (!request) return;
+    pendingChanges.current.set(productId, request);
+    setRemovedIds((previous) =>
+      removed ? [...previous.filter((id) => id !== productId), productId] : previous.filter((id) => id !== productId),
+    );
+    track(removed ? "product_unsaved" : "product_saved", { product_id: productId, save_source: "saved" });
+    void request.then(async (result) => {
+      if (result === "failed") await reloadSavedProducts();
+      if (pendingChanges.current.get(productId) !== request) return;
+      pendingChanges.current.delete(productId);
+      if (result !== "failed") return;
+      const restored = getSavedProductsSnapshot();
+      const saved = restored.status === "ready" ? restored.ids.includes(productId) : removed;
+      setRemovedIds((previous) =>
+        saved ? previous.filter((id) => id !== productId) : [...previous.filter((id) => id !== productId), productId],
+      );
+    });
   };
 
   const onToggleSave = (productId: number) => {
-    if (removedIds.includes(productId)) {
-      restore(productId);
-      return;
-    }
-    remove(productId);
+    changeSaved(productId, !removedIds.includes(productId));
   };
 
   if (!composing && settled !== keyword) setSettled(keyword);
@@ -288,7 +294,7 @@ export function SavedScreen() {
           if (removedIds.includes(product.id)) {
             return (
               <li key={product.id}>
-                <UndoRow productName={product.name} onUndo={() => restore(product.id)}>
+                <UndoRow productName={product.name} onUndo={() => changeSaved(product.id, false)}>
                   {card}
                 </UndoRow>
               </li>
