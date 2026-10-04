@@ -14,14 +14,14 @@
 - `DELETE /api/members/me`: 회원 탈퇴. 행을 지우지 않고 `deleted_at`을 남긴 뒤 세션을 끝낸다
 - `POST /api/auth/withdrawn-member/restore-request`: 탈퇴 계정으로 다시 로그인한 사람의 복구 요청.
   로그인 처리에서 세션에 맡겨 둔 탈퇴 회원에게만 `restore_requested_at`을 남긴다
-- `POST /api/auth/logout`: 세션 무효화
+- `POST /api/members/logout`: 회원 세션 무효화. 관리자 세션은 403으로 거절한다
 - 탈퇴 회원 파기: 매일 03:40 탈퇴한 지 30일이 지난 회원 행을 지운다(`poudy.member.retention`, 운영만 켬)
 - `GET /api/admin/members/restore-requests`: 복구를 요청한 탈퇴 회원 목록. 요청한 순서대로 페이지로 준다
 - `POST /api/admin/members/{memberId}/restore`: 복구를 요청한 탈퇴 회원 복구. `deleted_at`과
-  `restore_requested_at`을 비운다. 다른 관리자 API처럼 아직 인증이 없다
+  `restore_requested_at`을 비운다
 
 하지 않는 것: 모바일 네이티브 로그인(토큰 교환 엔드포인트), 저장함, 탈퇴 시 카카오 연결 끊기(어드민
-키 필요), 관리자 API 인증. 각각 다음 작업으로 남긴다.
+키 필요). 각각 다음 작업으로 남긴다.
 
 ## 설계
 
@@ -45,14 +45,15 @@
 - 운영 nginx는 `/api/`만 백엔드로 넘기므로 Security 로그인 경로를 `/api` 아래로 옮긴다.
 - 로그인이 끝나면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `CLIENT_DOMAIN`의 `*` 없는
   첫 값이고, 비어 있으면 같은 오리진(운영)이다. 실패하면 같은 주소에 `error`
-  (오류 코드)와, 이메일 중복이면 `provider`를 붙인다. 탈퇴 계정이면 `withdrawn=true`를, 이미 복구를
-  요청했으면 `restoreRequested=true`도 붙이고 탈퇴 회원을 세션에 맡기지 않는다. 화면 분기는 프론트가 `/api/members/me`로
+  (오류 코드)와, 이메일 중복이면 `provider`를 붙인다. 로그인을 마치면 `status`에 `SIGNED_IN`을, 탈퇴 계정이면
+  `WITHDRAWN`을, 이미 복구를 요청했으면 `RESTORE_REQUESTED`를 붙이고 이때는 탈퇴 회원을 세션에 맡기지 않는다. 화면 분기는 프론트가 `/api/members/me`로
   판단한다.
 - staging·로컬은 프론트와 API 오리진이 달라 CORS 자격 증명을 허용한다. 운영은 같은 오리진이라
   `CLIENT_DOMAIN`을 비워 CORS를 열지 않는다.
 - Security 기본 `Cache-Control: no-store`는 끈다. 기존 응답 캐시(nginx·Next)를 바꾸지 않는다.
   회원 응답만 컨트롤러에서 `no-store`로 둔다.
-- 기존 API는 모두 공개로 둔다. 관리자 API의 보호 방식도 이번에 바꾸지 않는다.
+- 회원·관리자 API 외의 기존 API는 공개로 둔다. 관리자 API는 공용 계정 로그인으로 받은 관리자 세션
+  (`ROLE_ADMIN`, 비활동 1시간·로그인 후 12시간)이 있어야 호출한다.
 
 ## 검증
 
