@@ -1,7 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
+
+import { AdminBlankPage } from "./AdminBlankPage";
+import { useAdminSession } from "./useAdminSession";
 
 import { adminLogin } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
@@ -15,10 +18,15 @@ const failureMessage = (error: unknown): string => {
 
 export function AdminLoginScreen() {
   const router = useRouter();
+  const session = useAdminSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session === "signedIn") router.replace("/admin");
+  }, [session, router]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,6 +39,8 @@ export function AdminLoginScreen() {
         setPending(false);
       });
   };
+
+  if (session === "checking" || session === "signedIn") return <AdminBlankPage />;
 
   return (
     <main data-desktop-page className="flex min-h-svh items-center justify-center bg-surface px-6">

@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { AdminBlankPage } from "./AdminBlankPage";
 import { FeedbackList } from "./FeedbackList";
 import { ProductRequestList } from "./ProductRequestList";
 import { RestoreRequestList } from "./RestoreRequestList";
+import { useAdminSession } from "./useAdminSession";
 
 import { adminLogout } from "@/lib/api/admin";
 
@@ -25,8 +27,13 @@ function TabContent({ tab }: { readonly tab: Tab }) {
 
 export function AdminScreen() {
   const router = useRouter();
+  const session = useAdminSession();
   const [tab, setTab] = useState<Tab>("feedbacks");
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (session === "signedOut") router.replace("/admin/login");
+  }, [session, router]);
 
   const signOut = () => {
     setPending(true);
@@ -34,6 +41,8 @@ export function AdminScreen() {
       .catch(() => undefined)
       .finally(() => router.replace("/admin/login"));
   };
+
+  if (session === "checking" || session === "signedOut") return <AdminBlankPage />;
 
   return (
     <main data-desktop-page className="flex min-h-svh flex-col bg-surface">

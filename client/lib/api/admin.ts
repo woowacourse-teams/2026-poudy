@@ -4,6 +4,7 @@ import {
   AdminProductRequestPageResponse,
   AdminProductRequestResponse,
   AdminRestoreRequestPageResponse,
+  AdminSessionResponse,
   type AdminFeedbackStatusUpdateRequest,
 } from "@poudy/api/api.zod";
 
@@ -18,6 +19,9 @@ const pageQuery = (page: number): URLSearchParams =>
 
 export const adminLogin = (username: string, password: string): Promise<void> =>
   apiPost("/api/admin/login", { username, password }, { withSession: true });
+
+export const findAdminSession = (): Promise<AdminSessionResponse> =>
+  apiGet("/api/admin/me", AdminSessionResponse, { withSession: true });
 
 export const adminLogout = (): Promise<void> => apiPost("/api/admin/logout", undefined, { withSession: true });
 
