@@ -208,6 +208,13 @@ describe("목 응답과 스키마", () => {
     expect(await response.text()).toBe("");
   });
 
+  it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/auth/withdrawn-member/restore-request", "");
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
+  });
+
   it("로그아웃은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/logout", "");
 
@@ -234,6 +241,7 @@ describe("목 응답과 스키마", () => {
       "/members/me/profile",
       "/auth/logout",
       "/members/me (DELETE)",
+      "/auth/withdrawn-member/restore-request",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

@@ -17,6 +17,10 @@ export const logout = (): Promise<void> => apiPost("/api/auth/logout", undefined
 
 export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
 
+/** 탈퇴한 계정으로 방금 로그인한 사람만 보낼 수 있다. 복구 여부는 관리자가 정한다. */
+export const requestRestore = (): Promise<void> =>
+  apiPost("/api/auth/withdrawn-member/restore-request", undefined, { withSession: true });
+
 /**
  * 로그인하지 않았거나, 다른 기기에서 탈퇴해 세션의 회원이 더 없는 경우다. 둘 다 다시 로그인해야 한다.
  */

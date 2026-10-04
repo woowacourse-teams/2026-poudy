@@ -505,6 +505,8 @@ export const handlers = [
 
   http.post("*/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
 
+  http.post("*/api/auth/withdrawn-member/restore-request", () => new HttpResponse(null, { status: 204 })),
+
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
 
   http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
