@@ -10,7 +10,11 @@ import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
 const WITHDRAW_FAILED = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
-const WITHDRAW_CONFIRM = "탈퇴하면 이 계정으로 로그인할 수 없어요. 다시 쓰려면 복구를 요청해야 해요. 탈퇴할까요?";
+const WITHDRAW_CONFIRM = [
+  "탈퇴하면 로그아웃되고 회원 기능을 사용할 수 없어요. 계정과 저장함은 복구를 위해 30일 보관한 뒤 삭제해요.",
+  "카카오·Google 계정 연결은 자동으로 해제되지 않아요. 연결도 해제하려면 해당 계정 설정에서 직접 해제해 주세요.",
+  "탈퇴할까요?",
+].join("\n\n");
 
 export function MyPageScreen() {
   const router = useRouter();
