@@ -66,6 +66,7 @@ public class LoginSession {
             request,
             response
         );
+        request.getSession().removeAttribute(WITHDRAWN_MEMBER_ID);
     }
 
     public void signInAdmin(String username, HttpServletRequest request, HttpServletResponse response) {

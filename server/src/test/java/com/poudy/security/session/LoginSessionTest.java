@@ -106,6 +106,17 @@ class LoginSessionTest {
     }
 
     @Test
+    @DisplayName("탈퇴 회원을 맡겨 둔 세션에서 다른 계정으로 로그인하면 맡겨 둔 탈퇴 회원을 버린다")
+    void dropsWithdrawnMemberOnSignIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID + 1, request, new MockHttpServletResponse());
+
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+    }
+
+    @Test
     @DisplayName("관리자로 로그인하면 기존 세션을 버리고 관리자 인증만 가진 새 세션을 비활동 1시간으로 둔다")
     void signsInAdmin() {
         MockHttpServletRequest request = signedInRequest();
