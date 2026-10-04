@@ -1,4 +1,4 @@
-package com.poudy.config;
+package com.poudy.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
     + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
 @AutoConfigureMockMvc
 @DisplayName("CORS 설정")
-class CorsConfigTest {
+class CorsTest {
 
     private static final String DISALLOWED_ORIGIN = "http://evil.example.com";
 
@@ -42,11 +42,12 @@ class CorsConfigTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"http://localhost:3000", "https://poudy.example.com", "https://pr-12.preview.example.com"})
-    @DisplayName("허용한 도메인의 조회 응답에 허용 헤더를 준다")
+    @DisplayName("허용한 도메인의 조회 응답에 허용 헤더와 자격 증명 허용을 준다")
     void allowsRequestFromAllowedOrigin(String origin) throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, origin))
             .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
     }
 
     @Test

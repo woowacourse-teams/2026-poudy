@@ -28,9 +28,43 @@ spring:
     url: ${POUDY_DB_URL:jdbc:postgresql://localhost:5432/poudy}
     username: ${POUDY_DB_USERNAME:${USER:postgres}}
     password: ${POUDY_DB_PASSWORD:}
+  # 소셜 로그인. 운영 nginx 는 /api 만 백엔드로 넘기므로 콜백도 /api 아래에 둔다.
+  # 키가 없어도 서버는 뜨고 로그인만 실패한다. 운영 프로필은 값이 없으면 뜨지 않는다.
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_REST_API_KEY:unset}
+            client-secret: ${KAKAO_CLIENT_SECRET:unset}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+            scope: account_email
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:unset}
+            client-secret: ${GOOGLE_CLIENT_SECRET:unset}
+            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+            scope: openid, email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 server:
   shutdown: graceful
+  # 세션은 서버 메모리에 있어 배포하면 모두 로그아웃된다.
+  # 쿠키 수명은 앱 세션에 맞춘 전역 값이고, 웹 세션의 짧은 수명은 poudy.auth.web-session 이 판정한다.
+  servlet:
+    session:
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+        secure: true
+        same-site: lax
+        max-age: 60d
 
 management:
   endpoints:
@@ -58,6 +92,10 @@ springdoc:
 # CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
 # 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
 poudy:
+  auth:
+    web-session:
+      idle-timeout: P1D
+      absolute-timeout: P7D
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}

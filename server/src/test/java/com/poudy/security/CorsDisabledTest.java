@@ -1,4 +1,4 @@
-package com.poudy.config;
+package com.poudy.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
