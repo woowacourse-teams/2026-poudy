@@ -72,6 +72,16 @@ const post = async (path: string, body: BodyInit, headers?: HeadersInit) => {
   return { status: response.status, body: text ? (JSON.parse(text) as unknown) : undefined };
 };
 
+const patch = async (path: string, body: unknown) => {
+  const response = await fetch(`${BASE}${path}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return { status: response.status, body: (await response.json()) as unknown };
+};
+
 const json = (body: unknown) => [JSON.stringify(body), { "Content-Type": "application/json" }] as const;
 
 const cases = [
@@ -172,6 +182,25 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
+  it("초기 정보 저장은 입력을 마친 MemberResponse 를 지킨다", async () => {
+    const { status, body } = await patch("/members/me/profile", {
+      gender: "FEMALE",
+      ageRange: "TWENTIES",
+      skinType: "UNKNOWN",
+    });
+
+    expect(status).toBe(200);
+    expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
+    expect(body).toMatchObject({ profileCompleted: true, skinType: "UNKNOWN" });
+  });
+
+  it("초기 정보가 빠지면 ProblemDetail 로 거절한다", async () => {
+    const { status, body } = await patch("/members/me/profile", { gender: "FEMALE" });
+
+    expect(status).toBe(400);
+    expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
+  });
+
   it("로그아웃은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/logout", "");
 
@@ -195,6 +224,7 @@ describe("목 응답과 스키마", () => {
       "/products/registration-requests",
       "/products/:id/views",
       "/search-keywords",
+      "/members/me/profile",
       "/auth/logout",
     ];
 

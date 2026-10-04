@@ -1,6 +1,6 @@
-import { MemberResponse } from "@poudy/api/api.zod";
+import { MemberResponse, type MemberProfileRequest } from "@poudy/api/api.zod";
 
-import { apiGet, publicApiUrl } from "./client";
+import { apiGet, apiPatch, publicApiUrl } from "./client";
 
 export type SocialProvider = "kakao" | "google";
 
@@ -9,3 +9,6 @@ export const socialLoginUrl = (provider: SocialProvider): string =>
   publicApiUrl(`/api/oauth2/authorization/${provider}`);
 
 export const findMe = (): Promise<MemberResponse> => apiGet("/api/members/me", MemberResponse, { withSession: true });
+
+export const updateMyProfile = (profile: MemberProfileRequest): Promise<MemberResponse> =>
+  apiPatch("/api/members/me/profile", MemberResponse, profile);

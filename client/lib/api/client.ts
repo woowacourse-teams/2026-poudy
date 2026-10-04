@@ -191,3 +191,21 @@ export const apiPostForm = async <T>(path: string, schema: ZodType<T>, form: For
 
   return checkResponse(schema, response, path);
 };
+
+/**
+ * 로그인한 회원의 값을 바꾸고 바뀐 결과를 받는 요청.
+ */
+export const apiPatch = async <T>(path: string, schema: ZodType<T>, body: unknown): Promise<T> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+
+  return checkResponse(schema, response, path);
+};

@@ -1,4 +1,9 @@
-import type { MemberResponse, ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
+import {
+  MemberProfileRequest,
+  type MemberResponse,
+  type ProductDetailResponse,
+  type RankingItem,
+} from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -471,7 +476,7 @@ const curationBlocks = [
 const RANKING_SIZE = 6;
 
 /**
- * 목에서는 늘 로그인한 회원 한 명이 있다고 본다.
+ * 목에서는 늘 로그인한 회원 한 명이 있다고 본다. 초기 정보를 저장하면 이 값이 바뀐다.
  */
 const mockSession: { member: MemberResponse } = {
   member: {
@@ -487,6 +492,14 @@ const mockSession: { member: MemberResponse } = {
 
 export const handlers = [
   http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+
+  http.patch("*/api/members/me/profile", async ({ request }) => {
+    const profile = MemberProfileRequest.safeParse(await request.json());
+    if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
+
+    mockSession.member = { ...mockSession.member, ...profile.data, profileCompleted: true };
+    return HttpResponse.json(mockSession.member);
+  }),
 
   http.post("*/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { apiGet, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
+import { apiGet, apiPatch, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
 
 // 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -172,6 +172,21 @@ describe("로그인 세션 요청", () => {
     expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
       credentials: "include",
       cache: "no-store",
+    });
+  });
+
+  it("변경 요청은 쿠키와 함께 JSON 본문을 PATCH 로 보내고 응답을 검증해 돌려준다", async () => {
+    const fetchMock = prepareFetch();
+
+    const member = await apiPatch("/api/members/me/profile", Member, { gender: "FEMALE" });
+
+    expect(member).toEqual({ id: 1 });
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me/profile", {
+      credentials: "include",
+      cache: "no-store",
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gender: "FEMALE" }),
     });
   });
 });
