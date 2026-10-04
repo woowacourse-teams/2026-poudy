@@ -176,6 +176,51 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 후보를 찾고, Java가 버전·제형·용도 차이를 판정해 확정한다. 처리 규칙과 평가 근거는
 [`share-text-matching.md`](docs/product/share-text-matching.md)가 소유한다.
 
+### Security
+
+`security`는 Security 설정, 소셜 로그인과 로그인 세션을 소유한다. 회원 기능을 알지 않으며, 가입·조회는
+`SocialSignIn` 포트로 맡기고 `member`가 구현한다. 의존은 `member → security` 한 방향이고, 로그인한
+회원이 필요한 기능은 `member` 대신 `security`의 `LoginMember`에 의존한다. `config`는 기능을 모르는
+설정만 남긴다.
+
+제공자 응답 해석은 `OAuthProvider`가 맡는다. 카카오 회원번호·구글 `sub`가 제공자 식별자이고, 카카오는
+`is_email_valid`·`is_email_verified`, 구글은 `email_verified`가 참일 때만 인증된 이메일로 본다.
+
+로그인 흐름은 Spring Security `oauth2Login`이 처리하고, 컨트롤러가 없는 로그인 시작과 로그아웃 경로는
+OpenAPI에 직접 추가한다. 등록하지 않은 제공자는 Security 기본 500 대신 404로 응답한다. Spring OAuth 클라이언트 인터페이스를
+구현하는 부품(등록된 제공자만 받는 요청 해석, 제공자 토큰을 버리는 저장소)은 `security.oauth`에 둔다. 운영 nginx가 `/api/`만
+백엔드로 넘기므로 시작(`/api/oauth2/authorization/*`)과 콜백(`/api/login/oauth2/code/*`) 경로를
+`/api` 아래에 둔다. 로그인에 성공하면 세션의 인증을 회원 ID만 가진 인증으로 바꾸고, 제공자 토큰은
+저장하지 않는다. 로그인을 마치면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `ClientOrigins`가
+CORS 허용 오리진 중 `*`가 없는 첫 값으로 정하고, 비어 있으면 같은 오리진(운영)이다. 처리하지 못한
+예외가 나도 Spring이 먼저 저장한 제공자 인증을 세션과 함께 버리고 로그인 실패로 보낸다. 실패하면 오류 코드를 `error`에,
+이메일 중복이면 기존 제공자를 `provider`에 붙인다. 화면 분기는 프론트가 회원 조회로 판단한다.
+
+세션을 만들고 버리고 만료를 판정하는 일은 `LoginSession`이 맡는다. 소셜 로그인 콜백의 성공·실패 처리는 컨트롤러가 아니라 Security 필터가 호출하는 핸들러라서 별도
+객체로 두지 않고 `SecurityConfig`의 빈으로 정의하고, 이 핸들러가 `LoginSession`을 호출한다. 로그아웃도
+Security 로그아웃 필터가 처리한다. CSRF를 끄면 이 필터가 모든 메서드를 받으므로 POST로 한정하고 204로
+응답한다. 코드는 `HttpSession`과 Security의 `SecurityContextRepository`만 쓰므로 세션 저장소를
+Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이 경계에는 별도 Repository를 두지
+않는다. 지금 세션은 서블릿 컨테이너 메모리에 두므로 배포하면 모두 로그아웃된다. 웹 세션은 비활동
+1일, 로그인 후 7일에 만료한다. 서블릿 세션에 절대 만료가 없어 세션에 로그인 시각을 두고 Security
+필터 앞에서 판정한다. 이 판정이 요청마다 세션을 조회하므로 세션 쿠키를 가진 요청은 비활동 만료를
+연장한다. 쿠키 수명은 연장하지 않는다. 세션 쿠키는 `HttpOnly`, `SameSite=Lax`, `Domain` 없음이고
+수명은 앱 세션에 맞춘 60일이다. 웹의 짧은 수명은 서버가 판정한다. CSRF 토큰 대신 출처를 확인한다. 세션 쿠키가
+`SameSite=Lax`라 다른 사이트의 요청에는 실리지 않지만, `SameSite`는 사이트 단위라 `*.poudy.site`
+(staging 포함)에서 온 요청에는 운영 쿠키가 실리고, 본문 없는 POST는 CORS preflight도 거치지 않는다.
+그래서 GET·HEAD·OPTIONS·TRACE가 아닌 요청은 `Origin`이 같은 오리진이거나 `ClientOrigins`가 허용하는 오리진일 때만
+통과시키고, 아니면 403 `FORBIDDEN_ORIGIN`으로 거절한다. 이 확인은 `security.filter`의 `ForeignOriginFilter`가 맡는다. `Origin`이 없는 요청은 브라우저가 아니므로
+통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 기존 응답 캐시를 바꾸지 않고, 회원 응답만
+`no-store`로 둔다.
+
+### Member
+
+`member`는 회원과 초기 정보(성별·나이대·피부 타입)를 소유한다. 회원은 제공자와 제공자 식별자로
+식별하고, 이메일은 가입 시점에 제공자가 인증한 값을 소문자로 저장해 다른 제공자의 중복 가입을 막는
+데만 쓴다. 가입은 `MemberSignup`이 소셜 계정의 인증된 이메일을 한 번만 검증해 담고, 중복 확인과 저장이
+같은 값을 쓴다. 이미 가입한 회원은 이메일 상태와 무관하게 로그인한다. 피부 타입의 `UNKNOWN`은 회원 전용
+값이라 제품 필터 선택지인 `skin_type` 테이블을 참조하지 않는다.
+
 ## Layer responsibilities
 
 ### Controller
@@ -227,8 +272,11 @@ DB를 사용한다.
 ### CORS
 
 CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소유한다. 값이 없으면 열지 않는
-것이 기본값이다. 운영은 같은 오리진 nginx 프록시를 사용하므로 자격 증명과 불필요한 오리진을
-허용하지 않는다.
+것이 기본값이다. staging과 로컬은 프론트와 API 오리진이 달라 세션 쿠키를 보내야 하므로 허용한
+오리진에는 자격 증명을 허용한다. 운영은 같은 오리진 nginx 프록시를 사용하므로 `CLIENT_DOMAIN`을
+비워 CORS를 열지 않는다. CORS는 Security 필터 체인에서 처리한다. `CLIENT_DOMAIN` 해석은
+`security`의 `ClientOrigins` 한 곳이 맡아 CORS 설정, 상태 변경 요청의 출처 확인, 로그인 후 이동 주소가 같은
+오리진 목록을 쓴다.
 
 ## API decisions
 
