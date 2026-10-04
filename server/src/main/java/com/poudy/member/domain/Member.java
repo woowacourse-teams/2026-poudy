@@ -32,11 +32,7 @@ public final class Member {
     }
 
     public SocialSignInResult signInResult() {
-        return switch (status) {
-            case ACTIVE -> SocialSignInResult.signedIn(id);
-            case WITHDRAWN -> SocialSignInResult.withdrawn(id);
-            case RESTORE_REQUESTED -> SocialSignInResult.restoreRequested(id);
-        };
+        return new SocialSignInResult(id, status.signInStatus());
     }
 
     public boolean isProfileCompleted() {

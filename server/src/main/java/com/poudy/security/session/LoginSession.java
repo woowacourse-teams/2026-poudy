@@ -1,5 +1,6 @@
 package com.poudy.security.session;
 
+import com.poudy.security.domain.SocialSignInResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -40,6 +41,14 @@ public class LoginSession {
         this.absoluteTimeout = absoluteTimeout;
         this.clock = clock;
         this.securityContextRepository = securityContextRepository;
+    }
+
+    public void applySignInResult(SocialSignInResult result, HttpServletRequest request, HttpServletResponse response) {
+        switch (result.status()) {
+            case SIGNED_IN -> signIn(result.memberId(), request, response);
+            case WITHDRAWN -> holdWithdrawnMember(result.memberId(), request, response);
+            case RESTORE_REQUESTED -> signOut(request, response);
+        }
     }
 
     public void signIn(long memberId, HttpServletRequest request, HttpServletResponse response) {

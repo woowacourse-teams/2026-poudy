@@ -11,6 +11,7 @@ import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.SignInStatus;
 import com.poudy.security.domain.SocialSignInResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import org.junit.jupiter.api.DisplayName;
@@ -108,7 +109,7 @@ class MemberServiceTest {
 
         SocialSignInResult result = memberService.signIn(account);
 
-        assertThat(result.isWithdrawn()).isTrue();
+        assertThat(result.status()).isEqualTo(SignInStatus.WITHDRAWN);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 
@@ -122,8 +123,7 @@ class MemberServiceTest {
 
         SocialSignInResult result = memberService.signIn(account);
 
-        assertThat(result.isRestoreRequested()).isTrue();
-        assertThat(result.isWithdrawn()).isFalse();
+        assertThat(result.status()).isEqualTo(SignInStatus.RESTORE_REQUESTED);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 
@@ -151,8 +151,7 @@ class MemberServiceTest {
         memberService.restore(memberId);
 
         SocialSignInResult result = memberService.signIn(account);
-        assertThat(result.isWithdrawn()).isFalse();
-        assertThat(result.isRestoreRequested()).isFalse();
+        assertThat(result.status()).isEqualTo(SignInStatus.SIGNED_IN);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 }

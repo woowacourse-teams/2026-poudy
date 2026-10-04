@@ -3,6 +3,7 @@ package com.poudy.member.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.SignInStatus;
 import com.poudy.security.domain.SocialSignInResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +48,7 @@ class MemberTest {
     void signsInActiveMember() {
         SocialSignInResult result = memberOf(MemberStatus.ACTIVE).signInResult();
 
-        assertThat(result.isWithdrawn()).isFalse();
-        assertThat(result.isRestoreRequested()).isFalse();
+        assertThat(result.status()).isEqualTo(SignInStatus.SIGNED_IN);
         assertThat(result.memberId()).isEqualTo(1L);
     }
 
@@ -57,7 +57,7 @@ class MemberTest {
     void reportsWithdrawnMember() {
         SocialSignInResult result = memberOf(MemberStatus.WITHDRAWN).signInResult();
 
-        assertThat(result.isWithdrawn()).isTrue();
+        assertThat(result.status()).isEqualTo(SignInStatus.WITHDRAWN);
         assertThat(result.memberId()).isEqualTo(1L);
     }
 
@@ -66,8 +66,7 @@ class MemberTest {
     void reportsRestoreRequestedMember() {
         SocialSignInResult result = memberOf(MemberStatus.RESTORE_REQUESTED).signInResult();
 
-        assertThat(result.isRestoreRequested()).isTrue();
-        assertThat(result.isWithdrawn()).isFalse();
+        assertThat(result.status()).isEqualTo(SignInStatus.RESTORE_REQUESTED);
         assertThat(result.memberId()).isEqualTo(1L);
     }
 

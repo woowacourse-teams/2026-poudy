@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.SignInStatus;
 import com.poudy.security.domain.SocialSignIn;
 import com.poudy.security.domain.SocialSignInResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
@@ -66,7 +67,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("로그인에 성공하면 회원 ID만 세션에 남기고 프론트로 보낸다")
     void signsInMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.signedIn(7L));
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -74,7 +75,7 @@ class OAuthLoginHandlersTest {
         verify(socialSignIn).signIn(account.capture());
         assertThat(account.getValue().provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(account.getValue().providerId()).isEqualTo("4321");
-        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI);
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=SIGNED_IN");
         SecurityContext context = (SecurityContext) request.getSession()
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
         assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(7L));
@@ -141,11 +142,11 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("프론트 오리진이 없으면 같은 오리진의 콜백으로 보낸다")
     void redirectsToSameOriginWithoutClientOrigin() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.signedIn(7L));
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
 
         successHandlerFor(List.of()).onAuthenticationSuccess(request, response, kakaoToken());
 
-        assertThat(response.getRedirectedUrl()).isEqualTo("/login/callback");
+        assertThat(response.getRedirectedUrl()).isEqualTo("/login/callback?status=SIGNED_IN");
     }
 
     @Test
@@ -168,11 +169,11 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("탈퇴한 계정이면 로그인시키지 않고 탈퇴 회원만 세션에 둔 채 탈퇴 안내로 보낸다")
     void holdsWithdrawnMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.withdrawn(7L));
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
-        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?withdrawn=true");
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=WITHDRAWN");
         assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
             .isNull();
         assertThat(loginSession.releaseWithdrawnMember(request)).contains(7L);
@@ -187,11 +188,11 @@ class OAuthLoginHandlersTest {
             new SecurityContextImpl(kakaoToken())
         );
         request.setSession(session);
-        given(socialSignIn.signIn(any())).willReturn(SocialSignInResult.restoreRequested(7L));
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.RESTORE_REQUESTED));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
-        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?withdrawn=true&restoreRequested=true");
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=RESTORE_REQUESTED");
         assertThat(session.isInvalid()).isTrue();
         assertThat(loginSession.releaseWithdrawnMember(request)).isEmpty();
     }

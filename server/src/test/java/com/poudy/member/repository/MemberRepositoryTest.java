@@ -10,6 +10,7 @@ import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.SignInStatus;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -95,7 +96,7 @@ class MemberRepositoryTest {
 
         assertThat(repository.findById(saved.id())).isEmpty();
         assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com")))
-            .get().extracting(member -> member.signInResult().isWithdrawn()).isEqualTo(true);
+            .get().extracting(member -> member.signInResult().status()).isEqualTo(SignInStatus.WITHDRAWN);
         assertThat(repository.withdraw(saved.id())).isFalse();
     }
 
@@ -109,7 +110,7 @@ class MemberRepositoryTest {
         assertThat(repository.requestRestore(saved.id())).isTrue();
         assertThat(repository.requestRestore(saved.id())).isTrue();
         assertThat(repository.findByAccount(account(OAuthProvider.GOOGLE, "sub", "member@example.com")))
-            .get().extracting(member -> member.signInResult().isRestoreRequested()).isEqualTo(true);
+            .get().extracting(member -> member.signInResult().status()).isEqualTo(SignInStatus.RESTORE_REQUESTED);
     }
 
     @Test
