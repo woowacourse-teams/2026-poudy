@@ -75,8 +75,6 @@
 
 ## 배포 전 할 일
 
-- 처리방침에 탈퇴 회원 정보를 복구 요청을 받기 위해 30일 보관한 뒤 지운다고 적는다.
-
 - 운영·staging `backend.env`: `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`,
   `GOOGLE_CLIENT_SECRET`, staging은 `CLIENT_DOMAIN`
 - staging 프론트를 `app.staging.poudy.site`로 옮기기 (쿠키를 같은 사이트로 맞춤)
