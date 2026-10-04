@@ -1,5 +1,6 @@
 package com.poudy.security;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.security.session.LoginMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 @SpringBootTest(properties = "poudy.cors.allowed-origins="
     + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
@@ -74,7 +77,7 @@ class CorsTest {
     @ValueSource(strings = {"http://evil.example.com", "null", "https://poudy.example.com.evil.com"})
     @DisplayName("허용하지 않은 출처의 상태 변경 요청을 403으로 거절한다")
     void rejectsForeignStateChange(String origin) throws Exception {
-        mockMvc.perform(post("/api/auth/logout").header(HttpHeaders.ORIGIN, origin))
+        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, origin))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN_ORIGIN"));
     }
@@ -83,14 +86,18 @@ class CorsTest {
     @ValueSource(strings = {"http://localhost", "https://poudy.example.com", "https://pr-12.preview.example.com"})
     @DisplayName("같은 출처와 허용한 출처의 상태 변경 요청은 통과시킨다")
     void allowsKnownOriginStateChange(String origin) throws Exception {
-        mockMvc.perform(post("/api/auth/logout").header(HttpHeaders.ORIGIN, origin))
+        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, origin).with(signedInMember()))
             .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("출처 헤더가 없는 상태 변경 요청은 브라우저 요청이 아니므로 통과시킨다")
     void allowsStateChangeWithoutOrigin() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
+        mockMvc.perform(post("/api/members/logout").with(signedInMember()))
             .andExpect(status().isNoContent());
+    }
+
+    private RequestPostProcessor signedInMember() {
+        return authentication(new LoginMember(1L).toAuthentication());
     }
 }

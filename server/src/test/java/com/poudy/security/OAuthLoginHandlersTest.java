@@ -53,6 +53,8 @@ class OAuthLoginHandlersTest {
     private final LoginSession loginSession = new LoginSession(
         Duration.ofDays(1),
         Duration.ofDays(7),
+        Duration.ofHours(1),
+        Duration.ofHours(12),
         CLOCK,
         new HttpSessionSecurityContextRepository()
     );

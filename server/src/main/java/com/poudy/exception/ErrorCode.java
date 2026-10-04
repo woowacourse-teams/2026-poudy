@@ -18,6 +18,7 @@ public enum ErrorCode {
     UNSUPPORTED_REQUEST("지원하지 않는 요청입니다."),
     UNAUTHORIZED("로그인이 필요합니다."),
     FORBIDDEN_ORIGIN("허용하지 않은 출처의 요청입니다."),
+    FORBIDDEN("이 요청을 할 권한이 없습니다."),
     OAUTH_LOGIN_FAILED("소셜 로그인에 실패했습니다."),
     OAUTH_EMAIL_NOT_VERIFIED("인증된 이메일이 있는 계정으로만 가입할 수 있습니다."),
     MEMBER_EMAIL_ALREADY_REGISTERED("다른 로그인 방식으로 이미 가입한 이메일입니다."),

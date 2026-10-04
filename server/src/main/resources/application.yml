@@ -96,6 +96,9 @@ poudy:
     web-session:
       idle-timeout: P1D
       absolute-timeout: P7D
+    admin-session:
+      idle-timeout: PT1H
+      absolute-timeout: PT12H
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}

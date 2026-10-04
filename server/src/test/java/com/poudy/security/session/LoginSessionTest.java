@@ -22,6 +22,8 @@ class LoginSessionTest {
     private static final Instant SIGNED_IN_AT = Instant.parse("2026-10-03T00:00:00Z");
     private static final Duration IDLE = Duration.ofDays(1);
     private static final Duration ABSOLUTE = Duration.ofDays(7);
+    private static final Duration ADMIN_IDLE = Duration.ofHours(1);
+    private static final Duration ADMIN_ABSOLUTE = Duration.ofHours(12);
     private static final long MEMBER_ID = 7L;
 
     @AfterEach
@@ -103,6 +105,37 @@ class LoginSessionTest {
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
     }
 
+    @Test
+    @DisplayName("관리자로 로그인하면 기존 세션을 버리고 관리자 인증만 가진 새 세션을 비활동 1시간으로 둔다")
+    void signsInAdmin() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession memberSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
+
+        SecurityContext context = (SecurityContext) request.getSession()
+            .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertThat(memberSession.isInvalid()).isTrue();
+        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginAdmin("admin"));
+        assertThat(context.getAuthentication().getAuthorities()).extracting(Object::toString)
+            .containsExactly("ROLE_ADMIN");
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(ADMIN_IDLE.toSeconds());
+    }
+
+    @Test
+    @DisplayName("관리자 세션은 로그인하고 12시간이 지나면 버린다")
+    void expiresAdminSessionAfterAbsoluteTimeout() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE).minusSeconds(1)).expireIfOverdue(request);
+        assertThat(session.isInvalid()).isFalse();
+
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).expireIfOverdue(request);
+        assertThat(session.isInvalid()).isTrue();
+    }
+
     private MockHttpServletRequest signedInRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());
@@ -113,6 +146,8 @@ class LoginSessionTest {
         return new LoginSession(
             IDLE,
             ABSOLUTE,
+            ADMIN_IDLE,
+            ADMIN_ABSOLUTE,
             Clock.fixed(now, ZoneOffset.UTC),
             new HttpSessionSecurityContextRepository()
         );

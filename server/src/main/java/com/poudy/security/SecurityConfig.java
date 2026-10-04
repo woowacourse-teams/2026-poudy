@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -35,16 +35,14 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 public class SecurityConfig {
 
-    private static final String MEMBER_API = "/api/members/**";
     public static final String AUTHORIZATION_BASE_URI = "/api/oauth2/authorization";
-    public static final String LOGOUT_URI = "/api/auth/logout";
     private static final String REDIRECTION_BASE_URI = "/api/login/oauth2/code/*";
     private static final String UNSERVED_LOGIN_PAGE = "/login";
     private static final String LOGIN_CALLBACK_PATH = "/login/callback";
@@ -72,17 +70,18 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable)
             .logout(
                 logout -> logout
-                    .logoutRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, LOGOUT_URI))
+                    .logoutRequestMatcher(
+                        new OrRequestMatcher(Arrays.stream(AccessRule.values()).map(AccessRule::logoutRequest).toList())
+                    )
                     .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             )
             .requestCache(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
             .securityContext(context -> context.securityContextRepository(securityContextRepository))
-            .authorizeHttpRequests(
-                requests -> requests
-                    .requestMatchers(MEMBER_API).authenticated()
-                    .anyRequest().permitAll()
-            )
+            .authorizeHttpRequests(requests -> {
+                Arrays.stream(AccessRule.values()).forEach(rule -> rule.authorize(requests));
+                requests.anyRequest().permitAll();
+            })
             .oauth2Login(
                 login -> configureSocialLogin(
                     login,
@@ -92,14 +91,23 @@ public class SecurityConfig {
                 )
             )
             .exceptionHandling(
-                exceptions -> exceptions.authenticationEntryPoint(
-                    (request, response, exception) -> handlerExceptionResolver.resolveException(
-                        request,
-                        response,
-                        null,
-                        exception
+                exceptions -> exceptions
+                    .authenticationEntryPoint(
+                        (request, response, exception) -> handlerExceptionResolver.resolveException(
+                            request,
+                            response,
+                            null,
+                            exception
+                        )
                     )
-                )
+                    .accessDeniedHandler(
+                        (request, response, exception) -> handlerExceptionResolver.resolveException(
+                            request,
+                            response,
+                            null,
+                            exception
+                        )
+                    )
             )
             .addFilterBefore(
                 new ForeignOriginFilter(clientOrigins, handlerExceptionResolver),

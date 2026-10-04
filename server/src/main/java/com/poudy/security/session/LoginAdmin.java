@@ -5,13 +5,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 
-public record LoginMember(long id) implements Serializable {
+public record LoginAdmin(String username) implements Serializable {
 
     public Authentication toAuthentication() {
         return UsernamePasswordAuthenticationToken.authenticated(
             this,
             null,
-            AuthorityUtils.createAuthorityList(Role.MEMBER.authority())
+            AuthorityUtils.createAuthorityList(Role.ADMIN.authority())
         );
     }
 }

@@ -14,6 +14,7 @@ import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,14 @@ class MemberControllerTest {
         mockMvc.perform(get("/api/members/me"))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    @DisplayName("관리자 세션으로는 회원 API를 403으로 거절한다")
+    void rejectsAdminSession() throws Exception {
+        mockMvc.perform(get("/api/members/me").with(authentication(new LoginAdmin("admin").toAuthentication())))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
 
     @Test

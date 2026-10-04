@@ -53,7 +53,7 @@ class CorsDisabledTest {
     @Test
     @DisplayName("다른 출처의 상태 변경 요청은 403으로 거절한다")
     void rejectsForeignStateChange() throws Exception {
-        mockMvc.perform(post("/api/auth/logout").header(HttpHeaders.ORIGIN, ORIGIN))
+        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, ORIGIN))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN_ORIGIN"));
     }

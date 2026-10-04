@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -74,13 +75,14 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("로그아웃하면 세션을 버리고 204를 돌려준다")
+    @DisplayName("회원이 로그아웃하면 세션을 버리고 204를 돌려준다")
     void logsOut() throws Exception {
         MockHttpSession session = new MockHttpSession();
 
         mockMvc
             .perform(
-                post("/api/auth/logout").session(session).with(authentication(new LoginMember(1L).toAuthentication()))
+                post("/api/members/logout").session(session)
+                    .with(authentication(new LoginMember(1L).toAuthentication()))
             )
             .andExpect(status().isNoContent());
 
@@ -88,10 +90,35 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("로그인하지 않았어도 로그아웃은 204를 돌려준다")
-    void logsOutAnonymous() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
-            .andExpect(status().isNoContent());
+    @DisplayName("로그인하지 않았으면 회원·관리자 로그아웃을 401로 거절한다")
+    void rejectsLogoutWithoutSession() throws Exception {
+        mockMvc.perform(post("/api/members/logout"))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/admin/logout"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("다른 역할의 로그아웃으로는 세션을 끝내지 않고 403으로 거절한다")
+    void keepsSessionOnOtherRoleLogout() throws Exception {
+        MockHttpSession adminSession = new MockHttpSession();
+        MockHttpSession memberSession = new MockHttpSession();
+
+        mockMvc.perform(
+            post("/api/members/logout").session(adminSession)
+                .with(authentication(new LoginAdmin("admin").toAuthentication()))
+        )
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        mockMvc.perform(
+            post("/api/admin/logout").session(memberSession)
+                .with(authentication(new LoginMember(1L).toAuthentication()))
+        )
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
+        assertThat(adminSession.isInvalid()).isFalse();
+        assertThat(memberSession.isInvalid()).isFalse();
     }
 
     @Test
@@ -99,7 +126,9 @@ class SecurityConfigTest {
     void ignoresLogoutByGet() throws Exception {
         MockHttpSession session = new MockHttpSession();
 
-        mockMvc.perform(get("/api/auth/logout").session(session))
+        mockMvc.perform(
+            get("/api/members/logout").session(session).with(authentication(new LoginMember(1L).toAuthentication()))
+        )
             .andExpect(status().isNotFound());
 
         assertThat(session.isInvalid()).isFalse();

@@ -1,7 +1,7 @@
 package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
-import com.poudy.security.SecurityConfig;
+import com.poudy.security.AccessRule;
 import com.poudy.security.domain.OAuthProvider;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -28,7 +28,7 @@ public class SecurityPathConfig {
     public OpenApiCustomizer securityPathCustomizer() {
         return openApi -> openApi.getPaths()
             .addPathItem(ErrorResponseCodes.SOCIAL_LOGIN_PATH, socialLoginPath())
-            .addPathItem(SecurityConfig.LOGOUT_URI, logoutPath());
+            .addPathItem(AccessRule.MEMBER.logoutPath(), logoutPath());
     }
 
     private PathItem socialLoginPath() {
