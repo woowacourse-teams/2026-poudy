@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { socialLoginUrl } from "@/lib/api/member";
+import { SocialLoginLink } from "@/components/login/SocialLoginLink";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -67,20 +67,20 @@ export default function LoginPage() {
       </section>
 
       <div className="flex shrink-0 flex-col gap-2.5">
-        <a
-          href={socialLoginUrl("kakao")}
+        <SocialLoginLink
+          provider="kakao"
           className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <KakaoIcon />
           카카오로 시작하기
-        </a>
-        <a
-          href={socialLoginUrl("google")}
+        </SocialLoginLink>
+        <SocialLoginLink
+          provider="google"
           className="flex h-[52px] items-center justify-center gap-2 rounded-button border border-[#8b8d8b] bg-background text-[16px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <GoogleIcon />
           Google로 시작하기
-        </a>
+        </SocialLoginLink>
 
         <Link
           href="/"
