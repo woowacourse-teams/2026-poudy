@@ -174,6 +174,13 @@ public class MemberRepository {
         ) == 1;
     }
 
+    public int deleteWithdrawnBefore(OffsetDateTime cutoff) {
+        return jdbc.update(
+            "delete from member where deleted_at <= :cutoff",
+            new MapSqlParameterSource("cutoff", cutoff.atZoneSameInstant(SEOUL).toLocalDateTime())
+        );
+    }
+
     private static OffsetDateTime offset(LocalDateTime value) {
         return value.atZone(SEOUL).toOffsetDateTime();
     }

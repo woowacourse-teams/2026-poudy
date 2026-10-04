@@ -10,11 +10,14 @@ import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -24,6 +27,9 @@ class MemberRepositoryTest {
 
     @Autowired
     private MemberRepository repository;
+
+    @Autowired
+    private NamedParameterJdbcTemplate jdbc;
 
     @Test
     @DisplayName("저장한 회원을 ID, 제공자 식별자, 이메일로 다시 읽는다")
@@ -104,6 +110,26 @@ class MemberRepositoryTest {
         assertThat(repository.requestRestore(saved.id())).isTrue();
         assertThat(repository.findByAccount(account(OAuthProvider.GOOGLE, "sub", "member@example.com")))
             .get().extracting(member -> member.signInResult().isRestoreRequested()).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("기준 시각 이전에 탈퇴한 회원만 지운다")
+    void deletesOnlyMembersWithdrawnBeforeCutoff() {
+        Member active = repository.save(signup(OAuthProvider.KAKAO, "1", "active@example.com"));
+        Member expired = repository.save(signup(OAuthProvider.KAKAO, "2", "expired@example.com"));
+        Member recent = repository.save(signup(OAuthProvider.KAKAO, "3", "recent@example.com"));
+        repository.withdraw(expired.id());
+        repository.withdraw(recent.id());
+        jdbc.update(
+            "update member set deleted_at = deleted_at - interval '31 days' where id = :id",
+            new MapSqlParameterSource("id", expired.id())
+        );
+
+        assertThat(repository.deleteWithdrawnBefore(OffsetDateTime.now().minusDays(30))).isEqualTo(1);
+
+        assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "2", "expired@example.com"))).isEmpty();
+        assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "3", "recent@example.com"))).isPresent();
+        assertThat(repository.findById(active.id())).isPresent();
     }
 
     private MemberSignup signup(OAuthProvider provider, String providerId, String email) {

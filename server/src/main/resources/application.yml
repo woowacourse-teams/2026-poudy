@@ -126,6 +126,11 @@ poudy:
       batch-size: 500
       max-batches: 20
       cron: "0 30 3 * * *"
+  member:
+    retention:
+      enabled: false
+      max-age: P30D
+      cron: "0 40 3 * * *"
   product-request:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}
