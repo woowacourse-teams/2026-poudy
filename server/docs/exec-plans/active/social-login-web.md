@@ -20,7 +20,7 @@
 - `POST /api/admin/members/{memberId}/restore`: 복구를 요청한 탈퇴 회원 복구. `deleted_at`과
   `restore_requested_at`을 비운다
 
-하지 않는 것: 모바일 네이티브 로그인(토큰 교환 엔드포인트), 저장함, 탈퇴 시 카카오 연결 끊기(어드민
+하지 않는 것: 모바일 네이티브 로그인(토큰 교환 엔드포인트), 저장함(`member-saved-products.md`), 탈퇴 시 카카오 연결 끊기(어드민
 키 필요). 각각 다음 작업으로 남긴다.
 
 ## 설계

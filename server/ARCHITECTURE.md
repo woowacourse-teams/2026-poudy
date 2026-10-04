@@ -27,8 +27,8 @@ com.poudy
 └── exception             공통 오류 응답 경계
 ```
 
-기능 패키지는 필요한 역할만 만든다. `storage`는 브라우저 상태의 조회 투영이므로 Domain과
-Repository가 없고, `share`는 제품·브랜드 모델을 사용하는 별도 해석 경계이므로 Repository가
+기능 패키지는 필요한 역할만 만든다. `storage`는 회원별 저장 목록이 제품 ID와 저장 시각뿐이라 Domain이
+없고, `share`는 제품·브랜드 모델을 사용하는 별도 해석 경계이므로 Repository가
 없다. `common`은 횡단 API 계약과 기술 코드만 소유하며 기능 규칙을 가져가지 않는다.
 
 ## Dependency direction
@@ -167,8 +167,11 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 
 ### Storage
 
-보관 목록과 정렬은 브라우저 상태다. 서버의 `storage`는 전달받은 제품 ID를 제품 목록 표현으로
-투영할 뿐 별도 저장 상태를 만들지 않는다.
+저장함은 로그인한 회원만 쓰고 `member_saved_product`에 회원·제품·저장 시각(`created_at`)을 둔다.
+제품 목록·상세 응답에는 저장 여부를 넣지 않는다. 클라이언트가 저장한 제품 ID 목록
+(`/api/members/me/saved-products/ids`)을 따로 받아 표시하고, 저장함 화면은 표시 정보까지 담은
+목록(`/api/members/me/saved-products`)을 한 번에 받는다. 둘 다 최근 저장순이다. 저장과 해제는
+같은 요청을 다시 보내도 결과가 같다. 회원 행을 지우면 저장 목록도 함께 지워진다(`ON DELETE CASCADE`).
 
 ### Share
 
