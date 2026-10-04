@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { socialLoginUrl } from "@/lib/api/member";
+
 export const metadata: Metadata = {
   title: "로그인",
   description: "파우디에 로그인하고 내 피부에 맞는 제품을 이어서 살펴보세요.",
@@ -65,24 +67,20 @@ export default function LoginPage() {
       </section>
 
       <div className="flex shrink-0 flex-col gap-2.5">
-        <button
-          type="button"
-          disabled
-          title="카카오 로그인 준비 중"
-          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919]"
+        <a
+          href={socialLoginUrl("kakao")}
+          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <KakaoIcon />
           카카오로 시작하기
-        </button>
-        <button
-          type="button"
-          disabled
-          title="Google 로그인 준비 중"
-          className="flex h-[52px] items-center justify-center gap-2 rounded-button border border-[#8b8d8b] bg-background text-[16px] font-bold"
+        </a>
+        <a
+          href={socialLoginUrl("google")}
+          className="flex h-[52px] items-center justify-center gap-2 rounded-button border border-[#8b8d8b] bg-background text-[16px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <GoogleIcon />
           Google로 시작하기
-        </button>
+        </a>
 
         <Link
           href="/"
@@ -92,7 +90,7 @@ export default function LoginPage() {
           로그인 없이 둘러보기
         </Link>
         <p className="mt-1 text-center text-[11px] leading-relaxed text-text-secondary sm:text-[12px]">
-          시작하면{" "}
+          시작하면 만 14세 이상임을 확인하고,{" "}
           <Link
             href="/terms"
             className="rounded-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"

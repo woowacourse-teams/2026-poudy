@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { apiGet, apiPost, apiUrl, INVALID_RESPONSE } from "./client";
+import { apiGet, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
 
 // 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -134,5 +134,44 @@ describe("응답 검증", () => {
     const [error, properties] = captureException.mock.calls[0];
     expect((error as Error).message).toBe(`${INVALID_RESPONSE} /api/brands/:id/items: items.*.name`);
     expect(properties).toEqual({ surface: "/api/brands/:id/items", fields: ["items.*.name"] });
+  });
+});
+
+describe("페이지 이동용 API 주소", () => {
+  it("서버에서 그려도 서버 전용 주소 대신 공개 주소를 쓴다", () => {
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "http://127.0.0.1:8081");
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://staging.poudy.site");
+
+    expect(publicApiUrl("/api/oauth2/authorization/kakao")).toBe(
+      "https://staging.poudy.site/api/oauth2/authorization/kakao",
+    );
+  });
+
+  it("공개 주소가 비어 있으면 같은 출처의 경로를 쓴다", () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
+
+    expect(publicApiUrl("/api/oauth2/authorization/google")).toBe("/api/oauth2/authorization/google");
+  });
+});
+
+describe("로그인 세션 요청", () => {
+  const Member = z.object({ id: z.number() });
+
+  const prepareFetch = () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+    return fetchMock;
+  };
+
+  it("세션 조회는 쿠키를 함께 보내고 응답을 담아 두지 않는다", async () => {
+    const fetchMock = prepareFetch();
+
+    await apiGet("/api/members/me", Member, { withSession: true });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+      credentials: "include",
+      cache: "no-store",
+    });
   });
 });

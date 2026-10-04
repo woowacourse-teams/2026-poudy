@@ -10,6 +10,7 @@ import {
   IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
+  MemberResponse,
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
@@ -97,6 +98,7 @@ const cases = [
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
+  ["내 정보", "/members/me", MemberResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -170,6 +172,13 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
+  it("로그아웃은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/auth/logout", "");
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
+  });
+
   it("모든 핸들러를 검사한다", () => {
     /*
      * 성분 목록처럼 분기가 둘인 핸들러가 있어 경로에서 조회 문자열을 뗀 뒤 센다.
@@ -186,6 +195,7 @@ describe("목 응답과 스키마", () => {
       "/products/registration-requests",
       "/products/:id/views",
       "/search-keywords",
+      "/auth/logout",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

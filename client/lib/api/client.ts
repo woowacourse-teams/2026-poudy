@@ -19,6 +19,12 @@ export const apiUrl = (path: string, query?: URLSearchParams) => {
 };
 
 /**
+ * 브라우저가 페이지째 이동할 API 주소. 서버 컴포넌트가 그려도 서버 전용 주소를 쓰지 않는다.
+ * 공개 주소가 비어 있으면 같은 출처의 경로로 둔다.
+ */
+export const publicApiUrl = (path: string): string => `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}${path}`;
+
+/**
  * 사용자가 만난 실패를 남긴다. 이 파일은 서버 컴포넌트도 부르므로 분석 모듈을
  * 정적으로 가져오지 않는다. 가져오면 서버 그래프에 클라이언트 경계가 끌려 들어온다.
  *
@@ -57,7 +63,14 @@ type CacheSeconds = number;
 type GetOptions = {
   readonly query?: URLSearchParams;
   readonly revalidate?: CacheSeconds;
+  /** 로그인 세션 쿠키를 함께 보낸다. 회원마다 응답이 달라 담아 두지 않는다. */
+  readonly withSession?: boolean;
 };
+
+/**
+ * 로그인 세션이 필요한 요청. staging 과 로컬은 프론트와 API 출처가 달라 쿠키를 명시해야 실린다.
+ */
+const SESSION_REQUEST: RequestInit = { credentials: "include", cache: "no-store" };
 
 export const INVALID_RESPONSE = "INVALID_RESPONSE";
 
@@ -108,9 +121,10 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
 export const apiGet = async <T>(
   path: string,
   schema: ZodType<T>,
-  { query, revalidate }: GetOptions = {},
+  { query, revalidate, withSession = false }: GetOptions = {},
 ): Promise<T> => {
-  const response = await fetch(apiUrl(path, query), { next: { revalidate } }).catch((cause: unknown) => {
+  const init: RequestInit = withSession ? SESSION_REQUEST : { next: { revalidate } };
+  const response = await fetch(apiUrl(path, query), init).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);
     throw new ApiError(0, "NETWORK_ERROR", cause instanceof Error ? cause.message : "요청을 보내지 못했습니다.");

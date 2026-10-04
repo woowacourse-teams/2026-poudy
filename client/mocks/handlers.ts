@@ -1,4 +1,4 @@
-import type { ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
+import type { MemberResponse, ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -470,7 +470,26 @@ const curationBlocks = [
 /** 인기 제품은 목록 앞에서 잘라 쓴다. 목에는 조회수가 없어 순위를 만들 기준이 없다. */
 const RANKING_SIZE = 6;
 
+/**
+ * 목에서는 늘 로그인한 회원 한 명이 있다고 본다.
+ */
+const mockSession: { member: MemberResponse } = {
+  member: {
+    id: 1,
+    provider: "KAKAO",
+    email: "member@example.com",
+    gender: null,
+    ageRange: null,
+    skinType: null,
+    profileCompleted: false,
+  },
+};
+
 export const handlers = [
+  http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+
+  http.post("*/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
+
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
 
   http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
