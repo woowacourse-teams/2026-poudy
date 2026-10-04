@@ -621,7 +621,7 @@ export type AdminProductRequestPageResponse = { items: Array<AdminProductRequest
 export type AdminRestoreRequestResponse = { memberId: number, provider: ("KAKAO" | "GOOGLE"), email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -775,13 +775,15 @@ export type post_Restore = {
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
     }
 /**
- * 관리자 계정을 확인한다.
+ * 관리자 계정을 확인하고 관리자 세션을 발급한다. 관리자 API는 이 세션 쿠키로 호출한다.
  */
 export type post_Login = {
       method: "POST",
@@ -814,6 +816,7 @@ export type patch_UpdateMyProfile = {
       responses: {200: Schemas.MemberResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -831,6 +834,8 @@ export type patch_ChangeStatus = {
           }
       responses: {200: Schemas.AdminProductRequestResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -849,6 +854,8 @@ export type patch_ChangeStatus_1 = {
           }
       responses: {200: Schemas.AdminFeedbackResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -1088,6 +1095,7 @@ export type get_FindMe = {
       parameters: never,
       responses: {200: Schemas.MemberResponse,
 401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1103,6 +1111,7 @@ export type delete_Withdraw = {
       parameters: never,
       responses: {204: unknown,
 401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1316,6 +1325,8 @@ export type get_FindAll = {
           }
       responses: {200: Schemas.AdminProductRequestPageResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1332,6 +1343,8 @@ export type get_FindById = {
           }
       responses: {200: Schemas.AdminProductRequestResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -1360,6 +1373,8 @@ export type get_FindRestoreRequests = {
           }
       responses: {200: Schemas.AdminRestoreRequestPageResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1386,6 +1401,8 @@ export type get_FindAll_1 = {
           }
       responses: {200: Schemas.AdminFeedbackPageResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1402,13 +1419,15 @@ export type get_FindById_1 = {
           }
       responses: {200: Schemas.AdminFeedbackResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
     }
 /**
- * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다. 탈퇴한 계정이면 withdrawn=true를, 이미 복구를 요청했으면 restoreRequested=true도 붙인다.
+ * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, status에 SIGNED_IN, 탈퇴한 계정이면 WITHDRAWN, 이미 복구를 요청했으면 RESTORE_REQUESTED를 붙인다. 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다.
  */
 export type get_StartSocialLogin = {
       method: "GET",
@@ -1428,15 +1447,33 @@ export type get_StartSocialLogin = {
 },
     }
 /**
- * 로그인 세션을 끝낸다. 로그인하지 않았어도 성공한다.
+ * 회원 세션을 끝낸다. 관리자 세션은 끝내지 않는다.
  */
 export type post_Logout = {
       method: "POST",
-      path: "/api/auth/logout",
+      path: "/api/members/logout",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
       responses: {204: unknown,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 관리자 세션을 끝낸다. 회원 세션은 끝내지 않는다.
+ */
+export type post_AdminLogout = {
+      method: "POST",
+      path: "/api/admin/logout",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1455,7 +1492,8 @@ export type post_Logout = {
 "/api/auth/withdrawn-member/restore-request": Endpoints.post_RequestRestore,
 "/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
 "/api/admin/login": Endpoints.post_Login,
-"/api/auth/logout": Endpoints.post_Logout
+"/api/members/logout": Endpoints.post_Logout,
+"/api/admin/logout": Endpoints.post_AdminLogout
          },
 patch: {
            "/api/members/me/profile": Endpoints.patch_UpdateMyProfile,

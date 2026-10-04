@@ -1,6 +1,7 @@
 package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
+import com.poudy.security.AccessRule;
 import com.poudy.security.SecurityConfig;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import java.util.List;
@@ -17,7 +18,6 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
-    private static final String MEMBERS_PATH = "/api/members/";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn-member/restore-request";
     public static final String SOCIAL_LOGIN_PATH = SecurityConfig.AUTHORIZATION_BASE_URI + "/{provider}";
@@ -81,7 +81,7 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean authenticated(String path) {
-        return path.startsWith(MEMBERS_PATH);
+        return AccessRule.requiresLogin(path);
     }
 
     public static boolean payloadLimited(String path) {

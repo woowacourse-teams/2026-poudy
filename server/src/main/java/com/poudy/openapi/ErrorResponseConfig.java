@@ -41,6 +41,10 @@ public class ErrorResponseConfig {
                 "401",
                 ProblemDetailResponses.of("로그인 필요", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED)
             );
+            responses.addApiResponse(
+                "403",
+                ProblemDetailResponses.of("권한 없음", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN)
+            );
         }
         if (ErrorResponseCodes.rateLimited(path)) {
             responses.addApiResponse(
