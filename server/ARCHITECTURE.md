@@ -182,7 +182,8 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 ### Security
 
 `security`는 Security 설정, 소셜 로그인과 로그인 세션을 소유한다. 회원 기능을 알지 않으며, 가입·조회는
-`SocialSignIn` 포트로 맡기고 `member`가 구현한다. 의존은 `member → security` 한 방향이고, 로그인한
+`SocialSignIn` 포트로 맡기고 `member`가 구현한다. 활성 회원 확인도 `MemberActivity` 포트를
+`MemberService`가 구현한다. 의존은 `member → security` 한 방향이고, 로그인한
 회원이 필요한 기능은 `member` 대신 `security`의 `LoginMember`에 의존한다. `config`는 기능을 모르는
 설정만 남긴다.
 
@@ -210,7 +211,10 @@ Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이
 필터 앞에서 판정한다. 관리자는 환경 변수의 공용 계정으로 `POST /api/admin/login`에 로그인하면 같은
 세션에 `ROLE_ADMIN` 인증을 받는다. 로그인 때 기존 세션을 버려 세션 ID를 새로 받고, 비활동 1시간,
 로그인 후 12시간에 만료한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/members/**`는 회원 인증만 받고,
-인증이 없으면 401 `UNAUTHORIZED`, 다른 쪽 인증이면 403 `FORBIDDEN`으로 거절한다. 로그아웃은 회원
+인증이 없으면 401 `UNAUTHORIZED`, 다른 쪽 인증이면 403 `FORBIDDEN`으로 거절한다. 회원 인증으로
+`/api/members/**`를 호출하면 `ActiveMemberFilter`가 PK 조회 한 번으로 활성 상태를 확인한다.
+탈퇴하거나 삭제된 회원이면 세션을 종료하고 401로 거절한다. 이 필터는 인증을 읽은 뒤,
+로그아웃 처리 전에 실행하므로 다른 기기의 세션도 다음 회원 API 요청에서 종료된다. 로그아웃은 회원
 `POST /api/members/logout`, 관리자 `POST /api/admin/logout`으로 나누고, 둘 다 Security 로그아웃 필터가
 자기 역할의 세션일 때만 처리한다. 세션이 없거나 다른 역할이면 필터를 지나 접근 규칙에 따라 401·403으로
 거절하고 세션은 그대로 둔다. 나중에 IP 제한 같은 조건을
