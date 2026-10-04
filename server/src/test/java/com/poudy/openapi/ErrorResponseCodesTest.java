@@ -63,4 +63,12 @@ class ErrorResponseCodesTest {
         assertThat(ErrorResponseCodes.notFound("/api/admin/product-requests/{requestId}"))
             .contains(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("소셜 로그인 시작은 없는 제공자만 404로 문서화한다")
+    void documentsSocialLoginErrors() {
+        assertThat(ErrorResponseCodes.badRequest("/api/oauth2/authorization/{provider}", HttpMethod.GET)).isEmpty();
+        assertThat(ErrorResponseCodes.notFound("/api/oauth2/authorization/{provider}"))
+            .containsExactly(ErrorCode.ENDPOINT_NOT_FOUND);
+    }
 }

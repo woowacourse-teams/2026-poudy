@@ -32,6 +32,10 @@
       "description": "빠른 필터 조회 API"
     },
     {
+      "name": "회원",
+      "description": "로그인한 회원 API"
+    },
+    {
       "name": "성분군",
       "description": "성분군 조회 API"
     },
@@ -638,6 +642,86 @@
                   "status": 400,
                   "detail": "요청 본문 값이 올바르지 않습니다.",
                   "code": "INVALID_REQUEST_BODY"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/members/me/profile": {
+      "patch": {
+        "tags": [
+          "회원"
+        ],
+        "summary": "내 초기 정보 저장",
+        "description": "성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.",
+        "operationId": "updateMyProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "저장 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 본문 값이 올바르지 않습니다.",
+                  "code": "INVALID_REQUEST_BODY"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
                 }
               }
             }
@@ -1882,6 +1966,60 @@
         }
       }
     },
+    "/api/members/me": {
+      "get": {
+        "tags": [
+          "회원"
+        ],
+        "summary": "내 정보 조회",
+        "description": "로그인한 회원 정보와 초기 정보 입력 완료 여부를 조회한다.",
+        "operationId": "findMe",
+        "responses": {
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ingredients": {
       "get": {
         "tags": [
@@ -2901,6 +3039,105 @@
           }
         }
       }
+    },
+    "/api/oauth2/authorization/{provider}": {
+      "get": {
+        "tags": [
+          "인증"
+        ],
+        "summary": "소셜 로그인 시작",
+        "description": "제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다.",
+        "operationId": "startSocialLogin",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "kakao",
+                "google"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "제공자 로그인 화면으로 이동",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "요청한 경로를 찾을 수 없습니다.",
+                  "code": "ENDPOINT_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "인증"
+        ],
+        "summary": "로그아웃",
+        "description": "로그인 세션을 끝낸다. 로그인하지 않았어도 성공한다.",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "로그아웃 성공"
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3058,6 +3295,119 @@
         "required": [
           "password",
           "username"
+        ]
+      },
+      "MemberProfileRequest": {
+        "type": "object",
+        "properties": {
+          "gender": {
+            "type": "string",
+            "enum": [
+              "FEMALE",
+              "MALE"
+            ],
+            "example": "FEMALE"
+          },
+          "ageRange": {
+            "type": "string",
+            "enum": [
+              "TEENS",
+              "TWENTIES",
+              "THIRTIES",
+              "FORTIES",
+              "FIFTIES",
+              "SIXTIES_OR_OLDER"
+            ],
+            "example": "TWENTIES"
+          },
+          "skinType": {
+            "type": "string",
+            "enum": [
+              "DRY",
+              "OILY",
+              "SENSITIVE",
+              "COMBINATION",
+              "UNKNOWN"
+            ],
+            "example": "COMBINATION"
+          }
+        },
+        "required": [
+          "ageRange",
+          "gender",
+          "skinType"
+        ]
+      },
+      "MemberResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "KAKAO",
+              "GOOGLE"
+            ],
+            "example": "KAKAO"
+          },
+          "email": {
+            "type": "string",
+            "example": "member@example.com"
+          },
+          "gender": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "FEMALE",
+              "MALE"
+            ]
+          },
+          "ageRange": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "TEENS",
+              "TWENTIES",
+              "THIRTIES",
+              "FORTIES",
+              "FIFTIES",
+              "SIXTIES_OR_OLDER"
+            ]
+          },
+          "skinType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "DRY",
+              "OILY",
+              "SENSITIVE",
+              "COMBINATION",
+              "UNKNOWN"
+            ]
+          },
+          "profileCompleted": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "ageRange",
+          "email",
+          "gender",
+          "id",
+          "profileCompleted",
+          "provider",
+          "skinType"
         ]
       },
       "AdminProductRequestStatusUpdateRequest": {
@@ -5221,7 +5571,13 @@
               "PAYLOAD_TOO_LARGE",
               "TOO_MANY_REQUESTS",
               "UNSUPPORTED_REQUEST",
+              "UNAUTHORIZED",
+              "FORBIDDEN_ORIGIN",
+              "OAUTH_LOGIN_FAILED",
+              "OAUTH_EMAIL_NOT_VERIFIED",
+              "MEMBER_EMAIL_ALREADY_REGISTERED",
               "FEEDBACK_NOT_FOUND",
+              "MEMBER_NOT_FOUND",
               "PRODUCT_REQUEST_NOT_FOUND",
               "CURATION_NOT_FOUND",
               "PRODUCT_NOT_FOUND",

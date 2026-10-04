@@ -42,6 +42,8 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
+export type MemberProfileRequest = { gender: ("FEMALE" | "MALE"), ageRange: ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER"), skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") }
+export type MemberResponse = { id: number, provider: ("KAKAO" | "GOOGLE"), email: string, gender: (("FEMALE" | "MALE") | null), ageRange: (("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER") | null), skinType: (("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") | null), profileCompleted: boolean }
 export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
 export type AdminFeedbackStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
@@ -617,7 +619,7 @@ export type BrandDetailResponse = {
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -756,6 +758,25 @@ export type post_Login = {
       responses: {200: unknown,
 400: Schemas.ProblemDetail,
 401: unknown,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.
+ */
+export type patch_UpdateMyProfile = {
+      method: "PATCH",
+      path: "/api/members/me/profile",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.MemberProfileRequest,
+          }
+      responses: {200: Schemas.MemberResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1015,6 +1036,21 @@ export type get_CountProducts = {
           }
       responses: {200: Schemas.ProductCountResponse,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인한 회원 정보와 초기 정보 입력 완료 여부를 조회한다.
+ */
+export type get_FindMe = {
+      method: "GET",
+      path: "/api/members/me",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.MemberResponse,
+401: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1292,6 +1328,40 @@ export type get_FindById_1 = {
 },
 
     }
+/**
+ * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다.
+ */
+export type get_StartSocialLogin = {
+      method: "GET",
+      path: "/api/oauth2/authorization/{provider}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { provider: ("kakao" | "google") },
+
+          }
+      responses: {302: unknown,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+      responseHeaders: {302: { Location: string },
+},
+    }
+/**
+ * 로그인 세션을 끝낸다. 로그인하지 않았어도 성공한다.
+ */
+export type post_Logout = {
+      method: "POST",
+      path: "/api/auth/logout",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+500: Schemas.ProblemDetail,
+},
+
+    }
 
   }
 
@@ -1303,10 +1373,12 @@ export type get_FindById_1 = {
 "/api/products/registration-requests": Endpoints.post_Submit,
 "/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
-"/api/admin/login": Endpoints.post_Login
+"/api/admin/login": Endpoints.post_Login,
+"/api/auth/logout": Endpoints.post_Logout
          },
 patch: {
-           "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
+           "/api/members/me/profile": Endpoints.patch_UpdateMyProfile,
+"/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
 "/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          },
 get: {
@@ -1319,6 +1391,7 @@ get: {
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
+"/api/members/me": Endpoints.get_FindMe,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
@@ -1332,7 +1405,8 @@ get: {
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
-"/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1
+"/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
+"/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
          }
      }
 

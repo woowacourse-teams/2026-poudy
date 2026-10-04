@@ -29,10 +29,17 @@ public class ErrorResponseConfig {
     private void addErrorResponses(String path, PathItem.HttpMethod method, Operation operation) {
         ApiResponses responses = operation.getResponses();
 
-        if (hasInput(operation)) {
+        List<ErrorCode> badRequestCodes = ErrorResponseCodes.badRequest(path, method);
+        if (hasInput(operation) && !badRequestCodes.isEmpty()) {
             responses.addApiResponse(
                 "400",
-                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path, method))
+                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes)
+            );
+        }
+        if (ErrorResponseCodes.authenticated(path)) {
+            responses.addApiResponse(
+                "401",
+                ProblemDetailResponses.of("로그인 필요", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED)
             );
         }
         if (ErrorResponseCodes.rateLimited(path)) {

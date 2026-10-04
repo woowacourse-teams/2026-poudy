@@ -1,6 +1,7 @@
 package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
+import com.poudy.security.SecurityConfig;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,9 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
+    private static final String MEMBERS_PATH = "/api/members/";
+    private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
+    public static final String SOCIAL_LOGIN_PATH = SecurityConfig.AUTHORIZATION_BASE_URI + "/{provider}";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
         "brands",
@@ -34,6 +38,9 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> badRequest(String path, HttpMethod method) {
+        if (SOCIAL_LOGIN_PATH.equals(path)) {
+            return List.of();
+        }
         if (PRODUCT_REQUESTS_PATH.equals(path) || "/api/search-keywords".equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
@@ -50,7 +57,7 @@ public final class ErrorResponseCodes {
         if (PENDING_IMAGES_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
-        if (ADMIN_LOGIN_PATH.equals(path)) {
+        if (ADMIN_LOGIN_PATH.equals(path) || MEMBER_PROFILE_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
@@ -72,6 +79,10 @@ public final class ErrorResponseCodes {
             || PENDING_IMAGES_PATH.equals(path);
     }
 
+    public static boolean authenticated(String path) {
+        return path.startsWith(MEMBERS_PATH);
+    }
+
     public static boolean payloadLimited(String path) {
         return PENDING_IMAGES_PATH.equals(path);
     }
@@ -81,6 +92,9 @@ public final class ErrorResponseCodes {
             return List.of();
         }
 
+        if (SOCIAL_LOGIN_PATH.equals(path)) {
+            return List.of(ErrorCode.ENDPOINT_NOT_FOUND);
+        }
         if (path.startsWith("/api/admin/feedbacks/")) {
             return List.of(ErrorCode.FEEDBACK_NOT_FOUND);
         }
