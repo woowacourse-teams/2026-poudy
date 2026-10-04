@@ -195,9 +195,9 @@ describe("로그인 세션 요청", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
 
-    await apiPost("/api/auth/logout", undefined, { withSession: true });
+    await apiPost("/api/members/logout", undefined, { withSession: true });
 
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/auth/logout", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/logout", {
       credentials: "include",
       cache: "no-store",
       method: "POST",

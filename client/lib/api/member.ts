@@ -13,7 +13,7 @@ export const findMe = (): Promise<MemberResponse> => apiGet("/api/members/me", M
 export const updateMyProfile = (profile: MemberProfileRequest): Promise<MemberResponse> =>
   apiPatch("/api/members/me/profile", MemberResponse, profile);
 
-export const logout = (): Promise<void> => apiPost("/api/auth/logout", undefined, { withSession: true });
+export const logout = (): Promise<void> => apiPost("/api/members/logout", undefined, { withSession: true });
 
 export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
 

@@ -33,7 +33,11 @@ export function MyPageScreen() {
     setPending(true);
     request()
       .then(() => router.replace("/login"))
-      .catch(() => {
+      .catch((error: unknown) => {
+        if (isSignedOut(error)) {
+          router.replace("/login");
+          return;
+        }
         window.alert(failure);
         setPending(false);
       });

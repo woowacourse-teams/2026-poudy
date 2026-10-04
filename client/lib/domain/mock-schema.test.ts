@@ -216,7 +216,7 @@ describe("목 응답과 스키마", () => {
   });
 
   it("로그아웃은 내용 없이 204 를 준다", async () => {
-    const { status, body } = await post("/auth/logout", "");
+    const { status, body } = await post("/members/logout", "");
 
     expect(status).toBe(204);
     expect(body).toBeUndefined();
@@ -239,7 +239,7 @@ describe("목 응답과 스키마", () => {
       "/products/:id/views",
       "/search-keywords",
       "/members/me/profile",
-      "/auth/logout",
+      "/members/logout",
       "/members/me (DELETE)",
       "/auth/withdrawn-member/restore-request",
     ];

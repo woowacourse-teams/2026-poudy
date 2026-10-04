@@ -503,7 +503,7 @@ export const handlers = [
 
   http.delete("*/api/members/me", () => new HttpResponse(null, { status: 204 })),
 
-  http.post("*/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
+  http.post("*/api/members/logout", () => new HttpResponse(null, { status: 204 })),
 
   http.post("*/api/auth/withdrawn-member/restore-request", () => new HttpResponse(null, { status: 204 })),
 
