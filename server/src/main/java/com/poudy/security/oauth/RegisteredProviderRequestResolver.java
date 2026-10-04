@@ -1,5 +1,7 @@
 package com.poudy.security.oauth;
 
+import com.poudy.security.ClientOrigins;
+import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Supplier;
 import org.jspecify.annotations.NonNull;
@@ -11,15 +13,23 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 
 public class RegisteredProviderRequestResolver implements OAuth2AuthorizationRequestResolver {
 
+    public static final String RETURN_ORIGIN_PARAMETER = "returnOrigin";
+
     private static final String PROMPT = "prompt";
     private static final String SELECT_ACCOUNT = "select_account";
 
     private final DefaultOAuth2AuthorizationRequestResolver resolver;
+    private final ClientOrigins clientOrigins;
+    private final LoginSession loginSession;
 
     public RegisteredProviderRequestResolver(
         ClientRegistrationRepository clientRegistrationRepository,
-        String authorizationBaseUri
+        String authorizationBaseUri,
+        ClientOrigins clientOrigins,
+        LoginSession loginSession
     ) {
+        this.clientOrigins = clientOrigins;
+        this.loginSession = loginSession;
         this.resolver = new DefaultOAuth2AuthorizationRequestResolver(
             clientRegistrationRepository,
             authorizationBaseUri
@@ -31,7 +41,7 @@ public class RegisteredProviderRequestResolver implements OAuth2AuthorizationReq
 
     @Override
     public @Nullable OAuth2AuthorizationRequest resolve(@NonNull HttpServletRequest request) {
-        return registeredOnly(() -> resolver.resolve(request));
+        return rememberingReturnOrigin(request, () -> resolver.resolve(request));
     }
 
     @Override
@@ -39,7 +49,18 @@ public class RegisteredProviderRequestResolver implements OAuth2AuthorizationReq
         @NonNull HttpServletRequest request,
         @NonNull String clientRegistrationId
     ) {
-        return registeredOnly(() -> resolver.resolve(request, clientRegistrationId));
+        return rememberingReturnOrigin(request, () -> resolver.resolve(request, clientRegistrationId));
+    }
+
+    private @Nullable OAuth2AuthorizationRequest rememberingReturnOrigin(
+        HttpServletRequest request,
+        Supplier<OAuth2AuthorizationRequest> resolution
+    ) {
+        OAuth2AuthorizationRequest authorization = registeredOnly(resolution);
+        if (authorization != null) {
+            rememberReturnOrigin(request, authorization.getState());
+        }
+        return authorization;
     }
 
     private @Nullable OAuth2AuthorizationRequest registeredOnly(Supplier<OAuth2AuthorizationRequest> resolution) {
@@ -48,5 +69,12 @@ public class RegisteredProviderRequestResolver implements OAuth2AuthorizationReq
         } catch (IllegalArgumentException unregisteredProvider) {
             return null;
         }
+    }
+
+    private void rememberReturnOrigin(HttpServletRequest request, String state) {
+        clientOrigins.trustedOrigin(request.getParameter(RETURN_ORIGIN_PARAMETER)).ifPresentOrElse(
+            origin -> loginSession.rememberReturnOrigin(origin, state, request),
+            () -> loginSession.forgetReturnOrigin(request)
+        );
     }
 }

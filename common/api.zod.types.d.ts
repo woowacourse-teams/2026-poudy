@@ -1509,7 +1509,7 @@ export type get_StartSocialLogin = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
+            query?:  Partial<{ returnOrigin: string }>,
         path:  { provider: ("kakao" | "google") },
 
           }

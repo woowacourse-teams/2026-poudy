@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,8 @@ public class LoginSession {
 
     private static final String EXPIRES_AT = LoginSession.class.getName() + ".expiresAt";
     private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
+    private static final String RETURN_ORIGIN = LoginSession.class.getName() + ".returnOrigin";
+    private static final String RETURN_ORIGIN_STATE = LoginSession.class.getName() + ".returnOriginState";
     private static final Duration WITHDRAWN_HOLD_TIMEOUT = Duration.ofMinutes(10);
 
     private final Duration idleTimeout;
@@ -94,6 +97,32 @@ public class LoginSession {
         }
         session.removeAttribute(WITHDRAWN_MEMBER_ID);
         return Optional.of(memberId);
+    }
+
+    public void rememberReturnOrigin(String origin, String state, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        session.setAttribute(RETURN_ORIGIN, origin);
+        session.setAttribute(RETURN_ORIGIN_STATE, state);
+    }
+
+    public void forgetReturnOrigin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.removeAttribute(RETURN_ORIGIN);
+            session.removeAttribute(RETURN_ORIGIN_STATE);
+        }
+    }
+
+    public Optional<String> takeReturnOrigin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null
+            || !(session.getAttribute(RETURN_ORIGIN) instanceof String origin)
+            || !(session.getAttribute(RETURN_ORIGIN_STATE) instanceof String state)
+            || !state.equals(request.getParameter(OAuth2ParameterNames.STATE))) {
+            return Optional.empty();
+        }
+        forgetReturnOrigin(request);
+        return Optional.of(origin);
     }
 
     public void signOut(HttpServletRequest request, HttpServletResponse response) {

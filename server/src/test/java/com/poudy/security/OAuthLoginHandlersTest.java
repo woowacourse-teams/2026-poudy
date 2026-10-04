@@ -46,6 +46,7 @@ class OAuthLoginHandlersTest {
 
     private static final String CLIENT_ORIGIN = "https://poudy.example.com";
     private static final String REDIRECT_URI = CLIENT_ORIGIN + "/login/callback";
+    private static final String STATE = "state-1";
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-03T00:00:00Z"), ZoneOffset.UTC);
 
     private final SocialSignIn socialSignIn = mock(SocialSignIn.class);
@@ -132,11 +133,12 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("제공자 인증에 실패하면 로그인 실패로 보낸다")
     void redirectsFailure() throws Exception {
-        securityConfig.oauthLoginFailureHandler(ClientOrigins.from(List.of(CLIENT_ORIGIN))).onAuthenticationFailure(
-            request,
-            response,
-            new OAuth2AuthenticationException(new OAuth2Error("access_denied"))
-        );
+        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(List.of(CLIENT_ORIGIN)))
+            .onAuthenticationFailure(
+                request,
+                response,
+                new OAuth2AuthenticationException(new OAuth2Error("access_denied"))
+            );
 
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?error=OAUTH_LOGIN_FAILED");
     }
@@ -197,6 +199,76 @@ class OAuthLoginHandlersTest {
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=RESTORE_REQUESTED");
         assertThat(session.isInvalid()).isTrue();
         assertThat(loginSession.releaseWithdrawnMember(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("preview에서 시작한 로그인에 성공하면 그 preview의 콜백으로 보낸다")
+    void returnsToPreviewOnSuccess() throws Exception {
+        rememberPreview();
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
+        assertThat(response.getRedirectedUrl())
+            .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=SIGNED_IN");
+    }
+
+    @Test
+    @DisplayName("preview에서 시작한 로그인을 제공자가 거절하면 그 preview의 콜백으로 보낸다")
+    void returnsToPreviewOnProviderFailure() throws Exception {
+        rememberPreview();
+        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(previewOrigins()))
+            .onAuthenticationFailure(
+                request,
+                response,
+                new OAuth2AuthenticationException(new OAuth2Error("access_denied"))
+            );
+        assertThat(response.getRedirectedUrl())
+            .isEqualTo("https://pr-111.preview.poudy.site/login/callback?error=OAUTH_LOGIN_FAILED");
+    }
+
+    @Test
+    @DisplayName("로그인 실패로 세션을 버려도 preview의 콜백으로 보낸다")
+    void returnsToPreviewEvenWhenSignInInvalidatesSession() throws Exception {
+        rememberPreview();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        willThrow(new UnverifiedOAuthEmailException()).given(socialSignIn).signIn(any());
+        successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(response.getRedirectedUrl())
+            .isEqualTo("https://pr-111.preview.poudy.site/login/callback?error=OAUTH_EMAIL_NOT_VERIFIED");
+    }
+
+    @Test
+    @DisplayName("탈퇴 계정으로 세션을 바꿔도 preview의 콜백으로 보낸다")
+    void returnsWithdrawnMemberToPreviewAfterReplacingSession() throws Exception {
+        rememberPreview();
+        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
+        successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
+        assertThat(response.getRedirectedUrl())
+            .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=WITHDRAWN");
+        assertThat(loginSession.releaseWithdrawnMember(request)).contains(7L);
+    }
+
+    @Test
+    @DisplayName("다른 state의 콜백이면 preview가 아니라 기본 콜백으로 보낸다")
+    void ignoresReturnOriginOfOtherState() throws Exception {
+        rememberPreview();
+        request.setParameter("state", "other-state");
+        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(previewOrigins()))
+            .onAuthenticationFailure(
+                request,
+                response,
+                new OAuth2AuthenticationException(new OAuth2Error("authorization_request_not_found"))
+            );
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?error=OAUTH_LOGIN_FAILED");
+    }
+
+    private List<String> previewOrigins() {
+        return List.of(CLIENT_ORIGIN, "https://*.preview.poudy.site");
+    }
+
+    private void rememberPreview() {
+        loginSession.rememberReturnOrigin("https://pr-111.preview.poudy.site", STATE, request);
+        request.setParameter("state", STATE);
     }
 
     private AuthenticationSuccessHandler successHandlerFor(List<String> clientOrigins) {

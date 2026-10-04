@@ -23,13 +23,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
-@SpringBootTest
+@SpringBootTest(properties = "poudy.cors.allowed-origins=https://staging-app.poudy.site,https://*.preview.poudy.site")
 @AutoConfigureMockMvc
 @Transactional
+@DirtiesContext
 @DisplayName("보안 설정")
 class SecurityConfigTest {
 
@@ -142,6 +146,52 @@ class SecurityConfigTest {
             .andExpect(status().isNotFound());
 
         assertThat(session.isInvalid()).isFalse();
+    }
+
+    @Test
+    @DisplayName("preview에서 시작한 OAuth 인증이 거절되면 state가 같은 콜백만 그 preview로 돌아간다")
+    void returnsToPreviewThroughOAuthFiltersOnFailure() throws Exception {
+        MvcResult start = mockMvc.perform(
+            get("/api/oauth2/authorization/kakao")
+                .param("returnOrigin", "https://pr-111.preview.poudy.site")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andReturn();
+        MockHttpSession session = (MockHttpSession) start.getRequest().getSession();
+
+        mockMvc.perform(
+            get("/api/login/oauth2/code/kakao")
+                .session(session)
+                .param("state", "other-state")
+                .param("error", "access_denied")
+        )
+            .andExpect(
+                header().string(
+                    HttpHeaders.LOCATION,
+                    "https://staging-app.poudy.site/login/callback?error=OAUTH_LOGIN_FAILED"
+                )
+            );
+        mockMvc.perform(
+            get("/api/login/oauth2/code/kakao")
+                .session(session)
+                .param("state", stateOf(start))
+                .param("error", "access_denied")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(
+                header().string(
+                    HttpHeaders.LOCATION,
+                    "https://pr-111.preview.poudy.site/login/callback?error=OAUTH_LOGIN_FAILED"
+                )
+            );
+    }
+
+    private String stateOf(MvcResult start) {
+        String encodedState = UriComponentsBuilder.fromUriString(start.getResponse().getHeader(HttpHeaders.LOCATION))
+            .build()
+            .getQueryParams()
+            .getFirst("state");
+        return URLDecoder.decode(encodedState, StandardCharsets.UTF_8);
     }
 
     private RequestPostProcessor signedInMember() {

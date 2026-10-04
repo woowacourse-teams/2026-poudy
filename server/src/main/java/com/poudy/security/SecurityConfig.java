@@ -89,6 +89,8 @@ public class SecurityConfig {
                 login -> configureSocialLogin(
                     login,
                     clientRegistrationRepository,
+                    clientOrigins,
+                    loginSession,
                     oauthLoginSuccessHandler,
                     oauthLoginFailureHandler
                 )
@@ -136,21 +138,23 @@ public class SecurityConfig {
         LoginSession loginSession,
         ClientOrigins clientOrigins
     ) {
-        String loginCallback = clientOrigins.clientUrl(LOGIN_CALLBACK_PATH);
         return (request, response, authentication) -> completeSocialLogin(
             (OAuth2AuthenticationToken) authentication,
             socialSignIn,
             loginSession,
-            loginCallback,
+            loginCallback(request, loginSession, clientOrigins),
             request,
             response
         );
     }
 
     @Bean
-    public AuthenticationFailureHandler oauthLoginFailureHandler(ClientOrigins clientOrigins) {
-        String loginCallback = clientOrigins.clientUrl(LOGIN_CALLBACK_PATH);
+    public AuthenticationFailureHandler oauthLoginFailureHandler(
+        LoginSession loginSession,
+        ClientOrigins clientOrigins
+    ) {
         return (request, response, exception) -> {
+            String loginCallback = loginCallback(request, loginSession, clientOrigins);
             log.info("Social login failed: {}", exception.getMessage());
             response.sendRedirect(loginFailureUri(loginCallback, ErrorCode.OAUTH_LOGIN_FAILED).toUriString());
         };
@@ -169,6 +173,8 @@ public class SecurityConfig {
     private void configureSocialLogin(
         OAuth2LoginConfigurer<HttpSecurity> login,
         ClientRegistrationRepository clientRegistrationRepository,
+        ClientOrigins clientOrigins,
+        LoginSession loginSession,
         AuthenticationSuccessHandler successHandler,
         AuthenticationFailureHandler failureHandler
     ) {
@@ -178,7 +184,12 @@ public class SecurityConfig {
                 endpoint -> endpoint
                     .baseUri(AUTHORIZATION_BASE_URI)
                     .authorizationRequestResolver(
-                        new RegisteredProviderRequestResolver(clientRegistrationRepository, AUTHORIZATION_BASE_URI)
+                        new RegisteredProviderRequestResolver(
+                            clientRegistrationRepository,
+                            AUTHORIZATION_BASE_URI,
+                            clientOrigins,
+                            loginSession
+                        )
                     )
             )
             .redirectionEndpoint(endpoint -> endpoint.baseUri(REDIRECTION_BASE_URI))
@@ -207,6 +218,14 @@ public class SecurityConfig {
         } catch (RuntimeException exception) {
             rejectSocialLogin(loginSession, request, response, loginFailureUriOf(loginCallback, exception));
         }
+    }
+
+    private String loginCallback(
+        HttpServletRequest request,
+        LoginSession loginSession,
+        ClientOrigins clientOrigins
+    ) {
+        return loginSession.takeReturnOrigin(request).orElseGet(clientOrigins::defaultOrigin) + LOGIN_CALLBACK_PATH;
     }
 
     private String signInResultUri(String loginCallback, SocialSignInResult result) {

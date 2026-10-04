@@ -1,6 +1,8 @@
 package com.poudy.security;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -49,10 +51,29 @@ public final class ClientOrigins {
         return corsConfiguration.checkOrigin(origin) != null;
     }
 
-    public String clientUrl(String path) {
+    public Optional<String> trustedOrigin(String candidate) {
+        if (candidate == null || !isBareOrigin(candidate)) {
+            return Optional.empty();
+        }
+        return Optional.of(candidate).filter(this::isAllowedOrigin);
+    }
+
+    public String defaultOrigin() {
         return origins.stream()
             .filter(origin -> !origin.contains(ORIGIN_WILDCARD))
             .findFirst()
-            .orElse("") + path;
+            .orElse("");
+    }
+
+    private boolean isBareOrigin(String candidate) {
+        try {
+            URI uri = URI.create(candidate);
+            return ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))
+                && uri.getHost() != null
+                && uri.getRawUserInfo() == null
+                && candidate.equals(uri.getScheme() + "://" + uri.getRawAuthority());
+        } catch (IllegalArgumentException notUri) {
+            return false;
+        }
     }
 }

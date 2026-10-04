@@ -3978,6 +3978,16 @@
                 "google"
               ]
             }
+          },
+          {
+            "name": "returnOrigin",
+            "in": "query",
+            "description": "Preview의 복귀 오리진. 허용된 오리진만 사용하며 누락되거나 유효하지 않으면 기본 프론트로 돌아간다.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "https://pr-111.preview.poudy.site"
+            }
           }
         ],
         "responses": {

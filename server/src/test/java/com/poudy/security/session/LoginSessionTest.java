@@ -25,6 +25,8 @@ class LoginSessionTest {
     private static final Duration ADMIN_IDLE = Duration.ofHours(1);
     private static final Duration ADMIN_ABSOLUTE = Duration.ofHours(12);
     private static final long MEMBER_ID = 7L;
+    private static final String PREVIEW = "https://pr-111.preview.poudy.site";
+    private static final String STATE = "state-1";
 
     @AfterEach
     void clearContext() {
@@ -106,6 +108,41 @@ class LoginSessionTest {
     }
 
     @Test
+    @DisplayName("맡겨 둔 복귀 오리진은 같은 state의 콜백에서 한 번만 꺼낼 수 있다")
+    void takesReturnOriginOnce() {
+        MockHttpServletRequest start = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).rememberReturnOrigin(PREVIEW, STATE, start);
+        MockHttpServletRequest callback = callbackOf(start, STATE);
+
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callback)).contains(PREVIEW);
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callback)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("state가 다르거나 없는 콜백은 복귀 오리진을 꺼내지 못하고 남겨 둔다")
+    void keepsReturnOriginForOtherState() {
+        MockHttpServletRequest start = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).rememberReturnOrigin(PREVIEW, STATE, start);
+
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callbackOf(start, "other-state"))).isEmpty();
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callbackOf(start, null))).isEmpty();
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callbackOf(start, STATE))).contains(PREVIEW);
+    }
+
+    @Test
+    @DisplayName("복귀 오리진을 잊으면 꺼낼 수 없고, 세션이 없으면 만들지 않는다")
+    void forgetsReturnOrigin() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).forgetReturnOrigin(request);
+        assertThat(request.getSession(false)).isNull();
+
+        sessionAt(SIGNED_IN_AT).rememberReturnOrigin(PREVIEW, STATE, request);
+        sessionAt(SIGNED_IN_AT).forgetReturnOrigin(request);
+
+        assertThat(sessionAt(SIGNED_IN_AT).takeReturnOrigin(callbackOf(request, STATE))).isEmpty();
+    }
+
+    @Test
     @DisplayName("탈퇴 회원을 맡겨 둔 세션에서 다른 계정으로 로그인하면 맡겨 둔 탈퇴 회원을 버린다")
     void dropsWithdrawnMemberOnSignIn() {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -145,6 +182,15 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).expireIfOverdue(request);
         assertThat(session.isInvalid()).isTrue();
+    }
+
+    private MockHttpServletRequest callbackOf(MockHttpServletRequest start, String state) {
+        MockHttpServletRequest callback = new MockHttpServletRequest();
+        callback.setSession(start.getSession());
+        if (state != null) {
+            callback.setParameter("state", state);
+        }
+        return callback;
     }
 
     private MockHttpServletRequest signedInRequest() {

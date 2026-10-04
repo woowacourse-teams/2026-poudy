@@ -5,25 +5,71 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 @DisplayName("프론트 오리진")
 class ClientOriginsTest {
 
     @Test
-    @DisplayName("와일드카드가 아닌 첫 오리진에 경로를 붙인다")
-    void buildsUrlOnFirstExactOrigin() {
+    @DisplayName("와일드카드가 아닌 첫 오리진을 기본 오리진으로 쓴다")
+    void usesFirstExactOriginAsDefault() {
         ClientOrigins clientOrigins = ClientOrigins.from(
             List.of(" ", " https://*.preview.example.com ", " https://app.example.com ", "http://localhost:3000")
         );
 
-        assertThat(clientOrigins.clientUrl("/login/callback")).isEqualTo("https://app.example.com/login/callback");
+        assertThat(clientOrigins.defaultOrigin()).isEqualTo("https://app.example.com");
     }
 
     @Test
-    @DisplayName("오리진이 없으면 같은 오리진의 경로를 돌려준다")
-    void buildsSameOriginUrlWithoutOrigins() {
-        assertThat(ClientOrigins.from(List.of()).clientUrl("/login/callback")).isEqualTo("/login/callback");
+    @DisplayName("오리진이 없으면 같은 오리진을 뜻하는 빈 기본 오리진을 돌려준다")
+    void usesSameOriginWithoutOrigins() {
+        assertThat(ClientOrigins.from(List.of()).defaultOrigin()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("허용한 오리진과 정확히 같은 형태의 값만 믿는다")
+    void trustsAllowedBareOrigin() {
+        ClientOrigins clientOrigins = ClientOrigins
+            .from(List.of("https://staging-app.poudy.site", "https://*.preview.poudy.site"));
+
+        assertThat(clientOrigins.trustedOrigin("https://pr-111.preview.poudy.site"))
+            .contains("https://pr-111.preview.poudy.site");
+        assertThat(clientOrigins.trustedOrigin("https://staging-app.poudy.site"))
+            .contains("https://staging-app.poudy.site");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://evil.com",
+            "https://pr-111.preview.poudy.site.evil.com",
+            "http://pr-111.preview.poudy.site",
+            "//pr-111.preview.poudy.site",
+            "https://evil.com@pr-111.preview.poudy.site",
+            "https://pr-111.preview.poudy.site/other",
+            "https://pr-111.preview.poudy.site?next=evil",
+            "https://pr-111.preview.poudy.site#evil",
+            "https://evil.com/.preview.poudy.site",
+            "https://evil.com?.preview.poudy.site",
+            "https://evil.com#.preview.poudy.site",
+            "https://[",
+            "null",
+            ""
+    })
+    @DisplayName("허용하지 않았거나 오리진 형태가 아닌 값은 믿지 않는다")
+    void distrustsUntrustedOrNonOriginValues(String candidate) {
+        ClientOrigins clientOrigins = ClientOrigins
+            .from(List.of("https://staging-app.poudy.site", "https://*.preview.poudy.site"));
+
+        assertThat(clientOrigins.trustedOrigin(candidate)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("허용 오리진이 없는 운영 설정에서는 어떤 값도 믿지 않는다")
+    void distrustsEverythingWithoutOrigins() {
+        assertThat(ClientOrigins.from(List.of()).trustedOrigin("https://pr-111.preview.poudy.site")).isEmpty();
+        assertThat(ClientOrigins.from(List.of()).trustedOrigin(null)).isEmpty();
     }
 
     @Test
