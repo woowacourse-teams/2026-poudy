@@ -94,6 +94,115 @@ describe("저장한 제품", () => {
     await expect.poll(() => getSavedProductsSnapshot().ids).toEqual([3, 1]);
   });
 
+  it.each([
+    { name: "저장", change: () => saveProduct(2), expected: [2, 3, 1] },
+    { name: "해제", change: () => unsaveProduct(3), expected: [1] },
+  ])("조회 중 $name 성공 후 오래된 응답을 버리고 다시 조회한다", async ({ change, expected }) => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return HttpResponse.json({ productIds: [3, 1] });
+        }
+        return HttpResponse.json({ productIds: expected });
+      }),
+    );
+
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    await expect(change()).resolves.toBe("done");
+    expect(getSavedProductsSnapshot().ids).toEqual(expected);
+    release.resolve();
+    await earlierLoad;
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "ready", ids: expected });
+    expect(reads).toBe(2);
+  });
+
+  it("변경 전 시작한 조회의 401도 버리고 최신 상태를 다시 조회한다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return unauthorized();
+        }
+        return HttpResponse.json({ productIds: [2, 3, 1] });
+      }),
+    );
+
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    await saveProduct(2);
+    release.resolve();
+    await earlierLoad;
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "ready", ids: [2, 3, 1] });
+  });
+
+  it("로그아웃 후 재조회가 진행 중인 이전 조회를 재사용하지 않는다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return HttpResponse.json({ productIds: [3, 1] });
+        }
+        return unauthorized();
+      }),
+    );
+
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    const signedOutLoad = reloadSavedProducts();
+    release.resolve();
+    await Promise.all([earlierLoad, signedOutLoad]);
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "signedOut", ids: [] });
+    expect(reads).toBe(2);
+  });
+
+  it("저장이 진행 중이면 요청이 끝난 뒤 목록을 조회한다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.put(`${SAVED_PATH}/2`, async () => {
+        started.resolve();
+        await release.promise;
+        setMockSavedProducts([2, 3, 1]);
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(`${SAVED_PATH}/ids`, () => {
+        reads++;
+        return HttpResponse.json({ productIds: [2, 3, 1] });
+      }),
+    );
+
+    const saving = saveProduct(2);
+    await started.promise;
+    const reading = reloadSavedProducts();
+    expect(reads).toBe(0);
+    release.resolve();
+    await Promise.all([saving, reading]);
+
+    expect(reads).toBe(1);
+    expect(getSavedProductsSnapshot().ids).toEqual([2, 3, 1]);
+  });
+
   it("세션이 끝났으면 로그아웃 상태로 바꾼다", async () => {
     server.use(http.put(`${SAVED_PATH}/:productId`, unauthorized));
 

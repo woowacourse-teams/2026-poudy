@@ -18,6 +18,8 @@ const pendingRequests = new Map<number, Promise<SaveResult>>();
 
 let snapshot: SavedProductsSnapshot = LOADING;
 let loading: Promise<void> | null = null;
+let initialized = false;
+let changeVersion = 0;
 
 const update = (next: SavedProductsSnapshot): void => {
   snapshot = next;
@@ -30,23 +32,38 @@ const failureOf = (error: unknown): SaveResult => {
 };
 
 const load = (): Promise<void> => {
-  loading = fetchSavedProductIds()
-    .then((response) => update({ status: "ready", ids: response.productIds }))
-    .catch((error: unknown) => {
-      if (isSignedOut(error)) {
-        update(SIGNED_OUT);
-        return;
+  if (loading) return loading;
+  initialized = true;
+  loading = (async () => {
+    while (true) {
+      while (pendingRequests.size > 0) {
+        await Promise.all(pendingRequests.values());
       }
-      update({ status: "failed", ids: [] });
-    });
+      const requestedVersion = changeVersion;
+      try {
+        const response = await fetchSavedProductIds();
+        if (requestedVersion !== changeVersion) continue;
+        update({ status: "ready", ids: response.productIds });
+      } catch (error: unknown) {
+        if (requestedVersion !== changeVersion) continue;
+        update(isSignedOut(error) ? SIGNED_OUT : { status: "failed", ids: [] });
+      }
+      return;
+    }
+  })().finally(() => {
+    loading = null;
+  });
   return loading;
 };
 
-export const reloadSavedProducts = (): Promise<void> => load();
+export const reloadSavedProducts = (): Promise<void> => {
+  changeVersion++;
+  return load();
+};
 
 export const subscribeSavedProducts = (listener: () => void): (() => void) => {
   listeners.add(listener);
-  if (!loading) void load();
+  if (!initialized) void load();
   return () => {
     listeners.delete(listener);
   };
@@ -77,11 +94,13 @@ const enqueue = (productId: number, send: () => Promise<void>): Promise<SaveResu
 };
 
 export const saveProduct = (productId: number): Promise<SaveResult> => {
+  changeVersion++;
   update({ ...snapshot, ids: [productId, ...snapshot.ids.filter((id) => id !== productId)] });
   return enqueue(productId, () => putSavedProduct(productId));
 };
 
 export const unsaveProduct = (productId: number): Promise<SaveResult> => {
+  changeVersion++;
   update({ ...snapshot, ids: snapshot.ids.filter((id) => id !== productId) });
   return enqueue(productId, () => deleteSavedProduct(productId));
 };
