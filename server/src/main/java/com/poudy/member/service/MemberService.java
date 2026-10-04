@@ -7,11 +7,13 @@ import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
+import com.poudy.member.domain.RestoreRequestPage;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
 import com.poudy.security.domain.SocialSignInResult;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,22 @@ public class MemberService implements SocialSignIn {
     public void withdraw(long memberId) {
         if (!memberRepository.withdraw(memberId)) {
             throw new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+    }
+
+    public RestoreRequestPage findRestoreRequests(int page, int size) {
+        long totalElements = memberRepository.countRestoreRequests();
+        long offset = (long) (page - 1) * size;
+        if (offset >= totalElements) {
+            return new RestoreRequestPage(List.of(), totalElements);
+        }
+        return new RestoreRequestPage(memberRepository.findRestoreRequests(offset, size), totalElements);
+    }
+
+    @Transactional
+    public void restore(long memberId) {
+        if (!memberRepository.restore(memberId)) {
+            throw new ResourceNotFoundException(ErrorCode.RESTORE_REQUEST_NOT_FOUND);
         }
     }
 

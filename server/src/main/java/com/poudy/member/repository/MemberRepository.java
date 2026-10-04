@@ -6,10 +6,15 @@ import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
 import com.poudy.member.domain.MemberStatus;
+import com.poudy.member.domain.RestoreRequest;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import org.springframework.jdbc.core.RowMapper;
@@ -36,6 +41,15 @@ public class MemberRepository {
         enumOrNull(rs, "age_range", AgeRange::valueOf),
         enumOrNull(rs, "skin_type", MemberSkinType::valueOf),
         MemberStatus.valueOf(rs.getString("status"))
+    );
+
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+    private static final RowMapper<RestoreRequest> RESTORE_REQUEST = (rs, row) -> new RestoreRequest(
+        rs.getLong("id"),
+        OAuthProvider.valueOf(rs.getString("oauth_provider")),
+        rs.getString("email"),
+        offset(rs.getObject("deleted_at", LocalDateTime.class)),
+        offset(rs.getObject("restore_requested_at", LocalDateTime.class))
     );
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -122,6 +136,46 @@ public class MemberRepository {
                 """,
             new MapSqlParameterSource("id", id)
         ) == 1;
+    }
+
+    public long countRestoreRequests() {
+        return jdbc.queryForObject(
+            "select count(*) from member where restore_requested_at is not null",
+            new MapSqlParameterSource(),
+            Long.class
+        );
+    }
+
+    public List<RestoreRequest> findRestoreRequests(long offset, int size) {
+        return jdbc.query(
+            """
+                select id, oauth_provider, email, deleted_at, restore_requested_at
+                from member
+                where restore_requested_at is not null
+                order by restore_requested_at, id
+                offset :offset limit :size
+                """,
+            new MapSqlParameterSource()
+                .addValue("offset", offset)
+                .addValue("size", size),
+            RESTORE_REQUEST
+        );
+    }
+
+    public boolean restore(long id) {
+        return jdbc.update(
+            """
+                update member
+                set deleted_at = null, restore_requested_at = null,
+                    updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                where id = :id and restore_requested_at is not null
+                """,
+            new MapSqlParameterSource("id", id)
+        ) == 1;
+    }
+
+    private static OffsetDateTime offset(LocalDateTime value) {
+        return value.atZone(SEOUL).toOffsetDateTime();
     }
 
     private static <T> T enumOrNull(ResultSet rs, String column, Function<String, T> parse) throws SQLException {

@@ -137,4 +137,22 @@ class MemberServiceTest {
         memberService.withdraw(memberId);
         memberService.requestRestore(memberId);
     }
+
+    @Test
+    @DisplayName("복구를 요청한 탈퇴 회원만 복구하고, 복구하면 다시 로그인한다")
+    void restoresOnlyRestoreRequestedMember() {
+        OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true);
+        long memberId = memberService.signIn(account).memberId();
+
+        assertThatThrownBy(() -> memberService.restore(memberId)).isInstanceOf(ResourceNotFoundException.class);
+        memberService.withdraw(memberId);
+        assertThatThrownBy(() -> memberService.restore(memberId)).isInstanceOf(ResourceNotFoundException.class);
+        memberService.requestRestore(memberId);
+        memberService.restore(memberId);
+
+        SocialSignInResult result = memberService.signIn(account);
+        assertThat(result.isWithdrawn()).isFalse();
+        assertThat(result.isRestoreRequested()).isFalse();
+        assertThat(result.memberId()).isEqualTo(memberId);
+    }
 }
