@@ -66,7 +66,7 @@ public class ErrorResponseConfig {
                 )
             );
         }
-        List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path);
+        List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path, method);
         if (!notFoundCodes.isEmpty()) {
             responses.addApiResponse(
                 "404",

@@ -43,15 +43,6 @@ export const AdminFeedbackImageResponse = z.object({ imageId: z.uuid(), extensio
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER", "PRODUCT_CORRECTION"]), content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]), statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
-export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
-export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
-
-export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
-export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
-
-export type StorageResponse = __TypedOpenapi.Schemas.StorageResponse;
-export const StorageResponse = z.object({ items: z.array(ProductResponse) });
-
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]), name: z.string() });
 
@@ -67,6 +58,9 @@ export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });
 
+export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
+export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
+
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
 
@@ -78,6 +72,9 @@ export const PaginationResponse = z.object({ page: z.number().int(), size: z.num
 
 export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterOptionsResponse;
 export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse) });
+
+export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
+export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), filterOptions: ProductFilterOptionsResponse.optional() });
@@ -147,6 +144,12 @@ export const ProductRankingResponse = z.object({ items: z.array(ProductRankingIt
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
+
+export type SavedProductsResponse = __TypedOpenapi.Schemas.SavedProductsResponse;
+export const SavedProductsResponse = z.object({ items: z.array(ProductResponse) });
+
+export type SavedProductIdsResponse = __TypedOpenapi.Schemas.SavedProductIdsResponse;
+export const SavedProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
 
 export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
 export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse) });

@@ -19,6 +19,7 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
+    private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn-member/restore-request";
     public static final String SOCIAL_LOGIN_PATH = SecurityConfig.AUTHORIZATION_BASE_URI + "/{provider}";
 
@@ -86,6 +87,16 @@ public final class ErrorResponseCodes {
 
     public static boolean payloadLimited(String path) {
         return PENDING_IMAGES_PATH.equals(path);
+    }
+
+    public static List<ErrorCode> notFound(String path, HttpMethod method) {
+        if (SAVED_PRODUCT_PATH.equals(path)) {
+            if (method == HttpMethod.PUT) {
+                return List.of(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            return List.of();
+        }
+        return notFound(path);
     }
 
     public static List<ErrorCode> notFound(String path) {
