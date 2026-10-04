@@ -188,6 +188,15 @@ body {
   overflow-wrap: break-word;
 }
 
+body:has([data-desktop-page]) {
+  max-width: none;
+  box-shadow: none;
+}
+
+body:has([data-desktop-page]) [data-app-qr-panel] {
+  display: none;
+}
+
 /*
  * 성분 정보는 팀이 모아 정리한 자료라 그대로 긁어 가는 것을 막는다. 제품 상세의 성분
  * 영역과 성분 상세 화면이 여기에 해당하고, 나머지 화면은 그대로 선택된다.

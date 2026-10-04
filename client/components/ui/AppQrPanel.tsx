@@ -28,6 +28,7 @@ const QR_SIZE = 132;
 export function AppQrPanel() {
   return (
     <aside
+      data-app-qr-panel
       aria-label={`${SITE_NAME} 안드로이드 앱 설치 안내`}
       /*
        * 왼쪽 여백의 가운데에 세운다. 본문은 뷰포트 가운데에 있으므로 그 절반(50%)에서
