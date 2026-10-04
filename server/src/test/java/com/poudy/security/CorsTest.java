@@ -8,6 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.repository.MemberRepository;
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,10 +23,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(properties = "poudy.cors.allowed-origins="
     + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("CORS 설정")
 class CorsTest {
 
@@ -30,6 +36,9 @@ class CorsTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MemberRepository memberRepository;
 
     @ParameterizedTest
     @ValueSource(strings = {"http://localhost:3000", "https://poudy.example.com", "https://pr-12.preview.example.com"})
@@ -42,7 +51,23 @@ class CorsTest {
         )
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
-            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,HEAD,POST,PATCH,DELETE,OPTIONS"));
+            .andExpect(
+                header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS")
+            );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:3000", "https://poudy.example.com", "https://pr-12.preview.example.com"})
+    @DisplayName("허용한 도메인의 저장 PUT 사전 요청에 자격 증명 허용 헤더를 준다")
+    void allowsSavedProductPutPreflight(String origin) throws Exception {
+        mockMvc.perform(
+            options("/api/members/me/saved-products/1")
+                .header(HttpHeaders.ORIGIN, origin)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
     }
 
     @ParameterizedTest
@@ -98,6 +123,9 @@ class CorsTest {
     }
 
     private RequestPostProcessor signedInMember() {
-        return authentication(new LoginMember(1L).toAuthentication());
+        long memberId = memberRepository.save(
+            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "cors", "cors@example.com", true))
+        ).id();
+        return authentication(new LoginMember(memberId).toAuthentication());
     }
 }
