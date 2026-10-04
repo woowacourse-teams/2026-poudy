@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.member.domain.AgeRange;
+import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
+import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
@@ -72,5 +75,13 @@ class MemberServiceTest {
     void failsToFindMissingMember() {
         assertThatThrownBy(() -> memberService.findById(Long.MAX_VALUE))
             .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("없는 회원의 초기 정보는 저장하지 못한다")
+    void failsToUpdateMissingMemberProfile() {
+        assertThatThrownBy(
+            () -> memberService.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, MemberSkinType.DRY)
+        ).isInstanceOf(ResourceNotFoundException.class);
     }
 }

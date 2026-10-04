@@ -2,8 +2,11 @@ package com.poudy.member.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.member.domain.AgeRange;
+import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.domain.MemberSkinType;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.OAuthAccount;
@@ -30,6 +33,12 @@ public class MemberService implements SocialSignIn {
 
     public Member findById(long memberId) {
         return memberRepository.findById(memberId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    @Transactional
+    public Member updateProfile(long memberId, Gender gender, AgeRange ageRange, MemberSkinType skinType) {
+        return memberRepository.updateProfile(memberId, gender, ageRange, skinType)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

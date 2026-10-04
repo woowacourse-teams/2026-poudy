@@ -3,8 +3,11 @@ package com.poudy.member.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.poudy.member.domain.AgeRange;
+import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import org.junit.jupiter.api.DisplayName;
@@ -53,6 +56,28 @@ class MemberRepositoryTest {
 
         assertThatThrownBy(() -> repository.save(signup(OAuthProvider.GOOGLE, "2", "member@example.com")))
             .isInstanceOf(DuplicateKeyException.class);
+    }
+
+    @Test
+    @DisplayName("초기 정보를 저장하고 바뀐 회원을 돌려준다")
+    void updatesProfile() {
+        Member saved = repository.save(signup(OAuthProvider.GOOGLE, "sub", "member@example.com"));
+
+        Member updated = repository
+            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, MemberSkinType.UNKNOWN)
+            .orElseThrow();
+
+        assertThat(updated.gender()).isEqualTo(Gender.MALE);
+        assertThat(updated.ageRange()).isEqualTo(AgeRange.SIXTIES_OR_OLDER);
+        assertThat(updated.skinType()).isEqualTo(MemberSkinType.UNKNOWN);
+        assertThat(repository.findById(saved.id())).get().extracting(Member::isProfileCompleted).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("없는 회원의 초기 정보는 저장하지 않는다")
+    void skipsMissingMemberProfile() {
+        assertThat(repository.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, MemberSkinType.DRY))
+            .isEmpty();
     }
 
     private MemberSignup signup(OAuthProvider provider, String providerId, String email) {

@@ -1,15 +1,19 @@
 package com.poudy.member.controller;
 
+import com.poudy.member.controller.dto.MemberProfileRequest;
 import com.poudy.member.controller.dto.MemberResponse;
 import com.poudy.member.service.MemberService;
 import com.poudy.security.session.LoginMember;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,5 +37,26 @@ public class MemberController {
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
             .body(MemberResponse.from(memberService.findById(loginMember.id())));
+    }
+
+    @Operation(summary = "내 초기 정보 저장", description = "성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.")
+    @ApiResponse(responseCode = "200", description = "저장 성공")
+    @PatchMapping("/me/profile")
+    public ResponseEntity<MemberResponse> updateMyProfile(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @Valid @RequestBody MemberProfileRequest request
+    ) {
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(
+                MemberResponse.from(
+                    memberService.updateProfile(
+                        loginMember.id(),
+                        request.gender(),
+                        request.ageRange(),
+                        request.skinType()
+                    )
+                )
+            );
     }
 }

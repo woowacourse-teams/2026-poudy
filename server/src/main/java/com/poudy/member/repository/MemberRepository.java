@@ -75,6 +75,23 @@ public class MemberRepository {
         );
     }
 
+    public Optional<Member> updateProfile(long id, Gender gender, AgeRange ageRange, MemberSkinType skinType) {
+        return jdbc.query(
+            """
+                update member
+                set gender = :gender, age_range = :ageRange, skin_type = :skinType,
+                    updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                where id = :id
+                returning\s""" + COLUMNS,
+            new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("gender", gender.name())
+                .addValue("ageRange", ageRange.name())
+                .addValue("skinType", skinType.name()),
+            MEMBER
+        ).stream().findFirst();
+    }
+
     private static <T> T enumOrNull(ResultSet rs, String column, Function<String, T> parse) throws SQLException {
         String value = rs.getString(column);
         if (value == null) {

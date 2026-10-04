@@ -2,6 +2,7 @@ package com.poudy.member.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,10 +15,13 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,5 +61,61 @@ class MemberControllerTest {
             .andExpect(jsonPath("$.ageRange").isEmpty())
             .andExpect(jsonPath("$.skinType").isEmpty())
             .andExpect(jsonPath("$.profileCompleted").value(false));
+    }
+
+    @Test
+    @DisplayName("초기 정보를 저장하면 입력을 마친 회원 정보를 돌려준다")
+    void updatesProfile() throws Exception {
+        Member member = memberRepository
+            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));
+
+        mockMvc.perform(
+            patch("/api/members/me/profile")
+                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"gender":"FEMALE","ageRange":"TWENTIES","skinType":"COMBINATION"}
+                    """)
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+            .andExpect(jsonPath("$.gender").value("FEMALE"))
+            .andExpect(jsonPath("$.ageRange").value("TWENTIES"))
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"))
+            .andExpect(jsonPath("$.profileCompleted").value(true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\"}",
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"SEVENTIES\",\"skinType\":\"DRY\"}",
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"NORMAL\"}"
+    })
+    @DisplayName("빠졌거나 모르는 값이 있으면 초기 정보를 400으로 거절한다")
+    void rejectsInvalidProfile(String body) throws Exception {
+        Member member = memberRepository
+            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));
+
+        mockMvc.perform(
+            patch("/api/members/me/profile")
+                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+    }
+
+    @Test
+    @DisplayName("로그인하지 않았으면 초기 정보를 401로 거절한다")
+    void rejectsAnonymousProfileUpdate() throws Exception {
+        mockMvc.perform(
+            patch("/api/members/me/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"gender":"FEMALE","ageRange":"TWENTIES","skinType":"COMBINATION"}
+                    """)
+        )
+            .andExpect(status().isUnauthorized());
     }
 }
