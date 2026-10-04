@@ -49,6 +49,21 @@ class MemberRepositoryTest {
     }
 
     @Test
+    @DisplayName("존재하고 탈퇴하지 않은 회원만 활성 상태다")
+    void checksActiveMember() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "active", "active@example.com"));
+
+        assertThat(repository.isActive(saved.id())).isTrue();
+        assertThat(repository.isActive(Long.MAX_VALUE)).isFalse();
+        repository.withdraw(saved.id());
+        assertThat(repository.isActive(saved.id())).isFalse();
+        repository.requestRestore(saved.id());
+        assertThat(repository.isActive(saved.id())).isFalse();
+        repository.restore(saved.id());
+        assertThat(repository.isActive(saved.id())).isTrue();
+    }
+
+    @Test
     @DisplayName("다른 제공자의 같은 식별자는 다른 회원이다")
     void separatesIdentifiersByProvider() {
         repository.save(signup(OAuthProvider.KAKAO, "1234", "kakao@example.com"));

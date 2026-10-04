@@ -3,9 +3,11 @@ package com.poudy.security;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.RuleViolationException;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
+import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
 import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.filter.ActiveMemberFilter;
 import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.oauth.DiscardingAuthorizedClientRepository;
 import com.poudy.security.oauth.RegisteredProviderRequestResolver;
@@ -61,6 +63,7 @@ public class SecurityConfig {
         AuthenticationSuccessHandler oauthLoginSuccessHandler,
         AuthenticationFailureHandler oauthLoginFailureHandler,
         LoginSession loginSession,
+        MemberActivity memberActivity,
         @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
     ) {
         http
@@ -108,6 +111,10 @@ public class SecurityConfig {
                             exception
                         )
                     )
+            )
+            .addFilterAfter(
+                new ActiveMemberFilter(memberActivity, loginSession, handlerExceptionResolver),
+                SecurityContextHolderFilter.class
             )
             .addFilterBefore(
                 new ForeignOriginFilter(clientOrigins, handlerExceptionResolver),

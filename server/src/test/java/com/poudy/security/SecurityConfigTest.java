@@ -8,6 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.repository.MemberRepository;
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import java.net.URLDecoder;
@@ -20,14 +24,20 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("보안 설정")
 class SecurityConfigTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MemberRepository memberRepository;
 
     @Test
     @DisplayName("카카오 로그인은 /api 아래 콜백 주소로 이메일 동의를 요청한다")
@@ -82,7 +92,7 @@ class SecurityConfigTest {
         mockMvc
             .perform(
                 post("/api/members/logout").session(session)
-                    .with(authentication(new LoginMember(1L).toAuthentication()))
+                    .with(signedInMember())
             )
             .andExpect(status().isNoContent());
 
@@ -112,7 +122,7 @@ class SecurityConfigTest {
             .andExpect(jsonPath("$.code").value("FORBIDDEN"));
         mockMvc.perform(
             post("/api/admin/logout").session(memberSession)
-                .with(authentication(new LoginMember(1L).toAuthentication()))
+                .with(signedInMember())
         )
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN"));
@@ -127,11 +137,18 @@ class SecurityConfigTest {
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(
-            get("/api/members/logout").session(session).with(authentication(new LoginMember(1L).toAuthentication()))
+            get("/api/members/logout").session(session).with(signedInMember())
         )
             .andExpect(status().isNotFound());
 
         assertThat(session.isInvalid()).isFalse();
+    }
+
+    private RequestPostProcessor signedInMember() {
+        long memberId = memberRepository.save(
+            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "security", "security@example.com", true))
+        ).id();
+        return authentication(new LoginMember(memberId).toAuthentication());
     }
 
     private String redirectOf(String path) throws Exception {

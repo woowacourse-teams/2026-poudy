@@ -58,6 +58,14 @@ public class MemberRepository {
         this.jdbc = jdbc;
     }
 
+    public boolean isActive(long id) {
+        return jdbc.queryForObject(
+            "select exists(select 1 from member where id = :id and deleted_at is null)",
+            new MapSqlParameterSource("id", id),
+            Boolean.class
+        );
+    }
+
     public Optional<Member> findById(long id) {
         return jdbc.query(
             "select " + COLUMNS + " from member where id = :id and deleted_at is null",

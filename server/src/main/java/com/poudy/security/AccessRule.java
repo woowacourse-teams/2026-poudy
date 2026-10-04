@@ -44,6 +44,10 @@ public enum AccessRule {
         return logoutPath;
     }
 
+    public RequestMatcher requestMatcher() {
+        return PathPatternRequestMatcher.withDefaults().matcher(pathPattern);
+    }
+
     public RequestMatcher logoutRequest() {
         RequestMatcher logoutPost = PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, logoutPath);
         return request -> logoutPost.matches(request)

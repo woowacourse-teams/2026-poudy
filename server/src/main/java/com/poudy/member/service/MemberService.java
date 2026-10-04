@@ -10,6 +10,7 @@ import com.poudy.member.domain.MemberSkinType;
 import com.poudy.member.domain.RestoreRequestPage;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
+import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialSignIn;
 import com.poudy.security.domain.SocialSignInResult;
@@ -18,12 +19,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MemberService implements SocialSignIn {
+public class MemberService implements SocialSignIn, MemberActivity {
 
     private final MemberRepository memberRepository;
 
     public MemberService(MemberRepository memberRepository) {
         this.memberRepository = memberRepository;
+    }
+
+    @Override
+    public boolean isActive(long memberId) {
+        return memberRepository.isActive(memberId);
     }
 
     @Override
