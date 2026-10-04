@@ -618,8 +618,10 @@ export type BrandDetailResponse = {
   categories: Array<CategoryResponse>;
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
+export type AdminRestoreRequestResponse = { memberId: number, provider: ("KAKAO" | "GOOGLE"), email: string, withdrawnAt: string, requestedAt: string }
+export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -739,6 +741,41 @@ export type post_Submit_1 = {
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 탈퇴한 계정으로 방금 소셜 로그인한 사람이 복구를 요청한다. 복구 여부는 관리자가 정한다.
+ */
+export type post_RequestRestore = {
+      method: "POST",
+      path: "/api/auth/withdrawn-member/restore-request",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 복구를 요청한 탈퇴 회원을 되살려 다시 로그인할 수 있게 한다.
+ */
+export type post_Restore = {
+      method: "POST",
+      path: "/api/admin/members/{memberId}/restore",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { memberId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1056,6 +1093,21 @@ export type get_FindMe = {
 
     }
 /**
+ * 회원 정보를 지우고 로그인 세션을 끝낸다.
+ */
+export type delete_Withdraw = {
+      method: "DELETE",
+      path: "/api/members/me",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+401: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다. usedInProducts 를 true 로 보내면 제품 전성분에 한 번 이상 쓰인 성분만 조회한다.
  */
 export type get_FindIngredients = {
@@ -1285,6 +1337,33 @@ export type get_FindById = {
 },
 
     }
+/**
+ * 복구를 요청한 탈퇴 회원을 요청한 순서대로 조회한다.
+ */
+export type get_FindRestoreRequests = {
+      method: "GET",
+      path: "/api/admin/members/restore-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminRestoreRequestPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_FindAll_1 = {
       method: "GET",
       path: "/api/admin/feedbacks",
@@ -1329,7 +1408,7 @@ export type get_FindById_1 = {
 
     }
 /**
- * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다.
+ * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다. 탈퇴한 계정이면 withdrawn=true를, 이미 복구를 요청했으면 restoreRequested=true도 붙인다.
  */
 export type get_StartSocialLogin = {
       method: "GET",
@@ -1373,6 +1452,8 @@ export type post_Logout = {
 "/api/products/registration-requests": Endpoints.post_Submit,
 "/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
+"/api/auth/withdrawn-member/restore-request": Endpoints.post_RequestRestore,
+"/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
 "/api/admin/login": Endpoints.post_Login,
 "/api/auth/logout": Endpoints.post_Logout
          },
@@ -1404,12 +1485,17 @@ get: {
 "/api/brands/{brandId}": Endpoints.get_FindBrand,
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
+"/api/admin/members/restore-requests": Endpoints.get_FindRestoreRequests,
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
 "/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
+         },
+delete: {
+           "/api/members/me": Endpoints.delete_Withdraw
          }
      }
 
     export type PostEndpoints = EndpointByMethod["post"]
 export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type DeleteEndpoints = EndpointByMethod["delete"]

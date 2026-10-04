@@ -19,6 +19,7 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String MEMBERS_PATH = "/api/members/";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
+    private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn-member/restore-request";
     public static final String SOCIAL_LOGIN_PATH = SecurityConfig.AUTHORIZATION_BASE_URI + "/{provider}";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
@@ -88,6 +89,9 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path) {
+        if (WITHDRAWN_MEMBER_RESTORE_PATH.equals(path)) {
+            return List.of(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);
+        }
         if (!path.contains("{")) {
             return List.of();
         }
@@ -100,6 +104,9 @@ public final class ErrorResponseCodes {
         }
         if (path.startsWith("/api/admin/product-requests/")) {
             return List.of(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
+        }
+        if (path.startsWith("/api/admin/members/")) {
+            return List.of(ErrorCode.RESTORE_REQUEST_NOT_FOUND);
         }
 
         if ("/api/products/{productId}".equals(path)) {

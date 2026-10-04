@@ -229,10 +229,16 @@ export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.stri
 export type AdminProductRequestPageResponse = __TypedOpenapi.Schemas.AdminProductRequestPageResponse;
 export const AdminProductRequestPageResponse = z.object({ items: z.array(AdminProductRequestResponse), pagination: PaginationResponse });
 
+export type AdminRestoreRequestResponse = __TypedOpenapi.Schemas.AdminRestoreRequestResponse;
+export const AdminRestoreRequestResponse = z.object({ memberId: z.number().int(), provider: z.enum(["KAKAO", "GOOGLE"]), email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }) });
+
+export type AdminRestoreRequestPageResponse = __TypedOpenapi.Schemas.AdminRestoreRequestPageResponse;
+export const AdminRestoreRequestPageResponse = z.object({ items: z.array(AdminRestoreRequestResponse), pagination: PaginationResponse });
+
 export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPageResponse;
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
-export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
+export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]) });
 
 // </Schemas>
