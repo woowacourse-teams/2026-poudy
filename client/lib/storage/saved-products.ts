@@ -1,17 +1,18 @@
-import { isSignedOut } from "@/lib/api/member";
+import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { deleteSavedProduct, fetchSavedProductIds, putSavedProduct } from "@/lib/api/saved-products";
 
-export type SavedProductsStatus = "loading" | "ready" | "failed" | "signedOut";
+export type SavedProductsStatus = "loading" | "ready" | "failed" | "signedOut" | "adminSession";
 
 export type SavedProductsSnapshot = {
   readonly status: SavedProductsStatus;
   readonly ids: readonly number[];
 };
 
-export type SaveResult = "done" | "failed" | "signedOut";
+export type SaveResult = "done" | "failed" | "signedOut" | "adminSession";
 
 const LOADING: SavedProductsSnapshot = { status: "loading", ids: [] };
 const SIGNED_OUT: SavedProductsSnapshot = { status: "signedOut", ids: [] };
+const ADMIN_SESSION: SavedProductsSnapshot = { status: "adminSession", ids: [] };
 
 const listeners = new Set<() => void>();
 const pendingRequests = new Map<number, Promise<SaveResult>>();
@@ -28,7 +29,15 @@ const update = (next: SavedProductsSnapshot): void => {
 
 const failureOf = (error: unknown): SaveResult => {
   if (isSignedOut(error)) return "signedOut";
+  if (isAdminSession(error)) return "adminSession";
   return "failed";
+};
+
+const loadFailureOf = (error: unknown): SavedProductsSnapshot => {
+  const result = failureOf(error);
+  if (result === "signedOut") return SIGNED_OUT;
+  if (result === "adminSession") return ADMIN_SESSION;
+  return { status: "failed", ids: [] };
 };
 
 const load = (): Promise<void> => {
@@ -46,7 +55,7 @@ const load = (): Promise<void> => {
         update({ status: "ready", ids: response.productIds });
       } catch (error: unknown) {
         if (requestedVersion !== changeVersion) continue;
-        update(isSignedOut(error) ? SIGNED_OUT : { status: "failed", ids: [] });
+        update(loadFailureOf(error));
       }
       return;
     }
@@ -79,6 +88,7 @@ const settle = (request: Promise<void>): Promise<SaveResult> =>
     .catch((error: unknown) => {
       const result = failureOf(error);
       if (result === "signedOut") update(SIGNED_OUT);
+      if (result === "adminSession") update(ADMIN_SESSION);
       if (result === "failed") void load();
       return result;
     });

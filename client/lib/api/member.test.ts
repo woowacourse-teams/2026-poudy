@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "./client";
-import { isSignedOut, socialLoginUrl } from "./member";
+import { isAdminSession, isSignedOut, socialLoginUrl } from "./member";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -22,5 +22,11 @@ describe("회원 API", () => {
   it("그 밖의 실패는 로그아웃으로 보지 않는다", () => {
     expect(isSignedOut(new ApiError(500, "INTERNAL_SERVER_ERROR", "서버 오류"))).toBe(false);
     expect(isSignedOut(new Error("network"))).toBe(false);
+  });
+
+  it("회원 API가 관리자 세션을 거절한 403만 관리자 세션으로 본다", () => {
+    expect(isAdminSession(new ApiError(403, "FORBIDDEN", "이 요청을 할 권한이 없습니다."))).toBe(true);
+    expect(isAdminSession(new ApiError(403, "FORBIDDEN_ORIGIN", "허용하지 않은 출처의 요청입니다."))).toBe(false);
+    expect(isAdminSession(new ApiError(401, "UNAUTHORIZED", "로그인이 필요합니다."))).toBe(false);
   });
 });

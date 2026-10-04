@@ -4,7 +4,8 @@ import type { MemberResponse } from "@poudy/api/api.zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { findMe, isSignedOut, logout, withdraw } from "@/lib/api/member";
+import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { findMe, isAdminSession, isSignedOut, logout, withdraw } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
@@ -20,6 +21,7 @@ export function MyPageScreen() {
   const router = useRouter();
   const [member, setMember] = useState<MemberResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [adminSession, setAdminSession] = useState(false);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -28,6 +30,10 @@ export function MyPageScreen() {
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
           router.replace("/login");
+          return;
+        }
+        if (isAdminSession(error)) {
+          setAdminSession(true);
           return;
         }
         setLoadFailed(true);
@@ -46,6 +52,10 @@ export function MyPageScreen() {
           router.replace("/login");
           return;
         }
+        if (isAdminSession(error)) {
+          setAdminSession(true);
+          return;
+        }
         window.alert(failure);
         setPending(false);
       });
@@ -56,6 +66,12 @@ export function MyPageScreen() {
   const resign = () => {
     if (window.confirm(WITHDRAW_CONFIRM)) leave(withdraw, WITHDRAW_FAILED);
   };
+
+  if (adminSession) {
+    return (
+      <AdminSessionNotice className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 text-center" />
+    );
+  }
 
   if (loadFailed) {
     return (

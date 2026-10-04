@@ -8,13 +8,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SavedScreen } from "./SavedScreen";
 
+import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { getSavedProductsSnapshot, reloadSavedProducts } from "@/lib/storage/saved-products";
 import { allProducts } from "@/mocks/fixtures";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace }),
 }));
 
 const PAGE_SIZE = 20;
@@ -50,6 +52,20 @@ describe("저장함", () => {
 
     expect(await screen.findByText("로그인하면 제품을 저장할 수 있어요")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "로그인하기" })).toHaveAttribute("href", "/login");
+  });
+
+  it("관리자로 로그인되어 있으면 안내하고 관리자에서 로그아웃하면 로그인 화면으로 보낸다", async () => {
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, () => problem(403, "FORBIDDEN")),
+      http.post("*/api/admin/logout", () => new HttpResponse(null, { status: 204 })),
+    );
+    await reloadSavedProducts();
+
+    render(<SavedScreen />);
+
+    expect(await screen.findByText(ADMIN_SESSION_MESSAGE)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "관리자 로그아웃" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
   });
 
   it("저장한 제품을 최근 저장순으로 채운다", async () => {

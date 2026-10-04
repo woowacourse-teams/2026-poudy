@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
-import { findMe, isSignedOut, updateMyProfile } from "@/lib/api/member";
+import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 
 type Gender = MemberProfileRequest["gender"];
 type AgeRange = MemberProfileRequest["ageRange"];
@@ -83,6 +84,7 @@ export function OnboardingScreen() {
   const [skinType, setSkinType] = useState<SkinType | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [adminSession, setAdminSession] = useState(false);
   const router = useRouter();
   const canStart = Boolean(gender && ageRange && skinType) && !saving;
 
@@ -95,6 +97,7 @@ export function OnboardingScreen() {
       })
       .catch((error: unknown) => {
         if (isSignedOut(error)) router.replace("/login");
+        if (isAdminSession(error)) setAdminSession(true);
       });
   }, [router]);
 
@@ -111,10 +114,20 @@ export function OnboardingScreen() {
           router.replace("/login");
           return;
         }
+        if (isAdminSession(error)) {
+          setAdminSession(true);
+          return;
+        }
         setFailed(true);
         setSaving(false);
       });
   };
+
+  if (adminSession) {
+    return (
+      <AdminSessionNotice className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 text-center" />
+    );
+  }
 
   return (
     <main className="flex min-h-svh flex-col">

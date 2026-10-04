@@ -20,6 +20,12 @@ const unauthorized = () =>
     { status: 401 },
   );
 
+const forbidden = () =>
+  HttpResponse.json(
+    { title: "Forbidden", status: 403, detail: "이 요청을 할 권한이 없습니다.", code: "FORBIDDEN" },
+    { status: 403 },
+  );
+
 const serverError = () =>
   HttpResponse.json(
     { title: "Internal Server Error", status: 500, detail: "서버 오류", code: "INTERNAL_SERVER_ERROR" },
@@ -42,6 +48,22 @@ describe("저장한 제품", () => {
     await reloadSavedProducts();
 
     expect(getSavedProductsSnapshot()).toEqual({ status: "signedOut", ids: [] });
+  });
+
+  it("관리자 세션이면 관리자 세션 상태로 둔다", async () => {
+    server.use(http.get(`${SAVED_PATH}/ids`, forbidden));
+
+    await reloadSavedProducts();
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "adminSession", ids: [] });
+  });
+
+  it("저장 중 관리자 세션으로 거절되면 관리자 세션 상태로 바꾼다", async () => {
+    server.use(http.put(`${SAVED_PATH}/:productId`, forbidden));
+
+    await expect(saveProduct(2)).resolves.toBe("adminSession");
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "adminSession", ids: [] });
   });
 
   it("처음 구독할 때 목록을 받아 온다", async () => {

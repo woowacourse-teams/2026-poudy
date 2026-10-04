@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useSavedProducts } from "./useSavedProducts";
 
+import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
@@ -15,14 +16,17 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const SAVED_PATH = "*/api/members/me/saved-products";
+const codeOf = (status: number): string => {
+  if (status === 401) return "UNAUTHORIZED";
+  if (status === 403) return "FORBIDDEN";
+  return "INTERNAL_SERVER_ERROR";
+};
 const problem = (status: number) =>
-  HttpResponse.json(
-    { title: "실패", status, detail: "실패", code: status === 401 ? "UNAUTHORIZED" : "INTERNAL_SERVER_ERROR" },
-    { status },
-  );
+  HttpResponse.json({ title: "실패", status, detail: "실패", code: codeOf(status) }, { status });
 
 beforeEach(async () => {
   push.mockClear();
+  vi.spyOn(window, "alert").mockImplementation(() => undefined);
   setMockSavedProducts([1]);
   await reloadSavedProducts();
 });
@@ -79,5 +83,28 @@ describe("저장 요청 결과", () => {
 
     expect(push).toHaveBeenCalledWith("/login");
     expect(result.current.status).toBe("signedOut");
+  });
+
+  it("관리자 세션이면 요청을 보내지 않고 안내한 뒤 null을 반환한다", async () => {
+    server.use(http.get(`${SAVED_PATH}/ids`, () => problem(403)));
+    await reloadSavedProducts();
+    const { result } = renderHook(useSavedProducts);
+
+    expect(result.current.save(2)).toBeNull();
+    expect(window.alert).toHaveBeenCalledWith(ADMIN_SESSION_MESSAGE);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("요청이 관리자 세션으로 거절되면 결과를 반환하면서 안내한다", async () => {
+    server.use(http.put(`${SAVED_PATH}/2`, () => problem(403)));
+    const { result } = renderHook(useSavedProducts);
+
+    await act(async () => {
+      await expect(result.current.save(2)).resolves.toBe("adminSession");
+    });
+
+    expect(window.alert).toHaveBeenCalledWith(ADMIN_SESSION_MESSAGE);
+    expect(push).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("adminSession");
   });
 });

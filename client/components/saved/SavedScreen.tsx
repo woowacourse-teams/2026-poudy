@@ -4,6 +4,7 @@ import type { ProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -12,7 +13,7 @@ import type { SortOption } from "@/components/ui/SortDropdown";
 import { SortHeader } from "@/components/ui/SortHeader";
 import { StickyBar } from "@/components/ui/StickyBar";
 import { track } from "@/lib/analytics/track";
-import { isSignedOut } from "@/lib/api/member";
+import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
@@ -136,6 +137,7 @@ function SignInNotice() {
 export function SavedScreen() {
   const { status: savedStatus, save, unsave } = useSavedProducts();
   const signedOut = savedStatus === "signedOut";
+  const adminSession = savedStatus === "adminSession";
   const [status, setStatus] = useState<Status>("loading");
   const [items, setItems] = useState<readonly ProductResponse[]>([]);
   const [removedIds, setRemovedIds] = useState<readonly number[]>([]);
@@ -148,7 +150,7 @@ export function SavedScreen() {
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
-    if (signedOut) return;
+    if (signedOut || adminSession) return;
 
     let cancelled = false;
     fetchSavedProducts()
@@ -159,7 +161,7 @@ export function SavedScreen() {
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        if (isSignedOut(error)) {
+        if (isSignedOut(error) || isAdminSession(error)) {
           void reloadSavedProducts();
           return;
         }
@@ -169,7 +171,7 @@ export function SavedScreen() {
     return () => {
       cancelled = true;
     };
-  }, [signedOut, retry]);
+  }, [signedOut, adminSession, retry]);
 
   const changeSaved = (productId: number, removed: boolean) => {
     const request = removed ? unsave(productId) : save(productId);
@@ -215,6 +217,12 @@ export function SavedScreen() {
   const sentinel = useInfiniteScroll(hasNext, showMore);
 
   if (signedOut) return <SignInNotice />;
+
+  if (adminSession) {
+    return (
+      <AdminSessionNotice className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-14 text-center" />
+    );
+  }
 
   if (status === "loading") {
     return (

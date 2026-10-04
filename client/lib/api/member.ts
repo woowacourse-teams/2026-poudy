@@ -26,3 +26,9 @@ export const requestRestore = (): Promise<void> =>
  */
 export const isSignedOut = (error: unknown): boolean =>
   error instanceof ApiError && (error.status === 401 || error.code === "MEMBER_NOT_FOUND");
+
+/**
+ * 관리자로 로그인한 세션이 회원 API를 불렀다. 출처 확인 실패(FORBIDDEN_ORIGIN)도 403 이라 코드로 가린다.
+ */
+export const isAdminSession = (error: unknown): boolean =>
+  error instanceof ApiError && error.status === 403 && error.code === "FORBIDDEN";
