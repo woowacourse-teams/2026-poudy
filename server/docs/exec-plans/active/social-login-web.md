@@ -43,7 +43,10 @@
   403 `FORBIDDEN_ORIGIN`이다. `SameSite=Lax`는 `*.poudy.site`(staging)에서 온 요청과 본문 없는 POST를
   막지 못해서 더한다. `Origin`이 없는 요청(브라우저 아님)은 통과시킨다.
 - 운영 nginx는 `/api/`만 백엔드로 넘기므로 Security 로그인 경로를 `/api` 아래로 옮긴다.
-- 로그인이 끝나면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `CLIENT_DOMAIN`의 `*` 없는
+- Preview 로그인은 시작 요청의 `returnOrigin`을 허용된 HTTP(S) 오리진인지 검증해 OAuth `state`와 함께
+  세션에 저장하고, `state`가 같은 콜백의 성공·실패에서만 한 번 소비해 해당 프론트의 `/login/callback`으로 보낸다. 경로·쿼리·fragment·userinfo가
+  있는 값은 거절하고 기존 고정 주소로 복귀한다. 세션 무효화 전에 복귀 주소를 꺼낸다.
+- 복귀 오리진이 없으면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `CLIENT_DOMAIN`의 `*` 없는
   첫 값이고, 비어 있으면 같은 오리진(운영)이다. 실패하면 같은 주소에 `error`
   (오류 코드)와, 이메일 중복이면 `provider`를 붙인다. 로그인을 마치면 `status`에 `SIGNED_IN`을, 탈퇴 계정이면
   `WITHDRAWN`을, 이미 복구를 요청했으면 `RESTORE_REQUESTED`를 붙이고 이때는 탈퇴 회원을 세션에 맡기지 않는다. 화면 분기는 프론트가 `/api/members/me`로
@@ -77,5 +80,8 @@
 
 - 운영·staging `backend.env`: `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`,
   `GOOGLE_CLIENT_SECRET`, staging은 `CLIENT_DOMAIN`
-- staging 프론트를 `app.staging.poudy.site`로 옮기기 (쿠키를 같은 사이트로 맞춤)
+- staging 프론트를 `staging-app.poudy.site`, PR preview를 `pr-<번호>.preview.poudy.site`로 옮기기
+  (쿠키를 API와 같은 사이트로 맞춤, #619)
+- staging `CLIENT_DOMAIN=https://staging-app.poudy.site,https://*.preview.poudy.site`. 고정 주소가 첫 값이어야
+  기본 복귀 주소가 된다. 프론트는 HTTPS의 `*.preview.poudy.site`에서만 로그인 링크에 현재 오리진을 붙인다.
 - 운영 nginx가 `X-Forwarded-Proto`를 넘기는지 확인 (`redirect_uri`가 https로 만들어져야 한다)
