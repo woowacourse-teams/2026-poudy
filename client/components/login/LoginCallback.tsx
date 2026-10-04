@@ -10,8 +10,7 @@ import { loginErrorMessage } from "@/lib/domain/login-error";
 type Props = {
   readonly error: string | null;
   readonly provider: string | null;
-  readonly withdrawn: boolean;
-  readonly restoreRequested: boolean;
+  readonly status: string | null;
 };
 
 type RestoreState = "idle" | "sending" | "sent" | "failed";
@@ -84,9 +83,12 @@ function RestoreRequestedNotice() {
 
 const SIGN_IN_FAILED = "OAUTH_LOGIN_FAILED";
 
-export function LoginCallback({ error, provider, withdrawn, restoreRequested }: Props) {
-  if (restoreRequested) return <RestoreRequestedNotice />;
-  if (withdrawn) return <WithdrawnNotice />;
+const WITHDRAWN = "WITHDRAWN";
+const RESTORE_REQUESTED = "RESTORE_REQUESTED";
+
+export function LoginCallback({ error, provider, status }: Props) {
+  if (status === RESTORE_REQUESTED) return <RestoreRequestedNotice />;
+  if (status === WITHDRAWN) return <WithdrawnNotice />;
 
   return <SignInResult error={error} provider={provider} />;
 }

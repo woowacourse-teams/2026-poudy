@@ -19,11 +19,6 @@ export default async function LoginCallbackPage({ searchParams }: Props) {
   const params = await searchParams;
 
   return (
-    <LoginCallback
-      error={single(params.error)}
-      provider={single(params.provider)}
-      withdrawn={single(params.withdrawn) === "true"}
-      restoreRequested={single(params.restoreRequested) === "true"}
-    />
+    <LoginCallback error={single(params.error)} provider={single(params.provider)} status={single(params.status)} />
   );
 }
