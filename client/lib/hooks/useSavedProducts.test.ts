@@ -11,6 +11,8 @@ import { server } from "@/mocks/server";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+// 실패 응답의 오류 이벤트가 테스트 종료 뒤 실제 분석 모듈을 불러오지 않게 한다.
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const SAVED_PATH = "*/api/members/me/saved-products";
 const problem = (status: number) =>
