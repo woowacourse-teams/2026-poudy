@@ -1,11 +1,11 @@
-const PROVIDER_NAMES: Readonly<Record<string, string>> = { KAKAO: "카카오", GOOGLE: "Google" };
+import { providerName as nameOf } from "./social-provider";
 
 /**
  * 소셜 로그인을 마친 서버가 /login/callback 에 붙여 보낸 오류를 화면 문구로 바꾼다.
  * 이메일 중복이면 provider 에 먼저 가입한 제공자가 온다.
  */
 export const loginErrorMessage = (code: string, provider: string | null): string => {
-  const providerName: string | undefined = PROVIDER_NAMES[provider ?? ""];
+  const providerName = nameOf(provider);
 
   if (code === "MEMBER_EMAIL_ALREADY_REGISTERED" && providerName) {
     return `이미 ${providerName}로 가입한 이메일이에요. ${providerName}로 로그인해 주세요.`;

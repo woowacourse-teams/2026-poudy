@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
-import { ApiError } from "@/lib/api/client";
-import { findMe, updateMyProfile } from "@/lib/api/member";
+import { findMe, isSignedOut, updateMyProfile } from "@/lib/api/member";
 
 type Gender = MemberProfileRequest["gender"];
 type AgeRange = MemberProfileRequest["ageRange"];
@@ -37,8 +36,6 @@ const SKIN_TYPES: readonly {
   { value: "COMBINATION", icon: "combination", name: "복합성", description: "T존만 번들거려요" },
 ];
 const UNKNOWN_SKIN_TYPE: SkinType = "UNKNOWN";
-
-const isUnauthorized = (error: unknown): boolean => error instanceof ApiError && error.status === 401;
 
 type ChoiceProps<T extends string> = {
   readonly group: string;
@@ -97,7 +94,7 @@ export function OnboardingScreen() {
         setSkinType(member.skinType);
       })
       .catch((error: unknown) => {
-        if (isUnauthorized(error)) router.replace("/login");
+        if (isSignedOut(error)) router.replace("/login");
       });
   }, [router]);
 
@@ -110,7 +107,7 @@ export function OnboardingScreen() {
     updateMyProfile({ gender, ageRange, skinType })
       .then(() => router.replace("/"))
       .catch((error: unknown) => {
-        if (isUnauthorized(error)) {
+        if (isSignedOut(error)) {
           router.replace("/login");
           return;
         }

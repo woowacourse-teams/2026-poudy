@@ -1,6 +1,6 @@
 import { MemberResponse, type MemberProfileRequest } from "@poudy/api/api.zod";
 
-import { apiGet, apiPatch, publicApiUrl } from "./client";
+import { ApiError, apiDelete, apiGet, apiPatch, apiPost, publicApiUrl } from "./client";
 
 export type SocialProvider = "kakao" | "google";
 
@@ -12,3 +12,13 @@ export const findMe = (): Promise<MemberResponse> => apiGet("/api/members/me", M
 
 export const updateMyProfile = (profile: MemberProfileRequest): Promise<MemberResponse> =>
   apiPatch("/api/members/me/profile", MemberResponse, profile);
+
+export const logout = (): Promise<void> => apiPost("/api/auth/logout", undefined, { withSession: true });
+
+export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
+
+/**
+ * 로그인하지 않았거나, 다른 기기에서 탈퇴해 세션의 회원이 더 없는 경우다. 둘 다 다시 로그인해야 한다.
+ */
+export const isSignedOut = (error: unknown): boolean =>
+  error instanceof ApiError && (error.status === 401 || error.code === "MEMBER_NOT_FOUND");

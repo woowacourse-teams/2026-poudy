@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { apiGet, apiPatch, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
 
 // 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -188,5 +188,39 @@ describe("로그인 세션 요청", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gender: "FEMALE" }),
     });
+  });
+
+  it("세션이 필요한 POST 는 쿠키를 함께 보낸다", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+
+    await apiPost("/api/auth/logout", undefined, { withSession: true });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/auth/logout", {
+      credentials: "include",
+      cache: "no-store",
+      method: "POST",
+    });
+  });
+
+  it("삭제 요청은 쿠키와 함께 DELETE 로 보내고 실패하면 ApiError 로 알린다", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ code: "UNAUTHORIZED", detail: "로그인이 필요합니다." }), { status: 401 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+
+    await apiDelete("/api/members/me");
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+      credentials: "include",
+      cache: "no-store",
+      method: "DELETE",
+    });
+    await expect(apiDelete("/api/members/me")).rejects.toMatchObject({ status: 401, code: "UNAUTHORIZED" });
   });
 });

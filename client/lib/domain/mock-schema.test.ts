@@ -201,6 +201,13 @@ describe("목 응답과 스키마", () => {
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
   });
 
+  it("회원 탈퇴는 내용 없이 204 를 준다", async () => {
+    const response = await fetch(`${BASE}/members/me`, { method: "DELETE" });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+  });
+
   it("로그아웃은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/logout", "");
 
@@ -226,6 +233,7 @@ describe("목 응답과 스키마", () => {
       "/search-keywords",
       "/members/me/profile",
       "/auth/logout",
+      "/members/me (DELETE)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

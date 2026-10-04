@@ -162,8 +162,13 @@ const networkError = (cause: unknown, path: string): ApiError => {
  * 선택적으로 본문을 보내고 응답을 받지 않는 요청. 204 처럼 내용이 없는 응답을 돌려주는 곳에 쓴다.
  * 캐시를 두지 않는다. 보내는 요청은 저장해 두었다 다시 쓸 수 있는 종류가 아니다.
  */
-export const apiPost = async (path: string, body?: unknown): Promise<void> => {
+export const apiPost = async (
+  path: string,
+  body?: unknown,
+  { withSession = false }: { readonly withSession?: boolean } = {},
+): Promise<void> => {
   const response = await fetch(apiUrl(path), {
+    ...(withSession ? SESSION_REQUEST : {}),
     method: "POST",
     ...(body === undefined
       ? {}
@@ -208,4 +213,15 @@ export const apiPatch = async <T>(path: string, schema: ZodType<T>, body: unknow
   if (!response.ok) throw await toApiError(response, path);
 
   return checkResponse(schema, response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ */
+export const apiDelete = async (path: string): Promise<void> => {
+  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "DELETE" }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
 };
