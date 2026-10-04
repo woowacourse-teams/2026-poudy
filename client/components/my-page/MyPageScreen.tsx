@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { findMe, isSignedOut, logout, withdraw } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
+import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
 const WITHDRAW_FAILED = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
@@ -32,7 +33,10 @@ export function MyPageScreen() {
   const leave = (request: () => Promise<void>, failure: string) => {
     setPending(true);
     request()
-      .then(() => router.replace("/login"))
+      .then(() => {
+        void reloadSavedProducts();
+        router.replace("/login");
+      })
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
           router.replace("/login");

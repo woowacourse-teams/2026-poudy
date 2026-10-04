@@ -18,7 +18,7 @@ export function SaveProductButton({ productId, productName, variant = "wide", en
   const saved = isSaved(productId);
 
   const onToggle = () => {
-    toggle(productId);
+    if (!toggle(productId)) return;
     track(saved ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "product_detail",

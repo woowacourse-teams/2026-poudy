@@ -216,6 +216,17 @@ export const apiPatch = async <T>(path: string, schema: ZodType<T>, body: unknow
 };
 
 /**
+ * 로그인한 회원의 값을 그 주소에 두는 요청. 같은 요청을 다시 보내도 결과가 같다.
+ */
+export const apiPut = async (path: string): Promise<void> => {
+  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "PUT" }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+};
+
+/**
  * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
  */
 export const apiDelete = async (path: string): Promise<void> => {

@@ -490,8 +490,40 @@ const mockSession: { member: MemberResponse } = {
   },
 };
 
+let mockSavedProductIds: readonly number[] = [];
+
+export const setMockSavedProducts = (productIds: readonly number[]): void => {
+  mockSavedProductIds = productIds;
+};
+
+const productOf = (id: number) => allProducts.find((product) => product.id === id);
+
 export const handlers = [
   http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+
+  http.get("*/api/members/me/saved-products/ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
+
+  http.get("*/api/members/me/saved-products", () =>
+    HttpResponse.json({
+      items: mockSavedProductIds
+        .map(productOf)
+        .filter((product): product is (typeof allProducts)[number] => Boolean(product)),
+    }),
+  ),
+
+  http.put("*/api/members/me/saved-products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+    mockSavedProductIds = [id, ...mockSavedProductIds.filter((savedId) => savedId !== id)];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.delete("*/api/members/me/saved-products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    mockSavedProductIds = mockSavedProductIds.filter((savedId) => savedId !== id);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   http.patch("*/api/members/me/profile", async ({ request }) => {
     const profile = MemberProfileRequest.safeParse(await request.json());
@@ -608,17 +640,6 @@ export const handlers = [
     if (!listed) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
     return HttpResponse.json(detailOf(listed));
-  }),
-
-  http.get("*/api/storage", ({ request }) => {
-    const url = new URL(request.url);
-    const ids = numbers(url, "productIds");
-    // 요청한 순서를 유지하고 존재하는 제품만 돌려준다.
-    const items = ids
-      .map((id) => allProducts.find((product) => product.id === id))
-      .filter((product): product is (typeof allProducts)[number] => Boolean(product));
-
-    return HttpResponse.json({ items });
   }),
 
   http.get("*/api/ingredients", ({ request }) => {

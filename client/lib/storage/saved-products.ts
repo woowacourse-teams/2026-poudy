@@ -1,174 +1,87 @@
-import { createLocalStore, isNumberArray } from "./local-store";
+import { isSignedOut } from "@/lib/api/member";
+import { deleteSavedProduct, fetchSavedProductIds, putSavedProduct } from "@/lib/api/saved-products";
 
-/** 저장한 제품과 담은 때. 언제 담았는지 보여 주거나 기기끼리 맞출 때 쓴다. */
-export type SavedProduct = {
-  readonly id: number;
-  readonly savedAt: string;
+export type SavedProductsStatus = "loading" | "ready" | "failed" | "signedOut";
+
+export type SavedProductsSnapshot = {
+  readonly status: SavedProductsStatus;
+  readonly ids: readonly number[];
 };
 
-const isSavedProducts = (value: unknown): value is SavedProduct[] =>
-  Array.isArray(value) &&
-  value.every(
-    (item): item is SavedProduct =>
-      typeof item === "object" &&
-      item !== null &&
-      typeof (item as SavedProduct).id === "number" &&
-      Number.isInteger((item as SavedProduct).id) &&
-      typeof (item as SavedProduct).savedAt === "string",
-  );
+export type SaveResult = "done" | "failed" | "signedOut";
 
-const KEY = "poudy.saved-products.v2";
+const LOADING: SavedProductsSnapshot = { status: "loading", ids: [] };
+const SIGNED_OUT: SavedProductsSnapshot = { status: "signedOut", ids: [] };
 
-const store = createLocalStore<SavedProduct[]>(KEY, {
-  version: 2,
-  fallback: [],
-  isValid: isSavedProducts,
-});
-
-/*
- * 번호만 담던 예전 형식이다. 담은 때를 알 수 없어 지금 시각으로 채운다.
- * 차례는 그대로 두므로 최근 저장순은 옮긴 뒤에도 어긋나지 않는다.
- */
-const legacyStore = createLocalStore<number[]>("poudy.saved-products.v1", {
-  version: 1,
-  fallback: [],
-  isValid: isNumberArray,
-});
-
-const migrate = (): SavedProduct[] => {
-  const legacy = legacyStore.read();
-  if (legacy.length === 0) return [];
-
-  const now = new Date().toISOString();
-  const moved = legacy.map((id) => ({ id, savedAt: now }));
-  store.write(moved);
-  legacyStore.clear();
-  return moved;
-};
-
-const load = (): SavedProduct[] => {
-  const saved = store.read();
-  return saved.length > 0 ? saved : migrate();
-};
-
-/** 저장 목록이 바뀌면 구독자에게 알린다. 같은 화면의 여러 카드가 함께 갱신되게 한다. */
 const listeners = new Set<() => void>();
+const pendingRequests = new Map<number, Promise<SaveResult>>();
 
-const notify = () => {
+let snapshot: SavedProductsSnapshot = LOADING;
+let loading: Promise<void> | null = null;
+
+const update = (next: SavedProductsSnapshot): void => {
+  snapshot = next;
   listeners.forEach((listener) => listener());
 };
 
+const failureOf = (error: unknown): SaveResult => {
+  if (isSignedOut(error)) return "signedOut";
+  return "failed";
+};
+
+const load = (): Promise<void> => {
+  loading = fetchSavedProductIds()
+    .then((response) => update({ status: "ready", ids: response.productIds }))
+    .catch((error: unknown) => {
+      if (isSignedOut(error)) {
+        update(SIGNED_OUT);
+        return;
+      }
+      update({ status: "failed", ids: [] });
+    });
+  return loading;
+};
+
+export const reloadSavedProducts = (): Promise<void> => load();
+
 export const subscribeSavedProducts = (listener: () => void): (() => void) => {
   listeners.add(listener);
+  if (!loading) void load();
   return () => {
     listeners.delete(listener);
   };
 };
 
-// useSyncExternalStore 는 값이 같으면 같은 참조를 돌려받아야 다시 그리지 않는다.
-let saved: readonly SavedProduct[] = load();
-let snapshot: readonly number[] = saved.map((item) => item.id);
+export const getSavedProductsSnapshot = (): SavedProductsSnapshot => snapshot;
 
-export const getSavedProductsSnapshot = (): readonly number[] => snapshot;
+export const getSavedProductsServerSnapshot = (): SavedProductsSnapshot => LOADING;
 
-/** 서버에는 저장 목록이 없다. 첫 HTML 이 어긋나지 않게 빈 목록을 쓴다. */
-const SERVER_SNAPSHOT: readonly number[] = [];
+const settle = (request: Promise<void>): Promise<SaveResult> =>
+  request
+    .then((): SaveResult => "done")
+    .catch((error: unknown) => {
+      const result = failureOf(error);
+      if (result === "signedOut") update(SIGNED_OUT);
+      if (result === "failed") void load();
+      return result;
+    });
 
-export const getSavedProductsServerSnapshot = (): readonly number[] => SERVER_SNAPSHOT;
-
-const commit = (next: readonly SavedProduct[]): readonly number[] => {
-  saved = next;
-  snapshot = next.map((item) => item.id);
-  store.write([...next]);
-  notify();
-  return snapshot;
+const enqueue = (productId: number, send: () => Promise<void>): Promise<SaveResult> => {
+  const previous = pendingRequests.get(productId) ?? Promise.resolve<SaveResult>("done");
+  const next = previous.then(() => settle(send()));
+  pendingRequests.set(productId, next);
+  void next.then(() => {
+    if (pendingRequests.get(productId) === next) pendingRequests.delete(productId);
+  });
+  return next;
 };
 
-/** 저장함 목록. 서버는 ID 를 받아 표시 정보만 채워 주므로 목록 자체는 브라우저가 가진다. */
-export const readSavedProductIds = (): readonly number[] => load().map((item) => item.id);
-
-/** 저장한 제품과 담은 때. 최근에 담은 것이 앞에 온다. */
-export const readSavedProducts = (): readonly SavedProduct[] => load();
-
-/** 그 제품을 언제 담았는지. 담은 적이 없으면 undefined 다. */
-export const savedAtOf = (productId: number): string | undefined =>
-  saved.find((item) => item.id === productId)?.savedAt;
-
-export const isSaved = (productId: number): boolean => snapshot.includes(productId);
-
-/** 최근에 저장한 것이 앞에 오게 한다. 디자인의 `최근 저장순` 정렬과 맞춘다. */
-export const saveProduct = (productId: number): readonly number[] =>
-  commit([{ id: productId, savedAt: new Date().toISOString() }, ...saved.filter((item) => item.id !== productId)]);
-
-export const unsaveProduct = (productId: number): readonly number[] =>
-  commit(saved.filter((item) => item.id !== productId));
-
-/** 서버에서 더 이상 찾을 수 없는 제품처럼 여러 항목을 한 번에 정리한다. */
-export const unsaveProducts = (productIds: readonly number[]): readonly number[] => {
-  const targets = new Set(productIds);
-  return commit(saved.filter((item) => !targets.has(item.id)));
+export const saveProduct = (productId: number): Promise<SaveResult> => {
+  update({ ...snapshot, ids: [productId, ...snapshot.ids.filter((id) => id !== productId)] });
+  return enqueue(productId, () => putSavedProduct(productId));
 };
 
-/** 저장을 푼 항목과 그것이 있던 자리. 되돌리기가 이 값을 들고 있다가 되살린다. */
-export type RemovedEntry = {
-  readonly product: SavedProduct;
-  readonly index: number;
-};
-
-/**
- * 저장을 풀기 직전의 항목을 자리와 함께 돌려준다. 담은 때만으로는 잇달아 담은
- * 항목의 차례를 가릴 수 없어 자리를 같이 남긴다.
- */
-export const savedEntriesOf = (productIds: readonly number[]): readonly RemovedEntry[] => {
-  const targets = new Set(productIds);
-  return saved.flatMap((product, index) => (targets.has(product.id) ? [{ product, index }] : []));
-};
-
-/**
- * 되돌리기로 되살린다. `saveProduct` 는 담은 때를 지금으로 새로 찍어 맨 앞에 놓으므로
- * 되살리는 데 쓸 수 없다. 담았던 때를 그대로 두고 그 때 순으로 다시 세운다.
- *
- * 자리를 함께 받아 담은 때가 같은 항목도 원래 차례로 돌아가게 한다. 잇달아 담으면
- * 밀리초까지 같을 수 있어 때만으로는 어느 쪽이 앞인지 가릴 수 없다.
- */
-export const restoreProducts = (entries: readonly RemovedEntry[]): readonly number[] => {
-  if (entries.length === 0) return snapshot;
-
-  /*
-   * 뺐던 자리에 도로 꽂는다. 자리가 큰 것부터 넣어야 앞자리를 채우는 동안 뒷자리가
-   * 밀리지 않는다.
-   *
-   * `index` 는 그 항목을 뺄 때의 목록을 가리킨다. `savedEntriesOf` 로 한 번에 뽑은
-   * 것들은 같은 목록을 가리키므로 이대로 맞고, 하나씩 뽑아 잇달아 뺀 것들은 저마다
-   * 다른 목록을 가리키지만 나중에 뺀 것부터 되돌리면 그 목록으로 돌아간 뒤에 꽂힌다.
-   * 어느 쪽이든 자리가 큰 것부터라는 한 가지 차례로 풀린다.
-   */
-  const next = entries
-    .map((entry, order) => ({ ...entry, order }))
-    // 자리가 같으면 나중에 뺀 것부터 되돌린다. 그래야 저마다 빠지던 목록으로 돌아간다.
-    .toSorted((a, b) => b.index - a.index || b.order - a.order)
-    .reduce<readonly SavedProduct[]>((list, { product, index }) => {
-      const without = list.filter((item) => item.id !== product.id);
-      return [...without.slice(0, index), product, ...without.slice(index)];
-    }, saved);
-
-  return commit(next);
-};
-
-export const toggleSaved = (productId: number): readonly number[] =>
-  isSaved(productId) ? unsaveProduct(productId) : saveProduct(productId);
-
-export const clearSavedProducts = (): void => {
-  saved = [];
-  snapshot = [];
-  store.clear();
-  legacyStore.clear();
-  notify();
-};
-
-/** localStorage 를 직접 지운 테스트에서 메모리 스냅샷을 다시 맞춘다. */
-export const refreshSavedProducts = (): void => {
-  saved = load();
-  snapshot = saved.map((item) => item.id);
-  notify();
+export const unsaveProduct = (productId: number): Promise<SaveResult> => {
+  update({ ...snapshot, ids: snapshot.ids.filter((id) => id !== productId) });
+  return enqueue(productId, () => deleteSavedProduct(productId));
 };

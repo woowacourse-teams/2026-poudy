@@ -19,7 +19,8 @@ import {
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
-  StorageResponse,
+  SavedProductIdsResponse,
+  SavedProductsResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -91,7 +92,8 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["저장함", "/storage?productIds=1,2", StorageResponse],
+  ["저장한 제품 ID", "/members/me/saved-products/ids", SavedProductIdsResponse],
+  ["저장함", "/members/me/saved-products", SavedProductsResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
   ["성분 검색 제안", "/ingredients/suggestions?keyword=글리", IngredientListResponse],
@@ -208,6 +210,17 @@ describe("목 응답과 스키마", () => {
     expect(await response.text()).toBe("");
   });
 
+  it("제품 저장과 해제는 내용 없이 204 를 주고, 없는 제품 저장은 404 를 준다", async () => {
+    const saved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "PUT" });
+    const unsaved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "DELETE" });
+    const missing = await fetch(`${BASE}/members/me/saved-products/999999`, { method: "PUT" });
+
+    expect(saved.status).toBe(204);
+    expect(unsaved.status).toBe(204);
+    expect(missing.status).toBe(404);
+    expect(deepStrict(ProblemDetail).safeParse(await missing.json())).toMatchObject({ success: true });
+  });
+
   it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/withdrawn-member/restore-request", "");
 
@@ -241,6 +254,8 @@ describe("목 응답과 스키마", () => {
       "/members/me/profile",
       "/members/logout",
       "/members/me (DELETE)",
+      "/members/me/saved-products/:id (PUT)",
+      "/members/me/saved-products/:id (DELETE)",
       "/auth/withdrawn-member/restore-request",
     ];
 
