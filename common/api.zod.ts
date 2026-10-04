@@ -238,6 +238,9 @@ export const AdminRestoreRequestResponse = z.object({ memberId: z.number().int()
 export type AdminRestoreRequestPageResponse = __TypedOpenapi.Schemas.AdminRestoreRequestPageResponse;
 export const AdminRestoreRequestPageResponse = z.object({ items: z.array(AdminRestoreRequestResponse), pagination: PaginationResponse });
 
+export type AdminSessionResponse = __TypedOpenapi.Schemas.AdminSessionResponse;
+export const AdminSessionResponse = z.object({ username: z.string() });
+
 export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPageResponse;
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 

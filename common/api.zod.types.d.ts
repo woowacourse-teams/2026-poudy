@@ -616,6 +616,7 @@ export type BrandDetailResponse = {
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminRestoreRequestResponse = { memberId: number, provider: ("KAKAO" | "GOOGLE"), email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
+export type AdminSessionResponse = { username: string }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
@@ -1432,6 +1433,26 @@ export type get_FindRestoreRequests = {
 },
 
     }
+/**
+ * 관리자 화면이 그리기 전에 관리자 세션이 있는지 확인한다.
+ */
+export type get_FindMe_1 = {
+      method: "GET",
+      path: "/api/admin/me",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ username: string }>,
+
+          }
+      responses: {200: Schemas.AdminSessionResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_FindAll_1 = {
       method: "GET",
       path: "/api/admin/feedbacks",
@@ -1585,6 +1606,7 @@ get: {
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
 "/api/admin/members/restore-requests": Endpoints.get_FindRestoreRequests,
+"/api/admin/me": Endpoints.get_FindMe_1,
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
 "/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
