@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
@@ -73,6 +74,18 @@ class AdminControllerTest {
         mockMvc.perform(get(ADMIN_API).session(session))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    @DisplayName("관리자 세션이 있으면 관리자 아이디를 돌려주고, 없으면 401, 회원 세션이면 403으로 거절한다")
+    void checksAdminSession() throws Exception {
+        mockMvc.perform(get("/api/admin/me").with(authentication(new LoginAdmin("admin-test").toAuthentication())))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.username").value("admin-test"));
+        mockMvc.perform(get("/api/admin/me"))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/admin/me").with(authentication(new LoginMember(1L).toAuthentication())))
+            .andExpect(status().isForbidden());
     }
 
     @Test

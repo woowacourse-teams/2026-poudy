@@ -1,7 +1,9 @@
 package com.poudy.admin.controller;
 
 import com.poudy.admin.controller.dto.AdminLoginRequest;
+import com.poudy.admin.controller.dto.AdminSessionResponse;
 import com.poudy.admin.service.AdminLoginService;
+import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginSession;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -9,8 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,5 +49,14 @@ public class AdminController {
 
         loginSession.signInAdmin(request.username(), httpRequest, httpResponse);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "관리자 세션 확인", description = "관리자 화면이 그리기 전에 관리자 세션이 있는지 확인한다.")
+    @ApiResponse(responseCode = "200", description = "관리자 세션 있음")
+    @GetMapping("/me")
+    public ResponseEntity<AdminSessionResponse> findMe(@AuthenticationPrincipal LoginAdmin loginAdmin) {
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(AdminSessionResponse.from(loginAdmin));
     }
 }
