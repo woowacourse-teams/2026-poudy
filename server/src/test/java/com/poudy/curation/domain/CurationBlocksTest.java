@@ -14,8 +14,8 @@ class CurationBlocksTest {
     @Test
     void rejectsDuplicateBlockIds() {
         UUID id = UUID.randomUUID();
-        CurationBlock first = CurationBlock.image(id, 0, 0, "first.png");
-        CurationBlock second = CurationBlock.image(id, 0, 0, "second.png");
+        CurationBlock first = CurationBlock.image(id, 0, 0, "first.png", null, null);
+        CurationBlock second = CurationBlock.image(id, 0, 0, "second.png", null, null);
 
         assertThatThrownBy(() -> CurationBlocks.from(List.of(first, second)))
             .isInstanceOf(IllegalArgumentException.class);
@@ -27,8 +27,8 @@ class CurationBlocksTest {
         UUID secondId = UUID.randomUUID();
         List<CurationBlock> source = new ArrayList<>(
             List.of(
-                CurationBlock.image(firstId, 0, 0, "first.png"),
-                CurationBlock.image(secondId, 0, 0, "second.png")
+                CurationBlock.image(firstId, 0, 0, "first.png", null, null),
+                CurationBlock.image(secondId, 0, 0, "second.png", null, null)
             )
         );
         CurationBlocks blocks = CurationBlocks.from(source);
