@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { AppQrPanel } from "./AppQrPanel";
 
-const STORE_URL = "https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share";
+const OPEN_APP_URL = "http://localhost:3000/open-app";
 
 const link = () => screen.getByRole("link", { name: /앱 받기/ });
 
@@ -29,22 +29,23 @@ describe("앱 설치 QR 코드 패널", () => {
 
   /*
    * 줄바꿈은 눈으로 읽는 자리를 고른 것이라 문장 자체는 끊기지 않아야 한다.
-   * `Play 스토어` 가 갈라지지 않도록 그 앞에서 줄을 바꾼다.
+   * QR 스캔 안내 다음에 줄을 바꿔도 공백으로 이어 읽는다.
    */
   it("설명은 줄바꿈이 있어도 한 문장으로 읽힌다", () => {
     render(<AppQrPanel />);
 
-    const description = screen.getByText(/QR 코드를 비추면/);
+    const description = screen.getByText(/QR 코드를 스캔하거나/);
 
-    expect(description.textContent).toBe("휴대전화 카메라로 QR 코드를 비추면 Play 스토어로 이동해요.");
+    expect(description.textContent).toBe("QR 코드를 스캔하거나 플레이 스토어에서 ‘파우디’를 검색해 보세요.");
     expect(description.querySelector("br")).toBeInTheDocument();
   });
 
-  it("스토어 주소로 QR 코드를 그린다", () => {
+  /* 스토어 주소를 담으면 구글 도메인이라 앱이 깔려 있어도 스토어가 열린다. */
+  it("앱이 받을 수 있는 우리 주소로 QR 코드를 그린다", () => {
     const { container } = render(<AppQrPanel />);
 
     /* QR 코드는 링크의 내용을 옮긴 그림이라 두 주소가 어긋나면 찍은 쪽만 엉뚱한 곳으로 간다. */
-    expect(link()).toHaveAttribute("href", STORE_URL);
+    expect(link()).toHaveAttribute("href", OPEN_APP_URL);
     expect(container.querySelector("svg")).toBeInTheDocument();
   });
 

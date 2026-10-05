@@ -185,7 +185,7 @@ describe("공유 메타데이터", () => {
     expect(markup).toContain('"@type":"Organization"');
     expect(markup).toContain('"@id":"http://localhost:3000/#organization"');
     expect(markup).toContain('"alternateName":"Poudy"');
-    expect(markup).toContain('"logo":"http://localhost:3000/favicon.png"');
+    expect(markup).toContain('"logo":"http://localhost:3000/logo.webp"');
     expect(markup).toContain(
       '"sameAs":["https://www.instagram.com/poudy.official","https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share"]',
     );

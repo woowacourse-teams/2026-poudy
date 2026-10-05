@@ -88,6 +88,32 @@ export const buildInstallIntentUrl = (webUrl: string): string => {
   return `intent://${destination}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(APP_STORE_URL)};end`;
 };
 
+/** 앱 설치 QR 코드가 담는 경로. 앱이 이 도메인의 모든 경로를 App Links 로 받는다. */
+export const OPEN_APP_PATH = "/open-app";
+
+/**
+ * QR 코드로 들어온 `/open-app` 에서 이어 갈 주소를 고른다.
+ *
+ * QR 코드에 스토어 주소를 그대로 담으면 구글 도메인이라 앱이 깔려 있어도 스토어가 열린다.
+ * 그렇다고 `intent://` 를 담을 수도 없다. 카메라 앱은 이 스킴을 열지 못하고 브라우저
+ * 안에서 옮겨 갈 때만 통한다. 그래서 우리 주소를 담고 여기서 갈래를 나눈다.
+ *
+ * 앱이 있으면 대개 App Links 가 주소를 가로채 이 화면까지 오지 않는다. 그래도 앱은 받은
+ * 주소를 웹뷰에 그대로 열므로 앱 안에서도 이 화면에 닿는다. 그때 스토어로 보내면 쓰던
+ * 앱에서 밀려나므로 홈으로 보낸다.
+ *
+ * 브라우저에 닿은 안드로이드는 설치 배너와 같은 길로 보낸다. 앱이 있으면 열고 없으면
+ * 스토어로 간다. 홈을 담는 까닭은 `/open-app` 을 담으면 앱이 이 화면을 다시 열기 때문이다.
+ */
+export const resolveOpenAppDestination = (webUrl: string, userAgent: string, isPoudyApp: boolean): string => {
+  const homeUrl = new URL("/", webUrl).href;
+
+  if (isPoudyApp) return homeUrl;
+  if (!ANDROID.test(userAgent)) return APP_STORE_URL;
+
+  return buildInstallIntentUrl(homeUrl);
+};
+
 export const planAppOpen = (webUrl: string, userAgent: string, isPoudyApp: boolean): AppOpenPlan => {
   const fallbackWebUrl = consumeFallbackMarker(webUrl);
   const cleanWebUrl = consumeShareMarker(fallbackWebUrl ?? webUrl);
