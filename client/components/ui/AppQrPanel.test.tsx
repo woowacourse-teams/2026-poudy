@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { AppQrPanel } from "./AppQrPanel";
 
-const STORE_URL = "https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share";
+const ENTRY_URL = "http://localhost:3000/app";
 
 const link = () => screen.getByRole("link", { name: /앱 받기/ });
 
@@ -40,11 +40,12 @@ describe("앱 설치 QR 코드 패널", () => {
     expect(description.querySelector("br")).toBeInTheDocument();
   });
 
-  it("스토어 주소로 QR 코드를 그린다", () => {
+  /* 스토어 주소를 담으면 구글 도메인이라 앱이 깔려 있어도 스토어가 열린다. */
+  it("앱이 받을 수 있는 우리 주소로 QR 코드를 그린다", () => {
     const { container } = render(<AppQrPanel />);
 
     /* QR 코드는 링크의 내용을 옮긴 그림이라 두 주소가 어긋나면 찍은 쪽만 엉뚱한 곳으로 간다. */
-    expect(link()).toHaveAttribute("href", STORE_URL);
+    expect(link()).toHaveAttribute("href", ENTRY_URL);
     expect(container.querySelector("svg")).toBeInTheDocument();
   });
 

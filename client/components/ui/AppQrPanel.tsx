@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
-import { APP_STORE_URL } from "@/lib/navigation/open-app";
-import { SITE_NAME } from "@/lib/seo/site";
+import { APP_ENTRY_PATH } from "@/lib/navigation/open-app";
+import { absoluteUrl, SITE_NAME } from "@/lib/seo/site";
 
 /* 둘레의 빈 테두리까지 포함한 크기다. 코드 자체는 이보다 조금 작게 그려진다. */
 const QR_SIZE = 132;
@@ -11,7 +11,11 @@ const QR_SIZE = 132;
  * 넓은 화면의 왼쪽 여백에 서는 안드로이드 앱 설치 안내.
  *
  * 앱은 Play 스토어에만 올라가 있다. iOS 에도 내게 되면 제목과 설명에 적어 둔 조건,
- * 링크의 이름, `APP_STORE_URL` 을 함께 손봐야 한다.
+ * 링크의 이름, `planAppEntry` 를 함께 손봐야 한다.
+ *
+ * QR 코드에는 스토어가 아니라 우리 주소(`APP_ENTRY_PATH`)를 담는다. 스토어 주소는 구글
+ * 도메인이라 앱이 깔려 있어도 스토어가 열린다. 우리 주소는 App Links 가 앱으로 넘기고,
+ * 앱이 없으면 그 화면이 스토어로 보낸다.
  *
  * 본문은 `--container-md`(448px) 로 폭이 묶여 가운데에 놓이므로, 화면이 넓어질수록
  * 양옆이 빈다. 그 자리에 앱을 알리는 자리를 둔다.
@@ -26,6 +30,8 @@ const QR_SIZE = 132;
  * 줄어, 패널을 놓으면 본문 카드에 닿을 듯이 붙는다.
  */
 export function AppQrPanel() {
+  const entryUrl = absoluteUrl(APP_ENTRY_PATH);
+
   return (
     <aside
       aria-label={`${SITE_NAME} 안드로이드 앱 설치 안내`}
@@ -69,14 +75,14 @@ export function AppQrPanel() {
           어디로 가는지 알린다.
         */}
         <a
-          href={APP_STORE_URL}
+          href={entryUrl}
           target="_blank"
           rel="noreferrer noopener"
           aria-label={`Google Play 에서 ${SITE_NAME} 앱 받기 (새 창)`}
           className="rounded-2xl border border-border bg-background p-2"
         >
           <QRCodeSVG
-            value={APP_STORE_URL}
+            value={entryUrl}
             size={QR_SIZE}
             /*
              * 기본값인 L 은 복원 능력이 가장 낮다. 화면에서 바로 찍는 코드라 얼룩이나
