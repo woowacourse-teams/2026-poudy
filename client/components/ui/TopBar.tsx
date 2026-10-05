@@ -140,14 +140,14 @@ export function TopBar({
               로고만 둘 때는 맞출 글자가 없으므로 바 높이를 채우고 가운데에 선다.
             */
             <Image
-              src="/logo.png"
+              src="/logo.webp"
               alt={logoOnly ? title : ""}
-              width={80}
-              height={89}
+              width={226}
+              height={296}
               draggable={false}
               loading="eager"
               className={
-                logoOnly ? "ml-3 h-9 w-auto shrink-0 select-none" : "ml-3 mb-1.5 h-[29px] w-[26px] select-none self-end"
+                logoOnly ? "ml-3 h-9 w-auto shrink-0 select-none" : "ml-3 mb-1.5 h-[29px] w-auto select-none self-end"
               }
             />
           ) : null}

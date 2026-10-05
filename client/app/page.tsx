@@ -55,7 +55,7 @@ const websiteStructuredData = {
       alternateName: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl("/"),
-      logo: absoluteUrl("/favicon.png"),
+      logo: absoluteUrl("/logo.webp"),
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer support",

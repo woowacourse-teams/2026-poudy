@@ -48,7 +48,7 @@ export function AppQrPanel() {
       className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-6 lg:grid"
     >
       <div className="flex w-full max-w-60 flex-col items-center gap-3 text-center">
-        <Image src="/logo.png" alt="" width={80} height={89} draggable={false} className="h-9 w-auto select-none" />
+        <Image src="/logo.webp" alt="" width={226} height={296} draggable={false} className="h-9 w-auto select-none" />
 
         {/*
           제목에서 안드로이드임을 먼저 밝힌다. 지금은 Play 스토어에만 올라가 있어, 조건을
