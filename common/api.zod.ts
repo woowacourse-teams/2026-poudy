@@ -19,6 +19,12 @@ export const FeedbackImageUploadResponse = z.object({ imageIds: z.array(z.uuid()
 export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
 export const FeedbackRequest = z.object({ type: z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER"]), content: z.string().min(10).max(2000), path: z.string().min(1).max(500).nullable().optional(), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
 
+export type AppLoginRequest = __TypedOpenapi.Schemas.AppLoginRequest;
+export const AppLoginRequest = z.object({ token: z.string().min(1) });
+
+export type AppLoginResponse = __TypedOpenapi.Schemas.AppLoginResponse;
+export const AppLoginResponse = z.object({ status: z.enum(["SIGNED_IN", "WITHDRAWN", "RESTORE_REQUESTED"]) });
+
 export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
 export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
 

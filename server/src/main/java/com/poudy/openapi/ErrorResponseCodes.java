@@ -21,6 +21,7 @@ public final class ErrorResponseCodes {
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn-member/restore-request";
+    private static final String APP_LOGIN_PATH = "/api/auth/{provider}/app-login";
     public static final String SOCIAL_LOGIN_PATH = WebLoginConfigurer.AUTHORIZATION_BASE_URI + "/{provider}";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
@@ -42,6 +43,14 @@ public final class ErrorResponseCodes {
     public static List<ErrorCode> badRequest(String path, HttpMethod method) {
         if (SOCIAL_LOGIN_PATH.equals(path)) {
             return List.of();
+        }
+        if (APP_LOGIN_PATH.equals(path)) {
+            return List.of(
+                ErrorCode.INVALID_REQUEST_BODY,
+                ErrorCode.OAUTH_LOGIN_FAILED,
+                ErrorCode.OAUTH_EMAIL_NOT_VERIFIED,
+                ErrorCode.MEMBER_EMAIL_ALREADY_REGISTERED
+            );
         }
         if (PRODUCT_REQUESTS_PATH.equals(path) || "/api/search-keywords".equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);

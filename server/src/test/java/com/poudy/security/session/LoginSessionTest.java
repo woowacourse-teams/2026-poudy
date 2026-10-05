@@ -3,6 +3,8 @@ package com.poudy.security.session;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.security.login.admin.AdminSessionPolicy;
+import com.poudy.security.login.app.AppSessionCookie;
+import com.poudy.security.login.app.AppSessionPolicy;
 import com.poudy.security.login.web.WebSessionPolicy;
 import java.time.Clock;
 import java.time.Duration;
@@ -27,6 +29,7 @@ class LoginSessionTest {
     private static final Duration ABSOLUTE = Duration.ofDays(7);
     private static final Duration ADMIN_IDLE = Duration.ofHours(1);
     private static final Duration ADMIN_ABSOLUTE = Duration.ofHours(12);
+    private static final Duration APP_IDLE = Duration.ofDays(60);
     private static final long MEMBER_ID = 7L;
     private static final String PREVIEW = "https://pr-111.preview.poudy.site";
     private static final String STATE = "state-1";
@@ -197,6 +200,37 @@ class LoginSessionTest {
     }
 
     @Test
+    @DisplayName("앱으로 로그인하면 비활동 60일로 두고 로그인 후 오래 지나도 버리지 않는다")
+    void keepsAppSessionWithoutAbsoluteTimeout() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isFalse();
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(APP_IDLE.toSeconds());
+    }
+
+    @Test
+    @DisplayName("앱 세션은 접속하면 쿠키 수명을 다시 60일로 늘리고, 하루 안에는 다시 늘리지 않는다")
+    void extendsAppSessionCookie() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        ((MockHttpSession) request.getSession()).setNew(false);
+
+        MockHttpServletResponse first = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, first);
+        MockHttpServletResponse sameDay = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30)).plusSeconds(60)).refresh(request, sameDay);
+
+        assertThat(first.getHeader("Set-Cookie"))
+            .startsWith("JSESSIONID=" + request.getSession().getId())
+            .contains("Max-Age=" + APP_IDLE.toSeconds(), "HttpOnly", "Secure", "SameSite=Lax");
+        assertThat(sameDay.getHeader("Set-Cookie")).isNull();
+    }
+
+    @Test
     @DisplayName("웹 세션은 쿠키 수명을 늘리지 않는다")
     void doesNotExtendWebSessionCookie() {
         MockHttpServletRequest request = signedInRequest();
@@ -218,7 +252,11 @@ class LoginSessionTest {
         return new LoginSession(
             List.of(
                 new WebSessionPolicy(IDLE, ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC)),
-                new AdminSessionPolicy(ADMIN_IDLE, ADMIN_ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC))
+                new AdminSessionPolicy(ADMIN_IDLE, ADMIN_ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC)),
+                new AppSessionPolicy(
+                    APP_IDLE,
+                    new AppSessionCookie("JSESSIONID", APP_IDLE, true, "Lax", Clock.fixed(now, ZoneOffset.UTC))
+                )
             ),
             new HttpSessionSecurityContextRepository()
         );

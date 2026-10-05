@@ -17,6 +17,8 @@ import com.poudy.security.domain.SocialMemberLogin;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import com.poudy.security.login.SocialLogin;
 import com.poudy.security.login.admin.AdminSessionPolicy;
+import com.poudy.security.login.app.AppSessionCookie;
+import com.poudy.security.login.app.AppSessionPolicy;
 import com.poudy.security.session.LoginMember;
 import com.poudy.security.session.LoginSession;
 import java.time.Clock;
@@ -55,7 +57,11 @@ class WebLoginHandlerTest {
     private final LoginSession loginSession = new LoginSession(
         List.of(
             new WebSessionPolicy(Duration.ofDays(1), Duration.ofDays(7), CLOCK),
-            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), CLOCK)
+            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), CLOCK),
+            new AppSessionPolicy(
+                Duration.ofDays(60),
+                new AppSessionCookie("JSESSIONID", Duration.ofDays(60), true, "Lax", CLOCK)
+            )
         ),
         new HttpSessionSecurityContextRepository()
     );

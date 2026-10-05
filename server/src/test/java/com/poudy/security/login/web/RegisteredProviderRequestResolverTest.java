@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.security.ClientOrigins;
 import com.poudy.security.login.admin.AdminSessionPolicy;
+import com.poudy.security.login.app.AppSessionCookie;
+import com.poudy.security.login.app.AppSessionPolicy;
 import com.poudy.security.session.LoginSession;
 import java.time.Clock;
 import java.time.Duration;
@@ -26,7 +28,11 @@ class RegisteredProviderRequestResolverTest {
     private final LoginSession loginSession = new LoginSession(
         List.of(
             new WebSessionPolicy(Duration.ofDays(1), Duration.ofDays(7), Clock.systemUTC()),
-            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), Clock.systemUTC())
+            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), Clock.systemUTC()),
+            new AppSessionPolicy(
+                Duration.ofDays(60),
+                new AppSessionCookie("JSESSIONID", Duration.ofDays(60), true, "Lax", Clock.systemUTC())
+            )
         ),
         new HttpSessionSecurityContextRepository()
     );

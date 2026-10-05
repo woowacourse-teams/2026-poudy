@@ -99,6 +99,10 @@ poudy:
     admin-session:
       idle-timeout: PT1H
       absolute-timeout: PT12H
+    app-session:
+      idle-timeout: P60D
+    app-login:
+      kakao-app-id: "1595861"
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
