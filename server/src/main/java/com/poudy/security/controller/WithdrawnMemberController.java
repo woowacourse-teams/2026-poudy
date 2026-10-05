@@ -2,7 +2,7 @@ package com.poudy.security.controller;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.security.domain.SocialSignIn;
+import com.poudy.security.domain.SocialMemberLogin;
 import com.poudy.security.session.LoginSession;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,11 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth/withdrawn-member")
 public class WithdrawnMemberController {
 
-    private final SocialSignIn socialSignIn;
+    private final SocialMemberLogin socialMemberLogin;
     private final LoginSession loginSession;
 
-    public WithdrawnMemberController(SocialSignIn socialSignIn, LoginSession loginSession) {
-        this.socialSignIn = socialSignIn;
+    public WithdrawnMemberController(SocialMemberLogin socialMemberLogin, LoginSession loginSession) {
+        this.socialMemberLogin = socialMemberLogin;
         this.loginSession = loginSession;
     }
 
@@ -32,7 +32,7 @@ public class WithdrawnMemberController {
     public ResponseEntity<Void> requestRestore(HttpServletRequest request) {
         long withdrawnMemberId = loginSession.releaseWithdrawnMember(request)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND));
-        socialSignIn.requestRestore(withdrawnMemberId);
+        socialMemberLogin.requestRestore(withdrawnMemberId);
         return ResponseEntity.noContent().build();
     }
 }

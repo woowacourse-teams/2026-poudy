@@ -1,19 +1,19 @@
 package com.poudy.member.domain;
 
-import com.poudy.security.domain.SignInStatus;
+import com.poudy.security.domain.LoginStatus;
 
 public enum MemberStatus {
-    ACTIVE(SignInStatus.SIGNED_IN),
-    WITHDRAWN(SignInStatus.WITHDRAWN),
-    RESTORE_REQUESTED(SignInStatus.RESTORE_REQUESTED);
+    ACTIVE(LoginStatus.SIGNED_IN),
+    WITHDRAWN(LoginStatus.WITHDRAWN),
+    RESTORE_REQUESTED(LoginStatus.RESTORE_REQUESTED);
 
-    private final SignInStatus signInStatus;
+    private final LoginStatus loginStatus;
 
-    MemberStatus(SignInStatus signInStatus) {
-        this.signInStatus = signInStatus;
+    MemberStatus(LoginStatus loginStatus) {
+        this.loginStatus = loginStatus;
     }
 
-    public SignInStatus signInStatus() {
-        return signInStatus;
+    public LoginStatus loginStatus() {
+        return loginStatus;
     }
 }

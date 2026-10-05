@@ -1,6 +1,6 @@
 package com.poudy.security.domain;
 
-public enum SignInStatus {
+public enum LoginStatus {
     SIGNED_IN,
     WITHDRAWN,
     RESTORE_REQUESTED

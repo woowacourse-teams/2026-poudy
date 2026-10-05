@@ -1,4 +1,4 @@
-package com.poudy.security;
+package com.poudy.security.login.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,13 +7,16 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.poudy.security.ClientOrigins;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
+import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
-import com.poudy.security.domain.SignInStatus;
-import com.poudy.security.domain.SocialSignIn;
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
+import com.poudy.security.domain.SocialMemberLogin;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
+import com.poudy.security.login.SocialLogin;
+import com.poudy.security.login.admin.AdminSessionPolicy;
 import com.poudy.security.session.LoginMember;
 import com.poudy.security.session.LoginSession;
 import java.time.Clock;
@@ -38,25 +41,22 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 @DisplayName("소셜 로그인 처리")
-class OAuthLoginHandlersTest {
+class WebLoginHandlerTest {
 
     private static final String CLIENT_ORIGIN = "https://poudy.example.com";
     private static final String REDIRECT_URI = CLIENT_ORIGIN + "/login/callback";
     private static final String STATE = "state-1";
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-03T00:00:00Z"), ZoneOffset.UTC);
 
-    private final SocialSignIn socialSignIn = mock(SocialSignIn.class);
-    private final SecurityConfig securityConfig = new SecurityConfig();
+    private final SocialMemberLogin socialMemberLogin = mock(SocialMemberLogin.class);
     private final LoginSession loginSession = new LoginSession(
-        Duration.ofDays(1),
-        Duration.ofDays(7),
-        Duration.ofHours(1),
-        Duration.ofHours(12),
-        CLOCK,
+        List.of(
+            new WebSessionPolicy(Duration.ofDays(1), Duration.ofDays(7), CLOCK),
+            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), CLOCK)
+        ),
         new HttpSessionSecurityContextRepository()
     );
     private final MockHttpServletRequest request = new MockHttpServletRequest();
@@ -70,12 +70,12 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("로그인에 성공하면 회원 ID만 세션에 남기고 프론트로 보낸다")
     void signsInMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.SIGNED_IN));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
         ArgumentCaptor<OAuthAccount> account = ArgumentCaptor.forClass(OAuthAccount.class);
-        verify(socialSignIn).signIn(account.capture());
+        verify(socialMemberLogin).login(account.capture());
         assertThat(account.getValue().provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(account.getValue().providerId()).isEqualTo("4321");
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=SIGNED_IN");
@@ -90,7 +90,7 @@ class OAuthLoginHandlersTest {
     void rejectsDuplicateEmail() throws Exception {
         MockHttpSession session = new MockHttpSession();
         request.setSession(session);
-        willThrow(new EmailAlreadyRegisteredException(OAuthProvider.GOOGLE)).given(socialSignIn).signIn(any());
+        willThrow(new EmailAlreadyRegisteredException(OAuthProvider.GOOGLE)).given(socialMemberLogin).login(any());
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -104,7 +104,7 @@ class OAuthLoginHandlersTest {
     void rejectsUnverifiedEmail() throws Exception {
         MockHttpSession session = new MockHttpSession();
         request.setSession(session);
-        willThrow(new UnverifiedOAuthEmailException()).given(socialSignIn).signIn(any());
+        willThrow(new UnverifiedOAuthEmailException()).given(socialMemberLogin).login(any());
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -133,7 +133,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("제공자 인증에 실패하면 로그인 실패로 보낸다")
     void redirectsFailure() throws Exception {
-        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(List.of(CLIENT_ORIGIN)))
+        handlerFor(ClientOrigins.from(List.of(CLIENT_ORIGIN)))
             .onAuthenticationFailure(
                 request,
                 response,
@@ -146,7 +146,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("프론트 오리진이 없으면 같은 오리진의 콜백으로 보낸다")
     void redirectsToSameOriginWithoutClientOrigin() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.SIGNED_IN));
 
         successHandlerFor(List.of()).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -162,7 +162,7 @@ class OAuthLoginHandlersTest {
             new SecurityContextImpl(kakaoToken())
         );
         request.setSession(session);
-        willThrow(new QueryTimeoutException("statement timeout")).given(socialSignIn).signIn(any());
+        willThrow(new QueryTimeoutException("statement timeout")).given(socialMemberLogin).login(any());
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -173,7 +173,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("탈퇴한 계정이면 로그인시키지 않고 탈퇴 회원만 세션에 둔 채 탈퇴 안내로 보낸다")
     void holdsWithdrawnMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.WITHDRAWN));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -192,7 +192,7 @@ class OAuthLoginHandlersTest {
             new SecurityContextImpl(kakaoToken())
         );
         request.setSession(session);
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.RESTORE_REQUESTED));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.RESTORE_REQUESTED));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -205,7 +205,7 @@ class OAuthLoginHandlersTest {
     @DisplayName("preview에서 시작한 로그인에 성공하면 그 preview의 콜백으로 보낸다")
     void returnsToPreviewOnSuccess() throws Exception {
         rememberPreview();
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.SIGNED_IN));
         successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
         assertThat(response.getRedirectedUrl())
             .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=SIGNED_IN");
@@ -215,7 +215,7 @@ class OAuthLoginHandlersTest {
     @DisplayName("preview에서 시작한 로그인을 제공자가 거절하면 그 preview의 콜백으로 보낸다")
     void returnsToPreviewOnProviderFailure() throws Exception {
         rememberPreview();
-        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(previewOrigins()))
+        handlerFor(ClientOrigins.from(previewOrigins()))
             .onAuthenticationFailure(
                 request,
                 response,
@@ -230,7 +230,7 @@ class OAuthLoginHandlersTest {
     void returnsToPreviewEvenWhenSignInInvalidatesSession() throws Exception {
         rememberPreview();
         MockHttpSession session = (MockHttpSession) request.getSession();
-        willThrow(new UnverifiedOAuthEmailException()).given(socialSignIn).signIn(any());
+        willThrow(new UnverifiedOAuthEmailException()).given(socialMemberLogin).login(any());
         successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
         assertThat(session.isInvalid()).isTrue();
         assertThat(response.getRedirectedUrl())
@@ -241,7 +241,7 @@ class OAuthLoginHandlersTest {
     @DisplayName("탈퇴 계정으로 세션을 바꿔도 preview의 콜백으로 보낸다")
     void returnsWithdrawnMemberToPreviewAfterReplacingSession() throws Exception {
         rememberPreview();
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
+        given(socialMemberLogin.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.WITHDRAWN));
         successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
         assertThat(response.getRedirectedUrl())
             .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=WITHDRAWN");
@@ -253,7 +253,7 @@ class OAuthLoginHandlersTest {
     void ignoresReturnOriginOfOtherState() throws Exception {
         rememberPreview();
         request.setParameter("state", "other-state");
-        securityConfig.oauthLoginFailureHandler(loginSession, ClientOrigins.from(previewOrigins()))
+        handlerFor(ClientOrigins.from(previewOrigins()))
             .onAuthenticationFailure(
                 request,
                 response,
@@ -271,8 +271,17 @@ class OAuthLoginHandlersTest {
         request.setParameter("state", STATE);
     }
 
-    private AuthenticationSuccessHandler successHandlerFor(List<String> clientOrigins) {
-        return securityConfig.oauthLoginSuccessHandler(socialSignIn, loginSession, ClientOrigins.from(clientOrigins));
+    private WebLoginHandler successHandlerFor(List<String> clientOrigins) {
+        return handlerFor(ClientOrigins.from(clientOrigins));
+    }
+
+    private WebLoginHandler handlerFor(ClientOrigins clientOrigins) {
+        return new WebLoginHandler(
+            new SocialLogin(socialMemberLogin, loginSession),
+            new WebSocialAccountReader(),
+            loginSession,
+            clientOrigins
+        );
     }
 
     private OAuth2AuthenticationToken kakaoToken() {

@@ -1,14 +1,15 @@
 package com.poudy.security.session;
 
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,66 +22,44 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoginSession {
 
-    private static final String EXPIRES_AT = LoginSession.class.getName() + ".expiresAt";
+    private static final String CHANNEL = LoginSession.class.getName() + ".channel";
     private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
     private static final String RETURN_ORIGIN = LoginSession.class.getName() + ".returnOrigin";
     private static final String RETURN_ORIGIN_STATE = LoginSession.class.getName() + ".returnOriginState";
     private static final Duration WITHDRAWN_HOLD_TIMEOUT = Duration.ofMinutes(10);
 
-    private final Duration idleTimeout;
-    private final Duration absoluteTimeout;
-    private final Duration adminIdleTimeout;
-    private final Duration adminAbsoluteTimeout;
-    private final Clock clock;
+    private final Map<LoginChannel, SessionPolicy> policies;
     private final SecurityContextRepository securityContextRepository;
     private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
         .getContextHolderStrategy();
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
-    public LoginSession(
-        @Value("${poudy.auth.web-session.idle-timeout}") Duration idleTimeout,
-        @Value("${poudy.auth.web-session.absolute-timeout}") Duration absoluteTimeout,
-        @Value("${poudy.auth.admin-session.idle-timeout}") Duration adminIdleTimeout,
-        @Value("${poudy.auth.admin-session.absolute-timeout}") Duration adminAbsoluteTimeout,
-        Clock clock,
-        SecurityContextRepository securityContextRepository
-    ) {
-        this.idleTimeout = idleTimeout;
-        this.absoluteTimeout = absoluteTimeout;
-        this.adminIdleTimeout = adminIdleTimeout;
-        this.adminAbsoluteTimeout = adminAbsoluteTimeout;
-        this.clock = clock;
+    public LoginSession(List<SessionPolicy> policies, SecurityContextRepository securityContextRepository) {
+        this.policies = policies.stream().collect(Collectors.toMap(SessionPolicy::channel, Function.identity()));
         this.securityContextRepository = securityContextRepository;
     }
 
-    public void applySignInResult(SocialSignInResult result, HttpServletRequest request, HttpServletResponse response) {
+    public void applyLoginResult(
+        SocialLoginResult result,
+        LoginChannel channel,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
         switch (result.status()) {
-            case SIGNED_IN -> signIn(result.memberId(), request, response);
+            case SIGNED_IN -> signIn(result.memberId(), channel, request, response);
             case WITHDRAWN -> holdWithdrawnMember(result.memberId(), request, response);
             case RESTORE_REQUESTED -> signOut(request, response);
         }
     }
 
-    public void signIn(long memberId, HttpServletRequest request, HttpServletResponse response) {
-        saveAuthentication(
-            new LoginMember(memberId).toAuthentication(),
-            idleTimeout,
-            absoluteTimeout,
-            request,
-            response
-        );
-        request.getSession().removeAttribute(WITHDRAWN_MEMBER_ID);
+    public void signIn(long memberId, LoginChannel channel, HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = start(new LoginMember(memberId).toAuthentication(), channel, request, response);
+        session.removeAttribute(WITHDRAWN_MEMBER_ID);
     }
 
     public void signInAdmin(String username, HttpServletRequest request, HttpServletResponse response) {
         signOut(request, response);
-        saveAuthentication(
-            new LoginAdmin(username).toAuthentication(),
-            adminIdleTimeout,
-            adminAbsoluteTimeout,
-            request,
-            response
-        );
+        start(new LoginAdmin(username).toAuthentication(), LoginChannel.ADMIN, request, response);
     }
 
     public void holdWithdrawnMember(long memberId, HttpServletRequest request, HttpServletResponse response) {
@@ -129,20 +108,19 @@ public class LoginSession {
         logoutHandler.logout(request, response, null);
     }
 
-    public void expireIfOverdue(HttpServletRequest request) {
+    public void refresh(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             return;
         }
-        if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt && !clock.instant().isBefore(expiresAt)) {
-            session.invalidate();
+        if (session.getAttribute(CHANNEL) instanceof LoginChannel channel) {
+            policies.get(channel).refresh(session, response);
         }
     }
 
-    private void saveAuthentication(
+    private HttpSession start(
         Authentication authentication,
-        Duration idleTimeout,
-        Duration absoluteTimeout,
+        LoginChannel channel,
         HttpServletRequest request,
         HttpServletResponse response
     ) {
@@ -152,7 +130,8 @@ public class LoginSession {
         securityContextRepository.saveContext(context, request, response);
 
         HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(Math.toIntExact(idleTimeout.toSeconds()));
-        session.setAttribute(EXPIRES_AT, clock.instant().plus(absoluteTimeout));
+        session.setAttribute(CHANNEL, channel);
+        policies.get(channel).start(session);
+        return session;
     }
 }

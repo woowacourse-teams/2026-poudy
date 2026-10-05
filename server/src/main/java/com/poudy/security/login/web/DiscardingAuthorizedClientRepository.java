@@ -1,4 +1,4 @@
-package com.poudy.security.oauth;
+package com.poudy.security.login.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

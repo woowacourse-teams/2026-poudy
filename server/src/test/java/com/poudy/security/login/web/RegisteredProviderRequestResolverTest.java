@@ -1,8 +1,9 @@
-package com.poudy.security.oauth;
+package com.poudy.security.login.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.security.ClientOrigins;
+import com.poudy.security.login.admin.AdminSessionPolicy;
 import com.poudy.security.session.LoginSession;
 import java.time.Clock;
 import java.time.Duration;
@@ -23,11 +24,10 @@ class RegisteredProviderRequestResolverTest {
     private static final String PREVIEW = "https://pr-111.preview.poudy.site";
 
     private final LoginSession loginSession = new LoginSession(
-        Duration.ofDays(1),
-        Duration.ofDays(7),
-        Duration.ofHours(1),
-        Duration.ofHours(12),
-        Clock.systemUTC(),
+        List.of(
+            new WebSessionPolicy(Duration.ofDays(1), Duration.ofDays(7), Clock.systemUTC()),
+            new AdminSessionPolicy(Duration.ofHours(1), Duration.ofHours(12), Clock.systemUTC())
+        ),
         new HttpSessionSecurityContextRepository()
     );
     private final RegisteredProviderRequestResolver resolver = new RegisteredProviderRequestResolver(

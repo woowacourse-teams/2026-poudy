@@ -2,10 +2,13 @@ package com.poudy.security.session;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.security.login.admin.AdminSessionPolicy;
+import com.poudy.security.login.web.WebSessionPolicy;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +41,7 @@ class LoginSessionTest {
     void signsIn() {
         MockHttpServletRequest request = new MockHttpServletRequest();
 
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
 
         SecurityContext context = (SecurityContext) request.getSession()
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
@@ -64,7 +67,7 @@ class LoginSessionTest {
         MockHttpServletRequest request = signedInRequest();
         MockHttpSession session = (MockHttpSession) request.getSession();
 
-        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).expireIfOverdue(request);
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
 
         assertThat(session.isInvalid()).isTrue();
     }
@@ -75,7 +78,7 @@ class LoginSessionTest {
         MockHttpServletRequest request = signedInRequest();
         MockHttpSession session = (MockHttpSession) request.getSession();
 
-        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).minusSeconds(1)).expireIfOverdue(request);
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
 
         assertThat(session.isInvalid()).isFalse();
     }
@@ -87,7 +90,7 @@ class LoginSessionTest {
         MockHttpSession session = new MockHttpSession();
         request.setSession(session);
 
-        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).expireIfOverdue(request);
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
 
         assertThat(session.isInvalid()).isFalse();
     }
@@ -148,7 +151,7 @@ class LoginSessionTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
 
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID + 1, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID + 1, LoginChannel.WEB, request, new MockHttpServletResponse());
 
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
     }
@@ -177,10 +180,10 @@ class LoginSessionTest {
         sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
         MockHttpSession session = (MockHttpSession) request.getSession();
 
-        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE).minusSeconds(1)).expireIfOverdue(request);
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
         assertThat(session.isInvalid()).isFalse();
 
-        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).expireIfOverdue(request);
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).refresh(request, new MockHttpServletResponse());
         assertThat(session.isInvalid()).isTrue();
     }
 
@@ -193,19 +196,30 @@ class LoginSessionTest {
         return callback;
     }
 
+    @Test
+    @DisplayName("웹 세션은 쿠키 수명을 늘리지 않는다")
+    void doesNotExtendWebSessionCookie() {
+        MockHttpServletRequest request = signedInRequest();
+        ((MockHttpSession) request.getSession()).setNew(false);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofHours(1))).refresh(request, response);
+
+        assertThat(response.getHeader("Set-Cookie")).isNull();
+    }
+
     private MockHttpServletRequest signedInRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
         return request;
     }
 
     private LoginSession sessionAt(Instant now) {
         return new LoginSession(
-            IDLE,
-            ABSOLUTE,
-            ADMIN_IDLE,
-            ADMIN_ABSOLUTE,
-            Clock.fixed(now, ZoneOffset.UTC),
+            List.of(
+                new WebSessionPolicy(IDLE, ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC)),
+                new AdminSessionPolicy(ADMIN_IDLE, ADMIN_ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC))
+            ),
             new HttpSessionSecurityContextRepository()
         );
     }

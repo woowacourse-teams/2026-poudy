@@ -12,14 +12,14 @@ import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
-import com.poudy.security.domain.SocialSignIn;
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
+import com.poudy.security.domain.SocialMemberLogin;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MemberService implements SocialSignIn, MemberActivity {
+public class MemberService implements SocialMemberLogin, MemberActivity {
 
     private final MemberRepository memberRepository;
 
@@ -34,8 +34,8 @@ public class MemberService implements SocialSignIn, MemberActivity {
 
     @Override
     @Transactional
-    public SocialSignInResult signIn(OAuthAccount account) {
-        return memberRepository.findByAccount(account).orElseGet(() -> register(account)).signInResult();
+    public SocialLoginResult login(OAuthAccount account) {
+        return memberRepository.findByAccount(account).orElseGet(() -> register(account)).loginResult();
     }
 
     @Override

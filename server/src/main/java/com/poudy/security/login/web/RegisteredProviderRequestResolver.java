@@ -1,4 +1,4 @@
-package com.poudy.security.oauth;
+package com.poudy.security.login.web;
 
 import com.poudy.security.ClientOrigins;
 import com.poudy.security.session.LoginSession;
