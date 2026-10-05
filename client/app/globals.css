@@ -161,6 +161,14 @@
    * 퍼짐을 음수로 줄여 아래로만 드리운다. 위로 번지면 바로 위에 붙은 줄에 얼룩이 진다.
    */
   --shadow-sticky-edge: 0 6px 6px -4px rgb(0 0 0 / 0.1);
+
+  /*
+   * 맞닿아 붙은 두 줄 사이를 메우는 바탕색 띠. 위 줄에 주어 아래 줄 윗부분을 조금 더 덮는다.
+   * 배율이 125%·150% 처럼 소수이면 두 줄의 경계가 기기 픽셀에 따로 반올림되어 틈이
+   * 벌어지고, 그 틈으로 뒤에서 지나가는 목록이 비친다. 경계가 0.5px 에 걸리면 1px 로는
+   * 다 메우지 못해 2px 을 덮는다. 아래 줄의 윗부분은 여백이라 덮여도 보이는 것이 없다.
+   */
+  --shadow-seam-cover: 0 2px 0 var(--color-background);
 }
 
 /*
@@ -818,6 +826,8 @@ body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar 
 
 .filter-summary-bar {
   top: 2.75rem;
+  /* JS 가 잰 높이에 소수가 섞여 칩 줄과의 경계가 기기 픽셀에서 어긋날 수 있다. */
+  box-shadow: var(--shadow-seam-cover);
 }
 
 .filter-summary-bar[data-hidden="true"] {
@@ -872,7 +882,8 @@ body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-f
 body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   opacity: 1;
   transform: translateY(0);
-  box-shadow: none;
+  /* 축약형은 transform 으로 움직이는 별도 층이라 칩 줄과 다르게 반올림된다. */
+  box-shadow: var(--shadow-seam-cover);
 }
 
 /*
