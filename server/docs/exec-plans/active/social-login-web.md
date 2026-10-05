@@ -29,7 +29,7 @@
   막는 데만 쓴다. 다른 제공자로 이미 가입한 이메일이면 가입을 거절하고 기존 제공자를 알린다.
 - 제공자가 인증한 이메일만 받는다. 카카오는 `is_email_valid`·`is_email_verified`, 구글은
   `email_verified`가 모두 참이어야 한다. 이미 가입한 회원은 이메일 상태와 무관하게 로그인한다.
-- `security`는 회원을 모르고 `SocialSignIn` 포트로 가입·조회를 맡긴다. `member`가 포트를 구현하므로
+- `security`는 회원을 모르고 `SocialMemberLogin` 포트로 가입·조회를 맡긴다. `member`가 포트를 구현하므로
   의존은 `member → security` 한 방향이다. 제공자별 응답 해석은 `OAuthProvider`가 `OAuthAccount`로
   바꾼다. 구글은 `openid`·`email`로 OIDC, 카카오는 OIDC 없이 `/v2/user/me`를 쓴다.
 - 로그인에 성공하면 세션의 인증 정보를 회원 ID만 가진 인증으로 바꾼다. 제공자 응답을 세션에
