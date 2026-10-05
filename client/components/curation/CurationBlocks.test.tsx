@@ -38,6 +38,8 @@ const imageBlock = {
   spacingTop: 8,
   spacingBottom: 24,
   imageUrl: "/images/curations/autumn-barrier.jpg",
+  altText: null,
+  bodyText: null,
 } as const satisfies CurationBlockResponse;
 
 const productsBlock = {

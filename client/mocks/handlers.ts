@@ -442,6 +442,8 @@ const curationBlocks = [
     spacingTop: 0,
     spacingBottom: 24,
     imageUrl: "/images/curations/autumn-barrier.jpg",
+    altText: null,
+    bodyText: null,
   },
   {
     id: CURATION_BLOCK_IDS.products,
