@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { AppEntryRedirect } from "@/components/navigation/AppEntryRedirect";
+import { OpenAppDestinationRedirect } from "@/components/navigation/OpenAppDestinationRedirect";
 import { TopBar } from "@/components/ui/TopBar";
 import { APP_STORE_URL } from "@/lib/navigation/open-app";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  * 넘기는 일은 브라우저에서만 판단할 수 있어 붙은 뒤에 일어난다. 그 사이에 비거나
  * 넘기기가 막힌 경우를 위해 스토어로 가는 링크를 남긴다.
  */
-export default function AppEntryPage() {
+export default function OpenAppPage() {
   return (
     <>
       <TopBar title="앱으로 이동" variant="sub" />
@@ -31,7 +31,7 @@ export default function AppEntryPage() {
         </a>
       </main>
 
-      <AppEntryRedirect />
+      <OpenAppDestinationRedirect />
     </>
   );
 }

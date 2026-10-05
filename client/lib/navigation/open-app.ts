@@ -89,10 +89,10 @@ export const buildInstallIntentUrl = (webUrl: string): string => {
 };
 
 /** 앱 설치 QR 코드가 담는 경로. 앱이 이 도메인의 모든 경로를 App Links 로 받는다. */
-export const APP_ENTRY_PATH = "/app";
+export const OPEN_APP_PATH = "/open-app";
 
 /**
- * QR 코드로 들어온 `/app` 에서 이어 갈 주소를 고른다.
+ * QR 코드로 들어온 `/open-app` 에서 이어 갈 주소를 고른다.
  *
  * QR 코드에 스토어 주소를 그대로 담으면 구글 도메인이라 앱이 깔려 있어도 스토어가 열린다.
  * 그렇다고 `intent://` 를 담을 수도 없다. 카메라 앱은 이 스킴을 열지 못하고 브라우저
@@ -103,9 +103,9 @@ export const APP_ENTRY_PATH = "/app";
  * 앱에서 밀려나므로 홈으로 보낸다.
  *
  * 브라우저에 닿은 안드로이드는 설치 배너와 같은 길로 보낸다. 앱이 있으면 열고 없으면
- * 스토어로 간다. 홈을 담는 까닭은 `/app` 을 담으면 앱이 이 화면을 다시 열기 때문이다.
+ * 스토어로 간다. 홈을 담는 까닭은 `/open-app` 을 담으면 앱이 이 화면을 다시 열기 때문이다.
  */
-export const planAppEntry = (webUrl: string, userAgent: string, isPoudyApp: boolean): string => {
+export const resolveOpenAppDestination = (webUrl: string, userAgent: string, isPoudyApp: boolean): string => {
   const homeUrl = new URL("/", webUrl).href;
 
   if (isPoudyApp) return homeUrl;

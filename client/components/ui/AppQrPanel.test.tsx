@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { AppQrPanel } from "./AppQrPanel";
 
-const ENTRY_URL = "http://localhost:3000/app";
+const OPEN_APP_URL = "http://localhost:3000/open-app";
 
 const link = () => screen.getByRole("link", { name: /앱 받기/ });
 
@@ -45,7 +45,7 @@ describe("앱 설치 QR 코드 패널", () => {
     const { container } = render(<AppQrPanel />);
 
     /* QR 코드는 링크의 내용을 옮긴 그림이라 두 주소가 어긋나면 찍은 쪽만 엉뚱한 곳으로 간다. */
-    expect(link()).toHaveAttribute("href", ENTRY_URL);
+    expect(link()).toHaveAttribute("href", OPEN_APP_URL);
     expect(container.querySelector("svg")).toBeInTheDocument();
   });
 
