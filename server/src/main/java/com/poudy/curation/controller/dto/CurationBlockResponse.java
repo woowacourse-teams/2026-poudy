@@ -22,7 +22,9 @@ public sealed interface CurationBlockResponse permits CurationImageBlockResponse
                 "IMAGE",
                 image.spacingTop(),
                 image.spacingBottom(),
-                image.imageUrl()
+                image.imageUrl(),
+                image.altText(),
+                image.bodyText()
             );
             case CurationBlockContent.Products products -> new CurationProductsBlockResponse(
                 products.id(),
