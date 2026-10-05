@@ -45,9 +45,9 @@ export function AppQrPanel() {
        * 화면 아래를 기준으로 삼되 하단 내비게이션 높이만큼은 띄운다. 내비게이션은 본문
        * 폭 안에만 있어 이 패널과 겹치지는 않지만, 같은 높이에서 끝나면 한 줄로 읽힌다.
        */
-      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-6 lg:grid"
+      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-4 lg:grid"
     >
-      <div className="flex w-full max-w-60 flex-col items-center gap-3 text-center">
+      <div className="flex w-full max-w-64 flex-col items-center gap-3 text-center">
         <Image src="/logo.webp" alt="" width={226} height={296} draggable={false} className="h-9 w-auto select-none" />
 
         {/*
@@ -57,22 +57,10 @@ export function AppQrPanel() {
         */}
         <p className="text-[15px] font-bold text-text-primary">안드로이드 앱으로 더 편하게</p>
 
-        {/*
-          제목이 이미 안드로이드 앱이라고 밝혔으므로 여기서는 되풀이하지 않는다. 앞서
-          서비스 이름까지 넣었더니 좁은 여백에서 석 줄로 늘어나 끝줄에 두 글자만 남았다.
-
-          줄바꿈 자리를 직접 정한다. 그대로 두면 `비추면 Play` 까지 첫 줄에 들어가
-          `Play 스토어` 가 두 줄에 걸쳐 끊긴다. 한 이름이 갈라지면 눈이 한 번 멈춘다.
-          `text-balance` 같은 자동 규칙은 어디서 끊을지 보장하지 않아 쓰지 않는다.
-        */}
-        <p className="text-[13px] leading-relaxed text-text-secondary">
-          {/*
-            `<br />` 앞뒤의 줄바꿈은 JSX 가 지워 버려 글자가 `비추면Play` 로 붙는다.
-            눈에는 줄이 갈라져 보이지만 낭독기와 번역기는 한 낱말로 받는다.
-            공백을 명시해 문장이 그대로 이어지게 한다.
-          */}
-          휴대전화 카메라로 QR 코드를 비추면 <br />
-          Play 스토어로 이동해요.
+        {/* QR 스캔과 스토어 검색을 두 줄로 안내하되, 낭독할 때는 공백으로 이어 읽는다. */}
+        <p className="text-[13px] leading-relaxed whitespace-nowrap text-text-secondary">
+          QR 코드를 스캔하거나 <br />
+          플레이 스토어에서 ‘파우디’를 검색해 보세요.
         </p>
 
         {/*
