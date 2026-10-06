@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { findMe, requestRestore } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 type Props = {
   readonly error: string | null;
@@ -101,7 +102,10 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     if (error) return;
 
     findMe()
-      .then((member) => router.replace(member.profileCompleted ? "/" : "/onboarding"))
+      .then((member) => {
+        void reloadSavedProducts();
+        router.replace(member.profileCompleted ? "/" : "/onboarding");
+      })
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);
 
