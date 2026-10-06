@@ -130,6 +130,41 @@ describe("CurationBlocks", () => {
     expect(later).not.toHaveAttribute("fetchpriority");
   });
 
+  it("이미지의 짧은 설명을 대체 텍스트로 적는다", () => {
+    const described = { ...imageBlock, altText: "가을 장벽 기획전" } as const;
+    render(<CurationBlocks curationId={CURATION_ID} blocks={[described]} />);
+
+    expect(screen.getByRole("img", { name: "가을 장벽 기획전" })).toBeInTheDocument();
+  });
+
+  /* 아직 적지 않은 설명과 꾸밈용으로 비운 설명 모두 낭독기가 파일 이름을 읽지 않게 비워 둔다. */
+  it.each([null, ""])("설명이 %j 이면 대체 텍스트를 비운다", (altText) => {
+    const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[{ ...imageBlock, altText }]} />);
+
+    expect(container.querySelector("img")).toHaveAttribute("alt", "");
+  });
+
+  /*
+   * 그림 속 문구는 눈에는 이미 보이므로 화면에서는 숨기고, 낭독기와 크롤러가 읽도록 HTML
+   * 에는 남긴다. 줄마다 문단으로 나누어 이어 읽을 때 문장이 붙지 않게 한다.
+   */
+  it("이미지의 본문을 화면에서 숨긴 채 문단으로 나누어 남긴다", () => {
+    const withBody = { ...imageBlock, bodyText: "  건조한 계절,\n\n장벽부터 채우세요  \n" } as const;
+    const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[withBody]} />);
+
+    const caption = container.querySelector("figure > figcaption");
+    const paragraphs = [...(caption?.querySelectorAll("p") ?? [])].map((p) => p.textContent);
+
+    expect(caption).toHaveClass("sr-only");
+    expect(paragraphs).toEqual(["건조한 계절,", "장벽부터 채우세요"]);
+  });
+
+  it.each([null, "", " \n "])("본문이 %j 이면 숨긴 본문을 두지 않는다", (bodyText) => {
+    const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[{ ...imageBlock, bodyText }]} />);
+
+    expect(container.querySelector("figcaption")).not.toBeInTheDocument();
+  });
+
   it("제품 블록의 제품을 모두 그리고 상세로 잇는다", () => {
     render(<CurationBlocks curationId={CURATION_ID} blocks={[productsBlock]} />);
 
