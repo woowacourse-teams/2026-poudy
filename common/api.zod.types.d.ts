@@ -817,7 +817,7 @@ export type post_Login = {
  */
 export type post_RequestRestore = {
       method: "POST",
-      path: "/api/auth/withdrawn-member/restore-request",
+      path: "/api/auth/withdrawn/restore",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
@@ -1598,7 +1598,7 @@ post: {
 "/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
 "/api/auth/{provider}/app-login": Endpoints.post_Login,
-"/api/auth/withdrawn-member/restore-request": Endpoints.post_RequestRestore,
+"/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
 "/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
 "/api/admin/login": Endpoints.post_Login_1,
 "/api/members/logout": Endpoints.post_Logout,

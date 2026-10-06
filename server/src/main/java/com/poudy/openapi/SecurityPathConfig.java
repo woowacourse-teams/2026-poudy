@@ -2,8 +2,8 @@ package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.security.AccessRule;
+import com.poudy.security.auth.oauth.RegisteredProviderRequestResolver;
 import com.poudy.security.domain.OAuthProvider;
-import com.poudy.security.login.web.RegisteredProviderRequestResolver;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.headers.Header;

@@ -13,13 +13,13 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialLoginResult;
-import com.poudy.security.domain.SocialMemberLogin;
+import com.poudy.security.domain.SocialMembers;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MemberService implements SocialMemberLogin, MemberActivity {
+public class MemberService implements SocialMembers, MemberActivity {
 
     private final MemberRepository memberRepository;
 

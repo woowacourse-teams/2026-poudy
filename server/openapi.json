@@ -913,7 +913,7 @@
         }
       }
     },
-    "/api/auth/withdrawn-member/restore-request": {
+    "/api/auth/withdrawn/restore": {
       "post": {
         "tags": [
           "인증"

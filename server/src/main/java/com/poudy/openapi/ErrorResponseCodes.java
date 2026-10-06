@@ -2,7 +2,7 @@ package com.poudy.openapi;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.security.AccessRule;
-import com.poudy.security.login.web.WebLoginConfigurer;
+import com.poudy.security.auth.oauth.OAuthLoginConfigurer;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +20,9 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
-    private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn-member/restore-request";
+    private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn/restore";
     private static final String APP_LOGIN_PATH = "/api/auth/{provider}/app-login";
-    public static final String SOCIAL_LOGIN_PATH = WebLoginConfigurer.AUTHORIZATION_BASE_URI + "/{provider}";
+    public static final String SOCIAL_LOGIN_PATH = OAuthLoginConfigurer.AUTHORIZATION_BASE_URI + "/{provider}";
 
     private static final Map<String, ErrorCode> NOT_FOUND_CODES = Map.of(
         "brands",

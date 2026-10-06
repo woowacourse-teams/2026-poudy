@@ -1,9 +1,9 @@
 package com.poudy.security;
 
+import com.poudy.security.auth.oauth.OAuthLoginConfigurer;
 import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.filter.ActiveMemberFilter;
 import com.poudy.security.filter.ForeignOriginFilter;
-import com.poudy.security.login.web.WebLoginConfigurer;
 import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,7 +33,7 @@ public class SecurityConfig {
         HttpSecurity http,
         ClientOrigins clientOrigins,
         SecurityContextRepository securityContextRepository,
-        WebLoginConfigurer webLoginConfigurer,
+        OAuthLoginConfigurer oauthLoginConfigurer,
         LoginSession loginSession,
         MemberActivity memberActivity,
         @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
@@ -57,7 +57,7 @@ public class SecurityConfig {
                 Arrays.stream(AccessRule.values()).forEach(rule -> rule.authorize(requests));
                 requests.anyRequest().permitAll();
             })
-            .oauth2Login(webLoginConfigurer::configure)
+            .oauth2Login(oauthLoginConfigurer::configure)
             .exceptionHandling(
                 exceptions -> exceptions
                     .authenticationEntryPoint(
