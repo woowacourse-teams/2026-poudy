@@ -43,7 +43,9 @@ class ErdCloudSchemaTest {
                 "spacing_bottom",
                 "image_url",
                 "created_at",
-                "updated_at"
+                "updated_at",
+                "alt_text",
+                "body_text"
             )
         ),
         entry("curation_block_filter", List.of("id", "block_id", "position", "label", "created_at", "updated_at")),

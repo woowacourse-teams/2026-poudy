@@ -72,7 +72,7 @@ public class CurationRepository {
         List<Long> curationIds = curations.stream().map(CurationRow::id).toList();
         List<BlockRow> blocks = jdbc.query(
             """
-                select id, curation_id, type, spacing_top, spacing_bottom, image_url
+                select id, curation_id, type, spacing_top, spacing_bottom, image_url, alt_text, body_text
                 from curation_block where curation_id in (:ids) order by curation_id, position
                 """,
             new MapSqlParameterSource("ids", curationIds),
@@ -82,7 +82,9 @@ public class CurationRepository {
                 rs.getString("type"),
                 rs.getInt("spacing_top"),
                 rs.getInt("spacing_bottom"),
-                rs.getString("image_url")
+                rs.getString("image_url"),
+                rs.getString("alt_text"),
+                rs.getString("body_text")
             )
         );
         List<UUID> blockIds = blocks.stream().map(BlockRow::id).toList();
@@ -94,7 +96,14 @@ public class CurationRepository {
                 .computeIfAbsent(block.curationId(), ignored -> new ArrayList<>());
             LinkedHashMap<Long, List<UUID>> mappings = products.getOrDefault(block.id(), new LinkedHashMap<>());
             group.add(switch (block.type()) {
-                case "IMAGE" -> CurationBlock.image(block.id(), block.top(), block.bottom(), block.imageUrl());
+                case "IMAGE" -> CurationBlock.image(
+                    block.id(),
+                    block.top(),
+                    block.bottom(),
+                    block.imageUrl(),
+                    block.altText(),
+                    block.bodyText()
+                );
                 case "PRODUCTS" -> CurationBlock.products(
                     block.id(),
                     block.top(),
@@ -178,6 +187,14 @@ public class CurationRepository {
         String thumbnail) {
     }
 
-    private record BlockRow(UUID id, Long curationId, String type, int top, int bottom, String imageUrl) {
+    private record BlockRow(
+        UUID id,
+        Long curationId,
+        String type,
+        int top,
+        int bottom,
+        String imageUrl,
+        String altText,
+        String bodyText) {
     }
 }

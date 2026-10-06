@@ -4835,9 +4835,25 @@
           },
           "imageUrl": {
             "type": "string"
+          },
+          "altText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "짧은 대체 설명(최대 500자). null은 미입력, 빈 문자열은 장식용 이미지"
+          },
+          "bodyText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "전체 접근성 본문. null은 미입력이며 줄바꿈과 공백을 그대로 제공한다"
           }
         },
         "required": [
+          "altText",
+          "bodyText",
           "id",
           "imageUrl",
           "spacingBottom",

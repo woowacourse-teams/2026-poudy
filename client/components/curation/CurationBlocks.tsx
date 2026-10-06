@@ -36,21 +36,7 @@ function CurationBlock({
        * width·height 가 있어야 비율을 잡아 두므로 정사각으로 적고, 실제 비율은 도착한
        * 그림이 정한다.
        */
-      return (
-        <Image
-          src={imageDeliveryUrl(block.imageUrl)}
-          alt=""
-          width={1080}
-          height={1080}
-          sizes="(max-width: 480px) 100vw, 448px"
-          /*
-           * 맨 앞의 이미지는 화면을 열자마자 보이는 가장 큰 요소(LCP)다. 미루지 않고 먼저
-           * 받는다. 그 아래의 이미지는 내려 읽을 때 받아도 늦지 않다.
-           */
-          {...(first ? { loading: "eager" as const, fetchPriority: "high" as const } : {})}
-          className="h-auto w-full"
-        />
-      );
+      return <CurationImage block={block} first={first} />;
     /* 제품 블록은 본문 여백 안쪽에 놓는다. 여백은 이미지가 아니라 여백이 필요한 쪽이 갖는다. */
     case "PRODUCTS":
       return (
@@ -75,6 +61,57 @@ function CurationBlock({
       return unhandled;
     }
   }
+}
+
+/**
+ * 기획전 이미지 한 장.
+ *
+ * 기획전 이미지에는 문구가 그림으로 박혀 있어, 그림만 두면 화면 낭독기도 검색 크롤러도
+ * 내용을 읽지 못한다. 짧은 설명은 `alt` 에, 그림 속 문구 전체는 눈에는 숨기되 HTML 에는
+ * 남는 `figcaption` 에 적는다. `display: none` 으로 숨기면 낭독기가 건너뛰므로 `sr-only` 로
+ * 숨긴다.
+ *
+ * `altText` 가 `null` 이면 아직 입력하지 않은 것이고, 빈 문자열이면 꾸밈용이라 일부러
+ * 비운 것이다. 어느 쪽이든 읽을 말이 없으니 `alt=""` 로 두어 낭독기가 파일 이름을 읽지
+ * 않게 한다.
+ */
+function CurationImage({
+  block,
+  first,
+}: {
+  readonly block: Extract<CurationBlockResponse, { type: "IMAGE" }>;
+  readonly first: boolean;
+}) {
+  /* 서버는 줄바꿈을 그대로 보낸다. 줄마다 문단으로 나누어야 이어 읽을 때 문장이 붙지 않는다. */
+  const paragraphs = (block.bodyText ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return (
+    <figure>
+      <Image
+        src={imageDeliveryUrl(block.imageUrl)}
+        alt={block.altText ?? ""}
+        width={1080}
+        height={1080}
+        sizes="(max-width: 480px) 100vw, 448px"
+        /*
+         * 맨 앞의 이미지는 화면을 열자마자 보이는 가장 큰 요소(LCP)다. 미루지 않고 먼저
+         * 받는다. 그 아래의 이미지는 내려 읽을 때 받아도 늦지 않다.
+         */
+        {...(first ? { loading: "eager" as const, fetchPriority: "high" as const } : {})}
+        className="h-auto w-full"
+      />
+      {paragraphs.length > 0 ? (
+        <figcaption className="sr-only">
+          {paragraphs.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </figcaption>
+      ) : null}
+    </figure>
+  );
 }
 
 /**
