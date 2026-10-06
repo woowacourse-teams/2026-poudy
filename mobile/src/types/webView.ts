@@ -41,7 +41,14 @@ export interface WebViewNavigation {
   readonly key: number;
   readonly navigate: (url: string) => void;
   readonly reload: () => void;
+  readonly startWebLogin: () => void;
   readonly url: string;
+}
+
+export interface WebViewBridgeOptions {
+  readonly onWebLogin: () => void;
+  readonly serviceOrigin: string;
+  readonly webViewRef: RefObject<WebView | null>;
 }
 
 export interface WebViewNavigationRequest {

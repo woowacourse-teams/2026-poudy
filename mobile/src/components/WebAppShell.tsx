@@ -13,6 +13,7 @@ import { useSplashTransition } from '@/hooks/useSplashTransition';
 import { useWebViewBridge } from '@/hooks/useWebViewBridge';
 import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
 import { APPLICATION_NAME, WEBVIEW_INIT_SCRIPT } from '@/util/appInfo';
+import { WEB_ORIGIN_WHITELIST } from '@/util/webViewRequest';
 
 const serviceBaseUrl = process.env.EXPO_PUBLIC_SERVICE_URL!;
 const serviceOrigin = new URL(serviceBaseUrl).origin;
@@ -20,10 +21,10 @@ const serviceOrigin = new URL(serviceBaseUrl).origin;
 export default function WebAppShell() {
   const webViewRef = useRef<WebView>(null);
 
-  const navigation = useWebViewNavigation(serviceBaseUrl);
+  const navigation = useWebViewNavigation(serviceBaseUrl, webViewRef);
   const keyboardInset = useKeyboardInset();
   const splash = useSplashTransition();
-  const handleMessage = useWebViewBridge();
+  const handleMessage = useWebViewBridge({ onWebLogin: navigation.startWebLogin, serviceOrigin, webViewRef });
 
   useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
   useQuickActions({ onNavigate: navigation.navigate, serviceBaseUrl });
@@ -67,7 +68,7 @@ export default function WebAppShell() {
           onMessage={handleMessage}
           onNavigationStateChange={handleNavigationChange}
           onShouldStartLoadWithRequest={navigation.handleShouldStartLoad}
-          originWhitelist={[serviceOrigin]}
+          originWhitelist={WEB_ORIGIN_WHITELIST}
           setBuiltInZoomControls={false}
           setDisplayZoomControls={false}
           setSupportMultipleWindows={false}

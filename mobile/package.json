@@ -12,6 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-google-signin/google-signin": "^16.1.5",
+    "@react-native-kakao/core": "^2.4.8",
+    "@react-native-kakao/user": "^2.4.8",
     "@tanstack/react-query": "^5.101.4",
     "expo": "~57.0.3",
     "expo-build-properties": "~57.0.12",

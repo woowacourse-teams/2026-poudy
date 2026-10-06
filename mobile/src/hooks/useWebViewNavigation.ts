@@ -1,5 +1,6 @@
 import { useNetworkState } from 'expo-network';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import type { WebView } from 'react-native-webview';
 
 import type {
   WebViewErrorEvent,
@@ -9,12 +10,18 @@ import type {
   WebViewSource,
 } from '@/types/webView';
 import { failureOf } from '@/util/webViewFailure';
-import { openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
+import { isHttpUrl, openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
 const LOAD_TIMEOUT_MS = 10_000;
 
-export const useWebViewNavigation = (serviceBaseUrl: string): WebViewNavigation => {
+export const useWebViewNavigation = (
+  serviceBaseUrl: string,
+  webViewRef: RefObject<WebView | null>,
+): WebViewNavigation => {
   const currentUrlRef = useRef(serviceBaseUrl);
+  const isWebLoginRef = useRef(false);
+  const hasLeftServiceRef = useRef(false);
+  const hasReturnedRef = useRef(false);
 
   const [source, setSource] = useState<WebViewSource>({ key: 0, url: serviceBaseUrl });
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +56,23 @@ export const useWebViewNavigation = (serviceBaseUrl: string): WebViewNavigation 
     setSource((current) => ({ ...current, key: current.key + 1 }));
   }, []);
 
+  const startWebLogin = useCallback(() => {
+    isWebLoginRef.current = true;
+    hasLeftServiceRef.current = false;
+  }, []);
+
   const handleShouldStartLoad = useCallback(
     ({ url }: WebViewNavigationRequest) => {
       if (shouldLoadInWebView(url, serviceOrigin)) {
+        if (isWebLoginRef.current && hasLeftServiceRef.current) {
+          isWebLoginRef.current = false;
+          hasReturnedRef.current = true;
+        }
+        return true;
+      }
+
+      if (isWebLoginRef.current && isHttpUrl(url)) {
+        hasLeftServiceRef.current = true;
         return true;
       }
 
@@ -68,7 +89,14 @@ export const useWebViewNavigation = (serviceBaseUrl: string): WebViewNavigation 
 
   const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
-  }, []);
+
+    if (!hasReturnedRef.current) {
+      return;
+    }
+
+    hasReturnedRef.current = false;
+    webViewRef.current?.clearHistory?.();
+  }, [webViewRef]);
 
   const handleError = useCallback(
     (event: WebViewErrorEvent) => {
@@ -102,6 +130,7 @@ export const useWebViewNavigation = (serviceBaseUrl: string): WebViewNavigation 
     failure,
     navigate,
     reload,
+    startWebLogin,
     handleShouldStartLoad,
     handleUrlChange,
     handleLoad,
