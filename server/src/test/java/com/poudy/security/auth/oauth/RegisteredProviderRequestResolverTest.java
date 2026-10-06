@@ -3,6 +3,7 @@ package com.poudy.security.auth.oauth;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.security.ClientOrigins;
+import com.poudy.security.session.LoginChannel;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,6 +94,36 @@ class RegisteredProviderRequestResolverTest {
         assertThat(
             OAuthLoginStart.takeFrom(callbackOf(second, authorization.getState())).returnOriginOr(DEFAULT_ORIGIN)
         ).isEqualTo(DEFAULT_ORIGIN);
+    }
+
+    @Test
+    @DisplayName("앱 WebView에서 시작했다고 알린 로그인에만 앱 채널을 기억한다")
+    void remembersAppChannelOnlyWhenRequested() {
+        MockHttpServletRequest app = request(BASE_URI + "/kakao");
+        app.setParameter("channel", "app");
+        OAuth2AuthorizationRequest appAuthorization = resolver.resolve(app);
+        assertThat(OAuthLoginStart.takeFrom(callbackOf(app, appAuthorization.getState())).channel())
+            .isEqualTo(LoginChannel.APP);
+
+        MockHttpServletRequest other = request(BASE_URI + "/kakao");
+        other.setParameter("channel", "admin");
+        OAuth2AuthorizationRequest otherAuthorization = resolver.resolve(other);
+        assertThat(OAuthLoginStart.takeFrom(callbackOf(other, otherAuthorization.getState())).channel())
+            .isEqualTo(LoginChannel.WEB);
+    }
+
+    @Test
+    @DisplayName("채널 없이 로그인을 다시 시작하면 이전에 기억한 앱 채널을 버린다")
+    void forgetsPreviousAppChannelWithoutParameter() {
+        MockHttpServletRequest first = request(BASE_URI + "/kakao");
+        first.setParameter("channel", "app");
+        resolver.resolve(first);
+        MockHttpServletRequest second = request(BASE_URI + "/kakao");
+        second.setSession(first.getSession());
+        OAuth2AuthorizationRequest authorization = resolver.resolve(second);
+
+        assertThat(OAuthLoginStart.takeFrom(callbackOf(second, authorization.getState())).channel())
+            .isEqualTo(LoginChannel.WEB);
     }
 
     private MockHttpServletRequest callbackOf(MockHttpServletRequest start, String state) {

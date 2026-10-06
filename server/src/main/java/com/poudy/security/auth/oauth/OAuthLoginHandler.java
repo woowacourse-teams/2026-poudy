@@ -44,7 +44,7 @@ public class OAuthLoginHandler implements AuthenticationSuccessHandler, Authenti
         throws IOException {
         OAuthLoginStart start = OAuthLoginStart.takeFrom(request);
         OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
-        response.sendRedirect(loginRedirect(token, LoginChannel.WEB, callbackOf(start), request, response));
+        response.sendRedirect(loginRedirect(token, start.channel(), callbackOf(start), request, response));
     }
 
     @Override

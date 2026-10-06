@@ -66,6 +66,11 @@ public class SecurityPathConfig {
                         .description("Preview의 복귀 오리진. 허용된 오리진만 사용하며 누락되거나 유효하지 않으면 기본 프론트로 돌아간다.")
                         .schema(new StringSchema().example("https://pr-111.preview.poudy.site"))
                 )
+                .addParametersItem(
+                    new QueryParameter().name(RegisteredProviderRequestResolver.CHANNEL_PARAMETER).required(false)
+                        .description("앱 WebView에서 시작한 로그인이면 app. 로그인 후 앱 세션 정책으로 세션을 만든다.")
+                        .schema(new StringSchema()._enum(List.of(RegisteredProviderRequestResolver.APP_CHANNEL)))
+                )
                 .responses(
                     new ApiResponses()
                         .addApiResponse(

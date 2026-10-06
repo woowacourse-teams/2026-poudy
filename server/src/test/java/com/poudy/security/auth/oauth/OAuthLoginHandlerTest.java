@@ -19,6 +19,7 @@ import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import com.poudy.security.session.AdminSessionPolicy;
 import com.poudy.security.session.AppSessionCookie;
 import com.poudy.security.session.AppSessionPolicy;
+import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginMember;
 import com.poudy.security.session.LoginSession;
 import com.poudy.security.session.WebSessionPolicy;
@@ -269,12 +270,37 @@ class OAuthLoginHandlerTest {
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?error=OAUTH_LOGIN_FAILED");
     }
 
+    @Test
+    @DisplayName("앱 WebView에서 시작한 로그인에 성공하면 앱 세션 정책으로 세션을 만든다")
+    void signsInWithAppSessionPolicyWhenStartedInApp() throws Exception {
+        new OAuthLoginStart(STATE, null, LoginChannel.APP).rememberIn(request);
+        request.setParameter("state", STATE);
+        given(socialMembers.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.SIGNED_IN));
+
+        successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
+
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=SIGNED_IN");
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofDays(60).toSeconds());
+    }
+
+    @Test
+    @DisplayName("다른 state의 콜백이면 앱에서 시작했다는 표시를 쓰지 않고 웹 세션으로 만든다")
+    void ignoresAppChannelOfOtherState() throws Exception {
+        new OAuthLoginStart(STATE, null, LoginChannel.APP).rememberIn(request);
+        request.setParameter("state", "other-state");
+        given(socialMembers.login(any())).willReturn(new SocialLoginResult(7L, LoginStatus.SIGNED_IN));
+
+        successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
+
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofDays(1).toSeconds());
+    }
+
     private List<String> previewOrigins() {
         return List.of(CLIENT_ORIGIN, "https://*.preview.poudy.site");
     }
 
     private void rememberPreview() {
-        new OAuthLoginStart(STATE, "https://pr-111.preview.poudy.site").rememberIn(request);
+        new OAuthLoginStart(STATE, "https://pr-111.preview.poudy.site", LoginChannel.WEB).rememberIn(request);
         request.setParameter("state", STATE);
     }
 

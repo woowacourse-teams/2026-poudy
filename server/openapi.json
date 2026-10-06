@@ -4094,6 +4094,18 @@
               "type": "string",
               "example": "https://pr-111.preview.poudy.site"
             }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "description": "앱 WebView에서 시작한 로그인이면 app. 로그인 후 앱 세션 정책으로 세션을 만든다.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app"
+              ]
+            }
           }
         ],
         "responses": {

@@ -1,5 +1,6 @@
 package com.poudy.security.auth.oauth;
 
+import com.poudy.security.session.LoginChannel;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.io.Serial;
@@ -14,14 +15,16 @@ public final class OAuthLoginStart implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final String ATTRIBUTE = OAuthLoginStart.class.getName();
-    private static final OAuthLoginStart UNKNOWN = new OAuthLoginStart(null, null);
+    private static final OAuthLoginStart UNKNOWN = new OAuthLoginStart(null, null, LoginChannel.WEB);
 
     private final @Nullable String state;
     private final @Nullable String returnOrigin;
+    private final LoginChannel channel;
 
-    public OAuthLoginStart(@Nullable String state, @Nullable String returnOrigin) {
+    public OAuthLoginStart(@Nullable String state, @Nullable String returnOrigin, LoginChannel channel) {
         this.state = state;
         this.returnOrigin = returnOrigin;
+        this.channel = channel;
     }
 
     public static OAuthLoginStart unknown() {
@@ -43,6 +46,10 @@ public final class OAuthLoginStart implements Serializable {
             return defaultOrigin;
         }
         return returnOrigin;
+    }
+
+    public LoginChannel channel() {
+        return channel;
     }
 
     private boolean startedBy(@Nullable String callbackState) {

@@ -1,6 +1,7 @@
 package com.poudy.security.auth.oauth;
 
 import com.poudy.security.ClientOrigins;
+import com.poudy.security.session.LoginChannel;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Supplier;
 import org.jspecify.annotations.NonNull;
@@ -13,6 +14,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 public class RegisteredProviderRequestResolver implements OAuth2AuthorizationRequestResolver {
 
     public static final String RETURN_ORIGIN_PARAMETER = "returnOrigin";
+    public static final String CHANNEL_PARAMETER = "channel";
+    public static final String APP_CHANNEL = "app";
 
     private static final String PROMPT = "prompt";
     private static final String SELECT_ACCOUNT = "select_account";
@@ -70,8 +73,15 @@ public class RegisteredProviderRequestResolver implements OAuth2AuthorizationReq
     private OAuthLoginStart loginStartOf(HttpServletRequest request, String state) {
         return new OAuthLoginStart(
             state,
-            clientOrigins.trustedOrigin(request.getParameter(RETURN_ORIGIN_PARAMETER)).orElse(null)
+            clientOrigins.trustedOrigin(request.getParameter(RETURN_ORIGIN_PARAMETER)).orElse(null),
+            channelOf(request)
         );
     }
 
+    private LoginChannel channelOf(HttpServletRequest request) {
+        if (APP_CHANNEL.equals(request.getParameter(CHANNEL_PARAMETER))) {
+            return LoginChannel.APP;
+        }
+        return LoginChannel.WEB;
+    }
 }

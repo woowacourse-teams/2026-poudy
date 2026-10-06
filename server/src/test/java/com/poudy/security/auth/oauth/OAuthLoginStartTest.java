@@ -2,6 +2,7 @@ package com.poudy.security.auth.oauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.security.session.LoginChannel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -16,12 +17,13 @@ class OAuthLoginStartTest {
     @DisplayName("맡겨 둔 시작 정보는 같은 state의 콜백에서 한 번만 꺼낼 수 있다")
     void takesStartOnce() {
         MockHttpServletRequest start = new MockHttpServletRequest();
-        new OAuthLoginStart(STATE, PREVIEW).rememberIn(start);
+        new OAuthLoginStart(STATE, PREVIEW, LoginChannel.APP).rememberIn(start);
         MockHttpServletRequest callback = callbackOf(start, STATE);
 
         OAuthLoginStart taken = OAuthLoginStart.takeFrom(callback);
 
         assertThat(taken.returnOriginOr("https://poudy.site")).isEqualTo(PREVIEW);
+        assertThat(taken.channel()).isEqualTo(LoginChannel.APP);
         assertThat(OAuthLoginStart.takeFrom(callback)).isEqualTo(OAuthLoginStart.unknown());
     }
 
@@ -29,16 +31,15 @@ class OAuthLoginStartTest {
     @DisplayName("state가 다르거나 없는 콜백은 시작 정보를 꺼내지 못하고 남겨 둔다")
     void keepsStartForOtherState() {
         MockHttpServletRequest start = new MockHttpServletRequest();
-        new OAuthLoginStart(STATE, PREVIEW).rememberIn(start);
+        new OAuthLoginStart(STATE, PREVIEW, LoginChannel.APP).rememberIn(start);
 
         assertThat(OAuthLoginStart.takeFrom(callbackOf(start, "other-state"))).isEqualTo(OAuthLoginStart.unknown());
         assertThat(OAuthLoginStart.takeFrom(callbackOf(start, null))).isEqualTo(OAuthLoginStart.unknown());
-        assertThat(OAuthLoginStart.takeFrom(callbackOf(start, STATE)).returnOriginOr("https://poudy.site"))
-            .isEqualTo(PREVIEW);
+        assertThat(OAuthLoginStart.takeFrom(callbackOf(start, STATE)).channel()).isEqualTo(LoginChannel.APP);
     }
 
     @Test
-    @DisplayName("시작 정보가 없으면 기본 주소로 돌아가고, 세션을 만들지 않는다")
+    @DisplayName("시작 정보가 없으면 기본 주소로 돌아가는 웹 로그인으로 보고, 세션을 만들지 않는다")
     void treatsMissingStartAsWebLogin() {
         MockHttpServletRequest callback = new MockHttpServletRequest();
         callback.setParameter("state", STATE);
@@ -46,6 +47,7 @@ class OAuthLoginStartTest {
         OAuthLoginStart taken = OAuthLoginStart.takeFrom(callback);
 
         assertThat(taken.returnOriginOr("https://poudy.site")).isEqualTo("https://poudy.site");
+        assertThat(taken.channel()).isEqualTo(LoginChannel.WEB);
         assertThat(callback.getSession(false)).isNull();
     }
 
