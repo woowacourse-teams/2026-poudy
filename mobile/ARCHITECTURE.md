@@ -20,6 +20,9 @@
 `application → hooks → util·api` 한 방향이다. `util` 과 `api` 는 React 에 의존하지 않고,
 `components` 는 훅이 만든 상태를 받기만 한다. 훅끼리 호출하지 않고 `application` 에서 조합한다.
 
+`components` 와 `hooks` 는 `index.ts` 로 묶어 내보내고, 바깥에서는 `@/components`·`@/hooks` 로 가져온다. 같은 폴더 안에서는
+배럴을 거치면 자기 자신을 다시 불러오는 순환이 생기므로 파일을 직접 가져온다.
+
 ## 생성물과 소스
 
 `android/` 와 `ios/` 는 prebuild 가 `app.config.ts` 로부터 만드는 산출물이다. 네이티브 설정은
