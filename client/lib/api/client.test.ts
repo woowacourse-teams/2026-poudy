@@ -1,7 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { apiDelete, apiGet, apiPatch, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
+import {
+  apiDelete,
+  apiGet,
+  apiPatch,
+  apiPost,
+  apiPostFor,
+  apiUrl,
+  INVALID_RESPONSE,
+  publicApiUrl,
+  RegisteredProviderError,
+} from "./client";
 
 // 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -202,6 +212,34 @@ describe("로그인 세션 요청", () => {
       cache: "no-store",
       method: "POST",
     });
+  });
+
+  it("결과를 받는 POST 는 쿠키와 함께 JSON 본문을 보내고 응답을 검증해 돌려준다", async () => {
+    const fetchMock = prepareFetch();
+
+    const member = await apiPostFor("/api/auth/kakao/app-login", Member, { token: "access-token" });
+
+    expect(member).toEqual({ id: 1 });
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/auth/kakao/app-login", {
+      credentials: "include",
+      cache: "no-store",
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: "access-token" }),
+    });
+  });
+
+  it("실패 응답에 먼저 가입한 제공자가 있으면 함께 알린다", async () => {
+    const problem = { code: "MEMBER_EMAIL_ALREADY_REGISTERED", detail: "이미 가입한 이메일입니다.", provider: "KAKAO" };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(problem), { status: 400 })));
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+
+    const error = await apiPostFor("/api/auth/google/app-login", Member, { token: "id-token" }).catch(
+      (cause: unknown) => cause,
+    );
+
+    expect(error).toBeInstanceOf(RegisteredProviderError);
+    expect(error).toMatchObject({ status: 400, code: "MEMBER_EMAIL_ALREADY_REGISTERED", provider: "KAKAO" });
   });
 
   it("삭제 요청은 쿠키와 함께 DELETE 로 보내고 실패하면 ApiError 로 알린다", async () => {

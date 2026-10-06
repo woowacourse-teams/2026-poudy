@@ -52,6 +52,17 @@ export class ApiError extends Error {
   }
 }
 
+/** 이미 가입한 이메일이면 서버가 먼저 가입한 제공자를 함께 보낸다. */
+export class RegisteredProviderError extends ApiError {
+  constructor(
+    error: ApiError,
+    readonly provider: string,
+  ) {
+    super(error.status, error.code, error.message);
+    this.name = "RegisteredProviderError";
+  }
+}
+
 /**
  * 서버에서 이 응답을 얼마나 담아 둘지(초). 브라우저 요청에는 아무 영향이 없다.
  *
@@ -150,7 +161,9 @@ const toApiError = async (response: Response, path: string): Promise<ApiError> =
   const code = problem?.code ?? "INTERNAL_SERVER_ERROR";
 
   reportError(code, response.status, path);
-  return new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
+  const error = new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
+  if (typeof problem?.provider === "string") return new RegisteredProviderError(error, problem.provider);
+  return error;
 };
 
 const networkError = (cause: unknown, path: string): ApiError => {
@@ -181,6 +194,24 @@ export const apiPost = async (
   });
 
   if (!response.ok) throw await toApiError(response, path);
+};
+
+/**
+ * 본문을 보내고 결과를 받는 요청. 세션을 만들거나 쓰는 요청이라 쿠키를 함께 보낸다.
+ */
+export const apiPostFor = async <T>(path: string, schema: ZodType<T>, body: unknown): Promise<T> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+
+  return checkResponse(schema, response, path);
 };
 
 /**
