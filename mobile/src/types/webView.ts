@@ -30,10 +30,12 @@ export interface WebViewFailureMessage {
 }
 
 export interface WebViewNavigation {
-  readonly fail: (reason: WebViewFailure) => void;
   readonly failure: WebViewFailure | null;
+  readonly handleError: (event: WebViewErrorEvent) => void;
+  readonly handleHttpError: () => void;
   readonly handleLoad: () => void;
   readonly handleLoadEnd: () => void;
+  readonly handleShouldStartLoad: (request: WebViewNavigationRequest) => boolean;
   readonly handleUrlChange: (url: string) => void;
   readonly isLoading: boolean;
   readonly key: number;
