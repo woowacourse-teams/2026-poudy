@@ -5,13 +5,15 @@ import { WebView, type WebViewNavigation as NativeWebViewNavigation } from 'reac
 
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
-import { useExternalEntry } from '@/hooks/useExternalEntry';
-import { useHardwareBack } from '@/hooks/useHardwareBack';
-import { useKeyboardInset } from '@/hooks/useKeyboardInset';
-import { useQuickActions } from '@/hooks/useQuickActions';
-import { useSplashTransition } from '@/hooks/useSplashTransition';
-import { useWebViewBridge } from '@/hooks/useWebViewBridge';
-import { useWebViewNavigation } from '@/hooks/useWebViewNavigation';
+import {
+  useExternalEntry,
+  useHardwareBack,
+  useKeyboardInset,
+  useQuickActions,
+  useSplashTransition,
+  useWebViewBridge,
+  useWebViewNavigation,
+} from '@/hooks';
 import { APPLICATION_NAME, WEBVIEW_INIT_SCRIPT } from '@/util/appInfo';
 import { WEB_ORIGIN_WHITELIST } from '@/util/webViewRequest';
 
