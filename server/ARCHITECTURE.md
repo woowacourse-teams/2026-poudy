@@ -181,26 +181,28 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 
 ### Security
 
-`security`는 Security 설정, 소셜 로그인과 로그인 세션을 소유한다. 회원 기능을 알지 않으며, 가입·조회는
-`SocialMemberLogin` 포트로 맡기고 `member`가 구현한다. 활성 회원 확인도 `MemberActivity` 포트를
+`security`는 Security 설정, 소셜 로그인과 로그인 세션을 소유한다. 회원 기능을 알지 않으며, 가입·조회와 복구 요청은
+`SocialMembers` 포트로 맡기고 `member`가 구현한다. 활성 회원 확인도 `MemberActivity` 포트를
 `MemberService`가 구현한다. 의존은 `member → security` 한 방향이고, 로그인한
 회원이 필요한 기능은 `member` 대신 `security`의 `LoginMember`에 의존한다. `config`는 기능을 모르는
-설정만 남긴다.
+설정만 남긴다. 관리자 인증 컨트롤러·요청과 응답·계정 확인도 `security.auth.admin`이 소유한다.
+회원 가입·프로필·탈퇴·복구 요청 저장과 복구 상태 규칙은 `member`에 남기고, `auth`는
+신원 확인과 인증 상태를 이용하는 흐름만 맡는다.
 
 제공자 응답 해석은 `OAuthProvider`가 맡는다. 카카오 회원번호·구글 `sub`가 제공자 식별자이고, 카카오는
 `is_email_valid`·`is_email_verified`, 구글은 `email_verified`가 참일 때만 인증된 이메일로 본다.
 
 로그인 흐름은 Spring Security `oauth2Login`이 처리하고, 컨트롤러가 없는 로그인 시작과 로그아웃 경로는
 OpenAPI에 직접 추가한다. 등록하지 않은 제공자는 Security 기본 500 대신 404로 응답한다. Spring OAuth 클라이언트 인터페이스를
-구현하는 부품(등록된 제공자만 받는 요청 해석, 제공자 토큰을 버리는 저장소)은 웹 로그인에만 쓰여 `security.login.web`에 둔다. 운영 nginx가 `/api/`만
+구현하는 부품(등록된 제공자만 받는 요청 해석, 제공자 토큰을 버리는 저장소)은 웹과 앱 WebView의 OAuth 로그인에 함께 쓰여 `security.auth.oauth`에 둔다. 운영 nginx가 `/api/`만
 백엔드로 넘기므로 시작(`/api/oauth2/authorization/*`)과 콜백(`/api/login/oauth2/code/*`) 경로를
 `/api` 아래에 둔다. 제공자 로그인 요청에는 `prompt=select_account`를 붙여, 브라우저에 로그인된 제공자 계정이
 있어도 바로 넘어가지 않고 다른 계정을 고를 수 있게 한다. 로그인에 성공하면 세션의 인증을 회원 ID만 가진 인증으로 바꾸고, 제공자 토큰은
 저장하지 않는다. 로그인을 마치면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `ClientOrigins`가
 CORS 허용 오리진 중 `*`가 없는 첫 값으로 정하고, 비어 있으면 같은 오리진(운영)이다. PR preview는
 주소가 PR마다 달라 허용 목록에 와일드카드로만 있으므로, 어느 preview에서 시작했는지 서버가 알 수 없다. 그래서
-로그인 시작 요청의 `returnOrigin`을 `ClientOrigins.trustedOrigin`이 판정하고, 믿을 수 있는 값만 `LoginSession`이
-그 로그인의 OAuth `state`와 함께 세션에 맡겨 둔다. 콜백의 `state`가 같을 때만 한 번 꺼내 그 오리진으로 보내고,
+로그인 시작 요청의 `returnOrigin`을 `ClientOrigins.trustedOrigin`이 판정하고, 믿을 수 있는 값만 앱 채널 여부와 함께
+`OAuthLoginStart`로 묶어 그 로그인의 OAuth `state`와 함께 세션에 맡겨 둔다. 이 값이 세션에 맡기고 꺼내는 일까지 스스로 한다. OAuth 흐름에만 있는 상태라 `LoginSession`이 아니라 `security.auth.oauth`가 소유한다. 콜백의 `state`가 같을 때만 한 번 꺼내 그 오리진으로 보내고,
 다르면 꺼내지 않고 기본 주소로 보낸다. 같은 브라우저에서 로그인을 둘 시작하면 앞선 로그인의 콜백이 나중 로그인의
 복귀 주소를 가져가지 않게 하기 위해서다. 이 값은 링크를 만든 누구나 넣을 수 있으므로 URI로
 해석해 `scheme://authority`와 정확히 같은지 먼저 확인한다. CORS 와일드카드 판정은 `*`를 임의 문자열로 보므로
@@ -210,24 +212,21 @@ CORS 허용 오리진 중 `*`가 없는 첫 값으로 정하고, 비어 있으�
 예외가 나도 Spring이 먼저 저장한 제공자 인증을 세션과 함께 버리고 로그인 실패로 보낸다. 실패하면 오류 코드를 `error`에,
 이메일 중복이면 기존 제공자를 `provider`에 붙인다. 화면 분기는 프론트가 회원 조회로 판단한다.
 
-세션을 만들고 버리고 만료를 판정하는 일은 `LoginSession`이 맡는다. 웹 소셜 로그인 설정(`WebLoginConfigurer`)과 콜백의 성공·실패 처리(`WebLoginHandler`)는 웹에만 쓰여
-`security.login.web`에 두고, `SecurityConfig`에는 웹·앱 공통 설정만 남긴다. 로그아웃도
+세션을 만들고 버리고 만료를 판정하는 일은 `LoginSession`이 맡는다. OAuth 로그인 설정(`OAuthLoginConfigurer`)과 콜백의 성공·실패 처리(`OAuthLoginHandler`)는 웹·앱 공통 OAuth 구현으로
+`security.auth.oauth`에 두고, `SecurityConfig`에는 웹·앱 공통 설정만 남긴다. 로그아웃도
 Security 로그아웃 필터가 처리한다. CSRF를 끄면 이 필터가 모든 메서드를 받으므로 POST로 한정하고 204로
 응답한다. 코드는 `HttpSession`과 Security의 `SecurityContextRepository`만 쓰므로 세션 저장소를
 Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이 경계에는 별도 Repository를 두지
 않는다. 지금 세션은 서블릿 컨테이너 메모리에 두므로 배포하면 모두 로그아웃된다. 웹 세션은 비활동
 1일, 로그인 후 7일에 만료한다. 앱은 네이티브 SDK로 받은 카카오 접근 토큰이나 구글 ID 토큰을
 `POST /api/auth/{provider}/app-login`으로 보내고, 서버는 카카오 토큰의 `app_id`(`access_token_info`)나 구글 ID 토큰의
-서명·발급자·대상(웹 클라이언트 ID)을 확인한 뒤 웹과 같은 `SocialMemberLogin`으로 가입·로그인한다. 토큰은 이 로그인에만 쓰고
-보관하지 않는다. 로그인 자격 증명은 `LoginCredential`의 웹(`WebLoginCredential`, Spring 인증 결과)·앱(`AppLoginCredential`, 네이티브 토큰) 구현이고, 자격 증명이
-웹·앱 채널을 갖는다. 소셜 계정을 읽는 방법은 `SocialAccountReader`의 웹·앱 구현으로 나누고, 앱 구현은 제공자별
-`ProviderTokenVerifier`(카카오·구글)에 맡긴다. 가입·로그인과 세션 교체·발급은 `SocialLogin`이 함께 맡는다. 이 로그인 부품은 `security.login`에 두고, 웹 구현은 `security.login.web`, 앱 구현과 제공자별 확인기는 `security.login.app`에 둔다. 성공·실패를 어떻게 돌려줄지는 `LoginResponder` 구현이 정한다. 웹(`WebLoginResponder`)은
-`/login/callback`의 `status`·`error` 리다이렉트 주소를, 앱(`AppLoginResponder`)은 JSON을 돌려주고 실패는 MVC 예외 처리로
-넘긴다. 로그인에 실패하면 웹·앱 모두 기존 세션을 버린다. 세션 기간은 `SessionPolicy` 구현이 정한다. 웹(`WebSessionPolicy`)·관리자(`AdminSessionPolicy`)는 절대 만료가 있는
+서명·발급자·대상(웹 클라이언트 ID)을 확인한 뒤 웹과 같은 `SocialMembers`로 가입·로그인한다. 토큰은 이 로그인에만 쓰고
+보관하지 않는다. `SocialLogin`은 소셜 계정을 읽는 방법(`Supplier<OAuthAccount>`)과 세션을 만들 채널을 받는다. OAuth 처리기는 Spring 인증 결과에서, 앱 로그인 컨트롤러는
+제공자별 `ProviderTokenVerifier`(카카오·구글)를 고르는 `ProviderTokenVerifiers`로 계정을 읽는다. 읽기도 `SocialLogin` 안에서 일어나므로 계정을 읽다 실패해도 기존 세션을 버린다. 입구가 둘뿐이라 자격 증명·계정 판독 인터페이스는 두지 않는다. 가입·로그인과 세션 교체·발급은 `SocialLogin`이 함께 맡는다. 공통 계약·인증 흐름·탈퇴 계정 본인 확인 API는 `security.auth`에 둔다. 계약의 OAuth 리다이렉트 로그인 구현은 `security.auth.oauth`, 네이티브 토큰 구현과 API는 `security.auth.app`으로 분리한다. 패키지는 접속 기기가 아니라 로그인 방식으로 나눈다. 카카오톡이 없는 앱도 WebView 안에서 같은 OAuth 구현을 쓰기 때문이다. `SocialLogin`은 로그인 결과를 돌려주고 실패하면 기존 세션을 버린 뒤 예외를 다시 던진다. 응답은 각 입구가 만든다. OAuth 처리기는 `LoginCallbackUrl`로 `/login/callback`의 `status`·`error` 리다이렉트 주소를, 앱 로그인 컨트롤러는 JSON을 돌려주고 실패는 MVC 예외 처리로 넘긴다. 입구가 둘뿐이고 응답 모양이 완전히 달라 응답을 만드는 인터페이스는 두지 않는다. 로그인에 실패하면 웹·앱 모두 기존 세션을 버린다. 세션 기간은 `SessionPolicy` 구현이 정한다. 웹(`WebSessionPolicy`)·관리자(`AdminSessionPolicy`)는 절대 만료가 있는
 `ExpiringSessionPolicy`이고, 앱은 쿠키 수명을 늘리는 `AppSessionPolicy`다. `LoginSession`은 정책 목록을 주입받아 세션에 기록한
-`LoginChannel`로 고르므로 웹·앱 구현을 알지 않는다. 웹 정책은 `security.login.web`, 관리자 정책은 `security.login.admin`, 앱 정책·쿠키 연장과
-앱 로그인 API는 `security.login.app`에 둔다. `security.session`에는 세션 공통 부품만 남긴다. 앱의 구글 ID 토큰은 `azp`가 Android 클라이언트라
-`azp`를 웹 클라이언트 ID와 비교하는 Spring OIDC 검증기를 쓰지 않고 서명·발급자·대상·만료만 확인한다. 앱 세션은 비활동 60일·절대 만료 없음이고, 하루에 한 번 세션 쿠키 수명도 다시 60일로 늘린다. 서블릿 세션에 절대 만료가 없어 세션에 만료 시각을 두고 Security
+`LoginChannel`로 고르므로 웹·앱 구현을 알지 않는다. 웹·앱·관리자 세션 정책과 앱 쿠키 연장은 `security.session`에 모으고,
+네이티브 토큰 로그인 API는 `security.auth.app`에 둔다. `security.auth` 안의 HTTP 입구도 다른 기능처럼 `controller`·`controller.dto`·`service` 하위 패키지에 둬 `ArchitectureTest`의 계층 규칙을 받게 한다. Spring Security 부품만 있는 `security.auth.oauth`는 나누지 않는다. 앱의 구글 ID 토큰은 `azp`가 Android 클라이언트라
+`azp`를 웹 클라이언트 ID와 비교하는 Spring OIDC 검증기를 쓰지 않고 서명·발급자·대상·만료만 확인한다. 앱 세션은 비활동 60일·절대 만료 없음이고, 하루에 한 번 세션 쿠키 수명도 다시 60일로 늘린다. 카카오톡이 없는 기기는 앱 WebView 안에서 웹 OAuth로 로그인하고, 시작 요청에 `channel=app`을 붙인다. 이 값도 복귀 오리진과 함께 `OAuthLoginStart`에 담겨, 같은 `state`의 콜백에서만 꺼내 세션 채널을 앱으로 정한다. 없거나 다른 값이면 웹이다. 이 값은 누구나 붙일 수 있지만 세션 기간만 바꾸고 권한은 바꾸지 않는다. 서블릿 세션에 절대 만료가 없어 세션에 만료 시각을 두고 Security
 필터 앞에서 판정한다. 관리자는 환경 변수의 공용 계정으로 `POST /api/admin/login`에 로그인하면 같은
 세션에 `ROLE_ADMIN` 인증을 받는다. 로그인 때 기존 세션을 버려 세션 ID를 새로 받고, 비활동 1시간,
 로그인 후 12시간에 만료한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/members/**`는 회원 인증만 받고,
