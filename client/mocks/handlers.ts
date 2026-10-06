@@ -442,8 +442,8 @@ const curationBlocks = [
     spacingTop: 0,
     spacingBottom: 24,
     imageUrl: "/images/curations/autumn-barrier.jpg",
-    altText: null,
-    bodyText: null,
+    altText: "가을 장벽 케어 기획전",
+    bodyText: "건조한 계절, 장벽부터 채우세요\n가볍게 스며드는 토너와 진정 크림을 모았어요.",
   },
   {
     id: CURATION_BLOCK_IDS.products,
