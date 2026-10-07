@@ -144,7 +144,8 @@ describe("제품 성분 요약", () => {
       screen.getByRole("link", { name: "셀퓨전씨 브랜드관" }),
     ];
 
-    links.forEach((link) => expect(link).toHaveClass("py-1.5", "-my-1.5"));
+    // 여백으로 넓히면 경로의 높이가 바뀐다. 위아래로 겹쳐 그린 가상 요소가 손을 받는다.
+    links.forEach((link) => expect(link).toHaveClass("relative", "after:-inset-y-1.5"));
   });
 
   it("상세 구역을 24px씩 띄우고 출처 안내를 회색 상자에 담는다", () => {

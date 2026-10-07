@@ -119,11 +119,11 @@ export function PartTabs({
 
       {/*
         머리(44px)와 그 아래 축약형 밑에 붙는다. 축약형이 나타나는 순간 그 높이만큼 내려가므로
-        자리 옮김을 이어 준다. 본문 여백을 되물려 화면 양끝까지 선을 긋는다.
+        자리 옮김을 이어 준다. 본문에 좌우 여백이 없어 화면 양끝까지 선이 그어진다.
       */}
       <div
         ref={stickyRef}
-        className="sticky top-[calc(2.75rem+var(--summary-bar-height,0px))] z-20 -mx-4 bg-background transition-[top] duration-disclosure ease-out"
+        className="sticky top-[calc(2.75rem+var(--summary-bar-height,0px))] z-20 bg-background transition-[top] duration-disclosure ease-out"
       >
         <div
           ref={ref}

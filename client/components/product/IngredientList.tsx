@@ -43,7 +43,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
               <Link
                 href={`/ingredients/${ingredient.id}`}
                 prefetch="auto"
-                className="flex min-h-[60px] items-center gap-2 px-0.5 py-2"
+                className="flex min-h-[60px] items-center gap-2"
               >
                 <span className="flex h-7 w-6 shrink-0 items-center justify-center text-[12px] text-[#566273]">
                   {String(index + 1).padStart(2, "0")}

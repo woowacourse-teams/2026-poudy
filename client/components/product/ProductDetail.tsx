@@ -41,53 +41,56 @@ export function ProductDetail({
       <ProductViewRecorder productId={product.id} />
       <TrackActiveTime pageType="product_detail" entityId={product.id} />
 
-      <main className="flex-1 px-4">
-        <div className="flex flex-col gap-4 pt-4 pb-3">
+      {/*
+        간격은 design/v2.pen 의 auto layout 을 그대로 옮긴다. 형제 사이는 부모의 gap 으로 띄우고,
+        padding 은 화면 가장자리(좌우 16, 위 16, 아래 40)에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
+      */}
+      <main className="flex flex-1 flex-col">
+        {/* 카테고리 경로 → 제품 요약 24, 제품 요약 → 저장 버튼 36 */}
+        <div className="flex flex-col gap-6 px-4 pt-4 pb-3">
           <CategoryPath categories={product.categories} />
-        </div>
 
-        <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-          <ProductImage
-            src={product.imageUrl || PRODUCT_PLACEHOLDER}
-            alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-            size={184}
-            className="size-[184px] object-contain"
-            loading="eager"
-          />
+          <div className="flex flex-col gap-9">
+            <section className="flex flex-col items-center gap-4">
+              <ProductImage
+                src={product.imageUrl || PRODUCT_PLACEHOLDER}
+                alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                size={184}
+                className="size-[184px] object-contain"
+                loading="eager"
+              />
 
-          <div className="flex flex-col items-center gap-2">
-            <Link
-              href={`/brands/${product.brand.id}`}
-              aria-label={`${product.brand.name} 브랜드관`}
-              className="-my-1.5 py-1.5 text-[12px] font-medium text-[#566273] active:opacity-60"
-            >
-              {product.brand.name}
-            </Link>
-            <h1 className="text-center text-[20px] leading-[1.15] font-bold text-[#182132]">{product.name}</h1>
+              <div className="flex w-full flex-col items-center gap-2">
+                <Link
+                  href={`/brands/${product.brand.id}`}
+                  aria-label={`${product.brand.name} 브랜드관`}
+                  className={`${LINK} text-[12px] font-medium text-[#566273]`}
+                >
+                  {product.brand.name}
+                </Link>
+                <h1 className="text-center text-[20px] leading-[1.15] font-bold text-[#182132]">{product.name}</h1>
 
-            <div className="flex gap-2">
-              <LevelTag kind="moisture" level={product.moistureLevel} variant="pill" />
-              <LevelTag kind="oil" level={product.oilLevel} variant="pill" />
+                <div className="flex gap-2">
+                  <LevelTag kind="moisture" level={product.moistureLevel} />
+                  <LevelTag kind="oil" level={product.oilLevel} />
+                </div>
+
+                <Variants variants={product.variants} />
+              </div>
+            </section>
+
+            {/* 축약형이 나타나는 자리는 저장 버튼 바로 아래다. 둘 사이에 gap 이 끼지 않게 한 묶음에 둔다. */}
+            <div className="flex flex-col">
+              <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
+              <SummaryEnd />
             </div>
           </div>
-
-          <Variants variants={product.variants} />
-        </section>
-
-        <div className="pt-4 pb-3">
-          <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
         </div>
-
-        <SummaryEnd />
 
         {/* 저장 버튼 바로 아래에 두고, 내려가면 머리에 붙는다. */}
         <PartTabs product={product} entryPoint={entryPoint} />
 
-        {/*
-          맨 아래의 출처 안내는 문의 버튼이 덮는 자리에 놓인다. 버튼이 가리는 만큼
-          아래를 비워 `정보 수정 제안` 이 눌리게 한다.
-        */}
-        <div className="flex flex-col gap-6 pt-6 pb-(--inquiry-button-clearance)">
+        <div className="flex flex-col gap-6 px-4 pt-6 pb-10">
           <SelectedPart product={product} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
@@ -150,12 +153,12 @@ function CompactSummary({
 }
 
 /*
- * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 위아래로 여백을 주어 손이 닿을 자리를
- * 넓히고, 같은 크기의 음수 바깥 여백으로 되돌려 경로가 차지하는 높이는 그대로 둔다.
+ * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 글자 위아래로 6px 씩 겹쳐 그린 가상 요소가
+ * 손을 받게 해 누를 자리만 넓힌다. 여백으로 넓히지 않으므로 경로가 차지하는 높이는 그대로다.
  *
  * 가만히 있을 때의 모습은 원래 배치 그대로 두고, 손이 닿는 동안에만 옅어져 눌린 것을 알린다.
  */
-const LINK = "-my-1.5 py-1.5 active:opacity-60";
+const LINK = "relative after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] active:opacity-60";
 
 function CategoryPath({ categories }: { readonly categories: ProductDetailResponse["categories"] }) {
   if (categories.length === 0) return null;
@@ -188,13 +191,14 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
   if (variants.length === 0) return null;
 
   return (
-    <section className="w-full">
+    // 화면 폭을 다 쓰면 용량과 가격이 양끝으로 갈라져 한 줄로 읽히지 않는다. 본문의 2/3 쯤으로 줄인다.
+    <section className="w-60">
       <h3 className="sr-only">용량별 가격</h3>
       <ul className="divide-y divide-[#DEE2E9]">
         {variants.map((variant) => {
           const perUnit = unitPrice(variant.price, variant);
           return (
-            <li key={variant.id} className="flex min-h-10 items-center justify-between gap-3 py-0.5">
+            <li key={variant.id} className="flex min-h-10 items-center justify-between gap-3">
               <span className="text-[13px] font-bold text-[#182132]">
                 {variant.volumeValue}
                 {variant.volumeUnit}
@@ -236,6 +240,43 @@ function SelectedPart({ product }: { readonly product: ProductDetailResponse }) 
 }
 
 /**
+ * 주의 성분 확인 원 안의 표시. 경로는 Tabler 의 x · check 다.
+ *
+ * 24 단위 viewBox 그대로 두면 check 는 그림이 오른쪽 위로 치우쳐 있어 원 안에서 가운데로 보이지 않는다.
+ * viewBox 를 그림(선 굵기의 절반까지)에 딱 맞게 잘라 그림의 가운데가 상자의 가운데에 오게 한다.
+ *
+ * 크기는 디자인(24 단위를 13px)에 가까운 정수 px 로 둔다. 8.1px 처럼 소수로 두면 20px 원 안에서
+ * 놓이는 자리가 픽셀 격자에 맞춰지며 반 픽셀쯤 밀린다. 비율이 다른 칸은 viewBox 가 가운데로 맞춰 넣는다.
+ */
+const MARKS = {
+  x: { viewBox: "4.5 4.5 15 15", width: 8, height: 8, paths: ["M18 6l-12 12", "M6 6l12 12"] },
+  check: { viewBox: "3.5 5.5 18 13", width: 10, height: 8, paths: ["M5 12l5 5l10 -10"] },
+} as const;
+
+function CautionMark({ kind }: { readonly kind: keyof typeof MARKS }) {
+  const { viewBox, width, height, paths } = MARKS[kind];
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={viewBox}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {paths.map((d) => (
+        <path key={d} d={d} />
+      ))}
+    </svg>
+  );
+}
+
+/**
  * 주의 성분 확인. 기준마다 공개 전성분에 들었는지를 두 칸 격자로 보여 준다.
  * 들어 있는 기준을 앞에 두어 눈이 먼저 닿게 한다.
  */
@@ -245,7 +286,7 @@ function CautionCheck({ groups }: { readonly groups: ProductPartResponse["exclud
   const summary = cautionSummary(groups);
 
   return (
-    <section data-no-select className="flex flex-col gap-3">
+    <section data-no-select className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-[14px] font-bold text-[#182132]">주의 성분 확인</h3>
         <p className={`text-[12px] font-bold ${summary.contains ? "text-[#C53030]" : "text-[#0A6B52]"}`}>
@@ -257,18 +298,14 @@ function CautionCheck({ groups }: { readonly groups: ProductPartResponse["exclud
         이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
         서버는 기준 이름만 주므로 "있음"·"없음" 은 화면에서 붙인다.
       */}
-      <ul className="grid grid-cols-2 gap-x-3 gap-y-3 px-0.5 pt-1">
+      <ul className="grid grid-cols-2 gap-3">
         {sortedCautions(groups).map((group) => (
-          <li key={group.name} className="flex items-start gap-2">
-            {group.contains ? (
-              <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-[#C53030]">
-                <Icon name="x" size={13} strokeWidth={3} className="text-white" />
-              </span>
-            ) : (
-              <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-[#17A47A]">
-                <Icon name="check" size={13} strokeWidth={3} className="text-white" />
-              </span>
-            )}
+          <li key={group.name} className="flex items-center gap-2">
+            <span
+              className={`flex size-5 shrink-0 items-center justify-center rounded-full text-white ${group.contains ? "bg-[#C53030]" : "bg-[#17A47A]"}`}
+            >
+              <CautionMark kind={group.contains ? "x" : "check"} />
+            </span>
             <span
               className={`text-[14px] leading-[1.4] ${group.contains ? "font-semibold text-[#182132]" : "font-medium text-[#424E5F]"}`}
             >
