@@ -8,7 +8,7 @@ import { ingredientReferences } from "@/lib/domain/ingredient-references";
 /**
  * S25 참고자료. 처음에는 건수와 갱신일만 보여 주고, 누르면 자료 목록을 편다(S25b).
  *
- * 접힌 목록도 문서에 그려 두고 보이기만 감춘다. 출처는 검색 로봇이 성분 설명의 근거로 읽는 글이다.
+ * 접힌 목록도 문서에 그려 두고 높이만 접는다. 출처는 검색 로봇이 성분 설명의 근거로 읽는 글이다.
  */
 export function IngredientReferences({
   infoSources,
@@ -42,17 +42,30 @@ export function IngredientReferences({
         <Icon name="info" size={15} className="shrink-0 text-[#6A7588]" />
         <span className="font-medium text-[#566273]">참고자료 {references.length}건</span>
         <span className="min-w-0 flex-1 text-[#6A7588]">· {date} 업데이트</span>
-        <Icon name={open ? "chevron-up" : "chevron-down"} size={18} className="shrink-0 text-[#6A7588]" />
+        {/* 목록이 열리는 것과 같은 길이로 화살표를 돌린다. 전환은 disclosure-chevron 이 건다. */}
+        <Icon
+          name="chevron-down"
+          size={18}
+          className={`disclosure-chevron shrink-0 text-[#6A7588] ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
-      <ul id={listId} hidden={!open} className="pb-1">
-        {references.map((reference) => (
-          <li key={reference.source} className="flex flex-col gap-1 py-3">
-            <span className="text-[13px] leading-[1.45] font-medium text-[#182132]">{reference.source}</span>
-            <span className="text-[12px] font-medium text-[#424E5F]">{reference.usage}에 반영</span>
-          </li>
-        ))}
-      </ul>
+      {/*
+        접힌 목록도 문서에 남겨 둔 채 높이만 0 으로 접는다. 열고 닫는 전환은 두 높이 사이를 잇는 것이라
+        한쪽이 없으면 걸리지 않는다. 접힌 동안에는 `inert` 로 손과 초점, 보조 기술을 막는다.
+      */}
+      <div id={listId} className="disclosure" data-open={open}>
+        <div>
+          <ul inert={!open} className="pb-1">
+            {references.map((reference) => (
+              <li key={reference.source} className="flex flex-col gap-1 py-3">
+                <span className="text-[13px] leading-[1.45] font-medium text-[#182132]">{reference.source}</span>
+                <span className="text-[12px] font-medium text-[#424E5F]">{reference.usage}에 반영</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </section>
   );
 }
