@@ -43,18 +43,15 @@
    * 도 3.73:1 에 그쳐 글자로 쓸 수 없어, 같은 계열의 더 어두운 색을 쓴다.
    */
   /*
-   * 네 값은 디자인 시안에서 그대로 뽑았다. 팔레트에서 계산해 낸 값이 아니라
-   * 고른 색 자체가 기준이므로 hex 로 적어 둔다.
-   *
-   * 빈 물방울은 면이 아니라 테두리라 같은 값이라도 채운 쪽보다 약하게 읽힌다.
+   * 유수분 물방울과 글자. design/v2.pen 의 `팔레트 · 유수분 데이터` 를 따른다.
+   * 물방울은 수분 water-300 · 유분 oil-400 으로 칠하고, 글자는 같은 계열의 700 단계를 쓴다.
+   * 빈 칸은 색을 바꾸지 않고 테두리만 남은 물방울로 그린다.
    */
   --color-droplet-moisture: #6aabd6;
-  --color-droplet-empty: #b8defa;
   --color-droplet-oil: #c69e69;
-  --color-droplet-empty-oil: #f2ddb6;
 
-  --color-level-moisture-text: oklch(50% 0.08 242.749);
-  --color-level-oil-text: oklch(50.1% 0.077 52.531);
+  --color-level-moisture-text: #1f6b8e;
+  --color-level-oil-text: #854c2c;
 
   /*
    * 목록에서 카드 사이를 가르는 선. `--color-border` 보다 연하다.
