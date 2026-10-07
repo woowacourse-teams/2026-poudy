@@ -25,9 +25,6 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   // 로고는 배포된 주소에서 받아 온다. 여기서는 무엇을 넘겼는지만 보므로 받지 않는다.
   socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
-vi.mock("next/font/google", () => ({
-  Geist_Mono: () => ({ variable: "--font-geist-mono" }),
-}));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
 /* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));

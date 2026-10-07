@@ -62,7 +62,6 @@
   /* 타이포 */
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-data: var(--font-geist-mono), monospace;
   --text-body: 14px;
 
   /* 형태 */
