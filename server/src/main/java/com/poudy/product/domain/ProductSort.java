@@ -2,6 +2,7 @@ package com.poudy.product.domain;
 
 public enum ProductSort {
     DEFAULT,
+    CREATED_ASC,
     PRICE_DESC,
     PRICE_ASC,
     UNIT_PRICE_DESC,
