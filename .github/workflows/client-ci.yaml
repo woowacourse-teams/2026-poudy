@@ -1,11 +1,11 @@
 name: Client CI
 
+# dev 로 가는 PR 은 클라이언트가 바뀔 때만, main 으로 가는 릴리스 PR 은 항상 검사한다.
+# common/ 변경만 있는 dev 대상 PR은 client-common-ci.yaml이 Lighthouse 없이 검사한다.
+# 워크플로 수준 paths 로는 대상 브랜치마다 조건을 달리할 수 없어, changes 가 판단한다.
 on:
   pull_request:
-    branches: [dev]
-    paths:
-      - "client/**"
-      - ".github/workflows/client-ci.yaml"
+    branches: [dev, main]
 
 permissions:
   contents: read
@@ -19,8 +19,31 @@ defaults:
     working-directory: client
 
 jobs:
+  # 클라이언트와 관련된 변경이 있는지만 판단한다. 이 잡은 항상 돈다.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - '.github/workflows/client-ci.yaml'
+
+  # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
   check:
     name: Client checks
+    needs: changes
+    if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -85,9 +108,14 @@ jobs:
       #
       # 미리 만드는 화면은 빌드하며 API 를 부르므로 주소를 준다. 목으로는 이 요청을
       # 받을 수 없어, 목을 켠 빌드를 재면 데이터가 빈 화면을 재게 된다.
+      #
+      # Vercel 명령은 저장소 루트에서 실행한다. 공유 API 스키마(common/)를 client 가 불러오므로
+      # 빌드가 client/ 밖을 읽어야 한다. Vercel 프로젝트의 Root Directory 를 client 로 두고
+      # 루트에서 실행해야, 산출물 경로가 client/client 처럼 겹치지 않는다.
       - name: Build preview
         id: build
         continue-on-error: true
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -111,6 +139,7 @@ jobs:
         id: preview
         if: steps.build.outcome == 'success'
         continue-on-error: true
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
