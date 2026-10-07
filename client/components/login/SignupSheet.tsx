@@ -7,8 +7,9 @@ import { useState } from "react";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ApiError } from "@/lib/api/client";
-import { signUp } from "@/lib/api/member";
+import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
 const SIGNUP_REQUIRED = "required";
@@ -47,7 +48,12 @@ export function SignupSheet() {
     setState("sending");
     setMessage(null);
     signUp()
-      .then(() => router.replace("/onboarding"))
+      .then(() => {
+        findMe()
+          .then((member) => rememberLastLogin(member.provider))
+          .catch(() => undefined);
+        router.replace("/onboarding");
+      })
       .catch((error: unknown) => {
         const failure = failureOf(error);
         setState(failure.state);
