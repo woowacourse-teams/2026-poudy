@@ -116,6 +116,31 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
+    @DisplayName("등록순은 조회수와 무관하게 등록 시각·ID 오름차순으로 페이지를 나눈다")
+    void sortsByCreationTime() throws Exception {
+        jdbc.update("update product set created_at = '2026-01-03' where brand_id = 90000");
+        jdbc.update("update product set created_at = '2026-01-01' where id in (90002, 90004)");
+        jdbc.update("update product set created_at = '2026-01-02' where id = 90001");
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count) values (?, 90001, 10000) "
+                + "on conflict (view_date, product_id) do update set view_count = 10000",
+            LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1)
+        );
+
+        mockMvc.perform(
+            get("/api/products").param("brandIds", "90000").param("sort", "CREATED_ASC").param("size", "2")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90002, 90004)));
+        mockMvc.perform(
+            get("/api/products").param("brandIds", "90000").param("sort", "CREATED_ASC")
+                .param("size", "2").param("page", "2")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(90001));
+    }
+
+    @Test
     @DisplayName("단가는 대표 옵션의 ml·g 수치를 비교하고 ea·0은 양방향 모두 ID순으로 뒤에 둔다")
     void sortsByRepresentativeUnitPrice() throws Exception {
         jdbc.update(
