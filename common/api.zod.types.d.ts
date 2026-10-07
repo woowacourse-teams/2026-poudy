@@ -930,7 +930,7 @@ export type get_FindProducts = {
   /**
    * 정렬 조건
    */
-  sort: ("DEFAULT" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC");
+  sort: ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC");
   /**
    * 조회할 페이지 번호 (1부터 시작)
    */

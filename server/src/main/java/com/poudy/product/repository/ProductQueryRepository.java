@@ -205,6 +205,7 @@ public class ProductQueryRepository {
     private static String orderBy(ProductQuery query, ProductSort sort) {
         return switch (sort) {
             case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case CREATED_ASC -> "m.created_at asc";
             case PRICE_DESC -> "v.price desc";
             case PRICE_ASC -> "v.price asc";
             case UNIT_PRICE_DESC -> unitPriceOrder("desc");
