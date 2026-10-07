@@ -41,7 +41,8 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
           <li key={effect.id} className="flex gap-3 border-b border-[#DEE2E9] py-3 last:border-b-0">
             <span className="flex min-h-9 w-[100px] shrink-0 items-center gap-2">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-[#EFF1F5]">
-                <EffectIcon code={effect.code} size={17} className="text-[#424E5F]" />
+                {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
+                <EffectIcon code={effect.code} size={16} className="text-[#424E5F]" />
               </span>
               <span className="text-[14px] leading-[1.3] font-semibold text-[#182132]">{effectLabel(effect)}</span>
             </span>

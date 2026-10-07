@@ -80,13 +80,10 @@ export function EffectIcon({
   code,
   size,
   className,
-  viewBox = "0 0 24 24",
 }: {
   readonly code: string;
   readonly size: number;
   readonly className?: string;
-  /** 글자 옆에 붙을 때 눈높이를 맞추려고 그림을 옮길 때만 바꾼다. */
-  readonly viewBox?: string;
 }) {
   const path = isEffectCode(code) ? EFFECTS[code].path : DEFAULT_PATH;
 
@@ -94,7 +91,7 @@ export function EffectIcon({
     <svg
       width={size}
       height={size}
-      viewBox={viewBox}
+      viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
@@ -110,10 +107,10 @@ export function EffectTag({ effect }: { readonly effect: Pick<SkinEffectResponse
   return (
     <span className="flex h-6 shrink-0 items-center gap-1 rounded-xl bg-[#EFF1F5] px-2">
       {/*
-        한글 글자는 줄 상자 안에서 아래로 치우쳐 그려져, 상자끼리 가운데를 맞추면 글자가 아이콘보다
-        0.5px 쯤 낮아 보인다. 디자인처럼 viewBox 를 한 단위 올려 아이콘을 그만큼 내려 눈높이를 맞춘다.
+        아이콘은 디자인(13px)보다 1px 작은 12px 로 둔다. 24px 태그에서 13px 은 가운데 자리가
+        5.5px 라는 소수가 되어, 브라우저가 픽셀에 맞추며 아이콘을 0.5px 아래로 민다.
       */}
-      <EffectIcon code={effect.code} size={13} viewBox="0 -1 24 24" className="shrink-0 text-[#566273]" />
+      <EffectIcon code={effect.code} size={12} className="shrink-0 text-[#566273]" />
       <span className="text-[11px] leading-none font-bold text-[#424E5F]">{effectLabel(effect)}</span>
     </span>
   );
