@@ -33,11 +33,11 @@ export function LevelTag({ kind, level }: LevelTagProps) {
             key={index}
             name={isFilled ? "droplet-solid" : "droplet"}
             /*
-             * 디자인은 물방울을 8.28×12 로 그린다. 둘레의 0.5 선을 담으려 viewBox 를 넓힌 만큼
+             * 디자인은 물방울을 8.28×12 로 그린다. 둘레의 0.8 선을 담으려 viewBox 를 넓힌 만큼
              * 크기도 같은 비율로 키워 물방울 자체는 디자인 크기 그대로 보이게 한다.
              */
-            width={8.66}
-            height={12.38}
+            width={8.88}
+            height={12.6}
             preserveRatio
             className={droplet}
           />
