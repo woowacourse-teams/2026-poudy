@@ -72,7 +72,7 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
       />
 
       <BottomSheet.Body>
-        <div className="flex flex-col gap-6 pt-5 pb-[calc(env(safe-area-inset-bottom)+20px)]">
+        <div className="flex flex-col gap-6 pt-5 pb-2">
           <RoleDescription description={description} />
 
           <section className="flex flex-col gap-2">
@@ -94,12 +94,15 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
               ))}
             </ul>
           </section>
-
-          <SheetDetailLink href={`/ingredient-groups/${encodeURIComponent(group.code)}`}>
-            {name} 성분군 자세히 보기
-          </SheetDetailLink>
         </div>
       </BottomSheet.Body>
+
+      {/* 성분 목록이 길어 몸통이 스크롤되어도 성분군 설명으로 가는 단추는 늘 보이게 발에 둔다. */}
+      <BottomSheet.Footer>
+        <SheetDetailLink href={`/ingredient-groups/${encodeURIComponent(group.code)}`}>
+          {name} 성분군 자세히 보기
+        </SheetDetailLink>
+      </BottomSheet.Footer>
     </>
   );
 }

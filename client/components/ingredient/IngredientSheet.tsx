@@ -62,7 +62,7 @@ function Content({
       />
 
       <BottomSheet.Body>
-        <div className="flex flex-col gap-6 pt-5 pb-[calc(env(safe-area-inset-bottom)+20px)]">
+        <div className="flex flex-col gap-6 pt-5 pb-2">
           <RoleDescription description={description}>
             {ingredient.formulationRoles.length > 0 ? (
               <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
@@ -74,10 +74,13 @@ function Content({
               </ul>
             ) : null}
           </RoleDescription>
-
-          <SheetDetailLink href={`/ingredients/${ingredient.id}`}>{ingredient.koreanName} 자세히 보기</SheetDetailLink>
         </div>
       </BottomSheet.Body>
+
+      {/* 설명이 길어 몸통이 스크롤되어도 상세로 가는 단추는 늘 보이게 발에 둔다. */}
+      <BottomSheet.Footer>
+        <SheetDetailLink href={`/ingredients/${ingredient.id}`}>{ingredient.koreanName} 자세히 보기</SheetDetailLink>
+      </BottomSheet.Footer>
     </>
   );
 }

@@ -175,9 +175,12 @@ function Body({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
-/** 시트의 발. 담긴 버튼을 가로로 늘어놓는다. */
+/**
+ * 시트의 발. 담긴 버튼을 가로로 늘어놓는다. 몸통이 스크롤되어도 제자리에 남는다.
+ * 시트가 화면 바닥에 붙으므로 아래로 기기의 안전 영역(홈 표시줄 자리)만큼 더 띄운다.
+ */
 function Footer({ children }: { readonly children: React.ReactNode }) {
-  return <div className="flex gap-2 px-4 py-4">{children}</div>;
+  return <div className="flex shrink-0 gap-2 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">{children}</div>;
 }
 
 /** 발에 두는 되돌리기 버튼. 적용보다 좁게 둔다. */
