@@ -33,14 +33,26 @@ public class ProductSimilarityService {
     public ProductSimilarities find(Long productId, Long partId) {
         Product product = products.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        ProductPart part = partId == null ? product.firstPart().orElse(null) : product.findPart(partId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
-        boolean calculated = part != null && similarities.isCalculated(part.id());
+        ProductPart part = findPart(product, partId);
+        if (part == null) {
+            return new ProductSimilarities(null, false, List.of(), excludeCodes.findAll());
+        }
+        if (!similarities.isCalculated(part.id())) {
+            return new ProductSimilarities(part.id(), false, List.of(), excludeCodes.findAll());
+        }
         return new ProductSimilarities(
-            part == null ? null : part.id(),
-            calculated,
-            calculated ? similarities.findSimilarProducts(part.id()) : List.of(),
+            part.id(),
+            true,
+            similarities.findSimilarProducts(part.id()),
             excludeCodes.findAll()
         );
+    }
+
+    private ProductPart findPart(Product product, Long partId) {
+        if (partId == null) {
+            return product.firstPart().orElse(null);
+        }
+        return product.findPart(partId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
     }
 }
