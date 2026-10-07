@@ -5,8 +5,8 @@ import com.poudy.exception.RuleViolationException;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.SignInStatus;
 import com.poudy.security.domain.SocialSignIn;
-import com.poudy.security.domain.SocialSignInResult;
 import com.poudy.security.filter.ActiveMemberFilter;
 import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.oauth.DiscardingAuthorizedClientRepository;
@@ -212,9 +212,10 @@ public class SecurityConfig {
                 token.getAuthorizedClientRegistrationId(),
                 token.getPrincipal().getAttributes()
             );
-            SocialSignInResult result = socialSignIn.signIn(account);
-            loginSession.applySignInResult(result, request, response);
-            response.sendRedirect(signInResultUri(loginCallback, result));
+            SignInStatus status = socialSignIn.signIn(account)
+                .map(result -> loginSession.applySignInResult(result, request, response))
+                .orElseGet(() -> loginSession.holdSignup(account, request, response));
+            response.sendRedirect(signInResultUri(loginCallback, status));
         } catch (RuntimeException exception) {
             rejectSocialLogin(loginSession, request, response, loginFailureUriOf(loginCallback, exception));
         }
@@ -228,9 +229,9 @@ public class SecurityConfig {
         return loginSession.takeReturnOrigin(request).orElseGet(clientOrigins::defaultOrigin) + LOGIN_CALLBACK_PATH;
     }
 
-    private String signInResultUri(String loginCallback, SocialSignInResult result) {
+    private String signInResultUri(String loginCallback, SignInStatus status) {
         return UriComponentsBuilder.fromUriString(loginCallback)
-            .queryParam(STATUS_PARAMETER, result.status().name())
+            .queryParam(STATUS_PARAMETER, status.name())
             .toUriString();
     }
 

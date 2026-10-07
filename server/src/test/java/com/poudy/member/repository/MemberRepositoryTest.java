@@ -39,7 +39,6 @@ class MemberRepositoryTest {
 
         assertThat(saved.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(saved.email()).isEqualTo("member@example.com");
-        assertThat(saved.isProfileCompleted()).isFalse();
         assertThat(repository.findById(saved.id())).get().extracting(Member::id).isEqualTo(saved.id());
         assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com"))).get()
             .extracting(Member::id)
@@ -92,7 +91,8 @@ class MemberRepositoryTest {
         assertThat(updated.gender()).isEqualTo(Gender.MALE);
         assertThat(updated.ageRange()).isEqualTo(AgeRange.SIXTIES_OR_OLDER);
         assertThat(updated.skinType()).isEqualTo(MemberSkinType.UNKNOWN);
-        assertThat(repository.findById(saved.id())).get().extracting(Member::isProfileCompleted).isEqualTo(true);
+        assertThat(repository.findById(saved.id())).get().extracting(Member::skinType)
+            .isEqualTo(MemberSkinType.UNKNOWN);
     }
 
     @Test

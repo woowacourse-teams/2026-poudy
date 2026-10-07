@@ -1,5 +1,7 @@
 package com.poudy.security.session;
 
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.SignInStatus;
 import com.poudy.security.domain.SocialSignInResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,9 +25,10 @@ public class LoginSession {
 
     private static final String EXPIRES_AT = LoginSession.class.getName() + ".expiresAt";
     private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
+    private static final String SIGNUP_ACCOUNT = LoginSession.class.getName() + ".signupAccount";
     private static final String RETURN_ORIGIN = LoginSession.class.getName() + ".returnOrigin";
     private static final String RETURN_ORIGIN_STATE = LoginSession.class.getName() + ".returnOriginState";
-    private static final Duration WITHDRAWN_HOLD_TIMEOUT = Duration.ofMinutes(10);
+    private static final Duration HOLD_TIMEOUT = Duration.ofMinutes(10);
 
     private final Duration idleTimeout;
     private final Duration absoluteTimeout;
@@ -53,12 +56,17 @@ public class LoginSession {
         this.securityContextRepository = securityContextRepository;
     }
 
-    public void applySignInResult(SocialSignInResult result, HttpServletRequest request, HttpServletResponse response) {
+    public SignInStatus applySignInResult(
+        SocialSignInResult result,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
         switch (result.status()) {
             case SIGNED_IN -> signIn(result.memberId(), request, response);
             case WITHDRAWN -> holdWithdrawnMember(result.memberId(), request, response);
             case RESTORE_REQUESTED -> signOut(request, response);
         }
+        return result.status();
     }
 
     public void signIn(long memberId, HttpServletRequest request, HttpServletResponse response) {
@@ -69,7 +77,9 @@ public class LoginSession {
             request,
             response
         );
-        request.getSession().removeAttribute(WITHDRAWN_MEMBER_ID);
+        HttpSession session = request.getSession();
+        session.removeAttribute(WITHDRAWN_MEMBER_ID);
+        session.removeAttribute(SIGNUP_ACCOUNT);
     }
 
     public void signInAdmin(String username, HttpServletRequest request, HttpServletResponse response) {
@@ -84,19 +94,20 @@ public class LoginSession {
     }
 
     public void holdWithdrawnMember(long memberId, HttpServletRequest request, HttpServletResponse response) {
-        signOut(request, response);
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(Math.toIntExact(WITHDRAWN_HOLD_TIMEOUT.toSeconds()));
-        session.setAttribute(WITHDRAWN_MEMBER_ID, memberId);
+        hold(WITHDRAWN_MEMBER_ID, memberId, request, response);
     }
 
     public Optional<Long> releaseWithdrawnMember(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || !(session.getAttribute(WITHDRAWN_MEMBER_ID) instanceof Long memberId)) {
-            return Optional.empty();
-        }
-        session.removeAttribute(WITHDRAWN_MEMBER_ID);
-        return Optional.of(memberId);
+        return release(WITHDRAWN_MEMBER_ID, Long.class, request);
+    }
+
+    public SignInStatus holdSignup(OAuthAccount account, HttpServletRequest request, HttpServletResponse response) {
+        hold(SIGNUP_ACCOUNT, account, request, response);
+        return SignInStatus.SIGNUP_REQUIRED;
+    }
+
+    public Optional<OAuthAccount> releaseSignup(HttpServletRequest request) {
+        return release(SIGNUP_ACCOUNT, OAuthAccount.class, request);
     }
 
     public void rememberReturnOrigin(String origin, String state, HttpServletRequest request) {
@@ -137,6 +148,23 @@ public class LoginSession {
         if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt && !clock.instant().isBefore(expiresAt)) {
             session.invalidate();
         }
+    }
+
+    private void hold(String name, Object value, HttpServletRequest request, HttpServletResponse response) {
+        signOut(request, response);
+        HttpSession session = request.getSession();
+        session.setMaxInactiveInterval(Math.toIntExact(HOLD_TIMEOUT.toSeconds()));
+        session.setAttribute(name, value);
+    }
+
+    private <T> Optional<T> release(String name, Class<T> type, HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || !type.isInstance(session.getAttribute(name))) {
+            return Optional.empty();
+        }
+        T value = type.cast(session.getAttribute(name));
+        session.removeAttribute(name);
+        return Optional.of(value);
     }
 
     private void saveAuthentication(

@@ -43,7 +43,7 @@ export type AdminLoginRequest = {
   password: string;
 }
 export type MemberProfileRequest = { gender: ("FEMALE" | "MALE"), ageRange: ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER"), skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") }
-export type MemberResponse = { id: number, provider: ("KAKAO" | "GOOGLE"), email: string, gender: (("FEMALE" | "MALE") | null), ageRange: (("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER") | null), skinType: (("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") | null), profileCompleted: boolean }
+export type MemberResponse = { id: number, provider: ("KAKAO" | "GOOGLE"), email: string, gender: (("FEMALE" | "MALE") | null), ageRange: (("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER") | null), skinType: (("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") | null) }
 export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
 export type AdminFeedbackStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
@@ -618,7 +618,7 @@ export type AdminRestoreRequestResponse = { memberId: number, provider: ("KAKAO"
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminSessionResponse = { username: string }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -791,6 +791,21 @@ export type post_Submit_1 = {
 export type post_RequestRestore = {
       method: "POST",
       path: "/api/auth/withdrawn-member/restore-request",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 처음 소셜 로그인한 사람이 만 14세 이상임을 확인하고 가입한다. 가입하면 바로 로그인한다.
+ */
+export type post_SignUp = {
+      method: "POST",
+      path: "/api/auth/signup",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
@@ -1107,7 +1122,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 로그인한 회원 정보와 초기 정보 입력 완료 여부를 조회한다.
+ * 로그인한 회원 정보와 초기 정보를 조회한다.
  */
 export type get_FindMe = {
       method: "GET",
@@ -1571,6 +1586,7 @@ post: {
 "/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
 "/api/auth/withdrawn-member/restore-request": Endpoints.post_RequestRestore,
+"/api/auth/signup": Endpoints.post_SignUp,
 "/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
 "/api/admin/login": Endpoints.post_Login,
 "/api/members/logout": Endpoints.post_Logout,

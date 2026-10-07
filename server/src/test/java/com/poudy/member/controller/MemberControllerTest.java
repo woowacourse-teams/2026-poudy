@@ -58,7 +58,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("로그인한 회원 정보와 초기 정보 입력 완료 여부를 캐시 없이 돌려준다")
+    @DisplayName("로그인한 회원 정보를 캐시 없이 돌려준다")
     void findsSignedInMember() throws Exception {
         Member member = memberRepository
             .save(MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true)));
@@ -71,12 +71,11 @@ class MemberControllerTest {
             .andExpect(jsonPath("$.email").value("member@example.com"))
             .andExpect(jsonPath("$.gender").isEmpty())
             .andExpect(jsonPath("$.ageRange").isEmpty())
-            .andExpect(jsonPath("$.skinType").isEmpty())
-            .andExpect(jsonPath("$.profileCompleted").value(false));
+            .andExpect(jsonPath("$.skinType").isEmpty());
     }
 
     @Test
-    @DisplayName("초기 정보를 저장하면 입력을 마친 회원 정보를 돌려준다")
+    @DisplayName("초기 정보를 저장하면 바뀐 회원 정보를 돌려준다")
     void updatesProfile() throws Exception {
         Member member = memberRepository
             .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));
@@ -93,8 +92,7 @@ class MemberControllerTest {
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
             .andExpect(jsonPath("$.gender").value("FEMALE"))
             .andExpect(jsonPath("$.ageRange").value("TWENTIES"))
-            .andExpect(jsonPath("$.skinType").value("COMBINATION"))
-            .andExpect(jsonPath("$.profileCompleted").value(true));
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"));
     }
 
     @ParameterizedTest

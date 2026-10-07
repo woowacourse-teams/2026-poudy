@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,7 +71,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("로그인에 성공하면 회원 ID만 세션에 남기고 프론트로 보낸다")
     void signsInMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialSignIn.signIn(any())).willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.SIGNED_IN)));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -83,6 +84,28 @@ class OAuthLoginHandlersTest {
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
         assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(7L));
         assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofDays(1).toSeconds());
+    }
+
+    @Test
+    @DisplayName("처음 로그인한 계정이면 로그인시키지 않고 계정만 세션에 둔 채 가입 확인으로 보낸다")
+    void holdsSignupAccount() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(
+            HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+            new SecurityContextImpl(kakaoToken())
+        );
+        request.setSession(session);
+        given(socialSignIn.signIn(any())).willReturn(Optional.empty());
+
+        successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
+
+        assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?status=SIGNUP_REQUIRED");
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(loginSession.releaseSignup(request)).get()
+            .extracting(OAuthAccount::providerId)
+            .isEqualTo("4321");
     }
 
     @Test
@@ -146,7 +169,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("프론트 오리진이 없으면 같은 오리진의 콜백으로 보낸다")
     void redirectsToSameOriginWithoutClientOrigin() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialSignIn.signIn(any())).willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.SIGNED_IN)));
 
         successHandlerFor(List.of()).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -173,7 +196,7 @@ class OAuthLoginHandlersTest {
     @Test
     @DisplayName("탈퇴한 계정이면 로그인시키지 않고 탈퇴 회원만 세션에 둔 채 탈퇴 안내로 보낸다")
     void holdsWithdrawnMember() throws Exception {
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
+        given(socialSignIn.signIn(any())).willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.WITHDRAWN)));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -192,7 +215,8 @@ class OAuthLoginHandlersTest {
             new SecurityContextImpl(kakaoToken())
         );
         request.setSession(session);
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.RESTORE_REQUESTED));
+        given(socialSignIn.signIn(any()))
+            .willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.RESTORE_REQUESTED)));
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
@@ -205,7 +229,7 @@ class OAuthLoginHandlersTest {
     @DisplayName("preview에서 시작한 로그인에 성공하면 그 preview의 콜백으로 보낸다")
     void returnsToPreviewOnSuccess() throws Exception {
         rememberPreview();
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.SIGNED_IN));
+        given(socialSignIn.signIn(any())).willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.SIGNED_IN)));
         successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
         assertThat(response.getRedirectedUrl())
             .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=SIGNED_IN");
@@ -241,7 +265,7 @@ class OAuthLoginHandlersTest {
     @DisplayName("탈퇴 계정으로 세션을 바꿔도 preview의 콜백으로 보낸다")
     void returnsWithdrawnMemberToPreviewAfterReplacingSession() throws Exception {
         rememberPreview();
-        given(socialSignIn.signIn(any())).willReturn(new SocialSignInResult(7L, SignInStatus.WITHDRAWN));
+        given(socialSignIn.signIn(any())).willReturn(Optional.of(new SocialSignInResult(7L, SignInStatus.WITHDRAWN)));
         successHandlerFor(previewOrigins()).onAuthenticationSuccess(request, response, kakaoToken());
         assertThat(response.getRedirectedUrl())
             .isEqualTo("https://pr-111.preview.poudy.site/login/callback?status=WITHDRAWN");

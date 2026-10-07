@@ -34,7 +34,7 @@ public class MemberController {
         this.loginSession = loginSession;
     }
 
-    @Operation(summary = "내 정보 조회", description = "로그인한 회원 정보와 초기 정보 입력 완료 여부를 조회한다.")
+    @Operation(summary = "내 정보 조회", description = "로그인한 회원 정보와 초기 정보를 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/me")
     public ResponseEntity<MemberResponse> findMe(

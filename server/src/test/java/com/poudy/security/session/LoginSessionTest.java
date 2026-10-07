@@ -2,6 +2,8 @@ package com.poudy.security.session;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.OAuthProvider;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -27,6 +29,7 @@ class LoginSessionTest {
     private static final long MEMBER_ID = 7L;
     private static final String PREVIEW = "https://pr-111.preview.poudy.site";
     private static final String STATE = "state-1";
+    private static final OAuthAccount ACCOUNT = new OAuthAccount(OAuthProvider.KAKAO, "4321", "new@example.com", true);
 
     @AfterEach
     void clearContext() {
@@ -105,6 +108,33 @@ class LoginSessionTest {
             .isNull();
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).contains(MEMBER_ID);
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("가입할 계정을 맡겨 두면 로그인하지 않은 새 세션에 10분 동안 두고, 한 번 꺼내면 다시 꺼낼 수 없다")
+    void holdsSignupAccountOnce() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession signedInSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, request, new MockHttpServletResponse());
+
+        assertThat(signedInSession.isInvalid()).isTrue();
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofMinutes(10).toSeconds());
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).contains(ACCOUNT);
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("가입할 계정을 맡겨 둔 세션에서 기존 회원으로 로그인하면 맡겨 둔 계정을 버린다")
+    void dropsSignupAccountOnSignIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, request, new MockHttpServletResponse());
+
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());
+
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).isEmpty();
     }
 
     @Test
