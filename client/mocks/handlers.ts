@@ -19,6 +19,7 @@ import {
   productCategoryIds,
   productSkinTypes,
   productDetails,
+  productPartSets,
 } from "./fixtures";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -263,6 +264,28 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   },
   updatedAt: "2026-08-01T00:00:00+09:00",
 });
+
+/**
+ * 구성품이 여럿인 제품은 `partId` 로 고른 구성품을 담아 돌려준다. 없으면 첫 구성품을 고른다.
+ * 서버처럼 그 제품에 없는 구성품을 고르면 404 로 답한다.
+ */
+const partResponse = (detail: ProductDetailResponse, partId: string | null) => {
+  const parts = productPartSets.get(detail.id);
+  if (!parts) return HttpResponse.json(detail);
+
+  const selected = partId === null ? parts[0] : parts.find((part) => part.id === Number(partId));
+  if (!selected) return notFound("제품 구성품을 찾을 수 없습니다.", "PRODUCT_PART_NOT_FOUND");
+
+  return HttpResponse.json({
+    ...detail,
+    productParts: parts.map((part) => ({
+      id: part.id,
+      name: part.name,
+      cautionCount: part.excludeGroups.filter((group) => group.contains).length,
+    })),
+    selectedPart: selected,
+  });
+};
 
 /**
  * 조건에 걸린 제품이 실제로 속한 카테고리만 추린다.
@@ -560,10 +583,11 @@ export const handlers = [
     return HttpResponse.json(paginate(matched, url));
   }),
 
-  http.get("*/api/products/:productId", ({ params }) => {
+  http.get("*/api/products/:productId", ({ params, request }) => {
     const id = Number(params.productId);
+    const partId = new URL(request.url).searchParams.get("partId");
     const detail = productDetails.find((product) => product.id === id);
-    if (detail) return HttpResponse.json(detail);
+    if (detail) return partResponse(detail, partId);
 
     /*
      * 손으로 적은 상세는 몇 개뿐이라 나머지는 목록에 있는 정보로 상세를 세운다.
@@ -573,7 +597,7 @@ export const handlers = [
     const listed = allProducts.find((product) => product.id === id);
     if (!listed) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
-    return HttpResponse.json(detailOf(listed));
+    return partResponse(detailOf(listed), partId);
   }),
 
   http.get("*/api/storage", ({ request }) => {

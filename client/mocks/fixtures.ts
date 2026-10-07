@@ -270,16 +270,25 @@ const EXCLUDE_GROUP_NAMES = [
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
   EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
 
+/**
+ * 세라마이드 성분군에 드는 성분. 1025 독도 토너가 다섯 가지를 모두 담아 성분군 칩과 시트를 확인할 수 있다.
+ * ID 는 파이프라인 데이터의 같은 성분과 맞춘다. 로컬에서 파이프라인을 채워도 성분이 둘로 갈라지지 않는다.
+ */
+const ceramides = [
+  [7130, "세라마이드엔피", "Ceramide NP"],
+  [8323, "세라마이드에이피", "Ceramide AP"],
+  [8322, "세라마이드엔에스", "Ceramide NS"],
+  [9695, "세라마이드에이에스", "Ceramide AS"],
+  [8324, "세라마이드이오피", "Ceramide EOP"],
+] as const;
+
 export const ingredientGroups: IngredientGroupResponse[] = [
   {
     code: "CERAMIDES",
     name: "세라마이드",
     englishName: "Ceramides",
-    description: "피부 장벽을 이루는 지질 성분입니다.",
-    ingredients: [
-      { id: 2, koreanName: "부틸렌글라이콜", englishName: "Butylene Glycol" },
-      { id: 3, koreanName: "글리세린", englishName: "Glycerin" },
-    ],
+    description: "세라마이드는 피부 장벽을 이루는 지질 성분이에요. 종류별로 쓰임이 달라 성분명을 확인하는 게 좋아요.",
+    ingredients: ceramides.map(([id, koreanName, englishName]) => ({ id, koreanName, englishName })),
   },
 ];
 
@@ -331,6 +340,7 @@ const singleItems = (ingredients: ReadonlyArray<readonly [number, string]>) =>
   ingredients.map(([id, koreanName]) => ({ ingredientGroup: null, ingredients: [{ id, koreanName }] }));
 
 const 보습 = { id: "1", code: "HYDRATION_RELATED", name: "보습" };
+const 장벽 = { id: "4", code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽 관련" };
 const 진정 = { id: "2", code: "SOOTHING_RELATED", name: "진정" };
 const 각질케어 = { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어" };
 
@@ -419,6 +429,20 @@ export const productDetails: ProductDetailResponse[] = [
           ingredientIds: [8],
           items: singleItems([[8, "프로테아제"]]),
         },
+        {
+          id: "4",
+          code: "BARRIER_SUPPORT_RELATED",
+          name: "피부 장벽 관련",
+          ingredientIds: [6, ...ceramides.map(([id]) => id)],
+          // 같은 성분군 성분은 서버가 항목 하나로 묶어 보낸다. 화면은 이것을 `세라마이드 5종` 칩 하나로 그린다.
+          items: [
+            ...singleItems([[6, "판테놀"]]),
+            {
+              ingredientGroup: { code: "CERAMIDES", name: "세라마이드" },
+              ingredients: ceramides.map(([id, koreanName]) => ({ id, koreanName })),
+            },
+          ],
+        },
       ],
       ingredients: [
         {
@@ -489,6 +513,13 @@ export const productDetails: ProductDetailResponse[] = [
           formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
           skinEffects: [각질케어],
         },
+        ...ceramides.map(([id, koreanName, englishName]) => ({
+          id,
+          koreanName,
+          englishName,
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [장벽],
+        })),
       ],
       excludeGroups: excludeGroupsOf([
         "FRAGRANCE_ALLERGENS",
@@ -504,11 +535,51 @@ export const productDetails: ProductDetailResponse[] = [
   untaggedProductDetail,
 ];
 
+/** 주의 기준 가운데 `contained` 만 들어 있는 구성품을 만든다. 성분은 1025 독도 토너의 것을 빌려 쓴다. */
+const partOf = (id: number, name: string, contained: readonly string[]): ProductPartResponse => ({
+  ...productDetails[0]!.selectedPart!,
+  id,
+  name,
+  excludeGroups: excludeGroupsOf(EXCLUDE_GROUP_NAMES.map(([code]) => code).filter((code) => !contained.includes(code))),
+});
+
+/**
+ * 구성품이 여럿인 제품. 목록에 있는 제품에 구성품을 덧입혀 탭을 확인한다.
+ *
+ * - 5 아토베리어365 크림: 구성품 둘. 탭 내용이 바에 들어가 폭을 똑같이 나눈다(S39b).
+ * - 7 나이트 리페어 세럼: 구성품 넷. 탭 내용이 바를 넘쳐 가로로 민다(S39c).
+ */
+export const productPartSets: ReadonlyMap<number, readonly ProductPartResponse[]> = new Map([
+  [5, [partOf(501, "아쿠아 세럼", []), partOf(502, "인텐스 크림", ["FRAGRANCE_ALLERGENS"])]],
+  [
+    7,
+    [
+      partOf(701, "염모제 1제", ["FRAGRANCE_ALLERGENS", "HARSH_PRESERVATIVES"]),
+      partOf(702, "산화제 2제", ["HARSH_PRESERVATIVES"]),
+      partOf(703, "컬러 케어 샴푸", ["SULFATES"]),
+      partOf(704, "헤어 리페어 마스크", ["CYCLIC_SILICONES"]),
+    ],
+  ],
+]);
+
 /** S06 화면의 출처 문구. 성분마다 같은 자료를 본다. */
 const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
 const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
 
 export const ingredientDetails: IngredientDetailResponse[] = [
+  ...ceramides.map(([id, koreanName, englishName]) => ({
+    id,
+    koreanName,
+    englishName,
+    description: "피부 장벽을 이루는 지질 성분으로, 각질층 사이를 채워 수분이 빠져나가지 않게 돕습니다.",
+    formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+    skinEffects: [장벽],
+    groupCodes: [],
+    productCount: 214,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  })),
   {
     id: 1,
     koreanName: "정제수",
