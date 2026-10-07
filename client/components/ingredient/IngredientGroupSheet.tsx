@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EffectTag } from "./EffectTag";
 import { RoleDescription, SheetDetailLink, SheetHead } from "./SheetParts";
 
+import { Badge } from "@/components/ui/Badge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
 import { fetchIngredientGroup } from "@/lib/api/products";
@@ -54,11 +55,7 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
     <>
       <SheetHead
         title={name}
-        badge={
-          <span className="flex h-[26px] shrink-0 items-center rounded-[13px] bg-[#EFF1F5] px-3 text-[12px] font-semibold text-[#566273]">
-            {group.ingredients.length}종
-          </span>
-        }
+        badge={<Badge variant="count">{group.ingredients.length}종</Badge>}
         englishName={detail.status === "loaded" ? detail.value.englishName : undefined}
         tags={
           group.effects.length > 0 ? (

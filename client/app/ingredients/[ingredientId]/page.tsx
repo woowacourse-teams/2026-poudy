@@ -10,6 +10,7 @@ import { EffectTag } from "@/components/ingredient/EffectTag";
 import { IngredientReferences } from "@/components/ingredient/IngredientReferences";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
@@ -103,11 +104,8 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           {ingredient.formulationRoles.length > 0 ? (
             <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
               {ingredient.formulationRoles.map((role) => (
-                <li
-                  key={role.id}
-                  className="flex h-7 items-center rounded-[14px] bg-[#EFF1F5] px-3 text-[12px] font-medium text-[#424E5F]"
-                >
-                  {role.name}
+                <li key={role.id}>
+                  <Badge variant="roleLarge">{role.name}</Badge>
                 </li>
               ))}
             </ul>

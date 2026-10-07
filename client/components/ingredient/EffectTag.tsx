@@ -1,5 +1,7 @@
 import type { SkinEffectResponse } from "@poudy/api/api.zod";
 
+import { Badge } from "@/components/ui/Badge";
+
 /**
  * 피부 작용(BIOLOGICAL_EFFECT) 태그. 문구와 아이콘은 design/v2.pen 의
  * `CS · 피부 효과(BIOLOGICAL_EFFECT) 아이콘 정의` 를 따른다.
@@ -102,16 +104,18 @@ export function EffectIcon({
   );
 }
 
-/** 24px 높이의 작용 태그. 성분 행 끝과 성분 설명 머리에 붙는다. */
+/** 작용 태그. 성분 행 끝과 성분 설명 머리에 붙는다. */
 export function EffectTag({ effect }: { readonly effect: Pick<SkinEffectResponse, "code" | "name"> }) {
   return (
-    <span className="flex h-6 shrink-0 items-center gap-1 rounded-xl bg-[#EFF1F5] px-2">
-      {/*
-        아이콘은 디자인(13px)보다 1px 작은 12px 로 둔다. 24px 태그에서 13px 은 가운데 자리가
+    <Badge
+      variant="effect"
+      /*
+        아이콘은 디자인(13px)보다 1px 작은 12px 로 둔다. 24px 배지에서 13px 은 가운데 자리가
         5.5px 라는 소수가 되어, 브라우저가 픽셀에 맞추며 아이콘을 0.5px 아래로 민다.
-      */}
-      <EffectIcon code={effect.code} size={12} className="shrink-0 text-[#566273]" />
-      <span className="text-[11px] leading-none font-bold text-[#424E5F]">{effectLabel(effect)}</span>
-    </span>
+      */
+      icon={<EffectIcon code={effect.code} size={12} className="shrink-0 text-[#566273]" />}
+    >
+      {effectLabel(effect)}
+    </Badge>
   );
 }

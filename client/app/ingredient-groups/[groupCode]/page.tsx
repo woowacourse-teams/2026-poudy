@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
+import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
@@ -61,9 +62,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
         <section className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <h2 className="min-w-0 text-[20px] font-bold text-[#182132]">{name}</h2>
-            <span className="flex h-[26px] shrink-0 items-center rounded-[13px] bg-[#EFF1F5] px-3 text-[12px] font-semibold text-[#566273]">
-              {group.ingredients.length}종
-            </span>
+            <Badge variant="count">{group.ingredients.length}종</Badge>
           </div>
           {group.englishName ? <p className="text-[13px] text-[#6A7588]">{group.englishName}</p> : null}
         </section>

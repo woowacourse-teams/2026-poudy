@@ -5,6 +5,7 @@ import type { ProductIngredientResponse } from "@poudy/api/api.zod";
 import { EffectTag } from "./EffectTag";
 import { RoleDescription, SheetDetailLink, SheetHead } from "./SheetParts";
 
+import { Badge } from "@/components/ui/Badge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
@@ -66,11 +67,8 @@ function Content({
             {ingredient.formulationRoles.length > 0 ? (
               <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
                 {ingredient.formulationRoles.map((role) => (
-                  <li
-                    key={role.id}
-                    className="flex h-[26px] items-center rounded-[13px] bg-[#EFF1F5] px-3 text-[11px] font-semibold text-[#424E5F]"
-                  >
-                    {role.name}
+                  <li key={role.id}>
+                    <Badge variant="role">{role.name}</Badge>
                   </li>
                 ))}
               </ul>
