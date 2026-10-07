@@ -101,7 +101,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     if (error) return;
 
     findMe()
-      .then((member) => router.replace(member.profileCompleted ? "/" : "/onboarding"))
+      .then(() => router.replace("/"))
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);
 

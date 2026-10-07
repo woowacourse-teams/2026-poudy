@@ -184,7 +184,7 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
-  it("초기 정보 저장은 입력을 마친 MemberResponse 를 지킨다", async () => {
+  it("초기 정보 저장은 바뀐 MemberResponse 를 지킨다", async () => {
     const { status, body } = await patch("/members/me/profile", {
       gender: "FEMALE",
       ageRange: "TWENTIES",
@@ -193,11 +193,11 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(200);
     expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
-    expect(body).toMatchObject({ profileCompleted: true, skinType: "UNKNOWN" });
+    expect(body).toMatchObject({ skinType: "UNKNOWN" });
   });
 
-  it("초기 정보가 빠지면 ProblemDetail 로 거절한다", async () => {
-    const { status, body } = await patch("/members/me/profile", { gender: "FEMALE" });
+  it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
+    const { status, body } = await patch("/members/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
 
     expect(status).toBe(400);
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });

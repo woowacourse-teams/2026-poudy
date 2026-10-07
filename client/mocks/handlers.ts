@@ -486,7 +486,6 @@ const mockSession: { member: MemberResponse } = {
     gender: null,
     ageRange: null,
     skinType: null,
-    profileCompleted: false,
   },
 };
 
@@ -529,7 +528,7 @@ export const handlers = [
     const profile = MemberProfileRequest.safeParse(await request.json());
     if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
 
-    mockSession.member = { ...mockSession.member, ...profile.data, profileCompleted: true };
+    mockSession.member = { ...mockSession.member, ...profile.data };
     return HttpResponse.json(mockSession.member);
   }),
 
