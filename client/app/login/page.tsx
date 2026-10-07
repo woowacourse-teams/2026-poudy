@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 
+import { SignupSheet } from "@/components/login/SignupSheet";
 import { SocialLoginLink } from "@/components/login/SocialLoginLink";
 
 export const metadata: Metadata = {
@@ -90,7 +92,7 @@ export default function LoginPage() {
           로그인 없이 둘러보기
         </Link>
         <p className="mt-1 text-center text-[11px] leading-relaxed text-text-secondary sm:text-[12px]">
-          시작하면 만 14세 이상임을 확인하고,{" "}
+          시작하면{" "}
           <Link
             href="/terms"
             className="rounded-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -107,6 +109,10 @@ export default function LoginPage() {
           에 동의하게 돼요.
         </p>
       </div>
+
+      <Suspense fallback={null}>
+        <SignupSheet />
+      </Suspense>
     </main>
   );
 }

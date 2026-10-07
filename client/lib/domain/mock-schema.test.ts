@@ -228,6 +228,13 @@ describe("목 응답과 스키마", () => {
     expect(body).toBeUndefined();
   });
 
+  it("회원가입은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/auth/signup", "");
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
+  });
+
   it("로그아웃은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/members/logout", "");
 
@@ -257,6 +264,7 @@ describe("목 응답과 스키마", () => {
       "/members/me/saved-products/:id (PUT)",
       "/members/me/saved-products/:id (DELETE)",
       "/auth/withdrawn-member/restore-request",
+      "/auth/signup",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);
