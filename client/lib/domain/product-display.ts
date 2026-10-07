@@ -34,15 +34,6 @@ export const levelLabel = (level: number): string => pick(level in LEVEL_LABELS,
 export const dropletFills = (level: number, total = 3): readonly boolean[] =>
   Array.from({ length: total }, (_, index) => index < level);
 
-/** 제품 상세 `성분 정보` 의 한 줄 요약. 검색 설명문도 같은 문장을 쓴다. */
-export const ingredientSummary = (ingredientCount: number, effectNames: readonly string[]): string => {
-  const effects = [...new Set(effectNames)].slice(0, 2).map((name) => `${name} 성분`);
-
-  if (effects.length === 0) return `${ingredientCount}개 전성분으로 이루어진 제품이에요.`;
-  if (effects.length === 1) return `${ingredientCount}개 전성분을 기준으로, ${effects[0]}을 담은 구성입니다.`;
-  return `${ingredientCount}개 전성분을 기준으로, ${effects.join("과 ")}을 함께 담은 구성입니다.`;
-};
-
 /** 검색 결과에 쓰도록 전성분 수와 대표 분류를 간결하게 담은 제품별 설명. */
 export const productIngredientDescription = ({
   brandName,

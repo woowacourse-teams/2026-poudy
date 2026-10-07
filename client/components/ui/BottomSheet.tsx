@@ -126,6 +126,34 @@ function Header({ title, description }: { readonly title: string; readonly descr
 }
 
 /**
+ * 제목 줄을 쓰는 쪽이 꾸미는 머리. `Header` 처럼 잡아 끌면 닫히고, 제목은 `Title` 로 단다.
+ * 성분 설명처럼 이름 아래에 영문명과 태그가 붙는 시트가 쓴다.
+ */
+function CustomHeader({ children }: { readonly children: React.ReactNode }) {
+  const { handleProps } = useSheet("CustomHeader");
+
+  return (
+    <div {...handleProps} className="shrink-0 cursor-grab touch-none active:cursor-grabbing">
+      <div className="flex h-5 items-center justify-center">
+        <span className="h-1 w-9 rounded-sm bg-[#B0BAC7]" aria-hidden="true" />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** 시트의 이름이 되는 제목. 시트가 이 글로 불린다. */
+function Title({ children, className }: { readonly children: React.ReactNode; readonly className?: string }) {
+  const { titleId } = useSheet("Title");
+
+  return (
+    <h2 id={titleId} className={className}>
+      {children}
+    </h2>
+  );
+}
+
+/**
  * 시트의 몸통. 길면 스스로 스크롤한다.
  *
  * 내용이 넘치면 위아래를 흐려 더 있다는 것을 알린다. 층을 겹치면 그 아래를 누를 수 없어
@@ -187,6 +215,8 @@ function SubmitButton({ children, onClick, disabled }: SubmitButtonProps) {
 }
 
 BottomSheet.Header = Header;
+BottomSheet.CustomHeader = CustomHeader;
+BottomSheet.Title = Title;
 BottomSheet.Body = Body;
 BottomSheet.Footer = Footer;
 BottomSheet.ResetButton = ResetButton;

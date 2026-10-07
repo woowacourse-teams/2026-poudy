@@ -32,12 +32,22 @@ describe("전체 성분표", () => {
   });
 
   it("이름이 길어도 태그와 화살표를 줄 안에 남긴다", () => {
-    render(<IngredientList ingredients={[ingredient(1, LONG_NAME)]} />);
+    const tagged = {
+      ...ingredient(1, LONG_NAME),
+      skinEffects: [{ id: "HYDRATION_RELATED", code: "HYDRATION_RELATED", name: "피부 수분 관련" }],
+    };
+    render(<IngredientList ingredients={[tagged]} />);
 
     const row = within(rowOf(LONG_NAME));
 
-    expect(row.getByText("일반")).toBeInTheDocument();
-    expect(rowOf(LONG_NAME).querySelector("svg")).toBeInTheDocument();
+    expect(row.getByText("수분")).toBeInTheDocument();
+    expect(rowOf(LONG_NAME).querySelectorAll("svg")).toHaveLength(2);
+  });
+
+  it("피부 작용이 없는 성분에는 태그를 두지 않는다", () => {
+    render(<IngredientList ingredients={[ingredient(1, "정제수")]} />);
+
+    expect(rowOf("정제수").querySelectorAll("svg")).toHaveLength(1);
   });
 
   it("이름이 여러 줄이 되면 줄 높이가 따라 늘어난다", () => {

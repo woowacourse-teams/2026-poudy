@@ -64,7 +64,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
         onClick={handleClick}
         aria-pressed={saved}
         aria-label={label}
-        className={`relative flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-bold transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
+        className={`relative flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] text-[14px] font-bold transition-transform duration-press ease-out motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
           saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
         }`}
       >
@@ -72,6 +72,12 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
           `제품 저장` 과 `저장됨` 은 길이가 달라 그대로 두면 글자와 아이콘이 좌우로 밀린다.
           긴 쪽을 자리로 잡아 두고 그 안에서 글자만 바꿔 위치를 고정한다.
         */}
+        <span className="inline-grid items-center leading-none">
+          <span className="invisible col-start-1 row-start-1" aria-hidden="true">
+            제품 저장
+          </span>
+          <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
+        </span>
         <span className="relative inline-flex items-center justify-center leading-none">
           {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
           <span
@@ -79,15 +85,9 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
             data-popped={popping}
             onTransitionEnd={finishPop}
           >
-            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={18} strokeWidth={2.5} />
+            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={16} strokeWidth={2.5} />
           </span>
           <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
-        </span>
-        <span className="inline-grid items-center leading-none">
-          <span className="invisible col-start-1 row-start-1" aria-hidden="true">
-            제품 저장
-          </span>
-          <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
         </span>
       </button>
     );
