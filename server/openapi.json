@@ -1073,7 +1073,7 @@
           "회원"
         ],
         "summary": "내 초기 정보 저장",
-        "description": "성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.",
+        "description": "성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다. 나중에 바꿀 때도 쓴다.",
         "operationId": "updateMyProfile",
         "requestBody": {
           "content": {
@@ -4371,7 +4371,10 @@
         "type": "object",
         "properties": {
           "gender": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "FEMALE",
               "MALE"
@@ -4379,7 +4382,10 @@
             "example": "FEMALE"
           },
           "ageRange": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "TEENS",
               "TWENTIES",
@@ -4391,7 +4397,10 @@
             "example": "TWENTIES"
           },
           "skinType": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "DRY",
               "OILY",

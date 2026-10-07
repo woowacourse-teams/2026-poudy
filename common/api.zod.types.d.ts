@@ -42,7 +42,7 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
-export type MemberProfileRequest = { gender: ("FEMALE" | "MALE"), ageRange: ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER"), skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") }
+export type MemberProfileRequest = { gender: (("FEMALE" | "MALE") | null), ageRange: (("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER") | null), skinType: (("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") | null) }
 export type MemberResponse = { id: number, provider: ("KAKAO" | "GOOGLE"), email: string, gender: (("FEMALE" | "MALE") | null), ageRange: (("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER") | null), skinType: (("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN") | null) }
 export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
@@ -857,7 +857,7 @@ export type post_Login = {
 
     }
 /**
- * 성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.
+ * 성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다. 나중에 바꿀 때도 쓴다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",

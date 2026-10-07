@@ -45,7 +45,7 @@ public class MemberController {
             .body(MemberResponse.from(memberService.findById(loginMember.id())));
     }
 
-    @Operation(summary = "내 초기 정보 저장", description = "성별, 나이대, 피부 타입을 한 번에 저장한다. 나중에 바꿀 때도 쓴다.")
+    @Operation(summary = "내 초기 정보 저장", description = "성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다. 나중에 바꿀 때도 쓴다.")
     @ApiResponse(responseCode = "200", description = "저장 성공")
     @PatchMapping("/me/profile")
     public ResponseEntity<MemberResponse> updateMyProfile(

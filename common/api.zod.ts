@@ -23,7 +23,7 @@ export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
 export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
 
 export type MemberProfileRequest = __TypedOpenapi.Schemas.MemberProfileRequest;
-export const MemberProfileRequest = z.object({ gender: z.enum(["FEMALE", "MALE"]), ageRange: z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIFTIES", "SIXTIES_OR_OLDER"]), skinType: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION", "UNKNOWN"]) });
+export const MemberProfileRequest = z.object({ gender: z.enum(["FEMALE", "MALE"]).nullable(), ageRange: z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIFTIES", "SIXTIES_OR_OLDER"]).nullable(), skinType: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION", "UNKNOWN"]).nullable() });
 
 export type MemberResponse = __TypedOpenapi.Schemas.MemberResponse;
 export const MemberResponse = z.object({ id: z.number().int(), provider: z.enum(["KAKAO", "GOOGLE"]), email: z.string(), gender: z.enum(["FEMALE", "MALE"]).nullable(), ageRange: z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIFTIES", "SIXTIES_OR_OLDER"]).nullable(), skinType: z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION", "UNKNOWN"]).nullable() });

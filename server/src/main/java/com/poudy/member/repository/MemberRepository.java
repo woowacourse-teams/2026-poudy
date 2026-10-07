@@ -11,6 +11,7 @@ import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -116,9 +117,9 @@ public class MemberRepository {
                 returning\s""" + COLUMNS,
             new MapSqlParameterSource()
                 .addValue("id", id)
-                .addValue("gender", gender.name())
-                .addValue("ageRange", ageRange.name())
-                .addValue("skinType", skinType.name()),
+                .addValue("gender", nameOf(gender), Types.VARCHAR)
+                .addValue("ageRange", nameOf(ageRange), Types.VARCHAR)
+                .addValue("skinType", nameOf(skinType), Types.VARCHAR),
             MEMBER
         ).stream().findFirst();
     }
@@ -199,5 +200,12 @@ public class MemberRepository {
             return null;
         }
         return parse.apply(value);
+    }
+
+    private static String nameOf(Enum<?> value) {
+        if (value == null) {
+            return null;
+        }
+        return value.name();
     }
 }
