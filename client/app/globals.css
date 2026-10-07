@@ -66,8 +66,6 @@
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-data: var(--font-geist-mono), monospace;
-  /* 헤더의 서비스 이름에만 쓴다. 굵기를 조절할 수 있는 글꼴이다. */
-  --font-brand: var(--font-foldit), sans-serif;
   --text-body: 14px;
 
   /* 형태 */
@@ -1276,20 +1274,6 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   .action-card:hover .action-card-arrow {
     transform: none;
   }
-}
-
-/*
- * Foldit 은 글자마다 색이 박힌 글꼴이라 color 로는 칠할 수 없다.
- * 팔레트를 덮어써 로고와 같은 핑크로 맞춘다.
- *
- * 이 글꼴은 접힌 면의 밝은 쪽과 어두운 쪽 두 자리만 쓴다.
- * 로고도 진한 핑크와 연한 핑크로 이뤄져 있어 같은 방식으로 칠한다.
- */
-@font-palette-values --brand-fold {
-  font-family: Foldit;
-  override-colors:
-    0 #de4c77,
-    1 #f9a8c0;
 }
 
 /*

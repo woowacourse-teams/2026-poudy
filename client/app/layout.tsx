@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { foldit, geistMono } from "./fonts";
+import { geistMono } from "./fonts";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
      */
     <html
       lang="ko"
-      className={`${geistMono.variable} ${foldit.variable} h-full antialiased pointer-fine:overscroll-y-none`}
+      className={`${geistMono.variable} h-full antialiased pointer-fine:overscroll-y-none`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col pointer-fine:overscroll-y-none">

@@ -26,7 +26,6 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
 vi.mock("next/font/google", () => ({
-  Foldit: () => ({ variable: "--font-foldit" }),
   Geist_Mono: () => ({ variable: "--font-geist-mono" }),
 }));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));

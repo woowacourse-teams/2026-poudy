@@ -47,29 +47,22 @@ describe("TopBar 뒤로 가기", () => {
 });
 
 describe("TopBar 제목", () => {
-  it("로고가 첫 글자를 대신해도 제목 전체를 Poudy로 읽는다", () => {
-    render(<TopBar title="oudy" variant="root" showLogo />);
+  it("로고를 선택하거나 이미지로 끌 수 없다", () => {
+    const { container } = render(<TopBar title="Poudy" variant="root" showLogo />);
 
-    expect(screen.getByRole("heading", { name: "Poudy" })).toBeInTheDocument();
-  });
-
-  it("로고 영역을 선택하거나 이미지로 끌 수 없다", () => {
-    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
-
-    expect(screen.getByRole("heading", { name: "Poudy" })).toHaveClass("cursor-default", "select-none");
     expect(container.querySelector("img")).toHaveAttribute("draggable", "false");
     expect(container.querySelector("img")).toHaveClass("select-none");
   });
 
   it("첫 화면에 보이는 로고를 즉시 불러온다", () => {
-    const { container } = render(<TopBar title="oudy" variant="root" showLogo />);
+    const { container } = render(<TopBar title="Poudy" variant="root" showLogo />);
 
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
   });
 
   /* 홈은 로고만 두고 이름 글자를 그리지 않는다(디자인 S01). */
   it("로고만 둘 때는 그림이 서비스 이름을 대신 읽는다", () => {
-    const { container } = render(<TopBar title="Poudy" variant="root" showLogo logoOnly />);
+    const { container } = render(<TopBar title="Poudy" variant="root" showLogo />);
 
     expect(container.querySelector("img")).toHaveAttribute("alt", "Poudy");
     // 이름이 두 번 읽히지 않도록 제목은 화면에서만 감춘다. 문서 구조에는 남는다.
@@ -77,7 +70,7 @@ describe("TopBar 제목", () => {
   });
 
   it("로고만 둘 때도 오른쪽 자리를 함께 그린다", () => {
-    render(<TopBar title="Poudy" variant="root" showLogo logoOnly right={<button type="button">검색</button>} />);
+    render(<TopBar title="Poudy" variant="root" showLogo right={<button type="button">검색</button>} />);
 
     expect(screen.getByRole("button", { name: "검색" })).toBeInTheDocument();
   });
