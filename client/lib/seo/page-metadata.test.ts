@@ -28,7 +28,6 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
 vi.mock("next/font/google", () => ({
   Foldit: () => ({ variable: "--font-foldit" }),
   Geist_Mono: () => ({ variable: "--font-geist-mono" }),
-  Noto_Sans_KR: () => ({ variable: "--font-noto-sans-kr" }),
 }));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
 /* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */

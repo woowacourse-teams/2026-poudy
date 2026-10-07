@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { foldit, geistMono, notoSansKr } from "./fonts";
+import { foldit, geistMono } from "./fonts";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
@@ -14,6 +14,12 @@ import { IconSprite } from "@/components/ui/icons/sprite";
 import { InquiryButtonSlot } from "@/components/ui/InquiryButtonSlot";
 import { rootMetadata } from "@/lib/seo/metadata";
 
+/*
+ * 본문 글꼴. Noto Sans KR 은 ascent 가 한글 잉크보다 크게 잡혀 있어, 줄 상자를 가운데에 맞춰도
+ * 한글이 0.06em 아래에 그려졌다. Pretendard 는 ascent·descent 가 잉크에 맞아 아이콘과 높이가 맞는다.
+ * 패키지에 함께 든 woff2 를 번들러가 자체 도메인으로 내보내므로 외부 CDN 에 기대지 않는다.
+ */
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
 export const metadata: Metadata = rootMetadata();
@@ -31,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
      */
     <html
       lang="ko"
-      className={`${notoSansKr.variable} ${geistMono.variable} ${foldit.variable} h-full antialiased pointer-fine:overscroll-y-none`}
+      className={`${geistMono.variable} ${foldit.variable} h-full antialiased pointer-fine:overscroll-y-none`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col pointer-fine:overscroll-y-none">
