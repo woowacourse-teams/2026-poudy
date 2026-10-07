@@ -1202,6 +1202,7 @@
               "description": "정렬 조건",
               "enum": [
                 "DEFAULT",
+                "CREATED_ASC",
                 "PRICE_DESC",
                 "PRICE_ASC",
                 "UNIT_PRICE_DESC",
