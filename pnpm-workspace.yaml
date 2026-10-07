@@ -1,0 +1,20 @@
+# mobile 과 infra/discord-worker 는 넣지 않는다. 두 디렉터리는 자기 pnpm-workspace.yaml 을
+# 가진 독립 워크스페이스로 남는다. 경위는 #487 에 있다.
+packages:
+  - client
+  - common
+
+# common 과 client 가 함께 쓰는 의존성은 버전을 여기서 한 번만 정한다.
+# 두 곳에서 따로 적으면 한쪽만 올렸을 때 common 의 스키마가 다른 zod 로 해석된다.
+catalog:
+  zod: ^4.4.3
+
+# 설치 스크립트 허용 여부는 워크스페이스 루트에서만 읽힌다.
+allowBuilds:
+  # postinstall 이 후원 안내를 출력하는 것이 전부라 실행하지 않는다.
+  core-js: false
+  # postinstall 이 client/public/mockServiceWorker.js 를 쓰는 것이 전부다.
+  # 워커는 pnpm msw:init 으로 직접 만들고 저장소에 두므로 설치 스크립트는 막는다.
+  msw: false
+  sharp: false
+  unrs-resolver: false
