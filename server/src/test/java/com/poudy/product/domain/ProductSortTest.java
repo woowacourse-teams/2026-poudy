@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Test;
 class ProductSortTest {
 
     @Test
-    @DisplayName("기본순, 가격순과 용량별 가격순 다섯 가지만 제공한다")
+    @DisplayName("기본순, 등록순, 가격순과 용량별 가격순을 제공한다")
     void providesUpdatedSorts() {
         assertThat(ProductSort.values()).containsExactly(
             ProductSort.DEFAULT,
+            ProductSort.CREATED_ASC,
             ProductSort.PRICE_DESC,
             ProductSort.PRICE_ASC,
             ProductSort.UNIT_PRICE_DESC,

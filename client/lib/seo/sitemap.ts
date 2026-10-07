@@ -1,7 +1,13 @@
 import type { MetadataRoute } from "next";
 
-import { fetchBrands, fetchCategories, fetchCurations, fetchIngredients, fetchProducts } from "@/lib/api/products";
-import { EMPTY_FILTER, FIRST_PAGE } from "@/lib/domain/filter";
+import {
+  fetchBrands,
+  fetchCategories,
+  fetchCurations,
+  fetchIngredients,
+  fetchSitemapProducts,
+} from "@/lib/api/products";
+import { FIRST_PAGE } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
 export const SITEMAP_PATHS = {
@@ -70,7 +76,7 @@ export const productEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const entries: MetadataRoute.Sitemap = [];
 
   for (let page = FIRST_PAGE; page < FIRST_PAGE + MAX_PRODUCT_PAGES; page += 1) {
-    const response = await fetchProducts({ ...EMPTY_FILTER, page, size: PRODUCT_PAGE_SIZE });
+    const response = await fetchSitemapProducts(page, PRODUCT_PAGE_SIZE);
     entries.push(...response.items.map((product) => entry(`/products/${product.id}`, "weekly", 0.8)));
     if (entries.length > SITEMAP_URL_LIMIT) throw new Error("제품 사이트맵이 URL 50,000개 제한을 초과했습니다.");
     if (!response.pagination.hasNext) return entries;

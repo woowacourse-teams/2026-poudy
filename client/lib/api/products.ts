@@ -18,6 +18,7 @@ import {
   SkinTypesResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
+import type { Endpoints } from "@poudy/api/api.zod.types";
 
 import { apiGet, apiPost } from "./client";
 
@@ -44,6 +45,16 @@ type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, { query: serializeFilter(filter), revalidate: CATALOG_TTL });
+
+/** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
+export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
+  apiGet("/api/products", ProductPageResponse, {
+    query: new URLSearchParams({
+      sort: "CREATED_ASC" satisfies NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"],
+      page: String(page),
+      size: String(size),
+    }),
+  });
 
 export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
   apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
