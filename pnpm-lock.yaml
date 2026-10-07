@@ -4,13 +4,24 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    zod:
+      specifier: ^4.4.3
+      version: 4.4.3
+
 importers:
 
-  .:
+  .: {}
+
+  client:
     dependencies:
       '@next/third-parties':
         specifier: 16.3.0
         version: 16.3.0(next@16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@poudy/api':
+        specifier: workspace:*
+        version: link:../common
       next:
         specifier: 16.3.0
         version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -30,7 +41,7 @@ importers:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@20.19.43)
       zod:
-        specifier: ^4.4.3
+        specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
       '@eslint/js':
@@ -108,6 +119,12 @@ importers:
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@20.19.43)(jsdom@30.0.1)(msw@2.15.0(@types/node@20.19.43)(typescript@5.9.3))(vite@8.2.1(@types/node@20.19.43)(jiti@2.7.0)(yaml@2.9.0))
+
+  common:
+    devDependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
 
 packages:
 

@@ -12,6 +12,8 @@
 
 ### 패키지 매니저 ###
 .pnpm-store/
+# client 와 common 을 묶은 pnpm 워크스페이스의 가상 스토어가 루트에 생긴다.
+/node_modules
 
 ### 배포 도구 ###
 # Vercel CLI 를 저장소 루트에서 실행하면 설정과 산출물이 여기에 생긴다.

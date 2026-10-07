@@ -7,6 +7,9 @@ on:
     branches: [dev]
     paths:
       - "client/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
       - ".github/workflows/client-staging-deploy.yaml"
 
 permissions:
@@ -42,7 +45,7 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: client/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       # 값이 없으면 목을 켠 채로 배포되거나 빈 주소로 요청이 나간다. 먼저 막는다.
       - name: Check required settings
