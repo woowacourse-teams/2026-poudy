@@ -29,10 +29,9 @@ describe("사이트맵 제품 조회", () => {
   it("등록 시각 오름차순으로 요청한다", () => {
     void fetchSitemapProducts(2, 100);
 
-    expect(client.apiGet).toHaveBeenCalledWith(
-      "/api/products",
-      new URLSearchParams({ sort: "CREATED_ASC", page: "2", size: "100" }),
-    );
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products", expect.anything(), {
+      query: new URLSearchParams({ sort: "CREATED_ASC", page: "2", size: "100" }),
+    });
   });
 });
 
