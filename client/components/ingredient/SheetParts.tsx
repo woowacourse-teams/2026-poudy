@@ -43,7 +43,12 @@ export function SheetHead({
           // 끌어 닫기가 머리 전체를 잡고 있어 단추를 누르는 손도 끌기로 읽힌다. 단추에서는 끌기를 시작하지 않는다.
           onPointerDown={(event) => event.stopPropagation()}
           aria-label="닫기"
-          className="flex size-11 shrink-0 items-center justify-center text-[#182132]"
+          /*
+            hover 하면 버튼 뒤에 옅은 원을 띄워 누를 수 있다는 것을 알린다. 머리 전체가 잡아 끄는
+            자리라 커서가 손바닥으로 바뀌어 있는데, 단추 위에서는 누르는 손가락으로 되돌린다.
+            원은 opacity 만 바꿔 다시 그리기를 피하고, 터치에서는 hover 대신 누르는 동안에만 띄운다.
+          */
+          className="relative isolate flex size-11 shrink-0 cursor-pointer items-center justify-center text-[#182132] before:absolute before:inset-1 before:-z-10 before:rounded-full before:bg-[#EFF1F5] before:opacity-0 before:transition-opacity before:duration-control-state before:ease-out before:content-[''] hover:before:opacity-100 active:before:opacity-100 active:before:bg-[#DEE2E9]"
         >
           <Icon name="x" size={22} />
         </button>
