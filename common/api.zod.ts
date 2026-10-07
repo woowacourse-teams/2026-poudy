@@ -118,6 +118,12 @@ export const ProductPartResponse = z.object({ id: z.number().int(), name: z.stri
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
+
+export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
+export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
+
 export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
 export const ProductSuggestionMatchResponse = z.object({ field: z.enum(["PRODUCT_NAME", "BRAND_NAME"]), text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
