@@ -5,6 +5,9 @@ import { Suspense } from "react";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
+import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
+import { EffectTag } from "@/components/ingredient/EffectTag";
+import { IngredientReferences } from "@/components/ingredient/IngredientReferences";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Icon } from "@/components/ui/icons/Icon";
@@ -12,9 +15,6 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
-import { EXCLUDE_CODE_LABELS } from "@/lib/domain/exclude-codes";
-import { isExcludeCode } from "@/lib/domain/filter";
-import { effectColor } from "@/lib/domain/skin-effect-colors";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { ingredientStructuredData } from "@/lib/seo/structured-data";
@@ -61,159 +61,79 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
 export default async function IngredientDetailPage(props: PageProps<"/ingredients/[ingredientId]">) {
   const { ingredientId } = await props.params;
   const ingredient = await load(ingredientId);
-  // 이름표가 있는 성분군만 보여 준다.
-  const groupCodes = ingredient.groupCodes.filter(isExcludeCode);
-
-  const updatedAt = new Date(ingredient.updatedAt)
-    .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-    .replace(/\.$/, "")
-    .replace(/\. /g, ".");
 
   return (
     <>
       <JsonLd data={ingredientStructuredData(ingredient)} />
-      {/* 아래로 내리면 큰 제목이 사라지므로 상단에 성분 이름을 남긴다. */}
-      <TopBar title={ingredient.koreanName} variant="sub" right={<ShareButton />} />
+      <TopBar title="성분 설명" variant="sub" right={<ShareButton />} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />
       </Suspense>
       <TrackActiveTime pageType="ingredient_detail" entityId={ingredient.id} />
 
-      {/*
-        바탕은 화면 여백인 16px 만 둔다.
-        읽을거리는 안쪽 여백을 더해 32px 로 들여 쓰고,
-        배경을 가진 덩어리만 안쪽 여백을 빼서 바탕 여백까지 넓힌다.
-      */}
       {/* 화면 전체가 성분 정보라 본문째 선택을 막는다. 규칙은 globals.css 에 있다. */}
-      <main data-no-select className="flex-1 px-4">
-        <section className="flex flex-col gap-2 px-4 pt-4 pb-4">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-6">
+        <section className="flex flex-col gap-2">
           <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 
           {ingredient.skinEffects.length > 0 ? (
-            <ul className="flex h-[26px] items-center gap-1.5">
-              {ingredient.skinEffects.map((effect) => {
-                const color = effectColor(effect.code);
-
-                return (
-                  <li
-                    key={effect.id}
-                    className={`flex h-[26px] items-center rounded-[13px] px-2.5 text-[11px] font-bold ${color.bg} ${color.text}`}
-                  >
-                    {effect.name}
-                  </li>
-                );
-              })}
+            <ul aria-label="피부 작용" className="flex flex-wrap items-center gap-2">
+              {ingredient.skinEffects.map((effect) => (
+                <li key={effect.id}>
+                  <EffectTag effect={effect} />
+                </li>
+              ))}
             </ul>
           ) : null}
         </section>
 
-        <div className="flex flex-col gap-6 px-4 pt-4 pb-6">
-          <section className="flex flex-col gap-3">
-            <div className="flex h-7 items-center justify-between">
-              <h3 className="text-[18px] font-bold text-[#202124]">무슨 역할을 하나요?</h3>
-              <span className="flex h-6 items-center gap-1 rounded-[12px] bg-[#F2F0FF] px-2">
-                <Icon name="sparkles" size={12} filled className="text-[#6250C5]" />
-                <span className="text-[12px] font-semibold text-[#6250C5]">AI 요약</span>
-              </span>
-            </div>
-
-            <p className="text-pretty text-[12px] text-[#72747A]">{ingredient.description}</p>
-
-            {/*
-              제형에서 맡는 배합 목적이다. 피부에 주는 효과(skinEffects)와 다른 축이라
-              머리말 옆 태그와 섞지 않고 설명 아래에 따로 둔다.
-            */}
-            {ingredient.formulationRoles.length > 0 ? (
-              <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                {ingredient.formulationRoles.map((role) => (
-                  <li
-                    key={role.id}
-                    className="flex h-[26px] items-center rounded-[13px] bg-[#F2F3F5] px-2.5 text-[11px] font-semibold text-[#4D5159]"
-                  >
-                    {role.name}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
-
-          {/* 제품 상세의 안내와 같은 결로 둔다. 색 상자 대신 윗선으로만 가른다. */}
-          <p className="flex items-start gap-2 border-t border-[#E5E7EB] pt-3">
-            <Icon name="info" size={16} className="shrink-0 text-[#72747A]" />
-            <span className="text-pretty text-[11px] text-[#72747A]">
-              실제 사용감은 배합량과 함께 사용된 {"성분에\u00a0따라\u00a0달라질\u00a0수\u00a0있어요."}
-            </span>
-          </p>
-
-          {groupCodes.length > 0 ? (
-            <section className="flex flex-col gap-2.5">
-              <h3 className="text-[18px] font-bold text-[#202124]">포함된 성분군</h3>
-              <ul>
-                {groupCodes.map((code) => (
-                  <li
-                    key={code}
-                    className="flex h-12 items-center border-b border-[#E8E9EC] px-0.5 text-[14px] font-semibold text-[#202124]"
-                  >
-                    {EXCLUDE_CODE_LABELS[code]}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {/* 바탕을 가진 덩어리라 둘레의 안쪽 여백을 되물려 바탕 여백인 16px 에 맞춘다. */}
-          <section className="-mx-4 pt-1">
-            <Link
-              href={`/products?includeIngredientIds=${ingredient.id}`}
-              className="flex h-12 w-full items-center justify-center gap-1 rounded-xl bg-[#202124] px-4 text-[14px] leading-[1.3] font-bold text-white"
-            >
-              {/*
-                이름이 길어도 단추가 한 줄을 넘지 않게 이름만 줄인다.
-                뒤따르는 개수와 화살표는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
-              */}
-              <span className="truncate">{ingredient.koreanName}</span>
-              <span className="shrink-0">포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
-              <Icon name="chevron-right" size={18} className="shrink-0" />
-            </Link>
-          </section>
-        </div>
-
-        {/* 바탕을 가진 덩어리라 안쪽 여백을 두지 않고 바탕 여백인 16px 에 맞춘다. */}
-        <section className="pb-4">
-          <div className="flex gap-3 rounded-xl bg-surface-subtle p-4">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
-              <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
-            </span>
-
-            <div className="flex flex-1 flex-col gap-3">
-              <h3 className="text-[14px] font-bold text-[#202124]">정보 출처 및 안내</h3>
-
-              <p className="text-pretty text-[12px] leading-[1.45] text-[#5F6268]">
-                성분의 일반적인 정보와 알려진 효과를 {"이해하기\u00a0위한\u00a0참고\u00a0자료예요."} 개인의 피부 반응은{" "}
-                {"다를\u00a0수\u00a0있어요."}
-              </p>
-
-              {ingredient.infoSources.length > 0 ? (
-                <p className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#3C3F44]">성분 정보 출처</span>
-                  <span className="text-[11px] leading-[1.4] text-[#72747A]">{ingredient.infoSources.join(" · ")}</span>
-                </p>
-              ) : null}
-
-              {ingredient.effectSources.length > 0 ? (
-                <p className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#3C3F44]">성분 효과 출처</span>
-                  <span className="text-[11px] leading-[1.4] text-[#72747A]">
-                    {ingredient.effectSources.join(" · ")}
-                  </span>
-                </p>
-              ) : null}
-
-              <p className="text-[10px] text-[#8B8D94]">정보 업데이트 · {updatedAt}</p>
-            </div>
+        <section className="flex flex-col gap-3">
+          <div className="flex h-7 items-center justify-between">
+            <h3 className="text-[18px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
+            <AiSummaryBadge />
           </div>
+
+          <p className="text-pretty text-[15px] leading-[1.6] text-[#424E5F]">{ingredient.description}</p>
+
+          {/*
+            제형에서 맡는 배합 목적이다. 피부에 주는 효과(skinEffects)와 다른 축이라
+            머리말 옆 태그와 섞지 않고 설명 아래에 따로 둔다.
+          */}
+          {ingredient.formulationRoles.length > 0 ? (
+            <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
+              {ingredient.formulationRoles.map((role) => (
+                <li
+                  key={role.id}
+                  className="flex h-7 items-center rounded-[14px] bg-[#EFF1F5] px-3 text-[12px] font-medium text-[#424E5F]"
+                >
+                  {role.name}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
+
+        <Link
+          href={`/products?includeIngredientIds=${ingredient.id}`}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] leading-[1.3] font-bold text-white"
+        >
+          {/*
+            이름이 길어도 단추가 한 줄을 넘지 않게 이름만 줄인다.
+            뒤따르는 개수와 화살표는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
+          */}
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate">{ingredient.koreanName}</span>
+            <span className="shrink-0">포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
+          </span>
+          <Icon name="chevron-right" size={16} className="shrink-0" />
+        </Link>
+
+        <IngredientReferences
+          infoSources={ingredient.infoSources}
+          effectSources={ingredient.effectSources}
+          updatedAt={ingredient.updatedAt}
+        />
       </main>
     </>
   );

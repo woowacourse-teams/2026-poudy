@@ -51,10 +51,10 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
 
   return (
     <div className="flex flex-col gap-0.5">
-      <h2 ref={koreanRef} className={`text-[20px] font-bold text-[#202124] ${clamp}`}>
+      <h2 ref={koreanRef} className={`text-[20px] font-bold text-[#182132] ${clamp}`}>
         {koreanName}
       </h2>
-      <p ref={englishRef} className={`text-[13px] text-[#72747A] ${clamp}`}>
+      <p ref={englishRef} className={`text-[13px] text-[#6A7588] ${clamp}`}>
         {englishName}
       </p>
 
