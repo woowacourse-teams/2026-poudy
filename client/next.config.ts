@@ -18,14 +18,12 @@ const nextConfig: NextConfig = {
         outputFileTracingRoot: path.join(__dirname, ".."),
       }),
 
-  // 공유 API 스키마(common/api.zod.ts)는 client/ 밖에 있다. root 를 저장소 루트로 올리지 않으면
-  // Turbopack 이 client/ 밖을 읽지 못한다. EC2 빌드는 outputFileTracingRoot 가 이 역할을 대신
-  // 했지만, Vercel 빌드에는 그 설정이 없어 스키마를 불러오지 못했다.
-  // 저장소 루트에는 node_modules 가 없으므로, common 에서 부르는 zod 는 client 의 것을 가리키게 한다.
-  // common 을 워크스페이스 패키지로 만들어 zod 를 의존성으로 두면 이 별칭은 지운다.
+  // 공유 API 스키마 패키지(@poudy/api)는 워크스페이스 링크를 따라가면 client/ 밖의 common/ 에 있다.
+  // root 를 저장소 루트로 올리지 않으면 Turbopack 이 client/ 밖을 읽지 못한다. EC2 빌드는
+  // outputFileTracingRoot 가 이 역할을 대신했지만, Vercel 빌드에는 그 설정이 없어 스키마를
+  // 불러오지 못했다.
   turbopack: {
     root: path.join(__dirname, ".."),
-    resolveAlias: { zod: "./node_modules/zod" },
   },
 
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.

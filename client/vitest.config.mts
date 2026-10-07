@@ -8,10 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "."),
-      "@poudy/api": path.resolve(import.meta.dirname, "../common"),
-      // common/api.zod.ts 가 부르는 zod 는 client 의 것을 쓴다. next.config.ts 와 같은 이유이며,
-      // common 을 워크스페이스 패키지로 만들면 함께 지운다.
-      zod: path.resolve(import.meta.dirname, "node_modules/zod"),
     },
   },
   test: {
