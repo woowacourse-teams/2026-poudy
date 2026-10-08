@@ -490,6 +490,31 @@ describe("CurationCarousel", () => {
   });
 
   /*
+   * 여러 칸을 미끄러져 되돌아가면 지나가는 카드가 한꺼번에 커졌다 줄며 화면이 어수선하다.
+   * 되감기는 흐렸다가 옮긴다. jsdom 에는 웹 애니메이션 API 가 없어 곧바로 옮긴다.
+   */
+  it("세 장 이상에서 마지막 카드에 닿으면 미끄러지지 않고 첫 카드로 옮긴다", () => {
+    const restore = fakeFrames();
+    const three = [
+      ...items,
+      { id: 3, title: "맑은 진정", description: "시카 성분 모아보기", thumbnailImageUrl: "/images/c.jpg" },
+    ];
+
+    try {
+      const { container } = render(<CurationCarousel items={three} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 2 * STEP;
+
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS + 16));
+
+      expect(list.scrollLeft).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  /*
    * 마우스로 카드를 끄는 순간 브라우저가 그림을 집어 들면 목록을 미는 동작이 끊긴다.
    */
   it("카드의 그림을 집어 들지 못하게 한다", () => {

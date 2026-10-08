@@ -115,6 +115,17 @@ const easeInOut = (ratio: number): number => (ratio < 0.5 ? 4 * ratio ** 3 : 1 -
  */
 const easeOut = (ratio: number): number => 1 - (1 - ratio) ** 5;
 
+/** `easeOut` 과 같은 커브를 CSS 로 적은 것. 웹 애니메이션 API 에 넘긴다. */
+const EASE_OUT_CSS = "cubic-bezier(0.23, 1, 0.32, 1)";
+
+/**
+ * 마지막 카드에서 첫 카드로 되감을 때 흐려지고 다시 나타나는 시간.
+ *
+ * 여러 칸을 미끄러져 되돌아가면 지나가는 카드들이 한꺼번에 커졌다 줄며 스쳐 화면이
+ * 어수선하다. 되감기는 사람이 따라가야 할 이동이 아니므로, 잠깐 흐려진 사이에 옮긴다.
+ */
+const REWIND_FADE = 150;
+
 /** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.7 이다. */
 const MIN_SCALE = 0.7;
 
@@ -196,6 +207,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const settleRef = useRef<() => void>(() => {});
   /* 시계 안에서 부르는 함수. 그릴 때마다 새로 만들어지므로 ref 로 최신 것을 붙든다. */
   const scrollToSlideRef = useRef<(slideIndex: number, smooth: boolean) => void>(() => {});
+  const rewindRef = useRef<() => void>(() => {});
 
   /**
    * 카드가 가운데에서 얼마나 떨어져 있는지에 따라 크기를 정한다.
@@ -328,6 +340,41 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const dropToSlide = (slideIndex: number) =>
     scrollToSlide(slideIndex, true, { duration: DROP_DURATION, ease: easeOut });
 
+  /**
+   * 마지막 카드에서 첫 카드로 되감는다.
+   *
+   * 목록을 잠깐 흐렸다가, 보이지 않는 사이에 첫 카드로 옮기고 다시 나타낸다. `opacity` 만
+   * 바꾸므로 합성 단계에서 처리된다. 웹 애니메이션 API 가 없으면 곧바로 옮긴다.
+   *
+   * 흐려지는 도중에 손을 대면 `onPointerDown` 이 애니메이션을 지워 목록이 곧바로
+   * 돌아오고, 옮기기 전이었다면 그 자리에 남는다.
+   */
+  const rewind = () => {
+    const track = trackRef.current;
+    if (!track) return;
+    if (typeof track.animate !== "function") {
+      scrollToSlide(0, false);
+      return;
+    }
+
+    const fadeOut = track.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: REWIND_FADE,
+      easing: EASE_OUT_CSS,
+      fill: "forwards",
+    });
+    fadeOut.finished.then(
+      () => {
+        scrollToSlide(0, false);
+        paintScales();
+        track.animate([{ opacity: 0 }, { opacity: 1 }], { duration: REWIND_FADE, easing: EASE_OUT_CSS });
+        // 나타나는 애니메이션이 덮으므로 흐려진 채로 붙들던 값을 지워도 깜빡이지 않는다.
+        fadeOut.cancel();
+      },
+      // 손을 대 지운 경우다. 옮기지 않고 그 자리에 둔다.
+      () => {},
+    );
+  };
+
   useEffect(() => {
     reduced.current = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     // 첫 화면에도 가운데 카드가 제 크기로 서 있어야 한다.
@@ -403,13 +450,23 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * 한 칸마다 1px 씩 어긋나고, 그 자리는 스냅 지점이 아니라서 브라우저가 멈춘 뒤
        * 다시 끌어당긴다. 그 보정이 이동 애니메이션을 잡아먹는다.
        */
-      const following = slideAt(track) + 1;
-      /* 마지막 카드에서는 첫 카드로 되감는다. */
-      const next = following < track.children.length ? following : 0;
+      const slide = slideAt(track);
+      const following = slide + 1;
 
       // 이 스크롤은 사람이 넘긴 것이 아니므로 시계를 다시 세지 않는다.
       selfScrolling.current = true;
-      scrollToSlideRef.current(next, true);
+
+      if (following < track.children.length) {
+        scrollToSlideRef.current(following, true);
+        return;
+      }
+
+      /*
+       * 마지막 카드에서는 첫 카드로 되감는다. 한 칸 거리(카드 두 장)면 그대로 미끄러지고,
+       * 그보다 멀면 흐렸다가 옮긴다.
+       */
+      if (slide <= 1) scrollToSlideRef.current(0, true);
+      else rewindRef.current();
     }, AUTOPLAY_INTERVAL);
   }, [multiple]);
 
@@ -508,6 +565,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       glide.current = undefined;
       track.style.scrollSnapType = "";
     }
+    /* 되감느라 흐려지던 중이면 그 자리에서 멈춘다. */
+    for (const animation of track.getAnimations?.() ?? []) animation.cancel();
     selfScrolling.current = false;
 
     if (event.pointerType !== "mouse" || event.button !== 0) return;
@@ -641,6 +700,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   useEffect(() => {
     settleRef.current = settle;
     scrollToSlideRef.current = scrollToSlide;
+    rewindRef.current = rewind;
   });
 
   /*
