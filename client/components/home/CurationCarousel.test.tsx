@@ -542,6 +542,32 @@ describe("CurationCarousel", () => {
   });
 
   /*
+   * 처음과 끝에서 딱 멈추면 보이지 않는 벽에 부딪힌 것 같다. 끈 만큼 다 따라오지는 않되
+   * 조금 밀려 끝에 닿았음을 알리고, 손을 떼면 제자리로 돌아와야 한다.
+   */
+  it("첫 카드에서 더 끌면 목록이 조금만 따라오고, 놓으면 돌아온다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    Object.defineProperty(list, "scrollWidth", { value: list.clientWidth + STEP, configurable: true });
+    list.scrollLeft = 0;
+
+    fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 100 });
+    fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 100 + 200 });
+
+    expect(list.scrollLeft).toBe(0);
+    const pulled = /translate3d\((.+)px, 0, 0\)/.exec(list.style.transform);
+    expect(pulled).not.toBeNull();
+    /* 200px 를 끌었지만 40px 에 못 미치게만 따라온다. */
+    expect(Number(pulled?.[1])).toBeGreaterThan(0);
+    expect(Number(pulled?.[1])).toBeLessThan(40);
+
+    fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 100 + 200 });
+
+    expect(list.style.transform).toBe("");
+  });
+
+  /*
    * 여러 칸을 미끄러져 되돌아가면 지나가는 카드가 한꺼번에 커졌다 줄며 화면이 어수선하다.
    * 되감기는 흐렸다가 옮긴다. jsdom 에는 웹 애니메이션 API 가 없어 곧바로 옮긴다.
    */

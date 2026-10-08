@@ -164,6 +164,14 @@ const DRAG_SWITCH_RATIO = 0.2;
 const FLICK_VELOCITY = 0.11;
 
 /**
+ * 처음과 끝 밖으로 끌 때 목록이 따라오는 최대 거리(px).
+ *
+ * 끝에서 딱 멈추면 보이지 않는 벽에 부딪힌 것 같다. 더 끌수록 덜 따라오게 해 끝에 닿았음을
+ * 알리고, 손을 떼면 제자리로 돌아온다. 손가락은 브라우저의 오버스크롤이 같은 일을 한다.
+ */
+const EDGE_PULL = 40;
+
+/**
  * 디자인 S01 의 큐레이션 캐러셀.
  *
  * 카드를 받은 순서대로 한 번씩만 그린다. 끝에서 처음으로 이어 돌지 않고, 스스로 넘기다
@@ -391,6 +399,23 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     );
   };
 
+  /**
+   * 끝 밖으로 끌려 나간 목록을 제자리로 돌려놓는다.
+   *
+   * 끄는 동안 적어 둔 `transform` 을 지우고, 그 자리에서 제자리까지 빠르게 출발해 멎도록
+   * 그린다. 웹 애니메이션 API 가 없으면 곧바로 돌아온다.
+   */
+  const releaseEdgePull = (track: HTMLElement) => {
+    const pulled = track.style.transform;
+    if (!pulled) return;
+
+    track.style.transform = "";
+    track.animate?.([{ transform: pulled }, { transform: "translate3d(0, 0, 0)" }], {
+      duration: DROP_DURATION,
+      easing: EASE_OUT_CSS,
+    });
+  };
+
   useEffect(() => {
     reduced.current = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     // 첫 화면에도 가운데 카드가 제 크기로 서 있어야 한다.
@@ -581,7 +606,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       glide.current = undefined;
       track.style.scrollSnapType = "";
     }
-    /* 되감느라 흐려지던 중이면 그 자리에서 멈춘다. */
+    /* 되감느라 흐려지던 중이거나 끝에서 돌아오던 중이면 그 자리에서 멈춘다. */
     for (const animation of track.getAnimations?.() ?? []) animation.cancel();
     selfScrolling.current = false;
 
@@ -626,7 +651,23 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     }
 
     /* 끈 방향과 반대로 목록이 흘러야 붙잡은 카드가 손을 따라온다. */
-    track.scrollLeft = active.startScroll - moved;
+    const wanted = active.startScroll - moved;
+    const max = track.scrollWidth - track.clientWidth;
+    /* 범위를 잴 수 없으면(그리기 전) 끝을 따지지 않는다. */
+    if (max <= 0) {
+      track.scrollLeft = wanted;
+      return;
+    }
+
+    /*
+     * 처음과 끝 밖으로 끈 만큼은 스크롤 대신 목록을 옮겨 보인다. 더 끌수록 덜 따라오고
+     * `EDGE_PULL` 에 다가가기만 한다. 스크롤 값은 끝에 묶어 둔다.
+     */
+    const over = wanted < 0 ? wanted : Math.max(0, wanted - max);
+    track.scrollLeft = wanted - over;
+    const pull = -Math.sign(over) * EDGE_PULL * (1 - Math.exp(-Math.abs(over) / EDGE_PULL));
+    const pulled = over === 0 ? "" : `translate3d(${pull}px, 0, 0)`;
+    if (track.style.transform !== pulled) track.style.transform = pulled;
   };
 
   /** 손을 뗐다. 가장 가까운 칸으로 붙여 준다. */
@@ -639,6 +680,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     if (!track || !finished || finished.pointerId !== event.pointerId) return;
 
     if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+    releaseEdgePull(track);
 
     /* 끌지 않고 누르기만 했다면 자리를 건드리지 않는다. 껐던 스냅만 돌려 놓는다. */
     if (!finished.moved) {
@@ -703,6 +745,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     if (!track || !stopped) return;
 
     if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+    releaseEdgePull(track);
     track.style.scrollSnapType = "";
   };
 
