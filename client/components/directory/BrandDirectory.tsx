@@ -4,6 +4,7 @@ import type { BrandSummaryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { DirectoryList } from "@/components/ui/DirectoryList";
+import { track } from "@/lib/analytics/track";
 import { CHOSEONG_INDEX, choseongOf } from "@/lib/domain/choseong";
 
 const ALL = "전체";
@@ -51,6 +52,10 @@ export function BrandDirectory({ brands }: { readonly brands: readonly BrandSumm
       rail={rail.map((label) => ({ id: label, label }))}
       selectedRailId={selected}
       onSelectRail={setSelected}
+      // 어느 칸에서 골랐는지 함께 남겨, 전체 목록에서 훑어 고르는지 초성으로 좁혀 고르는지 본다.
+      onSelectRow={(row) =>
+        track("brand_selected", { brand_id: Number(row.id), brand_name: row.label, index_label: selected })
+      }
       panels={[
         {
           railId: selected,

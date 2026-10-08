@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRESS_SURFACE } from "@/components/ui/press";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
@@ -30,20 +31,38 @@ export type ProductIngredientGroup = {
 export function IngredientGroupSheet({
   open,
   group,
+  kind = "ingredient_group",
   onClose,
 }: {
   readonly open: boolean;
   readonly group: ProductIngredientGroup | undefined;
-  readonly onClose: () => void;
+  /** 성분군 칩에서 열었는지 주의 성분 기준에서 열었는지. 성분군 설명으로 넘어갈 때 유입 경로로 남긴다. */
+  readonly kind?: "ingredient_group" | "caution";
+  /** 닫은 방법을 함께 넘긴다. 시트를 연 쪽이 분석에 남긴다. */
+  readonly onClose: (method: SheetCloseMethod) => void;
 }) {
   return (
     <BottomSheet open={open && group !== undefined} onClose={onClose}>
-      {group ? <Content group={group} onClose={onClose} /> : null}
+      {group ? (
+        <Content
+          group={group}
+          from={kind === "caution" ? "caution_sheet" : "ingredient_group_sheet"}
+          onClose={onClose}
+        />
+      ) : null}
     </BottomSheet>
   );
 }
 
-function Content({ group, onClose }: { readonly group: ProductIngredientGroup; readonly onClose: () => void }) {
+function Content({
+  group,
+  from,
+  onClose,
+}: {
+  readonly group: ProductIngredientGroup;
+  readonly from: "ingredient_group_sheet" | "caution_sheet";
+  readonly onClose: (method: SheetCloseMethod) => void;
+}) {
   const detail = useSheetDescription(group.code, () => fetchIngredientGroup(group.code));
   const name = groupDisplayName(group.name);
 
@@ -70,20 +89,25 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
             </ul>
           ) : null
         }
-        onClose={onClose}
+        onClose={() => onClose("close_button")}
       />
 
       <BottomSheet.Body>
         <div className="flex flex-col gap-6 pt-5 pb-2">
           <RoleDescription description={description} />
 
-          {group.ingredients.length > 0 && <ProductIngredients ingredients={group.ingredients} />}
+          {group.ingredients.length > 0 && (
+            <ProductIngredients ingredients={group.ingredients} onLeave={() => onClose("detail_link")} />
+          )}
         </div>
       </BottomSheet.Body>
 
       {/* 성분 목록이 길어 몸통이 스크롤되어도 성분군 설명으로 가는 단추는 늘 보이게 발에 둔다. */}
       <BottomSheet.Footer>
-        <SheetDetailLink href={`/ingredient-groups/${encodeURIComponent(group.code)}`}>
+        <SheetDetailLink
+          href={`/ingredient-groups/${encodeURIComponent(group.code)}?from=${from}`}
+          onClick={() => onClose("detail_link")}
+        >
           {name} 성분군 자세히 보기
         </SheetDetailLink>
       </BottomSheet.Footer>
@@ -91,7 +115,14 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
   );
 }
 
-function ProductIngredients({ ingredients }: { readonly ingredients: ProductIngredientGroup["ingredients"] }) {
+function ProductIngredients({
+  ingredients,
+  onLeave,
+}: {
+  readonly ingredients: ProductIngredientGroup["ingredients"];
+  /** 성분을 눌러 성분 설명으로 옮겨 갈 때. 시트를 떠난 것으로 남긴다. */
+  readonly onLeave: () => void;
+}) {
   return (
     <section className="flex flex-col gap-2">
       <h3 className="text-[15px] font-bold text-[#182132]">이 제품에 든 성분</h3>
@@ -99,7 +130,8 @@ function ProductIngredients({ ingredients }: { readonly ingredients: ProductIngr
         {ingredients.map((ingredient) => (
           <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
             <Link
-              href={`/ingredients/${ingredient.id}`}
+              href={`/ingredients/${ingredient.id}?from=ingredient_group_sheet`}
+              onClick={onLeave}
               className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
             >
               <span className="flex min-w-0 flex-col gap-1">

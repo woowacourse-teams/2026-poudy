@@ -110,10 +110,20 @@ function DescriptionText({ description }: { readonly description: SheetDescripti
 }
 
 /** 시트 맨 아래의 이동 단추. 시트에 담지 못한 설명은 상세 화면에서 본다. */
-export function SheetDetailLink({ href, children }: { readonly href: string; readonly children: React.ReactNode }) {
+export function SheetDetailLink({
+  href,
+  onClick,
+  children,
+}: {
+  readonly href: string;
+  /** 시트를 떠나 설명 화면으로 옮겨 간다는 것을 시트를 연 쪽에 알린다. */
+  readonly onClick?: () => void;
+  readonly children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`flex h-12 w-full items-center justify-center rounded-[14px] bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132] ${PRESS_SCALE}`}
     >
       <span className="truncate">{children}</span>

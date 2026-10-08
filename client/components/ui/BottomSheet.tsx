@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useId, useRef } from "react";
 
 import { useDragToDismiss } from "@/lib/hooks/useDragToDismiss";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
@@ -22,9 +22,13 @@ const useSheet = (part: string): SheetContext => {
   return value;
 };
 
+/** 시트 껍데기가 닫은 방법. 머리의 닫기 단추처럼 안쪽에서 닫는 길은 쓰는 쪽이 직접 안다. */
+export type SheetCloseReason = "backdrop" | "drag" | "escape";
+
 type BottomSheetProps = {
   readonly open: boolean;
-  readonly onClose: () => void;
+  /** 어떻게 닫혔는지 넘긴다. 분석이 필요 없는 쪽은 받지 않아도 된다. */
+  readonly onClose: (reason: SheetCloseReason) => void;
   readonly children: React.ReactNode;
 };
 
@@ -51,7 +55,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
 
 type ShellProps = {
   readonly shown: boolean;
-  readonly onClose: () => void;
+  readonly onClose: (reason: SheetCloseReason) => void;
   readonly onExited: () => void;
   readonly children: React.ReactNode;
 };
@@ -59,13 +63,15 @@ type ShellProps = {
 function Shell({ shown, onClose, onExited, children }: ShellProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  const { offset, dragging, handleProps } = useDragToDismiss(onClose);
+  const closeByDrag = useCallback(() => onClose("drag"), [onClose]);
+  const closeByEscape = useCallback(() => onClose("escape"), [onClose]);
+  const { offset, dragging, handleProps } = useDragToDismiss(closeByDrag);
 
   /*
    * 붙는 즉시 가둔다. 올라오는 전환이 시작되기를 기다리면 그 사이에 누른 Escape 가
    * 먹지 않고 초점도 바깥에 남는다.
    */
-  useFocusTrap(sheetRef, true, onClose);
+  useFocusTrap(sheetRef, true, closeByEscape);
 
   /** 끄는 동안에는 손가락을 그대로 따라오게 한다. 놓은 뒤에는 전환이 그린다. */
   const style = offset > 0 ? { transform: `translateY(${offset}px)` } : undefined;
@@ -76,7 +82,7 @@ function Shell({ shown, onClose, onExited, children }: ShellProps) {
       <div
         className="bottom-sheet-dim fixed inset-0 z-40 bg-black/40"
         data-open={shown}
-        onClick={onClose}
+        onClick={() => onClose("backdrop")}
         aria-hidden="true"
       />
 

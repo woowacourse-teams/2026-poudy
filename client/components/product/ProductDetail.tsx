@@ -259,8 +259,9 @@ function SelectedPart({
       aria-labelledby={tabbed ? partTabId(part.id) : undefined}
       className="flex flex-col gap-6"
     >
-      <UsageIngredients part={part} />
+      <UsageIngredients productId={product.id} part={part} />
       <CautionCheck
+        productId={product.id}
         groups={withCautionCodes(
           part.excludeGroups,
           excludeCodes,

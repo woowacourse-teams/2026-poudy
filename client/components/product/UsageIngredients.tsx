@@ -4,11 +4,13 @@ import type { ProductIngredientResponse, ProductPartResponse, SkinEffectItemResp
 import Link from "next/link";
 import { useState } from "react";
 
+import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
 import { openInPlace } from "@/components/ui/open-in-place";
 import { PRESS_SURFACE } from "@/components/ui/press";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 
 type Sheet = { readonly kind: "ingredient"; readonly id: number } | { readonly kind: "group"; readonly code: string };
@@ -19,8 +21,15 @@ type Sheet = { readonly kind: "ingredient"; readonly id: number } | { readonly k
  * 칩은 성분 설명과 성분군 설명으로 가는 링크로 그린다. 검색 로봇과 새 탭으로 여는 사람은 그 화면으로 가고,
  * 그냥 누르면 화면을 떠나지 않도록 시트로 연다(S24a·S24b).
  */
-export function UsageIngredients({ part }: { readonly part: ProductPartResponse }) {
+export function UsageIngredients({
+  productId,
+  part,
+}: {
+  readonly productId: number;
+  readonly part: ProductPartResponse;
+}) {
   const [sheet, setSheet] = useState<Sheet>();
+  const tracking = useIngredientSheetTracking();
   // 닫는 동안에도 내용이 남아 있어야 시트가 빈 채로 내려가지 않는다. 그래서 무엇을 열었는지와 열려 있는지를 따로 둔다.
   const [open, setOpen] = useState(false);
 
@@ -31,6 +40,15 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
   const show = (next: Sheet) => {
     setSheet(next);
     setOpen(true);
+    tracking.opened(
+      next.kind === "ingredient"
+        ? { sheet_type: "ingredient", product_id: productId, ingredient_id: next.id }
+        : { sheet_type: "ingredient_group", product_id: productId, group_code: next.code },
+    );
+  };
+  const close = (method: SheetCloseMethod) => {
+    setOpen(false);
+    tracking.closed(method);
   };
 
   return (
@@ -67,12 +85,12 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
       <IngredientSheet
         open={open && sheet?.kind === "ingredient"}
         ingredient={sheet?.kind === "ingredient" ? ingredients.get(sheet.id) : undefined}
-        onClose={() => setOpen(false)}
+        onClose={close}
       />
       <IngredientGroupSheet
         open={open && sheet?.kind === "group"}
         group={sheet?.kind === "group" ? productGroupOf(part, sheet.code, ingredients) : undefined}
-        onClose={() => setOpen(false)}
+        onClose={close}
       />
     </section>
   );
@@ -96,7 +114,7 @@ function Chip({
   if (group) {
     return (
       <Link
-        href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
+        href={`/ingredient-groups/${encodeURIComponent(group.code)}?from=product_detail`}
         onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: group.code }))}
         className={CHIP}
       >

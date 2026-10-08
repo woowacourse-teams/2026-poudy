@@ -11,6 +11,7 @@ export type PageName =
   | "product_list"
   | "product_detail"
   | "ingredient_detail"
+  | "ingredient_group_detail"
   | "saved"
   | "category"
   | "brand"
@@ -64,8 +65,28 @@ export const productEntryPointOf = (value: unknown): ProductEntryPoint =>
 /** 저장 버튼이 여러 화면에 있어 어디서 눌렀는지 남긴다. */
 export type SaveSource = "product_list" | "product_detail" | "home" | "saved";
 
-/** 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다. */
-export type IngredientEntryPoint = "product_detail" | "search" | "ingredient_filter";
+/**
+ * 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다.
+ * from 이 없으면 product_detail 로 본다. 제품 상세의 전체 성분 목록이 from 없이 링크한다.
+ */
+export type IngredientEntryPoint =
+  | "product_detail"
+  | "search"
+  | "ingredient_filter"
+  | "ingredient_sheet"
+  | "ingredient_group_sheet"
+  | "ingredient_group_detail";
+
+/** 성분군 설명으로 들어온 경로. from 이 없으면 direct 로 본다. */
+export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_sheet" | "caution_sheet" | "direct";
+
+/** 제품 상세에서 여는 시트. 주의 성분 기준도 성분군 시트를 쓰지만 연 자리가 달라 따로 센다. */
+export type IngredientSheetTarget =
+  | { sheet_type: "ingredient"; product_id: number; ingredient_id: number }
+  | { sheet_type: "ingredient_group" | "caution"; product_id: number; group_code: string };
+
+/** 시트를 닫은 방법. detail_link 는 자세히 보기로 설명 화면에 옮겨 간 경우다. */
+export type SheetCloseMethod = "close_button" | "backdrop" | "drag" | "escape" | "detail_link";
 
 /** 목록을 그리는 화면. 같은 ProductList 를 여러 화면이 함께 쓴다. */
 export type ListSurface = "product_list" | "category" | "brand";
@@ -76,7 +97,15 @@ export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 export const HOME_PAGE_VERSION = "main_2026_09";
 
 /** 활성 체류시간을 재는 상세 화면. */
-export type DetailPageType = "product_detail" | "ingredient_detail";
+export type DetailPageType = "product_detail" | "ingredient_detail" | "ingredient_group_detail";
+
+/**
+ * 체류시간을 잰 대상. 제품과 성분은 숫자 ID 로, 성분군은 코드로 가른다.
+ * 성분군 코드를 entity_id 에 넣으면 같은 속성에 숫자와 문자열이 섞여 PostHog 에서 거르기 어렵다.
+ */
+export type ActiveTimeEntity =
+  | { page_type: "product_detail" | "ingredient_detail"; entity_id: number }
+  | { page_type: "ingredient_group_detail"; entity_code: string };
 
 /** 활성 체류시간을 보낸 시점. */
 export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "pagehide" | "unmount";
@@ -158,6 +187,16 @@ export type EventMap = {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
   };
+  ingredient_group_viewed: {
+    group_code: string;
+    entry_point: IngredientGroupEntryPoint;
+  };
+  /** 제품 상세에서 성분·성분군·주의 성분 시트를 열 때. 칩을 눌러 화면을 옮기지 않고 시트로 본다. */
+  ingredient_sheet_opened: IngredientSheetTarget;
+  /** 시트를 닫을 때. 열려 있던 시간(초, 소수 한 자리)과 닫은 방법을 함께 남긴다. */
+  ingredient_sheet_closed: IngredientSheetTarget & { close_method: SheetCloseMethod; open_seconds: number };
+  /** 구성품 탭을 바꿀 때. 처음 열린 구성품은 product_viewed 로 이미 남는다. */
+  product_part_selected: { product_id: number; part_id: number; previous_part_id: number };
   /**
    * 상세 화면을 실제로 들여다본 시간. 탭이 보이고 창에 포커스가 있으며 최근 60초 안에 입력이 있을 때만 센다.
    * $prev_pageview_duration 은 자리 비움과 숨은 탭까지 포함하므로 이 이벤트로 대신한다.
@@ -165,9 +204,7 @@ export type EventMap = {
    * active_seconds 는 직전 전송 뒤에 늘어난 만큼만 담아 합산해도 겹치지 않는다.
    * elapsed_seconds 와 max_scroll_percentage 는 화면에 들어온 뒤로 누적한 값이다.
    */
-  detail_active_time_recorded: {
-    page_type: DetailPageType;
-    entity_id: number;
+  detail_active_time_recorded: ActiveTimeEntity & {
     active_seconds: number;
     elapsed_seconds: number;
     max_scroll_percentage: number;
@@ -226,6 +263,8 @@ export type EventMap = {
     category_id?: number;
   } & DiscoveryProperties;
   /** 카테고리를 선택해 제품 탐색을 시작했을 때. 같은 선택 안의 후속 행동과 연결한다. */
+  /** 브랜드 디렉터리에서 브랜드를 고를 때. index_label 은 그때 고른 레일 칸(전체, ㄱ, A-Z 등)이다. */
+  brand_selected: { brand_id: number; brand_name: string; index_label: string };
   category_selected: {
     category_id: number;
     category_name?: string;

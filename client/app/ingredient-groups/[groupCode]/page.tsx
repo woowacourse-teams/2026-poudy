@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
+import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
+import { TrackIngredientGroupView } from "@/components/analytics/TrackIngredientGroupView";
 import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
@@ -57,6 +60,11 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
   return (
     <>
       <TopBar title="성분군 설명" variant="sub" right={<ShareButton />} />
+      {/* 성분 설명과 같이 조회·체류시간을 남긴다. 유입 경로를 브라우저에서 읽으므로 경계를 둔다. */}
+      <Suspense fallback={null}>
+        <TrackIngredientGroupView groupCode={group.code} />
+      </Suspense>
+      <TrackActiveTime pageType="ingredient_group_detail" entityCode={group.code} />
 
       {/* 성분 설명과 같이 화면 전체가 성분 정보라 본문째 선택을 막는다. */}
       <main data-no-select className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-6">
@@ -91,7 +99,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
               {group.ingredients.map((ingredient) => (
                 <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
                   <Link
-                    href={`/ingredients/${ingredient.id}`}
+                    href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
                     className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
                   >
                     <span className="flex min-w-0 flex-col gap-1">

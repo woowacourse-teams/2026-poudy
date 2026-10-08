@@ -4,9 +4,13 @@
 import type { BrandSummaryResponse } from "@poudy/api/api.zod";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BrandDirectory } from "./BrandDirectory";
+
+import { track } from "@/lib/analytics/track";
+
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const brand = (id: number, name: string): BrandSummaryResponse => ({
   id,
@@ -22,6 +26,17 @@ const brands = [brand(1, "라운드랩"), brand(2, "토리든"), brand(3, "3CE")
 const railLabels = () => screen.getByRole("navigation", { name: "브랜드 초성" }).querySelectorAll("button");
 
 describe("BrandDirectory", () => {
+  beforeEach(() => vi.mocked(track).mockReset());
+
+  it("브랜드를 고르면 그 브랜드와 고른 레일 칸을 남긴다", async () => {
+    render(<BrandDirectory brands={brands} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "ㄹ" }));
+    await userEvent.click(screen.getByRole("link", { name: /라운드랩/ }));
+
+    expect(track).toHaveBeenCalledWith("brand_selected", { brand_id: 1, brand_name: "라운드랩", index_label: "ㄹ" });
+  });
+
   it("브랜드가 있는 초성만 레일에 둔다", () => {
     render(<BrandDirectory brands={brands} />);
 

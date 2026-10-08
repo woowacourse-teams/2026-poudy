@@ -4,11 +4,13 @@ import type { ProductPartResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useState } from "react";
 
+import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { scalableIconStyle } from "@/components/ui/icons/Icon";
 import { openInPlace } from "@/components/ui/open-in-place";
 import { PRESS_SURFACE_OUTSET } from "@/components/ui/press";
 import { slashBreakable } from "@/components/ui/slash-breakable";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { type CautionGroup, cautionSummary, sortedCautions } from "@/lib/domain/caution-check";
 
 type Ingredients = ProductPartResponse["ingredients"];
@@ -21,13 +23,16 @@ type Ingredients = ProductPartResponse["ingredients"];
  * 쓰임새별 성분의 성분군 칩과 같은 시트다. 성분군 코드를 찾지 못한 기준은 누를 수 없게 둔다.
  */
 export function CautionCheck({
+  productId,
   groups,
   ingredients,
 }: {
+  readonly productId: number;
   readonly groups: readonly CautionGroup[];
   readonly ingredients: Ingredients;
 }) {
   const [shown, setShown] = useState<CautionGroup>();
+  const tracking = useIngredientSheetTracking();
   // 닫는 동안에도 내용이 남아 있어야 시트가 빈 채로 내려가지 않는다. 그래서 무엇을 열었는지와 열려 있는지를 따로 둔다.
   const [open, setOpen] = useState(false);
 
@@ -36,6 +41,11 @@ export function CautionCheck({
   const show = (group: CautionGroup) => {
     setShown(group);
     setOpen(true);
+    tracking.opened({ sheet_type: "caution", product_id: productId, group_code: group.code ?? "" });
+  };
+  const close = (method: SheetCloseMethod) => {
+    setOpen(false);
+    tracking.closed(method);
   };
 
   return (
@@ -45,7 +55,8 @@ export function CautionCheck({
       <IngredientGroupSheet
         open={open}
         group={shown ? sheetGroupOf(shown, ingredients) : undefined}
-        onClose={() => setOpen(false)}
+        kind="caution"
+        onClose={close}
       />
     </section>
   );
@@ -108,7 +119,7 @@ function CautionItem({
 
   return (
     <Link
-      href={`/ingredient-groups/${encodeURIComponent(code)}`}
+      href={`/ingredient-groups/${encodeURIComponent(code)}?from=product_detail`}
       onClick={(event) => openInPlace(event, () => onOpen(group))}
       className={`flex flex-1 items-center gap-2 ${PRESS_SURFACE_OUTSET}`}
     >

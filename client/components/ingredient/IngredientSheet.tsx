@@ -7,6 +7,7 @@ import { RoleDescription, SheetDetailLink, SheetHead } from "./SheetParts";
 
 import { Badge } from "@/components/ui/Badge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
 
@@ -22,7 +23,8 @@ export function IngredientSheet({
 }: {
   readonly open: boolean;
   readonly ingredient: ProductIngredientResponse | undefined;
-  readonly onClose: () => void;
+  /** 닫은 방법을 함께 넘긴다. 시트를 연 쪽이 분석에 남긴다. */
+  readonly onClose: (method: SheetCloseMethod) => void;
 }) {
   return (
     <BottomSheet open={open && ingredient !== undefined} onClose={onClose}>
@@ -36,7 +38,7 @@ function Content({
   onClose,
 }: {
   readonly ingredient: ProductIngredientResponse;
-  readonly onClose: () => void;
+  readonly onClose: (method: SheetCloseMethod) => void;
 }) {
   const description = useSheetDescription(String(ingredient.id), () =>
     fetchIngredientDetail(ingredient.id).then((detail) => detail.description),
@@ -58,7 +60,7 @@ function Content({
             </ul>
           ) : null
         }
-        onClose={onClose}
+        onClose={() => onClose("close_button")}
       />
 
       <BottomSheet.Body>
@@ -79,7 +81,12 @@ function Content({
 
       {/* 설명이 길어 몸통이 스크롤되어도 상세로 가는 단추는 늘 보이게 발에 둔다. */}
       <BottomSheet.Footer>
-        <SheetDetailLink href={`/ingredients/${ingredient.id}`}>{ingredient.koreanName} 자세히 보기</SheetDetailLink>
+        <SheetDetailLink
+          href={`/ingredients/${ingredient.id}?from=ingredient_sheet`}
+          onClick={() => onClose("detail_link")}
+        >
+          {ingredient.koreanName} 자세히 보기
+        </SheetDetailLink>
       </BottomSheet.Footer>
     </>
   );

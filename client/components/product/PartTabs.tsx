@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { track } from "@/lib/analytics/track";
 import { partHref, partTabId } from "@/lib/domain/product-parts";
 import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
@@ -140,7 +141,16 @@ export function PartTabs({
                   draggable={false}
                   // 동적 화면이라 기본값으로는 미리 받지 않는다. 구성품은 몇 개뿐이라 모두 받아 두어 바로 바뀌게 한다.
                   prefetch
-                  onClick={rememberStuck}
+                  onClick={() => {
+                    rememberStuck();
+                    // 이미 보고 있는 탭을 다시 누른 것은 바꾼 것이 아니다. 끌기 뒤의 클릭은 useDragScroll 이 막아 여기로 오지 않는다.
+                    if (selectedId === undefined || part.id === selectedId) return;
+                    track("product_part_selected", {
+                      product_id: product.id,
+                      part_id: part.id,
+                      previous_part_id: selectedId,
+                    });
+                  }}
                   className={`flex h-12 min-w-max shrink-0 items-center justify-center border-b-2 px-3 ${scrollable ? "" : "flex-1 basis-0"} ${selected ? "border-[#182132]" : "border-transparent"}`}
                 >
                   <span data-tab-content className="flex items-center gap-1 whitespace-nowrap">
