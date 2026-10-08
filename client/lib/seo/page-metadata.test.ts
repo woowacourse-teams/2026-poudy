@@ -34,11 +34,11 @@ vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
 vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
+import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
+import { metadata as categoriesMetadata } from "@/app/(directory)/categories/page";
 import BrandOpenGraphImage, { revalidate as brandImageRevalidate } from "@/app/brands/[brandId]/opengraph-image";
 import { generateMetadata as brandMetadata } from "@/app/brands/[brandId]/page";
-import { metadata as brandsMetadata } from "@/app/brands/page";
 import { generateMetadata as categoryMetadata } from "@/app/categories/[categoryId]/page";
-import { metadata as categoriesMetadata } from "@/app/categories/page";
 import { generateMetadata as curationMetadata } from "@/app/curations/[curationId]/page";
 import IngredientOpenGraphImage, {
   revalidate as ingredientImageRevalidate,

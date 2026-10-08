@@ -882,21 +882,14 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
 }
 
 /*
- * 카테고리·브랜드 탭의 흰 알약. 밑줄과 같은 길이로 미끄러진다.
+ * 카테고리·브랜드 탭의 밑줄. 고른 탭 아래로 미끄러진다.
  *
- * 두 탭 전환이 화면마다 다르게 움직이면 같은 일을 하는 자리로 읽히지 않는다.
+ * 두 화면이 머리와 탭을 레이아웃으로 함께 써서 주소가 바뀌어도 밑줄이 다시 그려지지 않는다.
+ * 그래서 옮겨 가는 길을 끝까지 보여 줄 수 있어, 화면 안에서 자리를 옮기는 길이(200ms)를 준다.
+ * 탭 글자는 색과 굵기를 함께 바로 바꾼다. 굵기는 이어 바꿀 수 없어, 색만 천천히 바꾸면 둘이 따로 논다.
  */
-/*
- * 알약만 짧게 둔다. 두 화면은 라우트가 갈라 눌린 뒤 150ms 안팎이면 페이지가 바뀌고,
- * 그때 이 요소가 새로 그려져 전환이 중간에 끊긴다. 옮겨 가는 길을 다 보여 주지 못할
- * 바에는 그 안에 도착시킨다. 검색 탭 밑줄과 길이가 갈리지만 끊겨 보이는 것보다 낫다.
- */
-.directory-tab-pill {
-  transition: transform var(--transition-duration-control-state) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.directory-tab {
-  transition: color var(--transition-duration-control-state) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
+.directory-tab-indicator {
+  transition: transform var(--transition-duration-disclosure) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 /*
@@ -1212,7 +1205,7 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
     transition-duration: 0s;
   }
 
-  .directory-tab-pill {
+  .directory-tab-indicator {
     transition-duration: 0s;
   }
 
