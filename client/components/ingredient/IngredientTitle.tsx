@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { PRESS_TEXT } from "@/components/ui/press";
+
 type IngredientTitleProps = {
   readonly koreanName: string;
   readonly englishName: string;
@@ -51,10 +53,10 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
 
   return (
     <div className="flex flex-col gap-0.5">
-      <h2 ref={koreanRef} className={`text-[20px] font-bold text-[#202124] ${clamp}`}>
+      <h2 ref={koreanRef} className={`text-[20px] font-bold text-[#182132] ${clamp}`}>
         {koreanName}
       </h2>
-      <p ref={englishRef} className={`text-[13px] text-[#72747A] ${clamp}`}>
+      <p ref={englishRef} className={`text-[13px] text-[#6A7588] ${clamp}`}>
         {englishName}
       </p>
 
@@ -63,7 +65,7 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
           type="button"
           onClick={() => setExpanded((open) => !open)}
           aria-expanded={expanded}
-          className="mt-1 self-start text-[12px] font-semibold text-text-secondary underline"
+          className={`mt-1 self-start text-[12px] font-semibold text-text-secondary underline ${PRESS_TEXT}`}
         >
           {expanded ? "접기" : "전체 이름 보기"}
         </button>

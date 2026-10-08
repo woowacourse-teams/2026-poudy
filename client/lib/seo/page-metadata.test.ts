@@ -25,11 +25,6 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   // 로고는 배포된 주소에서 받아 온다. 여기서는 무엇을 넘겼는지만 보므로 받지 않는다.
   socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
-vi.mock("next/font/google", () => ({
-  Foldit: () => ({ variable: "--font-foldit" }),
-  Geist_Mono: () => ({ variable: "--font-geist-mono" }),
-  Noto_Sans_KR: () => ({ variable: "--font-noto-sans-kr" }),
-}));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
 /* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
@@ -39,11 +34,11 @@ vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
 vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
+import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
+import { metadata as categoriesMetadata } from "@/app/(directory)/categories/page";
 import BrandOpenGraphImage, { revalidate as brandImageRevalidate } from "@/app/brands/[brandId]/opengraph-image";
 import { generateMetadata as brandMetadata } from "@/app/brands/[brandId]/page";
-import { metadata as brandsMetadata } from "@/app/brands/page";
 import { generateMetadata as categoryMetadata } from "@/app/categories/[categoryId]/page";
-import { metadata as categoriesMetadata } from "@/app/categories/page";
 import { generateMetadata as curationMetadata } from "@/app/curations/[curationId]/page";
 import IngredientOpenGraphImage, {
   revalidate as ingredientImageRevalidate,

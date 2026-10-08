@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 
 import { BrandDirectory } from "@/components/directory/BrandDirectory";
-import { DirectoryTabs } from "@/components/directory/DirectoryTabs";
-import { TopBar } from "@/components/ui/TopBar";
 import { fetchBrands } from "@/lib/api/products";
 
 export const metadata: Metadata = {
@@ -17,13 +15,6 @@ export const revalidate = 86400;
 export default async function BrandsPage() {
   const brands = await fetchBrands();
 
-  return (
-    <>
-      <TopBar title="브랜드" variant="root" edge={false} />
-      <DirectoryTabs current="brand" />
-      <div className="flex flex-1 flex-col px-4 pb-4">
-        <BrandDirectory brands={brands.items} />
-      </div>
-    </>
-  );
+  // 머리와 탭은 (directory) 레이아웃이 그린다.
+  return <BrandDirectory brands={brands.items} />;
 }

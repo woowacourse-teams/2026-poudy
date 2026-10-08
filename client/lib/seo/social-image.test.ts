@@ -33,7 +33,7 @@ describe("공유 이미지 레이아웃", () => {
     expect(nextOg.ImageResponse).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        fonts: [expect.objectContaining({ name: "Noto Sans KR", weight: 900 })],
+        fonts: [expect.objectContaining({ name: "Pretendard", weight: 900 })],
       }),
     );
 
@@ -46,7 +46,7 @@ describe("공유 이미지 레이아웃", () => {
     expect(markup).toContain("padding:64px");
     expect(markup).toContain("box-sizing:border-box");
     expect(markup).toContain("text-align:left");
-    expect(markup).toContain("font-family:Noto Sans KR");
+    expect(markup).toContain("font-family:Pretendard");
     expect(markup).not.toContain("font-family:Fredoka");
     expect(markup).toContain("font-size:80px");
     expect(markup).toContain("font-weight:900");

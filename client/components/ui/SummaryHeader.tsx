@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import { StickyBar } from "@/components/ui/StickyBar";
 import { TopBar } from "@/components/ui/TopBar";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
 
 /** `TopBar variant="sub"` 의 높이. 축약형이 그 아래에서 자리를 이어받는다. */
@@ -39,6 +40,11 @@ type SummaryHeaderProps = {
  */
 export function SummaryHeader({ title, right, summary, children }: SummaryHeaderProps) {
   const [passed, setPassed] = useState(false);
+  /*
+   * 축약형이 나와 있는 동안만 높이를 알린다. 그 아래에 붙는 줄(제품 상세의 구성품 탭)이
+   * 이 값을 더해 자리를 잡는다. 숨어 있을 때는 값을 지워 그 줄이 머리 바로 아래에 붙는다.
+   */
+  const summaryRef = useHeightVariable<HTMLDivElement>("--summary-bar-height", passed);
 
   return (
     <Context.Provider value={setPassed}>
@@ -53,6 +59,7 @@ export function SummaryHeader({ title, right, summary, children }: SummaryHeader
         <TopBar title={title} variant="sub" right={right} titleAs="p" edge={false} sticky={false} />
 
         <div
+          ref={summaryRef}
           data-stuck={passed}
           inert={!passed}
           className="product-summary-bar absolute inset-x-0 top-full bg-background"

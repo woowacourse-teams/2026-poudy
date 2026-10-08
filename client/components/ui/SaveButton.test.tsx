@@ -30,11 +30,11 @@ afterEach(() => {
 });
 
 describe("SaveButton 저장 인터랙션", () => {
-  it("wide 형태는 굵은 북마크 아이콘을 글자 앞에 둔다", () => {
+  it("wide 형태는 굵은 북마크 아이콘을 글자 뒤에 둔다", () => {
     render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant="wide" />);
 
     const button = screen.getByRole("button", { name: "테스트 제품 저장" });
-    const [icon, label] = button.children;
+    const [label, icon] = button.children;
 
     expect(icon?.querySelector("svg")).toHaveAttribute("stroke-width", "2.5");
     expect(icon).toHaveClass("items-center");
