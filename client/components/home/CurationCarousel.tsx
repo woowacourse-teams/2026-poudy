@@ -734,6 +734,12 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                     카드의 최소 높이를 비율과 글자가 그대로 정한다.
                   */
                   className="flex h-full"
+                  /*
+                    링크는 브라우저가 기본으로 끌어 옮길 수 있는 요소다. 그대로 두면 마우스로 카드를
+                    끄는 순간 링크 끌기가 시작되고 `pointercancel` 이 와서, 목록을 미는 동작이
+                    몇 px 만에 끊긴다. 그림에 준 것과 같은 까닭이다.
+                  */
+                  draggable={false}
                 >
                   {/*
                     비율은 최소 높이로만 쓴다. 글자가 카드에 다 들어가지 않으면 그만큼 세로로 자란다.
