@@ -215,12 +215,19 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * (globals.css) 한 번 그린 획을 늘였다 줄일 뿐 떨리지 않는다.
        */
       const size = 1 - (1 - MIN_SCALE) * distance;
-      box.style.transform = `scale3d(${size}, ${size}, 1)`;
+      /*
+       * 값이 그대로면 다시 적지 않는다. 같은 값이라도 적을 때마다 속성이 바뀐 것으로 잡혀,
+       * 세션 리플레이가 너무 잦은 변경으로 보고 기록을 건너뛴다. 멈춰 있는 카드는 대부분
+       * 값이 같으므로 이것만으로 적는 횟수가 크게 준다.
+       */
+      const transform = `scale3d(${size}, ${size}, 1)`;
+      if (box.style.transform !== transform) box.style.transform = transform;
       /*
        * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
        * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
        */
-      box.style.transformOrigin = child.offsetLeft + child.offsetWidth / 2 < center ? "right center" : "left center";
+      const origin = child.offsetLeft + child.offsetWidth / 2 < center ? "right center" : "left center";
+      if (box.style.transformOrigin !== origin) box.style.transformOrigin = origin;
     }
   }, []);
 
