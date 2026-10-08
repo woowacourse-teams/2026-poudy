@@ -11,6 +11,7 @@ import {
   IngredientPageResponse,
   ProductCountResponse,
   ProductDetailResponse,
+  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
@@ -66,6 +67,10 @@ const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;
   return new URLSearchParams({ partId: String(partId) });
 };
+
+/** 성분이 비슷한 제품. 서버가 미리 계산해 둔 것을 최대 3개 받는다. partId 가 없으면 첫 구성품을 기준으로 한다. */
+export const fetchProductSimilarities = (productId: number, partId?: number): Promise<ProductSimilarityResponse> =>
+  apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, { query: partQuery(partId) });
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 

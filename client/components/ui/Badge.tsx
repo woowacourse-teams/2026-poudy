@@ -19,6 +19,10 @@ const VARIANTS = {
   role: "h-[26px] px-3 bg-[#EFF1F5] text-[11px] font-semibold text-[#424E5F]",
   /** 성분 설명 화면의 배합 목적. 시트보다 한 단계 크다. */
   roleLarge: "h-7 px-3 bg-[#EFF1F5] text-[12px] font-medium text-[#424E5F]",
+  /** 주의 성분이 없음. 비슷한 제품 행의 상태 칩. */
+  noCaution: "h-6 px-2 bg-[#E0F4EA] text-[11px] font-bold text-[#0A6B52]",
+  /** 주의 성분이 있음. 색으로도 상태를 가르는 유일한 칩이다. */
+  caution: "h-6 px-2 bg-[#FFF0DC] text-[11px] font-bold text-[#9A4D00]",
 } as const;
 
 export type BadgeVariant = keyof typeof VARIANTS;

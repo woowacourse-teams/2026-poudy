@@ -1,10 +1,11 @@
-import type { ProductDetailResponse, ProductPartResponse } from "@poudy/api/api.zod";
+import type { ProductDetailResponse, ProductPartResponse, SimilarProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 
 import { IngredientList } from "./IngredientList";
 import { PartTabs } from "./PartTabs";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
+import { SimilarProducts } from "./SimilarProducts";
 import { UsageIngredients } from "./UsageIngredients";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
@@ -24,9 +25,12 @@ import { partTabId } from "@/lib/domain/product-parts";
 export function ProductDetail({
   product,
   entryPoint = "direct",
+  similarProducts = [],
 }: {
   readonly product: ProductDetailResponse;
   readonly entryPoint?: ProductEntryPoint;
+  /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
+  readonly similarProducts?: readonly SimilarProductResponse[];
 }) {
   return (
     <SummaryHeader
@@ -96,7 +100,7 @@ export function ProductDetail({
         <PartTabs product={product} entryPoint={entryPoint} />
 
         <div className="flex flex-col gap-6 px-4 pt-6 pb-10">
-          <SelectedPart product={product} />
+          <SelectedPart product={product} similarProducts={similarProducts} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
@@ -225,7 +229,13 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 }
 
 /** 고른 구성품의 성분 정보. 구성품이 여럿이면 위의 탭이 이 패널을 바꾼다. */
-function SelectedPart({ product }: { readonly product: ProductDetailResponse }) {
+function SelectedPart({
+  product,
+  similarProducts,
+}: {
+  readonly product: ProductDetailResponse;
+  readonly similarProducts: readonly SimilarProductResponse[];
+}) {
   const part = product.selectedPart;
   if (!part) return null;
 
@@ -240,6 +250,7 @@ function SelectedPart({ product }: { readonly product: ProductDetailResponse }) 
       <UsageIngredients part={part} />
       <CautionCheck groups={part.excludeGroups} />
       <Ingredients ingredients={part.ingredients} />
+      <SimilarProducts products={similarProducts} />
     </div>
   );
 }

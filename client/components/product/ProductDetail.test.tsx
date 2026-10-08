@@ -549,3 +549,50 @@ describe("구성품 탭", () => {
     expect(screen.getByRole("heading", { name: "정보 출처" })).toBeInTheDocument();
   });
 });
+
+describe("성분이 비슷한 제품", () => {
+  const similar = [
+    {
+      id: 3,
+      name: "다이브인 저분자 히알루론산 토너",
+      brand: { id: 2, name: "토리든", englishName: "TORRIDEN", imageUrl: "" },
+      imageUrl: "",
+      partId: 3,
+      containsExcludedIngredient: false,
+    },
+    {
+      id: 2,
+      name: "어성초 77 수딩 토너",
+      brand: { id: 3, name: "아누아", englishName: "ANUA", imageUrl: "" },
+      imageUrl: "",
+      partId: 21,
+      containsExcludedIngredient: true,
+    },
+  ];
+
+  it("비슷한 제품이 없으면 섹션을 그리지 않는다", () => {
+    render(<ProductDetail product={productDetails[0]!} similarProducts={[]} />);
+
+    expect(screen.queryByRole("heading", { name: "성분이 비슷한 제품" })).not.toBeInTheDocument();
+  });
+
+  it("비교한 구성품으로 여는 링크를 두고 진입 경로를 남긴다", () => {
+    render(<ProductDetail product={productDetails[0]!} similarProducts={similar} />);
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+
+    expect(section.getByRole("link", { name: /어성초 77 수딩 토너/ })).toHaveAttribute(
+      "href",
+      "/products/2?partId=21&from=similar_product",
+    );
+  });
+
+  it("주의 성분이 들었는지 칩으로 알린다", () => {
+    render(<ProductDetail product={productDetails[0]!} similarProducts={similar} />);
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+
+    expect(within(section.getByRole("link", { name: /다이브인/ })).getByText("주의 없음")).toBeInTheDocument();
+    expect(within(section.getByRole("link", { name: /어성초/ })).getByText("주의")).toBeInTheDocument();
+  });
+});

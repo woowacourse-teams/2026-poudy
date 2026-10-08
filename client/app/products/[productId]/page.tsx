@@ -5,7 +5,7 @@ import { ProductDetail } from "@/components/product/ProductDetail";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
-import { fetchProductDetail } from "@/lib/api/products";
+import { fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
 import { productIngredientDescription } from "@/lib/domain/product-display";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
@@ -32,6 +32,21 @@ const load = async (raw: string, partId: number | undefined) => {
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
+  }
+};
+
+/**
+ * 성분이 비슷한 제품. 받아 오지 못해도 제품 상세는 그대로 보여 준다. 덧붙이는 정보라 빈 목록으로 대신한다.
+ * 제품 상세와 같은 partId 를 넘겨 고른 구성품을 기준으로 받는다.
+ */
+const loadSimilarProducts = async (raw: string, partId: number | undefined) => {
+  const productId = Number(raw);
+  if (!Number.isInteger(productId)) return [];
+
+  try {
+    return (await fetchProductSimilarities(productId, partId)).items;
+  } catch {
+    return [];
   }
 };
 
@@ -70,13 +85,22 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 export default async function ProductDetailPage(props: PageProps<"/products/[productId]">) {
   const { productId } = await props.params;
   const searchParams = (await props.searchParams) ?? {};
-  const product = await load(productId, partIdOf(searchParams.partId));
+  const partId = partIdOf(searchParams.partId);
+  // 둘은 서로 기다릴 이유가 없어 함께 받는다.
+  const [product, similarProducts] = await Promise.all([
+    load(productId, partId),
+    loadSimilarProducts(productId, partId),
+  ]);
 
   return (
     <>
       <JsonLd data={breadcrumbList(productCrumbs(product))} />
       <JsonLd data={productStructuredData(product)} />
-      <ProductDetail product={product} entryPoint={productEntryPointOf(searchParams.from)} />
+      <ProductDetail
+        product={product}
+        entryPoint={productEntryPointOf(searchParams.from)}
+        similarProducts={similarProducts}
+      />
     </>
   );
 }
