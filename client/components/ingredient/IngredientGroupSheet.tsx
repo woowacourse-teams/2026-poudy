@@ -9,6 +9,7 @@ import { RoleDescription, SheetDetailLink, SheetHead } from "./SheetParts";
 import { Badge } from "@/components/ui/Badge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_SURFACE } from "@/components/ui/press";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
@@ -82,7 +83,7 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
                 <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
                   <Link
                     href={`/ingredients/${ingredient.id}`}
-                    className="flex min-h-[60px] items-center justify-between gap-2 py-2"
+                    className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
                   >
                     <span className="flex min-w-0 flex-col gap-1">
                       <span className="text-[14px] font-semibold text-[#182132]">{ingredient.koreanName}</span>

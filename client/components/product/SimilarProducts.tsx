@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { Badge } from "@/components/ui/Badge";
+import { PRESS_CARD_OUTSET } from "@/components/ui/press";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { partHref } from "@/lib/domain/product-parts";
@@ -35,7 +36,7 @@ export function SimilarProducts({ products }: { readonly products: readonly Simi
             */}
             <Link
               href={partHref(product.id, product.partId, "similar_product")}
-              className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 transition-colors duration-release ease-out active:bg-[#EFF1F5] active:duration-press @min-[calc(88px_+_10.7em)]:grid-cols-[64px_minmax(0,1fr)_auto]"
+              className={`grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 @min-[calc(88px_+_10.7em)]:grid-cols-[64px_minmax(0,1fr)_auto] ${PRESS_CARD_OUTSET}`}
             >
               <ProductImage
                 src={product.imageUrl || PRODUCT_PLACEHOLDER}

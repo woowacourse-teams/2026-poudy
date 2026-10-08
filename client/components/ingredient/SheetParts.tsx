@@ -6,6 +6,7 @@ import { AiSummaryBadge } from "./AiSummaryBadge";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_SCALE } from "@/components/ui/press";
 import type { SheetDescription } from "@/lib/hooks/useSheetDescription";
 
 /**
@@ -113,7 +114,7 @@ export function SheetDetailLink({ href, children }: { readonly href: string; rea
   return (
     <Link
       href={href}
-      className="flex h-12 w-full items-center justify-center rounded-[14px] bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132]"
+      className={`flex h-12 w-full items-center justify-center rounded-[14px] bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132] ${PRESS_SCALE}`}
     >
       <span className="truncate">{children}</span>
     </Link>

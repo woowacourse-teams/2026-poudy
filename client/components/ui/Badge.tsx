@@ -40,7 +40,9 @@ export function Badge({
 }) {
   return (
     <span
-      className={`flex w-fit shrink-0 items-center gap-1 rounded-full leading-none whitespace-nowrap ${VARIANTS[variant]}`}
+      // 누를 수 있는 행 안에서 행의 바탕색을 따라 배지 바탕을 바꿀 때 이 표지로 찾는다(PRESS_SURFACE_WITH_BADGE).
+      data-badge
+      className={`flex w-fit shrink-0 items-center gap-1 rounded-full leading-none whitespace-nowrap transition-colors duration-control-state ease-out ${VARIANTS[variant]}`}
     >
       {icon}
       {children}

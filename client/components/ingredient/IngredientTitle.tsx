@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { PRESS_TEXT } from "@/components/ui/press";
+
 type IngredientTitleProps = {
   readonly koreanName: string;
   readonly englishName: string;
@@ -63,7 +65,7 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
           type="button"
           onClick={() => setExpanded((open) => !open)}
           aria-expanded={expanded}
-          className="mt-1 self-start text-[12px] font-semibold text-text-secondary underline"
+          className={`mt-1 self-start text-[12px] font-semibold text-text-secondary underline ${PRESS_TEXT}`}
         >
           {expanded ? "접기" : "전체 이름 보기"}
         </button>

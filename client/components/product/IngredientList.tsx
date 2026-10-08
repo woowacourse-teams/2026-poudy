@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { EffectTag } from "@/components/ingredient/EffectTag";
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_SCALE, PRESS_SURFACE_WITH_BADGE } from "@/components/ui/press";
 
 /** 접기 전까지 보여 줄 성분 개수. design/v2.pen 의 `전성분 앞 5개 목록` 을 따른다. */
 const COLLAPSED_COUNT = 5;
@@ -43,7 +44,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
               <Link
                 href={`/ingredients/${ingredient.id}`}
                 prefetch="auto"
-                className="flex min-h-[60px] items-center gap-2"
+                className={`flex min-h-[60px] items-center gap-2 ${PRESS_SURFACE_WITH_BADGE}`}
               >
                 {/* 순번 칸은 글자를 따라 넓어지게 em 으로 잡는다. 1배에서는 24px 그대로다. */}
                 <span className="flex h-7 w-[2em] shrink-0 items-center justify-center text-[12px] text-[#566273] tabular-nums">
@@ -79,7 +80,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           type="button"
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
-          className="flex min-h-11 w-full items-center justify-center gap-1 rounded-[10px] bg-[#DEE2E9] px-4 py-2 text-center text-[13px] font-semibold text-[#182132]"
+          className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-[10px] bg-[#DEE2E9] px-4 py-2 text-center text-[13px] font-semibold text-[#182132] ${PRESS_SCALE}`}
         >
           {expanded ? "성분 목록 접기" : `나머지 ${restCount}개 성분 펼쳐보기`}
           <Icon name={expanded ? "chevron-up" : "chevron-down"} size={16} scalable className="text-[#566273]" />

@@ -6,6 +6,8 @@ import { Fragment } from "react";
 import { BrandLogo } from "./BrandLogo";
 import { Icon } from "./icons/Icon";
 
+import { PRESS_SURFACE } from "@/components/ui/press";
+
 type DirectoryRailItem = {
   readonly id: string;
   readonly label: string;
@@ -167,11 +169,11 @@ function DirectoryRow({
   const { label, count, countPrefix, initial, imageUrl, href } = item;
 
   return (
-    // 마우스를 올리면 누를 때와 같은 색으로 칠한다. 들고 나는 시간은 160ms 로 같게 두어 훑을 때 색이 튀지 않게 하고, 누름만 100ms 로 바로 반응한다.
+    // 누름·hover 표시는 다른 목록 행과 같은 규칙을 쓴다.
     <Link
       href={href}
       onClick={() => onSelect?.(item)}
-      className="flex min-h-[52px] items-center gap-2 border-b border-[#DEE2E9] py-2 pr-4 pl-5 transition-colors duration-control-state ease-out active:bg-[#EFF1F5] active:duration-press pointer-fine:hover:bg-[#EFF1F5]"
+      className={`flex min-h-[52px] items-center gap-2 border-b border-[#DEE2E9] py-2 pr-4 pl-5 ${PRESS_SURFACE}`}
     >
       {/* 로고가 있으면 그림으로, 없으면 이름 첫 글자로 자리를 채운다. */}
       {imageUrl ? <BrandLogo name={label} imageUrl={imageUrl} size={28} scalable /> : null}

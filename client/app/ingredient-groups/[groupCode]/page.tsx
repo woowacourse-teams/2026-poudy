@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_SCALE, PRESS_SURFACE } from "@/components/ui/press";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
@@ -77,7 +78,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
 
         <Link
           href={`/products?includeGroupCodes=${encodeURIComponent(group.code)}`}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] font-bold text-white"
+          className={`flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] font-bold text-white ${PRESS_SCALE}`}
         >
           <span className="truncate">{name} 성분군 포함 제품 보기</span>
           <Icon name="chevron-right" size={16} scalable className="shrink-0" />
@@ -91,7 +92,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
                 <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
                   <Link
                     href={`/ingredients/${ingredient.id}`}
-                    className="flex min-h-[60px] items-center justify-between gap-2 py-2"
+                    className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
                   >
                     <span className="flex min-w-0 flex-col gap-1">
                       <span className="text-[15px] font-semibold text-[#182132]">{ingredient.koreanName}</span>

@@ -12,6 +12,7 @@ import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { Icon, scalableIconStyle } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
+import { PRESS_TEXT } from "@/components/ui/press";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
@@ -373,7 +374,7 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
       {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
       <Link
         href={`/inquiry/products/${productId}`}
-        className="flex min-h-11 items-center justify-between gap-2 border-t border-[#DEE2E9] text-[14px] font-semibold text-[#182132]"
+        className={`flex min-h-11 items-center justify-between gap-2 border-t border-[#DEE2E9] text-[14px] font-semibold text-[#182132] ${PRESS_TEXT}`}
       >
         정보가 다르다면 수정을 제안해 주세요
         <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#566273]" />

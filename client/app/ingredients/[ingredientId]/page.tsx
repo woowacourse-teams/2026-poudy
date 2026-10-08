@@ -12,6 +12,7 @@ import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_SCALE } from "@/components/ui/press";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
@@ -114,7 +115,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
         <Link
           href={`/products?includeIngredientIds=${ingredient.id}`}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 py-3 text-[14px] leading-[1.3] font-bold text-white"
+          className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 py-3 text-[14px] leading-[1.3] font-bold text-white ${PRESS_SCALE}`}
         >
           {/*
             이름이 길면 이름만 줄인다. 뒤따르는 개수는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.

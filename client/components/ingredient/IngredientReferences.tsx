@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
+import { PRESS_TEXT } from "@/components/ui/press";
 import { ingredientReferences } from "@/lib/domain/ingredient-references";
 
 /**
@@ -37,7 +38,7 @@ export function IngredientReferences({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls={listId}
-        className="flex min-h-11 w-full items-center gap-1 border-b border-[#DEE2E9] text-left text-[13px]"
+        className={`flex min-h-11 w-full items-center gap-1 border-b border-[#DEE2E9] text-left text-[13px] ${PRESS_TEXT}`}
       >
         <Icon name="info" size={15} scalable className="shrink-0 text-[#6A7588]" />
         {/* 글자를 키워 한 줄에 다 들어가지 않으면 날짜를 통째로 다음 줄로 넘긴다. 낱말 가운데서 끊지 않는다. */}

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
+import { PRESS_SURFACE } from "@/components/ui/press";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 
 type Sheet = { readonly kind: "ingredient"; readonly id: number } | { readonly kind: "group"; readonly code: string };
@@ -78,8 +79,7 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
 
 const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
 
-const CHIP =
-  "flex h-9 items-center rounded-full border border-[#CAD1DB] bg-white px-3 text-[13px] font-medium text-[#182132] transition-colors duration-release ease-out active:bg-[#EFF1F5] active:duration-press";
+const CHIP = `flex h-9 items-center rounded-full border border-[#CAD1DB] bg-white px-3 text-[13px] font-medium text-[#182132] ${PRESS_SURFACE}`;
 
 function Chip({
   item,
