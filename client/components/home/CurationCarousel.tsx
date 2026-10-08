@@ -4,7 +4,6 @@ import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 
 import { track } from "@/lib/analytics/track";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
@@ -51,6 +50,22 @@ const slideStep = (track: HTMLElement): number => {
   if (!(second instanceof HTMLElement)) return first.offsetWidth;
 
   return second.offsetLeft - first.offsetLeft;
+};
+
+/**
+ * 한 칸을 가운데로 보내는 스크롤 값.
+ *
+ * 좌우 여백이 고정 px 이라 칸의 자리도 딱 떨어진다. 칸의 자리에서 여백을 빼면 그 값이 나온다.
+ *
+ * 다만 끝 여백을 스크롤 범위에 넣지 않는 브라우저가 있어, 마지막 칸은 그 값까지 가지 못할
+ * 수 있다. 갈 수 있는 끝으로 묶어 두지 않으면 `settle` 이 아직 덜 왔다고 보아 붙이기를
+ * 끝없이 되풀이한다. 범위를 잴 수 없을 때(그리기 전)는 그대로 둔다.
+ */
+const scrollOf = (track: HTMLElement, slide: HTMLElement): number => {
+  const to = slide.offsetLeft - SIDE_PADDING;
+  const max = track.scrollWidth - track.clientWidth;
+
+  return max > 0 ? Math.min(to, max) : to;
 };
 
 /** 스스로 다음 카드로 넘어가는 간격. */
@@ -111,32 +126,14 @@ const DRAG_THRESHOLD = 5;
 const DRAG_SWITCH_RATIO = 0.2;
 
 /**
- * 가운데 칸 양옆에 두는 여유분 수.
- *
- * 순서를 돌리는 일은 스크롤이 멎은 뒤에만 한다. 손가락으로 빠르게 여러 칸을 밀면 멎기
- * 전에 여러 칸을 지나므로, 한 장만 두면 끝에 닿는다. 두 장씩 두어 미끄러지는 동안에도
- * 갈 곳이 남게 한다.
- */
-const SPARE = 2;
-
-/**
- * 가운데 칸이 첫 카드를 가리키도록 세운 처음 순서.
- *
- * 카드가 여유분보다 적으면 같은 카드가 여러 자리에 선다. 나머지 연산으로 돌려 담아
- * 개수와 상관없이 자리가 비지 않게 한다.
- */
-const initialOrder = (count: number): readonly number[] => {
-  if (count === 0) return [];
-  if (count === 1) return [0];
-
-  return Array.from({ length: SPARE * 2 + 1 }, (_, slot) => (slot - SPARE + count * SPARE) % count);
-};
-
-/**
  * 디자인 S01 의 큐레이션 캐러셀.
  *
- * 처음과 끝이 이어지도록 앞뒤에 카드를 한 장씩 복제해 둔다. 복제한 자리에 닿으면
- * 애니메이션 없이 같은 그림의 진짜 자리로 옮겨, 사용자에게는 끝없이 도는 것으로 보인다.
+ * 카드를 받은 순서대로 한 번씩만 그린다. 끝에서 처음으로 이어 돌지 않고, 스스로 넘기다
+ * 마지막 카드에 닿으면 첫 카드로 되감는다.
+ *
+ * 끝없이 도는 것처럼 보이려고 카드를 복제해 두고 스크롤이 멎을 때마다 순서를 돌렸던 적이
+ * 있다. 그 되돌림이 스크롤 위치를 순간 이동시키고, 멎었는지 판정하는 시점이 브라우저마다
+ * 달라 손가락으로 밀 때 카드가 튀었다. 카드가 몇 장 되지 않아 되감기로도 충분하다.
  *
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
  */
@@ -155,8 +152,6 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   const frame = useRef<number | undefined>(undefined);
   /* 미끄러지는 움직임을 그리는 자리. 새로 출발할 때 가던 것을 멈춘다. */
   const glide = useRef<number | undefined>(undefined);
-  /* 되돌리느라 옮긴 스크롤인지. 그 한 번은 자리 표시를 다시 세지 않는다. */
-  const recentering = useRef(false);
   /*
    * 마우스로 끄는 동안의 상태.
    *
@@ -238,40 +233,15 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     });
   }, [paintScales]);
 
-  const loop = items.length > 1;
-
-  /*
-   * 보이는 카드의 순서. 끝에 닿아 되감는 대신 이 순서를 돌려 원통처럼 이어 간다.
-   *
-   * 맨 앞 카드를 떼어 뒤에 붙이면 카드가 한 칸 왼쪽으로 밀린다. 그만큼 스크롤도 뒤로
-   * 당기면 둘이 상쇄되어 가운데 카드가 화면에서 제자리에 남는다. 스크롤이 완전히 멎은
-   * 뒤에만 하므로 눈에는 아무 변화가 없다.
-   */
-  const [order, setOrder] = useState<readonly number[]>(() => initialOrder(items.length));
-  /*
-   * 지금 순서를 곧바로 읽을 자리. `setOrder` 는 다시 그린 뒤에야 반영되는데, 되돌린 직후의
-   * 스크롤은 그 전에 온다. 그때 낡은 순서를 보면 자리 표시가 한 칸 어긋난다.
-   */
-  const orderRef = useRef(order);
-
-  /*
-   * 자리마다 고른 카드. 여유분이 있어 양 끝에서도 이웃이 보인다.
-   *
-   * 목록에서의 자리를 함께 들고 간다. 복제한 카드가 섞여 있어 그린 순서로는 이것이 몇 번째
-   * 큐레이션인지 알 수 없는데, 눌렀을 때 남기는 이벤트에는 그 번호가 필요하다.
-   */
-  const slides = order.map((itemIndex) => ({ curation: items[itemIndex], itemIndex }));
+  /* 한 장뿐이면 넘길 곳이 없다. 스스로 넘기지도, 자리 표시를 띄우지도 않는다. */
+  const multiple = items.length > 1;
 
   const scrollToSlide = (slideIndex: number, smooth: boolean, duration = GLIDE_DURATION) => {
     const track = trackRef.current;
     const target = track?.children[slideIndex];
     if (!track || !(target instanceof HTMLElement)) return;
 
-    /*
-     * 좌우 여백이 고정 px 이라 칸의 자리도 딱 떨어진다. 첫 칸의 자리를 빼면 그 칸을
-     * 가운데로 보내는 스크롤 값이 그대로 나온다.
-     */
-    const to = target.offsetLeft - SIDE_PADDING;
+    const to = scrollOf(track, target);
 
     // 가던 움직임이 있으면 멈추고 새로 출발한다.
     if (glide.current !== undefined) cancelAnimationFrame(glide.current);
@@ -320,8 +290,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
       glide.current = undefined;
       /*
-       * 스냅은 자리를 되돌린 뒤에 켠다. 여기서 켜면 방금 도착한 자리가 스냅 지점이 아니라
-       * 브라우저가 가까운 칸으로 끌어당겨, 가던 카드가 도로 밀려난다.
+       * 멎었다고 알린 뒤에 스냅을 켠다. 도착한 자리가 스냅 지점에서 조금 벗어나 있으면
+       * `settle` 이 짧게 붙이는데, 그 전에 켜면 브라우저가 먼저 끌어당겨 둘이 다툰다.
        */
       track.dispatchEvent(new Event("scrollend"));
       track.style.scrollSnapType = "";
@@ -332,8 +302,6 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
   useEffect(() => {
     reduced.current = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    // 여유분을 앞에 둔 만큼 들어가 가운데 칸에서 시작한다.
-    if (loop) scrollToSlide(SPARE, false);
     // 첫 화면에도 가운데 카드가 제 크기로 서 있어야 한다.
     paintScales();
 
@@ -341,7 +309,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       if (frame.current !== undefined) cancelAnimationFrame(frame.current);
       if (glide.current !== undefined) cancelAnimationFrame(glide.current);
     };
-  }, [loop, paintScales]);
+  }, [paintScales]);
 
   /* 화면 폭이 바뀌면 한 칸의 너비도 바뀐다. 크기를 다시 셈한다. */
   useEffect(() => {
@@ -366,14 +334,14 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     /*
      * 그리는 동안에는 흘려보낸다. 프레임마다 `scrollLeft` 를 적으면 브라우저가 그 사이사이
-     * 멎었다고 보아 이 이벤트를 던지는데, 그때 자리를 되돌리면 가던 카드가 끌려 돌아온다.
+     * 멎었다고 보아 이 이벤트를 던지는데, 그때 가운데로 붙이면 가던 카드가 끌려 돌아온다.
      * 다 그리고 나서 스스로 한 번 던지는 것만 받는다.
      */
     const onScrollEnd = () => {
       if (glide.current !== undefined) return;
       /*
        * 끄는 도중에 손을 잠깐 멈추면 브라우저가 스크롤이 멎었다고 보아 이 이벤트를 던진다.
-       * 그때 순서를 되돌리면 붙잡고 있던 카드가 손을 떠난다. 손을 뗄 때 처리한다.
+       * 그때 가운데로 붙이면 붙잡고 있던 카드가 손을 떠난다. 손을 뗄 때 처리한다.
        */
       if (drag.current !== undefined) return;
       settleRef.current();
@@ -390,7 +358,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    */
   const restartAutoplay = useCallback(() => {
     clearInterval(autoplay.current);
-    if (!loop || reduced.current) return;
+    if (!multiple || reduced.current) return;
 
     autoplay.current = setInterval(() => {
       const track = trackRef.current;
@@ -407,66 +375,20 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * 한 칸마다 1px 씩 어긋나고, 그 자리는 스냅 지점이 아니라서 브라우저가 멈춘 뒤
        * 다시 끌어당긴다. 그 보정이 이동 애니메이션을 잡아먹는다.
        */
-      const next = slideAt(track) + 1;
-      if (next >= track.children.length) return;
+      const following = slideAt(track) + 1;
+      /* 마지막 카드에서는 첫 카드로 되감는다. */
+      const next = following < track.children.length ? following : 0;
 
       // 이 스크롤은 사람이 넘긴 것이 아니므로 시계를 다시 세지 않는다.
       selfScrolling.current = true;
       scrollToSlideRef.current(next, true);
     }, AUTOPLAY_INTERVAL);
-  }, [loop]);
+  }, [multiple]);
 
   useEffect(() => {
     restartAutoplay();
     return () => clearInterval(autoplay.current);
   }, [restartAutoplay]);
-
-  /**
-   * 가운데 칸으로 되돌리면서 카드 순서를 그만큼 돌린다.
-   *
-   * 밀려난 칸 수만큼 순서를 돌리고 스크롤도 같은 만큼 되돌린다. 둘이 상쇄되어 가운데
-   * 카드는 화면에서 제자리에 남고, 스크롤 위치는 늘 가운데 칸 언저리에 머문다.
-   * 끝에 닿는 일이 없으므로 되감기도 없다.
-   *
-   * 크기는 React 가 다시 그리기를 기다리지 않고 곧바로 고쳐 적는다. 한 프레임이라도
-   * 어긋나면 카드 크기가 순간 뒤바뀐 것으로 보인다.
-   */
-  const recenter = () => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    const slide = slideAt(track);
-    if (slide === SPARE) return;
-
-    /*
-     * 가운데 설 카드를 기준으로 순서를 새로 세운다. 자리 수가 카드 수의 배수가 아니어서
-     * 배열을 통째로 돌리면 같은 카드가 두 자리에 겹쳐 한 장이 건너뛰어진다.
-     */
-    const previous = orderRef.current;
-    const center = previous[Math.min(previous.length - 1, Math.max(0, slide))];
-    const next = previous.map((_, slot) => (center + slot - SPARE + items.length * SPARE) % items.length);
-
-    /* 뒤따라오는 스크롤이 곧바로 읽도록 먼저 담아 둔다. */
-    orderRef.current = next;
-
-    /*
-     * 순서를 화면에 먼저 그려 놓고 스크롤을 옮긴다.
-     *
-     * 그냥 두면 `setOrder` 는 다음 그림에 반영되는데 스크롤은 그 자리에서 옮겨진다.
-     * 그 한 프레임 동안 자리는 새 자리인데 카드는 옛 순서라, 그림과 글자가 서로 다른
-     * 큐레이션을 가리키는 것이 눈에 스친다.
-     */
-    flushSync(() => {
-      setOrder(next);
-      /* 순서가 돌아도 가운데 카드는 그대로다. 자리 표시도 그 카드를 가리키게 맞춘다. */
-      setCurrent(center);
-    });
-
-    /* 이 스크롤이 깨우는 `onScroll` 은 자리 표시를 건드리지 않게 표시해 둔다. */
-    recentering.current = true;
-    scrollToSlide(SPARE, false);
-    paintScales();
-  };
 
   /* 어느 카드가 가운데 왔는지는 스크롤 위치에서 읽는다. */
   const onScroll = () => {
@@ -476,30 +398,15 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     // 미는 동안 계속 크기를 고쳐 그린다. 자리가 정해지기를 기다리지 않는다.
     scheduleScales();
 
-    /*
-     * 되돌리느라 옮긴 스크롤이면 자리 표시를 건드리지 않는다.
-     *
-     * 되돌릴 때 이미 가운데 카드를 정해 표시까지 맞춰 두었다. 그 스크롤이 이 자리를 다시
-     * 깨우는데, 그때 위치로 다시 세면 한 프레임 동안 옆 카드를 가리켜 글자가 스쳐 보인다.
-     */
-    if (recentering.current) {
-      recentering.current = false;
-    } else {
-      const slide = slideAt(track);
-      /* 순서는 방금 바뀌었을 수 있어 ref 에서 읽는다. 그리기 전의 값을 쓰면 한 칸 어긋난다. */
-      const live = orderRef.current;
-      setCurrent(live[Math.min(live.length - 1, Math.max(0, slide))] ?? 0);
-    }
+    setCurrent(slideAt(track));
 
     /*
-     * 순서를 돌리는 일은 스크롤이 완전히 멎은 뒤에 한다. 가는 도중에 손대면 카드가
-     * 되돌아온다. 직접 그리는 동안에는 끝나는 때를 알고 있으니 시계를 걸지 않는다.
+     * 멎은 뒤의 정리는 스크롤이 완전히 멎은 뒤에 한다. 직접 그리는 동안에는 끝나는 때를
+     * 알고 있으니 시계를 걸지 않는다.
      *
-     * 마우스로 끄는 중에도 걸지 않는다. 끄는 동안에도 이 자리가 프레임마다 깨어나므로
-     * 시계를 걸면 손가락이 멈춰 있는 사이에 시계가 차서, 끌고 있는 도중에 `recenter` 가
-     * 순서를 돌리고 스크롤을 되돌린다. 그러면 붙잡고 있던 카드가 손을 떠나 튄다.
-     * 손을 뗄 때 `onPointerUp` 이 이어서 처리한다. 손가락도 같은 까닭으로 화면에 닿아 있는
-     * 동안에는 걸지 않는다. 손을 뗀 뒤 붙는 동안의 스크롤이 다시 건다.
+     * 마우스로 끌거나 손가락이 화면에 닿아 있는 동안에도 걸지 않는다. 손이 잠깐 멈춘 사이에
+     * 시계가 차면 `settle` 이 카드를 가운데로 끌어당겨, 붙잡고 있던 카드가 손을 떠난다.
+     * 마우스는 `onPointerUp` 이, 손가락은 손을 뗀 뒤 붙는 동안의 스크롤이 다시 건다.
      */
     clearTimeout(settleTimer.current);
     if (glide.current === undefined && drag.current === undefined && !held.current) {
@@ -507,7 +414,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     }
   };
 
-  /** 스크롤이 멎었다. 자리를 되돌리고 시계를 다시 센다. */
+  /** 스크롤이 멎었다. 본 카드를 남기고 시계를 다시 센다. */
   const settle = () => {
     clearTimeout(settleTimer.current);
 
@@ -517,9 +424,9 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       const selected = carouselTrack.children[slide];
       if (
         selected instanceof HTMLElement &&
-        Math.abs(carouselTrack.scrollLeft - (selected.offsetLeft - SIDE_PADDING)) > 1
+        Math.abs(carouselTrack.scrollLeft - scrollOf(carouselTrack, selected)) > 1
       ) {
-        // 브라우저가 스냅 지점 밖에서 멈췄다면, 재배치 전에 짧게 가운데로 붙인다.
+        // 브라우저가 스냅 지점 밖에서 멈췄다면 짧게 가운데로 붙인다.
         scrollToSlide(slide, true, DROP_DURATION);
         return;
       }
@@ -530,7 +437,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     const trackElement = trackRef.current;
     if (trackElement) {
-      const itemIndex = orderRef.current[slideAt(trackElement)] ?? 0;
+      const itemIndex = slideAt(trackElement);
       if (itemIndex !== lastSettledItem.current) {
         const item = items[itemIndex];
         if (item) {
@@ -543,8 +450,6 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       }
       lastSettledItem.current = itemIndex;
     }
-
-    if (loop) recenter();
 
     // 사람이 넘긴 것이다. 넘긴 카드를 볼 시간을 주도록 시계를 처음부터 다시 센다.
     if (!wasSelf) restartAutoplay();
@@ -659,8 +564,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
      * 그 절반이 멀다. 끌기 시작한 칸에서 한 칸 간격의 `DRAG_SWITCH_RATIO` 만큼만 움직였으면
      * 넘긴 것으로 본다. 그만큼도 못 움직였으면 시작한 칸으로 되돌린다.
      *
-     * `scrollToSlide` 는 끝에서 `scrollend` 를 스스로 던지므로, 순서를 되돌리는 `settle`
-     * 까지 이어진다. 끝 칸에 닿아 되감기는 일이 없다.
+     * `scrollToSlide` 는 끝에서 `scrollend` 를 스스로 던지므로 `settle` 까지 이어진다.
      */
     const step = slideStep(track);
     /* 끈 거리는 스크롤이 움직인 값으로 읽는다. 포인터 좌표는 붙들기 전후로 기준이 다르다. */
@@ -672,7 +576,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       target = from + (shifted > 0 ? 1 : -1);
     }
 
-    /* 여유분 밖으로는 나가지 않는다. 그 바깥은 카드가 없다. */
+    /* 처음과 끝 밖으로는 나가지 않는다. 그 바깥은 카드가 없다. */
     const last = track.children.length - 1;
     scrollToSlide(Math.min(last, Math.max(0, target)), true, DROP_DURATION);
   };
@@ -698,7 +602,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    * 손가락을 뗐다.
    *
    * 손가락으로 밀면 `pointerup` 대신 `pointercancel` 이 오고, 그때는 아직 손이 화면에 있다.
-   * 손이 실제로 떨어지는 때는 이 이벤트만 알려 준다. 스냅과 순서 되돌리기는 뒤이어 오는
+   * 손이 실제로 떨어지는 때는 이 이벤트만 알려 준다. 가운데로 붙이는 일은 뒤이어 오는
    * `scrollend` 가 맡는다.
    */
   const onTouchEnd = (event: React.TouchEvent<HTMLUListElement>) => {
@@ -765,17 +669,13 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
           className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4"
         >
-          {slides.map(({ curation, itemIndex }, slideIndex) => {
+          {items.map((curation, slideIndex) => {
             return (
               /*
-                자리를 key 로 쓴다. 순서가 돌아도 자리는 그대로이므로 React 가 요소를
-                새로 만들지 않는다. 카드 ID 를 key 로 두면 돌 때마다 요소가 다시 생겨
-                그림을 처음부터 다시 받고, 받는 동안 카드가 한 번 비어 보인다.
-
                 칸의 폭은 목록의 안쪽 폭을 그대로 쓴다. 안쪽 폭은 이미 좌우 여백을 뺀 값이라
                 여기서 또 빼면 두 번 빠진다. 여백이 고정이라 칸의 자리도 딱 떨어진다.
               */
-              <li key={slideIndex} className="w-full shrink-0 snap-center">
+              <li key={curation.id} className="w-full shrink-0 snap-center">
                 {/*
                   가운데 카드를 키우는 대신 옆 카드를 줄인다.
 
@@ -798,7 +698,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       event.preventDefault();
                       return;
                     }
-                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
+                    track("curation_opened", { curation_id: curation.id, position: slideIndex + 1, surface: "home" });
                   }}
                   className="block"
                 >
@@ -812,7 +712,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       alt=""
                       fill
                       sizes="(max-width: 480px) 90vw, 420px"
-                      {...(slideIndex === SPARE ? { priority: true } : { loading: "eager" as const })}
+                      {...(slideIndex === 0 ? { priority: true } : { loading: "eager" as const })}
                       draggable={false}
                       className="object-cover select-none"
                     />
