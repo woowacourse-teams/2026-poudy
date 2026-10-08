@@ -98,9 +98,9 @@ class IngredientDatabaseQueryTest {
             values (90002, 'ANTIOXIDANT_RELATED', 0)
             """);
         jdbc.update("""
-            insert into exclude_code_ingredient (exclude_code, ingredient_id, display_order)
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
             select 'FRAGRANCE_ALLERGENS', 90002, coalesce(max(display_order), -1) + 1
-            from exclude_code_ingredient where exclude_code = 'FRAGRANCE_ALLERGENS'
+            from ingredient_group_ingredient where group_code = 'FRAGRANCE_ALLERGENS'
             """);
 
         mockMvc.perform(get("/api/ingredients/90002"))

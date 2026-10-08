@@ -23,16 +23,16 @@ public class ErrorResponseConfig {
     }
 
     private void addErrorResponses(String path, PathItem pathItem) {
-        pathItem.readOperations().forEach(operation -> addErrorResponses(path, operation));
+        pathItem.readOperationsMap().forEach((method, operation) -> addErrorResponses(path, method, operation));
     }
 
-    private void addErrorResponses(String path, Operation operation) {
+    private void addErrorResponses(String path, PathItem.HttpMethod method, Operation operation) {
         ApiResponses responses = operation.getResponses();
 
         if (hasInput(operation)) {
             responses.addApiResponse(
                 "400",
-                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path))
+                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path, method))
             );
         }
         if (ErrorResponseCodes.rateLimited(path)) {
@@ -55,13 +55,13 @@ public class ErrorResponseConfig {
                 )
             );
         }
-        ErrorResponseCodes.notFound(path)
-            .ifPresent(
-                code -> responses.addApiResponse(
-                    "404",
-                    ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, code)
-                )
+        List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path);
+        if (!notFoundCodes.isEmpty()) {
+            responses.addApiResponse(
+                "404",
+                ProblemDetailResponses.of("대상을 찾을 수 없음", HttpStatus.NOT_FOUND, notFoundCodes)
             );
+        }
         responses.addApiResponse(
             "500",
             ProblemDetailResponses.of("서버 오류", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR)

@@ -8,8 +8,7 @@ public final class RankingChange {
         NEW,
         UP,
         DOWN,
-        SAME,
-        NONE
+        SAME
     }
 
     private final Movement movement;
@@ -20,8 +19,8 @@ public final class RankingChange {
         this.steps = steps;
     }
 
-    public static RankingChange unknown() {
-        return new RankingChange(Movement.NONE, 0);
+    public static RankingChange unchanged() {
+        return new RankingChange(Movement.SAME, 0);
     }
 
     public static RankingChange entered() {
@@ -30,16 +29,12 @@ public final class RankingChange {
 
     public static RankingChange moved(int previousRank, int rank) {
         if (previousRank == rank) {
-            return new RankingChange(Movement.SAME, 0);
+            return unchanged();
         }
         if (previousRank > rank) {
             return new RankingChange(Movement.UP, previousRank - rank);
         }
         return new RankingChange(Movement.DOWN, rank - previousRank);
-    }
-
-    public boolean isKnown() {
-        return movement != Movement.NONE;
     }
 
     public String movementName() {

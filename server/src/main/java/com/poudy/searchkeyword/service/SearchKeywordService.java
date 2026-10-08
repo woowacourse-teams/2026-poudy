@@ -1,5 +1,6 @@
 package com.poudy.searchkeyword.service;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
 import com.poudy.searchkeyword.domain.ranking.RankedKeyword;
@@ -35,7 +36,7 @@ public class SearchKeywordService {
     }
 
     private void logWhenUnresolved(String normalizedQuery) {
-        if (snapshot.recognizes(normalizedQuery)) {
+        if (!snapshot.isInitialized() || snapshot.recognizes(normalizedQuery)) {
             return;
         }
         log.info("event=search_keyword_unresolved keyword=\"{}\"", quoted(normalizedQuery));
@@ -46,6 +47,9 @@ public class SearchKeywordService {
     }
 
     public List<RankedKeyword> rankings() {
+        if (!snapshot.isInitialized()) {
+            throw new InfrastructureException("검색어 사전을 불러오지 못했습니다.");
+        }
         return snapshot.rankings();
     }
 

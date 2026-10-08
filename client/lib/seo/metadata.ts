@@ -53,10 +53,7 @@ const twitter: Metadata["twitter"] = {
 };
 
 const icons: Metadata["icons"] = {
-  icon: [
-    { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
-    { url: "/favicon.png", type: "image/png", sizes: "256x256" },
-  ],
+  icon: [{ url: "/favicon.ico", sizes: "16x16 32x32 48x48 64x64 128x128 256x256" }],
 };
 
 /**

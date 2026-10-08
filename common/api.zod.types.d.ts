@@ -123,7 +123,7 @@ export type SkinTypesResponse = {
   items: Array<SkinTypeResponse>;
 }
 export type RankingChangeItem = { movement: string, steps: number }
-export type RankingItem = { rank: number, keyword: string, change?: RankingChangeItem }
+export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
@@ -171,30 +171,7 @@ export type CategoryPathResponse = {
   name: string;
   child: CategorySummaryResponse;
 }
-export type DisclosedAmountResponse = {
-  /**
-   * 공개 형태
-   */
-  type: string;
-  /**
-   * 함량 값
-   */
-  value: number;
-  /**
-   * 함량 단위
-   */
-  unit: string;
-}
-export type ExcludeGroupResponse = {
-  /**
-   * 제외 성분군 이름
-   */
-  name: string;
-  /**
-   * 제품의 해당 성분군 포함 여부
-   */
-  contains: boolean;
-}
+export type ExcludeGroupResponse = { name: string, contains: boolean }
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
@@ -206,6 +183,7 @@ export type FormulationRoleResponse = {
    */
   name: string;
 }
+export type IngredientGroupSummaryResponse = { code: string, name: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -228,18 +206,7 @@ export type ProductVariantResponse = {
    */
   status: string;
 }
-export type SkinEffectGroupResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-  ingredientIds: Array<number>;
-}
+export type ProductPartSummaryResponse = { id: number, name: (string | null), cautionCount: number }
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -263,54 +230,57 @@ export type ProductIngredientResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
    */
   skinEffects: Array<SkinEffectResponse>;
-  disclosedAmount?: DisclosedAmountResponse;
 }
-export type ProductDetailResponse = {
+export type SkinEffectIngredientResponse = { id: number, koreanName: string }
+export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
+export type SkinEffectGroupResponse = {
   /**
-   * 제품 ID
+   * 피부 작용 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+  ingredientIds: Array<number>;
+  items: Array<SkinEffectItemResponse>;
+}
+export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
+export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
+export type SimilarProductResponse = {
+  /**
+   * 대상 제품 ID
    */
   id: number;
   /**
-   * 제품명
+   * 대상 제품명
    */
   name: string;
   brand: BrandResponse;
-  /**
-   * 제품 카테고리 목록
-   */
-  categories: Array<CategoryPathResponse>;
-  /**
-   * 제품 대표 이미지 URL
-   */
   imageUrl: string;
   /**
-   * 같은 제품의 용량 옵션 전체. 가격과 용량은 옵션마다 따로 있다
+   * 유사도 계산에 사용된 대상 구성품 ID
    */
-  variants: Array<ProductVariantResponse>;
+  partId: number;
   /**
-   * 수분감 단계 (0~3)
+   * 대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지
    */
-  moistureLevel: number;
+  containsExcludedIngredient: boolean;
+}
+export type ProductSimilarityResponse = {
   /**
-   * 유분감 단계 (0~3)
+   * 기준 구성품 ID. 구성품이 없으면 null
    */
-  oilLevel: number;
+  partId: (number | null);
   /**
-   * 연관 성분 수가 많은 순서의 주요 피부 작용별 성분 그룹 (최대 3개)
+   * 기준 구성품 계산 완료 여부. true여도 후보가 없으면 items는 빈 배열
    */
-  skinEffectGroups: Array<SkinEffectGroupResponse>;
+  calculated: boolean;
   /**
-   * 표시 순서대로 정렬된 전체 성분
+   * 최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개
    */
-  ingredients: Array<ProductIngredientResponse>;
-  /**
-   * 제외 성분군별 포함 여부
-   */
-  excludeGroups: Array<ExcludeGroupResponse>;
-  /**
-   * 제품 정보를 마지막으로 갱신한 시각
-   */
-  updatedAt: string;
+  items: Array<SimilarProductResponse>;
 }
 export type ProductSuggestionMatchResponse = {
   /**
@@ -437,6 +407,7 @@ export type IngredientDetailResponse = {
   effectSources: Array<string>;
   updatedAt: string;
 }
+export type IngredientGroupSuggestionResponse = { code: string, name: string, ingredientIds: Array<number> }
 export type IngredientSuggestionMatchResponse = {
   /**
    * 검색어가 일치한 성분 필드
@@ -479,7 +450,10 @@ export type IngredientListResponse = {
    * 검색어에 일치한 성분
    */
   items: Array<IngredientSuggestionResponse>;
+  groups: Array<IngredientGroupSuggestionResponse>;
 }
+export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName: (string | null) }
+export type IngredientGroupResponse = { code: string, name: string, englishName: (string | null), description: string, ingredients: Array<IngredientGroupMemberResponse> }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
   /**
@@ -536,6 +510,14 @@ export type CurationImageBlockResponse = {
    */
   spacingBottom: number;
   imageUrl: string;
+  /**
+   * 짧은 대체 설명(최대 500자). null은 미입력, 빈 문자열은 장식용 이미지
+   */
+  altText: (string | null);
+  /**
+   * 전체 접근성 본문. null은 미입력이며 줄바꿈과 공백을 그대로 제공한다
+   */
+  bodyText: (string | null);
 }
 export type CurationProductResponse = {
   /**
@@ -677,7 +659,7 @@ export type BrandDetailResponse = {
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
 
     }
 
@@ -922,7 +904,9 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<string>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  includeGroupCodes: Array<string>;
+  excludeGroupCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -949,7 +933,7 @@ export type get_FindProducts = {
 
     }
 /**
- * 제품 ID 에 해당하는 제품의 상세 정보와 전체 성분을 조회한다.
+ * 제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
  */
 export type get_FindProductDetail = {
       method: "GET",
@@ -957,11 +941,31 @@ export type get_FindProductDetail = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
+            query?:  Partial<{ partId: number }>,
         path:  { productId: number },
 
           }
       responses: {200: Schemas.ProductDetailResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 외부에서 계산해 저장한 유사 제품을 최대 3개 조회한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
+ */
+export type get_Find = {
+      method: "GET",
+      path: "/api/products/{productId}/similarities",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ partId: number }>,
+        path:  { productId: number },
+
+          }
+      responses: {200: Schemas.ProductSimilarityResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1061,7 +1065,9 @@ export type get_CountProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<string>;
+  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  includeGroupCodes: Array<string>;
+  excludeGroupCodes: Array<string>;
   /**
    * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
    */
@@ -1125,7 +1131,7 @@ export type get_FindIngredientDetail = {
 
     }
 /**
- * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다.
+ * 검색어에 해당하는 성분을 ID, 이름과 피부 작용 태그만 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. groups 는 이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 담는다. 제외 성분군은 빠른 필터로만 쓰므로 담지 않는다.
  */
 export type get_SuggestIngredients = {
       method: "GET",
@@ -1143,6 +1149,26 @@ export type get_SuggestIngredients = {
           }
       responses: {200: Schemas.IngredientListResponse,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 성분군 코드에 해당하는 성분군의 이름, 설명과 속한 성분을 조회한다.
+ */
+export type get_FindIngredientGroup = {
+      method: "GET",
+      path: "/api/ingredient-groups/{code}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { code: string },
+
+          }
+      responses: {200: Schemas.IngredientGroupResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1351,6 +1377,7 @@ get: {
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/{productId}/similarities": Endpoints.get_Find,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/rankings": Endpoints.get_FindRankings,
@@ -1358,6 +1385,7 @@ get: {
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
+"/api/ingredient-groups/{code}": Endpoints.get_FindIngredientGroup,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/curations": Endpoints.get_FindCurations,
 "/api/curations/{curationId}": Endpoints.get_FindCuration,

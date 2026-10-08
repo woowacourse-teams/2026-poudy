@@ -10,7 +10,8 @@ export const SOCIAL_IMAGE_CACHE_CONTROL = "public, max-age=86400, s-maxage=86400
 
 const LOGO_PATH = "/images/og-lockup/g0qFp9.png";
 const BACKGROUND_PATH = "/images/og-background/K9joN.png";
-const TITLE_FONT_PATH = "/fonts/NotoSansKR-Black.ttf";
+// 본문과 같은 Pretendard 의 가장 굵은 굵기. 이미지 생성기는 woff2 를 읽지 못해 otf 를 둔다.
+const TITLE_FONT_PATH = "/fonts/Pretendard-Black.otf";
 
 /*
  * 그림과 글꼴을 가져오는 길이 두 갈래다.
@@ -66,7 +67,7 @@ const graphemeSegmenter = new Intl.Segmenter("ko", { granularity: "grapheme" });
 const TITLE_STYLE = {
   width: 760,
   maxWidth: 760,
-  fontFamily: "Noto Sans KR",
+  fontFamily: "Pretendard",
   fontSize: 80,
   fontWeight: 900,
   lineHeight: 1.14,
@@ -129,7 +130,7 @@ export const socialImage = async ({ title, logoSrc, cacheControl }: SocialImageC
     </div>,
     {
       ...SOCIAL_IMAGE_SIZE,
-      fonts: [{ name: "Noto Sans KR", data: titleFont, weight: 900, style: "normal" }],
+      fonts: [{ name: "Pretendard", data: titleFont, weight: 900, style: "normal" }],
       ...(cacheControl ? { headers: { "Cache-Control": cacheControl } } : {}),
     },
   );

@@ -23,6 +23,10 @@ const show = (match: IngredientSuggestionResponse["match"]) =>
       includedIds={[]}
       excludedIds={[]}
       onToggle={vi.fn()}
+      groups={[]}
+      includedGroupCodes={[]}
+      excludedGroupCodes={[]}
+      onToggleGroup={vi.fn()}
     />,
   );
 

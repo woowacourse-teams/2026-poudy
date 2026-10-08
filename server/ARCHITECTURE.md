@@ -47,10 +47,10 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 `feedback.service` 등) 사이의 순환 참조도 `ArchitectureTest`가 막는다. `exception` 패키지는 기능
 패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
 하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능에서
-`ingredient → tag`, `ingredient → excludecode ← product`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
+`ingredient → tag`, `ingredient → excludecode ← product`, `product → ingredientgroup → excludecode`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
 상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
 (`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`)를 두고 상위
-기능이 구현한다. 성분군 조회 포트 `IngredientGroups`는 값을 소유한 `excludecode` 도메인에 둔다.
+기능이 구현한다. 성분이 속한 제외 성분군을 찾는 포트 `ExcludeCodeLookup`은 값을 소유한 `excludecode` 도메인에 둔다.
 집계 결과 타입(`BrandProductCounts`, `CategoryProductCount`)은 그 값을 보여 주는 쪽 기능의 Domain이 소유한다.
 성분군 코드는 성분 도메인까지 `ExcludeCode` 값 객체로 전달하고 HTTP 경계에서 문자열로 직렬화한다.
 
@@ -85,8 +85,8 @@ DB 사전·집계 조회와 상품 존재 확인을 조율하고 사전·순위�
 ### Ingredient
 
 `ingredient`는 성분과 근거·태그를 소유하며 API 조회는 DB에서 처리한다. `IngredientCatalog`는
-조회 대상 상품·제외 성분군에 필요한 성분을 조립한다. 제품의 `Ingredients`는 전성분 참조의 입력 순서와
-중복을 보존한다.
+조회 대상 상품·제외 성분군에 필요한 성분을 조립한다. 구성품의 `Ingredients`는 전성분 참조의 입력
+순서와 중복을 보존한다.
 
 ### Tag
 
@@ -97,13 +97,22 @@ DB 사전·집계 조회와 상품 존재 확인을 조율하고 사전·순위�
 
 ### Product
 
-`Product`는 브랜드, 카테고리, 순서가 보존된 전성분, 판매 옵션과 감각 값을 묶는 중심
-애그리게이트다. 검색과 필터는 DB에서 판정한다. 감각 값은 서버 밖에서 계산해 제품
+`Product`는 브랜드, 카테고리, 구성품(`ProductPart`, 테이블 `product_component`)별로 순서가 보존된
+전성분, 판매 옵션과 감각 값을 묶는 중심 애그리게이트다. 상세 응답은 모든 구성품의 요약(`productParts`)과
+`partId`로 고른 구성품 하나(`selectedPart`, 없으면 표시 순서가 가장 앞선 구성품)만 담는다. 구성품이 수십 개인
+제품에서 같은 성분 정보가 구성품 수만큼 반복되지 않게 하기 위해서다. 구성품의 피부 작용 그룹과 제외 성분군
+포함 여부는 그 구성품의 성분만으로 계산한다.
+검색과 필터는 DB에서 판정한다. 감각 값은 서버 밖에서 계산해 제품
 행에 저장한 수분감·유분감 단계를 그대로 읽으며 목록·상세·필터·개수가 같은 값을 사용한다.
 서버는 감각 값을 계산하지 않는다. 지금 저장된 값을 만든 계산 근거와 한계는
 [`sensory-inference-v0.md`](docs/product/sensory-inference-v0.md)가 소유한다.
 
 ### Products
+
+구성품별 유사도는 외부 데이터 작업이 계산해 `product_similarity`에 저장한다. 서버는 현재 판매
+상태와 최종 점수 0.25 기준을 적용해 서로 다른 제품 최대 3개를 조회한다. 주의 판정은 계산에서
+선택된 대상 구성품에 한정하며, 계산 완료/미계산 여부는 별도 테이블로 구분한다.
+수동 실행과 저장 계약은 [유사 제품 조회](docs/product/product-similarity.md)를 따른다.
 
 상품 목록·개수·필터 선택지는 Repository의 공통 SQL 조건으로 조회한다. 선택지는 자신의 필터만
 해제한 후보를 집계하며 첫 페이지에 제공한다. Java는 DB에서 결정한 페이지의 상품을 조립한다.
@@ -119,12 +128,28 @@ Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 �
 
 ### ExcludeCode
 
-`excludecode`는 DB의 빠른 제외 성분군 코드·표시명·설명과 성분 매핑을 소유한다. 성분군은 서버에서
-성분으로 해석하며, 성분이 없는 정의는 기동을 실패시킨다. 포함 범위와 목록은 DB 데이터의
-책임이며 서버 enum이나 패턴으로 추론하지 않는다. 목록은 코드 순서로 공개한다.
+`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·설명과 성분 매핑은
+DB의 `ingredient_group`, `ingredient_group_ingredient`가 소유하고, 그중 제외 성분군은 서버의
+`ExcludeCode` enum이 고정한다. 제외 성분군 목록, `excludeCodes` 필터, 제품 상세의 주의 판정은
+enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문구가 함께 바뀌어야 하므로 DB 행
+추가만으로 늘리지 않는다. enum 코드 중 DB에 성분이 없는 것이 있으면 기동을 실패시킨다. 목록은 코드
+순서로 공개한다.
 저장소가 SQL 조인으로 성분 ID를 표시 정보로 해석하고, 도메인 `ExcludeCodeGroup`은 정의와
 소속 성분을 함께 소유해 포함 여부를 판정한다. `ExcludeCodes`는 공개 순서의 성분군 목록만
 보관한다. `excludecode`는 `ingredient` 코드에 의존하지 않는다.
+
+### IngredientGroup
+
+`ingredientgroup`은 성분군 상세 조회와 제품 상세 주요 성분의 묶음을 맡는다. 주요 성분은 제외
+성분군을 뺀 성분군으로 묶는다. 한 피부 작용 그룹 안에서 같은 성분군 성분이 2개 이상일 때만 처음
+나온 자리에 하나로 묶고, 한 성분이 여러 성분군에 속하면 더 많은 성분을 묶는 성분군을, 같으면 코드
+순서가 앞선 성분군을 고른다. 배정한 뒤 성분이 하나만 남은 성분군은 묶지 않는다. 전체 성분표는 묶지 않는다.
+성분군 목록과 소속 성분은 `V4__insert_ingredient_groups.sql`이 성분 영문명 규칙으로 넣는다.
+
+성분 검색에는 이름이 검색어를 포함하는 성분군을 함께 제안한다. 제외 성분군은 빠른 필터로만 쓰므로 제안하지
+않고, 제품 목록의 `includeGroupCodes`·`excludeGroupCodes`에도 받지 않는다. 포함 성분군은 속한 성분을 하나라도
+가진 제품을, 제외 성분군은 하나도 없는 제품을 남긴다. 제외 성분군은 빠른 제외 성분군과 같은 경로로 걸러서,
+제외한 성분군의 성분을 포함 조건으로 고르거나 같은 성분군을 포함과 제외에 함께 넣으면 필터 충돌로 거절한다.
 
 ### SkinType
 

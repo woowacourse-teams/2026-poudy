@@ -43,7 +43,9 @@ class ErdCloudSchemaTest {
                 "spacing_bottom",
                 "image_url",
                 "created_at",
-                "updated_at"
+                "updated_at",
+                "alt_text",
+                "body_text"
             )
         ),
         entry("curation_block_filter", List.of("id", "block_id", "position", "label", "created_at", "updated_at")),
@@ -52,10 +54,13 @@ class ErdCloudSchemaTest {
             "curation_block_product_filter",
             List.of("block_id", "product_id", "filter_id", "position", "created_at", "updated_at")
         ),
-        entry("exclude_code", List.of("code", "display_name", "description", "created_at", "updated_at")),
         entry(
-            "exclude_code_ingredient",
-            List.of("exclude_code", "ingredient_id", "display_order", "created_at", "updated_at")
+            "ingredient_group",
+            List.of("code", "display_name", "description", "created_at", "updated_at", "english_name")
+        ),
+        entry(
+            "ingredient_group_ingredient",
+            List.of("group_code", "ingredient_id", "display_order", "created_at", "updated_at")
         ),
         entry(
             "feedback",
@@ -81,6 +86,8 @@ class ErdCloudSchemaTest {
             )
         ),
         entry("product_component", List.of("id", "product_id", "display_order", "name", "created_at", "updated_at")),
+        entry("product_similarity_calculation", List.of("component_id")),
+        entry("product_similarity", List.of("component_id", "similar_component_id", "similarity_score")),
         entry(
             "product_correction_request",
             List.of("id", "product_id", "content", "status", "status_changed_at", "created_at")
@@ -137,8 +144,8 @@ class ErdCloudSchemaTest {
         entry("curation_block_filter", List.of("id", "block_id")),
         entry("curation_block_product", List.of("block_id", "product_id")),
         entry("curation_block_product_filter", List.of("block_id", "product_id", "filter_id")),
-        entry("exclude_code", List.of("code")),
-        entry("exclude_code_ingredient", List.of("exclude_code", "ingredient_id")),
+        entry("ingredient_group", List.of("code")),
+        entry("ingredient_group_ingredient", List.of("group_code", "ingredient_id")),
         entry("feedback", List.of("id")),
         entry("feedback_image", List.of("image_id")),
         entry("ingredient", List.of("id")),
@@ -147,6 +154,8 @@ class ErdCloudSchemaTest {
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
         entry("product", List.of("id")),
         entry("product_component", List.of("id")),
+        entry("product_similarity_calculation", List.of("component_id")),
+        entry("product_similarity", List.of("component_id", "similar_component_id")),
         entry("product_correction_request", List.of("id")),
         entry("product_correction_request_image", List.of("image_id")),
         entry("product_daily_view", List.of("view_date", "product_id")),

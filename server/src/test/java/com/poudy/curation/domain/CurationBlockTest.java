@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class CurationBlockTest {
 
@@ -54,8 +57,39 @@ class CurationBlockTest {
 
     @Test
     void rejectsImageWithoutUrl() {
-        assertThatThrownBy(() -> CurationBlock.image(UUID.randomUUID(), 0, 0, null))
+        assertThatThrownBy(() -> CurationBlock.image(UUID.randomUUID(), 0, 0, null, null, null))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"환절기 장벽 케어", "  설명  "})
+    void preservesImageTextIncludingMissingAndDecorativeAlt(String altText) {
+        String bodyText = "  첫 문단\r\n\r\n두 번째 문단\n ";
+        CurationBlock block = CurationBlock.image(UUID.randomUUID(), 0, 0, "image.png", altText, bodyText);
+
+        CurationBlockContent.Image content = (CurationBlockContent.Image) block.resolveContent(
+            Products.from(List.of())
+        ).orElseThrow();
+
+        assertThat(content.altText()).isEqualTo(altText);
+        assertThat(content.bodyText()).isEqualTo(bodyText);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🌿"})
+    void enforcesAltLengthInUnicodeCharacters(String character) {
+        String altText = character.repeat(500);
+        CurationBlock block = CurationBlock.image(UUID.randomUUID(), 0, 0, "image.png", altText, null);
+        CurationBlockContent.Image content = (CurationBlockContent.Image) block.resolveContent(
+            Products.from(List.of())
+        ).orElseThrow();
+
+        assertThat(content.altText()).isEqualTo(altText);
+        assertThat(content.bodyText()).isNull();
+        assertThatThrownBy(
+            () -> CurationBlock.image(UUID.randomUUID(), 0, 0, "image.png", character.repeat(501), null)
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

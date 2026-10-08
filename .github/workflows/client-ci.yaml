@@ -37,6 +37,9 @@ jobs:
           filters: |
             client:
               - 'client/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
               - '.github/workflows/client-ci.yaml'
 
   # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
@@ -58,7 +61,7 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: client/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

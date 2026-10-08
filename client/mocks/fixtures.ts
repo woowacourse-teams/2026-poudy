@@ -5,8 +5,11 @@ import type {
   CategoryResponse,
   ExcludeCodeResponse,
   IngredientDetailResponse,
+  IngredientGroupResponse,
   ProductDetailResponse,
+  ProductPartResponse,
   ProductResponse,
+  ProductSimilarityResponse,
 } from "@poudy/api/api.zod";
 
 /*
@@ -265,52 +268,82 @@ const EXCLUDE_GROUP_NAMES = [
   ["SYNTHETIC_COLORANTS", "합성 색소"],
 ] as const;
 
-export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductDetailResponse["excludeGroups"] =>
+export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
   EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
 
+/**
+ * 세라마이드 성분군에 드는 성분. 1025 독도 토너가 다섯 가지를 모두 담아 성분군 칩과 시트를 확인할 수 있다.
+ * ID 는 파이프라인 데이터의 같은 성분과 맞춘다. 로컬에서 파이프라인을 채워도 성분이 둘로 갈라지지 않는다.
+ */
+const ceramides = [
+  [7130, "세라마이드엔피", "Ceramide NP"],
+  [8323, "세라마이드에이피", "Ceramide AP"],
+  [8322, "세라마이드엔에스", "Ceramide NS"],
+  [9695, "세라마이드에이에스", "Ceramide AS"],
+  [8324, "세라마이드이오피", "Ceramide EOP"],
+] as const;
+
+export const ingredientGroups: IngredientGroupResponse[] = [
+  {
+    code: "CERAMIDES",
+    name: "세라마이드",
+    englishName: "Ceramides",
+    description: "세라마이드는 피부 장벽을 이루는 지질 성분이에요. 종류별로 쓰임이 달라 성분명을 확인하는 게 좋아요.",
+    ingredients: ceramides.map(([id, koreanName, englishName]) => ({ id, koreanName, englishName })),
+  },
+];
+
+// 이름은 staging 과 같게 둔다. 제품 상세의 주의 성분 기준과 이름으로 맞춰 성분군 코드를 찾는다.
 export const excludeCodes: ExcludeCodeResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
-    name: "향료/알레르기 성분 제외",
+    name: "향료/알레르기 성분",
     description: "착향 목적의 성분과 표시 대상 알레르기 유발 성분입니다.",
     ingredients: [
-      { id: 101, koreanName: "리모넨", englishName: "Limonene" },
+      // 1006 은 더마 릴리프 썬스크린(6)의 리모넨이다. 주의 성분 시트가 이 제품에 든 성분을 보여 준다.
+      { id: 1006, koreanName: "리모넨", englishName: "Limonene" },
       { id: 102, koreanName: "리날룰", englishName: "Linalool" },
     ],
   },
   {
     code: "DRYING_ALCOHOLS",
-    name: "건조 알코올 제외",
+    name: "건조 알코올",
     description: "휘발성이 높아 건조함을 유발할 수 있는 알코올입니다.",
     ingredients: [{ id: 111, koreanName: "변성알코올", englishName: "Alcohol Denat." }],
   },
   {
     code: "HARSH_PRESERVATIVES",
-    name: "자극성 방부제 제외",
+    name: "자극성 방부제",
     description: "자극 보고가 있는 방부 성분입니다.",
     ingredients: [{ id: 121, koreanName: "메틸파라벤", englishName: "Methylparaben" }],
   },
   {
     code: "SULFATES",
-    name: "설페이트 성분 제외",
+    name: "설페이트 성분",
     description: "세정력이 강한 설페이트 계열 계면활성제입니다.",
     ingredients: [{ id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" }],
   },
   {
     code: "CYCLIC_SILICONES",
-    name: "실리콘 자극원 제외",
+    name: "실리콘 자극원",
     description: "고리형 실리콘 성분입니다.",
     ingredients: [{ id: 141, koreanName: "사이클로펜타실록세인", englishName: "Cyclopentasiloxane" }],
   },
   {
     code: "SYNTHETIC_COLORANTS",
-    name: "합성 색소 제외",
+    name: "합성 색소",
     description: "타르 색소를 포함한 합성 착색 성분입니다.",
     ingredients: [{ id: 151, koreanName: "적색201호", englishName: "Red 201" }],
   },
 ];
 
+/** 성분군으로 묶이지 않은 성분을 하나씩 담는다. */
+const singleItems = (ingredients: ReadonlyArray<readonly [number, string]>) =>
+  // 성분군에 묶이지 않은 성분 하나짜리 항목이다. 서버는 이때 ingredientGroup 을 null 로 보낸다.
+  ingredients.map(([id, koreanName]) => ({ ingredientGroup: null, ingredients: [{ id, koreanName }] }));
+
 const 보습 = { id: "1", code: "HYDRATION_RELATED", name: "보습" };
+const 장벽 = { id: "4", code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽 관련" };
 const 진정 = { id: "2", code: "SOOTHING_RELATED", name: "진정" };
 const 각질케어 = { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어" };
 
@@ -320,6 +353,8 @@ const sunscreenIngredientNames = [
   "프로필헵틸카프릴레이트",
   "C12-15알킬벤조에이트",
   "부틸렌글라이콜",
+  // 향료/알레르기 성분을 담은 제품이라 그 기준에 드는 성분을 하나 둔다. 주의 성분 시트에서 이 성분이 보인다.
+  "리모넨",
 ] as const;
 
 export const untaggedProductDetail: ProductDetailResponse = {
@@ -331,21 +366,26 @@ export const untaggedProductDetail: ProductDetailResponse = {
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
   oilLevel: 2,
-  skinEffectGroups: [],
-  ingredients: Array.from({ length: 24 }, (_, index) => ({
-    id: 1001 + index,
-    koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
-    englishName: `Ingredient ${index + 1}`,
-    formulationRoles: [],
-    skinEffects: [],
-  })),
-  excludeGroups: excludeGroupsOf([
-    "DRYING_ALCOHOLS",
-    "HARSH_PRESERVATIVES",
-    "SULFATES",
-    "CYCLIC_SILICONES",
-    "SYNTHETIC_COLORANTS",
-  ]),
+  productParts: [{ id: 6, name: null, cautionCount: 1 }],
+  selectedPart: {
+    id: 6,
+    name: null,
+    skinEffectGroups: [],
+    ingredients: Array.from({ length: 24 }, (_, index) => ({
+      id: 1001 + index,
+      koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
+      englishName: `Ingredient ${index + 1}`,
+      formulationRoles: [],
+      skinEffects: [],
+    })),
+    excludeGroups: excludeGroupsOf([
+      "DRYING_ALCOHOLS",
+      "HARSH_PRESERVATIVES",
+      "SULFATES",
+      "CYCLIC_SILICONES",
+      "SYNTHETIC_COLORANTS",
+    ]),
+  },
   updatedAt: "2026-08-20T00:00:00+09:00",
 };
 
@@ -362,99 +402,189 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     moistureLevel: 3,
     oilLevel: 1,
-    skinEffectGroups: [
-      { id: "1", code: "HYDRATION_RELATED", name: "보습", ingredientIds: [2, 6] },
-      { id: "2", code: "SOOTHING_RELATED", name: "진정", ingredientIds: [7, 6] },
-      { id: "3", code: "EXFOLIATION_RELATED", name: "각질 케어", ingredientIds: [8] },
-    ],
-    ingredients: [
-      {
-        id: 1,
-        koreanName: "정제수",
-        englishName: "Water",
-        formulationRoles: [
-          { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [],
-      },
-      {
-        id: 2,
-        koreanName: "부틸렌글라이콜",
-        englishName: "Butylene Glycol",
-        formulationRoles: [
-          { id: "3", code: "MOISTURISING", name: "보습제" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 3,
-        koreanName: "글리세린",
-        englishName: "Glycerin",
-        formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
-        skinEffects: [보습],
-      },
-      {
-        id: 4,
-        koreanName: "펜틸렌글라이콜",
-        englishName: "Pentylene Glycol",
-        formulationRoles: [
-          { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
-          { id: "2", code: "SOLVENT", name: "용제" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 5,
-        koreanName: "프로판다이올",
-        englishName: "Propanediol",
-        formulationRoles: [
-          { id: "2", code: "SOLVENT", name: "용제" },
-          { id: "4", code: "HUMECTANT", name: "보습 보조" },
-        ],
-        skinEffects: [보습],
-      },
-      {
-        id: 6,
-        koreanName: "판테놀",
-        englishName: "Panthenol",
-        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
-        skinEffects: [보습, 진정],
-      },
-      {
-        id: 7,
-        koreanName: "아이리쉬모스추출물",
-        englishName: "Chondrus Crispus Extract",
-        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
-        skinEffects: [진정],
-      },
-      {
-        id: 8,
-        koreanName: "프로테아제",
-        englishName: "Protease",
-        formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
-        skinEffects: [각질케어],
-      },
-    ],
-    excludeGroups: excludeGroupsOf([
-      "FRAGRANCE_ALLERGENS",
-      "DRYING_ALCOHOLS",
-      "HARSH_PRESERVATIVES",
-      "SULFATES",
-      "CYCLIC_SILICONES",
-      "SYNTHETIC_COLORANTS",
-    ]),
+    productParts: [{ id: 1, name: null, cautionCount: 0 }],
+    selectedPart: {
+      id: 1,
+      name: null,
+      skinEffectGroups: [
+        {
+          id: "1",
+          code: "HYDRATION_RELATED",
+          name: "보습",
+          ingredientIds: [2, 6],
+          items: singleItems([
+            [2, "부틸렌글라이콜"],
+            [6, "판테놀"],
+          ]),
+        },
+        {
+          id: "2",
+          code: "SOOTHING_RELATED",
+          name: "진정",
+          ingredientIds: [7, 6],
+          items: singleItems([
+            [7, "아이리쉬모스추출물"],
+            [6, "판테놀"],
+          ]),
+        },
+        {
+          id: "3",
+          code: "EXFOLIATION_RELATED",
+          name: "각질 케어",
+          ingredientIds: [8],
+          items: singleItems([[8, "프로테아제"]]),
+        },
+        {
+          id: "4",
+          code: "BARRIER_SUPPORT_RELATED",
+          name: "피부 장벽 관련",
+          ingredientIds: [6, ...ceramides.map(([id]) => id)],
+          // 같은 성분군 성분은 서버가 항목 하나로 묶어 보낸다. 화면은 이것을 `세라마이드 5종` 칩 하나로 그린다.
+          items: [
+            ...singleItems([[6, "판테놀"]]),
+            {
+              ingredientGroup: { code: "CERAMIDES", name: "세라마이드" },
+              ingredients: ceramides.map(([id, koreanName]) => ({ id, koreanName })),
+            },
+          ],
+        },
+      ],
+      ingredients: [
+        {
+          id: 1,
+          koreanName: "정제수",
+          englishName: "Water",
+          formulationRoles: [
+            { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [],
+        },
+        {
+          id: 2,
+          koreanName: "부틸렌글라이콜",
+          englishName: "Butylene Glycol",
+          formulationRoles: [
+            { id: "3", code: "MOISTURISING", name: "보습제" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 3,
+          koreanName: "글리세린",
+          englishName: "Glycerin",
+          formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
+          skinEffects: [보습],
+        },
+        {
+          id: 4,
+          koreanName: "펜틸렌글라이콜",
+          englishName: "Pentylene Glycol",
+          formulationRoles: [
+            { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+            { id: "2", code: "SOLVENT", name: "용제" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 5,
+          koreanName: "프로판다이올",
+          englishName: "Propanediol",
+          formulationRoles: [
+            { id: "2", code: "SOLVENT", name: "용제" },
+            { id: "4", code: "HUMECTANT", name: "보습 보조" },
+          ],
+          skinEffects: [보습],
+        },
+        {
+          id: 6,
+          koreanName: "판테놀",
+          englishName: "Panthenol",
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [보습, 진정],
+        },
+        {
+          id: 7,
+          koreanName: "아이리쉬모스추출물",
+          englishName: "Chondrus Crispus Extract",
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [진정],
+        },
+        {
+          id: 8,
+          koreanName: "프로테아제",
+          englishName: "Protease",
+          formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
+          skinEffects: [각질케어],
+        },
+        ...ceramides.map(([id, koreanName, englishName]) => ({
+          id,
+          koreanName,
+          englishName,
+          formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+          skinEffects: [장벽],
+        })),
+      ],
+      excludeGroups: excludeGroupsOf([
+        "FRAGRANCE_ALLERGENS",
+        "DRYING_ALCOHOLS",
+        "HARSH_PRESERVATIVES",
+        "SULFATES",
+        "CYCLIC_SILICONES",
+        "SYNTHETIC_COLORANTS",
+      ]),
+    },
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
   untaggedProductDetail,
 ];
+
+/** 주의 기준 가운데 `contained` 만 들어 있는 구성품을 만든다. 성분은 1025 독도 토너의 것을 빌려 쓴다. */
+const partOf = (id: number, name: string, contained: readonly string[]): ProductPartResponse => ({
+  ...productDetails[0]!.selectedPart!,
+  id,
+  name,
+  excludeGroups: excludeGroupsOf(EXCLUDE_GROUP_NAMES.map(([code]) => code).filter((code) => !contained.includes(code))),
+});
+
+/**
+ * 구성품이 여럿인 제품. 목록에 있는 제품에 구성품을 덧입혀 탭을 확인한다.
+ *
+ * - 5 아토베리어365 크림: 구성품 둘. 탭 내용이 바에 들어가 폭을 똑같이 나눈다(S39b).
+ * - 7 나이트 리페어 세럼: 구성품 넷. 탭 내용이 바를 넘쳐 가로로 민다(S39c).
+ */
+export const productPartSets: ReadonlyMap<number, readonly ProductPartResponse[]> = new Map([
+  [5, [partOf(501, "아쿠아 세럼", []), partOf(502, "인텐스 크림", ["FRAGRANCE_ALLERGENS"])]],
+  [
+    7,
+    [
+      partOf(701, "염모제 1제", ["FRAGRANCE_ALLERGENS", "HARSH_PRESERVATIVES"]),
+      partOf(702, "산화제 2제", ["HARSH_PRESERVATIVES"]),
+      partOf(703, "컬러 케어 샴푸", ["SULFATES"]),
+      partOf(704, "헤어 리페어 마스크", ["CYCLIC_SILICONES"]),
+    ],
+  ],
+]);
 
 /** S06 화면의 출처 문구. 성분마다 같은 자료를 본다. */
 const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
 const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
 
 export const ingredientDetails: IngredientDetailResponse[] = [
+  ...ceramides.map(([id, koreanName, englishName]) => ({
+    id,
+    koreanName,
+    englishName,
+    description: "피부 장벽을 이루는 지질 성분으로, 각질층 사이를 채워 수분이 빠져나가지 않게 돕습니다.",
+    formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+    skinEffects: [장벽],
+    groupCodes: [],
+    productCount: 214,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  })),
   {
     id: 1,
     koreanName: "정제수",
@@ -880,3 +1010,31 @@ export const pipelineIngredientSummaries = pipelineIngredients.map((ingredient) 
   englishName: ingredient.englishName,
   skinEffects: [] as { id: number; code: string; name: string }[],
 }));
+
+/**
+ * 성분이 비슷한 제품. 1025 독도 토너에만 둔다. 나머지 제품은 빈 목록이라 섹션이 숨는 경우를 확인할 수 있다.
+ * 둘째 제품은 주의 성분이 들어 있어 주의 칩이 갈리는 경우를 보여 준다.
+ */
+export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse["items"]> = new Map([
+  [
+    1,
+    [
+      {
+        id: 3,
+        name: "다이브인 저분자 히알루론산 토너",
+        brand: brandOf(2),
+        imageUrl: "",
+        partId: 3,
+        containsExcludedIngredient: false,
+      },
+      {
+        id: 2,
+        name: "어성초 77 수딩 토너",
+        brand: brandOf(3),
+        imageUrl: "",
+        partId: 2,
+        containsExcludedIngredient: true,
+      },
+    ],
+  ],
+]);

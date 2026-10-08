@@ -1,4 +1,4 @@
-import type {
+import {
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
@@ -6,10 +6,12 @@ import type {
   CurationListResponse,
   ExcludeCodeListResponse,
   IngredientDetailResponse,
+  IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
   ProductCountResponse,
   ProductDetailResponse,
+  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
@@ -43,29 +45,39 @@ const RANKING_TTL = 10 * 60;
 type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
-  apiGet("/api/products", serializeFilter(filter), CATALOG_TTL);
+  apiGet("/api/products", ProductPageResponse, { query: serializeFilter(filter), revalidate: CATALOG_TTL });
 
 /** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
-  apiGet(
-    "/api/products",
-    new URLSearchParams({
+  apiGet("/api/products", ProductPageResponse, {
+    query: new URLSearchParams({
       sort: "CREATED_ASC" satisfies NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"],
       page: String(page),
       size: String(size),
     }),
-  );
+  });
 
 export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
-  apiGet("/api/products/count", serializeFilter(filter));
+  apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
 
-export const fetchProductDetail = (productId: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`);
+export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
+  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId) });
+
+const partQuery = (partId: number | undefined) => {
+  if (partId === undefined) return undefined;
+  return new URLSearchParams({ partId: String(partId) });
+};
+
+/** 성분이 비슷한 제품. 서버가 미리 계산해 둔 것을 최대 3개 받는다. partId 가 없으면 첫 구성품을 기준으로 한다. */
+export const fetchProductSimilarities = (productId: number, partId?: number): Promise<ProductSimilarityResponse> =>
+  apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, { query: partQuery(partId) });
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
 export const fetchProductSuggestions = (keyword: string, page = FIRST_PAGE): Promise<ProductSuggestionPageResponse> =>
-  apiGet("/api/products/suggestions", new URLSearchParams({ keyword, page: String(page) }));
+  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, {
+    query: new URLSearchParams({ keyword, page: String(page) }),
+  });
 
 export const fetchIngredients = (query: {
   readonly ingredientIds?: readonly number[];
@@ -78,10 +90,13 @@ export const fetchIngredients = (query: {
   if (query.usedInProducts) params.set("usedInProducts", "true");
   if (query.page !== undefined) params.set("page", String(query.page));
   if (query.size !== undefined) params.set("size", String(query.size));
-  return apiGet("/api/ingredients", params);
+  return apiGet("/api/ingredients", IngredientPageResponse, { query: params });
 };
 
 /** ID 조건에 해당하는 성분을 마지막 페이지까지 조회해 하나의 목록으로 합친다. */
+export const fetchIngredientGroup = (code: string): Promise<IngredientGroupResponse> =>
+  apiGet(`/api/ingredient-groups/${encodeURIComponent(code)}`, IngredientGroupResponse);
+
 export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): Promise<IngredientItemsResponse> => {
   if (ingredientIds.length === 0) return { items: [] };
 
@@ -100,20 +115,22 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
 };
 
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
-  apiGet("/api/ingredients/suggestions", new URLSearchParams({ keyword }));
+  apiGet("/api/ingredients/suggestions", IngredientListResponse, { query: new URLSearchParams({ keyword }) });
 
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
-  apiGet(`/api/ingredients/${ingredientId}`);
+  apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse);
 
 export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> =>
-  apiGet("/api/exclude-codes", undefined, CATALOG_TTL);
+  apiGet("/api/exclude-codes", ExcludeCodeListResponse, { revalidate: CATALOG_TTL });
 
 /**
  * 제품이 없는 카테고리는 눌러도 빈 목록만 나오므로 받은 자리에서 뺀다. 디렉터리, 홈 칩,
  * 상세의 형제 줄, 사이트맵이 모두 이 목록을 보므로 한 곳에서 거른다.
  */
 export const fetchCategories = async (): Promise<CategoryListResponse> => {
-  const response = await apiGet<CategoryListResponse>("/api/categories", undefined, CATALOG_TTL);
+  const response = await apiGet<CategoryListResponse>("/api/categories", CategoryListResponse, {
+    revalidate: CATALOG_TTL,
+  });
 
   return {
     items: response.items.flatMap((category) => {
@@ -123,30 +140,34 @@ export const fetchCategories = async (): Promise<CategoryListResponse> => {
   };
 };
 
-export const fetchBrands = (): Promise<BrandOverviewResponse> => apiGet("/api/brands", undefined, CATALOG_TTL);
+export const fetchBrands = (): Promise<BrandOverviewResponse> =>
+  apiGet("/api/brands", BrandOverviewResponse, { revalidate: CATALOG_TTL });
 
 export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
-  apiGet(`/api/brands/${brandId}`, undefined, CATALOG_TTL);
+  apiGet(`/api/brands/${brandId}`, BrandDetailResponse, { revalidate: CATALOG_TTL });
 
 /** 저장함은 브라우저가 가진 ID 로 표시 정보를 채운다. */
 export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>
-  apiGet("/api/storage", new URLSearchParams(productIds.map((id) => ["productIds", String(id)])));
+  apiGet("/api/storage", StorageResponse, {
+    query: new URLSearchParams(productIds.map((id) => ["productIds", String(id)])),
+  });
 
 /*
  * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을
  * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
  */
-export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations");
+export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", CurationListResponse);
 
 /** 큐레이션 상세. 이미지와 제품이 모두 blocks 에 담겨 한 번에 온다. */
 export const fetchCuration = (curationId: number): Promise<CurationDetailResponse> =>
-  apiGet(`/api/curations/${curationId}`);
+  apiGet(`/api/curations/${curationId}`, CurationDetailResponse);
 
-export const fetchSkinTypes = (): Promise<SkinTypesResponse> => apiGet("/api/skin-types", undefined, CATALOG_TTL);
+export const fetchSkinTypes = (): Promise<SkinTypesResponse> =>
+  apiGet("/api/skin-types", SkinTypesResponse, { revalidate: CATALOG_TTL });
 
 /** 인기 검색어 순위. 실시간으로 보여 주는 값이라 짧게만 담아 둔다. */
 export const fetchSearchKeywordRankings = (): Promise<RankingsResponse> =>
-  apiGet("/api/search-keywords/rankings", undefined, RANKING_TTL);
+  apiGet("/api/search-keywords/rankings", RankingsResponse, { revalidate: RANKING_TTL });
 
 /**
  * 조회수로 매긴 인기 제품. 카테고리를 주면 그 카테고리 안에서만 고른다.
@@ -155,7 +176,7 @@ export const fetchSearchKeywordRankings = (): Promise<RankingsResponse> =>
 export const fetchProductRankings = (categoryIds: readonly number[] = []): Promise<ProductRankingResponse> => {
   const params = new URLSearchParams([["days", String(RANKING_DAYS)]]);
   for (const id of categoryIds) params.append("categoryIds", String(id));
-  return apiGet("/api/products/rankings", params, RANKING_TTL);
+  return apiGet("/api/products/rankings", ProductRankingResponse, { query: params, revalidate: RANKING_TTL });
 };
 
 /**

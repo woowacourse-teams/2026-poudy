@@ -8,7 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "."),
-      "@poudy/api": path.resolve(import.meta.dirname, "../common"),
     },
   },
   test: {

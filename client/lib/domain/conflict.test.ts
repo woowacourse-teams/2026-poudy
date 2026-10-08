@@ -12,6 +12,13 @@ const codeIngredients: ExcludeCodeIngredients = new Map([
 const filterWith = (changed: Partial<Filter>): Filter => ({ ...EMPTY_FILTER, ...changed });
 
 describe("findConflicts", () => {
+  it("검색으로 제외한 성분군의 성분을 포함하면 충돌이다", () => {
+    const filter = filterWith({ excludeGroupCodes: ["CERAMIDES"], includeIngredientIds: [7130] });
+    const groups: ExcludeCodeIngredients = new Map([["CERAMIDES", [7130, 8322]]]);
+
+    expect(findConflicts(filter, groups)).toEqual([{ code: "CERAMIDES", ingredientIds: [7130] }]);
+  });
+
   it("성분군을 제외하고 그 안의 성분을 포함하면 충돌이다", () => {
     const filter = filterWith({
       excludeCodes: ["FRAGRANCE_ALLERGENS"],

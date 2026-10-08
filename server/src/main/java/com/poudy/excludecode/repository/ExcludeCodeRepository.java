@@ -8,7 +8,6 @@ import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
-import jakarta.annotation.PostConstruct;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,22 +29,24 @@ public class ExcludeCodeRepository {
 
     public ExcludeCodes findAll() {
         List<GroupRow> definitions = jdbc.query(
-            "select code, display_name, description from exclude_code order by code",
-            new MapSqlParameterSource(),
+            "select code, display_name, description from ingredient_group"
+                + " where code = any(:codes) order by code",
+            excludeCodeParameters(),
             (row, number) -> new GroupRow(
-                new ExcludeCode(row.getString("code")),
+                ExcludeCode.valueOf(row.getString("code")),
                 row.getString("display_name"),
                 row.getString("description")
             )
         );
         try {
             Map<ExcludeCode, List<ExcludeCodeIngredient>> members = jdbc.query(
-                "select e.exclude_code, e.ingredient_id, i.korean_name, i.english_name"
-                    + " from exclude_code_ingredient e join ingredient i on i.id = e.ingredient_id"
-                    + " order by e.exclude_code, e.display_order",
-                new MapSqlParameterSource(),
+                "select e.group_code, e.ingredient_id, i.korean_name, i.english_name"
+                    + " from ingredient_group_ingredient e join ingredient i on i.id = e.ingredient_id"
+                    + " where e.group_code = any(:codes)"
+                    + " order by e.group_code, e.display_order",
+                excludeCodeParameters(),
                 (row, number) -> {
-                    ExcludeCode code = new ExcludeCode(row.getString("exclude_code"));
+                    ExcludeCode code = ExcludeCode.valueOf(row.getString("group_code"));
                     Long id = row.getLong("ingredient_id");
                     return new MappingRow(
                         code,
@@ -79,48 +80,31 @@ public class ExcludeCodeRepository {
         }
     }
 
-    @PostConstruct
-    void validateDefinitions() {
-        Long definitionCount = jdbc.queryForObject(
-            "select count(*) from exclude_code",
-            new MapSqlParameterSource(),
-            Long.class
-        );
-        if (definitionCount == null || definitionCount == 0) {
-            throw new InfrastructureException("제외 성분군 정의를 찾지 못했습니다.");
-        }
+    private void validateDefinitions() {
         List<String> missing = jdbc.queryForList(
-            "select c.code from exclude_code c left join exclude_code_ingredient i on i.exclude_code = c.code"
-                + " where i.exclude_code is null order by c.code",
-            new MapSqlParameterSource(),
+            "select code from unnest(cast(:codes as text[])) as code"
+                + " where not exists (select 1 from ingredient_group_ingredient i where i.group_code = code)"
+                + " order by code",
+            excludeCodeParameters(),
             String.class
         );
         if (!missing.isEmpty()) {
-            throw new InfrastructureException("제외 성분군에 속한 성분이 없는 정의가 있습니다: " + missing);
+            throw new InfrastructureException("성분이 등록되지 않은 제외 성분군이 있습니다: " + missing);
         }
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {
+        validateDefinitions();
         return jdbc.queryForList(
-            "select distinct exclude_code from exclude_code_ingredient where ingredient_id = :id order by exclude_code",
-            Map.of("id", ingredientId),
+            "select distinct group_code from ingredient_group_ingredient"
+                + " where ingredient_id = :id and group_code = any(:codes) order by group_code",
+            excludeCodeParameters().addValue("id", ingredientId),
             String.class
-        ).stream().map(ExcludeCode::new).toList();
+        ).stream().map(ExcludeCode::valueOf).toList();
     }
 
-    public boolean containsAll(List<ExcludeCode> codes) {
-        if (codes.isEmpty()) {
-            return true;
-        }
-        Long count = jdbc.queryForObject(
-            "select count(*) from exclude_code where code = any(cast(:codes as text[]))",
-            new MapSqlParameterSource(
-                "codes",
-                new SqlArrayValue("text", codes.stream().map(ExcludeCode::value).toArray())
-            ),
-            Long.class
-        );
-        return count != null && count == codes.size();
+    private static MapSqlParameterSource excludeCodeParameters() {
+        return new MapSqlParameterSource("codes", new SqlArrayValue("text", ExcludeCode.codeValues().toArray()));
     }
 
     private record MappingRow(ExcludeCode code, ExcludeCodeIngredient ingredient) {

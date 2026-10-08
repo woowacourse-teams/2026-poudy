@@ -5,10 +5,12 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
@@ -32,6 +34,7 @@ public class ProductService {
     private final ProductQueryRepository productQueries;
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
+    private final IngredientGroupRepository ingredientGroupRepository;
     private final ProductSearchLogger searchLogger;
 
     public ProductService(
@@ -39,12 +42,14 @@ public class ProductService {
         ProductQueryRepository productQueries,
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
+        IngredientGroupRepository ingredientGroupRepository,
         ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
         this.productQueries = productQueries;
         this.categoryRepository = categoryRepository;
         this.excludeCodeRepository = excludeCodeRepository;
+        this.ingredientGroupRepository = ingredientGroupRepository;
         this.searchLogger = searchLogger;
     }
 
@@ -105,7 +110,7 @@ public class ProductService {
     }
 
     private void validate(ProductQuery query) {
-        if (!excludeCodeRepository.containsAll(query.excludeCodes())) {
+        if (!ingredientGroupRepository.containsAll(query.groupCodes())) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
         if (productQueries.hasConflictingIngredients(query)) {
@@ -117,11 +122,26 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
-    public ProductDetail findDetail(Long productId) {
+    public ProductDetail findDetail(Long productId, Long partId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return ProductDetail.from(product, categoryRepository.findAll(), excludeCodeRepository.findAll());
+        return ProductDetail.from(
+            product,
+            selectPart(product, partId),
+            categoryRepository.findAll(),
+            excludeCodeRepository.findAll(),
+            ingredientGroupRepository.findBundlingGroups()
+        );
+    }
+
+    private ProductPart selectPart(Product product, Long partId) {
+        if (partId == null) {
+            return product.firstPart().orElse(null);
+        }
+
+        return product.findPart(partId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
     }
 
 }

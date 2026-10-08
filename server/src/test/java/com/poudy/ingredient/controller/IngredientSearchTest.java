@@ -1,5 +1,6 @@
 package com.poudy.ingredient.controller;
 
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -11,7 +12,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -20,6 +23,32 @@ class IngredientSearchTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    @Test
+    @Transactional
+    @DisplayName("이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 제안한다")
+    void suggestsIngredientGroupsByName() throws Exception {
+        jdbc.update(
+            "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values ('CERAMIDES', 20, 0), ('CERAMIDES', 9, 1)"
+        );
+
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "세라 마이드"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.groups[*].code").value(contains("CERAMIDES")))
+            .andExpect(jsonPath("$.groups[0].name").value("세라마이드"))
+            .andExpect(jsonPath("$.groups[0].ingredientIds").value(contains(20, 9)));
+    }
+
+    @Test
+    @DisplayName("제외 성분군은 성분군 제안에 넣지 않는다")
+    void doesNotSuggestExcludeCodes() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "방부제"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.groups.length()").value(0));
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {"가지", "가지추출물", "eGgPlAnT"})

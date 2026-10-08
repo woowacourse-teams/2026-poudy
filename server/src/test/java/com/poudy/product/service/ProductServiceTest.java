@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -23,9 +22,12 @@ import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
+import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
+import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
@@ -61,6 +63,7 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -71,7 +74,9 @@ class ProductServiceTest {
             null,
             null,
             null,
-            List.of(new ExcludeCode("HARSH_PRESERVATIVES")),
+            List.of(ExcludeCode.HARSH_PRESERVATIVES),
+            null,
+            null,
             null
         );
 
@@ -87,7 +92,7 @@ class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("제품 상세에 카테고리 경로와 포함하지 않는 성분군을 함께 담는다")
+    @DisplayName("제품 상세에 카테고리 경로와 제외 성분군 정의를 함께 담는다")
     void findsProductDetail() {
         Product product = product(1L);
         ProductRepository repository = mock(ProductRepository.class);
@@ -95,35 +100,33 @@ class ProductServiceTest {
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product));
         stubPage(product);
         ExcludeCodeGroup sulfates = new ExcludeCodeGroup(
-            new ExcludeCode("SULFATES"),
+            ExcludeCode.SULFATES,
             "설페이트 성분",
             "설명",
             List.of(new ExcludeCodeIngredient(20L, "성분", null))
         );
         ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
-            new ExcludeCode("FRAGRANCE_ALLERGENS"),
+            ExcludeCode.FRAGRANCE_ALLERGENS,
             "향료",
             "설명",
             List.of(new ExcludeCodeIngredient(10L, "성분", null))
         );
-        given(excludeCodeIngredients.freeCodesOf(argThat(ingredients -> ingredients.contains(10L))))
-            .willReturn(List.of(sulfates));
         given(excludeCodeIngredients.groups()).willReturn(List.of(fragrance, sulfates));
         ProductService service = new ProductService(
             repository,
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
 
-        ProductDetail detail = service.findDetail(1L);
+        ProductDetail detail = service.findDetail(1L, null);
 
         assertThat(detail.product()).isEqualTo(product);
+        assertThat(detail.selectedPart()).isEqualTo(product.parts().getFirst());
         assertThat(detail.categoryPath()).extracting(Category::id).containsExactly(1L, 2L);
-        assertThat(detail.freeOfCodes()).containsExactly(new ExcludeCode("SULFATES"));
-        assertThat(detail.containsIngredientFrom(sulfates)).isFalse();
-        assertThat(detail.containsIngredientFrom(fragrance)).isTrue();
+        assertThat(detail.excludeCodes()).containsExactly(fragrance, sulfates);
     }
 
     @Test
@@ -139,13 +142,35 @@ class ProductServiceTest {
             queries,
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
 
-        assertThatThrownBy(() -> service.findDetail(999L))
+        assertThatThrownBy(() -> service.findDetail(999L, null))
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("제품에 없는 구성품 ID를 고르면 구성품 없음 예외를 던진다")
+    void rejectsUnknownPart() {
+        ProductRepository repository = mock(ProductRepository.class);
+        ExcludeCodes excludeCodeIngredients = mock(ExcludeCodes.class);
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product(1L)));
+        ProductService service = new ProductService(
+            repository,
+            queries,
+            categoryRepository(categories()),
+            excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
+            new ProductSearchLogger()
+        );
+
+        assertThatThrownBy(() -> service.findDetail(1L, 999L))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting(exception -> ((ResourceNotFoundException) exception).code())
+            .isEqualTo(ErrorCode.PRODUCT_PART_NOT_FOUND);
     }
 
     @Test
@@ -161,12 +186,15 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             "제품",
             null,
             List.of(1L),
+            null,
+            null,
             null,
             null,
             null,
@@ -203,10 +231,11 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
+            ingredientGroupRepository(),
             new ProductSearchLogger()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null);
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -233,11 +262,12 @@ class ProductServiceTest {
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
+            ingredientGroupRepository(),
             logger
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null),
             ProductSort.DEFAULT,
             1,
             20
@@ -262,8 +292,12 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
-            new Ingredients(
-                List.of(new Ingredient(10L, "성분", null, null, null, null, null, null))
+            List.of(
+                new ProductPart(
+                    1L,
+                    null,
+                    new Ingredients(List.of(new Ingredient(10L, "성분", null, null, null, null, null, null)))
+                )
             ),
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
@@ -281,8 +315,14 @@ class ProductServiceTest {
     private static ExcludeCodeRepository excludeCodeRepository(ExcludeCodes excludeCodeIngredients) {
         ExcludeCodeRepository excludeCodeRepository = mock(ExcludeCodeRepository.class);
         given(excludeCodeRepository.findAll()).willReturn(excludeCodeIngredients);
-        given(excludeCodeRepository.containsAll(any())).willReturn(true);
         return excludeCodeRepository;
+    }
+
+    private static IngredientGroupRepository ingredientGroupRepository() {
+        IngredientGroupRepository ingredientGroupRepository = mock(IngredientGroupRepository.class);
+        given(ingredientGroupRepository.findBundlingGroups()).willReturn(IngredientGroupCatalog.empty());
+        given(ingredientGroupRepository.containsAll(List.of())).willReturn(true);
+        return ingredientGroupRepository;
     }
 
     private static Categories categories() {

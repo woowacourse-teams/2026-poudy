@@ -27,6 +27,8 @@ Node.js 22 이상, pnpm 11.21.0.
 pnpm install
 ```
 
+`client`와 `common`은 저장소 루트의 pnpm 워크스페이스로 묶여 있습니다. `client`에서 설치해도 워크스페이스 전체가 설치되며, 락파일과 `node_modules`는 저장소 루트에 생깁니다.
+
 ## 환경 변수
 
 `.env.example`을 복사해 `.env.local`을 만듭니다. 이 파일이 없으면 API 목 서버가 켜지지 않아 화면에 데이터가 나오지 않습니다.
@@ -94,7 +96,7 @@ pnpm run format
 프로젝트 루트의 Git hook이 Client 변경을 검사합니다.
 
 - `pre-commit`: Client의 staged 파일에 `lint-staged`를 실행합니다.
-- `pre-push`: push 대상 커밋에 Client 변경이 있으면 `pnpm run check`를 실행합니다.
+- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다.
 
 hook을 우회했거나 설치하지 않은 경우에도 push 전에 다음 명령으로 같은 검사를 실행합니다.
 
@@ -110,7 +112,15 @@ pnpm run check
 import type { ProductResponse } from "@poudy/api/api.zod";
 ```
 
-`@poudy/api/*`는 저장소 루트의 `common/`을 가리키는 경로 별칭입니다.
+`@poudy/api`는 저장소 루트의 `common/`을 워크스페이스 패키지로 등록한 것입니다. `client/package.json`에 `workspace:*`로 선언되어 있어서, 설치하면 `common/`에 연결됩니다.
+
+같은 파일에는 응답 타입과 이름이 같은 Zod 스키마도 들어 있습니다. API를 호출할 때는 이 스키마를 `apiGet`, `apiPostForm`에 넘겨 응답을 런타임에 검증합니다. 기준과 이유는 [AGENTS.md](AGENTS.md)의 「TypeScript 기준」을 참고하세요.
+
+```ts
+import { BrandOverviewResponse } from "@poudy/api/api.zod";
+
+apiGet("/api/brands", BrandOverviewResponse);
+```
 
 API 타입 생성 방법은 [Server README](../server/README.md#api-타입-생성)를 참고하세요.
 
@@ -213,6 +223,13 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 - 목록과 조건 조작 — `product_list_viewed`, `filter_applied`, `filter_reset`, `sort_applied`,
   `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`
 - 제품 진단 — `product_unsaved`, `ingredient_viewed`, `ingredient_condition_toggled`, `error_occurred`, 세션 녹화
+- 상세 탐색 시간 — `detail_active_time_recorded`
+
+`detail_active_time_recorded`는 제품 상세와 성분 상세에서 사용자가 실제로 화면을 본 시간을 기록합니다.
+탭이 보이고 창에 포커스가 있으며 마지막 입력 후 60초가 지나지 않은 동안에만 시간을 누적합니다.
+`$prev_pageview_duration`은 숨은 탭과 자리를 비운 시간까지 포함하므로 활성 체류시간 지표로 쓰지 않습니다.
+30초마다, 그리고 탭이 가려지거나 경로가 바뀌거나 화면을 떠날 때 직전 전송 이후에 늘어난 시간만
+`active_seconds`로 보냅니다. 따라서 여러 이벤트의 `active_seconds`를 더해도 같은 시간이 두 번 집계되지 않습니다.
 
 큐레이션 캐러셀은 `home_section_viewed.section = curation`으로 실제 섹션 노출을 기록하고,
 `curation_slide_viewed`로 가운데 카드가 바뀐 시점과 `transition = manual | autoplay`를 남깁니다.

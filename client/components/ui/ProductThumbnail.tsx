@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+
+import { ProductImage } from "@/components/ui/ProductImage";
 
 export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
 
@@ -68,13 +69,12 @@ function ProductThumbnailImage({
       className={`size-20 shrink-0 overflow-hidden rounded-lg ${settled ? "bg-transparent" : "bg-[#F2F3F5]"}`}
       data-thumbnail-state={settled ? "loaded" : "loading"}
     >
-      <Image
+      <ProductImage
         ref={ref}
         src={sourceOf(imageUrl, failed)}
         alt=""
         data-product-image
-        width={80}
-        height={80}
+        size={80}
         loading={loading}
         onLoad={() => setSettled(true)}
         onError={handleError}

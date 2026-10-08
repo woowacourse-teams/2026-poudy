@@ -2,9 +2,12 @@
 
 import type { IngredientSuggestionResponse } from "@poudy/api/api.zod";
 
+import { IngredientGroupRows } from "./IngredientGroupRows";
+
 import { ConditionButton } from "@/components/ui/ConditionButton";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { splitByRange } from "@/lib/domain/highlight";
+import type { GroupConditionKey, IngredientGroup } from "@/lib/domain/ingredient-groups";
 import { effectColor } from "@/lib/domain/skin-effect-colors";
 
 /** 한 줄에 담기는 만큼만 보인다. 나머지는 개수로 알린다. */
@@ -16,7 +19,13 @@ type IngredientSuggestionsProps = {
   readonly includedIds: readonly number[];
   readonly excludedIds: readonly number[];
   readonly onToggle: (key: "includeIngredientIds" | "excludeIngredientIds", item: IngredientSuggestionResponse) => void;
+  readonly groups: readonly IngredientGroup[];
+  readonly includedGroupCodes: readonly string[];
+  readonly excludedGroupCodes: readonly string[];
+  readonly onToggleGroup: (key: GroupConditionKey, group: IngredientGroup) => void;
 };
+
+const ROW_CLASS = "flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] px-3.5 py-2 last:border-b-0";
 
 export function IngredientSuggestions({
   items,
@@ -24,6 +33,10 @@ export function IngredientSuggestions({
   includedIds,
   excludedIds,
   onToggle,
+  groups,
+  includedGroupCodes,
+  excludedGroupCodes,
+  onToggleGroup,
 }: IngredientSuggestionsProps) {
   return (
     /* 제목 줄을 두지 않는다. 무엇을 찾는 중인지는 바로 위 입력창에 그대로 떠 있고,
@@ -31,15 +44,19 @@ export function IngredientSuggestions({
     <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-[#E8E9EC] bg-white shadow-lg">
       {loading ? (
         <p className="flex min-h-40 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
-      ) : items.length === 0 ? (
+      ) : items.length + groups.length === 0 ? (
         <p className="flex min-h-40 items-center justify-center text-[13px] text-text-secondary">찾는 성분이 없어요</p>
       ) : (
         <ul aria-label="성분 검색 결과">
+          <IngredientGroupRows
+            groups={groups}
+            includedCodes={includedGroupCodes}
+            excludedCodes={excludedGroupCodes}
+            onToggle={onToggleGroup}
+            rowClassName={ROW_CLASS}
+          />
           {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0F3] px-3.5 py-2 last:border-b-0"
-            >
+            <li key={item.id} className={ROW_CLASS}>
               <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                 {/*
                   성분 이름은 40자를 넘는 것이 있다. 한 줄로 자르면 앞머리가 비슷한

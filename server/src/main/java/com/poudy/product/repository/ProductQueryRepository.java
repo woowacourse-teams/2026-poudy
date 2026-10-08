@@ -6,7 +6,6 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
@@ -55,11 +54,16 @@ public class ProductQueryRepository {
                   where not exists (select 1 from product_component pc
                       join product_ingredient pi on pi.component_id = pc.id
                       where pc.product_id = p.id and pi.ingredient_id = wanted.id))
+              and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
+                  where not exists (select 1 from product_component pc
+                      join product_ingredient pi on pi.component_id = pc.id
+                      join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
+                      where pc.product_id = p.id and g.group_code = wanted.code))
               and not exists (select 1 from product_component pc
                   join product_ingredient pi on pi.component_id = pc.id where pc.product_id = p.id
                   and (pi.ingredient_id = any(:excluded) or exists (
-                      select 1 from exclude_code_ingredient e where e.ingredient_id = pi.ingredient_id
-                          and e.exclude_code = any(:codes))))
+                      select 1 from ingredient_group_ingredient e where e.ingredient_id = pi.ingredient_id
+                          and e.group_code = any(:codes))))
         ), matched as (select * from candidates where brand_ok and category_ok and skin_ok)
         """;
 
@@ -227,15 +231,17 @@ public class ProductQueryRepository {
             .addValue("oil", array("integer", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
-            .addValue("codes", array("text", query.excludeCodes().stream().map(ExcludeCode::value).toList()))
+            .addValue("codes", array("text", query.allExcludedCodes()))
+            .addValue("includedGroups", array("text", query.includeGroupCodes()))
             .addValue("skin", query.skinType() == null ? null : query.skinType().name());
     }
 
     public boolean hasConflictingIngredients(ProductQuery query) {
-        return !query.includeIngredientIds().isEmpty() && Boolean.TRUE.equals(jdbc.queryForObject("""
+        return query.hasIncludeConditions() && Boolean.TRUE.equals(jdbc.queryForObject("""
             select exists (select 1 from unnest(cast(:included as bigint[])) i(id)
-                where i.id = any(:excluded) or exists (select 1 from exclude_code_ingredient e
-                    where e.ingredient_id = i.id and e.exclude_code = any(:codes)))
+                where i.id = any(:excluded) or exists (select 1 from ingredient_group_ingredient e
+                    where e.ingredient_id = i.id and e.group_code = any(:codes)))
+                or exists (select 1 from unnest(cast(:includedGroups as text[])) g(code) where g.code = any(:codes))
             """, parameters(query), Boolean.class));
     }
 

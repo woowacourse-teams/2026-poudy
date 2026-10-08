@@ -1,0 +1,16 @@
+{
+  "name": "@poudy/api",
+  "private": true,
+  "exports": {
+    "./api.zod": "./api.zod.ts",
+    "./api.zod.types": {
+      "types": "./api.zod.types.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "zod": "catalog:"
+  }
+}

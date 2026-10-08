@@ -8,6 +8,10 @@ describe("pageOf", () => {
     expect(pageOf("/curations/1")).toBe("curation_detail");
   });
 
+  it("성분군 설명을 화면 이름으로 가른다", () => {
+    expect(pageOf("/ingredient-groups/CERAMIDES")).toBe("ingredient_group_detail");
+  });
+
   it("큐레이션 상세 아래의 경로는 큐레이션 상세로 세지 않는다", () => {
     expect(pageOf("/curations/1/opengraph-image")).toBeUndefined();
   });

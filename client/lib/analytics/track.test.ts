@@ -5,12 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const init = vi.fn();
 const register = vi.fn();
+const setConfig = vi.fn();
 const posthogCapture = vi.fn();
 const captureException = vi.fn();
 const trackGoogleAnalytics = vi.fn();
 
-vi.mock("posthog-js", () => ({ default: { capture: posthogCapture, captureException, init, register } }));
+vi.mock("posthog-js", () => ({
+  default: { capture: posthogCapture, captureException, init, register, set_config: setConfig },
+}));
 vi.mock("./google-analytics", () => ({ trackGoogleAnalytics }));
+vi.mock("./after-page-load", () => ({ afterPageLoad: (start: () => void) => start() }));
 
 const APP_INFO = {
   is_app: true,
@@ -42,6 +46,7 @@ beforeEach(() => {
   init.mockClear();
   posthogCapture.mockClear();
   register.mockClear();
+  setConfig.mockClear();
   trackGoogleAnalytics.mockClear();
   window.sessionStorage.clear();
   window.posthog = { capture, captureException: vi.fn() };
@@ -85,6 +90,32 @@ describe("track", () => {
     expect(capture).not.toHaveBeenCalled();
   });
 
+  it("beacon 을 켜면 모아 두지 않고 비콘으로 바로 보낸다", async () => {
+    const { track } = await load("production", "phc_test");
+
+    track(
+      "detail_active_time_recorded",
+      {
+        page_type: "product_detail",
+        entity_id: 42,
+        active_seconds: 8,
+        elapsed_seconds: 10,
+        max_scroll_percentage: 60,
+        flush_reason: "pagehide",
+      },
+      { beacon: true },
+    );
+
+    expect(capture).toHaveBeenCalledWith(
+      "detail_active_time_recorded",
+      expect.objectContaining({ active_seconds: 8 }),
+      {
+        send_instantly: true,
+        transport: "sendBeacon",
+      },
+    );
+  });
+
   it("PostHog 키와 관계없이 GA4 전송을 독립적으로 호출한다", async () => {
     const { track } = await load("production");
 
@@ -103,22 +134,30 @@ describe("initAnalytics", () => {
     delete window.posthog;
   });
 
-  it("초기화 호출 직후 첫 화면 이벤트를 보낸다", async () => {
+  it("SDK 준비 전 첫 화면 이벤트를 보관했다가 보낸다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
 
     void initAnalytics();
     track("page_viewed", { page: "home" });
 
-    expect(posthogCapture).toHaveBeenCalledWith("page_viewed", {
-      page: "home",
-      analytics_schema_version: 3,
-      environment: "production",
-    });
+    expect(posthogCapture).not.toHaveBeenCalled();
+    await vi.dynamicImportSettled();
+    expect(posthogCapture).toHaveBeenCalledWith(
+      "page_viewed",
+      expect.objectContaining({
+        page: "home",
+        analytics_schema_version: 3,
+        environment: "production",
+      }),
+      expect.objectContaining({ timestamp: expect.any(Date) }),
+    );
   });
 
   it("같은 검색 탐색 ID를 결과·상세·보관까지 이어 붙인다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     track("search_started", { mode: "product" });
     const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
@@ -146,6 +185,8 @@ describe("initAnalytics", () => {
   it("홈 검색 버튼에서 시작한 탐색 경로를 실제 검색까지 보존한다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     track("home_search_selected", { placement: "top_bar" });
     const selected = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
@@ -167,6 +208,8 @@ describe("initAnalytics", () => {
   it("인기 검색어 선택을 목록·상세·보관까지 이어 붙인다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     track("popular_keyword_used", { keyword: "독도", rank: 1, placement: "ticker" });
     const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
@@ -187,6 +230,8 @@ describe("initAnalytics", () => {
   it("홈 기본 랭킹 제품 선택을 상세와 보관까지 이어 붙인다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     track("home_product_selected", { product_id: 42, position: 1, ranking_scope: "overall" });
     const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
@@ -203,6 +248,8 @@ describe("initAnalytics", () => {
   it("다른 진입 경로에는 직전 탐색 ID를 잘못 붙이지 않는다", async () => {
     const { initAnalytics, track } = await load("production", "phc_test");
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     track("category_selected", { category_id: 11, origin_surface: "category" });
     track("product_viewed", { product_id: 42, entry_point: "home_ranking" });
@@ -215,6 +262,8 @@ describe("initAnalytics", () => {
     const { initAnalytics } = await load("production", "phc_test");
 
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     expect(init).toHaveBeenCalledWith(
       "phc_test",
@@ -222,8 +271,8 @@ describe("initAnalytics", () => {
         api_host: "/ingest",
         person_profiles: "always",
         autocapture: false,
-        capture_pageleave: true,
-        capture_pageview: "history_change",
+        capture_pageleave: false,
+        capture_pageview: false,
       }),
     );
   });
@@ -232,6 +281,8 @@ describe("initAnalytics", () => {
     const { initAnalytics } = await load("production", "phc_test");
 
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     expect(init).toHaveBeenCalledWith("phc_test", expect.objectContaining({ external_scripts_inject_target: "head" }));
   });
@@ -241,6 +292,8 @@ describe("initAnalytics", () => {
     const { initAnalytics } = await load("production", "phc_test");
 
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     expect(register).toHaveBeenCalledWith(APP_INFO);
   });
@@ -249,6 +302,8 @@ describe("initAnalytics", () => {
     const { initAnalytics } = await load("production", "phc_test");
 
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     expect(register).toHaveBeenCalledWith({ is_app: false });
   });
@@ -258,6 +313,8 @@ describe("initAnalytics", () => {
     const { initAnalytics } = await load("production", "phc_test");
 
     initAnalytics();
+    await vi.dynamicImportSettled();
+    posthogCapture.mockClear();
 
     expect(register).toHaveBeenCalledWith({ is_app: false });
   });
@@ -266,7 +323,8 @@ describe("initAnalytics", () => {
     window.__POUDY_APP__ = { ...APP_INFO, user_id: "1234" };
     const { initAnalytics } = await load("production", "phc_test");
 
-    await initAnalytics();
+    initAnalytics();
+    await vi.dynamicImportSettled();
 
     expect(register).toHaveBeenCalledWith(APP_INFO);
   });

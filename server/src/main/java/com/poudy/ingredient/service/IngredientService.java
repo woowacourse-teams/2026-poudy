@@ -2,14 +2,14 @@ package com.poudy.ingredient.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.excludecode.domain.IngredientGroups;
+import com.poudy.excludecode.domain.ExcludeCodeLookup;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
-import com.poudy.ingredient.domain.IngredientSuggestion;
+import com.poudy.ingredient.domain.IngredientSuggestions;
 import com.poudy.ingredient.domain.IngredientUsage;
 import com.poudy.ingredient.repository.IngredientRepository;
-import java.util.List;
+import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,16 +20,19 @@ public class IngredientService {
 
     private final IngredientRepository ingredientRepository;
     private final IngredientUsage ingredientUsage;
-    private final IngredientGroups ingredientGroups;
+    private final ExcludeCodeLookup excludeCodeLookup;
+    private final IngredientGroupRepository ingredientGroupRepository;
 
     public IngredientService(
         IngredientRepository ingredientRepository,
         IngredientUsage ingredientUsage,
-        IngredientGroups ingredientGroups
+        ExcludeCodeLookup excludeCodeLookup,
+        IngredientGroupRepository ingredientGroupRepository
     ) {
         this.ingredientRepository = ingredientRepository;
         this.ingredientUsage = ingredientUsage;
-        this.ingredientGroups = ingredientGroups;
+        this.excludeCodeLookup = excludeCodeLookup;
+        this.ingredientGroupRepository = ingredientGroupRepository;
     }
 
     public IngredientDetail findDetail(Long ingredientId) {
@@ -38,7 +41,7 @@ public class IngredientService {
 
         return new IngredientDetail(
             ingredient,
-            ingredientGroups.codesOf(ingredientId),
+            excludeCodeLookup.codesOf(ingredientId),
             ingredientUsage.countProductsContaining(ingredientId)
         );
     }
@@ -47,7 +50,10 @@ public class IngredientService {
         return ingredientRepository.findPage(query.ingredientIds(), query.usedInProducts(), page, size);
     }
 
-    public List<IngredientSuggestion> suggest(String keyword) {
-        return ingredientRepository.suggest(keyword);
+    public IngredientSuggestions suggest(String keyword) {
+        return new IngredientSuggestions(
+            ingredientRepository.suggest(keyword),
+            ingredientGroupRepository.suggest(keyword)
+        );
     }
 }

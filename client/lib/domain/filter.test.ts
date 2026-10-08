@@ -96,6 +96,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
     ["검색어", { ...EMPTY_FILTER, keyword: "독도 토너" }],
     ["성분 포함·제외", { ...EMPTY_FILTER, includeIngredientIds: [6], excludeIngredientIds: [101] }],
     ["빠른 필터", { ...EMPTY_FILTER, excludeCodes: ["SULFATES", "FRAGRANCE_ALLERGENS"] }],
+    ["성분군 포함·제외", { ...EMPTY_FILTER, includeGroupCodes: ["CERAMIDES"], excludeGroupCodes: ["LIPIDS"] }],
     ["수분·유분", { ...EMPTY_FILTER, moistureLevel: [1, 2], oilLevel: [0] }],
     ["피부 타입", { ...EMPTY_FILTER, skinType: "SENSITIVE" }],
     [
@@ -109,6 +110,8 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         includeIngredientIds: [6],
         excludeIngredientIds: [101, 102],
         excludeCodes: ["DRYING_ALCOHOLS"],
+        includeGroupCodes: ["CERAMIDES"],
+        excludeGroupCodes: ["LIPIDS"],
         skinType: "COMBINATION",
         sort: "PRICE_DESC",
         page: 3,

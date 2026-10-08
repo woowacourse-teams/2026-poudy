@@ -60,6 +60,8 @@ export type Filter = {
   readonly includeIngredientIds: readonly number[];
   readonly excludeIngredientIds: readonly number[];
   readonly excludeCodes: readonly ExcludeCode[];
+  readonly includeGroupCodes: readonly string[];
+  readonly excludeGroupCodes: readonly string[];
   /** 서버가 한 번에 하나만 받는다. 다른 조건과 AND 로 묶인다. */
   readonly skinType?: SkinType;
   readonly sort: Sort;
@@ -75,6 +77,8 @@ export const EMPTY_FILTER: Filter = {
   includeIngredientIds: [],
   excludeIngredientIds: [],
   excludeCodes: [],
+  includeGroupCodes: [],
+  excludeGroupCodes: [],
   sort: DEFAULT_SORT,
   page: FIRST_PAGE,
   size: DEFAULT_SIZE,
@@ -105,13 +109,17 @@ const readLevels = (params: URLSearchParams, key: string): readonly number[] =>
     .filter((value) => value >= LEVEL_MIN && value <= LEVEL_MAX)
     .toSorted((a, b) => a - b);
 
-const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
+const readStrings = (params: URLSearchParams, key: string): readonly string[] =>
   unique(
     params
-      .getAll("excludeCodes")
+      .getAll(key)
       .flatMap((value) => value.split(","))
-      .map((value) => value.trim()),
-  ).filter(isExcludeCode);
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+
+const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
+  readStrings(params, "excludeCodes").filter(isExcludeCode);
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
 
@@ -149,6 +157,8 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     includeIngredientIds: readIds(params, "includeIngredientIds"),
     excludeIngredientIds: readIds(params, "excludeIngredientIds"),
     excludeCodes: readCodes(params),
+    includeGroupCodes: readStrings(params, "includeGroupCodes"),
+    excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
     sort: readSort(params),
     page: readCount(params, "page", { fallback: FIRST_PAGE, min: FIRST_PAGE }),
     size: readCount(params, "size", { fallback: DEFAULT_SIZE, min: 1 }),
@@ -172,6 +182,8 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("includeIngredientIds", filter.includeIngredientIds),
     ...listEntries("excludeIngredientIds", filter.excludeIngredientIds),
     ...listEntries("excludeCodes", filter.excludeCodes),
+    ...listEntries("includeGroupCodes", filter.includeGroupCodes),
+    ...listEntries("excludeGroupCodes", filter.excludeGroupCodes),
     ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
@@ -188,6 +200,8 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.includeIngredientIds.length > 0 ||
   filter.excludeIngredientIds.length > 0 ||
   filter.excludeCodes.length > 0 ||
+  filter.includeGroupCodes.length > 0 ||
+  filter.excludeGroupCodes.length > 0 ||
   Boolean(filter.skinType);
 
 /** 조건을 바꾸면 페이지를 처음으로 되돌린다. 2 페이지에서 조건을 바꿔 빈 목록이 나오는 것을 막는다. */

@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         outputFileTracingRoot: path.join(__dirname, ".."),
       }),
 
+  // 공유 API 스키마 패키지(@poudy/api)는 워크스페이스 링크를 따라가면 client/ 밖의 common/ 에 있다.
+  // root 를 저장소 루트로 올리지 않으면 Turbopack 이 client/ 밖을 읽지 못한다. EC2 빌드는
+  // outputFileTracingRoot 가 이 역할을 대신했지만, Vercel 빌드에는 그 설정이 없어 스키마를
+  // 불러오지 못했다.
+  turbopack: {
+    root: path.join(__dirname, ".."),
+  },
+
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
     // EC2의 이미지 변환 부담과 Vercel의 최적화 사용량을 줄이기 위해 변환을 건너뛴다.

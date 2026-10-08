@@ -25,11 +25,6 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   // 로고는 배포된 주소에서 받아 온다. 여기서는 무엇을 넘겼는지만 보므로 받지 않는다.
   socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
-vi.mock("next/font/google", () => ({
-  Foldit: () => ({ variable: "--font-foldit" }),
-  Geist_Mono: () => ({ variable: "--font-geist-mono" }),
-  Noto_Sans_KR: () => ({ variable: "--font-noto-sans-kr" }),
-}));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
 /* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
@@ -39,11 +34,11 @@ vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
 vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
+import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
+import { metadata as categoriesMetadata } from "@/app/(directory)/categories/page";
 import BrandOpenGraphImage, { revalidate as brandImageRevalidate } from "@/app/brands/[brandId]/opengraph-image";
 import { generateMetadata as brandMetadata } from "@/app/brands/[brandId]/page";
-import { metadata as brandsMetadata } from "@/app/brands/page";
 import { generateMetadata as categoryMetadata } from "@/app/categories/[categoryId]/page";
-import { metadata as categoriesMetadata } from "@/app/categories/page";
 import { generateMetadata as curationMetadata } from "@/app/curations/[curationId]/page";
 import IngredientOpenGraphImage, {
   revalidate as ingredientImageRevalidate,
@@ -185,7 +180,7 @@ describe("공유 메타데이터", () => {
     expect(markup).toContain('"@type":"Organization"');
     expect(markup).toContain('"@id":"http://localhost:3000/#organization"');
     expect(markup).toContain('"alternateName":"Poudy"');
-    expect(markup).toContain('"logo":"http://localhost:3000/favicon.png"');
+    expect(markup).toContain('"logo":"http://localhost:3000/logo.webp"');
     expect(markup).toContain(
       '"sameAs":["https://www.instagram.com/poudy.official","https://play.google.com/store/apps/details?id=com.poudy.app&pcampaignid=web_share"]',
     );
@@ -201,8 +196,7 @@ describe("공유 메타데이터", () => {
       name: "수분 세럼",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "https://images.example/product.png",
-      ingredients: [],
-      skinEffectGroups: [],
+      selectedPart: { ingredients: [], skinEffectGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -225,8 +219,7 @@ describe("공유 메타데이터", () => {
       name: "진정 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       imageUrl: "",
-      ingredients: [],
-      skinEffectGroups: [],
+      selectedPart: { ingredients: [], skinEffectGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -371,8 +364,10 @@ describe("공유 메타데이터", () => {
       name: "약콩 판테놀 마스크",
       brand: { id: 2, name: "라운드랩", englishName: "Round Lab", imageUrl: "" },
       imageUrl: "",
-      ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
-      skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+      selectedPart: {
+        ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
+        skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+      },
     });
 
     const metadata = await productMetadata({

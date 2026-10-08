@@ -4,11 +4,13 @@
 import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { IngredientSearchPanel } from "./IngredientSearchPanel";
 
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
+import { server } from "@/mocks/server";
 
 const excludeCodes: readonly ExcludeCodeResponse[] = [
   {
@@ -155,5 +157,72 @@ describe("IngredientSearchPanel", () => {
 
     expect(screen.getByRole("checkbox", { name: /향료\/알레르기 성분 제외/ })).toBeInTheDocument();
     expect(screen.queryByText("착향 목적의 성분입니다.")).not.toBeInTheDocument();
+  });
+
+  describe("성분군", () => {
+    const pantheonGroup = { code: "PANTHENOLS", name: "판테놀 계열", ingredientIds: [6, 7] };
+
+    const withGroup = () =>
+      server.use(
+        http.get("*/api/ingredients/suggestions", () =>
+          HttpResponse.json({
+            items: [
+              {
+                id: 6,
+                koreanName: "판테놀",
+                englishName: "Panthenol",
+                skinEffects: [],
+                match: { field: "KOREAN_NAME", text: "판테놀", startIndex: 0, endIndexExclusive: 3 },
+              },
+            ],
+            groups: [pantheonGroup],
+          }),
+        ),
+        http.get("*/api/ingredient-groups/PANTHENOLS", () =>
+          HttpResponse.json({
+            code: "PANTHENOLS",
+            name: "판테놀 계열",
+            englishName: "Panthenols",
+            description: "설명",
+            ingredients: [
+              { id: 6, koreanName: "판테놀", englishName: "Panthenol" },
+              { id: 7, koreanName: "덱스판테놀", englishName: "Dexpanthenol" },
+            ],
+          }),
+        ),
+      );
+
+    it("검색 결과에 성분군을 개수와 함께 보여 주고 포함하면 성분군 조건에 담는다", async () => {
+      withGroup();
+      const { onChange } = setup();
+      const row = await search("판테놀 2종");
+
+      await userEvent.click(row.getByRole("button", { name: "판테놀 2종 포함" }));
+
+      expect(onChange).toHaveBeenCalledWith({ includeGroupCodes: ["PANTHENOLS"], excludeGroupCodes: [] });
+    });
+
+    it("이미 고른 성분군에 속한 성분은 검색 결과에서 뺀다", async () => {
+      withGroup();
+      setup({ ...EMPTY_FILTER, includeGroupCodes: ["PANTHENOLS"] });
+      await search("판테놀 2종");
+
+      const list = screen.getByRole("list", { name: "성분 검색 결과" });
+      expect(within(list).queryByText("판테놀")).not.toBeInTheDocument();
+    });
+
+    it("제외한 성분군에 속한 성분을 포함하면 충돌 경고를 띄운다", async () => {
+      withGroup();
+      setup({ ...EMPTY_FILTER, excludeGroupCodes: ["PANTHENOLS"], includeIngredientIds: [6] });
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("제외한 성분군에 속한 성분");
+    });
+
+    it("고른 성분군을 선택한 성분 영역에 보여 준다", async () => {
+      withGroup();
+      setup({ ...EMPTY_FILTER, excludeGroupCodes: ["PANTHENOLS"] });
+
+      expect(await screen.findByText("판테놀 2종")).toBeInTheDocument();
+    });
   });
 });

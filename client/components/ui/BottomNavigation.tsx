@@ -25,7 +25,8 @@ const TABS = [
     match: (path: string) =>
       matchesPathSegment(path, "/search") ||
       matchesPathSegment(path, "/products") ||
-      matchesPathSegment(path, "/ingredients"),
+      matchesPathSegment(path, "/ingredients") ||
+      matchesPathSegment(path, "/ingredient-groups"),
   },
   { href: "/saved", label: "저장", icon: "bookmarks", match: (path: string) => matchesPathSegment(path, "/saved") },
 ] as const;

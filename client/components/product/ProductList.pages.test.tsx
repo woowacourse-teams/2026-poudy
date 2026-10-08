@@ -35,6 +35,8 @@ const threePages = () => {
         items: products.slice(page - 1, page),
         pagination: { page, size: 1, totalElements: 3, totalPages: 3, hasNext: page < 3 },
         brands: [],
+        categories: [],
+        skinTypes: [],
       });
     }),
   );
@@ -62,6 +64,8 @@ const failingPages = (failures: Record<number, number>) => {
         items: products.slice(page - 1, page),
         pagination: { page, size: 1, totalElements: 3, totalPages: 3, hasNext: page < 3 },
         brands: [],
+        categories: [],
+        skinTypes: [],
       });
     }),
   );

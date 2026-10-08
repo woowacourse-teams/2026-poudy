@@ -6,7 +6,14 @@ import { useEffect } from "react";
 import type { IngredientEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
-const ENTRY_POINTS: readonly IngredientEntryPoint[] = ["product_detail", "search", "ingredient_filter"];
+const ENTRY_POINTS: readonly IngredientEntryPoint[] = [
+  "product_detail",
+  "search",
+  "ingredient_filter",
+  "ingredient_sheet",
+  "ingredient_group_sheet",
+  "ingredient_group_detail",
+];
 
 const entryPointOf = (raw: string | null): IngredientEntryPoint =>
   ENTRY_POINTS.find((entry) => entry === raw) ?? "product_detail";

@@ -38,7 +38,7 @@ class KeywordRankingTest {
             RankingFallback.of(List.of())
         );
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
     }
 
     @Test
@@ -54,8 +54,8 @@ class KeywordRankingTest {
         );
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "토너", RankingChange.unknown()),
-            new RankedKeyword(2, "크림", RankingChange.unknown())
+            new RankedKeyword(1, "토너", RankingChange.unchanged()),
+            new RankedKeyword(2, "크림", RankingChange.unchanged())
         );
     }
 
@@ -75,9 +75,9 @@ class KeywordRankingTest {
         );
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "크림", RankingChange.unknown()),
-            new RankedKeyword(2, "크림오일", RankingChange.unknown()),
-            new RankedKeyword(3, "토너", RankingChange.unknown())
+            new RankedKeyword(1, "크림", RankingChange.unchanged()),
+            new RankedKeyword(2, "크림오일", RankingChange.unchanged()),
+            new RankedKeyword(3, "토너", RankingChange.unchanged())
         );
     }
 
@@ -97,8 +97,8 @@ class KeywordRankingTest {
         );
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "토너", RankingChange.unknown()),
-            new RankedKeyword(2, "크림", RankingChange.unknown())
+            new RankedKeyword(1, "토너", RankingChange.unchanged()),
+            new RankedKeyword(2, "크림", RankingChange.unchanged())
         );
     }
 
@@ -113,7 +113,7 @@ class KeywordRankingTest {
             RankingFallback.of(List.of())
         );
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림", RankingChange.unknown()));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "크림", RankingChange.unchanged()));
     }
 
     @Test
@@ -129,7 +129,7 @@ class KeywordRankingTest {
             RankingFallback.of(List.of())
         );
 
-        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThat(rankings).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
     }
 
     @Test
@@ -149,9 +149,9 @@ class KeywordRankingTest {
         );
 
         assertThat(rankings).containsExactly(
-            new RankedKeyword(1, "토너", RankingChange.unknown()),
-            new RankedKeyword(2, "크림", RankingChange.unknown()),
-            new RankedKeyword(3, "세럼", RankingChange.unknown())
+            new RankedKeyword(1, "토너", RankingChange.unchanged()),
+            new RankedKeyword(2, "크림", RankingChange.unchanged()),
+            new RankedKeyword(3, "세럼", RankingChange.unchanged())
         );
     }
 
@@ -179,7 +179,7 @@ class KeywordRankingTest {
     }
 
     @Test
-    void leavesMovementUnknownWithoutComparisonAndForDefaultKeywords() {
+    void treatsMovementAsUnchangedWithoutComparisonAndForDefaultKeywords() {
         SearchKeywordDictionary dictionary = dictionary(entry("term:1", "토너"), entry("term:2", "크림"));
 
         List<RankedKeyword> withoutComparison = rank(
@@ -196,9 +196,9 @@ class KeywordRankingTest {
             RankingFallback.of(List.of("크림"))
         );
 
-        assertThat(withoutComparison.getFirst().change().isKnown()).isFalse();
+        assertThat(withoutComparison.getFirst().change()).isEqualTo(RankingChange.unchanged());
         assertThat(filled.get(0).change()).isEqualTo(RankingChange.moved(1, 1));
-        assertThat(filled.get(1).change().isKnown()).isFalse();
+        assertThat(filled.get(1).change()).isEqualTo(RankingChange.unchanged());
     }
 
     private static List<RankedKeyword> rank(

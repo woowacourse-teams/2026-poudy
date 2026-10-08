@@ -3,8 +3,10 @@ package com.poudy.searchkeyword.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.bucket.BucketWindow;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
@@ -88,7 +90,7 @@ class SearchKeywordServiceTest {
 
         assertThat(successful.view().counts()).containsOnlyKeys("독도 토너", "독도토너");
         assertThat(service.rankings())
-            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unknown()));
+            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unchanged()));
     }
 
     @Test
@@ -103,7 +105,7 @@ class SearchKeywordServiceTest {
         TestServices updated = service(List.of(entry("product", "라운드랩 1025 독도 토너", "독도 토너")), Set.of());
         updated.refreshRankings();
         assertThat(updated.rankings())
-            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unknown()));
+            .containsExactly(new RankedKeyword(1, "라운드랩 1025 독도 토너", RankingChange.unchanged()));
         assertThat(successful.view().counts()).containsOnlyKeys("독도 토너");
     }
 
@@ -133,6 +135,27 @@ class SearchKeywordServiceTest {
             .contains("event=search_keyword_unresolved keyword=\"독도 \\\"토너\\\"\"")
             .doesNotContain("keyword=\"토너\"")
             .doesNotContain("keyword=\"없는검색\"");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void unavailableDictionaryFailsRankingsButStillRecordsWithoutFalseUnresolvedLog(CapturedOutput output) {
+        SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot();
+        KeywordBuckets buckets = mock(KeywordBuckets.class);
+        SearchKeywordService service = new SearchKeywordService(snapshot, buckets, ignored -> true);
+
+        assertThatThrownBy(service::rankings)
+            .isInstanceOf(InfrastructureException.class)
+            .hasMessageContaining("검색어 사전");
+        service.record(new SearchKeyword("토너"));
+
+        verify(buckets).record("토너");
+        assertThat(output).doesNotContain("event=search_keyword_unresolved");
+
+        snapshot.replace(SearchKeywordDictionary.of(List.of()), List.of(), clock.instant());
+        assertThat(service.rankings()).isEmpty();
+        service.record(new SearchKeyword("크림"));
+        assertThat(output).contains("event=search_keyword_unresolved keyword=\"크림\"");
     }
 
     @Test
@@ -166,14 +189,14 @@ class SearchKeywordServiceTest {
         closeBucket();
         service.refreshRankings();
         List<RankedKeyword> published = service.rankings();
-        assertThat(published).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
-        assertThatThrownBy(() -> published.add(new RankedKeyword(2, "크림", RankingChange.unknown())))
+        assertThat(published).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
+        assertThatThrownBy(() -> published.add(new RankedKeyword(2, "크림", RankingChange.unchanged())))
             .isInstanceOf(UnsupportedOperationException.class);
 
         for (int i = 0; i < 6; i++) {
             service.record(new SearchKeyword("크림"));
         }
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
         closeBucket();
 
         ExecutorService readers = Executors.newFixedThreadPool(4);
@@ -186,17 +209,17 @@ class SearchKeywordServiceTest {
         assertThat(readers.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
         for (Future<List<RankedKeyword>> future : futures) {
             assertThat(future.get()).isIn(
-                List.of(new RankedKeyword(1, "토너", RankingChange.unknown())),
+                List.of(new RankedKeyword(1, "토너", RankingChange.unchanged())),
                 List.of(
-                    new RankedKeyword(1, "크림", RankingChange.unknown()),
-                    new RankedKeyword(2, "토너", RankingChange.unknown())
+                    new RankedKeyword(1, "크림", RankingChange.unchanged()),
+                    new RankedKeyword(2, "토너", RankingChange.unchanged())
                 )
             );
         }
         service.refreshRankings();
         assertThat(service.rankings()).containsExactly(
-            new RankedKeyword(1, "크림", RankingChange.unknown()),
-            new RankedKeyword(2, "토너", RankingChange.unknown())
+            new RankedKeyword(1, "크림", RankingChange.unchanged()),
+            new RankedKeyword(2, "토너", RankingChange.unchanged())
         );
     }
 
@@ -221,7 +244,7 @@ class SearchKeywordServiceTest {
         throwingClock.now = throwingClock.now.plus(10, ChronoUnit.MINUTES);
         failing.refreshRankings();
         List<RankedKeyword> previous = failing.rankings();
-        assertThat(previous).containsExactly(new RankedKeyword(1, "토너", RankingChange.unknown()));
+        assertThat(previous).containsExactly(new RankedKeyword(1, "토너", RankingChange.unchanged()));
         throwingClock.fail = true;
         assertThat(failing.rankings()).isEqualTo(previous);
         failing.refreshRankings();
@@ -327,7 +350,7 @@ class SearchKeywordServiceTest {
         }
         closeBucket();
         service.refreshRankings();
-        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "자격", RankingChange.unknown()));
+        assertThat(service.rankings()).containsExactly(new RankedKeyword(1, "자격", RankingChange.unchanged()));
         assertThat(calls).hasValue(1);
     }
 

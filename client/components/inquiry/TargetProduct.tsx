@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
+import { ProductImage } from "@/components/ui/ProductImage";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 
 /**
@@ -27,14 +27,11 @@ export function TargetProduct({
     <section className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
       {/* 제품 사진은 여백이 넓고 세로로 길다. 잘라내면 흰 부분만 남으므로 비율을 지켜 담는다. */}
       <span className="relative size-14 shrink-0">
-        <Image
-          // 주소가 바뀌면 이전 그림의 실패 상태를 가져가지 않는다.
-          key={source}
+        <ProductImage
           src={source}
           alt=""
-          fill
-          sizes="56px"
-          className="object-contain"
+          size={56}
+          className="absolute inset-0 size-full object-contain"
           onError={() => setFailed(true)}
         />
       </span>

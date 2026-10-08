@@ -27,8 +27,15 @@ public abstract sealed class CurationBlock permits CurationImageBlock, CurationP
         }
     }
 
-    public static CurationBlock image(UUID id, int spacingTop, int spacingBottom, String imageUrl) {
-        return new CurationImageBlock(id, spacingTop, spacingBottom, imageUrl);
+    public static CurationBlock image(
+        UUID id,
+        int spacingTop,
+        int spacingBottom,
+        String imageUrl,
+        String altText,
+        String bodyText
+    ) {
+        return new CurationImageBlock(id, spacingTop, spacingBottom, imageUrl, altText, bodyText);
     }
 
     public static CurationBlock products(

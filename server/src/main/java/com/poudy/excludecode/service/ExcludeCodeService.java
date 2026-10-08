@@ -1,14 +1,14 @@
 package com.poudy.excludecode.service;
 
 import com.poudy.excludecode.domain.ExcludeCode;
+import com.poudy.excludecode.domain.ExcludeCodeLookup;
 import com.poudy.excludecode.domain.ExcludeCodes;
-import com.poudy.excludecode.domain.IngredientGroups;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ExcludeCodeService implements IngredientGroups {
+public class ExcludeCodeService implements ExcludeCodeLookup {
 
     private final ExcludeCodeRepository excludeCodeRepository;
 

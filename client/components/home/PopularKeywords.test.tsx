@@ -17,10 +17,10 @@ vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
  * 마지막 순위가 지나간 줄로 함께 있으므로, 펼쳐야만 보이는 말을 가운데에 하나 둔다.
  */
 const items: readonly RankingItem[] = [
-  { rank: 1, keyword: "나이아신아마이드" },
-  { rank: 2, keyword: "어성초" },
-  { rank: 3, keyword: "레티놀" },
-  { rank: 4, keyword: "세라마이드" },
+  { rank: 1, keyword: "나이아신아마이드", change: { movement: "SAME", steps: 0 } },
+  { rank: 2, keyword: "어성초", change: { movement: "SAME", steps: 0 } },
+  { rank: 3, keyword: "레티놀", change: { movement: "SAME", steps: 0 } },
+  { rank: 4, keyword: "세라마이드", change: { movement: "SAME", steps: 0 } },
 ];
 
 /** 접힌 줄에는 없고 펼친 목록에만 있는 말. */
@@ -245,15 +245,21 @@ describe("PopularKeywords", () => {
     expect(within(list).getByText("변동 없음", { exact: false })).toBeInTheDocument();
   });
 
-  /* 서버는 견줄 지난 집계가 없으면 `change` 를 빼고 내려보낸다. 그때도 줄은 서야 한다. */
-  it("변동이 오지 않아도 검색어를 그린다", async () => {
+  /* 비교할 이전 집계가 없는 항목도 SAME 으로 내려오므로 변동 없음을 표시한다. */
+  it("변동 없는 검색어에는 가로줄과 변동 없음 안내를 표시한다", async () => {
     render(<PopularKeywords items={items} />);
+
+    expect(currentRow()).toHaveTextContent("변동 없음");
+
     await userEvent.click(screen.getByRole("button", { name: "인기 검색어 전체 보기" }));
 
     const list = screen.getByRole("list");
 
     expect(within(list).getByText(ONLY_WHEN_EXPANDED)).toBeInTheDocument();
     expect(within(list).queryByText("NEW")).not.toBeInTheDocument();
-    expect(within(list).queryByText("변동 없음", { exact: false })).not.toBeInTheDocument();
+    for (const link of within(list).getAllByRole("link")) {
+      expect(within(link).getByText("−")).toBeInTheDocument();
+      expect(link).toHaveTextContent("변동 없음");
+    }
   });
 });

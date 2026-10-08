@@ -14,7 +14,13 @@ public sealed interface CurationBlockContent permits CurationBlockContent.Image,
 
     int spacingBottom();
 
-    record Image(UUID id, int spacingTop, int spacingBottom, String imageUrl) implements CurationBlockContent {
+    record Image(
+        UUID id,
+        int spacingTop,
+        int spacingBottom,
+        String imageUrl,
+        String altText,
+        String bodyText) implements CurationBlockContent {
         public Image {
             validate(id, spacingTop, spacingBottom);
             if (imageUrl == null || imageUrl.isBlank()) {

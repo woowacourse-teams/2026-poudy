@@ -1,4 +1,4 @@
-import type { FeedbackImageUploadResponse, FeedbackRequest } from "@poudy/api/api.zod";
+import { FeedbackImageUploadResponse, type FeedbackRequest } from "@poudy/api/api.zod";
 
 import { apiPost, apiPostForm } from "./client";
 
@@ -63,7 +63,7 @@ export const uploadFeedbackImages = (files: readonly File[]): Promise<FeedbackIm
   const form = new FormData();
   for (const file of files) form.append("images", file);
 
-  return apiPostForm("/api/pending-images", form);
+  return apiPostForm("/api/pending-images", FeedbackImageUploadResponse, form);
 };
 
 type RequestProductInput = {

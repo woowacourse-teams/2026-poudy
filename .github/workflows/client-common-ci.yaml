@@ -1,0 +1,144 @@
+name: Client Common CI
+
+# 클라이언트 변경과 main 대상 릴리스 PR은 기존 Client CI가 검사한다.
+# common 변경만 있는 dev 대상 PR은 Lighthouse 없이 호환성을 확인한다.
+on:
+  pull_request:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: client
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      common: ${{ steps.filter.outputs.common }}
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            common:
+              - 'common/**'
+              - '.github/workflows/client-common-ci.yaml'
+            client:
+              - 'client/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+              - '.github/workflows/client-ci.yaml'
+
+  check:
+    name: Client common checks
+    needs: changes
+    if: needs.changes.outputs.common == 'true' && needs.changes.outputs.client == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Next.js types
+        run: pnpm exec next typegen
+
+      - name: Format
+        id: format
+        continue-on-error: true
+        run: pnpm run format:check
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: pnpm run lint
+
+      - name: Type check
+        id: typecheck
+        continue-on-error: true
+        run: pnpm run typecheck
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: pnpm run test
+
+      # 빌드 중 서버가 API를 호출하므로 기존 CI와 같은 staging 주소를 사용한다.
+      # 미리보기 배포 없이 Next.js 빌드만 수행한다.
+      - name: Build
+        id: build
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: staging
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.STAGING_SITE_URL }}
+        run: |
+          if [ -z "$NEXT_PUBLIC_API_BASE_URL" ] || [ -z "$NEXT_PUBLIC_SITE_URL" ]; then
+            echo "::error::STAGING_API_BASE_URL and STAGING_SITE_URL must be configured."
+            exit 1
+          fi
+          pnpm run build
+
+      - name: Summarize check results
+        if: always()
+        env:
+          FORMAT: ${{ steps.format.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          {
+            echo "## Client Common CI"
+            echo ""
+            echo "| Check | Result |"
+            echo "| --- | --- |"
+            echo "| Format | $FORMAT |"
+            echo "| Lint | $LINT |"
+            echo "| Type check | $TYPECHECK |"
+            echo "| Test | $TEST |"
+            echo "| Build | $BUILD |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any check failed
+        if: always()
+        env:
+          FORMAT: ${{ steps.format.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          for result in "$FORMAT" "$LINT" "$TYPECHECK" "$TEST" "$BUILD"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A client check did not succeed: $result"
+              exit 1
+            fi
+          done

@@ -55,7 +55,7 @@ class ExcludeCodeRepositoryTest {
     void readsIngredientsInDisplayOrder() {
         assertThat(
             excludeCodeRepository.findAll().groups().stream()
-                .filter(group -> group.code().equals(new ExcludeCode("FRAGRANCE_ALLERGENS")))
+                .filter(group -> group.code().equals(ExcludeCode.FRAGRANCE_ALLERGENS))
                 .findFirst().orElseThrow().ingredients()
         )
             .extracting(ExcludeCodeIngredient::id)
@@ -65,7 +65,7 @@ class ExcludeCodeRepositoryTest {
     @Test
     @DisplayName("성분의 제외 성분군을 코드 값 객체로 읽는다")
     void readsCodesAsValues() {
-        assertThat(excludeCodeRepository.codesOf(9L)).containsExactly(new ExcludeCode("FRAGRANCE_ALLERGENS"));
+        assertThat(excludeCodeRepository.codesOf(9L)).containsExactly(ExcludeCode.FRAGRANCE_ALLERGENS);
     }
 
     @Test
