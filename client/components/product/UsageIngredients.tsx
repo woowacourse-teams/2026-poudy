@@ -7,6 +7,7 @@ import { useState } from "react";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
+import { openInPlace } from "@/components/ui/open-in-place";
 import { PRESS_SURFACE } from "@/components/ui/press";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 
@@ -121,13 +122,6 @@ function Chip({
     </Link>
   );
 }
-
-/** 새 탭이나 새 창으로 열려는 누름은 링크에 맡긴다. 그냥 누를 때만 시트로 연다. */
-const openInPlace = (event: React.MouseEvent<HTMLAnchorElement>, open: () => void) => {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-  event.preventDefault();
-  open();
-};
 
 /** 성분군 시트에 넘길 것을 모은다. 성분군이 여러 쓰임새에 걸쳐 있으면 쓰임새를 모두 붙인다. */
 const productGroupOf = (

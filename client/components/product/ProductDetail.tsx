@@ -1,6 +1,12 @@
-import type { ProductDetailResponse, ProductPartResponse, SimilarProductResponse } from "@poudy/api/api.zod";
+import type {
+  ExcludeCodeResponse,
+  ProductDetailResponse,
+  ProductPartResponse,
+  SimilarProductResponse,
+} from "@poudy/api/api.zod";
 import Link from "next/link";
 
+import { CautionCheck } from "./CautionCheck";
 import { IngredientList } from "./IngredientList";
 import { PartTabs } from "./PartTabs";
 import { ProductViewRecorder } from "./ProductViewRecorder";
@@ -10,7 +16,7 @@ import { UsageIngredients } from "./UsageIngredients";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
-import { Icon, scalableIconStyle } from "@/components/ui/icons/Icon";
+import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRESS_TEXT } from "@/components/ui/press";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
@@ -18,7 +24,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { cautionSummary, sortedCautions } from "@/lib/domain/caution-check";
+import { withCautionCodes } from "@/lib/domain/caution-check";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
 import { partTabId } from "@/lib/domain/product-parts";
 
@@ -27,11 +33,14 @@ export function ProductDetail({
   product,
   entryPoint = "direct",
   similarProducts = [],
+  excludeCodes = [],
 }: {
   readonly product: ProductDetailResponse;
   readonly entryPoint?: ProductEntryPoint;
   /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
   readonly similarProducts?: readonly SimilarProductResponse[];
+  /** 주의 성분 기준의 성분군 코드를 찾는 제외 성분군 목록. 비어 있으면 기준을 누를 수 없게 둔다. */
+  readonly excludeCodes?: readonly ExcludeCodeResponse[];
 }) {
   return (
     <SummaryHeader
@@ -101,7 +110,7 @@ export function ProductDetail({
         <PartTabs product={product} entryPoint={entryPoint} />
 
         <div className="flex flex-col gap-6 px-4 pt-6 pb-10">
-          <SelectedPart product={product} similarProducts={similarProducts} />
+          <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
@@ -233,9 +242,11 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 function SelectedPart({
   product,
   similarProducts,
+  excludeCodes,
 }: {
   readonly product: ProductDetailResponse;
   readonly similarProducts: readonly SimilarProductResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
 }) {
   const part = product.selectedPart;
   if (!part) return null;
@@ -249,96 +260,17 @@ function SelectedPart({
       className="flex flex-col gap-6"
     >
       <UsageIngredients part={part} />
-      <CautionCheck groups={part.excludeGroups} />
+      <CautionCheck
+        groups={withCautionCodes(
+          part.excludeGroups,
+          excludeCodes,
+          part.ingredients.map((ingredient) => ingredient.id),
+        )}
+        ingredients={part.ingredients}
+      />
       <Ingredients ingredients={part.ingredients} />
       <SimilarProducts products={similarProducts} />
     </div>
-  );
-}
-
-/**
- * 주의 성분 확인 원 안의 표시. 경로는 Tabler 의 x · check 다.
- *
- * 24 단위 viewBox 그대로 두면 check 는 그림이 오른쪽 위로 치우쳐 있어 원 안에서 가운데로 보이지 않는다.
- * viewBox 를 그림(선 굵기의 절반까지)에 딱 맞게 잘라 그림의 가운데가 상자의 가운데에 오게 한다.
- *
- * 크기는 디자인(24 단위를 13px)에 가까운 정수 px 로 둔다. 8.1px 처럼 소수로 두면 20px 원 안에서
- * 놓이는 자리가 픽셀 격자에 맞춰지며 반 픽셀쯤 밀린다. 비율이 다른 칸은 viewBox 가 가운데로 맞춰 넣는다.
- */
-const MARKS = {
-  x: { viewBox: "4.5 4.5 15 15", width: 8, height: 8, paths: ["M18 6l-12 12", "M6 6l12 12"] },
-  check: { viewBox: "3.5 5.5 18 13", width: 10, height: 8, paths: ["M5 12l5 5l10 -10"] },
-} as const;
-
-function CautionMark({ kind }: { readonly kind: keyof typeof MARKS }) {
-  const { viewBox, width, height, paths } = MARKS[kind];
-
-  return (
-    <svg
-      width={width}
-      height={height}
-      style={scalableIconStyle(width, height)}
-      viewBox={viewBox}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={3}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {paths.map((d) => (
-        <path key={d} d={d} />
-      ))}
-    </svg>
-  );
-}
-
-/**
- * 주의 성분 확인. 기준마다 공개 전성분에 들었는지를 두 칸 격자로 보여 준다.
- * 들어 있는 기준을 앞에 두어 눈이 먼저 닿게 한다.
- */
-function CautionCheck({ groups }: { readonly groups: ProductPartResponse["excludeGroups"] }) {
-  if (groups.length === 0) return null;
-
-  const summary = cautionSummary(groups);
-
-  return (
-    <section data-no-select className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[14px] font-bold text-[#182132]">주의 성분 확인</h3>
-        <p className={`text-[12px] font-bold ${summary.contains ? "text-[#C53030]" : "text-[#0A6B52]"}`}>
-          {summary.label}
-        </p>
-      </div>
-
-      {/*
-        이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
-        서버는 기준 이름만 주므로 "있음"·"없음" 은 화면에서 붙인다.
-      */}
-      {/*
-        칸 수를 글자 크기로 정한다. 1배에서는 두 칸이지만, 글자를 키워 한 칸이 130px(글자 기준)보다
-        좁아지면 한 칸으로 바뀐다. 두 칸에 억지로 담으면 긴 이름이 낱말 가운데서 갈라진다.
-        한 칸의 최소 폭을 절반 아래로는 두지 않아, 화면이 넓어도 세 칸으로 늘지 않는다.
-      */}
-      <ul className="grid grid-cols-[repeat(auto-fit,minmax(max(min(100%,calc(130em/14)),calc((100%_-_12px)/2)),1fr))] gap-3 text-[14px]">
-        {sortedCautions(groups).map((group) => (
-          <li key={group.name} className="flex items-center gap-2">
-            <span
-              className={`flex size-[max(20px,calc(20em/14))] shrink-0 items-center justify-center rounded-full text-white ${group.contains ? "bg-[#C53030]" : "bg-[#17A47A]"}`}
-            >
-              <CautionMark kind={group.contains ? "x" : "check"} />
-            </span>
-            <span
-              className={`text-[14px] leading-[1.4] break-keep ${group.contains ? "font-semibold text-[#182132]" : "font-medium text-[#424E5F]"}`}
-            >
-              {/* `향료/알레르기` 처럼 빗금으로 이은 이름은 빗금 뒤에서 줄을 바꿀 수 있게 한다. */}
-              {group.name.replaceAll("/", "/\u200B")} {group.contains ? "있음" : "없음"}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 

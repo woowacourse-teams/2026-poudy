@@ -496,6 +496,19 @@ const curationBlocks = [
 /** 인기 제품은 목록 앞에서 잘라 쓴다. 목에는 조회수가 없어 순위를 만들 기준이 없다. */
 const RANKING_SIZE = 6;
 
+/** 제외 성분군을 성분군 응답 모양으로 옮긴다. 영문 이름은 목에 없어 비워 둔다. */
+const excludeGroupOf = (code: string) => {
+  const found = excludeCodes.find((excludeCode) => excludeCode.code === code);
+  if (!found) return undefined;
+  return {
+    code: found.code,
+    name: found.name,
+    englishName: null,
+    description: found.description,
+    ingredients: found.ingredients,
+  };
+};
+
 export const handlers = [
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
 
@@ -672,8 +685,9 @@ export const handlers = [
 
   http.get("*/api/exclude-codes", () => HttpResponse.json({ items: excludeCodes })),
 
+  // 서버는 제외 성분군도 같은 성분군 표에 두어 이 주소로 함께 조회된다. 목도 두 목록을 함께 찾는다.
   http.get("*/api/ingredient-groups/:code", ({ params }) => {
-    const group = ingredientGroups.find((found) => found.code === params.code);
+    const group = ingredientGroups.find((found) => found.code === params.code) ?? excludeGroupOf(String(params.code));
     if (!group) return notFound("성분군을 찾을 수 없습니다.", "INGREDIENT_GROUP_NOT_FOUND");
     return HttpResponse.json(group);
   }),

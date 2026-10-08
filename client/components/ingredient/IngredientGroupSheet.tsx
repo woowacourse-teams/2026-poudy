@@ -56,7 +56,8 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
     <>
       <SheetHead
         title={name}
-        badge={<Badge variant="count">{group.ingredients.length}종</Badge>}
+        // 주의 성분 기준처럼 이 제품에 든 성분이 없으면 개수와 목록을 두지 않는다. `0종` 과 빈 목록은 읽을 것이 없다.
+        badge={group.ingredients.length > 0 ? <Badge variant="count">{group.ingredients.length}종</Badge> : null}
         englishName={detail.status === "loaded" ? detail.value.englishName : undefined}
         tags={
           group.effects.length > 0 ? (
@@ -76,25 +77,7 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
         <div className="flex flex-col gap-6 pt-5 pb-2">
           <RoleDescription description={description} />
 
-          <section className="flex flex-col gap-2">
-            <h3 className="text-[15px] font-bold text-[#182132]">이 제품에 든 성분</h3>
-            <ul>
-              {group.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
-                  <Link
-                    href={`/ingredients/${ingredient.id}`}
-                    className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
-                  >
-                    <span className="flex min-w-0 flex-col gap-1">
-                      <span className="text-[14px] font-semibold text-[#182132]">{ingredient.koreanName}</span>
-                      <span className="text-[12px] text-[#6A7588]">{ingredient.englishName}</span>
-                    </span>
-                    <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {group.ingredients.length > 0 && <ProductIngredients ingredients={group.ingredients} />}
         </div>
       </BottomSheet.Body>
 
@@ -105,5 +88,29 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
         </SheetDetailLink>
       </BottomSheet.Footer>
     </>
+  );
+}
+
+function ProductIngredients({ ingredients }: { readonly ingredients: ProductIngredientGroup["ingredients"] }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-[15px] font-bold text-[#182132]">이 제품에 든 성분</h3>
+      <ul>
+        {ingredients.map((ingredient) => (
+          <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
+            <Link
+              href={`/ingredients/${ingredient.id}`}
+              className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
+            >
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="text-[14px] font-semibold text-[#182132]">{ingredient.koreanName}</span>
+                <span className="text-[12px] text-[#6A7588]">{ingredient.englishName}</span>
+              </span>
+              <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

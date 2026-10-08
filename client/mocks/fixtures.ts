@@ -293,43 +293,45 @@ export const ingredientGroups: IngredientGroupResponse[] = [
   },
 ];
 
+// 이름은 staging 과 같게 둔다. 제품 상세의 주의 성분 기준과 이름으로 맞춰 성분군 코드를 찾는다.
 export const excludeCodes: ExcludeCodeResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
-    name: "향료/알레르기 성분 제외",
+    name: "향료/알레르기 성분",
     description: "착향 목적의 성분과 표시 대상 알레르기 유발 성분입니다.",
     ingredients: [
-      { id: 101, koreanName: "리모넨", englishName: "Limonene" },
+      // 1006 은 더마 릴리프 썬스크린(6)의 리모넨이다. 주의 성분 시트가 이 제품에 든 성분을 보여 준다.
+      { id: 1006, koreanName: "리모넨", englishName: "Limonene" },
       { id: 102, koreanName: "리날룰", englishName: "Linalool" },
     ],
   },
   {
     code: "DRYING_ALCOHOLS",
-    name: "건조 알코올 제외",
+    name: "건조 알코올",
     description: "휘발성이 높아 건조함을 유발할 수 있는 알코올입니다.",
     ingredients: [{ id: 111, koreanName: "변성알코올", englishName: "Alcohol Denat." }],
   },
   {
     code: "HARSH_PRESERVATIVES",
-    name: "자극성 방부제 제외",
+    name: "자극성 방부제",
     description: "자극 보고가 있는 방부 성분입니다.",
     ingredients: [{ id: 121, koreanName: "메틸파라벤", englishName: "Methylparaben" }],
   },
   {
     code: "SULFATES",
-    name: "설페이트 성분 제외",
+    name: "설페이트 성분",
     description: "세정력이 강한 설페이트 계열 계면활성제입니다.",
     ingredients: [{ id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" }],
   },
   {
     code: "CYCLIC_SILICONES",
-    name: "실리콘 자극원 제외",
+    name: "실리콘 자극원",
     description: "고리형 실리콘 성분입니다.",
     ingredients: [{ id: 141, koreanName: "사이클로펜타실록세인", englishName: "Cyclopentasiloxane" }],
   },
   {
     code: "SYNTHETIC_COLORANTS",
-    name: "합성 색소 제외",
+    name: "합성 색소",
     description: "타르 색소를 포함한 합성 착색 성분입니다.",
     ingredients: [{ id: 151, koreanName: "적색201호", englishName: "Red 201" }],
   },
@@ -351,6 +353,8 @@ const sunscreenIngredientNames = [
   "프로필헵틸카프릴레이트",
   "C12-15알킬벤조에이트",
   "부틸렌글라이콜",
+  // 향료/알레르기 성분을 담은 제품이라 그 기준에 드는 성분을 하나 둔다. 주의 성분 시트에서 이 성분이 보인다.
+  "리모넨",
 ] as const;
 
 export const untaggedProductDetail: ProductDetailResponse = {

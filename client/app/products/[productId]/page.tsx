@@ -5,7 +5,7 @@ import { ProductDetail } from "@/components/product/ProductDetail";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
-import { fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
+import { fetchExcludeCodes, fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
 import { productIngredientDescription } from "@/lib/domain/product-display";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
@@ -50,6 +50,18 @@ const loadSimilarProducts = async (raw: string, partId: number | undefined) => {
   }
 };
 
+/**
+ * 주의 성분 기준의 성분군 코드를 찾는 제외 성분군 목록. 받아 오지 못하면 기준을 누를 수 없게 둘 뿐이라
+ * 빈 목록으로 대신한다. 모든 제품이 같은 목록을 쓰므로 카탈로그 캐시를 함께 쓴다.
+ */
+const loadExcludeCodes = async () => {
+  try {
+    return (await fetchExcludeCodes()).items;
+  } catch {
+    return [];
+  }
+};
+
 export async function generateMetadata(props: PageProps<"/products/[productId]">): Promise<Metadata> {
   const { productId } = await props.params;
 
@@ -86,10 +98,11 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
   const { productId } = await props.params;
   const searchParams = (await props.searchParams) ?? {};
   const partId = partIdOf(searchParams.partId);
-  // 둘은 서로 기다릴 이유가 없어 함께 받는다.
-  const [product, similarProducts] = await Promise.all([
+  // 셋은 서로 기다릴 이유가 없어 함께 받는다.
+  const [product, similarProducts, excludeCodes] = await Promise.all([
     load(productId, partId),
     loadSimilarProducts(productId, partId),
+    loadExcludeCodes(),
   ]);
 
   return (
@@ -100,6 +113,7 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
         product={product}
         entryPoint={productEntryPointOf(searchParams.from)}
         similarProducts={similarProducts}
+        excludeCodes={excludeCodes}
       />
     </>
   );

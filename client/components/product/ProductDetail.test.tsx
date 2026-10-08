@@ -437,14 +437,61 @@ describe("주의 성분 확인", () => {
     const list = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!.querySelector("ul")!;
 
     expect(screen.getByText("6개 중 1개 포함")).toHaveClass("text-[#C53030]");
-    // 빗금 뒤에서 줄을 바꿀 수 있게 폭 없는 공백을 넣으므로 그 문자를 허용한다.
-    expect(list.firstElementChild).toHaveTextContent(/향료\/\u200B?알레르기 성분 있음/);
+    expect(list.firstElementChild).toHaveTextContent("향료/알레르기 성분 있음");
   });
 
   it("들어 있지 않은 기준은 없음으로 표시한다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     expect(itemOf("건조 알코올 없음")).toBeInTheDocument();
+  });
+
+  const part = untaggedProductDetail.selectedPart!;
+  const [first, second] = part.ingredients;
+  const excludeCodes = [
+    {
+      code: "FRAGRANCE_ALLERGENS",
+      name: "향료/알레르기 성분",
+      description: "착향 목적의 성분이에요.",
+      ingredients: [{ id: first!.id, koreanName: first!.koreanName, englishName: first!.englishName }],
+    },
+    {
+      code: "DRYING_ALCOHOLS",
+      name: "건조 알코올",
+      description: "피부를 건조하게 할 수 있는 알코올이에요.",
+      ingredients: [{ id: -1, koreanName: "에탄올", englishName: "Alcohol" }],
+    },
+  ];
+
+  it("기준을 누르면 성분군 시트를 열고 이 제품에 든 해당 성분을 보여 준다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+
+    await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분 있음" }));
+
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByText("향료/알레르기 성분")).toBeInTheDocument();
+    expect(within(sheet).getByRole("link", { name: new RegExp(first!.koreanName) })).toBeInTheDocument();
+    expect(within(sheet).queryByText(second!.koreanName)).not.toBeInTheDocument();
+  });
+
+  it("들어 있지 않은 기준은 성분 목록 없이 성분군 설명만 보여 준다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+
+    await userEvent.click(screen.getByRole("link", { name: "건조 알코올 없음" }));
+
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
+    expect(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ })).toHaveAttribute(
+      "href",
+      "/ingredient-groups/DRYING_ALCOHOLS",
+    );
+  });
+
+  it("성분군 코드를 찾지 못한 기준은 누를 수 없게 둔다", () => {
+    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+
+    expect(screen.queryByRole("link", { name: "합성 색소 없음" })).not.toBeInTheDocument();
+    expect(screen.getByText(/합성 색소/)).toBeInTheDocument();
   });
 
   it("들어 있는 기준이 없으면 모두 없다고 알린다", () => {
