@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, createEvent, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CurationCarousel } from "./CurationCarousel";
@@ -484,6 +484,58 @@ describe("CurationCarousel", () => {
 
       // 100px 에서 출발해 400px 로 간다. 남은 300px 의 절반을 넘겼다.
       expect(list.scrollLeft).toBeGreaterThan(100 + 150);
+    } finally {
+      restore();
+    }
+  });
+
+  /*
+   * 빠르게 튕기는 동작은 거리가 짧아 한 칸의 20% 에 못 미친다. 거리만 보면 넘기려던 카드가
+   * 제자리로 돌아오므로 속도도 함께 본다.
+   */
+  it("짧게 튕기면 거리가 모자라도 다음 카드로 넘어간다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      const down = createEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent(list, down);
+      /* 한 칸의 20%(80px) 에 크게 못 미치는 30px 을 50ms 만에 움직였다. */
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      const up = createEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      Object.defineProperty(up, "timeStamp", { value: down.timeStamp + 50 });
+      fireEvent(list, up);
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+
+      expect(list.scrollLeft).toBe(STEP);
+    } finally {
+      restore();
+    }
+  });
+
+  it("천천히 조금만 끌었다 놓으면 제자리로 돌아온다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      const down = createEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent(list, down);
+      /* 같은 30px 을 1초에 걸쳐 움직였다. */
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      const up = createEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      Object.defineProperty(up, "timeStamp", { value: down.timeStamp + 1000 });
+      fireEvent(list, up);
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+
+      expect(list.scrollLeft).toBe(0);
     } finally {
       restore();
     }

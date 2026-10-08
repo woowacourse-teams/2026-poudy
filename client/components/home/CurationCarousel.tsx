@@ -156,6 +156,14 @@ const DRAG_THRESHOLD = 5;
 const DRAG_SWITCH_RATIO = 0.2;
 
 /**
+ * 짧게 튕겨도 넘기는 속도(px/ms).
+ *
+ * 빠르게 튕기는 동작은 움직인 거리가 짧아 `DRAG_SWITCH_RATIO` 에 못 미친다. 거리만 보면
+ * 넘기려던 카드가 제자리로 돌아오므로, 이 속도를 넘으면 거리와 상관없이 넘긴다.
+ */
+const FLICK_VELOCITY = 0.11;
+
+/**
  * 디자인 S01 의 큐레이션 캐러셀.
  *
  * 카드를 받은 순서대로 한 번씩만 그린다. 끝에서 처음으로 이어 돌지 않고, 스스로 넘기다
@@ -190,7 +198,15 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    * `pointerId` 는 끌기를 시작한 포인터만 따라가려고 담아 둔다.
    */
   const drag = useRef<
-    { pointerId: number; startX: number; startScroll: number; startSlide: number; moved: boolean } | undefined
+    | {
+        pointerId: number;
+        startX: number;
+        startScroll: number;
+        startSlide: number;
+        startedAt: number;
+        moved: boolean;
+      }
+    | undefined
   >(undefined);
   /*
    * 방금 끝난 동작이 끌기였는지.
@@ -576,6 +592,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
       startX: event.clientX,
       startScroll: track.scrollLeft,
       startSlide: slideAt(track),
+      startedAt: event.timeStamp,
       moved: false,
     };
 
@@ -649,7 +666,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
      *
      * 가장 가까운 칸을 고르면 한 칸의 절반을 넘겨야 넘어가는데, 카드가 화면 폭에 가까워서
      * 그 절반이 멀다. 끌기 시작한 칸에서 한 칸 간격의 `DRAG_SWITCH_RATIO` 만큼만 움직였으면
-     * 넘긴 것으로 본다. 그만큼도 못 움직였으면 시작한 칸으로 되돌린다.
+     * 넘긴 것으로 본다. 그만큼 움직이지 않았어도 빠르게 튕겼으면 넘긴다. 둘 다 아니면
+     * 시작한 칸으로 되돌린다.
      *
      * `scrollToSlide` 는 끝에서 `scrollend` 를 스스로 던지므로 `settle` 까지 이어진다.
      */
@@ -658,10 +676,13 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     const shifted = track.scrollLeft - finished.startScroll;
     const from = finished.startSlide;
 
+    /* 짧게 튕긴 동작은 거리가 아니라 속도로 본다. 누른 순간부터 뗀 순간까지의 평균이다. */
+    const velocity = Math.abs(shifted) / Math.max(1, event.timeStamp - finished.startedAt);
+    const far = step > 0 && Math.abs(shifted) >= step * DRAG_SWITCH_RATIO;
+    const flicked = Math.abs(shifted) >= DRAG_THRESHOLD && velocity > FLICK_VELOCITY;
+
     let target = from;
-    if (step > 0 && Math.abs(shifted) >= step * DRAG_SWITCH_RATIO) {
-      target = from + (shifted > 0 ? 1 : -1);
-    }
+    if (far || flicked) target = from + (shifted > 0 ? 1 : -1);
 
     /* 처음과 끝 밖으로는 나가지 않는다. 그 바깥은 카드가 없다. */
     const last = track.children.length - 1;
