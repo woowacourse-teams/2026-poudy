@@ -766,8 +766,18 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
                         {curation.title}
                       </h3>
-                      {/* 제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다. */}
-                      <p className="text-[11px] whitespace-pre-line text-[#624255]">{curation.description}</p>
+                      {/*
+                        제목과 마찬가지로 문구에 넣어 둔 줄바꿈을 그대로 살린다.
+
+                        오른쪽은 자리 표시(`n / N`)가 놓이는 자리라 비워 둔다. 문구와 자리 표시는
+                        같은 줄 높이에 놓이므로, 비워 두지 않으면 긴 문구의 끝이 자리 표시 밑으로
+                        들어간다. 비우는 폭은 자리 표시의 폭(글자 `10 / 10` 이 들어가는 3.5em,
+                        좌우 안쪽 여백 16px, 테두리 2px)에 사이 간격 8px 을 더한 값이다. 둘 다
+                        11px 글자라 `em` 으로 잡으면 글자 크기 설정을 키워도 함께 넓어진다.
+                      */}
+                      <p className="pr-[calc(3.5em+26px)] text-[11px] whitespace-pre-line text-[#624255]">
+                        {curation.description}
+                      </p>
                     </div>
                   </article>
                 </Link>
