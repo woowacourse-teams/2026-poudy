@@ -214,31 +214,17 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * 층이 풀리고, 크기가 바뀔 때마다 글자를 다시 그려 획이 떨린다. `scale3d` 는
        * 3D 맥락을 지켜 층 위에서 늘였다 줄였다만 한다.
        */
+      /*
+       * 글자도 카드와 함께 커지고 작아진다. 그림만 자라고 글자가 제 크기로 남으면 카드와
+       * 글자의 비율이 미는 동안 계속 바뀌어 어색하다. 글자는 제 층에 올려 두었으므로
+       * (globals.css) 한 번 그린 획을 늘였다 줄일 뿐 떨리지 않는다.
+       */
       const size = 1 - (1 - MIN_SCALE) * distance;
       box.style.transform = `scale3d(${size}, ${size}, 1)`;
-
       /*
-       * 글자에는 거꾸로 되돌리는 크기를 걸어 실제 크기를 늘 1 로 둔다.
-       *
-       * 카드가 조금씩 커지고 작아지는 동안 글자도 따라 크기가 바뀌면, 브라우저가 그때마다
-       * 획을 새로 그린다. 획이 픽셀 경계에 걸치는 방식이 달라져 글자가 떨려 보인다.
-       * 자리와 크기를 재 보면 어긋남이 없는데도 눈에는 띈다.
-       *
-       * 그림과 배경만 커지고 글자는 제 크기를 지킨다. 카드가 커 보이는 효과는 그대로다.
+       * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
+       * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
        */
-      const text = box.querySelector<HTMLElement>("[data-curation-text]");
-      if (text) {
-        text.style.transform = `scale3d(${1 / size}, ${1 / size}, 1)`;
-        /*
-         * 되돌린 만큼 폭도 함께 좁힌다. 글자는 줄어든 카드 안에 있으면서 제 크기를
-         * 지키므로, 폭을 그대로 두면 되돌리는 배율만큼 넓어져 카드 밖으로 밀려난다.
-         * 카드가 많이 줄어들수록 더 밀려나 제목이 한두 글자만 남고 잘린다.
-         *
-         * 줄어든 좌표계에서 이만큼이 카드 안쪽 폭이다. 되돌리고 나면 정확히 카드
-         * 안쪽 폭이 되어, 줄바꿈 자리는 가운데 카드와 같아진다.
-         */
-        text.style.width = `${size * 100}%`;
-      }
       /*
        * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
        * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
@@ -807,14 +793,10 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                     />
 
                     {/*
-                      카드가 커지는 만큼 이 덩어리는 거꾸로 줄어 실제 크기가 1 로 유지된다.
-                      `paintScales` 가 그 값을 적는다. 왼쪽 아래를 붙들어 두어야 글자가
-                      제자리에 남는다.
-
                       그림 위에 덮는 막을 두지 않아 썸네일이 그대로 보인다. 그래서 글자는 흰색이
                       아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
                     */}
-                    <div data-curation-text className="relative flex origin-bottom-left flex-col gap-1.5">
+                    <div className="relative flex flex-col gap-1.5">
                       <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
                         {curation.title}
                       </h3>
