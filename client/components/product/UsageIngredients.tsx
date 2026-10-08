@@ -38,16 +38,20 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
 
       <ul>
         {part.skinEffectGroups.map((effect) => (
-          <li key={effect.id} className="flex gap-3 border-b border-[#DEE2E9] py-3 last:border-b-0">
-            <span className="flex min-h-9 w-[100px] shrink-0 items-center gap-2">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-[#EFF1F5]">
+          /*
+            라벨 칸과 칩 목록의 폭을 글자 크기(em)로 잡는다. 기기에서 글자를 키우면 라벨 칸이 함께 넓어지고,
+            칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다. 1배에서는 디자인의 100px 그대로다.
+          */
+          <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-[#DEE2E9] py-3 last:border-b-0">
+            <span className="flex min-h-9 w-[calc(100em/14)] shrink-0 items-center gap-2 text-[14px]">
+              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-2xl bg-[#EFF1F5] text-[16px]">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-[#424E5F]" />
               </span>
               <span className="text-[14px] leading-[1.3] font-semibold text-[#182132]">{effectLabel(effect)}</span>
             </span>
 
-            <ul className="flex min-w-0 flex-1 flex-wrap gap-2">
+            <ul className="flex min-w-[min(100%,calc(170em/13))] flex-1 flex-wrap gap-2 text-[13px]">
               {effect.items.map((item) => (
                 <li key={chipKey(item)}>
                   <Chip item={item} ingredients={ingredients} onOpen={show} />

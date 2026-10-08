@@ -39,13 +39,17 @@ export function IngredientReferences({
         aria-controls={listId}
         className="flex min-h-11 w-full items-center gap-1 border-b border-[#DEE2E9] text-left text-[13px]"
       >
-        <Icon name="info" size={15} className="shrink-0 text-[#6A7588]" />
-        <span className="font-medium text-[#566273]">참고자료 {references.length}건</span>
-        <span className="min-w-0 flex-1 text-[#6A7588]">· {date} 업데이트</span>
+        <Icon name="info" size={15} scalable className="shrink-0 text-[#6A7588]" />
+        {/* 글자를 키워 한 줄에 다 들어가지 않으면 날짜를 통째로 다음 줄로 넘긴다. 낱말 가운데서 끊지 않는다. */}
+        <span className="flex min-w-0 flex-1 flex-wrap gap-x-1">
+          <span className="font-medium text-[#566273]">참고자료 {references.length}건</span>
+          <span className="break-keep text-[#6A7588]">· {date} 업데이트</span>
+        </span>
         {/* 목록이 열리는 것과 같은 길이로 화살표를 돌린다. 전환은 disclosure-chevron 이 건다. */}
         <Icon
           name="chevron-down"
           size={18}
+          scalable
           className={`disclosure-chevron shrink-0 text-[#6A7588] ${open ? "rotate-180" : ""}`}
         />
       </button>

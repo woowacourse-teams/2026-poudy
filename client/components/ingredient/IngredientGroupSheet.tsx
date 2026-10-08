@@ -88,7 +88,7 @@ function Content({ group, onClose }: { readonly group: ProductIngredientGroup; r
                       <span className="text-[14px] font-semibold text-[#182132]">{ingredient.koreanName}</span>
                       <span className="text-[12px] text-[#6A7588]">{ingredient.englishName}</span>
                     </span>
-                    <Icon name="chevron-right" size={16} className="shrink-0 text-[#6A7588]" />
+                    <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
                   </Link>
                 </li>
               ))}

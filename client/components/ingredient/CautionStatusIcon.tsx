@@ -1,3 +1,5 @@
+import { scalableIconStyle } from "@/components/ui/icons/Icon";
+
 /**
  * 주의 성분 상태 아이콘. design/v2.pen 의 `정의 · 주의 성분 없음` · `정의 · 주의 성분 있음` 을 따른다.
  *
@@ -14,6 +16,8 @@ export function CautionStatusIcon({ caution, size }: { readonly caution: boolean
     <svg
       width={size}
       height={size}
+      // 글자 옆에만 쓰이므로 늘 글자와 함께 커진다.
+      style={scalableIconStyle(size, size)}
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"

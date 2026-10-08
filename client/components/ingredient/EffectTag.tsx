@@ -1,6 +1,7 @@
 import type { SkinEffectResponse } from "@poudy/api/api.zod";
 
 import { Badge } from "@/components/ui/Badge";
+import { scalableIconStyle } from "@/components/ui/icons/Icon";
 
 /**
  * 피부 작용(BIOLOGICAL_EFFECT) 태그. 문구와 아이콘은 design/v2.pen 의
@@ -93,6 +94,8 @@ export function EffectIcon({
     <svg
       width={size}
       height={size}
+      // 글자 옆과 글자 크기를 따르는 원 안에만 쓰이므로 늘 글자와 함께 커진다.
+      style={scalableIconStyle(size, size)}
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"

@@ -85,7 +85,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
             data-popped={popping}
             onTransitionEnd={finishPop}
           >
-            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={16} strokeWidth={2.5} />
+            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={16} strokeWidth={2.5} scalable />
           </span>
           <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
         </span>

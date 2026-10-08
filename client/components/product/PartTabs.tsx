@@ -55,8 +55,10 @@ export function PartTabs({
     document.fonts?.ready.then(measure).catch(() => {});
 
     if (typeof ResizeObserver === "undefined") return;
+    // 기기에서 글자 크기를 바꾸면 바 폭은 그대로여도 탭 내용이 커진다. 내용의 크기 변화도 지켜본다.
     const observer = new ResizeObserver(measure);
     observer.observe(bar);
+    bar.querySelectorAll("[data-tab-content]").forEach((content) => observer.observe(content));
     return () => observer.disconnect();
   }, [ref, product.productParts]);
 

@@ -10,7 +10,7 @@ import { UsageIngredients } from "./UsageIngredients";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
-import { Icon } from "@/components/ui/icons/Icon";
+import { Icon, scalableIconStyle } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -181,7 +181,7 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
             <Link href={`/categories/${path.id}`} aria-label={`${path.name} 카테고리 제품`} className={LINK}>
               {path.name}
             </Link>
-            <Icon name="chevron-right" size={12} />
+            <Icon name="chevron-right" size={12} scalable />
             <Link
               href={`/categories/${path.child.id}`}
               aria-label={`${path.child.name} 카테고리 제품`}
@@ -276,6 +276,7 @@ function CautionMark({ kind }: { readonly kind: keyof typeof MARKS }) {
     <svg
       width={width}
       height={height}
+      style={scalableIconStyle(width, height)}
       viewBox={viewBox}
       fill="none"
       stroke="currentColor"
@@ -314,18 +315,24 @@ function CautionCheck({ groups }: { readonly groups: ProductPartResponse["exclud
         이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
         서버는 기준 이름만 주므로 "있음"·"없음" 은 화면에서 붙인다.
       */}
-      <ul className="grid grid-cols-2 gap-3">
+      {/*
+        칸 수를 글자 크기로 정한다. 1배에서는 두 칸이지만, 글자를 키워 한 칸이 130px(글자 기준)보다
+        좁아지면 한 칸으로 바뀐다. 두 칸에 억지로 담으면 긴 이름이 낱말 가운데서 갈라진다.
+        한 칸의 최소 폭을 절반 아래로는 두지 않아, 화면이 넓어도 세 칸으로 늘지 않는다.
+      */}
+      <ul className="grid grid-cols-[repeat(auto-fit,minmax(max(min(100%,calc(130em/14)),calc((100%_-_12px)/2)),1fr))] gap-3 text-[14px]">
         {sortedCautions(groups).map((group) => (
           <li key={group.name} className="flex items-center gap-2">
             <span
-              className={`flex size-5 shrink-0 items-center justify-center rounded-full text-white ${group.contains ? "bg-[#C53030]" : "bg-[#17A47A]"}`}
+              className={`flex size-[max(20px,calc(20em/14))] shrink-0 items-center justify-center rounded-full text-white ${group.contains ? "bg-[#C53030]" : "bg-[#17A47A]"}`}
             >
               <CautionMark kind={group.contains ? "x" : "check"} />
             </span>
             <span
-              className={`text-[14px] leading-[1.4] ${group.contains ? "font-semibold text-[#182132]" : "font-medium text-[#424E5F]"}`}
+              className={`text-[14px] leading-[1.4] break-keep ${group.contains ? "font-semibold text-[#182132]" : "font-medium text-[#424E5F]"}`}
             >
-              {group.name} {group.contains ? "있음" : "없음"}
+              {/* `향료/알레르기` 처럼 빗금으로 이은 이름은 빗금 뒤에서 줄을 바꿀 수 있게 한다. */}
+              {group.name.replaceAll("/", "/\u200B")} {group.contains ? "있음" : "없음"}
             </span>
           </li>
         ))}
@@ -352,8 +359,8 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
   return (
     <section className="flex flex-col gap-2 rounded-xl bg-[#EFF1F5] px-4 pt-4 pb-1">
       <div className="flex items-center gap-2">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-xl bg-[#E0F4EA]">
-          <Icon name="badge-check" size={14} className="text-[#0A6B52]" />
+        <span className="flex size-[max(24px,calc(24em/14))] shrink-0 items-center justify-center rounded-xl bg-[#E0F4EA] text-[14px]">
+          <Icon name="badge-check" size={14} scalable className="text-[#0A6B52]" />
         </span>
         <h3 className="text-[14px] font-bold text-[#182132]">정보 출처</h3>
       </div>
@@ -369,7 +376,7 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
         className="flex min-h-11 items-center justify-between gap-2 border-t border-[#DEE2E9] text-[14px] font-semibold text-[#182132]"
       >
         정보가 다르다면 수정을 제안해 주세요
-        <Icon name="chevron-right" size={16} className="shrink-0 text-[#566273]" />
+        <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#566273]" />
       </Link>
     </section>
   );

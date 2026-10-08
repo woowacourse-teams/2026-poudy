@@ -29,8 +29,14 @@ export function SheetHead({
     <BottomSheet.CustomHeader>
       <div className="flex gap-2 pt-2 pr-2 pl-5">
         <div className="flex min-w-0 flex-1 flex-col gap-2 pb-2">
-          <div className="flex items-center gap-2">
-            <BottomSheet.Title className="min-w-0 text-[20px] font-bold text-[#182132]">{title}</BottomSheet.Title>
+          {/*
+            기기에서 글자를 키워 이름과 배지가 한 줄에 들어가지 않으면 배지가 다음 줄로 내려간다.
+            이름은 낱말 가운데서 끊지 않는다.
+          */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <BottomSheet.Title className="max-w-full text-[20px] font-bold break-keep text-[#182132]">
+              {title}
+            </BottomSheet.Title>
             {badge}
           </div>
           {englishName ? <p className="text-[13px] text-[#566273]">{englishName}</p> : null}
@@ -68,7 +74,7 @@ export function RoleDescription({
 }) {
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex h-7 items-center justify-between">
+      <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <h3 className="text-[15px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
         <AiSummaryBadge />
       </div>

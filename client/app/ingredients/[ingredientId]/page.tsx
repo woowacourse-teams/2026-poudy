@@ -90,7 +90,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
         </section>
 
         <section className="flex flex-col gap-3">
-          <div className="flex h-7 items-center justify-between">
+          <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <h3 className="text-[18px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
             <AiSummaryBadge />
           </div>
@@ -114,17 +114,17 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
 
         <Link
           href={`/products?includeIngredientIds=${ingredient.id}`}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] leading-[1.3] font-bold text-white"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 py-3 text-[14px] leading-[1.3] font-bold text-white"
         >
           {/*
-            이름이 길어도 단추가 한 줄을 넘지 않게 이름만 줄인다.
-            뒤따르는 개수와 화살표는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
+            이름이 길면 이름만 줄인다. 뒤따르는 개수는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
+            기기에서 글자를 키워 한 줄에 다 들어가지 않으면, 개수 쪽이 다음 줄로 넘어가 단추가 높아진다.
           */}
-          <span className="flex min-w-0 items-center gap-1">
-            <span className="truncate">{ingredient.koreanName}</span>
-            <span className="shrink-0">포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
+          <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-1 text-center">
+            <span className="max-w-full truncate">{ingredient.koreanName}</span>
+            <span>포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
           </span>
-          <Icon name="chevron-right" size={16} className="shrink-0" />
+          <Icon name="chevron-right" size={16} scalable className="shrink-0" />
         </Link>
 
         <IngredientReferences

@@ -39,6 +39,7 @@ export function LevelTag({ kind, level }: LevelTagProps) {
             width={8.88}
             height={12.6}
             preserveRatio
+            scalable
             className={droplet}
           />
         ))}

@@ -68,7 +68,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
         </section>
 
         <section className="flex flex-col gap-3">
-          <div className="flex h-7 items-center justify-between">
+          <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <h3 className="text-[18px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
             <AiSummaryBadge />
           </div>
@@ -80,7 +80,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
           className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] font-bold text-white"
         >
           <span className="truncate">{name} 성분군 포함 제품 보기</span>
-          <Icon name="chevron-right" size={16} className="shrink-0" />
+          <Icon name="chevron-right" size={16} scalable className="shrink-0" />
         </Link>
 
         {group.ingredients.length > 0 ? (
@@ -99,7 +99,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
                         <span className="text-[13px] text-[#566273]">{ingredient.englishName}</span>
                       ) : null}
                     </span>
-                    <Icon name="chevron-right" size={16} className="shrink-0 text-[#6A7588]" />
+                    <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
                   </Link>
                 </li>
               ))}

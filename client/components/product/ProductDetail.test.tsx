@@ -437,7 +437,8 @@ describe("주의 성분 확인", () => {
     const list = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!.querySelector("ul")!;
 
     expect(screen.getByText("6개 중 1개 포함")).toHaveClass("text-[#C53030]");
-    expect(list.firstElementChild).toHaveTextContent("향료/알레르기 성분 있음");
+    // 빗금 뒤에서 줄을 바꿀 수 있게 폭 없는 공백을 넣으므로 그 문자를 허용한다.
+    expect(list.firstElementChild).toHaveTextContent(/향료\/\u200B?알레르기 성분 있음/);
   });
 
   it("들어 있지 않은 기준은 없음으로 표시한다", () => {
