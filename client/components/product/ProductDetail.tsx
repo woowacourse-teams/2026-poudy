@@ -79,10 +79,15 @@ export function ProductDetail({
               </div>
             </section>
 
-            {/* 축약형이 나타나는 자리는 저장 버튼 바로 아래다. 둘 사이에 gap 이 끼지 않게 한 묶음에 둔다. */}
+            {/*
+              축약형은 저장 버튼이 머리 밑으로 들어가는 순간 나타난다. 축약형에도 저장 단추가 있어
+              큰 버튼을 그대로 이어받는다. 표식과 구성품 탭 사이가 60px 이라 탭이 붙기 전에
+              축약형이 먼저 나와 있고, 탭을 바꿔 패널로 올려도 축약형이 그대로 남는다.
+              표식과 버튼 사이에 gap 이 끼지 않게 한 묶음에 둔다.
+            */}
             <div className="flex flex-col">
-              <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
               <SummaryEnd />
+              <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
             </div>
           </div>
         </div>

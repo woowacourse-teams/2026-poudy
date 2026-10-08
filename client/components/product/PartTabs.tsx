@@ -15,10 +15,6 @@ const TAB_PADDING = 12;
 const FIXED_GUTTER = 16;
 /** 스크롤 모드에서 고른 탭을 맞출 때 끝에서 띄우는 폭. 끝을 흐리는 폭(24px)에 가리지 않게 한다. */
 const FADE_CLEARANCE = 24;
-/** 패널로 올린 뒤 축약형이 나타나거나 사라질 때까지 기다리는 시간. 관찰자 알림과 다시 그리기를 넉넉히 덮는다. */
-const SETTLE_DELAY = 120;
-/** 붙는 높이가 바뀌는 것은 축약형이 한 번 들어가거나 나올 때뿐이라 세 번이면 자리를 잡는다. */
-const MAX_ALIGN_TRIES = 3;
 
 /**
  * S39b·S39c 구성품 탭. 구성품이 둘 이상인 제품만 둔다.
@@ -77,11 +73,10 @@ export function PartTabs({
   }, [ref, scrollable, selectedId]);
 
   /*
-   * 머리에 붙은 채로 탭을 바꾸면 새 구성품의 처음부터 읽게 패널 시작점으로 올린다.
+   * 머리에 붙은 채로 탭을 바꾸면 새 구성품의 처음부터 읽게 패널 시작점으로 한 번에 올린다.
    *
-   * 올리고 나면 머리 아래의 축약형이 나타나거나 사라져 탭이 붙는 높이가 바뀔 수 있다.
-   * 그러면 패널 첫 줄이 탭 밑에 가리거나 탭 위로 저장 버튼이 다시 보이므로, 붙는 높이가
-   * 자리를 잡을 때까지 몇 번 더 맞춘다. 축약형은 관찰자가 알려 와야 바뀌어 한 박자 늦다.
+   * 탭이 붙어 있으면 축약형도 나와 있고, 올린 뒤에도 축약형이 사라지는 자리까지 내려가지 않는다.
+   * 그래서 붙는 높이가 바뀌지 않아 다시 맞출 일이 없다. 축약형이 나타나는 자리는 ProductDetail 이 정한다.
    */
   useEffect(() => {
     const anchor = anchorRef.current;
@@ -89,18 +84,8 @@ export function PartTabs({
     if (!scrollToPanel.current || !anchor || !sticky) return;
     scrollToPanel.current = false;
 
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const align = (triesLeft: number) => {
-      const stickyTop = parseFloat(getComputedStyle(sticky).top) || 0;
-      const offset = anchor.getBoundingClientRect().top - stickyTop;
-      if (Math.abs(offset) < 1 || triesLeft === 0) return;
-
-      window.scrollTo({ top: window.scrollY + offset });
-      timer = setTimeout(() => align(triesLeft - 1), SETTLE_DELAY);
-    };
-
-    align(MAX_ALIGN_TRIES);
-    return () => clearTimeout(timer);
+    const stickyTop = parseFloat(getComputedStyle(sticky).top) || 0;
+    window.scrollTo({ top: window.scrollY + anchor.getBoundingClientRect().top - stickyTop });
   }, [selectedId]);
 
   if (product.productParts.length < 2) return null;
@@ -118,13 +103,11 @@ export function PartTabs({
       <div ref={anchorRef} aria-hidden="true" />
 
       {/*
-        머리(44px)와 그 아래 축약형 밑에 붙는다. 축약형이 나타나는 순간 그 높이만큼 내려가므로
-        자리 옮김을 이어 준다. 본문에 좌우 여백이 없어 화면 양끝까지 선이 그어진다.
+        머리(44px)와 그 아래 축약형 밑에 붙는다. 축약형은 탭이 붙기 전에 이미 나와 있어 붙는 높이가
+        바뀌는 동안 탭은 흐름 안에 있다. 그래서 높이 전환을 걸지 않는다. 본문에 좌우 여백이 없어
+        화면 양끝까지 선이 그어진다.
       */}
-      <div
-        ref={stickyRef}
-        className="sticky top-[calc(2.75rem+var(--summary-bar-height,0px))] z-20 bg-background transition-[top] duration-disclosure ease-out"
-      >
+      <div ref={stickyRef} className="sticky top-[calc(2.75rem+var(--summary-bar-height,0px))] z-20 bg-background">
         <div
           ref={ref}
           onScroll={onScroll}
