@@ -673,8 +673,13 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           onPointerCancel={onPointerCancel}
           onTouchEnd={onTouchEnd}
           onTouchCancel={onTouchEnd}
-          /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
-          className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4"
+          /*
+           * 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다.
+           *
+           * 칸의 높이는 가장 높은 카드에 맞춘다. 글자 크기 설정을 키우면 글자가 긴 카드만
+           * 세로로 자라는데, 그대로 두면 카드마다 높이가 달라 넘길 때마다 들쭉날쭉해진다.
+           */
+          className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
         >
           {items.map((curation, slideIndex) => {
             return (
@@ -721,9 +726,24 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                     }
                     track("curation_opened", { curation_id: curation.id, position: slideIndex + 1, surface: "home" });
                   }}
-                  className="block"
+                  /*
+                    카드를 칸의 높이까지 늘인다. 옆 카드가 더 높으면 그 높이에 맞춘다.
+
+                    카드에 `h-full` 을 직접 주면 그 높이가 비율보다 앞서서, 아래에 적은 최소 높이
+                    동작이 꺼진다. 링크를 칸 높이의 flex 상자로 두고 카드는 그 안에서 늘어나게 해야
+                    카드의 최소 높이를 비율과 글자가 그대로 정한다.
+                  */
+                  className="flex h-full"
                 >
-                  <article className="curation-card relative flex aspect-[15/8] flex-col justify-end overflow-hidden rounded-[18px] px-5 py-4">
+                  {/*
+                    비율은 최소 높이로만 쓴다. 글자가 카드에 다 들어가지 않으면 그만큼 세로로 자란다.
+
+                    `aspect-ratio` 는 본래 내용이 넘치면 그만큼 높아지는데, `overflow-hidden` 이면
+                    이 동작이 꺼져 높이가 고정되고 넘친 제목이 위로 잘린다. 기기의 글자 크기 설정을
+                    키우면 1.9배쯤부터 그렇게 된다. `overflow-clip` 은 둥근 모서리 밖을 똑같이
+                    잘라 내면서도 이 동작을 지킨다.
+                  */}
+                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-[18px] px-5 py-4">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
