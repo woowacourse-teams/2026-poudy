@@ -225,10 +225,6 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
        * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
        * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
        */
-      /*
-       * 줄어드는 쪽이 가운데를 마주 보는 가장자리를 붙들어야 그 사이 간격이 변하지 않는다.
-       * 가운데를 지나는 순간 기준이 뒤집히는데, 그 자리에서는 이미 제 크기라 튀지 않는다.
-       */
       box.style.transformOrigin = child.offsetLeft + child.offsetWidth / 2 < center ? "right center" : "left center";
     }
   }, []);
@@ -502,10 +498,11 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
      * 마우스로 끄는 중에도 걸지 않는다. 끄는 동안에도 이 자리가 프레임마다 깨어나므로
      * 시계를 걸면 손가락이 멈춰 있는 사이에 시계가 차서, 끌고 있는 도중에 `recenter` 가
      * 순서를 돌리고 스크롤을 되돌린다. 그러면 붙잡고 있던 카드가 손을 떠나 튄다.
-     * 손을 뗄 때 `onPointerUp` 이 이어서 처리한다.
+     * 손을 뗄 때 `onPointerUp` 이 이어서 처리한다. 손가락도 같은 까닭으로 화면에 닿아 있는
+     * 동안에는 걸지 않는다. 손을 뗀 뒤 붙는 동안의 스크롤이 다시 건다.
      */
     clearTimeout(settleTimer.current);
-    if (glide.current === undefined && drag.current === undefined) {
+    if (glide.current === undefined && drag.current === undefined && !held.current) {
       settleTimer.current = setTimeout(settle, SETTLE_DELAY);
     }
   };
@@ -564,12 +561,23 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     held.current = true;
 
     const track = trackRef.current;
-    if (!track || event.pointerType !== "mouse" || event.button !== 0) return;
+    if (!track) return;
 
-    /* 사람이 붙잡았으므로 스스로 가던 움직임을 멈춘다. 그대로 두면 끄는 손과 다툰다. */
-    if (glide.current !== undefined) cancelAnimationFrame(glide.current);
-    glide.current = undefined;
+    /*
+     * 사람이 붙잡았으므로 스스로 가던 움직임을 멈춘다. 손가락도 마찬가지다.
+     *
+     * 그대로 두면 미끄러지는 동작이 프레임마다 `scrollLeft` 를 적어, 손가락이 민 자리를
+     * 덮어쓴다. 스스로 넘기는 데 1.5초가 걸리므로 그 사이에 손을 대는 일이 흔하다.
+     * 그리는 동안 꺼 둔 스냅도 돌려 놓아야 손가락으로 민 뒤 브라우저가 카드를 붙인다.
+     */
+    if (glide.current !== undefined) {
+      cancelAnimationFrame(glide.current);
+      glide.current = undefined;
+      track.style.scrollSnapType = "";
+    }
     selfScrolling.current = false;
+
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
 
     drag.current = {
       pointerId: event.pointerId,
@@ -671,7 +679,11 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
   /** 끌기가 중간에 끊겼다. 잡고 있던 것을 놓고 스냅을 되돌린다. */
   const onPointerCancel = (event: React.PointerEvent<HTMLUListElement>) => {
-    held.current = false;
+    /*
+     * 손가락으로 밀기 시작하면 브라우저가 가로 스크롤을 넘겨받으며 이 이벤트를 보낸다.
+     * 손은 아직 화면에 있으므로 붙잡은 상태를 풀지 않는다. 손을 떼는 것은 `onTouchEnd` 가 안다.
+     */
+    if (event.pointerType !== "touch") held.current = false;
 
     const track = trackRef.current;
     const stopped = drag.current;
@@ -680,6 +692,17 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
     track.style.scrollSnapType = "";
+  };
+
+  /**
+   * 손가락을 뗐다.
+   *
+   * 손가락으로 밀면 `pointerup` 대신 `pointercancel` 이 오고, 그때는 아직 손이 화면에 있다.
+   * 손이 실제로 떨어지는 때는 이 이벤트만 알려 준다. 스냅과 순서 되돌리기는 뒤이어 오는
+   * `scrollend` 가 맡는다.
+   */
+  const onTouchEnd = (event: React.TouchEvent<HTMLUListElement>) => {
+    if (event.touches.length === 0) held.current = false;
   };
 
   /* 붙여 둔 이벤트가 늘 최신 것을 부르도록 그린 뒤에 담아 둔다. */
@@ -737,6 +760,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
           /* 직접 그리는 동안에는 스냅을 끈다. 손가락으로 넘길 때는 브라우저가 카드를 가운데에 붙인다. */
           className="curation-track scrollbar-none flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4"
         >

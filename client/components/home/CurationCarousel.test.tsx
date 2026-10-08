@@ -182,6 +182,103 @@ describe("CurationCarousel", () => {
     expect(track.scrollLeft).toBe(100);
   });
 
+  /*
+   * 스스로 넘어가는 데는 1.5초가 걸려 그 사이에 손을 대는 일이 흔하다. 미끄러지는 동작이
+   * 멈추지 않으면 프레임마다 `scrollLeft` 를 적어 손가락이 민 자리를 덮어써, 카드가 튄다.
+   */
+  it("스스로 넘어가는 중에 손가락을 대면 그 움직임을 멈춘다", () => {
+    vi.useFakeTimers();
+    const raf = vi
+      .spyOn(globalThis, "requestAnimationFrame")
+      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
+    const caf = vi
+      .spyOn(globalThis, "cancelAnimationFrame")
+      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
+    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = container.querySelector(".curation-track");
+      if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+      const step = 400;
+      for (const [slot, child] of [...list.children].entries()) {
+        Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
+        Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
+      }
+      Object.defineProperty(list, "clientWidth", { value: step, configurable: true });
+      /* 가운데 칸(SPARE=2)에서 시작한다. */
+      const start = 2 * step - 16;
+      list.scrollLeft = start;
+
+      // 스스로 넘기기 시작해 절반쯤 왔다.
+      act(() => vi.advanceTimersByTime(5000 + 750));
+      expect(list.style.scrollSnapType).toBe("none");
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "touch", button: 0, clientX: 200 });
+      const touched = list.scrollLeft;
+      act(() => vi.advanceTimersByTime(1000));
+
+      expect(list.scrollLeft).toBe(touched);
+      // 손가락으로 민 뒤 브라우저가 카드를 붙이도록 스냅을 돌려 놓는다.
+      expect(list.style.scrollSnapType).toBe("");
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      now.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  /*
+   * 손가락으로 밀기 시작하면 브라우저는 `pointerup` 대신 `pointercancel` 을 보낸다. 그것을
+   * 손을 뗀 것으로 보면 미는 도중에 스스로 넘기기가 출발해 손가락과 다툰다.
+   */
+  it("손가락이 닿아 있는 동안에는 스스로 넘기지 않는다", () => {
+    vi.useFakeTimers();
+    const raf = vi
+      .spyOn(globalThis, "requestAnimationFrame")
+      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
+    const caf = vi
+      .spyOn(globalThis, "cancelAnimationFrame")
+      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
+    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = container.querySelector(".curation-track");
+      if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+
+      const step = 400;
+      for (const [slot, child] of [...list.children].entries()) {
+        Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
+        Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
+      }
+      Object.defineProperty(list, "clientWidth", { value: step, configurable: true });
+      /* 가운데 칸(SPARE=2)에서 시작한다. */
+      const start = 2 * step - 16;
+      list.scrollLeft = start;
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "touch", button: 0, clientX: 200 });
+      fireEvent.pointerCancel(list, { pointerId: 1, pointerType: "touch" });
+      // 시계(5초)가 찼다면 미끄러지는 한가운데일 시점이다.
+      act(() => vi.advanceTimersByTime(5000 + 750));
+
+      expect(list.scrollLeft).toBe(start);
+
+      // 손을 떼면 다음 시계(10초)에 다시 스스로 넘긴다. 그 한가운데다.
+      fireEvent.touchEnd(list, { touches: [] });
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(list.scrollLeft).toBeGreaterThan(start);
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      now.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it("스냅 지점에서 벗어나 멈추면 가운데로 정렬한 뒤 재배치한다", () => {
     vi.useFakeTimers();
     const raf = vi
