@@ -248,6 +248,40 @@ export type SkinEffectGroupResponse = {
 }
 export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
 export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
+export type SimilarProductResponse = {
+  /**
+   * 대상 제품 ID
+   */
+  id: number;
+  /**
+   * 대상 제품명
+   */
+  name: string;
+  brand: BrandResponse;
+  imageUrl: string;
+  /**
+   * 유사도 계산에 사용된 대상 구성품 ID
+   */
+  partId: number;
+  /**
+   * 대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지
+   */
+  containsExcludedIngredient: boolean;
+}
+export type ProductSimilarityResponse = {
+  /**
+   * 기준 구성품 ID. 구성품이 없으면 null
+   */
+  partId: (number | null);
+  /**
+   * 기준 구성품 계산 완료 여부. true여도 후보가 없으면 items는 빈 배열
+   */
+  calculated: boolean;
+  /**
+   * 최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개
+   */
+  items: Array<SimilarProductResponse>;
+}
 export type ProductSuggestionMatchResponse = {
   /**
    * 검색어가 일치한 제품 필드
@@ -919,6 +953,26 @@ export type get_FindProductDetail = {
 
     }
 /**
+ * 외부에서 계산해 저장한 유사 제품을 최대 3개 조회한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
+ */
+export type get_Find = {
+      method: "GET",
+      path: "/api/products/{productId}/similarities",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ partId: number }>,
+        path:  { productId: number },
+
+          }
+      responses: {200: Schemas.ProductSimilarityResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. match 는 제품명 또는 브랜드명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
  */
 export type get_SuggestProducts = {
@@ -1323,6 +1377,7 @@ get: {
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/{productId}/similarities": Endpoints.get_Find,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/rankings": Endpoints.get_FindRankings,
