@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { partHref, partTabId } from "@/lib/domain/product-parts";
+import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
 
 /** 탭 하나의 좌우 여백. design/v2.pen 의 `구성품 탭` 을 따른다. */
@@ -39,6 +40,8 @@ export function PartTabs({
   const scrollToPanel = useRef(false);
   const [scrollable, setScrollable] = useState(false);
   const selectedId = product.selectedPart?.id;
+  // 넘쳐서 밀어야 할 때만 마우스 끌기를 받는다. 고정 모드에서는 끌 것이 없다.
+  useDragScroll(ref, scrollable);
 
   useEffect(() => {
     const bar = ref.current;
@@ -116,7 +119,7 @@ export function PartTabs({
           data-axis="horizontal"
           data-start={scrollable && edges.start}
           data-end={scrollable && edges.end}
-          className={`edge-fade scrollbar-none relative overflow-x-auto border-b border-[#DEE2E9] ${scrollable ? "px-1" : "px-4"}`}
+          className={`edge-fade scrollbar-none relative overflow-x-auto border-b border-[#DEE2E9] ${scrollable ? "px-1 pointer-fine:cursor-grab pointer-fine:data-[dragging=true]:cursor-grabbing" : "px-4"}`}
         >
           <div role="tablist" aria-label="구성품" className="flex">
             {product.productParts.map((part, index) => {
@@ -133,6 +136,8 @@ export function PartTabs({
                   // 탭을 오가는 것은 화면을 옮기는 일이 아니다. 뒤로 가기가 탭을 되짚지 않고 이전 화면으로 가게 한다.
                   replace
                   scroll={false}
+                  // 마우스로 끌면 브라우저가 링크째 끌어 가 줄이 밀리지 않는다. 링크 끌기는 끈다.
+                  draggable={false}
                   // 동적 화면이라 기본값으로는 미리 받지 않는다. 구성품은 몇 개뿐이라 모두 받아 두어 바로 바뀌게 한다.
                   prefetch
                   onClick={rememberStuck}
