@@ -1081,6 +1081,50 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   backface-visibility: hidden;
 }
 
+/*
+ * 카드 크기를 스크롤 위치에 묶는다.
+ *
+ * 각 칸이 목록 안에서 지나가는 정도(`view()` 타임라인)를 그대로 진행도로 쓴다. 0% 는 칸이
+ * 오른쪽 끝에서 들어오기 시작한 때, 50% 는 가운데에 선 때, 100% 는 왼쪽 끝으로 다 나간
+ * 때다. 크기 변화가 합성 단계에서 돌아, 메인 스레드가 바쁜 기기에서도 손가락을 늦지 않게
+ * 따라간다. 이것을 쓸 수 없는 브라우저에서는 `CurationCarousel` 의 `paintScales` 가 같은
+ * 일을 스크롤마다 직접 한다.
+ *
+ * 한 칸 옆에 선 카드의 진행도는 약 1% 와 99% 라, 양 끝을 옆 카드의 크기(0.7)로 둔다.
+ * 그 사이는 미는 만큼 고르게 변해야 하므로 `linear` 로 둔다.
+ *
+ * 옆 카드는 가운데를 마주 보는 가장자리를 붙든 채 줄어야 카드 사이 간격이 변하지 않는다.
+ * 가운데를 기준으로 줄인 뒤 줄어든 폭의 절반(15%)만큼 가운데 쪽으로 옮겨 같은 결과를 낸다.
+ * 옮기는 `%` 는 줄이기 전 카드 폭에 대한 값이다. 층이 풀리지 않도록 `paintScales` 와 같이
+ * 3D 변환으로 적는다.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .curation-slide {
+      view-timeline: --curation-slide inline;
+    }
+
+    .curation-slide .curation-card {
+      animation: curation-card-scale linear both;
+      animation-timeline: --curation-slide;
+    }
+  }
+}
+
+@keyframes curation-card-scale {
+  0% {
+    transform: translate3d(-15%, 0, 0) scale3d(0.7, 0.7, 1);
+  }
+
+  50% {
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+
+  100% {
+    transform: translate3d(15%, 0, 0) scale3d(0.7, 0.7, 1);
+  }
+}
+
 /* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다. */
 @media (prefers-reduced-motion: reduce) {
   .curation-card {
