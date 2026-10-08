@@ -79,7 +79,7 @@ export function UsageIngredients({ part }: { readonly part: ProductPartResponse 
 const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
 
 const CHIP =
-  "flex h-9 items-center rounded-full border border-[#CAD1DB] bg-white px-3 text-[13px] font-medium text-[#182132] transition-colors duration-press ease-out active:bg-[#EFF1F5]";
+  "flex h-9 items-center rounded-full border border-[#CAD1DB] bg-white px-3 text-[13px] font-medium text-[#182132] transition-colors duration-release ease-out active:bg-[#EFF1F5] active:duration-press";
 
 function Chip({
   item,
