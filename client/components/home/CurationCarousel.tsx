@@ -88,13 +88,32 @@ const GLIDE_DURATION = 1500;
 const SETTLE_DELAY = GLIDE_DURATION + 250;
 
 /**
- * 손을 뗀 뒤 가까운 카드로 붙는 데 걸리는 시간.
+ * 손을 뗀 뒤 가까운 카드로 붙거나, 옆 카드를 눌러 데려오는 데 걸리는 시간.
  *
  * `GLIDE_DURATION` 은 스스로 넘어가는 자리의 값이라 재촉할 이유가 없어 길게 두었다.
- * 사람이 끌어서 놓은 자리는 다르다. 놓자마자 결과가 보여야 끌어서 옮긴 것으로 느껴지고,
- * 길게 끌면 손을 뗀 뒤에도 화면이 한참 미끄러져 조작이 무겁게 느껴진다.
+ * 사람이 조작한 자리는 다르다. 놓자마자 결과가 보여야 끌어서 옮긴 것으로 느껴지고,
+ * 길게 끌면 손을 뗀 뒤에도 화면이 한참 미끄러져 조작이 무겁게 느껴진다. 사람의 조작에
+ * 답하는 움직임이라 300ms 안에 끝낸다.
  */
-const DROP_DURATION = 320;
+const DROP_DURATION = 250;
+
+/**
+ * 시작과 끝이 모두 느리고 가운데가 빠른 커브. 스스로 넘어가는 움직임에 쓴다.
+ *
+ * 끝만 느린 커브를 쓰면 처음 10분의 1 만에 거리의 3분의 1 을 가버리고 뒷부분은 멈춘 듯
+ * 기어가, 앞은 튀고 끝은 끊긴 것처럼 보인다. 긴 시간을 들일수록 그 치우침이 눈에 띈다.
+ * 양끝을 고르게 두어야 한 번의 움직임으로 읽힌다.
+ */
+const easeInOut = (ratio: number): number => (ratio < 0.5 ? 4 * ratio ** 3 : 1 - Math.pow(-2 * ratio + 2, 3) / 2);
+
+/**
+ * 빠르게 출발해 천천히 멎는 커브. 사람의 조작에 답하는 움직임에 쓴다.
+ *
+ * 손을 떼거나 누른 직후가 사람이 가장 눈여겨보는 순간이다. 시작이 느린 커브를 쓰면 그
+ * 순간 화면이 멈췄다가 움직이는 것처럼 보이고, 끌던 속도도 이어지지 않는다.
+ * `cubic-bezier(0.23, 1, 0.32, 1)` 에 가까운 5차 커브다.
+ */
+const easeOut = (ratio: number): number => 1 - (1 - ratio) ** 5;
 
 /** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.7 이다. */
 const MIN_SCALE = 0.7;
@@ -176,7 +195,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    */
   const settleRef = useRef<() => void>(() => {});
   /* 시계 안에서 부르는 함수. 그릴 때마다 새로 만들어지므로 ref 로 최신 것을 붙든다. */
-  const scrollToSlideRef = useRef<(slideIndex: number, smooth: boolean, duration?: number) => void>(() => {});
+  const scrollToSlideRef = useRef<(slideIndex: number, smooth: boolean) => void>(() => {});
 
   /**
    * 카드가 가운데에서 얼마나 떨어져 있는지에 따라 크기를 정한다.
@@ -243,7 +262,11 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   /* 한 장뿐이면 넘길 곳이 없다. 스스로 넘기지도, 자리 표시를 띄우지도 않는다. */
   const multiple = items.length > 1;
 
-  const scrollToSlide = (slideIndex: number, smooth: boolean, duration = GLIDE_DURATION) => {
+  const scrollToSlide = (
+    slideIndex: number,
+    smooth: boolean,
+    { duration = GLIDE_DURATION, ease = easeInOut }: { duration?: number; ease?: (ratio: number) => number } = {},
+  ) => {
     const track = trackRef.current;
     const target = track?.children[slideIndex];
     if (!track || !(target instanceof HTMLElement)) return;
@@ -268,7 +291,8 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     const from = track.scrollLeft;
     if (from === to) return;
 
-    const startedAt = performance.now();
+    /* 첫 프레임의 시각을 출발 시각으로 삼는다. 프레임이 넘겨주는 시각과 같은 시계로 잰다. */
+    let startedAt: number | undefined;
     /*
      * 그리는 동안에는 스냅을 끈다.
      *
@@ -279,16 +303,9 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     track.style.scrollSnapType = "none";
 
     const step = (now: number) => {
+      startedAt ??= now;
       const ratio = Math.min(1, (now - startedAt) / duration);
-      /*
-       * 시작과 끝이 모두 느리고 가운데가 빠른 커브다.
-       *
-       * 끝만 느린 커브를 쓰면 처음 10분의 1 만에 거리의 3분의 1 을 가버리고 뒷부분은
-       * 멈춘 듯 기어가, 앞은 튀고 끝은 끊긴 것처럼 보인다. 긴 시간을 들일수록 그 치우침이
-       * 눈에 띈다. 양끝을 고르게 두어야 한 번의 움직임으로 읽힌다.
-       */
-      const eased = ratio < 0.5 ? 4 * ratio ** 3 : 1 - Math.pow(-2 * ratio + 2, 3) / 2;
-      track.scrollLeft = from + (to - from) * eased;
+      track.scrollLeft = from + (to - from) * ease(ratio);
 
       if (ratio < 1) {
         glide.current = requestAnimationFrame(step);
@@ -306,6 +323,10 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     glide.current = requestAnimationFrame(step);
   };
+
+  /** 사람의 조작에 답해 한 칸으로 붙인다. 빠르게 출발해 `DROP_DURATION` 안에 멎는다. */
+  const dropToSlide = (slideIndex: number) =>
+    scrollToSlide(slideIndex, true, { duration: DROP_DURATION, ease: easeOut });
 
   useEffect(() => {
     reduced.current = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -434,7 +455,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
         Math.abs(carouselTrack.scrollLeft - scrollOf(carouselTrack, selected)) > 1
       ) {
         // 브라우저가 스냅 지점 밖에서 멈췄다면 짧게 가운데로 붙인다.
-        scrollToSlide(slide, true, DROP_DURATION);
+        dropToSlide(slide);
         return;
       }
     }
@@ -585,7 +606,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
     /* 처음과 끝 밖으로는 나가지 않는다. 그 바깥은 카드가 없다. */
     const last = track.children.length - 1;
-    scrollToSlide(Math.min(last, Math.max(0, target)), true, DROP_DURATION);
+    dropToSlide(Math.min(last, Math.max(0, target)));
   };
 
   /** 끌기가 중간에 끊겼다. 잡고 있던 것을 놓고 스냅을 되돌린다. */
@@ -721,7 +742,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       event.preventDefault();
                       // 사람이 넘긴 것이다. 멎으면 `settle` 이 시계를 처음부터 다시 센다.
                       selfScrolling.current = false;
-                      scrollToSlide(slideIndex, true, DROP_DURATION);
+                      dropToSlide(slideIndex);
                       return;
                     }
                     track("curation_opened", { curation_id: curation.id, position: slideIndex + 1, surface: "home" });

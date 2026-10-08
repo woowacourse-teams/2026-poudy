@@ -30,7 +30,7 @@ const items = [
 ];
 
 /* 컴포넌트의 DROP_DURATION 과 같은 값. 정렬이 끝나는 시점을 알려면 필요하다. */
-const DROP_MS = 320;
+const DROP_MS = 250;
 
 /* 컴포넌트의 AUTOPLAY_INTERVAL, GLIDE_DURATION 과 같은 값. */
 const AUTOPLAY_MS = 5000;
@@ -365,7 +365,8 @@ describe("CurationCarousel", () => {
       expect(list.scrollLeft).toBe(STEP - 120);
       act(() => vi.advanceTimersByTime(DROP_MS / 2));
       expect(list.scrollLeft).toBeGreaterThan(STEP - 120);
-      act(() => vi.advanceTimersByTime(DROP_MS / 2));
+      // 미끄러짐은 다음 프레임에 출발하므로 한 프레임 넉넉히 기다린다.
+      act(() => vi.advanceTimersByTime(DROP_MS / 2 + 32));
 
       expect(list.scrollLeft).toBe(STEP);
       expect(list).toHaveClass("snap-mandatory");
@@ -458,6 +459,31 @@ describe("CurationCarousel", () => {
       act(() => vi.advanceTimersByTime(DROP_MS + 32));
 
       expect(list.scrollLeft).toBe(STEP);
+    } finally {
+      restore();
+    }
+  });
+
+  /*
+   * 손을 뗀 직후가 사람이 가장 눈여겨보는 순간이다. 시작이 느린 커브를 쓰면 그 순간 화면이
+   * 멈췄다가 움직이는 것처럼 보인다. 붙는 시간의 5분의 1 만에 거리의 절반 이상을 가야 한다.
+   */
+  it("손을 뗀 뒤 붙는 움직임은 빠르게 출발한다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 100 });
+      fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 100 });
+      act(() => vi.advanceTimersByTime(16 + DROP_MS / 5));
+
+      // 100px 에서 출발해 400px 로 간다. 남은 300px 의 절반을 넘겼다.
+      expect(list.scrollLeft).toBeGreaterThan(100 + 150);
     } finally {
       restore();
     }
