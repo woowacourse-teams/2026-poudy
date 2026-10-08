@@ -7,8 +7,11 @@ import { DirectoryList } from "@/components/ui/DirectoryList";
 import { CHOSEONG_INDEX, choseongOf } from "@/lib/domain/choseong";
 
 const ALL = "전체";
-/** 한글이 아닌 이름(3CE, Dr.G 등)을 모아 둘 자리. */
-const ETC = "기타";
+/**
+ * 한글로 시작하지 않는 이름(SK-II, 3CE 등)을 모아 둘 자리. 한글 초성 다음에 둔다.
+ * 숫자나 기호로 시작하는 이름도 따로 칸을 나누지 않고 함께 모은다. 한두 개뿐인 칸이 늘어나면 레일만 길어진다.
+ */
+const LATIN = "A-Z";
 
 const rowOf = (brand: BrandSummaryResponse) => ({
   id: String(brand.id),
@@ -19,7 +22,7 @@ const rowOf = (brand: BrandSummaryResponse) => ({
   href: `/brands/${brand.id}`,
 });
 
-const indexOf = (brand: BrandSummaryResponse) => choseongOf(brand.name) || ETC;
+const indexOf = (brand: BrandSummaryResponse) => choseongOf(brand.name) || LATIN;
 
 /**
  * S29 브랜드 디렉터리. 초성으로 골라 본다.
@@ -30,7 +33,7 @@ export function BrandDirectory({ brands }: { readonly brands: readonly BrandSumm
 
   // 브랜드가 없는 초성은 눌러도 빈 목록이라 레일에 두지 않는다.
   const present = new Set(brands.map(indexOf));
-  const indexes = [...CHOSEONG_INDEX.filter((label) => present.has(label)), ...(present.has(ETC) ? [ETC] : [])];
+  const indexes = [...CHOSEONG_INDEX.filter((label) => present.has(label)), ...(present.has(LATIN) ? [LATIN] : [])];
   const rail = [ALL, ...indexes];
 
   const sections =

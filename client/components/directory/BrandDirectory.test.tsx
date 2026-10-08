@@ -26,7 +26,7 @@ describe("BrandDirectory", () => {
     render(<BrandDirectory brands={brands} />);
 
     const labels = [...railLabels()].map((button) => button.textContent);
-    expect(labels).toEqual(["전체", "ㄹ", "ㅌ", "기타"]);
+    expect(labels).toEqual(["전체", "ㄹ", "ㅌ", "A-Z"]);
   });
 
   it("브랜드가 없는 초성은 눌러 볼 수 없다", () => {
@@ -46,12 +46,13 @@ describe("BrandDirectory", () => {
     expect(screen.getByText("브랜드 1개")).toBeInTheDocument();
   });
 
-  it("한글이 아닌 이름은 기타로 모은다", async () => {
-    render(<BrandDirectory brands={brands} />);
+  it("한글로 시작하지 않는 이름은 숫자로 시작해도 A-Z 로 모은다", async () => {
+    render(<BrandDirectory brands={[...brands, brand(4, "SK-II")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "기타" }));
+    await userEvent.click(screen.getByRole("button", { name: "A-Z" }));
 
     expect(screen.getByText("3CE")).toBeInTheDocument();
+    expect(screen.getByText("SK-II")).toBeInTheDocument();
     expect(screen.queryByText("라운드랩")).not.toBeInTheDocument();
   });
 
@@ -62,10 +63,10 @@ describe("BrandDirectory", () => {
     expect(screen.getByText("브랜드 3개")).toBeInTheDocument();
   });
 
-  it("한글 브랜드가 없으면 기타만 남는다", () => {
+  it("한글 브랜드가 없으면 A-Z 만 남는다", () => {
     render(<BrandDirectory brands={[brand(3, "3CE")]} />);
 
     const labels = [...railLabels()].map((button) => button.textContent);
-    expect(labels).toEqual(["전체", "기타"]);
+    expect(labels).toEqual(["전체", "A-Z"]);
   });
 });
