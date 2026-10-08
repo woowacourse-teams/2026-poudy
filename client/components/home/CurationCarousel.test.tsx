@@ -156,6 +156,31 @@ describe("CurationCarousel", () => {
   });
 
   /*
+   * 옆에 걸친 카드는 대개 넘기려고 누른다. 곧바로 상세가 열리면 뜻밖이므로, 그 카드를
+   * 가운데로 데려오기만 한다.
+   */
+  it("옆에 걸친 카드를 누르면 상세로 가지 않고 그 카드로 넘긴다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      const clicked = fireEvent.click(screen.getByRole("link", { name: /순한 클렌징/ }));
+
+      expect(clicked).toBe(false);
+      expect(track).not.toHaveBeenCalledWith("curation_opened", expect.anything());
+
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+      expect(list.scrollLeft).toBe(STEP);
+    } finally {
+      restore();
+    }
+  });
+
+  /*
    * 브라우저는 끌기가 끝난 자리에서도 클릭을 한 번 보낸다. 막아 두지 않으면 목록을
    * 밀어 넘길 때마다 상세 화면이 열려, 카드를 넘겨 볼 수가 없다.
    */

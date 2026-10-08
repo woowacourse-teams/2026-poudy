@@ -690,12 +690,26 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
 
                   끌어서 목록을 넘긴 뒤에는 이동하지 않는다. 브라우저는 끌기가 끝난 자리에서도
                   클릭을 한 번 보내는데, 그대로 두면 카드를 밀 때마다 상세 화면이 열린다.
+
+                  옆에 걸친 카드를 누르면 상세로 가지 않고 그 카드를 가운데로 데려온다. 걸친
+                  카드는 대개 넘기려고 누른 것이라, 곧바로 상세가 열리면 뜻밖이다. 키보드로
+                  옆 카드에 초점을 옮기면 브라우저가 그 카드를 화면 안으로 스크롤하므로,
+                  가운데 온 뒤에 누르면 상세로 간다.
                 */}
                 <Link
                   href={`/curations/${curation.id}`}
                   onClick={(event) => {
                     if (dragged.current) {
                       event.preventDefault();
+                      return;
+                    }
+                    /* 자리 표시(`current`)는 다시 그린 뒤에야 바뀌므로 스크롤 위치를 직접 읽는다. */
+                    const carouselTrack = trackRef.current;
+                    if (carouselTrack && slideAt(carouselTrack) !== slideIndex) {
+                      event.preventDefault();
+                      // 사람이 넘긴 것이다. 멎으면 `settle` 이 시계를 처음부터 다시 센다.
+                      selfScrolling.current = false;
+                      scrollToSlide(slideIndex, true, DROP_DURATION);
                       return;
                     }
                     track("curation_opened", { curation_id: curation.id, position: slideIndex + 1, surface: "home" });
