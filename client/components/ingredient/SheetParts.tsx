@@ -47,8 +47,9 @@ export function SheetHead({
             hover 하면 버튼 뒤에 옅은 원을 띄워 누를 수 있다는 것을 알린다. 머리 전체가 잡아 끄는
             자리라 커서가 손바닥으로 바뀌어 있는데, 단추 위에서는 누르는 손가락으로 되돌린다.
             원은 opacity 만 바꿔 다시 그리기를 피하고, 터치에서는 hover 대신 누르는 동안에만 띄운다.
+            hover 는 색이 바뀌는 것이라 `ease` 로 두고, 누름은 손에 붙도록 더 짧은 press 길이로 답한다.
           */
-          className="relative isolate flex size-11 shrink-0 cursor-pointer items-center justify-center text-[#182132] before:absolute before:inset-1 before:-z-10 before:rounded-full before:bg-[#EFF1F5] before:opacity-0 before:transition-opacity before:duration-control-state before:ease-out before:content-[''] hover:before:opacity-100 active:before:opacity-100 active:before:bg-[#DEE2E9]"
+          className="relative isolate flex size-11 shrink-0 cursor-pointer items-center justify-center text-[#182132] before:absolute before:inset-1 before:-z-10 before:rounded-full before:bg-[#EFF1F5] before:opacity-0 before:transition-opacity before:duration-control-state before:ease-[ease] before:content-[''] hover:before:opacity-100 active:before:bg-[#DEE2E9] active:before:opacity-100 active:before:duration-press"
         >
           <Icon name="x" size={22} />
         </button>
@@ -80,7 +81,12 @@ export function RoleDescription({
 
 function DescriptionText({ description }: { readonly description: SheetDescription<string> }) {
   if (description.status === "loaded") {
-    return <p className="text-pretty text-[14px] leading-[1.6] text-[#424E5F]">{description.value}</p>;
+    // 회색 막대가 글자로 순간 바뀌지 않게 옅게 들어온다. 자리를 옮기지 않으니 움직임 줄이기에서도 남긴다.
+    return (
+      <p className="text-pretty text-[14px] leading-[1.6] text-[#424E5F] transition-opacity duration-disclosure ease-out starting:opacity-0">
+        {description.value}
+      </p>
+    );
   }
   if (description.status === "failed") {
     return <p className="text-[14px] leading-[1.6] text-[#566273]">설명을 불러오지 못했어요.</p>;
@@ -89,8 +95,9 @@ function DescriptionText({ description }: { readonly description: SheetDescripti
   // 설명 두 줄 높이를 미리 잡아 두어 받아 온 뒤에 아래가 밀려나지 않게 한다.
   return (
     <div aria-busy="true" aria-label="설명을 불러오는 중" className="flex flex-col gap-2 py-1">
-      <span className="h-4 w-full animate-pulse rounded bg-[#EFF1F5]" />
-      <span className="h-4 w-3/5 animate-pulse rounded bg-[#EFF1F5]" />
+      {/* 끝나지 않는 깜빡임이라 움직임 줄이기를 켠 사용자에게는 멈춘 막대만 보인다. */}
+      <span className="h-4 w-full animate-pulse rounded bg-[#EFF1F5] motion-reduce:animate-none" />
+      <span className="h-4 w-3/5 animate-pulse rounded bg-[#EFF1F5] motion-reduce:animate-none" />
     </div>
   );
 }
