@@ -20,6 +20,7 @@ import {
   productSkinTypes,
   productDetails,
   productPartSets,
+  productSimilarities,
 } from "./fixtures";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -497,6 +498,17 @@ const RANKING_SIZE = 6;
 
 export const handlers = [
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
+
+  // 서버처럼 기준 구성품을 함께 돌려준다. 계산해 둔 제품이 없으면 빈 목록이다.
+  http.get("*/api/products/:productId/similarities", ({ params, request }) => {
+    const id = Number(params.productId);
+    const partId = new URL(request.url).searchParams.get("partId");
+    return HttpResponse.json({
+      partId: partId === null ? id : Number(partId),
+      calculated: true,
+      items: productSimilarities.get(id) ?? [],
+    });
+  }),
 
   http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
 

@@ -13,6 +13,7 @@ import {
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
+  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
@@ -80,6 +81,7 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
+  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
   ["저장함", "/storage?productIds=1,2", StorageResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],

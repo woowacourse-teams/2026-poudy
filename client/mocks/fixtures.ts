@@ -9,6 +9,7 @@ import type {
   ProductDetailResponse,
   ProductPartResponse,
   ProductResponse,
+  ProductSimilarityResponse,
 } from "@poudy/api/api.zod";
 
 /*
@@ -1005,3 +1006,31 @@ export const pipelineIngredientSummaries = pipelineIngredients.map((ingredient) 
   englishName: ingredient.englishName,
   skinEffects: [] as { id: number; code: string; name: string }[],
 }));
+
+/**
+ * 성분이 비슷한 제품. 1025 독도 토너에만 둔다. 나머지 제품은 빈 목록이라 섹션이 숨는 경우를 확인할 수 있다.
+ * 둘째 제품은 주의 성분이 들어 있어 주의 칩이 갈리는 경우를 보여 준다.
+ */
+export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse["items"]> = new Map([
+  [
+    1,
+    [
+      {
+        id: 3,
+        name: "다이브인 저분자 히알루론산 토너",
+        brand: brandOf(2),
+        imageUrl: "",
+        partId: 3,
+        containsExcludedIngredient: false,
+      },
+      {
+        id: 2,
+        name: "어성초 77 수딩 토너",
+        brand: brandOf(3),
+        imageUrl: "",
+        partId: 2,
+        containsExcludedIngredient: true,
+      },
+    ],
+  ],
+]);
