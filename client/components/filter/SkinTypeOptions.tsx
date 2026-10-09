@@ -1,8 +1,6 @@
 "use client";
 
-import type { SkinTypeResponse } from "@poudy/api/api.zod";
-
-import { type SkinType } from "@/lib/domain/filter";
+import type { SkinType, SkinTypeResponse } from "@poudy/api/api.zod";
 
 type SkinTypeOptionsProps = {
   readonly selected: SkinType | undefined;

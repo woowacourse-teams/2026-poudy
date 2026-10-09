@@ -1,8 +1,10 @@
+import { get_MatchSharedProduct } from "@poudy/api/api.zod";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { TopBar } from "@/components/ui/TopBar";
+import { constraintOf } from "@/lib/api/constraint";
 import { fetchShareMatch } from "@/lib/api/share";
 import { shareDestinationOf } from "@/lib/domain/share-destination";
 
@@ -15,7 +17,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /** 서버가 원문을 정제하므로 길이만 앱과 같은 기준으로 먼저 거른다. */
-const MAX_TEXT_LENGTH = 500;
+const MAX_TEXT_LENGTH = constraintOf(
+  get_MatchSharedProduct.parameters.query.shape.text.maxLength,
+  "공유 텍스트 최대 길이",
+);
 
 type SharePageProps = {
   readonly searchParams: Promise<{ readonly text?: string }>;

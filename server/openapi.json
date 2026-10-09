@@ -1132,17 +1132,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string",
-                "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
-                "example": "HARSH_PRESERVATIVES"
+                "$ref": "#/components/schemas/ExcludeCode"
               },
               "uniqueItems": true
             }
@@ -1179,15 +1169,7 @@
             "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
-              "enum": [
-                "DRY",
-                "OILY",
-                "SENSITIVE",
-                "COMBINATION"
-              ],
-              "example": "DRY"
+              "$ref": "#/components/schemas/SkinType"
             },
             "example": "DRY"
           },
@@ -1197,17 +1179,7 @@
             "description": "정렬 조건",
             "required": false,
             "schema": {
-              "type": "string",
-              "default": "DEFAULT",
-              "description": "정렬 조건",
-              "enum": [
-                "DEFAULT",
-                "CREATED_ASC",
-                "PRICE_DESC",
-                "PRICE_ASC",
-                "UNIT_PRICE_DESC",
-                "UNIT_PRICE_ASC"
-              ]
+              "$ref": "#/components/schemas/ProductSort"
             }
           },
           {
@@ -1855,17 +1827,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string",
-                "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-                "enum": [
-                  "FRAGRANCE_ALLERGENS",
-                  "DRYING_ALCOHOLS",
-                  "HARSH_PRESERVATIVES",
-                  "SULFATES",
-                  "CYCLIC_SILICONES",
-                  "SYNTHETIC_COLORANTS"
-                ],
-                "example": "HARSH_PRESERVATIVES"
+                "$ref": "#/components/schemas/ExcludeCode"
               },
               "uniqueItems": true
             }
@@ -1902,15 +1864,7 @@
             "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
-              "enum": [
-                "DRY",
-                "OILY",
-                "SENSITIVE",
-                "COMBINATION"
-              ],
-              "example": "DRY"
+              "$ref": "#/components/schemas/SkinType"
             },
             "example": "DRY"
           }
@@ -2640,13 +2594,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "RECEIVED",
-                "IN_PROGRESS",
-                "COMPLETED",
-                "REJECTED"
-              ]
+              "$ref": "#/components/schemas/ProductRequestStatus"
             }
           },
           {
@@ -2816,13 +2764,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "RECEIVED",
-                "IN_PROGRESS",
-                "COMPLETED",
-                "REJECTED"
-              ]
+              "$ref": "#/components/schemas/FeedbackStatus"
             }
           },
           {
@@ -2830,13 +2772,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "BUG_REPORT",
-                "IMPROVEMENT",
-                "OTHER",
-                "PRODUCT_CORRECTION"
-              ]
+              "$ref": "#/components/schemas/FeedbackSubjectType"
             }
           },
           {
@@ -3083,13 +3019,8 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string",
+            "$ref": "#/components/schemas/FeedbackType",
             "description": "의견 유형",
-            "enum": [
-              "BUG_REPORT",
-              "IMPROVEMENT",
-              "OTHER"
-            ],
             "example": "BUG_REPORT"
           },
           "content": {
@@ -3127,6 +3058,14 @@
           "type"
         ]
       },
+      "FeedbackType": {
+        "type": "string",
+        "enum": [
+          "BUG_REPORT",
+          "IMPROVEMENT",
+          "OTHER"
+        ]
+      },
       "AdminLoginRequest": {
         "type": "object",
         "properties": {
@@ -3155,18 +3094,21 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "RECEIVED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "REJECTED"
-            ],
+            "$ref": "#/components/schemas/ProductRequestStatus",
             "example": "IN_PROGRESS"
           }
         },
         "required": [
           "status"
+        ]
+      },
+      "ProductRequestStatus": {
+        "type": "string",
+        "enum": [
+          "RECEIVED",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "REJECTED"
         ]
       },
       "AdminProductRequestResponse": {
@@ -3190,13 +3132,7 @@
             "format": "date-time"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "RECEIVED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "REJECTED"
-            ]
+            "$ref": "#/components/schemas/ProductRequestStatus"
           },
           "statusChangedAt": {
             "type": "string",
@@ -3224,18 +3160,21 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "RECEIVED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "REJECTED"
-            ],
+            "$ref": "#/components/schemas/FeedbackStatus",
             "example": "IN_PROGRESS"
           }
         },
         "required": [
           "status"
+        ]
+      },
+      "FeedbackStatus": {
+        "type": "string",
+        "enum": [
+          "RECEIVED",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "REJECTED"
         ]
       },
       "AdminFeedbackImageResponse": {
@@ -3262,13 +3201,7 @@
             "format": "uuid"
           },
           "type": {
-            "type": "string",
-            "enum": [
-              "BUG_REPORT",
-              "IMPROVEMENT",
-              "OTHER",
-              "PRODUCT_CORRECTION"
-            ]
+            "$ref": "#/components/schemas/FeedbackSubjectType"
           },
           "content": {
             "type": "string"
@@ -3297,13 +3230,7 @@
             "format": "date-time"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "RECEIVED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "REJECTED"
-            ]
+            "$ref": "#/components/schemas/FeedbackStatus"
           },
           "statusChangedAt": {
             "type": "string",
@@ -3335,6 +3262,15 @@
           "status",
           "statusChangedAt",
           "type"
+        ]
+      },
+      "FeedbackSubjectType": {
+        "type": "string",
+        "enum": [
+          "BUG_REPORT",
+          "IMPROVEMENT",
+          "OTHER",
+          "PRODUCT_CORRECTION"
         ]
       },
       "BrandResponse": {
@@ -3458,18 +3394,21 @@
           "items"
         ]
       },
+      "SkinType": {
+        "type": "string",
+        "enum": [
+          "DRY",
+          "OILY",
+          "SENSITIVE",
+          "COMBINATION"
+        ]
+      },
       "SkinTypeResponse": {
         "type": "object",
         "properties": {
           "code": {
-            "type": "string",
+            "$ref": "#/components/schemas/SkinType",
             "description": "피부타입 코드",
-            "enum": [
-              "DRY",
-              "OILY",
-              "SENSITIVE",
-              "COMBINATION"
-            ],
             "example": "DRY"
           },
           "name": {
@@ -3550,6 +3489,32 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "ExcludeCode": {
+        "type": "string",
+        "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
+        "enum": [
+          "FRAGRANCE_ALLERGENS",
+          "DRYING_ALCOHOLS",
+          "HARSH_PRESERVATIVES",
+          "SULFATES",
+          "CYCLIC_SILICONES",
+          "SYNTHETIC_COLORANTS"
+        ],
+        "example": "HARSH_PRESERVATIVES"
+      },
+      "ProductSort": {
+        "type": "string",
+        "default": "DEFAULT",
+        "description": "정렬 조건",
+        "enum": [
+          "DEFAULT",
+          "CREATED_ASC",
+          "PRICE_DESC",
+          "PRICE_ASC",
+          "UNIT_PRICE_DESC",
+          "UNIT_PRICE_ASC"
         ]
       },
       "CategoryChildResponse": {
@@ -4240,16 +4205,19 @@
           "partId"
         ]
       },
+      "ProductMatchField": {
+        "type": "string",
+        "enum": [
+          "PRODUCT_NAME",
+          "BRAND_NAME"
+        ]
+      },
       "ProductSuggestionMatchResponse": {
         "type": "object",
         "properties": {
           "field": {
-            "type": "string",
-            "description": "검색어가 일치한 제품 필드",
-            "enum": [
-              "PRODUCT_NAME",
-              "BRAND_NAME"
-            ]
+            "$ref": "#/components/schemas/ProductMatchField",
+            "description": "검색어가 일치한 제품 필드"
           },
           "text": {
             "type": "string",
@@ -4338,11 +4306,7 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "MATCHED",
-              "NOT_FOUND"
-            ]
+            "$ref": "#/components/schemas/ShareMatchStatus"
           },
           "productId": {
             "type": [
@@ -4362,6 +4326,13 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "ShareMatchStatus": {
+        "type": "string",
+        "enum": [
+          "MATCHED",
+          "NOT_FOUND"
         ]
       },
       "ProductRankingItemResponse": {
@@ -4640,17 +4611,20 @@
           "items"
         ]
       },
+      "IngredientMatchField": {
+        "type": "string",
+        "enum": [
+          "KOREAN_NAME",
+          "ENGLISH_NAME",
+          "ALIAS"
+        ]
+      },
       "IngredientSuggestionMatchResponse": {
         "type": "object",
         "properties": {
           "field": {
-            "type": "string",
-            "description": "검색어가 일치한 성분 필드",
-            "enum": [
-              "KOREAN_NAME",
-              "ENGLISH_NAME",
-              "ALIAS"
-            ]
+            "$ref": "#/components/schemas/IngredientMatchField",
+            "description": "검색어가 일치한 성분 필드"
           },
           "text": {
             "type": "string",
@@ -5359,6 +5333,29 @@
           "pagination"
         ]
       },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "INVALID_QUERY_PARAMETER",
+          "INVALID_REQUEST_BODY",
+          "INVALID_FEEDBACK_IMAGE",
+          "INVALID_FEEDBACK_IMAGE_ID",
+          "CONFLICTING_INGREDIENT_FILTER",
+          "PAYLOAD_TOO_LARGE",
+          "TOO_MANY_REQUESTS",
+          "UNSUPPORTED_REQUEST",
+          "FEEDBACK_NOT_FOUND",
+          "PRODUCT_REQUEST_NOT_FOUND",
+          "CURATION_NOT_FOUND",
+          "PRODUCT_NOT_FOUND",
+          "PRODUCT_PART_NOT_FOUND",
+          "BRAND_NOT_FOUND",
+          "INGREDIENT_NOT_FOUND",
+          "INGREDIENT_GROUP_NOT_FOUND",
+          "ENDPOINT_NOT_FOUND",
+          "INTERNAL_SERVER_ERROR"
+        ]
+      },
       "ProblemDetail": {
         "type": "object",
         "properties": {
@@ -5386,27 +5383,7 @@
             "example": "/api/products"
           },
           "code": {
-            "type": "string",
-            "enum": [
-              "INVALID_QUERY_PARAMETER",
-              "INVALID_REQUEST_BODY",
-              "INVALID_FEEDBACK_IMAGE",
-              "INVALID_FEEDBACK_IMAGE_ID",
-              "CONFLICTING_INGREDIENT_FILTER",
-              "PAYLOAD_TOO_LARGE",
-              "TOO_MANY_REQUESTS",
-              "UNSUPPORTED_REQUEST",
-              "FEEDBACK_NOT_FOUND",
-              "PRODUCT_REQUEST_NOT_FOUND",
-              "CURATION_NOT_FOUND",
-              "PRODUCT_NOT_FOUND",
-              "PRODUCT_PART_NOT_FOUND",
-              "BRAND_NOT_FOUND",
-              "INGREDIENT_NOT_FOUND",
-              "INGREDIENT_GROUP_NOT_FOUND",
-              "ENDPOINT_NOT_FOUND",
-              "INTERNAL_SERVER_ERROR"
-            ]
+            "$ref": "#/components/schemas/ErrorCode"
           }
         },
         "required": [

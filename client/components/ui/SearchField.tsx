@@ -1,8 +1,12 @@
 "use client";
 
+import { SearchKeywordRequest } from "@poudy/api/api.zod";
+
 import { Icon } from "./icons/Icon";
 
-export const SEARCH_KEYWORD_MAX_LENGTH = 100;
+import { constraintOf } from "@/lib/api/constraint";
+
+export const SEARCH_KEYWORD_MAX_LENGTH = constraintOf(SearchKeywordRequest.shape.keyword.maxLength, "검색어 최대 길이");
 
 type SearchFieldProps = {
   readonly value: string;

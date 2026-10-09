@@ -17,11 +17,9 @@ export type FeedbackImageUploadResponse = {
    */
   imageIds: Array<string>;
 }
+export type FeedbackType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER")
 export type FeedbackRequest = {
-  /**
-   * 의견 유형
-   */
-  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER");
+  type: FeedbackType;
   content: string;
   /**
    * 의견을 작성한 화면 경로
@@ -42,11 +40,14 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
-export type AdminProductRequestStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
-export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null) }
-export type AdminFeedbackStatusUpdateRequest = { status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED") }
+export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
+export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
+export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
+export type FeedbackStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
+export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string, extension: string }
-export type AdminFeedbackResponse = { feedbackId: string, type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION"), content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED"), statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
+export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -106,11 +107,9 @@ export type StorageResponse = {
    */
   items: Array<ProductResponse>;
 }
+export type SkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
 export type SkinTypeResponse = {
-  /**
-   * 피부타입 코드
-   */
-  code: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
+  code: SkinType;
   /**
    * 피부타입 표시명
    */
@@ -125,6 +124,14 @@ export type SkinTypesResponse = {
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
+/**
+ * 빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다
+ */
+export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
+/**
+ * 정렬 조건
+ */
+export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
@@ -282,11 +289,9 @@ export type ProductSimilarityResponse = {
    */
   items: Array<SimilarProductResponse>;
 }
+export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME")
 export type ProductSuggestionMatchResponse = {
-  /**
-   * 검색어가 일치한 제품 필드
-   */
-  field: ("PRODUCT_NAME" | "BRAND_NAME");
+  field: ProductMatchField;
   /**
    * 검색어가 일치한 원문
    */
@@ -326,7 +331,8 @@ export type ProductSuggestionPageResponse = {
   items: Array<ProductSuggestionResponse>;
   pagination: PaginationResponse;
 }
-export type ShareMatchResponse = { status: ("MATCHED" | "NOT_FOUND"), productId?: (number | null), keyword?: (string | null) }
+export type ShareMatchStatus = ("MATCHED" | "NOT_FOUND")
+export type ShareMatchResponse = { status: ShareMatchStatus, productId?: (number | null), keyword?: (string | null) }
 export type ProductRankingProductResponse = {
   /**
    * 제품 ID
@@ -408,11 +414,9 @@ export type IngredientDetailResponse = {
   updatedAt: string;
 }
 export type IngredientGroupSuggestionResponse = { code: string, name: string, ingredientIds: Array<number> }
+export type IngredientMatchField = ("KOREAN_NAME" | "ENGLISH_NAME" | "ALIAS")
 export type IngredientSuggestionMatchResponse = {
-  /**
-   * 검색어가 일치한 성분 필드
-   */
-  field: ("KOREAN_NAME" | "ENGLISH_NAME" | "ALIAS");
+  field: IngredientMatchField;
   /**
    * 검색어가 일치한 원문
    */
@@ -659,7 +663,8 @@ export type BrandDetailResponse = {
 }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR") }
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "FEEDBACK_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
 
@@ -904,17 +909,11 @@ export type get_FindProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  /**
-   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
-   */
-  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
-  /**
-   * 정렬 조건
-   */
-  sort: ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC");
+  skinType: Schemas.SkinType;
+  sort: Schemas.ProductSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
    */
@@ -1065,13 +1064,10 @@ export type get_CountProducts = {
   oilLevel: Array<number>;
   includeIngredientIds: Array<number>;
   excludeIngredientIds: Array<number>;
-  excludeCodes: Array<("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")>;
+  excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  /**
-   * 선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다
-   */
-  skinType: ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION");
+  skinType: Schemas.SkinType;
 }>,
 
           }
@@ -1276,7 +1272,7 @@ export type get_FindAll = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{
-  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
+  status: Schemas.ProductRequestStatus;
   /**
    * 조회할 페이지 번호 (1부터 시작)
    */
@@ -1318,8 +1314,8 @@ export type get_FindAll_1 = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{
-  status: ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED");
-  type: ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION");
+  status: Schemas.FeedbackStatus;
+  type: Schemas.FeedbackSubjectType;
   /**
    * 조회할 페이지 번호 (1부터 시작)
    */

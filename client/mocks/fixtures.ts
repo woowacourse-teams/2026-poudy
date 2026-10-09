@@ -10,6 +10,7 @@ import type {
   ProductPartResponse,
   ProductResponse,
   ProductSimilarityResponse,
+  SkinType,
 } from "@poudy/api/api.zod";
 
 /*
@@ -875,11 +876,6 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
   ...fillerProducts.map(({ product, categoryId }) => [product.id, categoryId] as const),
 ]);
 
-/** 피부 타입 코드. 서버가 늘어놓는 차례와 같게 두어 응답을 만들 때 그대로 쓴다. */
-export const SKIN_TYPE_CODES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
-
-export type SkinTypeCode = (typeof SKIN_TYPE_CODES)[number];
-
 /**
  * 제품이 어느 피부 타입에 드는지.
  *
@@ -896,7 +892,7 @@ export type SkinTypeCode = (typeof SKIN_TYPE_CODES)[number];
  * 지성으로 잡히는 것처럼 제품과 어긋나는 값이 나온다. 서버도 제품마다 붙은 집합을 쓰지
  * 유수분에서 끌어내지 않는다.
  */
-const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinTypeCode[]> = new Map([
+const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Map([
   [1, ["DRY", "SENSITIVE"]], // 1025 독도 토너: 순한 데일리 토너
   [2, ["SENSITIVE"]], // 어성초 77 수딩 토너: 진정
   [3, ["DRY"]], // 다이브인 저분자 히알루론산 토너: 보습
@@ -921,7 +917,7 @@ const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinTypeCode[]> = ne
  * 여럿에 드는 것, 어디에도 들지 않는 것이 고루 나오도록 미리 정해 둔 조합에서 집는다.
  * 어느 제품이 어느 조합을 받는지에는 뜻이 없고, 조건을 걸면 목록이 줄어드는지만 본다.
  */
-const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinTypeCode[])[] = [
+const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
   ["DRY"],
   ["OILY"],
   ["SENSITIVE"],
@@ -940,7 +936,7 @@ const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinTypeCode[])[] = [
  * `ProductResponse` 에는 피부 타입이 없어 목록 응답만 보아서는 알 수 없다. 카테고리와
  * 마찬가지로 이 지도가 있어야 조건에 걸린 제품의 타입을 추려 낼 수 있다.
  */
-export const productSkinTypes: ReadonlyMap<number, readonly SkinTypeCode[]> = new Map(
+export const productSkinTypes: ReadonlyMap<number, readonly SkinType[]> = new Map(
   allProducts.map(
     (product) =>
       [
