@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
@@ -12,7 +12,7 @@ import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import type { Filter } from "@/lib/domain/filter";
 import {
   coveredIngredientIds,
   excludedGroupIngredients,

@@ -14,12 +14,12 @@ import {
   ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
+  type ProductSort,
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
   StorageResponse,
 } from "@poudy/api/api.zod";
-import type { Endpoints } from "@poudy/api/api.zod.types";
 
 import { apiGet, apiPost } from "./client";
 
@@ -51,7 +51,7 @@ export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, {
     query: new URLSearchParams({
-      sort: "CREATED_ASC" satisfies NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"],
+      sort: "CREATED_ASC" satisfies ProductSort,
       page: String(page),
       size: String(size),
     }),

@@ -1,4 +1,4 @@
-import type { ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
+import type { ErrorCode, ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -32,10 +32,10 @@ const numbers = (url: URL, key: string) =>
     .map(Number)
     .filter(Number.isFinite);
 
-const notFound = (detail: string, code: string) =>
+const notFound = (detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: "Not Found", status: 404, detail, code }, { status: 404 });
 
-const problem = (status: number, detail: string, code: string) =>
+const problem = (status: number, detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: code, status, detail, code }, { status });
 
 const MOCK_IMAGE_MAX_COUNT = 5;
