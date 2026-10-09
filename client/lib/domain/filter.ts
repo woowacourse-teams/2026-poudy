@@ -2,6 +2,8 @@ import { ExcludeCode, get_FindProducts, type ProductSort, SkinType } from "@poud
 
 import { firstOf, keepIf } from "./optional";
 
+import { constraintOf } from "@/lib/api/constraint";
+
 /** 서버 정렬 중 화면에서 고를 수 있는 것만 둔다. 순서는 드롭다운에 보이는 순서다. */
 export const SORTS = [
   "DEFAULT",
@@ -30,6 +32,8 @@ const PRODUCT_QUERY = get_FindProducts.parameters.query.unwrap().shape;
 export const DEFAULT_SORT: Sort =
   SORTS.find((sort) => sort === PRODUCT_QUERY.sort.unwrap().parse(undefined)) ?? SORTS[0];
 export const DEFAULT_SIZE = PRODUCT_QUERY.size.unwrap().parse(undefined);
+/** 수분감·유분감 단계의 최댓값. 두 조건의 범위가 같아 수분감 쪽을 읽는다. */
+export const MAX_LEVEL = constraintOf(PRODUCT_QUERY.moistureLevel.unwrap().element.maxValue, "유수분 최대 단계");
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
 

@@ -1,7 +1,11 @@
+import { FeedbackRequest, ProductCorrectionRequest } from "@poudy/api/api.zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "./client";
 import {
+  CONTENT_MAX_LENGTH,
+  CONTENT_MIN_LENGTH,
+  IMAGE_MAX_COUNT,
   isAcceptedImageType,
   requestProductCorrection,
   requestProductRegistration,
@@ -195,5 +199,16 @@ describe("오류 형태", () => {
       status: 0,
       code: "NETWORK_ERROR",
     });
+  });
+});
+
+describe("입력 제약", () => {
+  it("의견과 제품 정보 정정이 같은 내용 길이 제약을 쓴다", () => {
+    const correction = ProductCorrectionRequest.shape.content;
+    expect([correction.minLength, correction.maxLength]).toEqual([CONTENT_MIN_LENGTH, CONTENT_MAX_LENGTH]);
+  });
+
+  it("업로드와 의견 본문이 같은 첨부 개수 제약을 쓴다", () => {
+    expect(FeedbackRequest.shape.imageIds.unwrap().unwrap()._zod.bag.maximum).toBe(IMAGE_MAX_COUNT);
   });
 });
