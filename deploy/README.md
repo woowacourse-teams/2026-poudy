@@ -22,11 +22,28 @@ HTTPS 통신을 위해 유지할 수 있지만, 프론트 프록시·DNS·외부
 않습니다. 자동 public IPv4는 stop/start 후 바뀔 수 있으므로 백엔드 연결은 반드시
 사설 IP를 사용합니다.
 
+### Staging 프론트 EC2
+
+staging 프론트도 운영과 같은 구조로 옮기는 중입니다(#654). 세션 쿠키를 운영과 같은 조건에서
+확인하려면 화면과 API가 같은 출처여야 하는데, Vercel staging(`poudy-staging.vercel.app`)은
+API(`staging.poudy.site`)와 사이트가 달라 iOS가 쿠키를 막습니다.
+
+- `staging.poudy.site` → staging 프론트 EC2 Nginx → `/`는 Next.js, `/api/*`는 staging 백엔드
+  사설 IP `:8080`
+- 도메인은 `deploy/config/frontend-site-staging.env`로 정합니다. 별칭(`www`)은 없습니다.
+- 지금 `staging.poudy.site`는 staging 백엔드 EC2의 Nginx가 받습니다. DNS를 프론트 EC2로 옮기고,
+  Vercel staging의 API 호출이 정상이며 백엔드 Nginx 접근 로그가 멎은 것을 확인한 뒤 백엔드
+  Nginx를 제거합니다.
+- Vercel staging과 PR preview는 같은 `staging.poudy.site/api`를 부르므로 DNS를 옮겨도
+  프론트 EC2 Nginx를 거쳐 계속 동작합니다.
+
 배포 산출물은 다음 스크립트로 생성합니다. 출력 디렉터리는 새로 만들어져야 합니다.
 
 ```bash
 ./deploy/scripts/package-artifacts.sh /tmp/poudy-artifacts
 ```
+
+프론트 산출물만 만들 때는 `./deploy/scripts/package-frontend.sh <출력 디렉터리>`를 씁니다.
 
 생성 결과:
 
