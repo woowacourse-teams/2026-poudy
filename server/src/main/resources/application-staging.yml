@@ -1,0 +1,5 @@
+# staging 화면은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
+# PR preview(pr-<번호>.preview.poudy.site)는 Vercel 에서 열려 staging API 를 다른 오리진으로 부른다.
+poudy:
+  cors:
+    allowed-origins: https://*.preview.poudy.site

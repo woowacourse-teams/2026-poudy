@@ -97,7 +97,7 @@ staging 프론트 파이프라인은 같은 `poudy-staging-pipeline`에 붙이�
 - 프론트엔드: 같은 파이프라인의 `poudy-frontend-staging-dg`가 staging 프론트 EC2에 배포
 - staging 주소: `https://staging.poudy.site` (화면과 `/api`를 같은 출처로 제공)
 - 백엔드 staging: `https://staging.poudy.site`
-- CORS 허용 origin: PR preview `https://*.preview.poudy.site`
+- CORS 허용 origin: PR preview `https://*.preview.poudy.site` (`application-staging.yml`, 컨테이너 프로필 `prod,staging`)
 
 staging 백엔드는 다음 검증을 완료했습니다.
 
