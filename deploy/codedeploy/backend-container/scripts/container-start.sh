@@ -16,6 +16,7 @@ exec /usr/bin/docker run \
     --pids-limit 256 \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+    --volume /var/lib/poudy-sessions:/var/lib/poudy-sessions \
     --cap-drop ALL \
     --security-opt no-new-privileges \
     --log-driver journald \
@@ -23,4 +24,5 @@ exec /usr/bin/docker run \
     --env-file /etc/poudy/backend.env \
     --env SPRING_PROFILES_ACTIVE=prod \
     --env SERVER_PORT=8080 \
+    --env POUDY_SESSION_STORE_DIR=/var/lib/poudy-sessions \
     "${POUDY_BACKEND_IMAGE}"
