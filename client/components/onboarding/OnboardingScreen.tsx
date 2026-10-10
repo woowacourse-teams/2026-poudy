@@ -42,7 +42,7 @@ type ChoiceProps<T extends string> = {
   readonly group: string;
   readonly value: T;
   readonly selected: boolean;
-  readonly onSelect: (value: T) => void;
+  readonly onSelect: (value: T | null) => void;
   readonly children: React.ReactNode;
   readonly card?: boolean;
 };
@@ -56,6 +56,9 @@ function Choice<T extends string>({ group, value, selected, onSelect, children, 
         value={value}
         checked={selected}
         onChange={() => onSelect(value)}
+        onClick={() => {
+          if (selected) onSelect(null);
+        }}
         className="peer sr-only"
       />
       <span
@@ -227,6 +230,9 @@ export function OnboardingScreen() {
                 value={UNKNOWN_SKIN_TYPE}
                 checked={skinType === UNKNOWN_SKIN_TYPE}
                 onChange={() => setSkinType(UNKNOWN_SKIN_TYPE)}
+                onClick={() => {
+                  if (skinType === UNKNOWN_SKIN_TYPE) setSkinType(null);
+                }}
                 className="peer sr-only"
               />
               <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
