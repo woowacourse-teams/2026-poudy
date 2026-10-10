@@ -36,8 +36,9 @@ staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 �
   API와 다른 사이트라 세션 쿠키가 실리지 않습니다. 와일드카드 인증서는 Cloudflare의
   `_acme-challenge.preview` NS 레코드를 `ns1.vercel-dns.com`·`ns2.vercel-dns.com`으로 위임해
   Vercel이 발급·갱신합니다. 이 레코드를 지우면 갱신이 멈춥니다.
-- staging 백엔드 `CLIENT_DOMAIN`은 preview 출처 `https://*.preview.poudy.site`만 둡니다.
-  staging 화면은 같은 출처라 CORS가 필요 없습니다.
+- staging 백엔드는 `prod,staging` 프로필로 뜨고, `application-staging.yml`이 CORS 허용 출처를 PR preview
+  `https://*.preview.poudy.site`로 정합니다. staging 화면은 같은 출처라 CORS가 필요 없고, 서버의
+  `CLIENT_DOMAIN`은 쓰지 않습니다.
 
 배포 산출물은 다음 스크립트로 생성합니다. 출력 디렉터리는 새로 만들어져야 합니다.
 
