@@ -21,6 +21,6 @@ exec /usr/bin/docker run \
     --log-driver journald \
     --log-opt tag=poudy-backend \
     --env-file /etc/poudy/backend.env \
-    --env SPRING_PROFILES_ACTIVE=prod \
+    --env SPRING_PROFILES_ACTIVE=prod,staging \
     --env SERVER_PORT=8080 \
     "${POUDY_BACKEND_IMAGE}"
