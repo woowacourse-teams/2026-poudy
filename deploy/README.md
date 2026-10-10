@@ -279,6 +279,14 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 출발지로 제한합니다. 방화벽 적용 전 SSH 접속 경로를 보존하고 별도 세션에서
 접근성을 검증합니다.
 
+운영 백엔드에는 `nftables`로 이 제한을 적용합니다. 저장소의
+[`deploy/firewall/production-backend.nft`](firewall/production-backend.nft)는 운영
+프론트 EC2(`10.0.0.57/32`)만 IPv4 `TCP/8080`에 접근하도록 허용하고, IPv6의
+`TCP/8080` 접근은 모두 차단합니다. 전용 systemd 서비스가 부팅 때 규칙을 읽으며,
+백엔드 서비스는 방화벽 서비스가 성공한 뒤 시작합니다. 설치 및 복구 절차는
+[`deploy/monitoring/README.md`](monitoring/README.md)의 “운영 백엔드 8080 호스트 방화벽”을
+따릅니다. 공유 보안 그룹은 변경하지 않습니다.
+
 ## 보안 실행 기준
 
 - 애플리케이션은 `poudy` 전용 사용자로 실행합니다.

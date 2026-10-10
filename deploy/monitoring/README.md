@@ -12,14 +12,14 @@
   - Elastic IP: `54.116.229.77`
   - Private IP: `10.0.0.57`
 - 백엔드 EC2: `i-0192ed4a2f51748fe`
-  - 현재 Public IP: `16.184.16.46` (Elastic IP 아님)
+  - 현재 Public IP: `43.202.164.103` (Elastic IP 아님)
   - Private IP: `10.0.3.84`
 - EC2 IAM role: `ec2-project`
 - Security Group: `project-public`
 
-백엔드 `:8080` 외부 접근 차단은 현재 의도적으로 보류 중입니다. 외부 모니터링과
-프론트 Nginx의 백엔드 연결은 백엔드 Public IP가 아니라 운영 도메인과 Private IP
-경로를 사용합니다.
+백엔드 `:8080`은 운영 프론트 EC2의 Private IP에서만 접근할 수 있도록 호스트
+방화벽을 적용합니다. 외부 모니터링은 운영 도메인으로, 프론트 Nginx는 백엔드
+Private IP로 접근합니다.
 
 ### 적용 완료 항목
 
@@ -106,8 +106,7 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 
 ### 0. 백엔드 `:8080` 상태 확인
 
-현재 외부 접근 차단은 보류 중이므로 이 단계에서는 상태만 기록하고 보안 그룹을
-변경하지 않습니다. 차단을 진행할 때는 프론트 Private 경로 검증을 먼저 수행해야 합니다.
+현재 운영 백엔드의 호스트 방화벽을 확인합니다. 공유 보안 그룹은 변경하지 않습니다.
 
 보안 그룹을 바꾸기 전에 현재 연결과 SSH 세션을 보존합니다. 먼저 AWS에서 백엔드의
 보안 그룹과 `8080` 규칙을 확인합니다.
@@ -137,17 +136,60 @@ curl --fail --silent http://127.0.0.1:8080/actuator/health
 sudo firewall-cmd --state 2>/dev/null || true
 sudo firewall-cmd --list-all 2>/dev/null || true
 sudo nft list ruleset
+sudo systemctl status poudy-backend-firewall.service --no-pager
+sudo systemctl is-enabled poudy-backend-firewall.service
 ```
 
-외부 네트워크에서 public IPv4 직접 접근을 확인합니다. 응답이 오면 public 노출이며,
-timeout/refused여야 프론트 프록시 경로만 남은 상태입니다.
+외부 네트워크에서 public IPv4 직접 접근이 차단됐는지 확인합니다.
 
 ```bash
-curl -i --connect-timeout 5 http://16.184.16.46:8080/actuator/health
+curl -i --connect-timeout 5 http://43.202.164.103:8080/api/categories
 ```
 
-현재는 위 상태를 알려진 보류 사항으로 관리합니다. 향후 차단할 때도 SSH `22` 규칙은
-건드리지 않습니다.
+다음 private 경로 명령은 운영 프론트 EC2의 SSM 세션에서 실행합니다. 공개 도메인
+명령은 외부 클라이언트에서 실행합니다.
+
+```bash
+curl --fail --silent --show-error http://10.0.3.84:8080/api/categories
+curl --fail --silent --show-error https://poudy.site/api/categories
+```
+
+### 운영 백엔드 8080 호스트 방화벽
+
+`deploy/firewall/production-backend.nft`가 규칙의 원본입니다. 운영 백엔드 EC2에서
+저장소 checkout을 같은 커밋으로 맞춘 뒤 설치 스크립트를 실행합니다. 이 스크립트는
+production instance ID를 IMDSv2로 확인하고, 방화벽 전용 테이블만 교체합니다.
+
+```bash
+sudo ./deploy/scripts/install-production-backend-firewall.sh
+```
+
+적용 뒤 저장소 설정과 `/etc`에 설치한 파일이 같은지 확인합니다.
+
+```bash
+sha256sum deploy/firewall/production-backend.nft /etc/poudy/backend-firewall.nft
+sha256sum deploy/systemd/poudy-backend-firewall.service /etc/systemd/system/poudy-backend-firewall.service
+sha256sum deploy/systemd/poudy-backend.service.d/10-firewall.conf /etc/systemd/system/poudy-backend.service.d/10-firewall.conf
+sudo nft list table inet poudy_backend
+sudo systemctl is-enabled poudy-backend-firewall.service
+sudo systemctl is-active poudy-backend-firewall.service poudy-backend.service
+```
+
+방화벽은 `10.0.0.57`에서 오는 IPv4 `TCP/8080`만 통과시키고 다른 IPv4 출발지 및
+모든 IPv6 `TCP/8080`을 차단합니다. `22/tcp`, 다른 포트, 아웃바운드, 공유 보안 그룹
+규칙은 건드리지 않습니다. systemd drop-in이 방화벽 서비스의 성공을 백엔드 시작
+조건으로 지정하며, 방화벽 서비스는 부팅 때 규칙을 다시 로드합니다. 운영 재부팅은
+검증만을 위해 수행하지 않습니다.
+
+긴급 롤백은 현재 SSM 세션을 유지한 채 방화벽 전용 서비스를 비활성화합니다. 이 조치는
+외부 `8080` 차단을 해제하므로 복구 확인 뒤에는 저장소 설정을 수정하고 재적용합니다.
+
+```bash
+sudo systemctl disable --now poudy-backend-firewall.service
+sudo rm -f /etc/systemd/system/poudy-backend.service.d/10-firewall.conf
+sudo systemctl daemon-reload
+sudo nft list table inet poudy_backend 2>/dev/null || true
+```
 
 ```bash
 curl --fail --silent --show-error \
