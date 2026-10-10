@@ -2,11 +2,27 @@
 
 set -Eeuo pipefail
 
-if [[ -s /etc/letsencrypt/live/poudy.site/fullchain.pem \
-    && -s /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SITE_FILE="${SCRIPT_DIR}/../nginx/frontend-site.env"
+
+site_library="${SCRIPT_DIR}/lib/frontend-site.sh"
+if [[ ! -f "${site_library}" ]]; then
+    site_library="${SCRIPT_DIR}/../../../scripts/lib/frontend-site.sh"
+fi
+# shellcheck source=deploy/scripts/lib/frontend-site.sh
+source "${site_library}"
+
+load_frontend_site "${SITE_FILE}" || {
+    echo "frontend validation failed: 프론트 도메인 설정이 없거나 형식이 맞지 않습니다: ${SITE_FILE}" >&2
+    exit 1
+}
+readonly CERT_DIR="$(frontend_site_cert_dir)"
+
+if [[ -s "${CERT_DIR}/fullchain.pem" \
+    && -s "${CERT_DIR}/privkey.pem" ]]; then
     readonly HTTPS_MODE=1
-    readonly BASE_URL='https://poudy.site'
-    readonly CURL_TLS_ARGS=(--insecure --resolve poudy.site:443:127.0.0.1)
+    readonly BASE_URL="https://${POUDY_SITE_HOST}"
+    readonly CURL_TLS_ARGS=(--insecure --resolve "${POUDY_SITE_HOST}:443:127.0.0.1")
 else
     readonly HTTPS_MODE=0
     readonly BASE_URL='http://127.0.0.1'
@@ -42,34 +58,38 @@ nginx -t || fail_validation 'nginx configuration is invalid'
 
 if [[ "${HTTPS_MODE}" -eq 1 ]]; then
     readonly CANONICAL_PROBE_PATH='/products/601?source=canonical-probe'
-    readonly EXPECTED_REDIRECT="301 https://poudy.site${CANONICAL_PROBE_PATH}"
+    readonly EXPECTED_REDIRECT="301 https://${POUDY_SITE_HOST}${CANONICAL_PROBE_PATH}"
 
-    http_redirect="$(curl --silent --show-error --max-time 3 \
-        --resolve www.poudy.site:80:127.0.0.1 \
-        --output /dev/null \
-        --write-out '%{http_code} %{redirect_url}' \
-        "http://www.poudy.site${CANONICAL_PROBE_PATH}")" \
-        || fail_validation 'www HTTP redirect probe failed'
-    [[ "${http_redirect}" == "${EXPECTED_REDIRECT}" ]] \
-        || fail_validation "unexpected www HTTP redirect: ${http_redirect}"
+    for alias_host in ${POUDY_SITE_ALIASES}; do
+        http_redirect="$(curl --silent --show-error --max-time 3 \
+            --resolve "${alias_host}:80:127.0.0.1" \
+            --output /dev/null \
+            --write-out '%{http_code} %{redirect_url}' \
+            "http://${alias_host}${CANONICAL_PROBE_PATH}")" \
+            || fail_validation "${alias_host} HTTP redirect probe failed"
+        [[ "${http_redirect}" == "${EXPECTED_REDIRECT}" ]] \
+            || fail_validation "unexpected ${alias_host} HTTP redirect: ${http_redirect}"
 
-    https_redirect="$(curl --silent --show-error --max-time 3 \
-        --resolve www.poudy.site:443:127.0.0.1 \
-        --output /dev/null \
-        --write-out '%{http_code} %{redirect_url}' \
-        "https://www.poudy.site${CANONICAL_PROBE_PATH}")" \
-        || fail_validation 'www HTTPS redirect probe failed'
-    [[ "${https_redirect}" == "${EXPECTED_REDIRECT}" ]] \
-        || fail_validation "unexpected www HTTPS redirect: ${https_redirect}"
+        https_redirect="$(curl --silent --show-error --max-time 3 \
+            --resolve "${alias_host}:443:127.0.0.1" \
+            --output /dev/null \
+            --write-out '%{http_code} %{redirect_url}' \
+            "https://${alias_host}${CANONICAL_PROBE_PATH}")" \
+            || fail_validation "${alias_host} HTTPS redirect probe failed"
+        [[ "${https_redirect}" == "${EXPECTED_REDIRECT}" ]] \
+            || fail_validation "unexpected ${alias_host} HTTPS redirect: ${https_redirect}"
+    done
 
-    acme_status="$(curl --silent --show-error --max-time 3 \
-        --resolve www.poudy.site:80:127.0.0.1 \
-        --output /dev/null \
-        --write-out '%{http_code}' \
-        'http://www.poudy.site/.well-known/acme-challenge/poudy-deployment-probe')" \
-        || fail_validation 'www ACME route probe failed'
-    [[ "${acme_status}" == '404' ]] \
-        || fail_validation "www ACME route was redirected or exposed an unexpected response: ${acme_status}"
+    for acme_host in "${POUDY_SITE_HOST}" ${POUDY_SITE_ALIASES}; do
+        acme_status="$(curl --silent --show-error --max-time 3 \
+            --resolve "${acme_host}:80:127.0.0.1" \
+            --output /dev/null \
+            --write-out '%{http_code}' \
+            "http://${acme_host}/.well-known/acme-challenge/poudy-deployment-probe")" \
+            || fail_validation "${acme_host} ACME route probe failed"
+        [[ "${acme_status}" == '404' ]] \
+            || fail_validation "${acme_host} ACME route was redirected or exposed an unexpected response: ${acme_status}"
+    done
 fi
 
 main_pid="$(systemctl show --property MainPID --value poudy-frontend.service)"

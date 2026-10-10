@@ -65,6 +65,25 @@ staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBu
 buildspec을 사용하지 않으며 패키지 루트 `appspec.yml`이 컨테이너 적용 hook을 선택합니다.
 이 변경은 staging 백엔드에만 적용하고 production은 기존 JAR 배포를 유지합니다.
 
+staging 프론트 파이프라인은 같은 `poudy-staging-pipeline`에 붙이되, 백엔드와 다른 CodeBuild
+프로젝트를 씁니다. 백엔드 staging 빌드는 Docker 권한과 단일 primary artifact를 쓰므로 그대로 두고,
+프론트 빌드를 따로 둬 백엔드 배포 흐름을 건드리지 않습니다.
+
+- CodeBuild 프로젝트: 새로 생성. ARM64, Node.js 22 지원 관리형 이미지, CodePipeline 소스
+- 빌드 명령: 저장소 루트의 `buildspec-staging-frontend.yml`
+- CodeBuild 환경 변수: `NEXT_PUBLIC_POSTHOG_KEY` (저장소에 적지 않음)
+- 배포 그룹: `poudy-codedeploy`의 `poudy-frontend-staging-dg`, 대상 태그 `Name=ec2-poudy-staging-fe` 하나
+- 순서: 백엔드 배포(`poudy-backend-staging-dg`)가 끝난 다음 단계
+
+프론트 빌드는 Next.js prerender 중 `https://staging.poudy.site/api`를 부릅니다. 빌드 단계도
+백엔드 배포 다음에 두면 같은 커밋의 API 변경을 본 상태로 빌드합니다.
+
+배포 그룹 대상은 `Name` 태그 하나로만 잡습니다. staging 프론트·백엔드 인스턴스는 `Environment`,
+`ProjectTeam`, `Service`, `Role` 태그가 같아서 공통 태그로 잡으면 서로의 배포 대상이 됩니다.
+2026-09-18에는 `poudy-backend-staging-dg` 배포가 운영 백엔드까지 대상으로 잡은 적이 있습니다.
+프론트 `validate-service.sh`가 백엔드를 거쳐 `/api/categories`를 확인하므로 백엔드 다음에
+배포합니다.
+
 ## Staging 운영 상태
 
 현재 staging 백엔드 배포와 외부 접근 검증까지 완료된 상태입니다.
@@ -132,7 +151,9 @@ OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가 없으므�
 연동으로 주입합니다.
 
 프론트엔드 secondary artifact에는 Nginx main 설정·서버 설정 템플릿과 systemd unit이
-포함됩니다. CodeDeploy
+포함됩니다. 서버 설정 템플릿의 도메인은 자리표시자이고, 산출물의 `nginx/frontend-site.env`
+(운영은 `deploy/config/frontend-site-production.env`, staging은 `frontend-site-staging.env`)
+값으로 hook이 채웁니다. 인증서 경로·검사 호스트·검증 주소도 이 파일을 따릅니다. CodeDeploy
 `ApplicationStart` 훅은 인증서 두 파일이 모두 존재할 때만 HTTPS 템플릿을 활성화하고,
 그 외에는 HTTP bootstrap 템플릿을 활성화합니다. 따라서 인증서가 아직 없는 신규
 인스턴스나 인증서가 제거된 인스턴스에 재배포해도 `nginx -t`가 존재하지 않는

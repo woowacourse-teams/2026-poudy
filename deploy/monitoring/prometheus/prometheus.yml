@@ -46,6 +46,12 @@ scrape_configs:
           endpoint: frontend_page
           service: poudy-frontend
       - targets:
+          - https://staging.poudy.site/categories
+        labels:
+          environment: staging
+          endpoint: frontend_page
+          service: poudy-frontend
+      - targets:
           - https://staging.poudy.site/api/categories
         labels:
           environment: staging

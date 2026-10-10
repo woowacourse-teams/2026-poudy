@@ -112,9 +112,11 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `grafana/provisioning/dashboards/poudy.yaml`: 파일 기반 대시보드 프로비저닝 설정
 - `alloy/staging.alloy`: 스테이징 EC2의 systemd/프로세스/Actuator 메트릭, `/actuator/health` HTTP probe, 백엔드 journal을 수집하는 Alloy 설정
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
+- `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성
 - `grafana/dashboards/poudy-frontend-availability.json`: Production·Staging 공개 페이지/API 상태 및 응답시간 대시보드
 - `grafana/dashboards/poudy-frontend-production-resources.json`: 운영 프론트 EC2 자원·프로세스 대시보드
+- `grafana/dashboards/poudy-frontend-staging-resources.json`: staging 프론트 EC2 자원·프로세스 대시보드
 
 ### Frontend 공개 경로 모니터링
 
@@ -127,6 +129,7 @@ HTTPS URL을 60초마다 확인합니다. Prometheus는 각 `probe_success`, HTT
 | Production | 프론트 페이지 | `https://poudy.site/categories` |
 | Production | 공개 API | `https://poudy.site/api/categories` |
 | Staging | 프론트 페이지 | `https://poudy-staging.vercel.app/categories` |
+| Staging | 프론트 페이지(EC2) | `https://staging.poudy.site/categories` |
 | Staging | 공개 API | `https://staging.poudy.site/api/categories` |
 
 대시보드는 각 경로 상태를 `UP`/`DOWN`으로 표시하고 최근 응답시간과 HTTP 상태 코드를
@@ -163,6 +166,19 @@ deploy/monitoring/compose/compose.override.yaml
 deploy/monitoring/grafana/dashboards/poudy-frontend-availability.json
   -> /opt/poudy-monitoring/data/grafana/dashboards/poudy/poudy-frontend-availability.json
 ```
+
+Staging 프론트 EC2 Probe(`https://staging.poudy.site/categories`)는 `staging.poudy.site` DNS를
+프론트 EC2로 옮긴 뒤 Monitoring EC2에 반영합니다. 그 전에는 이 주소를 백엔드 EC2의 Nginx가 받아
+`/categories`가 404이므로, 먼저 반영하면 `Poudy Staging Frontend Health Down`이 울립니다.
+Vercel staging Probe는 Vercel staging을 정리할 때 함께 뺍니다.
+
+### Staging 프론트 수집 구조
+
+staging 프론트 EC2도 운영 프론트와 같은 Alloy 구성(`alloy/staging-frontend.alloy`)을 씁니다.
+staging 백엔드와 같은 `environment="staging"`으로 보내므로 `service="poudy-frontend"`로 구분합니다.
+staging 백엔드 Alloy는 호스트·프로세스 지표에 `service` 라벨을 붙이지 않기 때문에, `poudy-backend-staging.json`의
+호스트 지표 패널(CPU·메모리·디스크·네트워크·스왑·OOM)은 `service!="poudy-frontend"`로
+프론트 호스트를 뺍니다.
 
 ### Staging 수집 구조
 

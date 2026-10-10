@@ -59,8 +59,12 @@ test -x /usr/bin/heif-convert
 
 ```bash
 cd /opt/poudy/repository
-sudo ./deploy/scripts/bootstrap-frontend.sh
+sudo ./deploy/scripts/bootstrap-frontend.sh production   # staging 프론트 EC2는 staging
 ```
+
+인자로 받은 환경의 `deploy/config/frontend-site-<환경>.env`에서 대표 도메인
+(`POUDY_SITE_HOST`)과 별칭(`POUDY_SITE_ALIASES`)을 읽어 Nginx 설정의 자리표시자를 채웁니다.
+운영은 `poudy.site`와 별칭 `www.poudy.site`, staging은 `staging.poudy.site`이고 별칭이 없습니다.
 
 구성 내용:
 
@@ -76,7 +80,8 @@ sudo ./deploy/scripts/bootstrap-frontend.sh
 - Nginx 설정 검증 및 enable/start
 
 인증서가 이미 발급된 호스트를 재초기화하면 `ec2-frontend-https.conf`를 활성화합니다.
-이때 인증서가 `poudy.site`와 `www.poudy.site`를 모두 포함하는지 검사합니다. apex만
+이때 `/etc/letsencrypt/live/<대표 도메인>` 인증서가 대표 도메인과 별칭을 모두 포함하는지
+검사합니다(운영은 `poudy.site`와 `www.poudy.site`). apex만
 포함한 기존 인증서나 일부 파일만 남은 인증서는 활성 설정을 교체하기 전에 실패합니다.
 인증서가 없으면 HTTP bootstrap 설정만 사용합니다.
 
@@ -108,8 +113,25 @@ sudo certbot certonly --webroot \
   --email <운영_이메일> \
   --agree-tos \
   --no-eff-email
-sudo ./deploy/scripts/enable-frontend-https.sh
+sudo ./deploy/scripts/enable-frontend-https.sh production
 ```
+
+staging 프론트 EC2는 별칭 없이 `staging.poudy.site` 하나로 발급하고 `staging`을 넘깁니다.
+
+```bash
+sudo certbot certonly --webroot \
+  --webroot-path /var/www/letsencrypt \
+  --cert-name staging.poudy.site \
+  --domain staging.poudy.site \
+  --email <운영_이메일> \
+  --agree-tos \
+  --no-eff-email
+sudo ./deploy/scripts/enable-frontend-https.sh staging
+```
+
+`enable-frontend-https.sh`는 인자가 없으면 `production`으로 동작합니다. 인자 없이 등록한
+기존 `certbot renew --deploy-hook`을 그대로 두기 위해서입니다. staging 호스트의 갱신 hook에는
+`staging`을 붙여 등록합니다.
 
 `enable-frontend-https.sh`는 인증서가 없으면 실패하고, 설정 검증이나 reload가
 실패하면 기존 Nginx 설정으로 복구합니다. 인증서에 두 호스트가 모두 없을 때도 설정을

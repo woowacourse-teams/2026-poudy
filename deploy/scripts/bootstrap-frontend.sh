@@ -10,8 +10,16 @@ readonly NODE_DIST_BASE="https://nodejs.org/dist/v${NODE_VERSION}"
 
 # shellcheck source=deploy/scripts/lib/common.sh
 source "${SCRIPT_DIR}/lib/common.sh"
+# shellcheck source=deploy/scripts/lib/frontend-site.sh
+source "${SCRIPT_DIR}/lib/frontend-site.sh"
 
 require_root
+
+environment_name="${1:-}"
+[[ "${environment_name}" =~ ^(production|staging)$ ]] || fail "사용법: $0 <production|staging>"
+site_file="${REPOSITORY_ROOT}/deploy/config/frontend-site-${environment_name}.env"
+load_frontend_site "${site_file}" || fail "프론트 도메인 설정이 없거나 형식이 맞지 않습니다: ${site_file}"
+cert_dir="$(frontend_site_cert_dir)"
 
 log '프론트엔드 호스트 초기화를 시작합니다.'
 
@@ -56,21 +64,22 @@ install_systemd_unit \
 
 # Certbot이 아직 인증서를 발급하지 않은 초기 상태에서는 HTTP 설정을
 # 유지합니다. 이미 인증서가 있는 호스트를 재초기화하는 경우에만 HTTPS
-# 설정을 활성화합니다. 일부 파일만 있거나 www가 빠진 기존 인증서가 있으면
+# 설정을 활성화합니다. 일부 파일만 있거나 별칭이 빠진 기존 인증서가 있으면
 # 현재 실행 중인 Nginx 설정을 교체하기 전에 실패합니다.
 frontend_config="${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend.conf"
-if [[ -s /etc/letsencrypt/live/poudy.site/fullchain.pem \
-    && -s /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+if [[ -s "${cert_dir}/fullchain.pem" \
+    && -s "${cert_dir}/privkey.pem" ]]; then
     # shellcheck source=deploy/scripts/lib/frontend-certificate.sh
     source "${SCRIPT_DIR}/lib/frontend-certificate.sh"
+    # shellcheck disable=SC2086
     frontend_certificate_covers_hosts \
-        /etc/letsencrypt/live/poudy.site/fullchain.pem \
-        poudy.site \
-        www.poudy.site \
-        || fail '기존 인증서가 poudy.site와 www.poudy.site를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 실행하세요.'
+        "${cert_dir}/fullchain.pem" \
+        "${POUDY_SITE_HOST}" \
+        ${POUDY_SITE_ALIASES} \
+        || fail "기존 인증서가 ${POUDY_SITE_HOST}${POUDY_SITE_ALIASES:+ ${POUDY_SITE_ALIASES}}를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 실행하세요."
     frontend_config="${REPOSITORY_ROOT}/deploy/nginx/ec2-frontend-https.conf"
-elif [[ -e /etc/letsencrypt/live/poudy.site/fullchain.pem \
-    || -e /etc/letsencrypt/live/poudy.site/privkey.pem ]]; then
+elif [[ -e "${cert_dir}/fullchain.pem" \
+    || -e "${cert_dir}/privkey.pem" ]]; then
     fail '인증서 fullchain.pem과 privkey.pem 중 일부만 존재합니다.'
 fi
 
@@ -85,11 +94,15 @@ install \
     "${REPOSITORY_ROOT}/deploy/nginx/ec2-nginx.conf" \
     /etc/nginx/nginx.conf
 
+rendered_config="$(mktemp)"
+trap 'rm -rf "${temporary_dir:-}" "${rendered_config}"' EXIT
+render_frontend_nginx_config "${frontend_config}" "${rendered_config}" \
+    || fail "Nginx 설정에 채우지 못한 도메인 자리표시자가 남았습니다: ${frontend_config}"
 install \
     -o root \
     -g root \
     -m 0644 \
-    "${frontend_config}" \
+    "${rendered_config}" \
     /etc/nginx/conf.d/poudy-frontend.conf
 
 install \
