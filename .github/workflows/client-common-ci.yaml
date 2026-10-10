@@ -39,6 +39,9 @@ jobs:
               - '.github/workflows/client-common-ci.yaml'
             client:
               - 'client/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
               - '.github/workflows/client-ci.yaml'
 
   check:
@@ -59,7 +62,7 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: client/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -27,6 +27,8 @@ Node.js 22 이상, pnpm 11.21.0.
 pnpm install
 ```
 
+`client`와 `common`은 저장소 루트의 pnpm 워크스페이스로 묶여 있습니다. `client`에서 설치해도 워크스페이스 전체가 설치되며, 락파일과 `node_modules`는 저장소 루트에 생깁니다.
+
 ## 환경 변수
 
 `.env.example`을 복사해 `.env.local`을 만듭니다. 이 파일이 없으면 API 목 서버가 켜지지 않아 화면에 데이터가 나오지 않습니다.
@@ -94,7 +96,7 @@ pnpm run format
 프로젝트 루트의 Git hook이 Client 변경을 검사합니다.
 
 - `pre-commit`: Client의 staged 파일에 `lint-staged`를 실행합니다.
-- `pre-push`: push 대상 커밋에 Client 변경이 있으면 `pnpm run check`를 실행합니다.
+- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다.
 
 hook을 우회했거나 설치하지 않은 경우에도 push 전에 다음 명령으로 같은 검사를 실행합니다.
 
@@ -110,7 +112,7 @@ pnpm run check
 import type { ProductResponse } from "@poudy/api/api.zod";
 ```
 
-`@poudy/api/*`는 저장소 루트의 `common/`을 가리키는 경로 별칭입니다.
+`@poudy/api`는 저장소 루트의 `common/`을 워크스페이스 패키지로 등록한 것입니다. `client/package.json`에 `workspace:*`로 선언되어 있어서, 설치하면 `common/`에 연결됩니다.
 
 같은 파일에는 응답 타입과 이름이 같은 Zod 스키마도 들어 있습니다. API를 호출할 때는 이 스키마를 `apiGet`, `apiPostForm`에 넘겨 응답을 런타임에 검증합니다. 기준과 이유는 [AGENTS.md](AGENTS.md)의 「TypeScript 기준」을 참고하세요.
 

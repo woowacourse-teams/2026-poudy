@@ -6,6 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,7 +45,9 @@ class CurationSchemaTest {
             "spacing_bottom",
             "image_url",
             "created_at",
-            "updated_at"
+            "updated_at",
+            "alt_text",
+            "body_text"
         );
         assertThat(columnsOf("curation_block_filter")).containsExactly(
             "id",
@@ -114,6 +120,73 @@ class CurationSchemaTest {
                 UUID.fromString("00000000-0000-4000-8000-000000000001"),
                 10L,
                 0
+            )
+        ).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"환절기 장벽 케어"})
+    void allowsMissingAndDecorativeImageText(String altText) {
+        String bodyText = "  첫 문단\r\n\r\n두 번째 문단\n ";
+        UUID blockId = UUID.fromString("00000000-0000-4000-8000-000000000001");
+        jdbcTemplate.update(
+            "UPDATE curation_block SET alt_text = ?, body_text = ? WHERE id = ?",
+            altText,
+            bodyText,
+            blockId
+        );
+
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT alt_text FROM curation_block WHERE id = ?",
+                String.class,
+                blockId
+            )
+        ).isEqualTo(altText);
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT body_text FROM curation_block WHERE id = ?",
+                String.class,
+                blockId
+            )
+        ).isEqualTo(bodyText);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🌿"})
+    void limitsAltTextTo500UnicodeCharacters(String character) {
+        UUID blockId = UUID.fromString("00000000-0000-4000-8000-000000000001");
+        String altText = character.repeat(500);
+        jdbcTemplate.update("UPDATE curation_block SET alt_text = ? WHERE id = ?", altText, blockId);
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT alt_text FROM curation_block WHERE id = ?",
+                String.class,
+                blockId
+            )
+        ).isEqualTo(altText);
+
+        assertThatThrownBy(
+            () -> jdbcTemplate.update(
+                "UPDATE curation_block SET alt_text = ? WHERE id = ?",
+                character.repeat(501),
+                blockId
+            )
+        ).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "PRODUCTS, alt_text",
+            "PRODUCTS, body_text",
+            "PRODUCTS_BY_FILTER, alt_text",
+            "PRODUCTS_BY_FILTER, body_text"})
+    void rejectsImageTextOnProductBlocks(String type, String column) {
+        assertThatThrownBy(
+            () -> jdbcTemplate.update(
+                "UPDATE curation_block SET " + column + " = '' WHERE type = ?",
+                type
             )
         ).isInstanceOf(DataIntegrityViolationException.class);
     }

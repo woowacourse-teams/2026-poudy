@@ -6,7 +6,7 @@ import { useState } from "react";
 import { DirectoryList } from "@/components/ui/DirectoryList";
 import { track } from "@/lib/analytics/track";
 
-/** S08 카테고리. 대분류를 고르면 오른쪽에 소분류가 나온다. */
+/** S27 카테고리. 대분류를 고르면 오른쪽에 소분류가 나온다. 첫 행은 `{대분류} 전체` 다. */
 export function CategoryDirectory({ categories }: { readonly categories: readonly CategoryResponse[] }) {
   const [selectedId, setSelectedId] = useState(String(categories[0]?.id ?? ""));
 
@@ -28,15 +28,24 @@ export function CategoryDirectory({ categories }: { readonly categories: readonl
         railId: String(category.id),
         title: category.name,
         description: "원하는 제품 유형을 선택하세요",
-        rows: [
-          // 전체는 대분류 자신의 화면으로, 소분류는 각자의 화면으로 보낸다.
-          { id: "all", label: "전체", count: category.productCount, href: `/categories/${category.id}` },
-          ...category.children.map((child) => ({
-            id: String(child.id),
-            label: child.name,
-            count: child.productCount,
-            href: `/categories/${child.id}`,
-          })),
+        sections: [
+          {
+            rows: [
+              // 전체는 대분류 자신의 화면으로, 소분류는 각자의 화면으로 보낸다.
+              {
+                id: "all",
+                label: `${category.name} 전체`,
+                count: category.productCount,
+                href: `/categories/${category.id}`,
+              },
+              ...category.children.map((child) => ({
+                id: String(child.id),
+                label: child.name,
+                count: child.productCount,
+                href: `/categories/${child.id}`,
+              })),
+            ],
+          },
         ],
       }))}
     />

@@ -44,7 +44,7 @@
   - ARN: `arn:aws:sns:ap-northeast-2:843255971531:poudy-infra-alerts`
 - self-hosted Blackbox Exporter 공개 경로 Probe:
 - Production: `https://poudy.site/categories`, `https://poudy.site/api/categories`
-- Staging: `https://poudy-staging.vercel.app/categories`, `https://staging.poudy.site/api/categories`
+- Staging: `https://staging.poudy.site/categories`, `https://staging.poudy.site/api/categories`
 - Grafana `Poudy Frontend Availability` 대시보드와 Production·Staging 헬스 알림 규칙 적용 완료
 
 ### 현재 CloudWatch Alarm
@@ -112,9 +112,11 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `grafana/provisioning/dashboards/poudy.yaml`: 파일 기반 대시보드 프로비저닝 설정
 - `alloy/staging.alloy`: 스테이징 EC2의 systemd/프로세스/Actuator 메트릭, `/actuator/health` HTTP probe, 백엔드 journal을 수집하는 Alloy 설정
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
+- `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성
 - `grafana/dashboards/poudy-frontend-availability.json`: Production·Staging 공개 페이지/API 상태 및 응답시간 대시보드
 - `grafana/dashboards/poudy-frontend-production-resources.json`: 운영 프론트 EC2 자원·프로세스 대시보드
+- `grafana/dashboards/poudy-frontend-staging-resources.json`: staging 프론트 EC2 자원·프로세스 대시보드
 
 ### Frontend 공개 경로 모니터링
 
@@ -126,7 +128,7 @@ HTTPS URL을 60초마다 확인합니다. Prometheus는 각 `probe_success`, HTT
 | --- | --- | --- |
 | Production | 프론트 페이지 | `https://poudy.site/categories` |
 | Production | 공개 API | `https://poudy.site/api/categories` |
-| Staging | 프론트 페이지 | `https://poudy-staging.vercel.app/categories` |
+| Staging | 프론트 페이지 | `https://staging.poudy.site/categories` |
 | Staging | 공개 API | `https://staging.poudy.site/api/categories` |
 
 대시보드는 각 경로 상태를 `UP`/`DOWN`으로 표시하고 최근 응답시간과 HTTP 상태 코드를
@@ -163,6 +165,18 @@ deploy/monitoring/compose/compose.override.yaml
 deploy/monitoring/grafana/dashboards/poudy-frontend-availability.json
   -> /opt/poudy-monitoring/data/grafana/dashboards/poudy/poudy-frontend-availability.json
 ```
+
+2026-10-10 `staging.poudy.site`를 staging 프론트 EC2로 옮기면서 Staging 프론트 페이지 Probe를
+`https://poudy-staging.vercel.app/categories`에서 `https://staging.poudy.site/categories`로
+바꿨습니다(#654).
+
+### Staging 프론트 수집 구조
+
+staging 프론트 EC2도 운영 프론트와 같은 Alloy 구성(`alloy/staging-frontend.alloy`)을 씁니다.
+staging 백엔드와 같은 `environment="staging"`으로 보내므로 `service="poudy-frontend"`로 구분합니다.
+staging 백엔드 Alloy는 호스트·프로세스 지표에 `service` 라벨을 붙이지 않기 때문에, `poudy-backend-staging.json`의
+호스트 지표 패널(CPU·메모리·디스크·네트워크·스왑·OOM)은 `service!="poudy-frontend"`로
+프론트 호스트를 뺍니다.
 
 ### Staging 수집 구조
 
@@ -297,7 +311,7 @@ Grafana 프론트 자원 대시보드에서 Next.js 프로세스 1개와 Nginx �
 | 로그 저장·수집 | journald, CloudWatch Logs, Loki(S3) | journald, Alloy → Loki(S3) | 전송과 Loki 조회 경로 확인. Staging의 안전한 Spring 시작·초기화 로그가 표시됨. 로그가 발생하지 않는 시간대에는 패널이 비어 있을 수 있음 |
 | 핵심 지표 대시보드 | CPU, 메모리, 디스크, 서비스·프로세스 상태, Actuator, 로그, JVM heap·live threads, 네트워크·swap·OOM·HTTP 성능 패널 | CPU, 메모리, 디스크, 서비스·프로세스 상태, Actuator Health, 로그, JVM heap·live threads, 네트워크·swap·OOM·HTTP 성능 패널 | 두 JSON의 17개 패널을 Grafana에 반영하고 주요 패널 확인 완료. 2026-09-26 Production 복제본 UID `poudy-backend-production`을 삭제하고 정상 UID `ad2z7mm`을 보존했음. histogram 시계열 확인 완료 |
 | 팀 장애 알림 | 서비스·자원 및 Actuator 관련 규칙, Discord 연락처 | `/actuator/health` 장애만 Discord 연락처로 알림 | Staging health 알림의 firing Discord 도착과 정상 복구 후 resolved 도착 확인 |
-| 배포 파이프라인 | `main` → `poudy-pipeline` → CodeBuild/CodeDeploy | `dev` → `poudy-staging-pipeline` → CodeBuild/CodeDeploy; 프론트는 Vercel staging workflow | 설정은 CodePipeline/AWS 및 Vercel에 있으며 저장소에 파이프라인 IaC는 없음 |
+| 배포 파이프라인 | `main` → `poudy-pipeline` → CodeBuild/CodeDeploy | `dev` → `poudy-staging-pipeline` → CodeBuild/CodeDeploy (백엔드 다음 프론트) | 설정은 CodePipeline/AWS에 있으며 PR preview만 Vercel에 있고 저장소에 파이프라인 IaC는 없음 |
 
 Staging 백엔드 `/actuator/health` 장애 규칙은 비파괴 테스트에서 실제 firing Discord 알림과
 복구 후 resolved 알림 도착까지 확인했습니다. Production 백엔드 Discord 연락처 발송도 별도로

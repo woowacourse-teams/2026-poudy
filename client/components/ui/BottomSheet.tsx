@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useId, useRef } from "react";
 
 import { useDragToDismiss } from "@/lib/hooks/useDragToDismiss";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
@@ -22,9 +22,13 @@ const useSheet = (part: string): SheetContext => {
   return value;
 };
 
+/** 시트 껍데기가 닫은 방법. 머리의 닫기 단추처럼 안쪽에서 닫는 길은 쓰는 쪽이 직접 안다. */
+export type SheetCloseReason = "backdrop" | "drag" | "escape";
+
 type BottomSheetProps = {
   readonly open: boolean;
-  readonly onClose: () => void;
+  /** 어떻게 닫혔는지 넘긴다. 분석이 필요 없는 쪽은 받지 않아도 된다. */
+  readonly onClose: (reason: SheetCloseReason) => void;
   readonly children: React.ReactNode;
 };
 
@@ -51,7 +55,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
 
 type ShellProps = {
   readonly shown: boolean;
-  readonly onClose: () => void;
+  readonly onClose: (reason: SheetCloseReason) => void;
   readonly onExited: () => void;
   readonly children: React.ReactNode;
 };
@@ -59,13 +63,15 @@ type ShellProps = {
 function Shell({ shown, onClose, onExited, children }: ShellProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  const { offset, dragging, handleProps } = useDragToDismiss(onClose);
+  const closeByDrag = useCallback(() => onClose("drag"), [onClose]);
+  const closeByEscape = useCallback(() => onClose("escape"), [onClose]);
+  const { offset, dragging, handleProps } = useDragToDismiss(closeByDrag);
 
   /*
    * 붙는 즉시 가둔다. 올라오는 전환이 시작되기를 기다리면 그 사이에 누른 Escape 가
    * 먹지 않고 초점도 바깥에 남는다.
    */
-  useFocusTrap(sheetRef, true, onClose);
+  useFocusTrap(sheetRef, true, closeByEscape);
 
   /** 끄는 동안에는 손가락을 그대로 따라오게 한다. 놓은 뒤에는 전환이 그린다. */
   const style = offset > 0 ? { transform: `translateY(${offset}px)` } : undefined;
@@ -76,7 +82,7 @@ function Shell({ shown, onClose, onExited, children }: ShellProps) {
       <div
         className="bottom-sheet-dim fixed inset-0 z-40 bg-black/40"
         data-open={shown}
-        onClick={onClose}
+        onClick={() => onClose("backdrop")}
         aria-hidden="true"
       />
 
@@ -126,6 +132,34 @@ function Header({ title, description }: { readonly title: string; readonly descr
 }
 
 /**
+ * 제목 줄을 쓰는 쪽이 꾸미는 머리. `Header` 처럼 잡아 끌면 닫히고, 제목은 `Title` 로 단다.
+ * 성분 설명처럼 이름 아래에 영문명과 태그가 붙는 시트가 쓴다.
+ */
+function CustomHeader({ children }: { readonly children: React.ReactNode }) {
+  const { handleProps } = useSheet("CustomHeader");
+
+  return (
+    <div {...handleProps} className="shrink-0 cursor-grab touch-none active:cursor-grabbing">
+      <div className="flex h-5 items-center justify-center">
+        <span className="h-1 w-9 rounded-sm bg-[#B0BAC7]" aria-hidden="true" />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** 시트의 이름이 되는 제목. 시트가 이 글로 불린다. */
+function Title({ children, className }: { readonly children: React.ReactNode; readonly className?: string }) {
+  const { titleId } = useSheet("Title");
+
+  return (
+    <h2 id={titleId} className={className}>
+      {children}
+    </h2>
+  );
+}
+
+/**
  * 시트의 몸통. 길면 스스로 스크롤한다.
  *
  * 내용이 넘치면 위아래를 흐려 더 있다는 것을 알린다. 층을 겹치면 그 아래를 누를 수 없어
@@ -147,9 +181,12 @@ function Body({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
-/** 시트의 발. 담긴 버튼을 가로로 늘어놓는다. */
+/**
+ * 시트의 발. 담긴 버튼을 가로로 늘어놓는다. 몸통이 스크롤되어도 제자리에 남는다.
+ * 시트가 화면 바닥에 붙으므로 아래로 기기의 안전 영역(홈 표시줄 자리)만큼 더 띄운다.
+ */
 function Footer({ children }: { readonly children: React.ReactNode }) {
-  return <div className="flex gap-2 px-4 py-4">{children}</div>;
+  return <div className="flex shrink-0 gap-2 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">{children}</div>;
 }
 
 /** 발에 두는 되돌리기 버튼. 적용보다 좁게 둔다. */
@@ -187,6 +224,8 @@ function SubmitButton({ children, onClick, disabled }: SubmitButtonProps) {
 }
 
 BottomSheet.Header = Header;
+BottomSheet.CustomHeader = CustomHeader;
+BottomSheet.Title = Title;
 BottomSheet.Body = Body;
 BottomSheet.Footer = Footer;
 BottomSheet.ResetButton = ResetButton;

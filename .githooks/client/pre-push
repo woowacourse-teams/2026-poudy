@@ -1,11 +1,12 @@
 #!/bin/sh
 #
-# push 대상 커밋에 client/ 변경이 있으면 client 전체 검사를 실행한다.
+# push 대상 커밋에 client/ 나 루트의 워크스페이스 설정 변경이 있으면 client 전체 검사를 실행한다.
 
 set -e
 
 root=$(git rev-parse --show-toplevel)
-client_watched="client"
+# 락파일과 워크스페이스 설정은 루트에 있지만 client 의 의존성을 정한다.
+client_watched="client pnpm-lock.yaml pnpm-workspace.yaml package.json"
 
 is_zero() {
     case "$1" in
@@ -22,10 +23,10 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     if is_zero "$remote_sha"; then
         # 원격에 없는 새 브랜치는 원격에 아직 없는 커밋을 검사한다.
         client_touched=$(git log --format= --name-only "$local_sha" --not --remotes \
-            -- "$client_watched" | head -1)
+            -- $client_watched | head -1)
     else
         client_touched=$(git log --format= --name-only "$remote_sha..$local_sha" \
-            -- "$client_watched" | head -1)
+            -- $client_watched | head -1)
     fi
 
     [ -n "$client_touched" ] && client_relevant=1

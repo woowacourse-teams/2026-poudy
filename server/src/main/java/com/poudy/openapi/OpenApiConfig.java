@@ -1,6 +1,7 @@
 package com.poudy.openapi;
 
 import com.poudy.security.session.LoginMember;
+import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.servers.Server;
@@ -15,5 +16,6 @@ public class OpenApiConfig {
 
     static {
         SpringDocUtils.getConfig().addRequestWrapperToIgnore(LoginMember.class);
+        ModelResolver.enumsAsRef = true;
     }
 }

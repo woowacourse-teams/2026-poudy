@@ -11,8 +11,10 @@ import {
   IngredientPageResponse,
   ProductCountResponse,
   ProductDetailResponse,
+  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
+  type ProductSort,
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
@@ -44,6 +46,16 @@ type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, { query: serializeFilter(filter), revalidate: CATALOG_TTL });
 
+/** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
+export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
+  apiGet("/api/products", ProductPageResponse, {
+    query: new URLSearchParams({
+      sort: "CREATED_ASC" satisfies ProductSort,
+      page: String(page),
+      size: String(size),
+    }),
+  });
+
 export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
   apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
 
@@ -54,6 +66,10 @@ const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;
   return new URLSearchParams({ partId: String(partId) });
 };
+
+/** 성분이 비슷한 제품. 서버가 미리 계산해 둔 것을 최대 3개 받는다. partId 가 없으면 첫 구성품을 기준으로 한다. */
+export const fetchProductSimilarities = (productId: number, partId?: number): Promise<ProductSimilarityResponse> =>
+  apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, { query: partQuery(partId) });
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 

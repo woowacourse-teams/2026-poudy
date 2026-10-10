@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -97,5 +98,30 @@ class OpenApiContractTest {
             .andExpect(jsonPath(operation + ".responses['302'].headers.Location").exists())
             .andExpect(jsonPath(operation + ".responses['404']").exists())
             .andExpect(jsonPath(operation + ".responses['400']").doesNotExist());
+    }
+
+    @Test
+    void documentsEnumsAsNamedSchemas() throws Exception {
+        ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        String[][] references = {
+                {"SkinTypeResponse", "code", "SkinType"},
+                {"ShareMatchResponse", "status", "ShareMatchStatus"},
+                {"ProductSuggestionMatchResponse", "field", "ProductMatchField"},
+                {"IngredientSuggestionMatchResponse", "field", "IngredientMatchField"},
+                {"FeedbackRequest", "type", "FeedbackType"},
+                {"AdminFeedbackResponse", "type", "FeedbackSubjectType"},
+                {"AdminFeedbackResponse", "status", "FeedbackStatus"},
+                {"AdminProductRequestResponse", "status", "ProductRequestStatus"},
+                {"ProblemDetail", "code", "ErrorCode"}
+        };
+        for (String[] reference : references) {
+            result.andExpect(
+                jsonPath("$.components.schemas." + reference[0] + ".properties." + reference[1] + ".$ref")
+                    .value("#/components/schemas/" + reference[2])
+            );
+        }
+        result.andExpect(jsonPath("$.components.schemas.ProductSort.default").value("DEFAULT"))
+            .andExpect(jsonPath("$.components.schemas.ExcludeCode.enum", hasItem("SULFATES")))
+            .andExpect(jsonPath("$.components.schemas.ErrorCode.enum", hasItem("CONFLICTING_INGREDIENT_FILTER")));
     }
 }

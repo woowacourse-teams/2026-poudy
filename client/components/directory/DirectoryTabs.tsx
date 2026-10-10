@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { StickyBar } from "@/components/ui/StickyBar";
@@ -8,25 +9,24 @@ import { StickyBar } from "@/components/ui/StickyBar";
 type Directory = "category" | "brand";
 
 const TABS = [
-  { key: "category", label: "카테고리", href: "/categories" },
+  { key: "category", label: "제품 유형", href: "/categories" },
   { key: "brand", label: "브랜드", href: "/brands" },
 ] as const;
 
 /**
- * 디자인의 카테고리·브랜드 탐색 전환.
- * 회색 바탕 위에서 고른 쪽만 흰 알약으로 떠오른다.
+ * S27·S29 카테고리·브랜드 탐색 전환. 화면 폭을 반씩 나눈 밑줄 탭이다.
  *
- * 알약은 탭마다 따로 켜고 끄지 않고 하나만 두어 고른 자리로 미끄러진다. 탭마다 제
- * 배경을 가지면 한쪽이 꺼지고 다른 쪽이 켜질 뿐이라 툭 옮겨 붙는 것으로 보인다.
+ * 밑줄은 탭마다 따로 켜고 끄지 않고 하나만 두어 고른 탭 아래로 미끄러진다. 탭마다 제
+ * 밑줄을 가지면 한쪽이 꺼지고 다른 쪽이 켜질 뿐이라 툭 옮겨 붙는 것으로 보인다.
  *
- * 상단바(`variant="root"`, 56px) 아래에 함께 붙는다. 본문의 윗여백(12px)과 목록과의
- * 간격(12px)을 이 줄이 들고 있어, 붙었을 때도 탭이 바와 목록에 닿지 않는다. 붙은 뒤에만
- * 아래 선을 긋는다. 바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
+ * 상단바(`variant="root"`, 56px) 아래에 함께 붙는다. 바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
  */
-export function DirectoryTabs({ current }: { readonly current: Directory }) {
+export function DirectoryTabs() {
+  // 두 화면이 레이아웃을 함께 쓰므로 지금 화면은 주소로 가린다.
+  const current: Directory = usePathname().startsWith("/brands") ? "brand" : "category";
+
   /*
-   * 두 화면은 라우트가 갈라 있어 페이지가 통째로 다시 그려진다. 도착한 뒤에 옮기면
-   * 알약이 사라졌다 다시 생길 뿐이라, 누른 그 자리에서 먼저 옮긴다.
+   * 다음 화면의 목록을 받는 동안 기다리면 밑줄이 한 박자 늦게 움직인다. 누른 그 자리에서 먼저 옮긴다.
    *
    * 새 페이지가 오면 그쪽 `current` 가 진실이므로 눌린 것을 버린다. 뒤로 가기처럼
    * 누르지 않고 바뀌는 길도 있어 눌린 것만 믿고 두지 않는다. 지난 `current` 를 함께
@@ -47,20 +47,16 @@ export function DirectoryTabs({ current }: { readonly current: Directory }) {
   );
 
   return (
-    <StickyBar stuckAt={56} className="sticky top-14 z-20 bg-background px-4 py-3">
-      <nav aria-label="탐색 방식" className="relative flex h-11 gap-0.5 rounded-xl bg-[#F2F3F5] p-[3px]">
+    <StickyBar stuckAt={56} className="sticky top-14 z-20 bg-background">
+      <nav aria-label="탐색 방식" className="relative flex h-11 border-b border-[#DEE2E9]">
         {/*
-        바탕에 3px 안쪽 여백과 탭 사이 2px 간격이 있다. 알약은 그 안에서 한 칸을
-        차지하므로 여백과 간격을 뺀 절반이 폭이고, 옮길 거리는 폭에 간격을 더한 만큼이다.
-        뜻을 전하지 않는 장식이라 보조 기술에서는 감춘다. 고른 탭은 aria-current 가 알린다.
-      */}
+          아래 선 위에 겹쳐 그리도록 1px 내려 둔다. 폭은 탭 한 칸이고, 옮길 거리는 자기 폭만큼이다.
+          뜻을 전하지 않는 장식이라 보조 기술에서는 감춘다. 고른 탭은 aria-current 가 알린다.
+        */}
         <span
           aria-hidden="true"
-          className="directory-tab-pill absolute top-[3px] bottom-[3px] left-[3px] rounded-[9px] bg-background"
-          style={{
-            width: "calc((100% - 6px - 2px) / 2)",
-            transform: `translateX(calc(${activeIndex} * (100% + 2px)))`,
-          }}
+          className="directory-tab-indicator absolute -bottom-px left-0 h-0.5 w-1/2 bg-[#182132]"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
         />
 
         {TABS.map((tab) => {
@@ -73,8 +69,8 @@ export function DirectoryTabs({ current }: { readonly current: Directory }) {
               onClick={() => setPressed({ from: current, to: tab.key })}
               /* 지금 어느 화면인지는 라우트가 정한다. 눌린 것과 어긋나는 짧은 동안에도 실제를 알린다. */
               aria-current={tab.key === current ? "page" : undefined}
-              className={`directory-tab relative flex flex-1 items-center justify-center rounded-[9px] text-[13px] ${
-                selected ? "font-bold text-[#E83D61]" : "font-medium text-[#72747A]"
+              className={`relative flex flex-1 items-center justify-center text-[15px] ${
+                selected ? "font-bold text-[#182132]" : "font-medium text-[#566273]"
               }`}
             >
               {tab.label}

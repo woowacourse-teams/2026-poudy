@@ -1,0 +1,64 @@
+name: Client Preview Cleanup
+
+# PR 이 닫히면 client-ci.yaml 이 붙인 pr-<번호>.preview.poudy.site 별칭을 뗀다.
+# 뗀 뒤 이 주소는 Vercel 프로젝트의 기본 배포를 가리킨다.
+#
+# client-ci.yaml 이 preview 를 만드는 PR 과 범위를 맞추려고 같은 경로로 거른다.
+# main 대상 릴리스 PR 은 client-ci.yaml 이 항상 preview 를 만들므로 거르지 않는다.
+on:
+  pull_request:
+    types: [closed]
+    branches: [dev, main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+              - '.github/workflows/client-ci.yaml'
+
+  remove-alias:
+    needs: changes
+    # fork 에서 온 PR 은 secret 을 읽지 못해 preview 도 별칭도 만들지 않았다.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      PREVIEW_HOST: pr-${{ github.event.pull_request.number }}.preview.poudy.site
+
+    steps:
+      # 배포 도구는 플랫폼을 따라가야 하므로 버전을 묶지 않는다.
+      - name: Install Vercel CLI
+        run: npm install --global vercel
+
+      # preview 빌드가 실패한 PR 은 별칭이 없을 수 있다. 그때는 실패로 막지 않고
+      # 경고만 남긴다. alias ls 는 최대 100개만 보여 줘 있는지 미리 확인할 수 없다.
+      - name: Remove preview alias
+        run: |
+          if vercel alias rm "$PREVIEW_HOST" --yes --token=${{ secrets.VERCEL_TOKEN }}; then
+            echo "### preview 별칭 제거" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "$PREVIEW_HOST" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::$PREVIEW_HOST 별칭을 지우지 못했습니다. 별칭이 없었거나 Vercel 요청이 실패했습니다."
+          fi

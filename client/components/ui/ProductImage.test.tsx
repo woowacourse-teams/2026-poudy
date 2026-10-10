@@ -2,13 +2,16 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ProductImage } from "./ProductImage";
 
 const S3_PRODUCT =
   "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5.webp";
 const variant = (width: number) => S3_PRODUCT.replace(/\.webp$/, `_${width}.webp`);
+const CDN = "https://d2rcowg6kz7uw3.cloudfront.net";
+
+afterEach(() => vi.unstubAllEnvs());
 
 const image = () => document.querySelector("img") as HTMLImageElement;
 
@@ -21,6 +24,19 @@ describe("제품 그림", () => {
     );
     expect(image()).toHaveAttribute("sizes", "96px");
     expect(image()).toHaveAttribute("src", S3_PRODUCT);
+  });
+
+  it("CDN 설정 시 원본과 크기별 사본을 모두 CloudFront에서 받는다", () => {
+    vi.stubEnv("NEXT_PUBLIC_IMAGE_CDN_BASE_URL", CDN);
+
+    render(<ProductImage src={S3_PRODUCT} alt="" size={96} />);
+
+    expect(image()).toHaveAttribute("src", `${CDN}/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5.webp`);
+    expect(image().getAttribute("srcset")).toBe(
+      [128, 192, 288, 384, 576, 768]
+        .map((width) => `${CDN}/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_${width}.webp ${width}w`)
+        .join(", "),
+    );
   });
 
   it("S3 제품 그림이 아니면 사본 없이 주소를 그대로 쓴다", () => {

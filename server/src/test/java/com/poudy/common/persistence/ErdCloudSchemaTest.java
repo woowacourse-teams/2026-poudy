@@ -43,7 +43,9 @@ class ErdCloudSchemaTest {
                 "spacing_bottom",
                 "image_url",
                 "created_at",
-                "updated_at"
+                "updated_at",
+                "alt_text",
+                "body_text"
             )
         ),
         entry("curation_block_filter", List.of("id", "block_id", "position", "label", "created_at", "updated_at")),
@@ -84,6 +86,8 @@ class ErdCloudSchemaTest {
             )
         ),
         entry("product_component", List.of("id", "product_id", "display_order", "name", "created_at", "updated_at")),
+        entry("product_similarity_calculation", List.of("component_id")),
+        entry("product_similarity", List.of("component_id", "similar_component_id", "similarity_score")),
         entry(
             "product_correction_request",
             List.of("id", "product_id", "content", "status", "status_changed_at", "created_at")
@@ -169,6 +173,8 @@ class ErdCloudSchemaTest {
         entry("member_saved_product", List.of("member_id", "product_id")),
         entry("product", List.of("id")),
         entry("product_component", List.of("id")),
+        entry("product_similarity_calculation", List.of("component_id")),
+        entry("product_similarity", List.of("component_id", "similar_component_id")),
         entry("product_correction_request", List.of("id")),
         entry("product_correction_request_image", List.of("image_id")),
         entry("product_daily_view", List.of("view_date", "product_id")),

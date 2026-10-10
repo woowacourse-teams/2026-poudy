@@ -10,8 +10,11 @@ export type IngredientGroups = ReadonlyMap<string, IngredientGroup>;
 
 export type GroupConditionKey = "includeGroupCodes" | "excludeGroupCodes";
 
+/** 성분군 이름의 `계열` 은 뺀다. `세라마이드 계열` 보다 `세라마이드` 가 짧고 뜻이 같다. */
+export const groupDisplayName = (name: string): string => name.replace(/\s*계열$/, "");
+
 export const groupLabel = (group: IngredientGroup): string =>
-  `${group.name.replace(/\s*계열$/, "")} ${group.ingredientIds.length}종`;
+  `${groupDisplayName(group.name)} ${group.ingredientIds.length}종`;
 
 export const selectedGroupCodes = (filter: Filter): readonly string[] => [
   ...filter.includeGroupCodes,

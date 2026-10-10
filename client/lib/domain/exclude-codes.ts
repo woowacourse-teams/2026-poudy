@@ -1,6 +1,6 @@
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, ExcludeCodeResponse } from "@poudy/api/api.zod";
 
-import { type ExcludeCode, isExcludeCode } from "./filter";
+import { isExcludeCode } from "./filter";
 
 export type KnownExcludeCodeResponse = ExcludeCodeResponse & { readonly code: ExcludeCode };
 

@@ -1,30 +1,46 @@
-import type { ProductDetailResponse, ProductPartResponse } from "@poudy/api/api.zod";
+import type {
+  ExcludeCodeResponse,
+  ProductDetailResponse,
+  ProductPartResponse,
+  SimilarProductResponse,
+} from "@poudy/api/api.zod";
 import Link from "next/link";
 
-import { EffectIngredients } from "./EffectIngredients";
+import { CautionCheck } from "./CautionCheck";
 import { IngredientList } from "./IngredientList";
+import { PartTabs } from "./PartTabs";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SaveProductButton } from "./SaveProductButton";
+import { SimilarProducts } from "./SimilarProducts";
+import { UsageIngredients } from "./UsageIngredients";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
+import { PRESS_TEXT } from "@/components/ui/press";
 import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { formatPrice, ingredientSummary, unitPrice } from "@/lib/domain/product-display";
-import { effectColor } from "@/lib/domain/skin-effect-colors";
+import { withCautionCodes } from "@/lib/domain/caution-check";
+import { formatPrice, unitPrice } from "@/lib/domain/product-display";
+import { partTabId } from "@/lib/domain/product-parts";
 
-/** S05 제품 성분 상세. 문구와 구조는 design/v1.pen 을 따른다. */
+/** S24 제품 성분 상세. 문구와 구조는 design/v2.pen 을 따른다. */
 export function ProductDetail({
   product,
   entryPoint = "direct",
+  similarProducts = [],
+  excludeCodes = [],
 }: {
   readonly product: ProductDetailResponse;
   readonly entryPoint?: ProductEntryPoint;
+  /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
+  readonly similarProducts?: readonly SimilarProductResponse[];
+  /** 주의 성분 기준의 성분군 코드를 찾는 제외 성분군 목록. 비어 있으면 기준을 누를 수 없게 둔다. */
+  readonly excludeCodes?: readonly ExcludeCodeResponse[];
 }) {
   return (
     <SummaryHeader
@@ -39,50 +55,62 @@ export function ProductDetail({
       <ProductViewRecorder productId={product.id} />
       <TrackActiveTime pageType="product_detail" entityId={product.id} />
 
-      <main className="flex-1 px-4">
-        <div className="flex flex-col gap-4 pt-4 pb-3">
+      {/*
+        간격은 design/v2.pen 의 auto layout 을 그대로 옮긴다. 형제 사이는 부모의 gap 으로 띄우고,
+        padding 은 화면 가장자리(좌우 16, 위 16, 아래 40)에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
+      */}
+      <main className="flex flex-1 flex-col">
+        {/* 카테고리 경로 → 제품 요약 24, 제품 요약 → 저장 버튼 36 */}
+        <div className="flex flex-col gap-6 px-4 pt-4 pb-3">
           <CategoryPath categories={product.categories} />
-        </div>
 
-        <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-          <ProductImage
-            src={product.imageUrl || PRODUCT_PLACEHOLDER}
-            alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-            size={184}
-            className="size-[184px] object-contain"
-            loading="eager"
-          />
+          <div className="flex flex-col gap-9">
+            <section className="flex flex-col items-center gap-4">
+              <ProductImage
+                src={product.imageUrl || PRODUCT_PLACEHOLDER}
+                alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                size={184}
+                className="size-[184px] object-contain"
+                loading="eager"
+              />
 
-          <div className="flex flex-col items-center gap-2">
-            <Link
-              href={`/brands/${product.brand.id}`}
-              aria-label={`${product.brand.name} 브랜드관`}
-              className="-my-1.5 py-1.5 text-[12px] font-medium text-text-secondary active:opacity-60"
-            >
-              {product.brand.name}
-            </Link>
-            <h1 className="text-center text-[20px] font-bold text-text-primary">{product.name}</h1>
+              <div className="flex w-full flex-col items-center gap-2">
+                <Link
+                  href={`/brands/${product.brand.id}`}
+                  aria-label={`${product.brand.name} 브랜드관`}
+                  className={`${LINK} text-[12px] font-medium text-[#566273]`}
+                >
+                  {product.brand.name}
+                </Link>
+                <h1 className="text-center text-[20px] leading-[1.15] font-bold text-[#182132]">{product.name}</h1>
 
-            <div className="flex gap-2">
-              <LevelTag kind="moisture" level={product.moistureLevel} variant="pill" />
-              <LevelTag kind="oil" level={product.oilLevel} variant="pill" />
+                <div className="flex gap-2">
+                  <LevelTag kind="moisture" level={product.moistureLevel} />
+                  <LevelTag kind="oil" level={product.oilLevel} />
+                </div>
+
+                <Variants variants={product.variants} />
+              </div>
+            </section>
+
+            {/*
+              축약형은 저장 버튼이 머리 밑으로 들어가는 순간 나타난다. 축약형에도 저장 단추가 있어
+              큰 버튼을 그대로 이어받는다. 표식과 구성품 탭 사이가 60px 이라 탭이 붙기 전에
+              축약형이 먼저 나와 있고, 탭을 바꿔 패널로 올려도 축약형이 그대로 남는다.
+              표식과 버튼 사이에 gap 이 끼지 않게 한 묶음에 둔다.
+            */}
+            <div className="flex flex-col">
+              <SummaryEnd />
+              <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
             </div>
           </div>
+        </div>
 
-          <Variants variants={product.variants} />
+        {/* 저장 버튼 바로 아래에 두고, 내려가면 머리에 붙는다. */}
+        <PartTabs product={product} entryPoint={entryPoint} />
 
-          <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
-        </section>
-
-        <SummaryEnd />
-
-        {/*
-          맨 아래의 출처 안내는 문의 버튼이 덮는 자리에 놓인다. 버튼이 가리는 만큼
-          아래를 비워 `정보 수정 제안` 이 눌리게 한다.
-        */}
-        <div className="flex flex-col gap-6 px-4 pb-(--inquiry-button-clearance)">
-          <PartTabs product={product} entryPoint={entryPoint} />
-          <SelectedPart part={product.selectedPart} />
+        <div className="flex flex-col gap-6 px-4 pt-6 pb-10">
+          <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
@@ -144,12 +172,12 @@ function CompactSummary({
 }
 
 /*
- * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 위아래로 여백을 주어 손이 닿을 자리를
- * 넓히고, 같은 크기의 음수 바깥 여백으로 되돌려 경로가 차지하는 높이는 그대로 둔다.
+ * 12px 글자는 그대로 두면 누를 자리가 24px 에 못 미친다. 글자 위아래로 6px 씩 겹쳐 그린 가상 요소가
+ * 손을 받게 해 누를 자리만 넓힌다. 여백으로 넓히지 않으므로 경로가 차지하는 높이는 그대로다.
  *
  * 가만히 있을 때의 모습은 원래 배치 그대로 두고, 손이 닿는 동안에만 옅어져 눌린 것을 알린다.
  */
-const LINK = "-my-1.5 py-1.5 active:opacity-60";
+const LINK = "relative after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] active:opacity-60";
 
 function CategoryPath({ categories }: { readonly categories: ProductDetailResponse["categories"] }) {
   if (categories.length === 0) return null;
@@ -159,11 +187,11 @@ function CategoryPath({ categories }: { readonly categories: ProductDetailRespon
       {/* 경로가 여럿이면 세로로 쌓고, 한 경로 안에서는 한 줄로 이어 적는다. */}
       <ol className="flex flex-col gap-[3px]">
         {categories.map((path) => (
-          <li key={path.id} className="flex items-center gap-[5px] text-[12px] text-text-secondary">
+          <li key={path.id} className="flex items-center gap-1 text-[12px] text-[#566273]">
             <Link href={`/categories/${path.id}`} aria-label={`${path.name} 카테고리 제품`} className={LINK}>
               {path.name}
             </Link>
-            <Icon name="chevron-right" size={12} />
+            <Icon name="chevron-right" size={12} scalable />
             <Link
               href={`/categories/${path.child.id}`}
               aria-label={`${path.child.name} 카테고리 제품`}
@@ -182,22 +210,23 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
   if (variants.length === 0) return null;
 
   return (
+    // 화면 폭을 다 쓰면 용량과 가격이 양끝으로 갈라져 한 줄로 읽히지 않는다. 본문의 2/3 쯤으로 줄인다.
     <section className="w-60">
       <h3 className="sr-only">용량별 가격</h3>
-      <ul className="divide-y divide-[#E8E9EC]">
+      <ul className="divide-y divide-[#DEE2E9]">
         {variants.map((variant) => {
           const perUnit = unitPrice(variant.price, variant);
           return (
-            <li key={variant.id} className="flex h-10 items-center justify-between">
-              <span className="text-[13px] font-bold text-[#212124]">
+            <li key={variant.id} className="flex min-h-10 items-center justify-between gap-3">
+              <span className="text-[13px] font-bold text-[#182132]">
                 {variant.volumeValue}
                 {variant.volumeUnit}
               </span>
-              <span className="flex flex-col items-end gap-px">
-                <span className="text-[12px] font-medium text-[#54575C]">정가 {formatPrice(variant.price)}</span>
+              <span className="flex flex-col items-end gap-0.5">
+                <span className="text-[12px] font-medium text-[#424E5F]">정가 {formatPrice(variant.price)}</span>
                 {perUnit === undefined ? null : (
-                  <span className="text-[10px] text-[#868B94]">
-                    정가 기준 {perUnit.toLocaleString("ko-KR")}원/{variant.volumeUnit}
+                  <span className="text-[12px] text-[#566273]">
+                    {variant.volumeUnit}당 {perUnit.toLocaleString("ko-KR")}원
                   </span>
                 )}
               </span>
@@ -209,171 +238,47 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
   );
 }
 
-/**
- * 구성품이 둘 이상인 제품만 탭을 둔다. 탭은 `partId` 를 붙인 주소로 가는 링크라
- * 서버가 고른 구성품을 그린 화면이 그대로 온다. 진입 경로는 그대로 넘겨 조회 이벤트가 다시 나가지 않게 한다.
- */
-function PartTabs({
+/** 고른 구성품의 성분 정보. 구성품이 여럿이면 위의 탭이 이 패널을 바꾼다. */
+function SelectedPart({
   product,
-  entryPoint,
+  similarProducts,
+  excludeCodes,
 }: {
   readonly product: ProductDetailResponse;
-  readonly entryPoint: ProductEntryPoint;
+  readonly similarProducts: readonly SimilarProductResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
 }) {
-  if (product.productParts.length < 2) return null;
-
-  return (
-    <nav aria-label="구성품" className="pt-5">
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4">
-        {product.productParts.map((part, index) => {
-          const selected = part.id === product.selectedPart?.id;
-
-          return (
-            <li key={part.id} className="shrink-0">
-              <Link
-                href={partHref(product.id, part.id, entryPoint)}
-                scroll={false}
-                aria-current={selected && "page"}
-                className={partTabClass(selected)}
-              >
-                {part.name ?? `구성품 ${index + 1}`} <CautionBadge count={part.cautionCount} />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
-}
-
-const partHref = (productId: number, partId: number, entryPoint: ProductEntryPoint) => {
-  const query = new URLSearchParams({ partId: String(partId) });
-  if (entryPoint !== "direct") query.set("from", entryPoint);
-  return `/products/${productId}?${query}`;
-};
-
-const partTabClass = (selected: boolean) => {
-  const base = "flex h-9 items-center gap-1.5 rounded-[18px] px-3.5 text-[13px] font-semibold";
-  if (selected) return `${base} bg-[#202124] text-white`;
-  return `${base} border border-border text-text-primary`;
-};
-
-function CautionBadge({ count }: { readonly count: number }) {
-  if (count === 0) return null;
-  return <span className="text-[12px] font-bold text-[#E8590C]">주의 {count}</span>;
-}
-
-function SelectedPart({ part }: { readonly part: ProductPartResponse | null }) {
+  const part = product.selectedPart;
   if (!part) return null;
 
-  return (
-    <>
-      <SkinEffectGroups part={part} />
-      <IngredientSummary part={part} />
-      <Ingredients ingredients={part.ingredients} />
-    </>
-  );
-}
-
-function SkinEffectGroups({ part }: { readonly part: ProductPartResponse }) {
-  if (part.skinEffectGroups.length === 0) return null;
+  const tabbed = product.productParts.length >= 2;
 
   return (
-    <section data-no-select className="flex flex-col gap-3 pt-5">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[18px] font-bold text-text-primary">성분 분류</h3>
-        <p className="text-[12px] text-text-secondary">성분을 특성에 따라 확인해 보세요</p>
-      </div>
-
-      <ul>
-        {part.skinEffectGroups.map((group) => {
-          const color = effectColor(group.code);
-
-          return (
-            <li
-              key={group.id}
-              className="flex min-h-[52px] items-start gap-3 border-b border-border py-2.5 last:border-b-0"
-            >
-              <span
-                className={`flex h-[30px] w-[80px] shrink-0 items-center justify-center rounded-[15px] text-[12px] font-bold ${color.bg} ${color.text}`}
-              >
-                {group.name}
-              </span>
-              {/* 이름을 하나로 이어 붙이지 않고 성분마다 끊어 각각 성분 상세로 보낸다. 구분 기호 없이 간격으로만 나눈다. */}
-              <EffectIngredients rowId={group.id} items={group.items} />
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-/** 무첨가 태그와 성분 요약. 디자인은 회색 박스 안에 담는다. */
-function IngredientSummary({ part }: { readonly part: ProductPartResponse }) {
-  return (
-    <section
-      data-no-select
-      className="relative isolate flex flex-col gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']"
+    <div
+      role={tabbed ? "tabpanel" : undefined}
+      aria-labelledby={tabbed ? partTabId(part.id) : undefined}
+      className="flex flex-col gap-6"
     >
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[18px] font-bold text-[#202124]">성분 정보</h3>
-        <p className="text-pretty text-[12px] text-[#72747A]">
-          {ingredientSummary(
-            part.ingredients.length,
-            part.skinEffectGroups.map((group) => group.name),
-          )}
-        </p>
-      </div>
-
-      {part.excludeGroups.length > 0 ? (
-        /*
-          이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
-          세 칸은 모바일 폭에서 거의 모든 이름이 두 줄로 꺾여 두 칸으로 둔다.
-        */
-        <ul className="grid grid-cols-2 gap-1.5">
-          {/*
-            제외한 성분군을 강조한다. 들어 있는 성분군은 비활성 버튼처럼 흐리게 둔다.
-            서버는 성분군 이름만 주므로 "제외" 는 화면에서 붙인다.
-          */}
-          {part.excludeGroups.map((group) =>
-            group.contains ? (
-              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#F2F3F5] px-2.5 py-1">
-                {/* 체크가 없어도 이웃 칸과 글자 시작점이 맞도록 체크 자리를 비워 둔다. */}
-                <span aria-hidden="true" className="size-3 shrink-0" />
-                <span className="text-[12px] leading-tight font-semibold text-[#C2C5CA]">{group.name} 제외</span>
-                <span className="sr-only"> 있음</span>
-              </li>
-            ) : (
-              <li key={group.name} className="flex min-h-7 items-center gap-1 rounded-[14px] bg-[#FFF0F4] px-2.5 py-1">
-                {/* 획 굵기는 고른 네모(CheckMark)의 체크와 맞춘다. */}
-                <Icon name="check" size={12} strokeWidth={4} className="shrink-0 text-[#F04465]" />
-                <span className="text-[12px] leading-tight font-semibold text-[#54575C]">{group.name} 제외</span>
-                <span className="sr-only"> 없음</span>
-              </li>
-            ),
-          )}
-        </ul>
-      ) : null}
-
-      <p className="flex items-start gap-2 border-t border-[#E5E7EB] pt-3">
-        <Icon name="info" size={16} className="shrink-0 text-[#72747A]" />
-        <span className="text-pretty text-[11px] text-[#72747A]">
-          ‘없음’ 표시는 공개된 전성분표에서 해당 성분명이 {"확인되지\u00a0않는다는\u00a0뜻이에요."}
-        </span>
-      </p>
-    </section>
+      <UsageIngredients productId={product.id} part={part} />
+      <CautionCheck
+        productId={product.id}
+        groups={withCautionCodes(
+          part.excludeGroups,
+          excludeCodes,
+          part.ingredients.map((ingredient) => ingredient.id),
+        )}
+        ingredients={part.ingredients}
+      />
+      <Ingredients ingredients={part.ingredients} />
+      <SimilarProducts products={similarProducts} />
+    </div>
   );
 }
 
 function Ingredients({ ingredients }: { readonly ingredients: ProductPartResponse["ingredients"] }) {
   return (
     <section data-no-select className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[18px] font-bold text-[#202124]">전체 성분표</h3>
-        <p className="text-[12px] text-[#72747A]">표기 순서대로 전성분을 보여드려요</p>
-      </div>
-
+      <h3 className="text-[14px] font-bold text-[#182132]">전체 성분</h3>
       <IngredientList ingredients={ingredients} />
     </section>
   );
@@ -386,29 +291,27 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
     .replace(/\. /g, ".");
 
   return (
-    <section className="relative isolate flex gap-3 py-4 before:absolute before:inset-y-0 before:-inset-x-4 before:-z-10 before:rounded-xl before:bg-surface-subtle before:content-['']">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-[14px] bg-[#E8F5F0]">
-        <Icon name="badge-check" size={16} className="text-[#2C9A72]" />
-      </span>
-
-      <span className="flex flex-1 flex-col gap-2.5">
-        <span className="text-[14px] font-bold text-[#202124]">상품 정보 출처 안내</span>
-        <span className="text-pretty text-[12px] text-[#5F6268]">
-          브랜드 공식 전성분을 기준으로 정리했어요. {"제품\u00a0리뉴얼에\u00a0따라"} 실제 표기와 다를 수 있어요.
+    <section className="flex flex-col gap-2 rounded-xl bg-[#EFF1F5] px-4 pt-4 pb-1">
+      <div className="flex items-center gap-2">
+        <span className="flex size-[max(24px,calc(24em/14))] shrink-0 items-center justify-center rounded-xl bg-[#E0F4EA] text-[14px]">
+          <Icon name="badge-check" size={14} scalable className="text-[#0A6B52]" />
         </span>
-        <span className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-[#8B8D94]">정보 업데이트 · {date}</span>
+        <h3 className="text-[14px] font-bold text-[#182132]">정보 출처</h3>
+      </div>
 
-          {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
-          <Link
-            href={`/inquiry/products/${productId}`}
-            className="flex shrink-0 items-center gap-0.5 text-[11px] text-[#5F6268]"
-          >
-            정보 수정 제안
-            <Icon name="chevron-right" size={12} />
-          </Link>
-        </span>
-      </span>
+      <p className="text-pretty text-[13px] leading-normal text-[#424E5F]">
+        브랜드 공식 정보와 공개된 전성분표 기준이에요. {"리뉴얼로\u00a0실제\u00a0표기와"} 다를 수 있어요.
+      </p>
+      <p className="text-[12px] text-[#566273]">업데이트 {date}</p>
+
+      {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
+      <Link
+        href={`/inquiry/products/${productId}`}
+        className={`flex min-h-11 items-center justify-between gap-2 border-t border-[#DEE2E9] text-[14px] font-semibold text-[#182132] ${PRESS_TEXT}`}
+      >
+        정보가 다르다면 수정을 제안해 주세요
+        <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#566273]" />
+      </Link>
     </section>
   );
 }

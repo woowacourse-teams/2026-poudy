@@ -12,8 +12,21 @@ type IconProps = {
   readonly filled?: boolean;
   /** 선 굵기. 작게 그리는 아이콘은 굵게 해야 또렷하다. */
   readonly strokeWidth?: number;
+  /**
+   * 글자 옆에 놓인 아이콘을 글자와 함께 키울지. 기기 글자 크기를 키우면 글자만 커지고
+   * px 로 잡은 아이콘은 그대로 남는다. 아이콘의 글자 크기를 제 높이(px)로 두고 폭과 높이를 em 으로 잡아,
+   * 1배에서는 지금과 같은 정수 px 로 그리고 배율이 바뀌면 글자와 같은 비율로 커지게 한다.
+   */
+  readonly scalable?: boolean;
   readonly className?: string;
 };
+
+/** 아이콘의 글자 크기를 높이(px)로 두고, 폭과 높이를 그에 맞춘 em 으로 바꾼다. */
+export const scalableIconStyle = (width: number, height: number): React.CSSProperties => ({
+  fontSize: `${height}px`,
+  width: `${width / height}em`,
+  height: "1em",
+});
 
 /**
  * 스프라이트의 아이콘을 참조한다.
@@ -36,14 +49,18 @@ export function Icon({
   preserveRatio = false,
   filled = false,
   strokeWidth = 1.5,
+  scalable = false,
   className,
 }: IconProps) {
   const fillOnly = isFillOnly(name);
+  const drawnWidth = width ?? size;
+  const drawnHeight = height ?? size;
 
   return (
     <svg
-      width={width ?? size}
-      height={height ?? size}
+      width={drawnWidth}
+      height={drawnHeight}
+      style={scalable ? scalableIconStyle(drawnWidth, drawnHeight) : undefined}
       // 가로세로를 따로 준 경우에만 늘려 채운다. 비율을 지키려면 preserveRatio 를 쓴다.
       preserveAspectRatio={width && height && !preserveRatio ? "none" : undefined}
       className={className}

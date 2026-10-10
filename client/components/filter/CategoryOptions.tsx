@@ -43,7 +43,7 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
               <Icon
                 name="chevron-down"
                 size={16}
-                className={`category-disclosure-chevron ${expanded ? "rotate-180 text-[#555A62]" : "text-[#868B94]"}`}
+                className={`disclosure-chevron ${expanded ? "rotate-180 text-[#555A62]" : "text-[#868B94]"}`}
               />
             </button>
 
@@ -51,7 +51,7 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
               접힌 것도 지우지 않고 남겨 둔다. 열고 닫는 전환은 두 높이 사이를 잇는 것이라
               한쪽이 없으면 걸리지 않는다. 대신 접힌 동안에는 `inert` 로 손과 초점을 막는다.
             */}
-            <div className="category-disclosure" data-open={expanded}>
+            <div className="disclosure" data-open={expanded}>
               <div>
                 <ul inert={!expanded}>
                   {[{ id: 0, name: "전체", productCount: category.productCount }, ...category.children].map((child) => {
