@@ -36,6 +36,11 @@ API(`staging.poudy.site`)와 사이트가 달라 iOS가 쿠키를 막습니다.
   Nginx를 제거합니다.
 - Vercel staging과 PR preview는 같은 `staging.poudy.site/api`를 부르므로 DNS를 옮겨도
   프론트 EC2 Nginx를 거쳐 계속 동작합니다.
+- PR preview는 Vercel에 두고 `pr-<PR 번호>.preview.poudy.site`로 엽니다. `client-ci.yaml`이
+  배포 뒤 별칭을 붙이고 PR이 닫히면 `client-preview-cleanup.yaml`이 뗍니다. `*.vercel.app`은
+  API와 다른 사이트라 세션 쿠키가 실리지 않습니다. 와일드카드 인증서는 Cloudflare의
+  `_acme-challenge.preview` NS 레코드를 `ns1.vercel-dns.com`·`ns2.vercel-dns.com`으로 위임해
+  Vercel이 발급·갱신합니다. 이 레코드를 지우면 갱신이 멈춥니다.
 
 배포 산출물은 다음 스크립트로 생성합니다. 출력 디렉터리는 새로 만들어져야 합니다.
 
