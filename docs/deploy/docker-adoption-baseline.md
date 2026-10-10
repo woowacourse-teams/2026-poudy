@@ -135,7 +135,8 @@ Staging Vercel FE, PostgreSQL은 변경하지 않는다. 현재 working tree에�
 - Host networking으로 기존 API `:8080`, loopback-only Actuator `:8081`, EC2 instance role의
   IMDS 접근을 보존한다. DB와 S3가 현재 영속 데이터 저장소이므로 호스트 JSON data/state
   mount는 추가하지 않는다. 환경별 비밀 값은 기존 `/etc/poudy/backend.env`에서 주입하고,
-  비밀이 없는 `application-prod.yml`은 이미지에 포함한다.
+  비밀이 없는 설정은 jar 안의 `application-*.yml`을 그대로 쓴다. jar 밖 `/app/config/`에
+  따로 두면 jar 안의 프로필 전용 파일보다 우선해, `application-staging.yml`의 값을 덮는다.
 - 현재 애플리케이션이 HEIC 처리에 host의 `prlimit`과 `heif-convert`를 사용하므로 이
   프로그램을 image 안에 포함한다. Docker container logs는 journald로 보내 기존 Alloy/Loki
   수집 경로를 유지한다.
