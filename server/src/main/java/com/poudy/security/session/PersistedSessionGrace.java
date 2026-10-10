@@ -1,6 +1,5 @@
 package com.poudy.security.session;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import org.apache.catalina.Lifecycle;
@@ -15,32 +14,19 @@ public class PersistedSessionGrace implements WebServerFactoryCustomizer<TomcatS
     private static final Duration GRACE = Duration.ofMinutes(5);
 
     private final LoginSession loginSession;
-    private final Clock clock;
 
-    public PersistedSessionGrace(LoginSession loginSession, Clock clock) {
+    public PersistedSessionGrace(LoginSession loginSession) {
         this.loginSession = loginSession;
-        this.clock = clock;
     }
 
     @Override
     public void customize(TomcatServletWebServerFactory factory) {
         factory.addContextCustomizers(context -> context.addLifecycleListener(event -> {
             if (Lifecycle.BEFORE_STOP_EVENT.equals(event.getType())) {
-                extend(context.getManager().findSessions());
+                Arrays.stream(context.getManager().findSessions())
+                    .map(Session::getSession)
+                    .forEach(session -> loginSession.grace(session, GRACE));
             }
         }));
-    }
-
-    public void extend(Session[] sessions) {
-        Arrays.stream(sessions).forEach(this::extend);
-    }
-
-    private void extend(Session session) {
-        int maxInactiveSeconds = session.getMaxInactiveInterval();
-        long idleDeadline = session.getThisAccessedTimeInternal() + Duration.ofSeconds(maxInactiveSeconds).toMillis();
-        if (maxInactiveSeconds > 0 && idleDeadline - clock.millis() < GRACE.toMillis()) {
-            session.setMaxInactiveInterval(maxInactiveSeconds + Math.toIntExact(GRACE.toSeconds()));
-        }
-        loginSession.graceExpiry(session.getSession(), GRACE);
     }
 }

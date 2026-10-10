@@ -29,6 +29,8 @@ class LoginSessionTest {
     private static final long MEMBER_ID = 7L;
     private static final String PREVIEW = "https://pr-111.preview.poudy.site";
     private static final String STATE = "state-1";
+    private static final Duration GRACE = Duration.ofMinutes(5);
+    private static final int IDLE_SECONDS = 600;
     private static final OAuthAccount ACCOUNT = new OAuthAccount(OAuthProvider.KAKAO, "4321", "new@example.com", true);
 
     @AfterEach
@@ -84,13 +86,13 @@ class LoginSessionTest {
     }
 
     @Test
-    @DisplayName("로그인 후 만료까지 5분이 안 남은 세션은 만료 시각을 5분 늦춘다")
+    @DisplayName("배포로 종료할 때 로그인 후 만료까지 5분이 안 남은 세션은 만료 시각을 5분 늦춘다")
     void gracesExpiryAboutToPass() {
         MockHttpServletRequest request = signedInRequest();
         MockHttpSession session = (MockHttpSession) request.getSession();
         Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(2));
 
-        sessionAt(stoppedAt).graceExpiry(session, Duration.ofMinutes(5));
+        sessionAt(stoppedAt).grace(session, GRACE);
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(4))).expireIfOverdue(request);
         assertThat(session.isInvalid()).isFalse();
@@ -99,16 +101,71 @@ class LoginSessionTest {
     }
 
     @Test
-    @DisplayName("로그인 후 만료까지 5분 이상 남은 세션은 만료 시각을 그대로 둔다")
+    @DisplayName("배포로 종료할 때 로그인 후 만료까지 5분 이상 남은 세션은 만료 시각을 그대로 둔다")
     void keepsExpiryWithEnoughTime() {
         MockHttpServletRequest request = signedInRequest();
         MockHttpSession session = (MockHttpSession) request.getSession();
         Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(6));
 
-        sessionAt(stoppedAt).graceExpiry(session, Duration.ofMinutes(5));
+        sessionAt(stoppedAt).grace(session, GRACE);
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).expireIfOverdue(request);
         assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료까지 5분이 안 남은 세션은 비활동 만료를 5분 늘린다")
+    void gracesIdleTimeoutAboutToPass() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(8)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료가 막 지난 세션도 비활동 만료를 5분 늘린다")
+    void gracesIdleTimeoutJustPassed() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(11)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료까지 5분 이상 남은 세션은 비활동 만료를 그대로 둔다")
+    void keepsIdleTimeoutWithEnoughTime() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(1)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS);
+    }
+
+    @Test
+    @DisplayName("비활동 만료가 없는 세션은 배포로 종료할 때 그대로 둔다")
+    void keepsSessionWithoutIdleTimeout() {
+        MockHttpSession session = idleSession(-1);
+
+        idleSessionAt(session, Duration.ofDays(30)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(-1);
+    }
+
+    @Test
+    @DisplayName("비활동 만료를 늘린 세션은 다음 요청에서 원래 비활동 만료로 돌아간다")
+    void restoresIdleTimeoutOnNextRequest() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+        idleSessionAt(session, Duration.ofMinutes(8)).grace(session, GRACE);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(session);
+
+        idleSessionAt(session, Duration.ofMinutes(9)).expireIfOverdue(request);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS);
+        idleSessionAt(session, Duration.ofMinutes(10)).grace(session, GRACE);
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
     }
 
     @Test
@@ -255,6 +312,16 @@ class LoginSessionTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, request, new MockHttpServletResponse());
         return request;
+    }
+
+    private MockHttpSession idleSession(int idleSeconds) {
+        MockHttpSession session = new MockHttpSession();
+        session.setMaxInactiveInterval(idleSeconds);
+        return session;
+    }
+
+    private LoginSession idleSessionAt(MockHttpSession session, Duration sinceLastAccess) {
+        return sessionAt(Instant.ofEpochMilli(session.getLastAccessedTime()).plus(sinceLastAccess));
     }
 
     private LoginSession sessionAt(Instant now) {

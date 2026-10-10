@@ -28,6 +28,7 @@ public class LoginSession {
     private static final String SIGNUP_ACCOUNT = LoginSession.class.getName() + ".signupAccount";
     private static final String RETURN_ORIGIN = LoginSession.class.getName() + ".returnOrigin";
     private static final String RETURN_ORIGIN_STATE = LoginSession.class.getName() + ".returnOriginState";
+    private static final String GRACED_IDLE_TIMEOUT = LoginSession.class.getName() + ".gracedIdleTimeout";
     private static final Duration HOLD_TIMEOUT = Duration.ofMinutes(10);
 
     private final Duration idleTimeout;
@@ -147,10 +148,32 @@ public class LoginSession {
         }
         if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt && !clock.instant().isBefore(expiresAt)) {
             session.invalidate();
+            return;
+        }
+        if (session.getAttribute(GRACED_IDLE_TIMEOUT) instanceof Integer idleSeconds) {
+            session.setMaxInactiveInterval(idleSeconds);
+            session.removeAttribute(GRACED_IDLE_TIMEOUT);
         }
     }
 
-    public void graceExpiry(HttpSession session, Duration grace) {
+    public void grace(HttpSession session, Duration grace) {
+        graceIdleTimeout(session, grace);
+        graceExpiry(session, grace);
+    }
+
+    private void graceIdleTimeout(HttpSession session, Duration grace) {
+        int idleSeconds = session.getMaxInactiveInterval();
+        Instant idleDeadline = Instant.ofEpochMilli(session.getLastAccessedTime()).plusSeconds(idleSeconds);
+        if (idleSeconds <= 0 || !clock.instant().plus(grace).isAfter(idleDeadline)) {
+            return;
+        }
+        if (!(session.getAttribute(GRACED_IDLE_TIMEOUT) instanceof Integer)) {
+            session.setAttribute(GRACED_IDLE_TIMEOUT, idleSeconds);
+        }
+        session.setMaxInactiveInterval(idleSeconds + Math.toIntExact(grace.toSeconds()));
+    }
+
+    private void graceExpiry(HttpSession session, Duration grace) {
         if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt
             && clock.instant().plus(grace).isAfter(expiresAt)) {
             session.setAttribute(EXPIRES_AT, expiresAt.plus(grace));

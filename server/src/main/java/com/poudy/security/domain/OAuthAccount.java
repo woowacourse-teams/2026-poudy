@@ -6,6 +6,8 @@ import java.util.Map;
 
 public final class OAuthAccount implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final OAuthProvider provider;
     private final String providerId;
     private final String email;
