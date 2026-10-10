@@ -104,6 +104,19 @@ listener_addresses="$(ss -H -ltn 'sport = :8081' | awk '{print $4}')"
 [[ "${listener_addresses}" == '127.0.0.1:8081' ]] \
     || fail_validation "unexpected :8081 listener: ${listener_addresses:-none}"
 
+# 앱은 검색 엔진 색인을 허용하는 환경(production)에서만 runtime sitemap을 제공하고
+# 그 밖에서는 404를 돌려줍니다. 색인하지 않는 환경은 sitemap이 막혀 있는지만 확인합니다.
+if [[ "${POUDY_SITE_INDEXED}" != 'true' ]]; then
+    sitemap_status="$(curl --silent --show-error --max-time 10 "${CURL_TLS_ARGS[@]}" \
+        --output /dev/null \
+        --write-out '%{http_code}' \
+        "${BASE_URL}/sitemap-pages.xml")" \
+        || fail_validation 'page sitemap probe failed'
+    [[ "${sitemap_status}" == '404' ]] \
+        || fail_validation "sitemap must be hidden on a non-indexed site: ${sitemap_status}"
+    exit 0
+fi
+
 # 가장 작은 runtime sitemap만 한 번 warm-up한 뒤 query와 개인화/RSC 헤더를
 # 바꾼 요청이 같은 공개 cache entry를 사용하는지 확인합니다. 운영 캐시는 지우지
 # 않으므로 정상 stale/background update 중인 배포도 실패시키지 않습니다.
