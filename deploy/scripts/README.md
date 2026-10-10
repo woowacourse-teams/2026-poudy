@@ -33,6 +33,20 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 별도로 준비하며, CodeDeploy는 이를 변경하지 않고 검증만 합니다. 빠진 항목이 있으면
 원인을 로그에 남기고 기존 서비스를 재시작하지 않습니다.
 
+### 운영 백엔드 호스트 방화벽
+
+운영 백엔드 `:8080` 방화벽은 staging 설정과 섞이지 않도록 별도 스크립트로 설치합니다.
+운영 백엔드 EC2에서만 다음을 실행합니다.
+
+```bash
+sudo ./deploy/scripts/install-production-backend-firewall.sh
+```
+
+스크립트는 IMDSv2의 인스턴스 ID가 production backend와 일치하는지 확인한 뒤
+`nftables`와 저장소의 규칙·systemd 파일을 설치합니다. 절차와 검증 방법은
+[`deploy/monitoring/README.md`](../monitoring/README.md)의 “운영 백엔드 8080 호스트 방화벽”을
+참고합니다.
+
 ### HEIC 런타임
 
 `bootstrap-backend.sh`는 Amazon Linux 2023의 `libheif-tools`, `libde265`,
