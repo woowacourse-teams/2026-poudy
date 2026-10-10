@@ -84,6 +84,34 @@ class LoginSessionTest {
     }
 
     @Test
+    @DisplayName("로그인 후 만료까지 5분이 안 남은 세션은 만료 시각을 5분 늦춘다")
+    void gracesExpiryAboutToPass() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(2));
+
+        sessionAt(stoppedAt).graceExpiry(session, Duration.ofMinutes(5));
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(4))).expireIfOverdue(request);
+        assertThat(session.isInvalid()).isFalse();
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(5))).expireIfOverdue(request);
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("로그인 후 만료까지 5분 이상 남은 세션은 만료 시각을 그대로 둔다")
+    void keepsExpiryWithEnoughTime() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(6));
+
+        sessionAt(stoppedAt).graceExpiry(session, Duration.ofMinutes(5));
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).expireIfOverdue(request);
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
     @DisplayName("로그인하지 않은 세션은 건드리지 않는다")
     void ignoresSessionWithoutSignIn() {
         MockHttpServletRequest request = new MockHttpServletRequest();

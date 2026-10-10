@@ -33,6 +33,7 @@ import org.springframework.transaction.support.TransactionTemplate;
         "KAKAO_CLIENT_SECRET=test-kakao-secret",
         "GOOGLE_CLIENT_ID=test-google-id",
         "GOOGLE_CLIENT_SECRET=test-google-secret",
+        "POUDY_SESSION_STORE_DIR=${java.io.tmpdir}",
         "POUDY_DB_URL=${POUDY_TEST_DB_URL:jdbc:postgresql://localhost:5432/poudy_test}",
         "POUDY_DB_STATEMENT_TIMEOUT_MS=300",
         "spring.datasource.hikari.maximum-pool-size=2",

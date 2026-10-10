@@ -55,7 +55,7 @@ spring:
 
 server:
   shutdown: graceful
-  # 세션은 서버 메모리에 있어 배포하면 모두 로그아웃된다.
+  # 세션은 서버 메모리에 있다. 운영 프로필은 종료할 때 파일에 남기고 다시 뜰 때 불러온다(application-prod.yml).
   # 쿠키 수명은 앱 세션에 맞춘 전역 값이고, 웹 세션의 짧은 수명은 poudy.auth.web-session 이 판정한다.
   servlet:
     session:
