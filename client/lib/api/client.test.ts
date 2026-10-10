@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { apiGet, apiPost, apiUrl, INVALID_RESPONSE } from "./client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiUrl, INVALID_RESPONSE, publicApiUrl } from "./client";
 
 // 브라우저에서는 오류 이벤트를 남기려고 분석 모듈을 불러온다. 여기서는 부른 사실만 확인한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -134,5 +134,93 @@ describe("응답 검증", () => {
     const [error, properties] = captureException.mock.calls[0];
     expect((error as Error).message).toBe(`${INVALID_RESPONSE} /api/brands/:id/items: items.*.name`);
     expect(properties).toEqual({ surface: "/api/brands/:id/items", fields: ["items.*.name"] });
+  });
+});
+
+describe("페이지 이동용 API 주소", () => {
+  it("서버에서 그려도 서버 전용 주소 대신 공개 주소를 쓴다", () => {
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "http://127.0.0.1:8081");
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://staging.poudy.site");
+
+    expect(publicApiUrl("/api/oauth2/authorization/kakao")).toBe(
+      "https://staging.poudy.site/api/oauth2/authorization/kakao",
+    );
+  });
+
+  it("공개 주소가 비어 있으면 같은 출처의 경로를 쓴다", () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
+
+    expect(publicApiUrl("/api/oauth2/authorization/google")).toBe("/api/oauth2/authorization/google");
+  });
+});
+
+describe("로그인 세션 요청", () => {
+  const Member = z.object({ id: z.number() });
+
+  const prepareFetch = () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+    return fetchMock;
+  };
+
+  it("세션 조회는 쿠키를 함께 보내고 응답을 담아 두지 않는다", async () => {
+    const fetchMock = prepareFetch();
+
+    await apiGet("/api/members/me", Member, { withSession: true });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+      credentials: "include",
+      cache: "no-store",
+    });
+  });
+
+  it("변경 요청은 쿠키와 함께 JSON 본문을 PATCH 로 보내고 응답을 검증해 돌려준다", async () => {
+    const fetchMock = prepareFetch();
+
+    const member = await apiPatch("/api/members/me/profile", Member, { gender: "FEMALE" });
+
+    expect(member).toEqual({ id: 1 });
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me/profile", {
+      credentials: "include",
+      cache: "no-store",
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gender: "FEMALE" }),
+    });
+  });
+
+  it("세션이 필요한 POST 는 쿠키를 함께 보낸다", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+
+    await apiPost("/api/members/logout", undefined, { withSession: true });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/logout", {
+      credentials: "include",
+      cache: "no-store",
+      method: "POST",
+    });
+  });
+
+  it("삭제 요청은 쿠키와 함께 DELETE 로 보내고 실패하면 ApiError 로 알린다", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ code: "UNAUTHORIZED", detail: "로그인이 필요합니다." }), { status: 401 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
+
+    await apiDelete("/api/members/me");
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+      credentials: "include",
+      cache: "no-store",
+      method: "DELETE",
+    });
+    await expect(apiDelete("/api/members/me")).rejects.toMatchObject({ status: 401, code: "UNAUTHORIZED" });
   });
 });

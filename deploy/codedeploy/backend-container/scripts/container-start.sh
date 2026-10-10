@@ -16,6 +16,7 @@ exec /usr/bin/docker run \
     --pids-limit 256 \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+    --volume /var/lib/poudy-sessions:/var/lib/poudy-sessions \
     --cap-drop ALL \
     --security-opt no-new-privileges \
     --log-driver journald \

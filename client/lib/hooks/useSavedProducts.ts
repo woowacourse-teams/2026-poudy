@@ -1,26 +1,63 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useSyncExternalStore } from "react";
 
+import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import {
   getSavedProductsServerSnapshot,
   getSavedProductsSnapshot,
+  type SaveResult,
+  saveProduct,
+  type SavedProductsStatus,
   subscribeSavedProducts,
-  toggleSaved,
+  unsaveProduct,
 } from "@/lib/storage/saved-products";
 
-/**
- * 저장함은 localStorage 에 있어 서버가 알 수 없다.
- * 서버 스냅샷을 빈 목록으로 두어 첫 HTML 이 어긋나지 않게 한다.
- */
+const LOGIN_PATH = "/login";
+
+const useSignedInRequest = (status: SavedProductsStatus) => {
+  const router = useRouter();
+
+  return useCallback(
+    (request: (productId: number) => Promise<SaveResult>, productId: number): Promise<SaveResult> | null => {
+      if (status === "signedOut") {
+        router.push(LOGIN_PATH);
+        return null;
+      }
+      if (status === "adminSession") {
+        window.alert(ADMIN_SESSION_MESSAGE);
+        return null;
+      }
+      return request(productId).then((result) => {
+        if (result === "signedOut") router.push(LOGIN_PATH);
+        if (result === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
+        return result;
+      });
+    },
+    [status, router],
+  );
+};
+
 export const useSavedProducts = () => {
-  const savedIds = useSyncExternalStore(
+  const { status, ids } = useSyncExternalStore(
     subscribeSavedProducts,
     getSavedProductsSnapshot,
     getSavedProductsServerSnapshot,
   );
+  const run = useSignedInRequest(status);
 
-  const isSaved = useCallback((productId: number) => savedIds.includes(productId), [savedIds]);
+  const isSaved = useCallback((productId: number) => ids.includes(productId), [ids]);
+  const save = useCallback((productId: number) => run(saveProduct, productId), [run]);
+  const unsave = useCallback((productId: number) => run(unsaveProduct, productId), [run]);
 
-  return { savedIds, toggle: toggleSaved, isSaved };
+  const toggle = useCallback(
+    (productId: number): Promise<SaveResult> | null => {
+      if (ids.includes(productId)) return unsave(productId);
+      return save(productId);
+    },
+    [ids, save, unsave],
+  );
+
+  return { status, isSaved, save, unsave, toggle };
 };

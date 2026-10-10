@@ -1,30 +1,53 @@
 "use client";
 
+import type { MemberProfileRequest } from "@poudy/api/api.zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
+import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 
-const GENDERS = ["여성", "남성"] as const;
-const AGE_GROUPS = ["10대", "20대", "30대", "40대", "50대", "60대 이상"] as const;
-const SKIN_TYPES = [
-  { value: "dry", name: "건성", description: "세안 후 자주 당겨요" },
-  { value: "oily", name: "지성", description: "오후면 번들거려요" },
-  { value: "sensitive", name: "민감성", description: "쉽게 붉어지고 따가워요" },
-  { value: "combination", name: "복합성", description: "T존만 번들거려요" },
-] as const;
+type Gender = NonNullable<MemberProfileRequest["gender"]>;
+type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
+type SkinType = NonNullable<MemberProfileRequest["skinType"]>;
 
-type ChoiceProps = {
+const GENDERS: readonly { readonly value: Gender; readonly label: string }[] = [
+  { value: "FEMALE", label: "여성" },
+  { value: "MALE", label: "남성" },
+];
+const AGE_RANGES: readonly { readonly value: AgeRange; readonly label: string }[] = [
+  { value: "TEENS", label: "10대" },
+  { value: "TWENTIES", label: "20대" },
+  { value: "THIRTIES", label: "30대" },
+  { value: "FORTIES", label: "40대" },
+  { value: "FIFTIES", label: "50대" },
+  { value: "SIXTIES_OR_OLDER", label: "60대 이상" },
+];
+const SKIN_TYPES: readonly {
+  readonly value: SkinType;
+  readonly icon: string;
+  readonly name: string;
+  readonly description: string;
+}[] = [
+  { value: "DRY", icon: "dry", name: "건성", description: "세안 후 자주 당겨요" },
+  { value: "OILY", icon: "oily", name: "지성", description: "오후면 번들거려요" },
+  { value: "SENSITIVE", icon: "sensitive", name: "민감성", description: "쉽게 붉어지고 따가워요" },
+  { value: "COMBINATION", icon: "combination", name: "복합성", description: "T존만 번들거려요" },
+];
+const UNKNOWN_SKIN_TYPE: SkinType = "UNKNOWN";
+
+type ChoiceProps<T extends string> = {
   readonly group: string;
-  readonly value: string;
+  readonly value: T;
   readonly selected: boolean;
-  readonly onSelect: (value: string) => void;
+  readonly onSelect: (value: T | null) => void;
   readonly children: React.ReactNode;
   readonly card?: boolean;
 };
 
-function Choice({ group, value, selected, onSelect, children, card = false }: ChoiceProps) {
+function Choice<T extends string>({ group, value, selected, onSelect, children, card = false }: ChoiceProps<T>) {
   return (
     <label className="relative cursor-pointer">
       <input
@@ -33,6 +56,9 @@ function Choice({ group, value, selected, onSelect, children, card = false }: Ch
         value={value}
         checked={selected}
         onChange={() => onSelect(value)}
+        onClick={() => {
+          if (selected) onSelect(null);
+        }}
         className="peer sr-only"
       />
       <span
@@ -40,7 +66,6 @@ function Choice({ group, value, selected, onSelect, children, card = false }: Ch
           card ? "min-h-[108px] flex-col items-start gap-2 p-3.5" : "h-[52px] items-center justify-center gap-2"
         }`}
       >
-        {!card && selected ? <Icon name="check" size={16} strokeWidth={2} /> : null}
         {children}
       </span>
       {card && selected ? (
@@ -55,28 +80,82 @@ function Choice({ group, value, selected, onSelect, children, card = false }: Ch
   );
 }
 
+const startLabel = (answered: boolean): string => {
+  if (answered) return "시작하기";
+  return "하나 이상 골라 주세요";
+};
+
 export function OnboardingScreen() {
-  const [gender, setGender] = useState("");
-  const [ageGroup, setAgeGroup] = useState("");
-  const [skinType, setSkinType] = useState("");
+  const [gender, setGender] = useState<Gender | null>(null);
+  const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
+  const [skinType, setSkinType] = useState<SkinType | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [adminSession, setAdminSession] = useState(false);
   const router = useRouter();
-  const canStart = Boolean(gender && ageGroup && skinType);
+  const answered = Boolean(gender || ageRange || skinType);
+  const canStart = answered && !saving;
+
+  useEffect(() => {
+    findMe()
+      .then((member) => {
+        setGender(member.gender);
+        setAgeRange(member.ageRange);
+        setSkinType(member.skinType);
+      })
+      .catch((error: unknown) => {
+        if (isSignedOut(error)) router.replace("/login");
+        if (isAdminSession(error)) setAdminSession(true);
+      });
+  }, [router]);
 
   const start = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (canStart) router.push("/");
+    if (!canStart) return;
+
+    setSaving(true);
+    setFailed(false);
+    updateMyProfile({ gender, ageRange, skinType })
+      .then(() => router.replace("/"))
+      .catch((error: unknown) => {
+        if (isSignedOut(error)) {
+          router.replace("/login");
+          return;
+        }
+        if (isAdminSession(error)) {
+          setAdminSession(true);
+          return;
+        }
+        setFailed(true);
+        setSaving(false);
+      });
   };
+
+  if (adminSession) {
+    return (
+      <AdminSessionNotice className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 text-center" />
+    );
+  }
 
   return (
     <main className="flex min-h-svh flex-col">
       <form onSubmit={start} className="flex flex-1 flex-col">
         <div className="flex-1 px-4 pt-10 pb-12">
-          <h1 className="text-[24px] leading-[1.4] font-bold tracking-tight">
-            피부에 맞는 제품을 <br />
-            보여 드릴게요
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-[24px] leading-[1.4] font-bold tracking-tight">
+              피부에 맞는 제품을 <br />
+              보여 드릴게요
+            </h1>
+            <button
+              type="button"
+              onClick={() => router.replace("/")}
+              className="mt-1 shrink-0 rounded-sm py-1 text-[14px] text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+            >
+              건너뛰기
+            </button>
+          </div>
           <p className="mt-3 text-[15px] leading-relaxed text-text-secondary">
-            세 가지만 골라 주세요. 나중에 언제든 바꿀 수 있어요.
+            아는 것만 골라 주세요. 나중에 언제든 바꿀 수 있어요.
           </p>
           <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-relaxed text-text-secondary">
             <svg
@@ -101,9 +180,9 @@ export function OnboardingScreen() {
           <fieldset className="mt-9">
             <legend className="mb-3 text-[16px] font-bold">성별</legend>
             <div className="grid grid-cols-2 gap-2.5">
-              {GENDERS.map((value) => (
+              {GENDERS.map(({ value, label }) => (
                 <Choice key={value} group="gender" value={value} selected={gender === value} onSelect={setGender}>
-                  <span className={gender === value ? "font-bold" : "font-medium text-[#55585e]"}>{value}</span>
+                  <span className={gender === value ? "font-bold" : "font-medium text-[#55585e]"}>{label}</span>
                 </Choice>
               ))}
             </div>
@@ -112,15 +191,15 @@ export function OnboardingScreen() {
           <fieldset className="mt-9">
             <legend className="mb-3 text-[16px] font-bold">나이대</legend>
             <div className="grid grid-cols-3 gap-2.5">
-              {AGE_GROUPS.map((value) => (
+              {AGE_RANGES.map(({ value, label }) => (
                 <Choice
                   key={value}
-                  group="age-group"
+                  group="age-range"
                   value={value}
-                  selected={ageGroup === value}
-                  onSelect={setAgeGroup}
+                  selected={ageRange === value}
+                  onSelect={setAgeRange}
                 >
-                  <span className={ageGroup === value ? "font-bold" : "font-medium text-[#55585e]"}>{value}</span>
+                  <span className={ageRange === value ? "font-bold" : "font-medium text-[#55585e]"}>{label}</span>
                 </Choice>
               ))}
             </div>
@@ -129,7 +208,7 @@ export function OnboardingScreen() {
           <fieldset className="mt-9">
             <legend className="mb-3 text-[16px] font-bold">피부 타입</legend>
             <div className="grid grid-cols-2 gap-2.5">
-              {SKIN_TYPES.map(({ value, name, description }) => (
+              {SKIN_TYPES.map(({ value, icon, name, description }) => (
                 <Choice
                   key={value}
                   group="skin-type"
@@ -138,7 +217,7 @@ export function OnboardingScreen() {
                   onSelect={setSkinType}
                   card
                 >
-                  <Image src={`/images/skin-types/${value}.svg`} alt="" width={24} height={24} />
+                  <Image src={`/images/skin-types/${icon}.svg`} alt="" width={24} height={24} />
                   <span className="font-bold">{name}</span>
                   <span className="text-[13px] leading-relaxed text-text-secondary">{description}</span>
                 </Choice>
@@ -148,26 +227,34 @@ export function OnboardingScreen() {
               <input
                 type="radio"
                 name="skin-type"
-                value="unknown"
-                checked={skinType === "unknown"}
-                onChange={() => setSkinType("unknown")}
+                value={UNKNOWN_SKIN_TYPE}
+                checked={skinType === UNKNOWN_SKIN_TYPE}
+                onChange={() => setSkinType(UNKNOWN_SKIN_TYPE)}
+                onClick={() => {
+                  if (skinType === UNKNOWN_SKIN_TYPE) setSkinType(null);
+                }}
                 className="peer sr-only"
               />
               <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
                 내 피부 타입을 잘 모르겠어요
               </span>
-              <Icon name={skinType === "unknown" ? "check" : "chevron-right"} size={16} />
+              <Icon name={skinType === UNKNOWN_SKIN_TYPE ? "check" : "chevron-right"} size={16} />
             </label>
           </fieldset>
         </div>
 
         <div className="sticky bottom-0 border-t border-border bg-background px-4 pt-3 pb-6">
+          {failed ? (
+            <p role="alert" className="mb-3 text-center text-[14px] text-text-secondary">
+              저장하지 못했어요. 잠시 후 다시 시도해 주세요.
+            </p>
+          ) : null}
           <button
             type="submit"
             disabled={!canStart}
-            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:opacity-40"
+            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:bg-[#F3F4F5] disabled:text-[#9EA3AB]"
           >
-            시작하기
+            {startLabel(answered)}
           </button>
         </div>
       </form>

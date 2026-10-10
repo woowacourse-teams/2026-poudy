@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+
+import { SignupSheet } from "@/components/login/SignupSheet";
+import { SocialLoginLink } from "@/components/login/SocialLoginLink";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -65,25 +69,38 @@ export default function LoginPage() {
       </section>
 
       <div className="flex shrink-0 flex-col gap-2.5">
-        <button
-          type="button"
-          disabled
-          title="카카오 로그인 준비 중"
-          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919]"
+        <SocialLoginLink
+          provider="kakao"
+          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <KakaoIcon />
           카카오로 시작하기
-        </button>
-        <button
-          type="button"
-          disabled
-          title="Google 로그인 준비 중"
-          className="flex h-[52px] items-center justify-center gap-2 rounded-button border border-[#8b8d8b] bg-background text-[16px] font-bold"
+        </SocialLoginLink>
+        <SocialLoginLink
+          provider="google"
+          className="flex h-[52px] items-center justify-center gap-2 rounded-button border border-[#8b8d8b] bg-background text-[16px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <GoogleIcon />
           Google로 시작하기
-        </button>
+        </SocialLoginLink>
 
+        <p className="mt-1 text-center text-[11px] leading-relaxed text-text-secondary sm:text-[12px]">
+          시작하면{" "}
+          <Link
+            href="/terms"
+            className="rounded-sm font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            이용약관
+          </Link>
+          과{" "}
+          <Link
+            href="/privacy"
+            className="rounded-sm font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            개인정보 처리방침
+          </Link>
+          에 동의하게 돼요.
+        </p>
         <Link
           href="/"
           replace
@@ -91,24 +108,11 @@ export default function LoginPage() {
         >
           로그인 없이 둘러보기
         </Link>
-        <p className="mt-1 text-center text-[11px] leading-relaxed text-text-secondary sm:text-[12px]">
-          시작하면{" "}
-          <Link
-            href="/terms"
-            className="rounded-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            이용약관
-          </Link>
-          과{" "}
-          <Link
-            href="/privacy"
-            className="rounded-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            개인정보 처리방침
-          </Link>
-          에 동의하게 돼요.
-        </p>
       </div>
+
+      <Suspense fallback={null}>
+        <SignupSheet />
+      </Suspense>
     </main>
   );
 }

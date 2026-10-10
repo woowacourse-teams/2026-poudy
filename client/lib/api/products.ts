@@ -18,7 +18,6 @@ import {
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
-  StorageResponse,
 } from "@poudy/api/api.zod";
 
 import { apiGet, apiPost } from "./client";
@@ -145,12 +144,6 @@ export const fetchBrands = (): Promise<BrandOverviewResponse> =>
 
 export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
   apiGet(`/api/brands/${brandId}`, BrandDetailResponse, { revalidate: CATALOG_TTL });
-
-/** 저장함은 브라우저가 가진 ID 로 표시 정보를 채운다. */
-export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>
-  apiGet("/api/storage", StorageResponse, {
-    query: new URLSearchParams(productIds.map((id) => ["productIds", String(id)])),
-  });
 
 /*
  * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을

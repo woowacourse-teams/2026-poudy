@@ -1,8 +1,11 @@
-package com.poudy.config;
+package com.poudy.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,5 +41,20 @@ class CorsDisabledTest {
     void omitsAllowHeader() throws Exception {
         mockMvc.perform(get("/api/products").header(HttpHeaders.ORIGIN, ORIGIN))
             .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+    }
+
+    @Test
+    @DisplayName("다른 출처의 조회 요청은 그대로 처리한다")
+    void servesForeignRead() throws Exception {
+        mockMvc.perform(get("/api/skin-types").header(HttpHeaders.ORIGIN, ORIGIN))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("다른 출처의 상태 변경 요청은 403으로 거절한다")
+    void rejectsForeignStateChange() throws Exception {
+        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, ORIGIN))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("FORBIDDEN_ORIGIN"));
     }
 }

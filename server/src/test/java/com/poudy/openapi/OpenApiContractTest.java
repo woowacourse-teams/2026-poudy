@@ -1,6 +1,7 @@
 package com.poudy.openapi;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,6 +85,19 @@ class OpenApiContractTest {
                     .value(1)
             )
             .andExpect(jsonPath("$.paths['/api/products/share-matches'].get.parameters[0].schema.minLength").value(1));
+    }
+
+    @Test
+    void documentsSocialLoginStartAsRedirect() throws Exception {
+        String operation = "$.paths['/api/oauth2/authorization/{provider}'].get";
+
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(operation + ".tags", contains("인증")))
+            .andExpect(jsonPath(operation + ".parameters[0].schema.enum", containsInAnyOrder("kakao", "google")))
+            .andExpect(jsonPath(operation + ".responses['302'].headers.Location").exists())
+            .andExpect(jsonPath(operation + ".responses['404']").exists())
+            .andExpect(jsonPath(operation + ".responses['400']").doesNotExist());
     }
 
     @Test

@@ -31,10 +31,21 @@ public class ErrorResponseConfig {
     private void addErrorResponses(String path, PathItem.HttpMethod method, Operation operation) {
         ApiResponses responses = operation.getResponses();
 
-        if (hasInput(operation)) {
+        List<ErrorCode> badRequestCodes = ErrorResponseCodes.badRequest(path, method);
+        if (hasInput(operation) && !badRequestCodes.isEmpty()) {
             responses.addApiResponse(
                 "400",
-                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, ErrorResponseCodes.badRequest(path, method))
+                ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes)
+            );
+        }
+        if (ErrorResponseCodes.authenticated(path)) {
+            responses.addApiResponse(
+                "401",
+                ProblemDetailResponses.of("로그인 필요", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED)
+            );
+            responses.addApiResponse(
+                "403",
+                ProblemDetailResponses.of("권한 없음", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN)
             );
         }
         if (ErrorResponseCodes.rateLimited(path)) {
@@ -57,7 +68,7 @@ public class ErrorResponseConfig {
                 )
             );
         }
-        List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path);
+        List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path, method);
         if (!notFoundCodes.isEmpty()) {
             responses.addApiResponse(
                 "404",

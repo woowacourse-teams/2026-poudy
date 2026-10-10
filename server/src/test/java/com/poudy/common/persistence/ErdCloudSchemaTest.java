@@ -132,6 +132,23 @@ class ErdCloudSchemaTest {
         entry("search_keyword", List.of("id", "keyword", "status", "ranking_eligible", "created_at", "updated_at")),
         entry("search_keyword_bucket", List.of("bucket_start", "keyword_key", "hit_count", "created_at", "updated_at")),
         entry("search_keyword_expression", List.of("expression_key", "keyword_id", "created_at", "updated_at")),
+        entry(
+            "member",
+            List.of(
+                "id",
+                "oauth_provider",
+                "oauth_provider_id",
+                "email",
+                "age_range",
+                "gender",
+                "skin_type",
+                "created_at",
+                "updated_at",
+                "deleted_at",
+                "restore_requested_at"
+            )
+        ),
+        entry("member_saved_product", List.of("member_id", "product_id", "created_at", "updated_at")),
         entry("skin_type", List.of("code", "name", "created_at", "updated_at")),
         entry("tag", List.of("code", "category_code", "name", "created_at", "updated_at"))
     );
@@ -152,6 +169,8 @@ class ErdCloudSchemaTest {
         entry("ingredient_alias", List.of("id")),
         entry("ingredient_source", List.of("id")),
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
+        entry("member", List.of("id")),
+        entry("member_saved_product", List.of("member_id", "product_id")),
         entry("product", List.of("id")),
         entry("product_component", List.of("id")),
         entry("product_similarity_calculation", List.of("component_id")),

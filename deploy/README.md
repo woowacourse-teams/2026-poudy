@@ -11,6 +11,8 @@ CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업�
 - 공개 브라우저 API: Nginx `:443/api/*` → 백엔드 EC2 사설 IP `:8080`
 - Next.js 서버 API: Nginx `127.0.0.1:8081/api/*` → 같은 백엔드 upstream
 - 백엔드: Spring Boot JAR `:8080` → systemd
+- 로그인 세션: 백엔드가 정상 종료할 때 `/var/lib/poudy-sessions`에 저장하고 다시 뜰 때 불러옵니다.
+  호스트 JAR는 systemd `StateDirectory`가, staging 컨테이너는 같은 경로를 마운트해 씁니다.
 - 데이터: PostgreSQL 15 이상. 피드백 이미지만 비공개 S3에 저장
 
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로

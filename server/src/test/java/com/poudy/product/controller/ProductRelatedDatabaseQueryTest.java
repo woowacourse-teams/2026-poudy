@@ -36,8 +36,8 @@ class ProductRelatedDatabaseQueryTest {
     private ProductRepository repository;
 
     @Test
-    @DisplayName("기동 후 추가·변경된 상품을 상세와 보관에서 요청 순서대로 반환한다")
-    void readsCurrentDetailAndStorage() throws Exception {
+    @DisplayName("기동 후 추가·변경된 상품을 상세와 ID 묶음 조회에서 요청 순서대로 반환한다")
+    void readsCurrentDetailAndProductsById() throws Exception {
         jdbc.update("update product set product_name = '갱신된 검증토너' where id = 90001");
         jdbc.update("update product_variant set price = 4321 where product_id = 90001");
         mockMvc.perform(get("/api/products/90001"))
@@ -45,11 +45,10 @@ class ProductRelatedDatabaseQueryTest {
             .andExpect(jsonPath("$.variants[0].price").value(4321))
             .andExpect(jsonPath("$.productParts").isEmpty())
             .andExpect(jsonPath("$.selectedPart").value(nullValue()));
-        mockMvc.perform(get("/api/storage").param("productIds", "90002,999999,90001"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90002, 90001)))
-            .andExpect(jsonPath("$.items[1].name").value("갱신된 검증토너"));
         assertThat(repository.findAllById(List.of(90002L, 90001L, 90002L, 999999L))).extracting(Product::id)
             .containsExactly(90002L, 90001L, 90002L);
+        assertThat(repository.findAllById(List.of(90001L))).extracting(Product::name)
+            .containsExactly("갱신된 검증토너");
     }
 
     @Test

@@ -20,6 +20,12 @@ export const apiUrl = (path: string, query?: URLSearchParams) => {
 };
 
 /**
+ * 브라우저가 페이지째 이동할 API 주소. 서버 컴포넌트가 그려도 서버 전용 주소를 쓰지 않는다.
+ * 공개 주소가 비어 있으면 같은 출처의 경로로 둔다.
+ */
+export const publicApiUrl = (path: string): string => `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}${path}`;
+
+/**
  * 사용자가 만난 실패를 남긴다. 이 파일은 서버 컴포넌트도 부르므로 분석 모듈을
  * 정적으로 가져오지 않는다. 가져오면 서버 그래프에 클라이언트 경계가 끌려 들어온다.
  *
@@ -58,7 +64,14 @@ type CacheSeconds = number;
 type GetOptions = {
   readonly query?: URLSearchParams;
   readonly revalidate?: CacheSeconds;
+  /** 로그인 세션 쿠키를 함께 보낸다. 회원마다 응답이 달라 담아 두지 않는다. */
+  readonly withSession?: boolean;
 };
+
+/**
+ * 로그인 세션이 필요한 요청. staging 과 로컬은 프론트와 API 출처가 달라 쿠키를 명시해야 실린다.
+ */
+const SESSION_REQUEST: RequestInit = { credentials: "include", cache: "no-store" };
 
 export const INVALID_RESPONSE = "INVALID_RESPONSE";
 
@@ -109,9 +122,10 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
 export const apiGet = async <T>(
   path: string,
   schema: ZodType<T>,
-  { query, revalidate }: GetOptions = {},
+  { query, revalidate, withSession = false }: GetOptions = {},
 ): Promise<T> => {
-  const response = await fetch(apiUrl(path, query), { next: { revalidate } }).catch((cause: unknown) => {
+  const init: RequestInit = withSession ? SESSION_REQUEST : { next: { revalidate } };
+  const response = await fetch(apiUrl(path, query), init).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);
     throw new ApiError(0, "NETWORK_ERROR", cause instanceof Error ? cause.message : "요청을 보내지 못했습니다.");
@@ -149,8 +163,13 @@ const networkError = (cause: unknown, path: string): ApiError => {
  * 선택적으로 본문을 보내고 응답을 받지 않는 요청. 204 처럼 내용이 없는 응답을 돌려주는 곳에 쓴다.
  * 캐시를 두지 않는다. 보내는 요청은 저장해 두었다 다시 쓸 수 있는 종류가 아니다.
  */
-export const apiPost = async (path: string, body?: unknown): Promise<void> => {
+export const apiPost = async (
+  path: string,
+  body?: unknown,
+  { withSession = false }: { readonly withSession?: boolean } = {},
+): Promise<void> => {
   const response = await fetch(apiUrl(path), {
+    ...(withSession ? SESSION_REQUEST : {}),
     method: "POST",
     ...(body === undefined
       ? {}
@@ -177,4 +196,44 @@ export const apiPostForm = async <T>(path: string, schema: ZodType<T>, form: For
   if (!response.ok) throw await toApiError(response, path);
 
   return checkResponse(schema, response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 바꾸고 바뀐 결과를 받는 요청.
+ */
+export const apiPatch = async <T>(path: string, schema: ZodType<T>, body: unknown): Promise<T> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+
+  return checkResponse(schema, response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 그 주소에 두는 요청. 같은 요청을 다시 보내도 결과가 같다.
+ */
+export const apiPut = async (path: string): Promise<void> => {
+  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "PUT" }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ */
+export const apiDelete = async (path: string): Promise<void> => {
+  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "DELETE" }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
+
+  if (!response.ok) throw await toApiError(response, path);
 };

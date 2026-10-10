@@ -1,4 +1,10 @@
-import type { ErrorCode, ProductDetailResponse, RankingItem } from "@poudy/api/api.zod";
+import {
+  MemberProfileRequest,
+  type ErrorCode,
+  type MemberResponse,
+  type ProductDetailResponse,
+  type RankingItem,
+} from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
@@ -496,6 +502,28 @@ const curationBlocks = [
 /** 인기 제품은 목록 앞에서 잘라 쓴다. 목에는 조회수가 없어 순위를 만들 기준이 없다. */
 const RANKING_SIZE = 6;
 
+/**
+ * 목에서는 늘 로그인한 회원 한 명이 있다고 본다. 초기 정보를 저장하면 이 값이 바뀐다.
+ */
+const mockSession: { member: MemberResponse } = {
+  member: {
+    id: 1,
+    provider: "KAKAO",
+    email: "member@example.com",
+    gender: null,
+    ageRange: null,
+    skinType: null,
+  },
+};
+
+let mockSavedProductIds: readonly number[] = [];
+
+export const setMockSavedProducts = (productIds: readonly number[]): void => {
+  mockSavedProductIds = productIds;
+};
+
+const productOf = (id: number) => allProducts.find((product) => product.id === id);
+
 /** 제외 성분군을 성분군 응답 모양으로 옮긴다. 영문 이름은 목에 없어 비워 둔다. */
 const excludeGroupOf = (code: string) => {
   const found = excludeCodes.find((excludeCode) => excludeCode.code === code);
@@ -510,6 +538,48 @@ const excludeGroupOf = (code: string) => {
 };
 
 export const handlers = [
+  http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+
+  http.get("*/api/members/me/saved-products/ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
+
+  http.get("*/api/members/me/saved-products", () =>
+    HttpResponse.json({
+      items: mockSavedProductIds
+        .map(productOf)
+        .filter((product): product is (typeof allProducts)[number] => Boolean(product)),
+    }),
+  ),
+
+  http.put("*/api/members/me/saved-products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+    mockSavedProductIds = [id, ...mockSavedProductIds.filter((savedId) => savedId !== id)];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.delete("*/api/members/me/saved-products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    mockSavedProductIds = mockSavedProductIds.filter((savedId) => savedId !== id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch("*/api/members/me/profile", async ({ request }) => {
+    const profile = MemberProfileRequest.safeParse(await request.json());
+    if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
+
+    mockSession.member = { ...mockSession.member, ...profile.data };
+    return HttpResponse.json(mockSession.member);
+  }),
+
+  http.delete("*/api/members/me", () => new HttpResponse(null, { status: 204 })),
+
+  http.post("*/api/members/logout", () => new HttpResponse(null, { status: 204 })),
+
+  http.post("*/api/auth/withdrawn-member/restore-request", () => new HttpResponse(null, { status: 204 })),
+
+  http.post("*/api/auth/signup", () => new HttpResponse(null, { status: 204 })),
+
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
 
   // 서버처럼 기준 구성품을 함께 돌려준다. 계산해 둔 제품이 없으면 빈 목록이다.
@@ -623,17 +693,6 @@ export const handlers = [
     if (!listed) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
     return partResponse(detailOf(listed), partId);
-  }),
-
-  http.get("*/api/storage", ({ request }) => {
-    const url = new URL(request.url);
-    const ids = numbers(url, "productIds");
-    // 요청한 순서를 유지하고 존재하는 제품만 돌려준다.
-    const items = ids
-      .map((id) => allProducts.find((product) => product.id === id))
-      .filter((product): product is (typeof allProducts)[number] => Boolean(product));
-
-    return HttpResponse.json({ items });
   }),
 
   http.get("*/api/ingredients", ({ request }) => {
