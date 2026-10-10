@@ -6,6 +6,7 @@ set -Eeuo pipefail
 # 배포·초기화 때 deploy/config/frontend-site-<환경>.env 값으로 채웁니다.
 POUDY_SITE_HOST=''
 POUDY_SITE_ALIASES=''
+POUDY_SITE_INDEXED=''
 
 frontend_site_value() {
     local site_file="$1"
@@ -22,9 +23,11 @@ load_frontend_site() {
     [[ -f "${site_file}" ]] || return 1
     POUDY_SITE_HOST="$(frontend_site_value "${site_file}" POUDY_SITE_HOST)"
     POUDY_SITE_ALIASES="$(frontend_site_value "${site_file}" POUDY_SITE_ALIASES)"
+    POUDY_SITE_INDEXED="$(frontend_site_value "${site_file}" POUDY_SITE_INDEXED)"
 
     [[ "${POUDY_SITE_HOST}" =~ ${host_pattern} ]] || return 1
     [[ "${POUDY_SITE_ALIASES}" =~ ${aliases_pattern} ]] || return 1
+    [[ "${POUDY_SITE_INDEXED}" =~ ^(true|false)$ ]] || return 1
 }
 
 frontend_site_cert_dir() {
