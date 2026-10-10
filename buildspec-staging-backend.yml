@@ -28,7 +28,6 @@ phases:
         context="${CODEBUILD_SRC_DIR}/.docker-context/backend"
         image_tag="poudy-backend:${CODEBUILD_RESOLVED_SOURCE_VERSION}"
         cp "${backend_jars[0]}" "${context}/app.jar"
-        cp "${CODEBUILD_SRC_DIR}/server/src/main/resources/application-prod.yml" "${context}/application-prod.yml"
         cp "${CODEBUILD_SRC_DIR}/deploy/docker/backend/Dockerfile" "${context}/Dockerfile"
 
         docker build --pull --platform linux/arm64 --tag "${image_tag}" "${context}"
