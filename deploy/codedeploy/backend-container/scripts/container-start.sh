@@ -24,5 +24,4 @@ exec /usr/bin/docker run \
     --env-file /etc/poudy/backend.env \
     --env SPRING_PROFILES_ACTIVE=prod \
     --env SERVER_PORT=8080 \
-    --env POUDY_SESSION_STORE_DIR=/var/lib/poudy-sessions \
     "${POUDY_BACKEND_IMAGE}"

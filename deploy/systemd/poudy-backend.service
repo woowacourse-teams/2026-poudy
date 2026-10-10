@@ -13,7 +13,6 @@ WorkingDirectory=/opt/poudy/backend
 EnvironmentFile=/etc/poudy/backend.env
 Environment=SPRING_PROFILES_ACTIVE=prod
 Environment=SERVER_PORT=8080
-Environment=POUDY_SESSION_STORE_DIR=/var/lib/poudy-sessions
 StateDirectory=poudy-sessions
 StateDirectoryMode=0700
 ExecStart=/usr/bin/java -Xms128m -Xmx768m -jar /opt/poudy/backend/app.jar

@@ -45,7 +45,7 @@ server:
   servlet:
     session:
       persistent: true
-      store-dir: ${POUDY_SESSION_STORE_DIR}
+      store-dir: /var/lib/poudy-sessions
 
 # 모니터링 에이전트가 로컬에서만 접근하도록 Actuator 전용 포트를 분리한다.
 management:
