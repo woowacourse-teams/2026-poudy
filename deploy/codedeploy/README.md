@@ -178,6 +178,10 @@ warm-up하고 query·Cookie·Authorization·RSC 헤더를 바꾼 요청이 같�
 재사용하는지 확인합니다. 운영 캐시를 삭제하거나 제품·성분 전체를 매 배포마다 다시
 생성하지 않습니다.
 
+앱은 검색 엔진 색인을 허용하는 환경(production)에서만 runtime sitemap을 제공하고 그 밖에서는
+404를 돌려줍니다. 그래서 도메인 파일의 `POUDY_SITE_INDEXED`가 `true`일 때만 위 sitemap 캐시
+검사를 하고, `false`(staging)이면 `/sitemap-pages.xml`이 404인지만 확인합니다.
+
 인증서 발급 후에는 프론트 EC2에서 다음을 실행합니다.
 
 ```bash

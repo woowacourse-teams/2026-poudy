@@ -65,6 +65,8 @@ sudo ./deploy/scripts/bootstrap-frontend.sh production   # staging 프론트 EC2
 인자로 받은 환경의 `deploy/config/frontend-site-<환경>.env`에서 대표 도메인
 (`POUDY_SITE_HOST`)과 별칭(`POUDY_SITE_ALIASES`)을 읽어 Nginx 설정의 자리표시자를 채웁니다.
 운영은 `poudy.site`와 별칭 `www.poudy.site`, staging은 `staging.poudy.site`이고 별칭이 없습니다.
+`POUDY_SITE_INDEXED`는 앱이 sitemap을 내주는 환경인지(운영 `true`, staging `false`)를 적고,
+배포 검증이 sitemap을 확인하는 방식을 정합니다.
 
 구성 내용:
 
