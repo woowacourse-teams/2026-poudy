@@ -33,8 +33,9 @@ phases:
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/frontend/appspec.yml"
       - cp -R deploy/codedeploy/backend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"
-      - cp deploy/scripts/lib/frontend-certificate.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/lib/"
+      - cp deploy/scripts/lib/frontend-certificate.sh deploy/scripts/lib/frontend-site.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/lib/"
       - cp deploy/nginx/ec2-nginx.conf deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/"
+      - cp deploy/config/frontend-site-production.env "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/frontend-site.env"
       - cp deploy/systemd/poudy-backend.service "${CODEBUILD_SRC_DIR}/.artifacts/backend/systemd/"
       - cp deploy/systemd/poudy-frontend.service "${CODEBUILD_SRC_DIR}/.artifacts/frontend/systemd/"
       - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/"*.sh "${CODEBUILD_SRC_DIR}/.artifacts/frontend/scripts/"*.sh
@@ -44,6 +45,7 @@ phases:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/app/app.jar"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/backend/scripts/validate-database.sh"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/app/server.js"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/frontend/nginx/frontend-site.env"
 
 artifacts:
   files:

@@ -4,35 +4,44 @@ set -Eeuo pipefail
 
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly NGINX_SOURCE_DIR="${SCRIPT_DIR}/../nginx"
+readonly SITE_FILE="${NGINX_SOURCE_DIR}/frontend-site.env"
 readonly ACTIVE_CONFIG="/etc/nginx/conf.d/poudy-frontend.conf"
 readonly ACTIVE_MAIN_CONFIG="/etc/nginx/nginx.conf"
-readonly CERT_DIR="/etc/letsencrypt/live/poudy.site"
-
-certificate_library="${SCRIPT_DIR}/lib/frontend-certificate.sh"
-if [[ ! -f "${certificate_library}" ]]; then
-    certificate_library="${SCRIPT_DIR}/../../../scripts/lib/frontend-certificate.sh"
-fi
-[[ -f "${certificate_library}" ]] || {
-    printf '[poudy-frontend-deploy] ERROR: 인증서 검증 라이브러리를 찾을 수 없습니다.\n' >&2
-    exit 1
-}
-# shellcheck source=deploy/scripts/lib/frontend-certificate.sh
-source "${certificate_library}"
 
 fail() {
     printf '[poudy-frontend-deploy] ERROR: %s\n' "$*" >&2
     exit 1
 }
 
+library_path() {
+    local name="$1"
+
+    if [[ -f "${SCRIPT_DIR}/lib/${name}" ]]; then
+        printf '%s' "${SCRIPT_DIR}/lib/${name}"
+    elif [[ -f "${SCRIPT_DIR}/../../../scripts/lib/${name}" ]]; then
+        printf '%s' "${SCRIPT_DIR}/../../../scripts/lib/${name}"
+    else
+        fail "배포 라이브러리를 찾을 수 없습니다: ${name}"
+    fi
+}
+
+# shellcheck source=deploy/scripts/lib/frontend-certificate.sh
+source "$(library_path frontend-certificate.sh)"
+# shellcheck source=deploy/scripts/lib/frontend-site.sh
+source "$(library_path frontend-site.sh)"
+
 [[ "${EUID}" -eq 0 ]] || fail 'root 권한이 필요합니다.'
+load_frontend_site "${SITE_FILE}" || fail "프론트 도메인 설정이 없거나 형식이 맞지 않습니다: ${SITE_FILE}"
+readonly CERT_DIR="$(frontend_site_cert_dir)"
 
 if [[ -s "${CERT_DIR}/fullchain.pem" && -s "${CERT_DIR}/privkey.pem" ]]; then
     command -v openssl >/dev/null 2>&1 || fail '인증서 호스트 검증에 필요한 openssl을 찾을 수 없습니다.'
+    # shellcheck disable=SC2086
     frontend_certificate_covers_hosts \
         "${CERT_DIR}/fullchain.pem" \
-        poudy.site \
-        www.poudy.site \
-        || fail '기존 인증서가 poudy.site와 www.poudy.site를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 배포하세요.'
+        "${POUDY_SITE_HOST}" \
+        ${POUDY_SITE_ALIASES} \
+        || fail "기존 인증서가 ${POUDY_SITE_HOST}${POUDY_SITE_ALIASES:+ ${POUDY_SITE_ALIASES}}를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 배포하세요."
     source_config="${NGINX_SOURCE_DIR}/ec2-frontend-https.conf"
     selected_mode='HTTPS'
 elif [[ -e "${CERT_DIR}/fullchain.pem" || -e "${CERT_DIR}/privkey.pem" ]]; then
@@ -89,7 +98,10 @@ install -d -o nginx -g nginx -m 0750 \
     /var/cache/nginx/poudy_static
 
 install -o root -g root -m 0644 "${SOURCE_MAIN_CONFIG}" "${temporary_main_config}"
-install -o root -g root -m 0644 "${source_config}" "${temporary_config}"
+render_frontend_nginx_config "${source_config}" "${temporary_config}" \
+    || fail "Nginx 설정에 채우지 못한 도메인 자리표시자가 남았습니다: ${source_config}"
+chown root:root "${temporary_config}"
+chmod 0644 "${temporary_config}"
 mv -f "${temporary_main_config}" "${ACTIVE_MAIN_CONFIG}"
 mv -f "${temporary_config}" "${ACTIVE_CONFIG}"
 
@@ -98,4 +110,4 @@ if ! nginx -t; then
     fail "${selected_mode} Nginx 설정이 유효하지 않아 기존 설정으로 복구했습니다."
 fi
 
-printf '[poudy-frontend-deploy] Nginx mode: %s\n' "${selected_mode}"
+printf '[poudy-frontend-deploy] Nginx mode: %s (%s)\n' "${selected_mode}" "${POUDY_SITE_HOST}"
