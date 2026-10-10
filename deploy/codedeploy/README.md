@@ -94,16 +94,16 @@ staging 프론트 파이프라인은 같은 `poudy-staging-pipeline`에 붙이�
 - Build: `poudy-staging-codebuild`
 - Deploy: `poudy-codedeploy`의 `poudy-backend-staging-dg`
 - 배포 방식: CodeDeploy In-place
-- 프론트엔드: 기존 GitHub Actions를 통한 Vercel staging 배포
-- Vercel staging: `https://poudy-staging.vercel.app`
+- 프론트엔드: 같은 파이프라인의 `poudy-frontend-staging-dg`가 staging 프론트 EC2에 배포
+- staging 주소: `https://staging.poudy.site` (화면과 `/api`를 같은 출처로 제공)
 - 백엔드 staging: `https://staging.poudy.site`
-- CORS 허용 origin: `https://poudy-staging.vercel.app`
+- CORS 허용 origin: PR preview `https://*.preview.poudy.site`
 
 staging 백엔드는 다음 검증을 완료했습니다.
 
 - `/actuator/health` → `200 / UP`
 - `/api/categories` → `200`
-- Vercel staging에서 실제 API 호출 확인
+- staging 프론트 EC2를 거친 화면·API 호출 확인
 - Nginx HTTPS 및 Let’s Encrypt 자동 갱신 확인
 - CodeDeploy Agent 정상 실행 확인
 
