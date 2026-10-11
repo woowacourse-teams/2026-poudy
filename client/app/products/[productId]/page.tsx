@@ -51,8 +51,8 @@ const loadSimilarProducts = async (raw: string, partId: number | undefined) => {
 };
 
 /**
- * 주의 성분 기준의 성분군 코드를 찾는 제외 성분군 목록. 받아 오지 못하면 기준을 누를 수 없게 둘 뿐이라
- * 빈 목록으로 대신한다. 모든 제품이 같은 목록을 쓰므로 카탈로그 캐시를 함께 쓴다.
+ * 고른 구성품에 든 주의 성분을 찾는 제외 성분군 목록. 받아 오지 못하면 시트의 포함 성분 목록을
+ * 비워 둔다. 모든 제품이 같은 목록을 쓰므로 카탈로그 캐시를 함께 쓴다.
  */
 const loadExcludeCodes = async () => {
   try {

@@ -128,7 +128,7 @@ export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
 
 export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
-export const ExcludeGroupResponse = z.object({ name: z.string(), contains: z.boolean() });
+export const ExcludeGroupResponse = z.object({ code: z.string(), name: z.string(), contains: z.boolean() });
 
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });

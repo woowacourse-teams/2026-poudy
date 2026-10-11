@@ -51,6 +51,14 @@ class OpenApiContractTest {
     }
 
     @Test
+    void documentsCautionGroupCodeAsRequiredString() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.required", hasItem("code")))
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.properties.code.type").value("string"));
+    }
+
+    @Test
     void documentsRankingChangeAsRequiredReference() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())

@@ -270,7 +270,7 @@ const EXCLUDE_GROUP_NAMES = [
 ] as const;
 
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
-  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
+  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ code, name, contains: !freeOfCodes.includes(code) }));
 
 /**
  * 세라마이드 성분군에 드는 성분. 1025 독도 토너가 다섯 가지를 모두 담아 성분군 칩과 시트를 확인할 수 있다.

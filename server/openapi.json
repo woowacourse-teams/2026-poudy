@@ -5305,6 +5305,11 @@
       "ExcludeGroupResponse": {
         "type": "object",
         "properties": {
+          "code": {
+            "type": "string",
+            "description": "성분군을 구분하는 값",
+            "example": "FRAGRANCE_ALLERGENS"
+          },
           "name": {
             "type": "string",
             "example": "향료/알레르기 성분"
@@ -5315,6 +5320,7 @@
           }
         },
         "required": [
+          "code",
           "contains",
           "name"
         ]

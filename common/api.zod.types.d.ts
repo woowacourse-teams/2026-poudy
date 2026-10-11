@@ -186,7 +186,14 @@ export type CategoryPathResponse = {
   name: string;
   child: CategorySummaryResponse;
 }
-export type ExcludeGroupResponse = { name: string, contains: boolean }
+export type ExcludeGroupResponse = {
+  /**
+   * 성분군을 구분하는 값
+   */
+  code: string;
+  name: string;
+  contains: boolean;
+}
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
