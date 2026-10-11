@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EffectTag } from "@/components/ingredient/EffectTag";
-import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRESS_SCALE, PRESS_SURFACE_WITH_BADGE } from "@/components/ui/press";
 
@@ -65,13 +64,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
                     </span>
                   </span>
 
-                  {ingredient.cautions.map((caution) => (
-                    <Badge key={caution.code} variant="cautionTag">
-                      {caution.label}
-                    </Badge>
-                  ))}
-
-                  {/* 피부 작용은 기존처럼 첫 번째 하나만 표시한다. */}
+                  {/* 작용이 없는 성분(정제수 등)은 태그를 두지 않는다. 태그는 정보라서 빈칸을 채울 이유가 없다. */}
                   {effect ? <EffectTag effect={effect} /> : null}
                 </span>
 

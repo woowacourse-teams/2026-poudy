@@ -12,8 +12,6 @@
 const VARIANTS = {
   /** 피부 작용 태그. 24px, 11px 굵게. */
   effect: "h-[max(24px,calc(24em/11))] px-2 bg-[#EFF1F5] text-[11px] font-bold text-[#424E5F]",
-  /** 개별 성분의 주의 기준 태그. */
-  cautionTag: "h-[max(24px,calc(24em/11))] px-2 bg-[#FDECEC] text-[11px] font-bold text-[#C53030]",
   /** AI 요약. 24px, 12px. */
   ai: "h-[max(24px,calc(24em/12))] px-2 bg-[#EEEBFF] text-[12px] font-semibold text-[#4A3B8C]",
   /** 성분군에 든 성분 수(`5종`). 26px. */

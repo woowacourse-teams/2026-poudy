@@ -261,12 +261,12 @@ const CATEGORY_TREE: readonly {
 
 /** 서버처럼 성분군마다 제품에 들어 있는지를 담는다. 이름은 서버가 내려 주는 표시명이다. */
 const EXCLUDE_GROUP_NAMES = [
-  ["FRAGRANCE_ALLERGENS", "향료/알레르기 성분", "향료"],
-  ["DRYING_ALCOHOLS", "건조 알코올", "건조 알코올"],
-  ["HARSH_PRESERVATIVES", "자극성 방부제", "자극성 방부제"],
-  ["SULFATES", "설페이트 성분", "설페이트"],
-  ["CYCLIC_SILICONES", "실리콘 자극원", "실리콘"],
-  ["SYNTHETIC_COLORANTS", "합성 색소", "합성 색소"],
+  ["FRAGRANCE_ALLERGENS", "향료/알레르기 성분"],
+  ["DRYING_ALCOHOLS", "건조 알코올"],
+  ["HARSH_PRESERVATIVES", "자극성 방부제"],
+  ["SULFATES", "설페이트 성분"],
+  ["CYCLIC_SILICONES", "실리콘 자극원"],
+  ["SYNTHETIC_COLORANTS", "합성 색소"],
 ] as const;
 
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
@@ -556,13 +556,6 @@ const partOf = (id: number, name: string, contained: readonly string[]): Product
   ...productDetails[0]!.selectedPart!,
   id,
   name,
-  ingredients: productDetails[0]!.selectedPart!.ingredients.map((ingredient, index) => ({
-    ...ingredient,
-    cautions:
-      index === 0
-        ? EXCLUDE_GROUP_NAMES.filter(([code]) => contained.includes(code)).map(([code, , label]) => ({ code, label }))
-        : [],
-  })),
   excludeGroups: excludeGroupsOf(EXCLUDE_GROUP_NAMES.map(([code]) => code).filter((code) => !contained.includes(code))),
 });
 
