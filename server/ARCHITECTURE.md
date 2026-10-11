@@ -128,7 +128,7 @@ Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 �
 
 ### ExcludeCode
 
-`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·설명과 성분 매핑은
+`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·태그용 이름·설명과 성분 매핑은
 DB의 `ingredient_group`, `ingredient_group_ingredient`가 소유하고, 그중 제외 성분군은 서버의
 `ExcludeCode` enum이 고정한다. 제외 성분군 목록, `excludeCodes` 필터, 제품 상세의 주의 판정은
 enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문구가 함께 바뀌어야 하므로 DB 행
@@ -137,6 +137,10 @@ enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문
 저장소가 SQL 조인으로 성분 ID를 표시 정보로 해석하고, 도메인 `ExcludeCodeGroup`은 정의와
 소속 성분을 함께 소유해 포함 여부를 판정한다. `ExcludeCodes`는 공개 순서의 성분군 목록만
 보관한다. `excludecode`는 `ingredient` 코드에 의존하지 않는다.
+
+제품 상세의 성분별 주의 기준도 같은 소속으로 판정하며 해당하는 기준을 모두 반환한다.
+`ingredient_group.tag_name`은 전체 성분 행에 붙이는 짧은 문구다. 제외 성분군에는 빈 문구를
+허용하지 않고, 일반 성분군에는 NULL을 허용한다.
 
 ### IngredientGroup
 
