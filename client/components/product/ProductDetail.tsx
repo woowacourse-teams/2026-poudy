@@ -1,9 +1,4 @@
-import type {
-  ExcludeCodeResponse,
-  ProductDetailResponse,
-  ProductPartResponse,
-  SimilarProductResponse,
-} from "@poudy/api/api.zod";
+import type { ProductDetailResponse, ProductPartResponse, SimilarProductResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 
 import { CautionCheck } from "./CautionCheck";
@@ -33,14 +28,11 @@ export function ProductDetail({
   product,
   entryPoint = "direct",
   similarProducts = [],
-  excludeCodes = [],
 }: {
   readonly product: ProductDetailResponse;
   readonly entryPoint?: ProductEntryPoint;
   /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
   readonly similarProducts?: readonly SimilarProductResponse[];
-  /** 주의 성분군에 속한 성분 목록. 고른 구성품에 든 해당 성분을 찾는 데 쓴다. */
-  readonly excludeCodes?: readonly ExcludeCodeResponse[];
 }) {
   return (
     <SummaryHeader
@@ -110,7 +102,7 @@ export function ProductDetail({
         <PartTabs product={product} entryPoint={entryPoint} />
 
         <div className="flex flex-col gap-6 px-4 pt-6 pb-10">
-          <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
+          <SelectedPart product={product} similarProducts={similarProducts} />
           <Source updatedAt={product.updatedAt} productId={product.id} />
         </div>
       </main>
@@ -242,11 +234,9 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 function SelectedPart({
   product,
   similarProducts,
-  excludeCodes,
 }: {
   readonly product: ProductDetailResponse;
   readonly similarProducts: readonly SimilarProductResponse[];
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
 }) {
   const part = product.selectedPart;
   if (!part) return null;
@@ -262,11 +252,7 @@ function SelectedPart({
       <UsageIngredients productId={product.id} part={part} />
       <CautionCheck
         productId={product.id}
-        groups={withCautionIngredients(
-          part.excludeGroups,
-          excludeCodes,
-          part.ingredients.map((ingredient) => ingredient.id),
-        )}
+        groups={withCautionIngredients(part.excludeGroups, part.ingredients)}
         ingredients={part.ingredients}
       />
       <Ingredients ingredients={part.ingredients} />

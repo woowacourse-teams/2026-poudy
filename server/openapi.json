@@ -5349,6 +5349,25 @@
           "name"
         ]
       },
+      "IngredientCautionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "이 성분이 속한 주의 성분 기준의 코드",
+            "example": "FRAGRANCE_ALLERGENS"
+          },
+          "label": {
+            "type": "string",
+            "description": "주의 태그에 표시할 짧은 이름",
+            "example": "향료"
+          }
+        },
+        "required": [
+          "code",
+          "label"
+        ]
+      },
       "IngredientGroupSummaryResponse": {
         "type": "object",
         "properties": {
@@ -5492,9 +5511,17 @@
             "items": {
               "$ref": "#/components/schemas/SkinEffectResponse"
             }
+          },
+          "cautions": {
+            "type": "array",
+            "description": "이 성분이 속한 주의 성분 기준. 해당하는 기준이 없으면 빈 배열이다",
+            "items": {
+              "$ref": "#/components/schemas/IngredientCautionResponse"
+            }
           }
         },
         "required": [
+          "cautions",
           "englishName",
           "formulationRoles",
           "id",

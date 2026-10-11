@@ -234,6 +234,9 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.selectedPart.name").value(nullValue()))
             .andExpect(jsonPath("$.selectedPart.ingredients[*].disclosedAmount").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(20, 9)))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions[0].code").value("FRAGRANCE_ALLERGENS"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions[0].label").value("향료"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[1].cautions[0].code").value("FRAGRANCE_ALLERGENS"))
             .andExpect(
                 jsonPath("$.selectedPart.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING"))
             )

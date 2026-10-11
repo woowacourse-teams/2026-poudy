@@ -65,6 +65,7 @@ class ProductPartTest {
         ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
             ExcludeCode.FRAGRANCE_ALLERGENS,
             "향료",
+            "향료",
             "설명",
             List.of(new ExcludeCodeIngredient(20L, "향료 성분", null))
         );

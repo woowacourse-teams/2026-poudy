@@ -261,12 +261,12 @@ const CATEGORY_TREE: readonly {
 
 /** 서버처럼 성분군마다 제품에 들어 있는지를 담는다. 이름은 서버가 내려 주는 표시명이다. */
 const EXCLUDE_GROUP_NAMES = [
-  ["FRAGRANCE_ALLERGENS", "향료/알레르기 성분"],
-  ["DRYING_ALCOHOLS", "건조 알코올"],
-  ["HARSH_PRESERVATIVES", "자극성 방부제"],
-  ["SULFATES", "설페이트 성분"],
-  ["CYCLIC_SILICONES", "실리콘 자극원"],
-  ["SYNTHETIC_COLORANTS", "합성 색소"],
+  ["FRAGRANCE_ALLERGENS", "향료/알레르기 성분", "향료"],
+  ["DRYING_ALCOHOLS", "건조 알코올", "건조 알코올"],
+  ["HARSH_PRESERVATIVES", "자극성 방부제", "자극성 방부제"],
+  ["SULFATES", "설페이트 성분", "설페이트"],
+  ["CYCLIC_SILICONES", "실리콘 자극원", "실리콘"],
+  ["SYNTHETIC_COLORANTS", "합성 색소", "합성 색소"],
 ] as const;
 
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
@@ -378,6 +378,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
       englishName: `Ingredient ${index + 1}`,
       formulationRoles: [],
       skinEffects: [],
+      cautions: index === 5 ? [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] : [],
     })),
     excludeGroups: excludeGroupsOf([
       "DRYING_ALCOHOLS",
@@ -460,6 +461,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [],
+          cautions: [],
         },
         {
           id: 2,
@@ -470,6 +472,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 3,
@@ -477,6 +480,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Glycerin",
           formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 4,
@@ -487,6 +491,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 5,
@@ -497,6 +502,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "4", code: "HUMECTANT", name: "보습 보조" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 6,
@@ -504,6 +510,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Panthenol",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [보습, 진정],
+          cautions: [],
         },
         {
           id: 7,
@@ -511,6 +518,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Chondrus Crispus Extract",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [진정],
+          cautions: [],
         },
         {
           id: 8,
@@ -518,6 +526,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Protease",
           formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
           skinEffects: [각질케어],
+          cautions: [],
         },
         ...ceramides.map(([id, koreanName, englishName]) => ({
           id,
@@ -525,6 +534,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName,
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [장벽],
+          cautions: [],
         })),
       ],
       excludeGroups: excludeGroupsOf([
@@ -546,6 +556,13 @@ const partOf = (id: number, name: string, contained: readonly string[]): Product
   ...productDetails[0]!.selectedPart!,
   id,
   name,
+  ingredients: productDetails[0]!.selectedPart!.ingredients.map((ingredient, index) => ({
+    ...ingredient,
+    cautions:
+      index === 0
+        ? EXCLUDE_GROUP_NAMES.filter(([code]) => contained.includes(code)).map(([code, , label]) => ({ code, label }))
+        : [],
+  })),
   excludeGroups: excludeGroupsOf(EXCLUDE_GROUP_NAMES.map(([code]) => code).filter((code) => !contained.includes(code))),
 });
 

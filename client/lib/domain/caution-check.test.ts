@@ -34,67 +34,53 @@ describe("sortedCautions", () => {
 });
 
 describe("withCautionIngredients", () => {
-  const excludeCodes = [
+  const ingredients = [
     {
-      code: "FRAGRANCE_ALLERGENS",
-      name: "향료/알레르기 성분",
-      description: "착향 목적의 성분이에요.",
-      ingredients: [
-        { id: 10, koreanName: "리모넨", englishName: "Limonene" },
-        { id: 11, koreanName: "리날룰", englishName: "Linalool" },
+      id: 11,
+      cautions: [
+        { code: "FRAGRANCE_ALLERGENS", label: "향료" },
+        { code: "SULFATES", label: "설페이트" },
       ],
     },
-    {
-      code: "DRYING_ALCOHOLS",
-      name: "건조 알코올",
-      description: "피부를 건조하게 할 수 있는 알코올이에요.",
-      ingredients: [{ id: 20, koreanName: "에탄올", englishName: "Alcohol" }],
-    },
+    { id: 3, cautions: [] },
+    { id: 10, cautions: [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] },
   ];
 
-  it("이름이 달라도 같은 코드의 제외 성분군에서 제품 순서대로 포함 성분을 붙인다", () => {
+  it("표시명이 달라도 코드로 해당 성분을 찾아 제품 순서를 유지한다", () => {
     const [fragrance] = withCautionIngredients(
-      [{ code: "FRAGRANCE_ALLERGENS", name: "향료", contains: true }],
-      excludeCodes,
-      [11, 3, 10],
+      [{ code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분", contains: true }],
+      ingredients,
     );
 
     expect(fragrance).toEqual({
-      name: "향료",
+      name: "향료/알레르기 성분",
       contains: true,
       code: "FRAGRANCE_ALLERGENS",
       ingredientIds: [11, 10],
     });
   });
 
-  it("들어 있지 않은 기준은 상세 응답의 코드와 빈 성분 목록을 유지한다", () => {
-    const [drying] = withCautionIngredients(
-      [{ code: "DRYING_ALCOHOLS", name: "건조 알코올", contains: false }],
-      excludeCodes,
-      [11],
+  it("한 성분이 여러 기준에 들면 각 기준의 성분 목록에 포함한다", () => {
+    const result = withCautionIngredients(
+      [
+        { code: "FRAGRANCE_ALLERGENS", name: "향료", contains: true },
+        { code: "SULFATES", name: "설페이트", contains: true },
+      ],
+      ingredients,
     );
 
-    expect(drying).toEqual({ name: "건조 알코올", contains: false, code: "DRYING_ALCOHOLS", ingredientIds: [] });
+    expect(result.map((group) => group.ingredientIds)).toEqual([[11, 10], [11]]);
   });
 
-  it("이름이 같아도 코드가 다르면 포함 성분을 가져오지 않는다", () => {
-    const [unknown] = withCautionIngredients(
-      [{ code: "SYNTHETIC_COLORANTS", name: "향료/알레르기 성분", contains: false }],
-      excludeCodes,
-      [11],
-    );
+  it("해당 성분이 없는 기준은 코드와 빈 성분 목록을 유지한다", () => {
+    const group = { code: "DRYING_ALCOHOLS", name: "건조 알코올", contains: false };
 
-    expect(unknown).toEqual({
-      code: "SYNTHETIC_COLORANTS",
-      name: "향료/알레르기 성분",
-      contains: false,
-      ingredientIds: [],
-    });
+    expect(withCautionIngredients([group], ingredients)).toEqual([{ ...group, ingredientIds: [] }]);
   });
 
-  it("제외 성분군 목록이 비어 있어도 상세 응답의 코드를 유지한다", () => {
-    const group = { code: "FRAGRANCE_ALLERGENS", name: "향료", contains: true };
+  it("성분 목록이 비어도 상세 응답의 코드를 유지한다", () => {
+    const group = { code: "FRAGRANCE_ALLERGENS", name: "향료", contains: false };
 
-    expect(withCautionIngredients([group], [], [11])).toEqual([{ ...group, ingredientIds: [] }]);
+    expect(withCautionIngredients([group], [])).toEqual([{ ...group, ingredientIds: [] }]);
   });
 });

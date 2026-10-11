@@ -44,4 +44,10 @@ public record ProductDetail(
     public long cautionCountOf(ProductPart part) {
         return part.countContainedFrom(excludeCodes);
     }
+
+    public List<ExcludeCodeGroup> cautionGroupsOf(Long ingredientId) {
+        return excludeCodes.stream()
+            .filter(group -> group.containsIngredient(ingredientId))
+            .toList();
+    }
 }

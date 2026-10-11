@@ -1,6 +1,7 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.product.domain.ProductDetail;
 import com.poudy.tag.controller.dto.FormulationRoleResponse;
 import com.poudy.tag.controller.dto.SkinEffectResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,9 +13,10 @@ public record ProductIngredientResponse(
     @NotNull @Schema(example = "글리세린") String koreanName,
     @NotNull @Schema(example = "Glycerin") String englishName,
     @NotNull @Schema(description = "배합 목적 태그 (CosIng FUNCTION). 제형에서 이 성분이 맡는 역할이다. 예: 습윤제, 유화제, 보존제") List<FormulationRoleResponse> formulationRoles,
-    @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects) {
+    @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects,
+    @NotNull @Schema(description = "이 성분이 속한 주의 성분 기준. 해당하는 기준이 없으면 빈 배열이다") List<IngredientCautionResponse> cautions) {
 
-    public static List<ProductIngredientResponse> from(List<Ingredient> ingredients) {
+    public static List<ProductIngredientResponse> from(List<Ingredient> ingredients, ProductDetail detail) {
         return ingredients.stream()
             .map(
                 ingredient -> new ProductIngredientResponse(
@@ -22,7 +24,8 @@ public record ProductIngredientResponse(
                     ingredient.koreanName(),
                     ingredient.englishName(),
                     FormulationRoleResponse.from(ingredient.formulationRoles()),
-                    SkinEffectResponse.from(ingredient.skinEffects())
+                    SkinEffectResponse.from(ingredient.skinEffects()),
+                    IngredientCautionResponse.from(detail.cautionGroupsOf(ingredient.id()))
                 )
             )
             .toList();

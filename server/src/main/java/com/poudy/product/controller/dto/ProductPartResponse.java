@@ -22,7 +22,7 @@ public record ProductPartResponse(
         return new ProductPartResponse(
             part.id(),
             part.name(),
-            ProductIngredientResponse.from(part.ingredients().values()),
+            ProductIngredientResponse.from(part.ingredients().values(), detail),
             SkinEffectGroupResponse.from(part.skinEffectGroups(), detail.ingredientGroups(), part.ingredients()),
             ExcludeGroupResponse.from(detail.excludeCodes(), part)
         );

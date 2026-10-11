@@ -56,7 +56,7 @@ class ErdCloudSchemaTest {
         ),
         entry(
             "ingredient_group",
-            List.of("code", "display_name", "description", "created_at", "updated_at", "english_name")
+            List.of("code", "display_name", "description", "created_at", "updated_at", "english_name", "tag_name")
         ),
         entry(
             "ingredient_group_ingredient",

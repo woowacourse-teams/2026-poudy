@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("제외 성분군 목록")
 class ExcludeCodesTest {
@@ -13,6 +16,7 @@ class ExcludeCodesTest {
     private static final ExcludeCodeGroup SULFATES = new ExcludeCodeGroup(
         ExcludeCode.SULFATES,
         "설페이트 성분",
+        "설페이트",
         "설페이트 성분을 제외해요.",
         List.of(
             new ExcludeCodeIngredient(30L, "성분 30", null),
@@ -27,6 +31,7 @@ class ExcludeCodesTest {
         ExcludeCodeGroup newCode = new ExcludeCodeGroup(
             ExcludeCode.FRAGRANCE_ALLERGENS,
             "새 성분군",
+            "향료",
             "새 설명",
             List.of(new ExcludeCodeIngredient(10L, "성분 10", null))
         );
@@ -41,7 +46,25 @@ class ExcludeCodesTest {
     @Test
     @DisplayName("DB 정의에 성분이 없으면 만들 수 없다")
     void rejectsEmptyCode() {
-        assertThatThrownBy(() -> new ExcludeCodeGroup(ExcludeCode.SULFATES, "설페이트", "설명", List.of()))
+        assertThatThrownBy(() -> new ExcludeCodeGroup(ExcludeCode.SULFATES, "설페이트 성분", "설페이트", "설명", List.of()))
             .isInstanceOf(InvalidExcludeCodeDefinitionException.class).hasMessageContaining("SULFATES");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    @DisplayName("제외 성분군의 태그 문구가 없으면 만들 수 없다")
+    void rejectsMissingTagName(String tagName) {
+        assertThatThrownBy(
+            () -> new ExcludeCodeGroup(
+                ExcludeCode.SULFATES,
+                "설페이트 성분",
+                tagName,
+                "설명",
+                SULFATES.ingredients()
+            )
+        )
+            .isInstanceOf(InvalidExcludeCodeDefinitionException.class)
+            .hasMessageContaining("태그 이름", "SULFATES");
     }
 }

@@ -477,35 +477,22 @@ describe("주의 성분 확인", () => {
   });
 
   const part = untaggedProductDetail.selectedPart!;
-  const [first, second] = part.ingredients;
-  const excludeCodes = [
-    {
-      code: "FRAGRANCE_ALLERGENS",
-      name: "이전 향료 표시명",
-      description: "착향 목적의 성분이에요.",
-      ingredients: [{ id: first!.id, koreanName: first!.koreanName, englishName: first!.englishName }],
-    },
-    {
-      code: "DRYING_ALCOHOLS",
-      name: "건조 알코올",
-      description: "피부를 건조하게 할 수 있는 알코올이에요.",
-      ingredients: [{ id: -1, koreanName: "에탄올", englishName: "Alcohol" }],
-    },
-  ];
+  const included = part.ingredients.find((ingredient) => ingredient.cautions.length > 0)!;
+  const other = part.ingredients[0]!;
 
-  it("두 응답의 표시명이 달라도 코드로 연결해 시트에 제품의 해당 성분을 보여 준다", async () => {
-    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+  it("성분별 주의 기준 코드로 시트에 제품의 해당 성분을 보여 준다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분 있음" }));
 
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).getByText("향료/알레르기 성분")).toBeInTheDocument();
-    expect(within(sheet).getByRole("link", { name: new RegExp(first!.koreanName) })).toBeInTheDocument();
-    expect(within(sheet).queryByText(second!.koreanName)).not.toBeInTheDocument();
+    expect(within(sheet).getByRole("link", { name: new RegExp(included.koreanName) })).toBeInTheDocument();
+    expect(within(sheet).queryByText(other.koreanName)).not.toBeInTheDocument();
   });
 
   it("들어 있지 않은 기준은 성분 목록 없이 성분군 설명만 보여 준다", async () => {
-    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+    render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getByRole("link", { name: "건조 알코올 없음" }));
 
@@ -519,7 +506,7 @@ describe("주의 성분 확인", () => {
 
   it("기준 시트를 열고 자세히 보기로 떠나면 주의 성분 시트로 남긴다", async () => {
     vi.mocked(track).mockClear();
-    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+    render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getByRole("link", { name: "건조 알코올 없음" }));
     const sheet = await screen.findByRole("dialog");
@@ -534,7 +521,7 @@ describe("주의 성분 확인", () => {
     });
   });
 
-  it("제외 성분군 목록이 비어 있어도 상세 응답의 코드로 성분군 설명을 연다", async () => {
+  it("제품 상세 응답의 코드로 포함되지 않은 성분군 설명을 연다", async () => {
     vi.mocked(fetchIngredientGroup).mockClear();
     render(<ProductDetail product={untaggedProductDetail} />);
 

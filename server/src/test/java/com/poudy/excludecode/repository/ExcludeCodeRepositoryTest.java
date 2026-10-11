@@ -35,6 +35,8 @@ class ExcludeCodeRepositoryTest {
             code -> assertThat(code.ingredients()).isNotEmpty()
                 .allSatisfy(ingredient -> assertThat(ingredient.koreanName()).isNotBlank())
         );
+        assertThat(groups.groups()).extracting(group -> group.tagName())
+            .containsExactly("실리콘", "건조 알코올", "향료", "자극성 방부제", "설페이트", "합성 색소");
     }
 
     @Test

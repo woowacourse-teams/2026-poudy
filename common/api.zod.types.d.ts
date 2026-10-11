@@ -205,6 +205,16 @@ export type FormulationRoleResponse = {
    */
   name: string;
 }
+export type IngredientCautionResponse = {
+  /**
+   * 이 성분이 속한 주의 성분 기준의 코드
+   */
+  code: string;
+  /**
+   * 주의 태그에 표시할 짧은 이름
+   */
+  label: string;
+}
 export type IngredientGroupSummaryResponse = { code: string, name: string }
 export type ProductVariantResponse = {
   /**
@@ -252,6 +262,10 @@ export type ProductIngredientResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련
    */
   skinEffects: Array<SkinEffectResponse>;
+  /**
+   * 이 성분이 속한 주의 성분 기준. 해당하는 기준이 없으면 빈 배열이다
+   */
+  cautions: Array<IngredientCautionResponse>;
 }
 export type SkinEffectIngredientResponse = { id: number, koreanName: string }
 export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
