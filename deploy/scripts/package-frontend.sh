@@ -41,12 +41,16 @@ fi
 node "${SCRIPT_DIR}/copy-tree.js" \
     "${standalone_source}" \
     "${output_dir}"
-node "${SCRIPT_DIR}/verify-frontend-artifact.js" "${output_dir}"
 mkdir -p "${output_dir}/.next"
 cp -R "${REPOSITORY_ROOT}/client/.next/static" "${output_dir}/.next/static"
 
+# standalone 산출물에 점으로 시작하는 항목이 빠진 public/ 이 이미 있어서
+# 폴더째 복사하면 public/public/ 이 생긴다. 내용물을 기존 public/ 에 합친다.
 if [[ -d "${REPOSITORY_ROOT}/client/public" ]]; then
-    cp -R "${REPOSITORY_ROOT}/client/public" "${output_dir}/public"
+    mkdir -p "${output_dir}/public"
+    cp -R "${REPOSITORY_ROOT}/client/public/." "${output_dir}/public/"
 fi
+
+node "${SCRIPT_DIR}/verify-frontend-artifact.js" "${output_dir}"
 
 log "프론트엔드 산출물을 생성했습니다: ${output_dir}"
