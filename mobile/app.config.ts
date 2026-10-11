@@ -13,6 +13,18 @@ const APP_VERSION = process.env.POUDY_APP_VERSION;
 const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 const KAKAO_MAVEN_REPOSITORY = 'https://devrepo.kakao.com/nexus/content/groups/public/';
+const KAKAO_PROGUARD_RULES = [
+  '-keep class com.kakao.sdk.**.model.* { <fields>; }',
+  '-keep class * extends com.google.gson.TypeAdapter',
+  '-dontwarn org.bouncycastle.jsse.**',
+  '-dontwarn org.conscrypt.*',
+  '-dontwarn org.openjsse.**',
+  '-if interface * { @retrofit2.http.* <methods>; }',
+  '-keep,allowobfuscation interface <1>',
+  '-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation',
+  '-keep,allowobfuscation,allowshrinking interface retrofit2.Call',
+  '-keep,allowobfuscation,allowshrinking class retrofit2.Response',
+].join('\n');
 
 const isHttpUrl = (value: string): boolean => {
   try {
@@ -146,6 +158,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             enableMinifyInReleaseBuilds: true,
             enableShrinkResourcesInReleaseBuilds: true,
             extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
+            extraProguardRules: KAKAO_PROGUARD_RULES,
           },
         },
       ],
