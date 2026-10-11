@@ -466,8 +466,10 @@ export type IngredientListResponse = {
   items: Array<IngredientSuggestionResponse>;
   groups: Array<IngredientGroupSuggestionResponse>;
 }
+export type IngredientGroupType = "QUICK_EXCLUDE"
 export type IngredientGroupMemberResponse = { id: number, koreanName: string, englishName: (string | null) }
 export type IngredientGroupResponse = { code: string, name: string, englishName: (string | null), description: string, ingredients: Array<IngredientGroupMemberResponse> }
+export type IngredientGroupListResponse = { items: Array<IngredientGroupResponse> }
 export type IngredientSummaryResponse = { id: number, koreanName: string, englishName: string }
 export type ExcludeCodeResponse = {
   /**
@@ -1348,6 +1350,24 @@ export type get_SuggestIngredients = {
 
     }
 /**
+ * 전체 성분군과 소속 성분을 코드 순서대로 조회한다. type=QUICK_EXCLUDE를 지정하면 빠른 제외 성분군만 반환한다.
+ */
+export type get_FindIngredientGroups = {
+      method: "GET",
+      path: "/api/ingredient-groups",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ type: Schemas.IngredientGroupType }>,
+
+          }
+      responses: {200: Schemas.IngredientGroupListResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 성분군 코드에 해당하는 성분군의 이름, 설명과 속한 성분을 조회한다.
  */
 export type get_FindIngredientGroup = {
@@ -1704,6 +1724,7 @@ get: {
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
+"/api/ingredient-groups": Endpoints.get_FindIngredientGroups,
 "/api/ingredient-groups/{code}": Endpoints.get_FindIngredientGroup,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
 "/api/curations": Endpoints.get_FindCurations,

@@ -10,6 +10,7 @@ import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
 import com.poudy.ingredientgroup.domain.IngredientGroupDetail;
 import com.poudy.ingredientgroup.domain.IngredientGroupMember;
 import com.poudy.ingredientgroup.domain.IngredientGroupSuggestion;
+import com.poudy.ingredientgroup.domain.IngredientGroupType;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,58 @@ public class IngredientGroupRepository {
             .toList();
     }
 
+    public List<IngredientGroupDetail> findAll(IngredientGroupType type) {
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        String condition = "";
+        if (type != null) {
+            List<String> codes = switch (type) {
+                case QUICK_EXCLUDE -> ExcludeCode.codeValues();
+            };
+            condition = " where code = any(:codes)";
+            parameters.addValue("codes", new SqlArrayValue("text", codes.toArray()));
+        }
+        List<GroupDefinition> groups = jdbc.query(
+            "select code, display_name, english_name, description from ingredient_group" + condition + " order by code",
+            parameters,
+            (row, number) -> new GroupDefinition(
+                row.getString("code"),
+                row.getString("display_name"),
+                row.getString("english_name"),
+                row.getString("description")
+            )
+        );
+        if (groups.isEmpty()) {
+            return List.of();
+        }
+        parameters.addValue("codes", new SqlArrayValue("text", groups.stream().map(GroupDefinition::code).toArray()));
+        Map<String, List<IngredientGroupMember>> members = jdbc.query(
+            "select m.group_code, i.id, i.korean_name, i.english_name from ingredient_group_ingredient m"
+                + " join ingredient i on i.id = m.ingredient_id where m.group_code = any(:codes)"
+                + " order by m.group_code, m.display_order",
+            parameters,
+            (row, number) -> new DetailMemberRow(
+                row.getString("group_code"),
+                new IngredientGroupMember(
+                    row.getLong("id"),
+                    row.getString("korean_name"),
+                    row.getString("english_name")
+                )
+            )
+        ).stream().collect(groupingBy(DetailMemberRow::code, mapping(DetailMemberRow::member, toList())));
+
+        return groups.stream()
+            .map(
+                group -> new IngredientGroupDetail(
+                    group.code(),
+                    group.name(),
+                    group.englishName(),
+                    group.description(),
+                    members.getOrDefault(group.code(), List.of())
+                )
+            )
+            .toList();
+    }
+
     public Optional<IngredientGroupDetail> findDetail(String code) {
         MapSqlParameterSource parameters = new MapSqlParameterSource("code", code);
         List<IngredientGroupMember> members = jdbc.query(
@@ -103,6 +156,12 @@ public class IngredientGroupRepository {
 
     private static MapSqlParameterSource excludeCodeParameters() {
         return new MapSqlParameterSource("excludeCodes", new SqlArrayValue("text", ExcludeCode.codeValues().toArray()));
+    }
+
+    private record GroupDefinition(String code, String name, String englishName, String description) {
+    }
+
+    private record DetailMemberRow(String code, IngredientGroupMember member) {
     }
 
     private record GroupKey(String code, String name) {
