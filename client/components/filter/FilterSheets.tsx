@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, ExcludeCodeResponse, SkinTypeResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
@@ -28,7 +28,7 @@ type FilterSheetsProps = {
   readonly brands: readonly BrandResponse[];
   /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
-  readonly excludeCodes: readonly IngredientGroupResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
   readonly optionsPageHref?: string;

@@ -524,6 +524,19 @@ export const setMockSavedProducts = (productIds: readonly number[]): void => {
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
+/** 제외 성분군을 성분군 응답 모양으로 옮긴다. 영문 이름은 목에 없어 비워 둔다. */
+const excludeGroupOf = (code: string) => {
+  const found = excludeCodes.find((excludeCode) => excludeCode.code === code);
+  if (!found) return undefined;
+  return {
+    code: found.code,
+    name: found.name,
+    englishName: null,
+    description: found.description,
+    ingredients: found.ingredients,
+  };
+};
+
 export const handlers = [
   http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
 
@@ -729,18 +742,11 @@ export const handlers = [
     return HttpResponse.json(detail);
   }),
 
-  http.get("*/api/ingredient-groups", ({ request }) => {
-    const type = new URL(request.url).searchParams.get("type");
-    if (type !== null && type !== "QUICK_EXCLUDE") {
-      return problem(400, "요청 파라미터 값이 올바르지 않습니다.", "INVALID_QUERY_PARAMETER");
-    }
-    const groups = type === "QUICK_EXCLUDE" ? excludeCodes : [...ingredientGroups, ...excludeCodes];
-    return HttpResponse.json({ items: [...groups].sort((left, right) => left.code.localeCompare(right.code)) });
-  }),
+  http.get("*/api/exclude-codes", () => HttpResponse.json({ items: excludeCodes })),
 
   // 서버는 제외 성분군도 같은 성분군 표에 두어 이 주소로 함께 조회된다. 목도 두 목록을 함께 찾는다.
   http.get("*/api/ingredient-groups/:code", ({ params }) => {
-    const group = [...ingredientGroups, ...excludeCodes].find((found) => found.code === params.code);
+    const group = ingredientGroups.find((found) => found.code === params.code) ?? excludeGroupOf(String(params.code));
     if (!group) return notFound("성분군을 찾을 수 없습니다.", "INGREDIENT_GROUP_NOT_FOUND");
     return HttpResponse.json(group);
   }),

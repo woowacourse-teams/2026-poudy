@@ -1,6 +1,6 @@
 "use client";
 
-import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { type MouseEvent, useEffect, useLayoutEffect, useRef } from "react";
 
 import { chipsOf } from "./product-chips";
@@ -25,7 +25,7 @@ type ProductRowsProps = {
   readonly basePath: string;
   readonly surface: ListSurface;
   readonly entryPoint?: ProductEntryPoint;
-  readonly excludeCodes: readonly IngredientGroupResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
   readonly openSheet: SheetKind | undefined;
   readonly onCloseSheet: () => void;
   /** 서버가 받아 렌더링에 포함한 첫 장. */

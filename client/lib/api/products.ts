@@ -4,10 +4,9 @@ import {
   CategoryListResponse,
   CurationDetailResponse,
   CurationListResponse,
+  ExcludeCodeListResponse,
   IngredientDetailResponse,
-  IngredientGroupListResponse,
   IngredientGroupResponse,
-  type IngredientGroupType,
   IngredientListResponse,
   IngredientPageResponse,
   ProductCountResponse,
@@ -120,14 +119,8 @@ export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientL
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
   apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse);
 
-/** 빠른 제외에 쓰는 성분군만 조회한다. 제품 필터의 excludeCodes 기준은 유지한다. */
-export const fetchExcludeCodes = (): Promise<IngredientGroupListResponse> =>
-  apiGet("/api/ingredient-groups", IngredientGroupListResponse, {
-    query: new URLSearchParams({
-      type: "QUICK_EXCLUDE" satisfies IngredientGroupType,
-    }),
-    revalidate: CATALOG_TTL,
-  });
+export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> =>
+  apiGet("/api/exclude-codes", ExcludeCodeListResponse, { revalidate: CATALOG_TTL });
 
 /**
  * 제품이 없는 카테고리는 눌러도 빈 목록만 나오므로 받은 자리에서 뺀다. 디렉터리, 홈 칩,

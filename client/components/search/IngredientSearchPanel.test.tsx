@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -12,13 +12,12 @@ import { IngredientSearchPanel } from "./IngredientSearchPanel";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
 import { server } from "@/mocks/server";
 
-const excludeCodes: readonly IngredientGroupResponse[] = [
+const excludeCodes: readonly ExcludeCodeResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
     name: "향료/알레르기 성분 제외",
-    englishName: null,
     description: "착향 목적의 성분입니다.",
-    ingredients: [{ id: 101, koreanName: "리모넨", englishName: null }],
+    ingredients: [{ id: 101, koreanName: "리모넨", englishName: "Limonene" }],
   },
 ];
 

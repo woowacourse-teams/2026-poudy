@@ -1,6 +1,6 @@
 "use client";
 
-import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
@@ -19,7 +19,7 @@ import { useCountState } from "@/lib/hooks/useProductCount";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
 type IngredientSearchScreenProps = {
-  readonly excludeCodes: readonly IngredientGroupResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
 };
 
 const NO_NAMES: ReadonlyMap<number, string> = new Map();

@@ -4,9 +4,9 @@ import {
   CategoryListResponse,
   CurationDetailResponse,
   CurationListResponse,
+  ExcludeCodeListResponse,
   FeedbackImageUploadResponse,
   IngredientDetailResponse,
-  IngredientGroupListResponse,
   IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
@@ -26,8 +26,6 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { fetchExcludeCodes } from "@/lib/api/products";
-import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 
 /*
@@ -102,8 +100,7 @@ const cases = [
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
   ["성분 검색 제안", "/ingredients/suggestions?keyword=글리", IngredientListResponse],
   ["성분 상세", "/ingredients/1", IngredientDetailResponse],
-  ["성분군 목록", "/ingredient-groups", IngredientGroupListResponse],
-  ["빠른 제외 성분군", "/ingredient-groups?type=QUICK_EXCLUDE", IngredientGroupListResponse],
+  ["제외 성분군", "/exclude-codes", ExcludeCodeListResponse],
   ["성분 검색 제안(성분군 포함)", "/ingredients/suggestions?keyword=세라", IngredientListResponse],
   ["성분군 상세", "/ingredient-groups/CERAMIDES", IngredientGroupResponse],
   ["카테고리", "/categories", CategoryListResponse],
@@ -124,13 +121,6 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(200);
     expect(deepStrict(schema).safeParse(body)).toMatchObject({ success: true });
-  });
-
-  it("빠른 제외 조회는 일반 성분군을 포함하지 않는다", async () => {
-    const { items } = await fetchExcludeCodes();
-
-    expect(items.map((group) => group.code)).toEqual(excludeCodes.map((group) => group.code).sort());
-    expect(items.some((group) => group.code === "CERAMIDES")).toBe(false);
   });
 
   it("문의 접수는 내용 없이 204 를 준다", async () => {

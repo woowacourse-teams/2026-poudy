@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
@@ -32,7 +32,7 @@ type ConditionKey = "includeIngredientIds" | "excludeIngredientIds";
 type IngredientSearchPanelProps = {
   readonly filter: Filter;
   readonly onChange: (changed: Partial<Filter>) => void;
-  readonly excludeCodes: readonly IngredientGroupResponse[];
+  readonly excludeCodes: readonly ExcludeCodeResponse[];
   /** 화면에 이름을 보여 주기 위해 검색으로 만난 성분을 기억한다. */
   readonly names: ReadonlyMap<number, string>;
 };
