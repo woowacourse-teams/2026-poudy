@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCode, ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { IngredientGroupRows } from "@/components/search/IngredientGroupRows";
@@ -37,7 +37,7 @@ const ROW_CLASS = "flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0
 type IngredientOptionsProps = {
   readonly draft: Filter;
   readonly setDraft: (filter: Filter) => void;
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   readonly names: ReadonlyMap<number, string>;
 };
 

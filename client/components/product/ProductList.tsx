@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 import { useMemo, useState } from "react";
 
 import { chipsOf } from "./product-chips";
@@ -22,7 +22,7 @@ import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import type { InitialPage } from "@/lib/hooks/useProductPages";
 
 type ProductListProps = {
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
   readonly basePath?: string;
   /** 화면이 고정하는 조건. 브랜드 상세의 브랜드처럼 사용자가 바꾸지 않는 값이다. */
