@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useSyncExternalStore } from "react";
 
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
+import { rememberLoginReturn } from "@/lib/storage/login-return";
 import {
   getSavedProductsServerSnapshot,
   getSavedProductsSnapshot,
@@ -22,6 +23,7 @@ const useSignedInRequest = (status: SavedProductsStatus) => {
   return useCallback(
     (request: (productId: number) => Promise<SaveResult>, productId: number): Promise<SaveResult> | null => {
       if (status === "signedOut") {
+        rememberLoginReturn();
         router.push(LOGIN_PATH);
         return null;
       }
@@ -30,7 +32,10 @@ const useSignedInRequest = (status: SavedProductsStatus) => {
         return null;
       }
       return request(productId).then((result) => {
-        if (result === "signedOut") router.push(LOGIN_PATH);
+        if (result === "signedOut") {
+          rememberLoginReturn();
+          router.push(LOGIN_PATH);
+        }
         if (result === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
         return result;
       });

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
+import { takeLoginReturn } from "@/lib/storage/login-return";
 
 type Gender = NonNullable<MemberProfileRequest["gender"]>;
 type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
@@ -116,7 +117,7 @@ export function OnboardingScreen() {
     setSaving(true);
     setFailed(false);
     updateMyProfile({ gender, ageRange, skinType })
-      .then(() => router.replace("/"))
+      .then(() => router.replace(takeLoginReturn()))
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
           router.replace("/login");
@@ -148,7 +149,7 @@ export function OnboardingScreen() {
             </h1>
             <button
               type="button"
-              onClick={() => router.replace("/")}
+              onClick={() => router.replace(takeLoginReturn())}
               className="mt-1 shrink-0 rounded-sm py-1 text-[14px] text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
             >
               건너뛰기
