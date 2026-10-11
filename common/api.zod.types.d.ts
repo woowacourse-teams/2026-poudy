@@ -30,6 +30,14 @@ export type FeedbackRequest = {
    */
   imageIds?: (Array<string> | null);
 }
+export type AppLoginRequest = {
+  /**
+   * 카카오 접근 토큰 또는 구글 ID 토큰
+   */
+  token: string;
+}
+export type LoginStatus = ("SIGNED_IN" | "WITHDRAWN" | "RESTORE_REQUESTED" | "SIGNUP_REQUIRED")
+export type AppLoginResponse = { status: LoginStatus }
 export type AdminLoginRequest = {
   /**
    * 관리자 아이디
@@ -837,11 +845,31 @@ export type post_Submit_1 = {
 
     }
 /**
+ * 앱이 네이티브 SDK로 받은 카카오 접근 토큰이나 구글 ID 토큰을 확인해 앱 세션을 발급한다. status 는 웹 로그인 콜백의 status 와 같다.
+ */
+export type post_Login = {
+      method: "POST",
+      path: "/api/auth/{provider}/app-login",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { provider: ("kakao" | "google") },
+
+        body:  Schemas.AppLoginRequest,
+          }
+      responses: {200: Schemas.AppLoginResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 탈퇴한 계정으로 방금 소셜 로그인한 사람이 복구를 요청한다. 복구 여부는 관리자가 정한다.
  */
 export type post_RequestRestore = {
       method: "POST",
-      path: "/api/auth/withdrawn-member/restore-request",
+      path: "/api/auth/withdrawn/restore",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
@@ -891,7 +919,7 @@ export type post_Restore = {
 /**
  * 관리자 계정을 확인하고 관리자 세션을 발급한다. 관리자 API는 이 세션 쿠키로 호출한다.
  */
-export type post_Login = {
+export type post_Login_1 = {
       method: "POST",
       path: "/api/admin/login",
       requestFormat: "json",
@@ -1586,7 +1614,7 @@ export type get_StartSocialLogin = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ returnOrigin: string }>,
+            query?:  Partial<{ returnOrigin: string, channel: "app" }>,
         path:  { provider: ("kakao" | "google") },
 
           }
@@ -1647,10 +1675,11 @@ post: {
 "/api/products/registration-requests": Endpoints.post_Submit,
 "/api/pending-images": Endpoints.post_UploadImages,
 "/api/feedbacks": Endpoints.post_Submit_1,
-"/api/auth/withdrawn-member/restore-request": Endpoints.post_RequestRestore,
+"/api/auth/{provider}/app-login": Endpoints.post_Login,
+"/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
 "/api/auth/signup": Endpoints.post_SignUp,
 "/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
-"/api/admin/login": Endpoints.post_Login,
+"/api/admin/login": Endpoints.post_Login_1,
 "/api/members/logout": Endpoints.post_Logout,
 "/api/admin/logout": Endpoints.post_AdminLogout
          },

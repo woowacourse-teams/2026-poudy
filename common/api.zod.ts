@@ -22,6 +22,15 @@ export const FeedbackType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER"]);
 export type FeedbackRequest = __TypedOpenapi.Schemas.FeedbackRequest;
 export const FeedbackRequest = z.object({ type: FeedbackType, content: z.string().min(10).max(2000), path: z.string().min(1).max(500).nullable().optional(), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
 
+export type AppLoginRequest = __TypedOpenapi.Schemas.AppLoginRequest;
+export const AppLoginRequest = z.object({ token: z.string().min(1) });
+
+export type LoginStatus = __TypedOpenapi.Schemas.LoginStatus;
+export const LoginStatus = z.enum(["SIGNED_IN", "WITHDRAWN", "RESTORE_REQUESTED", "SIGNUP_REQUIRED"]);
+
+export type AppLoginResponse = __TypedOpenapi.Schemas.AppLoginResponse;
+export const AppLoginResponse = z.object({ status: LoginStatus });
+
 export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
 export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
 
@@ -381,10 +390,20 @@ export const post_Submit_1 = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_Login = __TypedOpenapi.Endpoints.post_Login;
+export const post_Login = {
+  method: z.literal("POST"),
+  path: z.literal("/api/auth/{provider}/app-login"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ provider: z.enum(["kakao", "google"]) }), body: AppLoginRequest },
+  responses: { 200: AppLoginResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_RequestRestore = __TypedOpenapi.Endpoints.post_RequestRestore;
 export const post_RequestRestore = {
   method: z.literal("POST"),
-  path: z.literal("/api/auth/withdrawn-member/restore-request"),
+  path: z.literal("/api/auth/withdrawn/restore"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: z.never(),
@@ -411,8 +430,8 @@ export const post_Restore = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
-export type post_Login = __TypedOpenapi.Endpoints.post_Login;
-export const post_Login = {
+export type post_Login_1 = __TypedOpenapi.Endpoints.post_Login_1;
+export const post_Login_1 = {
   method: z.literal("POST"),
   path: z.literal("/api/admin/login"),
   requestFormat: z.literal("json"),
@@ -747,7 +766,7 @@ export const get_StartSocialLogin = {
   path: z.literal("/api/oauth2/authorization/{provider}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ returnOrigin: z.string() }).partial().optional(), path: z.object({ provider: z.enum(["kakao", "google"]) }) },
+  parameters: { query: z.object({ returnOrigin: z.string(), channel: z.literal("app") }).partial().optional(), path: z.object({ provider: z.enum(["kakao", "google"]) }) },
   responses: { 302: z.unknown(), 404: ProblemDetail, 500: ProblemDetail },
   responseHeaders: { 302: z.object({ Location: z.string() }) },
 };
@@ -790,10 +809,11 @@ post: {
 "/api/products/registration-requests": post_Submit as any,
 "/api/pending-images": post_UploadImages as any,
 "/api/feedbacks": post_Submit_1 as any,
-"/api/auth/withdrawn-member/restore-request": post_RequestRestore as any,
+"/api/auth/{provider}/app-login": post_Login as any,
+"/api/auth/withdrawn/restore": post_RequestRestore as any,
 "/api/auth/signup": post_SignUp as any,
 "/api/admin/members/{memberId}/restore": post_Restore as any,
-"/api/admin/login": post_Login as any,
+"/api/admin/login": post_Login_1 as any,
 "/api/members/logout": post_Logout as any,
 "/api/admin/logout": post_AdminLogout as any
          },

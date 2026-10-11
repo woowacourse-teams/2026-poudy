@@ -1,7 +1,7 @@
 package com.poudy.member.domain;
 
 import com.poudy.security.domain.OAuthProvider;
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
 
 public final class Member {
 
@@ -31,8 +31,8 @@ public final class Member {
         this.status = status;
     }
 
-    public SocialSignInResult signInResult() {
-        return new SocialSignInResult(id, status.signInStatus());
+    public SocialLoginResult loginResult() {
+        return new SocialLoginResult(id, status.loginStatus());
     }
 
     public long id() {

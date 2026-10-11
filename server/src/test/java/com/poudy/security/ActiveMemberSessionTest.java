@@ -11,6 +11,7 @@ import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,7 @@ class ActiveMemberSessionTest {
 
     private MockHttpSession signedInSession(long memberId) {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        loginSession.signIn(memberId, request, new MockHttpServletResponse());
+        loginSession.signIn(memberId, LoginChannel.WEB, request, new MockHttpServletResponse());
         SecurityContextHolder.clearContext();
         return (MockHttpSession) request.getSession();
     }

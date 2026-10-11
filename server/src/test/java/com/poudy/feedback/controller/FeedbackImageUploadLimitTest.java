@@ -2,7 +2,7 @@ package com.poudy.feedback.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.poudy.feedback.service.FeedbackImageUploadService;
+import com.poudy.EmbeddedServerTest;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,23 +10,14 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
-        "spring.servlet.multipart.max-file-size=1KB",
-        "spring.servlet.multipart.max-request-size=2KB"
-})
+@EmbeddedServerTest
 @DisplayName("의견 이미지 실제 multipart 상한")
 class FeedbackImageUploadLimitTest {
 
     @LocalServerPort
     private int port;
-
-    @MockitoBean
-    private FeedbackImageUploadService imageUploadService;
 
     @Test
     @DisplayName("embedded server가 파일 상한 초과를 ProblemDetail 413으로 반환한다")

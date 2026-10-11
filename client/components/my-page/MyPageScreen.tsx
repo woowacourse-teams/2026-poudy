@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { findMe, isAdminSession, isSignedOut, logout, withdraw } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
+import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
@@ -44,6 +45,7 @@ export function MyPageScreen() {
     setPending(true);
     request()
       .then(() => {
+        notifyAppLogout();
         void reloadSavedProducts();
         router.replace("/login");
       })

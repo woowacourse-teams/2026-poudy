@@ -224,7 +224,7 @@ describe("목 응답과 스키마", () => {
   });
 
   it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
-    const { status, body } = await post("/auth/withdrawn-member/restore-request", "");
+    const { status, body } = await post("/auth/withdrawn/restore", "");
 
     expect(status).toBe(204);
     expect(body).toBeUndefined();
@@ -265,7 +265,7 @@ describe("목 응답과 스키마", () => {
       "/members/me (DELETE)",
       "/members/me/saved-products/:id (PUT)",
       "/members/me/saved-products/:id (DELETE)",
-      "/auth/withdrawn-member/restore-request",
+      "/auth/withdrawn/restore",
       "/auth/signup",
     ];
 

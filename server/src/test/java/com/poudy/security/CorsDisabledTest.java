@@ -15,7 +15,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = "poudy.cors.allowed-origins=")
+@SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("오리진을 비워 둔 CORS 설정")
 class CorsDisabledTest {

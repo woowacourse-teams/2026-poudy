@@ -1,21 +1,23 @@
 package com.poudy.security.session;
 
+import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
-import com.poudy.security.domain.SignInStatus;
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
@@ -23,18 +25,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoginSession {
 
-    private static final String EXPIRES_AT = LoginSession.class.getName() + ".expiresAt";
+    private static final String CHANNEL = LoginSession.class.getName() + ".channel";
     private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
-    private static final String SIGNUP_ACCOUNT = LoginSession.class.getName() + ".signupAccount";
-    private static final String RETURN_ORIGIN = LoginSession.class.getName() + ".returnOrigin";
-    private static final String RETURN_ORIGIN_STATE = LoginSession.class.getName() + ".returnOriginState";
+    private static final String PENDING_SIGNUP = LoginSession.class.getName() + ".pendingSignup";
     private static final String GRACED_IDLE_TIMEOUT = LoginSession.class.getName() + ".gracedIdleTimeout";
     private static final Duration HOLD_TIMEOUT = Duration.ofMinutes(10);
 
-    private final Duration idleTimeout;
-    private final Duration absoluteTimeout;
-    private final Duration adminIdleTimeout;
-    private final Duration adminAbsoluteTimeout;
+    private final Map<LoginChannel, SessionPolicy> policies;
     private final Clock clock;
     private final SecurityContextRepository securityContextRepository;
     private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
@@ -42,56 +39,38 @@ public class LoginSession {
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
     public LoginSession(
-        @Value("${poudy.auth.web-session.idle-timeout}") Duration idleTimeout,
-        @Value("${poudy.auth.web-session.absolute-timeout}") Duration absoluteTimeout,
-        @Value("${poudy.auth.admin-session.idle-timeout}") Duration adminIdleTimeout,
-        @Value("${poudy.auth.admin-session.absolute-timeout}") Duration adminAbsoluteTimeout,
+        List<SessionPolicy> policies,
         Clock clock,
         SecurityContextRepository securityContextRepository
     ) {
-        this.idleTimeout = idleTimeout;
-        this.absoluteTimeout = absoluteTimeout;
-        this.adminIdleTimeout = adminIdleTimeout;
-        this.adminAbsoluteTimeout = adminAbsoluteTimeout;
+        this.policies = policies.stream().collect(Collectors.toMap(SessionPolicy::channel, Function.identity()));
         this.clock = clock;
         this.securityContextRepository = securityContextRepository;
     }
 
-    public SignInStatus applySignInResult(
-        SocialSignInResult result,
+    public LoginStatus applyLoginResult(
+        SocialLoginResult result,
+        LoginChannel channel,
         HttpServletRequest request,
         HttpServletResponse response
     ) {
         switch (result.status()) {
-            case SIGNED_IN -> signIn(result.memberId(), request, response);
+            case SIGNED_IN -> signIn(result.memberId(), channel, request, response);
             case WITHDRAWN -> holdWithdrawnMember(result.memberId(), request, response);
             case RESTORE_REQUESTED -> signOut(request, response);
         }
         return result.status();
     }
 
-    public void signIn(long memberId, HttpServletRequest request, HttpServletResponse response) {
-        saveAuthentication(
-            new LoginMember(memberId).toAuthentication(),
-            idleTimeout,
-            absoluteTimeout,
-            request,
-            response
-        );
-        HttpSession session = request.getSession();
+    public void signIn(long memberId, LoginChannel channel, HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = start(new LoginMember(memberId).toAuthentication(), channel, request, response);
         session.removeAttribute(WITHDRAWN_MEMBER_ID);
-        session.removeAttribute(SIGNUP_ACCOUNT);
+        session.removeAttribute(PENDING_SIGNUP);
     }
 
     public void signInAdmin(String username, HttpServletRequest request, HttpServletResponse response) {
         signOut(request, response);
-        saveAuthentication(
-            new LoginAdmin(username).toAuthentication(),
-            adminIdleTimeout,
-            adminAbsoluteTimeout,
-            request,
-            response
-        );
+        start(new LoginAdmin(username).toAuthentication(), LoginChannel.ADMIN, request, response);
     }
 
     public void holdWithdrawnMember(long memberId, HttpServletRequest request, HttpServletResponse response) {
@@ -102,63 +81,43 @@ public class LoginSession {
         return release(WITHDRAWN_MEMBER_ID, Long.class, request);
     }
 
-    public SignInStatus holdSignup(OAuthAccount account, HttpServletRequest request, HttpServletResponse response) {
-        hold(SIGNUP_ACCOUNT, account, request, response);
-        return SignInStatus.SIGNUP_REQUIRED;
+    public LoginStatus holdSignup(
+        OAuthAccount account,
+        LoginChannel channel,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
+        hold(PENDING_SIGNUP, new PendingSignup(account, channel), request, response);
+        return LoginStatus.SIGNUP_REQUIRED;
     }
 
-    public Optional<OAuthAccount> releaseSignup(HttpServletRequest request) {
-        return release(SIGNUP_ACCOUNT, OAuthAccount.class, request);
-    }
-
-    public void rememberReturnOrigin(String origin, String state, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        session.setAttribute(RETURN_ORIGIN, origin);
-        session.setAttribute(RETURN_ORIGIN_STATE, state);
-    }
-
-    public void forgetReturnOrigin(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.removeAttribute(RETURN_ORIGIN);
-            session.removeAttribute(RETURN_ORIGIN_STATE);
-        }
-    }
-
-    public Optional<String> takeReturnOrigin(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null
-            || !(session.getAttribute(RETURN_ORIGIN) instanceof String origin)
-            || !(session.getAttribute(RETURN_ORIGIN_STATE) instanceof String state)
-            || !state.equals(request.getParameter(OAuth2ParameterNames.STATE))) {
-            return Optional.empty();
-        }
-        forgetReturnOrigin(request);
-        return Optional.of(origin);
+    public Optional<PendingSignup> releaseSignup(HttpServletRequest request) {
+        return release(PENDING_SIGNUP, PendingSignup.class, request);
     }
 
     public void signOut(HttpServletRequest request, HttpServletResponse response) {
         logoutHandler.logout(request, response, null);
     }
 
-    public void expireIfOverdue(HttpServletRequest request) {
+    public void refresh(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
-            return;
-        }
-        if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt && !clock.instant().isBefore(expiresAt)) {
-            session.invalidate();
             return;
         }
         if (session.getAttribute(GRACED_IDLE_TIMEOUT) instanceof Integer idleSeconds) {
             session.setMaxInactiveInterval(idleSeconds);
             session.removeAttribute(GRACED_IDLE_TIMEOUT);
         }
+        if (session.getAttribute(CHANNEL) instanceof LoginChannel channel) {
+            policies.get(channel).refresh(session, response);
+        }
     }
 
     public void grace(HttpSession session, Duration grace) {
         graceIdleTimeout(session, grace);
-        graceExpiry(session, grace);
+        if (session.getAttribute(CHANNEL) instanceof LoginChannel channel) {
+            policies.get(channel).grace(session, grace);
+        }
     }
 
     private void graceIdleTimeout(HttpSession session, Duration grace) {
@@ -171,13 +130,6 @@ public class LoginSession {
             session.setAttribute(GRACED_IDLE_TIMEOUT, idleSeconds);
         }
         session.setMaxInactiveInterval(idleSeconds + Math.toIntExact(grace.toSeconds()));
-    }
-
-    private void graceExpiry(HttpSession session, Duration grace) {
-        if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt
-            && clock.instant().plus(grace).isAfter(expiresAt)) {
-            session.setAttribute(EXPIRES_AT, expiresAt.plus(grace));
-        }
     }
 
     private void hold(String name, Object value, HttpServletRequest request, HttpServletResponse response) {
@@ -197,10 +149,9 @@ public class LoginSession {
         return Optional.of(value);
     }
 
-    private void saveAuthentication(
+    private HttpSession start(
         Authentication authentication,
-        Duration idleTimeout,
-        Duration absoluteTimeout,
+        LoginChannel channel,
         HttpServletRequest request,
         HttpServletResponse response
     ) {
@@ -210,7 +161,8 @@ public class LoginSession {
         securityContextRepository.saveContext(context, request, response);
 
         HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(Math.toIntExact(idleTimeout.toSeconds()));
-        session.setAttribute(EXPIRES_AT, clock.instant().plus(absoluteTimeout));
+        session.setAttribute(CHANNEL, channel);
+        policies.get(channel).start(session);
+        return session;
     }
 }

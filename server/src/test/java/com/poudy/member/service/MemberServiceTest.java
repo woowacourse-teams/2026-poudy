@@ -9,10 +9,10 @@ import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
+import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
-import com.poudy.security.domain.SignInStatus;
-import com.poudy.security.domain.SocialSignInResult;
+import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,8 +33,8 @@ class MemberServiceTest {
     void doesNotRegisterOnFirstSignIn() {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "new@example.com", true);
 
-        assertThat(memberService.signIn(account)).isEmpty();
-        assertThat(memberService.signIn(account)).isEmpty();
+        assertThat(memberService.login(account)).isEmpty();
+        assertThat(memberService.login(account)).isEmpty();
     }
 
     @Test
@@ -54,12 +54,12 @@ class MemberServiceTest {
         long registered = memberService
             .signUp(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true));
 
-        SocialSignInResult result = memberService
-            .signIn(new OAuthAccount(OAuthProvider.GOOGLE, "sub", null, false))
+        SocialLoginResult result = memberService
+            .login(new OAuthAccount(OAuthProvider.GOOGLE, "sub", null, false))
             .orElseThrow();
 
         assertThat(result.memberId()).isEqualTo(registered);
-        assertThat(result.status()).isEqualTo(SignInStatus.SIGNED_IN);
+        assertThat(result.status()).isEqualTo(LoginStatus.SIGNED_IN);
     }
 
     @Test
@@ -67,7 +67,7 @@ class MemberServiceTest {
     void rejectsUnverifiedEmail() {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", false);
 
-        assertThatThrownBy(() -> memberService.signIn(account)).isInstanceOf(UnverifiedOAuthEmailException.class);
+        assertThatThrownBy(() -> memberService.login(account)).isInstanceOf(UnverifiedOAuthEmailException.class);
         assertThatThrownBy(() -> memberService.signUp(account)).isInstanceOf(UnverifiedOAuthEmailException.class);
     }
 
@@ -77,7 +77,7 @@ class MemberServiceTest {
         memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
         OAuthAccount google = new OAuthAccount(OAuthProvider.GOOGLE, "sub", "Member@example.com", true);
 
-        assertThatThrownBy(() -> memberService.signIn(google))
+        assertThatThrownBy(() -> memberService.login(google))
             .isInstanceOfSatisfying(
                 EmailAlreadyRegisteredException.class,
                 exception -> assertThat(exception.registeredProvider()).isEqualTo(OAuthProvider.KAKAO)
@@ -119,9 +119,9 @@ class MemberServiceTest {
         long memberId = memberService.signUp(account);
         memberService.withdraw(memberId);
 
-        SocialSignInResult result = memberService.signIn(account).orElseThrow();
+        SocialLoginResult result = memberService.login(account).orElseThrow();
 
-        assertThat(result.status()).isEqualTo(SignInStatus.WITHDRAWN);
+        assertThat(result.status()).isEqualTo(LoginStatus.WITHDRAWN);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 
@@ -133,9 +133,9 @@ class MemberServiceTest {
         memberService.withdraw(memberId);
         memberService.requestRestore(memberId);
 
-        SocialSignInResult result = memberService.signIn(account).orElseThrow();
+        SocialLoginResult result = memberService.login(account).orElseThrow();
 
-        assertThat(result.status()).isEqualTo(SignInStatus.RESTORE_REQUESTED);
+        assertThat(result.status()).isEqualTo(LoginStatus.RESTORE_REQUESTED);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 
@@ -161,8 +161,8 @@ class MemberServiceTest {
         memberService.requestRestore(memberId);
         memberService.restore(memberId);
 
-        SocialSignInResult result = memberService.signIn(account).orElseThrow();
-        assertThat(result.status()).isEqualTo(SignInStatus.SIGNED_IN);
+        SocialLoginResult result = memberService.login(account).orElseThrow();
+        assertThat(result.status()).isEqualTo(LoginStatus.SIGNED_IN);
         assertThat(result.memberId()).isEqualTo(memberId);
     }
 }

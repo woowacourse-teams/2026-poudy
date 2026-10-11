@@ -14,7 +14,7 @@
   맡겨 둔 소셜 계정으로만 가입하고, 가입하면 같은 세션으로 로그인시킨다
 - `PATCH /api/members/me/profile`: 성별·나이대·피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다. 이후 변경에도 쓴다
 - `DELETE /api/members/me`: 회원 탈퇴. 행을 지우지 않고 `deleted_at`을 남긴 뒤 세션을 끝낸다
-- `POST /api/auth/withdrawn-member/restore-request`: 탈퇴 계정으로 다시 로그인한 사람의 복구 요청.
+- `POST /api/auth/withdrawn/restore`: 탈퇴 계정으로 다시 로그인한 사람의 복구 요청.
   로그인 처리에서 세션에 맡겨 둔 탈퇴 회원에게만 `restore_requested_at`을 남긴다
 - `POST /api/members/logout`: 회원 세션 무효화. 관리자 세션은 403으로 거절한다
 - 탈퇴 회원 파기: 매일 03:40 탈퇴한 지 30일이 지난 회원 행을 지운다(`poudy.member.retention`, 운영만 켬)
@@ -31,7 +31,7 @@
   막는 데만 쓴다. 다른 제공자로 이미 가입한 이메일이면 가입을 거절하고 기존 제공자를 알린다.
 - 제공자가 인증한 이메일만 받는다. 카카오는 `is_email_valid`·`is_email_verified`, 구글은
   `email_verified`가 모두 참이어야 한다. 이미 가입한 회원은 이메일 상태와 무관하게 로그인한다.
-- `security`는 회원을 모르고 `SocialSignIn` 포트로 가입·조회를 맡긴다. `member`가 포트를 구현하므로
+- `security`는 회원을 모르고 `SocialMembers` 포트로 가입·조회를 맡긴다. `member`가 포트를 구현하므로
   의존은 `member → security` 한 방향이다. 제공자별 응답 해석은 `OAuthProvider`가 `OAuthAccount`로
   바꾼다. 구글은 `openid`·`email`로 OIDC, 카카오는 OIDC 없이 `/v2/user/me`를 쓴다.
 - 로그인에 성공하면 세션의 인증 정보를 회원 ID만 가진 인증으로 바꾼다. 제공자 응답을 세션에

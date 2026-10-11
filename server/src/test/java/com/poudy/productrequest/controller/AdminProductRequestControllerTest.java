@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.SharedMockBeans;
 import com.poudy.productrequest.domain.ProductRequest;
 import com.poudy.productrequest.domain.ProductRequestPage;
 import com.poudy.productrequest.domain.ProductRequestStatus;
@@ -24,10 +25,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
+@SharedMockBeans
 @AutoConfigureMockMvc
 @WithMockUser(roles = "ADMIN")
 @DisplayName("관리자 제품 등록 요청 API")
@@ -39,7 +40,7 @@ class AdminProductRequestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Autowired
     private ProductRequestService productRequestService;
 
     @Test

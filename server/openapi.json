@@ -807,7 +807,113 @@
         }
       }
     },
-    "/api/auth/withdrawn-member/restore-request": {
+    "/api/auth/{provider}/app-login": {
+      "post": {
+        "tags": [
+          "인증"
+        ],
+        "summary": "앱 소셜 로그인",
+        "description": "앱이 네이티브 SDK로 받은 카카오 접근 토큰이나 구글 ID 토큰을 확인해 앱 세션을 발급한다. status 는 웹 로그인 콜백의 status 와 같다.",
+        "operationId": "login",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "kakao",
+                "google"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "로그인 처리 완료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  },
+                  "OAUTH_LOGIN_FAILED": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "소셜 로그인에 실패했습니다.",
+                      "code": "OAUTH_LOGIN_FAILED"
+                    }
+                  },
+                  "OAUTH_EMAIL_NOT_VERIFIED": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "인증된 이메일이 있는 계정으로만 가입할 수 있습니다.",
+                      "code": "OAUTH_EMAIL_NOT_VERIFIED"
+                    }
+                  },
+                  "MEMBER_EMAIL_ALREADY_REGISTERED": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "다른 로그인 방식으로 이미 가입한 이메일입니다.",
+                      "code": "MEMBER_EMAIL_ALREADY_REGISTERED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/withdrawn/restore": {
       "post": {
         "tags": [
           "인증"
@@ -1014,7 +1120,7 @@
         ],
         "summary": "관리자 로그인",
         "description": "관리자 계정을 확인하고 관리자 세션을 발급한다. 관리자 API는 이 세션 쿠키로 호출한다.",
-        "operationId": "login",
+        "operationId": "login_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4062,6 +4168,18 @@
               "type": "string",
               "example": "https://pr-111.preview.poudy.site"
             }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "description": "앱 WebView에서 시작한 로그인이면 app. 로그인 후 앱 세션 정책으로 세션을 만든다.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app"
+              ]
+            }
           }
         ],
         "responses": {
@@ -4371,6 +4489,39 @@
           "BUG_REPORT",
           "IMPROVEMENT",
           "OTHER"
+        ]
+      },
+      "AppLoginRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "카카오 접근 토큰 또는 구글 ID 토큰",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "AppLoginResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/LoginStatus"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "LoginStatus": {
+        "type": "string",
+        "enum": [
+          "SIGNED_IN",
+          "WITHDRAWN",
+          "RESTORE_REQUESTED",
+          "SIGNUP_REQUIRED"
         ]
       },
       "AdminLoginRequest": {
