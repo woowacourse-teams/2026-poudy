@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -14,10 +14,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => params.current,
 }));
 
-const excludeCodes = [
+const excludeCodes: readonly IngredientGroupResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
     name: "향료 제외",
+    englishName: null,
     description: "",
     ingredients: [
       { id: 1, koreanName: "가", englishName: "a" },
@@ -25,7 +26,7 @@ const excludeCodes = [
       { id: 3, koreanName: "다", englishName: "c" },
     ],
   },
-] as unknown as readonly ExcludeCodeResponse[];
+];
 
 const setup = (query: string) => {
   params.current = new URLSearchParams(query);
