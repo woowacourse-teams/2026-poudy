@@ -17,6 +17,7 @@ import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
+import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { getSavedProductsSnapshot, reloadSavedProducts, type SaveResult } from "@/lib/storage/saved-products";
 
 type Status = "loading" | "error" | "ready";
@@ -125,6 +126,7 @@ function SignInNotice() {
       <p className="text-[12px] text-text-secondary">저장한 제품은 다른 기기에서도 그대로 볼 수 있어요.</p>
       <Link
         href="/login"
+        onClick={rememberLoginReturn}
         className="mt-2 flex h-11 items-center rounded-button bg-action px-5 text-[14px] font-bold text-action-text"
       >
         로그인하기

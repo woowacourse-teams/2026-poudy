@@ -9,6 +9,7 @@ import { SIGNUP_SHEET_PATH } from "./SignupSheet";
 import { findMe, requestRestore } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
+import { takeLoginReturn } from "@/lib/storage/login-return";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 type Props = {
@@ -124,7 +125,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
       .then((member) => {
         void reloadSavedProducts();
         rememberLastLogin(member.provider);
-        router.replace("/");
+        router.replace(takeLoginReturn());
       })
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);
