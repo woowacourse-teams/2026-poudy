@@ -23,17 +23,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@SpringBootTest(properties = "poudy.cors.allowed-origins=https://staging-app.poudy.site,https://*.preview.poudy.site")
+@SpringBootTest(properties = ConfiguredClientOrigins.PROPERTY)
 @AutoConfigureMockMvc
 @Transactional
-@DirtiesContext
 @DisplayName("보안 설정")
 class SecurityConfigTest {
 

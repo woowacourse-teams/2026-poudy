@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.SharedMockBeans;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.repository.MemberRepository;
@@ -23,11 +24,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
+@SharedMockBeans
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("앱 소셜 로그인 API")
@@ -47,7 +48,7 @@ class AppLoginControllerTest {
     @Autowired
     private MemberRepository memberRepository;
 
-    @MockitoBean
+    @Autowired
     private ProviderTokenVerifiers tokenVerifiers;
 
     @Test

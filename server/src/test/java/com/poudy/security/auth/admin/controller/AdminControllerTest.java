@@ -23,10 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = {
-        "poudy.admin.username=admin-test",
-        "poudy.admin.password=secret-test"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("관리자 로그인 API")
 class AdminControllerTest {

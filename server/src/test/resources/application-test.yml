@@ -4,6 +4,12 @@ poudy:
   feedback:
     image-s3:
       pending-prefix: poudy/test/feedback/pending/
+  # 로컬 .env 의 값과 무관하게 모든 테스트가 같은 값으로 뜨게 고정해, 이 값만 다르던 테스트도 기본 컨텍스트를 같이 쓴다.
+  admin:
+    username: admin-test
+    password: secret-test
+  cors:
+    allowed-origins: ""
 
 spring:
   datasource:

@@ -25,8 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(properties = "poudy.cors.allowed-origins="
-    + "http://localhost:3000, https://poudy.example.com, https://*.preview.example.com")
+@SpringBootTest(properties = ConfiguredClientOrigins.PROPERTY)
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("CORS 설정")

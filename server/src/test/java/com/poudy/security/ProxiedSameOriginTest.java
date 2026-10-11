@@ -2,6 +2,7 @@ package com.poudy.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.EmbeddedServerTest;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -9,16 +10,9 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.annotation.DirtiesContext;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
-        "server.forward-headers-strategy=native",
-        "poudy.cors.allowed-origins="
-})
-@DirtiesContext
+@EmbeddedServerTest
 @DisplayName("운영 프록시 뒤 같은 출처 판정")
 class ProxiedSameOriginTest {
 
