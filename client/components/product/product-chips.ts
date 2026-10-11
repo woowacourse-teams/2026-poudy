@@ -1,4 +1,4 @@
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 
 import type { FilterChipItem } from "@/components/ui/FilterChipBar";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
@@ -8,7 +8,7 @@ import type { Filter } from "@/lib/domain/filter";
  * 성분 칩의 숫자. 빠른 필터는 성분을 묶어 둔 것이라 묶음 하나가 아니라 그 안의 성분 수로 센다.
  * 낱개로 고른 성분과 겹칠 수 있으므로 한 번만 세도록 모아서 헤아린다.
  */
-const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): number => {
+const countIngredients = (filter: Filter, excludeCodes: readonly IngredientGroupResponse[]): number => {
   const picked = new Set<number>(filter.excludeIngredientIds);
 
   for (const code of knownExcludeCodes(excludeCodes)) {
@@ -19,7 +19,10 @@ const countIngredients = (filter: Filter, excludeCodes: readonly ExcludeCodeResp
   return picked.size + filter.excludeGroupCodes.length;
 };
 
-export const chipsOf = (filter: Filter, excludeCodes: readonly ExcludeCodeResponse[]): readonly FilterChipItem[] => [
+export const chipsOf = (
+  filter: Filter,
+  excludeCodes: readonly IngredientGroupResponse[],
+): readonly FilterChipItem[] => [
   {
     id: "ingredient",
     label: "성분",
