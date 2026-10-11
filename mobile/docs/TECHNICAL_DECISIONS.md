@@ -21,6 +21,7 @@
 - 카카오 SDK 로그아웃은 토큰을 서버에서 만료시키므로 로그인 직후가 아니라 웹이 `poudy:logout` 을 보낼 때 한다.
 - 구글 SDK 의 `webClientId` 는 서버의 `GOOGLE_CLIENT_ID` 와 같아야 한다. 서버가 ID 토큰의 `aud` 를 이 값으로 확인한다. Android OAuth 클라이언트는 패키지와 서명 SHA-1 로만 앱을 식별하고 코드에는 쓰지 않는다.
 - 카카오 Android SDK 는 Maven Central 이 아니라 카카오 저장소에 있어 `expo-build-properties` 의 `extraMavenRepos` 에 넣는다.
+- 카카오 SDK 는 서버 응답을 Gson 으로 `model` 클래스에 넣고 API 를 Retrofit 인터페이스로 부르는데, 이 규칙을 SDK 가 직접 싣지 않는다. release 빌드는 R8 로 줄이므로 카카오 문서의 프로가드 규칙을 `expo-build-properties` 의 `extraProguardRules` 에 넣는다. 없으면 R8 이 Retrofit `Call` 의 제네릭 정보를 지워, 카카오톡 로그인 뒤 인가 코드를 토큰으로 바꾸는 단계에서 `Unable to create call adapter` 로 앱이 종료된다.
 
 ## WebView 탐색과 뒤로 가기
 
