@@ -375,7 +375,7 @@ describe("공유 메타데이터", () => {
       searchParams: Promise.resolve({}),
     });
 
-    const title = "라운드랩 약콩 판테놀 마스크 — 성분·가격·제품 정보 | 파우디";
+    const title = "라운드랩 약콩 판테놀 마스크 — 성분·가격·제품 정보 | 파우디(Poudy)";
     const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요.";
     expect(metadata.title).toBe(title);
     expect(metadata.description).toBe(description);
