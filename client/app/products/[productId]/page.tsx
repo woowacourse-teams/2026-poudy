@@ -9,7 +9,7 @@ import { fetchExcludeCodes, fetchProductDetail, fetchProductSimilarities } from 
 import { productIngredientDescription } from "@/lib/domain/product-display";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
-import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION } from "@/lib/seo/site";
+import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 import { breadcrumbList, productCrumbs, productStructuredData } from "@/lib/seo/structured-data";
 
 // 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
@@ -72,7 +72,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
 
   try {
     const product = await fetchProductDetail(Number(productId));
-    const title = `${product.brand.name} ${product.name} — 성분·가격·제품 정보 | ${SITE_ALTERNATE_NAME}`;
+    const title = `${product.brand.name} ${product.name} — 성분·가격·제품 정보 | ${SITE_ALTERNATE_NAME}(${SITE_NAME})`;
     // 제품마다 성분 수와 대표 작용이 달라 설명문이 겹치지 않는다.
     const description = productIngredientDescription({
       brandName: product.brand.name,
