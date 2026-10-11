@@ -32,4 +32,12 @@ public abstract class ExpiringSessionPolicy implements SessionPolicy {
             session.invalidate();
         }
     }
+
+    @Override
+    public void grace(HttpSession session, Duration grace) {
+        if (session.getAttribute(EXPIRES_AT) instanceof Instant expiresAt
+            && clock.instant().plus(grace).isAfter(expiresAt)) {
+            session.setAttribute(EXPIRES_AT, expiresAt.plus(grace));
+        }
+    }
 }

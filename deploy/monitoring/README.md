@@ -12,14 +12,14 @@
   - Elastic IP: `54.116.229.77`
   - Private IP: `10.0.0.57`
 - 백엔드 EC2: `i-0192ed4a2f51748fe`
-  - 현재 Public IP: `16.184.16.46` (Elastic IP 아님)
+  - 현재 Public IP: `43.202.164.103` (Elastic IP 아님)
   - Private IP: `10.0.3.84`
 - EC2 IAM role: `ec2-project`
 - Security Group: `project-public`
 
-백엔드 `:8080` 외부 접근 차단은 현재 의도적으로 보류 중입니다. 외부 모니터링과
-프론트 Nginx의 백엔드 연결은 백엔드 Public IP가 아니라 운영 도메인과 Private IP
-경로를 사용합니다.
+백엔드 `:8080`은 운영 프론트 EC2의 Private IP에서만 접근할 수 있도록 호스트
+방화벽을 적용합니다. 외부 모니터링은 운영 도메인으로, 프론트 Nginx는 백엔드
+Private IP로 접근합니다.
 
 ### 적용 완료 항목
 
@@ -44,7 +44,7 @@
   - ARN: `arn:aws:sns:ap-northeast-2:843255971531:poudy-infra-alerts`
 - self-hosted Blackbox Exporter 공개 경로 Probe:
 - Production: `https://poudy.site/categories`, `https://poudy.site/api/categories`
-- Staging: `https://poudy-staging.vercel.app/categories`, `https://staging.poudy.site/api/categories`
+- Staging: `https://staging.poudy.site/categories`, `https://staging.poudy.site/api/categories`
 - Grafana `Poudy Frontend Availability` 대시보드와 Production·Staging 헬스 알림 규칙 적용 완료
 
 ### 현재 CloudWatch Alarm
@@ -112,9 +112,11 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `grafana/provisioning/dashboards/poudy.yaml`: 파일 기반 대시보드 프로비저닝 설정
 - `alloy/staging.alloy`: 스테이징 EC2의 systemd/프로세스/Actuator 메트릭, `/actuator/health` HTTP probe, 백엔드 journal을 수집하는 Alloy 설정
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
+- `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성
 - `grafana/dashboards/poudy-frontend-availability.json`: Production·Staging 공개 페이지/API 상태 및 응답시간 대시보드
 - `grafana/dashboards/poudy-frontend-production-resources.json`: 운영 프론트 EC2 자원·프로세스 대시보드
+- `grafana/dashboards/poudy-frontend-staging-resources.json`: staging 프론트 EC2 자원·프로세스 대시보드
 
 ### Frontend 공개 경로 모니터링
 
@@ -126,7 +128,7 @@ HTTPS URL을 60초마다 확인합니다. Prometheus는 각 `probe_success`, HTT
 | --- | --- | --- |
 | Production | 프론트 페이지 | `https://poudy.site/categories` |
 | Production | 공개 API | `https://poudy.site/api/categories` |
-| Staging | 프론트 페이지 | `https://poudy-staging.vercel.app/categories` |
+| Staging | 프론트 페이지 | `https://staging.poudy.site/categories` |
 | Staging | 공개 API | `https://staging.poudy.site/api/categories` |
 
 대시보드는 각 경로 상태를 `UP`/`DOWN`으로 표시하고 최근 응답시간과 HTTP 상태 코드를
@@ -163,6 +165,18 @@ deploy/monitoring/compose/compose.override.yaml
 deploy/monitoring/grafana/dashboards/poudy-frontend-availability.json
   -> /opt/poudy-monitoring/data/grafana/dashboards/poudy/poudy-frontend-availability.json
 ```
+
+2026-10-10 `staging.poudy.site`를 staging 프론트 EC2로 옮기면서 Staging 프론트 페이지 Probe를
+`https://poudy-staging.vercel.app/categories`에서 `https://staging.poudy.site/categories`로
+바꿨습니다(#654).
+
+### Staging 프론트 수집 구조
+
+staging 프론트 EC2도 운영 프론트와 같은 Alloy 구성(`alloy/staging-frontend.alloy`)을 씁니다.
+staging 백엔드와 같은 `environment="staging"`으로 보내므로 `service="poudy-frontend"`로 구분합니다.
+staging 백엔드 Alloy는 호스트·프로세스 지표에 `service` 라벨을 붙이지 않기 때문에, `poudy-backend-staging.json`의
+호스트 지표 패널(CPU·메모리·디스크·네트워크·스왑·OOM)은 `service!="poudy-frontend"`로
+프론트 호스트를 뺍니다.
 
 ### Staging 수집 구조
 
@@ -297,7 +311,7 @@ Grafana 프론트 자원 대시보드에서 Next.js 프로세스 1개와 Nginx �
 | 로그 저장·수집 | journald, CloudWatch Logs, Loki(S3) | journald, Alloy → Loki(S3) | 전송과 Loki 조회 경로 확인. Staging의 안전한 Spring 시작·초기화 로그가 표시됨. 로그가 발생하지 않는 시간대에는 패널이 비어 있을 수 있음 |
 | 핵심 지표 대시보드 | CPU, 메모리, 디스크, 서비스·프로세스 상태, Actuator, 로그, JVM heap·live threads, 네트워크·swap·OOM·HTTP 성능 패널 | CPU, 메모리, 디스크, 서비스·프로세스 상태, Actuator Health, 로그, JVM heap·live threads, 네트워크·swap·OOM·HTTP 성능 패널 | 두 JSON의 17개 패널을 Grafana에 반영하고 주요 패널 확인 완료. 2026-09-26 Production 복제본 UID `poudy-backend-production`을 삭제하고 정상 UID `ad2z7mm`을 보존했음. histogram 시계열 확인 완료 |
 | 팀 장애 알림 | 서비스·자원 및 Actuator 관련 규칙, Discord 연락처 | `/actuator/health` 장애만 Discord 연락처로 알림 | Staging health 알림의 firing Discord 도착과 정상 복구 후 resolved 도착 확인 |
-| 배포 파이프라인 | `main` → `poudy-pipeline` → CodeBuild/CodeDeploy | `dev` → `poudy-staging-pipeline` → CodeBuild/CodeDeploy; 프론트는 Vercel staging workflow | 설정은 CodePipeline/AWS 및 Vercel에 있으며 저장소에 파이프라인 IaC는 없음 |
+| 배포 파이프라인 | `main` → `poudy-pipeline` → CodeBuild/CodeDeploy | `dev` → `poudy-staging-pipeline` → CodeBuild/CodeDeploy (백엔드 다음 프론트) | 설정은 CodePipeline/AWS에 있으며 PR preview만 Vercel에 있고 저장소에 파이프라인 IaC는 없음 |
 
 Staging 백엔드 `/actuator/health` 장애 규칙은 비파괴 테스트에서 실제 firing Discord 알림과
 복구 후 resolved 알림 도착까지 확인했습니다. Production 백엔드 Discord 연락처 발송도 별도로
@@ -369,8 +383,7 @@ CloudWatch Agent JSON 템플릿에는 애플리케이션 journal 수집을 넣�
 
 ### 0. 백엔드 `:8080` 상태 확인
 
-현재 외부 접근 차단은 보류 중이므로 이 단계에서는 상태만 기록하고 보안 그룹을
-변경하지 않습니다. 차단을 진행할 때는 프론트 Private 경로 검증을 먼저 수행해야 합니다.
+현재 운영 백엔드의 호스트 방화벽을 확인합니다. 공유 보안 그룹은 변경하지 않습니다.
 
 보안 그룹을 바꾸기 전에 현재 연결과 SSH 세션을 보존합니다. 먼저 AWS에서 백엔드의
 보안 그룹과 `8080` 규칙을 확인합니다.
@@ -400,17 +413,60 @@ curl --fail --silent http://127.0.0.1:8080/actuator/health
 sudo firewall-cmd --state 2>/dev/null || true
 sudo firewall-cmd --list-all 2>/dev/null || true
 sudo nft list ruleset
+sudo systemctl status poudy-backend-firewall.service --no-pager
+sudo systemctl is-enabled poudy-backend-firewall.service
 ```
 
-외부 네트워크에서 public IPv4 직접 접근을 확인합니다. 응답이 오면 public 노출이며,
-timeout/refused여야 프론트 프록시 경로만 남은 상태입니다.
+외부 네트워크에서 public IPv4 직접 접근이 차단됐는지 확인합니다.
 
 ```bash
-curl -i --connect-timeout 5 http://16.184.16.46:8080/actuator/health
+curl -i --connect-timeout 5 http://43.202.164.103:8080/api/categories
 ```
 
-현재는 위 상태를 알려진 보류 사항으로 관리합니다. 향후 차단할 때도 SSH `22` 규칙은
-건드리지 않습니다.
+다음 private 경로 명령은 운영 프론트 EC2의 SSM 세션에서 실행합니다. 공개 도메인
+명령은 외부 클라이언트에서 실행합니다.
+
+```bash
+curl --fail --silent --show-error http://10.0.3.84:8080/api/categories
+curl --fail --silent --show-error https://poudy.site/api/categories
+```
+
+### 운영 백엔드 8080 호스트 방화벽
+
+`deploy/firewall/production-backend.nft`가 규칙의 원본입니다. 운영 백엔드 EC2에서
+저장소 checkout을 같은 커밋으로 맞춘 뒤 설치 스크립트를 실행합니다. 이 스크립트는
+production instance ID를 IMDSv2로 확인하고, 방화벽 전용 테이블만 교체합니다.
+
+```bash
+sudo ./deploy/scripts/install-production-backend-firewall.sh
+```
+
+적용 뒤 저장소 설정과 `/etc`에 설치한 파일이 같은지 확인합니다.
+
+```bash
+sha256sum deploy/firewall/production-backend.nft /etc/poudy/backend-firewall.nft
+sha256sum deploy/systemd/poudy-backend-firewall.service /etc/systemd/system/poudy-backend-firewall.service
+sha256sum deploy/systemd/poudy-backend.service.d/10-firewall.conf /etc/systemd/system/poudy-backend.service.d/10-firewall.conf
+sudo nft list table inet poudy_backend
+sudo systemctl is-enabled poudy-backend-firewall.service
+sudo systemctl is-active poudy-backend-firewall.service poudy-backend.service
+```
+
+방화벽은 `10.0.0.57`에서 오는 IPv4 `TCP/8080`만 통과시키고 다른 IPv4 출발지 및
+모든 IPv6 `TCP/8080`을 차단합니다. `22/tcp`, 다른 포트, 아웃바운드, 공유 보안 그룹
+규칙은 건드리지 않습니다. systemd drop-in이 방화벽 서비스의 성공을 백엔드 시작
+조건으로 지정하며, 방화벽 서비스는 부팅 때 규칙을 다시 로드합니다. 운영 재부팅은
+검증만을 위해 수행하지 않습니다.
+
+긴급 롤백은 현재 SSM 세션을 유지한 채 방화벽 전용 서비스를 비활성화합니다. 이 조치는
+외부 `8080` 차단을 해제하므로 복구 확인 뒤에는 저장소 설정을 수정하고 재적용합니다.
+
+```bash
+sudo systemctl disable --now poudy-backend-firewall.service
+sudo rm -f /etc/systemd/system/poudy-backend.service.d/10-firewall.conf
+sudo systemctl daemon-reload
+sudo nft list table inet poudy_backend 2>/dev/null || true
+```
 
 ```bash
 curl --fail --silent --show-error \

@@ -38,7 +38,7 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
         </button>
 
         {error.digest ? (
-          <p className="pt-2 font-data text-[10px] text-text-secondary">오류 코드 {error.digest}</p>
+          <p className="pt-2 font-mono text-[10px] text-text-secondary">오류 코드 {error.digest}</p>
         ) : null}
       </main>
     </>

@@ -262,7 +262,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{environment=\"staging\",mode=\"idle\"}[5m])))",
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{environment=\"staging\",service!=\"poudy-frontend\",mode=\"idle\"}[5m])))",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -314,7 +314,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "100 * (1 - node_memory_MemAvailable_bytes{environment=\"staging\",job=\"integrations/unix\"} / node_memory_MemTotal_bytes{environment=\"staging\",job=\"integrations/unix\"})",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"} / node_memory_MemTotal_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"})",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -366,7 +366,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "100 * (1 - node_filesystem_avail_bytes{environment=\"staging\",job=\"integrations/unix\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{environment=\"staging\",job=\"integrations/unix\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -777,13 +777,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "sum by (device) (rate(node_network_receive_bytes_total{environment=\"staging\",job=\"integrations/unix\",device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
+          "expr": "sum by (device) (rate(node_network_receive_bytes_total{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\",device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
           "legendFormat": "{{device}} RX"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "sum by (device) (rate(node_network_transmit_bytes_total{environment=\"staging\",job=\"integrations/unix\",device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
+          "expr": "sum by (device) (rate(node_network_transmit_bytes_total{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\",device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
           "legendFormat": "{{device}} TX"
         }
       ],
@@ -837,7 +837,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "node_memory_SwapTotal_bytes{environment=\"staging\",job=\"integrations/unix\"} - node_memory_SwapFree_bytes{environment=\"staging\",job=\"integrations/unix\"}",
+          "expr": "node_memory_SwapTotal_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"} - node_memory_SwapFree_bytes{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"}",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -891,13 +891,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "rate(node_vmstat_pswpin{environment=\"staging\",job=\"integrations/unix\"}[5m])",
+          "expr": "rate(node_vmstat_pswpin{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"}[5m])",
           "legendFormat": "pages in/s"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "rate(node_vmstat_pswpout{environment=\"staging\",job=\"integrations/unix\"}[5m])",
+          "expr": "rate(node_vmstat_pswpout{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"}[5m])",
           "legendFormat": "pages out/s"
         }
       ],
@@ -952,7 +952,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "sum(increase(node_vmstat_oom_kill{environment=\"staging\",job=\"integrations/unix\"}[24h]))",
+          "expr": "sum(increase(node_vmstat_oom_kill{environment=\"staging\",service!=\"poudy-frontend\",job=\"integrations/unix\"}[24h]))",
           "legendFormat": "OOM kills"
         }
       ],

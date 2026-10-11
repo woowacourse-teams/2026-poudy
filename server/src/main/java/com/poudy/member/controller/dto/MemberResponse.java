@@ -14,8 +14,7 @@ public record MemberResponse(
     @NotNull @Schema(example = "member@example.com") String email,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Gender gender,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) AgeRange ageRange,
-    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) MemberSkinType skinType,
-    @NotNull @Schema(example = "false") Boolean profileCompleted) {
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) MemberSkinType skinType) {
 
     public static MemberResponse from(Member member) {
         return new MemberResponse(
@@ -24,8 +23,7 @@ public record MemberResponse(
             member.email(),
             member.gender(),
             member.ageRange(),
-            member.skinType(),
-            member.isProfileCompleted()
+            member.skinType()
         );
     }
 }

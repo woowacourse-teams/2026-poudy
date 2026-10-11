@@ -34,6 +34,9 @@ export const logout = (): Promise<void> => apiPost("/api/members/logout", undefi
 
 export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
 
+/** 처음 소셜 로그인한 사람만 보낼 수 있다. 가입하면 같은 세션으로 바로 로그인된다. */
+export const signUp = (): Promise<void> => apiPost("/api/auth/signup", undefined, { withSession: true });
+
 /** 탈퇴한 계정으로 방금 로그인한 사람만 보낼 수 있다. 복구 여부는 관리자가 정한다. */
 export const requestRestore = (): Promise<void> =>
   apiPost("/api/auth/withdrawn/restore", undefined, { withSession: true });

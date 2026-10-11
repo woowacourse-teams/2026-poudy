@@ -1,9 +1,12 @@
 package com.poudy.security.domain;
 
+import java.io.Serializable;
 import java.util.Locale;
 import java.util.Map;
 
-public final class OAuthAccount {
+public final class OAuthAccount implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final OAuthProvider provider;
     private final String providerId;

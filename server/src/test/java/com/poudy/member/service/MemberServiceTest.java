@@ -29,10 +29,19 @@ class MemberServiceTest {
     private MemberService memberService;
 
     @Test
-    @DisplayName("처음 로그인하면 인증된 이메일로 가입한다")
+    @DisplayName("처음 로그인하면 가입시키지 않고 가입할 계정임만 알린다")
+    void doesNotRegisterOnFirstSignIn() {
+        OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "new@example.com", true);
+
+        assertThat(memberService.login(account)).isEmpty();
+        assertThat(memberService.login(account)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("가입하면 인증된 이메일을 소문자로 저장한다")
     void registersNewMember() {
         Member member = memberService.findById(
-            memberService.login(new OAuthAccount(OAuthProvider.KAKAO, "1", "New@Example.com", true)).memberId()
+            memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "New@Example.com", true))
         );
 
         assertThat(member.provider()).isEqualTo(OAuthProvider.KAKAO);
@@ -43,34 +52,38 @@ class MemberServiceTest {
     @DisplayName("이미 가입한 회원은 이메일 상태와 관계없이 같은 회원으로 로그인한다")
     void signsInRegisteredMember() {
         long registered = memberService
-            .login(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true))
-            .memberId();
+            .signUp(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true));
 
-        long signedIn = memberService.login(new OAuthAccount(OAuthProvider.GOOGLE, "sub", null, false)).memberId();
+        SocialLoginResult result = memberService
+            .login(new OAuthAccount(OAuthProvider.GOOGLE, "sub", null, false))
+            .orElseThrow();
 
-        assertThat(signedIn).isEqualTo(registered);
+        assertThat(result.memberId()).isEqualTo(registered);
+        assertThat(result.status()).isEqualTo(LoginStatus.SIGNED_IN);
     }
 
     @Test
-    @DisplayName("인증되지 않은 이메일로는 가입하지 않는다")
+    @DisplayName("인증되지 않은 이메일이면 처음 로그인할 때부터 거절하고 가입시키지 않는다")
     void rejectsUnverifiedEmail() {
-        assertThatThrownBy(
-            () -> memberService.login(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", false))
-        ).isInstanceOf(UnverifiedOAuthEmailException.class);
+        OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", false);
+
+        assertThatThrownBy(() -> memberService.login(account)).isInstanceOf(UnverifiedOAuthEmailException.class);
+        assertThatThrownBy(() -> memberService.signUp(account)).isInstanceOf(UnverifiedOAuthEmailException.class);
     }
 
     @Test
-    @DisplayName("다른 제공자로 가입한 이메일이면 가입하지 않고 그 제공자를 알린다")
+    @DisplayName("다른 제공자로 가입한 이메일이면 처음 로그인할 때부터 거절하고 그 제공자를 알린다")
     void rejectsEmailRegisteredWithAnotherProvider() {
-        memberService.login(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
+        memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
+        OAuthAccount google = new OAuthAccount(OAuthProvider.GOOGLE, "sub", "Member@example.com", true);
 
-        assertThatThrownBy(
-            () -> memberService.login(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "Member@example.com", true))
-        )
+        assertThatThrownBy(() -> memberService.login(google))
             .isInstanceOfSatisfying(
                 EmailAlreadyRegisteredException.class,
                 exception -> assertThat(exception.registeredProvider()).isEqualTo(OAuthProvider.KAKAO)
             );
+        assertThatThrownBy(() -> memberService.signUp(google))
+            .isInstanceOf(EmailAlreadyRegisteredException.class);
     }
 
     @Test
@@ -91,8 +104,7 @@ class MemberServiceTest {
     @Test
     @DisplayName("탈퇴하면 회원을 지우고, 없는 회원은 탈퇴시키지 못한다")
     void withdrawsMember() {
-        long memberId = memberService.login(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true))
-            .memberId();
+        long memberId = memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
 
         memberService.withdraw(memberId);
 
@@ -104,10 +116,10 @@ class MemberServiceTest {
     @DisplayName("탈퇴한 계정으로 다시 로그인하면 로그인시키지 않고 탈퇴 회원임을 알린다")
     void reportsWithdrawnMemberOnSignIn() {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true);
-        long memberId = memberService.login(account).memberId();
+        long memberId = memberService.signUp(account);
         memberService.withdraw(memberId);
 
-        SocialLoginResult result = memberService.login(account);
+        SocialLoginResult result = memberService.login(account).orElseThrow();
 
         assertThat(result.status()).isEqualTo(LoginStatus.WITHDRAWN);
         assertThat(result.memberId()).isEqualTo(memberId);
@@ -117,11 +129,11 @@ class MemberServiceTest {
     @DisplayName("복구를 요청한 탈퇴 계정으로 다시 로그인하면 복구 요청 중임을 알린다")
     void reportsRestoreRequestedMemberOnSignIn() {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true);
-        long memberId = memberService.login(account).memberId();
+        long memberId = memberService.signUp(account);
         memberService.withdraw(memberId);
         memberService.requestRestore(memberId);
 
-        SocialLoginResult result = memberService.login(account);
+        SocialLoginResult result = memberService.login(account).orElseThrow();
 
         assertThat(result.status()).isEqualTo(LoginStatus.RESTORE_REQUESTED);
         assertThat(result.memberId()).isEqualTo(memberId);
@@ -130,8 +142,7 @@ class MemberServiceTest {
     @Test
     @DisplayName("탈퇴한 회원은 복구를 요청할 수 있고, 탈퇴하지 않은 회원은 요청할 수 없다")
     void requestsRestore() {
-        long memberId = memberService.login(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true))
-            .memberId();
+        long memberId = memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
 
         assertThatThrownBy(() -> memberService.requestRestore(memberId)).isInstanceOf(ResourceNotFoundException.class);
         memberService.withdraw(memberId);
@@ -142,7 +153,7 @@ class MemberServiceTest {
     @DisplayName("복구를 요청한 탈퇴 회원만 복구하고, 복구하면 다시 로그인한다")
     void restoresOnlyRestoreRequestedMember() {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true);
-        long memberId = memberService.login(account).memberId();
+        long memberId = memberService.signUp(account);
 
         assertThatThrownBy(() -> memberService.restore(memberId)).isInstanceOf(ResourceNotFoundException.class);
         memberService.withdraw(memberId);
@@ -150,7 +161,7 @@ class MemberServiceTest {
         memberService.requestRestore(memberId);
         memberService.restore(memberId);
 
-        SocialLoginResult result = memberService.login(account);
+        SocialLoginResult result = memberService.login(account).orElseThrow();
         assertThat(result.status()).isEqualTo(LoginStatus.SIGNED_IN);
         assertThat(result.memberId()).isEqualTo(memberId);
     }

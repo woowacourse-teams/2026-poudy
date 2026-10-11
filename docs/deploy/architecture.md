@@ -24,12 +24,14 @@ flowchart LR
     end
 
     subgraph staging[Staging]
-        vercel[Vercel staging<br/>Next.js]
-        subgraph stagebe[Backend EC2]
-            stagenginx[HTTPS Nginx]
-            stageapp[Spring Boot systemd :8080]
+        subgraph stagefe[Frontend EC2]
+            stagenginx[Nginx :80/:443]
+            stagenext[Next.js systemd<br/>127.0.0.1:3000]
+            stagelocal[내부 Nginx listener<br/>127.0.0.1:8081]
         end
+        stageapp[Backend EC2<br/>Spring Boot 컨테이너 :8080]
     end
+    vercel[Vercel PR preview<br/>pr-번호.preview.poudy.site]
 
     subgraph dbhost[Database EC2 / PostgreSQL :5432]
         proddb[(poudy_prod)]
@@ -54,18 +56,22 @@ flowchart LR
     prodlocal -->|Backend 사설 IP :8080| prodbe
     prodbe -->|사설망| proddb
 
-    user -->|https://poudy-staging.vercel.app| vercel
-    vercel -->|STAGING_API_BASE_URL<br/>https://staging.poudy.site/api/*| stagenginx
-    stagenginx --> stageapp
+    user -->|https://staging.poudy.site| dns --> stagenginx
+    stagenginx -->|페이지·RSC·정적 자산| stagenext
+    stagenginx -->|브라우저 /api/*| stageapp
+    stagenext -->|서버 요청| stagelocal
+    stagelocal -->|Backend 사설 IP :8080| stageapp
     stageapp -->|사설망| stagedb
+    user -->|PR preview| vercel
+    vercel -->|STAGING_API_BASE_URL<br/>https://staging.poudy.site/api/*| stagenginx
 
     prodbe -->|피드백 이미지 객체| s3[(비공개 S3<br/>피드백 이미지)]
     stageapp -->|스테이징 prefix| s3
     blackbox -->|HTTPS probe| prodnginx
-    blackbox -->|HTTPS probe| vercel
     blackbox -->|HTTPS probe| stagenginx
     prodnginx -->|로컬 지표 수집| alloy
     prodbe -->|로컬 지표·Actuator·로그 수집| alloy
+    stagenginx -->|로컬 지표 수집| alloy
     stageapp -->|로컬 지표·Actuator·로그 수집| alloy
     alloy -->|Cloudflare Access remote write| tunnel
     tunnel -->|metrics-write| prometheus
@@ -89,12 +95,13 @@ flowchart LR
 
 ### Staging 웹 요청
 
-- 웹 프론트는 `https://poudy-staging.vercel.app`에서 제공되고 `dev`의 별도 GitHub Actions
-  workflow가 Vercel에 배포합니다.
-- 프론트 빌드의 `STAGING_API_BASE_URL`은 `https://staging.poudy.site`를 가리킵니다.
-  이 주소는 Staging Backend EC2의 HTTPS/Nginx 경로를 거쳐 Spring Boot `:8080`에
-  도달합니다. Nginx 인증서와 staging API 도메인의 호스트 설정은 현재 AWS/EC2 운영
-  구성이 기준이며, Production 프론트 Nginx 템플릿과 같은 파일로 관리되지는 않습니다.
+- Production과 같은 구조입니다. `staging.poudy.site`는 Staging Frontend EC2의 EIP를
+  가리키고, 그 Nginx가 `/api/*`는 Backend EC2의 사설 주소 `10.0.0.185:8080`으로,
+  나머지는 Next.js `127.0.0.1:3000`으로 보냅니다. Nginx 설정은 Production과 같은 템플릿을
+  `deploy/config/frontend-site-staging.env` 값으로 채웁니다(#654).
+- PR preview는 Vercel에 두고 `pr-<PR 번호>.preview.poudy.site`로 엽니다. API는 같은
+  `https://staging.poudy.site/api/*`를 부르므로, 서버의 `CLIENT_DOMAIN`은
+  `https://*.preview.poudy.site`만 허용합니다(#657).
 - Staging Backend EC2의 사설 주소는 `10.0.0.185`입니다. Backend EC2에서 DB로 가는
   연결은 공개 주소가 아니라 DB EC2의 사설 주소 `10.0.100.69:5432`를 사용합니다.
 
@@ -127,8 +134,9 @@ flowchart TB
         sa[BuildArtifact<br/>Spring Boot JAR + CodeDeploy hooks]
         scd[CodeDeploy<br/>poudy-backend-staging-dg]
         sbe[Staging Backend EC2]
-        sv[GitHub Actions<br/>client-staging-deploy.yaml]
-        vv[Vercel staging]
+        sfb[CodeBuild<br/>buildspec-staging-frontend.yml]
+        sfcd[CodeDeploy<br/>poudy-frontend-staging-dg]
+        sfe[Staging Frontend EC2]
     end
 
     subgraph prodpipe[Production 배포]
@@ -152,7 +160,7 @@ flowchart TB
 
     dev --> github --> prci
     github --> devpush --> sp --> sb --> sa --> scd --> sbe
-    devpush --> sv --> vv
+    scd --> sfb --> sfcd --> sfe
     github --> mainpush --> pp --> pb
     pb --> ba --> bcd --> pbe
     pb --> fa --> fcd --> pfe
@@ -162,11 +170,12 @@ flowchart TB
     db --> backup --> backups3
 ```
 
-- 저장소의 GitHub Actions는 PR 검사와 별도 서비스 배포를 담당합니다. `dev`의 Client 변경은
-  Vercel staging에 배포하며, Discord Worker는 별도 Cloudflare Workers workflow를 사용합니다.
-- `dev`의 백엔드는 `poudy-staging-pipeline` → `poudy-staging-codebuild` →
-  `poudy-backend-staging-dg` 순서로 배포됩니다. 이 경로는 백엔드만 배포하고 Vercel
-  staging 배포는 별도 workflow에서 처리합니다.
+- 저장소의 GitHub Actions는 PR 검사와 PR preview, 별도 서비스 배포를 담당합니다. PR
+  preview는 Vercel에 올리고 `pr-<PR 번호>.preview.poudy.site` 별칭을 붙이며, Discord
+  Worker는 별도 Cloudflare Workers workflow를 사용합니다.
+- `dev`는 `poudy-staging-pipeline`에서 백엔드(`poudy-staging-codebuild` →
+  `poudy-backend-staging-dg`)를 배포한 다음 프론트(`buildspec-staging-frontend.yml` →
+  `poudy-frontend-staging-dg`)를 빌드·배포합니다.
 - `main`은 `poudy-pipeline` → `poudy-codebuild` → Backend/Frontend secondary artifact →
   CodeDeploy로 배포됩니다. Backend와 Frontend는 각기 다른 EC2 배포 그룹을 사용합니다.
 - Backend CodeDeploy의 `BeforeInstall`은 `/etc/poudy/backend.env`로 DB 사전 검증을

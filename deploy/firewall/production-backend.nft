@@ -1,0 +1,11 @@
+table inet poudy_backend {
+    chain input {
+        type filter hook input priority -10; policy accept;
+
+        # The production frontend Nginx proxies public API requests over the VPC.
+        ip saddr != 10.0.0.57 tcp dport 8080 counter drop
+
+        # No IPv6 frontend path is configured; do not expose the backend on IPv6.
+        meta nfproto ipv6 tcp dport 8080 counter drop
+    }
+}

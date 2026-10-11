@@ -9,8 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.member.domain.AgeRange;
+import com.poudy.member.domain.Gender;
 import com.poudy.member.domain.Member;
 import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.domain.MemberSkinType;
 import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
@@ -58,7 +61,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("로그인한 회원 정보와 초기 정보 입력 완료 여부를 캐시 없이 돌려준다")
+    @DisplayName("로그인한 회원 정보를 캐시 없이 돌려준다")
     void findsSignedInMember() throws Exception {
         Member member = memberRepository
             .save(MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true)));
@@ -71,12 +74,11 @@ class MemberControllerTest {
             .andExpect(jsonPath("$.email").value("member@example.com"))
             .andExpect(jsonPath("$.gender").isEmpty())
             .andExpect(jsonPath("$.ageRange").isEmpty())
-            .andExpect(jsonPath("$.skinType").isEmpty())
-            .andExpect(jsonPath("$.profileCompleted").value(false));
+            .andExpect(jsonPath("$.skinType").isEmpty());
     }
 
     @Test
-    @DisplayName("초기 정보를 저장하면 입력을 마친 회원 정보를 돌려준다")
+    @DisplayName("초기 정보를 저장하면 바뀐 회원 정보를 돌려준다")
     void updatesProfile() throws Exception {
         Member member = memberRepository
             .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));
@@ -93,17 +95,36 @@ class MemberControllerTest {
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
             .andExpect(jsonPath("$.gender").value("FEMALE"))
             .andExpect(jsonPath("$.ageRange").value("TWENTIES"))
-            .andExpect(jsonPath("$.skinType").value("COMBINATION"))
-            .andExpect(jsonPath("$.profileCompleted").value(true));
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"));
+    }
+
+    @Test
+    @DisplayName("고른 초기 정보만 저장하고 고르지 않은 것은 비운다")
+    void updatesPartialProfile() throws Exception {
+        Member member = memberRepository
+            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));
+        memberRepository.updateProfile(member.id(), Gender.FEMALE, AgeRange.TWENTIES, MemberSkinType.DRY);
+
+        mockMvc.perform(
+            patch("/api/members/me/profile")
+                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"gender":null,"ageRange":null,"skinType":"COMBINATION"}
+                    """)
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.gender").isEmpty())
+            .andExpect(jsonPath("$.ageRange").isEmpty())
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\"}",
             "{\"gender\":\"FEMALE\",\"ageRange\":\"SEVENTIES\",\"skinType\":\"DRY\"}",
             "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"NORMAL\"}"
     })
-    @DisplayName("빠졌거나 모르는 값이 있으면 초기 정보를 400으로 거절한다")
+    @DisplayName("모르는 값이 있으면 초기 정보를 400으로 거절한다")
     void rejectsInvalidProfile(String body) throws Exception {
         Member member = memberRepository
             .save(MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true)));

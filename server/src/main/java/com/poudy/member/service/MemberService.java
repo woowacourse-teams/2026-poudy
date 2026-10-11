@@ -15,6 +15,7 @@ import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.SocialMembers;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +34,20 @@ public class MemberService implements SocialMembers, MemberActivity {
     }
 
     @Override
+    public Optional<SocialLoginResult> login(OAuthAccount account) {
+        Optional<Member> member = memberRepository.findByAccount(account);
+        if (member.isEmpty()) {
+            checkRegistrable(MemberSignup.from(account));
+        }
+        return member.map(Member::loginResult);
+    }
+
+    @Override
     @Transactional
-    public SocialLoginResult login(OAuthAccount account) {
-        return memberRepository.findByAccount(account).orElseGet(() -> register(account)).loginResult();
+    public long signUp(OAuthAccount account) {
+        MemberSignup signup = MemberSignup.from(account);
+        checkRegistrable(signup);
+        return memberRepository.save(signup).id();
     }
 
     @Override
@@ -80,11 +92,9 @@ public class MemberService implements SocialMembers, MemberActivity {
         }
     }
 
-    private Member register(OAuthAccount account) {
-        MemberSignup signup = MemberSignup.from(account);
+    private void checkRegistrable(MemberSignup signup) {
         memberRepository.findByEmail(signup.email()).ifPresent(registered -> {
             throw new EmailAlreadyRegisteredException(registered.provider());
         });
-        return memberRepository.save(signup);
     }
 }

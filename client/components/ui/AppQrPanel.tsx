@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
-import { APP_STORE_URL } from "@/lib/navigation/open-app";
-import { SITE_NAME } from "@/lib/seo/site";
+import { OPEN_APP_PATH } from "@/lib/navigation/open-app";
+import { absoluteUrl, SITE_NAME } from "@/lib/seo/site";
 
 /* 둘레의 빈 테두리까지 포함한 크기다. 코드 자체는 이보다 조금 작게 그려진다. */
 const QR_SIZE = 132;
@@ -11,7 +11,11 @@ const QR_SIZE = 132;
  * 넓은 화면의 왼쪽 여백에 서는 안드로이드 앱 설치 안내.
  *
  * 앱은 Play 스토어에만 올라가 있다. iOS 에도 내게 되면 제목과 설명에 적어 둔 조건,
- * 링크의 이름, `APP_STORE_URL` 을 함께 손봐야 한다.
+ * 링크의 이름, `resolveOpenAppDestination` 을 함께 손봐야 한다.
+ *
+ * QR 코드에는 스토어가 아니라 우리 주소(`OPEN_APP_PATH`)를 담는다. 스토어 주소는 구글
+ * 도메인이라 앱이 깔려 있어도 스토어가 열린다. 우리 주소는 App Links 가 앱으로 넘기고,
+ * 앱이 없으면 그 화면이 스토어로 보낸다.
  *
  * 본문은 `--container-md`(448px) 로 폭이 묶여 가운데에 놓이므로, 화면이 넓어질수록
  * 양옆이 빈다. 그 자리에 앱을 알리는 자리를 둔다.
@@ -26,6 +30,8 @@ const QR_SIZE = 132;
  * 줄어, 패널을 놓으면 본문 카드에 닿을 듯이 붙는다.
  */
 export function AppQrPanel() {
+  const openAppUrl = absoluteUrl(OPEN_APP_PATH);
+
   return (
     <aside
       data-app-qr-panel
@@ -46,10 +52,10 @@ export function AppQrPanel() {
        * 화면 아래를 기준으로 삼되 하단 내비게이션 높이만큼은 띄운다. 내비게이션은 본문
        * 폭 안에만 있어 이 패널과 겹치지는 않지만, 같은 높이에서 끝나면 한 줄로 읽힌다.
        */
-      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-6 lg:grid"
+      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-4 lg:grid"
     >
-      <div className="flex w-full max-w-60 flex-col items-center gap-3 text-center">
-        <Image src="/logo.png" alt="" width={80} height={89} draggable={false} className="h-9 w-auto select-none" />
+      <div className="flex w-full max-w-64 flex-col items-center gap-3 text-center">
+        <Image src="/logo.webp" alt="" width={226} height={296} draggable={false} className="h-9 w-auto select-none" />
 
         {/*
           제목에서 안드로이드임을 먼저 밝힌다. 지금은 Play 스토어에만 올라가 있어, 조건을
@@ -58,22 +64,10 @@ export function AppQrPanel() {
         */}
         <p className="text-[15px] font-bold text-text-primary">안드로이드 앱으로 더 편하게</p>
 
-        {/*
-          제목이 이미 안드로이드 앱이라고 밝혔으므로 여기서는 되풀이하지 않는다. 앞서
-          서비스 이름까지 넣었더니 좁은 여백에서 석 줄로 늘어나 끝줄에 두 글자만 남았다.
-
-          줄바꿈 자리를 직접 정한다. 그대로 두면 `비추면 Play` 까지 첫 줄에 들어가
-          `Play 스토어` 가 두 줄에 걸쳐 끊긴다. 한 이름이 갈라지면 눈이 한 번 멈춘다.
-          `text-balance` 같은 자동 규칙은 어디서 끊을지 보장하지 않아 쓰지 않는다.
-        */}
-        <p className="text-[13px] leading-relaxed text-text-secondary">
-          {/*
-            `<br />` 앞뒤의 줄바꿈은 JSX 가 지워 버려 글자가 `비추면Play` 로 붙는다.
-            눈에는 줄이 갈라져 보이지만 낭독기와 번역기는 한 낱말로 받는다.
-            공백을 명시해 문장이 그대로 이어지게 한다.
-          */}
-          휴대전화 카메라로 QR 코드를 비추면 <br />
-          Play 스토어로 이동해요.
+        {/* QR 스캔과 스토어 검색을 두 줄로 안내하되, 낭독할 때는 공백으로 이어 읽는다. */}
+        <p className="text-[13px] leading-relaxed whitespace-nowrap text-text-secondary">
+          QR 코드를 스캔하거나 <br />
+          플레이 스토어에서 ‘파우디’를 검색해 보세요.
         </p>
 
         {/*
@@ -82,14 +76,14 @@ export function AppQrPanel() {
           어디로 가는지 알린다.
         */}
         <a
-          href={APP_STORE_URL}
+          href={openAppUrl}
           target="_blank"
           rel="noreferrer noopener"
           aria-label={`Google Play 에서 ${SITE_NAME} 앱 받기 (새 창)`}
           className="rounded-2xl border border-border bg-background p-2"
         >
           <QRCodeSVG
-            value={APP_STORE_URL}
+            value={openAppUrl}
             size={QR_SIZE}
             /*
              * 기본값인 L 은 복원 능력이 가장 낮다. 화면에서 바로 찍는 코드라 얼룩이나

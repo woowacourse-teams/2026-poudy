@@ -14,6 +14,7 @@ import {
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
+  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
@@ -94,6 +95,7 @@ const cases = [
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
   ["저장한 제품 ID", "/members/me/saved-products/ids", SavedProductIdsResponse],
   ["저장함", "/members/me/saved-products", SavedProductsResponse],
+  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
   ["성분 검색 제안", "/ingredients/suggestions?keyword=글리", IngredientListResponse],
@@ -184,7 +186,7 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
-  it("초기 정보 저장은 입력을 마친 MemberResponse 를 지킨다", async () => {
+  it("초기 정보 저장은 바뀐 MemberResponse 를 지킨다", async () => {
     const { status, body } = await patch("/members/me/profile", {
       gender: "FEMALE",
       ageRange: "TWENTIES",
@@ -193,11 +195,11 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(200);
     expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
-    expect(body).toMatchObject({ profileCompleted: true, skinType: "UNKNOWN" });
+    expect(body).toMatchObject({ skinType: "UNKNOWN" });
   });
 
-  it("초기 정보가 빠지면 ProblemDetail 로 거절한다", async () => {
-    const { status, body } = await patch("/members/me/profile", { gender: "FEMALE" });
+  it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
+    const { status, body } = await patch("/members/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
 
     expect(status).toBe(400);
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
@@ -223,6 +225,13 @@ describe("목 응답과 스키마", () => {
 
   it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/withdrawn/restore", "");
+
+    expect(status).toBe(204);
+    expect(body).toBeUndefined();
+  });
+
+  it("회원가입은 내용 없이 204 를 준다", async () => {
+    const { status, body } = await post("/auth/signup", "");
 
     expect(status).toBe(204);
     expect(body).toBeUndefined();
@@ -257,6 +266,7 @@ describe("목 응답과 스키마", () => {
       "/members/me/saved-products/:id (PUT)",
       "/members/me/saved-products/:id (DELETE)",
       "/auth/withdrawn/restore",
+      "/auth/signup",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

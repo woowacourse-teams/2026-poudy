@@ -1,5 +1,6 @@
 import {
   MemberProfileRequest,
+  type ErrorCode,
   type MemberResponse,
   type ProductDetailResponse,
   type RankingItem,
@@ -24,6 +25,8 @@ import {
   productCategoryIds,
   productSkinTypes,
   productDetails,
+  productPartSets,
+  productSimilarities,
 } from "./fixtures";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -35,10 +38,10 @@ const numbers = (url: URL, key: string) =>
     .map(Number)
     .filter(Number.isFinite);
 
-const notFound = (detail: string, code: string) =>
+const notFound = (detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: "Not Found", status: 404, detail, code }, { status: 404 });
 
-const problem = (status: number, detail: string, code: string) =>
+const problem = (status: number, detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: code, status, detail, code }, { status });
 
 const MOCK_IMAGE_MAX_COUNT = 5;
@@ -270,6 +273,28 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
 });
 
 /**
+ * 구성품이 여럿인 제품은 `partId` 로 고른 구성품을 담아 돌려준다. 없으면 첫 구성품을 고른다.
+ * 서버처럼 그 제품에 없는 구성품을 고르면 404 로 답한다.
+ */
+const partResponse = (detail: ProductDetailResponse, partId: string | null) => {
+  const parts = productPartSets.get(detail.id);
+  if (!parts) return HttpResponse.json(detail);
+
+  const selected = partId === null ? parts[0] : parts.find((part) => part.id === Number(partId));
+  if (!selected) return notFound("제품 구성품을 찾을 수 없습니다.", "PRODUCT_PART_NOT_FOUND");
+
+  return HttpResponse.json({
+    ...detail,
+    productParts: parts.map((part) => ({
+      id: part.id,
+      name: part.name,
+      cautionCount: part.excludeGroups.filter((group) => group.contains).length,
+    })),
+    selectedPart: selected,
+  });
+};
+
+/**
  * 조건에 걸린 제품이 실제로 속한 카테고리만 추린다.
  *
  * 서버는 `조회 조건에 해당하는 제품 전체의 카테고리와 제품 수` 를 내려준다. 전체를 그대로
@@ -447,6 +472,8 @@ const curationBlocks = [
     spacingTop: 0,
     spacingBottom: 24,
     imageUrl: "/images/curations/autumn-barrier.jpg",
+    altText: "가을 장벽 케어 기획전",
+    bodyText: "건조한 계절, 장벽부터 채우세요\n가볍게 스며드는 토너와 진정 크림을 모았어요.",
   },
   {
     id: CURATION_BLOCK_IDS.products,
@@ -486,7 +513,6 @@ const mockSession: { member: MemberResponse } = {
     gender: null,
     ageRange: null,
     skinType: null,
-    profileCompleted: false,
   },
 };
 
@@ -497,6 +523,19 @@ export const setMockSavedProducts = (productIds: readonly number[]): void => {
 };
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
+
+/** 제외 성분군을 성분군 응답 모양으로 옮긴다. 영문 이름은 목에 없어 비워 둔다. */
+const excludeGroupOf = (code: string) => {
+  const found = excludeCodes.find((excludeCode) => excludeCode.code === code);
+  if (!found) return undefined;
+  return {
+    code: found.code,
+    name: found.name,
+    englishName: null,
+    description: found.description,
+    ingredients: found.ingredients,
+  };
+};
 
 export const handlers = [
   http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
@@ -529,7 +568,7 @@ export const handlers = [
     const profile = MemberProfileRequest.safeParse(await request.json());
     if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
 
-    mockSession.member = { ...mockSession.member, ...profile.data, profileCompleted: true };
+    mockSession.member = { ...mockSession.member, ...profile.data };
     return HttpResponse.json(mockSession.member);
   }),
 
@@ -539,7 +578,20 @@ export const handlers = [
 
   http.post("*/api/auth/withdrawn/restore", () => new HttpResponse(null, { status: 204 })),
 
+  http.post("*/api/auth/signup", () => new HttpResponse(null, { status: 204 })),
+
   http.post("*/api/products/:productId/views", () => new HttpResponse(null, { status: 204 })),
+
+  // 서버처럼 기준 구성품을 함께 돌려준다. 계산해 둔 제품이 없으면 빈 목록이다.
+  http.get("*/api/products/:productId/similarities", ({ params, request }) => {
+    const id = Number(params.productId);
+    const partId = new URL(request.url).searchParams.get("partId");
+    return HttpResponse.json({
+      partId: partId === null ? id : Number(partId),
+      calculated: true,
+      items: productSimilarities.get(id) ?? [],
+    });
+  }),
 
   http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
 
@@ -626,10 +678,11 @@ export const handlers = [
     return HttpResponse.json(paginate(matched, url));
   }),
 
-  http.get("*/api/products/:productId", ({ params }) => {
+  http.get("*/api/products/:productId", ({ params, request }) => {
     const id = Number(params.productId);
+    const partId = new URL(request.url).searchParams.get("partId");
     const detail = productDetails.find((product) => product.id === id);
-    if (detail) return HttpResponse.json(detail);
+    if (detail) return partResponse(detail, partId);
 
     /*
      * 손으로 적은 상세는 몇 개뿐이라 나머지는 목록에 있는 정보로 상세를 세운다.
@@ -639,7 +692,7 @@ export const handlers = [
     const listed = allProducts.find((product) => product.id === id);
     if (!listed) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
-    return HttpResponse.json(detailOf(listed));
+    return partResponse(detailOf(listed), partId);
   }),
 
   http.get("*/api/ingredients", ({ request }) => {
@@ -691,8 +744,9 @@ export const handlers = [
 
   http.get("*/api/exclude-codes", () => HttpResponse.json({ items: excludeCodes })),
 
+  // 서버는 제외 성분군도 같은 성분군 표에 두어 이 주소로 함께 조회된다. 목도 두 목록을 함께 찾는다.
   http.get("*/api/ingredient-groups/:code", ({ params }) => {
-    const group = ingredientGroups.find((found) => found.code === params.code);
+    const group = ingredientGroups.find((found) => found.code === params.code) ?? excludeGroupOf(String(params.code));
     if (!group) return notFound("성분군을 찾을 수 없습니다.", "INGREDIENT_GROUP_NOT_FOUND");
     return HttpResponse.json(group);
   }),

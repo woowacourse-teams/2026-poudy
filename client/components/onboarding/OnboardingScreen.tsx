@@ -9,9 +9,9 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 
-type Gender = MemberProfileRequest["gender"];
-type AgeRange = MemberProfileRequest["ageRange"];
-type SkinType = MemberProfileRequest["skinType"];
+type Gender = NonNullable<MemberProfileRequest["gender"]>;
+type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
+type SkinType = NonNullable<MemberProfileRequest["skinType"]>;
 
 const GENDERS: readonly { readonly value: Gender; readonly label: string }[] = [
   { value: "FEMALE", label: "여성" },
@@ -42,7 +42,7 @@ type ChoiceProps<T extends string> = {
   readonly group: string;
   readonly value: T;
   readonly selected: boolean;
-  readonly onSelect: (value: T) => void;
+  readonly onSelect: (value: T | null) => void;
   readonly children: React.ReactNode;
   readonly card?: boolean;
 };
@@ -56,6 +56,9 @@ function Choice<T extends string>({ group, value, selected, onSelect, children, 
         value={value}
         checked={selected}
         onChange={() => onSelect(value)}
+        onClick={() => {
+          if (selected) onSelect(null);
+        }}
         className="peer sr-only"
       />
       <span
@@ -63,7 +66,6 @@ function Choice<T extends string>({ group, value, selected, onSelect, children, 
           card ? "min-h-[108px] flex-col items-start gap-2 p-3.5" : "h-[52px] items-center justify-center gap-2"
         }`}
       >
-        {!card && selected ? <Icon name="check" size={16} strokeWidth={2} /> : null}
         {children}
       </span>
       {card && selected ? (
@@ -78,6 +80,11 @@ function Choice<T extends string>({ group, value, selected, onSelect, children, 
   );
 }
 
+const startLabel = (answered: boolean): string => {
+  if (answered) return "시작하기";
+  return "하나 이상 골라 주세요";
+};
+
 export function OnboardingScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
@@ -86,7 +93,8 @@ export function OnboardingScreen() {
   const [failed, setFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
   const router = useRouter();
-  const canStart = Boolean(gender && ageRange && skinType) && !saving;
+  const answered = Boolean(gender || ageRange || skinType);
+  const canStart = answered && !saving;
 
   useEffect(() => {
     findMe()
@@ -103,7 +111,7 @@ export function OnboardingScreen() {
 
   const start = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!gender || !ageRange || !skinType || saving) return;
+    if (!canStart) return;
 
     setSaving(true);
     setFailed(false);
@@ -133,12 +141,21 @@ export function OnboardingScreen() {
     <main className="flex min-h-svh flex-col">
       <form onSubmit={start} className="flex flex-1 flex-col">
         <div className="flex-1 px-4 pt-10 pb-12">
-          <h1 className="text-[24px] leading-[1.4] font-bold tracking-tight">
-            피부에 맞는 제품을 <br />
-            보여 드릴게요
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-[24px] leading-[1.4] font-bold tracking-tight">
+              피부에 맞는 제품을 <br />
+              보여 드릴게요
+            </h1>
+            <button
+              type="button"
+              onClick={() => router.replace("/")}
+              className="mt-1 shrink-0 rounded-sm py-1 text-[14px] text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+            >
+              건너뛰기
+            </button>
+          </div>
           <p className="mt-3 text-[15px] leading-relaxed text-text-secondary">
-            세 가지만 골라 주세요. 나중에 언제든 바꿀 수 있어요.
+            아는 것만 골라 주세요. 나중에 언제든 바꿀 수 있어요.
           </p>
           <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-relaxed text-text-secondary">
             <svg
@@ -213,6 +230,9 @@ export function OnboardingScreen() {
                 value={UNKNOWN_SKIN_TYPE}
                 checked={skinType === UNKNOWN_SKIN_TYPE}
                 onChange={() => setSkinType(UNKNOWN_SKIN_TYPE)}
+                onClick={() => {
+                  if (skinType === UNKNOWN_SKIN_TYPE) setSkinType(null);
+                }}
                 className="peer sr-only"
               />
               <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
@@ -232,9 +252,9 @@ export function OnboardingScreen() {
           <button
             type="submit"
             disabled={!canStart}
-            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:opacity-40"
+            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:bg-[#F3F4F5] disabled:text-[#9EA3AB]"
           >
-            시작하기
+            {startLabel(answered)}
           </button>
         </div>
       </form>

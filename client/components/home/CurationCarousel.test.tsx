@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, createEvent, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CurationCarousel } from "./CurationCarousel";
@@ -30,15 +30,75 @@ const items = [
 ];
 
 /* 컴포넌트의 DROP_DURATION 과 같은 값. 정렬이 끝나는 시점을 알려면 필요하다. */
-const DROP_MS = 320;
+const DROP_MS = 250;
+
+/* 컴포넌트의 AUTOPLAY_INTERVAL, GLIDE_DURATION 과 같은 값. */
+const AUTOPLAY_MS = 5000;
+const GLIDE_MS = 1500;
+
+/* 한 칸에서 다음 칸까지의 거리. */
+const STEP = 400;
+
+const trackOf = (container: HTMLElement): HTMLElement => {
+  const element = container.querySelector(".curation-track");
+  if (!(element instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+  return element;
+};
+
+/*
+ * jsdom 은 요소의 크기를 모두 0 으로 두므로 칸의 자리를 직접 세워 둔다.
+ *
+ * 목록 좌우 여백이 16px 이라 첫 칸은 16px 에서 시작한다. 그래서 n 번째 칸을 가운데로
+ * 보내는 스크롤 값은 `n × STEP` 이다.
+ */
+const layOut = (element: HTMLElement) => {
+  for (const [slot, child] of [...element.children].entries()) {
+    Object.defineProperty(child, "offsetLeft", { value: 16 + slot * STEP, configurable: true });
+    Object.defineProperty(child, "offsetWidth", { value: STEP - 8, configurable: true });
+  }
+  Object.defineProperty(element, "clientWidth", { value: STEP + 24, configurable: true });
+  element.setPointerCapture = vi.fn();
+  element.hasPointerCapture = vi.fn(() => false);
+};
+
+/*
+ * 미끄러지는 움직임은 `requestAnimationFrame` 으로 그려진다. 가짜 시간에 맞물려 돌도록
+ * 타이머로 바꿔 두고, `performance.now` 도 같은 시간을 읽게 한다. 되돌리는 함수를 돌려준다.
+ */
+const fakeFrames = () => {
+  vi.useFakeTimers();
+  const raf = vi
+    .spyOn(globalThis, "requestAnimationFrame")
+    .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
+  const caf = vi
+    .spyOn(globalThis, "cancelAnimationFrame")
+    .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
+  const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+
+  return () => {
+    raf.mockRestore();
+    caf.mockRestore();
+    now.mockRestore();
+    vi.useRealTimers();
+  };
+};
 
 describe("CurationCarousel", () => {
   it("받은 큐레이션의 제목과 설명을 그린다", () => {
     render(<CurationCarousel items={items} />);
 
-    /* 앞뒤로 여벌 카드를 두어 같은 제목이 여러 번 나온다. 하나라도 그려졌으면 된다. */
-    expect(screen.getAllByText("가을 장벽").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("보습 성분 모아보기").length).toBeGreaterThan(0);
+    expect(screen.getByText("가을 장벽")).toBeInTheDocument();
+    expect(screen.getByText("보습 성분 모아보기")).toBeInTheDocument();
+  });
+
+  /*
+   * 끝없이 도는 것처럼 보이려고 카드를 복제해 두면, 같은 링크가 여러 번 나와 키보드와
+   * 낭독기가 보이지 않는 카드까지 거친다. 받은 카드만 한 번씩 그린다.
+   */
+  it("받은 큐레이션 수만큼만 카드를 그린다", () => {
+    render(<CurationCarousel items={items} />);
+
+    expect(screen.getAllByRole("link")).toHaveLength(items.length);
   });
 
   /*
@@ -69,7 +129,7 @@ describe("CurationCarousel", () => {
   it("설명 문구의 줄바꿈을 살린다", () => {
     render(<CurationCarousel items={items} />);
 
-    const [description] = screen.getAllByText("보습 성분 모아보기");
+    const description = screen.getByText("보습 성분 모아보기");
 
     expect(description).toHaveClass("whitespace-pre-line");
   });
@@ -78,20 +138,46 @@ describe("CurationCarousel", () => {
   it("카드가 큐레이션 상세로 이어진다", () => {
     render(<CurationCarousel items={items} />);
 
-    /* 앞뒤로 여벌 카드를 두어 같은 링크가 여러 번 나온다. 가리키는 곳만 본다. */
-    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
+    const link = screen.getByRole("link", { name: /가을 장벽/ });
 
     expect(link).toHaveAttribute("href", "/curations/1");
   });
 
   it("카드를 누르면 몇 번째 큐레이션인지와 함께 남긴다", () => {
-    render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    list.scrollLeft = STEP;
 
-    const [link] = screen.getAllByRole("link", { name: /순한 클렌징/ });
-    fireEvent.click(link);
+    fireEvent.click(screen.getByRole("link", { name: /순한 클렌징/ }));
 
     /* 자리는 사람이 세는 대로 1 부터 센다. 두 번째 카드이므로 2 다. */
     expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
+  });
+
+  /*
+   * 옆에 걸친 카드는 대개 넘기려고 누른다. 곧바로 상세가 열리면 뜻밖이므로, 그 카드를
+   * 가운데로 데려오기만 한다.
+   */
+  it("옆에 걸친 카드를 누르면 상세로 가지 않고 그 카드로 넘긴다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      const clicked = fireEvent.click(screen.getByRole("link", { name: /순한 클렌징/ }));
+
+      expect(clicked).toBe(false);
+      expect(track).not.toHaveBeenCalledWith("curation_opened", expect.anything());
+
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+      expect(list.scrollLeft).toBe(STEP);
+    } finally {
+      restore();
+    }
   });
 
   /*
@@ -112,8 +198,7 @@ describe("CurationCarousel", () => {
     fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
     fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
 
-    const [link] = screen.getAllByRole("link", { name: /가을 장벽/ });
-    const clicked = fireEvent.click(link);
+    const clicked = fireEvent.click(screen.getByRole("link", { name: /가을 장벽/ }));
 
     /* 기본 동작이 막혔으면 이동하지 않는다. 이벤트도 남기지 않는다. */
     expect(clicked).toBe(false);
@@ -182,85 +267,173 @@ describe("CurationCarousel", () => {
     expect(track.scrollLeft).toBe(100);
   });
 
-  it("스냅 지점에서 벗어나 멈추면 가운데로 정렬한 뒤 재배치한다", () => {
-    vi.useFakeTimers();
-    const raf = vi
-      .spyOn(globalThis, "requestAnimationFrame")
-      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
-    const caf = vi
-      .spyOn(globalThis, "cancelAnimationFrame")
-      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
-    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+  /*
+   * 스스로 넘어가는 데는 1.5초가 걸려 그 사이에 손을 대는 일이 흔하다. 미끄러지는 동작이
+   * 멈추지 않으면 프레임마다 `scrollLeft` 를 적어 손가락이 민 자리를 덮어써, 카드가 튄다.
+   */
+  it("스스로 넘어가는 중에 손가락을 대면 그 움직임을 멈춘다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      // 스스로 넘기기 시작해 절반쯤 왔다.
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS + GLIDE_MS / 2));
+      expect(list.style.scrollSnapType).toBe("none");
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "touch", button: 0, clientX: 200 });
+      const touched = list.scrollLeft;
+      act(() => vi.advanceTimersByTime(1000));
+
+      expect(list.scrollLeft).toBe(touched);
+      // 손가락으로 민 뒤 브라우저가 카드를 붙이도록 스냅을 돌려 놓는다.
+      expect(list.style.scrollSnapType).toBe("");
+    } finally {
+      restore();
+    }
+  });
+
+  /*
+   * 손가락으로 밀기 시작하면 브라우저는 `pointerup` 대신 `pointercancel` 을 보낸다. 그것을
+   * 손을 뗀 것으로 보면 미는 도중에 스스로 넘기기가 출발해 손가락과 다툰다.
+   */
+  it("손가락이 닿아 있는 동안에는 스스로 넘기지 않는다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "touch", button: 0, clientX: 200 });
+      fireEvent.pointerCancel(list, { pointerId: 1, pointerType: "touch" });
+      // 시계(5초)가 찼다면 미끄러지는 한가운데일 시점이다.
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS + GLIDE_MS / 2));
+
+      expect(list.scrollLeft).toBe(0);
+
+      // 손을 떼면 다음 시계(10초)에 다시 스스로 넘긴다. 그 한가운데다.
+      fireEvent.touchEnd(list, { touches: [] });
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS));
+
+      expect(list.scrollLeft).toBeGreaterThan(0);
+    } finally {
+      restore();
+    }
+  });
+
+  /* 끝에서 처음으로 이어 돌지 않으므로, 마지막 카드에서는 첫 카드로 돌아가야 계속 넘어간다. */
+  it("스스로 넘기다 마지막 카드에 닿으면 첫 카드로 되감는다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = STEP;
+
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS + GLIDE_MS / 2));
+      expect(list.scrollLeft).toBeLessThan(STEP);
+
+      act(() => vi.advanceTimersByTime(GLIDE_MS / 2 + 32));
+      expect(list.scrollLeft).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it("스냅 지점에서 벗어나 멈추면 가운데로 붙인다", () => {
+    const restore = fakeFrames();
     const previousScrollEnd = Object.getOwnPropertyDescriptor(window, "onscrollend");
     Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
 
     try {
       const { container } = render(<CurationCarousel items={items} />);
-      const track = container.querySelector(".curation-track");
-      if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+      const list = trackOf(container);
+      layOut(list);
 
-      const step = 400;
-      for (const [slot, child] of [...track.children].entries()) {
-        Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
-        Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
-      }
-      Object.defineProperty(track, "clientWidth", { value: step, configurable: true });
+      // 두 번째 칸이 가운데에 가장 가깝지만 스냅 지점보다 120px 앞에서 멈춘 상황이다.
+      list.scrollLeft = STEP - 120;
+      fireEvent.scroll(list);
+      act(() => vi.advanceTimersByTime(1750));
 
-      // 세 번째 칸이 중심에 가장 가깝지만 스냅 지점보다 120px 앞에서 멈춘 상황이다.
-      track.scrollLeft = 3 * step - 16 - 120;
-      fireEvent.scroll(track);
-      vi.advanceTimersByTime(1750);
+      // 멎은 순간 곧바로 옮기지 않고, 남은 거리를 미끄러져 간다.
+      expect(list.scrollLeft).toBe(STEP - 120);
+      act(() => vi.advanceTimersByTime(DROP_MS / 2));
+      expect(list.scrollLeft).toBeGreaterThan(STEP - 120);
+      // 미끄러짐은 다음 프레임에 출발하므로 한 프레임 넉넉히 기다린다.
+      act(() => vi.advanceTimersByTime(DROP_MS / 2 + 32));
 
-      // 종료 시점에 즉시 순간이동하지 않고, 먼저 남은 거리를 움직인다.
-      expect(track.scrollLeft).toBe(3 * step - 16 - 120);
-      vi.advanceTimersByTime(DROP_MS / 2);
-      expect(track.scrollLeft).toBeGreaterThan(3 * step - 16 - 120);
-      vi.advanceTimersByTime(DROP_MS / 2);
-
-      // 가운데에 도착한 뒤에만 순서를 바꾼다.
-      expect(track.scrollLeft).toBe(2 * step - 16);
-      expect(track.children[2]).toHaveTextContent("순한 클렌징");
-      expect(track).toHaveClass("snap-mandatory");
+      expect(list.scrollLeft).toBe(STEP);
+      expect(list).toHaveClass("snap-mandatory");
+      expect(list.style.scrollSnapType).toBe("");
     } finally {
-      raf.mockRestore();
-      caf.mockRestore();
-      now.mockRestore();
+      restore();
       if (previousScrollEnd) Object.defineProperty(window, "onscrollend", previousScrollEnd);
       else Reflect.deleteProperty(window, "onscrollend");
-      vi.useRealTimers();
     }
   });
 
   /*
-   * 끄는 도중에는 카드 순서를 되돌리지 않는다.
-   *
-   * 이 컴포넌트는 스크롤이 멎으면 순서를 돌리고 스크롤을 가운데로 되돌린다. 끄는 동안에도
-   * 스크롤 이벤트가 프레임마다 오기 때문에, 막아 두지 않으면 끌고 있는 도중에 그 되돌림이
-   * 실행되어 붙잡고 있던 카드가 손을 떠나 튄다.
+   * 끝 여백을 스크롤 범위에 넣지 않는 브라우저에서는 마지막 칸이 제 스냅 지점까지 가지
+   * 못한다. 그 자리를 덜 왔다고 보면 붙이기를 끝없이 되풀이한다.
    */
-  it("끄는 도중에는 스크롤을 되돌리지 않는다", () => {
+  it("마지막 카드가 갈 수 있는 끝에 멈추면 붙이기를 되풀이하지 않는다", () => {
+    const restore = fakeFrames();
+    const previousScrollEnd = Object.getOwnPropertyDescriptor(window, "onscrollend");
+    Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      const end = STEP - 16;
+      Object.defineProperty(list, "scrollWidth", { value: list.clientWidth + end, configurable: true });
+
+      list.scrollLeft = end;
+      fireEvent.scroll(list);
+      act(() => vi.advanceTimersByTime(1750 + DROP_MS * 2));
+
+      expect(list.scrollLeft).toBe(end);
+      expect(track).toHaveBeenCalledWith("curation_slide_viewed", {
+        curation_id: 2,
+        position: 2,
+        transition: "manual",
+      });
+    } finally {
+      restore();
+      if (previousScrollEnd) Object.defineProperty(window, "onscrollend", previousScrollEnd);
+      else Reflect.deleteProperty(window, "onscrollend");
+    }
+  });
+
+  /*
+   * 끄는 동안에도 스크롤 이벤트가 프레임마다 온다. 손을 멈춘 사이에 멎었다고 보아 카드를
+   * 가운데로 붙이면, 붙잡고 있던 카드가 손을 떠나 튄다.
+   */
+  it("끄는 도중에는 가운데로 붙이지 않는다", () => {
     vi.useFakeTimers();
 
     try {
       const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 100;
 
-      const track = container.querySelector(".curation-track");
-      if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 200 });
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 140 });
+      fireEvent.scroll(list);
 
-      track.setPointerCapture = vi.fn();
-      track.hasPointerCapture = vi.fn(() => false);
-      track.scrollLeft = 100;
-
-      fireEvent.pointerDown(track, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 200 });
-      fireEvent.pointerMove(track, { pointerId: 1, pointerType: "mouse", clientX: 140 });
-      fireEvent.scroll(track);
-
-      const dragged = track.scrollLeft;
+      const dragged = list.scrollLeft;
 
       /* 손을 멈춘 채 시간이 흘러도 끌던 자리가 유지되어야 한다. */
       vi.advanceTimersByTime(4000);
 
-      expect(track.scrollLeft).toBe(dragged);
+      expect(list.scrollLeft).toBe(dragged);
     } finally {
       vi.useRealTimers();
     }
@@ -269,68 +442,155 @@ describe("CurationCarousel", () => {
   /*
    * 한 칸의 절반을 넘겨야 넘어가면 카드가 화면 폭에 가까워 넘기는 데 힘이 많이 든다.
    * 시작한 칸에서 한 칸의 20% 만 움직여도 다음 카드로 넘어가야 한다.
-   *
-   * jsdom 은 요소의 크기를 모두 0 으로 두므로 칸의 자리를 직접 세워 둔다.
    */
   it("한 칸의 20% 만 끌어도 다음 카드로 넘어간다", () => {
-    vi.useFakeTimers();
-
-    /*
-     * 정렬 움직임은 `requestAnimationFrame` 으로 그려진다. 가짜 시간에 맞물려 돌도록
-     * 타이머로 바꿔 두고, `performance.now` 도 같은 시간을 읽게 한다.
-     */
-    const raf = vi
-      .spyOn(globalThis, "requestAnimationFrame")
-      .mockImplementation((cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number);
-    const caf = vi
-      .spyOn(globalThis, "cancelAnimationFrame")
-      .mockImplementation((id) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>));
-    const now = vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+    const restore = fakeFrames();
 
     try {
-      runSwitchCase();
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      /* 한 칸의 20%(80px) 를 갓 넘긴다. 절반(200px) 에는 크게 못 미치는 거리다. */
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 85 });
+      fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 85 });
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+
+      expect(list.scrollLeft).toBe(STEP);
     } finally {
-      raf.mockRestore();
-      caf.mockRestore();
-      now.mockRestore();
-      vi.useRealTimers();
+      restore();
     }
   });
 
-  const runSwitchCase = () => {
-    const { container } = render(<CurationCarousel items={items} />);
+  /*
+   * 손을 뗀 직후가 사람이 가장 눈여겨보는 순간이다. 시작이 느린 커브를 쓰면 그 순간 화면이
+   * 멈췄다가 움직이는 것처럼 보인다. 붙는 시간의 5분의 1 만에 거리의 절반 이상을 가야 한다.
+   */
+  it("손을 뗀 뒤 붙는 움직임은 빠르게 출발한다", () => {
+    const restore = fakeFrames();
 
-    const track = container.querySelector(".curation-track");
-    if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
 
-    const step = 400;
-    for (const [slot, child] of [...track.children].entries()) {
-      if (!(child instanceof HTMLElement)) continue;
-      Object.defineProperty(child, "offsetLeft", { value: slot * step, configurable: true });
-      Object.defineProperty(child, "offsetWidth", { value: step, configurable: true });
+      fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 100 });
+      fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 100 });
+      act(() => vi.advanceTimersByTime(16 + DROP_MS / 5));
+
+      // 100px 에서 출발해 400px 로 간다. 남은 300px 의 절반을 넘겼다.
+      expect(list.scrollLeft).toBeGreaterThan(100 + 150);
+    } finally {
+      restore();
     }
-    Object.defineProperty(track, "clientWidth", { value: step, configurable: true });
+  });
 
-    track.setPointerCapture = vi.fn();
-    track.hasPointerCapture = vi.fn(() => false);
-    /* 가운데 칸(SPARE=2)에서 시작한다. 그 칸을 가운데로 보내는 스크롤 값이다. */
-    track.scrollLeft = 2 * step - 16;
+  /*
+   * 빠르게 튕기는 동작은 거리가 짧아 한 칸의 20% 에 못 미친다. 거리만 보면 넘기려던 카드가
+   * 제자리로 돌아오므로 속도도 함께 본다.
+   */
+  it("짧게 튕기면 거리가 모자라도 다음 카드로 넘어간다", () => {
+    const restore = fakeFrames();
 
-    fireEvent.pointerDown(track, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
-    /* 한 칸의 20%(80px) 를 갓 넘긴다. 절반(200px) 에는 크게 못 미치는 거리다. */
-    fireEvent.pointerMove(track, { pointerId: 1, pointerType: "mouse", clientX: 300 - 85 });
-    fireEvent.pointerUp(track, { pointerId: 1, pointerType: "mouse", clientX: 300 - 85 });
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
 
-    /*
-     * 정렬이 끝나면 `settle` 이 카드 순서를 돌리고 스크롤을 가운데 칸으로 되돌리므로,
-     * 마지막 스크롤 값으로는 어느 칸을 향했는지 알 수 없다. 정렬이 진행되는 동안의 값을
-     * 보고 판정한다. 절반 기준이면 시작한 칸으로 되돌아가 값이 줄어든다.
-     */
-    const startedAt = track.scrollLeft;
-    vi.advanceTimersByTime(Math.floor(DROP_MS / 2));
+      const down = createEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent(list, down);
+      /* 한 칸의 20%(80px) 에 크게 못 미치는 30px 을 50ms 만에 움직였다. */
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      const up = createEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      Object.defineProperty(up, "timeStamp", { value: down.timeStamp + 50 });
+      fireEvent(list, up);
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
 
-    expect(track.scrollLeft).toBeGreaterThan(startedAt);
-  };
+      expect(list.scrollLeft).toBe(STEP);
+    } finally {
+      restore();
+    }
+  });
+
+  it("천천히 조금만 끌었다 놓으면 제자리로 돌아온다", () => {
+    const restore = fakeFrames();
+
+    try {
+      const { container } = render(<CurationCarousel items={items} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 0;
+
+      const down = createEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 300 });
+      fireEvent(list, down);
+      /* 같은 30px 을 1초에 걸쳐 움직였다. */
+      fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      const up = createEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 300 - 30 });
+      Object.defineProperty(up, "timeStamp", { value: down.timeStamp + 1000 });
+      fireEvent(list, up);
+      act(() => vi.advanceTimersByTime(DROP_MS + 32));
+
+      expect(list.scrollLeft).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  /*
+   * 처음과 끝에서 딱 멈추면 보이지 않는 벽에 부딪힌 것 같다. 끈 만큼 다 따라오지는 않되
+   * 조금 밀려 끝에 닿았음을 알리고, 손을 떼면 제자리로 돌아와야 한다.
+   */
+  it("첫 카드에서 더 끌면 목록이 조금만 따라오고, 놓으면 돌아온다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    Object.defineProperty(list, "scrollWidth", { value: list.clientWidth + STEP, configurable: true });
+    list.scrollLeft = 0;
+
+    fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 100 });
+    fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 100 + 200 });
+
+    expect(list.scrollLeft).toBe(0);
+    const pulled = /translate3d\((.+)px, 0, 0\)/.exec(list.style.transform);
+    expect(pulled).not.toBeNull();
+    /* 200px 를 끌었지만 40px 에 못 미치게만 따라온다. */
+    expect(Number(pulled?.[1])).toBeGreaterThan(0);
+    expect(Number(pulled?.[1])).toBeLessThan(40);
+
+    fireEvent.pointerUp(list, { pointerId: 1, pointerType: "mouse", clientX: 100 + 200 });
+
+    expect(list.style.transform).toBe("");
+  });
+
+  /*
+   * 여러 칸을 미끄러져 되돌아가면 지나가는 카드가 한꺼번에 커졌다 줄며 화면이 어수선하다.
+   * 되감기는 흐렸다가 옮긴다. jsdom 에는 웹 애니메이션 API 가 없어 곧바로 옮긴다.
+   */
+  it("세 장 이상에서 마지막 카드에 닿으면 미끄러지지 않고 첫 카드로 옮긴다", () => {
+    const restore = fakeFrames();
+    const three = [
+      ...items,
+      { id: 3, title: "맑은 진정", description: "시카 성분 모아보기", thumbnailImageUrl: "/images/c.jpg" },
+    ];
+
+    try {
+      const { container } = render(<CurationCarousel items={three} />);
+      const list = trackOf(container);
+      layOut(list);
+      list.scrollLeft = 2 * STEP;
+
+      act(() => vi.advanceTimersByTime(AUTOPLAY_MS + 16));
+
+      expect(list.scrollLeft).toBe(0);
+    } finally {
+      restore();
+    }
+  });
 
   /*
    * 마우스로 카드를 끄는 순간 브라우저가 그림을 집어 들면 목록을 미는 동작이 끊긴다.
@@ -347,22 +607,16 @@ describe("CurationCarousel", () => {
     vi.useFakeTimers();
     try {
       const { container } = render(<CurationCarousel items={items} />);
-      const trackElement = container.querySelector(".curation-track");
-      if (!(trackElement instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
-
-      for (const [slot, child] of [...trackElement.children].entries()) {
-        Object.defineProperty(child, "offsetLeft", { value: slot * 400, configurable: true });
-        Object.defineProperty(child, "offsetWidth", { value: 400, configurable: true });
-      }
-      Object.defineProperty(trackElement, "clientWidth", { value: 400, configurable: true });
-      trackElement.scrollLeft = 2 * 400 - 16;
+      const trackElement = trackOf(container);
+      layOut(trackElement);
+      trackElement.scrollLeft = 0;
       vi.mocked(track).mockClear();
 
       fireEvent.scroll(trackElement);
       act(() => vi.advanceTimersByTime(1750));
       expect(track).not.toHaveBeenCalledWith("curation_slide_viewed", expect.anything());
 
-      trackElement.scrollLeft = 3 * 400 - 16;
+      trackElement.scrollLeft = STEP;
       fireEvent.scroll(trackElement);
       act(() => vi.advanceTimersByTime(1750));
       expect(track).toHaveBeenCalledWith("curation_slide_viewed", {

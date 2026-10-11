@@ -9,6 +9,7 @@ import {
   buildKakaoExternalUrl,
   consumeFallbackMarker,
   detectAndroidMobileBrowser,
+  resolveOpenAppDestination,
   planAppOpen,
 } from "./open-app";
 
@@ -143,5 +144,30 @@ describe("설치 배너가 여는 주소", () => {
    */
   it("https 가 아니면 스토어 주소를 그대로 내준다", () => {
     expect(buildInstallIntentUrl("http://localhost:3000/products?sort=popular")).toBe(APP_STORE_URL);
+  });
+});
+
+describe("QR 코드로 들어온 /open-app 이 이어 갈 주소", () => {
+  const OPEN_APP_URL = "https://poudy.site/open-app";
+  const DESKTOP = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36";
+  const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148";
+
+  /* 설치 배너와 같은 길로 보내 앱이 있으면 열고 없으면 스토어로 간다. */
+  it("안드로이드 브라우저는 설치 배너와 같은 intent 로 홈을 연다", () => {
+    expect(resolveOpenAppDestination(OPEN_APP_URL, ANDROID_CHROME, false)).toBe(
+      buildInstallIntentUrl("https://poudy.site/"),
+    );
+  });
+
+  /* 앱은 받은 주소를 웹뷰에 그대로 연다. 스토어로 보내면 쓰던 앱에서 밀려난다. */
+  it("앱 안에서는 홈으로 보낸다", () => {
+    expect(resolveOpenAppDestination(OPEN_APP_URL, ANDROID_CHROME, true)).toBe("https://poudy.site/");
+  });
+
+  it.each([
+    ["데스크톱", DESKTOP],
+    ["iPhone", IPHONE],
+  ])("%s는 스토어 주소로 보낸다", (_, userAgent) => {
+    expect(resolveOpenAppDestination(OPEN_APP_URL, userAgent, false)).toBe(APP_STORE_URL);
   });
 });

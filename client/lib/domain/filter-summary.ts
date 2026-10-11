@@ -1,4 +1,6 @@
-import { type Filter, SKIN_TYPE_NAMES, SKIN_TYPES } from "./filter";
+import { SkinType } from "@poudy/api/api.zod";
+
+import { type Filter, SKIN_TYPE_NAMES } from "./filter";
 import { groupLabel, type IngredientGroups } from "./ingredient-groups";
 import { firstOf, keepIf, pick } from "./optional";
 import { LEVEL_LABELS } from "./product-display";
@@ -34,7 +36,9 @@ const levelPart = (label: string, levels: readonly number[]): readonly string[] 
   keepIf(levels.length > 0, `${label} ${rangeLabel(levels)}`);
 
 const skinTypePart = (filter: Filter): readonly string[] =>
-  SKIN_TYPES.filter((skinType) => skinType === filter.skinType).map((skinType) => `${SKIN_TYPE_NAMES[skinType]} 피부`);
+  SkinType.options
+    .filter((skinType) => skinType === filter.skinType)
+    .map((skinType) => `${SKIN_TYPE_NAMES[skinType]} 피부`);
 
 const countPart = (label: string, count: number): readonly string[] => keepIf(count > 0, `${label} ${count}개`);
 

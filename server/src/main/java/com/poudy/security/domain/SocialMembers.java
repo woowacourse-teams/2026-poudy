@@ -1,8 +1,12 @@
 package com.poudy.security.domain;
 
+import java.util.Optional;
+
 public interface SocialMembers {
 
-    SocialLoginResult login(OAuthAccount account);
+    Optional<SocialLoginResult> login(OAuthAccount account);
+
+    long signUp(OAuthAccount account);
 
     void requestRestore(long withdrawnMemberId);
 }

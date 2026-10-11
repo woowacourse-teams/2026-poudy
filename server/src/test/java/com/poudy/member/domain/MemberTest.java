@@ -12,38 +12,6 @@ import org.junit.jupiter.api.Test;
 class MemberTest {
 
     @Test
-    @DisplayName("성별, 나이대, 피부 타입을 모두 고르면 초기 정보 입력을 마친 것이다")
-    void completesProfileWithAllAnswers() {
-        Member member = new Member(
-            1L,
-            OAuthProvider.KAKAO,
-            "member@example.com",
-            Gender.FEMALE,
-            AgeRange.TWENTIES,
-            MemberSkinType.UNKNOWN,
-            MemberStatus.ACTIVE
-        );
-
-        assertThat(member.isProfileCompleted()).isTrue();
-    }
-
-    @Test
-    @DisplayName("하나라도 고르지 않았으면 초기 정보 입력을 마치지 않은 것이다")
-    void doesNotCompleteProfileWithMissingAnswer() {
-        Member member = new Member(
-            1L,
-            OAuthProvider.KAKAO,
-            "member@example.com",
-            Gender.FEMALE,
-            AgeRange.TWENTIES,
-            null,
-            MemberStatus.ACTIVE
-        );
-
-        assertThat(member.isProfileCompleted()).isFalse();
-    }
-
-    @Test
     @DisplayName("탈퇴하지 않은 회원은 로그인한다")
     void signsInActiveMember() {
         SocialLoginResult result = memberOf(MemberStatus.ACTIVE).loginResult();

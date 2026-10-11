@@ -3,7 +3,7 @@ package com.poudy.security.auth.oauth;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.RuleViolationException;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
-import com.poudy.security.domain.SocialLoginResult;
+import com.poudy.security.domain.LoginStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -18,8 +18,8 @@ public final class LoginCallbackUrl {
         this.loginCallback = loginCallback;
     }
 
-    public String succeeded(SocialLoginResult result) {
-        return LoginCallbackParameter.STATUS.addTo(callback(), result.status()).toUriString();
+    public String succeeded(LoginStatus status) {
+        return LoginCallbackParameter.STATUS.addTo(callback(), status).toUriString();
     }
 
     public String failed(RuntimeException exception) {

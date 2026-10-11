@@ -51,8 +51,30 @@ class AppLoginControllerTest {
     private ProviderTokenVerifiers tokenVerifiers;
 
     @Test
-    @DisplayName("처음 로그인하면 가입시키고 앱 세션으로 회원 API를 쓸 수 있게 한다")
-    void signsUpAndSignsIn() throws Exception {
+    @DisplayName("처음 로그인하면 가입 확인을 기다리고, 가입하면 앱 세션으로 회원 API를 쓸 수 있게 한다")
+    void holdsSignupThenSignsInWithAppSession() throws Exception {
+        given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
+
+        MockHttpSession session = (MockHttpSession) mockMvc.perform(login(KAKAO_PATH, "kakao-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("SIGNUP_REQUIRED"))
+            .andReturn()
+            .getRequest()
+            .getSession(false);
+
+        assertThat(memberRepository.findByAccount(KAKAO_ACCOUNT)).isEmpty();
+        mockMvc.perform(get("/api/members/me").session(session)).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/signup").session(session)).andExpect(status().isNoContent());
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(60L * 24 * 60 * 60);
+        mockMvc.perform(get("/api/members/me").session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.email").value("member@example.com"));
+    }
+
+    @Test
+    @DisplayName("가입한 회원이 로그인하면 앱 세션으로 회원 API를 쓸 수 있게 한다")
+    void signsInWithAppSession() throws Exception {
+        memberRepository.save(MemberSignup.from(KAKAO_ACCOUNT));
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
 
         MockHttpSession session = (MockHttpSession) mockMvc.perform(login(KAKAO_PATH, "kakao-token"))

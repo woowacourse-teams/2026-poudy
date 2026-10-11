@@ -1,0 +1,16 @@
+[Unit]
+Description=Poudy production backend host firewall
+Documentation=file:/etc/poudy/backend-firewall.nft
+After=network-pre.target
+Before=poudy-backend.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/sbin/nft delete table inet poudy_backend
+ExecStart=/usr/sbin/nft -f /etc/poudy/backend-firewall.nft
+ExecStop=-/usr/sbin/nft delete table inet poudy_backend
+
+[Install]
+WantedBy=multi-user.target

@@ -17,7 +17,9 @@ public class ErrorResponseConfig {
     @Bean
     public OpenApiCustomizer errorResponseCustomizer() {
         return openApi -> {
-            openApi.getComponents().addSchemas(ProblemDetailResponses.SCHEMA_NAME, ProblemDetailResponses.schema());
+            openApi.getComponents()
+                .addSchemas(ProblemDetailResponses.ERROR_CODE_SCHEMA_NAME, ProblemDetailResponses.errorCodeSchema())
+                .addSchemas(ProblemDetailResponses.SCHEMA_NAME, ProblemDetailResponses.schema());
             openApi.getPaths().forEach(this::addErrorResponses);
         };
     }

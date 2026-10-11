@@ -1,3 +1,4 @@
+import { ErrorCode } from "@poudy/api/api.zod";
 import type { ZodType } from "zod";
 
 /**
@@ -143,7 +144,7 @@ export const apiGet = async <T>(
 
   if (!response.ok) {
     const problem = await response.json().catch(() => null);
-    const code = problem?.code ?? "INTERNAL_SERVER_ERROR";
+    const code = problem?.code ?? ErrorCode.enum.INTERNAL_SERVER_ERROR;
 
     reportError(code, response.status, path);
     throw new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
@@ -158,7 +159,7 @@ export const apiGet = async <T>(
  */
 const toApiError = async (response: Response, path: string): Promise<ApiError> => {
   const problem = await response.json().catch(() => null);
-  const code = problem?.code ?? "INTERNAL_SERVER_ERROR";
+  const code = problem?.code ?? ErrorCode.enum.INTERNAL_SERVER_ERROR;
 
   reportError(code, response.status, path);
   const error = new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");

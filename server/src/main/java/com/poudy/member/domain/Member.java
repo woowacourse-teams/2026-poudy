@@ -35,10 +35,6 @@ public final class Member {
         return new SocialLoginResult(id, status.loginStatus());
     }
 
-    public boolean isProfileCompleted() {
-        return gender != null && ageRange != null && skinType != null;
-    }
-
     public long id() {
         return id;
     }

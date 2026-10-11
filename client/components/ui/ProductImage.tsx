@@ -2,6 +2,8 @@
 
 import { type Ref, useLayoutEffect, useRef, useState } from "react";
 
+import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
+
 /*
  * S3 의 제품 그림은 `{이름}.webp` 옆에 긴 변을 칸 크기에 맞춘 `{이름}_{칸}.webp` 를 함께 둔다.
  * 칸은 화면이 그리는 크기(40~184px)를 4배 화면까지 덮도록 정했다. 칸이 바뀌면 S3 의 사본도
@@ -13,7 +15,9 @@ const VARIANT_WIDTHS = [128, 192, 288, 384, 576, 768] as const;
 
 const srcSetOf = (src: string): string | undefined => {
   if (!PRODUCT_IMAGE.test(src)) return undefined;
-  return VARIANT_WIDTHS.map((width) => `${src.replace(/\.webp$/, `_${width}.webp`)} ${width}w`).join(", ");
+  return VARIANT_WIDTHS.map((width) => `${imageDeliveryUrl(src.replace(/\.webp$/, `_${width}.webp`))} ${width}w`).join(
+    ", ",
+  );
 };
 
 type ProductImageProps = {
@@ -55,6 +59,7 @@ function ProductImageElement({
   const [broken, setBroken] = useState(false);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
+  const imageSrc = imageDeliveryUrl(src);
   const srcSet = variantsFailed ? undefined : srcSetOf(src);
 
   /*
@@ -72,7 +77,7 @@ function ProductImageElement({
     }
 
     // 속성으로 다시 넣는다. `image.src` 는 절대 주소를 돌려주므로 그대로 넣으면 상대 주소가 바뀐다.
-    image.setAttribute("src", src);
+    image.setAttribute("src", imageSrc);
     // 처음 붙을 때 한 번만 되살린다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -118,7 +123,7 @@ function ProductImageElement({
       style={broken ? undefined : { color: "transparent" }}
       sizes={srcSet && `${size}px`}
       srcSet={srcSet}
-      src={src}
+      src={imageSrc}
       onLoad={onLoad}
       onError={handleError}
     />

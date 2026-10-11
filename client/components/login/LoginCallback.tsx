@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { SIGNUP_SHEET_PATH } from "./SignupSheet";
+
 import { findMe, requestRestore } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { rememberLastLogin } from "@/lib/storage/last-login";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 type Props = {
@@ -86,12 +89,28 @@ const SIGN_IN_FAILED = "OAUTH_LOGIN_FAILED";
 
 const WITHDRAWN = "WITHDRAWN";
 const RESTORE_REQUESTED = "RESTORE_REQUESTED";
+const SIGNUP_REQUIRED = "SIGNUP_REQUIRED";
 
 export function LoginCallback({ error, provider, status }: Props) {
   if (status === RESTORE_REQUESTED) return <RestoreRequestedNotice />;
   if (status === WITHDRAWN) return <WithdrawnNotice />;
+  if (status === SIGNUP_REQUIRED) return <SignupRedirect />;
 
   return <SignInResult error={error} provider={provider} />;
+}
+
+function SignupRedirect() {
+  const router = useRouter();
+
+  useEffect(() => router.replace(SIGNUP_SHEET_PATH), [router]);
+
+  return (
+    <main className="flex min-h-svh items-center justify-center px-4">
+      <p role="status" className="text-[15px] text-text-secondary">
+        로그인하는 중이에요
+      </p>
+    </main>
+  );
 }
 
 function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
@@ -104,7 +123,8 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     findMe()
       .then((member) => {
         void reloadSavedProducts();
-        router.replace(member.profileCompleted ? "/" : "/onboarding");
+        rememberLastLogin(member.provider);
+        router.replace("/");
       })
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);

@@ -11,6 +11,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/poudy/backend
 EnvironmentFile=/etc/poudy/backend-image.env
+ExecStartPre=/bin/bash -c '/usr/bin/install -d -o poudy -g poudy -m 0700 /var/lib/poudy-sessions'
 ExecStart=/usr/local/sbin/poudy-backend-container-start
 ExecStop=/bin/bash -c '/usr/bin/docker stop --time 30 poudy-backend || true'
 ExecStopPost=/bin/bash -c '/usr/bin/docker rm --force poudy-backend >/dev/null 2>&1 || true'

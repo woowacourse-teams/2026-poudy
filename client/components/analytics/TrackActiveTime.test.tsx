@@ -65,6 +65,15 @@ describe("TrackActiveTime", () => {
     expect(recorded().map((event) => event.active_seconds)).toEqual([30, 30]);
   });
 
+  it("성분군 설명은 숫자 ID 대신 성분군 코드로 남긴다", () => {
+    render(<TrackActiveTime pageType="ingredient_group_detail" entityCode="CERAMIDES" />);
+
+    act(() => vi.advanceTimersByTime(HEARTBEAT_MS));
+
+    expect(track.mock.calls[0]?.[1]).toMatchObject({ page_type: "ingredient_group_detail", entity_code: "CERAMIDES" });
+    expect(track.mock.calls[0]?.[1]).not.toHaveProperty("entity_id");
+  });
+
   it("탭이 가려지면 바로 비콘으로 보내고 가려진 동안은 세지 않는다", () => {
     render(<TrackActiveTime pageType="ingredient_detail" entityId={7} />);
 

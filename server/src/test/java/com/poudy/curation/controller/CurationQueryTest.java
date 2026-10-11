@@ -2,6 +2,7 @@ package com.poudy.curation.controller;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,13 +10,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,6 +29,8 @@ class CurationQueryTest {
     private MockMvc mockMvc;
     @Autowired
     private ProductRepository products;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void returnsPublicBannerInConfiguredOrder() throws Exception {
@@ -49,12 +56,18 @@ class CurationQueryTest {
             .andExpect(jsonPath("$.blocks[*].id", contains(uuid(1), uuid(3), uuid(5), uuid(6))))
             .andExpect(jsonPath("$.blocks[0].type").value("IMAGE"))
             .andExpect(jsonPath("$.blocks[0].imageUrl").value("https://cdn.example.com/curations/12/detail-1.png"))
+            .andExpect(jsonPath("$.blocks[0].altText").value(nullValue()))
+            .andExpect(jsonPath("$.blocks[0].altText").hasJsonPath())
+            .andExpect(jsonPath("$.blocks[0].bodyText").value(nullValue()))
+            .andExpect(jsonPath("$.blocks[0].bodyText").hasJsonPath())
             .andExpect(jsonPath("$.blocks[0].spacingTop").value(8))
             .andExpect(jsonPath("$.blocks[0].spacingBottom").value(24))
             .andExpect(jsonPath("$.blocks[0].filters").doesNotExist())
             .andExpect(jsonPath("$.blocks[0].products").doesNotExist())
             .andExpect(jsonPath("$.blocks[1].type").value("PRODUCTS_BY_FILTER"))
             .andExpect(jsonPath("$.blocks[1].imageUrl").doesNotExist())
+            .andExpect(jsonPath("$.blocks[1].altText").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.blocks[1].bodyText").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.blocks[1].filters[*].id", contains(uuid(12), uuid(11))))
             .andExpect(jsonPath("$.blocks[1].filters[*].label", contains("보습", "진정")))
             .andExpect(jsonPath("$.blocks[1].products[*].product.id", contains(15, 10, 7, 1)))
@@ -74,6 +87,8 @@ class CurationQueryTest {
             .andExpect(jsonPath("$.blocks[1].products[0].product.moistureLevel").value(first.moistureLevel()))
             .andExpect(jsonPath("$.blocks[1].products[0].product.oilLevel").value(first.oilLevel()))
             .andExpect(jsonPath("$.blocks[3].type").value("PRODUCTS"))
+            .andExpect(jsonPath("$.blocks[3].altText").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.blocks[3].bodyText").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.blocks[3].filters").doesNotExist())
             .andExpect(jsonPath("$.blocks[3].products[0].id").value(10))
             .andExpect(jsonPath("$.blocks[3].products[0].filterIds").doesNotExist())
@@ -83,6 +98,25 @@ class CurationQueryTest {
             .andExpect(jsonPath("$.blocks[*].status").isEmpty())
             .andExpect(jsonPath("$.blocks[*].imageId").isEmpty())
             .andExpect(jsonPath("$.blocks[*].position").isEmpty());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"환절기 장벽 케어", "  대체 설명  "})
+    @Transactional
+    void returnsImageTextWithoutChangingWhitespace(String altText) throws Exception {
+        String bodyText = "  첫 문단\r\n\r\n두 번째 문단\n ";
+        jdbcTemplate.update(
+            "UPDATE curation_block SET alt_text = ?, body_text = ? WHERE id = ?",
+            altText,
+            bodyText,
+            UUID.fromString(uuid(1))
+        );
+
+        mockMvc.perform(get("/api/curations/12"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.blocks[0].altText").value(altText))
+            .andExpect(jsonPath("$.blocks[0].bodyText").value(bodyText));
     }
 
     @Test

@@ -6,8 +6,8 @@ import com.poudy.security.auth.app.ProviderTokenVerifiers;
 import com.poudy.security.auth.app.controller.dto.AppLoginRequest;
 import com.poudy.security.auth.app.controller.dto.AppLoginResponse;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
+import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthProvider;
-import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.session.LoginChannel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,7 +54,7 @@ public class AppLoginController {
         HttpServletResponse httpResponse
     ) {
         OAuthProvider tokenProvider = OAuthProvider.from(provider);
-        SocialLoginResult result = socialLogin.login(
+        LoginStatus status = socialLogin.login(
             () -> tokenVerifiers.verify(tokenProvider, request.token()),
             LoginChannel.APP,
             httpRequest,
@@ -62,7 +62,7 @@ public class AppLoginController {
         );
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
-            .body(new AppLoginResponse(result.status()));
+            .body(new AppLoginResponse(status));
     }
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
