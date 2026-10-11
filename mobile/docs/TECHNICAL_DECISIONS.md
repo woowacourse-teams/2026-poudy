@@ -5,6 +5,24 @@
 - 공유 원문은 앱에서 제품을 판별하지 않고 웹의 `/share/redirect` 경로로 전달한다. 앱은 같은 서비스 원본의 URL만 직접 열며, 그 외 텍스트의 제품 매칭은 웹이 담당한다.
 - 이 경계로 앱은 API 주소나 제품 매칭 규칙에 의존하지 않는다. 매칭 로직이나 API 배포 주소가 바뀌어도 앱을 다시 배포할 필요가 없다.
 
+## 소셜 로그인
+
+- 앱 안에서는 구글 로그인과 카카오톡 로그인을 네이티브 SDK 로 한다. 구글은 임베디드 WebView 의 OAuth 를 `disallowed_useragent` 로 막는다. 카카오는 카카오톡 앱으로 로그인하려면 SDK 가 필요하다.
+- 앱은 토큰을 서버에 직접 보내지 않고 WebView 에 넘긴다. 웹이 `POST /api/auth/{provider}/app-login` 을 부르므로 세션 쿠키가 WebView 의 쿠키 저장소에 생기고, 로그인 뒤 화면 분기도 웹 로그인과 같은 `/login/callback` 을 쓴다.
+- 웹은 `poudy:login:{provider}` 메시지로 로그인을 요청하고, 앱은 `poudy:login` 이벤트(`detail` 의 `status` 가 `success`·`cancelled`·`failed`·`unavailable`)로 답한다. 카카오는 접근 토큰, 구글은 ID 토큰을 `token` 에 담는다.
+- 앱은 초기화 스크립트에서 `window.__POUDY_APP_LOGIN__` 에 네이티브 로그인을 받는 제공자 목록을 둔다. 값이 없는 예전 앱이나 빈 목록이면 웹은 기존 OAuth 이동으로 로그인한다. 앱 버전으로 판별하지 않는 이유는 개발 빌드의 버전이 기능 유무를 나타내지 않기 때문이다.
+- 지금은 Android 만 목록을 채운다. iOS 는 카카오 URL 스킴과 구글 iOS 클라이언트를 아직 설정하지 않았다.
+- 카카오톡이 없으면 앱은 `unavailable` 로 답하고, 웹이 기존 카카오 OAuth 주소로 WebView 안에서 이동한다. 카카오는 WebView 로그인을 막지 않는다. 이때 시작 주소에 `channel=app` 을 붙여 서버가 앱 세션 정책으로 세션을 만든다. SDK 의 카카오계정 로그인은 쓰지 않는다. 이 로그인은 기본 브라우저의 맞춤 탭으로 열리는데, 맞춤 탭 서비스에 연결되지 않으면 투명한 `AuthCodeHandlerActivity` 만 남아 화면을 덮고, 뒤로 가기로 닫아도 SDK 가 결과를 돌려주지 않았다(Galaxy S24+, 삼성 인터넷 맞춤 탭 서비스가 메모리 부족으로 종료된 상태). 사용자 기기의 브라우저 상태에 로그인이 달리지 않게 WebView 로 연다.
+- 카카오톡이 있는데 카카오톡 로그인이 취소가 아닌 이유로 실패하면 `failed` 로 답한다.
+- WebView 로그인은 로그인 시작 주소(API), 카카오 로그인 페이지, 서버 콜백이 모두 서비스와 다른 origin 이라 평소 규칙대로면 외부 브라우저로 열린다. 그러면 로그인 뒤 콜백도 브라우저에서 열려 앱으로 돌아오지 못하고, 세션 쿠키도 브라우저에 생긴다. 그래서 앱은 `unavailable` 로 답하기 직전부터, 서비스 밖으로 나갔다가 서비스 origin 으로 돌아올 때까지 http(s) 주소를 WebView 안에서 연다. 운영은 API 가 서비스와 같은 origin 이라 로그인 시작 주소부터 서비스 origin 이므로, 서비스 origin 에 처음 들어온 것만으로 끝내면 카카오 로그인 페이지가 외부 브라우저로 열린다. 결과를 웹에 보내기 전에 표시를 켜므로 웹의 이동보다 늦지 않다. 서비스 origin 으로 돌아와 페이지를 다 읽으면 WebView 방문 기록을 지운다. 남겨 두면 로그인 뒤 뒤로 가기로 카카오 로그인 페이지에 돌아가는데, 그때는 로그인이 끝나 외부 브라우저로 열린다. 기록 지우기는 Android 에만 있고, iOS 는 아직 이 경로를 쓰지 않는다.
+- `react-native-webview` 의 `originWhitelist` 는 `onShouldStartLoadWithRequest` 보다 먼저 판정해 통과하지 못하면 외부로 연다. 그래서 `originWhitelist` 는 http(s) 전체로 두고 origin 판정은 `onShouldStartLoadWithRequest` 한 곳에서 한다. 로그인 동안에는 다른 origin 의 페이지에도 브리지가 생기므로 메시지는 서비스 origin 에서 온 것만 처리한다.
+- 구글은 ID 토큰을 받은 뒤 바로 SDK 로그아웃을 한다. 다음 로그인에서 계정 선택 화면이 다시 떠서 웹의 `select_account` 와 같이 동작한다. 로그아웃해도 받은 ID 토큰은 그대로 쓸 수 있다.
+- 앱은 진행 중인 로그인이 있어도 새 요청을 받으면 새 요청으로 갈아타고, 이전 요청의 늦은 결과는 웹에 보내지 않는다. SDK 가 결과를 돌려주지 않는 경우에 진행 중 요청을 무시하면 앱을 다시 켤 때까지 모든 로그인이 막힌다. 로그인 화면이 떠 있는 동안에는 WebView 를 누를 수 없으므로, 다시 누를 수 있다는 것은 이전 로그인 화면이 사라졌다는 뜻이다.
+- 카카오 SDK 로그아웃은 토큰을 서버에서 만료시키므로 로그인 직후가 아니라 웹이 `poudy:logout` 을 보낼 때 한다.
+- 구글 SDK 의 `webClientId` 는 서버의 `GOOGLE_CLIENT_ID` 와 같아야 한다. 서버가 ID 토큰의 `aud` 를 이 값으로 확인한다. Android OAuth 클라이언트는 패키지와 서명 SHA-1 로만 앱을 식별하고 코드에는 쓰지 않는다.
+- 카카오 Android SDK 는 Maven Central 이 아니라 카카오 저장소에 있어 `expo-build-properties` 의 `extraMavenRepos` 에 넣는다.
+- 카카오 SDK 는 서버 응답을 Gson 으로 `model` 클래스에 넣고 API 를 Retrofit 인터페이스로 부르는데, 이 규칙을 SDK 가 직접 싣지 않는다. release 빌드는 R8 로 줄이므로 카카오 문서의 프로가드 규칙을 `expo-build-properties` 의 `extraProguardRules` 에 넣는다. 없으면 R8 이 Retrofit `Call` 의 제네릭 정보를 지워, 카카오톡 로그인 뒤 인가 코드를 토큰으로 바꾸는 단계에서 `Unable to create call adapter` 로 앱이 종료된다.
+
 ## WebView 탐색과 뒤로 가기
 
 - WebView를 다시 만들면 브라우저 방문 기록도 비어 있다. 따라서 소스 키가 바뀔 때 네이티브 뒤로 가기 상태를 초기화해, 이전 WebView의 `canGoBack` 상태가 버튼 입력을 소모하지 않도록 한다.

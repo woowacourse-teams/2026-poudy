@@ -30,16 +30,25 @@ export interface WebViewFailureMessage {
 }
 
 export interface WebViewNavigation {
-  readonly fail: (reason: WebViewFailure) => void;
   readonly failure: WebViewFailure | null;
+  readonly handleError: (event: WebViewErrorEvent) => void;
+  readonly handleHttpError: () => void;
   readonly handleLoad: () => void;
   readonly handleLoadEnd: () => void;
+  readonly handleShouldStartLoad: (request: WebViewNavigationRequest) => boolean;
   readonly handleUrlChange: (url: string) => void;
   readonly isLoading: boolean;
   readonly key: number;
   readonly navigate: (url: string) => void;
   readonly reload: () => void;
+  readonly startWebLogin: () => void;
   readonly url: string;
+}
+
+export interface WebViewBridgeOptions {
+  readonly onWebLogin: () => void;
+  readonly serviceOrigin: string;
+  readonly webViewRef: RefObject<WebView | null>;
 }
 
 export interface WebViewNavigationRequest {

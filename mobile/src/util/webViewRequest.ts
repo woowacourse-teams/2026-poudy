@@ -1,6 +1,9 @@
 import { Alert, Linking } from 'react-native';
 
 const BLANK_URL = 'about:blank';
+const HTTP_PROTOCOLS = ['http:', 'https:'];
+
+export const WEB_ORIGIN_WHITELIST = ['http://*', 'https://*'];
 
 export const shouldLoadInWebView = (url: string, serviceOrigin: string): boolean => {
   if (url === BLANK_URL) {
@@ -9,6 +12,14 @@ export const shouldLoadInWebView = (url: string, serviceOrigin: string): boolean
 
   try {
     return new URL(url).origin === serviceOrigin;
+  } catch {
+    return false;
+  }
+};
+
+export const isHttpUrl = (url: string): boolean => {
+  try {
+    return HTTP_PROTOCOLS.includes(new URL(url).protocol);
   } catch {
     return false;
   }
