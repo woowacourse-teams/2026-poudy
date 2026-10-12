@@ -18,6 +18,7 @@ import {
   type ProductSort,
   ProductSuggestionPageResponse,
   RankingsResponse,
+  SitemapResponse,
   SkinTypesResponse,
 } from "@poudy/api/api.zod";
 
@@ -157,6 +158,8 @@ export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
  * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
  */
 export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", CurationListResponse);
+
+export const fetchSitemap = (): Promise<SitemapResponse> => apiGet("/api/sitemap", SitemapResponse);
 
 /** 큐레이션 상세. 이미지와 제품이 모두 blocks 에 담겨 한 번에 온다. */
 export const fetchCuration = (curationId: number): Promise<CurationDetailResponse> =>
