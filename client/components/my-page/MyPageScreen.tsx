@@ -1,30 +1,81 @@
 "use client";
 
 import type { MemberResponse } from "@poudy/api/api.zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+import { LogoutSheet } from "./LogoutSheet";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-import { findMe, isAdminSession, isSignedOut, logout, withdraw } from "@/lib/api/member";
-import { providerName } from "@/lib/domain/social-provider";
+import { ProviderBadge } from "@/components/login/ProviderIcon";
+import { Icon } from "@/components/ui/icons/Icon";
+import type { IconId } from "@/components/ui/icons/sprite";
+import { TopBar } from "@/components/ui/TopBar";
+import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
+import { AGE_RANGES, GENDERS, profileLabel, SKIN_TYPES } from "@/lib/domain/member-profile";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
+import {
+  getSavedProductsServerSnapshot,
+  getSavedProductsSnapshot,
+  reloadSavedProducts,
+  subscribeSavedProducts,
+} from "@/lib/storage/saved-products";
 
 const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
-const WITHDRAW_FAILED = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
-const WITHDRAW_CONFIRM = [
-  "탈퇴하면 로그아웃되고 회원 기능을 사용할 수 없어요. 계정과 저장함은 복구를 위해 30일 보관한 뒤 삭제해요.",
-  "카카오·Google 계정 연결은 자동으로 해제되지 않아요. 연결도 해제하려면 해당 계정 설정에서 직접 해제해 주세요.",
-  "탈퇴할까요?",
-].join("\n\n");
+
+const ROW_CLASS = "flex min-h-13 w-full items-center gap-3 px-4 text-left text-[15px] text-text-primary";
+
+function Section({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
+  return (
+    <section className="border-b-8 border-surface py-2 last:border-b-0">
+      <h2 className="px-4 pt-3 pb-1 text-[12px] font-semibold text-text-secondary">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function RowLabel({ icon, label }: { readonly icon: IconId; readonly label: string }) {
+  return (
+    <>
+      <Icon name={icon} size={20} className="shrink-0 text-text-primary" />
+      <span className="flex-1">{label}</span>
+    </>
+  );
+}
+
+type LinkRowProps = {
+  readonly href: string;
+  readonly icon: IconId;
+  readonly label: string;
+  readonly value?: string;
+};
+
+function LinkRow({ href, icon, label, value }: LinkRowProps) {
+  return (
+    <Link href={href} className={ROW_CLASS}>
+      <RowLabel icon={icon} label={label} />
+      {value === undefined && <span className="text-[14px] font-semibold text-brand">선택 필요</span>}
+      {value !== undefined && <span className="text-[14px] text-text-secondary">{value}</span>}
+      <Icon name="chevron-right" size={16} className="shrink-0 text-text-secondary" />
+    </Link>
+  );
+}
+
+const savedCountLabel = (status: string, count: number): string => {
+  if (status !== "ready") return "";
+  return `${count}개`;
+};
 
 export function MyPageScreen() {
   const router = useRouter();
   const [member, setMember] = useState<MemberResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const saved = useSyncExternalStore(subscribeSavedProducts, getSavedProductsSnapshot, getSavedProductsServerSnapshot);
 
   useEffect(() => {
     findMe()
@@ -43,9 +94,9 @@ export function MyPageScreen() {
       });
   }, [router]);
 
-  const leave = (request: () => Promise<void>, failure: string) => {
+  const signOut = () => {
     setPending(true);
-    request()
+    logout()
       .then(() => {
         notifyAppLogout();
         void reloadSavedProducts();
@@ -60,15 +111,9 @@ export function MyPageScreen() {
           setAdminSession(true);
           return;
         }
-        window.alert(failure);
+        window.alert(LOGOUT_FAILED);
         setPending(false);
       });
-  };
-
-  const signOut = () => leave(logout, LOGOUT_FAILED);
-
-  const resign = () => {
-    if (window.confirm(WITHDRAW_CONFIRM)) leave(withdraw, WITHDRAW_FAILED);
   };
 
   if (adminSession) {
@@ -98,35 +143,57 @@ export function MyPageScreen() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col px-4 pt-10 pb-6">
-      <h1 className="text-[24px] font-bold tracking-tight">마이페이지</h1>
+    <>
+      <TopBar title="마이페이지" variant="sub" />
+      <main className="flex flex-1 flex-col pb-6">
+        <Section title="계정">
+          <div className={ROW_CLASS}>
+            <RowLabel icon="mail" label="이메일" />
+            <span className="flex min-w-0 items-center gap-1.5 text-[14px] text-text-secondary">
+              <ProviderBadge provider={member.provider} size="small" />
+              <span className="truncate">{member.email}</span>
+            </span>
+          </div>
+        </Section>
 
-      <section aria-labelledby="account-title" className="mt-8 rounded-xl border border-border p-4">
-        <h2 id="account-title" className="text-[14px] font-bold text-text-secondary">
-          로그인 계정
-        </h2>
-        <p className="mt-2 text-[16px] font-bold">{providerName(member.provider)} 계정</p>
-        <p className="mt-1 text-[14px] break-all text-text-secondary">{member.email}</p>
-      </section>
+        <Section title="내 정보">
+          <LinkRow href="/my-page/gender" icon="user" label="성별" value={profileLabel(GENDERS, member.gender)} />
+          <LinkRow
+            href="/my-page/age-range"
+            icon="cake"
+            label="나이대"
+            value={profileLabel(AGE_RANGES, member.ageRange)}
+          />
+          <LinkRow
+            href="/my-page/skin-type"
+            icon="droplet"
+            label="피부 타입"
+            value={profileLabel(SKIN_TYPES, member.skinType)}
+          />
+        </Section>
 
-      <div className="mt-auto flex flex-col gap-2.5 pt-10">
-        <button
-          type="button"
-          onClick={signOut}
-          disabled={pending}
-          className="flex h-[52px] items-center justify-center rounded-button border border-border bg-background text-[16px] font-bold disabled:opacity-40"
-        >
-          로그아웃
-        </button>
-        <button
-          type="button"
-          onClick={resign}
-          disabled={pending}
-          className="flex min-h-12 items-center justify-center rounded-button text-[14px] font-bold text-text-secondary disabled:opacity-40"
-        >
-          회원 탈퇴
-        </button>
-      </div>
-    </main>
+        <Section title="관심 제품">
+          <LinkRow
+            href="/wishlist"
+            icon="bookmark"
+            label="위시리스트"
+            value={savedCountLabel(saved.status, saved.ids.length)}
+          />
+        </Section>
+
+        <Section title="기타">
+          <button type="button" onClick={() => setLogoutOpen(true)} disabled={pending} className={ROW_CLASS}>
+            <RowLabel icon="logout" label="로그아웃" />
+            <Icon name="chevron-right" size={16} className="shrink-0 text-text-secondary" />
+          </button>
+          <Link href="/my-page/withdraw" className={ROW_CLASS}>
+            <RowLabel icon="user-x" label="탈퇴하기" />
+            <Icon name="chevron-right" size={16} className="shrink-0 text-text-secondary" />
+          </Link>
+        </Section>
+      </main>
+
+      <LogoutSheet open={logoutOpen} pending={pending} onClose={() => setLogoutOpen(false)} onConfirm={signOut} />
+    </>
   );
 }
