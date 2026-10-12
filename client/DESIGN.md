@@ -68,11 +68,11 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 
 - `Button`: primary·secondary 변형과 disabled 상태를 가진 전체 너비 행동 버튼
 - `BottomSheet`: 필터 내용을 담고 backdrop, focus trap, Escape 닫기를 제공하는 modal surface
-- `BottomNavigation`: 네 개의 주요 경로와 현재 경로 상태를 보여 주는 고정 내비게이션
+- `BottomNavigation`: 다섯 개의 주요 경로와 현재 경로 상태를 보여 주는 고정 내비게이션
 
 ### BottomNavigation
 
-- **Structure**: 네 개의 경로 링크로 구성하고, 각 링크는 아이콘과 라벨을 세로로 쌓는다. 링크마다 뒤에 상호작용 배경을 하나씩 깔아 둔다.
+- **Structure**: 홈·카테고리·탐색·저장함·마이의 다섯 경로 링크로 구성하고, 각 링크는 아이콘과 라벨을 세로로 쌓는다. 링크마다 뒤에 상호작용 배경을 하나씩 깔아 둔다.
 - **States**: 기본, hover, 눌림, 선택됨, 키보드 포커스 상태를 제공한다.
 - **Selected**: 선택된 탭은 배경을 깔지 않고 `--color-brand` 색상과 채워진 아이콘, 굵은 라벨로 구분한다. 색 하나에만 기대지 않아야 색각 이상이 있어도 아이콘과 굵기로 읽힌다.
 - **Interaction background**: hover 와 눌림에서만 `--color-surface` 회색 배경이 `--transition-duration-control-state` 동안 나타난다. 선택 여부와 상관없이 네 탭이 똑같이 반응한다. 선택된 탭만 커서에 반응하지 않으면 오히려 어색하다. hover 는 `hover: hover` 와 `pointer: fine` 을 함께 만족하는 환경에만 적용해서, 손가락으로 누른 자리에 배경이 남지 않도록 한다. 터치 기기에서는 누름 배경만 나타난다. 배경은 링크의 형제 요소라서 `:has()` 로 부모에서 `:active` 를 받아 켠다.

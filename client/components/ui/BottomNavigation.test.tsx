@@ -57,6 +57,59 @@ describe("BottomNavigation 배치", () => {
   });
 });
 
+describe("BottomNavigation 마이 탭", () => {
+  it("다섯 번째 탭에서 마이페이지로 연결하고 미선택 윤곽 아이콘을 표시한다", () => {
+    render(<BottomNavigation />);
+    const links = screen.getAllByRole("link");
+    const myLink = screen.getByRole("link", { name: "마이" });
+
+    expect(links).toHaveLength(5);
+    expect(links[4]).toBe(myLink);
+    expect(myLink).toHaveAttribute("href", "/my-page");
+    expect(myLink).toHaveClass("text-text-secondary");
+    expect(myLink.querySelector("use")).toHaveAttribute("href", "#icon-user");
+  });
+
+  it("마이페이지에서 내비게이션을 표시하고 마이 탭을 채운 브랜드 색으로 선택한다", () => {
+    routerState.pathname = "/my-page";
+    render(<BottomNavigationSlot />);
+    const myLink = screen.getByRole("link", { name: "마이" });
+
+    expect(myLink).toHaveAttribute("aria-current", "page");
+    expect(myLink).toHaveClass("text-brand");
+    expect(myLink.querySelector("use")).toHaveAttribute("href", "#icon-user-solid");
+    expect(myLink.querySelector("svg")).toHaveAttribute("fill", "currentColor");
+  });
+
+  it("마이 탭도 이동 전에 선택 효과와 앱 햅틱을 적용하고 이동 후 선택을 유지한다", async () => {
+    const { rerender } = render(<BottomNavigation />);
+    const myLink = screen.getByRole("link", { name: "마이" });
+    myLink.addEventListener("click", (event) => event.preventDefault());
+
+    await userEvent.click(myLink);
+
+    expect(myLink).toHaveAttribute("data-selected", "true");
+    expect(myLink).toHaveAttribute("data-activated", "true");
+    expect(myLink.querySelector("use")).toHaveAttribute("href", "#icon-user-solid");
+    expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("data-selected", "false");
+    expect(postMessage).toHaveBeenCalledWith("poudy:haptic:selection");
+
+    routerState.pathname = "/my-page";
+    rerender(<BottomNavigation />);
+    expect(screen.getByRole("link", { name: "마이" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "마이" })).toHaveAttribute("data-selected", "true");
+  });
+
+  it.each(["/my-page/skin-type", "/my-page/withdraw", "/my-page-archive"])(
+    "%s에서는 저장·탈퇴 버튼과 겹치는 내비게이션을 표시하지 않는다",
+    (pathname) => {
+      routerState.pathname = pathname;
+      render(<BottomNavigationSlot />);
+      expect(screen.queryByRole("navigation", { name: "주요 메뉴" })).not.toBeInTheDocument();
+    },
+  );
+});
+
 describe("BottomNavigation 선택 모션", () => {
   it("현재 경로의 탭을 선택된 상태로 표시한다", () => {
     render(<BottomNavigation />);

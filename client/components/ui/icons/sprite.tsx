@@ -35,6 +35,7 @@ export const ICON_IDS = [
   "instagram",
   "mail",
   "user",
+  "user-solid",
   "user-x",
   "cake",
   "logout",
@@ -217,6 +218,12 @@ export function IconSprite() {
         <symbol id="icon-user" viewBox="0 0 24 24">
           <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
           <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+        </symbol>
+
+        {/* 마이 탭 선택 상태: user 윤곽과 같은 머리·상체를 면으로 그린다. */}
+        <symbol id="icon-user-solid" viewBox="0 0 24 24">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M10 14h4a5 5 0 0 1 5 5v2a1 1 0 0 1 -1 1H6a1 1 0 0 1 -1 -1v-2a5 5 0 0 1 5 -5z" />
         </symbol>
 
         {/* Tabler · user-x */}

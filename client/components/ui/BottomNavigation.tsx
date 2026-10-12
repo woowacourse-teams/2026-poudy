@@ -34,6 +34,12 @@ const TABS = [
     icon: "bookmarks",
     match: (path: string) => matchesPathSegment(path, "/wishlist"),
   },
+  {
+    href: "/my-page",
+    label: "마이",
+    icon: "user",
+    match: (path: string) => matchesPathSegment(path, "/my-page"),
+  },
 ] as const;
 
 type TabIcon = (typeof TABS)[number]["icon"];
