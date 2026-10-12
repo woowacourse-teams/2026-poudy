@@ -957,6 +957,7 @@ export type post_Login_1 = {
       responses: {200: unknown,
 400: Schemas.ProblemDetail,
 401: unknown,
+429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 

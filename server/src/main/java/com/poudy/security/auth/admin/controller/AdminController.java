@@ -1,5 +1,6 @@
 package com.poudy.security.auth.admin.controller;
 
+import com.poudy.common.web.ClientAddressResolver;
 import com.poudy.security.auth.admin.controller.dto.AdminLoginRequest;
 import com.poudy.security.auth.admin.controller.dto.AdminSessionResponse;
 import com.poudy.security.auth.admin.service.AdminLoginService;
@@ -43,7 +44,11 @@ public class AdminController {
         HttpServletRequest httpRequest,
         HttpServletResponse httpResponse
     ) {
-        if (!adminLoginService.matches(request.username(), request.password())) {
+        if (!adminLoginService.matches(
+            request.username(),
+            request.password(),
+            ClientAddressResolver.resolve(httpRequest)
+        )) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 

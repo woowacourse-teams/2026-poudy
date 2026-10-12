@@ -105,7 +105,10 @@ poudy:
       kakao-app-id: "1595861"
   admin:
     username: ${ADMIN_USERNAME:}
-    password: ${ADMIN_PASSWORD:}
+    password-hash: ${ADMIN_PASSWORD_HASH:}
+    login-rate-limit:
+      max-requests: 5
+      window: PT1M
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:
