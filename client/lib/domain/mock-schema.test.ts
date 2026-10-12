@@ -17,11 +17,13 @@ import {
   ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
+  RegisteredAccountResponse,
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
   SavedProductIdsResponse,
   SavedProductsResponse,
+  WithdrawnAccountResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -116,6 +118,8 @@ const cases = [
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
   ["내 정보", "/members/me", MemberResponse],
+  ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
+  ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {

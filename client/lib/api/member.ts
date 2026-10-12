@@ -1,4 +1,10 @@
-import { AppLoginResponse, MemberResponse, type MemberProfileRequest } from "@poudy/api/api.zod";
+import {
+  AppLoginResponse,
+  MemberResponse,
+  RegisteredAccountResponse,
+  WithdrawnAccountResponse,
+  type MemberProfileRequest,
+} from "@poudy/api/api.zod";
 
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, publicApiUrl } from "./client";
 
@@ -36,6 +42,14 @@ export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
 
 /** 처음 소셜 로그인한 사람만 보낼 수 있다. 가입하면 같은 세션으로 바로 로그인된다. */
 export const signUp = (): Promise<void> => apiPost("/api/auth/signup", undefined, { withSession: true });
+
+/** 탈퇴한 계정으로 방금 로그인한 사람만 읽을 수 있다. 복구를 요청하면 더 읽을 수 없다. */
+export const findWithdrawnAccount = (): Promise<WithdrawnAccountResponse> =>
+  apiGet("/api/auth/withdrawn", WithdrawnAccountResponse, { withSession: true });
+
+/** 이메일 중복으로 방금 로그인에 실패한 사람만 읽을 수 있다. 그 이메일과 먼저 가입한 제공자를 준다. */
+export const findRegisteredAccount = (): Promise<RegisteredAccountResponse> =>
+  apiGet("/api/auth/registered-account", RegisteredAccountResponse, { withSession: true });
 
 /** 탈퇴한 계정으로 방금 로그인한 사람만 보낼 수 있다. 복구 여부는 관리자가 정한다. */
 export const requestRestore = (): Promise<void> =>
