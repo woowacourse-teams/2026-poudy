@@ -34,7 +34,7 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
  * 배포 시각을 쓰지 않는다. 문구를 건드리지 않은 배포까지 바뀌었다고 말하게 되고, 값이
  * 실제보다 새로우면 검색 엔진이 사이트맵의 lastmod 를 통째로 믿지 않는다.
  */
-const SCREEN_UPDATED_AT = {
+export const SCREEN_UPDATED_AT = {
   home: "2026-09-05",
   search: "2026-08-30",
   category: "2026-10-09",

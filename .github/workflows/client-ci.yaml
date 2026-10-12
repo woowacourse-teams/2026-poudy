@@ -6,14 +6,6 @@ name: Client CI
 on:
   pull_request:
     branches: [dev, main]
-  # Client Lastmod 워크플로가 GITHUB_TOKEN 으로 올린 커밋은 pull_request 를 깨우지 않는다.
-  # 그 커밋에서도 main 필수 체크(Client checks)가 돌도록 그 워크플로가 직접 실행한다.
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: preview 주소에 쓸 PR 번호
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -27,9 +19,8 @@ defaults:
     working-directory: client
 
 jobs:
-  # 클라이언트와 관련된 변경이 있는지만 판단한다. PR 에서는 항상 돌고, 직접 실행에서는 건너뛴다.
+  # 클라이언트와 관련된 변경이 있는지만 판단한다. 이 잡은 항상 돈다.
   changes:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -55,9 +46,7 @@ jobs:
   check:
     name: Client checks
     needs: changes
-    if: >-
-      ${{ !cancelled() && needs.changes.result != 'failure' &&
-      (github.event_name == 'workflow_dispatch' || github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -139,7 +128,7 @@ jobs:
           NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
           # 이 값이 없으면 metadataBase 가 빈 주소가 되어 빌드가 멈춘다. preview 는
           # 배포 뒤 PR 번호로 정해지는 고정 주소를 붙이므로 그 주소를 미리 쓴다.
-          NEXT_PUBLIC_SITE_URL: https://pr-${{ github.event.pull_request.number || inputs.pr_number }}.preview.poudy.site
+          NEXT_PUBLIC_SITE_URL: https://pr-${{ github.event.pull_request.number }}.preview.poudy.site
         run: |
           pnpm add --global vercel
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
@@ -159,7 +148,7 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          PREVIEW_HOST: pr-${{ github.event.pull_request.number || inputs.pr_number }}.preview.poudy.site
+          PREVIEW_HOST: pr-${{ github.event.pull_request.number }}.preview.poudy.site
         run: |
           deployment=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           vercel alias set "$deployment" "$PREVIEW_HOST" --token=${{ secrets.VERCEL_TOKEN }}

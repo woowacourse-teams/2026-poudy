@@ -12,10 +12,12 @@
 - 화면 기준일
   - 클라이언트 `SCREEN_UPDATED_AT` 에 화면 종류별(home, search, category, brand, curation, product,
     ingredient)로 둔다.
-  - main 으로 가는 PR 에 `lastmod:<화면>` 라벨을 달면 Client Lastmod 워크플로가 그 화면의 날짜를 그날로
-    고쳐 PR 브랜치에 커밋한다. 손으로 고치지 않는다.
-  - `GITHUB_TOKEN` 으로 올린 커밋은 다른 워크플로를 깨우지 않아 main 필수 체크(`Client checks`, `gate`)가
-    비게 된다. 그래서 커밋 뒤 Client CI·Server CI 를 `workflow_dispatch` 로 직접 실행한다.
+  - main 으로 가는 PR 에서 Client Lastmod 워크플로가 화면 파일이 바뀐 화면에 `lastmod:<화면>` 라벨을 붙이고,
+    라벨이 있는 화면은 그날로, 없는 화면은 main 의 값으로 맞춰 PR 브랜치에 커밋한다. 손으로 고치지 않는다.
+    본문이 그대로인 변경으로 붙은 라벨은 사람이 뗀다. 뗀 라벨은 다시 붙이지 않는다.
+  - `GITHUB_TOKEN` 으로 올린 커밋의 PR 실행은 승인을 기다리며 멈춰 main 필수 체크(`Client checks`, `gate`)가
+    비게 된다. 그래서 커밋 뒤 그 실행들을 승인 API 로 푼다. `workflow_dispatch` 로 돌린 실행은 PR 체크로
+    세지 않아(v0.15.0 릴리스 PR 에서 확인) 쓰지 않는다.
   - 배포 시각은 쓰지 않는다. 본문이 그대로인 배포까지 날짜가 올라가면 검색 엔진이 lastmod 를 믿지 않는다.
 - 사이트맵은 요청마다 만들어지므로(`force-dynamic`) 데이터 수정은 배포 없이 반영된다.
 
