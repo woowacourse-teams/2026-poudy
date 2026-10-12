@@ -40,7 +40,7 @@ const SCREEN_UPDATED_AT = {
   category: "2026-10-09",
   brand: "2026-10-09",
   curation: "2026-10-09",
-  product: "2026-10-11",
+  product: "2026-10-12",
   ingredient: "2026-10-09",
 } as const;
 
