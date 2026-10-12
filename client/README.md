@@ -231,6 +231,26 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
   `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`
 - 제품 진단 — `product_unsaved`, `ingredient_viewed`, `ingredient_condition_toggled`, `error_occurred`, 세션 녹화
 - 상세 탐색 시간 — `detail_active_time_recorded`
+- 웹에서 앱 설치 유입 — `app_install_clicked`, `app_install_landed`, `app_store_redirected`
+
+앱 설치 유입은 [웹 → 앱 설치 유입 및 Google Play 이동](https://us.posthog.com/project/562550/insights/gpX6nbg5)에서
+최근 30일 횟수를 경로별로 확인합니다. 운영 환경·`poudy.site` 조건과 프로젝트 테스트 계정 제외를 적용합니다.
+
+| 이벤트                 | 의미                          | `source`                                           |
+| ---------------------- | ----------------------------- | -------------------------------------------------- |
+| `app_install_clicked`  | QR 링크 또는 상단 배너를 누름 | `qr_click`, `install_banner`                       |
+| `app_install_landed`   | QR 주소가 브라우저에 도착함   | `qr_scan`, `qr_click`, `unknown`                   |
+| `app_store_redirected` | Google Play로 보내기 직전     | `qr_scan`, `qr_click`, `install_banner`, `unknown` |
+
+QR 그림에는 `/open-app?source=qr_scan`, 클릭 링크에는 `/open-app?source=qr_click`을 담습니다.
+Android intent는 앱이 없을 때 `/open-app?source=…&store=google_play`를 거친 뒤 스토어로 보냅니다.
+그래서 클릭 자체를 스토어 이동으로 세지 않으며, 스토어 fallback에서는 QR 도착을 다시 세지 않습니다.
+표시가 없는 기존 QR·직접 방문은 `unknown`으로 남기고 QR 스캔으로 추정하지 않습니다.
+
+이벤트는 외부 이동 전에 비콘으로 전송합니다. 초기 SDK 준비를 최대 1초 기다리되, 로딩 실패나 지연이
+이동을 막지는 않습니다. 추적 거부·전송 실패는 집계에서 빠질 수 있습니다. 앱이 이미 설치되어 App Links가
+바로 앱을 여는 QR 스캔은 웹 집계에 포함되지 않습니다. 다른 기기로 찍은 QR은 웹 방문자와 같은 사람으로
+연결하지 않습니다. 스토어 이동은 Google Play의 로딩 완료나 설치 완료를 뜻하지 않으며 배포 이후부터만 수집합니다.
 
 `detail_active_time_recorded`는 제품 상세와 성분 상세에서 사용자가 실제로 화면을 본 시간을 기록합니다.
 탭이 보이고 창에 포커스가 있으며 마지막 입력 후 60초가 지나지 않은 동안에만 시간을 누적합니다.
