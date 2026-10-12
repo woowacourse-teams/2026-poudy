@@ -14,3 +14,13 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
 export const isBottomNavigationPath = (pathname: string): boolean =>
   EXACT_BOTTOM_NAVIGATION_PATHS.some((path) => pathname === path) ||
   BOTTOM_NAVIGATION_SEGMENTS.some((segment) => matchesPathSegment(pathname, segment));
+
+const BOTTOM_ACTION_BAR_PATHS = [
+  "/my-page/gender",
+  "/my-page/age-range",
+  "/my-page/skin-type",
+  "/my-page/withdraw",
+] as const;
+
+export const isBottomActionBarPath = (pathname: string): boolean =>
+  BOTTOM_ACTION_BAR_PATHS.some((path) => pathname === path);

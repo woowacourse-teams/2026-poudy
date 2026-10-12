@@ -51,7 +51,7 @@ export function WithdrawScreen() {
     <>
       <TopBar title="탈퇴하기" variant="sub" titleAs="p" />
       <main className="flex flex-1 flex-col">
-        <div className="flex-1 px-4 pt-4 pb-10">
+        <div className="flex-1 px-4 pt-4 pb-[var(--inquiry-button-clearance)]">
           <h1 className="text-[20px] font-bold tracking-tight">탈퇴하기 전에 확인해 주세요</h1>
 
           <div className="mt-5 rounded-xl bg-surface p-4">
@@ -82,7 +82,7 @@ export function WithdrawScreen() {
           </label>
         </div>
 
-        <div className="sticky bottom-0 border-t border-border bg-background px-4 pt-3 pb-6">
+        <div className="sticky bottom-0 h-[var(--bottom-action-bar-height)] border-t border-border bg-background px-4 pt-3 pb-6">
           <button
             type="button"
             onClick={resign}
