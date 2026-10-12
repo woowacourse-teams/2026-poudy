@@ -42,6 +42,34 @@ describe("내 정보 한 항목 바꾸기", () => {
     expect(await screen.findByRole("radio", { name: "20대" })).toBeChecked();
   });
 
+  it("아직 고른 값이 없으면 하나를 고를 때까지 저장할 수 없다", async () => {
+    const user = userEvent.setup();
+    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    render(<ProfileFieldScreen field="skinType" />);
+
+    const dry = await screen.findByRole("radio", { name: /건성/ });
+    expect(screen.getByRole("button", { name: "저장" })).toBeDisabled();
+
+    await user.click(dry);
+
+    expect(screen.getByRole("button", { name: "저장" })).toBeEnabled();
+  });
+
+  it("저장된 값에서 바꾼 것이 없으면 저장할 수 없다", async () => {
+    const user = userEvent.setup();
+    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    render(<ProfileFieldScreen field="ageRange" />);
+
+    const twenties = await screen.findByRole("radio", { name: "20대" });
+    expect(screen.getByRole("button", { name: "저장" })).toBeDisabled();
+
+    await user.click(screen.getByRole("radio", { name: "30대" }));
+    expect(screen.getByRole("button", { name: "저장" })).toBeEnabled();
+
+    await user.click(twenties);
+    expect(screen.getByRole("button", { name: "저장" })).toBeDisabled();
+  });
+
   it("바꾼 항목만 새 값으로 보내고 다른 항목은 그대로 두고 마이페이지로 돌아간다", async () => {
     const user = userEvent.setup();
     const sent = vi.fn();

@@ -163,7 +163,7 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
         </fieldset>
 
         <div className="sticky bottom-0 h-[var(--bottom-action-bar-height)] border-t border-border bg-background px-4 pt-3 pb-6">
-          <Button type="submit" disabled={!member || saving}>
+          <Button type="submit" disabled={!member || saving || selected === member[field]}>
             저장
           </Button>
         </div>
