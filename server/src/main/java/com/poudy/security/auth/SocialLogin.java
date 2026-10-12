@@ -1,5 +1,6 @@
 package com.poudy.security.auth;
 
+import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialLoginResult;
@@ -35,6 +36,9 @@ public class SocialLogin {
             loginSession.signOut(request, response);
             return result.map(member -> loginSession.applyLoginResult(member, channel, request, response))
                 .orElseGet(() -> loginSession.holdSignup(loginAccount, channel, request, response));
+        } catch (EmailAlreadyRegisteredException exception) {
+            loginSession.holdRegisteredAccount(exception.registeredAccount(), request, response);
+            throw exception;
         } catch (RuntimeException exception) {
             loginSession.signOut(request, response);
             throw exception;

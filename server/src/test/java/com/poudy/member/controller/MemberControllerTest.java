@@ -122,7 +122,8 @@ class MemberControllerTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "{\"gender\":\"FEMALE\",\"ageRange\":\"SEVENTIES\",\"skinType\":\"DRY\"}",
-            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"NORMAL\"}"
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"NORMAL\"}",
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"UNKNOWN\"}"
     })
     @DisplayName("모르는 값이 있으면 초기 정보를 400으로 거절한다")
     void rejectsInvalidProfile(String body) throws Exception {

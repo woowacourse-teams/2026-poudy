@@ -14,8 +14,11 @@ import com.poudy.security.domain.MemberActivity;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.SocialMembers;
+import com.poudy.security.domain.WithdrawnAccount;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +26,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService implements SocialMembers, MemberActivity {
 
     private final MemberRepository memberRepository;
+    private final Duration retention;
 
-    public MemberService(MemberRepository memberRepository) {
+    public MemberService(
+        MemberRepository memberRepository,
+        @Value("${poudy.member.retention.max-age:P30D}") Duration retention
+    ) {
         this.memberRepository = memberRepository;
+        this.retention = retention;
     }
 
     @Override
@@ -48,6 +56,13 @@ public class MemberService implements SocialMembers, MemberActivity {
         MemberSignup signup = MemberSignup.from(account);
         checkRegistrable(signup);
         return memberRepository.save(signup).id();
+    }
+
+    @Override
+    public WithdrawnAccount findWithdrawn(long withdrawnMemberId) {
+        return memberRepository.findWithdrawnById(withdrawnMemberId)
+            .map(member -> member.keptFor(retention))
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND));
     }
 
     @Override
@@ -94,7 +109,7 @@ public class MemberService implements SocialMembers, MemberActivity {
 
     private void checkRegistrable(MemberSignup signup) {
         memberRepository.findByEmail(signup.email()).ifPresent(registered -> {
-            throw new EmailAlreadyRegisteredException(registered.provider());
+            throw new EmailAlreadyRegisteredException(registered.registeredAccount());
         });
     }
 }

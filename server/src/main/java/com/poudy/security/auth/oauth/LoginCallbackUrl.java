@@ -25,7 +25,7 @@ public final class LoginCallbackUrl {
     public String failed(RuntimeException exception) {
         if (exception instanceof EmailAlreadyRegisteredException alreadyRegistered) {
             return LoginCallbackParameter.PROVIDER
-                .addTo(failure(alreadyRegistered.code()), alreadyRegistered.registeredProvider())
+                .addTo(failure(alreadyRegistered.code()), alreadyRegistered.registeredAccount().provider())
                 .toUriString();
         }
         if (exception instanceof RuleViolationException ruleViolation) {

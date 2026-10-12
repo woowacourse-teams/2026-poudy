@@ -56,7 +56,8 @@ public class SecurityPathConfig {
                     "제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. "
                         + "로그인을 마치면 프론트의 /login/callback으로 돌아오고, "
                         + "status에 SIGNED_IN, 탈퇴한 계정이면 WITHDRAWN, 이미 복구를 요청했으면 RESTORE_REQUESTED를 붙인다. "
-                        + "실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다."
+                        + "실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다. "
+                        + "이메일은 붙이지 않고 GET /api/auth/registered-account로 조회한다."
                 )
                 .addParametersItem(
                     new PathParameter().name("provider").required(true).schema(new StringSchema()._enum(providers))

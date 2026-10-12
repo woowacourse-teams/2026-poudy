@@ -50,7 +50,7 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type MemberSkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN")
+export type MemberSkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
 export type MemberProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
 export type MemberResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }
@@ -697,12 +697,14 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
+export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
+export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminRestoreRequestResponse = { memberId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminSessionResponse = { username: string }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1522,6 +1524,36 @@ export type get_FindBrand = {
 },
 
     }
+/**
+ * 탈퇴한 계정으로 방금 소셜 로그인한 사람에게 이메일, 제공자, 탈퇴 시각과 복구를 요청할 수 있는 기한을 알려 준다.
+ */
+export type get_FindWithdrawn = {
+      method: "GET",
+      path: "/api/auth/withdrawn",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.WithdrawnAccountResponse,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 웹 소셜 로그인이 이메일 중복으로 실패한 사람에게 그 이메일과 먼저 가입한 제공자를 알려 준다.
+ */
+export type get_FindRegisteredAccount = {
+      method: "GET",
+      path: "/api/auth/registered-account",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.RegisteredAccountResponse,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_FindAll = {
       method: "GET",
       path: "/api/admin/product-requests",
@@ -1665,7 +1697,7 @@ export type get_FindById_1 = {
 
     }
 /**
- * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, status에 SIGNED_IN, 탈퇴한 계정이면 WITHDRAWN, 이미 복구를 요청했으면 RESTORE_REQUESTED를 붙인다. 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다.
+ * 제공자 로그인 화면으로 보낸다. fetch가 아니라 페이지 이동으로 연다. 로그인을 마치면 프론트의 /login/callback으로 돌아오고, status에 SIGNED_IN, 탈퇴한 계정이면 WITHDRAWN, 이미 복구를 요청했으면 RESTORE_REQUESTED를 붙인다. 실패하면 error(오류 코드)와 이메일 중복 시 provider(기존 제공자)를 붙인다. 이메일은 붙이지 않고 GET /api/auth/registered-account로 조회한다.
  */
 export type get_StartSocialLogin = {
       method: "GET",
@@ -1772,6 +1804,8 @@ get: {
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand,
+"/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
+"/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
 "/api/admin/members/restore-requests": Endpoints.get_FindRestoreRequests,

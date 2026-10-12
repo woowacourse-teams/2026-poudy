@@ -2,6 +2,7 @@ package com.poudy.member.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import com.poudy.member.domain.AgeRange;
 import com.poudy.member.domain.Gender;
@@ -11,11 +12,15 @@ import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.WithdrawnAccount;
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -85,14 +90,14 @@ class MemberRepositoryTest {
         Member saved = repository.save(signup(OAuthProvider.GOOGLE, "sub", "member@example.com"));
 
         Member updated = repository
-            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, MemberSkinType.UNKNOWN)
+            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, MemberSkinType.COMBINATION)
             .orElseThrow();
 
         assertThat(updated.gender()).isEqualTo(Gender.MALE);
         assertThat(updated.ageRange()).isEqualTo(AgeRange.SIXTIES_OR_OLDER);
-        assertThat(updated.skinType()).isEqualTo(MemberSkinType.UNKNOWN);
+        assertThat(updated.skinType()).isEqualTo(MemberSkinType.COMBINATION);
         assertThat(repository.findById(saved.id())).get().extracting(Member::skinType)
-            .isEqualTo(MemberSkinType.UNKNOWN);
+            .isEqualTo(MemberSkinType.COMBINATION);
     }
 
     @Test
@@ -113,6 +118,33 @@ class MemberRepositoryTest {
         assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com")))
             .get().extracting(member -> member.loginResult().status()).isEqualTo(LoginStatus.WITHDRAWN);
         assertThat(repository.withdraw(saved.id())).isFalse();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원만 제공자, 이메일, 탈퇴 시각을 찾는다")
+    void findsOnlyWithdrawnMember() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "4321", "member@example.com"));
+
+        assertThat(repository.findWithdrawnById(saved.id())).isEmpty();
+        repository.withdraw(saved.id());
+
+        WithdrawnAccount withdrawn = repository.findWithdrawnById(saved.id()).orElseThrow().keptFor(Duration.ZERO);
+        assertThat(withdrawn.provider()).isEqualTo(OAuthProvider.KAKAO);
+        assertThat(withdrawn.email()).isEqualTo("member@example.com");
+        assertThat(withdrawn.withdrawnAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("피부 타입은 정해진 네 값만 저장한다")
+    void rejectsUnknownSkinType() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "4321", "member@example.com"));
+
+        assertThatThrownBy(
+            () -> jdbc.update(
+                "update member set skin_type = 'UNKNOWN' where id = :id",
+                new MapSqlParameterSource("id", saved.id())
+            )
+        ).isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

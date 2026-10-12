@@ -69,7 +69,7 @@ public class AppLoginController {
     public ResponseEntity<ProblemDetail> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
         problem.setProperty(GlobalExceptionHandler.CODE_PROPERTY, exception.code());
-        problem.setProperty(PROVIDER_PROPERTY, exception.registeredProvider());
+        problem.setProperty(PROVIDER_PROPERTY, exception.registeredAccount().provider());
         return ResponseEntity.badRequest().body(problem);
     }
 }

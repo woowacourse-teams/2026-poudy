@@ -1,6 +1,7 @@
 package com.poudy.security.auth.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,10 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@DisplayName("탈퇴 계정 복구 요청 API")
+@DisplayName("탈퇴 계정 조회·복구 요청 API")
 class WithdrawnMemberControllerTest {
 
-    private static final String PATH = "/api/auth/withdrawn/restore";
+    private static final String WITHDRAWN_PATH = "/api/auth/withdrawn";
+    private static final String PATH = WITHDRAWN_PATH + "/restore";
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,6 +67,38 @@ class WithdrawnMemberControllerTest {
                 member.id()
             )
         ).isTrue();
+    }
+
+    @Test
+    @DisplayName("방금 로그인한 탈퇴 회원의 정보를 몇 번이든 조회하고, 복구를 요청하면 더는 조회하지 못한다")
+    void findsWithdrawnAccountUntilRestoreRequest() throws Exception {
+        Member member = memberRepository.save(
+            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true))
+        );
+        memberRepository.withdraw(member.id());
+        MockHttpSession session = heldSessionOf(member.id());
+
+        mockMvc.perform(get(WITHDRAWN_PATH).session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.provider").value("KAKAO"))
+            .andExpect(jsonPath("$.email").value("member@example.com"))
+            .andExpect(jsonPath("$.withdrawnAt").isNotEmpty())
+            .andExpect(jsonPath("$.restorableUntil").isNotEmpty());
+        mockMvc.perform(get(WITHDRAWN_PATH).session(session))
+            .andExpect(status().isOk());
+        mockMvc.perform(post(PATH).session(session))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get(WITHDRAWN_PATH).session(session))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("WITHDRAWN_MEMBER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("탈퇴 계정으로 로그인하지 않았으면 탈퇴 정보 조회를 404로 거절한다")
+    void rejectsLookupWithoutWithdrawnSignIn() throws Exception {
+        mockMvc.perform(get(WITHDRAWN_PATH))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("WITHDRAWN_MEMBER_NOT_FOUND"));
     }
 
     @Test

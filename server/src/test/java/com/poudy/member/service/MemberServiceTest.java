@@ -12,8 +12,10 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
+import com.poudy.security.domain.WithdrawnAccount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +82,8 @@ class MemberServiceTest {
         assertThatThrownBy(() -> memberService.login(google))
             .isInstanceOfSatisfying(
                 EmailAlreadyRegisteredException.class,
-                exception -> assertThat(exception.registeredProvider()).isEqualTo(OAuthProvider.KAKAO)
+                exception -> assertThat(exception.registeredAccount())
+                    .isEqualTo(new RegisteredAccount(OAuthProvider.KAKAO, "member@example.com"))
             );
         assertThatThrownBy(() -> memberService.signUp(google))
             .isInstanceOf(EmailAlreadyRegisteredException.class);
@@ -110,6 +113,20 @@ class MemberServiceTest {
 
         assertThatThrownBy(() -> memberService.findById(memberId)).isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> memberService.withdraw(memberId)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("탈퇴 회원은 탈퇴 시각에 보관 기간을 더한 시각까지 복구를 요청할 수 있다고 알리고, 활성 회원은 찾지 못한다")
+    void findsWithdrawnAccount() {
+        long memberId = memberService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "member@example.com", true));
+
+        assertThatThrownBy(() -> memberService.findWithdrawn(memberId)).isInstanceOf(ResourceNotFoundException.class);
+        memberService.withdraw(memberId);
+
+        WithdrawnAccount account = memberService.findWithdrawn(memberId);
+        assertThat(account.provider()).isEqualTo(OAuthProvider.KAKAO);
+        assertThat(account.email()).isEqualTo("member@example.com");
+        assertThat(account.restorableUntil()).isEqualTo(account.withdrawnAt().plusDays(30));
     }
 
     @Test

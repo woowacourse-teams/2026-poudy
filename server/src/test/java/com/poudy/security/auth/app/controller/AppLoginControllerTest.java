@@ -112,17 +112,26 @@ class AppLoginControllerTest {
     }
 
     @Test
-    @DisplayName("다른 제공자로 가입한 이메일이면 기존 제공자를 알려 400으로 거절한다")
+    @DisplayName("다른 제공자로 가입한 이메일이면 기존 제공자를 알려 400으로 거절하고, 그 이메일은 세션으로 조회하게 한다")
     void rejectsEmailRegisteredWithOtherProvider() throws Exception {
         memberRepository.save(
             MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "member@example.com", true))
         );
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
 
-        mockMvc.perform(login(KAKAO_PATH, "kakao-token"))
+        MockHttpSession session = (MockHttpSession) mockMvc.perform(login(KAKAO_PATH, "kakao-token"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("MEMBER_EMAIL_ALREADY_REGISTERED"))
-            .andExpect(jsonPath("$.provider").value("GOOGLE"));
+            .andExpect(jsonPath("$.provider").value("GOOGLE"))
+            .andReturn()
+            .getRequest()
+            .getSession(false);
+
+        mockMvc.perform(get("/api/auth/registered-account").session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.provider").value("GOOGLE"))
+            .andExpect(jsonPath("$.email").value("member@example.com"));
+        mockMvc.perform(get("/api/members/me").session(session)).andExpect(status().isUnauthorized());
     }
 
     @Test

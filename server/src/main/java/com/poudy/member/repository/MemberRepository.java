@@ -7,6 +7,7 @@ import com.poudy.member.domain.MemberSignup;
 import com.poudy.member.domain.MemberSkinType;
 import com.poudy.member.domain.MemberStatus;
 import com.poudy.member.domain.RestoreRequest;
+import com.poudy.member.domain.WithdrawnMember;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import java.sql.ResultSet;
@@ -52,6 +53,11 @@ public class MemberRepository {
         offset(rs.getObject("deleted_at", LocalDateTime.class)),
         offset(rs.getObject("restore_requested_at", LocalDateTime.class))
     );
+    private static final RowMapper<WithdrawnMember> WITHDRAWN_MEMBER = (rs, row) -> new WithdrawnMember(
+        OAuthProvider.valueOf(rs.getString("oauth_provider")),
+        rs.getString("email"),
+        offset(rs.getObject("deleted_at", LocalDateTime.class))
+    );
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -72,6 +78,14 @@ public class MemberRepository {
             "select " + COLUMNS + " from member where id = :id and deleted_at is null",
             new MapSqlParameterSource("id", id),
             MEMBER
+        ).stream().findFirst();
+    }
+
+    public Optional<WithdrawnMember> findWithdrawnById(long id) {
+        return jdbc.query(
+            "select oauth_provider, email, deleted_at from member where id = :id and deleted_at is not null",
+            new MapSqlParameterSource("id", id),
+            WITHDRAWN_MEMBER
         ).stream().findFirst();
     }
 
