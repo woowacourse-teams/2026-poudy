@@ -9,7 +9,9 @@ name: Client Lastmod
 # 그대로인 변경까지 날짜를 올리면 lastmod 가 실제 변경과 어긋나 검색 엔진이 값을 믿지 않는다.
 # 라벨을 떼도 이미 고친 날짜는 되돌리지 않는다.
 #
-# GITHUB_TOKEN 으로 올린 커밋은 다른 워크플로를 깨우지 않으므로 이 워크플로가 되풀이되지 않는다.
+# GITHUB_TOKEN 으로 올린 커밋은 다른 워크플로를 깨우지 않는다. 그래서 이 워크플로가 되풀이되지 않지만,
+# main 필수 체크(Client checks, gate)도 그 커밋에서 돌지 않아 머지가 막힌다. 커밋을 올린 뒤
+# Client CI 와 Server CI 를 workflow_dispatch 로 직접 실행해 그 커밋의 체크를 채운다.
 on:
   pull_request:
     branches: [main]
@@ -17,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -39,6 +42,8 @@ jobs:
         env:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           screens=$(printf '%s' "$LABELS" | jq -r '.[] | select(startswith("lastmod:")) | ltrimstr("lastmod:")')
           if [ -z "$screens" ]; then
@@ -77,3 +82,5 @@ jobs:
           $(printf '%s\n' $screens | sed 's/^/- /')
           MESSAGE
           git push origin "HEAD:$HEAD_REF"
+          gh workflow run client-ci.yaml --ref "$HEAD_REF" -f pr_number="$PR_NUMBER"
+          gh workflow run server-ci.yml --ref "$HEAD_REF"
