@@ -1,0 +1,85 @@
+name: Client Product Lastmod
+
+# 제품 상세 화면 본문을 운영에 내보내는 PR(main 대상) 이 열리면 사이트맵 lastmod 기준일
+# (client/lib/seo/sitemap.ts 의 PRODUCT_DETAIL_CONTENT_UPDATED_AT)을 그날로 고쳐 PR 브랜치에 커밋한다.
+# 검색 엔진은 운영 화면을 읽으므로 기준일은 main 에 나가는 날이어야 한다. PR 을 연 날보다 늦게
+# 머지하면 그만큼 이른 날로 남는다.
+#
+# 본문이 그대로인 변경(리팩터링, 분석 이벤트, 스타일)만 담긴 PR 은 lastmod-skip 라벨을 달아 넘긴다.
+# 이 경우까지 날짜를 올리면 lastmod 가 실제 변경과 어긋나 검색 엔진이 값을 믿지 않는다.
+#
+# 공용 컴포넌트(components/ui, lib/domain)는 목록 화면과 함께 쓰여 넣지 않는다. 상세 화면에
+# 새 컴포넌트를 붙이면 아래 detail_files 에도 더한다.
+#
+# GITHUB_TOKEN 으로 올린 커밋은 다른 워크플로를 깨우지 않으므로 이 워크플로가 되풀이되지 않는다.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    name: Product detail lastmod
+    # 포크에서 온 PR 은 브랜치에 쓸 수 없다.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.labels.*.name, 'lastmod-skip')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Bump lastmod date
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          detail_files=(
+            ":(literal)client/app/products/[productId]/page.tsx"
+            ":(literal)client/components/product/ProductDetail.tsx"
+            ":(literal)client/components/product/CautionCheck.tsx"
+            ":(literal)client/components/product/IngredientList.tsx"
+            ":(literal)client/components/product/PartTabs.tsx"
+            ":(literal)client/components/product/SimilarProducts.tsx"
+            ":(literal)client/components/product/UsageIngredients.tsx"
+          )
+
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- "${detail_files[@]}")
+          if [ -z "$changed" ]; then
+            echo "제품 상세 화면 파일이 바뀌지 않았습니다."
+            exit 0
+          fi
+
+          sitemap=client/lib/seo/sitemap.ts
+          pattern='^const PRODUCT_DETAIL_CONTENT_UPDATED_AT = "[0-9-]*";$'
+          if ! grep -q "$pattern" "$sitemap"; then
+            echo "::error::$sitemap 에서 PRODUCT_DETAIL_CONTENT_UPDATED_AT 선언을 찾지 못했습니다. 선언 모양을 바꿨다면 이 워크플로의 pattern 도 고치세요."
+            exit 1
+          fi
+
+          today=$(TZ=Asia/Seoul date +%F)
+          sed -i "s/$pattern/const PRODUCT_DETAIL_CONTENT_UPDATED_AT = \"$today\";/" "$sitemap"
+          if git diff --quiet -- "$sitemap"; then
+            echo "PRODUCT_DETAIL_CONTENT_UPDATED_AT 이 이미 오늘($today)입니다."
+            exit 0
+          fi
+
+          echo "바뀐 제품 상세 화면 파일:"
+          echo "$changed"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix : 제품 상세 lastmod 기준일 갱신" -- "$sitemap"
+          git push origin "HEAD:$HEAD_REF"
