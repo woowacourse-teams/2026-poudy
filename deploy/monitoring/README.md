@@ -475,6 +475,27 @@ curl --fail --silent --show-error \
 
 ```
 
+### Staging 백엔드 8080 호스트 방화벽
+
+2026-10-12 staging BE(`i-00b689c66dc629d79`, `10.0.0.185`)에도 운영과 같은
+호스트 방화벽을 적용했습니다. 규칙 원본은 `deploy/firewall/staging-backend.nft`이며
+staging FE `10.0.0.51`에서 오는 IPv4 `TCP/8080`만 허용합니다. 나머지 IPv4와
+모든 IPv6의 `TCP/8080`은 차단합니다. Docker는 host network를 사용하므로 같은
+INPUT 규칙이 적용됩니다. SSH, 아웃바운드와 loopback 관리 포트 `8081`은 유지합니다.
+
+```bash
+sudo ./deploy/scripts/install-staging-backend-firewall.sh
+sudo nft list table inet poudy_backend
+sudo systemctl is-enabled poudy-backend-firewall.service
+sudo systemctl is-active poudy-backend-firewall.service poudy-backend.service
+curl --fail --silent http://127.0.0.1:8081/actuator/health
+```
+
+방화벽 서비스와 백엔드 시작 의존성 drop-in은 운영과 공유합니다. 설치 스크립트는
+staging BE 인스턴스 ID를 확인합니다. 외부 검증은 BE 공인 IP의 `:8080` 직접 요청이
+실패하고 `https://staging.poudy.site/api/categories`의 Cookie를 포함한 캐시 우회
+요청이 200인지 확인합니다. 긴급 롤백은 위 운영 절차와 같습니다.
+
 ### 1. IAM과 로그 그룹
 
 현재 `ec2-project` role과 로그 그룹 적용이 완료되었습니다. 새 환경이나 권한 오류가

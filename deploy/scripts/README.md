@@ -47,6 +47,14 @@ sudo ./deploy/scripts/install-production-backend-firewall.sh
 [`deploy/monitoring/README.md`](../monitoring/README.md)의 “운영 백엔드 8080 호스트 방화벽”을
 참고합니다.
 
+### Staging 백엔드 호스트 방화벽
+
+Staging 백엔드 EC2에서는 `sudo ./deploy/scripts/install-staging-backend-firewall.sh`를
+실행합니다. 인스턴스 ID `i-00b689c66dc629d79`를 확인하고, staging FE의 사설 IP
+`10.0.0.51`에서 오는 IPv4 `TCP/8080`만 허용합니다. 나머지 IPv4와 모든 IPv6의
+`TCP/8080`은 차단하며 SSH와 loopback 관리 포트 `8081`은 유지합니다.
+방화벽 서비스와 백엔드 systemd drop-in은 운영과 같은 파일을 사용합니다.
+
 ### HEIC 런타임
 
 `bootstrap-backend.sh`는 Amazon Linux 2023의 `libheif-tools`, `libde265`,
