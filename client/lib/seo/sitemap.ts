@@ -1,3 +1,4 @@
+import type { ProductResponse } from "@poudy/api/api.zod";
 import type { MetadataRoute } from "next";
 
 import {
@@ -37,6 +38,12 @@ const CONTENT_UPDATED_AT: Readonly<Record<string, string>> = {
   "/search/ingredients": "2026-08-30",
 };
 
+/**
+ * 제품 상세 화면의 본문 문구·구성이 바뀌어 운영(main)에 나간 날. 제품마다 데이터가 바뀐 날과 견줘 늦은 쪽을
+ * lastmod 로 쓴다. 손으로 고치지 않는다. main 으로 가는 PR 이 열리면 Client Product Lastmod 워크플로가 고친다.
+ */
+const PRODUCT_DETAIL_CONTENT_UPDATED_AT = "2026-10-11";
+
 type ChangeFrequency = "daily" | "weekly" | "monthly";
 
 const entry = (path: string, changeFrequency: ChangeFrequency, priority: number): MetadataRoute.Sitemap[number] => {
@@ -46,6 +53,18 @@ const entry = (path: string, changeFrequency: ChangeFrequency, priority: number)
 
   return { url, changeFrequency, priority, lastModified };
 };
+
+const productLastModified = (updatedAt: string): string => {
+  const dataUpdatedOn = updatedAt.slice(0, "YYYY-MM-DD".length);
+  if (dataUpdatedOn > PRODUCT_DETAIL_CONTENT_UPDATED_AT) return dataUpdatedOn;
+
+  return PRODUCT_DETAIL_CONTENT_UPDATED_AT;
+};
+
+const productEntry = ({ id, updatedAt }: Pick<ProductResponse, "id" | "updatedAt">): MetadataRoute.Sitemap[number] => ({
+  ...entry(`/products/${id}`, "weekly", 0.8),
+  lastModified: productLastModified(updatedAt),
+});
 
 export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const entries: MetadataRoute.Sitemap = [
@@ -77,7 +96,7 @@ export const productEntries = async (): Promise<MetadataRoute.Sitemap> => {
 
   for (let page = FIRST_PAGE; page < FIRST_PAGE + MAX_PRODUCT_PAGES; page += 1) {
     const response = await fetchSitemapProducts(page, PRODUCT_PAGE_SIZE);
-    entries.push(...response.items.map((product) => entry(`/products/${product.id}`, "weekly", 0.8)));
+    entries.push(...response.items.map(productEntry));
     if (entries.length > SITEMAP_URL_LIMIT) throw new Error("제품 사이트맵이 URL 50,000개 제한을 초과했습니다.");
     if (!response.pagination.hasNext) return entries;
   }
