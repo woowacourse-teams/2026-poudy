@@ -17,7 +17,7 @@ let originalReplace: History["replaceState"];
 const load = async () => {
   vi.resetModules();
   const { deferPosthog } = await import("./deferred-posthog");
-  deferPosthog("phc_test");
+  return deferPosthog("phc_test");
 };
 const start = async () => {
   mocks.schedule.mock.calls[0][0]();
@@ -47,6 +47,58 @@ afterEach(async () => {
 });
 
 describe("deferPosthog", () => {
+  it("외부 이동 준비는 스케줄러를 기다리지 않고 비콘 큐를 전송한다", async () => {
+    const flush = await load();
+    window.posthog?.capture(
+      "app_store_redirected",
+      { source: "qr_scan" },
+      { send_instantly: true, transport: "sendBeacon" },
+    );
+    await flush();
+    expect(mocks.create).toHaveBeenCalledOnce();
+    expect(mocks.capture).toHaveBeenCalledWith(
+      "app_store_redirected",
+      expect.objectContaining({ source: "qr_scan" }),
+      expect.objectContaining({ send_instantly: true, transport: "sendBeacon" }),
+    );
+    await start();
+    expect(mocks.create).toHaveBeenCalledOnce();
+  });
+
+  it("SDK 초기화 실패가 외부 이동을 막지 않는다", async () => {
+    mocks.create.mockImplementationOnce(() => {
+      throw new Error("unavailable");
+    });
+    const flush = await load();
+    await expect(flush()).resolves.toBeUndefined();
+  });
+
+  it("SDK 다운로드가 멎어도 외부 이동 준비는 1초 뒤 끝난다", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.doMock("./posthog-client", async () => {
+      await gate;
+      return { createPosthog: mocks.create };
+    });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const flush = await load();
+      const finished = vi.fn();
+      const pending = flush().then(finished);
+      await vi.advanceTimersByTimeAsync(999);
+      expect(finished).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await pending;
+      expect(finished).toHaveBeenCalledOnce();
+      expect(mocks.create).not.toHaveBeenCalled();
+    } finally {
+      release();
+      await vi.dynamicImportSettled();
+      vi.doMock("./posthog-client", () => ({ createPosthog: mocks.create }));
+    }
+  });
   it("스케줄러가 허용하기 전에는 SDK를 초기화하지 않는다", async () => {
     await load();
     await vi.dynamicImportSettled();
@@ -124,7 +176,8 @@ describe("deferPosthog", () => {
 
   it.each(["1", "yes"])("DNT %s이면 큐와 SDK를 만들지 않는다", async (value) => {
     Object.defineProperty(navigator, "doNotTrack", { value, configurable: true });
-    await load();
+    const flush = await load();
+    await flush();
     expect(window.posthog).toBeUndefined();
     expect(mocks.schedule).not.toHaveBeenCalled();
   });

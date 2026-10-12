@@ -85,19 +85,28 @@ const bufferErrors = (client: AnalyticsClient): (() => void) => {
   };
 };
 
+/** 다운로드가 멎어도 이동은 최대 1초 뒤 이어 간다. */
+const prepareNavigation = (start: () => Promise<void>): Promise<void> =>
+  new Promise((resolve) => {
+    const timer = window.setTimeout(resolve, 1000);
+    void start().then(() => {
+      window.clearTimeout(timer);
+      resolve();
+    });
+  });
+
 /** 초기 번들에는 큐만 포함하고, 무거운 SDK와 녹화 기능은 화면 로딩 이후 가져온다. */
-export const deferPosthog = (key: string): void => {
-  if (["1", "yes"].includes(navigator.doNotTrack?.toLowerCase() ?? "")) return;
+export const deferPosthog = (key: string): (() => Promise<void>) => {
+  if (["1", "yes"].includes(navigator.doNotTrack?.toLowerCase() ?? "")) return async () => {};
   const pending: PendingCapture[] = [];
   const buffer = bufferedClient(pending);
   window.posthog = buffer;
   const stopNavigation = bufferNavigation(buffer);
   const stopErrors = bufferErrors(buffer);
-  let loading = false;
-  const start = () => {
-    if (loading) return;
-    loading = true;
-    void import("./posthog-client")
+  let loading: Promise<void> | undefined;
+  const start = (): Promise<void> => {
+    if (loading) return loading;
+    loading = import("./posthog-client")
       .then(({ createPosthog }) => {
         const client = createPosthog(key);
         stopNavigation();
@@ -107,10 +116,12 @@ export const deferPosthog = (key: string): void => {
         client.set_config({ capture_pageview: "history_change", capture_pageleave: true });
       })
       .catch(() => {
-        loading = false;
+        loading = undefined;
         // 일시적인 청크 다운로드 실패가 화면을 깨뜨리지 않게 하고 다음 조작에서 재시도한다.
-        window.addEventListener("pointerdown", start, { once: true, passive: true });
+        window.addEventListener("pointerdown", () => void start(), { once: true, passive: true });
       });
+    return loading;
   };
-  afterPageLoad(start);
+  afterPageLoad(() => void start());
+  return () => prepareNavigation(start);
 };

@@ -1,12 +1,22 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppQrPanel } from "./AppQrPanel";
 
-const OPEN_APP_URL = "http://localhost:3000/open-app";
+const { track, qrCode } = vi.hoisted(() => ({ track: vi.fn(), qrCode: vi.fn() }));
+vi.mock("@/lib/analytics/track", () => ({ track }));
+vi.mock("qrcode.react", () => ({
+  QRCodeSVG: (props: { readonly value: string; readonly "aria-hidden"?: boolean | "true" | "false" }) => {
+    qrCode(props.value);
+    return <svg aria-hidden={props["aria-hidden"]} />;
+  },
+}));
+beforeEach(() => vi.clearAllMocks());
+
+const OPEN_APP_URL = "http://localhost:3000/open-app?source=qr_click";
 
 const link = () => screen.getByRole("link", { name: /앱 받기/ });
 
@@ -44,9 +54,16 @@ describe("앱 설치 QR 코드 패널", () => {
   it("앱이 받을 수 있는 우리 주소로 QR 코드를 그린다", () => {
     const { container } = render(<AppQrPanel />);
 
-    /* QR 코드는 링크의 내용을 옮긴 그림이라 두 주소가 어긋나면 찍은 쪽만 엉뚱한 곳으로 간다. */
+    /* 같은 목적지에 유입 표시만 다르게 붙여 스캔과 클릭을 나눈다. */
     expect(link()).toHaveAttribute("href", OPEN_APP_URL);
+    expect(qrCode).toHaveBeenCalledWith("http://localhost:3000/open-app?source=qr_scan");
     expect(container.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("QR 링크 클릭을 스캔과 구분해 한 번 기록한다", () => {
+    render(<AppQrPanel />);
+    fireEvent.click(link());
+    expect(track).toHaveBeenCalledExactlyOnceWith("app_install_clicked", { source: "qr_click" }, { beacon: true });
   });
 
   it("새 창으로 열되 여는 쪽 정보를 넘기지 않는다", () => {
