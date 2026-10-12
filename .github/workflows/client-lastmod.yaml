@@ -1,0 +1,79 @@
+name: Client Lastmod
+
+# main 으로 가는 PR 에 lastmod:<화면> 라벨이 붙으면 사이트맵 lastmod 의 화면 기준일
+# (client/lib/seo/sitemap.ts 의 SCREEN_UPDATED_AT)에서 그 화면의 날짜를 그날로 고쳐 PR 브랜치에 커밋한다.
+# 검색 엔진은 운영 화면을 읽으므로 기준일은 main 에 나가는 날이어야 한다. 라벨을 단 날보다 늦게
+# 머지하면 그만큼 이른 날로 남는다.
+#
+# 화면 본문(문구, 구성, 제목, 설명)이 바뀐 화면에만 라벨을 단다. 리팩터링이나 분석 이벤트처럼 본문이
+# 그대로인 변경까지 날짜를 올리면 lastmod 가 실제 변경과 어긋나 검색 엔진이 값을 믿지 않는다.
+# 라벨을 떼도 이미 고친 날짜는 되돌리지 않는다.
+#
+# GITHUB_TOKEN 으로 올린 커밋은 다른 워크플로를 깨우지 않으므로 이 워크플로가 되풀이되지 않는다.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    name: Screen lastmod
+    # 포크에서 온 PR 은 브랜치에 쓸 수 없다.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Bump screen dates
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          screens=$(printf '%s' "$LABELS" | jq -r '.[] | select(startswith("lastmod:")) | ltrimstr("lastmod:")')
+          if [ -z "$screens" ]; then
+            echo "lastmod 라벨이 없습니다."
+            exit 0
+          fi
+
+          sitemap=client/lib/seo/sitemap.ts
+          today=$(TZ=Asia/Seoul date +%F)
+          for screen in $screens; do
+            case "$screen" in
+              "" | *[!a-z]*)
+                echo "::error::라벨 'lastmod:$screen' 의 화면 이름은 영소문자여야 합니다."
+                exit 1
+                ;;
+            esac
+            pattern="^  $screen: \"[0-9-]*\",\$"
+            count=$(grep -c "$pattern" "$sitemap" || true)
+            if [ "$count" -ne 1 ]; then
+              echo "::error::$sitemap 의 SCREEN_UPDATED_AT 에서 '$screen' 을 하나로 찾지 못했습니다(찾은 줄 $count 개). 라벨 이름이나 선언 모양을 확인하세요."
+              exit 1
+            fi
+            sed -i "s/$pattern/  $screen: \"$today\",/" "$sitemap"
+          done
+
+          if git diff --quiet -- "$sitemap"; then
+            echo "라벨이 붙은 화면의 기준일이 이미 오늘($today)입니다."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -F - -- "$sitemap" <<MESSAGE
+          fix : 사이트맵 lastmod 기준일 갱신
+
+          $(printf '%s\n' $screens | sed 's/^/- /')
+          MESSAGE
+          git push origin "HEAD:$HEAD_REF"
