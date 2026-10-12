@@ -14,6 +14,8 @@
     ingredient)로 둔다.
   - main 으로 가는 PR 에 `lastmod:<화면>` 라벨을 달면 Client Lastmod 워크플로가 그 화면의 날짜를 그날로
     고쳐 PR 브랜치에 커밋한다. 손으로 고치지 않는다.
+  - `GITHUB_TOKEN` 으로 올린 커밋은 다른 워크플로를 깨우지 않아 main 필수 체크(`Client checks`, `gate`)가
+    비게 된다. 그래서 커밋 뒤 Client CI·Server CI 를 `workflow_dispatch` 로 직접 실행한다.
   - 배포 시각은 쓰지 않는다. 본문이 그대로인 배포까지 날짜가 올라가면 검색 엔진이 lastmod 를 믿지 않는다.
 - 사이트맵은 요청마다 만들어지므로(`force-dynamic`) 데이터 수정은 배포 없이 반영된다.
 
