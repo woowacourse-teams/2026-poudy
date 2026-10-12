@@ -80,6 +80,10 @@ public class LoginSession {
         hold(WITHDRAWN_MEMBER_ID, memberId, request, response);
     }
 
+    public Optional<Long> findWithdrawnMember(HttpServletRequest request) {
+        return find(WITHDRAWN_MEMBER_ID, Long.class, request);
+    }
+
     public Optional<Long> releaseWithdrawnMember(HttpServletRequest request) {
         return release(WITHDRAWN_MEMBER_ID, Long.class, request);
     }

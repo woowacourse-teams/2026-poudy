@@ -301,6 +301,9 @@ export const BrandOverviewResponse = z.object({ items: z.array(BrandSummaryRespo
 export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
 export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
 
+export type WithdrawnAccountResponse = __TypedOpenapi.Schemas.WithdrawnAccountResponse;
+export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), restorableUntil: z.iso.datetime({ offset: true }) });
+
 export type RegisteredAccountResponse = __TypedOpenapi.Schemas.RegisteredAccountResponse;
 export const RegisteredAccountResponse = z.object({ provider: OAuthProvider, email: z.string() });
 
@@ -738,6 +741,16 @@ export const get_FindBrand = {
   responses: { 200: BrandDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindWithdrawn = __TypedOpenapi.Endpoints.get_FindWithdrawn;
+export const get_FindWithdrawn = {
+  method: z.literal("GET"),
+  path: z.literal("/api/auth/withdrawn"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: WithdrawnAccountResponse, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindRegisteredAccount = __TypedOpenapi.Endpoints.get_FindRegisteredAccount;
 export const get_FindRegisteredAccount = {
   method: z.literal("GET"),
@@ -895,6 +908,7 @@ get: {
 "/api/categories": get_FindCategories as any,
 "/api/brands": get_FindBrands as any,
 "/api/brands/{brandId}": get_FindBrand as any,
+"/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
 "/api/admin/product-requests": get_FindAll as any,
 "/api/admin/product-requests/{requestId}": get_FindById as any,

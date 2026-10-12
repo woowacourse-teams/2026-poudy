@@ -20,6 +20,7 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
+    private static final String WITHDRAWN_MEMBER_PATH = "/api/auth/withdrawn";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn/restore";
     private static final String REGISTERED_ACCOUNT_PATH = "/api/auth/registered-account";
     private static final String APP_LOGIN_PATH = "/api/auth/{provider}/app-login";
@@ -115,7 +116,7 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path) {
-        if (WITHDRAWN_MEMBER_RESTORE_PATH.equals(path)) {
+        if (WITHDRAWN_MEMBER_PATH.equals(path) || WITHDRAWN_MEMBER_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);
         }
         if (REGISTERED_ACCOUNT_PATH.equals(path)) {

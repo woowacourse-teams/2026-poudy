@@ -8,5 +8,7 @@ public interface SocialMembers {
 
     long signUp(OAuthAccount account);
 
+    WithdrawnAccount findWithdrawn(long withdrawnMemberId);
+
     void requestRestore(long withdrawnMemberId);
 }

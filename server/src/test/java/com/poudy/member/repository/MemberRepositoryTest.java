@@ -2,6 +2,7 @@ package com.poudy.member.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import com.poudy.member.domain.AgeRange;
 import com.poudy.member.domain.Gender;
@@ -11,7 +12,10 @@ import com.poudy.member.domain.MemberSkinType;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.WithdrawnAccount;
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,6 +118,20 @@ class MemberRepositoryTest {
         assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com")))
             .get().extracting(member -> member.loginResult().status()).isEqualTo(LoginStatus.WITHDRAWN);
         assertThat(repository.withdraw(saved.id())).isFalse();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원만 제공자, 이메일, 탈퇴 시각을 찾는다")
+    void findsOnlyWithdrawnMember() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "4321", "member@example.com"));
+
+        assertThat(repository.findWithdrawnById(saved.id())).isEmpty();
+        repository.withdraw(saved.id());
+
+        WithdrawnAccount withdrawn = repository.findWithdrawnById(saved.id()).orElseThrow().keptFor(Duration.ZERO);
+        assertThat(withdrawn.provider()).isEqualTo(OAuthProvider.KAKAO);
+        assertThat(withdrawn.email()).isEqualTo("member@example.com");
+        assertThat(withdrawn.withdrawnAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
     }
 
     @Test

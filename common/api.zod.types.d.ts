@@ -697,6 +697,7 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
+export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminRestoreRequestResponse = { memberId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
@@ -1524,6 +1525,21 @@ export type get_FindBrand = {
 
     }
 /**
+ * 탈퇴한 계정으로 방금 소셜 로그인한 사람에게 이메일, 제공자, 탈퇴 시각과 복구를 요청할 수 있는 기한을 알려 준다.
+ */
+export type get_FindWithdrawn = {
+      method: "GET",
+      path: "/api/auth/withdrawn",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.WithdrawnAccountResponse,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 웹 소셜 로그인이 이메일 중복으로 실패한 사람에게 그 이메일과 먼저 가입한 제공자를 알려 준다.
  */
 export type get_FindRegisteredAccount = {
@@ -1788,6 +1804,7 @@ get: {
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand,
+"/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
