@@ -103,7 +103,7 @@ function UndoRow({
         */}
         <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-5 text-text-secondary">
           <span className="font-bold text-text-primary">{productName}</span>
-          {subjectJosa(productName)} 저장함에서 삭제됐어요
+          {subjectJosa(productName)} 위시리스트에서 삭제됐어요
         </p>
         <button
           type="button"
@@ -265,8 +265,8 @@ export function SavedScreen() {
               value={keyword}
               onChange={setKeyword}
               onChangeComposing={setComposing}
-              placeholder="저장한 제품 검색"
-              label="저장한 제품 검색"
+              placeholder="위시리스트에서 찾기"
+              label="위시리스트에서 찾기"
             />
           </StickyBar>
           <SortHeader
@@ -322,11 +322,11 @@ export function SavedScreen() {
 
       <Link href="/search/products" className="mt-2 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background">
-          <Icon name="plus" size={20} className="text-text-secondary" />
+          <Icon name="search" size={20} className="text-text-secondary" />
         </span>
         <span className="flex flex-1 flex-col gap-0.5">
-          <span className="text-[14px] font-bold text-text-primary">저장할 제품 더 찾기</span>
-          <span className="text-[11px] text-text-secondary">탐색 결과에서 제품을 추가할 수 있어요</span>
+          <span className="text-[14px] font-bold text-text-primary">다른 제품도 둘러보기</span>
+          <span className="text-[11px] text-text-secondary">마음에 들면 저장해서 여기에 모아 두세요</span>
         </span>
         <Icon name="chevron-right" size={16} className="text-text-secondary" />
       </Link>

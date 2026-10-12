@@ -1,4 +1,4 @@
-const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/saved", "/terms"] as const;
+const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/wishlist"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
   "/brands",
   "/categories",
