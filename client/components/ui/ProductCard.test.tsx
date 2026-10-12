@@ -18,6 +18,7 @@ const product: ProductResponse = {
   volumeUnit: "ml",
   moistureLevel: 2,
   oilLevel: 1,
+  updatedAt: "2026-08-03T00:00:00+09:00",
 };
 
 describe("ProductCard", () => {

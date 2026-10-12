@@ -156,6 +156,7 @@ export type ProductResponse = {
    * 유분감 단계 (0~3)
    */
   oilLevel: number;
+  updatedAt: string;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;

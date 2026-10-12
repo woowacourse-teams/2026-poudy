@@ -5310,6 +5310,11 @@
             "example": 1,
             "maximum": 3,
             "minimum": 0
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-01T09:30:00+09:00"
           }
         },
         "required": [
@@ -5320,6 +5325,7 @@
           "name",
           "oilLevel",
           "price",
+          "updatedAt",
           "volumeUnit",
           "volumeValue"
         ]
