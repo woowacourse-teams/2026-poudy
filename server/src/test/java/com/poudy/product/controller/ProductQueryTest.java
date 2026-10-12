@@ -50,6 +50,7 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.items[0].brand.englishName").value(nullValue()))
             .andExpect(jsonPath("$.items[0].brand.imageUrl").value(nullValue()))
             .andExpect(jsonPath("$.items[0].price").value(15000L))
+            .andExpect(jsonPath("$.items[0].updatedAt").value("2026-08-13T08:28:29.301+09:00"))
             .andExpect(jsonPath("$.pagination.totalElements").value(2L))
             .andExpect(jsonPath("$.pagination.hasNext").value(true))
             .andExpect(jsonPath("$.brands.length()").value(1))

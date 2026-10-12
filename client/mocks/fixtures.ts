@@ -50,6 +50,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 2,
@@ -61,6 +62,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 3,
@@ -72,6 +74,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 4,
@@ -83,6 +86,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 5,
@@ -94,6 +98,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 6,
@@ -105,6 +110,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 7,
@@ -116,6 +122,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 8,
@@ -127,6 +134,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 9,
@@ -138,6 +146,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 10,
@@ -149,6 +158,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 11,
@@ -160,6 +170,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 12,
@@ -171,6 +182,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 13,
@@ -182,6 +194,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 14,
@@ -193,6 +206,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 15,
@@ -204,6 +218,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];
 
@@ -775,6 +790,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   volumeUnit: product.volumeUnit,
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  updatedAt: "2026-08-03T00:00:00+09:00",
 }));
 
 /**
@@ -838,6 +854,7 @@ const fillerProducts: { readonly product: ProductResponse; readonly categoryId: 
             volumeUnit: "ml",
             moistureLevel: seed % 4,
             oilLevel: (seed + 2) % 4,
+            updatedAt: "2026-08-03T00:00:00+09:00",
           },
         };
       });

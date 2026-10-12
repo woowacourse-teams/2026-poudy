@@ -76,6 +76,8 @@ export type SkinTypesResponse = {
    */
   items: Array<SkinTypeResponse>;
 }
+export type SitemapEntryResponse = { id: number, updatedAt: string }
+export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
@@ -156,6 +158,7 @@ export type ProductResponse = {
    * 유분감 단계 (0~3)
    */
   oilLevel: number;
+  updatedAt: string;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -1033,6 +1036,20 @@ export type get_FindSkinTypes = {
 
     }
 /**
+ * 카테고리·브랜드·게시 큐레이션·제품에 쓰인 성분의 내용이 마지막으로 바뀐 시각을 조회한다.
+ */
+export type get_FindContentUpdates = {
+      method: "GET",
+      path: "/api/sitemap",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SitemapResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.
  */
 export type get_Rankings = {
@@ -1731,6 +1748,7 @@ patch: {
          },
 get: {
            "/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
