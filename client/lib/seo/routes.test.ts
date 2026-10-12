@@ -153,7 +153,7 @@ describe("sitemap", () => {
         "https://poudy.site/ingredients/5001",
       ]),
     );
-    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/saved");
+    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/wishlist");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchSitemapProducts).toHaveBeenCalledTimes(1);
   });

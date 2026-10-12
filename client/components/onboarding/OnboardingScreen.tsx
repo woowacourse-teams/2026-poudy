@@ -1,6 +1,5 @@
 "use client";
 
-import type { MemberProfileRequest } from "@poudy/api/api.zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,35 +7,15 @@ import { useEffect, useState } from "react";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
+import {
+  AGE_RANGES,
+  type AgeRange,
+  type Gender,
+  GENDERS,
+  SKIN_TYPES,
+  type SkinType,
+} from "@/lib/domain/member-profile";
 import { takeLoginReturn } from "@/lib/storage/login-return";
-
-type Gender = NonNullable<MemberProfileRequest["gender"]>;
-type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
-type SkinType = NonNullable<MemberProfileRequest["skinType"]>;
-
-const GENDERS: readonly { readonly value: Gender; readonly label: string }[] = [
-  { value: "FEMALE", label: "여성" },
-  { value: "MALE", label: "남성" },
-];
-const AGE_RANGES: readonly { readonly value: AgeRange; readonly label: string }[] = [
-  { value: "TEENS", label: "10대" },
-  { value: "TWENTIES", label: "20대" },
-  { value: "THIRTIES", label: "30대" },
-  { value: "FORTIES", label: "40대" },
-  { value: "FIFTIES", label: "50대" },
-  { value: "SIXTIES_OR_OLDER", label: "60대 이상" },
-];
-const SKIN_TYPES: readonly {
-  readonly value: SkinType;
-  readonly icon: string;
-  readonly name: string;
-  readonly description: string;
-}[] = [
-  { value: "DRY", icon: "dry", name: "건성", description: "세안 후 자주 당겨요" },
-  { value: "OILY", icon: "oily", name: "지성", description: "오후면 번들거려요" },
-  { value: "SENSITIVE", icon: "sensitive", name: "민감성", description: "쉽게 붉어지고 따가워요" },
-  { value: "COMBINATION", icon: "combination", name: "복합성", description: "T존만 번들거려요" },
-];
 
 type ChoiceProps<T extends string> = {
   readonly group: string;
@@ -208,7 +187,7 @@ export function OnboardingScreen() {
           <fieldset className="mt-9">
             <legend className="mb-3 text-[16px] font-bold">피부 타입</legend>
             <div className="grid grid-cols-2 gap-2.5">
-              {SKIN_TYPES.map(({ value, icon, name, description }) => (
+              {SKIN_TYPES.map(({ value, icon, label, description }) => (
                 <Choice
                   key={value}
                   group="skin-type"
@@ -218,7 +197,7 @@ export function OnboardingScreen() {
                   card
                 >
                   <Image src={`/images/skin-types/${icon}.svg`} alt="" width={24} height={24} />
-                  <span className="font-bold">{name}</span>
+                  <span className="font-bold">{label}</span>
                   <span className="text-[13px] leading-relaxed text-text-secondary">{description}</span>
                 </Choice>
               ))}

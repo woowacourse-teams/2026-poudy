@@ -41,7 +41,7 @@ describe("저장함", () => {
     expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /저장할 제품 더 찾기/ })).toHaveAttribute("href", "/search/products");
+    expect(screen.getByRole("link", { name: /다른 제품도 둘러보기/ })).toHaveAttribute("href", "/search/products");
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {

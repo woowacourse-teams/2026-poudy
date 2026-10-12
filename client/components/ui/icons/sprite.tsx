@@ -34,6 +34,11 @@ export const ICON_IDS = [
   "share",
   "instagram",
   "mail",
+  "user",
+  "user-solid",
+  "user-x",
+  "cake",
+  "logout",
   "message-question",
   "trending-up",
   "trending-down",
@@ -207,6 +212,40 @@ export function IconSprite() {
         <symbol id="icon-mail" viewBox="0 0 24 24">
           <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10" />
           <path d="M3 7l9 6l9 -6" />
+        </symbol>
+
+        {/* Tabler · user */}
+        <symbol id="icon-user" viewBox="0 0 24 24">
+          <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+          <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+        </symbol>
+
+        {/* 마이 탭 선택 상태: user 윤곽과 같은 머리·상체를 면으로 그린다. */}
+        <symbol id="icon-user-solid" viewBox="0 0 24 24">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M10 14h4a5 5 0 0 1 5 5v2a1 1 0 0 1 -1 1H6a1 1 0 0 1 -1 -1v-2a5 5 0 0 1 5 -5z" />
+        </symbol>
+
+        {/* Tabler · user-x */}
+        <symbol id="icon-user-x" viewBox="0 0 24 24">
+          <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+          <path d="M6 21v-2a4 4 0 0 1 4 -4h3.5" />
+          <path d="M22 22l-5 -5" />
+          <path d="M17 22l5 -5" />
+        </symbol>
+
+        {/* Tabler · cake */}
+        <symbol id="icon-cake" viewBox="0 0 24 24">
+          <path d="M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z" />
+          <path d="M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197" />
+          <path d="M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737z" />
+        </symbol>
+
+        {/* Tabler · logout */}
+        <symbol id="icon-logout" viewBox="0 0 24 24">
+          <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+          <path d="M9 12h12l-3 -3" />
+          <path d="M18 15l3 -3" />
         </symbol>
 
         {/* Tabler · message-circle-question */}

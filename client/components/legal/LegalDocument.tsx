@@ -1,6 +1,7 @@
 type LegalDocumentProps = {
   readonly title: string;
   readonly effectiveDate: string;
+  readonly effectiveDateLabel?: string;
   readonly children: React.ReactNode;
 };
 
@@ -8,12 +9,14 @@ type LegalDocumentProps = {
  * 처리방침과 이용약관이 함께 쓰는 문서 틀.
  * 본문 글자색을 이 자리에서 한 번만 정해 조문마다 되풀이하지 않는다.
  */
-export function LegalDocument({ title, effectiveDate, children }: LegalDocumentProps) {
+export function LegalDocument({ title, effectiveDate, effectiveDateLabel = "시행일", children }: LegalDocumentProps) {
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-10 text-[13px] leading-6 [&_a]:underline [&_li]:text-text-secondary [&_p]:text-text-secondary">
       <header className="flex flex-col gap-1">
         <h2 className="text-[18px] font-bold text-text-primary">{title}</h2>
-        <p className="text-[12px]">시행일 {effectiveDate}</p>
+        <p className="text-[12px]">
+          {effectiveDateLabel} {effectiveDate}
+        </p>
       </header>
 
       {children}

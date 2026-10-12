@@ -563,6 +563,19 @@ export const handlers = [
 
   http.post("*/api/members/logout", () => new HttpResponse(null, { status: 204 })),
 
+  http.get("*/api/auth/withdrawn", () =>
+    HttpResponse.json({
+      provider: "KAKAO",
+      email: "member@example.com",
+      withdrawnAt: "2026-10-05T14:00:00+09:00",
+      restorableUntil: "2026-11-04T14:00:00+09:00",
+    }),
+  ),
+
+  http.get("*/api/auth/registered-account", () =>
+    HttpResponse.json({ provider: "KAKAO", email: "member@example.com" }),
+  ),
+
   http.post("*/api/auth/withdrawn/restore", () => new HttpResponse(null, { status: 204 })),
 
   http.post("*/api/auth/signup", () => new HttpResponse(null, { status: 204 })),
