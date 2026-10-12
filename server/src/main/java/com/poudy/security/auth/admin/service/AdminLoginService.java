@@ -1,5 +1,6 @@
 package com.poudy.security.auth.admin.service;
 
+import com.poudy.security.auth.admin.ratelimit.AdminLoginRateLimiter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,16 +11,20 @@ public class AdminLoginService {
 
     private final String expectedUsername;
     private final String expectedPassword;
+    private final AdminLoginRateLimiter rateLimiter;
 
     public AdminLoginService(
         @Value("${poudy.admin.username:}") String expectedUsername,
-        @Value("${poudy.admin.password:}") String expectedPassword
+        @Value("${poudy.admin.password:}") String expectedPassword,
+        AdminLoginRateLimiter rateLimiter
     ) {
         this.expectedUsername = expectedUsername;
         this.expectedPassword = expectedPassword;
+        this.rateLimiter = rateLimiter;
     }
 
-    public boolean matches(String username, String password) {
+    public boolean matches(String username, String password, String clientId) {
+        rateLimiter.requireAllowed(clientId);
         boolean usernameMatches = constantTimeEquals(expectedUsername, username);
         boolean passwordMatches = constantTimeEquals(expectedPassword, password);
         return usernameMatches & passwordMatches;

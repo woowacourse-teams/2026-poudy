@@ -446,7 +446,7 @@ export const post_Login_1 = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { body: AdminLoginRequest },
-  responses: { 200: z.unknown(), 400: ProblemDetail, 401: z.unknown(), 500: ProblemDetail },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: z.unknown(), 429: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_UpdateMyProfile = __TypedOpenapi.Endpoints.patch_UpdateMyProfile;

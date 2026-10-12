@@ -106,6 +106,9 @@ poudy:
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
+    login-rate-limit:
+      max-requests: 5
+      window: PT1M
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
   feedback:

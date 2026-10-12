@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,6 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
@@ -122,6 +124,37 @@ class AdminControllerTest {
         )
             .andExpect(status().isUnauthorized())
             .andExpect(content().string(""));
+    }
+
+    @Test
+    @DisplayName("같은 주소에서 1분 안에 5번 넘게 시도하면 맞는 자격 증명이어도 429로 거절하고, 다른 주소는 막지 않는다")
+    void rejectsTooManyAttemptsFromSameAddress() throws Exception {
+        for (int attempt = 0; attempt < 5; attempt++) {
+            attemptLogin("203.0.113.10", "wrong-secret", 401);
+        }
+
+        mockMvc.perform(
+            post(PATH)
+                .header("X-Real-IP", "203.0.113.10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"username":"admin-test","password":"secret-test"}
+                    """)
+        )
+            .andExpect(status().isTooManyRequests())
+            .andExpect(header().exists(HttpHeaders.RETRY_AFTER))
+            .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"));
+        attemptLogin("203.0.113.11", "secret-test", 200);
+    }
+
+    private void attemptLogin(String clientAddress, String password, int expectedStatus) throws Exception {
+        mockMvc.perform(
+            post(PATH)
+                .header("X-Real-IP", clientAddress)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"admin-test\",\"password\":\"" + password + "\"}")
+        )
+            .andExpect(status().is(expectedStatus));
     }
 
     @ParameterizedTest(name = "{0}")
