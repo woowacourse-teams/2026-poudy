@@ -11,7 +11,7 @@ const api = vi.hoisted(() => ({
 
 vi.mock("@/lib/api/products", () => api);
 
-const sitemapProduct = (id: number, updatedAt = "2026-08-01T09:30:00+09:00") => ({ id, updatedAt });
+const sitemapProduct = (id: number, updatedAt = "2000-01-01T09:30:00+09:00") => ({ id, updatedAt });
 
 const emptySitemap = { categories: [], brands: [], curations: [], ingredients: [] };
 
@@ -21,7 +21,7 @@ import { dynamic as pageSitemapDynamic, GET as pagesSitemap } from "@/app/sitema
 import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/sitemap-products.xml/route";
 import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
-import { ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
+import { SCREEN_UPDATED_AT, ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -181,16 +181,16 @@ describe("sitemap", () => {
 
   it("제품 lastmod 는 데이터가 바뀐 날과 상세 화면 문구가 바뀐 날 중 늦은 쪽이다", async () => {
     api.fetchSitemapProducts.mockResolvedValue({
-      items: [sitemapProduct(30, "2026-08-01T09:30:00+09:00"), sitemapProduct(31, "2026-11-02T01:00:00+09:00")],
+      items: [sitemapProduct(30, "2000-01-01T09:30:00+09:00"), sitemapProduct(31, "2099-11-02T01:00:00+09:00")],
       pagination: { hasNext: false },
     });
 
     const entries = await productEntries();
     const xml = await (await productsSitemap()).text();
 
-    expect(entries.map(({ lastModified }) => lastModified)).toEqual(["2026-10-11", "2026-11-02"]);
+    expect(entries.map(({ lastModified }) => lastModified)).toEqual([SCREEN_UPDATED_AT.product, "2099-11-02"]);
     expect(xml).toContain(
-      "<url><loc>https://poudy.site/products/31</loc><lastmod>2026-11-02</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>",
+      "<url><loc>https://poudy.site/products/31</loc><lastmod>2099-11-02</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>",
     );
   });
 
@@ -203,14 +203,14 @@ describe("sitemap", () => {
     const lastModifiedOf = (path: string) =>
       entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
 
-    expect(lastModifiedOf("/")).toBe("2026-09-05");
-    expect(lastModifiedOf("/search/products")).toBe("2026-08-30");
-    expect(lastModifiedOf("/search/ingredients")).toBe("2026-08-30");
-    expect(lastModifiedOf("/categories")).toBe("2026-10-09");
-    expect(lastModifiedOf("/brands")).toBe("2026-10-09");
-    expect(lastModifiedOf("/categories/10")).toBe("2026-10-09");
-    expect(lastModifiedOf("/brands/20")).toBe("2026-10-09");
-    expect(lastModifiedOf("/curations/50")).toBe("2026-10-09");
+    expect(lastModifiedOf("/")).toBe(SCREEN_UPDATED_AT.home);
+    expect(lastModifiedOf("/search/products")).toBe(SCREEN_UPDATED_AT.search);
+    expect(lastModifiedOf("/search/ingredients")).toBe(SCREEN_UPDATED_AT.search);
+    expect(lastModifiedOf("/categories")).toBe(SCREEN_UPDATED_AT.category);
+    expect(lastModifiedOf("/brands")).toBe(SCREEN_UPDATED_AT.brand);
+    expect(lastModifiedOf("/categories/10")).toBe(SCREEN_UPDATED_AT.category);
+    expect(lastModifiedOf("/brands/20")).toBe(SCREEN_UPDATED_AT.brand);
+    expect(lastModifiedOf("/curations/50")).toBe(SCREEN_UPDATED_AT.curation);
   });
 
   it("카테고리·브랜드·큐레이션은 데이터가 바뀐 날이 늦으면 그날을 lastmod 로 싣는다", async () => {
@@ -220,26 +220,26 @@ describe("sitemap", () => {
     api.fetchSitemap.mockResolvedValue({
       ...emptySitemap,
       categories: [
-        { id: 10, updatedAt: "2026-11-02T01:00:00+09:00" },
-        { id: 11, updatedAt: "2026-08-01T09:30:00+09:00" },
+        { id: 10, updatedAt: "2099-11-02T01:00:00+09:00" },
+        { id: 11, updatedAt: "2000-01-01T09:30:00+09:00" },
       ],
       brands: [
-        { id: 20, updatedAt: "2026-11-03T01:00:00+09:00" },
-        { id: 21, updatedAt: "2026-11-04T01:00:00+09:00" },
+        { id: 20, updatedAt: "2099-11-03T01:00:00+09:00" },
+        { id: 21, updatedAt: "2099-11-04T01:00:00+09:00" },
       ],
-      curations: [{ id: 50, updatedAt: "2026-11-05T01:00:00+09:00" }],
+      curations: [{ id: 50, updatedAt: "2099-11-05T01:00:00+09:00" }],
     });
 
     const entries = await pageEntries();
     const lastModifiedOf = (path: string) =>
       entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
 
-    expect(lastModifiedOf("/categories")).toBe("2026-11-02");
-    expect(lastModifiedOf("/categories/10")).toBe("2026-11-02");
-    expect(lastModifiedOf("/categories/11")).toBe("2026-10-09");
-    expect(lastModifiedOf("/brands")).toBe("2026-11-04");
-    expect(lastModifiedOf("/brands/20")).toBe("2026-11-03");
-    expect(lastModifiedOf("/curations/50")).toBe("2026-11-05");
+    expect(lastModifiedOf("/categories")).toBe("2099-11-02");
+    expect(lastModifiedOf("/categories/10")).toBe("2099-11-02");
+    expect(lastModifiedOf("/categories/11")).toBe(SCREEN_UPDATED_AT.category);
+    expect(lastModifiedOf("/brands")).toBe("2099-11-04");
+    expect(lastModifiedOf("/brands/20")).toBe("2099-11-03");
+    expect(lastModifiedOf("/curations/50")).toBe("2099-11-05");
   });
 
   it("성분 lastmod 는 데이터가 바뀐 날과 성분 화면 기준일 중 늦은 쪽이다", async () => {
@@ -247,14 +247,14 @@ describe("sitemap", () => {
     api.fetchSitemap.mockResolvedValue({
       ...emptySitemap,
       ingredients: [
-        { id: 40, updatedAt: "2026-08-01T09:30:00+09:00" },
-        { id: 41, updatedAt: "2026-11-06T01:00:00+09:00" },
+        { id: 40, updatedAt: "2000-01-01T09:30:00+09:00" },
+        { id: 41, updatedAt: "2099-11-06T01:00:00+09:00" },
       ],
     });
 
     const entries = await ingredientEntries();
 
-    expect(entries.map(({ lastModified }) => lastModified)).toEqual(["2026-10-09", "2026-11-06"]);
+    expect(entries.map(({ lastModified }) => lastModified)).toEqual([SCREEN_UPDATED_AT.ingredient, "2099-11-06"]);
   });
 
   it("사이트맵 XML 이 lastmod 를 스키마 순서대로 적는다", async () => {
@@ -265,10 +265,10 @@ describe("sitemap", () => {
     const xml = await (await pagesSitemap()).text();
 
     expect(xml).toContain(
-      "<url><loc>https://poudy.site/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>",
+      `<url><loc>https://poudy.site/</loc><lastmod>${SCREEN_UPDATED_AT.home}</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>`,
     );
     expect(xml).toContain(
-      "<url><loc>https://poudy.site/brands/20</loc><lastmod>2026-10-09</lastmod><changefreq>weekly</changefreq>",
+      `<url><loc>https://poudy.site/brands/20</loc><lastmod>${SCREEN_UPDATED_AT.brand}</lastmod><changefreq>weekly</changefreq>`,
     );
   });
 

@@ -7,9 +7,6 @@ on:
   push:
     branches: [main, dev]
   pull_request:
-  # Client Lastmod 워크플로가 GITHUB_TOKEN 으로 올린 커밋은 push·pull_request 를 깨우지 않는다.
-  # 그 커밋에서도 main 필수 체크(gate)가 돌도록 그 워크플로가 직접 실행한다. 변경 판단 없이 빌드한다.
-  workflow_dispatch:
 
 # 워크플로가 저장소를 읽기만 하면 되므로 토큰 권한을 최소로 제한한다.
 permissions:
@@ -21,9 +18,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # 서버와 관련된 변경이 있는지만 판단한다. push·PR 에서는 항상 돌고, 직접 실행에서는 건너뛴다.
+  # 서버와 관련된 변경이 있는지만 판단한다. 이 잡은 항상 돈다.
   changes:
-    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -44,9 +40,7 @@ jobs:
 
   build:
     needs: changes
-    if: >-
-      ${{ !cancelled() && needs.changes.result != 'failure' &&
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.server == 'true') }}
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     # 생성 태스크는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20

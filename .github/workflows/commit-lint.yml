@@ -14,6 +14,9 @@ concurrency:
 
 jobs:
   lint:
+    # main 으로 가는 PR 의 커밋은 dev 로 가는 PR 에서 이미 검사했다. dev 이력에 들어간 커밋은 고칠 수 없으므로
+    # 여기서 다시 막아도 실패만 남는다(예: PR 제목을 그대로 쓴 squash 머지 커밋).
+    if: github.base_ref != 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
