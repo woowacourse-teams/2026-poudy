@@ -4735,8 +4735,7 @@
           "DRY",
           "OILY",
           "SENSITIVE",
-          "COMBINATION",
-          "UNKNOWN"
+          "COMBINATION"
         ]
       },
       "MemberResponse": {

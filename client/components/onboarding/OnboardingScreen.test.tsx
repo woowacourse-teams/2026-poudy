@@ -59,15 +59,11 @@ describe("피부 정보 설정", () => {
     expect(combination).not.toBeChecked();
   });
 
-  it("피부 타입을 잘 모르겠다고 고른 것도 다시 누르면 선택이 풀린다", async () => {
-    const user = userEvent.setup();
-    await renderWith({ gender: null, ageRange: null, skinType: "UNKNOWN" });
-    const unknown = screen.getByRole("radio", { name: "내 피부 타입을 잘 모르겠어요" });
-    expect(unknown).toBeChecked();
+  it("피부 타입을 잘 모르겠다는 문구는 고를 수 있는 항목이 아니다", async () => {
+    await renderWith({ gender: null, ageRange: null, skinType: null });
 
-    await user.click(unknown);
-
-    expect(unknown).not.toBeChecked();
+    expect(screen.getByText("내 피부 타입을 잘 모르겠어요")).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "내 피부 타입을 잘 모르겠어요" })).not.toBeInTheDocument();
   });
 
   it("다른 항목을 누르면 선택이 그 항목으로 옮겨 간다", async () => {

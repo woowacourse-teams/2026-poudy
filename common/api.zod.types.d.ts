@@ -50,7 +50,7 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type MemberSkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION" | "UNKNOWN")
+export type MemberSkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
 export type MemberProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
 export type MemberResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }

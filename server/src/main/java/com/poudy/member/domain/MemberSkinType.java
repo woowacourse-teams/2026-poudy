@@ -5,6 +5,5 @@ public enum MemberSkinType {
     DRY,
     OILY,
     SENSITIVE,
-    COMBINATION,
-    UNKNOWN
+    COMBINATION
 }

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -85,14 +86,14 @@ class MemberRepositoryTest {
         Member saved = repository.save(signup(OAuthProvider.GOOGLE, "sub", "member@example.com"));
 
         Member updated = repository
-            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, MemberSkinType.UNKNOWN)
+            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, MemberSkinType.COMBINATION)
             .orElseThrow();
 
         assertThat(updated.gender()).isEqualTo(Gender.MALE);
         assertThat(updated.ageRange()).isEqualTo(AgeRange.SIXTIES_OR_OLDER);
-        assertThat(updated.skinType()).isEqualTo(MemberSkinType.UNKNOWN);
+        assertThat(updated.skinType()).isEqualTo(MemberSkinType.COMBINATION);
         assertThat(repository.findById(saved.id())).get().extracting(Member::skinType)
-            .isEqualTo(MemberSkinType.UNKNOWN);
+            .isEqualTo(MemberSkinType.COMBINATION);
     }
 
     @Test
@@ -113,6 +114,19 @@ class MemberRepositoryTest {
         assertThat(repository.findByAccount(account(OAuthProvider.KAKAO, "4321", "member@example.com")))
             .get().extracting(member -> member.loginResult().status()).isEqualTo(LoginStatus.WITHDRAWN);
         assertThat(repository.withdraw(saved.id())).isFalse();
+    }
+
+    @Test
+    @DisplayName("피부 타입은 정해진 네 값만 저장한다")
+    void rejectsUnknownSkinType() {
+        Member saved = repository.save(signup(OAuthProvider.KAKAO, "4321", "member@example.com"));
+
+        assertThatThrownBy(
+            () -> jdbc.update(
+                "update member set skin_type = 'UNKNOWN' where id = :id",
+                new MapSqlParameterSource("id", saved.id())
+            )
+        ).isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

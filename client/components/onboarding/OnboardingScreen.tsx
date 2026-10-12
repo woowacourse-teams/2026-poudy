@@ -37,7 +37,6 @@ const SKIN_TYPES: readonly {
   { value: "SENSITIVE", icon: "sensitive", name: "민감성", description: "쉽게 붉어지고 따가워요" },
   { value: "COMBINATION", icon: "combination", name: "복합성", description: "T존만 번들거려요" },
 ];
-const UNKNOWN_SKIN_TYPE: SkinType = "UNKNOWN";
 
 type ChoiceProps<T extends string> = {
   readonly group: string;
@@ -224,23 +223,7 @@ export function OnboardingScreen() {
                 </Choice>
               ))}
             </div>
-            <label className="relative mt-3 inline-flex cursor-pointer items-center gap-1 py-1.5 text-[14px] font-semibold text-text-secondary">
-              <input
-                type="radio"
-                name="skin-type"
-                value={UNKNOWN_SKIN_TYPE}
-                checked={skinType === UNKNOWN_SKIN_TYPE}
-                onChange={() => setSkinType(UNKNOWN_SKIN_TYPE)}
-                onClick={() => {
-                  if (skinType === UNKNOWN_SKIN_TYPE) setSkinType(null);
-                }}
-                className="peer sr-only"
-              />
-              <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
-                내 피부 타입을 잘 모르겠어요
-              </span>
-              <Icon name={skinType === UNKNOWN_SKIN_TYPE ? "check" : "chevron-right"} size={16} />
-            </label>
+            <p className="mt-3 py-1.5 text-[14px] font-semibold text-text-secondary">내 피부 타입을 잘 모르겠어요</p>
           </fieldset>
         </div>
 

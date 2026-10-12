@@ -41,7 +41,7 @@ export type Gender = __TypedOpenapi.Schemas.Gender;
 export const Gender = z.enum(["FEMALE", "MALE"]);
 
 export type MemberSkinType = __TypedOpenapi.Schemas.MemberSkinType;
-export const MemberSkinType = z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION", "UNKNOWN"]);
+export const MemberSkinType = z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]);
 
 export type MemberProfileRequest = __TypedOpenapi.Schemas.MemberProfileRequest;
 export const MemberProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: MemberSkinType.nullable() });

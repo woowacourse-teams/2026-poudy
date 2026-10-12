@@ -200,12 +200,12 @@ describe("목 응답과 스키마", () => {
     const { status, body } = await patch("/members/me/profile", {
       gender: "FEMALE",
       ageRange: "TWENTIES",
-      skinType: "UNKNOWN",
+      skinType: "COMBINATION",
     });
 
     expect(status).toBe(200);
     expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
-    expect(body).toMatchObject({ skinType: "UNKNOWN" });
+    expect(body).toMatchObject({ skinType: "COMBINATION" });
   });
 
   it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
