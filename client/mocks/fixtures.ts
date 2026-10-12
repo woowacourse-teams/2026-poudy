@@ -269,7 +269,7 @@ const EXCLUDE_GROUP_NAMES = [
 ] as const;
 
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
-  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
+  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ code, name, contains: !freeOfCodes.includes(code) }));
 
 /**
  * 세라마이드 성분군에 드는 성분. 1025 독도 토너가 다섯 가지를 모두 담아 성분군 칩과 시트를 확인할 수 있다.
@@ -383,6 +383,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
       englishName: `Ingredient ${index + 1}`,
       formulationRoles: [],
       skinEffects: [],
+      cautions: index === 5 ? [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] : [],
     })),
     excludeGroups: excludeGroupsOf([
       "DRYING_ALCOHOLS",
@@ -465,6 +466,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [],
+          cautions: [],
         },
         {
           id: 2,
@@ -475,6 +477,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 3,
@@ -482,6 +485,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Glycerin",
           formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 4,
@@ -492,6 +496,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 5,
@@ -502,6 +507,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "4", code: "HUMECTANT", name: "보습 보조" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 6,
@@ -509,6 +515,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Panthenol",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [보습, 진정],
+          cautions: [],
         },
         {
           id: 7,
@@ -516,6 +523,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Chondrus Crispus Extract",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [진정],
+          cautions: [],
         },
         {
           id: 8,
@@ -523,6 +531,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Protease",
           formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
           skinEffects: [각질케어],
+          cautions: [],
         },
         ...ceramides.map(([id, koreanName, englishName]) => ({
           id,
@@ -530,6 +539,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName,
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [장벽],
+          cautions: [],
         })),
       ],
       excludeGroups: excludeGroupsOf([

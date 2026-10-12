@@ -51,6 +51,33 @@ class OpenApiContractTest {
     }
 
     @Test
+    void documentsCautionGroupCodeAsRequiredString() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.required", hasItem("code")))
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.properties.code.type").value("string"));
+    }
+
+    @Test
+    void documentsIngredientCautionsAsRequiredArray() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ProductIngredientResponse.required", hasItem("cautions")))
+            .andExpect(
+                jsonPath("$.components.schemas.ProductIngredientResponse.properties.cautions.type").value("array")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductIngredientResponse.properties.cautions.items.$ref")
+                    .value("#/components/schemas/IngredientCautionResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.IngredientCautionResponse.required", contains("code", "label")))
+            .andExpect(jsonPath("$.components.schemas.IngredientCautionResponse.properties.code.type").value("string"))
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientCautionResponse.properties.label.type").value("string")
+            );
+    }
+
+    @Test
     void documentsRankingChangeAsRequiredReference() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())

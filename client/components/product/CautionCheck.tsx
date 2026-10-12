@@ -20,7 +20,7 @@ type Ingredients = ProductPartResponse["ingredients"];
  * 들어 있는 기준을 앞에 두어 눈이 먼저 닿게 한다.
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
- * 쓰임새별 성분의 성분군 칩과 같은 시트다. 성분군 코드를 찾지 못한 기준은 누를 수 없게 둔다.
+ * 쓰임새별 성분의 성분군 칩과 같은 시트다. 제품 상세 응답의 코드로 성분군을 조회한다.
  */
 export function CautionCheck({
   productId,
@@ -41,7 +41,7 @@ export function CautionCheck({
   const show = (group: CautionGroup) => {
     setShown(group);
     setOpen(true);
-    tracking.opened({ sheet_type: "caution", product_id: productId, group_code: group.code ?? "" });
+    tracking.opened({ sheet_type: "caution", product_id: productId, group_code: group.code });
   };
   const close = (method: SheetCloseMethod) => {
     setOpen(false);
@@ -93,7 +93,7 @@ function CautionList({
     */
     <ul className="grid grid-cols-[repeat(auto-fit,minmax(max(min(100%,calc(130em/14)),calc((100%_-_12px)/2)),1fr))] gap-3 text-[14px]">
       {sortedCautions(groups).map((group) => (
-        <li key={group.name} className="flex">
+        <li key={group.code} className="flex">
           <CautionItem group={group} onOpen={onOpen} />
         </li>
       ))}
@@ -109,13 +109,6 @@ function CautionItem({
   readonly onOpen: (group: CautionGroup) => void;
 }) {
   const { code } = group;
-  if (!code) {
-    return (
-      <span className="flex items-center gap-2">
-        <CautionLabel group={group} />
-      </span>
-    );
-  }
 
   return (
     <Link
@@ -151,7 +144,7 @@ const sheetGroupOf = (group: CautionGroup, ingredients: Ingredients): ProductIng
   const byId = new Map(ingredients.map((ingredient) => [ingredient.id, ingredient]));
 
   return {
-    code: group.code ?? "",
+    code: group.code,
     name: group.name,
     ingredients: group.ingredientIds.flatMap((id) => byId.get(id) ?? []),
     effects: [],

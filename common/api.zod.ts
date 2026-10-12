@@ -128,10 +128,13 @@ export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
 
 export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
-export const ExcludeGroupResponse = z.object({ name: z.string(), contains: z.boolean() });
+export const ExcludeGroupResponse = z.object({ code: z.string(), name: z.string(), contains: z.boolean() });
 
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type IngredientCautionResponse = __TypedOpenapi.Schemas.IngredientCautionResponse;
+export const IngredientCautionResponse = z.object({ code: z.string(), label: z.string() });
 
 export type IngredientGroupSummaryResponse = __TypedOpenapi.Schemas.IngredientGroupSummaryResponse;
 export const IngredientGroupSummaryResponse = z.object({ code: z.string(), name: z.string() });
@@ -146,7 +149,7 @@ export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredientResponse;
-export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), cautions: z.array(IngredientCautionResponse) });
 
 export type SkinEffectIngredientResponse = __TypedOpenapi.Schemas.SkinEffectIngredientResponse;
 export const SkinEffectIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string() });

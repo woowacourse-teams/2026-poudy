@@ -234,10 +234,25 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.selectedPart.name").value(nullValue()))
             .andExpect(jsonPath("$.selectedPart.ingredients[*].disclosedAmount").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(20, 9)))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions[0].code").value("FRAGRANCE_ALLERGENS"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions[0].label").value("향료"))
+            .andExpect(jsonPath("$.selectedPart.ingredients[1].cautions[0].code").value("FRAGRANCE_ALLERGENS"))
             .andExpect(
                 jsonPath("$.selectedPart.ingredients[*].formulationRoles[*].code").value(hasItem("PERFUMING"))
             )
             .andExpect(jsonPath("$.selectedPart.excludeGroups.length()").value(6))
+            .andExpect(
+                jsonPath("$.selectedPart.excludeGroups[*].code").value(
+                    contains(
+                        "CYCLIC_SILICONES",
+                        "DRYING_ALCOHOLS",
+                        "FRAGRANCE_ALLERGENS",
+                        "HARSH_PRESERVATIVES",
+                        "SULFATES",
+                        "SYNTHETIC_COLORANTS"
+                    )
+                )
+            )
             .andExpect(jsonPath("$.selectedPart.excludeGroups[2].name").value("향료/알레르기 성분"))
             .andExpect(jsonPath("$.selectedPart.excludeGroups[2].contains").value(true))
             .andExpect(jsonPath("$.selectedPart.excludeGroups[3].name").value("자극성 방부제"))

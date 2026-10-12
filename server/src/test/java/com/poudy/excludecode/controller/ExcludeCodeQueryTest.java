@@ -53,7 +53,8 @@ class ExcludeCodeQueryTest {
             .andExpect(jsonPath("$.items[*].code", not(hasItem("AAA_CUSTOM"))));
         mockMvc.perform(get("/api/products/15")).andExpect(status().isOk())
             .andExpect(jsonPath("$.selectedPart.excludeGroups.length()").value(CODE_COUNT))
-            .andExpect(jsonPath("$.selectedPart.excludeGroups[*].name", not(hasItem("새 성분군"))));
+            .andExpect(jsonPath("$.selectedPart.excludeGroups[*].name", not(hasItem("새 성분군"))))
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].cautions[*].code", not(hasItem("AAA_CUSTOM"))));
         mockMvc.perform(get("/api/products").param("excludeCodes", "AAA_CUSTOM"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));

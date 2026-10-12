@@ -8,22 +8,28 @@ public final class ExcludeCodeGroup {
 
     private final ExcludeCode code;
     private final String displayName;
+    private final String tagName;
     private final String description;
     private final List<ExcludeCodeIngredient> ingredients;
 
     public ExcludeCodeGroup(
         ExcludeCode code,
         String displayName,
+        String tagName,
         String description,
         List<ExcludeCodeIngredient> ingredients
     ) {
         Objects.requireNonNull(code, "제외 성분군 코드가 필요합니다.");
+        if (tagName == null || tagName.isBlank()) {
+            throw new InvalidExcludeCodeDefinitionException("제외 성분군의 태그 이름이 없습니다: " + code.value());
+        }
         List<ExcludeCodeIngredient> members = List.copyOf(ingredients);
         if (members.isEmpty()) {
             throw new InvalidExcludeCodeDefinitionException("제외 성분군에 속한 성분이 없습니다: " + code.value());
         }
         this.code = code;
         this.displayName = displayName;
+        this.tagName = tagName;
         this.description = description;
         this.ingredients = members;
     }
@@ -42,6 +48,10 @@ public final class ExcludeCodeGroup {
 
     public String description() {
         return description;
+    }
+
+    public String tagName() {
+        return tagName;
     }
 
     public List<ExcludeCodeIngredient> ingredients() {

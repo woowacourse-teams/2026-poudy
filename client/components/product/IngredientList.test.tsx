@@ -16,6 +16,7 @@ const ingredient = (id: number, koreanName: string): ProductPartResponse["ingred
   englishName: `Ingredient ${id}`,
   formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "보습제" }],
   skinEffects: [],
+  cautions: [],
 });
 
 const rowOf = (name: string) => screen.getByText(name).closest("a")!;

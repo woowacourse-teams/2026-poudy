@@ -102,11 +102,13 @@ class ProductServiceTest {
         ExcludeCodeGroup sulfates = new ExcludeCodeGroup(
             ExcludeCode.SULFATES,
             "설페이트 성분",
+            "설페이트",
             "설명",
             List.of(new ExcludeCodeIngredient(20L, "성분", null))
         );
         ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
             ExcludeCode.FRAGRANCE_ALLERGENS,
+            "향료",
             "향료",
             "설명",
             List.of(new ExcludeCodeIngredient(10L, "성분", null))
