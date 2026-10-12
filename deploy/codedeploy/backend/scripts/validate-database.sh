@@ -15,9 +15,24 @@ require_value() {
 }
 
 [[ -r "${ENV_FILE}" ]] || fail "환경 변수 파일을 읽을 수 없습니다: ${ENV_FILE}"
-# backend.env is maintained by root and is also read by systemd EnvironmentFile.
-# shellcheck disable=SC1090
-source "${ENV_FILE}" || fail "환경 변수 파일을 해석하지 못했습니다: ${ENV_FILE}"
+
+# backend.env is read by systemd EnvironmentFile and docker --env-file, neither
+# of which expands `$`. Sourcing it would expand `$` in values such as BCrypt
+# hashes, so read only the keys this check needs, without shell evaluation.
+env_value() {
+    local value
+    value="$(sed -n "s/^$1=//p" "${ENV_FILE}" | tail -n 1)"
+    if [[ "${value}" =~ ^\'(.*)\'$ || "${value}" =~ ^\"(.*)\"$ ]]; then
+        value="${BASH_REMATCH[1]}"
+    fi
+    printf '%s' "${value}"
+}
+
+POUDY_DB_URL="$(env_value POUDY_DB_URL)"
+POUDY_DB_USERNAME="$(env_value POUDY_DB_USERNAME)"
+POUDY_DB_PASSWORD="$(env_value POUDY_DB_PASSWORD)"
+POUDY_FEEDBACK_S3_BUCKET="$(env_value POUDY_FEEDBACK_S3_BUCKET)"
+POUDY_FEEDBACK_S3_PENDING_PREFIX="$(env_value POUDY_FEEDBACK_S3_PENDING_PREFIX)"
 
 require_value POUDY_DB_URL
 require_value POUDY_DB_USERNAME
