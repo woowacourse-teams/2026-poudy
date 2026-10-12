@@ -5,14 +5,14 @@ import com.poudy.exception.RuleViolationException;
 
 public class EmailAlreadyRegisteredException extends RuleViolationException {
 
-    private final OAuthProvider registeredProvider;
+    private final RegisteredAccount registeredAccount;
 
-    public EmailAlreadyRegisteredException(OAuthProvider registeredProvider) {
+    public EmailAlreadyRegisteredException(RegisteredAccount registeredAccount) {
         super(ErrorCode.MEMBER_EMAIL_ALREADY_REGISTERED, ErrorCode.MEMBER_EMAIL_ALREADY_REGISTERED.message());
-        this.registeredProvider = registeredProvider;
+        this.registeredAccount = registeredAccount;
     }
 
-    public OAuthProvider registeredProvider() {
-        return registeredProvider;
+    public RegisteredAccount registeredAccount() {
+        return registeredAccount;
     }
 }

@@ -1,6 +1,7 @@
 package com.poudy.member.domain;
 
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 
 public final class Member {
@@ -33,6 +34,10 @@ public final class Member {
 
     public SocialLoginResult loginResult() {
         return new SocialLoginResult(id, status.loginStatus());
+    }
+
+    public RegisteredAccount registeredAccount() {
+        return new RegisteredAccount(provider, email);
     }
 
     public long id() {

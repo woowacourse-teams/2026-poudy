@@ -12,6 +12,7 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
 import org.junit.jupiter.api.DisplayName;
@@ -80,7 +81,8 @@ class MemberServiceTest {
         assertThatThrownBy(() -> memberService.login(google))
             .isInstanceOfSatisfying(
                 EmailAlreadyRegisteredException.class,
-                exception -> assertThat(exception.registeredProvider()).isEqualTo(OAuthProvider.KAKAO)
+                exception -> assertThat(exception.registeredAccount())
+                    .isEqualTo(new RegisteredAccount(OAuthProvider.KAKAO, "member@example.com"))
             );
         assertThatThrownBy(() -> memberService.signUp(google))
             .isInstanceOf(EmailAlreadyRegisteredException.class);

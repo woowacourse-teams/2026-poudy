@@ -21,6 +21,7 @@ public final class ErrorResponseCodes {
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn/restore";
+    private static final String REGISTERED_ACCOUNT_PATH = "/api/auth/registered-account";
     private static final String APP_LOGIN_PATH = "/api/auth/{provider}/app-login";
     private static final String SIGNUP_PATH = "/api/auth/signup";
     public static final String SOCIAL_LOGIN_PATH = OAuthLoginConfigurer.AUTHORIZATION_BASE_URI + "/{provider}";
@@ -116,6 +117,9 @@ public final class ErrorResponseCodes {
     public static List<ErrorCode> notFound(String path) {
         if (WITHDRAWN_MEMBER_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);
+        }
+        if (REGISTERED_ACCOUNT_PATH.equals(path)) {
+            return List.of(ErrorCode.REGISTERED_ACCOUNT_NOT_FOUND);
         }
         if (SIGNUP_PATH.equals(path)) {
             return List.of(ErrorCode.SIGNUP_ACCOUNT_NOT_FOUND);

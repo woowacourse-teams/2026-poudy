@@ -94,7 +94,7 @@ public class MemberService implements SocialMembers, MemberActivity {
 
     private void checkRegistrable(MemberSignup signup) {
         memberRepository.findByEmail(signup.email()).ifPresent(registered -> {
-            throw new EmailAlreadyRegisteredException(registered.provider());
+            throw new EmailAlreadyRegisteredException(registered.registeredAccount());
         });
     }
 }

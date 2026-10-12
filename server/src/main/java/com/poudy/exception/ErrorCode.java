@@ -26,6 +26,7 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND("회원을 찾을 수 없습니다."),
     SIGNUP_ACCOUNT_NOT_FOUND("가입할 소셜 계정을 찾을 수 없습니다. 다시 로그인해 주세요."),
     WITHDRAWN_MEMBER_NOT_FOUND("복구를 요청할 탈퇴 계정을 찾을 수 없습니다. 다시 로그인해 주세요."),
+    REGISTERED_ACCOUNT_NOT_FOUND("이미 가입한 계정 정보를 찾을 수 없습니다. 다시 로그인해 주세요."),
     RESTORE_REQUEST_NOT_FOUND("복구를 요청한 탈퇴 회원을 찾을 수 없습니다."),
     PRODUCT_REQUEST_NOT_FOUND("제품 등록 요청을 찾을 수 없습니다."),
     CURATION_NOT_FOUND("큐레이션을 찾을 수 없습니다."),

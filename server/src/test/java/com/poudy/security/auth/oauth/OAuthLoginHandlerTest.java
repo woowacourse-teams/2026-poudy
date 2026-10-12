@@ -13,6 +13,7 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.security.domain.SocialMembers;
 import com.poudy.security.domain.UnverifiedOAuthEmailException;
@@ -120,17 +121,21 @@ class OAuthLoginHandlerTest {
     }
 
     @Test
-    @DisplayName("다른 제공자로 가입한 이메일이면 세션을 버리고 오류 코드와 기존 제공자를 붙여 보낸다")
+    @DisplayName("다른 제공자로 가입한 이메일이면 세션을 버리고 오류 코드와 기존 제공자를 붙여 보내며, 이메일은 새 세션에만 둔다")
     void rejectsDuplicateEmail() throws Exception {
         MockHttpSession session = new MockHttpSession();
         request.setSession(session);
-        willThrow(new EmailAlreadyRegisteredException(OAuthProvider.GOOGLE)).given(socialMembers).login(any());
+        RegisteredAccount registered = new RegisteredAccount(OAuthProvider.GOOGLE, "member@example.com");
+        willThrow(new EmailAlreadyRegisteredException(registered)).given(socialMembers).login(any());
 
         successHandlerFor(List.of(CLIENT_ORIGIN)).onAuthenticationSuccess(request, response, kakaoToken());
 
         assertThat(response.getRedirectedUrl())
             .isEqualTo(REDIRECT_URI + "?error=MEMBER_EMAIL_ALREADY_REGISTERED&provider=GOOGLE");
         assertThat(session.isInvalid()).isTrue();
+        assertThat(loginSession.findRegisteredAccount(request)).contains(registered);
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.poudy.security.session;
 
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +29,7 @@ public class LoginSession {
     private static final String CHANNEL = LoginSession.class.getName() + ".channel";
     private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
     private static final String PENDING_SIGNUP = LoginSession.class.getName() + ".pendingSignup";
+    private static final String REGISTERED_ACCOUNT = LoginSession.class.getName() + ".registeredAccount";
     private static final String GRACED_IDLE_TIMEOUT = LoginSession.class.getName() + ".gracedIdleTimeout";
     private static final Duration HOLD_TIMEOUT = Duration.ofMinutes(10);
 
@@ -66,6 +68,7 @@ public class LoginSession {
         HttpSession session = start(new LoginMember(memberId).toAuthentication(), channel, request, response);
         session.removeAttribute(WITHDRAWN_MEMBER_ID);
         session.removeAttribute(PENDING_SIGNUP);
+        session.removeAttribute(REGISTERED_ACCOUNT);
     }
 
     public void signInAdmin(String username, HttpServletRequest request, HttpServletResponse response) {
@@ -79,6 +82,18 @@ public class LoginSession {
 
     public Optional<Long> releaseWithdrawnMember(HttpServletRequest request) {
         return release(WITHDRAWN_MEMBER_ID, Long.class, request);
+    }
+
+    public void holdRegisteredAccount(
+        RegisteredAccount account,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
+        hold(REGISTERED_ACCOUNT, account, request, response);
+    }
+
+    public Optional<RegisteredAccount> findRegisteredAccount(HttpServletRequest request) {
+        return find(REGISTERED_ACCOUNT, RegisteredAccount.class, request);
     }
 
     public LoginStatus holdSignup(
@@ -140,13 +155,17 @@ public class LoginSession {
     }
 
     private <T> Optional<T> release(String name, Class<T> type, HttpServletRequest request) {
+        Optional<T> value = find(name, type, request);
+        value.ifPresent(found -> request.getSession().removeAttribute(name));
+        return value;
+    }
+
+    private <T> Optional<T> find(String name, Class<T> type, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null || !type.isInstance(session.getAttribute(name))) {
             return Optional.empty();
         }
-        T value = type.cast(session.getAttribute(name));
-        session.removeAttribute(name);
-        return Optional.of(value);
+        return Optional.of(type.cast(session.getAttribute(name)));
     }
 
     private HttpSession start(
