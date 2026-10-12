@@ -5,8 +5,9 @@ import { useState, useSyncExternalStore } from "react";
 import { Icon } from "./icons/Icon";
 
 import { readAppInfo } from "@/lib/analytics/app-info";
+import { flushAnalyticsBeforeNavigation, track } from "@/lib/analytics/track";
 import { shouldShowAppBanner } from "@/lib/domain/app-banner";
-import { buildInstallIntentUrl } from "@/lib/navigation/open-app";
+import { buildAppStoreRedirectUrl, buildInstallIntentUrl } from "@/lib/navigation/open-app";
 
 const DISMISS_KEY = "poudy.app-banner.dismissed";
 
@@ -78,8 +79,11 @@ export function AppInstallBanner() {
    * 누르는 순간의 주소를 읽는다. 그려질 때 담아 두면 같은 화면에 머무는 동안 조건이
    * 바뀌어도 처음 주소로 열린다.
    */
-  const openApp = () => {
-    window.location.href = buildInstallIntentUrl(window.location.href);
+  const openApp = async () => {
+    const webUrl = window.location.href;
+    track("app_install_clicked", { source: "install_banner" }, { beacon: true });
+    await flushAnalyticsBeforeNavigation();
+    window.location.href = buildInstallIntentUrl(webUrl, buildAppStoreRedirectUrl(webUrl, "install_banner"));
   };
 
   if (!qualifies || dismissed) return null;
