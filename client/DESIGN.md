@@ -20,6 +20,7 @@ Poudy는 화장품 정보를 빠르게 비교하는 차분한 모바일 도구�
 | Action text    | `--color-action-text`    | `#ffffff` | 주요 버튼 글자       |
 | Info           | `--color-info`           | `#38a6dd` | 정보 상태            |
 | Success        | `--color-success`        | `#17a47a` | 성공 상태            |
+| Danger         | `--color-danger`         | `#dc3545` | 되돌릴 수 없는 행동  |
 
 새 색은 `app/globals.css`의 `@theme`와 이 표에 먼저 역할을 정의한 뒤 사용한다.
 
