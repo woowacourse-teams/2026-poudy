@@ -122,11 +122,12 @@ API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성
 운영과 staging은 별도 DB를 사용합니다. 피드백 S3 pending prefix도 운영은
 `poudy/feedback/pending/`, staging은 `poudy/staging/feedback/pending/`으로 구분합니다.
 
-### Staging 보류 사항
+### Staging 외부 접근과 배포 경로
 
-- Spring Boot `:8080` 외부 직접 접근 차단은 후순위로 보류합니다.
-- staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy를 실행하고, 프론트엔드는 Vercel
-  staging workflow가 별도로 배포합니다.
+- Spring Boot `:8080`은 호스트 nftables로 staging 프론트 사설 IP `10.0.0.51`만 허용합니다.
+  `install-staging-backend-firewall.sh`로 설치하며, 부팅 때 로드하고 백엔드 시작 전에 적용합니다.
+- staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy 이후 프론트 EC2 빌드·배포를 실행합니다.
+  PR preview는 Vercel에서 staging 프론트의 공개 HTTPS API를 사용합니다.
 
 현재 buildspec은 두 산출물을 같은 빌드에서 생성하지만, CodeBuild 프로젝트 설정에서
 각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상

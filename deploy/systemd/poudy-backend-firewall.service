@@ -1,5 +1,5 @@
 [Unit]
-Description=Poudy production backend host firewall
+Description=Poudy backend host firewall
 Documentation=file:/etc/poudy/backend-firewall.nft
 After=network-pre.target
 Before=poudy-backend.service

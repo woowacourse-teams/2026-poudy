@@ -1,4 +1,4 @@
-import type { ExcludeCodeResponse, ExcludeGroupResponse } from "@poudy/api/api.zod";
+import type { ExcludeGroupResponse, IngredientGroupResponse } from "@poudy/api/api.zod";
 
 export type CautionSummary = {
   /** 기준 가운데 하나라도 들어 있는지. 머리 문구의 색을 정한다. */
@@ -29,12 +29,12 @@ export type CautionGroup = ExcludeGroupResponse & {
 /**
  * 제품 상세의 주의 성분 기준에 이 제품에 든 해당 성분을 붙인다.
  *
- * 제외 성분군 목록(`/api/exclude-codes`)에서 같은 코드의 포함 성분을 얻는다.
+ * 빠른 제외 성분군 목록(`/api/ingredient-groups?type=QUICK_EXCLUDE`)에서 같은 코드의 포함 성분을 얻는다.
  * 시트를 여는 코드는 제품 상세 응답의 것을 그대로 쓴다.
  */
 export const withCautionIngredients = (
   groups: readonly ExcludeGroupResponse[],
-  excludeCodes: readonly ExcludeCodeResponse[],
+  excludeCodes: readonly IngredientGroupResponse[],
   productIngredientIds: readonly number[],
 ): readonly CautionGroup[] =>
   groups.map((group) => {

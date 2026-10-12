@@ -1,5 +1,5 @@
 import type {
-  ExcludeCodeResponse,
+  IngredientGroupResponse,
   ProductDetailResponse,
   ProductPartResponse,
   SimilarProductResponse,
@@ -40,7 +40,7 @@ export function ProductDetail({
   /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
   readonly similarProducts?: readonly SimilarProductResponse[];
   /** 주의 성분군에 속한 성분 목록. 고른 구성품에 든 해당 성분을 찾는 데 쓴다. */
-  readonly excludeCodes?: readonly ExcludeCodeResponse[];
+  readonly excludeCodes?: readonly IngredientGroupResponse[];
 }) {
   return (
     <SummaryHeader
@@ -246,7 +246,7 @@ function SelectedPart({
 }: {
   readonly product: ProductDetailResponse;
   readonly similarProducts: readonly SimilarProductResponse[];
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
 }) {
   const part = product.selectedPart;
   if (!part) return null;

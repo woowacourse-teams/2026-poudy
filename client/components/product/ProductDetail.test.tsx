@@ -482,12 +482,14 @@ describe("주의 성분 확인", () => {
     {
       code: "FRAGRANCE_ALLERGENS",
       name: "이전 향료 표시명",
+      englishName: null,
       description: "착향 목적의 성분이에요.",
       ingredients: [{ id: first!.id, koreanName: first!.koreanName, englishName: first!.englishName }],
     },
     {
       code: "DRYING_ALCOHOLS",
       name: "건조 알코올",
+      englishName: null,
       description: "피부를 건조하게 할 수 있는 알코올이에요.",
       ingredients: [{ id: -1, koreanName: "에탄올", englishName: "Alcohol" }],
     },

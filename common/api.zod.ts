@@ -232,11 +232,17 @@ export const IngredientSuggestionResponse = z.object({ id: z.number().int(), kor
 export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
 export const IngredientListResponse = z.object({ items: z.array(IngredientSuggestionResponse), groups: z.array(IngredientGroupSuggestionResponse) });
 
+export type IngredientGroupType = __TypedOpenapi.Schemas.IngredientGroupType;
+export const IngredientGroupType = z.literal("QUICK_EXCLUDE");
+
 export type IngredientGroupMemberResponse = __TypedOpenapi.Schemas.IngredientGroupMemberResponse;
 export const IngredientGroupMemberResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string().nullable() });
 
 export type IngredientGroupResponse = __TypedOpenapi.Schemas.IngredientGroupResponse;
 export const IngredientGroupResponse = z.object({ code: z.string(), name: z.string(), englishName: z.string().nullable(), description: z.string(), ingredients: z.array(IngredientGroupMemberResponse) });
+
+export type IngredientGroupListResponse = __TypedOpenapi.Schemas.IngredientGroupListResponse;
+export const IngredientGroupListResponse = z.object({ items: z.array(IngredientGroupResponse) });
 
 export type IngredientSummaryResponse = __TypedOpenapi.Schemas.IngredientSummaryResponse;
 export const IngredientSummaryResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string() });
@@ -633,6 +639,16 @@ export const get_SuggestIngredients = {
   responses: { 200: IngredientListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindIngredientGroups = __TypedOpenapi.Endpoints.get_FindIngredientGroups;
+export const get_FindIngredientGroups = {
+  method: z.literal("GET"),
+  path: z.literal("/api/ingredient-groups"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ type: IngredientGroupType }).partial().optional() },
+  responses: { 200: IngredientGroupListResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindIngredientGroup = __TypedOpenapi.Endpoints.get_FindIngredientGroup;
 export const get_FindIngredientGroup = {
   method: z.literal("GET"),
@@ -841,6 +857,7 @@ get: {
 "/api/ingredients": get_FindIngredients as any,
 "/api/ingredients/{ingredientId}": get_FindIngredientDetail as any,
 "/api/ingredients/suggestions": get_SuggestIngredients as any,
+"/api/ingredient-groups": get_FindIngredientGroups as any,
 "/api/ingredient-groups/{code}": get_FindIngredientGroup as any,
 "/api/exclude-codes": get_FindExcludeCodes as any,
 "/api/curations": get_FindCurations as any,

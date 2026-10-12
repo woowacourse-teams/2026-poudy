@@ -38,15 +38,17 @@ describe("withCautionIngredients", () => {
     {
       code: "FRAGRANCE_ALLERGENS",
       name: "향료/알레르기 성분",
+      englishName: null,
       description: "착향 목적의 성분이에요.",
       ingredients: [
-        { id: 10, koreanName: "리모넨", englishName: "Limonene" },
+        { id: 10, koreanName: "리모넨", englishName: null },
         { id: 11, koreanName: "리날룰", englishName: "Linalool" },
       ],
     },
     {
       code: "DRYING_ALCOHOLS",
       name: "건조 알코올",
+      englishName: "Drying Alcohols",
       description: "피부를 건조하게 할 수 있는 알코올이에요.",
       ingredients: [{ id: 20, koreanName: "에탄올", englishName: "Alcohol" }],
     },
