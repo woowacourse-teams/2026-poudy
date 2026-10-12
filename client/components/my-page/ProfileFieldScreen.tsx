@@ -126,7 +126,7 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
     <>
       <TopBar title={title} variant="sub" />
       <form onSubmit={save} className="flex flex-1 flex-col">
-        <fieldset className="flex flex-1 flex-col gap-2.5 px-4 pt-4 pb-10">
+        <fieldset className="flex flex-1 flex-col gap-2.5 px-4 pt-4 pb-[var(--inquiry-button-clearance)]">
           <legend className="sr-only">{title}</legend>
           {OPTIONS[field].map((option) => (
             <label key={option.value} className="relative cursor-pointer">
@@ -155,14 +155,14 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
           {field === "skinType" && (
             <p className="py-1.5 text-[14px] font-semibold text-text-secondary">내 피부 타입을 잘 모르겠어요</p>
           )}
-        </fieldset>
-
-        <div className="sticky bottom-0 border-t border-border bg-background px-4 pt-3 pb-6">
           {failed && (
-            <p role="alert" className="mb-3 text-center text-[14px] text-text-secondary">
+            <p role="alert" className="mt-auto pt-4 text-center text-[14px] text-text-secondary">
               {SAVE_FAILED}
             </p>
           )}
+        </fieldset>
+
+        <div className="sticky bottom-0 h-[var(--bottom-action-bar-height)] border-t border-border bg-background px-4 pt-3 pb-6">
           <Button type="submit" disabled={!member || saving}>
             저장
           </Button>
