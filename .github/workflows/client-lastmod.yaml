@@ -1,30 +1,32 @@
 name: Client Lastmod
 
-# main 으로 가는 PR 에 lastmod:<화면> 라벨이 붙으면 사이트맵 lastmod 의 화면 기준일
-# (client/lib/seo/sitemap.ts 의 SCREEN_UPDATED_AT)에서 그 화면의 날짜를 그날로 고쳐 PR 브랜치에 커밋한다.
-# 검색 엔진은 운영 화면을 읽으므로 기준일은 main 에 나가는 날이어야 한다. 라벨을 단 날보다 늦게
-# 머지하면 그만큼 이른 날로 남는다.
+# main 으로 가는 PR 에서 사이트맵 lastmod 의 화면 기준일(client/lib/seo/sitemap.ts 의 SCREEN_UPDATED_AT)을
+# 맞춰 PR 브랜치에 커밋한다. 검색 엔진은 운영 화면을 읽으므로 기준일은 main 에 나가는 날이어야 한다.
 #
-# 화면 본문(문구, 구성, 제목, 설명)이 바뀐 화면에만 라벨을 단다. 리팩터링이나 분석 이벤트처럼 본문이
-# 그대로인 변경까지 날짜를 올리면 lastmod 가 실제 변경과 어긋나 검색 엔진이 값을 믿지 않는다.
-# 라벨을 떼도 이미 고친 날짜는 되돌리지 않는다.
+# 1. 화면 파일이 바뀐 화면에 lastmod:<화면> 라벨을 붙인다. 사람이 뗀 라벨은 다시 붙이지 않는다.
+#    경로로 고르므로 리팩터링·분석 이벤트처럼 본문이 그대로인 변경에도 붙는다. 그런 라벨은 뗀다.
+# 2. 라벨이 있는 화면은 그날로, 없는 화면은 베이스(main)의 값으로 맞춘다. 라벨을 떼면 날짜도 돌아간다.
+#    본문이 그대로인 배포까지 날짜가 오르면 검색 엔진이 lastmod 를 믿지 않는다.
+# 3. 바뀐 것이 있으면 커밋해 PR 브랜치에 올리고, 이전 커밋의 CI 를 취소한다.
+#    GITHUB_TOKEN 으로 올린 커밋의 PR 실행은 승인을 기다리며 멈추므로 승인 API 로 풀어 main 필수 체크
+#    (Client checks, gate)가 돌게 한다. workflow_dispatch 로 돌린 실행은 PR 체크로 세지 않아 쓰지 않는다.
 #
-# GITHUB_TOKEN 으로 올린 커밋은 다른 워크플로를 깨우지 않는다. 그래서 이 워크플로가 되풀이되지 않지만,
-# main 필수 체크(Client checks, gate)도 그 커밋에서 돌지 않아 머지가 막힌다. 커밋을 올린 뒤
-# Client CI 와 Server CI 를 workflow_dispatch 로 직접 실행해 그 커밋의 체크를 채운다.
-# 이전 커밋에서 돌던 두 CI 는 결과가 머지 판단에 쓰이지 않으므로 먼저 취소한다.
+# 공용 컴포넌트(components/ui, lib/domain)는 여러 화면이 함께 써 경로로 고르지 않는다. 그런 변경은 라벨을
+# 손으로 단다. 화면 경로를 바꾸면 아래 path_of 도 고친다.
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: write
   actions: write
+  pull-requests: write
 
+# 라벨 여러 개를 연달아 달면 실행이 겹친다. 커밋·승인 도중 취소되지 않게 차례로 돌린다.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   bump:
@@ -32,62 +34,117 @@ jobs:
     # 포크에서 온 PR 은 브랜치에 쓸 수 없다.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Bump screen dates
+      - name: Sync screen dates
         env:
-          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          ACTION: ${{ github.event.action }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          screens=$(printf '%s' "$LABELS" | jq -r '.[] | select(startswith("lastmod:")) | ltrimstr("lastmod:")')
-          if [ -z "$screens" ]; then
-            echo "lastmod 라벨이 없습니다."
-            exit 0
+          sitemap=client/lib/seo/sitemap.ts
+          screens="home search category brand curation product ingredient"
+          today=$(TZ=Asia/Seoul date +%F)
+
+          path_of() {
+            case "$1" in
+              home) echo '^client/(app/page\.tsx|components/home/)' ;;
+              search) echo '^client/(app/search/|components/search/)' ;;
+              category) echo '^client/app/categories/' ;;
+              brand) echo '^client/app/brands/' ;;
+              curation) echo '^client/(app/curations/|components/curation/)' ;;
+              product) echo '^client/(app/products/\[productId\]/|components/product/)' ;;
+              ingredient) echo '^client/(app/ingredients/|components/ingredient/)' ;;
+            esac
+          }
+
+          labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+          if [ "$ACTION" != labeled ] && [ "$ACTION" != unlabeled ]; then
+            files=$(gh pr diff "$PR_NUMBER" --name-only | grep -Ev '\.test\.tsx?$' || true)
+            removed=$(gh api "repos/$REPO/issues/$PR_NUMBER/events" --paginate \
+              --jq '.[] | select(.event == "unlabeled" and .actor.login != "github-actions[bot]") | .label.name')
+            for screen in $screens; do
+              label="lastmod:$screen"
+              printf '%s\n' "$files" | grep -Eq "$(path_of "$screen")" || continue
+              printf '%s\n' "$labels" | grep -qxF "$label" && continue
+              printf '%s\n' "$removed" | grep -qxF "$label" && continue
+              gh pr edit "$PR_NUMBER" --add-label "$label"
+              labels=$(printf '%s\n%s' "$labels" "$label")
+            done
           fi
 
-          sitemap=client/lib/seo/sitemap.ts
-          today=$(TZ=Asia/Seoul date +%F)
+          unknown=$(printf '%s\n' "$labels" | sed -n 's/^lastmod://p' | grep -vxE "$(echo "$screens" | tr ' ' '|')" || true)
+          if [ -n "$unknown" ]; then
+            echo "::error::알 수 없는 lastmod 라벨이 있습니다: $unknown. 화면 이름은 $screens 중 하나입니다."
+            exit 1
+          fi
+
+          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          base=$(git show "$BASE_SHA:$sitemap" 2>/dev/null || true)
+          changes=""
           for screen in $screens; do
-            case "$screen" in
-              "" | *[!a-z]*)
-                echo "::error::라벨 'lastmod:$screen' 의 화면 이름은 영소문자여야 합니다."
-                exit 1
-                ;;
-            esac
             pattern="^  $screen: \"[0-9-]*\",\$"
-            count=$(grep -c "$pattern" "$sitemap" || true)
-            if [ "$count" -ne 1 ]; then
-              echo "::error::$sitemap 의 SCREEN_UPDATED_AT 에서 '$screen' 을 하나로 찾지 못했습니다(찾은 줄 $count 개). 라벨 이름이나 선언 모양을 확인하세요."
+            if [ "$(grep -c "$pattern" "$sitemap" || true)" -ne 1 ]; then
+              echo "::error::$sitemap 의 SCREEN_UPDATED_AT 에서 '$screen' 을 하나로 찾지 못했습니다. 선언 모양을 확인하세요."
               exit 1
             fi
-            sed -i "s/$pattern/  $screen: \"$today\",/" "$sitemap"
+            current=$(sed -n "s/^  $screen: \"\([0-9-]*\)\",\$/\1/p" "$sitemap")
+            if printf '%s\n' "$labels" | grep -qxF "lastmod:$screen"; then
+              target=$today
+            else
+              target=$(printf '%s\n' "$base" | sed -n "s/^  $screen: \"\([0-9-]*\)\",\$/\1/p")
+            fi
+            if [ -z "$target" ] || [ "$target" = "$current" ]; then
+              continue
+            fi
+            sed -i "s/$pattern/  $screen: \"$target\",/" "$sitemap"
+            changes=$(printf '%s\n- %s: %s → %s' "$changes" "$screen" "$current" "$target")
           done
 
-          if git diff --quiet -- "$sitemap"; then
-            echo "라벨이 붙은 화면의 기준일이 이미 오늘($today)입니다."
+          if [ -z "$changes" ]; then
+            echo "화면 기준일이 라벨과 맞습니다."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -F - -- "$sitemap" <<MESSAGE
-          fix : 사이트맵 lastmod 기준일 갱신
-
-          $(printf '%s\n' $screens | sed 's/^/- /')
-          MESSAGE
+          printf 'fix : 사이트맵 lastmod 기준일 갱신\n%s\n' "$changes" | git commit -F - -- "$sitemap"
           git push origin "HEAD:$HEAD_REF"
+          pushed=$(git rev-parse HEAD)
+
           for workflow in client-ci.yaml server-ci.yml; do
             gh run list --workflow "$workflow" --commit "$HEAD_SHA" --json databaseId,status \
               --jq '.[] | select(.status != "completed") | .databaseId' |
               while read -r run; do gh run cancel "$run" || true; done
           done
-          gh workflow run client-ci.yaml --ref "$HEAD_REF" -f pr_number="$PR_NUMBER"
-          gh workflow run server-ci.yml --ref "$HEAD_REF"
+
+          runs=""
+          for attempt in $(seq 1 24); do
+            runs=$(gh run list --commit "$pushed" --json databaseId,workflowName,conclusion \
+              --jq '.[] | "\(.databaseId)\t\(.workflowName)\t\(.conclusion)"')
+            if printf '%s\n' "$runs" | grep -q $'\tClient CI\t' && printf '%s\n' "$runs" | grep -q $'\tServer CI\t'; then
+              break
+            fi
+            sleep 5
+          done
+          if ! printf '%s\n' "$runs" | grep -q $'\tClient CI\t' || ! printf '%s\n' "$runs" | grep -q $'\tServer CI\t'; then
+            echo "::error::$pushed 에서 Client CI·Server CI 실행을 찾지 못했습니다. PR 화면에서 워크플로 승인을 확인하세요."
+            exit 1
+          fi
+          printf '%s\n' "$runs" | awk -F '\t' '$3 == "action_required" { print $1 }' |
+            while read -r run; do
+              gh api -X POST "repos/$REPO/actions/runs/$run/approve" || {
+                echo "::error::실행 $run 을 승인하지 못했습니다. PR 화면에서 워크플로 승인을 누르세요."
+                exit 1
+              }
+            done
