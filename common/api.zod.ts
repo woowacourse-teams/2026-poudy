@@ -85,6 +85,12 @@ export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
 export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
 export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
 
+export type SitemapEntryResponse = __TypedOpenapi.Schemas.SitemapEntryResponse;
+export const SitemapEntryResponse = z.object({ id: z.number().int(), updatedAt: z.iso.datetime({ offset: true }) });
+
+export type SitemapResponse = __TypedOpenapi.Schemas.SitemapResponse;
+export const SitemapResponse = z.object({ categories: z.array(SitemapEntryResponse), brands: z.array(SitemapEntryResponse), curations: z.array(SitemapEntryResponse), ingredients: z.array(SitemapEntryResponse) });
+
 export type RankingChangeItem = __TypedOpenapi.Schemas.RankingChangeItem;
 export const RankingChangeItem = z.object({ movement: z.string(), steps: z.number().int() });
 
@@ -489,6 +495,16 @@ export const get_FindSkinTypes = {
   responses: { 200: SkinTypesResponse, 500: ProblemDetail },
 };
 
+export type get_FindContentUpdates = __TypedOpenapi.Endpoints.get_FindContentUpdates;
+export const get_FindContentUpdates = {
+  method: z.literal("GET"),
+  path: z.literal("/api/sitemap"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: SitemapResponse, 500: ProblemDetail },
+};
+
 export type get_Rankings = __TypedOpenapi.Endpoints.get_Rankings;
 export const get_Rankings = {
   method: z.literal("GET"),
@@ -843,6 +859,7 @@ patch: {
          },
 get: {
            "/api/skin-types": get_FindSkinTypes as any,
+"/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,
 "/api/products": get_FindProducts as any,
 "/api/products/{productId}": get_FindProductDetail as any,
