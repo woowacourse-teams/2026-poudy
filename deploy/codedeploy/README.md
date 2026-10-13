@@ -1,46 +1,58 @@
 # CodeBuild·CodeDeploy 배포 구성
 
-운영 배포 흐름은 `poudy-pipeline`에서 GitHub `main` → CodeBuild →
-`backend`/`frontend` artifacts → CodeDeploy 배포 그룹 → EC2 파일 교체 및
-systemd 재시작 순서로 실행됩니다.
+운영 배포 흐름은 `poudy-pipeline`에서 GitHub `main` → 백엔드 CodeBuild → 백엔드
+CodeDeploy → 프론트 CodeBuild → 프론트 CodeDeploy 순서로 실행됩니다. 각 CodeDeploy는
+EC2 파일을 교체하고 systemd를 재시작합니다.
 
 이 흐름은 현재 AWS CodePipeline으로 연결되어 있습니다. 저장소에는 파이프라인
 정의나 IaC를 두지 않으므로 파이프라인 이름, webhook/실행 조건, 승인 단계, artifact
 store와 각 action의 세부 설정은 AWS 콘솔 구성이 기준입니다.
 
-현재 콘솔에서 확인된 Pipeline 구성은 다음과 같습니다.
+Pipeline 구성은 다음과 같습니다.
 
-- Pipeline: `poudy-pipeline`
+- Pipeline: `poudy-pipeline` (CodePipeline V2)
 - Source: GitHub OAuth, `woowacourse-teams/2026-poudy`, `main` 브랜치
 - Source output artifact: `SourceArtifact`
 - Trigger: CodePipeline webhook, source polling 비활성화
-- Build: AWS CodeBuild 프로젝트 `poudy-codebuild`
-- Build input artifact: `SourceArtifact`
-- Build output artifacts: `backend`, `frontend`
-- Deploy action `fe-deploy`: CodeDeploy 애플리케이션 `poudy-codedeploy`,
-  배포 그룹 `poudy-frontend-dg`, input artifact `frontend`
-- Deploy action `be-deploy`: CodeDeploy 애플리케이션 `poudy-codedeploy`,
+- `BuildBackend`: CodeBuild 프로젝트 `poudy-codebuild`, input artifact `SourceArtifact`,
+  output artifact `backend`
+- `DeployBackend`: CodeDeploy action `be-deploy`, 애플리케이션 `poudy-codedeploy`,
   배포 그룹 `poudy-backend-dg`, input artifact `backend`
+- `BuildFrontend`: CodeBuild 프로젝트 `poudy-frontend-codebuild`, input artifact
+  `SourceArtifact`, output artifact `frontend`
+- `DeployFrontend`: CodeDeploy action `fe-deploy`, 애플리케이션 `poudy-codedeploy`,
+  배포 그룹 `poudy-frontend-dg`, input artifact `frontend`
+- `DeployBackend`와 `DeployFrontend`는 각각 실패 시 stage 자동 롤백을 켭니다. 한쪽 롤백은
+  다른 단계를 다시 실행하지 않습니다. 롤백 대상은 현재 파이프라인 구조에서 성공한
+  실행이어야 하므로, 구조를 바꾼 뒤에는 첫 성공 실행이 생겨야 자동 롤백이 동작합니다.
+- CodeDeploy 배포 그룹의 자동 롤백은 쓰지 않습니다.
+
+프론트 빌드는 Next.js prerender 중 `https://poudy.site/api`를 부릅니다. 백엔드와 같은
+빌드에서 만들면 아직 배포되지 않은 API를 이전 백엔드에 요청해 빌드가 실패하고, 새
+백엔드도 그 빌드가 끝나야 배포되므로 재시도로 풀리지 않습니다. 그래서 프론트 빌드를
+백엔드 배포 다음 단계에 둡니다. staging도 같은 순서입니다. 백엔드가 먼저 뜨는 동안에는
+이전 프론트가 새 백엔드를 부르므로, 응답 필드를 빼는 변경은 두 번에 나눠 배포합니다.
+백엔드 단계가 실패하면 프론트 단계는 실행되지 않고, 프론트 단계가 실패하면 백엔드는 새
+버전으로 남습니다. 두 단계를 모두 손으로 되돌릴 때는 프론트를 먼저 롤백합니다.
 
 > 배포용 GitHub Actions 워크플로는 사용하지 않습니다. GitHub Actions에는 PR 검증만
 > 남기고, 운영 산출물 생성과 EC2 배포는 CodeBuild·CodeDeploy가 담당합니다.
 
 ## CodeBuild
 
-CodeBuild 프로젝트는 다음 기준으로 생성합니다.
+운영 CodeBuild 프로젝트는 백엔드와 프론트를 따로 둡니다. staging과 같은 구조입니다.
 
-- 소스: GitHub OAuth(GitHub 버전 1), `woowacourse-teams/2026-poudy`의 `main` 브랜치
-- 소스 아티팩트: Git 히스토리와 태그를 포함하지 않는 ZIP
-- 환경: 관리형 이미지, ARM64, Java 21·Node.js 22 지원 이미지
-- CodeBuild 프로젝트: `poudy-codebuild`
+- 환경: 관리형 이미지, ARM64
 - 로그 그룹: "/aws/codebuild/project-2026"
-- 빌드 명령: 저장소 루트의 "buildspec.yml"
-- secondary artifacts: "backend", "frontend"
-
-secondary artifact의 저장 위치는 AWS 콘솔에서 각각 지정합니다.
-
-- backend: "s3://techcourse-project-2026-artifacts/poudy/backend/"
-- frontend: "s3://techcourse-project-2026/poudy/frontend/"
+- 백엔드: 프로젝트 `poudy-codebuild`, 소스 공급자 GitHub OAuth, Java 21 지원 이미지,
+  빌드 명령은 저장소 루트의 `buildspec-backend.yml`
+- 프론트: 프로젝트 `poudy-frontend-codebuild`, 소스 공급자 CodePipeline, Node.js 22 지원
+  이미지, 빌드 명령은 저장소 루트의 `buildspec-frontend.yml`
+- 프론트 CodeBuild 환경 변수: 프론트 빌드가 쓰는 `NEXT_PUBLIC_*` 값(저장소에 적지 않음).
+  두 빌드를 한 프로젝트에서 돌리던 때 `poudy-codebuild`에 넣어 둔 값을 옮깁니다.
+- 파이프라인에서 실행되면 두 프로젝트 모두 `SourceArtifact`(Git 히스토리와 태그를 포함하지
+  않는 ZIP)를 소스로 받고, primary artifact 하나를 파이프라인 artifact store에 올립니다.
+  프로젝트의 소스·artifact 설정은 콘솔에서 단독 실행할 때만 쓰입니다.
 
 운영 artifact에는 애플리케이션과 함께 호스트 설정도 포함합니다. backend artifact는
 `poudy-backend.service`와 backend hook을, frontend artifact는 `ec2-nginx.conf`,
@@ -48,12 +60,12 @@ HTTP·HTTPS 서버 설정, `poudy-frontend.service`와 frontend hook을 포함�
 CodeDeploy hook은 파일을 각 호스트 경로에 반영한 뒤 `daemon-reload`, Nginx 검증 및
 서비스 재시작을 수행합니다.
 
-staging 백엔드 파이프라인은 운영용 전체 빌드와 분리된 CodeBuild 프로젝트를 사용합니다.
+staging 백엔드 파이프라인은 운영과 다른 CodeBuild 프로젝트를 사용합니다.
 
 - Pipeline: `poudy-staging-pipeline`
 - Source: GitHub OAuth, `woowacourse-teams/2026-poudy`, `dev` 브랜치
 - CodeBuild 프로젝트: `poudy-staging-codebuild`
-- CodeBuild 소스 공급자: CodePipeline
+- CodeBuild 소스 공급자: GitHub OAuth (파이프라인에서는 `SourceArtifact` 사용)
 - 빌드 명령: 저장소 루트의 `buildspec-staging-backend.yml`
 - Build input artifact: `SourceArtifact`
 - Build output artifact: `BuildArtifact`
@@ -69,7 +81,7 @@ staging 프론트 파이프라인은 같은 `poudy-staging-pipeline`에 붙이�
 프로젝트를 씁니다. 백엔드 staging 빌드는 Docker 권한과 단일 primary artifact를 쓰므로 그대로 두고,
 프론트 빌드를 따로 둬 백엔드 배포 흐름을 건드리지 않습니다.
 
-- CodeBuild 프로젝트: 새로 생성. ARM64, Node.js 22 지원 관리형 이미지, CodePipeline 소스
+- CodeBuild 프로젝트: `poudy-staging-frontend-codebuild`. ARM64, Node.js 22 지원 관리형 이미지, CodePipeline 소스
 - 빌드 명령: 저장소 루트의 `buildspec-staging-frontend.yml`
 - CodeBuild 환경 변수: `NEXT_PUBLIC_POSTHOG_KEY` (저장소에 적지 않음)
 - 배포 그룹: `poudy-codedeploy`의 `poudy-frontend-staging-dg`, 대상 태그 `Name=ec2-poudy-staging-fe` 하나
@@ -129,14 +141,10 @@ API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성
 - staging Pipeline은 `dev` 변경 시 백엔드 CodeDeploy 이후 프론트 EC2 빌드·배포를 실행합니다.
   PR preview는 Vercel에서 staging 프론트의 공개 HTTPS API를 사용합니다.
 
-현재 buildspec은 두 산출물을 같은 빌드에서 생성하지만, CodeBuild 프로젝트 설정에서
-각 산출물의 S3 위치를 분리해야 합니다. 최상위 primary artifact는 CodeBuild 규격상
-필요한 빌드 식별 marker만 담으며, 실제 배포에는 사용하지 않습니다.
-
 배포 산출물은 `CODEBUILD_RESOLVED_SOURCE_VERSION` 커밋으로 식별합니다.
-`buildspec.yml`은 primary artifact의 `build-metadata.txt`에 이 커밋을 기록합니다. GitHub
-OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가 없으므로 빌드 중 릴리스 버전을
-계산하지 않습니다.
+`buildspec-backend.yml`과 `buildspec-frontend.yml`은 각 artifact의 `build-metadata.txt`에
+이 커밋을 기록합니다. GitHub OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가
+없으므로 빌드 중 릴리스 버전을 계산하지 않습니다.
 
 버전 태그와 GitHub Release는 `dev` → `main` PR에 붙인 `major`·`minor`·`patch` 레이블을
 보고 `.github/workflows/release-tag.yml`이 만듭니다. 운영 Pipeline은 `main` 변경을 별도로
@@ -144,7 +152,7 @@ OAuth Source가 전달하는 ZIP에는 Git 히스토리와 태그가 없으므�
 합니다. 릴리스가 배포됐는지는 태그가 가리키는 커밋과 CodePipeline Source revision 또는
 `build-metadata.txt`의 `commit`을 대조해 확인합니다.
 
-`buildspec.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. 브라우저 번들의
+`buildspec-frontend.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. 브라우저 번들의
 `NEXT_PUBLIC_API_BASE_URL`은 `https://poudy.site`로 고정하고, 서버 컴포넌트와
 런타임 sitemap은 systemd의 `POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081`을
 사용합니다. `NEXT_PUBLIC_POSTHOG_KEY`와 `NEXT_PUBLIC_GA_MEASUREMENT_ID`처럼 값이
