@@ -632,7 +632,25 @@ export type CurationProductsByFilterBlockResponse = {
   filters: Array<CurationFilterResponse>;
   products: Array<CurationProductItemResponse>;
 }
-export type CurationBlockResponse = (CurationImageBlockResponse | CurationProductsBlockResponse | CurationProductsByFilterBlockResponse)
+export type CurationProductLinkQueryResponse = { keyword: (string | null), brandIds: Array<number>, categoryIds: Array<number>, includeIngredientIds: Array<number>, includeGroupCodes: Array<string> }
+export type CurationProductLinkBlockResponse = {
+  id: string;
+  type: "PRODUCT_LINK";
+  /**
+   * 위 여백 (px)
+   */
+  spacingTop: number;
+  /**
+   * 아래 여백 (px)
+   */
+  spacingBottom: number;
+  /**
+   * 일반 텍스트 문구, 최대 100 유니코드 문자
+   */
+  label: string;
+  query: CurationProductLinkQueryResponse;
+}
+export type CurationBlockResponse = (CurationImageBlockResponse | CurationProductsBlockResponse | CurationProductsByFilterBlockResponse | CurationProductLinkBlockResponse)
 export type CurationDetailResponse = {
   /**
    * 큐레이션 ID

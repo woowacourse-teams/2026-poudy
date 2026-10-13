@@ -283,8 +283,14 @@ export const CurationProductItemResponse = z.object({ product: CurationProductRe
 export type CurationProductsByFilterBlockResponse = __TypedOpenapi.Schemas.CurationProductsByFilterBlockResponse;
 export const CurationProductsByFilterBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS_BY_FILTER"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), filters: z.array(CurationFilterResponse).min(1).max(2147483647), products: z.array(CurationProductItemResponse).min(1).max(2147483647) });
 
+export type CurationProductLinkQueryResponse = __TypedOpenapi.Schemas.CurationProductLinkQueryResponse;
+export const CurationProductLinkQueryResponse = z.object({ keyword: z.string().max(100).nullable(), brandIds: z.array(z.number().int().min(1)).min(0).max(100).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), categoryIds: z.array(z.number().int().min(1)).min(0).max(100).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.number().int().min(1)).min(0).max(100).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string().min(1)).min(0).max(100).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
+
+export type CurationProductLinkBlockResponse = __TypedOpenapi.Schemas.CurationProductLinkBlockResponse;
+export const CurationProductLinkBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCT_LINK"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), label: z.string().min(1), query: CurationProductLinkQueryResponse });
+
 export type CurationBlockResponse = __TypedOpenapi.Schemas.CurationBlockResponse;
-export const CurationBlockResponse = z.discriminatedUnion("type", [CurationImageBlockResponse.extend({ type: z.literal("IMAGE") }), CurationProductsBlockResponse.extend({ type: z.literal("PRODUCTS") }), CurationProductsByFilterBlockResponse.extend({ type: z.literal("PRODUCTS_BY_FILTER") })]);
+export const CurationBlockResponse = z.discriminatedUnion("type", [CurationImageBlockResponse.extend({ type: z.literal("IMAGE") }), CurationProductsBlockResponse.extend({ type: z.literal("PRODUCTS") }), CurationProductsByFilterBlockResponse.extend({ type: z.literal("PRODUCTS_BY_FILTER") }), CurationProductLinkBlockResponse.extend({ type: z.literal("PRODUCT_LINK") })]);
 
 export type CurationDetailResponse = __TypedOpenapi.Schemas.CurationDetailResponse;
 export const CurationDetailResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), blocks: z.array(CurationBlockResponse) });

@@ -27,6 +27,9 @@ function CurationBlock({
   readonly first: boolean;
 }) {
   switch (block.type) {
+    case "PRODUCT_LINK":
+      // 조회 계약을 먼저 배포한다. 버튼 렌더링은 후속 클라이언트 PR에서 연결한다.
+      return null;
     case "IMAGE":
       /*
        * 기획전 이미지는 화면 폭을 꽉 채우고, 높이는 그림의 비율을 따른다. 제품 목록과 달리

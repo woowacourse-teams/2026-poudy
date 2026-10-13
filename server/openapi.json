@@ -6824,7 +6824,8 @@
           "mapping": {
             "IMAGE": "#/components/schemas/CurationImageBlockResponse",
             "PRODUCTS": "#/components/schemas/CurationProductsBlockResponse",
-            "PRODUCTS_BY_FILTER": "#/components/schemas/CurationProductsByFilterBlockResponse"
+            "PRODUCTS_BY_FILTER": "#/components/schemas/CurationProductsByFilterBlockResponse",
+            "PRODUCT_LINK": "#/components/schemas/CurationProductLinkBlockResponse"
           }
         },
         "oneOf": [
@@ -6836,6 +6837,9 @@
           },
           {
             "$ref": "#/components/schemas/CurationProductsByFilterBlockResponse"
+          },
+          {
+            "$ref": "#/components/schemas/CurationProductLinkBlockResponse"
           }
         ]
       },
@@ -6960,6 +6964,111 @@
         "required": [
           "filterIds",
           "product"
+        ]
+      },
+      "CurationProductLinkBlockResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PRODUCT_LINK"
+            ]
+          },
+          "spacingTop": {
+            "type": "integer",
+            "format": "int32",
+            "description": "위 여백 (px)",
+            "minimum": 0
+          },
+          "spacingBottom": {
+            "type": "integer",
+            "format": "int32",
+            "description": "아래 여백 (px)",
+            "minimum": 0
+          },
+          "label": {
+            "type": "string",
+            "description": "일반 텍스트 문구, 최대 100 유니코드 문자",
+            "minLength": 1
+          },
+          "query": {
+            "$ref": "#/components/schemas/CurationProductLinkQueryResponse"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "query",
+          "spacingBottom",
+          "spacingTop",
+          "type"
+        ]
+      },
+      "CurationProductLinkQueryResponse": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "brandIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "includeIngredientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "includeGroupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "brandIds",
+          "categoryIds",
+          "includeGroupCodes",
+          "includeIngredientIds",
+          "keyword"
         ]
       },
       "CurationProductResponse": {

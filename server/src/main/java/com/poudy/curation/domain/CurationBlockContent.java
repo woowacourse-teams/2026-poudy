@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public sealed interface CurationBlockContent permits CurationBlockContent.Image, CurationBlockContent.Products,
-    CurationBlockContent.ProductsByFilter {
+    CurationBlockContent.ProductsByFilter, CurationBlockContent.ProductLink {
 
     UUID id();
 
@@ -56,6 +56,19 @@ public sealed interface CurationBlockContent permits CurationBlockContent.Image,
             if (filters.isEmpty() || products.isEmpty()) {
                 throw new IllegalArgumentException("공개 필터 기준 제품 블록에는 필터와 제품이 필요합니다.");
             }
+        }
+    }
+
+    record ProductLink(
+        UUID id,
+        int spacingTop,
+        int spacingBottom,
+        String label,
+        CurationProductLinkQuery query) implements CurationBlockContent {
+        public ProductLink {
+            validate(id, spacingTop, spacingBottom);
+            Objects.requireNonNull(label);
+            Objects.requireNonNull(query);
         }
     }
 
