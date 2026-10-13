@@ -142,10 +142,11 @@ flowchart TB
     subgraph prodpipe[Production 배포]
         mainpush[main push]
         pp[CodePipeline<br/>poudy-pipeline]
-        pb[CodeBuild<br/>poudy-codebuild<br/>buildspec.yml]
+        pb[CodeBuild<br/>poudy-codebuild<br/>buildspec-backend.yml]
         ba[backend artifact]
-        fa[frontend artifact]
         bcd[CodeDeploy<br/>backend deployment group]
+        pfb[CodeBuild<br/>poudy-frontend-codebuild<br/>buildspec-frontend.yml]
+        fa[frontend artifact]
         fcd[CodeDeploy<br/>frontend deployment group]
         pbe[Production Backend EC2]
         pfe[Production Frontend EC2]
@@ -161,9 +162,8 @@ flowchart TB
     dev --> github --> prci
     github --> devpush --> sp --> sb --> sa --> scd --> sbe
     scd --> sfb --> sfcd --> sfe
-    github --> mainpush --> pp --> pb
-    pb --> ba --> bcd --> pbe
-    pb --> fa --> fcd --> pfe
+    github --> mainpush --> pp --> pb --> ba --> bcd --> pbe
+    bcd --> pfb --> fa --> fcd --> pfe
     dbchange --> db
     pbe --> db
     sbe --> db
@@ -176,8 +176,9 @@ flowchart TB
 - `dev`는 `poudy-staging-pipeline`에서 백엔드(`poudy-staging-codebuild` →
   `poudy-backend-staging-dg`)를 배포한 다음 프론트(`buildspec-staging-frontend.yml` →
   `poudy-frontend-staging-dg`)를 빌드·배포합니다.
-- `main`은 `poudy-pipeline` → `poudy-codebuild` → Backend/Frontend secondary artifact →
-  CodeDeploy로 배포됩니다. Backend와 Frontend는 각기 다른 EC2 배포 그룹을 사용합니다.
+- `main`은 `poudy-pipeline`에서 백엔드(`poudy-codebuild` → `poudy-backend-dg`)를 배포한
+  다음 프론트(`poudy-frontend-codebuild` → `poudy-frontend-dg`)를 빌드·배포합니다. 프론트
+  prerender가 운영 API를 부르므로 새 API를 쓰는 변경도 백엔드가 먼저 떠 있어야 빌드됩니다.
 - Backend CodeDeploy의 `BeforeInstall`은 `/etc/poudy/backend.env`로 DB 사전 검증을
   수행합니다. 연결이나 필수 객체 검증이 실패하면 기존 서비스를 유지합니다. 통과하면
   이전 JSON sync timer를 비활성화하고, 구 버전 Backend를 정지한 뒤 새 JAR를 시작하고
