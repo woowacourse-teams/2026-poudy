@@ -3,7 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { isStaleBuildError, reloadForStaleBuild } from "./stale-build";
+import { isStaleBuildError, reloadForStaleBuild, revalidateRscRequests } from "./stale-build";
 
 const STALE = new Error(
   "Module 98810 was instantiated because it was required from module 28942, but the module factory is not available.",
@@ -84,5 +84,60 @@ describe("지난 빌드 오류에서 문서 새로 읽기", () => {
     expect(reload).not.toHaveBeenCalled();
 
     vi.restoreAllMocks();
+  });
+});
+
+describe("RSC 요청을 매번 서버에 확인하기", () => {
+  const original = vi.fn(() => Promise.resolve(new Response("")));
+
+  beforeEach(() => {
+    original.mockClear();
+    vi.stubGlobal("fetch", original);
+    revalidateRscRequests();
+  });
+
+  it("rsc 헤더가 있는 요청은 캐시에 있어도 서버에 확인한다", async () => {
+    const signal = new AbortController().signal;
+    await window.fetch("/search/products?_rsc=abc", {
+      credentials: "same-origin",
+      headers: { rsc: "1", "next-router-prefetch": "1" },
+      priority: "low",
+      signal,
+    });
+
+    expect(original).toHaveBeenCalledWith("/search/products?_rsc=abc", {
+      credentials: "same-origin",
+      headers: { rsc: "1", "next-router-prefetch": "1" },
+      priority: "low",
+      signal,
+      cache: "no-cache",
+    });
+  });
+
+  it("다른 요청은 그대로 보낸다", async () => {
+    const init = { headers: { "content-type": "application/json" } };
+    await window.fetch("/api/products", init);
+
+    expect(original).toHaveBeenCalledWith("/api/products", init);
+  });
+
+  it("호출한 쪽이 캐시 모드를 정했으면 따른다", async () => {
+    const init: RequestInit = { headers: { rsc: "1" }, cache: "reload" };
+    await window.fetch("/categories?_rsc=abc", init);
+
+    expect(original).toHaveBeenCalledWith("/categories?_rsc=abc", init);
+  });
+
+  it("Next 가 RSC 요청에 붙이는 헤더 이름과 맞춘다", async () => {
+    const { RSC_HEADER } = await import("next/dist/client/components/app-router-headers");
+    await window.fetch("/brands?_rsc=abc", { headers: { [RSC_HEADER]: "1" } });
+
+    expect(original).toHaveBeenCalledWith("/brands?_rsc=abc", { headers: { [RSC_HEADER]: "1" }, cache: "no-cache" });
+  });
+
+  it("init 없이 부르면 그대로 보낸다", async () => {
+    await window.fetch("/logo.webp");
+
+    expect(original).toHaveBeenCalledWith("/logo.webp", undefined);
   });
 });

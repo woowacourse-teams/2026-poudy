@@ -53,6 +53,25 @@ const writeMark = (mark: ReloadMark): boolean => {
   }
 };
 
+/*
+ * Next 는 미리 렌더링한 RSC 응답에 CDN 용 stale-while-revalidate 를 붙이고, RSC 요청에는 캐시
+ * 모드를 정하지 않는다. 그래서 브라우저가 배포 전에 저장한 응답을 서버에 묻지 않고 꺼내 쓴다.
+ * 기기에 이미 저장된 응답은 헤더를 바꿔도 남아 있으므로, 요청 쪽에서 매번 서버에 확인하게 한다.
+ * 새로 받은 응답이 저장된 항목도 덮어쓴다. 하이드레이션 전에 한 번 부른다.
+ */
+const RSC_HEADER = "rsc";
+
+export const revalidateRscRequests = (): void => {
+  if (typeof window === "undefined") return;
+
+  const original = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    if (init?.cache !== undefined || !new Headers(init?.headers).has(RSC_HEADER)) return original(input, init);
+
+    return original(input, { ...init, cache: "no-cache" });
+  };
+};
+
 /* 표시를 남기지 못하는 곳에서는 되풀이를 막을 수 없어 새로고침하지 않는다. */
 export const reloadForStaleBuild = (error: Error, now: number = Date.now()): void => {
   if (typeof window === "undefined" || !isStaleBuildError(error)) return;
