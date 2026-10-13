@@ -1,11 +1,14 @@
 import { Share } from 'react-native';
 import PoudyShareModule from 'poudy-share';
 
-export const shareText = async (message: string): Promise<void> => {
+const openShareSheet = (message: string): Promise<unknown> => {
   if (PoudyShareModule) {
-    await PoudyShareModule.shareAsync(message);
-    return;
+    return PoudyShareModule.shareAsync(message);
   }
 
-  await Share.share({ message });
+  return Share.share({ message });
+};
+
+export const shareText = async (message: string) => {
+  await openShareSheet(message).catch(() => undefined);
 };

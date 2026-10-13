@@ -55,6 +55,9 @@ importers:
       expo-system-ui:
         specifier: ~57.0.2
         version: 57.0.2(expo@57.0.14)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(supports-color@8.1.1)
+      poudy-app-update:
+        specifier: workspace:*
+        version: link:modules/poudy-app-update
       poudy-haptics:
         specifier: workspace:*
         version: link:modules/poudy-haptics
@@ -107,6 +110,12 @@ importers:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+
+  modules/poudy-app-update:
+    dependencies:
+      expo:
+        specifier: '*'
+        version: 57.0.14(@babel/core@7.29.7(supports-color@8.1.1))(@expo/dom-webview@57.0.1)(react-native-webview@13.16.1(patch_hash=547b7bc1fc5ef2b8fb14d6dc507bc02d974d86e8a3d7668e409d6a9024d24a6e)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1)(typescript@6.0.3)
 
   modules/poudy-haptics:
     dependencies:

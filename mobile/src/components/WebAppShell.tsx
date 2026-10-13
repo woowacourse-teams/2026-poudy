@@ -6,6 +6,7 @@ import { WebView, type WebViewNavigation as NativeWebViewNavigation } from 'reac
 import WebViewError from '@/components/WebViewError';
 import WebViewLoading from '@/components/WebViewLoading';
 import {
+  useAppUpdate,
   useExternalEntry,
   useHardwareBack,
   useKeyboardInset,
@@ -28,6 +29,7 @@ export default function WebAppShell() {
   const splash = useSplashTransition();
   const handleMessage = useWebViewBridge({ onWebLogin: navigation.startWebLogin, serviceOrigin, webViewRef });
 
+  useAppUpdate();
   useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
   useQuickActions({ onNavigate: navigation.navigate, serviceBaseUrl });
 

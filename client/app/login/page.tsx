@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { LoginUpdateNotice } from "@/components/login/LoginUpdateNotice";
 import { GoogleIcon, KakaoIcon } from "@/components/login/ProviderIcon";
 import { SignupSheet } from "@/components/login/SignupSheet";
 import { SocialLoginLink } from "@/components/login/SocialLoginLink";
@@ -83,6 +84,7 @@ export default function LoginPage() {
       <Suspense fallback={null}>
         <SignupSheet />
       </Suspense>
+      <LoginUpdateNotice />
     </main>
   );
 }

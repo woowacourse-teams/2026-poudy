@@ -10,7 +10,7 @@ import type {
   WebViewSource,
 } from '@/types/webView';
 import { failureOf } from '@/util/webViewFailure';
-import { isHttpUrl, openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
+import { alertUnopenableUrl, isHttpUrl, openExternalUrl, shouldLoadInWebView } from '@/util/webViewRequest';
 
 const LOAD_TIMEOUT_MS = 10_000;
 
@@ -76,7 +76,7 @@ export const useWebViewNavigation = (
         return true;
       }
 
-      openExternalUrl(url);
+      openExternalUrl(url).catch(alertUnopenableUrl);
       return false;
     },
     [serviceOrigin],

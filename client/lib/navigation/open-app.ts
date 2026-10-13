@@ -68,6 +68,9 @@ export const buildOpenAppUrl = (webUrl: string, browser: AndroidMobileBrowser): 
 
 export const APP_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}&pcampaignid=web_share`;
 
+/** 앱 안에서 업데이트를 안내할 때 보내는 곳. 설치 유입이 아니므로 캠페인 표시를 붙이지 않는다. */
+export const APP_UPDATE_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+
 /**
  * 설치 배너가 쓰는 주소. 보던 화면을 그대로 이어 열되, 앱이 없으면 스토어로 보낸다.
  *

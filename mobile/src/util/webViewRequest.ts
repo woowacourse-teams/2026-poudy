@@ -36,8 +36,8 @@ export const isHomeUrl = (url: string, serviceBaseUrl: string): boolean => {
   }
 };
 
-export const openExternalUrl = (url: string) => {
-  void Linking.openURL(url).catch(() => {
-    Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
-  });
+export const openExternalUrl = (url: string): Promise<unknown> => Linking.openURL(url);
+
+export const alertUnopenableUrl = () => {
+  Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
 };

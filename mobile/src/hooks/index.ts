@@ -1,3 +1,4 @@
+export { useAppUpdate } from './useAppUpdate';
 export { useExternalEntry } from './useExternalEntry';
 export { useHardwareBack } from './useHardwareBack';
 export { useKeyboardInset } from './useKeyboardInset';
