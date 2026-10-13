@@ -26,6 +26,28 @@ const scrollTo = (y: number) => {
 };
 
 const thumb = (container: HTMLElement) => container.querySelector<HTMLElement>(".app-scroll-thumb");
+const track = (container: HTMLElement) => container.querySelector<HTMLElement>(".app-scroll-track");
+
+/** 화면 위에 붙은 줄을 흉내 낸다. jsdom 은 자리를 재지 않으므로 잰 값을 직접 준다. */
+const addStickyBar = ({
+  top,
+  rectTop,
+  bottom,
+  hidden = false,
+}: {
+  top: number;
+  rectTop: number;
+  bottom: number;
+  hidden?: boolean;
+}) => {
+  const bar = document.createElement("div");
+  bar.className = "sticky";
+  bar.style.top = `${top}px`;
+  if (hidden) bar.style.opacity = "0";
+  bar.getBoundingClientRect = () => ({ top: rectTop, bottom, height: bottom - rectTop }) as DOMRect;
+  document.body.append(bar);
+  return bar;
+};
 
 describe("앱 WebView 스크롤 막대", () => {
   beforeEach(() => {
@@ -41,6 +63,7 @@ describe("앱 WebView 스크롤 막대", () => {
   });
 
   afterEach(() => {
+    document.querySelectorAll(".sticky").forEach((bar) => bar.remove());
     vi.useRealTimers();
     vi.unstubAllGlobals();
     delete window.__POUDY_WEB_SCROLL_INDICATOR__;
@@ -77,6 +100,35 @@ describe("앱 WebView 스크롤 막대", () => {
     act(() => scrollTo(10));
 
     expect(thumb(container)).toHaveAttribute("data-visible", "false");
+  });
+
+  /* 칩 줄처럼 상단바 아래에 붙은 줄이 있으면 그 아래부터 오간다. 줄 위로 막대가 지나가지 않게 한다. */
+  it("화면 위에 붙은 줄들 가운데 가장 아래 끝부터 트랙을 시작한다", () => {
+    addStickyBar({ top: 0, rectTop: 0, bottom: 44 });
+    addStickyBar({ top: 44, rectTop: 44, bottom: 100 });
+    const { container } = render(<AppScrollIndicator />);
+
+    expect(track(container)?.style.top).toBe("100px");
+  });
+
+  /* 아직 흐름 안에 있는 줄은 붙은 것이 아니다. 붙기 전 투명하게 자리를 지키는 줄도 뺀다. */
+  it("아직 붙지 않았거나 보이지 않는 줄은 트랙 시작에서 뺀다", () => {
+    addStickyBar({ top: 0, rectTop: 0, bottom: 44 });
+    addStickyBar({ top: 44, rectTop: 300, bottom: 356 });
+    addStickyBar({ top: 44, rectTop: 44, bottom: 100, hidden: true });
+    const { container } = render(<AppScrollIndicator />);
+
+    expect(track(container)?.style.top).toBe("44px");
+  });
+
+  /* 맨 위에서는 칩 줄이 아직 흐름 안에 있지만 머리 바로 아래에 이어져 있어 머리로 본다. */
+  it("머리 바로 아래에 이어진 줄은 붙기 전이어도 트랙 시작에 넣는다", () => {
+    addStickyBar({ top: 0, rectTop: 0, bottom: 56 });
+    addStickyBar({ top: 56, rectTop: 56, bottom: 112 });
+    addStickyBar({ top: 112, rectTop: 120, bottom: 176 });
+    const { container } = render(<AppScrollIndicator />);
+
+    expect(track(container)?.style.top).toBe("176px");
   });
 
   /* 스크롤 타임라인은 Android WebView 의 스크롤을 버벅이게 해 쓰지 않는다. */
