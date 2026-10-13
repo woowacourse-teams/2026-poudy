@@ -1,12 +1,16 @@
 package com.poudy.curation.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.curation.domain.Curation;
+import com.poudy.exception.InfrastructureException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @DisplayName("큐레이션 저장소")
@@ -14,6 +18,8 @@ class CurationRepositoryTest {
 
     @Autowired
     private CurationRepository curationRepository;
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @Test
     @DisplayName("DB의 큐레이션 중 노출 배너만 순서대로 조회하고 게시 상태로 상세를 가른다")
@@ -24,4 +30,13 @@ class CurationRepositoryTest {
         assertThat(curationRepository.findAll().findPublishedById(4L)).isPresent();
         assertThat(curationRepository.findAll().findPublishedById(20L)).isEmpty();
     }
+
+    @Test
+    @Transactional
+    void rejectsInvalidDocumentsInsteadOfSilentlyReturningEmptyBlocks() {
+        jdbc.update("update curation set blocks = '[{}]'::jsonb where id = 12");
+        assertThatThrownBy(() -> curationRepository.findPublishedById(12L))
+            .isInstanceOf(InfrastructureException.class).hasMessageContaining("id=12");
+    }
+
 }

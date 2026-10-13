@@ -67,6 +67,18 @@ class SitemapQueryTest {
     }
 
     @Test
+    @DisplayName("JSONB 일반 제품 참조의 변경을 반영하고 누락 제품은 수정일을 덮지 않는다")
+    void readsUpdatedPlainProductReferences() throws Exception {
+        jdbc.update("""
+            update curation set blocks = jsonb_build_array(blocks -> 4 || '{"productIds":[15,999999]}'::jsonb)
+            where id = 12
+            """);
+        mockMvc.perform(get("/api/sitemap")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.curations[*].id").value(contains(4, 12)))
+            .andExpect(jsonPath("$.curations[*].updatedAt").value(contains(OLD, LATEST)));
+    }
+
+    @Test
     @DisplayName("제품에 쓰인 성분만 담는다")
     void findsUsedIngredientUpdates() throws Exception {
         Integer used = jdbc.queryForObject(
