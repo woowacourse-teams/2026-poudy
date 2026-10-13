@@ -24,10 +24,12 @@ const startImmediateUpdate = (): Promise<ImmediateUpdateStatus> =>
 export const checkAppUpdate = (): Promise<AppUpdate> =>
   (PoudyAppUpdateModule?.checkUpdateAsync() ?? Promise.resolve(NO_UPDATE)).catch(() => NO_UPDATE);
 
-export const isForcedUpdate = (update: AppUpdate): boolean =>
-  update.isInProgress || (update.isAvailable && update.priority >= FORCED_PRIORITY);
+const isForcedUpdate = (update: AppUpdate): boolean => update.priority >= FORCED_PRIORITY;
 
-export const isOptionalUpdate = (update: AppUpdate): boolean => update.isAvailable && update.priority < FORCED_PRIORITY;
+export const needsImmediateUpdate = (update: AppUpdate): boolean =>
+  update.isInProgress || (update.isAvailable && isForcedUpdate(update));
+
+export const isOptionalUpdate = (update: AppUpdate): boolean => update.isAvailable && !isForcedUpdate(update);
 
 export const startAppUpdate = async () => {
   const status = await startImmediateUpdate();
@@ -37,10 +39,10 @@ export const startAppUpdate = async () => {
   }
 };
 
-export const enforceAppUpdate = async () => {
+export const runImmediateUpdate = async (update: AppUpdate) => {
   const status = await startImmediateUpdate();
 
-  if (status === 'cancelled') {
+  if (status === 'cancelled' && isForcedUpdate(update)) {
     BackHandler.exitApp();
   }
 };

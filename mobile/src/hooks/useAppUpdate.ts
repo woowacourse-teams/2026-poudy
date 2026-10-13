@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
-import { checkAppUpdate, enforceAppUpdate, isForcedUpdate, isOptionalUpdate, suggestAppUpdate } from '@/util/appUpdate';
+import {
+  checkAppUpdate,
+  isOptionalUpdate,
+  needsImmediateUpdate,
+  runImmediateUpdate,
+  suggestAppUpdate,
+} from '@/util/appUpdate';
 
 export const useAppUpdate = () => {
   const isCheckingRef = useRef(false);
@@ -16,8 +22,8 @@ export const useAppUpdate = () => {
       isCheckingRef.current = true;
       const update = await checkAppUpdate();
 
-      if (isForcedUpdate(update)) {
-        await enforceAppUpdate();
+      if (needsImmediateUpdate(update)) {
+        await runImmediateUpdate(update);
       }
 
       if (isOptionalUpdate(update) && !hasSuggestedRef.current) {
