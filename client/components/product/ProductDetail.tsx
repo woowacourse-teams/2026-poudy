@@ -1,5 +1,5 @@
 import type {
-  ExcludeCodeResponse,
+  IngredientGroupResponse,
   ProductDetailResponse,
   ProductPartResponse,
   SimilarProductResponse,
@@ -24,7 +24,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { withCautionCodes } from "@/lib/domain/caution-check";
+import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatPrice, unitPrice } from "@/lib/domain/product-display";
 import { partTabId } from "@/lib/domain/product-parts";
 
@@ -39,8 +39,8 @@ export function ProductDetail({
   readonly entryPoint?: ProductEntryPoint;
   /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
   readonly similarProducts?: readonly SimilarProductResponse[];
-  /** 주의 성분 기준의 성분군 코드를 찾는 제외 성분군 목록. 비어 있으면 기준을 누를 수 없게 둔다. */
-  readonly excludeCodes?: readonly ExcludeCodeResponse[];
+  /** 주의 성분군에 속한 성분 목록. 고른 구성품에 든 해당 성분을 찾는 데 쓴다. */
+  readonly excludeCodes?: readonly IngredientGroupResponse[];
 }) {
   return (
     <SummaryHeader
@@ -246,7 +246,7 @@ function SelectedPart({
 }: {
   readonly product: ProductDetailResponse;
   readonly similarProducts: readonly SimilarProductResponse[];
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
 }) {
   const part = product.selectedPart;
   if (!part) return null;
@@ -262,7 +262,7 @@ function SelectedPart({
       <UsageIngredients productId={product.id} part={part} />
       <CautionCheck
         productId={product.id}
-        groups={withCautionCodes(
+        groups={withCautionIngredients(
           part.excludeGroups,
           excludeCodes,
           part.ingredients.map((ingredient) => ingredient.id),

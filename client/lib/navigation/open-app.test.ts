@@ -155,7 +155,18 @@ describe("QR 코드로 들어온 /open-app 이 이어 갈 주소", () => {
   /* 설치 배너와 같은 길로 보내 앱이 있으면 열고 없으면 스토어로 간다. */
   it("안드로이드 브라우저는 설치 배너와 같은 intent 로 홈을 연다", () => {
     expect(resolveOpenAppDestination(OPEN_APP_URL, ANDROID_CHROME, false)).toBe(
-      buildInstallIntentUrl("https://poudy.site/"),
+      buildInstallIntentUrl("https://poudy.site/", "https://poudy.site/open-app?source=unknown&store=google_play"),
+    );
+  });
+
+  it("QR 스캔 유입을 스토어 fallback까지 유지한다", () => {
+    const destination = resolveOpenAppDestination(`${OPEN_APP_URL}?source=qr_scan`, ANDROID_CHROME, false);
+    expect(decodeURIComponent(destination)).toContain("https://poudy.site/open-app?source=qr_scan&store=google_play");
+  });
+
+  it("스토어 fallback은 intent를 다시 시도하지 않고 Google Play로 보낸다", () => {
+    expect(resolveOpenAppDestination(`${OPEN_APP_URL}?source=qr_scan&store=google_play`, ANDROID_CHROME, false)).toBe(
+      APP_STORE_URL,
     );
   });
 

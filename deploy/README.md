@@ -11,6 +11,8 @@ CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업�
 - 공개 브라우저 API: Nginx `:443/api/*` → 백엔드 EC2 사설 IP `:8080`
 - Next.js 서버 API: Nginx `127.0.0.1:8081/api/*` → 같은 백엔드 upstream
 - 백엔드: Spring Boot JAR `:8080` → systemd
+- 로그인 세션: 백엔드가 정상 종료할 때 `/var/lib/poudy-sessions`에 저장하고 다시 뜰 때 불러옵니다.
+  호스트 JAR는 systemd `StateDirectory`가, staging 컨테이너는 같은 경로를 마운트해 씁니다.
 - 데이터: PostgreSQL 15 이상. 피드백 이미지만 비공개 S3에 저장
 
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
@@ -22,11 +24,31 @@ HTTPS 통신을 위해 유지할 수 있지만, 프론트 프록시·DNS·외부
 않습니다. 자동 public IPv4는 stop/start 후 바뀔 수 있으므로 백엔드 연결은 반드시
 사설 IP를 사용합니다.
 
+### Staging 프론트 EC2
+
+staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 운영과 같은 조건에서 확인하려면
+화면과 API가 같은 출처여야 해서 Vercel staging(`poudy-staging.vercel.app`)을 걷어 냈습니다.
+
+- `staging.poudy.site` → staging 프론트 EC2 Nginx → `/`는 Next.js, `/api/*`는 staging 백엔드
+  사설 IP `:8080`
+- 도메인은 `deploy/config/frontend-site-staging.env`로 정합니다. 별칭(`www`)은 없습니다.
+- staging 백엔드 EC2에는 운영처럼 Nginx를 두지 않습니다.
+- PR preview는 Vercel에 두고 `pr-<PR 번호>.preview.poudy.site`로 엽니다. `client-ci.yaml`이
+  배포 뒤 별칭을 붙이고 PR이 닫히면 `client-preview-cleanup.yaml`이 뗍니다. `*.vercel.app`은
+  API와 다른 사이트라 세션 쿠키가 실리지 않습니다. 와일드카드 인증서는 Cloudflare의
+  `_acme-challenge.preview` NS 레코드를 `ns1.vercel-dns.com`·`ns2.vercel-dns.com`으로 위임해
+  Vercel이 발급·갱신합니다. 이 레코드를 지우면 갱신이 멈춥니다.
+- staging 백엔드는 `prod,staging` 프로필로 뜨고, `application-staging.yml`이 CORS 허용 출처를 PR preview
+  `https://*.preview.poudy.site`로 정합니다. staging 화면은 같은 출처라 CORS가 필요 없고, 서버의
+  `CLIENT_DOMAIN`은 쓰지 않습니다.
+
 배포 산출물은 다음 스크립트로 생성합니다. 출력 디렉터리는 새로 만들어져야 합니다.
 
 ```bash
 ./deploy/scripts/package-artifacts.sh /tmp/poudy-artifacts
 ```
+
+프론트 산출물만 만들 때는 `./deploy/scripts/package-frontend.sh <출력 디렉터리>`를 씁니다.
 
 생성 결과:
 
@@ -280,6 +302,14 @@ Next.js의 서버 API 주소는 systemd의 고정 로컬 주소이므로 별도�
 않고, 백엔드 OS 방화벽에서 `8080`을 프론트 EC2의 사설 IP 또는 필요한 내부
 출발지로 제한합니다. 방화벽 적용 전 SSH 접속 경로를 보존하고 별도 세션에서
 접근성을 검증합니다.
+
+운영 백엔드에는 `nftables`로 이 제한을 적용합니다. 저장소의
+[`deploy/firewall/production-backend.nft`](firewall/production-backend.nft)는 운영
+프론트 EC2(`10.0.0.57/32`)만 IPv4 `TCP/8080`에 접근하도록 허용하고, IPv6의
+`TCP/8080` 접근은 모두 차단합니다. 전용 systemd 서비스가 부팅 때 규칙을 읽으며,
+백엔드 서비스는 방화벽 서비스가 성공한 뒤 시작합니다. 설치 및 복구 절차는
+[`deploy/monitoring/README.md`](monitoring/README.md)의 “운영 백엔드 8080 호스트 방화벽”을
+따릅니다. 공유 보안 그룹은 변경하지 않습니다.
 
 ## 보안 실행 기준
 

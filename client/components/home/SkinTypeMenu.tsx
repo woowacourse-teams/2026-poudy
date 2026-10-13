@@ -1,10 +1,10 @@
 "use client";
 
+import type { SkinType } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
-import type { SkinType } from "@/lib/domain/filter";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**

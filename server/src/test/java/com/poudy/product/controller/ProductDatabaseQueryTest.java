@@ -273,6 +273,29 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
+    @DisplayName("성분이 속한 모든 주의 기준을 코드 순서와 DB 태그 문구로 반환한다")
+    void returnsAllIngredientCautionsFromDatabase() throws Exception {
+        jdbc.update(
+            "update ingredient_group set tag_name = '향료 태그', display_name = '바뀐 표시명' where code = 'FRAGRANCE_ALLERGENS'"
+        );
+        jdbc.update("""
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
+            select 'SULFATES', 9, coalesce(max(display_order), -1) + 1
+            from ingredient_group_ingredient where group_code = 'SULFATES'
+            """);
+
+        mockMvc.perform(get("/api/products/15"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(20, 9)))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions.length()").value(1))
+            .andExpect(
+                jsonPath("$.selectedPart.ingredients[1].cautions[*].code")
+                    .value(contains("FRAGRANCE_ALLERGENS", "SULFATES"))
+            )
+            .andExpect(jsonPath("$.selectedPart.ingredients[1].cautions[*].label").value(contains("향료 태그", "설페이트")));
+    }
+
+    @Test
     @DisplayName("구성품마다 자기 성분만으로 제외 성분군 포함 여부를 판정한다")
     void judgesExcludeGroupsPerPart() throws Exception {
         addIngredients();
@@ -284,6 +307,8 @@ class ProductDatabaseQueryTest {
         mockMvc.perform(get("/api/products/90001"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.productParts[*].cautionCount").value(contains(1, 0)))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions").isEmpty())
+            .andExpect(jsonPath("$.selectedPart.ingredients[1].cautions[0].code").value("SULFATES"))
             .andExpect(
                 jsonPath("$.selectedPart.excludeGroups[?(@.name == '설페이트 성분')].contains").value(contains(true))
             );
@@ -291,6 +316,7 @@ class ProductDatabaseQueryTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.selectedPart.name").value("둘째 구성품"))
             .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(90002)))
+            .andExpect(jsonPath("$.selectedPart.ingredients[0].cautions").isEmpty())
             .andExpect(
                 jsonPath("$.selectedPart.excludeGroups[?(@.name == '설페이트 성분')].contains").value(contains(false))
             );

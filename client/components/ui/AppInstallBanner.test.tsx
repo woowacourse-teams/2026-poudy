@@ -7,6 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppInstallBanner } from "./AppInstallBanner";
 
+const { track, flush } = vi.hoisted(() => ({ track: vi.fn(), flush: vi.fn() }));
+vi.mock("@/lib/analytics/track", () => ({ track, flushAnalyticsBeforeNavigation: flush }));
+
 const ANDROID_UA =
   "Mozilla/5.0 (Linux; Android 14; SM-S911N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 const IPHONE_UA =
@@ -25,6 +28,8 @@ const CURRENT_URL = "https://poudy.site/products/123?sort=popular";
 let assigned = "";
 
 beforeEach(() => {
+  track.mockClear();
+  flush.mockReset().mockResolvedValue(undefined);
   assigned = "";
   setUserAgent(ANDROID_UA);
   window.sessionStorage.clear();
@@ -104,7 +109,29 @@ describe("앱 설치 배너", () => {
 
     await userEvent.click(banner()!);
 
-    expect(decodeURIComponent(assigned)).toContain("https://play.google.com/store/apps/details?id=com.poudy.app");
+    expect(decodeURIComponent(assigned)).toContain(
+      "https://poudy.site/open-app?source=install_banner&store=google_play",
+    );
+  });
+
+  it("배너 클릭을 기록하고 큐 전송 이후에 이동한다", async () => {
+    let ready: () => void = () => {};
+    flush.mockReturnValue(
+      new Promise<void>((resolve) => {
+        ready = resolve;
+      }),
+    );
+    render(<AppInstallBanner />);
+    await userEvent.click(banner()!);
+    expect(track).toHaveBeenCalledExactlyOnceWith(
+      "app_install_clicked",
+      { source: "install_banner" },
+      { beacon: true },
+    );
+    expect(assigned).toBe("");
+    ready();
+    await Promise.resolve();
+    expect(assigned).toContain("intent://poudy.site/products/123");
   });
 
   it("닫으면 사라지고 이 방문 동안 기억한다", async () => {
@@ -112,6 +139,7 @@ describe("앱 설치 배너", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "앱 설치 안내 닫기" }));
 
+    expect(track).not.toHaveBeenCalled();
     expect(banner()).not.toBeInTheDocument();
 
     /* 다시 들어와도 올라오지 않아야 한다. */

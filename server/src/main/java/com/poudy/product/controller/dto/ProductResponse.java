@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 public record ProductResponse(
     @NotNull @Schema(description = "제품 ID", example = "101") Long id,
@@ -18,7 +19,8 @@ public record ProductResponse(
     @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
     @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
     @NotNull @Min(0) @Max(3) @Schema(description = "수분감 단계 (0~3)", example = "3") Integer moistureLevel,
-    @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel) {
+    @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel,
+    @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 
     public static ProductResponse from(Product product) {
         ProductVariant variant = product.representativeVariant();
@@ -32,7 +34,8 @@ public record ProductResponse(
             variant.volumeValue(),
             variant.volumeUnit(),
             product.moistureLevel(),
-            product.oilLevel()
+            product.oilLevel(),
+            product.updatedAt()
         );
     }
 

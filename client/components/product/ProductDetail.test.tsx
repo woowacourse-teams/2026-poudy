@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
+import { fetchIngredientGroup } from "@/lib/api/products";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -480,19 +481,21 @@ describe("주의 성분 확인", () => {
   const excludeCodes = [
     {
       code: "FRAGRANCE_ALLERGENS",
-      name: "향료/알레르기 성분",
+      name: "이전 향료 표시명",
+      englishName: null,
       description: "착향 목적의 성분이에요.",
       ingredients: [{ id: first!.id, koreanName: first!.koreanName, englishName: first!.englishName }],
     },
     {
       code: "DRYING_ALCOHOLS",
       name: "건조 알코올",
+      englishName: null,
       description: "피부를 건조하게 할 수 있는 알코올이에요.",
       ingredients: [{ id: -1, koreanName: "에탄올", englishName: "Alcohol" }],
     },
   ];
 
-  it("기준을 누르면 성분군 시트를 열고 이 제품에 든 해당 성분을 보여 준다", async () => {
+  it("두 응답의 표시명이 달라도 코드로 연결해 시트에 제품의 해당 성분을 보여 준다", async () => {
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
     await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분 있음" }));
@@ -533,11 +536,18 @@ describe("주의 성분 확인", () => {
     });
   });
 
-  it("성분군 코드를 찾지 못한 기준은 누를 수 없게 둔다", () => {
-    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+  it("제외 성분군 목록이 비어 있어도 상세 응답의 코드로 성분군 설명을 연다", async () => {
+    vi.mocked(fetchIngredientGroup).mockClear();
+    render(<ProductDetail product={untaggedProductDetail} />);
 
-    expect(screen.queryByRole("link", { name: "합성 색소 없음" })).not.toBeInTheDocument();
-    expect(screen.getByText(/합성 색소/)).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "합성 색소 없음" });
+    expect(link).toHaveAttribute("href", "/ingredient-groups/SYNTHETIC_COLORANTS?from=product_detail");
+    await userEvent.click(link);
+
+    const sheet = await screen.findByRole("dialog");
+    expect(fetchIngredientGroup).toHaveBeenCalledWith("SYNTHETIC_COLORANTS");
+    expect(within(sheet).getByText("수분을 붙잡는 글라이콜 성분이에요.")).toBeInTheDocument();
+    expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
   });
 
   it("들어 있는 기준이 없으면 모두 없다고 알린다", () => {

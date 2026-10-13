@@ -20,6 +20,11 @@ const posthogEnabled = key !== undefined && key !== "" && environment !== "devel
 
 const ANALYTICS_SCHEMA_VERSION = 3;
 
+let prepareNavigation: () => Promise<void> = async () => {};
+
+/** beacon 이벤트를 담은 큐가 SDK에 전달된 뒤 외부로 이동한다. */
+export const flushAnalyticsBeforeNavigation = (): Promise<void> => prepareNavigation();
+
 const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): DiscoveryContext | undefined => {
   if (event === "home_search_selected") return beginHomeSearchDiscovery();
   if (event === "search_started") return startSearchDiscovery();
@@ -70,5 +75,5 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T], op
 
 export const initAnalytics = (): void => {
   if (!posthogEnabled || !key || typeof window === "undefined" || window.posthog) return;
-  deferPosthog(key);
+  prepareNavigation = deferPosthog(key);
 };

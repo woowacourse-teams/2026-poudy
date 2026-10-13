@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.SharedMockBeans;
 import com.poudy.exception.TooManyRequestsException;
 import com.poudy.productrequest.controller.dto.ProductRegistrationRequest;
 import com.poudy.productrequest.service.ProductRequestService;
@@ -23,10 +24,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
+@SharedMockBeans
 @AutoConfigureMockMvc
 @DisplayName("제품 등록 요청 API")
 class ProductRequestControllerTest {
@@ -36,7 +37,7 @@ class ProductRequestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Autowired
     private ProductRequestService productRequestService;
 
     @Test

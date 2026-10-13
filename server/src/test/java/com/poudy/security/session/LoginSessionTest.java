@@ -1,0 +1,343 @@
+package com.poudy.security.session;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.OAuthProvider;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+
+@DisplayName("로그인 세션")
+class LoginSessionTest {
+
+    private static final Instant SIGNED_IN_AT = Instant.parse("2026-10-03T00:00:00Z");
+    private static final Duration IDLE = Duration.ofDays(1);
+    private static final Duration ABSOLUTE = Duration.ofDays(7);
+    private static final Duration ADMIN_IDLE = Duration.ofHours(1);
+    private static final Duration ADMIN_ABSOLUTE = Duration.ofHours(12);
+    private static final Duration APP_IDLE = Duration.ofDays(60);
+    private static final long MEMBER_ID = 7L;
+    private static final Duration GRACE = Duration.ofMinutes(5);
+    private static final int IDLE_SECONDS = 600;
+    private static final OAuthAccount ACCOUNT = new OAuthAccount(OAuthProvider.KAKAO, "4321", "new@example.com", true);
+
+    @AfterEach
+    void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("로그인하면 회원 ID만 가진 인증을 세션에 저장하고 비활동 만료를 하루로 둔다")
+    void signsIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+
+        SecurityContext context = (SecurityContext) request.getSession()
+            .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(MEMBER_ID));
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(IDLE.toSeconds());
+    }
+
+    @Test
+    @DisplayName("로그아웃하면 세션과 인증을 버린다")
+    void signsOut() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).signOut(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    @DisplayName("로그인하고 7일이 지나면 세션을 버린다")
+    void expiresAfterAbsoluteTimeout() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("7일이 지나기 전에는 세션을 유지한다")
+    void keepsSessionBeforeAbsoluteTimeout() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isFalse();
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 로그인 후 만료까지 5분이 안 남은 세션은 만료 시각을 5분 늦춘다")
+    void gracesExpiryAboutToPass() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(2));
+
+        sessionAt(stoppedAt).grace(session, GRACE);
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(4)))
+            .refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isFalse();
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(5)))
+            .refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 로그인 후 만료까지 5분 이상 남은 세션은 만료 시각을 그대로 둔다")
+    void keepsExpiryWithEnoughTime() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        Instant stoppedAt = SIGNED_IN_AT.plus(ABSOLUTE).minus(Duration.ofMinutes(6));
+
+        sessionAt(stoppedAt).grace(session, GRACE);
+
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료까지 5분이 안 남은 세션은 비활동 만료를 5분 늘린다")
+    void gracesIdleTimeoutAboutToPass() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(8)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료가 막 지난 세션도 비활동 만료를 5분 늘린다")
+    void gracesIdleTimeoutJustPassed() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(11)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
+    }
+
+    @Test
+    @DisplayName("배포로 종료할 때 비활동 만료까지 5분 이상 남은 세션은 비활동 만료를 그대로 둔다")
+    void keepsIdleTimeoutWithEnoughTime() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+
+        idleSessionAt(session, Duration.ofMinutes(1)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS);
+    }
+
+    @Test
+    @DisplayName("비활동 만료가 없는 세션은 배포로 종료할 때 그대로 둔다")
+    void keepsSessionWithoutIdleTimeout() {
+        MockHttpSession session = idleSession(-1);
+
+        idleSessionAt(session, Duration.ofDays(30)).grace(session, GRACE);
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(-1);
+    }
+
+    @Test
+    @DisplayName("비활동 만료를 늘린 세션은 다음 요청에서 원래 비활동 만료로 돌아간다")
+    void restoresIdleTimeoutOnNextRequest() {
+        MockHttpSession session = idleSession(IDLE_SECONDS);
+        idleSessionAt(session, Duration.ofMinutes(8)).grace(session, GRACE);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(session);
+
+        idleSessionAt(session, Duration.ofMinutes(9)).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS);
+        idleSessionAt(session, Duration.ofMinutes(10)).grace(session, GRACE);
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(IDLE_SECONDS + 300);
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 세션은 건드리지 않는다")
+    void ignoresSessionWithoutSignIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession session = new MockHttpSession();
+        request.setSession(session);
+
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isFalse();
+    }
+
+    @Test
+    @DisplayName("탈퇴 회원을 맡겨 두면 로그인하지 않은 새 세션에 두고, 한 번 꺼내면 다시 꺼낼 수 없다")
+    void holdsWithdrawnMemberOnce() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession signedInSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+
+        assertThat(signedInSession.isInvalid()).isTrue();
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).contains(MEMBER_ID);
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("가입할 계정을 맡겨 두면 로그인하지 않은 새 세션에 10분 동안 로그인 방식과 함께 두고, 한 번 꺼내면 다시 꺼낼 수 없다")
+    void holdsSignupAccountOnce() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession signedInSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, LoginChannel.APP, request, new MockHttpServletResponse());
+
+        assertThat(signedInSession.isInvalid()).isTrue();
+        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+            .isNull();
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofMinutes(10).toSeconds());
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request))
+            .contains(new PendingSignup(ACCOUNT, LoginChannel.APP));
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("가입할 계정을 맡겨 둔 세션에서 기존 회원으로 로그인하면 맡겨 둔 계정을 버린다")
+    void dropsSignupAccountOnSignIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, LoginChannel.WEB, request, new MockHttpServletResponse());
+
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+
+        assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("탈퇴 회원을 맡겨 둔 세션에서 다른 계정으로 로그인하면 맡겨 둔 탈퇴 회원을 버린다")
+    void dropsWithdrawnMemberOnSignIn() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID + 1, LoginChannel.WEB, request, new MockHttpServletResponse());
+
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("관리자로 로그인하면 기존 세션을 버리고 관리자 인증만 가진 새 세션을 비활동 1시간으로 둔다")
+    void signsInAdmin() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession memberSession = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
+
+        SecurityContext context = (SecurityContext) request.getSession()
+            .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertThat(memberSession.isInvalid()).isTrue();
+        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginAdmin("admin"));
+        assertThat(context.getAuthentication().getAuthorities()).extracting(Object::toString)
+            .containsExactly("ROLE_ADMIN");
+        assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(ADMIN_IDLE.toSeconds());
+    }
+
+    @Test
+    @DisplayName("관리자 세션은 로그인하고 12시간이 지나면 버린다")
+    void expiresAdminSessionAfterAbsoluteTimeout() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isFalse();
+
+        sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("앱으로 로그인하면 비활동 60일로 두고 로그인 후 오래 지나도 버리지 않는다")
+    void keepsAppSessionWithoutAbsoluteTimeout() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        MockHttpSession session = (MockHttpSession) request.getSession();
+
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
+
+        assertThat(session.isInvalid()).isFalse();
+        assertThat(session.getMaxInactiveInterval()).isEqualTo(APP_IDLE.toSeconds());
+    }
+
+    @Test
+    @DisplayName("앱 세션은 접속하면 쿠키 수명을 다시 60일로 늘리고, 하루 안에는 다시 늘리지 않는다")
+    void extendsAppSessionCookie() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        ((MockHttpSession) request.getSession()).setNew(false);
+
+        MockHttpServletResponse first = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, first);
+        MockHttpServletResponse sameDay = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30)).plusSeconds(60)).refresh(request, sameDay);
+
+        assertThat(first.getHeader("Set-Cookie"))
+            .startsWith("JSESSIONID=" + request.getSession().getId())
+            .contains("Max-Age=" + APP_IDLE.toSeconds(), "HttpOnly", "Secure", "SameSite=Lax");
+        assertThat(sameDay.getHeader("Set-Cookie")).isNull();
+    }
+
+    @Test
+    @DisplayName("웹 세션은 쿠키 수명을 늘리지 않는다")
+    void doesNotExtendWebSessionCookie() {
+        MockHttpServletRequest request = signedInRequest();
+        ((MockHttpSession) request.getSession()).setNew(false);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofHours(1))).refresh(request, response);
+
+        assertThat(response.getHeader("Set-Cookie")).isNull();
+    }
+
+    private MockHttpServletRequest signedInRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+        return request;
+    }
+
+    private MockHttpSession idleSession(int idleSeconds) {
+        MockHttpSession session = new MockHttpSession();
+        session.setMaxInactiveInterval(idleSeconds);
+        return session;
+    }
+
+    private LoginSession idleSessionAt(MockHttpSession session, Duration sinceLastAccess) {
+        return sessionAt(Instant.ofEpochMilli(session.getLastAccessedTime()).plus(sinceLastAccess));
+    }
+
+    private LoginSession sessionAt(Instant now) {
+        return new LoginSession(
+            List.of(
+                new WebSessionPolicy(IDLE, ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC)),
+                new AdminSessionPolicy(ADMIN_IDLE, ADMIN_ABSOLUTE, Clock.fixed(now, ZoneOffset.UTC)),
+                new AppSessionPolicy(
+                    APP_IDLE,
+                    new AppSessionCookie("JSESSIONID", APP_IDLE, true, "Lax", Clock.fixed(now, ZoneOffset.UTC))
+                )
+            ),
+            Clock.fixed(now, ZoneOffset.UTC),
+            new HttpSessionSecurityContextRepository()
+        );
+    }
+}

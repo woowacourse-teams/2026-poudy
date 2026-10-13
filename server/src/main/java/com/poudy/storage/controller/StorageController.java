@@ -1,24 +1,25 @@
 package com.poudy.storage.controller;
 
-import com.poudy.storage.controller.dto.StorageResponse;
+import com.poudy.security.session.LoginMember;
+import com.poudy.storage.controller.dto.SavedProductIdsResponse;
+import com.poudy.storage.controller.dto.SavedProductsResponse;
 import com.poudy.storage.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
-import org.hibernate.validator.constraints.UniqueElements;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "보관함", description = "보관함 조회 API")
+@Tag(name = "저장함", description = "로그인한 회원의 저장함 API")
 @RestController
-@RequestMapping("/api/storage")
+@RequestMapping("/api/members/me/saved-products")
 public class StorageController {
 
     private final StorageService storageService;
@@ -27,12 +28,39 @@ public class StorageController {
         this.storageService = storageService;
     }
 
-    @Operation(summary = "보관함 조회", description = "보관함에 담긴 제품 ID 로 제품 목록 항목과 같은 정보를 한 번에 조회한다. "
-        + "받은 ID 를 모두 채워 돌려주므로 페이지를 나누지 않는다. 보관함 자체는 브라우저가 들고 있으며 서버는 저장하지 않는다.")
-    @GetMapping
-    public ResponseEntity<StorageResponse> findStorageProducts(
-        @Parameter(description = "보관함에 담긴 제품 ID. 콤마로 구분한다", example = "101,205", explode = Explode.FALSE, array = @ArraySchema(schema = @Schema(implementation = Long.class, example = "101"), uniqueItems = true)) @RequestParam @UniqueElements List<Long> productIds
+    @Operation(summary = "저장한 제품 ID 조회", description = "제품 목록과 상세에서 저장 여부를 표시할 때 쓴다. 최근에 저장한 것이 앞에 온다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/ids")
+    public ResponseEntity<SavedProductIdsResponse> findSavedProductIds(
+        @AuthenticationPrincipal LoginMember loginMember
     ) {
-        return ResponseEntity.ok(StorageResponse.from(storageService.findProducts(productIds)));
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(new SavedProductIdsResponse(storageService.findSavedProductIds(loginMember.id())));
+    }
+
+    @Operation(summary = "저장함 조회", description = "저장한 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 저장한 것이 앞에 온다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping
+    public ResponseEntity<SavedProductsResponse> findSavedProducts(@AuthenticationPrincipal LoginMember loginMember) {
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(SavedProductsResponse.from(storageService.findSavedProducts(loginMember.id())));
+    }
+
+    @Operation(summary = "제품 저장", description = "이미 저장한 제품이면 그대로 둔다.")
+    @ApiResponse(responseCode = "204", description = "저장 성공")
+    @PutMapping("/{productId}")
+    public ResponseEntity<Void> save(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long productId) {
+        storageService.save(loginMember.id(), productId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "제품 저장 해제", description = "저장하지 않은 제품이어도 성공한다.")
+    @ApiResponse(responseCode = "204", description = "저장 해제 성공")
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> unsave(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long productId) {
+        storageService.unsave(loginMember.id(), productId);
+        return ResponseEntity.noContent().build();
     }
 }

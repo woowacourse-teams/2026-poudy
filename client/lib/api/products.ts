@@ -4,9 +4,10 @@ import {
   CategoryListResponse,
   CurationDetailResponse,
   CurationListResponse,
-  ExcludeCodeListResponse,
   IngredientDetailResponse,
+  IngredientGroupListResponse,
   IngredientGroupResponse,
+  type IngredientGroupType,
   IngredientListResponse,
   IngredientPageResponse,
   ProductCountResponse,
@@ -14,12 +15,12 @@ import {
   ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
+  type ProductSort,
   ProductSuggestionPageResponse,
   RankingsResponse,
+  SitemapResponse,
   SkinTypesResponse,
-  StorageResponse,
 } from "@poudy/api/api.zod";
-import type { Endpoints } from "@poudy/api/api.zod.types";
 
 import { apiGet, apiPost } from "./client";
 
@@ -51,7 +52,7 @@ export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, {
     query: new URLSearchParams({
-      sort: "CREATED_ASC" satisfies NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"],
+      sort: "CREATED_ASC" satisfies ProductSort,
       page: String(page),
       size: String(size),
     }),
@@ -120,8 +121,14 @@ export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientL
 export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
   apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse);
 
-export const fetchExcludeCodes = (): Promise<ExcludeCodeListResponse> =>
-  apiGet("/api/exclude-codes", ExcludeCodeListResponse, { revalidate: CATALOG_TTL });
+/** 빠른 제외에 쓰는 성분군만 조회한다. 제품 필터의 excludeCodes 기준은 유지한다. */
+export const fetchExcludeCodes = (): Promise<IngredientGroupListResponse> =>
+  apiGet("/api/ingredient-groups", IngredientGroupListResponse, {
+    query: new URLSearchParams({
+      type: "QUICK_EXCLUDE" satisfies IngredientGroupType,
+    }),
+    revalidate: CATALOG_TTL,
+  });
 
 /**
  * 제품이 없는 카테고리는 눌러도 빈 목록만 나오므로 받은 자리에서 뺀다. 디렉터리, 홈 칩,
@@ -146,17 +153,13 @@ export const fetchBrands = (): Promise<BrandOverviewResponse> =>
 export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
   apiGet(`/api/brands/${brandId}`, BrandDetailResponse, { revalidate: CATALOG_TTL });
 
-/** 저장함은 브라우저가 가진 ID 로 표시 정보를 채운다. */
-export const fetchStorage = (productIds: readonly number[]): Promise<StorageResponse> =>
-  apiGet("/api/storage", StorageResponse, {
-    query: new URLSearchParams(productIds.map((id) => ["productIds", String(id)])),
-  });
-
 /*
  * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을
  * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
  */
 export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", CurationListResponse);
+
+export const fetchSitemap = (): Promise<SitemapResponse> => apiGet("/api/sitemap", SitemapResponse);
 
 /** 큐레이션 상세. 이미지와 제품이 모두 blocks 에 담겨 한 번에 온다. */
 export const fetchCuration = (curationId: number): Promise<CurationDetailResponse> =>

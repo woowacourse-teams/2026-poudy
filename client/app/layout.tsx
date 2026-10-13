@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
+import { BackForwardCacheSync } from "@/components/navigation/BackForwardCacheSync";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
 import { AppInstallBanner } from "@/components/ui/AppInstallBanner";
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </body>
 
       <HistoryDepthTracker />
+      <BackForwardCacheSync />
       <OpenInAppRedirect />
       <AnalyticsProvider />
       <GoogleAnalyticsTag />

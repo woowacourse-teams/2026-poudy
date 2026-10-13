@@ -68,6 +68,9 @@ export const buildOpenAppUrl = (webUrl: string, browser: AndroidMobileBrowser): 
 
 export const APP_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}&pcampaignid=web_share`;
 
+/** 앱 안에서 업데이트를 안내할 때 보내는 곳. 설치 유입이 아니므로 캠페인 표시를 붙이지 않는다. */
+export const APP_UPDATE_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+
 /**
  * 설치 배너가 쓰는 주소. 보던 화면을 그대로 이어 열되, 앱이 없으면 스토어로 보낸다.
  *
@@ -79,17 +82,32 @@ export const APP_STORE_URL = `https://play.google.com/store/apps/details?id=${AN
  * 찾으므로 http 인 localhost 에서는 가리킬 곳이 없다. 개발 중에 눌러도 아무 일이
  * 일어나지 않아 고장처럼 보이던 자리다. App Links 도 https 로만 검증된다.
  */
-export const buildInstallIntentUrl = (webUrl: string): string => {
+export const buildInstallIntentUrl = (webUrl: string, fallbackUrl: string = APP_STORE_URL): string => {
   const url = new URL(webUrl);
-  if (url.protocol !== "https:") return APP_STORE_URL;
+  if (url.protocol !== "https:") return fallbackUrl;
 
   const destination = `${url.host}${url.pathname}${url.search}`;
 
-  return `intent://${destination}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(APP_STORE_URL)};end`;
+  return `intent://${destination}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
 };
 
 /** 앱 설치 QR 코드가 담는 경로. 앱이 이 도메인의 모든 경로를 App Links 로 받는다. */
 export const OPEN_APP_PATH = "/open-app";
+
+export type AppInstallSource = "qr_scan" | "qr_click" | "install_banner" | "unknown";
+
+export const appInstallSourceOf = (webUrl: string): AppInstallSource => {
+  const source = new URL(webUrl).searchParams.get("source");
+  return source === "qr_scan" || source === "qr_click" || source === "install_banner" ? source : "unknown";
+};
+
+/** intent의 fallback도 우리 페이지를 거쳐, 실제로 스토어로 보내는 경우만 센다. */
+export const buildAppStoreRedirectUrl = (webUrl: string, source: AppInstallSource): string => {
+  const url = new URL(OPEN_APP_PATH, webUrl);
+  url.searchParams.set("source", source);
+  url.searchParams.set("store", "google_play");
+  return url.href;
+};
 
 /**
  * QR 코드로 들어온 `/open-app` 에서 이어 갈 주소를 고른다.
@@ -109,9 +127,10 @@ export const resolveOpenAppDestination = (webUrl: string, userAgent: string, isP
   const homeUrl = new URL("/", webUrl).href;
 
   if (isPoudyApp) return homeUrl;
+  if (new URL(webUrl).searchParams.get("store") === "google_play") return APP_STORE_URL;
   if (!ANDROID.test(userAgent)) return APP_STORE_URL;
 
-  return buildInstallIntentUrl(homeUrl);
+  return buildInstallIntentUrl(homeUrl, buildAppStoreRedirectUrl(webUrl, appInstallSourceOf(webUrl)));
 };
 
 export const planAppOpen = (webUrl: string, userAgent: string, isPoudyApp: boolean): AppOpenPlan => {

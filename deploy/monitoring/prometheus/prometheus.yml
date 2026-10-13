@@ -40,7 +40,7 @@ scrape_configs:
           endpoint: public_api
           service: poudy-backend
       - targets:
-          - https://poudy-staging.vercel.app/categories
+          - https://staging.poudy.site/categories
         labels:
           environment: staging
           endpoint: frontend_page

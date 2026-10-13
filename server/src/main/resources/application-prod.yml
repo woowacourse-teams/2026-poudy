@@ -13,6 +13,16 @@ spring:
     url: ${POUDY_DB_URL}
     user: ${POUDY_DB_USERNAME}
     password: ${POUDY_DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_REST_API_KEY}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
 
 poudy:
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
@@ -24,10 +34,18 @@ poudy:
       enabled: true
     retention:
       enabled: true
+  member:
+    retention:
+      enabled: true
 
 # 같은 인스턴스의 nginx가 전달한 X-Forwarded-For를 원격 주소로 복원해 요청 제한에 사용한다.
+# 세션은 정상 종료할 때 파일에 남기고 다시 뜰 때 불러와, 배포해도 로그인이 유지된다.
 server:
   forward-headers-strategy: native
+  servlet:
+    session:
+      persistent: true
+      store-dir: /var/lib/poudy-sessions
 
 # 모니터링 에이전트가 로컬에서만 접근하도록 Actuator 전용 포트를 분리한다.
 management:

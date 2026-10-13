@@ -1,11 +1,11 @@
 "use client";
 
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 import { useMemo, useState } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRows } from "./ProductRows";
-import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
+import { runwayStyleOf, STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
@@ -22,7 +22,7 @@ import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import type { InitialPage } from "@/lib/hooks/useProductPages";
 
 type ProductListProps = {
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 조건을 어느 주소에 쓸지. 브랜드 상세는 자기 주소에 남긴다. */
   readonly basePath?: string;
   /** 화면이 고정하는 조건. 브랜드 상세의 브랜드처럼 사용자가 바꾸지 않는 값이다. */
@@ -100,18 +100,20 @@ export function ProductList({
         묶음 안에 두면 묶음이 지나갈 때 함께 올라간다. 묶음의 간격은 위 여백으로 옮긴다.
         바텀시트의 딤(z-40)과 상단바(z-30) 아래에 둔다.
       */}
-      <ChipBarSlot sticky={stickyChips}>{chipBar}</ChipBarSlot>
+      <ChipBarRunway sticky={stickyChips}>
+        <ChipBarSlot sticky={stickyChips}>{chipBar}</ChipBarSlot>
 
-      <ProductRows
-        filter={filter}
-        basePath={basePath}
-        surface={surface}
-        entryPoint={entryPoint}
-        excludeCodes={excludeCodes}
-        openSheet={openSheet}
-        onCloseSheet={() => setOpenSheet(undefined)}
-        initialPage={initialPage}
-      />
+        <ProductRows
+          filter={filter}
+          basePath={basePath}
+          surface={surface}
+          entryPoint={entryPoint}
+          excludeCodes={excludeCodes}
+          openSheet={openSheet}
+          onCloseSheet={() => setOpenSheet(undefined)}
+          initialPage={initialPage}
+        />
+      </ChipBarRunway>
     </>
   );
 }
@@ -155,6 +157,17 @@ const blankFilter = (fixed: Partial<Filter> = {}): Partial<Filter> =>
  *
  * 뜻을 전하지 않는 장식이라 보조 기술에서는 감춘다.
  */
+/** 붙는 칩 줄과 그 아래 목록을 묶어, 결과가 적어도 칩 줄이 붙는 자리까지 스크롤되게 한다. */
+function ChipBarRunway({ sticky, children }: { readonly sticky?: StickyChips; readonly children: React.ReactNode }) {
+  if (!sticky) return <>{children}</>;
+
+  return (
+    <div className="flex flex-1 flex-col" style={runwayStyleOf(sticky)}>
+      {children}
+    </div>
+  );
+}
+
 /** 칩 줄 자리. 붙는 화면이면 그 화면의 자리에 붙인다. */
 function ChipBarSlot({ sticky, children }: { readonly sticky?: StickyChips; readonly children: React.ReactNode }) {
   if (!sticky) return <div className="bg-white px-4 pt-3">{children}</div>;

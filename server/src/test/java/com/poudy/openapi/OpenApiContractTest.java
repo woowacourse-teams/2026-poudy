@@ -1,6 +1,7 @@
 package com.poudy.openapi;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,6 +51,33 @@ class OpenApiContractTest {
     }
 
     @Test
+    void documentsCautionGroupCodeAsRequiredString() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.required", hasItem("code")))
+            .andExpect(jsonPath("$.components.schemas.ExcludeGroupResponse.properties.code.type").value("string"));
+    }
+
+    @Test
+    void documentsIngredientCautionsAsRequiredArray() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ProductIngredientResponse.required", hasItem("cautions")))
+            .andExpect(
+                jsonPath("$.components.schemas.ProductIngredientResponse.properties.cautions.type").value("array")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductIngredientResponse.properties.cautions.items.$ref")
+                    .value("#/components/schemas/IngredientCautionResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.IngredientCautionResponse.required", contains("code", "label")))
+            .andExpect(jsonPath("$.components.schemas.IngredientCautionResponse.properties.code.type").value("string"))
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientCautionResponse.properties.label.type").value("string")
+            );
+    }
+
+    @Test
     void documentsRankingChangeAsRequiredReference() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())
@@ -83,5 +112,43 @@ class OpenApiContractTest {
                     .value(1)
             )
             .andExpect(jsonPath("$.paths['/api/products/share-matches'].get.parameters[0].schema.minLength").value(1));
+    }
+
+    @Test
+    void documentsSocialLoginStartAsRedirect() throws Exception {
+        String operation = "$.paths['/api/oauth2/authorization/{provider}'].get";
+
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(operation + ".tags", contains("인증")))
+            .andExpect(jsonPath(operation + ".parameters[0].schema.enum", containsInAnyOrder("kakao", "google")))
+            .andExpect(jsonPath(operation + ".responses['302'].headers.Location").exists())
+            .andExpect(jsonPath(operation + ".responses['404']").exists())
+            .andExpect(jsonPath(operation + ".responses['400']").doesNotExist());
+    }
+
+    @Test
+    void documentsEnumsAsNamedSchemas() throws Exception {
+        ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        String[][] references = {
+                {"SkinTypeResponse", "code", "SkinType"},
+                {"ShareMatchResponse", "status", "ShareMatchStatus"},
+                {"ProductSuggestionMatchResponse", "field", "ProductMatchField"},
+                {"IngredientSuggestionMatchResponse", "field", "IngredientMatchField"},
+                {"FeedbackRequest", "type", "FeedbackType"},
+                {"AdminFeedbackResponse", "type", "FeedbackSubjectType"},
+                {"AdminFeedbackResponse", "status", "FeedbackStatus"},
+                {"AdminProductRequestResponse", "status", "ProductRequestStatus"},
+                {"ProblemDetail", "code", "ErrorCode"}
+        };
+        for (String[] reference : references) {
+            result.andExpect(
+                jsonPath("$.components.schemas." + reference[0] + ".properties." + reference[1] + ".$ref")
+                    .value("#/components/schemas/" + reference[2])
+            );
+        }
+        result.andExpect(jsonPath("$.components.schemas.ProductSort.default").value("DEFAULT"))
+            .andExpect(jsonPath("$.components.schemas.ExcludeCode.enum", hasItem("SULFATES")))
+            .andExpect(jsonPath("$.components.schemas.ErrorCode.enum", hasItem("CONFLICTING_INGREDIENT_FILTER")));
     }
 }

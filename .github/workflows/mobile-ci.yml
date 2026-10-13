@@ -27,6 +27,9 @@ jobs:
       # 검증 산출물은 배포하지 않으므로 실제 서비스 주소 대신 예약 도메인을 사용한다.
       EXPO_PUBLIC_SERVICE_URL: https://example.invalid
       EXPO_PUBLIC_API_BASE_URL: https://api.example.invalid
+      # 로그인은 실행하지 않으며, Expo 설정 검증에 필요한 형식만 맞춘다.
+      EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY: "00000000000000000000000000000000"
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "1234567890-ci.apps.googleusercontent.com"
 
     steps:
       - uses: actions/checkout@v7

@@ -27,8 +27,8 @@ com.poudy
 └── exception             공통 오류 응답 경계
 ```
 
-기능 패키지는 필요한 역할만 만든다. `storage`는 브라우저 상태의 조회 투영이므로 Domain과
-Repository가 없고, `share`는 제품·브랜드 모델을 사용하는 별도 해석 경계이므로 Repository가
+기능 패키지는 필요한 역할만 만든다. `storage`는 회원별 저장 목록이 제품 ID와 저장 시각뿐이라 Domain이
+없고, `share`는 제품·브랜드 모델을 사용하는 별도 해석 경계이므로 Repository가
 없다. `common`은 횡단 API 계약과 기술 코드만 소유하며 기능 규칙을 가져가지 않는다.
 
 ## Dependency direction
@@ -128,7 +128,7 @@ Repository는 조회 한 번마다 날짜·제품 행의 횟수를 DB에서 1 �
 
 ### ExcludeCode
 
-`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·설명과 성분 매핑은
+`excludecode`는 성분군 중 빠른 제외에 쓰는 것을 다룬다. 성분군의 코드·표시명·태그용 이름·설명과 성분 매핑은
 DB의 `ingredient_group`, `ingredient_group_ingredient`가 소유하고, 그중 제외 성분군은 서버의
 `ExcludeCode` enum이 고정한다. 제외 성분군 목록, `excludeCodes` 필터, 제품 상세의 주의 판정은
 enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문구가 함께 바뀌어야 하므로 DB 행
@@ -138,9 +138,16 @@ enum에 있는 코드만 읽는다. 제외 기준은 필터 계약과 화면 문
 소속 성분을 함께 소유해 포함 여부를 판정한다. `ExcludeCodes`는 공개 순서의 성분군 목록만
 보관한다. `excludecode`는 `ingredient` 코드에 의존하지 않는다.
 
+제품 상세의 성분별 주의 기준도 같은 소속으로 판정하며 해당하는 기준을 모두 반환한다.
+`ingredient_group.tag_name`은 전체 성분 행에 붙이는 짧은 문구다. 제외 성분군에는 빈 문구를
+허용하지 않고, 일반 성분군에는 NULL을 허용한다.
+
 ### IngredientGroup
 
-`ingredientgroup`은 성분군 상세 조회와 제품 상세 주요 성분의 묶음을 맡는다. 주요 성분은 제외
+`ingredientgroup`은 성분군 목록·상세 조회와 제품 상세 주요 성분의 묶음을 맡는다. 목록의
+`QUICK_EXCLUDE` 분류는 기존 `ExcludeCode` enum으로 선택하며, 분류를 생략한 목록은 빠른 제외를
+포함한 전체 성분군을 반환한다. 목록과 상세는 성분군과 소속 성분의 영문명을 항상 포함하고,
+값이 없으면 null로 반환한다. 기존 빠른 제외 조회는 호출부 전환 전까지 유지한다. 주요 성분은 제외
 성분군을 뺀 성분군으로 묶는다. 한 피부 작용 그룹 안에서 같은 성분군 성분이 2개 이상일 때만 처음
 나온 자리에 하나로 묶고, 한 성분이 여러 성분군에 속하면 더 많은 성분을 묶는 성분군을, 같으면 코드
 순서가 앞선 성분군을 고른다. 배정한 뒤 성분이 하나만 남은 성분군은 묶지 않는다. 전체 성분표는 묶지 않는다.
@@ -172,14 +179,135 @@ DB로 이전할 때 배너와 블록의 내부 순서 컬럼으로 배열 응답
 
 ### Storage
 
-보관 목록과 정렬은 브라우저 상태다. 서버의 `storage`는 전달받은 제품 ID를 제품 목록 표현으로
-투영할 뿐 별도 저장 상태를 만들지 않는다.
+저장함은 로그인한 회원만 쓰고 `member_saved_product`에 회원·제품·저장 시각(`created_at`)을 둔다.
+제품 목록·상세 응답에는 저장 여부를 넣지 않는다. 클라이언트가 저장한 제품 ID 목록
+(`/api/members/me/saved-products/ids`)을 따로 받아 표시하고, 저장함 화면은 표시 정보까지 담은
+목록(`/api/members/me/saved-products`)을 한 번에 받는다. 둘 다 최근 저장순이다. 저장과 해제는
+같은 요청을 다시 보내도 결과가 같다. 회원 행을 지우면 저장 목록도 함께 지워진다(`ON DELETE CASCADE`).
+
+### Sitemap
+
+`sitemap`은 클라이언트 사이트맵의 `lastmod`에 쓸 데이터 수정 시각만 내려 준다(`/api/sitemap`).
+카테고리·브랜드·게시 큐레이션은 자기 행과 담긴 제품의 `updated_at` 중 가장 늦은 값, 제품에 쓰인 성분은
+성분 행의 `updated_at`이다. 제품은 목록 응답(`ProductResponse.updatedAt`)이 같은 역할을 한다. 화면 응답에
+넣지 않은 것은 집계가 사이트맵 요청에만 필요해서다. 목록 순서(조회수순)와 빠져나간 제품은 반영하지 않는다.
+`updated_at`은 DB 기본값만 있고 수정 때 자동으로 바뀌지 않으므로, 데이터를 넣는 쪽이 내용이 바뀐 행(자식
+행 변경 포함)만 올린다. 화면 쪽 기준일은 클라이언트 `SCREEN_UPDATED_AT`이 따로 갖는다.
 
 ### Share
 
 `share`는 외부 공유 텍스트를 제품 후보로 해석하는 경계다. DB의 제품명 검색과 브랜드별 조회로
 후보를 찾고, Java가 버전·제형·용도 차이를 판정해 확정한다. 처리 규칙과 평가 근거는
 [`share-text-matching.md`](docs/product/share-text-matching.md)가 소유한다.
+
+### Security
+
+`security`는 Security 설정, 소셜 로그인과 로그인 세션을 소유한다. 회원 기능을 알지 않으며, 가입·조회와 복구 요청은
+`SocialMembers` 포트로 맡기고 `member`가 구현한다. 활성 회원 확인도 `MemberActivity` 포트를
+`MemberService`가 구현한다. 의존은 `member → security` 한 방향이고, 로그인한
+회원이 필요한 기능은 `member` 대신 `security`의 `LoginMember`에 의존한다. `config`는 기능을 모르는
+설정만 남긴다. 관리자 인증 컨트롤러·요청과 응답·계정 확인도 `security.auth.admin`이 소유한다.
+회원 가입·프로필·탈퇴·복구 요청 저장과 복구 상태 규칙은 `member`에 남기고, `auth`는
+신원 확인과 인증 상태를 이용하는 흐름만 맡는다.
+
+제공자 응답 해석은 `OAuthProvider`가 맡는다. 카카오 회원번호·구글 `sub`가 제공자 식별자이고, 카카오는
+`is_email_valid`·`is_email_verified`, 구글은 `email_verified`가 참일 때만 인증된 이메일로 본다.
+
+로그인 흐름은 Spring Security `oauth2Login`이 처리하고, 컨트롤러가 없는 로그인 시작과 로그아웃 경로는
+OpenAPI에 직접 추가한다. 등록하지 않은 제공자는 Security 기본 500 대신 404로 응답한다. Spring OAuth 클라이언트 인터페이스를
+구현하는 부품(등록된 제공자만 받는 요청 해석, 제공자 토큰을 버리는 저장소)은 웹과 앱 WebView의 OAuth 로그인에 함께 쓰여 `security.auth.oauth`에 둔다. 운영 nginx가 `/api/`만
+백엔드로 넘기므로 시작(`/api/oauth2/authorization/*`)과 콜백(`/api/login/oauth2/code/*`) 경로를
+`/api` 아래에 둔다. 제공자 로그인 요청에는 `prompt=select_account`를 붙여, 브라우저에 로그인된 제공자 계정이
+있어도 바로 넘어가지 않고 다른 계정을 고를 수 있게 한다. 로그인에 성공하면 세션의 인증을 회원 ID만 가진 인증으로 바꾸고, 제공자 토큰은
+저장하지 않는다. 로그인을 마치면 프론트의 `/login/callback`으로 보낸다. 프론트 오리진은 `ClientOrigins`가
+CORS 허용 오리진 중 `*`가 없는 첫 값으로 정하고, 비어 있으면 같은 오리진(운영)이다. PR preview는
+주소가 PR마다 달라 허용 목록에 와일드카드로만 있으므로, 어느 preview에서 시작했는지 서버가 알 수 없다. 그래서
+로그인 시작 요청의 `returnOrigin`을 `ClientOrigins.trustedOrigin`이 판정하고, 믿을 수 있는 값만 앱 채널 여부와 함께
+`OAuthLoginStart`로 묶어 그 로그인의 OAuth `state`와 함께 세션에 맡겨 둔다. 이 값이 세션에 맡기고 꺼내는 일까지 스스로 한다. OAuth 흐름에만 있는 상태라 `LoginSession`이 아니라 `security.auth.oauth`가 소유한다. 콜백의 `state`가 같을 때만 한 번 꺼내 그 오리진으로 보내고,
+다르면 꺼내지 않고 기본 주소로 보낸다. 같은 브라우저에서 로그인을 둘 시작하면 앞선 로그인의 콜백이 나중 로그인의
+복귀 주소를 가져가지 않게 하기 위해서다. 이 값은 링크를 만든 누구나 넣을 수 있으므로 URI로
+해석해 `scheme://authority`와 정확히 같은지 먼저 확인한다. CORS 와일드카드 판정은 `*`를 임의 문자열로 보므로
+`https://evil.com/.preview.poudy.site` 같은 값도 통과시키기 때문이다. 그래서 `isAllowedOrigin`은 브라우저가 붙이는
+`Origin` 헤더에만 쓰고, 요청 값은 `trustedOrigin`으로만 판정한다. 허용하지 않은 값이나 값이 없으면 기본 주소로
+보내고, 세션을 버리는 처리보다 먼저 꺼낸다. 처리하지 못한
+예외가 나도 Spring이 먼저 저장한 제공자 인증을 세션과 함께 버리고 로그인 실패로 보낸다. 실패하면 오류 코드를 `error`에,
+이메일 중복이면 기존 제공자를 `provider`에 붙인다. 중복된 이메일은 화면에 보여 줘야 하지만 주소창·방문 기록·접근 로그에
+남지 않게 URL에 붙이지 않는다. 대신 `SocialLogin`이 기존 제공자와 이메일을 로그인하지 않은 새 세션에 10분 동안 맡기고,
+프론트는 `GET /api/auth/registered-account`로 읽는다. 앱 로그인도 WebView의 웹 페이지가 같은 콜백 화면으로 보내므로,
+웹 OAuth와 앱 로그인 모두 이 세션을 쓰게 두 입구가 함께 지나는 `SocialLogin`에서 맡긴다. 방금 그 소셜 계정으로 로그인한
+브라우저만 받으므로 남의 이메일을 알아낼 수 없다. 화면을 다시 그려도 보이도록 읽을 때 지우지 않는다. 화면 분기는 `status`로 한다. 가입한 회원은 `SIGNED_IN`으로
+홈에 가고, 처음 로그인한 계정은 `SIGNUP_REQUIRED`로 가입 확인 화면에 간다. 초기 정보 입력은 가입 직후에만
+보여 주고, 입력하지 않고 떠난 회원에게 다시 묻지 않는다.
+
+세션을 만들고 버리고 만료를 판정하는 일은 `LoginSession`이 맡는다. OAuth 로그인 설정(`OAuthLoginConfigurer`)과 콜백의 성공·실패 처리(`OAuthLoginHandler`)는 웹·앱 공통 OAuth 구현으로
+`security.auth.oauth`에 두고, `SecurityConfig`에는 웹·앱 공통 설정만 남긴다. 로그아웃도
+Security 로그아웃 필터가 처리한다. CSRF를 끄면 이 필터가 모든 메서드를 받으므로 POST로 한정하고 204로
+응답한다. 코드는 `HttpSession`과 Security의 `SecurityContextRepository`만 쓰므로 세션 저장소를
+Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이 경계에는 별도 Repository를 두지
+않는다. 세션은 서블릿 컨테이너 메모리에 두되, 운영 프로필은 Tomcat이 정상 종료할 때 세션을 파일에 남기고 다시
+뜰 때 불러와 배포해도 로그인이 유지된다. 서버가 한 대라 Spring Session JDBC처럼 요청마다 DB에 쓰는 저장소 대신 이
+방식을 쓴다. 강제 종료되면 남지 않는다. 배포 중단 시간 사이에 만료될 세션이 이어지도록 종료 직전 만료까지 5분이
+안 남은 세션(막 지난 것 포함)에 5분을 준다. 비활동 만료는 `LoginSession`이, 절대 만료는 그 세션의 `SessionPolicy`가 늘린다.
+세션에 넣는 일반 클래스는 `serialVersionUID`를 둔다. 하나라도 읽지
+못하면 Tomcat이 그 뒤 세션을 모두 버린다. 웹 세션은 비활동
+1일, 로그인 후 7일에 만료한다. 앱은 네이티브 SDK로 받은 카카오 접근 토큰이나 구글 ID 토큰을
+`POST /api/auth/{provider}/app-login`으로 보내고, 서버는 카카오 토큰의 `app_id`(`access_token_info`)나 구글 ID 토큰의
+서명·발급자·대상(웹 클라이언트 ID)을 확인한 뒤 웹과 같은 `SocialMembers`로 가입·로그인한다. 토큰은 이 로그인에만 쓰고
+보관하지 않는다. `SocialLogin`은 소셜 계정을 읽는 방법(`Supplier<OAuthAccount>`)과 세션을 만들 채널을 받는다. OAuth 처리기는 Spring 인증 결과에서, 앱 로그인 컨트롤러는
+제공자별 `ProviderTokenVerifier`(카카오·구글)를 고르는 `ProviderTokenVerifiers`로 계정을 읽는다. 읽기도 `SocialLogin` 안에서 일어나므로 계정을 읽다 실패해도 기존 세션을 버린다. 입구가 둘뿐이라 자격 증명·계정 판독 인터페이스는 두지 않는다. 가입·로그인과 세션 교체·발급은 `SocialLogin`이 함께 맡는다. 공통 계약·인증 흐름·탈퇴 계정 본인 확인 API는 `security.auth`에 둔다. 계약의 OAuth 리다이렉트 로그인 구현은 `security.auth.oauth`, 네이티브 토큰 구현과 API는 `security.auth.app`으로 분리한다. 패키지는 접속 기기가 아니라 로그인 방식으로 나눈다. 카카오톡이 없는 앱도 WebView 안에서 같은 OAuth 구현을 쓰기 때문이다. `SocialLogin`은 로그인 결과를 돌려주고 실패하면 기존 세션을 버린 뒤 예외를 다시 던진다. 응답은 각 입구가 만든다. OAuth 처리기는 `LoginCallbackUrl`로 `/login/callback`의 `status`·`error` 리다이렉트 주소를, 앱 로그인 컨트롤러는 JSON을 돌려주고 실패는 MVC 예외 처리로 넘긴다. 입구가 둘뿐이고 응답 모양이 완전히 달라 응답을 만드는 인터페이스는 두지 않는다. 로그인에 실패하면 웹·앱 모두 기존 세션을 버린다. 세션 기간은 `SessionPolicy` 구현이 정한다. 웹(`WebSessionPolicy`)·관리자(`AdminSessionPolicy`)는 절대 만료가 있는
+`ExpiringSessionPolicy`이고, 앱은 쿠키 수명을 늘리는 `AppSessionPolicy`다. `LoginSession`은 정책 목록을 주입받아 세션에 기록한
+`LoginChannel`로 고르므로 웹·앱 구현을 알지 않는다. 웹·앱·관리자 세션 정책과 앱 쿠키 연장은 `security.session`에 모으고,
+네이티브 토큰 로그인 API는 `security.auth.app`에 둔다. `security.auth` 안의 HTTP 입구도 다른 기능처럼 `controller`·`controller.dto`·`service` 하위 패키지에 둬 `ArchitectureTest`의 계층 규칙을 받게 한다. Spring Security 부품만 있는 `security.auth.oauth`는 나누지 않는다. 앱의 구글 ID 토큰은 `azp`가 Android 클라이언트라
+`azp`를 웹 클라이언트 ID와 비교하는 Spring OIDC 검증기를 쓰지 않고 서명·발급자·대상·만료만 확인한다. 앱 세션은 비활동 60일·절대 만료 없음이고, 하루에 한 번 세션 쿠키 수명도 다시 60일로 늘린다. 카카오톡이 없는 기기는 앱 WebView 안에서 웹 OAuth로 로그인하고, 시작 요청에 `channel=app`을 붙인다. 이 값도 복귀 오리진과 함께 `OAuthLoginStart`에 담겨, 같은 `state`의 콜백에서만 꺼내 세션 채널을 앱으로 정한다. 없거나 다른 값이면 웹이다. 이 값은 누구나 붙일 수 있지만 세션 기간만 바꾸고 권한은 바꾸지 않는다. 서블릿 세션에 절대 만료가 없어 세션에 만료 시각을 두고 Security
+필터 앞에서 판정한다. 관리자는 환경 변수의 공용 계정으로 `POST /api/admin/login`에 로그인하면 같은
+세션에 `ROLE_ADMIN` 인증을 받는다. 환경 변수에는 비밀번호 원문 대신 BCrypt 해시를 둬, 서버 설정이 새도 원문은 남지 않는다. 해시가 없거나 BCrypt 형식이 아니어도 서버는 뜨고, 기동 때 오류 로그를 남긴 뒤 관리자 로그인만 401로 막는다. 관리자 설정 하나 때문에 회원 API까지 배포가 막히지 않게 하려는 것이다. 로그인 때 기존 세션을 버려 세션 ID를 새로 받고, 비활동 1시간,
+로그인 후 12시간에 만료한다. 공용 계정 하나를 비밀번호로만 지키므로 로그인 시도는 클라이언트 주소마다 1분에 5번으로
+제한하고, 넘으면 자격 증명을 확인하지 않고 429로 거절한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/members/**`는 회원 인증만 받고,
+인증이 없으면 401 `UNAUTHORIZED`, 다른 쪽 인증이면 403 `FORBIDDEN`으로 거절한다. 회원 인증으로
+`/api/members/**`를 호출하면 `ActiveMemberFilter`가 PK 조회 한 번으로 활성 상태를 확인한다.
+탈퇴하거나 삭제된 회원이면 세션을 종료하고 401로 거절한다. 이 필터는 인증을 읽은 뒤,
+로그아웃 처리 전에 실행하므로 다른 기기의 세션도 다음 회원 API 요청에서 종료된다. 로그아웃은 회원
+`POST /api/members/logout`, 관리자 `POST /api/admin/logout`으로 나누고, 둘 다 Security 로그아웃 필터가
+자기 역할의 세션일 때만 처리한다. 세션이 없거나 다른 역할이면 필터를 지나 접근 규칙에 따라 401·403으로
+거절하고 세션은 그대로 둔다. 나중에 IP 제한 같은 조건을
+관리자 인증 전체에 걸 수 있게 관리자 로그인·로그아웃·API를 모두 `/api/admin/` 아래에 둔다. 경로별로 필요한 역할은
+`AccessRule`이 정하고, 보안 설정과 OpenAPI의 401·403 문서가 함께 쓴다. 이 판정이 요청마다 세션을 조회하므로 세션 쿠키를 가진 요청은 비활동 만료를
+연장한다. 쿠키 수명은 연장하지 않는다. 세션 쿠키는 `HttpOnly`, `SameSite=Lax`, `Domain` 없음이고
+수명은 앱 세션에 맞춘 60일이다. 웹의 짧은 수명은 서버가 판정한다. CSRF 토큰 대신 출처를 확인한다. 세션 쿠키가
+`SameSite=Lax`라 다른 사이트의 요청에는 실리지 않지만, `SameSite`는 사이트 단위라 `*.poudy.site`
+(staging 포함)에서 온 요청에는 운영 쿠키가 실리고, 본문 없는 POST는 CORS preflight도 거치지 않는다.
+그래서 GET·HEAD·OPTIONS·TRACE가 아닌 요청은 `Origin`이 같은 오리진이거나 `ClientOrigins`가 허용하는 오리진일 때만
+통과시키고, 아니면 403 `FORBIDDEN_ORIGIN`으로 거절한다. 이 확인은 `security.filter`의 `ForeignOriginFilter`가 맡는다. `Origin`이 없는 요청은 브라우저가 아니므로
+통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 기존 응답 캐시를 바꾸지 않고, 회원 응답만
+`no-store`로 둔다.
+
+### Member
+
+`member`는 회원과 초기 정보(성별·나이대·피부 타입)를 소유한다. 회원은 제공자와 제공자 식별자로
+식별하고, 이메일은 가입 시점에 제공자가 인증한 값을 소문자로 저장해 다른 제공자의 중복 가입을 막는
+데만 쓴다. 가입은 `MemberSignup`이 소셜 계정의 인증된 이메일을 한 번만 검증해 담고, 중복 확인과 저장이
+같은 값을 쓴다. 만 14세 미만은 법정대리인 동의 절차가 없어 받지 않으므로, 처음 로그인한 계정은 바로 저장하지
+않는다. 이메일 인증과 중복을 먼저 확인한 뒤 그 소셜 계정만 로그인하지 않은 세션에 10분 동안 맡겨 두고, 사용자가
+가입 화면에서 만 14세 이상임을 직접 체크해 `POST /api/auth/signup`을 보내야 회원 행을 만들고 같은 세션으로
+로그인시킨다. 앱 로그인도 같은 확인을 거친다. 맡길 때 로그인 채널도 함께 둬, 가입하면 그 채널의 세션 정책으로
+로그인한다. 이 경로 말고는 회원 행이 생기지 않으므로 행이 있다는 것이 확인했다는 기록이다. 가입하지 않고
+떠나면 세션과 함께 사라져 남는 개인정보가 없다. 맡겨 둔 사이 다른 제공자로 같은 이메일이 가입했으면 가입 때 다시
+확인해 거절한다. 이미 가입한 회원은 이메일 상태와 무관하게 로그인한다. 초기 정보는 아는 것만 고르게 해 셋 다
+비어 있어도 되고, 저장할 때 고르지 않은 것은 비운다. 피부 타입을 모르면 비워 둔다. 예전에 있던 `UNKNOWN`은 저장된
+값을 비우고 없앴다. "잘 모르겠어요"는 나중에 설문으로 피부 타입을 진단해 네 값 중 하나를 저장할 자리라, 모른다는 값을
+따로 두지 않는다. 탈퇴는 회원 행을 지우지 않고 `deleted_at`만
+남긴 뒤 로그인 세션을 끝낸다. 탈퇴 회원은 회원 조회에서 빠진다. 같은 소셜 계정으로 다시 로그인하면
+로그인시키지 않고, 그 탈퇴 회원 ID만 로그인하지 않은 세션에 10분 동안 맡겨 둔 채 프론트에 탈퇴 안내를
+보낸다. 사용자는 이 세션으로만 탈퇴 정보를 조회하고 복구를 요청할 수 있어 다른 회원을 사칭할 수 없고, 요청은
+`restore_requested_at`에 남는다. 탈퇴 정보(`GET /api/auth/withdrawn`)는 제공자·이메일·탈퇴 시각과 복구를 요청할 수 있는
+기한을 준다. 기한은 탈퇴 시각에 파기 기준 보관 기간(`poudy.member.retention.max-age`)을 더한 시각이다. 파기 작업은
+그 시각이 지난 뒤 첫 새벽에 돌기 때문에, 이 시각까지는 행이 남아 있다. 화면을 다시 그려도 보이도록 조회는 맡긴
+회원 ID를 지우지 않고, 복구를 요청하면 지운다. 이미 복구를 요청한 회원이 다시 로그인하면 세션을 맡기지 않고 복구 요청
+중이라는 안내만 보낸다. 관리자는 복구를 요청한 탈퇴 회원만 복구할 수 있고, 복구하면 `deleted_at`과
+`restore_requested_at`을 비워 다시 로그인하게 한다. 복구 요청 목록은 요청한 순서대로 보여 준다. 탈퇴 회원
+행은 `MemberRetentionService`가 매일 새벽 탈퇴한 지 30일이 지난 것을 지운다. 복구를 요청했어도 30일 안에
+복구하지 않으면 지우고, 그 뒤 같은 계정으로 로그인하면 새로 가입한다. 운영 프로필에서만 켠다. 탈퇴 회원의 이메일도 남아 있어 다른 제공자로 같은 이메일 가입은 계속 막힌다. 카카오 연결 끊기는 어드민
+키가 필요해 아직 하지 않고, 구글은 토큰 없이 연결을 끊을 수 없어 사용자가 계정 설정에서 해제한다.
 
 ## Layer responsibilities
 
@@ -232,14 +360,25 @@ DB를 사용한다.
 ### CORS
 
 CORS는 `/api/**`에만 적용하며 허용 오리진은 `CLIENT_DOMAIN`이 소유한다. 값이 없으면 열지 않는
-것이 기본값이다. 운영은 같은 오리진 nginx 프록시를 사용하므로 자격 증명과 불필요한 오리진을
-허용하지 않는다.
+것이 기본값이다. staging과 로컬은 프론트와 API 오리진이 달라 세션 쿠키를 보내야 하므로 허용한
+오리진에는 자격 증명을 허용한다. 운영은 같은 오리진 nginx 프록시를 사용하므로 `CLIENT_DOMAIN`을
+비워 CORS를 열지 않는다. CORS는 Security 필터 체인에서 처리한다. `CLIENT_DOMAIN` 해석은
+`security`의 `ClientOrigins` 한 곳이 맡아 CORS 설정, 상태 변경 요청의 출처 확인, 로그인 후 이동 주소가 같은
+오리진 목록을 쓴다.
 
 ## API decisions
 
 엔드포인트와 스키마의 권위 원천은 Controller, DTO와 OpenAPI 설정 코드다. `openapi.json`과
 `common/api.zod.*`는 검증·소비용 생성물이므로 직접 수정하지 않는다. 이 문서에는 엔드포인트
 목록을 복제하지 않는다.
+
+클라이언트가 서버의 enum과 오류 코드를 손으로 복사하지 않도록, API에 노출되는 enum은 모두 이름 있는
+스키마로 문서화한다. 도메인 enum에 Swagger 어노테이션을 붙이지 않으려고 `OpenApiConfig`가 이를 전역으로
+켜며, 새 enum도 따로 표시하지 않아도 같은 방식으로 생성된다. 이때 파라미터에 둔 기본값은 그 파라미터가
+아니라 enum 스키마에 붙는다. `ProductSort`의 `DEFAULT`가 그렇다. 같은 enum을 기본값이 다른 자리에서
+쓰게 되면 기본값을 enum이 아닌 그 자리에서 정하도록 바꿔야 한다. `ErrorCode`는 `ProblemDetailResponses`가
+직접 컴포넌트로 등록하고 `ProblemDetail.code`가 참조한다. `common/api.zod.ts`는 엔드포인트별 파라미터
+스키마까지 생성해 클라이언트가 기본값과 범위를 따로 들고 있지 않게 한다.
 
 제품 검색과 필터는 같은 제품 컬렉션을 좁히는 조건이므로 `/api/products`에서 결합한다. 검색
 제안은 표시용 일치 정보라는 다른 표현을 반환하므로 별도 경계를 사용한다. 목록과 count는 같은

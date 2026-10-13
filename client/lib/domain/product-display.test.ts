@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { MAX_LEVEL } from "./filter";
 import {
   dropletFills,
   formatPrice,
   formatVolumeWithUnitPrice,
+  LEVEL_LABELS,
   levelLabel,
   productIngredientDescription,
   unitPrice,
@@ -75,5 +77,11 @@ describe("productIngredientDescription", () => {
         effectNames: [],
       }),
     ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요.");
+  });
+});
+
+describe("LEVEL_LABELS", () => {
+  it("서버가 받는 유수분 단계마다 이름이 있다", () => {
+    expect(LEVEL_LABELS).toHaveLength(MAX_LEVEL + 1);
   });
 });

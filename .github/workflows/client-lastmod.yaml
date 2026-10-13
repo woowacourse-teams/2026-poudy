@@ -1,0 +1,173 @@
+name: Client Lastmod
+
+# main 으로 가는 PR 에서 사이트맵 lastmod 의 화면 기준일(client/lib/seo/sitemap.ts 의 SCREEN_UPDATED_AT)을
+# 맞춰 PR 브랜치에 커밋한다. 검색 엔진은 운영 화면을 읽으므로 기준일은 main 에 나가는 날이어야 한다.
+#
+# 1. 화면 파일이 바뀌었는데 라벨이 없는 화면을 PR 댓글 하나로 알린다. 라벨은 붙이지 않는다.
+#    경로로는 리팩터링·분석 이벤트처럼 본문이 그대로인 변경과 화면 구성 변경을 가르지 못한다.
+#    화면 구성이 바뀌었는지는 사람이 보고 lastmod:<화면> 라벨을 단다.
+# 2. 라벨이 있는 화면은 그날로, 없는 화면은 베이스(main)의 값으로 맞춘다. 라벨을 떼면 날짜도 돌아간다.
+#    본문이 그대로인 배포까지 날짜가 오르면 검색 엔진이 lastmod 를 믿지 않는다.
+# 3. 바뀐 것이 있으면 커밋해 PR 브랜치에 올리고, 이전 커밋의 CI 를 취소한다.
+#    GITHUB_TOKEN 으로 올린 커밋의 PR 실행은 승인을 기다리며 멈추므로 승인 API 로 풀어 main 필수 체크
+#    (Client checks, gate)가 돌게 한다. workflow_dispatch 로 돌린 실행은 PR 체크로 세지 않아 쓰지 않는다.
+#
+# 공용 컴포넌트(components/ui, lib/domain)는 여러 화면이 함께 써 경로로 고르지 않는다. 그런 변경은 댓글에
+# 나오지 않으니 직접 살핀다. 화면 경로를 바꾸면 아래 path_of 도 고친다.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+  actions: write
+  # PR 댓글은 /issues/{n}/comments 로 달지만, 대상이 PR 이면 pull-requests 쓰기 권한도 함께 요구한다.
+  issues: write
+  pull-requests: write
+
+# 라벨 여러 개를 연달아 달면 실행이 겹친다. 커밋·승인 도중 취소되지 않게 차례로 돌린다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Screen lastmod
+    # 포크에서 온 PR 은 브랜치에 쓸 수 없다.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Sync screen dates
+        # 기본 셸은 pipefail 이 꺼져 있어 파이프 중간의 gh 실패가 묻힌다.
+        shell: bash
+        env:
+          ACTION: ${{ github.event.action }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sitemap=client/lib/seo/sitemap.ts
+          screens="home search category brand curation product ingredient"
+          today=$(TZ=Asia/Seoul date +%F)
+
+          path_of() {
+            case "$1" in
+              home) echo '^client/(app/page\.tsx|components/home/)' ;;
+              search) echo '^client/(app/search/|components/search/)' ;;
+              category) echo '^client/app/categories/' ;;
+              brand) echo '^client/app/brands/' ;;
+              curation) echo '^client/(app/curations/|components/curation/)' ;;
+              product) echo '^client/(app/products/\[productId\]/|components/product/)' ;;
+              ingredient) echo '^client/(app/ingredients/|components/ingredient/)' ;;
+            esac
+          }
+
+          labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+          # gh pr diff 는 파일이 300개를 넘으면 거절한다. 릴리스 PR 은 그보다 크다.
+          files=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate --jq '.[].filename')
+          files=$(printf '%s\n' "$files" | grep -Ev '\.test\.tsx?$' || true)
+          candidates=""
+          for screen in $screens; do
+            grep -qxF "lastmod:$screen" <<< "$labels" && continue
+            matched=$(grep -E "$(path_of "$screen")" <<< "$files" || true)
+            [ -z "$matched" ] && continue
+            count=$(wc -l <<< "$matched" | tr -d ' ')
+            shown=$(head -n 3 <<< "$matched" | sed 's/^/`/; s/$/`/' | paste -sd ',' - | sed 's/,/, /g')
+            line="- \`lastmod:$screen\` — $shown"
+            if [ "$count" -gt 3 ]; then
+              line="$line 외 $((count - 3))개"
+            fi
+            candidates=$(printf '%s\n%s' "$candidates" "$line")
+          done
+
+          marker='<!-- client-lastmod-candidates -->'
+          comments=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id")
+          comment=$(head -n 1 <<< "$comments")
+          if [ -n "$candidates" ]; then
+            body=$(printf '%s\n### 사이트맵 lastmod 후보 화면\n\n아래 화면의 파일이 바뀌었습니다. 검색 결과에 보이는 본문(문구, 구성, 제목, 설명)이 바뀐 화면에만 라벨을 달면 기준일이 그날로 바뀝니다. 리팩터링, 스타일, 분석 이벤트만 바뀌었다면 달지 않습니다.\n%s\n' "$marker" "$candidates")
+          else
+            body=$(printf '%s\n### 사이트맵 lastmod 후보 화면\n\n라벨을 달지 않은 후보 화면이 없습니다.\n' "$marker")
+          fi
+          if [ -n "$comment" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$comment" -f body="$body" > /dev/null
+          elif [ -n "$candidates" ]; then
+            gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
+          fi
+
+          unknown=$(printf '%s\n' "$labels" | sed -n 's/^lastmod://p' | grep -vxE "$(echo "$screens" | tr ' ' '|')" || true)
+          if [ -n "$unknown" ]; then
+            echo "::error::알 수 없는 lastmod 라벨이 있습니다: $unknown. 화면 이름은 $screens 중 하나입니다."
+            exit 1
+          fi
+
+          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          base=$(git show "$BASE_SHA:$sitemap" 2>/dev/null || true)
+          changes=""
+          for screen in $screens; do
+            pattern="^  $screen: \"[0-9-]*\",\$"
+            if [ "$(grep -c "$pattern" "$sitemap" || true)" -ne 1 ]; then
+              echo "::error::$sitemap 의 SCREEN_UPDATED_AT 에서 '$screen' 을 하나로 찾지 못했습니다. 선언 모양을 확인하세요."
+              exit 1
+            fi
+            current=$(sed -n "s/^  $screen: \"\([0-9-]*\)\",\$/\1/p" "$sitemap")
+            if grep -qxF "lastmod:$screen" <<< "$labels"; then
+              target=$today
+            else
+              target=$(printf '%s\n' "$base" | sed -n "s/^  $screen: \"\([0-9-]*\)\",\$/\1/p")
+            fi
+            if [ -z "$target" ] || [ "$target" = "$current" ]; then
+              continue
+            fi
+            sed -i "s/$pattern/  $screen: \"$target\",/" "$sitemap"
+            changes=$(printf '%s\n- %s: %s → %s' "$changes" "$screen" "$current" "$target")
+          done
+
+          if [ -z "$changes" ]; then
+            echo "화면 기준일이 라벨과 맞습니다."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf 'fix : 사이트맵 lastmod 기준일 갱신\n%s\n' "$changes" | git commit -F - -- "$sitemap"
+          git push origin "HEAD:$HEAD_REF"
+          pushed=$(git rev-parse HEAD)
+
+          for workflow in client-ci.yaml server-ci.yml; do
+            gh run list --workflow "$workflow" --commit "$HEAD_SHA" --json databaseId,status \
+              --jq '.[] | select(.status != "completed") | .databaseId' |
+              while read -r run; do gh run cancel "$run" || true; done
+          done
+
+          runs=""
+          for attempt in $(seq 1 24); do
+            runs=$(gh run list --commit "$pushed" --json databaseId,workflowName,conclusion \
+              --jq '.[] | "\(.databaseId)\t\(.workflowName)\t\(.conclusion)"')
+            if grep -q $'\tClient CI\t' <<< "$runs" && grep -q $'\tServer CI\t' <<< "$runs"; then
+              break
+            fi
+            sleep 5
+          done
+          if ! grep -q $'\tClient CI\t' <<< "$runs" || ! grep -q $'\tServer CI\t' <<< "$runs"; then
+            echo "::error::$pushed 에서 Client CI·Server CI 실행을 찾지 못했습니다. PR 화면에서 워크플로 승인을 확인하세요."
+            exit 1
+          fi
+          printf '%s\n' "$runs" | awk -F '\t' '$3 == "action_required" { print $1 }' |
+            while read -r run; do
+              gh api -X POST "repos/$REPO/actions/runs/$run/approve" || {
+                echo "::error::실행 $run 을 승인하지 못했습니다. PR 화면에서 워크플로 승인을 누르세요."
+                exit 1
+              }
+            done

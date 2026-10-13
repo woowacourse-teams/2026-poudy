@@ -44,7 +44,7 @@ pnpm android
 ```bash
 cd mobile
 export POUDY_BUNDLE_IDENTIFIER=com.poudy.app.dev
-export EXPO_PUBLIC_SERVICE_URL=https://poudy-staging.vercel.app
+export EXPO_PUBLIC_SERVICE_URL=https://staging.poudy.site
 pnpm exec expo prebuild --clean --no-install
 pnpm android
 ```

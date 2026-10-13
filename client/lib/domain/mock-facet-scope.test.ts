@@ -1,7 +1,6 @@
-import { SkinTypeResponse } from "@poudy/api/api.zod";
+import { SkinType } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 
-import type { SkinTypeCode } from "@/mocks/fixtures";
 import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtures";
 
 /*
@@ -24,7 +23,7 @@ const BASE = "http://localhost/api";
  * 서버가 내려주는 차례는 이 정의 순서를 따르므로, 손으로 적지 않고 공용 스키마에서 가져와
  * API 가 바뀌면 테스트도 함께 따라가게 한다.
  */
-const ALL_SKIN_TYPE_CODES: readonly SkinTypeCode[] = SkinTypeResponse.shape.code.options;
+const ALL_SKIN_TYPE_CODES: readonly SkinType[] = SkinType.options;
 
 // 목 서버는 vitest.setup.ts 가 이미 띄워 둔다.
 const fetchProducts = async (query: string) => {

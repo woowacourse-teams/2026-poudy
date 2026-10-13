@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { OpenAppDestinationRedirect } from "@/components/navigation/OpenAppDestinationRedirect";
 import { TopBar } from "@/components/ui/TopBar";
-import { APP_STORE_URL } from "@/lib/navigation/open-app";
 
 export const metadata: Metadata = {
   title: "앱으로 이동",
@@ -23,15 +22,8 @@ export default function OpenAppPage() {
       <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
         <p className="text-[15px] font-bold text-text-primary">파우디 앱으로 이동하고 있어요</p>
 
-        <a
-          href={APP_STORE_URL}
-          className="mt-2 flex h-11 items-center rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
-        >
-          Play 스토어에서 받기
-        </a>
+        <OpenAppDestinationRedirect />
       </main>
-
-      <OpenAppDestinationRedirect />
     </>
   );
 }

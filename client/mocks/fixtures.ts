@@ -3,13 +3,13 @@ import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pi
 import type {
   BrandSummaryResponse,
   CategoryResponse,
-  ExcludeCodeResponse,
   IngredientDetailResponse,
   IngredientGroupResponse,
   ProductDetailResponse,
   ProductPartResponse,
   ProductResponse,
   ProductSimilarityResponse,
+  SkinType,
 } from "@poudy/api/api.zod";
 
 /*
@@ -50,6 +50,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 2,
@@ -61,6 +62,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 3,
@@ -72,6 +74,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 4,
@@ -83,6 +86,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 5,
@@ -94,6 +98,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 6,
@@ -105,6 +110,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 7,
@@ -116,6 +122,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 8,
@@ -127,6 +134,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 9,
@@ -138,6 +146,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 10,
@@ -149,6 +158,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 11,
@@ -160,6 +170,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 12,
@@ -171,6 +182,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 13,
@@ -182,6 +194,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 14,
@@ -193,6 +206,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 1,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 15,
@@ -204,6 +218,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 0,
+    updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];
 
@@ -269,7 +284,7 @@ const EXCLUDE_GROUP_NAMES = [
 ] as const;
 
 export const excludeGroupsOf = (freeOfCodes: readonly string[]): ProductPartResponse["excludeGroups"] =>
-  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ name, contains: !freeOfCodes.includes(code) }));
+  EXCLUDE_GROUP_NAMES.map(([code, name]) => ({ code, name, contains: !freeOfCodes.includes(code) }));
 
 /**
  * 세라마이드 성분군에 드는 성분. 1025 독도 토너가 다섯 가지를 모두 담아 성분군 칩과 시트를 확인할 수 있다.
@@ -294,10 +309,11 @@ export const ingredientGroups: IngredientGroupResponse[] = [
 ];
 
 // 이름은 staging 과 같게 둔다. 제품 상세의 주의 성분 기준과 이름으로 맞춰 성분군 코드를 찾는다.
-export const excludeCodes: ExcludeCodeResponse[] = [
+export const excludeCodes: IngredientGroupResponse[] = [
   {
     code: "FRAGRANCE_ALLERGENS",
     name: "향료/알레르기 성분",
+    englishName: "Fragrance Allergens",
     description: "착향 목적의 성분과 표시 대상 알레르기 유발 성분입니다.",
     ingredients: [
       // 1006 은 더마 릴리프 썬스크린(6)의 리모넨이다. 주의 성분 시트가 이 제품에 든 성분을 보여 준다.
@@ -308,30 +324,35 @@ export const excludeCodes: ExcludeCodeResponse[] = [
   {
     code: "DRYING_ALCOHOLS",
     name: "건조 알코올",
+    englishName: "Drying Alcohols",
     description: "휘발성이 높아 건조함을 유발할 수 있는 알코올입니다.",
     ingredients: [{ id: 111, koreanName: "변성알코올", englishName: "Alcohol Denat." }],
   },
   {
     code: "HARSH_PRESERVATIVES",
     name: "자극성 방부제",
+    englishName: "Harsh Preservatives",
     description: "자극 보고가 있는 방부 성분입니다.",
     ingredients: [{ id: 121, koreanName: "메틸파라벤", englishName: "Methylparaben" }],
   },
   {
     code: "SULFATES",
     name: "설페이트 성분",
+    englishName: "Sulfates",
     description: "세정력이 강한 설페이트 계열 계면활성제입니다.",
     ingredients: [{ id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" }],
   },
   {
     code: "CYCLIC_SILICONES",
     name: "실리콘 자극원",
+    englishName: "Cyclic Silicones",
     description: "고리형 실리콘 성분입니다.",
     ingredients: [{ id: 141, koreanName: "사이클로펜타실록세인", englishName: "Cyclopentasiloxane" }],
   },
   {
     code: "SYNTHETIC_COLORANTS",
     name: "합성 색소",
+    englishName: "Synthetic Colorants",
     description: "타르 색소를 포함한 합성 착색 성분입니다.",
     ingredients: [{ id: 151, koreanName: "적색201호", englishName: "Red 201" }],
   },
@@ -377,6 +398,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
       englishName: `Ingredient ${index + 1}`,
       formulationRoles: [],
       skinEffects: [],
+      cautions: index === 5 ? [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] : [],
     })),
     excludeGroups: excludeGroupsOf([
       "DRYING_ALCOHOLS",
@@ -459,6 +481,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [],
+          cautions: [],
         },
         {
           id: 2,
@@ -469,6 +492,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 3,
@@ -476,6 +500,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Glycerin",
           formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 4,
@@ -486,6 +511,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "2", code: "SOLVENT", name: "용제" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 5,
@@ -496,6 +522,7 @@ export const productDetails: ProductDetailResponse[] = [
             { id: "4", code: "HUMECTANT", name: "보습 보조" },
           ],
           skinEffects: [보습],
+          cautions: [],
         },
         {
           id: 6,
@@ -503,6 +530,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Panthenol",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [보습, 진정],
+          cautions: [],
         },
         {
           id: 7,
@@ -510,6 +538,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Chondrus Crispus Extract",
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [진정],
+          cautions: [],
         },
         {
           id: 8,
@@ -517,6 +546,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName: "Protease",
           formulationRoles: [{ id: "5", code: "KERATOLYTIC", name: "각질 관리" }],
           skinEffects: [각질케어],
+          cautions: [],
         },
         ...ceramides.map(([id, koreanName, englishName]) => ({
           id,
@@ -524,6 +554,7 @@ export const productDetails: ProductDetailResponse[] = [
           englishName,
           formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
           skinEffects: [장벽],
+          cautions: [],
         })),
       ],
       excludeGroups: excludeGroupsOf([
@@ -759,6 +790,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   volumeUnit: product.volumeUnit,
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  updatedAt: "2026-08-03T00:00:00+09:00",
 }));
 
 /**
@@ -822,6 +854,7 @@ const fillerProducts: { readonly product: ProductResponse; readonly categoryId: 
             volumeUnit: "ml",
             moistureLevel: seed % 4,
             oilLevel: (seed + 2) % 4,
+            updatedAt: "2026-08-03T00:00:00+09:00",
           },
         };
       });
@@ -875,11 +908,6 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
   ...fillerProducts.map(({ product, categoryId }) => [product.id, categoryId] as const),
 ]);
 
-/** 피부 타입 코드. 서버가 늘어놓는 차례와 같게 두어 응답을 만들 때 그대로 쓴다. */
-export const SKIN_TYPE_CODES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
-
-export type SkinTypeCode = (typeof SKIN_TYPE_CODES)[number];
-
 /**
  * 제품이 어느 피부 타입에 드는지.
  *
@@ -896,7 +924,7 @@ export type SkinTypeCode = (typeof SKIN_TYPE_CODES)[number];
  * 지성으로 잡히는 것처럼 제품과 어긋나는 값이 나온다. 서버도 제품마다 붙은 집합을 쓰지
  * 유수분에서 끌어내지 않는다.
  */
-const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinTypeCode[]> = new Map([
+const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Map([
   [1, ["DRY", "SENSITIVE"]], // 1025 독도 토너: 순한 데일리 토너
   [2, ["SENSITIVE"]], // 어성초 77 수딩 토너: 진정
   [3, ["DRY"]], // 다이브인 저분자 히알루론산 토너: 보습
@@ -921,7 +949,7 @@ const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinTypeCode[]> = ne
  * 여럿에 드는 것, 어디에도 들지 않는 것이 고루 나오도록 미리 정해 둔 조합에서 집는다.
  * 어느 제품이 어느 조합을 받는지에는 뜻이 없고, 조건을 걸면 목록이 줄어드는지만 본다.
  */
-const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinTypeCode[])[] = [
+const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
   ["DRY"],
   ["OILY"],
   ["SENSITIVE"],
@@ -940,7 +968,7 @@ const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinTypeCode[])[] = [
  * `ProductResponse` 에는 피부 타입이 없어 목록 응답만 보아서는 알 수 없다. 카테고리와
  * 마찬가지로 이 지도가 있어야 조건에 걸린 제품의 타입을 추려 낼 수 있다.
  */
-export const productSkinTypes: ReadonlyMap<number, readonly SkinTypeCode[]> = new Map(
+export const productSkinTypes: ReadonlyMap<number, readonly SkinType[]> = new Map(
   allProducts.map(
     (product) =>
       [

@@ -1,0 +1,10 @@
+{
+  "name": "poudy-app-update",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/PoudyAppUpdateModule.ts",
+  "types": "src/PoudyAppUpdateModule.ts",
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

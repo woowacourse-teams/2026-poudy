@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.SharedMockBeans;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.feedback.domain.FeedbackContent;
 import com.poudy.feedback.domain.FeedbackPage;
@@ -26,11 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
+@SharedMockBeans
 @AutoConfigureMockMvc
+@WithMockUser(roles = "ADMIN")
 @DisplayName("관리자 피드백 API")
 class AdminFeedbackControllerTest {
 
@@ -39,7 +42,7 @@ class AdminFeedbackControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Autowired
     private FeedbackService feedbackService;
 
     @Test

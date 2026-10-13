@@ -16,6 +16,7 @@ const imageOptimizerEntry = path.join(
   artifactRoot,
   "node_modules/next/dist/server/image-optimizer.js",
 );
+const assetLinks = path.join(artifactRoot, "public/.well-known/assetlinks.json");
 
 if (!fs.existsSync(serverEntry)) {
   console.error(`standalone server.js를 찾을 수 없습니다: ${serverEntry}`);
@@ -26,6 +27,12 @@ if (!fs.existsSync(imageOptimizerEntry)) {
   console.error(
     `Next.js image optimizer를 찾을 수 없습니다: ${imageOptimizerEntry}`,
   );
+  process.exit(1);
+}
+
+// 없으면 Android App Links 검증이 실패해 poudy.site 링크가 앱 대신 브라우저로 열린다.
+if (!fs.existsSync(assetLinks)) {
+  console.error(`Android App Links 파일을 찾을 수 없습니다: ${assetLinks}`);
   process.exit(1);
 }
 

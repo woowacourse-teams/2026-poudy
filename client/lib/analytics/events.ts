@@ -5,6 +5,8 @@
  * 자세한 배경은 docs/exec-plans/analytics-events.md 를 본다.
  */
 
+import type { SkinType } from "@poudy/api/api.zod";
+
 export type PageName =
   | "home"
   | "search"
@@ -35,9 +37,6 @@ export type DiscoveryContext = {
 };
 
 export type DiscoveryProperties = Partial<DiscoveryContext>;
-
-/** 피부 타입 코드. 조건 타입과 같은 값이지만 이벤트 정의는 스스로 서게 둔다. */
-export type SkinTypeCode = "DRY" | "OILY" | "SENSITIVE" | "COMBINATION";
 
 export const PRODUCT_ENTRY_POINTS = [
   "search_results",
@@ -113,6 +112,12 @@ export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "p
 export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
 export type EventMap = {
+  /** 웹에서 앱 설치 링크를 누른 횟수. 앱이 열릴 수 있으므로 스토어 이동과 구분한다. */
+  app_install_clicked: { source: "qr_click" | "install_banner" };
+  /** QR 주소가 브라우저에 도착했을 때. App Links로 앱이 바로 열린 경우는 포함하지 않는다. */
+  app_install_landed: { source: "qr_scan" | "qr_click" | "unknown" };
+  /** Google Play로 보내기 직전. 스토어 로딩 완료나 설치 완료를 뜻하지 않는다. */
+  app_store_redirected: { source: "qr_scan" | "qr_click" | "install_banner" | "unknown"; store: "google_play" };
   page_viewed: { page: PageName; page_version?: string };
   /** 홈 섹션이 절반 이상 0.5초 동안 보여 실제 노출로 볼 수 있을 때 한 번 남긴다. */
   home_section_viewed: {
@@ -252,7 +257,7 @@ export type EventMap = {
    */
   curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
-  skin_type_selected: { skin_type: SkinTypeCode } & DiscoveryProperties;
+  skin_type_selected: { skin_type: SkinType } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
   ranking_category_changed: { category_id?: number };
   /** 홈 인기 제품에서 제품을 눌렀을 때. 카테고리 변경 여부는 속성으로 나눈다. */

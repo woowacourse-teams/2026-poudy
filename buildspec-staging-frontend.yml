@@ -1,0 +1,53 @@
+version: 0.2
+
+env:
+  variables:
+    PNPM_VERSION: "11.21.0"
+    # staging 프론트 EC2도 운영처럼 화면과 API를 같은 출처(staging.poudy.site)로 받는다.
+    # NEXT_PUBLIC_POSTHOG_KEY처럼 값이 필요한 환경값은 CodeBuild 프로젝트 환경 변수로 주입한다.
+    NEXT_PUBLIC_API_MOCKING: ""
+    NEXT_PUBLIC_API_BASE_URL: "https://staging.poudy.site"
+    NEXT_PUBLIC_ENVIRONMENT: "staging"
+    NEXT_PUBLIC_SITE_URL: "https://staging.poudy.site"
+    NEXT_PUBLIC_IMAGE_CDN_BASE_URL: "https://d2rcowg6kz7uw3.cloudfront.net"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm install --global "pnpm@${PNPM_VERSION}"
+  pre_build:
+    commands:
+      - test "$(uname -m)" = "aarch64"
+      - rm -rf "${CODEBUILD_SRC_DIR}/.poudy-package" "${CODEBUILD_SRC_DIR}/.artifacts"
+  build:
+    commands:
+      - ./deploy/scripts/package-frontend.sh "${CODEBUILD_SRC_DIR}/.poudy-package/frontend"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib" "${CODEBUILD_SRC_DIR}/.artifacts/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
+      - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/app/"
+      - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+      - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
+      - cp deploy/scripts/lib/frontend-certificate.sh deploy/scripts/lib/frontend-site.sh "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib/"
+      - cp deploy/nginx/ec2-nginx.conf deploy/nginx/ec2-frontend.conf deploy/nginx/ec2-frontend-https.conf "${CODEBUILD_SRC_DIR}/.artifacts/nginx/"
+      - cp deploy/config/frontend-site-staging.env "${CODEBUILD_SRC_DIR}/.artifacts/nginx/frontend-site.env"
+      - cp deploy/systemd/poudy-frontend.service "${CODEBUILD_SRC_DIR}/.artifacts/systemd/"
+      - chmod +x "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"*.sh
+      - printf 'commit=%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > "${CODEBUILD_SRC_DIR}/.artifacts/build-metadata.txt"
+  post_build:
+    commands:
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/server.js"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/nginx/frontend-site.env"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib/frontend-site.sh"
+
+artifacts:
+  base-directory: .artifacts
+  files:
+    - appspec.yml
+    - scripts/**/*
+    - nginx/**/*
+    - systemd/**/*
+    - app/**/*
+    - build-metadata.txt
+  discard-paths: no

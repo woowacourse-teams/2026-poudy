@@ -1,6 +1,9 @@
 import { Alert, Linking } from 'react-native';
 
 const BLANK_URL = 'about:blank';
+const HTTP_PROTOCOLS = ['http:', 'https:'];
+
+export const WEB_ORIGIN_WHITELIST = ['http://*', 'https://*'];
 
 export const shouldLoadInWebView = (url: string, serviceOrigin: string): boolean => {
   if (url === BLANK_URL) {
@@ -9,6 +12,14 @@ export const shouldLoadInWebView = (url: string, serviceOrigin: string): boolean
 
   try {
     return new URL(url).origin === serviceOrigin;
+  } catch {
+    return false;
+  }
+};
+
+export const isHttpUrl = (url: string): boolean => {
+  try {
+    return HTTP_PROTOCOLS.includes(new URL(url).protocol);
   } catch {
     return false;
   }
@@ -25,8 +36,8 @@ export const isHomeUrl = (url: string, serviceBaseUrl: string): boolean => {
   }
 };
 
-export const openExternalUrl = (url: string) => {
-  void Linking.openURL(url).catch(() => {
-    Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
-  });
+export const openExternalUrl = (url: string): Promise<unknown> => Linking.openURL(url);
+
+export const alertUnopenableUrl = () => {
+  Alert.alert('링크를 열 수 없어요', '연결된 앱 또는 올바른 주소인지 확인해 주세요.');
 };

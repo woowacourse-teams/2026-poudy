@@ -19,22 +19,29 @@ import org.springframework.http.HttpStatus;
 public final class ProblemDetailResponses {
 
     public static final String SCHEMA_NAME = "ProblemDetail";
+    public static final String ERROR_CODE_SCHEMA_NAME = "ErrorCode";
 
     private static final String SCHEMA_REF = "#/components/schemas/" + SCHEMA_NAME;
+    private static final String ERROR_CODE_SCHEMA_REF = "#/components/schemas/" + ERROR_CODE_SCHEMA_NAME;
     private static final String PROBLEM_JSON = org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 
     private ProblemDetailResponses() {
     }
 
-    public static Schema<?> schema() {
+    public static Schema<?> errorCodeSchema() {
         List<String> codes = Arrays.stream(ErrorCode.values()).map(Enum::name).toList();
+
+        return new StringSchema()._enum(codes);
+    }
+
+    public static Schema<?> schema() {
         ObjectSchema schema = new ObjectSchema();
         schema.addProperty("type", new StringSchema().format("uri").example("about:blank"));
         schema.addProperty("title", new StringSchema().example("Bad Request"));
         schema.addProperty("status", new IntegerSchema().example(400));
         schema.addProperty("detail", new StringSchema().example(ErrorCode.INVALID_QUERY_PARAMETER.message()));
         schema.addProperty("instance", new StringSchema().format("uri-reference").example("/api/products"));
-        schema.addProperty(GlobalExceptionHandler.CODE_PROPERTY, new StringSchema()._enum(codes));
+        schema.addProperty(GlobalExceptionHandler.CODE_PROPERTY, new Schema<>().$ref(ERROR_CODE_SCHEMA_REF));
         schema.setRequired(List.of("title", "status", "detail", GlobalExceptionHandler.CODE_PROPERTY));
 
         return schema;

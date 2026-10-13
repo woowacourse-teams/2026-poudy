@@ -10,6 +10,21 @@ const EAS_ACCOUNT = 'poudys-team';
 const EAS_PROJECT_ID = '25e0967e-a114-4253-ad7a-a39063fce314';
 const SERVICE_BASE_URL = process.env.EXPO_PUBLIC_SERVICE_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
+const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const KAKAO_MAVEN_REPOSITORY = 'https://devrepo.kakao.com/nexus/content/groups/public/';
+const KAKAO_PROGUARD_RULES = [
+  '-keep class com.kakao.sdk.**.model.* { <fields>; }',
+  '-keep class * extends com.google.gson.TypeAdapter',
+  '-dontwarn org.bouncycastle.jsse.**',
+  '-dontwarn org.conscrypt.*',
+  '-dontwarn org.openjsse.**',
+  '-if interface * { @retrofit2.http.* <methods>; }',
+  '-keep,allowobfuscation interface <1>',
+  '-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation',
+  '-keep,allowobfuscation,allowshrinking interface retrofit2.Call',
+  '-keep,allowobfuscation,allowshrinking class retrofit2.Response',
+].join('\n');
 
 const isHttpUrl = (value: string): boolean => {
   try {
@@ -19,19 +34,27 @@ const isHttpUrl = (value: string): boolean => {
   }
 };
 
-const requiredHttpUrl = (name: string, value: string | undefined): string => {
+const requiredValue = (name: string, value: string | undefined): string => {
   if (!value) {
     throw new Error(`${name} is required.`);
-  }
-
-  if (!isHttpUrl(value)) {
-    throw new Error(`${name} must use http or https.`);
   }
 
   return value;
 };
 
+const requiredHttpUrl = (name: string, value: string | undefined): string => {
+  const url = requiredValue(name, value);
+
+  if (!isHttpUrl(url)) {
+    throw new Error(`${name} must use http or https.`);
+  }
+
+  return url;
+};
+
 const validatedServiceBaseUrl = requiredHttpUrl('EXPO_PUBLIC_SERVICE_URL', SERVICE_BASE_URL);
+const kakaoNativeAppKey = requiredValue('EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY', KAKAO_NATIVE_APP_KEY);
+requiredValue('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID', GOOGLE_WEB_CLIENT_ID);
 
 if (process.env.EAS_BUILD_PROFILE === 'production' && !APP_VERSION) {
   throw new Error('POUDY_APP_VERSION is required for production builds.');
@@ -134,7 +157,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           android: {
             enableMinifyInReleaseBuilds: true,
             enableShrinkResourcesInReleaseBuilds: true,
+            extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
+            extraProguardRules: KAKAO_PROGUARD_RULES,
           },
+        },
+      ],
+      [
+        '@react-native-kakao/core',
+        {
+          nativeAppKey: kakaoNativeAppKey,
         },
       ],
       './plugins/withQuickActionIcons',

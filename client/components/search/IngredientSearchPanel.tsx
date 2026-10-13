@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
@@ -12,7 +12,7 @@ import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, findConflicts } from "@/lib/domain/conflict";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import type { Filter } from "@/lib/domain/filter";
 import {
   coveredIngredientIds,
   excludedGroupIngredients,
@@ -32,7 +32,7 @@ type ConditionKey = "includeIngredientIds" | "excludeIngredientIds";
 type IngredientSearchPanelProps = {
   readonly filter: Filter;
   readonly onChange: (changed: Partial<Filter>) => void;
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 화면에 이름을 보여 주기 위해 검색으로 만난 성분을 기억한다. */
   readonly names: ReadonlyMap<number, string>;
 };

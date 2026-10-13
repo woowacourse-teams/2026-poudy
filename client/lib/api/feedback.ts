@@ -1,16 +1,31 @@
-import { FeedbackImageUploadResponse, type FeedbackRequest } from "@poudy/api/api.zod";
+import {
+  FeedbackImageUploadResponse,
+  FeedbackRequest,
+  post_UploadImages,
+  ProductRegistrationRequest,
+} from "@poudy/api/api.zod";
 
 import { apiPost, apiPostForm } from "./client";
+import { constraintOf } from "./constraint";
 
 /** 화면에 두는 문의 유형. 제품 정보 정정은 유형이 아니라 requestProductCorrection 으로 보낸다. */
 export type FeedbackType = FeedbackRequest["type"];
 
-export const CONTENT_MIN_LENGTH = 10;
-export const CONTENT_MAX_LENGTH = 2000;
-export const PRODUCT_NAME_MAX_LENGTH = 200;
-export const BRAND_NAME_MAX_LENGTH = 100;
+const CONTENT = FeedbackRequest.shape.content;
+const REGISTRATION = ProductRegistrationRequest.shape;
 
-export const IMAGE_MAX_COUNT = 5;
+export const CONTENT_MIN_LENGTH = constraintOf(CONTENT.minLength, "의견 내용 최소 길이");
+export const CONTENT_MAX_LENGTH = constraintOf(CONTENT.maxLength, "의견 내용 최대 길이");
+export const PRODUCT_NAME_MAX_LENGTH = constraintOf(REGISTRATION.productName.maxLength, "제품명 최대 길이");
+export const BRAND_NAME_MAX_LENGTH = constraintOf(
+  REGISTRATION.brandName.unwrap().unwrap().maxLength,
+  "브랜드명 최대 길이",
+);
+
+export const IMAGE_MAX_COUNT = constraintOf(
+  post_UploadImages.parameters.body.shape.images._zod.bag.maximum,
+  "첨부 이미지 최대 개수",
+);
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 /**

@@ -1,199 +1,235 @@
-/**
- * localStorage 를 쓰므로 브라우저 환경이 필요하다.
- *
- * @vitest-environment jsdom
- */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { delay, http, HttpResponse } from "msw";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-  clearSavedProducts,
-  readSavedProductIds,
-  readSavedProducts,
-  refreshSavedProducts,
-  restoreProducts,
+  getSavedProductsSnapshot,
+  reloadSavedProducts,
   saveProduct,
-  savedAtOf,
-  savedEntriesOf,
+  subscribeSavedProducts,
   unsaveProduct,
-  unsaveProducts,
 } from "./saved-products";
 
-const LEGACY_KEY = "poudy.saved-products.v1";
-const KEY = "poudy.saved-products.v2";
+import { setMockSavedProducts } from "@/mocks/handlers";
+import { server } from "@/mocks/server";
 
-beforeEach(() => {
-  window.localStorage.clear();
-  refreshSavedProducts();
+const SAVED_PATH = "*/api/members/me/saved-products";
+
+const unauthorized = () =>
+  HttpResponse.json(
+    { title: "Unauthorized", status: 401, detail: "로그인이 필요합니다.", code: "UNAUTHORIZED" },
+    { status: 401 },
+  );
+
+const forbidden = () =>
+  HttpResponse.json(
+    { title: "Forbidden", status: 403, detail: "이 요청을 할 권한이 없습니다.", code: "FORBIDDEN" },
+    { status: 403 },
+  );
+
+const serverError = () =>
+  HttpResponse.json(
+    { title: "Internal Server Error", status: 500, detail: "서버 오류", code: "INTERNAL_SERVER_ERROR" },
+    { status: 500 },
+  );
+
+beforeEach(async () => {
+  setMockSavedProducts([3, 1]);
+  await reloadSavedProducts();
 });
 
 describe("저장한 제품", () => {
-  it("담은 때를 함께 적는다", () => {
-    saveProduct(7);
-
-    const [first] = readSavedProducts();
-
-    expect(first?.id).toBe(7);
-    expect(Number.isNaN(Date.parse(first?.savedAt ?? ""))).toBe(false);
+  it("서버의 저장 목록을 최근 저장순 그대로 받는다", () => {
+    expect(getSavedProductsSnapshot()).toEqual({ status: "ready", ids: [3, 1] });
   });
 
-  it("최근에 담은 것을 앞에 둔다", () => {
-    saveProduct(1);
-    saveProduct(2);
+  it("로그인하지 않았으면 로그아웃 상태로 둔다", async () => {
+    server.use(http.get(`${SAVED_PATH}/ids`, unauthorized));
 
-    expect(readSavedProductIds()).toEqual([2, 1]);
+    await reloadSavedProducts();
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "signedOut", ids: [] });
   });
 
-  it("담은 때를 물어볼 수 있다", () => {
-    saveProduct(3);
+  it("관리자 세션이면 관리자 세션 상태로 둔다", async () => {
+    server.use(http.get(`${SAVED_PATH}/ids`, forbidden));
 
-    expect(savedAtOf(3)).toBe(readSavedProducts()[0]?.savedAt);
-    expect(savedAtOf(999)).toBeUndefined();
+    await reloadSavedProducts();
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "adminSession", ids: [] });
   });
 
-  it("담은 것을 빼면 때도 함께 지운다", () => {
-    saveProduct(4);
-    unsaveProduct(4);
+  it("저장 중 관리자 세션으로 거절되면 관리자 세션 상태로 바꾼다", async () => {
+    server.use(http.put(`${SAVED_PATH}/:productId`, forbidden));
 
-    expect(readSavedProducts()).toEqual([]);
-    expect(savedAtOf(4)).toBeUndefined();
+    await expect(saveProduct(2)).resolves.toBe("adminSession");
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "adminSession", ids: [] });
   });
 
-  it("여러 제품을 한 번에 빼고 나머지 차례는 지킨다", () => {
-    [1, 2, 3, 4].forEach(saveProduct);
+  it("처음 구독할 때 목록을 받아 온다", async () => {
+    const unsubscribe = subscribeSavedProducts(() => undefined);
 
-    unsaveProducts([2, 4]);
-
-    expect(readSavedProductIds()).toEqual([3, 1]);
-  });
-});
-
-describe("번호만 담던 예전 저장을 옮긴다", () => {
-  /** 예전 형식을 직접 적어 둔다. */
-  const writeLegacy = (ids: readonly number[]) => {
-    window.localStorage.setItem(LEGACY_KEY, JSON.stringify({ version: 1, value: ids }));
-    refreshSavedProducts();
-  };
-
-  it("차례를 그대로 두고 담은 때를 채운다", () => {
-    writeLegacy([5, 3, 1]);
-
-    const moved = readSavedProducts();
-
-    expect(moved.map((item) => item.id)).toEqual([5, 3, 1]);
-    expect(moved.every((item) => !Number.isNaN(Date.parse(item.savedAt)))).toBe(true);
+    await expect.poll(() => getSavedProductsSnapshot().status).toBe("ready");
+    unsubscribe();
   });
 
-  it("옮기고 나면 예전 자리를 비운다", () => {
-    writeLegacy([2, 9]);
-    readSavedProducts();
+  it("저장하면 바로 앞에 두고 서버에도 저장한다", async () => {
+    const result = saveProduct(2);
 
-    expect(window.localStorage.getItem(LEGACY_KEY)).toBeNull();
-    expect(window.localStorage.getItem(KEY)).not.toBeNull();
+    expect(getSavedProductsSnapshot().ids).toEqual([2, 3, 1]);
+    await expect(result).resolves.toBe("done");
+    await reloadSavedProducts();
+    expect(getSavedProductsSnapshot().ids).toEqual([2, 3, 1]);
   });
 
-  it("옮길 것이 없으면 아무것도 만들지 않는다", () => {
-    expect(readSavedProducts()).toEqual([]);
-    expect(window.localStorage.getItem(KEY)).toBeNull();
+  it("저장을 풀면 바로 빼고 서버에서도 지운다", async () => {
+    const result = unsaveProduct(3);
+
+    expect(getSavedProductsSnapshot().ids).toEqual([1]);
+    await expect(result).resolves.toBe("done");
+    await reloadSavedProducts();
+    expect(getSavedProductsSnapshot().ids).toEqual([1]);
   });
 
-  it("모두 지우면 예전 자리도 함께 지운다", () => {
-    writeLegacy([1]);
-    clearSavedProducts();
+  it("같은 제품을 잇달아 저장하고 풀면 누른 차례대로 서버에 반영한다", async () => {
+    server.use(
+      http.put(`${SAVED_PATH}/:productId`, async () => {
+        await delay(50);
+        setMockSavedProducts([2, 3, 1]);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
 
-    expect(readSavedProducts()).toEqual([]);
-    expect(window.localStorage.getItem(LEGACY_KEY)).toBeNull();
-  });
-});
+    const saved = saveProduct(2);
+    const unsaved = unsaveProduct(2);
+    await Promise.all([saved, unsaved]);
 
-describe("되돌리기", () => {
-  it("저장을 푼 항목을 담았던 때와 자리까지 그대로 되살린다", () => {
-    saveProduct(1);
-    saveProduct(2);
-    saveProduct(3);
-
-    // 가운데 것을 뺐다가 되돌린다.
-    const removed = savedEntriesOf([2]);
-    const savedAt = savedAtOf(2);
-    unsaveProduct(2);
-    expect(readSavedProductIds()).toEqual([3, 1]);
-
-    restoreProducts(removed);
-
-    expect(readSavedProductIds()).toEqual([3, 2, 1]);
-    // 담았던 때가 새로 찍히지 않아야 `최근 저장순` 이 어긋나지 않는다.
-    expect(savedAtOf(2)).toBe(savedAt);
+    await reloadSavedProducts();
+    expect(getSavedProductsSnapshot().ids).toEqual([3, 1]);
   });
 
-  it("담은 때가 같아도 원래 차례로 돌아간다", () => {
-    /*
-     * 잇달아 담으면 밀리초까지 같을 수 있다. 그때도 자리가 뒤집히지 않아야 한다.
-     * 실제 시계에 맡기면 테스트가 몰릴 때 두 번 사이에 밀리초가 넘어가 전제가 깨지므로
-     * 시각을 고정해 같은 때를 만든다.
-     */
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-09-09T00:00:00.000Z"));
+  it("저장이 실패하면 서버 목록으로 되돌린다", async () => {
+    server.use(http.put(`${SAVED_PATH}/:productId`, serverError));
 
-    try {
-      saveProduct(1);
-      saveProduct(2);
-      const [first, second] = readSavedProducts();
-      expect(first.savedAt).toBe(second.savedAt);
+    await expect(saveProduct(2)).resolves.toBe("failed");
 
-      const removed = savedEntriesOf([2]);
-      unsaveProduct(2);
-      restoreProducts(removed);
-
-      expect(readSavedProductIds()).toEqual([2, 1]);
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect.poll(() => getSavedProductsSnapshot().ids).toEqual([3, 1]);
   });
 
-  it("여럿을 되살려도 서로의 자리를 밀지 않는다", () => {
-    saveProduct(1);
-    saveProduct(2);
-    saveProduct(3);
-    saveProduct(4);
-    // 최근 저장순은 4, 3, 2, 1 이다.
+  it.each([
+    { name: "저장", change: () => saveProduct(2), expected: [2, 3, 1] },
+    { name: "해제", change: () => unsaveProduct(3), expected: [1] },
+  ])("조회 중 $name 성공 후 오래된 응답을 버리고 다시 조회한다", async ({ change, expected }) => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return HttpResponse.json({ productIds: [3, 1] });
+        }
+        return HttpResponse.json({ productIds: expected });
+      }),
+    );
 
-    /*
-     * 화면에서 저장을 푸는 것은 한 번에 하나씩이라, 뺄 때마다 그때의 자리를 남긴다.
-     * 되돌리기도 하나씩이지만 한꺼번에 넘겨도 같은 자리로 돌아가야 한다.
-     */
-    const third = savedEntriesOf([3]);
-    unsaveProduct(3);
-    const second = savedEntriesOf([2]);
-    unsaveProduct(2);
-    expect(readSavedProductIds()).toEqual([4, 1]);
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    await expect(change()).resolves.toBe("done");
+    expect(getSavedProductsSnapshot().ids).toEqual(expected);
+    release.resolve();
+    await earlierLoad;
 
-    restoreProducts([...third, ...second]);
-
-    expect(readSavedProductIds()).toEqual([4, 3, 2, 1]);
+    expect(getSavedProductsSnapshot()).toEqual({ status: "ready", ids: expected });
+    expect(reads).toBe(2);
   });
 
-  it("잇달아 뺀 뒤 되살려도 저마다 담았던 자리로 돌아간다", () => {
-    saveProduct(1);
-    saveProduct(2);
-    saveProduct(3);
-    saveProduct(4);
-    // 최근 저장순은 4, 3, 2, 1 이다.
+  it("변경 전 시작한 조회의 401도 버리고 최신 상태를 다시 조회한다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return unauthorized();
+        }
+        return HttpResponse.json({ productIds: [2, 3, 1] });
+      }),
+    );
 
-    // 하나씩 뺀다. 두 번째로 뺄 때의 목록은 이미 첫 번째가 빠진 상태다.
-    const first = savedEntriesOf([4]);
-    unsaveProduct(4);
-    const second = savedEntriesOf([2]);
-    unsaveProduct(2);
-    expect(readSavedProductIds()).toEqual([3, 1]);
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    await saveProduct(2);
+    release.resolve();
+    await earlierLoad;
 
-    restoreProducts([...first, ...second]);
-
-    expect(readSavedProductIds()).toEqual([4, 3, 2, 1]);
+    expect(getSavedProductsSnapshot()).toEqual({ status: "ready", ids: [2, 3, 1] });
   });
 
-  it("되살릴 것이 없으면 목록을 건드리지 않는다", () => {
-    saveProduct(1);
+  it("로그아웃 후 재조회가 진행 중인 이전 조회를 재사용하지 않는다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.get(`${SAVED_PATH}/ids`, async () => {
+        reads++;
+        if (reads === 1) {
+          started.resolve();
+          await release.promise;
+          return HttpResponse.json({ productIds: [3, 1] });
+        }
+        return unauthorized();
+      }),
+    );
 
-    expect(restoreProducts([])).toEqual([1]);
-    expect(readSavedProductIds()).toEqual([1]);
+    const earlierLoad = reloadSavedProducts();
+    await started.promise;
+    const signedOutLoad = reloadSavedProducts();
+    release.resolve();
+    await Promise.all([earlierLoad, signedOutLoad]);
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "signedOut", ids: [] });
+    expect(reads).toBe(2);
+  });
+
+  it("저장이 진행 중이면 요청이 끝난 뒤 목록을 조회한다", async () => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let reads = 0;
+    server.use(
+      http.put(`${SAVED_PATH}/2`, async () => {
+        started.resolve();
+        await release.promise;
+        setMockSavedProducts([2, 3, 1]);
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(`${SAVED_PATH}/ids`, () => {
+        reads++;
+        return HttpResponse.json({ productIds: [2, 3, 1] });
+      }),
+    );
+
+    const saving = saveProduct(2);
+    await started.promise;
+    const reading = reloadSavedProducts();
+    expect(reads).toBe(0);
+    release.resolve();
+    await Promise.all([saving, reading]);
+
+    expect(reads).toBe(1);
+    expect(getSavedProductsSnapshot().ids).toEqual([2, 3, 1]);
+  });
+
+  it("세션이 끝났으면 로그아웃 상태로 바꾼다", async () => {
+    server.use(http.put(`${SAVED_PATH}/:productId`, unauthorized));
+
+    await expect(saveProduct(2)).resolves.toBe("signedOut");
+
+    expect(getSavedProductsSnapshot()).toEqual({ status: "signedOut", ids: [] });
   });
 });

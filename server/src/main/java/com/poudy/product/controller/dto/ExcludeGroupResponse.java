@@ -7,12 +7,19 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record ExcludeGroupResponse(
+    @NotNull @Schema(description = "성분군을 구분하는 값", example = "FRAGRANCE_ALLERGENS") String code,
     @NotNull @Schema(example = "향료/알레르기 성분") String name,
     @NotNull @Schema(example = "false") Boolean contains) {
 
     public static List<ExcludeGroupResponse> from(List<ExcludeCodeGroup> excludeCodes, ProductPart part) {
         return excludeCodes.stream()
-            .map(group -> new ExcludeGroupResponse(group.displayName(), part.containsIngredientFrom(group)))
+            .map(
+                group -> new ExcludeGroupResponse(
+                    group.codeValue(),
+                    group.displayName(),
+                    part.containsIngredientFrom(group)
+                )
+            )
             .toList();
     }
 }

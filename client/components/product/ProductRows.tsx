@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse } from "@poudy/api/api.zod";
+import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 import { type MouseEvent, useEffect, useLayoutEffect, useRef } from "react";
 
 import { chipsOf } from "./product-chips";
@@ -25,7 +25,7 @@ type ProductRowsProps = {
   readonly basePath: string;
   readonly surface: ListSurface;
   readonly entryPoint?: ProductEntryPoint;
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   readonly openSheet: SheetKind | undefined;
   readonly onCloseSheet: () => void;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
@@ -114,7 +114,7 @@ export function ProductRows({
   const trackedResultKey = useRef<string | undefined>(undefined);
 
   const onToggleSave = (productId: number) => {
-    toggle(productId);
+    if (toggle(productId) === null) return;
     track(isSaved(productId) ? "product_unsaved" : "product_saved", {
       product_id: productId,
       save_source: "product_list",

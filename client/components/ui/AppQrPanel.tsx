@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
+import { track } from "@/lib/analytics/track";
 import { OPEN_APP_PATH } from "@/lib/navigation/open-app";
 import { absoluteUrl, SITE_NAME } from "@/lib/seo/site";
 
@@ -30,10 +33,12 @@ const QR_SIZE = 132;
  * 줄어, 패널을 놓으면 본문 카드에 닿을 듯이 붙는다.
  */
 export function AppQrPanel() {
-  const openAppUrl = absoluteUrl(OPEN_APP_PATH);
+  const qrUrl = absoluteUrl(`${OPEN_APP_PATH}?source=qr_scan`);
+  const clickUrl = absoluteUrl(`${OPEN_APP_PATH}?source=qr_click`);
 
   return (
     <aside
+      data-app-qr-panel
       aria-label={`${SITE_NAME} 안드로이드 앱 설치 안내`}
       /*
        * 왼쪽 여백의 가운데에 세운다. 본문은 뷰포트 가운데에 있으므로 그 절반(50%)에서
@@ -75,14 +80,15 @@ export function AppQrPanel() {
           어디로 가는지 알린다.
         */}
         <a
-          href={openAppUrl}
+          href={clickUrl}
+          onClick={() => track("app_install_clicked", { source: "qr_click" }, { beacon: true })}
           target="_blank"
           rel="noreferrer noopener"
           aria-label={`Google Play 에서 ${SITE_NAME} 앱 받기 (새 창)`}
           className="rounded-2xl border border-border bg-background p-2"
         >
           <QRCodeSVG
-            value={openAppUrl}
+            value={qrUrl}
             size={QR_SIZE}
             /*
              * 기본값인 L 은 복원 능력이 가장 낮다. 화면에서 바로 찍는 코드라 얼룩이나

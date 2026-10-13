@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { LegalArticle, LegalDocument, LegalList } from "@/components/legal/LegalDocument";
+import { CurrentTerms, CURRENT_TERMS_EFFECTIVE_DATE } from "@/components/legal/CurrentTerms";
+import { LegalDocument } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
+import { ScheduledTerms } from "@/components/legal/ScheduledTerms";
 import { TopBar } from "@/components/ui/TopBar";
-
-/*
- * 무료로 정보를 보여 주기만 하는 서비스라 결제·청약철회 조항은 두지 않는다.
- * 실질은 제5조다. 성분 정보를 근거로 판단했다가 생긴 일까지 팀이 떠안지 않도록
- * 자료의 출처와 한계를 밝히는 자리다. 법률 검토를 받은 문서는 아니다.
- */
 
 export const metadata: Metadata = {
   title: "이용약관",
@@ -21,171 +16,17 @@ export default function TermsPage() {
   return (
     <>
       <TopBar title="이용약관" variant="sub" />
-
-      <LegalDocument
-        title={`${OPERATOR.serviceName} 이용약관`}
-        effectiveDate={OPERATOR.effectiveDate.terms}
-        revisionEffectiveDate={OPERATOR.revisionEffectiveDate.terms}
-      >
-        <LegalArticle heading="제1조 목적">
-          <p>
-            이 약관은 {OPERATOR.name}(이하 &quot;팀&quot;)이 제공하는 {OPERATOR.serviceName}(이하 &quot;서비스&quot;)의
-            이용 조건과 절차, 팀과 이용자의 권리·의무를 정하는 것을 목적으로 합니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제2조 용어의 정의">
-          <LegalList>
-            <li>이용자 — 이 약관에 따라 서비스를 이용하는 사람을 말합니다.</li>
-            <li>
-              서비스 — 팀이 웹과 모바일 앱으로 제공하는 화장품 제품·성분 정보 조회, 검색, 필터, 인기 검색어와 인기 제품
-              순위 기능을 말합니다.
-            </li>
-            <li>
-              성분 정보 — 화장품 제조사와 판매처가 표기한 전성분과 공개된 자료를 팀이 모아 정리한 내용을 말합니다.
-            </li>
-          </LegalList>
-        </LegalArticle>
-
-        <LegalArticle heading="제3조 약관의 효력과 변경">
-          <p>
-            이 약관은 서비스 화면에 게시함으로써 효력이 생깁니다. 팀은 관련 법령을 어기지 않는 범위에서 약관을 바꿀 수
-            있으며, 바뀐 약관은 시행일 7일 전부터 이 화면에 공지합니다. 이용자에게 불리한 변경은 30일 전부터 공지합니다.
-            공지 후에도 서비스를 계속 이용하면 바뀐 약관에 동의한 것으로 봅니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제4조 서비스의 내용과 이용">
-          <p>
-            서비스는 회원가입 없이 무료로 제공되며, 이용자는 별도의 절차 없이 이용할 수 있습니다. 팀은 서비스의 내용과
-            구성을 운영상·기술상 필요에 따라 바꿀 수 있습니다.
-          </p>
-          <p>
-            팀은 상품 검색 결과가 있는 검색어의 제출 횟수와 제품 상세 화면의 조회 횟수를 합산해 인기 검색어와 인기 제품
-            순위를 제공할 수 있습니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제5조 정보의 성격과 한계">
-          <p>
-            서비스가 보여 주는 성분 정보는 제조사와 판매처의 표기, 공개 자료를 정리한 참고 자료입니다. 팀은 자료를 최신
-            상태로 유지하려고 노력하지만 다음을 보장하지 않습니다.
-          </p>
-          <LegalList>
-            <li>제조사가 제품 성분을 바꾼 뒤 서비스의 표기가 즉시 따라가는 것</li>
-            <li>표기와 실제 제품의 완전한 일치</li>
-            <li>특정 성분이 모든 사람에게 안전하거나 위험하다는 판단</li>
-          </LegalList>
-          <p>
-            서비스의 성분 분류와 필터는 의학적·약학적 조언이 아니며 질병의 진단, 치료, 예방에 쓸 수 없습니다. 피부
-            이상이나 알레르기가 걱정된다면 반드시 전문의와 상담하시고, 제품 구매와 사용 여부는 실제 제품에 표기된
-            전성분을 확인한 뒤 이용자가 스스로 판단하시기 바랍니다.
-          </p>
-          <p>인기 검색어와 인기 제품 순위는 다음과 같은 이용 횟수 통계이며, 순위에는 아래 한계가 있습니다.</p>
-          <LegalList>
-            <li>
-              인기 검색어는 상품 검색 결과가 있는 검색 제출만 세어 최근 완결된 7일을 기준으로 산정하며, 10분 단위로
-              갱신되어 실제 이용보다 최대 10분 늦게 반영될 수 있습니다. 집계가 충분하지 않으면 팀이 정한 기본 검색어가
-              함께 표시될 수 있습니다.
-            </li>
-            <li>
-              인기 제품은 화면에서 기간을 지정하면 한국 시간 기준 오늘을 포함한 해당 기간, 지정하지 않으면 저장된 전체
-              기간의 제품 상세 화면 조회 횟수를 기준으로 최대 6개를 보여 줍니다.
-            </li>
-            <li>
-              조회 횟수가 0인 제품도 순위에 포함될 수 있고, 조회 횟수가 같으면 카탈로그의 기본 제품 순서에 따라 표시될
-              수 있습니다.
-            </li>
-            <li>
-              이용자·세션을 구분하지 않아 반복 요청과 자동화된 요청이 순위에 중복 반영되거나 순위를 왜곡할 수 있습니다.
-            </li>
-            <li>순위는 판매량, 품질, 효능, 안전성 또는 팀의 추천을 뜻하지 않습니다.</li>
-          </LegalList>
-        </LegalArticle>
-
-        <LegalArticle heading="제6조 이용자의 의무">
-          <p>이용자는 서비스를 이용하면서 다음 행위를 해서는 안 됩니다.</p>
-          <LegalList>
-            <li>자동화된 수단으로 서비스의 자료를 대량으로 수집하거나 복제하는 행위</li>
-            <li>서비스의 정상적인 운영을 방해할 정도로 반복해서 요청을 보내는 행위</li>
-            <li>서비스의 자료를 팀의 동의 없이 영리 목적으로 재배포하거나 판매하는 행위</li>
-            <li>다른 이용자나 제3자의 권리를 침해하거나 법령을 어기는 행위</li>
-          </LegalList>
-        </LegalArticle>
-
-        <LegalArticle heading="제7조 이용자 제출물">
-          <p>
-            이용자가 문의하기와 제품 정보 추가 요청으로 보낸 내용과 첨부한 이미지(이하 &quot;제출물&quot;)에 대한 권리는
-            이용자에게 있습니다.
-          </p>
-          <p>
-            이용자는 제출물이 다른 사람의 저작권, 초상권, 개인정보를 비롯한 권리를 침해하지 않는다는 점을 보증합니다.
-            다른 사람을 알아볼 수 있는 얼굴이나 개인정보가 담긴 이미지는 올리지 않아야 합니다.
-          </p>
-          <p>
-            팀은 제출물을 접수한 문의를 확인하고 처리하는 데, 그리고 서비스의 자료와 기능을 고치는 데 이용합니다.
-            개인정보 처리방침에 적은 위탁을 제외하고는 제출물을 공개하거나 제3자에게 제공하지 않습니다. 제출물에 담긴
-            개인정보의 처리는 개인정보 처리방침을 따릅니다.
-          </p>
-          <p>
-            팀은 제출물이 이 조를 어기거나 법령을 어긴다고 판단하면 삭제할 수 있습니다. 서비스는 회원가입을 받지 않아
-            이용자에게 따로 알릴 방법이 없으므로, 삭제한 사실은 이 화면의 공지로 갈음합니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제8조 지식재산권">
-          <p>
-            서비스의 화면 구성, 디자인, 편집물에 대한 권리는 팀에 있습니다. 제조사와 판매처가 표기한 성분 자료의 권리는
-            해당 권리자에게 있습니다. 이용자는 팀의 동의 없이 이를 영리 목적으로 이용할 수 없습니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제9조 서비스의 중단">
-          <p>
-            팀은 설비 점검, 교체, 고장이나 통신 두절 등 부득이한 사유가 있으면 서비스 제공을 일시적으로 멈출 수
-            있습니다. 미리 알릴 수 있는 경우에는 서비스 화면에 공지하고, 예상하지 못한 사유로 멈춘 경우에는 사유를 안
-            뒤에 알립니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제10조 책임의 제한">
-          <p>
-            팀은 천재지변이나 이에 준하는 불가항력, 이용자의 고의나 과실로 생긴 손해에 대해 책임지지 않습니다. 팀의 책임
-            있는 사유로 손해가 생긴 경우에는 관련 법령에 따라 배상하며, 서비스가 무료로 제공되는 점은 배상 범위를 정할
-            때 고려됩니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제11조 개인정보의 보호">
-          <p>
-            팀은 관련 법령에 따라 이용자의 개인정보를 보호합니다. 자세한 내용은{" "}
-            <Link href="/privacy">개인정보 처리방침</Link>에서 확인하실 수 있습니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="제12조 준거법과 분쟁 해결">
-          <p>
-            이 약관과 서비스 이용에는 대한민국 법을 적용합니다. 서비스 이용과 관련해 분쟁이 생기면 팀과 이용자는 원만한
-            해결을 위해 성실히 협의하며, 협의가 되지 않으면 민사소송법에 따른 관할 법원에 소를 제기할 수 있습니다.
-          </p>
-        </LegalArticle>
-
-        <LegalArticle heading="문의">
-          <LegalList>
-            <li>이메일 — {OPERATOR.officer.email}</li>
-          </LegalList>
-        </LegalArticle>
-
-        <LegalArticle heading="부칙">
-          <LegalList>
-            <li>{OPERATOR.effectiveDate.terms} — 제정</li>
-            <li>
-              {OPERATOR.revisionEffectiveDate.terms} 시행 예정 — 이용자 제출물 조항 신설에 따라 제7조 추가와 조문 번호
-              조정. 제10조의 무상 제공을 이유로 한 포괄 면책을 걷어내고 배상 범위를 법령에 따르도록 조정. 인기 검색어와
-              인기 제품 순위의 제공 기준과 한계 추가
-            </li>
-          </LegalList>
-        </LegalArticle>
+      <LegalDocument title={`${OPERATOR.serviceName} 이용약관`} effectiveDate={CURRENT_TERMS_EFFECTIVE_DATE}>
+        <details className="rounded-xl border border-border p-3">
+          <summary className="cursor-pointer font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-action">
+            {OPERATOR.effectiveDate.terms} 시행 예정 약관 펼쳐보기
+          </summary>
+          <div className="mt-4 flex flex-col gap-6 border-t border-border pt-4">
+            <p className="text-[12px]">시행 예정일 {OPERATOR.effectiveDate.terms}</p>
+            <ScheduledTerms />
+          </div>
+        </details>
+        <CurrentTerms />
       </LegalDocument>
     </>
   );

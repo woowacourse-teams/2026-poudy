@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 
-import { isBottomNavigationPath, matchesPathSegment } from "./bottom-navigation-path";
-import { InquiryButton } from "./InquiryButton";
+import { isBottomActionBarPath, isBottomNavigationPath, matchesPathSegment } from "./bottom-navigation-path";
+import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
 
 /**
  * 문의하기 화면에서는 감춘다. 이미 그 화면에 있는데 같은 곳으로 가는 버튼을 둘 이유가 없다.
@@ -12,12 +12,23 @@ import { InquiryButton } from "./InquiryButton";
 /* 문의하기 안쪽 경로인지 알아야 하는 곳이 늘면 여기서 함께 판단한다. */
 export const isInquiryPath = (pathname: string): boolean => matchesPathSegment(pathname, "/inquiry");
 
+const liftFor = (pathname: string): InquiryButtonLift => {
+  if (isBottomNavigationPath(pathname)) return "bottom-navigation";
+  if (isBottomActionBarPath(pathname)) return "bottom-action-bar";
+  return "none";
+};
+
 export function InquiryButtonSlot() {
   const pathname = usePathname();
 
   /* 문의하기 화면에서는 감춘다. 이미 그 안에 있는데 들어가는 버튼을 둘 이유가 없다. */
-  if (isInquiryPath(pathname) || matchesPathSegment(pathname, "/login") || matchesPathSegment(pathname, "/onboarding"))
+  if (
+    isInquiryPath(pathname) ||
+    matchesPathSegment(pathname, "/login") ||
+    matchesPathSegment(pathname, "/onboarding") ||
+    matchesPathSegment(pathname, "/admin")
+  )
     return null;
 
-  return <InquiryButton liftedAboveNavigation={isBottomNavigationPath(pathname)} />;
+  return <InquiryButton lift={liftFor(pathname)} />;
 }

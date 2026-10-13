@@ -29,12 +29,13 @@ public class ExcludeCodeRepository {
 
     public ExcludeCodes findAll() {
         List<GroupRow> definitions = jdbc.query(
-            "select code, display_name, description from ingredient_group"
+            "select code, display_name, tag_name, description from ingredient_group"
                 + " where code = any(:codes) order by code",
             excludeCodeParameters(),
             (row, number) -> new GroupRow(
                 ExcludeCode.valueOf(row.getString("code")),
                 row.getString("display_name"),
+                row.getString("tag_name"),
                 row.getString("description")
             )
         );
@@ -69,6 +70,7 @@ public class ExcludeCodeRepository {
                     definition -> new ExcludeCodeGroup(
                         definition.code(),
                         definition.displayName(),
+                        definition.tagName(),
                         definition.description(),
                         members.getOrDefault(definition.code(), List.of())
                     )
@@ -110,6 +112,6 @@ public class ExcludeCodeRepository {
     private record MappingRow(ExcludeCode code, ExcludeCodeIngredient ingredient) {
     }
 
-    private record GroupRow(ExcludeCode code, String displayName, String description) {
+    private record GroupRow(ExcludeCode code, String displayName, String tagName, String description) {
     }
 }

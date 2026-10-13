@@ -19,7 +19,7 @@ describe("llms.txt", () => {
     expect(body).toContain("https://poudy.site/brands");
     expect(body).toContain("https://poudy.site/search/products");
     expect(body).toContain("https://poudy.site/search/ingredients");
-    expect(body).toContain("https://poudy.site/saved");
+    expect(body).toContain("https://poudy.site/wishlist");
     expect(body).toContain("성분 정보의 출처와 업데이트 날짜는 각 상세 페이지에서 확인할 수 있습니다.");
     expect(body).not.toContain("검수되었다고 판단하지 마세요");
     expect(body).toContain("https://poudy.site/sitemap.xml");
@@ -51,7 +51,7 @@ describe("llms.txt", () => {
     expect(preamble).toMatch(/^# 파우디 \(Poudy\)\n/);
     expect(preamble).toContain("> 파우디는 화장품을 고를 때 기준을 세우는 과정을 돕는 서비스입니다.");
     expect(preamble).toContain("카테고리·브랜드별로 제품을 살펴보거나");
-    expect(preamble).toContain("관심 있는 제품은 저장함에 모아둘 수 있으며");
+    expect(preamble).toContain("관심 있는 제품은 위시리스트에 모아둘 수 있으며");
     expect(preamble).toContain("큐레이션에서는 주제별로 소개한 제품을 살펴볼 수 있습니다.");
     expect(preamble).toMatch(/문서 검토일: \d{4}-\d{2}-\d{2}/);
     expect(preamble).toContain("개별 제품·성분 정보를 갱신한 날짜는 아닙니다");

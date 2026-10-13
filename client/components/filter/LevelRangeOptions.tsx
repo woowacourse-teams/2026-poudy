@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { CheckMark } from "@/components/ui/CheckMark";
+import { MAX_LEVEL } from "@/lib/domain/filter";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
@@ -16,8 +17,6 @@ type LevelRangeProps = {
   readonly levels: readonly number[];
   readonly onChange: (levels: readonly number[]) => void;
 };
-
-const MAX_LEVEL = LEVEL_LABELS.length - 1;
 
 /**
  * 디자인의 유수분 4단계 범위 트랙.

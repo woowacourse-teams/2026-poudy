@@ -1,3 +1,4 @@
+import { ProductSort } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -61,6 +62,15 @@ describe("parseFilter", () => {
     expect(parse("page=-2").page).toBe(1);
     expect(parse("page=0").page).toBe(1);
     expect(parse("size=abc").size).toBe(DEFAULT_SIZE);
+  });
+
+  it("서버가 받는 범위를 넘는 페이지 크기는 기본값으로 되돌린다", () => {
+    expect(parse("size=100").size).toBe(100);
+    expect(parse("size=101").size).toBe(DEFAULT_SIZE);
+  });
+
+  it("기본 정렬은 서버의 기본 정렬과 같다", () => {
+    expect(DEFAULT_SORT).toBe(ProductSort.parse(undefined));
   });
 
   it("알 수 없는 피부 타입은 버린다", () => {

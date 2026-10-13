@@ -1,34 +1,21 @@
-import type { Endpoints } from "@poudy/api/api.zod.types";
+import { ExcludeCode, get_FindProducts, type ProductSort, SkinType } from "@poudy/api/api.zod";
 
 import { firstOf, keepIf } from "./optional";
 
-type ServerSort = NonNullable<NonNullable<Endpoints.get_FindProducts["parameters"]["query"]>["sort"]>;
+import { constraintOf } from "@/lib/api/constraint";
 
-/** 서버가 받지 않는 값이 섞이면 타입 검사에서 걸리게 한다. 순서는 드롭다운에 보이는 순서다. */
+/** 서버 정렬 중 화면에서 고를 수 있는 것만 둔다. 순서는 드롭다운에 보이는 순서다. */
 export const SORTS = [
   "DEFAULT",
   "PRICE_ASC",
   "PRICE_DESC",
   "UNIT_PRICE_ASC",
   "UNIT_PRICE_DESC",
-] as const satisfies readonly ServerSort[];
+] as const satisfies readonly ProductSort[];
 export type Sort = (typeof SORTS)[number];
 
-export const EXCLUDE_CODES = [
-  "FRAGRANCE_ALLERGENS",
-  "DRYING_ALCOHOLS",
-  "HARSH_PRESERVATIVES",
-  "SULFATES",
-  "CYCLIC_SILICONES",
-  "SYNTHETIC_COLORANTS",
-] as const;
-export type ExcludeCode = (typeof EXCLUDE_CODES)[number];
-
 /** 서버는 성분군 코드를 문자열로 준다. 화면이 아는 성분군인지 여기서 가른다. */
-export const isExcludeCode = (value: string): value is ExcludeCode => EXCLUDE_CODES.includes(value as ExcludeCode);
-
-export const SKIN_TYPES = ["DRY", "OILY", "SENSITIVE", "COMBINATION"] as const;
-export type SkinType = (typeof SKIN_TYPES)[number];
+export const isExcludeCode = (value: string): value is ExcludeCode => ExcludeCode.safeParse(value).success;
 
 /** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
 export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
@@ -38,35 +25,34 @@ export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
   COMBINATION: "복합성",
 };
 
-export const DEFAULT_SORT: Sort = "DEFAULT";
-export const DEFAULT_SIZE = 20;
+/** 기본값과 범위는 서버 계약에서 생성한 /api/products 쿼리 스키마가 정한다. */
+const PRODUCT_QUERY = get_FindProducts.parameters.query.unwrap().shape;
+
+/** 서버 기본 정렬이 SORTS 에 없으면 filter.test 가 잡는다. */
+export const DEFAULT_SORT: Sort =
+  SORTS.find((sort) => sort === PRODUCT_QUERY.sort.unwrap().parse(undefined)) ?? SORTS[0];
+export const DEFAULT_SIZE = PRODUCT_QUERY.size.unwrap().parse(undefined);
+/** 수분감·유분감 단계의 최댓값. 두 조건의 범위가 같아 수분감 쪽을 읽는다. */
+export const MAX_LEVEL = constraintOf(PRODUCT_QUERY.moistureLevel.unwrap().element.maxValue, "유수분 최대 단계");
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
 
-/** 수분감·유분감은 0~3 단계다. */
-const LEVEL_MIN = 0;
-const LEVEL_MAX = 3;
+type ProductQuery = Required<NonNullable<get_FindProducts["parameters"]["query"]>>;
+
+type ReadonlyParam<T> = T extends readonly (infer E)[] ? readonly E[] : T;
 
 /**
- * 탐색 조건. /api/products 의 쿼리 파라미터와 1:1 로 대응한다.
+ * 탐색 조건. /api/products 의 쿼리 파라미터에서 만들어 서버에 조건이 늘면 여기서 타입 검사가 걸린다.
+ * 검색어와 피부 타입은 걸지 않을 수 있고, 정렬은 화면에서 고를 수 있는 것만 받는다.
  * 화면은 이 객체를 따로 들고 있지 않고 URL 에서 매번 읽는다.
  */
 export type Filter = {
+  readonly [K in Exclude<keyof ProductQuery, "keyword" | "skinType" | "sort">]: ReadonlyParam<ProductQuery[K]>;
+} & {
   readonly keyword?: string;
-  readonly categoryIds: readonly number[];
-  readonly brandIds: readonly number[];
-  readonly moistureLevel: readonly number[];
-  readonly oilLevel: readonly number[];
-  readonly includeIngredientIds: readonly number[];
-  readonly excludeIngredientIds: readonly number[];
-  readonly excludeCodes: readonly ExcludeCode[];
-  readonly includeGroupCodes: readonly string[];
-  readonly excludeGroupCodes: readonly string[];
   /** 서버가 한 번에 하나만 받는다. 다른 조건과 AND 로 묶인다. */
   readonly skinType?: SkinType;
   readonly sort: Sort;
-  readonly page: number;
-  readonly size: number;
 };
 
 export const EMPTY_FILTER: Filter = {
@@ -103,10 +89,10 @@ const readIntegers = (params: URLSearchParams, key: string): readonly number[] =
 const readIds = (params: URLSearchParams, key: string): readonly number[] =>
   readIntegers(params, key).filter((value) => value > 0);
 
-/** 수분감·유분감은 0(없음)도 고를 수 있는 값이라 ID 와 다르게 읽는다. */
-const readLevels = (params: URLSearchParams, key: string): readonly number[] =>
+/** 수분감·유분감은 0(없음)도 고를 수 있는 값이라 ID 와 다르게 읽는다. 단계 범위는 서버 스키마로 거른다. */
+const readLevels = (params: URLSearchParams, key: "moistureLevel" | "oilLevel"): readonly number[] =>
   readIntegers(params, key)
-    .filter((value) => value >= LEVEL_MIN && value <= LEVEL_MAX)
+    .filter((value) => PRODUCT_QUERY[key].unwrap().element.safeParse(value).success)
     .toSorted((a, b) => a - b);
 
 const readStrings = (params: URLSearchParams, key: string): readonly string[] =>
@@ -125,17 +111,12 @@ const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort ==
 
 /** 서버가 단일 값만 받으므로 첫 값만 쓴다. 정해진 코드가 아니면 조건이 없는 것으로 본다. */
 const readSkinType = (params: URLSearchParams): SkinType | undefined =>
-  SKIN_TYPES.find((skinType) => skinType === params.get("skinType"));
+  SkinType.options.find((skinType) => skinType === params.get("skinType"));
 
-/** 정수이고 최솟값 이상일 때만 쓴다. 아니면 기본값으로 되돌린다. */
-const readCount = (
-  params: URLSearchParams,
-  key: string,
-  bounds: { readonly fallback: number; readonly min: number },
-): number => {
-  const value = Number(params.get(key));
-  const usable = Number.isInteger(value) && value >= bounds.min;
-  return firstOf(keepIf(usable, value), bounds.fallback);
+/** 서버 스키마의 범위를 벗어나면 기본값으로 되돌린다. */
+const readCount = (params: URLSearchParams, key: "page" | "size", fallback: number): number => {
+  const result = PRODUCT_QUERY[key].safeParse(params.get(key) ?? undefined);
+  return firstOf(keepIf(result.success, result.data ?? fallback), fallback);
 };
 
 const readKeyword = (params: URLSearchParams): string | undefined => params.get("keyword")?.trim() || undefined;
@@ -160,8 +141,8 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     includeGroupCodes: readStrings(params, "includeGroupCodes"),
     excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
     sort: readSort(params),
-    page: readCount(params, "page", { fallback: FIRST_PAGE, min: FIRST_PAGE }),
-    size: readCount(params, "size", { fallback: DEFAULT_SIZE, min: 1 }),
+    page: readCount(params, "page", FIRST_PAGE),
+    size: readCount(params, "size", DEFAULT_SIZE),
   };
 };
 

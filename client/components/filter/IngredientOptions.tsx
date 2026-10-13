@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExcludeCodeResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
 import { IngredientGroupRows } from "@/components/search/IngredientGroupRows";
@@ -12,7 +12,7 @@ import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import type { ExcludeCode, Filter } from "@/lib/domain/filter";
+import type { Filter } from "@/lib/domain/filter";
 import { splitByRange } from "@/lib/domain/highlight";
 import {
   coveredIngredientIds,
@@ -37,7 +37,7 @@ const ROW_CLASS = "flex min-h-[58px] items-center gap-1.5 border-b border-[#EEF0
 type IngredientOptionsProps = {
   readonly draft: Filter;
   readonly setDraft: (filter: Filter) => void;
-  readonly excludeCodes: readonly ExcludeCodeResponse[];
+  readonly excludeCodes: readonly IngredientGroupResponse[];
   readonly names: ReadonlyMap<number, string>;
 };
 
