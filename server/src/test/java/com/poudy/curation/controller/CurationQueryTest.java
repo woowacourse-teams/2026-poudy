@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -107,10 +106,13 @@ class CurationQueryTest {
     void returnsImageTextWithoutChangingWhitespace(String altText) throws Exception {
         String bodyText = "  첫 문단\r\n\r\n두 번째 문단\n ";
         jdbcTemplate.update(
-            "UPDATE curation_block SET alt_text = ?, body_text = ? WHERE id = ?",
+            """
+                UPDATE curation SET blocks = jsonb_set(blocks, '{0}', blocks -> 0 ||
+                    jsonb_build_object('altText', cast(? as text), 'bodyText', cast(? as text)))
+                WHERE id = 12
+                """,
             altText,
-            bodyText,
-            UUID.fromString(uuid(1))
+            bodyText
         );
 
         mockMvc.perform(get("/api/curations/12"))
@@ -120,7 +122,11 @@ class CurationQueryTest {
     }
 
     @Test
+    @Transactional
     void returnsEmptyBlocksWhenAllReferencedProductsAreMissing() throws Exception {
+        jdbcTemplate.update("""
+            update curation set blocks = jsonb_set(blocks, '{0,productIds}', '[999999]'::jsonb) where id = 4
+            """);
         mockMvc.perform(get("/api/curations/4")).andExpect(status().isOk())
             .andExpect(jsonPath("$.blocks", hasSize(0)));
     }

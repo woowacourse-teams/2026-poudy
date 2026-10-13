@@ -98,8 +98,8 @@ class ProductRelatedDatabaseQueryTest {
     void readsCurrentCurationReferences() throws Exception {
         jdbc.update("update product set product_name = '현재 큐레이션 상품' where id = 10");
         jdbc.update("""
-            insert into curation_block_product (block_id, product_id, position)
-            values ('00000000-0000-4000-8000-000000000006', 90001, 1)
+            update curation set blocks = jsonb_set(blocks, '{4,productIds}', '[10,90001]'::jsonb)
+            where id = 12
             """);
         mockMvc.perform(get("/api/curations/12"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.blocks[3].products[*].id").value(contains(10, 90001)))
