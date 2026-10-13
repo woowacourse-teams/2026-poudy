@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { reportBoundaryError } from "@/lib/analytics/report-error";
+import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
 /**
  * 루트 레이아웃까지 무너졌을 때. 이 파일이 레이아웃을 대신하므로 html·body 를 직접 그린다.
@@ -13,6 +14,7 @@ import { reportBoundaryError } from "@/lib/analytics/report-error";
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     reportBoundaryError(error, "global");
+    reloadForStaleBuild(error);
   }, [error]);
 
   return (

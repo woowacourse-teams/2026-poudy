@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { reportBoundaryError } from "@/lib/analytics/report-error";
+import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
 /**
  * 화면 하나가 무너졌을 때. 상단 바는 무너진 화면과 함께 사라져 여기서 다시 그린다.
@@ -16,6 +17,7 @@ import { reportBoundaryError } from "@/lib/analytics/report-error";
 export default function Error({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     reportBoundaryError(error, "route");
+    reloadForStaleBuild(error);
   }, [error]);
 
   return (
