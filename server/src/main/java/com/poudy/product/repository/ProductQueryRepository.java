@@ -40,14 +40,14 @@ public class ProductQueryRepository {
 
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
     private static final String CANDIDATES = """
-        with searched as materialized (%s), candidates as materialized (
-            select p.*, c.parent_id, searched.search_rank,
+        with %scandidates as materialized (
+            select p.*, c.parent_id, %s as search_rank,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
                     where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
-            from product p join searched on searched.id = p.id join category c on c.id = p.category_id
+            from product p %s join category c on c.id = p.category_id
             where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
               and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
               and not exists (select 1 from unnest(cast(:included as bigint[])) wanted(id)
@@ -199,11 +199,14 @@ public class ProductQueryRepository {
     }
 
     private String candidates(ProductQuery query) {
-        String searched = query.hasKeyword() ? """
+        String searchedCte = query.hasKeyword() ? """
             select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
             from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "select id, null::bigint as search_rank from product";
-        return CANDIDATES.formatted(searched);
+            """ : "";
+        String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
+        String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
+        String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
+        return CANDIDATES.formatted(cte, searchRank, searchedJoin);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
