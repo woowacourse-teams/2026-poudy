@@ -2,15 +2,18 @@ import * as Haptics from 'expo-haptics';
 import PoudyHapticsModule from 'poudy-haptics';
 import { Platform } from 'react-native';
 
-export const playSelectionHaptic = () => {
-  if (Platform.OS === 'android') {
-    const haptic = PoudyHapticsModule
-      ? PoudyHapticsModule.performSelectionAsync()
-      : Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-
-    void haptic.catch(() => undefined);
-    return;
+const performSelectionHaptic = (): Promise<void> => {
+  if (Platform.OS !== 'android') {
+    return Haptics.selectionAsync();
   }
 
-  void Haptics.selectionAsync().catch(() => undefined);
+  if (PoudyHapticsModule) {
+    return PoudyHapticsModule.performSelectionAsync();
+  }
+
+  return Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+};
+
+export const playSelectionHaptic = async () => {
+  await performSelectionHaptic().catch(() => undefined);
 };

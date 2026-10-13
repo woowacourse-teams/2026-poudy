@@ -14,7 +14,7 @@ export const googleIdToken = async (): Promise<ProviderTokenOutcome> => {
     return { status: 'cancelled' };
   }
 
-  void GoogleSignin.signOut().catch(() => undefined);
+  await GoogleSignin.signOut().catch(() => undefined);
 
   if (!response.data.idToken) {
     throw new Error('Google ID token is missing.');

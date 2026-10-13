@@ -17,7 +17,7 @@ export const useQuickActions = ({ onNavigate, serviceBaseUrl }: QuickActionOptio
   );
 
   useEffect(() => {
-    void QuickActions.setItems(getQuickActionItems()).catch(() => undefined);
+    QuickActions.setItems(getQuickActionItems()).catch(() => undefined);
   }, []);
 
   useQuickActionCallback(handleQuickAction);

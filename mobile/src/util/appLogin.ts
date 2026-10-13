@@ -47,10 +47,10 @@ export const loginResultScript = (result: AppLoginResult): string =>
   `window.dispatchEvent(new CustomEvent(${JSON.stringify(LOGIN_RESULT_EVENT)}, { detail: ${JSON.stringify(result)} }));
 true;`;
 
-export const signOutProviders = (): void => {
+export const signOutProviders = async () => {
   if (APP_LOGIN_PROVIDERS.length === 0) {
     return;
   }
 
-  void signOutKakao().catch(() => undefined);
+  await signOutKakao().catch(() => undefined);
 };

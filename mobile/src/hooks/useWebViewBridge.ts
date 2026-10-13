@@ -15,7 +15,7 @@ export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebV
   const latestLoginRef = useRef(0);
 
   const startLogin = useCallback(
-    (message: string) => {
+    async (message: string) => {
       const provider = loginProviderOf(message);
 
       if (!provider) {
@@ -25,23 +25,23 @@ export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebV
       const request = latestLoginRef.current + 1;
       latestLoginRef.current = request;
 
-      void loginWith(provider).then((result) => {
-        if (latestLoginRef.current !== request) {
-          return;
-        }
+      const result = await loginWith(provider);
 
-        if (result.status === 'unavailable') {
-          onWebLogin();
-        }
+      if (latestLoginRef.current !== request) {
+        return;
+      }
 
-        webViewRef.current?.injectJavaScript(loginResultScript(result));
-      });
+      if (result.status === 'unavailable') {
+        onWebLogin();
+      }
+
+      webViewRef.current?.injectJavaScript(loginResultScript(result));
     },
     [onWebLogin, webViewRef],
   );
 
   return useCallback(
-    (event: WebViewMessageEvent) => {
+    async (event: WebViewMessageEvent) => {
       const { data, url } = event.nativeEvent;
 
       if (!shouldLoadInWebView(url, serviceOrigin)) {
@@ -49,21 +49,21 @@ export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebV
       }
 
       if (data === HAPTIC_SELECTION_MESSAGE) {
-        playSelectionHaptic();
+        await playSelectionHaptic();
         return;
       }
 
       if (data.startsWith(SHARE_MESSAGE_PREFIX)) {
-        void shareText(data.slice(SHARE_MESSAGE_PREFIX.length)).catch(() => undefined);
+        await shareText(data.slice(SHARE_MESSAGE_PREFIX.length));
         return;
       }
 
       if (data === LOGOUT_MESSAGE) {
-        signOutProviders();
+        await signOutProviders();
         return;
       }
 
-      startLogin(data);
+      await startLogin(data);
     },
     [serviceOrigin, startLogin],
   );

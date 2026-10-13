@@ -92,11 +92,15 @@ export default function LoadingIndicator({
   useEffect(() => {
     const controller = new AbortController();
 
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+    const syncReduceMotion = async () => {
+      const isEnabled = await AccessibilityInfo.isReduceMotionEnabled();
+
       if (!controller.signal.aborted) {
-        setIsReduceMotionEnabled(enabled);
+        setIsReduceMotionEnabled(isEnabled);
       }
-    });
+    };
+
+    syncReduceMotion().catch(() => undefined);
     const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setIsReduceMotionEnabled);
 
     return () => {
