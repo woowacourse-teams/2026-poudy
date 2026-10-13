@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import type { AppInfo, AppPlatform } from '@/types/appInfo';
 import { APP_LOGIN_PROVIDERS } from '@/util/appLogin';
+import { canAppUpdate } from '@/util/appUpdate';
 
 const APP_PLATFORMS: readonly AppPlatform[] = ['ios', 'android'];
 const UNKNOWN = 'unknown';
@@ -35,6 +36,7 @@ export const WEBVIEW_INIT_SCRIPT = appInfo
   window.__POUDY_APP__ = ${JSON.stringify(appInfo)};
   window.__POUDY_WEB_SCROLL_INDICATOR__ = true;
   window.__POUDY_APP_LOGIN__ = ${JSON.stringify(APP_LOGIN_PROVIDERS)};
+  window.__POUDY_APP_UPDATE__ = ${JSON.stringify(canAppUpdate)};
 
   const lockViewport = () => {
     const viewport = document.querySelector('meta[name="viewport"]');

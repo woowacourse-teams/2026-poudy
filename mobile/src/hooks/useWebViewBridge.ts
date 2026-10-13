@@ -3,6 +3,7 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 
 import type { WebViewBridgeOptions } from '@/types/webView';
 import { LOGOUT_MESSAGE, loginProviderOf, loginResultScript, loginWith, signOutProviders } from '@/util/appLogin';
+import { APP_UPDATE_MESSAGE, startAppUpdate } from '@/util/appUpdate';
 import { playSelectionHaptic } from '@/util/haptic';
 import { shareText } from '@/util/share';
 import { shouldLoadInWebView } from '@/util/webViewRequest';
@@ -55,6 +56,11 @@ export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebV
 
       if (data.startsWith(SHARE_MESSAGE_PREFIX)) {
         await shareText(data.slice(SHARE_MESSAGE_PREFIX.length));
+        return;
+      }
+
+      if (data === APP_UPDATE_MESSAGE) {
+        await startAppUpdate();
         return;
       }
 
