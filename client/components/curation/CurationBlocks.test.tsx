@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { CurationBlockResponse } from "@poudy/api/api.zod";
+import { CurationBlockResponse } from "@poudy/api/api.zod";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -66,6 +66,40 @@ const filterBlock = {
 } as const satisfies CurationBlockResponse;
 
 describe("CurationBlocks", () => {
+  it("생성한 응답 유니온이 검색어 null과 유니코드 문구를 가진 제품 링크를 받는다", () => {
+    expect(
+      CurationBlockResponse.safeParse({
+        id: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e05",
+        type: "PRODUCT_LINK",
+        spacingTop: 0,
+        spacingBottom: 24,
+        label: "😀".repeat(100),
+        query: {
+          keyword: null,
+          brandIds: [1],
+          categoryIds: [],
+          includeIngredientIds: [],
+          includeGroupCodes: [],
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("클라이언트 버튼 연결 전에는 새 링크를 숨기고 기존 블록을 유지한다", () => {
+    const block = {
+      id: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e05",
+      type: "PRODUCT_LINK",
+      spacingTop: 0,
+      spacingBottom: 0,
+      label: "제품 보러가기",
+      query: { keyword: null, brandIds: [1], categoryIds: [], includeIngredientIds: [], includeGroupCodes: [] },
+    } satisfies CurationBlockResponse;
+    const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[block, imageBlock]} />);
+    expect(screen.queryByRole("link", { name: block.label })).not.toBeInTheDocument();
+    expect(screen.queryByText(block.label)).not.toBeInTheDocument();
+    expect(container.querySelector("figure")).toBeInTheDocument();
+  });
+
   it("서버가 내려 준 순서대로 블록을 쌓는다", () => {
     const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[imageBlock, productsBlock]} />);
 
