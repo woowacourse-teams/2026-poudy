@@ -615,7 +615,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy-backend\",uri!~\"/actuator.*\"}[5m]))",
+          "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\",uri!~\"/actuator.*\"}[5m]))",
           "legendFormat": "{{method}} {{uri}}"
         }
       ],
@@ -669,7 +669,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "100 * (sum(rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy-backend\",status=~\"5..\",uri!~\"/actuator.*\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy-backend\",uri!~\"/actuator.*\"}[5m])), 0.001)",
+          "expr": "100 * (sum(rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\",status=~\"5..\",uri!~\"/actuator.*\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\",uri!~\"/actuator.*\"}[5m])), 0.001)",
           "legendFormat": "5xx requests"
         }
       ],
@@ -723,7 +723,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, uri, method) (rate(http_server_requests_seconds_bucket{environment=\"staging\",job=\"poudy-backend\",uri!~\"/actuator.*\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, uri, method) (rate(http_server_requests_seconds_bucket{environment=\"staging\",job=\"poudy_backend_actuator\",uri!~\"/actuator.*\"}[5m])))",
           "legendFormat": "{{method}} {{uri}}"
         }
       ],
