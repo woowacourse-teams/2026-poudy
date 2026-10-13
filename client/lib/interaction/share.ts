@@ -1,4 +1,5 @@
 import { readAppInfo } from "@/lib/analytics/app-info";
+import { isAppVersionAtLeast } from "@/lib/domain/app-version";
 import { addShareMarker } from "@/lib/navigation/open-app";
 
 const SHARE_MESSAGE_PREFIX = "poudy:share:";
@@ -6,23 +7,12 @@ const SHARE_MESSAGE_PREFIX = "poudy:share:";
 /* 공유를 받기 시작한 앱 버전. 낮은 앱에 보내면 아무 일도 일어나지 않으므로 복사로 돌린다. */
 const SHARE_APP_VERSION = "0.1.2";
 
-const toParts = (version: string): readonly number[] => version.split(".").map((part) => Number(part) || 0);
-
-const isAtLeast = (version: string, target: string): boolean => {
-  const parts = toParts(version);
-  const difference = toParts(target)
-    .map((part, index) => (parts[index] ?? 0) - part)
-    .find((value) => value !== 0);
-
-  return (difference ?? 0) >= 0;
-};
-
 const canAppShare = (): boolean => {
   if (!window.ReactNativeWebView) return false;
 
   const info = readAppInfo(window.__POUDY_APP__);
 
-  return info.is_app && isAtLeast(info.app_version, SHARE_APP_VERSION);
+  return info.is_app && isAppVersionAtLeast(info.app_version, SHARE_APP_VERSION);
 };
 
 export type ShareResult = "shared" | "copied" | "unavailable";
