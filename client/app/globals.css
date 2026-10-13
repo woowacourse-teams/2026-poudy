@@ -374,8 +374,8 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
  * 하단 내비게이션 사이를 차지하고, thumb 은 그 안에서만 오간다.
  * 딤(z-40)보다 아래에 두어 시트가 열리면 함께 덮인다.
  *
- * thumb 의 위치는 문서 스크롤에 묶인 애니메이션이 옮긴다. 이동 거리(`--app-scroll-travel`)만
- * JS 가 크기가 바뀔 때 정한다. 스크롤 타임라인이 없으면 JS 가 transform 을 직접 쓴다.
+ * thumb 의 위치는 JS 가 스크롤마다 transform 으로 옮긴다. 스크롤 타임라인을 쓰지 않는 이유는
+ * `AppScrollIndicator` 에 적었다.
  */
 .app-scroll-track {
   position: fixed;
@@ -393,23 +393,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   border-radius: 9999px;
   background: rgb(0 0 0 / 0.35);
   transition: opacity 300ms ease-out;
-}
-
-@supports (animation-timeline: scroll()) {
-  .app-scroll-thumb {
-    animation: app-scroll-thumb linear both;
-    animation-timeline: scroll(root block);
-  }
-}
-
-@keyframes app-scroll-thumb {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(var(--app-scroll-travel, 0px));
-  }
 }
 
 .app-scroll-thumb[data-visible="false"] {
@@ -1095,50 +1078,6 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
 .curation-card p {
   transform: translateZ(0);
   backface-visibility: hidden;
-}
-
-/*
- * 카드 크기를 스크롤 위치에 묶는다.
- *
- * 각 칸이 목록 안에서 지나가는 정도(`view()` 타임라인)를 그대로 진행도로 쓴다. 0% 는 칸이
- * 오른쪽 끝에서 들어오기 시작한 때, 50% 는 가운데에 선 때, 100% 는 왼쪽 끝으로 다 나간
- * 때다. 크기 변화가 합성 단계에서 돌아, 메인 스레드가 바쁜 기기에서도 손가락을 늦지 않게
- * 따라간다. 이것을 쓸 수 없는 브라우저에서는 `CurationCarousel` 의 `paintScales` 가 같은
- * 일을 스크롤마다 직접 한다.
- *
- * 한 칸 옆에 선 카드의 진행도는 약 1% 와 99% 라, 양 끝을 옆 카드의 크기(0.7)로 둔다.
- * 그 사이는 미는 만큼 고르게 변해야 하므로 `linear` 로 둔다.
- *
- * 옆 카드는 가운데를 마주 보는 가장자리를 붙든 채 줄어야 카드 사이 간격이 변하지 않는다.
- * 가운데를 기준으로 줄인 뒤 줄어든 폭의 절반(15%)만큼 가운데 쪽으로 옮겨 같은 결과를 낸다.
- * 옮기는 `%` 는 줄이기 전 카드 폭에 대한 값이다. 층이 풀리지 않도록 `paintScales` 와 같이
- * 3D 변환으로 적는다.
- */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .curation-slide {
-      view-timeline: --curation-slide inline;
-    }
-
-    .curation-slide .curation-card {
-      animation: curation-card-scale linear both;
-      animation-timeline: --curation-slide;
-    }
-  }
-}
-
-@keyframes curation-card-scale {
-  0% {
-    transform: translate3d(-15%, 0, 0) scale3d(0.7, 0.7, 1);
-  }
-
-  50% {
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-  }
-
-  100% {
-    transform: translate3d(15%, 0, 0) scale3d(0.7, 0.7, 1);
-  }
 }
 
 /* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다. */

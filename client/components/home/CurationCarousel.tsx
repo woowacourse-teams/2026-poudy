@@ -172,15 +172,6 @@ const FLICK_VELOCITY = 0.11;
 const EDGE_PULL = 40;
 
 /**
- * 카드 크기를 CSS 스크롤 타임라인이 맡을 수 있는지.
- *
- * 맡을 수 있으면 크기 변화가 합성 단계에서 돌아, 메인 스레드가 바쁜 기기에서도 손가락을
- * 늦지 않게 따라간다. 맡을 수 없는 브라우저에서만 `paintScales` 가 스크롤마다 직접 적는다.
- */
-const cssDrivesScales = (): boolean =>
-  typeof CSS !== "undefined" && (CSS.supports?.("animation-timeline: view()") ?? false);
-
-/**
  * 디자인 S01 의 큐레이션 캐러셀.
  *
  * 카드를 받은 순서대로 한 번씩만 그린다. 끝에서 처음으로 이어 돌지 않고, 스스로 넘기다
@@ -251,12 +242,10 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    * 크기는 `transform` 으로만 바꾸고 React 를 거치지 않는다. 레이아웃과 페인트를 다시
    * 하지 않아 합성 단계에서만 처리되고, 프레임마다 트리를 다시 그리지도 않는다.
    *
-   * CSS 스크롤 타임라인을 쓸 수 있는 브라우저에서는 globals.css 의 `curation-card-scale`
-   * 이 같은 일을 하므로 여기서는 아무것도 하지 않는다.
+   * CSS 스크롤 타임라인(`animation-timeline: view()`)에 맡기면 Android WebView 에서 목록을
+   * 미는 동작이 버벅였다. 스크롤 막대(`AppScrollIndicator`)와 같은 이유로 직접 적는다.
    */
   const paintScales = useCallback(() => {
-    if (cssDrivesScales()) return;
-
     const track = trackRef.current;
     const first = track?.children[0];
     if (!track || !(first instanceof HTMLElement)) return;
