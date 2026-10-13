@@ -20,10 +20,6 @@ const setDocumentHeight = (scrollHeight: number, clientHeight: number) => {
   Object.defineProperty(document.documentElement, "clientHeight", { configurable: true, value: clientHeight });
 };
 
-const setScrollTimelineSupport = (supported: boolean) => {
-  vi.stubGlobal("CSS", { supports: () => supported });
-};
-
 const scrollTo = (y: number) => {
   Object.defineProperty(window, "scrollY", { configurable: true, value: y });
   window.dispatchEvent(new Event("scroll"));
@@ -39,7 +35,6 @@ describe("앱 WebView 스크롤 막대", () => {
       callback(0);
       return 1;
     });
-    setScrollTimelineSupport(true);
     setDocumentHeight(2000, 800);
     Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
     window.__POUDY_WEB_SCROLL_INDICATOR__ = true;
@@ -84,18 +79,8 @@ describe("앱 WebView 스크롤 막대", () => {
     expect(thumb(container)).toHaveAttribute("data-visible", "false");
   });
 
-  /* 위치는 CSS 스크롤 타임라인이 옮긴다. JS 는 이동 거리만 넘긴다. */
-  it("스크롤 타임라인이 있으면 이동 거리만 넘기고 위치는 직접 옮기지 않는다", () => {
-    const { container } = render(<AppScrollIndicator />);
-
-    act(() => scrollTo(600));
-
-    expect(thumb(container)?.style.getPropertyValue("--app-scroll-travel")).toBe("480px");
-    expect(thumb(container)?.style.transform).toBe("");
-  });
-
-  it("스크롤 타임라인이 없으면 스크롤 위치에 맞춰 직접 옮긴다", () => {
-    setScrollTimelineSupport(false);
+  /* 스크롤 타임라인은 Android WebView 의 스크롤을 버벅이게 해 쓰지 않는다. */
+  it("스크롤 위치에 맞춰 직접 옮긴다", () => {
     const { container } = render(<AppScrollIndicator />);
 
     act(() => scrollTo(600));

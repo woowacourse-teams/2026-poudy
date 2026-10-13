@@ -23,9 +23,6 @@ const readEnabled = () => window.__POUDY_WEB_SCROLL_INDICATOR__ === true;
 /* 서버는 앱 안인지 모른다. 미리 만든 화면은 그리지 않는 쪽으로 둔다. */
 const serverDisabled = () => false;
 
-const supportsScrollTimeline = () =>
-  typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("animation-timeline", "scroll()");
-
 const supportsScrollEnd = () => "onscrollend" in window;
 
 /**
@@ -46,9 +43,11 @@ export function AppScrollIndicator() {
 }
 
 /**
- * 막대의 위치는 CSS 스크롤 타임라인이 옮긴다(`.app-scroll-thumb`). JS 는 막대 길이와 이동
- * 거리를 크기가 바뀔 때만 다시 재고, 스크롤 중에는 보이고 숨기는 것만 정한다.
- * 스크롤 타임라인이 없는 WebView(iOS 26 미만)에서만 스크롤마다 위치를 직접 옮긴다.
+ * 막대 길이와 이동 거리는 크기가 바뀔 때 재고, 위치는 스크롤마다 한 프레임에 한 번 옮긴다.
+ *
+ * CSS 스크롤 타임라인(`animation-timeline: scroll()`)으로 옮기면 Android WebView 에서 문서
+ * 스크롤 자체가 버벅였다. 같은 기기의 삼성 인터넷과 이 막대를 그리지 않는 앱은 매끄러웠고,
+ * 이동 거리를 변수 대신 px 로 넣거나 `will-change` 를 주어도 그대로였다.
  */
 function ScrollThumb() {
   const pathname = usePathname();
@@ -60,7 +59,6 @@ function ScrollThumb() {
     const thumb = thumbRef.current;
     if (!track || !thumb) return;
 
-    const followsTimeline = supportsScrollTimeline();
     const endsWithScrollEnd = supportsScrollEnd();
     const state = { frame: 0, timer: 0, travel: 0, scrollable: false };
     const topBar = document.querySelector<HTMLElement>("[data-top-bar]");
@@ -89,12 +87,11 @@ function ScrollThumb() {
       track.style.top = `${top}px`;
       track.style.bottom = `${bottom}px`;
       thumb.style.height = `${height}px`;
-      thumb.style.setProperty("--app-scroll-travel", `${trackLength - height}px`);
 
       state.travel = trackLength - height;
       state.scrollable = root.scrollHeight > root.clientHeight;
       if (!state.scrollable) thumb.dataset.visible = "false";
-      if (!followsTimeline) place();
+      place();
     };
 
     const hideLater = () => {
@@ -105,7 +102,7 @@ function ScrollThumb() {
     };
 
     const handleScroll = () => {
-      if (!followsTimeline && !state.frame) state.frame = requestAnimationFrame(place);
+      if (!state.frame) state.frame = requestAnimationFrame(place);
       if (!state.scrollable) return;
 
       if (thumb.dataset.visible !== "true") thumb.dataset.visible = "true";
