@@ -18,9 +18,11 @@ class SwapSetupTest(unittest.TestCase):
         self.swap = self.root / "swapfile"
         self.fstab = self.root / "fstab"
         self.fstab.write_text("# existing host mounts\n")
+        self.proc_swaps = self.root / "proc-swaps"
+        self.proc_swaps.write_text("Filename Type Size Used Priority\n")
         script = SOURCE.read_text().replace(
             '[[ "${EUID}" -eq 0 ]] || { echo \'root 권한이 필요합니다.\' >&2; exit 1; }', ":"
-        ).replace("/swapfile", str(self.swap)).replace("/etc/fstab", str(self.fstab))
+        ).replace("/swapfile", str(self.swap)).replace("/etc/fstab", str(self.fstab)).replace("/proc/swaps", str(self.proc_swaps))
         self.script = self.root / "setup.sh"
         self.script.write_text(script)
         shim = self.root / "command.py"
@@ -39,8 +41,11 @@ elif name == 'blkid':
 elif name == 'stat': print(swap.stat().st_size)
 elif name == 'swapon':
     if '--show' in sys.argv:
-        if (root / 'active').exists(): print(swap)
-    else: (root / 'active').touch()
+        if (root / 'active').exists(): print(str(swap) + ' file 512M 0B -2')
+    else:
+        if (root / 'active').exists(): sys.exit(1)
+        (root / 'active').touch()
+        (root / 'proc-swaps').write_text('Filename Type Size Used Priority\\n' + str(swap) + ' file 524284 0 -2\\n')
 """)
         shim.chmod(0o755)
         for name in ["dd", "mkswap", "blkid", "stat", "chown", "swapon"]:
@@ -67,6 +72,7 @@ elif name == 'swapon':
     def test_existing_active_swap_preserved(self):
         self.existing_swap()
         (self.root / "active").touch()
+        self.proc_swaps.write_text(f"Filename Type Size Used Priority\n{self.swap} file 524284 0 -2\n")
         original = f"{self.swap} none swap sw 0 0\n"
         self.fstab.write_text(original)
         self.assertEqual(self.run_setup().returncode, 0)

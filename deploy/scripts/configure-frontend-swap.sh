@@ -30,7 +30,7 @@ elif [[ "${entries}" -ne 1 ]] || ! awk '$1 == "/swapfile" && $3 == "swap" && $4 
     exit 1
 fi
 
-if ! swapon --show --noheadings --raw --output NAME | grep -Fxq "${SWAP_FILE}"; then
+if ! awk -v path="${SWAP_FILE}" 'NR > 1 && $1 == path { found=1 } END { exit !found }' /proc/swaps; then
     swapon "${SWAP_FILE}"
 fi
 swapon --show --bytes
