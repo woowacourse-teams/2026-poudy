@@ -56,6 +56,13 @@ done
 
 nginx -t || fail_validation 'nginx configuration is invalid'
 
+image_optimizer_status="$(curl --silent --show-error --max-time 3 "${CURL_TLS_ARGS[@]}" \
+    --output /dev/null --write-out '%{http_code}' \
+    "${BASE_URL}/_next/image?url=%2Ffavicon.ico&w=64&q=75")" \
+    || fail_validation 'image optimizer probe failed'
+[[ "${image_optimizer_status}" == '404' ]] \
+    || fail_validation "image optimizer must remain disabled: ${image_optimizer_status}"
+
 if [[ "${HTTPS_MODE}" -eq 1 ]]; then
     readonly CANONICAL_PROBE_PATH='/products/601?source=canonical-probe'
     readonly EXPECTED_REDIRECT="301 https://${POUDY_SITE_HOST}${CANONICAL_PROBE_PATH}"
@@ -99,6 +106,13 @@ grep --null-data --fixed-strings --line-regexp --quiet \
     'POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081' \
     "/proc/${main_pid}/environ" \
     || fail_validation 'frontend server API origin is not the loopback listener'
+grep --null-data --fixed-strings --line-regexp --quiet \
+    'MALLOC_ARENA_MAX=2' "/proc/${main_pid}/environ" \
+    || fail_validation 'frontend allocator setting is not MALLOC_ARENA_MAX=2'
+awk 'NR > 1 && $1 == "/swapfile" { found=1 } END { exit !found }' /proc/swaps \
+    || fail_validation 'frontend /swapfile is not active; run configure-frontend-swap.sh during host setup'
+awk '$1 == "/swapfile" && $3 == "swap" { found=1 } END { exit !found }' /etc/fstab \
+    || fail_validation 'frontend /swapfile is not registered in fstab'
 
 listener_addresses="$(ss -H -ltn 'sport = :8081' | awk '{print $4}')"
 [[ "${listener_addresses}" == '127.0.0.1:8081' ]] \
