@@ -2,7 +2,7 @@
 name: 인프라 작업 & 모니터링 대응
 about: 인프라 변경, CI/CD 구축, 모니터링 알림 대응 작업을 기록합니다.
 title: '[Ops] '
-labels: infrastructure, devops
+labels: infra
 assignees: ''
 ---
 
