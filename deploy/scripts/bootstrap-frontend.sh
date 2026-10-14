@@ -62,6 +62,12 @@ install_systemd_unit \
     "${REPOSITORY_ROOT}/deploy/systemd/poudy-frontend.service" \
     /etc/systemd/system/poudy-frontend.service
 
+# 호스트 drop-in은 CodeDeploy의 앱 unit 교체·rollback 이후에도 유지한다.
+install -D -o root -g root -m 0644 \
+    "${REPOSITORY_ROOT}/deploy/systemd/poudy-frontend.service.d/allocator.conf" \
+    /etc/systemd/system/poudy-frontend.service.d/allocator.conf
+bash "${SCRIPT_DIR}/configure-frontend-swap.sh"
+
 # Certbot이 아직 인증서를 발급하지 않은 초기 상태에서는 HTTP 설정을
 # 유지합니다. 이미 인증서가 있는 호스트를 재초기화하는 경우에만 HTTPS
 # 설정을 활성화합니다. 일부 파일만 있거나 별칭이 빠진 기존 인증서가 있으면
