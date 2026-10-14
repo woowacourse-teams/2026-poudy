@@ -46,3 +46,8 @@ fi
 
 systemctl stop poudy-frontend.service || true
 install -d -o poudy -g poudy -m 0750 /opt/poudy/frontend
+
+# Next fetch 캐시 키에는 빌드 ID가 없어 새 빌드가 이전 빌드의 API 응답을 그대로 읽습니다.
+# 이미지 최적화를 끈 뒤로는 이미지 캐시도 읽히지 않아 .next/cache를 통째로 지웁니다.
+# CodeDeploy는 실행 중에 생긴 파일을 지우지 않으므로 배포마다 직접 비웁니다.
+rm -rf /opt/poudy/frontend/.next/cache
