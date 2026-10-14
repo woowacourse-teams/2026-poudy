@@ -12,7 +12,7 @@
   "graphTooltip": 1,
   "refresh": "30s",
   "schemaVersion": 41,
-  "version": 4,
+  "version": 5,
   "time": {
     "from": "now-6h",
     "to": "now"
@@ -993,6 +993,202 @@
           "decimals": 0
         },
         "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Hikari Connections",
+      "description": "Hikari active/idle connections, waiters, and configured maximum.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_active{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "active {{pool}}"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_idle{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "idle {{pool}}"
+        },
+        {
+          "refId": "C",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_pending{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "pending {{pool}}"
+        },
+        {
+          "refId": "D",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_max{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "max {{pool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Tomcat Thread Saturation",
+      "description": "Servlet worker threads in use and configured capacity.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "tomcat_threads_busy_threads{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "busy"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "tomcat_threads_current_threads{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "current"
+        },
+        {
+          "refId": "C",
+          "editorMode": "code",
+          "expr": "tomcat_threads_config_max_threads{environment=\"prod\",job=\"poudy-backend\"}",
+          "legendFormat": "max"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "JVM GC Pause Rate",
+      "description": "Five-minute rate of JVM GC pause time and pause count.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 72,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "rate(jvm_gc_pause_seconds_sum{environment=\"prod\",job=\"poudy-backend\"}[5m])",
+          "legendFormat": "pause seconds/s"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "rate(jvm_gc_pause_seconds_count{environment=\"prod\",job=\"poudy-backend\"}[5m])",
+          "legendFormat": "pauses/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "API Response Time (p99)",
+      "description": "Per-route p99 latency, excluding actuator endpoints.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 80,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le, uri, method) (rate(http_server_requests_seconds_bucket{environment=\"prod\",job=\"poudy-backend\",uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "{{method}} {{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       }
     }
   ]

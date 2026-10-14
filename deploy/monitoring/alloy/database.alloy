@@ -1,0 +1,85 @@
+// Grafana Alloy configuration for the shared PostgreSQL EC2.
+// Store credentials in a root-only systemd EnvironmentFile, never here.
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = "https://metrics-write.poudy.site/api/v1/write"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+prometheus.relabel "database" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    action       = "replace"
+    target_label = "environment"
+    replacement  = "shared"
+  }
+
+  rule {
+    action       = "replace"
+    target_label = "service"
+    replacement  = "poudy-database"
+  }
+}
+
+prometheus.exporter.unix "database" {
+  enable_collectors = ["systemd"]
+
+  systemd {
+    enable_restarts = true
+    unit_include    = "postgresql\\.service|poudy-db-backup\\.(service|timer)"
+  }
+}
+
+prometheus.scrape "database_host" {
+  job_name   = "integrations/unix"
+  targets    = prometheus.exporter.unix.database.targets
+  forward_to = [prometheus.relabel.database.receiver]
+
+  scrape_interval = "60s"
+}
+
+prometheus.exporter.postgres "database" {
+  // The DSN is provided only through the root-owned environment file.
+  data_source_names          = [sys.env("PG_EXPORTER_DSN")]
+  custom_queries_config_path = "/etc/alloy/postgres-queries.yaml"
+  enabled_collectors = [
+    "database",
+    "locks",
+    "long_running_transactions",
+    "postmaster",
+    "stat_activity_autovacuum",
+    "stat_bgwriter",
+    "stat_checkpointer",
+    "stat_database",
+    "stat_progress_vacuum",
+    "stat_statements",
+    "wal",
+  ]
+
+  stat_statements {
+    // pg_stat_statements is installed in staging only. Do not query prod here.
+    exclude_databases = ["poudy_prod", "postgres"]
+    include_query     = false
+    limit             = 20
+  }
+
+  autodiscovery {
+    enabled            = true
+    database_allowlist = ["poudy_prod", "poudy_staging"]
+  }
+}
+
+prometheus.scrape "postgres" {
+  job_name   = "integrations/postgres"
+  targets    = prometheus.exporter.postgres.database.targets
+  forward_to = [prometheus.relabel.database.receiver]
+
+  // Faster samples during gradual load analysis; host collection stays at 60s.
+  scrape_interval = "30s"
+}

@@ -1,0 +1,24 @@
+pg_activity_waits:
+  query: |
+    SELECT current_database() AS database_name,
+           wait_event_type,
+           wait_event,
+           count(*) AS waiting_sessions
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND wait_event IS NOT NULL
+    GROUP BY current_database(), wait_event_type, wait_event
+  metrics:
+    - database_name:
+        usage: "LABEL"
+        description: "Database sampled by the exporter"
+    - wait_event_type:
+        usage: "LABEL"
+        description: "PostgreSQL wait event category"
+    - wait_event:
+        usage: "LABEL"
+        description: "PostgreSQL wait event"
+    - waiting_sessions:
+        usage: "GAUGE"
+        description: "Active sessions currently waiting"
