@@ -109,7 +109,7 @@ grep --null-data --fixed-strings --line-regexp --quiet \
 grep --null-data --fixed-strings --line-regexp --quiet \
     'MALLOC_ARENA_MAX=2' "/proc/${main_pid}/environ" \
     || fail_validation 'frontend allocator setting is not MALLOC_ARENA_MAX=2'
-swapon --show --noheadings --raw --output NAME | grep -Fxq '/swapfile' \
+awk 'NR > 1 && $1 == "/swapfile" { found=1 } END { exit !found }' /proc/swaps \
     || fail_validation 'frontend /swapfile is not active; run configure-frontend-swap.sh during host setup'
 awk '$1 == "/swapfile" && $3 == "swap" { found=1 } END { exit !found }' /etc/fstab \
     || fail_validation 'frontend /swapfile is not registered in fstab'
