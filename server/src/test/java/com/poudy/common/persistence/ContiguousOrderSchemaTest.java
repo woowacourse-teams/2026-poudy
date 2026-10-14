@@ -49,6 +49,24 @@ class ContiguousOrderSchemaTest {
     @Test
     @DisplayName("부모 키가 여러 컬럼이어도 부모마다 순서를 검사한다")
     void checksCompositeParentKey() {
+        // 첫 배포에 남기는 legacy 테이블도 구버전 서버의 제약을 유지한다.
+        jdbcTemplate.update("""
+            INSERT INTO curation_block(id, curation_id, position, type, spacing_top, spacing_bottom)
+            VALUES (?, 12, 0, 'PRODUCTS_BY_FILTER', 0, 0)
+            """, FILTER_BLOCK_ID);
+        jdbcTemplate.update("""
+            INSERT INTO curation_block_filter(id, block_id, position, label) VALUES
+            ('00000000-0000-4000-8000-000000000011', ?, 0, '첫 필터'),
+            ('00000000-0000-4000-8000-000000000012', ?, 1, '다음 필터')
+            """, FILTER_BLOCK_ID, FILTER_BLOCK_ID);
+        jdbcTemplate.update("""
+            INSERT INTO curation_block_product(block_id, product_id, position) VALUES (?, 15, 0)
+            """, FILTER_BLOCK_ID);
+        jdbcTemplate.update("""
+            INSERT INTO curation_block_product_filter(block_id, product_id, filter_id, position) VALUES
+            (?, 15, '00000000-0000-4000-8000-000000000011', 0),
+            (?, 15, '00000000-0000-4000-8000-000000000012', 1)
+            """, FILTER_BLOCK_ID, FILTER_BLOCK_ID);
         jdbcTemplate.update(
             "UPDATE curation_block_product_filter SET position = position + 5"
                 + " WHERE block_id = ? AND product_id = ? AND position = 1",

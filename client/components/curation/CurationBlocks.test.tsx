@@ -1,13 +1,14 @@
 /**
  * @vitest-environment jsdom
  */
-import type { CurationBlockResponse } from "@poudy/api/api.zod";
+import { CurationBlockResponse } from "@poudy/api/api.zod";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CurationBlocks } from "./CurationBlocks";
 
 import { track } from "@/lib/analytics/track";
+import { DEFAULT_SORT, EMPTY_FILTER, parseFilter } from "@/lib/domain/filter";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
@@ -66,6 +67,93 @@ const filterBlock = {
 } as const satisfies CurationBlockResponse;
 
 describe("CurationBlocks", () => {
+  it("생성한 응답 유니온이 검색어 null과 유니코드 문구를 가진 제품 링크를 받는다", () => {
+    expect(
+      CurationBlockResponse.safeParse({
+        id: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e05",
+        type: "PRODUCT_LINK",
+        spacingTop: 0,
+        spacingBottom: 24,
+        label: "😀".repeat(100),
+        query: {
+          keyword: null,
+          brandIds: [1],
+          categoryIds: [],
+          includeIngredientIds: [],
+          includeGroupCodes: [],
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("제품 링크의 복합 조건으로 첫 페이지를 열고 문구를 일반 텍스트로 그린다", () => {
+    window.history.replaceState(null, "", "/curations/5?brandIds=999&page=7&sort=PRICE_DESC&excludeIngredientIds=888");
+    const block = {
+      id: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e05",
+      type: "PRODUCT_LINK",
+      spacingTop: 8,
+      spacingBottom: 24,
+      label: "<strong>레티놀 제품 보러가기</strong>",
+      query: {
+        keyword: "토너 & 크림",
+        brandIds: [1, 2],
+        categoryIds: [3],
+        includeIngredientIds: [4, 5],
+        includeGroupCodes: ["RETINOIDS", "CERAMIDES"],
+      },
+    } satisfies CurationBlockResponse;
+    const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[block]} />);
+    const link = screen.getByRole("link", { name: block.label });
+    const url = new URL(link.getAttribute("href") ?? "", "https://poudy.site");
+
+    expect(url.pathname).toBe("/products");
+    expect(parseFilter(url.searchParams)).toEqual({ ...EMPTY_FILTER, ...block.query });
+    expect(parseFilter(url.searchParams).sort).toBe(DEFAULT_SORT);
+    expect(url.searchParams.has("page")).toBe(false);
+    expect(url.searchParams.has("sort")).toBe(false);
+    expect(url.searchParams.has("excludeIngredientIds")).toBe(false);
+    expect(link.querySelector("strong")).toBeNull();
+    expect(container.firstElementChild).toHaveStyle({ paddingTop: "8px", paddingBottom: "24px" });
+    window.history.replaceState(null, "", "/");
+  });
+
+  it.each([
+    { brandIds: [1] },
+    { categoryIds: [2] },
+    { includeIngredientIds: [3] },
+    { includeGroupCodes: ["RETINOIDS"] },
+  ])("검색어 없는 제품 링크를 기존 제품 목록 URL로 변환한다: %j", (condition) => {
+    const query = {
+      keyword: null,
+      brandIds: [],
+      categoryIds: [],
+      includeIngredientIds: [],
+      includeGroupCodes: [],
+      ...condition,
+    };
+    render(
+      <CurationBlocks
+        curationId={CURATION_ID}
+        blocks={[
+          {
+            id: "0d4bd6d9-6a84-4a47-8f29-5b4c2d1a7e05",
+            type: "PRODUCT_LINK",
+            spacingTop: 0,
+            spacingBottom: 0,
+            label: "제품 보러가기",
+            query,
+          },
+        ]}
+      />,
+    );
+    const url = new URL(
+      screen.getByRole("link", { name: "제품 보러가기" }).getAttribute("href") ?? "",
+      "https://poudy.site",
+    );
+    expect(url.searchParams.has("keyword")).toBe(false);
+    expect(parseFilter(url.searchParams)).toEqual({ ...EMPTY_FILTER, ...condition });
+  });
+
   it("서버가 내려 준 순서대로 블록을 쌓는다", () => {
     const { container } = render(<CurationBlocks curationId={CURATION_ID} blocks={[imageBlock, productsBlock]} />);
 

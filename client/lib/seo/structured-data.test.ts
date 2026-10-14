@@ -138,6 +138,11 @@ describe("additional structured data", () => {
         { type: "IMAGE", imageUrl: "/image.png" },
         { type: "PRODUCTS", products: [{ id: 7, name: "토너" }] },
         { type: "PRODUCTS_BY_FILTER", products: [{ product: { id: 8, name: "크림" }, filterIds: ["filter"] }] },
+        {
+          type: "PRODUCT_LINK",
+          label: "브랜드 제품 보러가기",
+          query: { keyword: null, brandIds: [1], categoryIds: [], includeIngredientIds: [], includeGroupCodes: [] },
+        },
       ],
     } as unknown as CurationDetailResponse;
     const data = curationStructuredData(curation);

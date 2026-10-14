@@ -57,9 +57,16 @@ public class SitemapRepository {
             """
                 select c.id, greatest(c.updated_at, max(p.updated_at)) as updated_at
                 from curation c
-                left join curation_block cb on cb.curation_id = c.id
-                left join curation_block_product cbp on cbp.block_id = cb.id
-                left join product p on p.id = cbp.product_id
+                left join lateral (
+                    select product_id::bigint as id
+                    from jsonb_path_query(c.blocks,
+                        '$[*] ? (@.type == "PRODUCTS").productIds[*]') as ids(product_id)
+                    union all
+                    select product_id::bigint as id
+                    from jsonb_path_query(c.blocks,
+                        '$[*] ? (@.type == "PRODUCTS_BY_FILTER").products[*].productId') as ids(product_id)
+                ) refs on true
+                left join product p on p.id = refs.id
                 where c.publication_status = 'PUBLISHED'
                 group by c.id, c.updated_at
                 order by c.id

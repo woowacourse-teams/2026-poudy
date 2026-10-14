@@ -35,6 +35,13 @@ Pipeline 구성은 다음과 같습니다.
 백엔드 단계가 실패하면 프론트 단계는 실행되지 않고, 프론트 단계가 실패하면 백엔드는 새
 버전으로 남습니다. 두 단계를 모두 손으로 되돌릴 때는 프론트를 먼저 롤백합니다.
 
+프론트 `BeforeInstall`은 서비스를 멈춘 뒤 `.next/cache`를 비웁니다. Next fetch
+캐시 키에는 빌드 ID가 없고 CodeDeploy는 실행 중에 생긴 파일을 지우지 않아, 그대로 두면 새
+빌드가 응답 모양이 바뀌기 전의 API 응답을 `revalidate` 기간 동안 읽습니다. 이미지 최적화를
+끈 뒤로는 `.next/cache/images`도 읽히지 않아 디렉터리째 비웁니다. 빌드의 fetch
+캐시는 산출물에 넣지 않습니다. 빌드는 `https://poudy.site/api`를, 운영 서버는
+`http://127.0.0.1:8081/api`를 불러 캐시 키가 달라서입니다.
+
 > 배포용 GitHub Actions 워크플로는 사용하지 않습니다. GitHub Actions에는 PR 검증만
 > 남기고, 운영 산출물 생성과 EC2 배포는 CodeBuild·CodeDeploy가 담당합니다.
 
@@ -177,7 +184,16 @@ API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성
 cache key를 사용합니다. 세 runtime sitemap은 별도의 `poudy_sitemaps` 파일 캐시에서
 제품 12시간, 페이지·성분 24시간 동안 완성된 200 XML만 보관합니다. query·Host·Cookie·
 Authorization·RSC 헤더는 cache variant를 만들지 않으며 만료 갱신과 일시적인 5xx에는
-기존 정상 XML을 제공합니다. CodeDeploy의 `ApplicationStart` 훅은 Nginx main 설정·
+기존 정상 XML을 제공합니다.
+
+브라우저에 보내는 `Cache-Control`도 Nginx가 정합니다. Next.js가 미리 렌더링한 HTML·RSC에
+붙이는 `s-maxage`·`stale-while-revalidate`는 CDN용인데, 브라우저가 받으면 배포 전 빌드의
+RSC 응답을 서버에 묻지 않고 꺼내 써서 지난 빌드 chunk를 실행합니다. 그래서 `s-maxage=`로
+시작하는 값은 `private, no-cache`로 바꿔 보냅니다(`poudy_browser_cache_control` map).
+`/_next/static/`과 공개 파일의 캐시 헤더는 성공 응답에만 붙여, 없는 chunk의 404나
+재시작 중의 502가 브라우저에 남지 않게 합니다.
+
+CodeDeploy의 `ApplicationStart` 훅은 Nginx main 설정·
 server 설정·캐시 디렉터리·systemd unit을 설치하고 `nginx -t`를 통과시킨 뒤 Nginx를
 먼저, Next.js를 나중에 재시작합니다. Nginx 검증 실패 시 기존 설정을 복구합니다.
 

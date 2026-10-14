@@ -22,6 +22,9 @@ final class CurationImageBlock extends CurationBlock {
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException("이미지 블록의 URL이 필요합니다.");
         }
+        if (imageUrl.codePointCount(0, imageUrl.length()) > 1000) {
+            throw new IllegalArgumentException("이미지 블록의 URL은 1000자 이하여야 합니다.");
+        }
         if (altText != null && altText.codePointCount(0, altText.length()) > 500) {
             throw new IllegalArgumentException("이미지 블록의 대체 설명은 500자 이하여야 합니다.");
         }

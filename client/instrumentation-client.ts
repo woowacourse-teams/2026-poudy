@@ -1,4 +1,8 @@
 import { initAnalytics } from "./lib/analytics/track";
+import { revalidateRscRequests } from "./lib/navigation/stale-build";
+
+// 첫 화면 이동보다 먼저 자리를 잡아야 해서 하이드레이션 전에 동기로 건다.
+revalidateRscRequests();
 
 initAnalytics();
 

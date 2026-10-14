@@ -66,7 +66,7 @@ export const itemList = (
 
 export const curationStructuredData = (curation: CurationDetailResponse) => {
   const products = curation.blocks.flatMap((block) => {
-    if (block.type === "IMAGE") return [];
+    if (block.type === "IMAGE" || block.type === "PRODUCT_LINK") return [];
     if (block.type === "PRODUCTS_BY_FILTER") return block.products.map(({ product }) => product);
     return block.products;
   });

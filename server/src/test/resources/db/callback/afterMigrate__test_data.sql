@@ -770,39 +770,33 @@ INSERT INTO product_skin_type (product_id, skin_type_code) VALUES
     (15, 'COMBINATION');
 
 INSERT INTO curation (
-    id, position, title, description, banner_visible, banner_thumbnail_image_url, publication_status
+    id, position, title, description, banner_visible, banner_thumbnail_image_url, publication_status, blocks
 ) VALUES
-    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', TRUE, 'https://cdn.example.com/curations/banner.png', 'PUBLISHED'),
-    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', FALSE, NULL, 'PUBLISHED'),
-    (20, 2, '미게시 큐레이션', '미게시 큐레이션', FALSE, NULL, 'UNPUBLISHED');
-
-INSERT INTO curation_block (id, curation_id, position, type, spacing_top, spacing_bottom, image_url) VALUES
-    ('00000000-0000-4000-8000-000000000001', 12, 0, 'IMAGE', 8, 24, 'https://cdn.example.com/curations/12/detail-1.png'),
-    ('00000000-0000-4000-8000-000000000003', 12, 1, 'PRODUCTS_BY_FILTER', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000004', 12, 2, 'PRODUCTS_BY_FILTER', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000005', 12, 3, 'IMAGE', 8, 24, 'https://cdn.example.com/curations/12/detail-5.png'),
-    ('00000000-0000-4000-8000-000000000006', 12, 4, 'PRODUCTS', 0, 16, NULL),
-    ('00000000-0000-4000-8000-000000000007', 4, 0, 'PRODUCTS', 0, 16, NULL);
-
-INSERT INTO curation_block_filter (id, block_id, position, label) VALUES
-    ('00000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000003', 0, '보습'),
-    ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000003', 1, '진정'),
-    ('00000000-0000-4000-8000-000000000013', '00000000-0000-4000-8000-000000000003', 2, '사라질 필터'),
-    ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000004', 0, '이 블록에서만 유효');
-
-INSERT INTO curation_block_product (block_id, product_id, position) VALUES
-    ('00000000-0000-4000-8000-000000000003', 15, 0),
-    ('00000000-0000-4000-8000-000000000003', 10, 1),
-    ('00000000-0000-4000-8000-000000000003', 7, 2),
-    ('00000000-0000-4000-8000-000000000003', 1, 3),
-    ('00000000-0000-4000-8000-000000000006', 10, 0);
-
-INSERT INTO curation_block_product_filter (block_id, product_id, filter_id, position) VALUES
-    ('00000000-0000-4000-8000-000000000003', 15, '00000000-0000-4000-8000-000000000012', 0),
-    ('00000000-0000-4000-8000-000000000003', 15, '00000000-0000-4000-8000-000000000011', 1),
-    ('00000000-0000-4000-8000-000000000003', 10, '00000000-0000-4000-8000-000000000011', 0),
-    ('00000000-0000-4000-8000-000000000003', 7, '00000000-0000-4000-8000-000000000012', 0),
-    ('00000000-0000-4000-8000-000000000003', 1, '00000000-0000-4000-8000-000000000012', 0);
+    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', TRUE,
+     'https://cdn.example.com/curations/banner.png', 'PUBLISHED', $curation$[
+        {"id":"00000000-0000-4000-8000-000000000001","type":"IMAGE","spacingTop":8,"spacingBottom":24,
+         "imageUrl":"https://cdn.example.com/curations/12/detail-1.png","altText":null,"bodyText":null},
+        {"id":"00000000-0000-4000-8000-000000000003","type":"PRODUCTS_BY_FILTER","spacingTop":0,"spacingBottom":16,
+         "filters":[
+            {"id":"00000000-0000-4000-8000-000000000012","label":"보습"},
+            {"id":"00000000-0000-4000-8000-000000000011","label":"진정"},
+            {"id":"00000000-0000-4000-8000-000000000013","label":"사라질 필터"}
+         ],
+         "products":[
+            {"productId":15,"filterIds":["00000000-0000-4000-8000-000000000012","00000000-0000-4000-8000-000000000011"]},
+            {"productId":10,"filterIds":["00000000-0000-4000-8000-000000000011"]},
+            {"productId":7,"filterIds":["00000000-0000-4000-8000-000000000012"]},
+            {"productId":1,"filterIds":["00000000-0000-4000-8000-000000000012"]}
+         ]},
+        {"id":"00000000-0000-4000-8000-000000000004","type":"PRODUCTS_BY_FILTER","spacingTop":0,"spacingBottom":16,
+         "filters":[{"id":"00000000-0000-4000-8000-000000000011","label":"이 블록에서만 유효"}],"products":[]},
+        {"id":"00000000-0000-4000-8000-000000000005","type":"IMAGE","spacingTop":8,"spacingBottom":24,
+         "imageUrl":"https://cdn.example.com/curations/12/detail-5.png","altText":null,"bodyText":null},
+        {"id":"00000000-0000-4000-8000-000000000006","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[10]}
+     ]$curation$::jsonb),
+    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', FALSE, NULL, 'PUBLISHED',
+     '[{"id":"00000000-0000-4000-8000-000000000007","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[]}]'::jsonb),
+    (20, 2, '미게시 큐레이션', '미게시 큐레이션', FALSE, NULL, 'UNPUBLISHED', '[]'::jsonb);
 
 INSERT INTO search_keyword (id, keyword, status, ranking_eligible) VALUES
     ('brand:1', '라운드랩', 'ACTIVE', TRUE),

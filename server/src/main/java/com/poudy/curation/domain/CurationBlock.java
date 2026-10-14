@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public abstract sealed class CurationBlock permits CurationImageBlock, CurationProductsBlock,
-    CurationProductsByFilterBlock {
+    CurationProductsByFilterBlock, CurationProductLinkBlock {
 
     private final UUID id;
     private final int spacingTop;
@@ -55,6 +55,16 @@ public abstract sealed class CurationBlock permits CurationImageBlock, CurationP
         List<CurationProductMapping> products
     ) {
         return new CurationProductsByFilterBlock(id, spacingTop, spacingBottom, filters, products);
+    }
+
+    public static CurationBlock productLink(
+        UUID id,
+        int spacingTop,
+        int spacingBottom,
+        String label,
+        CurationProductLinkQuery query
+    ) {
+        return new CurationProductLinkBlock(id, spacingTop, spacingBottom, label, query);
     }
 
     public UUID id() {

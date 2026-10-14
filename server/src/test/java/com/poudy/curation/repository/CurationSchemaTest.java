@@ -3,12 +3,8 @@ package com.poudy.curation.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,189 +15,31 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @Transactional
 class CurationSchemaTest {
-
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbc;
 
     @Test
-    void matchesTheErdCloudCurationTables() {
-        assertThat(columnsOf("curation")).containsExactly(
-            "id",
-            "position",
-            "title",
-            "description",
-            "banner_visible",
-            "banner_thumbnail_image_url",
-            "publication_status",
-            "created_at",
-            "updated_at"
-        );
-        assertThat(columnsOf("curation_block")).containsExactly(
-            "id",
-            "curation_id",
-            "position",
-            "type",
-            "spacing_top",
-            "spacing_bottom",
-            "image_url",
-            "created_at",
-            "updated_at",
-            "alt_text",
-            "body_text"
-        );
-        assertThat(columnsOf("curation_block_filter")).containsExactly(
-            "id",
-            "block_id",
-            "position",
-            "label",
-            "created_at",
-            "updated_at"
-        );
-        assertThat(columnsOf("curation_block_product")).containsExactly(
-            "block_id",
-            "product_id",
-            "position",
-            "created_at",
-            "updated_at"
-        );
-        assertThat(columnsOf("curation_block_product_filter")).containsExactly(
-            "block_id",
-            "product_id",
-            "filter_id",
-            "position",
-            "created_at",
-            "updated_at"
-        );
-    }
-
-    @Test
-    void usesKoreanLocalTimestampDefaultsForCurationAuditColumns() {
-        Integer auditColumnCount = jdbcTemplate.queryForObject(
-            """
-                SELECT count(*)
-                FROM information_schema.columns
-                WHERE table_schema = current_schema()
-                  AND table_name IN (
-                      'curation',
-                      'curation_block',
-                      'curation_block_filter',
-                      'curation_block_product',
-                      'curation_block_product_filter'
-                  )
-                  AND column_name IN ('created_at', 'updated_at')
-                  AND data_type = 'timestamp without time zone'
-                  AND is_nullable = 'NO'
-                  AND column_default LIKE '%Asia/Seoul%'
-                """,
-            Integer.class
-        );
-
-        assertThat(auditColumnCount).isEqualTo(10);
-    }
-
-    @Test
-    void rejectsFiltersForBlocksThatAreNotFilterBlocks() {
-        assertThatThrownBy(
-            () -> jdbcTemplate.update(
-                "INSERT INTO curation_block_filter (id, block_id, position, label) VALUES (?, ?, ?, ?)",
-                UUID.randomUUID(),
-                UUID.fromString("00000000-0000-4000-8000-000000000001"),
-                0,
-                "잘못된 필터"
-            )
-        ).isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    void rejectsProductsForImageBlocks() {
-        assertThatThrownBy(
-            () -> jdbcTemplate.update(
-                "INSERT INTO curation_block_product (block_id, product_id, position) VALUES (?, ?, ?)",
-                UUID.fromString("00000000-0000-4000-8000-000000000001"),
-                10L,
-                0
-            )
-        ).isInstanceOf(DataIntegrityViolationException.class);
+    void requiresExplicitBodyForNewCurations() {
+        assertThatThrownBy(() -> jdbc.update("""
+            insert into curation(id, position, title, description, banner_visible, publication_status)
+            values (30, 3, '제목', '설명', false, 'PUBLISHED')
+            """)).isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {"환절기 장벽 케어"})
-    void allowsMissingAndDecorativeImageText(String altText) {
-        String bodyText = "  첫 문단\r\n\r\n두 번째 문단\n ";
-        UUID blockId = UUID.fromString("00000000-0000-4000-8000-000000000001");
-        jdbcTemplate.update(
-            "UPDATE curation_block SET alt_text = ?, body_text = ? WHERE id = ?",
-            altText,
-            bodyText,
-            blockId
-        );
-
-        assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT alt_text FROM curation_block WHERE id = ?",
-                String.class,
-                blockId
-            )
-        ).isEqualTo(altText);
-        assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT body_text FROM curation_block WHERE id = ?",
-                String.class,
-                blockId
-            )
-        ).isEqualTo(bodyText);
+    @ValueSource(strings = {"null", "{}"})
+    void rejectsNonArrayBodies(String body) {
+        assertThatThrownBy(() -> jdbc.update("update curation set blocks = cast(? as jsonb) where id = 12", body))
+            .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"가", "🌿"})
-    void limitsAltTextTo500UnicodeCharacters(String character) {
-        UUID blockId = UUID.fromString("00000000-0000-4000-8000-000000000001");
-        String altText = character.repeat(500);
-        jdbcTemplate.update("UPDATE curation_block SET alt_text = ? WHERE id = ?", altText, blockId);
-        assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT alt_text FROM curation_block WHERE id = ?",
-                String.class,
-                blockId
-            )
-        ).isEqualTo(altText);
-
-        assertThatThrownBy(
-            () -> jdbcTemplate.update(
-                "UPDATE curation_block SET alt_text = ? WHERE id = ?",
-                character.repeat(501),
-                blockId
-            )
-        ).isInstanceOf(DataIntegrityViolationException.class);
+    @Test
+    void rejectsSqlNullButAllowsExplicitEmptyBody() {
+        jdbc.update("update curation set blocks = '[]'::jsonb where id = 12");
+        assertThat(jdbc.queryForObject("select blocks::text from curation where id = 12", String.class))
+            .isEqualTo("[]");
+        assertThatThrownBy(() -> jdbc.update("update curation set blocks = null where id = 12"))
+            .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "PRODUCTS, alt_text",
-            "PRODUCTS, body_text",
-            "PRODUCTS_BY_FILTER, alt_text",
-            "PRODUCTS_BY_FILTER, body_text"})
-    void rejectsImageTextOnProductBlocks(String type, String column) {
-        assertThatThrownBy(
-            () -> jdbcTemplate.update(
-                "UPDATE curation_block SET " + column + " = '' WHERE type = ?",
-                type
-            )
-        ).isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    private List<String> columnsOf(String tableName) {
-        return jdbcTemplate.queryForList(
-            """
-                SELECT column_name
-                FROM information_schema.columns
-                WHERE table_schema = current_schema()
-                  AND table_name = ?
-                ORDER BY ordinal_position
-                """,
-            String.class,
-            tableName
-        );
-    }
 }

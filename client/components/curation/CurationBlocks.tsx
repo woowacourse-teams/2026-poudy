@@ -1,9 +1,11 @@
 import type { CurationBlockResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import Link from "next/link";
 
 import { CurationFilterBlock } from "./CurationFilterBlock";
 import { CurationProductGrid } from "./CurationProductGrid";
 
+import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 
 type CurationBlocksProps = {
@@ -27,6 +29,24 @@ function CurationBlock({
   readonly first: boolean;
 }) {
   switch (block.type) {
+    case "PRODUCT_LINK":
+      return (
+        <div className="px-4">
+          <Link
+            href={`/products?${serializeFilter({
+              ...EMPTY_FILTER,
+              keyword: block.query.keyword ?? undefined,
+              brandIds: block.query.brandIds,
+              categoryIds: block.query.categoryIds,
+              includeIngredientIds: block.query.includeIngredientIds,
+              includeGroupCodes: block.query.includeGroupCodes,
+            })}`}
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-action px-4 py-3 text-center text-sm font-semibold text-action-text"
+          >
+            {block.label}
+          </Link>
+        </div>
+      );
     case "IMAGE":
       /*
        * 기획전 이미지는 화면 폭을 꽉 채우고, 높이는 그림의 비율을 따른다. 제품 목록과 달리

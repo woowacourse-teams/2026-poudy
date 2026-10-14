@@ -29,7 +29,8 @@ class ErdCloudSchemaTest {
                 "banner_thumbnail_image_url",
                 "publication_status",
                 "created_at",
-                "updated_at"
+                "updated_at",
+                "blocks"
             )
         ),
         entry(
