@@ -22,7 +22,14 @@ const renderAttachment = (props: Partial<ImageAttachmentProps> = {}) => {
     onRetry: vi.fn(),
   };
   render(
-    <ImageAttachment label="사진" images={IMAGES} max={5} accept="image/jpeg,image/png" {...handlers} {...props} />,
+    <ImageAttachment
+      label="사진"
+      images={IMAGES}
+      max={5}
+      accept="image/jpeg,image/png,image/heic,image/heif"
+      {...handlers}
+      {...props}
+    />,
   );
   return handlers;
 };
@@ -59,7 +66,7 @@ describe("ImageAttachment", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "사진 추가" }));
     expect(pick).toHaveBeenCalled();
-    expect(input).toHaveAttribute("accept", "image/jpeg,image/png");
+    expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/heic,image/heif");
     expect(input).toHaveAttribute("multiple");
 
     const file = new File(["x"], "a.png", { type: "image/png" });

@@ -33,7 +33,7 @@ function AttachmentSample() {
       optional
       images={images}
       max={5}
-      accept="image/jpeg,image/png"
+      accept="image/jpeg,image/png,image/heic,image/heif"
       onSelect={(files) =>
         setImages((current) => [
           ...current,
@@ -50,7 +50,7 @@ function AttachmentSample() {
         setImages((current) => current.map((image) => (image.key === key ? { ...image, status: "uploaded" } : image)))
       }
       onOpen={noop}
-      status={`${images.length} / 5장 · ${uploading > 0 ? `${uploading}장 올리는 중 · ` : ""}장당 5MB 이하 · JPG, PNG`}
+      status={`${images.length} / 5장 · ${uploading > 0 ? `${uploading}장 올리는 중 · ` : ""}장당 5MB 이하 · JPG, PNG, HEIC`}
       error={failed > 0 ? `${failed}장을 올리지 못했어요. 사진을 눌러 다시 시도해 주세요.` : undefined}
     />
   );
@@ -169,7 +169,7 @@ export function LayoutSamples() {
           optional
           images={[]}
           max={1}
-          accept="image/jpeg,image/png"
+          accept="image/jpeg,image/png,image/heic,image/heif"
           onSelect={noop}
           onRemove={noop}
           onCancel={noop}

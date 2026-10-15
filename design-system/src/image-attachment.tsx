@@ -26,7 +26,10 @@ export type ImageAttachmentProps = {
   readonly images: readonly AttachedImage[];
   /** 올릴 수 있는 장수. 다 차면 추가 버튼을 막고, 이유는 status 문구로 알린다. */
   readonly max: number;
-  /** 고를 수 있는 형식(input accept). 규격은 IMAGE P04 를 따른다. */
+  /**
+   * 고를 수 있는 형식(input accept). 규격은 IMAGE P04 를 따른다. JPG·PNG 와 함께 아이폰 기본 형식인 HEIC(HEIF)도 받는다.
+   * 예: 'image/jpeg,image/png,image/heic,image/heif'
+   */
   readonly accept: string;
   /**
    * 사진을 골랐을 때. 크기·형식·장수 같은 규격은 쓰는 쪽이 고르는 순간 검사하고, 어긋나면 error 로 이유를 알린다
@@ -43,7 +46,7 @@ export type ImageAttachmentProps = {
   readonly onOpen?: (key: string) => void;
   /**
    * 사진 줄 아래 상태 줄(회색). 같은 자리에서 문구만 바뀐다.
-   * 예: '3 / 5장 · 장당 5MB 이하 · JPG, PNG', '3 / 5장 · 1장 올리는 중 · 장당 5MB 이하'
+   * 예: '3 / 5장 · 장당 5MB 이하 · JPG, PNG, HEIC', '3 / 5장 · 1장 올리는 중 · 장당 5MB 이하'
    */
   readonly status?: ReactNode;
   /**
