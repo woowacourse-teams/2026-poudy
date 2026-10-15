@@ -84,8 +84,8 @@ describe("ProductCard", () => {
     render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
 
     // 수분 2 단계는 보통, 유분 1 단계는 낮음이다.
-    expect(screen.getByText("보통")).toBeInTheDocument();
-    expect(screen.getByText("낮음")).toBeInTheDocument();
+    expect(screen.getByText("수분감 보통")).toBeInTheDocument();
+    expect(screen.getByText("유분감 낮음")).toBeInTheDocument();
   });
 
   it("제품 이름과 가격은 그림을 기다리지 않고 바로 읽힌다", () => {
