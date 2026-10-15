@@ -7,7 +7,6 @@ import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExtern
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
@@ -340,13 +339,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                       }}
                       className="flex items-center gap-3 py-3"
                     >
-                      <ProductImage
-                        src={item.imageUrl || PRODUCT_PLACEHOLDER}
-                        alt=""
-                        size={40}
-                        loading="lazy"
-                        className="size-10 shrink-0 rounded-sm bg-transparent object-contain"
-                      />
+                      <ProductImage src={item.imageUrl} size={40} loading="lazy" className="shrink-0" />
                       <span className="flex flex-1 flex-col gap-0.5">
                         {/*
                           맞은 자리는 색으로만 가른다. 굵기로 가르면 이름은 이미 굵어
