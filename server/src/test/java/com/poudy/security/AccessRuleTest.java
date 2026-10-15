@@ -13,7 +13,7 @@ class AccessRuleTest {
     @ValueSource(strings = {
             "/api/members/me",
             "/api/members/logout",
-            "/api/users/me/shelf",
+            "/api/users/me/shelf/products",
             "/api/admin/logout",
             "/api/admin/feedbacks",
             "/api/admin/members/{memberId}/restore"})

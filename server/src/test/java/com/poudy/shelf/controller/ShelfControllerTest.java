@@ -96,7 +96,7 @@ class ShelfControllerTest {
             "update user_shelf_product set created_at = created_at - interval '1 minute' where product_id = 15"
         );
 
-        mockMvc.perform(get(PATH).with(signedIn()))
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.usages.length()").value(3))
             .andExpect(jsonPath("$.usages[0].code").value("ALL"))
@@ -239,8 +239,8 @@ class ShelfControllerTest {
     @Test
     @DisplayName("회원 세션이 없으면 401, 관리자 세션이면 403 으로 거절한다")
     void requiresMemberSession() throws Exception {
-        mockMvc.perform(get(PATH)).andExpect(status().isUnauthorized());
-        mockMvc.perform(get(PATH).with(authentication(new LoginAdmin("admin").toAuthentication())))
+        mockMvc.perform(get(PRODUCTS_PATH)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(PRODUCTS_PATH).with(authentication(new LoginAdmin("admin").toAuthentication())))
             .andExpect(status().isForbidden());
     }
 
