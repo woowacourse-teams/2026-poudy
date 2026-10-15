@@ -36,8 +36,9 @@ export const exceptions = [
   {
     board: "LAYOUT L07",
     target: "내비 오른쪽 아이콘 버튼",
-    value: "오른쪽 14",
-    reason: "아이콘 안쪽 여백을 빼서 글리프가 화면 끝 16 에 보이게 한다. 스케일 값(pr-3.5)이라 린트 예외는 없다.",
+    value: "IconButton(44)을 칸 오른쪽 4 에 둔다(아이콘 끝 14)",
+    reason:
+      "아이콘(24) 끝을 화면 끝 14 에 두어, 안쪽 여백을 뺀 글리프가 화면 끝 16 에 보이게 한다. 스케일 값(pr-1)이라 린트 예외는 없다.",
   },
   {
     board: "LAYOUT L07",
