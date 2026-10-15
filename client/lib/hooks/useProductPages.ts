@@ -37,6 +37,13 @@ type PageState = {
   readonly pendingPage?: number;
   /** 위에 붙일 앞쪽 장. 중간 장부터 들어온 사람이 앞으로 돌아갈 때 받는다. */
   readonly pendingPreviousPage?: number;
+  /** 앞쪽 장을 받지 못했는지. 다음 장과 같이 저절로 다시 부르지 않고, 버튼을 눌러야 다시 부른다. */
+  readonly previousFailed?: boolean;
+  /**
+   * 같은 장을 몇 번째 부르는지. 오래 걸리는 요청을 사람이 다시 시도하면 장은 같아도 요청을 새로 보내야 해서,
+   * 받는 쪽이 이 값이 바뀔 때도 다시 부른다(FEEDBACK F02 의 10초 규칙).
+   */
+  readonly attempt?: number;
   /** 캐시에서 되살렸는지. 보던 자리로 되돌릴 대상인지 가른다. */
   readonly restored: boolean;
   /** 되살린 장 전체를 다시 받는 중인지. 그동안에도 담아 둔 목록을 보여 준다. */
@@ -133,14 +140,14 @@ const useFetchPreviousPage = (key: string, state: PageState, setState: SetPageSt
 
     fetchProducts({ ...JSON.parse(key), page: pendingPreviousPage })
       .then((response) => keep((previous) => prepended(previous, pendingPreviousPage, response)))
-      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined })));
+      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined, previousFailed: true })));
 
     return () => controller.abort();
   }, [key, pendingPreviousPage, setState]);
 };
 
 const useFetchPage = (key: string, state: PageState, setState: SetPageState) => {
-  const { pendingPage } = state;
+  const { pendingPage, attempt } = state;
 
   useEffect(() => {
     if (pendingPage === undefined) return;
@@ -156,7 +163,7 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
       .catch(() => keep((previous) => ({ ...previous, loading: false, failed: true, pendingPage: undefined })));
 
     return () => controller.abort();
-  }, [key, pendingPage, setState]);
+  }, [key, pendingPage, attempt, setState]);
 };
 
 /** 쌓아 둔 장을 전부 다시 받는다. 첫 장만 받으면 이어 붙인 목록이 스무 건으로 덮인다. */
@@ -248,6 +255,19 @@ const seedFor = (initial: InitialPage | undefined, key: string): ProductPageResp
 };
 
 /**
+ * 실패한 요청을 다시 보낸다. 첫 장부터 실패했으면 시작한 장을, 아니면 다음 장을 부른다.
+ * 아직 받는 중이면(오래 걸려 사람이 다시 시도를 누른 경우) 받던 요청을 끊고 같은 장을 새로 부른다.
+ */
+const retried = (previous: PageState): PageState => {
+  if (previous.loading && previous.pendingPage !== undefined) {
+    return { ...previous, attempt: (previous.attempt ?? 0) + 1 };
+  }
+  if (!previous.failed) return previous;
+  const pendingPage = previous.loaded ? previous.page + 1 : previous.first;
+  return { ...previous, pendingPage, loading: true, failed: false };
+};
+
+/**
  * 조건이 바뀌면 목록을 처음부터 다시 쌓고, 떠났다 돌아오면 담아 둔 목록에서 잇는다.
  * 조건의 `page` 는 목록이 시작할 장이다. 그 뒤로는 주소를 바꾸지 않고 장을 이어 붙인다.
  */
@@ -271,21 +291,21 @@ export const useProductPages = (filter: Filter, initial?: InitialPage) => {
     setState((previous) => ({ ...previous, pendingPage: previous.page + 1, loading: true, failed: false }));
   }, []);
 
-  /** 실패한 요청을 다시 보낸다. 첫 장부터 실패했으면 시작한 장을, 아니면 다음 장을 부른다. */
-  const retry = useCallback(() => {
-    setState((previous) => {
-      if (!previous.failed) return previous;
-      const pendingPage = previous.loaded ? previous.page + 1 : previous.first;
-      return { ...previous, pendingPage, loading: true, failed: false };
-    });
-  }, []);
+  const retry = useCallback(() => setState(retried), []);
 
   const loadPrevious = useCallback(() => {
     setState((previous) => {
       if (previous.first <= FIRST_PAGE || previous.pendingPreviousPage !== undefined) return previous;
-      return { ...previous, pendingPreviousPage: previous.first - 1 };
+      return { ...previous, pendingPreviousPage: previous.first - 1, previousFailed: false };
     });
   }, []);
 
-  return { ...current, loadingPrevious: current.pendingPreviousPage !== undefined, loadNext, loadPrevious, retry };
+  return {
+    ...current,
+    loadingPrevious: current.pendingPreviousPage !== undefined,
+    previousFailed: current.previousFailed ?? false,
+    loadNext,
+    loadPrevious,
+    retry,
+  };
 };

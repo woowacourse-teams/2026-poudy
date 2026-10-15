@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const openBrandSheet = async () => {
-  render(<ProductList excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
 
   // 목록 응답이 도착해 조건에 걸린 브랜드를 알게 될 때까지 기다린다.
   await waitFor(() => expect(screen.getByRole("main")).toBeInTheDocument());
@@ -54,7 +54,7 @@ describe("ProductList 브랜드 시트", () => {
       }),
     );
 
-    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    const { container } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
     expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(20);
     expect(container.querySelectorAll("[data-product-card]")).toHaveLength(0);
     expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("ProductList 브랜드 시트", () => {
       ),
     );
 
-    render(<ProductList excludeCodes={excludeCodes} />);
+    render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
 
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith("search_results_viewed", {
@@ -142,7 +142,9 @@ describe("ProductList 브랜드 시트", () => {
       ),
     );
 
-    render(<ProductList excludeCodes={excludeCodes} entryPoint="popular_keyword" />);
+    render(
+      <ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} entryPoint="popular_keyword" />,
+    );
 
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith("product_list_viewed", {
@@ -168,7 +170,7 @@ describe("ProductList 브랜드 시트", () => {
       ),
     );
 
-    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    const { container } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
     await waitFor(() => expect(container.querySelectorAll("[data-product-image]")).toHaveLength(2));
 
     const images = container.querySelectorAll("[data-product-image]");
