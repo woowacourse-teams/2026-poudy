@@ -875,16 +875,23 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                 className="flex h-full"
                 draggable={false}
               >
-                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-end overflow-clip rounded-[18px] bg-brand-soft px-5 py-4">
+                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-[18px] bg-brand-soft px-5 py-4">
                   {/* 오른쪽 위의 빛은 꾸밈이다. */}
                   <span
                     aria-hidden="true"
                     className="absolute -top-1.5 -right-8 size-44 rounded-full bg-[radial-gradient(circle,#ffffff_0%,var(--color-brand-soft)_100%)]"
                   />
-                  <span className="absolute top-5 left-5 flex h-5.5 items-center gap-1 rounded-full bg-white px-2 text-[11px] leading-[1.4] font-semibold text-[#C23A60]">
+                  {/*
+                    배지는 위에, 제목과 설명은 아래에 붙인다. 배지를 띄워 두면 글자를 키웠을 때 제목과
+                    겹치므로 흐름 안에 둔다. 넘치면 카드가 큐레이션 카드처럼 세로로 자란다.
+
+                    배지 글자도 `p` 로 두어 카드 안 글자를 제 층에 올리는 규칙(globals.css)에 들게 한다.
+                    `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
+                  */}
+                  <p className="relative mt-1 flex min-h-5.5 items-center gap-1 rounded-full bg-white px-2 text-[11px] leading-[1.4] font-semibold text-[#C23A60]">
                     <Icon name="book" size={12} strokeWidth={1} scalable />
                     서비스 가이드
-                  </span>
+                  </p>
                   <div className="relative flex flex-col gap-1">
                     <h3 className="text-[18px] leading-[1.4] font-bold whitespace-pre-line text-text-primary">
                       {"3단계로 알아보는\n파우디 사용법"}
