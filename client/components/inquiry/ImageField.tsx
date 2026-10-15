@@ -101,7 +101,7 @@ export function ImageField({
             disabled={full}
             aria-label="이미지 첨부"
             /* 누름과 올림에 반응한다. 저장 버튼이 쓰는 방식과 같게 둔다. */
-            className="flex size-16 cursor-pointer items-center justify-center rounded-sm border border-border bg-background text-text-secondary transition duration-press ease-out hover:border-text-secondary hover:bg-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-background disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
+            className="flex size-16 cursor-pointer items-center justify-center rounded-sm border border-border bg-background text-text-secondary transition duration-press ease-out hover:border-text-secondary hover:bg-hover active:scale-95 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:bg-background disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             <Icon name="plus" size={20} />
           </button>

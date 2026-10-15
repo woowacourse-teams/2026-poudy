@@ -105,7 +105,7 @@ export function WithdrawnNotice() {
             type="button"
             onClick={restore}
             disabled={state === "sending" || state === "failed"}
-            className="flex h-13 w-full items-center justify-center rounded-button bg-action text-[15px] font-bold text-action-text disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-13 w-full items-center justify-center rounded-button bg-action text-[15px] font-bold text-action-text disabled:cursor-not-allowed"
           >
             계정 되살리기
           </button>

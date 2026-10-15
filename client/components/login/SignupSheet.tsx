@@ -88,7 +88,7 @@ export function SignupSheet() {
         <button
           type="submit"
           disabled={!canSignUp}
-          className="mt-6 flex h-[52px] items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:bg-[#F3F4F5] disabled:text-[#9EA3AB]"
+          className="mt-6 flex h-[52px] items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default"
         >
           동의하고 계속
         </button>
