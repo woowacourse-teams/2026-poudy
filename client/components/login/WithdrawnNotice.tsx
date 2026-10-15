@@ -12,7 +12,7 @@ import { AccountDataSummary } from "@/components/my-page/AccountDataSummary";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
 import { findWithdrawnAccount, requestRestore } from "@/lib/api/member";
-import { monthDay } from "@/lib/domain/withdrawn-account";
+import { formatDate } from "@/lib/domain/format";
 
 type RestoreState = "idle" | "sending" | "sent" | "failed";
 
@@ -40,8 +40,8 @@ function Deadline({ account }: { readonly account: WithdrawnAccountResponse | nu
 
   return (
     <>
-      {monthDay(account.withdrawnAt)}에 탈퇴했어요. {monthDay(account.restorableUntil)}까지 되살리면 전에 쓰던 그대로
-      이어서 쓸 수 있어요.
+      {formatDate(account.withdrawnAt)}에 탈퇴했어요. {formatDate(account.restorableUntil)}까지 되살리면 전에 쓰던
+      그대로 이어서 쓸 수 있어요.
     </>
   );
 }
