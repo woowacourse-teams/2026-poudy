@@ -27,6 +27,7 @@ public final class Product {
     private final String imageUrl;
     private final ProductVariants variants;
     private final ProductSensory sensory;
+    private final boolean sensitiveSkin;
     private final LocalDateTime updatedAt;
 
     public Product(
@@ -39,6 +40,7 @@ public final class Product {
         String imageUrl,
         ProductVariants variants,
         ProductSensory sensory,
+        boolean sensitiveSkin,
         OffsetDateTime updatedAt
     ) {
         if (name == null || name.isBlank()) {
@@ -76,6 +78,7 @@ public final class Product {
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
+        this.sensitiveSkin = sensitiveSkin;
         this.updatedAt = updatedAt.atZoneSameInstant(SEOUL).toLocalDateTime();
     }
 
@@ -150,12 +153,16 @@ public final class Product {
         return keyword.matchesExactly(name);
     }
 
-    public Integer moistureLevel() {
+    public Double moistureLevel() {
         return sensory.moisture().value();
     }
 
-    public Integer oilLevel() {
+    public Double oilLevel() {
         return sensory.oil().value();
+    }
+
+    public boolean isForSensitiveSkin() {
+        return sensitiveSkin;
     }
 
     public ProductVariant representativeVariant() {

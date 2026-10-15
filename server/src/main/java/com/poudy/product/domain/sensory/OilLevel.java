@@ -2,19 +2,20 @@ package com.poudy.product.domain.sensory;
 
 public final class OilLevel {
 
-    private static final int MINIMUM = 0;
-    private static final int MAXIMUM = 3;
+    private static final double MINIMUM = 0;
+    private static final double MAXIMUM = 3;
+    private static final double STEPS_PER_UNIT = 2;
 
-    private final int value;
+    private final double value;
 
-    public OilLevel(int value) {
+    public OilLevel(double value) {
         if (value < MINIMUM || value > MAXIMUM) {
             throw new IllegalArgumentException("유분감 단계는 0부터 3까지여야 합니다.");
         }
-        this.value = value;
+        this.value = Math.round(value * STEPS_PER_UNIT) / STEPS_PER_UNIT;
     }
 
-    public int value() {
+    public double value() {
         return value;
     }
 
@@ -25,6 +26,6 @@ public final class OilLevel {
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(value);
+        return Double.hashCode(value);
     }
 }

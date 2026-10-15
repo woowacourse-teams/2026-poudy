@@ -4,7 +4,7 @@
 
 - 이슈: https://github.com/woowacourse-teams/2026-poudy/issues/716
 - 기준: `origin/dev`의 `ab6c0186f073485f407bf2a9ee2b8ada32ff5d8e`.
-- PR 준비 시 최신 `origin/dev`의 `366bf382`를 반영했다. V14·V15 선점에 따라 배지는 V16을 사용한다.
+- PR 준비 시 최신 `origin/dev`의 `366bf382`를 반영했다. 이후 #751 병합으로 V16·V17도 선점되어 배지는 V18을 사용한다.
 - 작업 브랜치: `feat/716-product-badge`.
 - 기존 브랜드를 유지하면서 한 제품에 여러 배지를 연결하고 제품 응답에 코드와 표시명을 제공한다.
 - 사용자 결정: 관리자 API를 만들기 전까지 운영자가 DB에 직접 접속해 데이터를 적재한다.
@@ -16,7 +16,7 @@
 ## 현재 구현에서 이어갈 경계
 
 - `ProductLoader`가 제품 ID 묶음으로 옵션·구성품·성분을 읽고 `Product`를 조립한다.
-  상세·랭킹·저장함·큐레이션·유사 제품·선반이 이 경로를 사용한다. 최신 dev의 목록 카드와 검색 제안은
+  상세·랭킹·위시리스트·큐레이션·유사 제품·선반이 이 경로를 사용한다. 최신 dev의 목록 카드와 검색 제안은
   경량 표시 조회를 유지하고 같은 로더의 배지 일괄 조회만 공유한다.
 - 페이지와 정렬은 배지 로딩 전에 SQL로 결정한다. 배지 연결 때문에 제품 행이나 개수가 늘어나면 안 된다.
 - 제품 저장소와 조회 서비스는 읽기 전용 REPEATABLE READ 트랜잭션으로 여러 조회의 일관성을 보장한다.
@@ -26,7 +26,7 @@
 
 ## 스키마
 
-신규 `V16__add_product_badges.sql`에 다음을 추가한다. 구현 시 원격 변경으로 버전이 선점되면
+신규 `V18__add_product_badges.sql`에 다음을 추가한다. 구현 시 원격 변경으로 버전이 선점되면
 다음 번호를 사용하고 기존 마이그레이션은 수정하지 않는다.
 
 | 테이블 | 컬럼 | 제약/의미 |
@@ -82,7 +82,7 @@
 
 | DTO | 반영 경로 |
 | --- | --- |
-| `ProductResponse` | 제품 목록, 같은 DTO를 쓰는 저장함 목록 |
+| `ProductResponse` | 제품 목록, 같은 DTO를 쓰는 위시리스트 목록 |
 | `ProductDetailResponse` | 제품 상세 |
 | `ProductRankingProductResponse` | 랭킹 제품 |
 | `CurationProductResponse` | 일반/필터형 큐레이션의 제품 |
@@ -91,7 +91,7 @@
 | `ShelfProductInfoResponse` | 선반 제품 |
 
 - 기존 `brand`/`brandName`을 그대로 제공하고 옆에 `badges`를 추가한다.
-- ID만 주는 저장함 ID 목록·공유 매칭 결과, count와 필터 선택지에는 추가하지 않는다.
+- ID만 주는 위시리스트 ID 목록·공유 매칭 결과, count와 필터 선택지에는 추가하지 않는다.
 - 검색 대상·검색 일치 구간·필터 조건·정렬 기준은 확장하지 않는다.
 - Swagger 필수 배열/필수 문자열 계약을 테스트하고 `generateApiArtifacts`로 OpenAPI와 공통 타입을 갱신한다.
 
@@ -190,3 +190,14 @@
 - 클라이언트 Next.js 경로 타입 생성과 TypeScript 검사를 통과했다. 서버와 동시 실행할 때 UI 테스트
   시간 초과가 발생해 해당 실행을 중지하고, 서버 종료 뒤 `--maxWorkers=2`로 단독 재실행해
   135개 파일·1,211개 테스트를 모두 통과했다. 테스트 제한 시간이나 검증 조건은 변경하지 않았다.
+
+## PR 병합 충돌 해결
+
+- #751이 반영된 `origin/dev`의 `a8f9e8ff`를 병합했다. 기존 V16·V17은 유지하고 배지 마이그레이션을
+  `V18__add_product_badges.sql`로 옮겼다.
+- 수분감·유분감의 소수 타입과 `sensitiveSkin` 계약을 유지하며 `badges`를 함께 제공하도록
+  OpenAPI와 공통 타입을 재생성했다. 생성자 테스트도 두 변경을 함께 반영했다.
+- 배지 API 테스트는 `UserRepository`와 `/api/users/me/wishlist/products`를 사용하도록 변경했다.
+- 클라이언트 경로 타입 생성·TypeScript 검사·Prettier 검사를 통과했다.
+- 통합 후 `sh ./scripts/verify.sh`를 통과했다. 생성물 드리프트가 없고 서버 전체 테스트
+  1,232개가 통과했으며 실패·오류·건너뜀은 0개다.

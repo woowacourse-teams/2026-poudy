@@ -14,8 +14,9 @@ public record ProductCard(
     Long price,
     BigDecimal volumeValue,
     String volumeUnit,
-    Integer moistureLevel,
-    Integer oilLevel,
+    Double moistureLevel,
+    Double oilLevel,
+    boolean sensitiveSkin,
     OffsetDateTime updatedAt) {
     public ProductCard {
         badges = List.copyOf(badges);

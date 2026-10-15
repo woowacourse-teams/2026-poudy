@@ -9,14 +9,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.product.domain.Badge;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -43,7 +43,7 @@ class ProductBadgeQueryTest {
     @Autowired
     private ProductRepository products;
     @Autowired
-    private MemberRepository members;
+    private UserRepository users;
 
     @BeforeEach
     void addBadges() {
@@ -134,12 +134,12 @@ class ProductBadgeQueryTest {
     }
 
     @Test
-    void includesBadgesInSavedProducts() throws Exception {
-        var member = members
-            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-member", "badge@example.com", true)));
-        jdbc.update("insert into member_saved_product(member_id, product_id) values (?, 90001)", member.id());
+    void includesBadgesInWishlistProducts() throws Exception {
+        var user = users
+            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-member", "badge@example.com", true)));
+        jdbc.update("insert into user_wishlist_product(user_id, product_id) values (?, 90001)", user.id());
         mvc.perform(
-            get("/api/members/me/saved-products").with(authentication(new LoginMember(member.id()).toAuthentication()))
+            get("/api/users/me/wishlist/products").with(authentication(new LoginMember(user.id()).toAuthentication()))
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].badges[*].code").value(contains("DAISO", "OTHER")));
@@ -161,11 +161,11 @@ class ProductBadgeQueryTest {
 
     @Test
     void includesBadgesInShelfProducts() throws Exception {
-        var member = members
-            .save(MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-shelf", "shelf@example.com", true)));
+        var user = users
+            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-shelf", "shelf@example.com", true)));
         mvc.perform(
             post("/api/users/me/shelf/products")
-                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"productId\":90001,\"usageStatus\":\"IN_USE\"}")
         )
@@ -173,7 +173,7 @@ class ProductBadgeQueryTest {
             .andExpect(jsonPath("$.product.badges[*].code").value(contains("DAISO", "OTHER")));
         mvc.perform(
             get("/api/users/me/shelf/products")
-                .with(authentication(new LoginMember(member.id()).toAuthentication()))
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].product.badges[*].code").value(contains("DAISO", "OTHER")));

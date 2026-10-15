@@ -43,6 +43,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
+                false,
                 updatedAt
             )
         )
@@ -64,6 +65,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
+                false,
                 updatedAt
             )
         )
@@ -87,6 +89,7 @@ class ProductTest {
                 "image",
                 variants,
                 sensory(1, 1),
+                false,
                 updatedAt
             )
         )
@@ -112,6 +115,7 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
+            false,
             updatedAt
         );
 
@@ -139,6 +143,7 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
+            false,
             updatedAt
         );
 
@@ -159,6 +164,7 @@ class ProductTest {
                 "image",
                 variants,
                 null,
+                false,
                 updatedAt
             )
         )
@@ -187,6 +193,7 @@ class ProductTest {
             "image",
             variants,
             sensory(1, 1),
+            false,
             updatedAt
         );
         badges.clear();

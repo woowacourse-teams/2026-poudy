@@ -19,7 +19,7 @@ describe("탈퇴하기", () => {
     const user = userEvent.setup();
     const withdraw = vi.fn();
     server.use(
-      http.delete("*/api/members/me", () => {
+      http.delete("*/api/users/me", () => {
         withdraw();
         return new HttpResponse(null, { status: 204 });
       }),

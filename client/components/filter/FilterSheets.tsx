@@ -13,7 +13,7 @@ import { UnavailableSelections } from "./UnavailableSelections";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import type { Filter } from "@/lib/domain/filter";
+import { type Filter, skinChoiceOf, withSkinChoice } from "@/lib/domain/filter";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductCount } from "@/lib/hooks/useProductCount";
 
@@ -111,7 +111,7 @@ function SheetBody({
       ...(kind === "category" ? { categoryIds: [] } : {}),
       ...(kind === "brand" ? { brandIds: [] } : {}),
       ...(kind === "level" ? { moistureLevel: [], oilLevel: [] } : {}),
-      ...(kind === "skinType" ? { skinType: undefined } : {}),
+      ...(kind === "skinType" ? withSkinChoice(undefined) : {}),
       ...(kind === "ingredient"
         ? {
             excludeCodes: [],
@@ -191,8 +191,8 @@ function SheetBody({
 
         {kind === "skinType" ? (
           <SkinTypeOptions
-            selected={draft.skinType}
-            onSelect={(skinType) => setDraft({ ...draft, skinType })}
+            selected={skinChoiceOf(draft)}
+            onSelect={(choice) => setDraft({ ...draft, ...withSkinChoice(choice) })}
             skinTypes={skinTypes}
           />
         ) : null}

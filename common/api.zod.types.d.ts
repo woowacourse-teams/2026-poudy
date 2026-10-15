@@ -77,10 +77,10 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type MemberSkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
-export type MemberProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }
+export type SkinType = ("DRY" | "OILY" | "COMBINATION")
+export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
-export type MemberResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (MemberSkinType | null) }
+export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -89,64 +89,6 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string, extension: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
-export type FormulationRoleResponse = {
-  /**
-   * 배합 목적 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 배합 목적 이름 (CosIng Function)
-   */
-  name: string;
-}
-export type SkinEffectResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-}
-export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
-export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
-export type ShelfTab = ("ALL" | "IN_USE" | "USED")
-export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
-export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
-export type ShelfProductIdsResponse = { productIds: Array<number> }
-export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
-export type IngredientAnalysisItemResponse = { id: number, koreanName: string, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
-export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
-export type SkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
-export type SkinTypeResponse = {
-  code: SkinType;
-  /**
-   * 피부타입 표시명
-   */
-  name: string;
-}
-export type SkinTypesResponse = {
-  /**
-   * 표시 순서대로 정렬된 피부타입 전체
-   */
-  items: Array<SkinTypeResponse>;
-}
-export type SitemapEntryResponse = { id: number, updatedAt: string }
-export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
-export type RankingChangeItem = { movement: string, steps: number }
-export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
-export type RankingsResponse = { items: Array<RankingItem> }
-/**
- * 빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다
- */
-export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
-/**
- * 정렬 조건
- */
-export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -164,23 +106,6 @@ export type BrandResponse = {
    * 브랜드 이미지 URL
    */
   imageUrl: (string | null);
-}
-export type CategoryChildResponse = { id: number, name: string, productCount: number }
-export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
-export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
-export type ProductFilterOptionsResponse = {
-  /**
-   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
-   */
-  brands: Array<BrandResponse>;
-  /**
-   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
-   */
-  categories: Array<CategoryResponse>;
-  /**
-   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
-   */
-  skinTypes: Array<SkinTypeResponse>;
 }
 export type ProductResponse = {
   /**
@@ -213,14 +138,91 @@ export type ProductResponse = {
    */
   volumeUnit: string;
   /**
-   * 수분감 단계 (0~3)
+   * 수분감 단계 (0~3, 0.5 단위)
    */
   moistureLevel: number;
   /**
-   * 유분감 단계 (0~3)
+   * 유분감 단계 (0~3, 0.5 단위)
    */
   oilLevel: number;
+  sensitiveSkin: boolean;
   updatedAt: string;
+}
+export type WishlistResponse = { items: Array<ProductResponse> }
+export type WishlistProductIdsResponse = { productIds: Array<number> }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
+export type SkinEffectResponse = {
+  /**
+   * 피부 작용 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+}
+export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
+export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
+export type ShelfTab = ("ALL" | "IN_USE" | "USED")
+export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
+export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
+export type ShelfProductIdsResponse = { productIds: Array<number> }
+export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
+export type IngredientAnalysisItemResponse = { id: number, koreanName: string, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
+export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type SkinTypeResponse = {
+  code: SkinType;
+  /**
+   * 피부타입 표시명
+   */
+  name: string;
+}
+export type SkinTypesResponse = {
+  /**
+   * 표시 순서대로 정렬된 피부타입 전체
+   */
+  items: Array<SkinTypeResponse>;
+}
+export type SitemapEntryResponse = { id: number, updatedAt: string }
+export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
+export type RankingChangeItem = { movement: string, steps: number }
+export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
+export type RankingsResponse = { items: Array<RankingItem> }
+/**
+ * 빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다
+ */
+export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
+/**
+ * 정렬 조건
+ */
+export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
+export type CategoryChildResponse = { id: number, name: string, productCount: number }
+export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
+export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
+export type ProductFilterOptionsResponse = {
+  /**
+   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
+   */
+  brands: Array<BrandResponse>;
+  /**
+   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
+   */
+  categories: Array<CategoryResponse>;
+  /**
+   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   */
+  skinTypes: Array<SkinTypeResponse>;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -339,6 +341,7 @@ export type ProductDetailResponse = {
   variants: Array<ProductVariantResponse>;
   moistureLevel: number;
   oilLevel: number;
+  sensitiveSkin: boolean;
   productParts: Array<ProductPartSummaryResponse>;
   selectedPart: (ProductPartResponse | null);
   updatedAt: string;
@@ -455,19 +458,17 @@ export type ProductRankingProductResponse = {
    */
   price: number;
   /**
-   * 수분감 단계 (0~3)
+   * 수분감 단계 (0~3, 0.5 단위)
    */
   moistureLevel: number;
   /**
-   * 유분감 단계 (0~3)
+   * 유분감 단계 (0~3, 0.5 단위)
    */
   oilLevel: number;
 }
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
-export type SavedProductsResponse = { items: Array<ProductResponse> }
-export type SavedProductIdsResponse = { productIds: Array<number> }
 export type IngredientResponse = {
   /**
    * 성분 ID
@@ -661,11 +662,11 @@ export type CurationProductResponse = {
    */
   volumeUnit: string;
   /**
-   * 수분감 단계 (0~3)
+   * 수분감 단계 (0~3, 0.5 단위)
    */
   moistureLevel: number;
   /**
-   * 유분감 단계 (0~3)
+   * 유분감 단계 (0~3, 0.5 단위)
    */
   oilLevel: number;
 }
@@ -789,9 +790,9 @@ export type BrandDetailResponse = {
 }
 export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
-export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
-export type AdminRestoreRequestResponse = { memberId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
+export type AdminRestoreRequestResponse = { userId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
+export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
 export type AdminSessionResponse = { username: string }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
 export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
@@ -802,6 +803,49 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
+ * 이미 담은 제품이면 그대로 둔다.
+ */
+export type put_AddToWishlist = {
+      method: "PUT",
+      path: "/api/users/me/wishlist/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 담지 않은 제품이어도 성공한다.
+ */
+export type delete_RemoveFromWishlist = {
+      method: "DELETE",
+      path: "/api/users/me/wishlist/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 선반 제품의 사용 상태와 평가를 통째로 바꾼다.
  */
 export type put_Update = {
@@ -830,49 +874,6 @@ export type put_Update = {
 export type delete_Remove = {
       method: "DELETE",
       path: "/api/users/me/shelf/products/{productId}",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-
-        path:  { productId: number },
-
-          }
-      responses: {204: unknown,
-400: Schemas.ProblemDetail,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 이미 저장한 제품이면 그대로 둔다.
- */
-export type put_Save = {
-      method: "PUT",
-      path: "/api/members/me/saved-products/{productId}",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-
-        path:  { productId: number },
-
-          }
-      responses: {204: unknown,
-400: Schemas.ProblemDetail,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 저장하지 않은 제품이어도 성공한다.
- */
-export type delete_Unsave = {
-      method: "DELETE",
-      path: "/api/members/me/saved-products/{productId}",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
@@ -1137,12 +1138,12 @@ export type post_SignUp = {
  */
 export type post_Restore = {
       method: "POST",
-      path: "/api/admin/members/{memberId}/restore",
+      path: "/api/admin/users/{userId}/restore",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
 
-        path:  { memberId: number },
+        path:  { userId: number },
 
           }
       responses: {204: unknown,
@@ -1175,18 +1176,18 @@ export type post_Login_1 = {
 
     }
 /**
- * 성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다. 나중에 바꿀 때도 쓴다.
+ * 성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",
-      path: "/api/members/me/profile",
+      path: "/api/users/me/profile",
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
 
-        body:  Schemas.MemberProfileRequest,
+        body:  Schemas.UserProfileRequest,
           }
-      responses: {200: Schemas.MemberResponse,
+      responses: {200: Schemas.UserResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
@@ -1230,6 +1231,70 @@ export type patch_ChangeStatus_1 = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인한 회원 정보와 프로필을 조회한다.
+ */
+export type get_FindMe = {
+      method: "GET",
+      path: "/api/users/me",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.UserResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 회원 정보를 지우고 로그인 세션을 끝낸다.
+ */
+export type delete_Withdraw = {
+      method: "DELETE",
+      path: "/api/users/me",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {204: unknown,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 위시리스트 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 담은 것이 앞에 온다.
+ */
+export type get_FindWishlistProducts = {
+      method: "GET",
+      path: "/api/users/me/wishlist/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.WishlistResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 제품 목록과 상세에서 위시리스트에 담았는지 표시할 때 쓴다. 최근에 담은 것이 앞에 온다.
+ */
+export type get_FindWishlistProductIds = {
+      method: "GET",
+      path: "/api/users/me/wishlist/product-ids",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.WishlistProductIdsResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1283,7 +1348,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.
+ * 피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.
  */
 export type get_FindSkinTypes = {
       method: "GET",
@@ -1348,6 +1413,7 @@ export type get_FindProducts = {
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
   skinType: Schemas.SkinType;
+  sensitiveSkin: boolean;
   sort: Schemas.ProductSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
@@ -1503,75 +1569,12 @@ export type get_CountProducts = {
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
   skinType: Schemas.SkinType;
+  sensitiveSkin: boolean;
 }>,
 
           }
       responses: {200: Schemas.ProductCountResponse,
 400: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 로그인한 회원 정보와 초기 정보를 조회한다.
- */
-export type get_FindMe = {
-      method: "GET",
-      path: "/api/members/me",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.MemberResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 회원 정보를 지우고 로그인 세션을 끝낸다.
- */
-export type delete_Withdraw = {
-      method: "DELETE",
-      path: "/api/members/me",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {204: unknown,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 저장한 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 저장한 것이 앞에 온다.
- */
-export type get_FindSavedProducts = {
-      method: "GET",
-      path: "/api/members/me/saved-products",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.SavedProductsResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 제품 목록과 상세에서 저장 여부를 표시할 때 쓴다. 최근에 저장한 것이 앞에 온다.
- */
-export type get_FindSavedProductIds = {
-      method: "GET",
-      path: "/api/members/me/saved-products/ids",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.SavedProductIdsResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1812,6 +1815,35 @@ export type get_FindRegisteredAccount = {
 },
 
     }
+/**
+ * 복구를 요청한 탈퇴 회원을 요청한 순서대로 조회한다.
+ */
+export type get_FindRestoreRequests = {
+      method: "GET",
+      path: "/api/admin/users/restore-requests",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminRestoreRequestPageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_FindAll = {
       method: "GET",
       path: "/api/admin/product-requests",
@@ -1854,35 +1886,6 @@ export type get_FindById = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 복구를 요청한 탈퇴 회원을 요청한 순서대로 조회한다.
- */
-export type get_FindRestoreRequests = {
-      method: "GET",
-      path: "/api/admin/members/restore-requests",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-            query?:  Partial<{
-  /**
-   * 조회할 페이지 번호 (1부터 시작)
-   */
-  page: number;
-  /**
-   * 페이지당 항목 개수
-   */
-  size: number;
-}>,
-
-          }
-      responses: {200: Schemas.AdminRestoreRequestPageResponse,
-400: Schemas.ProblemDetail,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1979,7 +1982,7 @@ export type get_StartSocialLogin = {
  */
 export type post_Logout = {
       method: "POST",
-      path: "/api/members/logout",
+      path: "/api/users/logout",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
@@ -2011,14 +2014,14 @@ export type post_AdminLogout = {
 
      export type EndpointByMethod = {
      put: {
-           "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
-"/api/members/me/saved-products/{productId}": Endpoints.put_Save
+           "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
+"/api/users/me/shelf/products/{productId}": Endpoints.put_Update
          },
 delete: {
-           "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
-"/api/members/me/saved-products/{productId}": Endpoints.delete_Unsave,
+           "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
+"/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
 "/api/users/me/skin-filter/ingredients": Endpoints.delete_RemoveIngredients,
-"/api/members/me": Endpoints.delete_Withdraw
+"/api/users/me": Endpoints.delete_Withdraw
          },
 post: {
            "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
@@ -2032,13 +2035,16 @@ post: {
 "/api/auth/{provider}/app-login": Endpoints.post_Login,
 "/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
 "/api/auth/signup": Endpoints.post_SignUp,
-"/api/admin/members/{memberId}/restore": Endpoints.post_Restore,
+"/api/admin/users/{userId}/restore": Endpoints.post_Restore,
 "/api/admin/login": Endpoints.post_Login_1,
-"/api/members/logout": Endpoints.post_Logout,
+"/api/users/logout": Endpoints.post_Logout,
 "/api/admin/logout": Endpoints.post_AdminLogout
          },
 get: {
            "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+"/api/users/me": Endpoints.get_FindMe,
+"/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
+"/api/users/me/wishlist/product-ids": Endpoints.get_FindWishlistProductIds,
 "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
 "/api/users/me/shelf/product-ids": Endpoints.get_FindProductIds,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
@@ -2052,9 +2058,6 @@ get: {
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
-"/api/members/me": Endpoints.get_FindMe,
-"/api/members/me/saved-products": Endpoints.get_FindSavedProducts,
-"/api/members/me/saved-products/ids": Endpoints.get_FindSavedProductIds,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
@@ -2068,16 +2071,16 @@ get: {
 "/api/brands/{brandId}": Endpoints.get_FindBrand,
 "/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
+"/api/admin/users/restore-requests": Endpoints.get_FindRestoreRequests,
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
-"/api/admin/members/restore-requests": Endpoints.get_FindRestoreRequests,
 "/api/admin/me": Endpoints.get_FindMe_1,
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
 "/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
          },
 patch: {
-           "/api/members/me/profile": Endpoints.patch_UpdateMyProfile,
+           "/api/users/me/profile": Endpoints.patch_UpdateMyProfile,
 "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
 "/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          }

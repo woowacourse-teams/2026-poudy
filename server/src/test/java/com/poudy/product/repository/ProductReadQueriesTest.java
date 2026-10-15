@@ -105,7 +105,7 @@ class ProductReadQueriesTest {
     }
 
     private ProductQuery query(List<Long> excluded) {
-        return new ProductQuery("검증토너", null, null, null, null, null, excluded, null, null, null, null);
+        return new ProductQuery("검증토너", null, null, null, null, null, excluded, null, null, null, null, false);
     }
 
     private List<String> selects() {

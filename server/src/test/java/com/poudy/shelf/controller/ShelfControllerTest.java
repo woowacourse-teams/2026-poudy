@@ -10,13 +10,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.Member;
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
+import com.poudy.user.domain.User;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,17 +43,17 @@ class ShelfControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private Member member;
+    private User user;
 
     @BeforeEach
     void signUp() {
-        member = memberRepository.save(
-            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true))
+        user = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
         );
     }
 
@@ -217,7 +217,7 @@ class ShelfControllerTest {
             """).andExpect(status().isCreated());
         jdbcTemplate.update(
             "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
-            member.id()
+            user.id()
         );
 
         mockMvc.perform(get(PATH + "/ingredient-analysis").with(signedIn()))
@@ -238,7 +238,7 @@ class ShelfControllerTest {
 
     @Test
     @DisplayName("회원 세션이 없으면 401, 관리자 세션이면 403 으로 거절한다")
-    void requiresMemberSession() throws Exception {
+    void requiresUserSession() throws Exception {
         mockMvc.perform(get(PRODUCTS_PATH)).andExpect(status().isUnauthorized());
         mockMvc.perform(get(PRODUCTS_PATH).with(authentication(new LoginAdmin("admin").toAuthentication())))
             .andExpect(status().isForbidden());
@@ -246,12 +246,12 @@ class ShelfControllerTest {
 
     @Test
     @DisplayName("회원 행을 지우면 선반도 함께 지운다")
-    void deletesShelfWithMember() throws Exception {
+    void deletesShelfWithUser() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE"}
             """).andExpect(status().isCreated());
 
-        jdbcTemplate.update("delete from member where id = ?", member.id());
+        jdbcTemplate.update("delete from \"user\" where id = ?", user.id());
 
         assertThat(shelfCount()).isZero();
     }
@@ -263,14 +263,14 @@ class ShelfControllerTest {
     }
 
     private RequestPostProcessor signedIn() {
-        return authentication(new LoginMember(member.id()).toAuthentication());
+        return authentication(new LoginMember(user.id()).toAuthentication());
     }
 
     private Integer shelfCount() {
         return jdbcTemplate.queryForObject(
             "select count(*) from user_shelf_product where user_id = ?",
             Integer.class,
-            member.id()
+            user.id()
         );
     }
 }

@@ -1,5 +1,7 @@
 import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pipelineProducts } from "./pipeline-data";
 
+import { SENSITIVE, type SkinChoice } from "@/lib/domain/filter";
+
 import type {
   BrandSummaryResponse,
   CategoryResponse,
@@ -51,6 +53,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -64,6 +67,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -77,6 +81,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -90,6 +95,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -103,6 +109,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -116,6 +123,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -129,6 +137,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -142,6 +151,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -155,6 +165,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -168,6 +179,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -181,6 +193,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -194,6 +207,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -207,6 +221,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -220,6 +235,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
@@ -233,6 +249,7 @@ export const products: ProductResponse[] = [
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];
@@ -403,6 +420,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
   oilLevel: 2,
+  sensitiveSkin: false,
   productParts: [{ id: 6, name: null, cautionCount: 1 }],
   selectedPart: {
     id: 6,
@@ -441,6 +459,7 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     moistureLevel: 3,
     oilLevel: 1,
+    sensitiveSkin: false,
     productParts: [{ id: 1, name: null, cautionCount: 0 }],
     selectedPart: {
       id: 1,
@@ -808,6 +827,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   volumeUnit: product.volumeUnit,
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  sensitiveSkin: false,
   updatedAt: "2026-08-03T00:00:00+09:00",
 }));
 
@@ -873,6 +893,7 @@ const fillerProducts: { readonly product: ProductResponse; readonly categoryId: 
             volumeUnit: "ml",
             moistureLevel: seed % 4,
             oilLevel: (seed + 2) % 4,
+            sensitiveSkin: false,
             updatedAt: "2026-08-03T00:00:00+09:00",
           },
         };
@@ -943,7 +964,7 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
  * 지성으로 잡히는 것처럼 제품과 어긋나는 값이 나온다. 서버도 제품마다 붙은 집합을 쓰지
  * 유수분에서 끌어내지 않는다.
  */
-const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Map([
+const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinChoice[]> = new Map<number, readonly SkinChoice[]>([
   [1, ["DRY", "SENSITIVE"]], // 1025 독도 토너: 순한 데일리 토너
   [2, ["SENSITIVE"]], // 어성초 77 수딩 토너: 진정
   [3, ["DRY"]], // 다이브인 저분자 히알루론산 토너: 보습
@@ -968,7 +989,7 @@ const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Ma
  * 여럿에 드는 것, 어디에도 들지 않는 것이 고루 나오도록 미리 정해 둔 조합에서 집는다.
  * 어느 제품이 어느 조합을 받는지에는 뜻이 없고, 조건을 걸면 목록이 줄어드는지만 본다.
  */
-const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
+const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinChoice[])[] = [
   ["DRY"],
   ["OILY"],
   ["SENSITIVE"],
@@ -987,14 +1008,17 @@ const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
  * `ProductResponse` 에는 피부 타입이 없어 목록 응답만 보아서는 알 수 없다. 카테고리와
  * 마찬가지로 이 지도가 있어야 조건에 걸린 제품의 타입을 추려 낼 수 있다.
  */
+const skinChoicesOf = (productId: number): readonly SkinChoice[] =>
+  HAND_WRITTEN_SKIN_TYPES.get(productId) ?? SKIN_TYPE_COMBINATIONS[productId % SKIN_TYPE_COMBINATIONS.length];
+
+const isSkinType = (choice: SkinChoice): choice is SkinType => choice !== SENSITIVE;
+
 export const productSkinTypes: ReadonlyMap<number, readonly SkinType[]> = new Map(
-  allProducts.map(
-    (product) =>
-      [
-        product.id,
-        HAND_WRITTEN_SKIN_TYPES.get(product.id) ?? SKIN_TYPE_COMBINATIONS[product.id % SKIN_TYPE_COMBINATIONS.length],
-      ] as const,
-  ),
+  allProducts.map((product) => [product.id, skinChoicesOf(product.id).filter(isSkinType)] as const),
+);
+
+export const sensitiveProductIds: ReadonlySet<number> = new Set(
+  allProducts.filter((product) => skinChoicesOf(product.id).includes(SENSITIVE)).map((product) => product.id),
 );
 
 /** 소분류마다 실제로 몇 개가 드는지. 제품이 늘고 줄어도 손댈 곳이 없게 여기서 센다. */

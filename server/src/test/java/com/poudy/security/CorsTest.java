@@ -8,11 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,7 +37,7 @@ class CorsTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @ParameterizedTest
     @ValueSource(strings = {"http://localhost:3000", "https://poudy.example.com", "https://pr-12.preview.example.com"})
@@ -60,7 +60,7 @@ class CorsTest {
     @DisplayName("허용한 도메인의 저장 PUT 사전 요청에 자격 증명 허용 헤더를 준다")
     void allowsSavedProductPutPreflight(String origin) throws Exception {
         mockMvc.perform(
-            options("/api/members/me/saved-products/1")
+            options("/api/users/me/wishlist/products/1")
                 .header(HttpHeaders.ORIGIN, origin)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")
         )
@@ -101,7 +101,7 @@ class CorsTest {
     @ValueSource(strings = {"http://evil.example.com", "null", "https://poudy.example.com.evil.com"})
     @DisplayName("허용하지 않은 출처의 상태 변경 요청을 403으로 거절한다")
     void rejectsForeignStateChange(String origin) throws Exception {
-        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, origin))
+        mockMvc.perform(post("/api/users/logout").header(HttpHeaders.ORIGIN, origin))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN_ORIGIN"));
     }
@@ -110,21 +110,21 @@ class CorsTest {
     @ValueSource(strings = {"http://localhost", "https://poudy.example.com", "https://pr-12.preview.example.com"})
     @DisplayName("같은 출처와 허용한 출처의 상태 변경 요청은 통과시킨다")
     void allowsKnownOriginStateChange(String origin) throws Exception {
-        mockMvc.perform(post("/api/members/logout").header(HttpHeaders.ORIGIN, origin).with(signedInMember()))
+        mockMvc.perform(post("/api/users/logout").header(HttpHeaders.ORIGIN, origin).with(signedInUser()))
             .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("출처 헤더가 없는 상태 변경 요청은 브라우저 요청이 아니므로 통과시킨다")
     void allowsStateChangeWithoutOrigin() throws Exception {
-        mockMvc.perform(post("/api/members/logout").with(signedInMember()))
+        mockMvc.perform(post("/api/users/logout").with(signedInUser()))
             .andExpect(status().isNoContent());
     }
 
-    private RequestPostProcessor signedInMember() {
-        long memberId = memberRepository.save(
-            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "cors", "cors@example.com", true))
+    private RequestPostProcessor signedInUser() {
+        long userId = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "cors", "cors@example.com", true))
         ).id();
-        return authentication(new LoginMember(memberId).toAuthentication());
+        return authentication(new LoginMember(userId).toAuthentication());
     }
 }

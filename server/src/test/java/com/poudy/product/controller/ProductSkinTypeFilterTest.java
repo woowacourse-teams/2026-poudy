@@ -28,7 +28,7 @@ class ProductSkinTypeFilterTest {
     private MockMvc mockMvc;
 
     @ParameterizedTest
-    @CsvSource({"SENSITIVE,1", "OILY,13", "COMBINATION,15"})
+    @CsvSource({"OILY,13", "COMBINATION,15"})
     @DisplayName("복수 타입 제품은 선택한 단일 타입에 포함되면 목록과 개수에 포함한다")
     void filtersByEachSkinType(String skinType, int productId) throws Exception {
         mockMvc.perform(get("/api/products").param("skinType", skinType))
@@ -74,8 +74,8 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.categories[0].children.length()").value(1))
             .andExpect(jsonPath("$.categories[0].children[0].id").value(2))
             .andExpect(jsonPath("$.categories[0].children[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")))
-            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "민감성", "복합성")));
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")))
+            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "복합성")));
         mockMvc.perform(get("/api/products/count").param("skinType", "DRY"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
     }
@@ -90,7 +90,7 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.pagination.hasNext").value(false))
             .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
             .andExpect(jsonPath("$.categories[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")));
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")));
     }
 
     @Test
@@ -147,7 +147,7 @@ class ProductSkinTypeFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"UNKNOWN", "dry", "DRY,OILY", "1"})
+    @ValueSource(strings = {"UNKNOWN", "SENSITIVE", "dry", "DRY,OILY", "1"})
     @DisplayName("잘못된 피부타입 코드는 목록과 개수에서 요청 오류로 거부한다")
     void rejectsInvalidCode(String skinType) throws Exception {
         for (String path : new String[] {"/api/products", "/api/products/count"}) {
@@ -158,15 +158,30 @@ class ProductSkinTypeFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"SENSITIVE", "DRY"})
+    @ValueSource(strings = {"OILY", "DRY"})
     @DisplayName("중복 단일 파라미터는 기존 enum 바인딩과 같이 첫 번째 값을 사용한다")
     void usesFirstValueForRepeatedParameter(String secondValue) throws Exception {
-        mockMvc.perform(get("/api/products").param("skinType", "SENSITIVE", secondValue))
+        mockMvc.perform(get("/api/products").param("skinType", "OILY", secondValue))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(13)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(1));
+        mockMvc.perform(get("/api/products/count").param("skinType", "OILY", secondValue))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+    }
+
+    @Test
+    @DisplayName("민감성 필터는 민감성 피부용 제품만 고르고 피부타입과 AND로 결합한다")
+    void filtersSensitiveSkinProducts() throws Exception {
+        mockMvc.perform(get("/api/products").param("sensitiveSkin", "true"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1)))
-            .andExpect(jsonPath("$.pagination.totalElements").value(1));
-        mockMvc.perform(get("/api/products/count").param("skinType", "SENSITIVE", secondValue))
+            .andExpect(jsonPath("$.items[0].sensitiveSkin").value(true));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "true").param("skinType", "DRY"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "true").param("skinType", "OILY"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "false"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(5));
     }
 
     @Test

@@ -1,8 +1,8 @@
 package com.poudy.security;
 
 import com.poudy.security.auth.oauth.OAuthLoginConfigurer;
-import com.poudy.security.domain.MemberActivity;
-import com.poudy.security.filter.ActiveMemberFilter;
+import com.poudy.security.domain.UserActivity;
+import com.poudy.security.filter.ActiveUserFilter;
 import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +41,7 @@ public class SecurityConfig {
         SecurityContextRepository securityContextRepository,
         OAuthLoginConfigurer oauthLoginConfigurer,
         LoginSession loginSession,
-        MemberActivity memberActivity,
+        UserActivity userActivity,
         @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
     ) {
         http
@@ -93,7 +93,7 @@ public class SecurityConfig {
                     )
             )
             .addFilterAfter(
-                new ActiveMemberFilter(memberActivity, loginSession, handlerExceptionResolver),
+                new ActiveUserFilter(userActivity, loginSession, handlerExceptionResolver),
                 SecurityContextHolderFilter.class
             )
             .addFilterBefore(
@@ -122,7 +122,7 @@ public class SecurityConfig {
 
     private static RequestMatcher privateResponses() {
         return new OrRequestMatcher(
-            AccessRule.MEMBER.requestMatcher(),
+            AccessRule.USER.requestMatcher(),
             AccessRule.ADMIN.requestMatcher(),
             PathPatternRequestMatcher.withDefaults().matcher("/api/auth/**")
         );

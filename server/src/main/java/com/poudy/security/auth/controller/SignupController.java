@@ -2,7 +2,7 @@ package com.poudy.security.auth.controller;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.security.domain.SocialMembers;
+import com.poudy.security.domain.SocialUsers;
 import com.poudy.security.session.LoginSession;
 import com.poudy.security.session.PendingSignup;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth/signup")
 public class SignupController {
 
-    private final SocialMembers socialMembers;
+    private final SocialUsers socialUsers;
     private final LoginSession loginSession;
 
-    public SignupController(SocialMembers socialMembers, LoginSession loginSession) {
-        this.socialMembers = socialMembers;
+    public SignupController(SocialUsers socialUsers, LoginSession loginSession) {
+        this.socialUsers = socialUsers;
         this.loginSession = loginSession;
     }
 
@@ -34,8 +34,8 @@ public class SignupController {
     public ResponseEntity<Void> signUp(HttpServletRequest request, HttpServletResponse response) {
         PendingSignup signup = loginSession.releaseSignup(request)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SIGNUP_ACCOUNT_NOT_FOUND));
-        long memberId = socialMembers.signUp(signup.account());
-        loginSession.signIn(memberId, signup.channel(), request, response);
+        long userId = socialUsers.signUp(signup.account());
+        loginSession.signIn(userId, signup.channel(), request, response);
         return ResponseEntity.noContent().build();
     }
 }

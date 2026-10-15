@@ -1,12 +1,16 @@
-import type { MemberProfileRequest } from "@poudy/api/api.zod";
+import type { UserProfileRequest, UserResponse } from "@poudy/api/api.zod";
 
-export type Gender = NonNullable<MemberProfileRequest["gender"]>;
-export type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
-export type SkinType = NonNullable<MemberProfileRequest["skinType"]>;
+import { pick } from "./optional";
+
+export type Gender = NonNullable<UserProfileRequest["gender"]>;
+export type AgeRange = NonNullable<UserProfileRequest["ageRange"]>;
+export type SkinType = NonNullable<UserProfileRequest["skinType"]>;
+export const SENSITIVE = "SENSITIVE";
+export type SkinChoice = SkinType | typeof SENSITIVE;
 
 export type ProfileOption<T extends string> = { readonly value: T; readonly label: string };
 
-export type SkinTypeOption = ProfileOption<SkinType> & { readonly icon: string; readonly description: string };
+export type SkinTypeOption = ProfileOption<SkinChoice> & { readonly icon: string; readonly description: string };
 
 export const GENDERS: readonly ProfileOption<Gender>[] = [
   { value: "FEMALE", label: "여성" },
@@ -28,6 +32,14 @@ export const SKIN_TYPES: readonly SkinTypeOption[] = [
   { value: "SENSITIVE", icon: "sensitive", label: "민감성", description: "쉽게 붉어지고 따가워요" },
   { value: "COMBINATION", icon: "combination", label: "복합성", description: "T존만 번들거려요" },
 ];
+
+export const skinChoiceOf = (profile: Pick<UserResponse, "skinType" | "sensitiveSkin">): SkinChoice | null =>
+  pick<SkinChoice | null>(profile.sensitiveSkin === true, SENSITIVE, profile.skinType);
+
+export const skinProfileOf = (choice: SkinChoice | null): Pick<UserProfileRequest, "skinType" | "sensitiveSkin"> => {
+  if (choice === SENSITIVE) return { skinType: null, sensitiveSkin: true };
+  return { skinType: choice, sensitiveSkin: null };
+};
 
 /** 고르지 않은 값이나 모르는 값이면 undefined 다. */
 export const profileLabel = <T extends string>(

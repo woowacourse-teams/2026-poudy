@@ -63,6 +63,34 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
+    @DisplayName("수분감·유분감은 0.5 단위로 반올림한 단계로 응답하고 필터한다")
+    void filtersByRoundedHalfStep() throws Exception {
+        jdbc.update("update product set moisture_level = 2.37, oil_level = 0.74 where id = 90002");
+        jdbc.update("update product set moisture_level = 2.75, oil_level = 0.25 where id = 90004");
+
+        mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "3"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mockMvc.perform(
+            get("/api/products").param("keyword", "검증토너").param("moistureLevel", "2.5").param("oilLevel", "0.5")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90002)))
+            .andExpect(jsonPath("$.items[0].moistureLevel").value(2.5))
+            .andExpect(jsonPath("$.items[0].oilLevel").value(0.5));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"moistureLevel,1.2", "moistureLevel,3.5", "oilLevel,-0.5", "oilLevel,2.25"})
+    @DisplayName("0.5 단위가 아니거나 0~3 을 벗어난 수분감·유분감 필터는 400 으로 거절한다")
+    void rejectsInvalidLevel(String name, String value) throws Exception {
+        mockMvc.perform(get("/api/products").param(name, value))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
+    }
+
+    @Test
     @DisplayName("검색어가 있으면 기본순이 DB 관련도 순서를 필터와 페이지 이후에도 보존한다")
     void defaultsToSearchRank() throws Exception {
         jdbc.update("update product set moisture_level = 2 where id in (90001, 90004)");
@@ -253,7 +281,8 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
@@ -404,7 +433,8 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         assertThat(repository.count(duplicateQuery)).isEqualTo(1);
         assertThat(repository.find(duplicateQuery, ProductSort.DEFAULT, 1, 20).items())

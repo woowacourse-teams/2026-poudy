@@ -42,7 +42,13 @@ class CurationJsonbMigrationTest {
                 JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
                 jdbc.execute("insert into brand select * from public.brand");
                 jdbc.execute("insert into category select * from public.category");
-                jdbc.execute("insert into product select * from public.product");
+                jdbc.execute(
+                    """
+                        insert into product
+                        select id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, updated_at, created_at
+                        from public.product
+                        """
+                );
                 jdbc.execute("insert into product_variant select * from public.product_variant");
                 ScriptUtils.executeSqlScript(connection, new ClassPathResource("db/curation-legacy-data.sql"));
                 connection.commit();
