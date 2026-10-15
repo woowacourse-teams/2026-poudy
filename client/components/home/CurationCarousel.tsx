@@ -5,12 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
+  /** 맨 앞에 서비스 가이드 장을 둘지. 홈은 늘 둔다. 큐레이션 동작만 따로 살필 때 끈다. */
+  readonly withGuide?: boolean;
 };
 
 /**
@@ -183,8 +186,15 @@ const EDGE_PULL = 40;
  *
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
  */
-export function CurationCarousel({ items }: CurationCarouselProps) {
+export function CurationCarousel({ items, withGuide = true }: CurationCarouselProps) {
   const sectionRef = useHomeSectionView("curation", 1);
+  /*
+   * 맨 앞에 서비스 가이드(디자인 S20c)를 한 장 더 둔다. 서비스를 막 연 때라 누구에게나 첫 장으로
+   * 보여 준다. 그 장이 있으면 큐레이션은 한 칸씩 뒤로 밀리므로, 칸 번호에서 큐레이션 번호를 얻을 때
+   * 이만큼 뺀다.
+   */
+  const offset = withGuide ? 1 : 0;
+  const slideCount = items.length + offset;
   const trackRef = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
   const lastSettledItem = useRef(0);
@@ -299,7 +309,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
   }, [paintScales]);
 
   /* 한 장뿐이면 넘길 곳이 없다. 스스로 넘기지도, 자리 표시를 띄우지도 않는다. */
-  const multiple = items.length > 1;
+  const multiple = slideCount > 1;
 
   const scrollToSlide = (
     slideIndex: number,
@@ -568,11 +578,12 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
     if (trackElement) {
       const itemIndex = slideAt(trackElement);
       if (itemIndex !== lastSettledItem.current) {
-        const item = items[itemIndex];
+        /* 가이드 장은 큐레이션이 아니라 세지 않는다. 자리는 큐레이션 목록 안에서 센다. */
+        const item = items[itemIndex - offset];
         if (item) {
           track("curation_slide_viewed", {
             curation_id: item.id,
-            position: itemIndex + 1,
+            position: itemIndex - offset + 1,
             transition: wasSelf ? "autoplay" : "manual",
           });
         }
@@ -779,7 +790,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
    * 여기는 아직 받아 오는 중인지 정말 하나도 없는지를 가리지 않는다. 어느 쪽이든 사람이
    * 할 일이 없는 자리라 읽어 줄 것도 없으므로, 낭독기에서는 통째로 숨긴다.
    */
-  if (items.length === 0) {
+  if (slideCount === 0) {
     return (
       <section aria-label="큐레이션" aria-hidden="true">
         <div className="relative -mx-4">
@@ -829,7 +840,63 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
            */
           className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
         >
-          {items.map((curation, slideIndex) => {
+          {withGuide ? (
+            <li key="service-guide" className="curation-slide w-full shrink-0 snap-center">
+              {/*
+                서비스 소개(/about)로 가는 길을 연다. 닫기 버튼은 두지 않는다.
+
+                넘기기와 옆 칸 누르기는 큐레이션 카드와 똑같이 다룬다.
+              */}
+              <Link
+                href="/about"
+                onClick={(event) => {
+                  if (dragged.current) {
+                    event.preventDefault();
+                    return;
+                  }
+                  const carouselTrack = trackRef.current;
+                  if (carouselTrack && slideAt(carouselTrack) !== 0) {
+                    event.preventDefault();
+                    selfScrolling.current = false;
+                    dropToSlide(0);
+                    return;
+                  }
+                  track("service_guide_opened", { surface: "home" });
+                }}
+                className="flex h-full"
+                draggable={false}
+              >
+                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-[18px] bg-brand-soft px-5 py-4">
+                  {/* 오른쪽 위의 빛은 꾸밈이다. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-1.5 -right-8 size-44 rounded-full bg-[radial-gradient(circle,#ffffff_0%,var(--color-brand-soft)_100%)]"
+                  />
+                  {/*
+                    배지는 위에, 제목과 설명은 아래에 붙인다. 배지를 띄워 두면 글자를 키웠을 때 제목과
+                    겹치므로 흐름 안에 둔다. 넘치면 카드가 큐레이션 카드처럼 세로로 자란다.
+
+                    배지 글자도 `p` 로 두어 카드 안 글자를 제 층에 올리는 규칙(globals.css)에 들게 한다.
+                    `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
+                  */}
+                  <p className="relative mt-1 flex min-h-5.5 items-center gap-1 rounded-full bg-white px-2 text-[11px] leading-[1.4] font-semibold text-[#C23A60]">
+                    <Icon name="book" size={12} strokeWidth={1} scalable />
+                    서비스 가이드
+                  </p>
+                  <div className="relative flex flex-col gap-1">
+                    <h3 className="text-[18px] leading-[1.4] font-bold whitespace-pre-line text-text-primary">
+                      {"3단계로 알아보는\n파우디 사용법"}
+                    </h3>
+                    <p className="pr-[calc(3.5em+26px)] text-[12px] leading-[1.4] text-[#C23A60]">
+                      원하는 성분, 피하고 싶은 성분만 고르면 돼요
+                    </p>
+                  </div>
+                </article>
+              </Link>
+            </li>
+          ) : null}
+          {items.map((curation, itemIndex) => {
+            const slideIndex = itemIndex + offset;
             return (
               /*
                 칸의 폭은 목록의 안쪽 폭을 그대로 쓴다. 안쪽 폭은 이미 좌우 여백을 뺀 값이라
@@ -872,7 +939,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       dropToSlide(slideIndex);
                       return;
                     }
-                    track("curation_opened", { curation_id: curation.id, position: slideIndex + 1, surface: "home" });
+                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
                   }}
                   /*
                     카드를 칸의 높이까지 늘인다. 옆 카드가 더 높으면 그 높이에 맞춘다.
@@ -907,7 +974,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                       alt=""
                       fill
                       sizes="(max-width: 480px) 90vw, 420px"
-                      {...(slideIndex === 0 ? { priority: true } : { loading: "eager" as const })}
+                      {...(itemIndex === 0 ? { priority: true } : { loading: "eager" as const })}
                       draggable={false}
                       className="object-cover select-none"
                     />
@@ -947,7 +1014,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
           가운데 카드는 줄지 않아 제 크기 그대로다. 오른쪽 가장자리는 이 자리의 오른쪽에서
           좌우 여백(16px)만큼 들어온 곳이고, 거기서 카드 좌우 안쪽 여백(20px)만큼 더 들인다.
         */}
-        {items.length > 1 ? (
+        {slideCount > 1 ? (
           /*
             숫자를 그림 위에 바로 얹으면 그림의 밝기에 따라 읽히는 정도가 달라진다. 반투명한
             판을 깔아 어떤 그림 위에서도 같은 또렷함을 유지한다.
@@ -963,14 +1030,14 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
             aria-hidden="true"
             className="pointer-events-none absolute right-9 bottom-4 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
-            {current + 1} / {items.length}
+            {current + 1} / {slideCount}
           </span>
         ) : null}
       </div>
 
       {/* 어느 자리에 있는지 글자로도 전한다. 위 표시는 그림과 겹쳐 있어 낭독기에서 감춘다. */}
       <p aria-live="polite" className="sr-only">
-        큐레이션 {current + 1} / {items.length}
+        큐레이션 {current + 1} / {slideCount}
       </p>
     </section>
   );

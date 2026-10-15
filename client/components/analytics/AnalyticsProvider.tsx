@@ -18,6 +18,7 @@ export const pageOf = (pathname: string): PageName | undefined => {
   if (pathname.startsWith("/categories")) return "category";
   if (pathname.startsWith("/brands")) return "brand";
   if (/^\/curations\/[^/]+$/.test(pathname)) return "curation_detail";
+  if (pathname === "/about") return "about";
   return undefined;
 };
 
