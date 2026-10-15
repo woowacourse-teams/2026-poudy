@@ -11,6 +11,7 @@ import { Button } from "./button";
 import { CheckboxGroup } from "./checkbox-group";
 import { ComboboxGroup } from "./combobox";
 import { RadioGroup } from "./radio-group";
+import { Tab } from "./tabs";
 import { Select } from "./select";
 import { TextArea } from "./text-area";
 import { TextField } from "./text-field";
@@ -40,9 +41,11 @@ describe("이름을 받는 자리", () => {
       <CheckboxGroup key="check" label={undefined} value={[]} onValueChange={noop}>
         {null}
       </CheckboxGroup>,
+      // @ts-expect-error 글자 없는 탭
+      <Tab key="tab" value="a" />,
     ];
 
-    expect(cases).toHaveLength(7);
+    expect(cases).toHaveLength(8);
   });
 
   it("라벨이 비어 있으면 aria-label 이나 aria-labelledby 가 이름이 된다", () => {
