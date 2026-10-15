@@ -1,6 +1,7 @@
 package com.poudy.shelf.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -38,6 +39,7 @@ class ShelfControllerTest {
 
     private static final String PATH = "/api/users/me/shelf";
     private static final String PRODUCTS_PATH = PATH + "/products";
+    private static final String ANALYSIS_PATH = PATH + "/ingredient-analysis";
 
     @Autowired
     private MockMvc mockMvc;
@@ -205,9 +207,9 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("성분 분석은 안 맞았어요 제품 수와 응답 형태에 맞춘 성분을 돌려준다")
+    @DisplayName("성분 분석은 안 맞은 제품에 든 주의 성분을 점수 순으로 주고, 잘 맞은 제품으로 상쇄된 성분은 뺀다")
     void analyzesIngredients() throws Exception {
-        mockMvc.perform(get(PATH + "/ingredient-analysis").with(signedIn()))
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.badProductCount").value(0))
             .andExpect(jsonPath("$.items.length()").value(0));
@@ -215,25 +217,62 @@ class ShelfControllerTest {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
             """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "USED", "preference": "BAD"}
+            """).andExpect(status().isCreated());
         jdbcTemplate.update(
             "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
             user.id()
         );
 
-        mockMvc.perform(get(PATH + "/ingredient-analysis").with(signedIn()))
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.badProductCount").value(1))
-            .andExpect(jsonPath("$.items.length()").value(2))
-            .andExpect(jsonPath("$.items[0].id").value(20L))
+            .andExpect(jsonPath("$.badProductCount").value(2))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 4815, 9)))
             .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
-            .andExpect(jsonPath("$.items[0].products[0].id").value(15L))
+            .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
             .andExpect(jsonPath("$.items[0].inFilter").value(true))
-            .andExpect(jsonPath("$.items[0].isNew").value(true))
-            .andExpect(jsonPath("$.items[1].id").value(9L))
-            .andExpect(jsonPath("$.items[1].inFilter").value(false))
-            .andExpect(jsonPath("$.items[1].isNew").value(false));
+            .andExpect(jsonPath("$.items[1].products[*].id").value(contains(1)))
+            .andExpect(jsonPath("$.items[1].inFilter").value(false));
+
+        add("""
+            {"productId": 7, "usageStatus": "IN_USE", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)));
+    }
+
+    @Test
+    @DisplayName("피부 타입과 민감성에 따른 주의 성분은 후보에 더하고 같은 조건의 다른 성분보다 앞에 둔다")
+    void addsSkinTypeCautions() throws Exception {
+        jdbcTemplate.update(
+            "insert into ingredient (id, korean_name, english_name, description, updated_at)"
+                + " values (3663, '포타슘코코에이트', 'Potassium Cocoate', '비누 성분', now())"
+        );
+        jdbcTemplate.update(
+            "insert into product_ingredient (component_id, ingredient_id, display_order)"
+                + " select id, 3663, 2 from product_component where product_id = 15"
+        );
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)));
+
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)));
+
+        jdbcTemplate.update("update \"user\" set is_sensitive_skin = true where id = ?", user.id());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)));
     }
 
     @Test
