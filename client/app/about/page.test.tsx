@@ -47,4 +47,10 @@ describe("서비스 소개 /about", () => {
     expect(within(start).getByRole("link", { name: "바로 둘러보기" })).toHaveAttribute("href", "/");
     expect(within(start).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
   });
+
+  it("푸터에서 지금 보고 있는 서비스 소개를 짚어 준다", () => {
+    render(<AboutPage />);
+
+    expect(screen.getByRole("link", { name: "서비스 소개" })).toHaveAttribute("aria-current", "page");
+  });
 });
