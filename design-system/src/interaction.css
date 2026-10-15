@@ -204,6 +204,66 @@
   min-height: 1lh;
 }
 
+/*
+ * 선택 표시(명세 APP · 라디오, APP · 체크박스). 네이티브 input 은 시각적으로 숨기고 이 표시를 그린다.
+ * 윤곽 1.5 는 선택 여부와 상관없이 같은 상자 안에 그려, 바꿔도 크기와 자리가 움직이지 않는다.
+ * 선택 상태는 부품이 붙이는 data-checked 로, 막힌 상태는 data-disabled 로 정한다.
+ */
+@utility radio-indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-control-border);
+  border-radius: 9999px;
+  background-color: var(--color-background);
+
+  &[data-checked] {
+    border-color: var(--color-text-primary);
+    background-color: var(--color-text-primary);
+  }
+}
+
+@utility checkbox-indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-control-border);
+  border-radius: var(--radius-xs);
+  background-color: var(--color-background);
+  color: var(--color-action-text);
+
+  &[data-checked] {
+    border-width: 1px;
+    border-color: var(--color-text-primary);
+    background-color: var(--color-action);
+  }
+
+  /* 이미 담겨 고칠 수 없는 항목은 선택 표시를 ui-border 면으로 흐리게 둔다(S53j) */
+  &[data-checked][data-disabled] {
+    border-color: var(--color-border);
+    background-color: var(--color-border);
+  }
+
+  &[data-disabled]:not([data-checked]) {
+    border-color: var(--color-border);
+  }
+}
+
+/*
+ * 카드형 선택지(선택 버튼 · 선택 카드 · 선택 행)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 ui-text-primary 다.
+ * 늘어난 0.5 는 안쪽 그림자로 그려 테두리 자리가 바뀌지 않는다. 선택해도 크기와 위치가 움직이지 않는다.
+ */
+@utility choice-outline {
+  border: 1px solid var(--color-border-strong);
+
+  &[data-checked] {
+    border-color: var(--color-text-primary);
+    box-shadow: inset 0 0 0 0.5px var(--color-text-primary);
+  }
+}
+
 @layer base {
   /* 비활성 버튼: 면과 글자는 기본 색 그대로 두고 전체를 흐리게 한다(S06) */
   :is(button, [role="button"]):is(:disabled, [aria-disabled="true"]) {
