@@ -28,7 +28,9 @@
     "./disclosure": "./src/disclosure.tsx",
     "./icon": "./src/icon.tsx",
     "./screen": "./src/screen.tsx",
-    "./top-bar": "./src/top-bar.tsx"
+    "./top-bar": "./src/top-bar.tsx",
+    "./bottom-navigation": "./src/bottom-navigation.tsx",
+    "./bottom-action-bar": "./src/bottom-action-bar.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
