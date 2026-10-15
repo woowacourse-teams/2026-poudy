@@ -660,9 +660,9 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   }
 }
 
-/* 누름은 hover 보다 한 단계 진하다. 마우스가 없는 환경에도 남겨 둔다. */
+/* 누름도 hover 와 같은 면 색이다(명세 STATE S03). 마우스가 없는 환경에도 남겨 둔다. */
 .skin-type-segment:active {
-  background-color: #f1f2f4;
+  background-color: var(--color-hover);
   transition-duration: var(--transition-duration-press, 100ms);
 }
 
