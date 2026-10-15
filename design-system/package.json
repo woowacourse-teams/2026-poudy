@@ -26,7 +26,9 @@
     "./tabs": "./src/tabs.tsx",
     "./tab-nav": "./src/tab-nav.tsx",
     "./disclosure": "./src/disclosure.tsx",
-    "./icon": "./src/icon.tsx"
+    "./icon": "./src/icon.tsx",
+    "./screen": "./src/screen.tsx",
+    "./top-bar": "./src/top-bar.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
