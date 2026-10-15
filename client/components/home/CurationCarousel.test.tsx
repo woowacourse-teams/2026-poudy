@@ -7,11 +7,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CurationCarousel } from "./CurationCarousel";
 
 import { track } from "@/lib/analytics/track";
+import { markExplored } from "@/lib/storage/service-guide";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 beforeEach(() => {
   vi.mocked(track).mockClear();
+  /* 아래 큐레이션 동작은 서비스 가이드 장이 빠진 상태(이미 탐색한 사람)를 기준으로 본다. */
+  localStorage.clear();
+  markExplored();
 });
 
 const items = [
@@ -627,5 +631,49 @@ describe("CurationCarousel", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("CurationCarousel 서비스 가이드", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("처음 온 사람에게는 맨 앞에 서비스 소개로 가는 장을 둔다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+
+    const links = screen.getAllByRole("link");
+
+    expect(links).toHaveLength(items.length + 1);
+    expect(links[0]).toHaveAttribute("href", "/about");
+    expect(links[0]).toHaveTextContent("서비스 가이드");
+    expect(trackOf(container).children).toHaveLength(items.length + 1);
+  });
+
+  it("조건으로 제품을 찾아본 사람에게는 가이드 장을 빼고 큐레이션부터 보여 준다", () => {
+    markExplored();
+
+    render(<CurationCarousel items={items} />);
+
+    expect(screen.queryByRole("link", { name: /서비스 가이드/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/curations/1");
+  });
+
+  /* 가이드 장이 앞에 서도 큐레이션의 자리는 큐레이션 목록 안에서 센다. 집계가 이어져야 한다. */
+  it("가이드 장이 있어도 큐레이션의 자리는 큐레이션끼리 센다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    list.scrollLeft = STEP * 2;
+
+    fireEvent.click(screen.getByRole("link", { name: /순한 클렌징/ }));
+
+    expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
+  });
+
+  it("큐레이션을 받지 못해도 가이드 장은 보여 준다", () => {
+    render(<CurationCarousel items={[]} />);
+
+    expect(screen.getByRole("link", { name: /서비스 가이드/ })).toHaveAttribute("href", "/about");
   });
 });
