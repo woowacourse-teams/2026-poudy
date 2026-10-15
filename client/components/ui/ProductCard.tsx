@@ -39,7 +39,7 @@ export function ProductCard({
       <div data-product-content className="flex min-h-27 items-center gap-3 py-3">
         <Link
           href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
-          className="flex flex-1 items-center gap-3"
+          className="flex min-w-0 flex-1 items-center gap-3"
         >
           {/*
             제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다. 그림은 제품마다 따로 도착하고,
@@ -60,7 +60,7 @@ export function ProductCard({
           가격·유수분처럼 따로 읽는 정보와 같은 간격으로 떨어뜨리면 흩어져 보인다.
           gap 은 컨테이너 전체에 걸리므로 이 한 자리만 margin 으로 좁힌다.
         */}
-          <div className="flex flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <span className="mb-[-4px] text-[12px] leading-tight font-medium">
               <MatchedText
                 label={brand.name}
@@ -84,7 +84,8 @@ export function ProductCard({
               {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}
             </p>
 
-            <div className="flex items-center gap-2">
+            {/* 좁은 화면에서 두 레벨이 한 줄에 들어가지 않으면 유분감을 다음 줄로 내린다. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <LevelTag kind="moisture" level={moistureLevel} />
               <LevelTag kind="oil" level={oilLevel} />
             </div>

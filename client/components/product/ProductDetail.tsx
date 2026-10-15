@@ -85,8 +85,8 @@ export function ProductDetail({
               </div>
 
               <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-                <LevelTag kind="moisture" level={product.moistureLevel} detailed />
-                <LevelTag kind="oil" level={product.oilLevel} detailed />
+                <LevelTag kind="moisture" level={product.moistureLevel} />
+                <LevelTag kind="oil" level={product.oilLevel} />
               </div>
 
               <Variants variants={product.variants} />
@@ -147,7 +147,7 @@ function CompactSummary({
           {product.name}
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <LevelTag kind="moisture" level={product.moistureLevel} />
           <LevelTag kind="oil" level={product.oilLevel} />
         </div>
