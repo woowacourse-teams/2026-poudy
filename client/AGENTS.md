@@ -49,8 +49,25 @@ API의 요청과 응답 타입은 서버 OpenAPI 문서에서 생성한 `@poudy/
 - 우리 코드 안에서 만들어 넘기는 값은 런타임에 다시 검증하지 않는다. 컴파일 타임의 타입 검사로 충분하다.
 - 외부 값에 `as`로 타입을 붙이는 것으로 검증을 대신하지 않는다.
 
+## 화면 값은 디자인 토큰으로 쓴다
+
+색, 글자 크기, 반경, 간격 같은 화면 값은 디자인 시스템 패키지(`design-system`)의 토큰과 Tailwind 스케일로 쓴다. `text-[13px]`, `bg-[#182132]`처럼 값을 직접 적지 않는다. 토큰 이름은 `design-system/README.md`에 있다.
+
+- 이유: 값의 주인은 명세(`client/design/poudy-ui.pen`)다. 코드에 값을 직접 적으면 명세가 바뀌어도 따라오지 않는다.
+- 디자인 토큰 린트가 직접 쓴 값을 경고로 알린다. `pnpm --dir client lint`로 확인한다. 지금은 경고라 CI가 실패하지 않지만, 새로 쓰는 코드에는 경고가 생기지 않게 한다.
+- 명세가 허용한 예외는 `design-system/lint/exceptions.mjs`에 있고, 린트가 알아서 허용한다.
+- 잠시 예외가 필요하면 그 줄에 기한이 있는 꼬리표를 단다. 꼬리표가 없거나 만료일이 지나면 CI가 실패한다.
+
+```tsx
+{
+  /* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 명세 확정 전 임시 값 · 만료 2026-11-30 */
+}
+<span className="pt-[3px]" />;
+```
+
 ## 기준을 확인하는 곳
 
 - `tsconfig.json`의 `strict: true`
 - ESLint(`eslint-config-next/typescript`, 도메인 계층의 불변성 규칙)
 - `dev`로 가는 PR마다 실행되는 Client CI의 `tsc --noEmit`과 ESLint
+- ESLint의 디자인 토큰 린트(`design-system/lint`)와 Client CI의 예외 꼬리표 검사

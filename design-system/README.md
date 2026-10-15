@@ -56,6 +56,30 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 
 반경과 행간은 Tailwind 기본 이름에 명세 값을 넣는다. 그래서 `rounded-xl`은 Tailwind 기본값인 12px가 아니라 명세 값인 14px다.
 
+## 린트와 예외
+
+`lint/`는 client의 ESLint가 가져다 쓰는 디자인 토큰 린트다. [`@shadcn/lint`](https://github.com/shadcn-ui/lint)의 규칙 네 개를 경고로 켠다.
+
+| 규칙                  | 잡는 것                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| `no-arbitrary-values` | `p-[13px]`, `bg-[#182132]`처럼 직접 적은 값                 |
+| `no-raw-colors`       | `bg-red-50`처럼 토큰이 아닌 Tailwind 색, SVG에 직접 적은 색 |
+| `no-inline-styles`    | `style={{ ... }}`와 `<style>`                               |
+| `no-unknown-classes`  | Tailwind가 만들 수 없는 클래스                              |
+
+`require-static-classes`와 `no-restyle`은 `cn`과 `cva`를 들인 뒤에 켠다(#725). 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
+
+예외는 두 가지다.
+
+- **명세가 허용한 예외:** 명세 보드의 '남겨 둔 예외' 표와 `lint/exceptions.mjs`를 1:1로 맞춘다. 표를 고치면 이 파일도 함께 고친다. 린트는 이 파일의 `allow`를 허용한다.
+- **기한이 있는 예외:** 잠시 필요한 예외는 그 줄에서 규칙을 끄고 꼬리표를 단다. CI가 `exceptions:check`로 꼬리표가 없거나 형식이 틀렸거나 만료일이 지난 곳을 찾아 실패시킨다. 오래 필요하면 꼬리표로 버티지 말고 명세의 예외 표에 올린다.
+
+```tsx
+{
+  /* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 이유 · 만료 YYYY-MM-DD */
+}
+```
+
 ## 컴포넌트 대응표
 
 명세 컴포넌트와 코드 컴포넌트의 대응이다. 각 1단계 이슈가 자기 행의 코드 이름을 확정한다.
