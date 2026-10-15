@@ -136,10 +136,13 @@ const finalOf = (word: string): number => {
   return DIGIT_FINALS[last] ?? 0;
 };
 
-/** 이름 뒤에 받침에 맞는 조사를 붙인다(W06). `withJosa("판테놀", "을/를")` → `판테놀을` */
-export const withJosa = (word: string, pair: JosaPair): string => {
+/** 이름의 받침에 맞는 조사만 돌려준다. 이름과 조사를 따로 꾸밀 때 쓴다. `josaOf("토너", "이/가")` → `가` */
+export const josaOf = (word: string, pair: JosaPair): string => {
   const [withFinal, withoutFinal] = JOSA[pair];
   const final = finalOf(word);
   const takesFinalForm = final !== 0 && !(pair === "으로/로" && final === RIEUL);
-  return `${word}${pick(takesFinalForm, withFinal, withoutFinal)}`;
+  return pick(takesFinalForm, withFinal, withoutFinal);
 };
+
+/** 이름 뒤에 받침에 맞는 조사를 붙인다(W06). `withJosa("판테놀", "을/를")` → `판테놀을` */
+export const withJosa = (word: string, pair: JosaPair): string => `${word}${josaOf(word, pair)}`;

@@ -25,7 +25,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
-import { formatPrice, unitPrice } from "@/lib/domain/format";
+import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
 import { partTabId } from "@/lib/domain/product-parts";
 
 /** S24 제품 성분 상세. 문구와 구조는 design/v2.pen 을 따른다. */
@@ -215,20 +215,13 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
       <h3 className="sr-only">용량별 가격</h3>
       <ul className="divide-y divide-[#DEE2E9]">
         {variants.map((variant) => {
-          const perUnit = unitPrice(variant.price, variant);
+          const perUnit = formatUnitPrice(variant.price, variant);
           return (
             <li key={variant.id} className="flex min-h-10 items-center justify-between gap-3">
-              <span className="text-[13px] font-bold text-[#182132]">
-                {variant.volumeValue}
-                {variant.volumeUnit}
-              </span>
+              <span className="text-[13px] font-bold text-[#182132]">{formatVolume(variant)}</span>
               <span className="flex flex-col items-end gap-0.5">
                 <span className="text-[12px] font-medium text-[#424E5F]">정가 {formatPrice(variant.price)}</span>
-                {perUnit === undefined ? null : (
-                  <span className="text-[12px] text-[#566273]">
-                    {variant.volumeUnit}당 {perUnit.toLocaleString("ko-KR")}원
-                  </span>
-                )}
+                {perUnit === undefined ? null : <span className="text-[12px] text-[#566273]">{perUnit}</span>}
               </span>
             </li>
           );
@@ -285,10 +278,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductPartRespons
 }
 
 function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly productId: number }) {
-  const date = new Date(updatedAt)
-    .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-    .replace(/\.$/, "")
-    .replace(/\. /g, ".");
+  const date = formatDate(updatedAt);
 
   return (
     <section className="flex flex-col gap-2 rounded-lg bg-[#EFF1F5] px-4 pt-4 pb-1">

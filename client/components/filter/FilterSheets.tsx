@@ -14,6 +14,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { type Filter, skinChoiceOf, withSkinChoice } from "@/lib/domain/filter";
+import { formatCount } from "@/lib/domain/format";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useProductCount } from "@/lib/hooks/useProductCount";
 
@@ -100,7 +101,7 @@ function SheetBody({
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
 
   // 유수분만 디자인 문구가 다르다.
-  const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
+  const countLabel = count === undefined ? "" : `${formatCount(count)} `;
   const submitLabel = kind === "level" ? `선택한 범위로 ${countLabel}보기` : `${countLabel}제품 보기`;
 
   const reset = () => {
