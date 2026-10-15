@@ -79,6 +79,14 @@
   right: var(--gutter);
 }
 
+/*
+ * 토스트 자리(FEEDBACK F04). 하단 고정 영역이나 하단 내비 바로 위 12 에 뜬다.
+ * 화면마다 아래에 붙은 영역의 높이가 달라, 앱이 --toast-offset 에 그 높이를 넣는다. 없으면 화면 아래에서 12 다.
+ */
+@utility bottom-toast {
+  bottom: calc(var(--toast-offset, 0px) + 12px);
+}
+
 /* 본문 최대 폭 480 을 넘는 화면에서는 본문 열에 맞춘다 */
 @utility inset-x-content {
   left: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
