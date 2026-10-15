@@ -89,6 +89,24 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 }
 ```
 
+## 입력 검사
+
+무엇이 오류인지는 client의 도메인이 정하고, 오류를 언제 보여 줄지는 입력 부품이 정한다. client는 칸마다 `FieldRule`을 만들어 `rule`로 넘긴다.
+
+```ts
+import type { FieldRule } from "@poudy/design-system/field-rule";
+
+// 기본: 칸을 벗어날 때 처음 검사하고, 한 번 오류가 난 칸은 입력할 때마다 다시 검사한다(FEEDBACK F06)
+export const productNameRule: FieldRule = { validate: productNameError };
+
+// 입력이 멈춘 뒤 검사한다. 기다리는 시간의 기본값은 300ms다
+export const nicknameRule: FieldRule = { validate: nicknameError, validateOn: "change", debounceMs: 500 };
+```
+
+- 어느 쪽이든 손대지 않은 칸에는 오류를 띄우지 않고, 고치면 기다리지 않고 바로 지운다.
+- 제출 버튼을 켤지 정할 때도 같은 `validate`를 부른다. 그러면 버튼 판단과 칸의 오류가 어긋나지 않는다.
+- 제출 뒤 서버가 돌려준 오류는 `serverError`로 넘긴다. 규칙과 상관없이 바로 보여 준다.
+
 ## 컴포넌트 대응표
 
 명세 컴포넌트와 코드 컴포넌트의 대응이다. 각 1단계 이슈가 자기 행의 코드 이름을 확정한다.
@@ -97,9 +115,9 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
 | BTN · Large Primary · Large Destructive · Primary · Secondary · Destructive · Compact Text (앞·뒤 아이콘, 비활성), BTN · Outline (높이 32) | `Button`                                                                                                                                            | #725 |
 | BTN · Icon · Overlay · 썸네일 삭제 · 투명(앱바 오른쪽·큰 제목 내비·시트 머리의 공유·도움말·추가·닫기)                                      | `IconButton` (변형: `overlay`, `thumbnail-remove`, `ghost`)                                                                                         | #725 |
-| APP · 입력 · 한 줄 · 여러 줄 · 선택                                                                                                        | `TextField`, `TextArea`, `Select`                                                                                                                   | #726 |
+| APP · 입력 · 한 줄 · 여러 줄 · 선택                                                                                                        | `TextField`, `TextArea`, `Select` (검사 규칙은 `FieldRule`)                                                                                         | #726 |
 | APP · 검색 입력 (기본·입력 중)                                                                                                             | `SearchField` (입력 칸: 평소·입력 중, 지우기 ✕. 시트용 변형은 따로 두지 않고 폭을 채운다)                                                           | #726 |
-| 검색 입력 + 자동완성 목록 (A11Y D04·D06)                                                                                                   | `Combobox` (`SearchField`와 결과 목록을 잇는 동작과 목록 그릇. 목록 안의 행은 client가 넣는다)                                                      | #726 |
+| 검색 입력 + 자동완성 목록 (A11Y D04·D06)                                                                                                   | `Combobox` (`SearchField`와 결과 목록을 잇는 동작과 목록 그릇. 목록 안의 행은 client가 넣는다)                                   | #726 |
 | 하나만 고르기: APP · 라디오 목록 행, 선택 버튼(일반·컴팩트), 선택 카드, 선택 행                                                            | `RadioGroup` + `RadioGroup.Item` (모양 변형: `list` 라디오 목록 행, `button` 선택 버튼(크기 `md` 52·`sm` 44), `card` 선택 카드, `card-row` 선택 행) | #726 |
 | 여러 개 고르기: APP · 체크 목록 행, 성분 체크 행                                                                                           | `CheckboxGroup` + `Checkbox` (모양 변형: `list`, 오른쪽 보조 글자 선택)                                                                             | #726 |
 | APP · 라디오, APP · 체크박스 (선택 표시)                                                                                                   | 패키지 안의 `RadioIndicator`, `CheckboxIndicator` (밖으로 내보내지 않고 위 두 부품이 안에서 쓴다)                                                   | #726 |
