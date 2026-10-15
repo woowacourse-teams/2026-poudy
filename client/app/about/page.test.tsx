@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/about" }));
 import AboutPage from "./page";
 
 describe("서비스 소개 /about", () => {
-  it("서비스 이름과 한 줄 설명, 누구의 어떤 문제를 푸는지 보여 준다", () => {
+  it("한 줄 설명과 누구의 어떤 문제를 푸는지 보여 준다", () => {
     render(<AboutPage />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("원하는 성분으로찾는 화장품");

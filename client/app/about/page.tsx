@@ -5,7 +5,6 @@ import Link from "next/link";
 import { PRESS_SCALE } from "@/components/ui/press";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
-import { SITE_ALTERNATE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "서비스 소개",
@@ -96,7 +95,6 @@ export default function AboutPage() {
 
       <main className="flex flex-1 flex-col">
         <section className="flex flex-col items-center gap-4 overflow-hidden bg-brand-soft px-4 pt-8 text-center">
-          <p className={`text-[11px] leading-[1.4] font-bold ${BRAND_TEXT}`}>{SITE_ALTERNATE_NAME}</p>
           <h1 className="text-[24px] leading-[1.3] font-bold text-text-primary">
             원하는 성분으로
             <br />
@@ -110,9 +108,6 @@ export default function AboutPage() {
             <br />
             성분만 고르세요. <strong className="font-bold text-text-primary">맞는 제품을 모아 드려요</strong>
           </p>
-          <Link href="/" className={`w-50 ${PRIMARY_BUTTON}`}>
-            바로 둘러보기
-          </Link>
           {/* 화면 캡처는 아랫부분을 잘라 다음 섹션으로 이어지는 것처럼 보이게 한다. */}
           <div className="flex h-[300px] w-full justify-center overflow-hidden pt-2">
             <Image
@@ -181,10 +176,13 @@ export default function AboutPage() {
             이런 것도 할 수 있어요
           </h2>
           {/*
-            기본 글자 크기에서는 두 칸으로 놓는다. 글자를 키우면 '브랜드·카테고리로' 같은 제목이 칸에 들지 않아
-            낱말이 갈라지므로, 칸 폭이 제목 폭(약 7.25em)과 안쪽 여백(24px)보다 좁아지면 한 칸으로 내린다.
+            두 칸씩 놓아 2·2·1 로 쌓는다. 칸의 최소 폭을 줄 폭의 절반(사이 간격 8px 을 뺀 값)으로 잡아,
+            넓은 화면에서도 세 칸으로 늘어나지 않게 한다.
+
+            글자를 키우면 '브랜드·카테고리로' 같은 제목이 칸에 들지 않아 낱말이 갈라진다. 칸 폭이 제목 폭
+            (약 7.25em)과 안쪽 여백(24px)보다 좁아지면 최소 폭이 절반을 넘으므로 한 칸으로 내려간다.
           */}
-          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,calc(24px+7.25em)),1fr))] gap-x-2 gap-y-5 text-[14px]">
+          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(calc(24px+7.25em),calc(50%-4px))),1fr))] gap-x-2 gap-y-5 text-[14px]">
             {FEATURES.map((feature) => (
               <li key={feature.image} className="flex flex-col gap-2 rounded-2xl bg-background p-3">
                 <Image
