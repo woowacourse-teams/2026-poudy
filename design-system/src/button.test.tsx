@@ -191,3 +191,20 @@ describe("IconButton", () => {
     expect(screen.getByRole("button", { name: "다음 사진" })).toHaveAttribute("data-on-image");
   });
 });
+
+describe("Button 줄 높이", () => {
+  it("크기·변형과 상관없이 글자 줄 높이가 1 이다. 글자가 세로 가운데에 온다(TYPO T04)", () => {
+    render(
+      <>
+        <Button size="lg">다음</Button>
+        <Button>저장</Button>
+        <Button variant="outline">추가</Button>
+        <Button variant="text">문의하기</Button>
+      </>,
+    );
+
+    for (const name of ["다음", "저장", "추가", "문의하기"]) {
+      expect(screen.getByRole("button", { name })).toHaveClass("leading-none");
+    }
+  });
+});

@@ -119,7 +119,10 @@ function ClearButton({ onClear }: { readonly onClear: () => void }) {
       onClick={onClear}
       className="pressable group -mr-2.5 flex size-11 shrink-0 items-center justify-center rounded-full"
     >
-      <span className="flex size-6 items-center justify-center rounded-full bg-layer text-text-secondary transition-colors duration-(--duration-fast) group-data-hovered:bg-border group-data-pressed:bg-border">
+      <span
+        data-focus-ring=""
+        className="flex size-6 items-center justify-center rounded-full bg-layer text-text-secondary transition-colors duration-(--duration-fast) group-data-hovered:bg-border group-data-pressed:bg-border"
+      >
         <Glyph name="x" size={14} />
       </span>
     </button>

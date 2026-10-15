@@ -81,7 +81,7 @@ export function IconButton({
       className={cn(iconButtonVariants({ variant }), className)}
     >
       {variant === "thumbnail-remove" ? (
-        <span aria-hidden="true" className="flex items-center justify-center [&>svg]:size-3.5">
+        <span aria-hidden="true" data-focus-ring="" className="flex items-center justify-center [&>svg]:size-3.5">
           {icon}
         </span>
       ) : (

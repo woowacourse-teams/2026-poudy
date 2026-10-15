@@ -29,7 +29,10 @@
   }
 }
 
-/* 크기 피드백. 버튼·칩·카드에만 붙이고 목록 행에는 붙이지 않는다. 움직임 줄이기에서는 크기만 뺀다. */
+/*
+ * 크기 피드백. 버튼·칩·카드에만 붙이고 목록 행에는 붙이지 않는다. 움직임 줄이기에서는 크기만 뺀다.
+ * 누르는 순간 자기 선택 모양이 바뀌는 것(토글 칩, 선택 버튼, 선택 카드)에도 붙이지 않는다. 겹치면 움찔해 보인다(S07).
+ */
 @utility press-scale {
   &[data-pressed]:not(:disabled, [aria-disabled="true"]) {
     transform: scale(0.97);
@@ -273,17 +276,27 @@
   /*
    * 포커스 링: 버튼·링크·탭에만. 입력칸 안의 입력 요소는 링 대신 .field 의 '입력 중' 모양을 쓴다.
    * 라디오·체크 행은 숨긴 입력이 아니라 행 전체에 링을 그린다.
+   *
+   * 보이는 모양보다 누르는 영역이 큰 컨트롤(칩 안 빼기 ✕, 검색 지우기, 썸네일 삭제, 슬라이더 손잡이)은 보이는 부분에
+   * data-focus-ring 을 단다. 링은 누르는 영역이 아니라 그 부분을 따라 그린다(S06: 링 모서리 = 보이는 컨트롤 모서리 + 2).
    */
   :is(button, a[href], [role="tab"], [tabindex]:not([tabindex="-1"])):not(
-      .field :is(input, textarea, select)
+      .field :is(input, textarea, select),
+      :has(> [data-focus-ring])
     ):focus-visible,
-  .choice-row:has(input:focus-visible) {
+  .choice-row:has(input:focus-visible),
+  :focus-visible > [data-focus-ring] {
     outline: var(--focus-ring-width) solid var(--color-focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
 
+  :focus-visible:has(> [data-focus-ring]) {
+    outline: none;
+  }
+
   /* 사진 위 컨트롤: 링 안쪽 간격을 흰 테로 채운 이중 링. 고대비 모드에서는 outline 만 남는다. */
-  [data-on-image]:focus-visible {
+  [data-on-image]:focus-visible:not(:has(> [data-focus-ring])),
+  [data-on-image]:focus-visible > [data-focus-ring] {
     box-shadow: 0 0 0 var(--focus-ring-offset) var(--color-background);
   }
 }

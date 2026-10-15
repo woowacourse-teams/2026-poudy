@@ -12,7 +12,7 @@ describe("RadioGroup", () => {
   it("라벨을 묶음의 이름으로 잇고, 선택지마다 네이티브 radio 를 둔다", () => {
     const onValueChange = vi.fn();
     render(
-      <RadioGroup label="성별" variant="button" value="female" onValueChange={onValueChange}>
+      <RadioGroup label="성별" variant="choice" value="female" onValueChange={onValueChange}>
         <RadioGroupItem value="female">여성</RadioGroupItem>
         <RadioGroupItem value="male">남성</RadioGroupItem>
       </RadioGroup>,
@@ -68,6 +68,22 @@ describe("RadioGroup", () => {
         </CheckboxGroup>
       )
     );
+  });
+
+  it("선택 버튼과 선택 카드는 누를 때 크기를 바꾸지 않는다(S07)", () => {
+    render(
+      <>
+        <RadioGroup aria-label="성별" variant="choice" value={undefined} onValueChange={() => undefined}>
+          <RadioGroupItem value="female">여성</RadioGroupItem>
+        </RadioGroup>
+        <RadioGroup aria-label="피부 타입" variant="card" value={undefined} onValueChange={() => undefined}>
+          <RadioGroupItem value="dry">건성</RadioGroupItem>
+        </RadioGroup>
+      </>,
+    );
+
+    expect(screen.getByText("여성").closest("label")).not.toHaveClass("press-scale");
+    expect(screen.getByText("건성").closest("label")).not.toHaveClass("press-scale");
   });
 
   it("막힌 선택지는 고를 수 없다", () => {

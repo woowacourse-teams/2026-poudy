@@ -10,7 +10,7 @@ import { hasVisibleLabel } from "./accessible-name";
 import { Glyph } from "./icons";
 import { usePressable } from "./use-pressable";
 
-type Variant = "list" | "button" | "card" | "card-row";
+type Variant = "list" | "choice" | "card" | "card-row";
 
 type RadioGroupContextValue = {
   readonly name: string;
@@ -28,7 +28,7 @@ const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid
 /** 모양별 묶음 배치. 선택 버튼·카드는 한 줄에 여러 개를 나란히 둔다(S38, S40). 선택 행은 12 간격으로 쌓는다(S55a). */
 const LAYOUT: Record<Variant, string> = {
   list: "flex flex-col",
-  button: "grid gap-2",
+  choice: "grid gap-2",
   card: "grid gap-2",
   "card-row": "flex flex-col gap-3",
 };
@@ -39,14 +39,14 @@ export type RadioGroupProps = GroupLabelProps & {
   /**
    * 모양. 동작은 모두 같고(radiogroup / radio, 방향키로 포커스와 선택이 함께 이동) 보이는 모양만 다르다.
    * - list: 라디오 목록 행. 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
-   * - button: 선택 버튼. 라벨만 가운데. 크기 md 52 · sm 44(가입 정보 S38, 문의 유형 S40)
+   * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 크기 md 52 · sm 44(가입 정보 S38, 문의 유형 S40)
    * - card: 선택 카드. 그림 + 이름 + 설명, 고르면 오른쪽 위 체크(피부 타입)
    * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
    */
   readonly variant: Variant;
-  /** button 모양의 높이. md 52 · sm 44 */
+  /** choice 모양의 높이. md 52 · sm 44 */
   readonly size?: "md" | "sm";
-  /** button·card 모양에서 한 줄에 둘 개수. 같은 줄의 선택지는 폭을 나눠 쓴다. */
+  /** choice·card 모양에서 한 줄에 둘 개수. 같은 줄의 선택지는 폭을 나눠 쓴다. */
   readonly columns?: 1 | 2 | 3 | 4;
   readonly disabled?: boolean;
   readonly children: ReactNode;
@@ -78,7 +78,7 @@ export function RadioGroup({
   const name = useId();
   const labelId = `${name}-label`;
   const messageId = `${name}-message`;
-  const grid = variant === "button" || variant === "card" ? COLUMNS[columns] : undefined;
+  const grid = variant === "choice" || variant === "card" ? COLUMNS[columns] : undefined;
 
   const visible = hasVisibleLabel(label);
 
@@ -124,11 +124,14 @@ export type RadioGroupItemProps = {
   readonly disabled?: boolean;
 };
 
-/** 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06). */
+/**
+ * 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06).
+ * 누를 때 크기는 바꾸지 않는다. 누르는 순간 선택 모양이 바뀌므로, 크기까지 바뀌면 움찔해 보인다(STATE S07).
+ */
 const ITEM: Record<Variant, string> = {
   list: "fb-surface h-12 gap-2 rounded-md pr-3 pl-6 data-checked:bg-layer",
-  button: "choice-outline press-scale fb-surface justify-center gap-1 rounded-lg bg-background px-3",
-  card: "choice-outline press-scale fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
+  choice: "choice-outline fb-surface justify-center gap-1 rounded-lg bg-background px-3",
+  card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
   "card-row": "choice-outline fb-surface h-18 gap-3 rounded-lg bg-background px-4",
 };
 
@@ -150,7 +153,7 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         "choice-row pressable flex cursor-pointer items-center select-none",
         "data-disabled:cursor-not-allowed data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
-        variant === "button" && (size === "md" ? "h-13" : "h-11"),
+        variant === "choice" && (size === "md" ? "h-13" : "h-11"),
       )}
     >
       <input
@@ -176,8 +179,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         </span>
       ) : null}
 
-      {variant === "button" ? (
-        <span className={cn("text-title font-semibold", checked ? "text-text-primary" : "text-text-body")}>
+      {variant === "choice" ? (
+        <span className={cn("text-title leading-none font-semibold", checked ? "text-text-primary" : "text-text-body")}>
           {children}
         </span>
       ) : null}
