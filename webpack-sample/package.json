@@ -1,0 +1,29 @@
+{
+  "name": "poudy-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production && node scripts/verify-dist.js dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
+    "@swc/core": "^1.15.47",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "html-webpack-plugin": "^5.6.8",
+    "react-refresh": "^0.18.0",
+    "swc-loader": "^0.2.7",
+    "typescript": "^7.0.2",
+    "webpack": "^5.109.2",
+    "webpack-cli": "^7.2.2",
+    "webpack-dev-server": "^5.2.6"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}
