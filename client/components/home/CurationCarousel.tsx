@@ -866,7 +866,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                 className="flex h-full"
                 draggable={false}
               >
-                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-[18px] bg-brand-soft px-5 py-4">
+                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-3xl bg-brand-soft px-5 py-4">
                   {/* 오른쪽 위의 빛은 꾸밈이다. */}
                   <span
                     aria-hidden="true"
