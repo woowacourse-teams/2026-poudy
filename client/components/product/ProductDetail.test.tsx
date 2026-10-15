@@ -289,8 +289,8 @@ describe("제품 상세 머리 고정", () => {
 
     expect(bar.getByText(multiVariantProduct.brand.name)).toBeInTheDocument();
     expect(bar.getByText(multiVariantProduct.name)).toBeInTheDocument();
-    expect(bar.getByText("수분")).toBeInTheDocument();
-    expect(bar.getByText("유분")).toBeInTheDocument();
+    expect(bar.getByText(/^수분감 /)).toBeInTheDocument();
+    expect(bar.getByText(/^유분감 /)).toBeInTheDocument();
     expect(bar.getByRole("button", { name: `${multiVariantProduct.name} 저장` })).toBeInTheDocument();
     expect(summaryBar().querySelector("img")).toBeInTheDocument();
   });

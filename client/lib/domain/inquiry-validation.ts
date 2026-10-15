@@ -17,7 +17,7 @@ export const contentError = (value: string): string | undefined => {
   if (trimmed.length === 0) return undefined;
 
   if (trimmed.length < CONTENT_MIN_LENGTH) {
-    return `${CONTENT_MIN_LENGTH}자 이상 적어주세요. 지금 ${trimmed.length}자예요.`;
+    return `${CONTENT_MIN_LENGTH}자 이상 적어 주세요. 지금 ${trimmed.length}자예요.`;
   }
 
   /* 입력 칸이 maxLength 로 막고 있어 여기까지 오지 않지만, 붙여넣기 같은 경로를 위해 남긴다. */

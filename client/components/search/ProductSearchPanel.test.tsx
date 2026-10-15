@@ -107,7 +107,7 @@ describe("ProductSearchPanel", () => {
     render(<ProductSearchPanel />);
     await type("독");
 
-    expect(await screen.findByRole("link", { name: /‘독’가 포함된 제품 검색/ })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: /‘독’이 포함된 제품 검색/ })).toBeInTheDocument();
   });
 
   it("전체 보기와 바로가기에 같은 제품 수를 보여 준다", async () => {

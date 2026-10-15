@@ -7,6 +7,7 @@ import { Icon } from "./icons/Icon";
 import { slashBreakable } from "./slash-breakable";
 
 import { PRESS_SURFACE } from "@/components/ui/press";
+import { formatCount } from "@/lib/domain/format";
 
 type DirectoryRailItem = {
   readonly id: string;
@@ -174,7 +175,7 @@ function DirectoryRow({
         {count === undefined ? null : (
           <span className="text-[13px] whitespace-nowrap text-[#6A7588]">
             {countPrefix ? `${countPrefix} ` : ""}
-            {count.toLocaleString("ko-KR")}개
+            {formatCount(count)}
           </span>
         )}
       </span>

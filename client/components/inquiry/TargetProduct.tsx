@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
 import { ProductImage } from "@/components/ui/ProductImage";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 
 /**
  * 정정 대상 제품. 사용자가 바꿀 수 없으므로 누를 수 있게 보이지 않아야 한다.
@@ -18,23 +15,13 @@ export function TargetProduct({
   readonly productName: string;
   readonly imageUrl: string;
 }) {
-  const [failed, setFailed] = useState(false);
-
-  /* 주소가 없거나 받아 오지 못하면 목록 카드와 같은 공병 그림으로 자리를 채운다. */
-  const source = failed || !imageUrl ? PRODUCT_PLACEHOLDER : imageUrl;
-
   return (
     <section className="flex items-center gap-3 rounded-lg bg-surface p-3">
-      {/* 제품 사진은 여백이 넓고 세로로 길다. 잘라내면 흰 부분만 남으므로 비율을 지켜 담는다. */}
-      <span className="relative size-14 shrink-0">
-        <ProductImage
-          src={source}
-          alt=""
-          size={56}
-          className="absolute inset-0 size-full object-contain"
-          onError={() => setFailed(true)}
-        />
-      </span>
+      {/*
+        썸네일 행의 칸 48 에 담는다(명세 IMAGE P02). 주소가 없거나 받아 오지 못하면
+        목록 카드와 같은 공병 그림으로 자리를 채운다.
+      */}
+      <ProductImage src={imageUrl} size={48} className="shrink-0" />
 
       {/*
         글자 크기와 색은 제품 목록 카드(ProductCard)와 맞춘다. 같은 제품을 가리키는

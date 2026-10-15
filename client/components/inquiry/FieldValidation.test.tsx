@@ -41,7 +41,7 @@ describe("문의 내용 검사", () => {
 
     await user.type(screen.getByLabelText(/문의 내용/), "짧아요");
 
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("10자 이상 적어주세요"));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("10자 이상 적어 주세요"));
   });
 
   it("치는 도중에는 아직 알리지 않는다", async () => {
@@ -85,7 +85,7 @@ describe("설명 자리", () => {
   it("잘못이 없으면 설명을 보여 준다", async () => {
     await startProduct();
 
-    expect(screen.getByText("용량이나 버전이 있다면 함께 적어주세요.")).toBeInTheDocument();
+    expect(screen.getByText("용량이나 버전이 있다면 함께 적어 주세요.")).toBeInTheDocument();
   });
 
   /*
@@ -99,7 +99,7 @@ describe("설명 자리", () => {
     fireEvent.change(field, { target: { value: "가".repeat(201) } });
 
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("200자까지"));
-    expect(screen.queryByText("용량이나 버전이 있다면 함께 적어주세요.")).not.toBeInTheDocument();
+    expect(screen.queryByText("용량이나 버전이 있다면 함께 적어 주세요.")).not.toBeInTheDocument();
   });
 });
 

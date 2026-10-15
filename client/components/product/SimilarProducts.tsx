@@ -4,7 +4,6 @@ import Link from "next/link";
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PRESS_CARD_OUTSET } from "@/components/ui/press";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { partHref } from "@/lib/domain/product-parts";
 
@@ -39,11 +38,10 @@ export function SimilarProducts({ products }: { readonly products: readonly Simi
               className={`grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 @min-[calc(88px_+_10.7em)]:grid-cols-[64px_minmax(0,1fr)_auto] ${PRESS_CARD_OUTSET}`}
             >
               <ProductImage
-                src={product.imageUrl || PRODUCT_PLACEHOLDER}
-                alt=""
+                src={product.imageUrl}
                 size={64}
                 loading="lazy"
-                className="col-start-1 row-span-2 row-start-1 size-16 self-start rounded-sm object-contain @min-[calc(88px_+_10.7em)]:row-span-1 @min-[calc(88px_+_10.7em)]:self-center"
+                className="col-start-1 row-span-2 row-start-1 self-start @min-[calc(88px_+_10.7em)]:row-span-1 @min-[calc(88px_+_10.7em)]:self-center"
               />
 
               <span className="col-start-2 row-start-2 flex min-w-0 flex-col gap-1 self-start @min-[calc(88px_+_10.7em)]:row-start-1 @min-[calc(88px_+_10.7em)]:self-center">

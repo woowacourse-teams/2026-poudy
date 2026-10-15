@@ -15,6 +15,7 @@ import { StickyBar } from "@/components/ui/StickyBar";
 import { track } from "@/lib/analytics/track";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
+import { josaOf } from "@/lib/domain/format";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -51,24 +52,6 @@ const matchesKeyword = (product: ProductResponse, keyword: string): boolean =>
   `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.toLowerCase());
 
 /**
- * 이름 뒤에 붙일 주격 조사를 고른다. 받침이 있으면 `이`, 없으면 `가` 다.
- *
- * 한글이 아닌 글자로 끝나는 이름은 읽는 소리를 알 수 없다. 숫자는 읽는 법이 정해져
- * 있어 그 소리의 받침을 따르고(`0`·`1`·`3`·`6`·`7`·`8` 이 받침으로 끝난다),
- * 그 밖의 글자는 `가` 로 둔다. 어느 쪽도 아니면 조사를 붙이지 않는 편이 낫지만,
- * 제품 이름은 대개 한글이나 숫자로 끝나 이 정도로 자연스럽게 읽힌다.
- */
-const subjectJosa = (name: string): string => {
-  const last = name.trimEnd().at(-1) ?? "";
-  const code = last.codePointAt(0) ?? 0;
-
-  // 한글 음절은 U+AC00 부터 28 개의 받침이 되풀이된다. 나머지가 0 이면 받침이 없다.
-  if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 === 0 ? "가" : "이";
-  if (/[0136780]/.test(last)) return "이";
-  return "가";
-};
-
-/**
  * 저장을 푼 카드 위에 덮는 겹. 카드를 치우지 않고 그 위에 얹는다.
  *
  * 카드가 흐릿하게 비쳐 어느 제품인지 그대로 읽힌다. 자리와 높이도 카드 그대로라
@@ -103,7 +86,7 @@ function UndoRow({
         */}
         <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-5 text-text-secondary">
           <span className="font-bold text-text-primary">{productName}</span>
-          {subjectJosa(productName)} 위시리스트에서 삭제됐어요
+          {josaOf(productName, "이/가")} 위시리스트에서 삭제됐어요
         </p>
         <button
           type="button"

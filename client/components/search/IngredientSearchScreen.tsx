@@ -11,6 +11,7 @@ import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
 import { countConditions, summarizeFilter } from "@/lib/domain/filter-summary";
+import { formatCount } from "@/lib/domain/format";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
@@ -56,7 +57,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
   // 바텀시트와 같은 문구를 쓴다. 조건을 바꾸면 개수가 따라 바뀐다.
   const { count, counting } = useCountState(filter);
-  const countLabel = count === undefined ? "" : `${count.toLocaleString("ko-KR")}개 `;
+  const countLabel = count === undefined ? "" : `${formatCount(count)} `;
   const resultKey = serializeFilter(filter).toString();
   const trackedEmptyResult = useRef<string | undefined>(undefined);
 
