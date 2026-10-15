@@ -22,6 +22,7 @@ const BOTTOM_ACTION_BAR_PATHS = [
   "/my-page/withdraw",
   "/shelf/add",
   "/shelf/filter",
+  "/shelf/guide",
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>
