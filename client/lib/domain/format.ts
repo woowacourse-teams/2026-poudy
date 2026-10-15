@@ -19,12 +19,9 @@ export type Volume = {
 /** `32,000원`. 원 표시(₩·KRW)는 쓰지 않는다(W04). */
 export const formatPrice = (price: number): string => `${formatNumber(price)}원`;
 
-/** 서버 값이 `mL`·`ML`이어도 `ml`로 보여 준다. g·매는 그대로 둔다(W04). */
-export const formatVolumeUnit = (unit: string): string => pick(unit.toLowerCase() === "ml", "ml", unit);
-
-/** `150ml`. 숫자와 단위를 붙여 쓴다(W04). */
+/** `150mL`. 숫자와 단위를 붙여 쓴다. 단위는 서버가 보낸 글자를 바꾸지 않고 그대로 쓴다(W04). */
 export const formatVolume = ({ volumeValue, volumeUnit }: Volume): string =>
-  `${formatNumber(volumeValue)}${formatVolumeUnit(volumeUnit)}`;
+  `${formatNumber(volumeValue)}${volumeUnit}`;
 
 /**
  * 단위당 가격은 API 에 없어서 계산한다. 표시 전용이며 정렬이나 필터에는 쓰지 않는다.
@@ -35,14 +32,14 @@ export const unitPrice = (price: number, { volumeValue }: Volume): number | unde
   return Math.round(price / volumeValue);
 };
 
-/** `ml당 400원`. 반올림한 정수로 쓰고, 용량을 모르면 없다(W04). `400원/ml`은 쓰지 않는다. */
+/** `mL당 400원`. 단위는 서버 값 그대로 쓰고, 금액은 반올림한 정수로 쓴다. 용량을 모르면 없다(W04). `400원/mL`은 쓰지 않는다. */
 export const formatUnitPrice = (price: number, volume: Volume): string | undefined => {
   const perUnit = unitPrice(price, volume);
   if (perUnit === undefined) return undefined;
-  return `${formatVolumeUnit(volume.volumeUnit)}당 ${formatNumber(perUnit)}원`;
+  return `${volume.volumeUnit}당 ${formatNumber(perUnit)}원`;
 };
 
-/** `200ml · ml당 90원`. 용량을 알 수 없으면 단가를 빼고 보여 준다. */
+/** `200mL · mL당 90원`. 용량을 알 수 없으면 단가를 빼고 보여 준다. */
 export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string =>
   [formatVolume(volume), formatUnitPrice(price, volume)]
     .filter((part): part is string => part !== undefined)

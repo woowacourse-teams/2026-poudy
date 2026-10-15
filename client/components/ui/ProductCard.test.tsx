@@ -16,7 +16,7 @@ const product: ProductResponse = {
   imageUrl: "",
   price: 18000,
   volumeValue: 200,
-  volumeUnit: "ml",
+  volumeUnit: "mL",
   moistureLevel: 2,
   oilLevel: 1,
   sensitiveSkin: false,
@@ -29,7 +29,7 @@ describe("ProductCard", () => {
 
     expect(screen.getByText("라운드랩")).toBeInTheDocument();
     expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
-    expect(screen.getByText(/18,000원 · 200ml · ml당 90원/)).toBeInTheDocument();
+    expect(screen.getByText(/18,000원 · 200mL · mL당 90원/)).toBeInTheDocument();
   });
 
   it("제품 상세로 가는 링크가 있다", () => {
