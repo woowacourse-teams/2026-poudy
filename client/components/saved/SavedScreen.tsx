@@ -4,9 +4,7 @@ import type { ProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { SearchField } from "@poudy/design-system/search-field";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
@@ -103,33 +101,6 @@ function UndoRow({
   );
 }
 
-/** 위시리스트가 빈 화면(S55d-1). TODO(#728): 빈 상태(EmptyState)가 들어오면 바꾼다. */
-function EmptyWishlist() {
-  const router = useRouter();
-
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 pt-4 text-center">
-      <Image
-        src="/images/empty-states/no-saved-products-watermark.png"
-        alt=""
-        width={340}
-        height={340}
-        loading="eager"
-        className="size-42.5"
-      />
-      <p className="text-section font-bold text-text-primary">아직 위시리스트에 추가한 제품이 없어요</p>
-      <p className="text-body text-text-secondary">
-        제품 상세에서 위시리스트 추가 버튼을 누르면
-        <br />
-        여기에서 모아 볼 수 있어요.
-      </p>
-      <Button variant="secondary" className="mt-2" onClick={() => router.push("/search/products")}>
-        제품 둘러보기
-      </Button>
-    </div>
-  );
-}
-
 /** 위시리스트 목록의 마지막 자리(APP · 위시리스트 더 둘러보기 행). 제품 카드와 같은 격자로 이어진다. */
 function BrowseMoreRow() {
   const { pressableProps } = usePressable();
@@ -176,7 +147,12 @@ function SignInNotice() {
 }
 
 /** 위시리스트(S55d). 저장한 제품과 표시 정보를 회원 위시리스트 API 에서 한 번에 받는다. */
-export function SavedScreen() {
+export function SavedScreen({
+  empty,
+}: {
+  /** 위시리스트가 비었을 때 그릴 빈 상태(S55d-1, FEEDBACK F03). 경로 옆 `app/my-page/wishlist/empty.tsx` 의 것을 넘긴다. */
+  readonly empty: React.ReactNode;
+}) {
   const { status: savedStatus, save, unsave } = useSavedProducts();
   const signedOut = savedStatus === "signedOut";
   const adminSession = savedStatus === "adminSession";
@@ -296,11 +272,7 @@ export function SavedScreen() {
   }
 
   if (items.length === 0) {
-    return (
-      <main className="flex flex-1 flex-col pb-6">
-        <EmptyWishlist />
-      </main>
-    );
+    return <main className="flex flex-1 flex-col pb-6">{empty}</main>;
   }
 
   return (
