@@ -14,6 +14,12 @@
 
 client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다. `theme.css`는 패키지 소스도 Tailwind가 훑도록 `@source`를 지정하므로, 부품이 쓰는 클래스는 client가 따로 설정하지 않아도 만들어진다.
 
+## 미리보기
+
+부품을 앱 없이 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다.
+
+`preview/`의 Vite 서버가 앱처럼 패키지의 `theme.css`만 가져와 그린다. 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 이 화면에서 함께 확인할 수 있다. 부품을 추가하면 `preview/main.tsx`에 변형과 상태를 늘어놓는다.
+
 ## 명세가 바뀌었을 때
 
 1. 주인 보드를 고치고, 보드의 수정 기록에 날짜와 함께 남긴다(MAP G03).
