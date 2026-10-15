@@ -59,16 +59,18 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 
 ## 린트와 예외
 
-`lint/`는 client의 ESLint가 가져다 쓰는 디자인 토큰 린트다. [`@shadcn/lint`](https://github.com/shadcn-ui/lint)의 규칙 네 개를 경고로 켠다.
+`lint/`는 client와 이 패키지의 ESLint가 가져다 쓰는 디자인 토큰 린트다. [`@shadcn/lint`](https://github.com/shadcn-ui/lint)의 규칙 여섯 개를 경고로 켠다.
 
-| 규칙                  | 잡는 것                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `no-arbitrary-values` | `p-[13px]`, `bg-[#182132]`처럼 직접 적은 값                 |
-| `no-raw-colors`       | `bg-red-50`처럼 토큰이 아닌 Tailwind 색, SVG에 직접 적은 색 |
-| `no-inline-styles`    | `style={{ ... }}`와 `<style>`                               |
-| `no-unknown-classes`  | Tailwind가 만들 수 없는 클래스                              |
+| 규칙                     | 잡는 것                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `no-arbitrary-values`    | `p-[13px]`, `bg-[#182132]`처럼 직접 적은 값                                        |
+| `no-raw-colors`          | `bg-red-50`처럼 토큰이 아닌 Tailwind 색, SVG에 직접 적은 색                        |
+| `no-inline-styles`       | `style={{ ... }}`와 `<style>`                                                      |
+| `no-unknown-classes`     | Tailwind가 만들 수 없는 클래스                                                     |
+| `require-static-classes` | 조건이나 변수로 이어 붙여 만든 클래스 이름                                         |
+| `no-restyle`             | 부품의 `className`으로 색·크기·모양을 바꾸는 것. 자리(여백·폭·배치)만 바꿀 수 있다 |
 
-`require-static-classes`와 `no-restyle`은 `cn`과 `cva`를 들인 뒤에 켠다(#725). 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
+`no-restyle`은 이 패키지의 부품(`@poudy/design-system/...`으로 가져온 것)에만 적용한다. client의 컴포넌트는 아직 디자인 시스템 부품이 아니므로 검사하지 않는다. 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
 
 예외는 두 가지다.
 
