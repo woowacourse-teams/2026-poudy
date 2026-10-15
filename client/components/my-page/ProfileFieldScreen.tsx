@@ -1,6 +1,6 @@
 "use client";
 
-import type { MemberProfileRequest, MemberResponse } from "@poudy/api/api.zod";
+import type { UserProfileRequest, UserResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ import { AGE_RANGES, GENDERS, type ProfileOption, SKIN_TYPES, type SkinTypeOptio
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-export type ProfileField = keyof MemberProfileRequest;
+export type ProfileField = keyof UserProfileRequest;
 
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
@@ -44,7 +44,7 @@ const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주�
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string | null): T | null =>
   options.find((option) => option.value === value)?.value ?? null;
 
-const profileWith = (member: MemberResponse, field: ProfileField, value: string | null): MemberProfileRequest => {
+const profileWith = (member: UserResponse, field: ProfileField, value: string | null): UserProfileRequest => {
   const profile = { gender: member.gender, ageRange: member.ageRange, skinType: member.skinType };
   if (field === "gender") return { ...profile, gender: valueIn(GENDERS, value) };
   if (field === "ageRange") return { ...profile, ageRange: valueIn(AGE_RANGES, value) };
@@ -58,7 +58,7 @@ const radioMarkClass = (checked: boolean): string => {
 
 export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) {
   const router = useRouter();
-  const [member, setMember] = useState<MemberResponse | null>(null);
+  const [member, setMember] = useState<UserResponse | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);

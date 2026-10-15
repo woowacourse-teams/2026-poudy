@@ -1,4 +1,4 @@
-import type { MemberResponse } from "@poudy/api/api.zod";
+import type { UserResponse } from "@poudy/api/api.zod";
 
 import { createLocalStore } from "./local-store";
 
@@ -14,11 +14,11 @@ const store = createLocalStore<SocialProvider | null>("poudy.last-login.v1", {
   isValid: isLastLogin,
 });
 
-const PROVIDERS: Readonly<Record<MemberResponse["provider"], SocialProvider>> = {
+const PROVIDERS: Readonly<Record<UserResponse["provider"], SocialProvider>> = {
   KAKAO: "kakao",
   GOOGLE: "google",
 };
 
 export const readLastLogin = (): SocialProvider | null => store.read();
 
-export const rememberLastLogin = (provider: MemberResponse["provider"]): void => store.write(PROVIDERS[provider]);
+export const rememberLastLogin = (provider: UserResponse["provider"]): void => store.write(PROVIDERS[provider]);

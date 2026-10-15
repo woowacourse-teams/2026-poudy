@@ -1,7 +1,7 @@
 import {
-  MemberProfileRequest,
+  UserProfileRequest,
   type ErrorCode,
-  type MemberResponse,
+  type UserResponse,
   type ProductDetailResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
@@ -505,7 +505,7 @@ const RANKING_SIZE = 6;
 /**
  * 목에서는 늘 로그인한 회원 한 명이 있다고 본다. 초기 정보를 저장하면 이 값이 바뀐다.
  */
-const mockSession: { member: MemberResponse } = {
+const mockSession: { member: UserResponse } = {
   member: {
     id: 1,
     provider: "KAKAO",
@@ -525,11 +525,11 @@ export const setMockSavedProducts = (productIds: readonly number[]): void => {
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
 export const handlers = [
-  http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+  http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
 
-  http.get("*/api/members/me/saved-products/ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
+  http.get("*/api/users/me/wishlist/product-ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
 
-  http.get("*/api/members/me/saved-products", () =>
+  http.get("*/api/users/me/wishlist/products", () =>
     HttpResponse.json({
       items: mockSavedProductIds
         .map(productOf)
@@ -537,7 +537,7 @@ export const handlers = [
     }),
   ),
 
-  http.put("*/api/members/me/saved-products/:productId", ({ params }) => {
+  http.put("*/api/users/me/wishlist/products/:productId", ({ params }) => {
     const id = Number(params.productId);
     if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
@@ -545,23 +545,23 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.delete("*/api/members/me/saved-products/:productId", ({ params }) => {
+  http.delete("*/api/users/me/wishlist/products/:productId", ({ params }) => {
     const id = Number(params.productId);
     mockSavedProductIds = mockSavedProductIds.filter((savedId) => savedId !== id);
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.patch("*/api/members/me/profile", async ({ request }) => {
-    const profile = MemberProfileRequest.safeParse(await request.json());
+  http.patch("*/api/users/me/profile", async ({ request }) => {
+    const profile = UserProfileRequest.safeParse(await request.json());
     if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
 
     mockSession.member = { ...mockSession.member, ...profile.data };
     return HttpResponse.json(mockSession.member);
   }),
 
-  http.delete("*/api/members/me", () => new HttpResponse(null, { status: 204 })),
+  http.delete("*/api/users/me", () => new HttpResponse(null, { status: 204 })),
 
-  http.post("*/api/members/logout", () => new HttpResponse(null, { status: 204 })),
+  http.post("*/api/users/logout", () => new HttpResponse(null, { status: 204 })),
 
   http.get("*/api/auth/withdrawn", () =>
     HttpResponse.json({

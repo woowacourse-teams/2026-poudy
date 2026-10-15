@@ -1,8 +1,8 @@
-import type { MemberProfileRequest } from "@poudy/api/api.zod";
+import type { UserProfileRequest } from "@poudy/api/api.zod";
 
-export type Gender = NonNullable<MemberProfileRequest["gender"]>;
-export type AgeRange = NonNullable<MemberProfileRequest["ageRange"]>;
-export type SkinType = NonNullable<MemberProfileRequest["skinType"]>;
+export type Gender = NonNullable<UserProfileRequest["gender"]>;
+export type AgeRange = NonNullable<UserProfileRequest["ageRange"]>;
+export type SkinType = NonNullable<UserProfileRequest["skinType"]>;
 
 export type ProfileOption<T extends string> = { readonly value: T; readonly label: string };
 

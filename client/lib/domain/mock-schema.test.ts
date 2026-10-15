@@ -10,7 +10,7 @@ import {
   IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
-  MemberResponse,
+  UserResponse,
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
@@ -21,8 +21,8 @@ import {
   ProductSuggestionPageResponse,
   RankingsResponse,
   SkinTypesResponse,
-  SavedProductIdsResponse,
-  SavedProductsResponse,
+  WishlistProductIdsResponse,
+  WishlistResponse,
   WithdrawnAccountResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
@@ -97,8 +97,8 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["저장한 제품 ID", "/members/me/saved-products/ids", SavedProductIdsResponse],
-  ["저장함", "/members/me/saved-products", SavedProductsResponse],
+  ["저장한 제품 ID", "/users/me/wishlist/product-ids", WishlistProductIdsResponse],
+  ["저장함", "/users/me/wishlist/products", WishlistResponse],
   ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
@@ -117,7 +117,7 @@ const cases = [
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
-  ["내 정보", "/members/me", MemberResponse],
+  ["내 정보", "/users/me", UserResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
 ] as const;
@@ -200,36 +200,36 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
-  it("초기 정보 저장은 바뀐 MemberResponse 를 지킨다", async () => {
-    const { status, body } = await patch("/members/me/profile", {
+  it("초기 정보 저장은 바뀐 UserResponse 를 지킨다", async () => {
+    const { status, body } = await patch("/users/me/profile", {
       gender: "FEMALE",
       ageRange: "TWENTIES",
       skinType: "COMBINATION",
     });
 
     expect(status).toBe(200);
-    expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
+    expect(deepStrict(UserResponse).safeParse(body)).toMatchObject({ success: true });
     expect(body).toMatchObject({ skinType: "COMBINATION" });
   });
 
   it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
-    const { status, body } = await patch("/members/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
+    const { status, body } = await patch("/users/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
 
     expect(status).toBe(400);
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
   });
 
   it("회원 탈퇴는 내용 없이 204 를 준다", async () => {
-    const response = await fetch(`${BASE}/members/me`, { method: "DELETE" });
+    const response = await fetch(`${BASE}/users/me`, { method: "DELETE" });
 
     expect(response.status).toBe(204);
     expect(await response.text()).toBe("");
   });
 
   it("제품 저장과 해제는 내용 없이 204 를 주고, 없는 제품 저장은 404 를 준다", async () => {
-    const saved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "PUT" });
-    const unsaved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "DELETE" });
-    const missing = await fetch(`${BASE}/members/me/saved-products/999999`, { method: "PUT" });
+    const saved = await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "PUT" });
+    const unsaved = await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "DELETE" });
+    const missing = await fetch(`${BASE}/users/me/wishlist/products/999999`, { method: "PUT" });
 
     expect(saved.status).toBe(204);
     expect(unsaved.status).toBe(204);
@@ -252,7 +252,7 @@ describe("목 응답과 스키마", () => {
   });
 
   it("로그아웃은 내용 없이 204 를 준다", async () => {
-    const { status, body } = await post("/members/logout", "");
+    const { status, body } = await post("/users/logout", "");
 
     expect(status).toBe(204);
     expect(body).toBeUndefined();
@@ -274,11 +274,11 @@ describe("목 응답과 스키마", () => {
       "/products/registration-requests",
       "/products/:id/views",
       "/search-keywords",
-      "/members/me/profile",
-      "/members/logout",
-      "/members/me (DELETE)",
-      "/members/me/saved-products/:id (PUT)",
-      "/members/me/saved-products/:id (DELETE)",
+      "/users/me/profile",
+      "/users/logout",
+      "/users/me (DELETE)",
+      "/users/me/wishlist/products/:id (PUT)",
+      "/users/me/wishlist/products/:id (DELETE)",
       "/auth/withdrawn/restore",
       "/auth/signup",
     ];

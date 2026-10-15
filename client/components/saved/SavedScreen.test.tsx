@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const PAGE_SIZE = 20;
-const SAVED_PATH = "*/api/members/me/saved-products";
+const SAVED_PATH = "*/api/users/me/wishlist";
 
 const seed = async (...productIds: readonly number[]) => {
   setMockSavedProducts(productIds);
@@ -45,7 +45,7 @@ describe("저장함", () => {
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {
-    server.use(http.get(`${SAVED_PATH}/ids`, () => problem(401, "UNAUTHORIZED")));
+    server.use(http.get(`${SAVED_PATH}/product-ids`, () => problem(401, "UNAUTHORIZED")));
     await reloadSavedProducts();
 
     render(<SavedScreen />);
@@ -56,7 +56,7 @@ describe("저장함", () => {
 
   it("관리자로 로그인되어 있으면 안내하고 관리자에서 로그아웃하면 로그인 화면으로 보낸다", async () => {
     server.use(
-      http.get(`${SAVED_PATH}/ids`, () => problem(403, "FORBIDDEN")),
+      http.get(`${SAVED_PATH}/product-ids`, () => problem(403, "FORBIDDEN")),
       http.post("*/api/admin/logout", () => new HttpResponse(null, { status: 204 })),
     );
     await reloadSavedProducts();
@@ -108,7 +108,7 @@ describe("저장함", () => {
 
   it("조회가 실패하면 빈 상태와 구분해서 알리고 다시 시도할 수 있다", async () => {
     await seed(1);
-    server.use(http.get(SAVED_PATH, () => problem(500, "INTERNAL_SERVER_ERROR")));
+    server.use(http.get(`${SAVED_PATH}/products`, () => problem(500, "INTERNAL_SERVER_ERROR")));
     render(<SavedScreen />);
 
     expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
@@ -176,8 +176,8 @@ describe("저장을 풀 때", () => {
     render(<SavedScreen />);
     await screen.findByText("1025 독도 토너");
     server.use(
-      http.delete(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
-      http.get(`${SAVED_PATH}/ids`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.delete(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.get(`${SAVED_PATH}/product-ids`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
@@ -189,7 +189,7 @@ describe("저장을 풀 때", () => {
 
   it("삭제가 실패하면 제품과 개수를 되돌린다", async () => {
     await seed(1, 3);
-    server.use(http.delete(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
+    server.use(http.delete(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
     render(<SavedScreen />);
     await screen.findByText("1025 독도 토너");
 
@@ -207,7 +207,7 @@ describe("저장을 풀 때", () => {
     await screen.findByText("1025 독도 토너");
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
     await reloadSavedProducts();
-    server.use(http.put(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
+    server.use(http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
 
     await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
 
@@ -220,11 +220,11 @@ describe("저장을 풀 때", () => {
     await seed(1, 3);
     const release = Promise.withResolvers<void>();
     server.use(
-      http.delete(`${SAVED_PATH}/1`, async () => {
+      http.delete(`${SAVED_PATH}/products/1`, async () => {
         await release.promise;
         return problem(500, "INTERNAL_SERVER_ERROR");
       }),
-      http.put(`${SAVED_PATH}/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
     render(<SavedScreen />);
     await screen.findByText("1025 독도 토너");

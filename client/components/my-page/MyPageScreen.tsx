@@ -1,6 +1,6 @@
 "use client";
 
-import type { MemberResponse } from "@poudy/api/api.zod";
+import type { UserResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -70,7 +70,7 @@ const savedCountLabel = (status: string, count: number): string => {
 
 export function MyPageScreen() {
   const router = useRouter();
-  const [member, setMember] = useState<MemberResponse | null>(null);
+  const [member, setMember] = useState<UserResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);

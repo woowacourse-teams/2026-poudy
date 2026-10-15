@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { MemberResponse } from "@poudy/api/api.zod";
+import type { UserResponse } from "@poudy/api/api.zod";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -19,7 +19,7 @@ const { history } = vi.hoisted(() => ({ history: { inSite: false } }));
 
 vi.mock("@/lib/navigation/history-depth", () => ({ hasInSiteHistory: () => history.inSite }));
 
-const member: MemberResponse = {
+const member: UserResponse = {
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
@@ -35,7 +35,7 @@ describe("내 정보 한 항목 바꾸기", () => {
   });
 
   it("지금 저장된 값을 골라 둔 채 연다", async () => {
-    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
 
     render(<ProfileFieldScreen field="ageRange" />);
 
@@ -44,7 +44,7 @@ describe("내 정보 한 항목 바꾸기", () => {
 
   it("아직 고른 값이 없으면 하나를 고를 때까지 저장할 수 없다", async () => {
     const user = userEvent.setup();
-    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
     render(<ProfileFieldScreen field="skinType" />);
 
     const dry = await screen.findByRole("radio", { name: /건성/ });
@@ -57,7 +57,7 @@ describe("내 정보 한 항목 바꾸기", () => {
 
   it("저장된 값에서 바꾼 것이 없으면 저장할 수 없다", async () => {
     const user = userEvent.setup();
-    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
     render(<ProfileFieldScreen field="ageRange" />);
 
     const twenties = await screen.findByRole("radio", { name: "20대" });
@@ -74,8 +74,8 @@ describe("내 정보 한 항목 바꾸기", () => {
     const user = userEvent.setup();
     const sent = vi.fn();
     server.use(
-      http.get("*/api/members/me", () => HttpResponse.json(member)),
-      http.patch("*/api/members/me/profile", async ({ request }) => {
+      http.get("*/api/users/me", () => HttpResponse.json(member)),
+      http.patch("*/api/users/me/profile", async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         sent(body);
         return HttpResponse.json({ ...member, ...body });
@@ -93,7 +93,7 @@ describe("내 정보 한 항목 바꾸기", () => {
   it("마이페이지에서 들어왔으면 저장한 뒤 앞 화면으로 돌아간다", async () => {
     const user = userEvent.setup();
     history.inSite = true;
-    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
     render(<ProfileFieldScreen field="gender" />);
 
     await user.click(await screen.findByRole("radio", { name: "남성" }));
@@ -104,7 +104,7 @@ describe("내 정보 한 항목 바꾸기", () => {
   });
 
   it("피부 타입을 잘 모르겠다는 문구는 고를 수 있는 항목이 아니다", async () => {
-    server.use(http.get("*/api/members/me", () => HttpResponse.json(member)));
+    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
 
     render(<ProfileFieldScreen field="skinType" />);
 
