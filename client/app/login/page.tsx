@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="flex shrink-0 flex-col gap-2.5">
         <SocialLoginLink
           provider="kakao"
-          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-[#fee500] text-[16px] font-bold text-[#191919] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+          className="flex h-[52px] items-center justify-center gap-2 rounded-button bg-kakao-bg text-[16px] font-bold text-kakao-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
         >
           <KakaoIcon />
           카카오로 시작하기
