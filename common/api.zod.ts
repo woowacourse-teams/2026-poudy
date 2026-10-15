@@ -4,6 +4,9 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type SkinFilterIngredientsRequest = __TypedOpenapi.Schemas.SkinFilterIngredientsRequest;
+export const SkinFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
+
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
 
@@ -76,6 +79,18 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
+export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
+export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
+export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
+export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+
+export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
+export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
+
 export type SkinType = __TypedOpenapi.Schemas.SkinType;
 export const SkinType = z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]);
 
@@ -136,9 +151,6 @@ export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.str
 export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
 export const ExcludeGroupResponse = z.object({ code: z.string(), name: z.string(), contains: z.boolean() });
 
-export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
-export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
-
 export type IngredientCautionResponse = __TypedOpenapi.Schemas.IngredientCautionResponse;
 export const IngredientCautionResponse = z.object({ code: z.string(), label: z.string() });
 
@@ -150,9 +162,6 @@ export const ProductVariantResponse = z.object({ id: z.number().int(), price: z.
 
 export type ProductPartSummaryResponse = __TypedOpenapi.Schemas.ProductPartSummaryResponse;
 export const ProductPartSummaryResponse = z.object({ id: z.number().int(), name: z.string().nullable(), cautionCount: z.number().int() });
-
-export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
-export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredientResponse;
 export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), cautions: z.array(IngredientCautionResponse) });
@@ -357,6 +366,26 @@ export const delete_Unsave = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
+export const post_AddIngredients = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/skin-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: SkinFilterIngredientsRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_RemoveIngredients = __TypedOpenapi.Endpoints.delete_RemoveIngredients;
+export const delete_RemoveIngredients = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/skin-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ ingredientIds: z.array(z.coerce.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
 export const post_Record = {
   method: z.literal("POST"),
@@ -495,6 +524,16 @@ export const patch_ChangeStatus_1 = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ feedbackId: z.uuid() }), body: AdminFeedbackStatusUpdateRequest },
   responses: { 200: AdminFeedbackResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindSkinFilter = __TypedOpenapi.Endpoints.get_FindSkinFilter;
+export const get_FindSkinFilter = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/skin-filter"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindSkinTypes = __TypedOpenapi.Endpoints.get_FindSkinTypes;
@@ -867,10 +906,12 @@ export const post_AdminLogout = {
          },
 delete: {
            "/api/members/me/saved-products/{productId}": delete_Unsave as any,
+"/api/users/me/skin-filter/ingredients": delete_RemoveIngredients as any,
 "/api/members/me": delete_Withdraw as any
          },
 post: {
-           "/api/search-keywords": post_Record as any,
+           "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
+"/api/search-keywords": post_Record as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,
 "/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
 "/api/products/registration-requests": post_Submit as any,
@@ -890,7 +931,8 @@ patch: {
 "/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
          },
 get: {
-           "/api/skin-types": get_FindSkinTypes as any,
+           "/api/users/me/skin-filter": get_FindSkinFilter as any,
+"/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,
 "/api/products": get_FindProducts as any,

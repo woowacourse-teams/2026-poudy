@@ -1,5 +1,6 @@
   export namespace Schemas {
-  export type SearchKeywordRequest = { keyword: string }
+  export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
+export type SearchKeywordRequest = { keyword: string }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
   /**
@@ -62,6 +63,30 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string, extension: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
+export type SkinEffectResponse = {
+  /**
+   * 피부 작용 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+}
+export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
+export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type SkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
 export type SkinTypeResponse = {
   code: SkinType;
@@ -197,17 +222,6 @@ export type ExcludeGroupResponse = {
   name: string;
   contains: boolean;
 }
-export type FormulationRoleResponse = {
-  /**
-   * 배합 목적 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 배합 목적 이름 (CosIng Function)
-   */
-  name: string;
-}
 export type IngredientCautionResponse = {
   /**
    * 이 성분이 속한 주의 성분 기준의 코드
@@ -242,17 +256,6 @@ export type ProductVariantResponse = {
   status: string;
 }
 export type ProductPartSummaryResponse = { id: number, name: (string | null), cautionCount: number }
-export type SkinEffectResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-}
 export type ProductIngredientResponse = {
   id: number;
   koreanName: string;
@@ -773,6 +776,46 @@ export type delete_Unsave = {
 
     }
 /**
+ * 고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.
+ */
+export type post_AddIngredients = {
+      method: "POST",
+      path: "/api/users/me/skin-filter/ingredients",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.SkinFilterIngredientsRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 고른 성분을 뺀다. 필터에 없는 성분이어도 성공한다.
+ */
+export type delete_RemoveIngredients = {
+      method: "DELETE",
+      path: "/api/users/me/skin-filter/ingredients",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { ingredientIds: Array<number> },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제출한 검색어를 인기 검색어 집계에 더한다. 지금 상품이 검색되지 않는 검색어는 세지 않는다.
  */
 export type post_Record = {
@@ -1038,6 +1081,22 @@ export type patch_ChangeStatus_1 = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 나만의 필터에 담은 성분을 최근 추가순으로 조회한다.
+ */
+export type get_FindSkinFilter = {
+      method: "GET",
+      path: "/api/users/me/skin-filter",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SkinFilterResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1775,10 +1834,12 @@ export type post_AdminLogout = {
          },
 delete: {
            "/api/members/me/saved-products/{productId}": Endpoints.delete_Unsave,
+"/api/users/me/skin-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/members/me": Endpoints.delete_Withdraw
          },
 post: {
-           "/api/search-keywords": Endpoints.post_Record,
+           "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
+"/api/search-keywords": Endpoints.post_Record,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
 "/api/products/registration-requests": Endpoints.post_Submit,
@@ -1798,7 +1859,8 @@ patch: {
 "/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          },
 get: {
-           "/api/skin-types": Endpoints.get_FindSkinTypes,
+           "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
+"/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,
