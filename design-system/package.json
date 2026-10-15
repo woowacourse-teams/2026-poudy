@@ -18,7 +18,9 @@
     "./radio-group": "./src/radio-group.tsx",
     "./checkbox-group": "./src/checkbox-group.tsx",
     "./range-slider": "./src/range-slider.tsx",
-    "./slider": "./src/slider.tsx"
+    "./slider": "./src/slider.tsx",
+    "./filter-chip": "./src/filter-chip.tsx",
+    "./toggle-chip": "./src/toggle-chip.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
