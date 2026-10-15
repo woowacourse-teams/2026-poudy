@@ -8,7 +8,7 @@ import { ProviderBadge } from "./ProviderIcon";
 
 import { TopBar } from "@/components/ui/TopBar";
 import { findWithdrawnAccount, requestRestore } from "@/lib/api/member";
-import { monthDay } from "@/lib/domain/withdrawn-account";
+import { formatDate } from "@/lib/domain/format";
 
 type RestoreState = "idle" | "sending" | "sent" | "failed";
 
@@ -25,8 +25,8 @@ function Deadline({ account }: { readonly account: WithdrawnAccountResponse | nu
 
   return (
     <>
-      {monthDay(account.withdrawnAt)}에 탈퇴했어요. {monthDay(account.restorableUntil)}까지 복구를 요청하면 확인 후 전에
-      쓰던 그대로 이어서 쓸 수 있어요.
+      {formatDate(account.withdrawnAt)}에 탈퇴했어요. {formatDate(account.restorableUntil)}까지 복구를 요청하면 확인 후
+      전에 쓰던 그대로 이어서 쓸 수 있어요.
     </>
   );
 }

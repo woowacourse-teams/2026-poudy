@@ -18,7 +18,7 @@ describe("로그인 결과 안내", () => {
   it("탈퇴한 계정이면 탈퇴한 날과 복구를 요청할 수 있는 날을 한국 날짜로 알려 준다", async () => {
     render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />);
 
-    expect(await screen.findByText(/10월 5일에 탈퇴했어요\. 11월 4일까지 복구를 요청하면/)).toBeInTheDocument();
+    expect(await screen.findByText(/2026\.10\.05에 탈퇴했어요\. 2026\.11\.04까지 복구를 요청하면/)).toBeInTheDocument();
     expect(screen.getByText("member@example.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "계정 되살리기" })).toBeEnabled();
   });
