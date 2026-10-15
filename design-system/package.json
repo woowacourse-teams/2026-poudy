@@ -6,7 +6,9 @@
     "./theme.css": "./src/index.css",
     "./lint": "./lint/index.mjs",
     "./cn": "./src/cn.ts",
-    "./use-pressable": "./src/use-pressable.ts"
+    "./use-pressable": "./src/use-pressable.ts",
+    "./button": "./src/button.tsx",
+    "./icon-button": "./src/icon-button.tsx"
   },
   "scripts": {
     "tokens": "node scripts/build-tokens.mjs",
