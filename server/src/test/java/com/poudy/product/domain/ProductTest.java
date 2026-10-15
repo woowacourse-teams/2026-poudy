@@ -117,6 +117,29 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("모든 구성품의 성분을 구성품 순서대로 중복 없이 합친다")
+    void combinesIngredientsOfAllParts() {
+        Ingredient shared = ingredient(1L, "SHARED");
+        Ingredient onlySecond = ingredient(2L, "ONLY_SECOND");
+        Product product = new Product(
+            1L,
+            "제품",
+            brand,
+            category,
+            List.of(
+                new ProductPart(1L, "본품", new Ingredients(List.of(shared))),
+                new ProductPart(2L, "리필", new Ingredients(List.of(onlySecond, shared)))
+            ),
+            "image",
+            variants,
+            sensory(1, 1),
+            updatedAt
+        );
+
+        assertThat(product.ingredients()).containsExactly(shared, onlySecond);
+    }
+
+    @Test
     @DisplayName("감각 추론 결과가 없으면 만들 수 없다")
     void rejectsMissingSensory() {
         assertThatThrownBy(
