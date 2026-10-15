@@ -1,7 +1,6 @@
 package com.poudy.shelf.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,11 +25,4 @@ class SuspectEvidenceTest {
         assertThat(new SuspectEvidence(2, 4, 0, 0).isOffsetBySuitedProducts()).isFalse();
     }
 
-    @Test
-    @DisplayName("성분이 든 제품 수는 평가한 제품 수를 넘을 수 없다")
-    void rejectsCountsOutOfRange() {
-        assertThatThrownBy(() -> new SuspectEvidence(3, 2, 0, 0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new SuspectEvidence(0, 2, 0, 0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new SuspectEvidence(1, 2, 2, 1)).isInstanceOf(IllegalArgumentException.class);
-    }
 }

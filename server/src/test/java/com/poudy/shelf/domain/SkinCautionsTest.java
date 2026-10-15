@@ -13,19 +13,22 @@ class SkinCautionsTest {
     @Test
     @DisplayName("피부 타입마다 주의 종류를 고르고 복합성은 건성과 지성 주의를 함께 고른다")
     void choosesCautionsBySkinType() {
-        assertThat(SkinCautions.of(SkinType.DRY, false).values()).containsExactly(SkinCaution.DRY_SKIN);
-        assertThat(SkinCautions.of(SkinType.OILY, false).values()).containsExactly(SkinCaution.OILY_SKIN);
-        assertThat(SkinCautions.of(SkinType.COMBINATION, false).values())
-            .containsExactlyInAnyOrder(SkinCaution.DRY_SKIN, SkinCaution.OILY_SKIN);
-        assertThat(SkinCautions.of(null, null).values()).isEmpty();
+        assertThat(SkinCautions.of(SkinType.DRY, false).ingredientIdsWith(List.of()))
+            .contains(3663L, 2365L).doesNotContain(317L, 527L);
+        assertThat(SkinCautions.of(SkinType.OILY, false).ingredientIdsWith(List.of()))
+            .contains(317L).doesNotContain(3663L, 527L);
+        assertThat(SkinCautions.of(SkinType.COMBINATION, false).ingredientIdsWith(List.of()))
+            .contains(3663L, 317L).doesNotContain(527L);
+        assertThat(SkinCautions.of(null, null).ingredientIdsWith(List.of())).isEmpty();
     }
 
     @Test
     @DisplayName("민감성은 피부 타입과 따로 더한다")
     void addsSensitiveSkinIndependently() {
-        assertThat(SkinCautions.of(SkinType.DRY, true).values())
-            .containsExactlyInAnyOrder(SkinCaution.DRY_SKIN, SkinCaution.SENSITIVE_SKIN);
-        assertThat(SkinCautions.of(null, true).values()).containsExactly(SkinCaution.SENSITIVE_SKIN);
+        assertThat(SkinCautions.of(SkinType.DRY, true).ingredientIdsWith(List.of()))
+            .contains(3663L, 527L).doesNotContain(317L);
+        assertThat(SkinCautions.of(null, true).ingredientIdsWith(List.of()))
+            .contains(527L).doesNotContain(3663L, 317L);
     }
 
     @Test
