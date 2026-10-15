@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { BrandProductsEmpty } from "./empty";
+
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
@@ -161,6 +163,7 @@ async function BrandProducts({
         stickyChips="brand"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
+        empty={<BrandProductsEmpty />}
       />
     </>
   );
