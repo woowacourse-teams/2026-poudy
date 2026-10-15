@@ -18,7 +18,8 @@ const TONE = {
 export type SliderProps = {
   /** 접근 가능한 이름. 예: '수분감' */
   readonly label: string;
-  readonly value: number;
+  /** 지금 값. null 이면 아직 고르지 않은 상태로, 손잡이와 채움 없이 '선택 전'을 적는다. */
+  readonly value: number | null;
   readonly onValueChange: (value: number) => void;
   readonly min?: number;
   readonly max?: number;
@@ -37,12 +38,19 @@ export type SliderProps = {
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high);
 const format = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 
+/** 값을 고르기 전에 적는 말. 화면과 보조 기술이 같은 말을 쓴다. */
+const EMPTY_TEXT = "선택 전";
+
 /**
  * 한 값 슬라이더(명세 APP · 유수분 평가 슬라이더, 2026-10-08 회의). 기본은 0~3 을 0.5 단위 7단계로 고른다.
  *
  * 오른쪽 위에 지금 값을 적고, 트랙 아래에 숫자와 양 끝 설명을 둔다. 탭·끌기·키보드(←→ 한 단위, Home/End 끝)가 같은 값을
  * 만든다. 끄는 동안 손잡이는 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙는다.
  * 세로 스크롤과 확대는 브라우저에 맡긴다(touch-action: pan-y pinch-zoom, STATE S09).
+ *
+ * 값이 null 이면 고르기 전이다(명세 S52i). 손잡이와 채움을 그리지 않고 값 자리에 '선택 전'을 적는다. 트랙을 누르거나
+ * 끌면 그 자리의 값이 되고, 키보드는 min 에서 출발한 것처럼 움직인다(→ 는 min + step, ← 와 Home 은 min, End 는 max).
+ * 그동안 포커스는 트랙 전체가 받아 링도 트랙을 따라 그린다.
  */
 export function Slider({
   label,
@@ -68,13 +76,16 @@ export function Slider({
   const markRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const dragging = useRef<number | null>(null);
 
-  const draw = useCallback((ratio: number) => {
-    if (fillRef.current) fillRef.current.style.width = `${ratio * 100}%`;
-    if (handleRef.current) handleRef.current.style.left = `${ratio * 100}%`;
+  const draw = useCallback((ratio: number | null) => {
+    if (fillRef.current) fillRef.current.style.width = ratio === null ? "0%" : `${ratio * 100}%`;
+    // 고르기 전에는 포커스 받는 자리가 트랙 전체(inset-0)라 위치를 비운다.
+    if (handleRef.current) handleRef.current.style.left = ratio === null ? "" : `${ratio * 100}%`;
   }, []);
 
+  const empty = value === null;
+
   useLayoutEffect(() => {
-    draw(ratioOf(value));
+    draw(value === null ? null : ratioOf(value));
   }, [draw, ratioOf, value]);
 
   useLayoutEffect(() => {
@@ -114,15 +125,16 @@ export function Slider({
   const release = (event: PointerEvent<HTMLDivElement>) => {
     if (dragging.current !== event.pointerId) return;
     dragging.current = null;
-    draw(ratioOf(value));
+    draw(value === null ? null : ratioOf(value));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const current = value ?? min;
     const next =
       event.key === "ArrowLeft" || event.key === "ArrowDown"
-        ? value - step
+        ? current - step
         : event.key === "ArrowRight" || event.key === "ArrowUp"
-          ? value + step
+          ? current + step
           : event.key === "Home"
             ? min
             : event.key === "End"
@@ -135,8 +147,13 @@ export function Slider({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
+      {/* 값 줄의 높이는 늘 text-title 한 줄이다. '선택 전'은 그 안에 작은 글로 적어, 값을 골라도 트랙이 밀리지 않는다. */}
       <p aria-hidden="true" className={cn("text-right text-title font-bold", TONE[tone].text)}>
-        {format(value)}
+        {value === null ? (
+          <span className="text-caption font-medium text-text-muted">{EMPTY_TEXT}</span>
+        ) : (
+          format(value)
+        )}
       </p>
 
       {/* 손잡이 반지름(12)만큼 양옆을 비워, 양 끝 값에서도 손잡이가 트랙 밖으로 나가지 않는다. */}
@@ -167,13 +184,25 @@ export function Slider({
             aria-label={label}
             aria-valuemin={min}
             aria-valuemax={max}
-            aria-valuenow={value}
-            aria-valuetext={format(value)}
+            aria-valuenow={value ?? undefined}
+            aria-valuetext={value === null ? EMPTY_TEXT : format(value)}
             onKeyDown={onKeyDown}
-            /* 누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
-            className="absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
+            /*
+              누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
+              고르기 전에는 손잡이가 없으므로 트랙 전체가 포커스를 받고 링도 트랙에 그린다.
+            */
+            className={
+              empty
+                ? "absolute inset-0 rounded-full"
+                : "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
+            }
           >
-            <span data-focus-ring="" className={cn("size-6 rounded-full border-2 bg-background", TONE[tone].outline)} />
+            {empty ? null : (
+              <span
+                data-focus-ring=""
+                className={cn("size-6 rounded-full border-2 bg-background", TONE[tone].outline)}
+              />
+            )}
           </div>
         </div>
 
