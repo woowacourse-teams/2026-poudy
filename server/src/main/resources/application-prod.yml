@@ -34,7 +34,7 @@ poudy:
       enabled: true
     retention:
       enabled: true
-  member:
+  user:
     retention:
       enabled: true
 

@@ -8,12 +8,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class SecurityConfigTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("카카오 로그인은 /api 아래 콜백 주소로 이메일 동의를 요청한다")
@@ -74,7 +74,7 @@ class SecurityConfigTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @ValueSource(strings = {"/api/members/me", "/api/users/me/shelf/products", "/api/admin/me", "/api/auth/withdrawn"})
+    @ValueSource(strings = {"/api/users/me", "/api/users/me/shelf/products", "/api/admin/me", "/api/auth/withdrawn"})
     @DisplayName("회원·관리자·로그인 API 응답에는 캐시 금지 헤더를 붙인다")
     void forbidsCachingPrivateResponses(String path) throws Exception {
         mockMvc.perform(get(path))
@@ -103,8 +103,8 @@ class SecurityConfigTest {
 
         mockMvc
             .perform(
-                post("/api/members/logout").session(session)
-                    .with(signedInMember())
+                post("/api/users/logout").session(session)
+                    .with(signedInUser())
             )
             .andExpect(status().isNoContent());
 
@@ -114,7 +114,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("로그인하지 않았으면 회원·관리자 로그아웃을 401로 거절한다")
     void rejectsLogoutWithoutSession() throws Exception {
-        mockMvc.perform(post("/api/members/logout"))
+        mockMvc.perform(post("/api/users/logout"))
             .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/admin/logout"))
             .andExpect(status().isUnauthorized());
@@ -124,23 +124,23 @@ class SecurityConfigTest {
     @DisplayName("다른 역할의 로그아웃으로는 세션을 끝내지 않고 403으로 거절한다")
     void keepsSessionOnOtherRoleLogout() throws Exception {
         MockHttpSession adminSession = new MockHttpSession();
-        MockHttpSession memberSession = new MockHttpSession();
+        MockHttpSession userSession = new MockHttpSession();
 
         mockMvc.perform(
-            post("/api/members/logout").session(adminSession)
+            post("/api/users/logout").session(adminSession)
                 .with(authentication(new LoginAdmin("admin").toAuthentication()))
         )
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN"));
         mockMvc.perform(
-            post("/api/admin/logout").session(memberSession)
-                .with(signedInMember())
+            post("/api/admin/logout").session(userSession)
+                .with(signedInUser())
         )
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value("FORBIDDEN"));
 
         assertThat(adminSession.isInvalid()).isFalse();
-        assertThat(memberSession.isInvalid()).isFalse();
+        assertThat(userSession.isInvalid()).isFalse();
     }
 
     @Test
@@ -149,7 +149,7 @@ class SecurityConfigTest {
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(
-            get("/api/members/logout").session(session).with(signedInMember())
+            get("/api/users/logout").session(session).with(signedInUser())
         )
             .andExpect(status().isNotFound());
 
@@ -202,11 +202,11 @@ class SecurityConfigTest {
         return URLDecoder.decode(encodedState, StandardCharsets.UTF_8);
     }
 
-    private RequestPostProcessor signedInMember() {
-        long memberId = memberRepository.save(
-            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "security", "security@example.com", true))
+    private RequestPostProcessor signedInUser() {
+        long userId = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "security", "security@example.com", true))
         ).id();
-        return authentication(new LoginMember(memberId).toAuthentication());
+        return authentication(new LoginMember(userId).toAuthentication());
     }
 
     private String redirectOf(String path) throws Exception {

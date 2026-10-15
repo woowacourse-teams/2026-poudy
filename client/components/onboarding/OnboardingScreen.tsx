@@ -13,7 +13,9 @@ import {
   type Gender,
   GENDERS,
   SKIN_TYPES,
-  type SkinType,
+  type SkinChoice,
+  skinChoiceOf,
+  skinProfileOf,
 } from "@/lib/domain/member-profile";
 import { takeLoginReturn } from "@/lib/storage/login-return";
 
@@ -67,7 +69,7 @@ const startLabel = (answered: boolean): string => {
 export function OnboardingScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
-  const [skinType, setSkinType] = useState<SkinType | null>(null);
+  const [skinType, setSkinType] = useState<SkinChoice | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
@@ -80,7 +82,7 @@ export function OnboardingScreen() {
       .then((member) => {
         setGender(member.gender);
         setAgeRange(member.ageRange);
-        setSkinType(member.skinType);
+        setSkinType(skinChoiceOf(member));
       })
       .catch((error: unknown) => {
         if (isSignedOut(error)) router.replace("/login");
@@ -94,7 +96,7 @@ export function OnboardingScreen() {
 
     setSaving(true);
     setFailed(false);
-    updateMyProfile({ gender, ageRange, skinType })
+    updateMyProfile({ gender, ageRange, ...skinProfileOf(skinType) })
       .then(() => router.replace(takeLoginReturn()))
       .catch((error: unknown) => {
         if (isSignedOut(error)) {

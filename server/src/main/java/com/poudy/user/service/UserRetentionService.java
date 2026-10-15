@@ -1,0 +1,44 @@
+package com.poudy.user.service;
+
+import com.poudy.user.repository.UserRepository;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+@Service
+@ConditionalOnProperty(name = "poudy.user.retention.enabled", havingValue = "true")
+public class UserRetentionService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserRetentionService.class);
+
+    private final UserRepository userRepository;
+    private final Clock clock;
+    private final Duration maxAge;
+
+    public UserRetentionService(
+        UserRepository userRepository,
+        Clock clock,
+        @Value("${poudy.user.retention.max-age:P30D}") Duration maxAge
+    ) {
+        if (maxAge.isNegative() || maxAge.isZero()) {
+            throw new IllegalArgumentException("탈퇴 회원 보관 기간은 0보다 길어야 합니다.");
+        }
+        this.userRepository = userRepository;
+        this.clock = clock;
+        this.maxAge = maxAge;
+    }
+
+    @Scheduled(cron = "${poudy.user.retention.cron:0 40 3 * * *}", zone = "Asia/Seoul")
+    public void purgeExpired() {
+        int deleted = userRepository.deleteWithdrawnBefore(OffsetDateTime.now(clock).minus(maxAge));
+        if (deleted > 0) {
+            log.info("보관 기간이 지난 탈퇴 회원을 삭제했습니다. deleted={}", deleted);
+        }
+    }
+}

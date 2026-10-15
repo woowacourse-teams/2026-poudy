@@ -9,7 +9,7 @@ public final class ProductSensoryTestFixture {
     private ProductSensoryTestFixture() {
     }
 
-    public static ProductSensory sensory(int moistureLevel, int oilLevel) {
+    public static ProductSensory sensory(double moistureLevel, double oilLevel) {
         return new ProductSensory(new MoistureLevel(moistureLevel), new OilLevel(oilLevel));
     }
 }

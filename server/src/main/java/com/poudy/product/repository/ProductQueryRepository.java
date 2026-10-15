@@ -15,6 +15,8 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.ViewPeriod;
+import com.poudy.product.domain.sensory.MoistureLevel;
+import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
@@ -49,8 +51,11 @@ public class ProductQueryRepository {
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
                     where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
             from product p %s join category c on c.id = p.category_id
-            where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
-              and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
+            where (not :sensitiveSkin or p.is_sensitive_skin)
+              and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
+                  where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
+              and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
+                  where p.oil_level >= level - 0.25 and p.oil_level < level + 0.25))
               %s
               and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
                   where not exists (select 1 from product_component pc
@@ -228,7 +233,8 @@ public class ProductQueryRepository {
         }
         Map<Long, ProductCard> cards = jdbc.query(
             """
-                select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level, p.updated_at,
+                select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level,
+                    p.is_sensitive_skin, p.updated_at,
                     b.korean_name, b.english_name, b.image_url as brand_image,
                     v.price, v.volume_value, v.volume_unit
                 from product p join brand b on b.id = p.brand_id
@@ -250,8 +256,9 @@ public class ProductQueryRepository {
                 rs.getLong("price"),
                 rs.getBigDecimal("volume_value"),
                 rs.getString("volume_unit"),
-                rs.getInt("moisture_level"),
-                rs.getInt("oil_level"),
+                new MoistureLevel(rs.getDouble("moisture_level")).value(),
+                new OilLevel(rs.getDouble("oil_level")).value(),
+                rs.getBoolean("is_sensitive_skin"),
                 rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             )
         ).stream().collect(toMap(ProductCard::id, card -> card));
@@ -293,13 +300,14 @@ public class ProductQueryRepository {
         return new MapSqlParameterSource("keyword", query.keyword())
             .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
-            .addValue("moisture", array("integer", query.moistureLevels()))
-            .addValue("oil", array("integer", query.oilLevels()))
+            .addValue("moisture", array("float8", query.moistureLevels()))
+            .addValue("oil", array("float8", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name());
+            .addValue("skin", query.skinType() == null ? null : query.skinType().name())
+            .addValue("sensitiveSkin", query.sensitiveSkin());
     }
 
     public boolean hasConflictingIngredients(ProductQuery query) {

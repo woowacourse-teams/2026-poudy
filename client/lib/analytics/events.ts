@@ -5,7 +5,7 @@
  * 자세한 배경은 docs/exec-plans/analytics-events.md 를 본다.
  */
 
-import type { SkinType } from "@poudy/api/api.zod";
+import type { SkinChoice } from "@/lib/domain/filter";
 
 export type PageName =
   | "home"
@@ -257,7 +257,7 @@ export type EventMap = {
    */
   curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
-  skin_type_selected: { skin_type: SkinType } & DiscoveryProperties;
+  skin_type_selected: { skin_type: SkinChoice } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
   ranking_category_changed: { category_id?: number };
   /** 홈 인기 제품에서 제품을 눌렀을 때. 카테고리 변경 여부는 속성으로 나눈다. */

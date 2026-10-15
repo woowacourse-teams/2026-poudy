@@ -61,7 +61,8 @@ class ErdCloudSchemaTest {
                 "moisture_level",
                 "oil_level",
                 "updated_at",
-                "created_at"
+                "created_at",
+                "is_sensitive_skin"
             )
         ),
         entry("product_component", List.of("id", "product_id", "display_order", "name", "created_at", "updated_at")),
@@ -112,7 +113,7 @@ class ErdCloudSchemaTest {
         entry("search_keyword_bucket", List.of("bucket_start", "keyword_key", "hit_count", "created_at", "updated_at")),
         entry("search_keyword_expression", List.of("expression_key", "keyword_id", "created_at", "updated_at")),
         entry(
-            "member",
+            "user",
             List.of(
                 "id",
                 "oauth_provider",
@@ -124,10 +125,11 @@ class ErdCloudSchemaTest {
                 "created_at",
                 "updated_at",
                 "deleted_at",
-                "restore_requested_at"
+                "restore_requested_at",
+                "is_sensitive_skin"
             )
         ),
-        entry("member_saved_product", List.of("member_id", "product_id", "created_at", "updated_at")),
+        entry("user_wishlist_product", List.of("user_id", "product_id", "created_at", "updated_at")),
         entry(
             "user_shelf_product",
             List.of(
@@ -158,8 +160,8 @@ class ErdCloudSchemaTest {
         entry("ingredient_alias", List.of("id")),
         entry("ingredient_source", List.of("id")),
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
-        entry("member", List.of("id")),
-        entry("member_saved_product", List.of("member_id", "product_id")),
+        entry("user", List.of("id")),
+        entry("user_wishlist_product", List.of("user_id", "product_id")),
         entry("user_shelf_product", List.of("user_id", "product_id")),
         entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id")),
         entry("product", List.of("id")),

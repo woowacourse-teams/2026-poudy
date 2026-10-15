@@ -8,12 +8,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.Member;
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
+import com.poudy.user.domain.User;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,17 +40,17 @@ class SkinFilterControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private Member member;
+    private User user;
 
     @BeforeEach
     void signUp() {
-        member = memberRepository.save(
-            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true))
+        user = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
         );
     }
 
@@ -122,12 +122,12 @@ class SkinFilterControllerTest {
 
     @Test
     @DisplayName("회원 행을 지우면 나만의 필터도 함께 지운다")
-    void deletesFilterWithMember() throws Exception {
+    void deletesFilterWithUser() throws Exception {
         add("""
             {"ingredientIds": [9]}
             """).andExpect(status().isNoContent());
 
-        jdbcTemplate.update("delete from member where id = ?", member.id());
+        jdbcTemplate.update("delete from \"user\" where id = ?", user.id());
 
         assertThat(filterCount()).isZero();
     }
@@ -139,14 +139,14 @@ class SkinFilterControllerTest {
     }
 
     private RequestPostProcessor signedIn() {
-        return authentication(new LoginMember(member.id()).toAuthentication());
+        return authentication(new LoginMember(user.id()).toAuthentication());
     }
 
     private Integer filterCount() {
         return jdbcTemplate.queryForObject(
             "select count(*) from user_skin_filter_ingredient where user_id = ?",
             Integer.class,
-            member.id()
+            user.id()
         );
     }
 }

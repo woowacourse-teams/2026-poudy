@@ -20,22 +20,22 @@ public class SkinFilterService {
         this.ingredientRepository = ingredientRepository;
     }
 
-    public Ingredients findIngredients(long memberId) {
-        List<Long> ingredientIds = skinFilterRepository.findIngredientIds(memberId);
+    public Ingredients findIngredients(long userId) {
+        List<Long> ingredientIds = skinFilterRepository.findIngredientIds(userId);
         return ingredientRepository.findInOrder(ingredientIds);
     }
 
     @Transactional
-    public void add(long memberId, List<Long> ingredientIds) {
+    public void add(long userId, List<Long> ingredientIds) {
         Ingredients ingredients = ingredientRepository.findInOrder(ingredientIds);
         if (!ingredients.containsAll(ingredientIds)) {
             throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
         }
-        skinFilterRepository.add(memberId, ingredientIds);
+        skinFilterRepository.add(userId, ingredientIds);
     }
 
     @Transactional
-    public void remove(long memberId, List<Long> ingredientIds) {
-        skinFilterRepository.remove(memberId, ingredientIds);
+    public void remove(long userId, List<Long> ingredientIds) {
+        skinFilterRepository.remove(userId, ingredientIds);
     }
 }

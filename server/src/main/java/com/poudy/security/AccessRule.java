@@ -14,7 +14,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 public enum AccessRule {
-    MEMBER(List.of("/api/members/**", "/api/users/**"), Role.MEMBER, "/api/members/logout"),
+    USER(List.of("/api/users/**"), Role.MEMBER, "/api/users/logout"),
     ADMIN(List.of("/api/admin/**"), Role.ADMIN, "/api/admin/logout", "/api/admin/login");
 
     private final List<String> pathPatterns;

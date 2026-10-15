@@ -25,13 +25,13 @@ class OAuthProviderTest {
                 "id",
                 4_321_987_654L,
                 "kakao_account",
-                Map.of("email", "Member@Kakao.com", "is_email_valid", true, "is_email_verified", true)
+                Map.of("email", "User@Kakao.com", "is_email_valid", true, "is_email_verified", true)
             )
         );
 
         assertThat(account.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(account.providerId()).isEqualTo("4321987654");
-        assertThat(account.verifiedEmail()).isEqualTo("member@kakao.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@kakao.com");
     }
 
     @Test
@@ -42,7 +42,7 @@ class OAuthProviderTest {
                 "id",
                 1L,
                 "kakao_account",
-                Map.of("email", "member@kakao.com", "is_email_valid", false, "is_email_verified", true)
+                Map.of("email", "user@kakao.com", "is_email_valid", false, "is_email_verified", true)
             )
         );
 
@@ -68,19 +68,19 @@ class OAuthProviderTest {
     @DisplayName("구글 sub와 인증된 이메일을 읽는다")
     void readsGoogleAccount() {
         OAuthAccount account = OAuthProvider.GOOGLE.parseAccount(
-            Map.of("sub", "1098765", "email", "member@gmail.com", "email_verified", true)
+            Map.of("sub", "1098765", "email", "user@gmail.com", "email_verified", true)
         );
 
         assertThat(account.provider()).isEqualTo(OAuthProvider.GOOGLE);
         assertThat(account.providerId()).isEqualTo("1098765");
-        assertThat(account.verifiedEmail()).isEqualTo("member@gmail.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@gmail.com");
     }
 
     @Test
     @DisplayName("구글 이메일이 인증되지 않았으면 인증된 이메일로 보지 않는다")
     void rejectsUnverifiedGoogleEmail() {
         OAuthAccount account = OAuthProvider.GOOGLE.parseAccount(
-            Map.of("sub", "1098765", "email", "member@gmail.com", "email_verified", false)
+            Map.of("sub", "1098765", "email", "user@gmail.com", "email_verified", false)
         );
 
         assertThatThrownBy(account::verifiedEmail).isInstanceOf(UnverifiedOAuthEmailException.class);

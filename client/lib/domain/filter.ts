@@ -1,6 +1,6 @@
 import { ExcludeCode, get_FindProducts, type ProductSort, SkinType } from "@poudy/api/api.zod";
 
-import { firstOf, keepIf } from "./optional";
+import { firstOf, keepIf, pick } from "./optional";
 
 import { constraintOf } from "@/lib/api/constraint";
 
@@ -18,12 +18,17 @@ export type Sort = (typeof SORTS)[number];
 export const isExcludeCode = (value: string): value is ExcludeCode => ExcludeCode.safeParse(value).success;
 
 /** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
-export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
+export const SENSITIVE = "SENSITIVE";
+export type SkinChoice = SkinType | typeof SENSITIVE;
+
+export const SKIN_TYPE_NAMES: Record<SkinChoice, string> = {
   DRY: "건성",
   OILY: "지성",
-  SENSITIVE: "민감성",
   COMBINATION: "복합성",
+  SENSITIVE: "민감성",
 };
+
+export const SENSITIVE_OPTION = { code: SENSITIVE, name: SKIN_TYPE_NAMES.SENSITIVE } as const;
 
 /** 기본값과 범위는 서버 계약에서 생성한 /api/products 쿼리 스키마가 정한다. */
 const PRODUCT_QUERY = get_FindProducts.parameters.query.unwrap().shape;
@@ -65,6 +70,7 @@ export const EMPTY_FILTER: Filter = {
   excludeCodes: [],
   includeGroupCodes: [],
   excludeGroupCodes: [],
+  sensitiveSkin: false,
   sort: DEFAULT_SORT,
   page: FIRST_PAGE,
   size: DEFAULT_SIZE,
@@ -113,6 +119,9 @@ const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort ==
 const readSkinType = (params: URLSearchParams): SkinType | undefined =>
   SkinType.options.find((skinType) => skinType === params.get("skinType"));
 
+const readSensitiveSkin = (params: URLSearchParams): boolean =>
+  params.get("sensitiveSkin") === "true" || params.get("skinType") === SENSITIVE;
+
 /** 서버 스키마의 범위를 벗어나면 기본값으로 되돌린다. */
 const readCount = (params: URLSearchParams, key: "page" | "size", fallback: number): number => {
   const result = PRODUCT_QUERY[key].safeParse(params.get(key) ?? undefined);
@@ -140,6 +149,7 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeCodes: readCodes(params),
     includeGroupCodes: readStrings(params, "includeGroupCodes"),
     excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
+    sensitiveSkin: readSensitiveSkin(params),
     sort: readSort(params),
     page: readCount(params, "page", FIRST_PAGE),
     size: readCount(params, "size", DEFAULT_SIZE),
@@ -166,6 +176,7 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("includeGroupCodes", filter.includeGroupCodes),
     ...listEntries("excludeGroupCodes", filter.excludeGroupCodes),
     ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
+    ...keepIf<Entry>(filter.sensitiveSkin, ["sensitiveSkin", "true"]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
@@ -183,7 +194,16 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.excludeCodes.length > 0 ||
   filter.includeGroupCodes.length > 0 ||
   filter.excludeGroupCodes.length > 0 ||
-  Boolean(filter.skinType);
+  Boolean(filter.skinType) ||
+  filter.sensitiveSkin;
+
+export const skinChoiceOf = (filter: Filter): SkinChoice | undefined =>
+  pick<SkinChoice | undefined>(filter.sensitiveSkin, SENSITIVE, filter.skinType);
+
+export const withSkinChoice = (choice: SkinChoice | undefined): Pick<Filter, "skinType" | "sensitiveSkin"> => {
+  if (choice === SENSITIVE) return { skinType: undefined, sensitiveSkin: true };
+  return { skinType: choice, sensitiveSkin: false };
+};
 
 /** 조건을 바꾸면 페이지를 처음으로 되돌린다. 2 페이지에서 조건을 바꿔 빈 목록이 나오는 것을 막는다. */
 export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter => ({

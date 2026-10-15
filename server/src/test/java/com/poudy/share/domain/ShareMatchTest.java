@@ -40,6 +40,7 @@ class ShareMatchTest {
             "",
             new ProductVariants(List.of(new ProductVariant(id, 10000L, new BigDecimal("100"), "ml", "active"))),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }

@@ -41,13 +41,13 @@ export const changeProductRequestStatus = (
   apiPatch(`/api/admin/product-requests/${requestId}/status`, AdminProductRequestResponse, { status });
 
 export const findRestoreRequests = (page: number): Promise<AdminRestoreRequestPageResponse> =>
-  apiGet("/api/admin/members/restore-requests", AdminRestoreRequestPageResponse, {
+  apiGet("/api/admin/users/restore-requests", AdminRestoreRequestPageResponse, {
     query: pageQuery(page),
     withSession: true,
   });
 
-export const restoreMember = (memberId: number): Promise<void> =>
-  apiPost(`/api/admin/members/${memberId}/restore`, undefined, { withSession: true });
+export const restoreMember = (userId: number): Promise<void> =>
+  apiPost(`/api/admin/users/${userId}/restore`, undefined, { withSession: true });
 
 export const isAdminSignedOut = (error: unknown): boolean =>
   error instanceof ApiError && (error.status === 401 || error.status === 403);

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { MemberResponse } from "@poudy/api/api.zod";
+import type { UserResponse } from "@poudy/api/api.zod";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -17,15 +17,16 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
-const member = (profile: Pick<MemberResponse, "gender" | "ageRange" | "skinType">): MemberResponse => ({
+const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">): UserResponse => ({
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
+  sensitiveSkin: null,
   ...profile,
 });
 
-const renderWith = async (profile: Pick<MemberResponse, "gender" | "ageRange" | "skinType">) => {
-  server.use(http.get("*/api/members/me", () => HttpResponse.json(member(profile))));
+const renderWith = async (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">) => {
+  server.use(http.get("*/api/users/me", () => HttpResponse.json(member(profile))));
   render(<OnboardingScreen />);
   const loaded = profile.gender ?? profile.ageRange ?? profile.skinType;
   if (loaded) {

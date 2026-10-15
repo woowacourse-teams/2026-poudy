@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 
 public record WithdrawnAccountResponse(
     @NotNull @Schema(example = "KAKAO") OAuthProvider provider,
-    @NotNull @Schema(example = "member@example.com") String email,
+    @NotNull @Schema(example = "user@example.com") String email,
     @NotNull @Schema(example = "2026-10-05T14:00:00+09:00") OffsetDateTime withdrawnAt,
     @NotNull @Schema(example = "2026-11-04T14:00:00+09:00") OffsetDateTime restorableUntil) {
 

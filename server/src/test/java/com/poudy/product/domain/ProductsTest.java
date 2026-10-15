@@ -82,6 +82,7 @@ class ProductsTest {
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }

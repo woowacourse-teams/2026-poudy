@@ -2,7 +2,7 @@ import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 
 import type { FilterChipItem } from "@/components/ui/FilterChipBar";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import type { Filter } from "@/lib/domain/filter";
+import { type Filter, skinChoiceOf } from "@/lib/domain/filter";
 
 /**
  * 성분 칩의 숫자. 빠른 필터는 성분을 묶어 둔 것이라 묶음 하나가 아니라 그 안의 성분 수로 센다.
@@ -36,5 +36,5 @@ export const chipsOf = (
     count: (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0),
   },
   // 피부 타입은 한 번에 하나만 걸 수 있어 숫자가 늘 1 이다. 세어 보여 주지 않는다.
-  { id: "skinType", label: "피부 타입", count: filter.skinType ? 1 : 0, showCount: false },
+  { id: "skinType", label: "피부 타입", count: skinChoiceOf(filter) ? 1 : 0, showCount: false },
 ];

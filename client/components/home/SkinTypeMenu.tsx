@@ -5,17 +5,23 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
+import { SENSITIVE, SENSITIVE_OPTION, type SkinChoice } from "@/lib/domain/filter";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
  * 타일 그림은 서버가 주지 않는다. `/api/skin-types` 는 코드와 이름만 내려 주므로
  * 그림은 코드에 맞춰 여기에서 고른다. 빠른 필터도 같은 방식을 쓴다.
  */
-const TILE_IMAGES: Record<SkinType, string> = {
+const TILE_IMAGES: Record<SkinChoice, string> = {
   DRY: "/images/skin-types/dry.svg",
   OILY: "/images/skin-types/oily.svg",
   SENSITIVE: "/images/skin-types/sensitive.svg",
   COMBINATION: "/images/skin-types/combination.svg",
+};
+
+const hrefOf = (code: SkinChoice): string => {
+  if (code === SENSITIVE) return "/products?sensitiveSkin=true&from=skin_type";
+  return `/products?skinType=${code}&from=skin_type`;
 };
 
 type SkinTypeMenuProps = {
@@ -40,7 +46,7 @@ export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
         나란히 서 있어 모서리만 다르면 한 세트로 읽히지 않는다.
       */}
       <ul className="flex items-stretch overflow-hidden rounded-xl border border-border">
-        {items.map(({ code, name }) => (
+        {[...items, SENSITIVE_OPTION].map(({ code, name }) => (
           /*
             칸은 고르게 나눈다. 이름의 길이가 달라도(`건성`·`민감성`) 칸이 들쭉날쭉하지
             않아야 한 줄로 읽힌다. 첫 칸을 뺀 나머지에만 왼쪽 선을 두어 양 끝에는
@@ -48,7 +54,7 @@ export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
           */
           <li key={code} className="flex-1 border-l border-divider first:border-l-0">
             <Link
-              href={`/products?skinType=${code}&from=skin_type`}
+              href={hrefOf(code)}
               onClick={() => track("skin_type_selected", { skin_type: code })}
               className="skin-type-segment flex items-center justify-center gap-1.5 py-3"
             >

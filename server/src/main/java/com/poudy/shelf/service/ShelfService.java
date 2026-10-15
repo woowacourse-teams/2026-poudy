@@ -41,45 +41,45 @@ public class ShelfService {
     }
 
     @Transactional(readOnly = true)
-    public Shelf findShelf(long memberId) {
-        List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(memberId);
+    public Shelf findShelf(long userId) {
+        List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(userId);
         List<Long> productIds = shelfProducts.stream()
             .map(ShelfProduct::productId)
             .toList();
         return Shelf.of(shelfProducts, productRepository.findAllById(productIds));
     }
 
-    public List<Long> findProductIds(long memberId) {
-        return shelfProductRepository.findProductIds(memberId);
+    public List<Long> findProductIds(long userId) {
+        return shelfProductRepository.findProductIds(userId);
     }
 
     @Transactional
-    public ShelfItem add(long memberId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+    public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
-        if (!shelfProductRepository.add(memberId, productId, usageStatus, rating)) {
+        if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
-        return shelfItemOf(memberId, product);
+        return shelfItemOf(userId, product);
     }
 
     @Transactional
-    public ShelfItem update(long memberId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
-        if (!shelfProductRepository.update(memberId, productId, usageStatus, rating)) {
+    public ShelfItem update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+        if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
             throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
-        return shelfItemOf(memberId, productRepository.findById(productId).orElseThrow());
+        return shelfItemOf(userId, productRepository.findById(productId).orElseThrow());
     }
 
     @Transactional
-    public void remove(long memberId, long productId) {
-        shelfProductRepository.delete(memberId, productId);
+    public void remove(long userId, long productId) {
+        shelfProductRepository.delete(userId, productId);
     }
 
     @Transactional(readOnly = true)
-    public IngredientAnalysis analyzeIngredients(long memberId) {
-        List<ShelfItem> badItems = findShelf(memberId).ratedBad();
-        List<Long> filterIngredientIds = skinFilterRepository.findIngredientIds(memberId);
+    public IngredientAnalysis analyzeIngredients(long userId) {
+        List<ShelfItem> badItems = findShelf(userId).ratedBad();
+        List<Long> filterIngredientIds = skinFilterRepository.findIngredientIds(userId);
         // TODO: 성분 분석 알고리즘은 아직 없다. 가장 최근에 안 맞았어요로 평가한 제품의 성분 앞부분을 임의로 돌려주고, 새로 생긴 성분은 짝수 번째로 둔다.
         List<AnalyzedIngredient> items = badItems.stream()
             .findFirst()
@@ -103,8 +103,8 @@ public class ShelfService {
             .toList();
     }
 
-    private ShelfItem shelfItemOf(long memberId, Product product) {
-        ShelfProduct shelfProduct = shelfProductRepository.find(memberId, product.id()).orElseThrow();
+    private ShelfItem shelfItemOf(long userId, Product product) {
+        ShelfProduct shelfProduct = shelfProductRepository.find(userId, product.id()).orElseThrow();
         return new ShelfItem(shelfProduct, product);
     }
 }

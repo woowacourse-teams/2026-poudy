@@ -12,7 +12,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import { FIRST_PAGE, type Filter, serializeFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, serializeFilter, skinChoiceOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
@@ -179,7 +179,7 @@ export function ProductRows({
     track("product_list_viewed", {
       source: listSource,
       result_count: total,
-      condition_count: countConditions(filter) + (filter.skinType ? 1 : 0),
+      condition_count: countConditions(filter) + (skinChoiceOf(filter) ? 1 : 0),
     });
   }, [filter, first, key, listSource, loaded, loading, page, requestedEntryPoint, searchMode, total]);
 

@@ -12,7 +12,7 @@ import {
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
-const SAVED_PATH = "*/api/members/me/saved-products";
+const SAVED_PATH = "*/api/users/me/wishlist";
 
 const unauthorized = () =>
   HttpResponse.json(
@@ -43,7 +43,7 @@ describe("저장한 제품", () => {
   });
 
   it("로그인하지 않았으면 로그아웃 상태로 둔다", async () => {
-    server.use(http.get(`${SAVED_PATH}/ids`, unauthorized));
+    server.use(http.get(`${SAVED_PATH}/product-ids`, unauthorized));
 
     await reloadSavedProducts();
 
@@ -51,7 +51,7 @@ describe("저장한 제품", () => {
   });
 
   it("관리자 세션이면 관리자 세션 상태로 둔다", async () => {
-    server.use(http.get(`${SAVED_PATH}/ids`, forbidden));
+    server.use(http.get(`${SAVED_PATH}/product-ids`, forbidden));
 
     await reloadSavedProducts();
 
@@ -59,7 +59,7 @@ describe("저장한 제품", () => {
   });
 
   it("저장 중 관리자 세션으로 거절되면 관리자 세션 상태로 바꾼다", async () => {
-    server.use(http.put(`${SAVED_PATH}/:productId`, forbidden));
+    server.use(http.put(`${SAVED_PATH}/products/:productId`, forbidden));
 
     await expect(saveProduct(2)).resolves.toBe("adminSession");
 
@@ -93,7 +93,7 @@ describe("저장한 제품", () => {
 
   it("같은 제품을 잇달아 저장하고 풀면 누른 차례대로 서버에 반영한다", async () => {
     server.use(
-      http.put(`${SAVED_PATH}/:productId`, async () => {
+      http.put(`${SAVED_PATH}/products/:productId`, async () => {
         await delay(50);
         setMockSavedProducts([2, 3, 1]);
         return new HttpResponse(null, { status: 204 });
@@ -109,7 +109,7 @@ describe("저장한 제품", () => {
   });
 
   it("저장이 실패하면 서버 목록으로 되돌린다", async () => {
-    server.use(http.put(`${SAVED_PATH}/:productId`, serverError));
+    server.use(http.put(`${SAVED_PATH}/products/:productId`, serverError));
 
     await expect(saveProduct(2)).resolves.toBe("failed");
 
@@ -124,7 +124,7 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/ids`, async () => {
+      http.get(`${SAVED_PATH}/product-ids`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
@@ -151,7 +151,7 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/ids`, async () => {
+      http.get(`${SAVED_PATH}/product-ids`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
@@ -176,7 +176,7 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/ids`, async () => {
+      http.get(`${SAVED_PATH}/product-ids`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
@@ -202,13 +202,13 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.put(`${SAVED_PATH}/2`, async () => {
+      http.put(`${SAVED_PATH}/products/2`, async () => {
         started.resolve();
         await release.promise;
         setMockSavedProducts([2, 3, 1]);
         return new HttpResponse(null, { status: 204 });
       }),
-      http.get(`${SAVED_PATH}/ids`, () => {
+      http.get(`${SAVED_PATH}/product-ids`, () => {
         reads++;
         return HttpResponse.json({ productIds: [2, 3, 1] });
       }),
@@ -226,7 +226,7 @@ describe("저장한 제품", () => {
   });
 
   it("세션이 끝났으면 로그아웃 상태로 바꾼다", async () => {
-    server.use(http.put(`${SAVED_PATH}/:productId`, unauthorized));
+    server.use(http.put(`${SAVED_PATH}/products/:productId`, unauthorized));
 
     await expect(saveProduct(2)).resolves.toBe("signedOut");
 
