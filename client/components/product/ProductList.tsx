@@ -1,7 +1,7 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRows } from "./ProductRows";
@@ -20,7 +20,6 @@ import { useHideOnScrollDown } from "@/lib/hooks/useHideOnScrollDown";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import type { InitialPage } from "@/lib/hooks/useProductPages";
-import { markExplored } from "@/lib/storage/service-guide";
 
 type ProductListProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
@@ -61,14 +60,6 @@ export function ProductList({
 }: ProductListProps) {
   const { filter: urlFilter } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
-
-  /*
-   * 조건으로 제품을 찾아봤다고 남긴다. 그때부터 홈 캐러셀에서 서비스 가이드를 뺀다.
-   * 브랜드관과 카테고리도 이 목록을 쓰지만, 그곳은 조건을 고르지 않고 둘러보는 자리라 세지 않는다.
-   */
-  useEffect(() => {
-    if (surface === "product_list") markExplored();
-  }, [surface]);
 
   // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
   const filter = useMemo(() => ({ ...urlFilter, ...fixedFilter }), [fixedFilter, urlFilter]);

@@ -3,16 +3,17 @@
 import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
-import { hasExplored } from "@/lib/storage/service-guide";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationSummaryResponse[];
+  /** 맨 앞에 서비스 가이드 장을 둘지. 홈은 늘 둔다. 큐레이션 동작만 따로 살필 때 끈다. */
+  readonly withGuide?: boolean;
 };
 
 /**
@@ -173,17 +174,6 @@ const FLICK_VELOCITY = 0.11;
  */
 const EDGE_PULL = 40;
 
-/* 탐색 기록은 다른 화면에서 남기므로 홈에 있는 동안 바뀌지 않는다. 그릴 때마다 읽는다. */
-const subscribeExplored = () => () => {};
-
-/*
- * 서버는 방문 기록을 모르므로 가이드를 넣고 그린다. 처음 온 사람이 첫 장으로 가이드를 봐야 하므로,
- * 이미 탐색한 사람에게 가이드가 잠깐 보였다 빠지는 쪽을 감수한다. 반대로 두면 처음 온 사람의
- * 첫 장이 큐레이션에서 가이드로 바뀌며 밀린다.
- */
-const showGuideOnServer = () => true;
-const showGuideOnClient = () => !hasExplored();
-
 /**
  * 디자인 S01 의 큐레이션 캐러셀.
  *
@@ -196,14 +186,14 @@ const showGuideOnClient = () => !hasExplored();
  *
  * 자리 이동은 스크롤로 한다. 손가락과 휠, 키보드가 모두 브라우저의 기본 동작을 쓴다.
  */
-export function CurationCarousel({ items }: CurationCarouselProps) {
+export function CurationCarousel({ items, withGuide = true }: CurationCarouselProps) {
   const sectionRef = useHomeSectionView("curation", 1);
   /*
-   * 처음 온 사람에게는 맨 앞에 서비스 가이드(디자인 S20c)를 한 장 더 둔다. 그 장이 있으면
-   * 큐레이션은 한 칸씩 뒤로 밀리므로, 칸 번호에서 큐레이션 번호를 얻을 때 이만큼 뺀다.
+   * 맨 앞에 서비스 가이드(디자인 S20c)를 한 장 더 둔다. 서비스를 막 연 때라 누구에게나 첫 장으로
+   * 보여 준다. 그 장이 있으면 큐레이션은 한 칸씩 뒤로 밀리므로, 칸 번호에서 큐레이션 번호를 얻을 때
+   * 이만큼 뺀다.
    */
-  const showGuide = useSyncExternalStore(subscribeExplored, showGuideOnClient, showGuideOnServer);
-  const offset = showGuide ? 1 : 0;
+  const offset = withGuide ? 1 : 0;
   const slideCount = items.length + offset;
   const trackRef = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
@@ -850,11 +840,10 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
            */
           className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
         >
-          {showGuide ? (
+          {withGuide ? (
             <li key="service-guide" className="curation-slide w-full shrink-0 snap-center">
               {/*
-                처음 온 사람에게 서비스 소개(/about)로 가는 길을 연다. 닫기 버튼은 두지 않는다.
-                조건으로 제품을 한 번 찾아보면 빠진다(`markExplored`).
+                서비스 소개(/about)로 가는 길을 연다. 닫기 버튼은 두지 않는다.
 
                 넘기기와 옆 칸 누르기는 큐레이션 카드와 똑같이 다룬다.
               */}
