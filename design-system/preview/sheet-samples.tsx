@@ -71,20 +71,16 @@ export function SheetSamples() {
             ))}
           </RadioGroup>
         </BottomSheetBody>
-        <BottomSheetFooter>
-          <Button variant="secondary" onClick={() => setNestedConfirm(true)} className="flex-1">
-            초기화
-          </Button>
-          <Button
-            onClick={() => {
+        <BottomSheetFooter
+          secondary={{ label: "초기화", onClick: () => setNestedConfirm(true) }}
+          primary={{
+            label: "제품 보기",
+            onClick: () => {
               setCategory(draft);
               setFilterOpen(false);
-            }}
-            className="flex-2"
-          >
-            제품 보기
-          </Button>
-        </BottomSheetFooter>
+            },
+          }}
+        />
       </BottomSheet>
 
       <ConfirmSheet
@@ -150,11 +146,13 @@ export function SheetSamples() {
           </p>
           <TextField label="메모" value={memo} onChange={setMemo} placeholder="입력해 주세요" />
         </BottomSheetBody>
-        <BottomSheetFooter>
-          <Button onClick={() => setFormOpen(false)} className="flex-1">
-            저장
-          </Button>
-        </BottomSheetFooter>
+        <BottomSheetFooter
+          primary={{
+            label: "저장",
+            onClick: () => setFormOpen(false),
+            disabledReason: memo.trim() ? undefined : "메모를 적으면 저장할 수 있어요.",
+          }}
+        />
       </BottomSheet>
     </Section>
   );
