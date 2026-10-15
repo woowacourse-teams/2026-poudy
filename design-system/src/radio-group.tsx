@@ -124,11 +124,14 @@ export type RadioGroupItemProps = {
   readonly disabled?: boolean;
 };
 
-/** 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06). */
+/**
+ * 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06).
+ * 누를 때 크기는 바꾸지 않는다. 누르는 순간 선택 모양이 바뀌므로, 크기까지 바뀌면 움찔해 보인다(STATE S07).
+ */
 const ITEM: Record<Variant, string> = {
   list: "fb-surface h-12 gap-2 rounded-md pr-3 pl-6 data-checked:bg-layer",
-  button: "choice-outline press-scale fb-surface justify-center gap-1 rounded-lg bg-background px-3",
-  card: "choice-outline press-scale fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
+  button: "choice-outline fb-surface justify-center gap-1 rounded-lg bg-background px-3",
+  card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
   "card-row": "choice-outline fb-surface h-18 gap-3 rounded-lg bg-background px-4",
 };
 
