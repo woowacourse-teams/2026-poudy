@@ -1,0 +1,226 @@
+"use client";
+
+import { createContext, useContext, useId } from "react";
+import type { ReactNode } from "react";
+
+import { cn } from "./cn";
+import { FieldFrame } from "./field-frame";
+import type { GroupLabelProps } from "./group-label";
+import { Glyph } from "./icons";
+import { usePressable } from "./use-pressable";
+
+type Variant = "list" | "button" | "card" | "card-row";
+
+type RadioGroupContextValue = {
+  readonly name: string;
+  readonly value: string | undefined;
+  readonly onValueChange: (value: string) => void;
+  readonly variant: Variant;
+  readonly size: "md" | "sm";
+  readonly disabled: boolean;
+};
+
+const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
+
+const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as const;
+
+/** 모양별 묶음 배치. 선택 버튼·카드는 한 줄에 여러 개를 나란히 둔다(S38, S40). 선택 행은 12 간격으로 쌓는다(S55a). */
+const LAYOUT: Record<Variant, string> = {
+  list: "flex flex-col",
+  button: "grid gap-2",
+  card: "grid gap-2",
+  "card-row": "flex flex-col gap-3",
+};
+
+export type RadioGroupProps = GroupLabelProps & {
+  readonly value: string | undefined;
+  readonly onValueChange: (value: string) => void;
+  /**
+   * 모양. 동작은 모두 같고(radiogroup / radio, 방향키로 포커스와 선택이 함께 이동) 보이는 모양만 다르다.
+   * - list: 라디오 목록 행. 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
+   * - button: 선택 버튼. 라벨만 가운데. 크기 md 52 · sm 44(가입 정보 S38, 문의 유형 S40)
+   * - card: 선택 카드. 그림 + 이름 + 설명, 고르면 오른쪽 위 체크(피부 타입)
+   * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
+   */
+  readonly variant: Variant;
+  /** button 모양의 높이. md 52 · sm 44 */
+  readonly size?: "md" | "sm";
+  /** button·card 모양에서 한 줄에 둘 개수. 같은 줄의 선택지는 폭을 나눠 쓴다. */
+  readonly columns?: 1 | 2 | 3 | 4;
+  readonly disabled?: boolean;
+  readonly children: ReactNode;
+  /** 묶음의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
+  readonly className?: string;
+};
+
+/**
+ * 하나만 고르는 선택지 묶음(STATE S06 '하나만 선택', A11Y D04).
+ *
+ * 선택지마다 네이티브 radio 를 시각적으로 숨기고 행·카드 전체를 누르는 영역으로 쓴다. 그래서 Tab 은 고른 선택지(없으면 첫
+ * 선택지)에 들어가고, 방향키는 포커스와 선택을 함께 옮긴다. 포커스 링은 행·카드 전체에 그린다(S11 .choice-row).
+ */
+export function RadioGroup({
+  label,
+  optional = false,
+  hint,
+  error,
+  value,
+  onValueChange,
+  variant,
+  size = "md",
+  columns = 2,
+  disabled = false,
+  children,
+  className,
+  ...aria
+}: RadioGroupProps) {
+  const name = useId();
+  const labelId = `${name}-label`;
+  const messageId = `${name}-message`;
+  const grid = variant === "button" || variant === "card" ? COLUMNS[columns] : undefined;
+
+  const group = (
+    <div
+      role="radiogroup"
+      aria-labelledby={label === undefined ? aria["aria-labelledby"] : labelId}
+      aria-label={label === undefined ? aria["aria-label"] : undefined}
+      aria-describedby={label === undefined ? undefined : messageId}
+      aria-required={label === undefined || optional ? undefined : true}
+      aria-invalid={error ? true : undefined}
+      className={cn(LAYOUT[variant], grid, label === undefined && className)}
+    >
+      <RadioGroupContext value={{ name, value, onValueChange, variant, size, disabled }}>{children}</RadioGroupContext>
+    </div>
+  );
+
+  if (label === undefined) return group;
+
+  return (
+    <FieldFrame
+      label={label}
+      labelId={labelId}
+      optional={optional}
+      messageId={messageId}
+      hint={hint}
+      error={error}
+      className={className}
+    >
+      {group}
+    </FieldFrame>
+  );
+}
+
+export type RadioGroupItemProps = {
+  readonly value: string;
+  /** 선택지 이름 */
+  readonly children: ReactNode;
+  /** 한 줄 설명. card·card-row 모양에서 이름 아래에 둔다. */
+  readonly description?: ReactNode;
+  /** 그림. card 는 28, card-row 는 32 칸에 맞춰 넣는다. 옆 글자가 뜻을 전하므로 alt 는 비운다. */
+  readonly image?: ReactNode;
+  readonly disabled?: boolean;
+};
+
+/** 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06). */
+const ITEM: Record<Variant, string> = {
+  list: "fb-surface h-12 gap-2 rounded-md pr-3 pl-6 data-checked:bg-layer",
+  button: "choice-outline press-scale fb-surface justify-center gap-1 rounded-lg bg-background px-3",
+  card: "choice-outline press-scale fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
+  "card-row": "choice-outline fb-surface h-18 gap-3 rounded-lg bg-background px-4",
+};
+
+export function RadioGroupItem({ value, children, description, image, disabled = false }: RadioGroupItemProps) {
+  const context = useContext(RadioGroupContext);
+  if (!context) throw new Error("RadioGroupItem 은 RadioGroup 안에 둔다.");
+
+  const { variant, size } = context;
+  const checked = context.value === value;
+  const blocked = disabled || context.disabled;
+  const { pressableProps } = usePressable({ disabled: blocked });
+  const state = { "data-checked": checked ? "" : undefined, "data-disabled": blocked ? "" : undefined };
+
+  return (
+    <label
+      {...pressableProps}
+      {...state}
+      className={cn(
+        "choice-row pressable flex cursor-pointer items-center select-none",
+        "data-disabled:cursor-not-allowed data-disabled:opacity-(--disabled-opacity)",
+        ITEM[variant],
+        variant === "button" && (size === "md" ? "h-13" : "h-11"),
+      )}
+    >
+      <input
+        type="radio"
+        name={context.name}
+        value={value}
+        checked={checked}
+        disabled={blocked}
+        onChange={() => context.onValueChange(value)}
+        className="sr-only"
+      />
+
+      {variant === "list" ? <RadioIndicator checked={checked} size="sm" /> : null}
+
+      {variant === "list" ? (
+        <span
+          className={cn(
+            "min-w-0 flex-1 text-title",
+            checked ? "font-semibold text-text-primary" : "font-medium text-text-body",
+          )}
+        >
+          {children}
+        </span>
+      ) : null}
+
+      {variant === "button" ? (
+        <span className={cn("text-title font-semibold", checked ? "text-text-primary" : "text-text-body")}>
+          {children}
+        </span>
+      ) : null}
+
+      {variant === "card" ? (
+        <>
+          <span className="flex items-center justify-between">
+            <span className="flex size-7 items-center justify-center [&>img]:size-full [&>img]:object-contain">
+              {image}
+            </span>
+            {checked ? <Glyph name="circle-check" size={20} className="text-text-primary" /> : null}
+          </span>
+          <span className={cn("text-title text-text-primary", checked ? "font-bold" : "font-semibold")}>
+            {children}
+          </span>
+          {description ? <span className="text-body-sm break-keep text-text-secondary">{description}</span> : null}
+        </>
+      ) : null}
+
+      {variant === "card-row" ? (
+        <>
+          {image ? (
+            <span className="flex size-8 shrink-0 items-center justify-center [&>img]:size-full [&>img]:object-contain">
+              {image}
+            </span>
+          ) : null}
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-title text-text-primary">{children}</span>
+            {description ? <span className="text-body-sm leading-snug text-text-secondary">{description}</span> : null}
+          </span>
+          <RadioIndicator checked={checked} size="md" />
+        </>
+      ) : null}
+    </label>
+  );
+}
+
+/** 라디오 표시(명세 APP · 라디오). 원 24 에 점 8, 목록 행에서는 원 18 에 점 6 이다. */
+function RadioIndicator({ checked, size }: { readonly checked: boolean; readonly size: "md" | "sm" }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-checked={checked ? "" : undefined}
+      className={cn("radio-indicator", size === "md" ? "size-6" : "size-4.5")}
+    >
+      {checked ? <span className={cn("rounded-full bg-background", size === "md" ? "size-2" : "size-1.5")} /> : null}
+    </span>
+  );
+}
