@@ -25,7 +25,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
-import { formatPrice, unitPrice } from "@/lib/domain/product-display";
+import { formatPrice, unitPrice } from "@/lib/domain/format";
 import { partTabId } from "@/lib/domain/product-parts";
 
 /** S24 제품 성분 상세. 문구와 구조는 design/v2.pen 을 따른다. */

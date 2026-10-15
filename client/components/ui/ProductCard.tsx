@@ -9,8 +9,8 @@ import { ProductThumbnail } from "./ProductThumbnail";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
-import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/product-display";
 
 // 제품 상세와 검색 패널이 같은 기본 그림을 쓴다. 들여오던 자리를 그대로 둔다.
 export { PRODUCT_PLACEHOLDER } from "./ProductThumbnail";
