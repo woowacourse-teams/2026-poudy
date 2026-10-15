@@ -5,6 +5,7 @@ import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.shelf.domain.AnalysisSnapshot;
 import com.poudy.shelf.domain.IngredientAnalysis;
 import com.poudy.shelf.domain.Rating;
 import com.poudy.shelf.domain.Shelf;
@@ -14,6 +15,7 @@ import com.poudy.shelf.domain.ShelfProductAlreadyExistsException;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.domain.SkinCautions;
 import com.poudy.shelf.domain.SuspectCandidates;
+import com.poudy.shelf.repository.ShelfAnalysisRepository;
 import com.poudy.shelf.repository.ShelfCautionRepository;
 import com.poudy.shelf.repository.ShelfProductRepository;
 import com.poudy.skinfilter.repository.SkinFilterRepository;
@@ -28,6 +30,7 @@ public class ShelfService {
 
     private final ShelfProductRepository shelfProductRepository;
     private final ShelfCautionRepository shelfCautionRepository;
+    private final ShelfAnalysisRepository shelfAnalysisRepository;
     private final ProductRepository productRepository;
     private final SkinFilterRepository skinFilterRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
@@ -36,6 +39,7 @@ public class ShelfService {
     public ShelfService(
         ShelfProductRepository shelfProductRepository,
         ShelfCautionRepository shelfCautionRepository,
+        ShelfAnalysisRepository shelfAnalysisRepository,
         ProductRepository productRepository,
         SkinFilterRepository skinFilterRepository,
         ExcludeCodeRepository excludeCodeRepository,
@@ -43,6 +47,7 @@ public class ShelfService {
     ) {
         this.shelfProductRepository = shelfProductRepository;
         this.shelfCautionRepository = shelfCautionRepository;
+        this.shelfAnalysisRepository = shelfAnalysisRepository;
         this.productRepository = productRepository;
         this.skinFilterRepository = skinFilterRepository;
         this.excludeCodeRepository = excludeCodeRepository;
@@ -70,7 +75,7 @@ public class ShelfService {
         if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
-        return findShelf(userId).item(productId);
+        return refreshAnalysis(userId).item(productId);
     }
 
     @Transactional
@@ -78,17 +83,33 @@ public class ShelfService {
         if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
             throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
-        return findShelf(userId).item(productId);
+        return refreshAnalysis(userId).item(productId);
     }
 
     @Transactional
     public void remove(long userId, long productId) {
         shelfProductRepository.delete(userId, productId);
+        refreshAnalysis(userId);
     }
 
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
-        return IngredientAnalysis.of(findShelf(userId), skinFilterRepository.findIngredientIds(userId));
+        return IngredientAnalysis.of(
+            findShelf(userId),
+            shelfAnalysisRepository.find(userId),
+            skinFilterRepository.findIngredientIds(userId)
+        );
+    }
+
+    // 평가가 바뀐 같은 트랜잭션에서 결과를 다시 계산해, 직전 결과와 성분이 다를 때만 새 성분을 다시 표시한다.
+    private Shelf refreshAnalysis(long userId) {
+        Shelf shelf = findShelf(userId);
+        List<Long> ingredientIds = shelf.suspectIngredients().ingredientIds();
+        AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
+        if (!snapshot.hasSameIngredients(ingredientIds)) {
+            shelfAnalysisRepository.save(userId, snapshot.next(ingredientIds));
+        }
+        return shelf;
     }
 
     private SuspectCandidates candidatesOf(long userId) {

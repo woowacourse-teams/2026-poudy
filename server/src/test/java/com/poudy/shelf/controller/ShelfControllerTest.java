@@ -271,6 +271,39 @@ class ShelfControllerTest {
     }
 
     @Test
+    @DisplayName("평가가 바뀌어 직전 결과에 없던 성분이 생기면 새 성분으로 표시하고, 필터에 있는 성분은 표시하지 않는다")
+    void marksNewIngredients() throws Exception {
+        jdbcTemplate.update(
+            "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
+            user.id()
+        );
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)))
+            .andExpect(jsonPath("$.items[*].isNew").value(contains(false, true)));
+
+        add("""
+            {"productId": 1, "usageStatus": "USED", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        mockMvc.perform(put(PRODUCTS_PATH + "/15").with(signedIn()).contentType(MediaType.APPLICATION_JSON).content("""
+            {"usageStatus": "IN_USE", "preference": "BAD", "moistureLevel": 2}
+            """)).andExpect(status().isOk());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 4815, 9)))
+            .andExpect(jsonPath("$.items[*].isNew").value(contains(false, true, false)));
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/1").with(signedIn())).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)))
+            .andExpect(jsonPath("$.items[*].isNew").value(contains(false, false)));
+    }
+
+    @Test
     @DisplayName("피부 타입과 민감성에 따른 주의 성분은 후보에 더하고 같은 조건의 다른 성분보다 앞에 둔다")
     void addsSkinTypeCautions() throws Exception {
         jdbcTemplate.update(
@@ -311,12 +344,19 @@ class ShelfControllerTest {
     @DisplayName("회원 행을 지우면 선반도 함께 지운다")
     void deletesShelfWithUser() throws Exception {
         add("""
-            {"productId": 15, "usageStatus": "IN_USE"}
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
             """).andExpect(status().isCreated());
 
         jdbcTemplate.update("delete from \"user\" where id = ?", user.id());
 
         assertThat(shelfCount()).isZero();
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from user_shelf_analysis_ingredient where user_id = ?",
+                Integer.class,
+                user.id()
+            )
+        ).isZero();
     }
 
     private ResultActions add(String body) throws Exception {
