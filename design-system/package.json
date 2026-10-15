@@ -37,7 +37,9 @@
     "./empty-state": "./src/empty-state.tsx",
     "./error-state": "./src/error-state.tsx",
     "./load-more": "./src/load-more.tsx",
-    "./icon": "./src/icon.tsx"
+    "./icon": "./src/icon.tsx",
+    "./screen": "./src/screen.tsx",
+    "./top-bar": "./src/top-bar.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
