@@ -41,12 +41,12 @@ export function ChoiceSamples() {
         </RadioGroup>
       </Section>
 
-      <Section title="RadioGroup · button (선택 버튼 md · sm)">
-        <RadioGroup label="성별" variant="button" value={gender} onValueChange={setGender} optional>
+      <Section title="RadioGroup · choice (선택 버튼 md · sm)">
+        <RadioGroup label="성별" variant="choice" value={gender} onValueChange={setGender} optional>
           <RadioGroupItem value="female">여성</RadioGroupItem>
           <RadioGroupItem value="male">남성</RadioGroupItem>
         </RadioGroup>
-        <RadioGroup label="문의 유형" variant="button" size="sm" value={inquiry} onValueChange={setInquiry}>
+        <RadioGroup label="문의 유형" variant="choice" size="sm" value={inquiry} onValueChange={setInquiry}>
           <RadioGroupItem value="error">오류 신고</RadioGroupItem>
           <RadioGroupItem value="product">제품 등록 요청</RadioGroupItem>
           <RadioGroupItem value="idea">기능 제안</RadioGroupItem>

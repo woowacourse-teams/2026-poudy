@@ -12,7 +12,7 @@ describe("RadioGroup", () => {
   it("라벨을 묶음의 이름으로 잇고, 선택지마다 네이티브 radio 를 둔다", () => {
     const onValueChange = vi.fn();
     render(
-      <RadioGroup label="성별" variant="button" value="female" onValueChange={onValueChange}>
+      <RadioGroup label="성별" variant="choice" value="female" onValueChange={onValueChange}>
         <RadioGroupItem value="female">여성</RadioGroupItem>
         <RadioGroupItem value="male">남성</RadioGroupItem>
       </RadioGroup>,
@@ -73,7 +73,7 @@ describe("RadioGroup", () => {
   it("선택 버튼과 선택 카드는 누를 때 크기를 바꾸지 않는다(S07)", () => {
     render(
       <>
-        <RadioGroup aria-label="성별" variant="button" value={undefined} onValueChange={() => undefined}>
+        <RadioGroup aria-label="성별" variant="choice" value={undefined} onValueChange={() => undefined}>
           <RadioGroupItem value="female">여성</RadioGroupItem>
         </RadioGroup>
         <RadioGroup aria-label="피부 타입" variant="card" value={undefined} onValueChange={() => undefined}>
