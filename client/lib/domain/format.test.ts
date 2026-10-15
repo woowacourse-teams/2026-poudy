@@ -27,9 +27,9 @@ describe("formatVolume", () => {
     expect(formatVolume({ volumeValue: 30, volumeUnit: "매" })).toBe("30매");
   });
 
-  it("서버 값이 mL·ML이어도 소문자 ml로 보여 준다", () => {
-    expect(formatVolume({ volumeValue: 80, volumeUnit: "mL" })).toBe("80ml");
-    expect(formatVolume({ volumeValue: 80, volumeUnit: "ML" })).toBe("80ml");
+  it("단위는 서버가 보낸 글자를 그대로 쓴다", () => {
+    expect(formatVolume({ volumeValue: 80, volumeUnit: "mL" })).toBe("80mL");
+    expect(formatVolume({ volumeValue: 80, volumeUnit: "ml" })).toBe("80ml");
   });
 
   it("천 단위부터 쉼표를 넣는다", () => {
@@ -51,7 +51,7 @@ describe("unitPrice", () => {
 
 describe("formatUnitPrice", () => {
   it("'{단위}당 {금액}원'으로 쓴다", () => {
-    expect(formatUnitPrice(32000, { volumeValue: 80, volumeUnit: "mL" })).toBe("ml당 400원");
+    expect(formatUnitPrice(32000, { volumeValue: 80, volumeUnit: "mL" })).toBe("mL당 400원");
     expect(formatUnitPrice(26000, { volumeValue: 21, volumeUnit: "g" })).toBe("g당 1,238원");
   });
 
@@ -62,7 +62,7 @@ describe("formatUnitPrice", () => {
 
 describe("formatVolumeWithUnitPrice", () => {
   it("용량과 단가를 가운뎃점으로 잇는다", () => {
-    expect(formatVolumeWithUnitPrice(18000, { volumeValue: 200, volumeUnit: "mL" })).toBe("200ml · ml당 90원");
+    expect(formatVolumeWithUnitPrice(18000, { volumeValue: 200, volumeUnit: "mL" })).toBe("200mL · mL당 90원");
   });
 
   it("용량을 알 수 없으면 단가를 빼고 보여 준다", () => {
