@@ -194,6 +194,24 @@ JSON 내부의 제품 ID에는 FK가 없다. 조회 시 잘못된 문서는 인�
 목록(`/api/members/me/saved-products`)을 한 번에 받는다. 둘 다 최근 저장순이다. 저장과 해제는
 같은 요청을 다시 보내도 결과가 같다. 회원 행을 지우면 저장 목록도 함께 지워진다(`ON DELETE CASCADE`).
 
+### Shelf
+
+선반은 회원이 써 본 제품을 사용 상태와 평가와 함께 `user_shelf_product`에 둔다. 회원마다 선반은 하나라
+선반 ID가 없고, 경로는 `/api/users/me/shelf/products/{productId}`로 제품을 가리킨다. 평가(호불호·수분감·유분감)는
+모두 선택이며 수분감·유분감은 0부터 3까지 0.5 단위만 받는다. 이 범위는 `Rating`과 스키마 CHECK가 함께 지킨다.
+같은 제품은 한 번만 담고, 다시 담으면 거절해 평가를 바꾸려면 수정 요청을 쓰게 한다. 선반 조회는 정렬·페이지 없이
+전부를 최근 등록순으로 주고, 사용 상태 탭은 `ShelfTab`이 이름과 개수를 정해 클라이언트가 탭을 손으로 들고 있지
+않게 한다. 성분 분석 알고리즘은 아직 없어 성분 분석 조회와 `possiblyUnsuitable`은 응답 형태만 맞춘 임의의 값을
+돌려준다. 분석 결과 저장 테이블은 알고리즘과 함께 추가한다. 테이블 이름은 회원을 `user`로 바꿀 ERD를 따르지만
+회원 FK는 아직 `member(id)`를 참조한다.
+
+### SkinFilter
+
+나만의 필터는 제품 검색에서 기본으로 뺄 성분을 `user_skin_filter_ingredient`에 둔다. 서버는 제품 조회에 필터를
+자동으로 적용하지 않고 클라이언트가 `excludeIngredientIds`로 보낸다. 추가와 삭제를 나눠 고른 성분만 보내게 해,
+목록 전체를 보내는 방식에서 잘못된 ID 하나가 삭제와 추가를 함께 일으키는 일을 막는다. 둘 다 같은 요청을 다시
+보내도 결과가 같고, 추가는 없는 성분이 섞이면 전부 거절한다.
+
 ### Sitemap
 
 `sitemap`은 클라이언트 사이트맵의 `lastmod`에 쓸 데이터 수정 시각만 내려 준다(`/api/sitemap`).
@@ -271,9 +289,9 @@ Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이
 필터 앞에서 판정한다. 관리자는 환경 변수의 공용 계정으로 `POST /api/admin/login`에 로그인하면 같은
 세션에 `ROLE_ADMIN` 인증을 받는다. 환경 변수에는 비밀번호 원문 대신 BCrypt 해시를 둬, 서버 설정이 새도 원문은 남지 않는다. 해시가 없거나 BCrypt 형식이 아니어도 서버는 뜨고, 기동 때 오류 로그를 남긴 뒤 관리자 로그인만 401로 막는다. 관리자 설정 하나 때문에 회원 API까지 배포가 막히지 않게 하려는 것이다. 로그인 때 기존 세션을 버려 세션 ID를 새로 받고, 비활동 1시간,
 로그인 후 12시간에 만료한다. 공용 계정 하나를 비밀번호로만 지키므로 로그인 시도는 클라이언트 주소마다 1분에 5번으로
-제한하고, 넘으면 자격 증명을 확인하지 않고 429로 거절한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/members/**`는 회원 인증만 받고,
+제한하고, 넘으면 자격 증명을 확인하지 않고 429로 거절한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/members/**`와 `/api/users/**`는 회원 인증만 받고,
 인증이 없으면 401 `UNAUTHORIZED`, 다른 쪽 인증이면 403 `FORBIDDEN`으로 거절한다. 회원 인증으로
-`/api/members/**`를 호출하면 `ActiveMemberFilter`가 PK 조회 한 번으로 활성 상태를 확인한다.
+두 회원 경로를 호출하면 `ActiveMemberFilter`가 PK 조회 한 번으로 활성 상태를 확인한다.
 탈퇴하거나 삭제된 회원이면 세션을 종료하고 401로 거절한다. 이 필터는 인증을 읽은 뒤,
 로그아웃 처리 전에 실행하므로 다른 기기의 세션도 다음 회원 API 요청에서 종료된다. 로그아웃은 회원
 `POST /api/members/logout`, 관리자 `POST /api/admin/logout`으로 나누고, 둘 다 Security 로그아웃 필터가
@@ -287,8 +305,9 @@ Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이
 (staging 포함)에서 온 요청에는 운영 쿠키가 실리고, 본문 없는 POST는 CORS preflight도 거치지 않는다.
 그래서 GET·HEAD·OPTIONS·TRACE가 아닌 요청은 `Origin`이 같은 오리진이거나 `ClientOrigins`가 허용하는 오리진일 때만
 통과시키고, 아니면 403 `FORBIDDEN_ORIGIN`으로 거절한다. 이 확인은 `security.filter`의 `ForeignOriginFilter`가 맡는다. `Origin`이 없는 요청은 브라우저가 아니므로
-통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 기존 응답 캐시를 바꾸지 않고, 회원 응답만
-`no-store`로 둔다.
+통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 공개 응답 캐시(nginx의 카테고리 캐시 등)를 바꾸지 않고,
+회원·관리자·로그인 경로(`/api/members/**`, `/api/users/**`, `/api/admin/**`, `/api/auth/**`)의 응답에만 Security가
+`no-store`를 붙인다. 컨트롤러는 따로 붙이지 않는다.
 
 ### Member
 

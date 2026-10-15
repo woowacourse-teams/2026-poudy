@@ -128,6 +128,20 @@ class ErdCloudSchemaTest {
             )
         ),
         entry("member_saved_product", List.of("member_id", "product_id", "created_at", "updated_at")),
+        entry(
+            "user_shelf_product",
+            List.of(
+                "user_id",
+                "product_id",
+                "usage_status",
+                "rating_preference",
+                "rating_moisture_level",
+                "rating_oil_level",
+                "created_at",
+                "updated_at"
+            )
+        ),
+        entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id", "created_at", "updated_at")),
         entry("skin_type", List.of("code", "name", "created_at", "updated_at")),
         entry("tag", List.of("code", "category_code", "name", "created_at", "updated_at"))
     );
@@ -146,6 +160,8 @@ class ErdCloudSchemaTest {
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
         entry("member", List.of("id")),
         entry("member_saved_product", List.of("member_id", "product_id")),
+        entry("user_shelf_product", List.of("user_id", "product_id")),
+        entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id")),
         entry("product", List.of("id")),
         entry("product_component", List.of("id")),
         entry("product_similarity_calculation", List.of("component_id")),

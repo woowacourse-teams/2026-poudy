@@ -1,0 +1,276 @@
+package com.poudy.shelf.controller;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.poudy.member.domain.Member;
+import com.poudy.member.domain.MemberSignup;
+import com.poudy.member.repository.MemberRepository;
+import com.poudy.security.domain.OAuthAccount;
+import com.poudy.security.domain.OAuthProvider;
+import com.poudy.security.session.LoginAdmin;
+import com.poudy.security.session.LoginMember;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+@DisplayName("선반 API")
+class ShelfControllerTest {
+
+    private static final String PATH = "/api/users/me/shelf";
+    private static final String PRODUCTS_PATH = PATH + "/products";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private Member member;
+
+    @BeforeEach
+    void signUp() {
+        member = memberRepository.save(
+            MemberSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "member@example.com", true))
+        );
+    }
+
+    @Test
+    @DisplayName("담은 제품을 201 로 돌려주고 평가는 비워 둘 수 있다")
+    void addsProductWithOptionalRating() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD", "moistureLevel": 1.5, "oilLevel": null}
+            """)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.product.id").value(15L))
+            .andExpect(jsonPath("$.product.name").value("PH 컨디션 토너"))
+            .andExpect(jsonPath("$.product.brandName").isString())
+            .andExpect(jsonPath("$.product.imageUrl").isString())
+            .andExpect(jsonPath("$.usageStatus").value("IN_USE"))
+            .andExpect(jsonPath("$.rating.preference").value("BAD"))
+            .andExpect(jsonPath("$.rating.moistureLevel").value(1.5))
+            .andExpect(jsonPath("$.rating.oilLevel").value(nullValue()))
+            .andExpect(jsonPath("$.possiblyUnsuitable").value(false))
+            .andExpect(jsonPath("$.registeredAt").isString());
+
+        add("""
+            {"productId": 1, "usageStatus": "USED"}
+            """)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.rating.preference").value(nullValue()))
+            .andExpect(jsonPath("$.rating.moistureLevel").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("선반 전부를 최근 등록순으로 주고 사용 상태 탭별 개수를 함께 준다")
+    void findsShelfWithUsageCounts() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+        jdbcTemplate.update(
+            "update user_shelf_product set created_at = created_at - interval '1 minute' where product_id = 15"
+        );
+
+        mockMvc.perform(get(PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.usages.length()").value(3))
+            .andExpect(jsonPath("$.usages[0].code").value("ALL"))
+            .andExpect(jsonPath("$.usages[0].name").value("전체"))
+            .andExpect(jsonPath("$.usages[0].count").value(2))
+            .andExpect(jsonPath("$.usages[1].code").value("IN_USE"))
+            .andExpect(jsonPath("$.usages[1].name").value("사용 중"))
+            .andExpect(jsonPath("$.usages[1].count").value(1))
+            .andExpect(jsonPath("$.usages[2].code").value("USED"))
+            .andExpect(jsonPath("$.usages[2].name").value("사용했던"))
+            .andExpect(jsonPath("$.usages[2].count").value(1))
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[0].product.id").value(1L))
+            .andExpect(jsonPath("$.items[0].usageStatus").value("IN_USE"))
+            .andExpect(jsonPath("$.items[1].product.id").value(15L))
+            .andExpect(jsonPath("$.items[1].usageStatus").value("USED"));
+        mockMvc.perform(get(PATH + "/product-ids").with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.productIds.length()").value(2))
+            .andExpect(jsonPath("$.productIds[0]").value(1L))
+            .andExpect(jsonPath("$.productIds[1]").value(15L));
+    }
+
+    @Test
+    @DisplayName("이미 담은 제품은 400 SHELF_PRODUCT_ALREADY_EXISTS 로 거절한다")
+    void rejectsDuplicateProduct() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        add("""
+            {"productId": 15, "usageStatus": "USED"}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_ALREADY_EXISTS"));
+        assertThat(shelfCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("없는 제품, 빠진 필수 값, 0.5 단위가 아닌 평가는 400 INVALID_REQUEST_BODY 로 거절한다")
+    void rejectsInvalidAddRequest() throws Exception {
+        add("""
+            {"productId": 999, "usageStatus": "IN_USE"}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+        add("""
+            {"productId": 15}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "moistureLevel": 1.2}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+        assertThat(shelfCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("수정은 사용 상태와 평가를 통째로 바꾸고 바뀐 선반 제품을 돌려준다")
+    void updatesProduct() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD", "moistureLevel": 2, "oilLevel": 1}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(
+            put(PRODUCTS_PATH + "/15").with(signedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"usageStatus": "USED", "preference": "BAD"}
+                    """)
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.product.id").value(15L))
+            .andExpect(jsonPath("$.usageStatus").value("USED"))
+            .andExpect(jsonPath("$.rating.preference").value("BAD"))
+            .andExpect(jsonPath("$.rating.moistureLevel").value(nullValue()))
+            .andExpect(jsonPath("$.rating.oilLevel").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("선반에 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 수정을 거절한다")
+    void rejectsUpdatingMissingProduct() throws Exception {
+        mockMvc.perform(
+            put(PRODUCTS_PATH + "/15").with(signedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"usageStatus": "USED"}
+                    """)
+        )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("선반에서 빼기는 없는 제품이어도 204 로 성공한다")
+    void removesIdempotently() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+        assertThat(shelfCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("성분 분석은 안 맞았어요 제품 수와 응답 형태에 맞춘 성분을 돌려준다")
+    void analyzesIngredients() throws Exception {
+        mockMvc.perform(get(PATH + "/ingredient-analysis").with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.badProductCount").value(0))
+            .andExpect(jsonPath("$.items.length()").value(0));
+
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        jdbcTemplate.update(
+            "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
+            member.id()
+        );
+
+        mockMvc.perform(get(PATH + "/ingredient-analysis").with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.badProductCount").value(1))
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[0].id").value(20L))
+            .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
+            .andExpect(jsonPath("$.items[0].products[0].id").value(15L))
+            .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
+            .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
+            .andExpect(jsonPath("$.items[0].inFilter").value(true))
+            .andExpect(jsonPath("$.items[0].isNew").value(true))
+            .andExpect(jsonPath("$.items[1].id").value(9L))
+            .andExpect(jsonPath("$.items[1].inFilter").value(false))
+            .andExpect(jsonPath("$.items[1].isNew").value(false));
+    }
+
+    @Test
+    @DisplayName("회원 세션이 없으면 401, 관리자 세션이면 403 으로 거절한다")
+    void requiresMemberSession() throws Exception {
+        mockMvc.perform(get(PATH)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(PATH).with(authentication(new LoginAdmin("admin").toAuthentication())))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("회원 행을 지우면 선반도 함께 지운다")
+    void deletesShelfWithMember() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        jdbcTemplate.update("delete from member where id = ?", member.id());
+
+        assertThat(shelfCount()).isZero();
+    }
+
+    private ResultActions add(String body) throws Exception {
+        return mockMvc.perform(
+            post(PRODUCTS_PATH).with(signedIn()).contentType(MediaType.APPLICATION_JSON).content(body)
+        );
+    }
+
+    private RequestPostProcessor signedIn() {
+        return authentication(new LoginMember(member.id()).toAuthentication());
+    }
+
+    private Integer shelfCount() {
+        return jdbcTemplate.queryForObject(
+            "select count(*) from user_shelf_product where user_id = ?",
+            Integer.class,
+            member.id()
+        );
+    }
+}

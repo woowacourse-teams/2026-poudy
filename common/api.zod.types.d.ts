@@ -1,5 +1,13 @@
   export namespace Schemas {
-  export type SearchKeywordRequest = { keyword: string }
+  export type RatingPreference = ("GOOD" | "BAD")
+export type ShelfUsageStatus = ("IN_USE" | "USED")
+export type ShelfProductUpdateRequest = { usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type RatingResponse = { preference: (RatingPreference | null), moistureLevel: (number | null), oilLevel: (number | null) }
+export type ShelfProductInfoResponse = { id: number, name: string, brandName: string, imageUrl: string }
+export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
+export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
+export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type SearchKeywordRequest = { keyword: string }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
   /**
@@ -62,6 +70,37 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string, extension: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
+export type SkinEffectResponse = {
+  /**
+   * 피부 작용 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 피부 작용 이름
+   */
+  name: string;
+}
+export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
+export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
+export type ShelfTab = ("ALL" | "IN_USE" | "USED")
+export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
+export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
+export type ShelfProductIdsResponse = { productIds: Array<number> }
+export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
+export type IngredientAnalysisItemResponse = { id: number, koreanName: string, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
+export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type SkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
 export type SkinTypeResponse = {
   code: SkinType;
@@ -197,17 +236,6 @@ export type ExcludeGroupResponse = {
   name: string;
   contains: boolean;
 }
-export type FormulationRoleResponse = {
-  /**
-   * 배합 목적 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 배합 목적 이름 (CosIng Function)
-   */
-  name: string;
-}
 export type IngredientCautionResponse = {
   /**
    * 이 성분이 속한 주의 성분 기준의 코드
@@ -242,17 +270,6 @@ export type ProductVariantResponse = {
   status: string;
 }
 export type ProductPartSummaryResponse = { id: number, name: (string | null), cautionCount: number }
-export type SkinEffectResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-}
 export type ProductIngredientResponse = {
   id: number;
   koreanName: string;
@@ -722,7 +739,7 @@ export type AdminRestoreRequestResponse = { memberId: number, provider: OAuthPro
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminSessionResponse = { username: string }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -730,6 +747,50 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
+ * 선반 제품의 사용 상태와 평가를 통째로 바꾼다.
+ */
+export type put_Update = {
+      method: "PUT",
+      path: "/api/users/me/shelf/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+        body:  Schemas.ShelfProductUpdateRequest,
+          }
+      responses: {200: Schemas.ShelfProductResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 선반에서 제품을 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다.
+ */
+export type delete_Remove = {
+      method: "DELETE",
+      path: "/api/users/me/shelf/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 이미 저장한 제품이면 그대로 둔다.
  */
 export type put_Save = {
@@ -765,6 +826,66 @@ export type delete_Unsave = {
 
           }
       responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.
+ */
+export type post_AddIngredients = {
+      method: "POST",
+      path: "/api/users/me/skin-filter/ingredients",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.SkinFilterIngredientsRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 고른 성분을 뺀다. 필터에 없는 성분이어도 성공한다.
+ */
+export type delete_RemoveIngredients = {
+      method: "DELETE",
+      path: "/api/users/me/skin-filter/ingredients",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { ingredientIds: Array<number> },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다.
+ */
+export type post_Add = {
+      method: "POST",
+      path: "/api/users/me/shelf/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.ShelfProductAddRequest,
+          }
+      responses: {201: Schemas.ShelfProductResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
@@ -1038,6 +1159,70 @@ export type patch_ChangeStatus_1 = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 나만의 필터에 담은 성분을 최근 추가순으로 조회한다.
+ */
+export type get_FindSkinFilter = {
+      method: "GET",
+      path: "/api/users/me/skin-filter",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SkinFilterResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
+ */
+export type get_FindShelf = {
+      method: "GET",
+      path: "/api/users/me/shelf",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.ShelfResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 선반에 담은 제품 ID를 최근 등록순으로 조회한다.
+ */
+export type get_FindProductIds = {
+      method: "GET",
+      path: "/api/users/me/shelf/product-ids",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.ShelfProductIdsResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.
+ */
+export type get_AnalyzeIngredients = {
+      method: "GET",
+      path: "/api/users/me/shelf/ingredient-analysis",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.IngredientAnalysisResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1771,14 +1956,19 @@ export type post_AdminLogout = {
 
      export type EndpointByMethod = {
      put: {
-           "/api/members/me/saved-products/{productId}": Endpoints.put_Save
+           "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
+"/api/members/me/saved-products/{productId}": Endpoints.put_Save
          },
 delete: {
-           "/api/members/me/saved-products/{productId}": Endpoints.delete_Unsave,
+           "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
+"/api/members/me/saved-products/{productId}": Endpoints.delete_Unsave,
+"/api/users/me/skin-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/members/me": Endpoints.delete_Withdraw
          },
 post: {
-           "/api/search-keywords": Endpoints.post_Record,
+           "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
+"/api/users/me/shelf/products": Endpoints.post_Add,
+"/api/search-keywords": Endpoints.post_Record,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
 "/api/products/registration-requests": Endpoints.post_Submit,
@@ -1798,7 +1988,11 @@ patch: {
 "/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          },
 get: {
-           "/api/skin-types": Endpoints.get_FindSkinTypes,
+           "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
+"/api/users/me/shelf": Endpoints.get_FindShelf,
+"/api/users/me/shelf/product-ids": Endpoints.get_FindProductIds,
+"/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
+"/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/products": Endpoints.get_FindProducts,

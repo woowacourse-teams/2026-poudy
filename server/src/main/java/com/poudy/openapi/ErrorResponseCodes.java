@@ -20,6 +20,9 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
     private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
+    private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
+    private static final String SHELF_PRODUCT_PATH = "/api/users/me/shelf/products/{productId}";
+    private static final String SKIN_FILTER_INGREDIENTS_PATH = "/api/users/me/skin-filter/ingredients";
     private static final String WITHDRAWN_MEMBER_PATH = "/api/auth/withdrawn";
     private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn/restore";
     private static final String REGISTERED_ACCOUNT_PATH = "/api/auth/registered-account";
@@ -77,6 +80,15 @@ public final class ErrorResponseCodes {
         if (ADMIN_LOGIN_PATH.equals(path) || MEMBER_PROFILE_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
+        if (SHELF_PRODUCTS_PATH.equals(path)) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY, ErrorCode.SHELF_PRODUCT_ALREADY_EXISTS);
+        }
+        if (SHELF_PRODUCT_PATH.equals(path) && method == HttpMethod.PUT) {
+            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+        }
+        if (SKIN_FILTER_INGREDIENTS_PATH.equals(path) && method == HttpMethod.POST) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY);
+        }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
             return method == HttpMethod.GET
                 ? List.of(ErrorCode.INVALID_QUERY_PARAMETER)
@@ -109,6 +121,12 @@ public final class ErrorResponseCodes {
         if (SAVED_PRODUCT_PATH.equals(path)) {
             if (method == HttpMethod.PUT) {
                 return List.of(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            return List.of();
+        }
+        if (SHELF_PRODUCT_PATH.equals(path)) {
+            if (method == HttpMethod.PUT) {
+                return List.of(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
             }
             return List.of();
         }

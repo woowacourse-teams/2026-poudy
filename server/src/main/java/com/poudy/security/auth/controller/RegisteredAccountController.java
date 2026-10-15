@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,12 +28,10 @@ public class RegisteredAccountController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     public ResponseEntity<RegisteredAccountResponse> findRegisteredAccount(HttpServletRequest request) {
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(
-                loginSession.findRegisteredAccount(request)
-                    .map(RegisteredAccountResponse::from)
-                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.REGISTERED_ACCOUNT_NOT_FOUND))
-            );
+        return ResponseEntity.ok(
+            loginSession.findRegisteredAccount(request)
+                .map(RegisteredAccountResponse::from)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.REGISTERED_ACCOUNT_NOT_FOUND))
+        );
     }
 }

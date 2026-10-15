@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -22,7 +24,11 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Configuration
@@ -51,7 +57,16 @@ public class SecurityConfig {
                     .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             )
             .requestCache(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
+            .headers(
+                headers -> headers
+                    .cacheControl(HeadersConfigurer.CacheControlConfig::disable)
+                    .addHeaderWriter(
+                        new DelegatingRequestMatcherHeaderWriter(
+                            privateResponses(),
+                            new StaticHeadersWriter(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue())
+                        )
+                    )
+            )
             .securityContext(context -> context.securityContextRepository(securityContextRepository))
             .authorizeHttpRequests(requests -> {
                 Arrays.stream(AccessRule.values()).forEach(rule -> rule.authorize(requests));
@@ -103,5 +118,13 @@ public class SecurityConfig {
     @Bean
     public SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
+    }
+
+    private static RequestMatcher privateResponses() {
+        return new OrRequestMatcher(
+            AccessRule.MEMBER.requestMatcher(),
+            AccessRule.ADMIN.requestMatcher(),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/auth/**")
+        );
     }
 }
