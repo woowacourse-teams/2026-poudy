@@ -1,3 +1,4 @@
+import { ErrorState } from "@poudy/design-system/error-state";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -17,19 +18,26 @@ export default function NotFound() {
     <>
       <TopBar title="찾을 수 없어요" variant="sub" />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
-        <Icon name="search" size={28} className="text-text-secondary" />
-        <p className="text-[15px] font-bold text-text-primary">찾는 화면이 없어요</p>
-        <p className="text-center text-[12px] text-text-secondary">
-          주소가 바뀌었거나 지워진 화면이에요. 다른 제품을 찾아보세요.
-        </p>
-
-        <Link
-          href="/search/products"
-          className="mt-2 flex h-11 items-center rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
-        >
-          제품 검색하기
-        </Link>
+      <main className="flex flex-1 flex-col">
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="search" size={28} />}
+          title="찾는 화면이 없어요"
+          description="주소가 바뀌었거나 지워진 화면이에요. 다른 제품을 찾아보세요."
+          action={
+            /*
+             * 다른 화면으로 가는 행동이라 버튼이 아니라 링크로 둔다. 패키지 Button 은 링크로 그릴 수 없어 BTN · Secondary 의
+             * 모양만 옮겼다. 링크 부품이 생기면 그것으로 바꾼다.
+             */
+            <Link
+              href="/search/products"
+              className="flex h-12 items-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
+            >
+              제품 검색하기
+            </Link>
+          }
+          className="flex-1"
+        />
       </main>
     </>
   );
