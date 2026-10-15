@@ -111,11 +111,19 @@ DB 잠금은 변환 중 동시 쓰기만 막으므로, 배포 전체의 쓰기 �
 전환 뒤 JSONB 수정이 시작되면 legacy 데이터가 낡아 구버전 앱 롤백을 보장할 수 없다.
 
 모든 서버가 JSONB를 읽고 운영 데이터의 이전 결과를 확인한 다음 **별도 배포**에서 제거한다.
-검증한 제거 SQL은 `scripts/curation/remove-legacy-tables.sql`에 있다. 다음으로 사용 가능한
-Flyway 버전 파일로 복사해 리뷰·배포한다. 첫 배포의 자동 마이그레이션 경로에 함께 넣지 않는다.
-수동 실행한다면 반드시 명시적 트랜잭션 안에서 전체 파일을 실행해야 한다.
+제거는 `src/main/resources/db/migration/V13__remove_curation_legacy_tables.sql`이 담당한다.
+V12의 운영 확인 후 별도 PR·배포로 적용하며, 서버 기동 때 Flyway 트랜잭션 안에서 실행한다.
+구형 데이터로 본문을 다시 조립하지 않으므로 전환 후 수정된 JSONB와 PRODUCT_LINK도 유지된다.
+현재 코드는 V13을 포함하지만 실제 staging·운영 제거 배포와 외부 ERD 반영은 별도로 확인한다.
 
 두 번째 배포는 `curation_block_product_filter`, `curation_block_product`,
 `curation_block_filter`, `curation_block` 순서로 제거하고 큐레이션 전용 함수 두 개를 제거한다.
 다른 도메인도 사용하는 `require_contiguous_order`는 유지한다. 외부 ERD에서도 이 단계가
 완료된 후 기존 테이블을 제거하며, JSON 내부의 제품 참조에 FK 관계선을 그리지 않는다.
+
+배포 전 모든 서버가 JSONB를 읽는지 확인하고 직접 SQL 적재·수정 작업을 조율한다.
+V13은 큐레이션 테이블을 ACCESS EXCLUSIVE로 잠그므로 장기 트랜잭션이 없는 시점에 적용한다.
+배포 후 `flyway_schema_history`의 V13 성공, 네 테이블·전용 함수 두 개의 부재와 큐레이션
+목록·상세·사이트맵 응답 및 오류 로그를 확인한다. 제거 후 앱 롤백은 현재 JSONB 문서 타입을
+지원하는 버전으로 한정한다. 구형 테이블 조회 버전으로 되돌리지 않으며, DB 복원이 필요한
+경우 배포 전 백업과 배포 후 변경분을 함께 복구해야 한다.
