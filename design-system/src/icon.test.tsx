@@ -40,6 +40,27 @@ describe("Icon", () => {
     render(<Icon name="x" filled />);
   });
 
+  it("scalable 은 글자 크기를 아이콘 크기로 두고 폭과 높이를 1em 으로 잡아 기기 글자 크기를 따라 커진다", () => {
+    const { container } = render(
+      <>
+        <Icon name="chevron-right" size={16} scalable className="text-text-secondary" />
+        <Icon name="chevron-right" size={16} />
+      </>,
+    );
+    const [scalable, fixed] = container.querySelectorAll("svg");
+
+    // 1배에서는 지금처럼 16px 로 그리도록 속성은 그대로 두고, 클래스가 em 크기로 덮는다.
+    expect(scalable).toHaveAttribute("width", "16");
+    expect(scalable).toHaveClass("size-em", "text-16", "text-text-secondary");
+    expect(fixed).not.toHaveClass("size-em");
+    expect(fixed.getAttribute("class")).not.toMatch(/text-16/);
+  });
+
+  it("혼자 있는 대표 아이콘 크기(28·40)는 scalable 을 타입이 막는다", () => {
+    // @ts-expect-error 40 은 옆 글자가 없는 대표 아이콘 크기다
+    render(<Icon name="alert-circle" size={40} scalable />);
+  });
+
   it("IconSprite 는 모든 이름의 심볼과 채움 심볼을 한 번씩 그린다", () => {
     const { container } = render(<IconSprite />);
     const ids = [...container.querySelectorAll("symbol")].map((symbol) => symbol.id);
