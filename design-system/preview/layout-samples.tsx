@@ -74,6 +74,11 @@ export function LayoutSamples() {
             <Icon key={name} name={name} size={24} />
           ))}
         </div>
+        {/* scalable: 브라우저 글자 크기를 키우면 꺾쇠가 옆 글자와 함께 커진다. */}
+        <div className="flex items-center gap-1 text-body text-text-primary">
+          전성분 보기
+          <Icon name="chevron-right" size={16} scalable />
+        </div>
         <div className="flex gap-3 text-brand-strong">
           {(["home", "grid", "search", "archive", "user", "bookmark", "bookmarks"] as const).map((name) => (
             <Icon key={name} name={name} size={24} filled />

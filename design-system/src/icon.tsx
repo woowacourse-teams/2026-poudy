@@ -191,10 +191,42 @@ export const ICON_NAMES = Object.keys(OUTLINE) as readonly IconName[];
 export const ICON_SIZES = [12, 14, 16, 20, 24, 28, 40] as const;
 export type IconSize = (typeof ICON_SIZES)[number];
 
-export type IconProps<N extends IconName = IconName> = {
+/**
+ * 글자와 함께 커질 수 있는 크기. 옆 글자(11–17)에 맞추는 단계만 든다. 28·40 은 혼자 있는 대표 아이콘이라 따라 커질 글자가 없다.
+ */
+export type ScalableIconSize = Exclude<IconSize, 28 | 40>;
+
+/**
+ * scalable 일 때 쓰는 클래스. 글자 크기를 아이콘 크기(px)로 두고 폭과 높이를 1em 으로 잡는다. 1배에서는 지금과 같은
+ * 정수 px 로 그리고, 기기 글자 크기를 키우면 font-size 가 함께 커져 아이콘도 글자와 같은 비율로 커진다.
+ * Tailwind 가 클래스를 찾도록 이름을 통째로 적는다.
+ */
+const SCALABLE_SIZE_CLASS = {
+  12: "size-em text-12",
+  14: "size-em text-14",
+  16: "size-em text-16",
+  20: "size-em text-20",
+  24: "size-em text-24",
+} as const satisfies Record<ScalableIconSize, string>;
+
+type IconSizeProps =
+  | {
+      /** 표에 없는 크기는 타입이 막는다. 기본 20. */
+      readonly size?: IconSize;
+      readonly scalable?: false;
+    }
+  | {
+      readonly size?: ScalableIconSize;
+      /**
+       * 글자 옆 아이콘을 글자와 함께 키운다. 기기 글자 크기를 키우면 글자만 커지고 px 로 잡은 아이콘은 그대로 남아,
+       * 행 끝 꺾쇠(›)·배지 안 기호·저장 버튼 아이콘이 옆 글자보다 작아진다. client 의 옛 Icon 이 같은 자리에서 쓰던
+       * scalable 과 뜻이 같다. 혼자 있는 아이콘(하단 내비·앱바·대표 아이콘)은 자리 크기가 정해져 있어 쓰지 않는다.
+       */
+      readonly scalable: true;
+    };
+
+export type IconProps<N extends IconName = IconName> = IconSizeProps & {
   readonly name: N;
-  /** 표에 없는 크기는 타입이 막는다. 기본 20. */
-  readonly size?: IconSize;
   /**
    * 상태가 켜졌다는 뜻일 때만 채운다. 예: 저장됨, 하단 내비의 지금 탭. 채움 그림이 있는 이름(FilledIconName)에만 줄 수 있다.
    */
@@ -217,7 +249,7 @@ const symbolId = (name: IconName, filled: boolean) => `ds-icon-${name}${filled ?
  * 선 굵기는 viewBox(24) 기준 2 다. SVG 가 크기에 맞춰 줄이므로 20 으로 그리면 1.67, 16 으로 그리면 1.33 이 되어
  * 명세의 굵기와 맞는다.
  */
-export function Icon<N extends IconName>({ name, size = 20, filled, bold = false, className }: IconProps<N>) {
+export function Icon<N extends IconName>({ name, size = 20, scalable, filled, bold = false, className }: IconProps<N>) {
   const fill = Boolean(filled) && name in FILLED;
   return (
     <svg
@@ -231,7 +263,7 @@ export function Icon<N extends IconName>({ name, size = 20, filled, bold = false
       strokeWidth={fill ? undefined : bold ? 3 : 2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("shrink-0", className)}
+      className={cn("shrink-0", scalable && SCALABLE_SIZE_CLASS[size as ScalableIconSize], className)}
     >
       <use href={`#${symbolId(name, fill)}`} />
     </svg>
