@@ -31,7 +31,6 @@ vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => n
 vi.mock("@/components/home/PopularKeywords", () => ({ PopularKeywords: () => null }));
 vi.mock("@/components/home/PopularProducts", () => ({ PopularProducts: () => null }));
 vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
-vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
 import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
