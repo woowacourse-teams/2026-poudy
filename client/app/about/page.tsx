@@ -135,13 +135,16 @@ export default function AboutPage() {
           </h2>
           {/*
             낭독기는 이름을 먼저 읽고(등록된 제품, 1,240) 화면은 숫자를 위에 둔다.
-            `dl` 안에는 묶음 `div` 만 둘 수 있어, 칸 사이의 선은 가상 요소로 긋는다.
+
+            기본 글자 크기에서는 세 칸으로 놓는다. 글자를 키우면 숫자가 칸 밖으로 넘치므로, 칸 폭이 숫자 폭
+            (약 3.75em)보다 좁아지면 다음 줄로 넘긴다. 칸 사이의 선은 각 칸 왼쪽 바깥 1px 에 긋고 목록 밖을
+            잘라, 줄의 첫 칸에서는 선이 보이지 않게 한다. `dl` 안에는 묶음 `div` 만 둘 수 있어 선은 가상 요소다.
           */}
-          <dl className="grid w-full grid-cols-3">
+          <dl className="grid w-full grid-cols-[repeat(auto-fit,minmax(3.75em,1fr))] gap-y-4 overflow-hidden text-[24px]">
             {STATS.map(({ label, value }) => (
               <div
                 key={label}
-                className="relative flex flex-col-reverse items-center gap-0.5 not-first:before:absolute not-first:before:top-1/2 not-first:before:left-0 not-first:before:h-10 not-first:before:w-px not-first:before:-translate-y-1/2 not-first:before:bg-border not-first:before:content-['']"
+                className="relative flex flex-col-reverse items-center gap-0.5 before:absolute before:top-1/2 before:-left-px before:h-10 before:w-px before:-translate-y-1/2 before:bg-border before:content-['']"
               >
                 <dt className="text-[12px] leading-[1.4] text-text-secondary">{label}</dt>
                 <dd className="text-[24px] leading-[1.3] font-bold text-text-primary tabular-nums">
@@ -177,7 +180,11 @@ export default function AboutPage() {
           <h2 id="about-features" className="text-[16px] leading-[1.4] font-bold text-white">
             이런 것도 할 수 있어요
           </h2>
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-5">
+          {/*
+            기본 글자 크기에서는 두 칸으로 놓는다. 글자를 키우면 '브랜드·카테고리로' 같은 제목이 칸에 들지 않아
+            낱말이 갈라지므로, 칸 폭이 제목 폭(약 7.25em)과 안쪽 여백(24px)보다 좁아지면 한 칸으로 내린다.
+          */}
+          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,calc(24px+7.25em)),1fr))] gap-x-2 gap-y-5 text-[14px]">
             {FEATURES.map((feature) => (
               <li key={feature.image} className="flex flex-col gap-2 rounded-2xl bg-background p-3">
                 <Image
@@ -193,7 +200,7 @@ export default function AboutPage() {
                 <p className="text-[12px] leading-[1.5] text-text-secondary">{feature.description}</p>
               </li>
             ))}
-            <li className="col-span-2 flex flex-col items-start gap-2 rounded-2xl bg-background p-3">
+            <li className="col-span-full flex flex-col items-start gap-2 rounded-2xl bg-background p-3">
               <Image
                 src="/images/about/feature-shelf.webp"
                 alt="내 선반. 사용 중인 제품 목록에 잘 맞음과 안 맞음 평가가 표시되어 있다."
@@ -202,7 +209,7 @@ export default function AboutPage() {
                 className="h-[150px] w-full object-contain"
               />
               <span
-                className={`flex h-5 items-center rounded bg-brand-soft px-1 text-[12px] leading-[1.4] font-semibold ${BRAND_TEXT}`}
+                className={`flex min-h-5 items-center rounded bg-brand-soft px-1 text-[12px] leading-[1.4] font-semibold ${BRAND_TEXT}`}
               >
                 로그인하면
               </span>
