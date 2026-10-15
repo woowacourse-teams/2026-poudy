@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
-import type { GroupLabelProps } from "./group-label";
+import type { GroupLabelProps } from "./accessible-name";
+import { hasVisibleLabel } from "./accessible-name";
 import { Glyph } from "./icons";
 import { usePressable } from "./use-pressable";
 
@@ -57,19 +58,21 @@ export function CheckboxGroup({
   const toggle = (item: string) =>
     onValueChange(value.includes(item) ? value.filter((current) => current !== item) : [...value, item]);
 
+  const visible = hasVisibleLabel(label);
+
   const group = (
     <div
       role="group"
-      aria-labelledby={label === undefined ? aria["aria-labelledby"] : labelId}
-      aria-label={label === undefined ? aria["aria-label"] : undefined}
-      aria-describedby={label === undefined ? undefined : messageId}
-      className={cn("flex flex-col", label === undefined && className)}
+      aria-labelledby={!visible ? aria["aria-labelledby"] : labelId}
+      aria-label={!visible ? aria["aria-label"] : undefined}
+      aria-describedby={!visible ? undefined : messageId}
+      className={cn("flex flex-col", !visible && className)}
     >
       <CheckboxGroupContext value={{ value, toggle, divided, disabled }}>{children}</CheckboxGroupContext>
     </div>
   );
 
-  if (label === undefined) return group;
+  if (!visible) return group;
 
   return (
     <FieldFrame

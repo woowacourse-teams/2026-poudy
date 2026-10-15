@@ -43,7 +43,9 @@ const buttonVariants = cva(
 
 type ButtonVariants = VariantProps<typeof buttonVariants>;
 
-export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type"> & {
+export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "children"> & {
+  /** 버튼 글자. 버튼의 이름이 되므로 반드시 넘긴다. 글자 없이 아이콘만 두는 버튼은 IconButton 을 쓴다. */
+  readonly children: NonNullable<ReactNode>;
   readonly variant?: NonNullable<ButtonVariants["variant"]>;
   /** primary·secondary·destructive 에만 쓴다. outline 과 text 는 크기가 정해져 있다. */
   readonly size?: NonNullable<ButtonVariants["size"]>;

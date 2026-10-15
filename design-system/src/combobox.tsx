@@ -182,7 +182,7 @@ export function ComboboxList({ label, children, className }: ComboboxListProps) 
 
 export type ComboboxGroupProps = {
   /** 묶음의 머리. 모양은 화면이 넣는다(예: 목록 구분 머리). 낭독기는 이 글을 묶음의 이름으로 읽는다. */
-  readonly label: ReactNode;
+  readonly label: NonNullable<ReactNode>;
   readonly children: ReactNode;
   readonly className?: string;
 };

@@ -36,7 +36,7 @@ describe("RadioGroup", () => {
     expect(screen.getByRole("radiogroup", { name: "소분류" })).toBeInTheDocument();
   });
 
-  it("이름 없이는 그릴 수 없다: label, aria-labelledby, aria-label 가운데 하나를 반드시 받는다", () => {
+  it("이름 없이는 그릴 수 없다: 라벨이 없으면 aria-labelledby 나 aria-label 을 반드시 받는다", () => {
     const items = <RadioGroupItem value="all">전체</RadioGroupItem>;
     render(
       <>
@@ -66,14 +66,6 @@ describe("RadioGroup", () => {
         <CheckboxGroup value={[]} onValueChange={() => undefined}>
           {items}
         </CheckboxGroup>
-      )
-    );
-    void (
-      (
-        // @ts-expect-error 보이는 라벨과 aria-label 을 함께 줄 수 없다
-        <RadioGroup label="성별" aria-label="성별" variant="list" value={undefined} onValueChange={() => undefined}>
-          {items}
-        </RadioGroup>
       )
     );
   });

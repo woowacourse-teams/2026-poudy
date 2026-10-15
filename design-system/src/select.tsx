@@ -3,30 +3,32 @@
 import { useId } from "react";
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 
+import type { NameProps } from "./accessible-name";
+import { hasVisibleLabel } from "./accessible-name";
 import { FieldFrame } from "./field-frame";
 import { Glyph } from "./icons";
 
 export type SelectProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  "type" | "value" | "className" | "children" | "onClick"
-> & {
-  readonly label: ReactNode;
-  /** 고른 값의 이름. 고르기 전이면 비운다. */
-  readonly value?: string;
-  readonly placeholder: string;
-  /** 선택 시트가 열려 있는지. 열려 있는 동안 칸은 '입력 중' 모양이다. */
-  readonly expanded: boolean;
-  /** 누르면 부른다. 선택 시트(BottomSheet)는 화면이 연다. */
-  readonly onOpen: () => void;
-  /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
-  readonly optional?: boolean;
-  readonly hint?: ReactNode;
-  /** 보여 줄 오류. 고르는 칸은 칸을 벗어나는 때가 따로 없어, 화면이 정한 때에 넘긴다. */
-  readonly error?: string;
-  /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
-  readonly className?: string;
-  readonly ref?: Ref<HTMLButtonElement>;
-};
+  "type" | "value" | "className" | "children" | "onClick" | "aria-label" | "aria-labelledby"
+> &
+  NameProps & {
+    /** 고른 값의 이름. 고르기 전이면 비운다. */
+    readonly value?: string;
+    readonly placeholder: string;
+    /** 선택 시트가 열려 있는지. 열려 있는 동안 칸은 '입력 중' 모양이다. */
+    readonly expanded: boolean;
+    /** 누르면 부른다. 선택 시트(BottomSheet)는 화면이 연다. */
+    readonly onOpen: () => void;
+    /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
+    readonly optional?: boolean;
+    readonly hint?: ReactNode;
+    /** 보여 줄 오류. 고르는 칸은 칸을 벗어나는 때가 따로 없어, 화면이 정한 때에 넘긴다. */
+    readonly error?: string;
+    /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
+    readonly className?: string;
+    readonly ref?: Ref<HTMLButtonElement>;
+  };
 
 /**
  * 선택 입력(명세 APP · 입력 · 선택). 한 줄 입력과 같은 칸에 오른쪽 ⌄ 가 붙는다. 누르면 선택 시트가 열린다.
@@ -36,6 +38,8 @@ export type SelectProps = Omit<
  */
 export function Select({
   label,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   value,
   placeholder,
   expanded,
@@ -69,7 +73,7 @@ export function Select({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={expanded}
-        aria-labelledby={`${labelId} ${valueId}`}
+        aria-labelledby={`${hasVisibleLabel(label) ? labelId : (ariaLabelledBy ?? labelId)} ${valueId}`}
         aria-describedby={messageId}
         aria-invalid={error ? true : undefined}
         onClick={onOpen}
@@ -89,6 +93,12 @@ export function Select({
         >
           {value || placeholder}
         </span>
+        {/* 보이는 라벨 없이 aria-label 로 받은 이름도 고른 값과 함께 읽도록 숨긴 글로 둔다. */}
+        {!hasVisibleLabel(label) && ariaLabel ? (
+          <span id={labelId} className="sr-only">
+            {ariaLabel}
+          </span>
+        ) : null}
         <Glyph name="chevron-down" size={16} className="shrink-0 text-text-secondary" />
       </button>
     </FieldFrame>

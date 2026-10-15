@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
-import type { GroupLabelProps } from "./group-label";
+import type { GroupLabelProps } from "./accessible-name";
+import { hasVisibleLabel } from "./accessible-name";
 import { Glyph } from "./icons";
 import { usePressable } from "./use-pressable";
 
@@ -79,21 +80,23 @@ export function RadioGroup({
   const messageId = `${name}-message`;
   const grid = variant === "button" || variant === "card" ? COLUMNS[columns] : undefined;
 
+  const visible = hasVisibleLabel(label);
+
   const group = (
     <div
       role="radiogroup"
-      aria-labelledby={label === undefined ? aria["aria-labelledby"] : labelId}
-      aria-label={label === undefined ? aria["aria-label"] : undefined}
-      aria-describedby={label === undefined ? undefined : messageId}
-      aria-required={label === undefined || optional ? undefined : true}
+      aria-labelledby={!visible ? aria["aria-labelledby"] : labelId}
+      aria-label={!visible ? aria["aria-label"] : undefined}
+      aria-describedby={!visible ? undefined : messageId}
+      aria-required={!visible || optional ? undefined : true}
       aria-invalid={error ? true : undefined}
-      className={cn(LAYOUT[variant], grid, label === undefined && className)}
+      className={cn(LAYOUT[variant], grid, !visible && className)}
     >
       <RadioGroupContext value={{ name, value, onValueChange, variant, size, disabled }}>{children}</RadioGroupContext>
     </div>
   );
 
-  if (label === undefined) return group;
+  if (!visible) return group;
 
   return (
     <FieldFrame
