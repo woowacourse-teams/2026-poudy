@@ -25,6 +25,7 @@ const product = (id: number, name: string) => ({
   id,
   name,
   brandName: "파우디",
+  badges: [],
   imageUrl: "",
   price: 18000,
   volumeValue: 200,

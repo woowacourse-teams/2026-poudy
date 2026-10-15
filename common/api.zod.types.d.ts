@@ -2,8 +2,27 @@
   export type RatingPreference = ("GOOD" | "BAD")
 export type ShelfUsageStatus = ("IN_USE" | "USED")
 export type ShelfProductUpdateRequest = { usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type BadgeResponse = {
+  /**
+   * 배지 코드
+   */
+  code: string;
+  /**
+   * 배지 표시명
+   */
+  name: string;
+}
 export type RatingResponse = { preference: (RatingPreference | null), moistureLevel: (number | null), oilLevel: (number | null) }
-export type ShelfProductInfoResponse = { id: number, name: string, brandName: string, imageUrl: string }
+export type ShelfProductInfoResponse = {
+  id: number;
+  name: string;
+  brandName: string;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
+  imageUrl: string;
+}
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
@@ -174,6 +193,10 @@ export type ProductResponse = {
   name: string;
   brand: BrandResponse;
   /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
+  /**
    * 제품 대표 이미지 URL
    */
   imageUrl: string;
@@ -303,7 +326,23 @@ export type SkinEffectGroupResponse = {
   items: Array<SkinEffectItemResponse>;
 }
 export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
-export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
+export type ProductDetailResponse = {
+  id: number;
+  name: string;
+  brand: BrandResponse;
+  categories: Array<CategoryPathResponse>;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
+  imageUrl: string;
+  variants: Array<ProductVariantResponse>;
+  moistureLevel: number;
+  oilLevel: number;
+  productParts: Array<ProductPartSummaryResponse>;
+  selectedPart: (ProductPartResponse | null);
+  updatedAt: string;
+}
 export type SimilarProductResponse = {
   /**
    * 대상 제품 ID
@@ -314,6 +353,10 @@ export type SimilarProductResponse = {
    */
   name: string;
   brand: BrandResponse;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
   imageUrl: string;
   /**
    * 유사도 계산에 사용된 대상 구성품 ID
@@ -364,13 +407,17 @@ export type ProductSuggestionResponse = {
    */
   name: string;
   /**
-   * 제품 대표 이미지 URL
-   */
-  imageUrl: string;
-  /**
    * 브랜드 한글명
    */
   brandName: string;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
   match: ProductSuggestionMatchResponse;
 }
 export type ProductSuggestionPageResponse = {
@@ -395,6 +442,10 @@ export type ProductRankingProductResponse = {
    * 브랜드명
    */
   brandName: string;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
   /**
    * 제품 대표 이미지 URL
    */
@@ -589,6 +640,10 @@ export type CurationProductResponse = {
    * 브랜드명
    */
   brandName: string;
+  /**
+   * 제품 배지, 없으면 빈 배열
+   */
+  badges: Array<BadgeResponse>;
   /**
    * 제품 대표 이미지 URL
    */

@@ -5439,6 +5439,25 @@
           "USED"
         ]
       },
+      "BadgeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "배지 코드",
+            "example": "DAISO"
+          },
+          "name": {
+            "type": "string",
+            "description": "배지 표시명",
+            "example": "다이소"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
       "RatingResponse": {
         "type": "object",
         "properties": {
@@ -5491,12 +5510,20 @@
             "type": "string",
             "example": "라운드랩"
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string",
             "example": "https://cdn.example.com/products/101.png"
           }
         },
         "required": [
+          "badges",
           "brandName",
           "id",
           "imageUrl",
@@ -6740,6 +6767,13 @@
             "$ref": "#/components/schemas/BrandResponse",
             "description": "브랜드 정보"
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string",
             "description": "제품 대표 이미지 URL",
@@ -6784,6 +6818,7 @@
           }
         },
         "required": [
+          "badges",
           "brand",
           "id",
           "imageUrl",
@@ -6919,6 +6954,13 @@
               "$ref": "#/components/schemas/CategoryPathResponse"
             }
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string",
             "example": "https://cdn.example.com/products/101.png"
@@ -6982,6 +7024,7 @@
           }
         },
         "required": [
+          "badges",
           "brand",
           "categories",
           "id",
@@ -7278,6 +7321,13 @@
           "brand": {
             "$ref": "#/components/schemas/BrandResponse"
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string"
           },
@@ -7293,6 +7343,7 @@
           }
         },
         "required": [
+          "badges",
           "brand",
           "containsExcludedIngredient",
           "id",
@@ -7375,15 +7426,22 @@
             "description": "제품명",
             "example": "스킨케어 이름"
           },
-          "imageUrl": {
-            "type": "string",
-            "description": "제품 대표 이미지 URL",
-            "example": "https://cdn.example.com/products/101.png"
-          },
           "brandName": {
             "type": "string",
             "description": "브랜드 한글명",
             "example": "브랜드 이름"
+          },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "제품 대표 이미지 URL",
+            "example": "https://cdn.example.com/products/101.png"
           },
           "match": {
             "$ref": "#/components/schemas/ProductSuggestionMatchResponse",
@@ -7391,6 +7449,7 @@
           }
         },
         "required": [
+          "badges",
           "brandName",
           "id",
           "imageUrl",
@@ -7461,6 +7520,13 @@
             "description": "브랜드명",
             "example": "파우디"
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string",
             "description": "제품 대표 이미지 URL",
@@ -7490,6 +7556,7 @@
           }
         },
         "required": [
+          "badges",
           "brandName",
           "id",
           "imageUrl",
@@ -8289,6 +8356,13 @@
             "description": "브랜드명",
             "example": "브랜드명"
           },
+          "badges": {
+            "type": "array",
+            "description": "제품 배지, 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/BadgeResponse"
+            }
+          },
           "imageUrl": {
             "type": "string",
             "description": "제품 대표 이미지 URL",
@@ -8328,6 +8402,7 @@
           }
         },
         "required": [
+          "badges",
           "brandName",
           "id",
           "imageUrl",

@@ -5,11 +5,13 @@ import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.product.domain.SimilarProduct;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 public record SimilarProductResponse(
     @NotNull @Schema(description = "대상 제품 ID", example = "101") Long id,
     @NotNull @Schema(description = "대상 제품명") String name,
     @NotNull BrandResponse brand,
+    @NotNull @Schema(description = "제품 배지, 없으면 빈 배열") List<BadgeResponse> badges,
     @NotNull String imageUrl,
     @NotNull @Schema(description = "유사도 계산에 사용된 대상 구성품 ID", example = "473") Long partId,
     @NotNull @Schema(description = "대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지") Boolean containsExcludedIngredient) {
@@ -18,6 +20,7 @@ public record SimilarProductResponse(
             item.product().id(),
             item.product().name(),
             BrandResponse.from(item.product().brand()),
+            BadgeResponse.from(item.product().badges()),
             item.product().imageUrl(),
             item.part().id(),
             item.containsExcludedIngredient(excludeCodes)

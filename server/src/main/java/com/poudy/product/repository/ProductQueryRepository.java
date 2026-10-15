@@ -6,6 +6,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
+import com.poudy.product.domain.Badge;
 import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
@@ -109,15 +110,18 @@ public class ProductQueryRepository {
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
 
     public ProductQueryRepository(
         NamedParameterJdbcTemplate jdbc,
+        ProductLoader loader,
         BrandRepository brandRepository,
         Clock clock
     ) {
         this.jdbc = jdbc;
+        this.loader = loader;
         this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
     }
@@ -192,6 +196,7 @@ public class ProductQueryRepository {
             )
         );
         List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
+        Map<Long, List<Badge>> badges = loader.loadBadges(ids);
         Map<Long, SuggestionDisplay> products = ids.isEmpty() ? Map.of() : jdbc.query(
             """
                 select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
@@ -210,8 +215,9 @@ public class ProductQueryRepository {
                 h -> new ProductSuggestion(
                     h.id(),
                     products.get(h.id()).name(),
-                    products.get(h.id()).imageUrl(),
                     products.get(h.id()).brandName(),
+                    badges.getOrDefault(h.id(), List.of()),
+                    products.get(h.id()).imageUrl(),
                     ProductMatchField.valueOf(h.field()),
                     h.text(),
                     new MatchRange(h.start(), h.finish())
@@ -226,6 +232,7 @@ public class ProductQueryRepository {
         if (ids.isEmpty()) {
             return List.of();
         }
+        Map<Long, List<Badge>> badges = loader.loadBadges(ids);
         Map<Long, ProductCard> cards = jdbc.query(
             """
                 select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level, p.updated_at,
@@ -246,6 +253,7 @@ public class ProductQueryRepository {
                     rs.getString("english_name"),
                     rs.getString("brand_image")
                 ),
+                badges.getOrDefault(rs.getLong("id"), List.of()),
                 Objects.requireNonNullElse(rs.getString("image_url"), ""),
                 rs.getLong("price"),
                 rs.getBigDecimal("volume_value"),

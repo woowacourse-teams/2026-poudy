@@ -195,6 +195,7 @@ describe("공유 메타데이터", () => {
       id: 101,
       name: "수분 세럼",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
+      badges: [],
       imageUrl: "https://images.example/product.png",
       selectedPart: { ingredients: [], skinEffectGroups: [] },
     });
@@ -218,6 +219,7 @@ describe("공유 메타데이터", () => {
       id: 102,
       name: "진정 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
+      badges: [],
       imageUrl: "",
       selectedPart: { ingredients: [], skinEffectGroups: [] },
     });
@@ -363,6 +365,7 @@ describe("공유 메타데이터", () => {
       id: 104,
       name: "약콩 판테놀 마스크",
       brand: { id: 2, name: "라운드랩", englishName: "Round Lab", imageUrl: "" },
+      badges: [],
       imageUrl: "",
       selectedPart: {
         ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
@@ -436,8 +439,9 @@ describe("공유 메타데이터", () => {
       id: 103,
       name: "장벽 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
-      imageUrl: "https://images.example/cream.png",
       categories: [],
+      badges: [],
+      imageUrl: "https://images.example/cream.png",
       variants: [],
       ingredients: [{ id: 1 }, { id: 2 }],
     });

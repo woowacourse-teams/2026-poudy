@@ -15,6 +15,7 @@ public record ProductDetailResponse(
     @NotNull @Schema(example = "스킨케어 이름") String name,
     @NotNull BrandResponse brand,
     @NotNull List<CategoryPathResponse> categories,
+    @NotNull @Schema(description = "제품 배지, 없으면 빈 배열") List<BadgeResponse> badges,
     @NotNull @Schema(example = "https://cdn.example.com/products/101.png") String imageUrl,
     @NotNull @Schema(example = """
         [{"id":1,"price":18000,"volumeValue":200,"volumeUnit":"ml","status":"active"},\
@@ -34,6 +35,7 @@ public record ProductDetailResponse(
             product.name(),
             BrandResponse.from(product.brand()),
             CategoryPathResponse.from(detail.categoryPath()),
+            BadgeResponse.from(product.badges()),
             product.imageUrl(),
             ProductVariantResponse.from(product.variants().values()),
             product.moistureLevel(),

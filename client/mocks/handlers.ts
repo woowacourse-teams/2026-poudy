@@ -248,6 +248,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   name: product.name,
   brand: product.brand,
   categories: [],
+  badges: product.badges,
   imageUrl: product.imageUrl,
   variants: [
     {
@@ -436,6 +437,7 @@ const curationProduct = (product: (typeof allProducts)[number]) => ({
   id: product.id,
   name: product.name,
   brandName: product.brand.name,
+  badges: product.badges,
   imageUrl: product.imageUrl,
   price: product.price,
   volumeValue: product.volumeValue,
@@ -629,6 +631,7 @@ export const handlers = [
           id: product.id,
           name: product.name,
           brandName: product.brand.name,
+          badges: product.badges,
           imageUrl: product.imageUrl,
           price: product.price,
           moistureLevel: product.moistureLevel,
@@ -667,8 +670,9 @@ export const handlers = [
       .map((product) => ({
         id: product.id,
         name: product.name,
-        imageUrl: product.imageUrl,
         brandName: product.brand.name,
+        badges: product.badges,
+        imageUrl: product.imageUrl,
         match: suggestionMatch(keyword, [
           { field: "PRODUCT_NAME", text: product.name },
           { field: "BRAND_NAME", text: product.brand.name },

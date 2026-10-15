@@ -1,18 +1,21 @@
 package com.poudy.product.domain;
 
 import com.poudy.search.domain.MatchRange;
+import java.util.List;
 import java.util.Objects;
 
 public record ProductSuggestion(
     Long id,
     String name,
-    String imageUrl,
     String brandName,
+    List<Badge> badges,
+    String imageUrl,
     ProductMatchField field,
     String text,
     MatchRange range) {
 
     public ProductSuggestion {
+        badges = List.copyOf(badges);
         Objects.requireNonNull(id);
         Objects.requireNonNull(name);
         Objects.requireNonNull(imageUrl);

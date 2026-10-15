@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 class ErdCloudSchemaTest {
 
     private static final Map<String, List<String>> ERD_COLUMNS = Map.ofEntries(
+        entry("badge", List.of("code", "name", "created_at", "updated_at")),
+        entry("product_badge", List.of("product_id", "badge_code", "created_at", "updated_at")),
         entry("brand", List.of("id", "korean_name", "english_name", "image_url", "created_at", "updated_at")),
         entry("category", List.of("id", "parent_id", "name", "depth", "created_at", "updated_at")),
         entry(
@@ -147,6 +149,8 @@ class ErdCloudSchemaTest {
     );
 
     private static final Map<String, List<String>> ERD_PRIMARY_KEYS = Map.ofEntries(
+        entry("badge", List.of("code")),
+        entry("product_badge", List.of("product_id", "badge_code")),
         entry("brand", List.of("id")),
         entry("category", List.of("id")),
         entry("curation", List.of("id")),

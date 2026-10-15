@@ -19,6 +19,7 @@ const rankingOf = (id: number, name: string): ProductRankingItemResponse => ({
     id,
     name,
     brandName: "라운드랩",
+    badges: [],
     imageUrl: `/images/products/${id}.png`,
     price: 20000,
     moistureLevel: 2,
