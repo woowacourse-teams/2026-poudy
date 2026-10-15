@@ -20,6 +20,7 @@ const BOTTOM_ACTION_BAR_PATHS = [
   "/my-page/age-range",
   "/my-page/skin-type",
   "/my-page/withdraw",
+  "/shelf/filter",
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>

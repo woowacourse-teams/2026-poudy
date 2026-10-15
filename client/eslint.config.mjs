@@ -1,5 +1,5 @@
 import js from "@eslint/js";
-import { designSystemLint } from "@poudy/design-system/lint";
+import { designSystemLint, RULES as DESIGN_SYSTEM_RULES } from "@poudy/design-system/lint";
 import { defineConfig, globalIgnores } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -14,6 +14,8 @@ const testFiles = ["**/*.test.ts", "**/*.test.tsx"];
 const domainFiles = ["lib/domain/**/*.ts"];
 // 관리자 화면은 명세에서 admin- 체계로 따로 정해 두어 디자인 토큰 린트의 대상이 아니다.
 const adminFiles = ["app/admin/**", "components/admin/**"];
+// 처음부터 토큰만 써서 새로 만든 화면. 경고 단계를 거치지 않고 디자인 토큰 린트를 오류로 켠다(#722 2단계 개편 구현).
+const tokenStrictFiles = ["app/shelf/**/*.{ts,tsx}", "components/shelf/**/*.{ts,tsx}"];
 
 const eslintConfig = defineConfig([
   js.configs.recommended,
@@ -101,6 +103,12 @@ const eslintConfig = defineConfig([
   },
   // 디자인 토큰 린트. 규칙과 명세 예외는 디자인 시스템 패키지가 정한다(design-system/lint).
   ...designSystemLint({ files: projectFiles, ignores: [...testFiles, ...adminFiles] }),
+  {
+    files: tokenStrictFiles,
+    ignores: testFiles,
+    // 심각도만 바꾸므로 규칙의 옵션(허용 목록 등)은 디자인 시스템 린트가 정한 그대로 남는다.
+    rules: Object.fromEntries(DESIGN_SYSTEM_RULES.map((rule) => [`shadcn/${rule}`, "error"])),
+  },
   eslintConfigPrettier,
   // Override the default ignores from eslint-config-next.
   // mockServiceWorker.js 는 msw 가 생성하는 파일이라 직접 고치지 않는다.
