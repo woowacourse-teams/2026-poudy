@@ -1,56 +1,19 @@
 @import "tailwindcss";
+@import "@poudy/design-system/theme.css";
 
 /*
- * 디자인 토큰은 client/design/v1.pen 의 변수를 옮긴 것이다.
- * 값을 바꿀 때는 디자인 파일과 함께 고친다.
- *
- * v1.pen 의 mobile-* 토큰은 ui-* 를 가리키는 별칭이라 옮기지 않았다.
- * 디자인에서 mobile-text 가 쓰인 자리는 ui-text-primary 와 같은 값이다.
+ * 디자인 토큰은 디자인 시스템 패키지(design-system)가 poudy-ui.pen 의 변수에서 만든다.
+ * 아래 @theme 에는 아직 명세에 없는 옛 토큰만 남아 있다. 명세와 이름이 같은 토큰을 여기에
+ * 다시 적으면 패키지 값을 덮어쓰므로 적지 않는다. 남은 토큰은 화면을 옮기면서 지운다(#743).
  */
 @theme {
-  /* 배경과 표면 */
-  --color-background: #ffffff;
-  --color-surface: #f7f7f8;
   --color-surface-subtle: #fafafb;
-  --color-border: #e8e9ec;
-
-  /* 본문 */
-  --color-text-primary: #202124;
-  --color-text-secondary: #72747a;
-
-  /* 강조 */
-  --color-brand: #f46a8d;
-  --color-brand-soft: #fff0f4;
-
-  /* 동작 */
-  --color-action: #202124;
-  --color-action-text: #ffffff;
-
-  /* 상태 */
-  --color-info: #38a6dd;
-  --color-info-soft: #eaf5fb;
-  --color-success: #17a47a;
-  --color-success-soft: #e7f6f0;
   --color-danger: #dc3545;
 
   /*
-   * 수분·유분 물방울.
-   * 수분은 Tailwind sky, 유분은 TDS(tossmini-docs.toss.im/tds-react-native) orange 를 쓴다.
-   * TDS 는 Tailwind 팔레트에 없으므로 값을 그대로 적어 둔다.
-   *
-   * 물방울은 도형이라 밝은 색을 그대로 쓰지만, 옆의 `수분`·`유분` 글자까지 같은 색으로
-   * 두면 흰 배경에서 읽히지 않는다(sky-300 은 1.67:1, TDS orange400 은 1.92:1).
-   * 글자는 대비 4.5:1 을 넘는 진한 색을 따로 둔다. TDS orange 는 가장 진한 orange900
-   * 도 3.73:1 에 그쳐 글자로 쓸 수 없어, 같은 계열의 더 어두운 색을 쓴다.
+   * 유수분 글자색. 명세의 --color-droplet-moisture-text · --color-droplet-oil-text 와 값이 같은
+   * 옛 이름이다.
    */
-  /*
-   * 유수분 물방울과 글자. design/v2.pen 의 `팔레트 · 유수분 데이터` 를 따른다.
-   * 물방울은 수분 water-300 · 유분 oil-400 으로 칠하고, 글자는 같은 계열의 700 단계를 쓴다.
-   * 빈 칸은 색을 바꾸지 않고 테두리만 남은 물방울로 그린다.
-   */
-  --color-droplet-moisture: #6aabd6;
-  --color-droplet-oil: #c69e69;
-
   --color-level-moisture-text: #1f6b8e;
   --color-level-oil-text: #854c2c;
 
@@ -63,7 +26,6 @@
   /* 타이포 */
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --text-body: 14px;
 
   /* 형태 */
   --radius-button: 14px;
@@ -77,11 +39,10 @@
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
   /*
-   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
+   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브는 패키지의 --ease-drawer 를 쓴다.
    * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
    */
   --transition-duration-drawer: 320ms;
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   /*
    * 고른 자리로 미끄러지는 표시(탭 밑줄과 알약).
@@ -107,11 +68,6 @@
   --transition-duration-shake: 280ms;
   --ease-release: linear(0, 0.45 14%, 0.82 28%, 1.267 48%, 1.04 64%, 0.933 76%, 1.015 89%, 1);
   --transition-duration-celebration: 520ms;
-  /*
-   * 움직이는 것은 모두 이 커브를 쓴다. 예전에 쓰던 cubic-bezier(0, 0, 0.2, 1) 은
-   * 끝이 흐리게 끌려, 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다.
-   */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;

@@ -3,6 +3,7 @@
 packages:
   - client
   - common
+  - design-system
 
 # common 과 client 가 함께 쓰는 의존성은 버전을 여기서 한 번만 정한다.
 # 두 곳에서 따로 적으면 한쪽만 올렸을 때 common 의 스키마가 다른 zod 로 해석된다.
