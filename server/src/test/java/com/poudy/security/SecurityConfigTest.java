@@ -18,6 +18,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -69,6 +71,14 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/oauth2/authorization/naver"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("ENDPOINT_NOT_FOUND"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/members/me", "/api/users/me/shelf", "/api/admin/me", "/api/auth/withdrawn"})
+    @DisplayName("회원·관리자·로그인 API 응답에는 캐시 금지 헤더를 붙인다")
+    void forbidsCachingPrivateResponses(String path) throws Exception {
+        mockMvc.perform(get(path))
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
     }
 
     @Test

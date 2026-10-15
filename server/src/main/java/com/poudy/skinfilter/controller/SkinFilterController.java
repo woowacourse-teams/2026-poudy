@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,9 +36,7 @@ public class SkinFilterController {
     @GetMapping
     public ResponseEntity<SkinFilterResponse> findSkinFilter(@AuthenticationPrincipal LoginMember loginMember) {
         Ingredients ingredients = skinFilterService.findIngredients(loginMember.id());
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(SkinFilterResponse.from(ingredients));
+        return ResponseEntity.ok(SkinFilterResponse.from(ingredients));
     }
 
     @Operation(summary = "나만의 필터 성분 추가", description = "고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.")

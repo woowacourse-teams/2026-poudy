@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,9 +44,7 @@ public class ShelfController {
     @GetMapping
     public ResponseEntity<ShelfResponse> findShelf(@AuthenticationPrincipal LoginMember loginMember) {
         Shelf shelf = shelfService.findShelf(loginMember.id());
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(ShelfResponse.from(shelf));
+        return ResponseEntity.ok(ShelfResponse.from(shelf));
     }
 
     @Operation(summary = "선반 제품 ID 조회", description = "선반에 담은 제품 ID를 최근 등록순으로 조회한다.")
@@ -55,9 +52,7 @@ public class ShelfController {
     @GetMapping("/product-ids")
     public ResponseEntity<ShelfProductIdsResponse> findProductIds(@AuthenticationPrincipal LoginMember loginMember) {
         List<Long> productIds = shelfService.findProductIds(loginMember.id());
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(new ShelfProductIdsResponse(productIds));
+        return ResponseEntity.ok(new ShelfProductIdsResponse(productIds));
     }
 
     @Operation(summary = "선반 제품 등록", description = "제품을 평가와 함께 선반에 담는다. 평가는 선택이다.")
@@ -74,7 +69,6 @@ public class ShelfController {
             request.rating()
         );
         return ResponseEntity.status(HttpStatus.CREATED)
-            .cacheControl(CacheControl.noStore())
             .body(ShelfProductResponse.from(addedItem));
     }
 
@@ -92,9 +86,7 @@ public class ShelfController {
             request.usageStatus(),
             request.rating()
         );
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(ShelfProductResponse.from(updatedItem));
+        return ResponseEntity.ok(ShelfProductResponse.from(updatedItem));
     }
 
     @Operation(summary = "선반 제품 삭제", description = "선반에서 제품을 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다.")
@@ -112,8 +104,6 @@ public class ShelfController {
         @AuthenticationPrincipal LoginMember loginMember
     ) {
         IngredientAnalysis analysis = shelfService.analyzeIngredients(loginMember.id());
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(IngredientAnalysisResponse.from(analysis));
+        return ResponseEntity.ok(IngredientAnalysisResponse.from(analysis));
     }
 }

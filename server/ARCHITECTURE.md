@@ -305,8 +305,9 @@ Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이
 (staging 포함)에서 온 요청에는 운영 쿠키가 실리고, 본문 없는 POST는 CORS preflight도 거치지 않는다.
 그래서 GET·HEAD·OPTIONS·TRACE가 아닌 요청은 `Origin`이 같은 오리진이거나 `ClientOrigins`가 허용하는 오리진일 때만
 통과시키고, 아니면 403 `FORBIDDEN_ORIGIN`으로 거절한다. 이 확인은 `security.filter`의 `ForeignOriginFilter`가 맡는다. `Origin`이 없는 요청은 브라우저가 아니므로
-통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 기존 응답 캐시를 바꾸지 않고, 회원 응답만
-`no-store`로 둔다.
+통과시킨다. 토큰 방식은 staging에서 프론트와 API 호스트가 달라 쿠키로 토큰을 읽을 수 없어 쓰지 않는다. Security 기본 `Cache-Control: no-store`는 꺼서 공개 응답 캐시(nginx의 카테고리 캐시 등)를 바꾸지 않고,
+회원·관리자·로그인 경로(`/api/members/**`, `/api/users/**`, `/api/admin/**`, `/api/auth/**`)의 응답에만 Security가
+`no-store`를 붙인다. 컨트롤러는 따로 붙이지 않는다.
 
 ### Member
 

@@ -7,7 +7,6 @@ import com.poudy.storage.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,18 +33,14 @@ public class StorageController {
     public ResponseEntity<SavedProductIdsResponse> findSavedProductIds(
         @AuthenticationPrincipal LoginMember loginMember
     ) {
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(new SavedProductIdsResponse(storageService.findSavedProductIds(loginMember.id())));
+        return ResponseEntity.ok(new SavedProductIdsResponse(storageService.findSavedProductIds(loginMember.id())));
     }
 
     @Operation(summary = "저장함 조회", description = "저장한 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 저장한 것이 앞에 온다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     public ResponseEntity<SavedProductsResponse> findSavedProducts(@AuthenticationPrincipal LoginMember loginMember) {
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(SavedProductsResponse.from(storageService.findSavedProducts(loginMember.id())));
+        return ResponseEntity.ok(SavedProductsResponse.from(storageService.findSavedProducts(loginMember.id())));
     }
 
     @Operation(summary = "제품 저장", description = "이미 저장한 제품이면 그대로 둔다.")

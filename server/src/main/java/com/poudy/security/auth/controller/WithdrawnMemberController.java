@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,9 +34,7 @@ public class WithdrawnMemberController {
     public ResponseEntity<WithdrawnAccountResponse> findWithdrawn(HttpServletRequest request) {
         long withdrawnMemberId = loginSession.findWithdrawnMember(request)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND));
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(WithdrawnAccountResponse.from(socialMembers.findWithdrawn(withdrawnMemberId)));
+        return ResponseEntity.ok(WithdrawnAccountResponse.from(socialMembers.findWithdrawn(withdrawnMemberId)));
     }
 
     @Operation(summary = "탈퇴 계정 복구 요청", description = "탈퇴한 계정으로 방금 소셜 로그인한 사람이 복구를 요청한다. 복구 여부는 관리자가 정한다.")
