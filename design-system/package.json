@@ -25,7 +25,9 @@
     "./badge": "./src/badge.tsx",
     "./tabs": "./src/tabs.tsx",
     "./tab-nav": "./src/tab-nav.tsx",
-    "./disclosure": "./src/disclosure.tsx"
+    "./disclosure": "./src/disclosure.tsx",
+    "./use-delayed-flag": "./src/use-delayed-flag.ts",
+    "./skeleton": "./src/skeleton.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
