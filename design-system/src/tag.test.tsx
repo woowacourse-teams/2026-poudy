@@ -43,7 +43,7 @@ describe("Tag", () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
-    const tooltip = () => document.body.querySelector(":scope > [aria-hidden='true']");
+    const tooltip = () => document.querySelector("#overlay-root > [aria-hidden='true']");
 
     it("줄인 칩을 500ms 누르면 전체 이름을 보이고, 손을 떼면 닫는다", () => {
       render(<Tag variant="summary">향료/알레르기 성분</Tag>);

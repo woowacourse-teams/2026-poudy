@@ -4,6 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { FocusEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { getOverlayRoot } from "./portal";
+
 /** 길게 누르기로 보기까지의 시간 */
 const LONG_PRESS_MS = 500;
 /** 누른 자리에서 이만큼 움직이면 스크롤로 보고 길게 누르기를 취소한다. */
@@ -114,7 +116,7 @@ export function useTooltip(enabled: () => boolean) {
 }
 
 /**
- * 툴팁 말풍선. 시트나 가로 스크롤 줄에 잘리지 않도록 문서 맨 위층에 띄운다.
+ * 툴팁 말풍선. 시트나 가로 스크롤 줄에 잘리지 않도록 떠 있는 면의 자리(#overlay-root)에 띄운다.
  * 칩 위쪽 가운데에 간격 8 로 뜨고, 위에 자리가 없으면 아래에 뜬다. 화면 끝에 걸리면 거터 안쪽으로 밀어 넣는다.
  * 전체 이름은 칩의 접근 가능한 이름이 이미 읽으므로 낭독에서 뺀다.
  */
@@ -155,6 +157,6 @@ export function TooltipBubble({
     >
       {children}
     </div>,
-    document.body,
+    getOverlayRoot(),
   );
 }

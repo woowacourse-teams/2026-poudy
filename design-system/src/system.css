@@ -18,7 +18,7 @@
 }
 
 /*
- * 쌓임 순서 8층(SHAPE E06). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 쌓임 순서 8층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
  *
  * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
  * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
