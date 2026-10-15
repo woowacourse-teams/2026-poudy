@@ -3,11 +3,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./theme.css": "./src/index.css"
+    "./theme.css": "./src/index.css",
+    "./lint": "./lint/index.mjs"
   },
   "scripts": {
     "tokens": "node scripts/build-tokens.mjs",
     "tokens:check": "node scripts/build-tokens.mjs --check",
-    "test": "node --test"
+    "test": "node --test",
+    "exceptions:check": "node scripts/check-exception-tags.mjs ../client/app ../client/components ../client/lib"
+  },
+  "dependencies": {
+    "@shadcn/lint": "0.2.1"
   }
 }
