@@ -104,7 +104,8 @@
   --text-label: 11px;
   --text-label--line-height: var(--leading-snug);
 
-  /* 행간 네 단계(TYPO). Tailwind 기본 leading-* 값을 덮어쓴다 */
+  /* 행간 다섯 단계(TYPO T04). Tailwind 기본 leading-* 값을 덮어쓴다 */
+  --leading-none: 1;
   --leading-tight: 1.3;
   --leading-snug: 1.4;
   --leading-normal: 1.5;

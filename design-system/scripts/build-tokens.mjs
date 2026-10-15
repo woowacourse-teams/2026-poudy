@@ -96,7 +96,7 @@ const GROUPS = [
   ["brand", "팔레트 밖 브랜드 지정 색: 카카오·구글 로그인 버튼(색상 팔레트 '팔레트 밖')"],
   ["text", "글자 크기 단계(TYPO T11)"],
   ["role", "글자 위계 역할. 크기와 행간을 함께 묶는다(TYPO T02·T11)"],
-  ["leading", "행간 네 단계(TYPO). Tailwind 기본 leading-* 값을 덮어쓴다"],
+  ["leading", "행간 다섯 단계(TYPO T04). Tailwind 기본 leading-* 값을 덮어쓴다"],
   ["radius", "반경(SHAPE E01). Tailwind 기본 rounded-* 값을 덮어쓴다"],
   ["duration", "시간(MOTION M01). duration-(--duration-fast) 처럼 쓴다"],
   ["state", "상태 값(STATE S03·S06, A11Y D10)"],

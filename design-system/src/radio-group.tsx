@@ -180,7 +180,7 @@ export function RadioGroupItem({ value, children, description, image, disabled =
       ) : null}
 
       {variant === "button" ? (
-        <span className={cn("text-title font-semibold", checked ? "text-text-primary" : "text-text-body")}>
+        <span className={cn("text-title leading-none font-semibold", checked ? "text-text-primary" : "text-text-body")}>
           {children}
         </span>
       ) : null}

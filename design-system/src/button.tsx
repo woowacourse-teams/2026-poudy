@@ -28,13 +28,13 @@ const buttonVariants = cva(
         destructive: "press-scale fb-danger bg-danger-action text-action-text",
         // 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12).
         outline:
-          "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 font-semibold text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
+          "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 leading-none font-semibold text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
         // 행이라 크기는 바꾸지 않고 색만 바꾼다(STATE S07).
-        text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 font-semibold text-text-primary",
+        text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 leading-none font-semibold text-text-primary",
       },
       size: {
-        md: "h-12 px-4 text-14 font-semibold",
-        lg: "h-14 px-6 text-16 font-bold",
+        md: "h-12 px-4 text-14 leading-none font-semibold",
+        lg: "h-14 px-6 text-16 leading-none font-bold",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },
@@ -101,7 +101,11 @@ export function Button({
       className={cn(buttonVariants({ variant, size: fixedSize ? null : size }), className)}
     >
       {leadingIcon}
-      {variant === "text" ? <span className="min-w-0 truncate">{children}</span> : children}
+      {variant === "text" ? (
+        <span className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">{children}</span>
+      ) : (
+        children
+      )}
       {trailingIcon}
     </button>
   );
