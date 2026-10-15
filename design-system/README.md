@@ -4,14 +4,15 @@
 
 ## 구성
 
-| 파일                       | 내용                                                                               | 고치는 방법                                                                     |
-| -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `tokens.json`              | `.pen` 변수를 가공하지 않고 그대로 옮긴 것                                         | 아래 절차대로 다시 내보낸다                                                     |
-| `src/tokens.css`           | `tokens.json`에서 만든 Tailwind `@theme`                                           | 손으로 고치지 않는다. `pnpm --filter @poudy/design-system tokens`로 다시 만든다 |
-| `src/system.css`           | 변수로 표현하지 않는 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티) | 주인 보드(SHAPE E06, MOTION M04, LAYOUT L02·L09)를 고친 뒤 함께 고친다          |
-| `scripts/build-tokens.mjs` | 변수 이름을 코드 이름으로 옮기는 규칙(MAP G03)                                     | 새 변수에 규칙이 없으면 생성이 실패한다. 규칙을 먼저 정한다                     |
+| 파일                       | 내용                                                                                                                                                 | 고치는 방법                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tokens.json`              | `.pen` 변수를 가공하지 않고 그대로 옮긴 것                                                                                                           | 아래 절차대로 다시 내보낸다                                                     |
+| `src/tokens.css`           | `tokens.json`에서 만든 Tailwind `@theme`                                                                                                             | 손으로 고치지 않는다. `pnpm --filter @poudy/design-system tokens`로 다시 만든다 |
+| `src/system.css`           | 변수로 표현하지 않는 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티)                                                                   | 주인 보드(SHAPE E06, MOTION M04, LAYOUT L02·L09)를 고친 뒤 함께 고친다          |
+| `src/interaction.css`      | 누를 수 있는 자리의 상태 모양(`fb-*`, `press-scale`, 포커스 링, 비활성, 입력칸). `usePressable`이 붙이는 `data-hovered`·`data-pressed`를 보고 칠한다 | 주인 보드(STATE S01~S11)를 고친 뒤 함께 고친다                                  |
+| `scripts/build-tokens.mjs` | 변수 이름을 코드 이름으로 옮기는 규칙(MAP G03)                                                                                                       | 새 변수에 규칙이 없으면 생성이 실패한다. 규칙을 먼저 정한다                     |
 
-client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다.
+client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다. `theme.css`는 패키지 소스도 Tailwind가 훑도록 `@source`를 지정하므로, 부품이 쓰는 클래스는 client가 따로 설정하지 않아도 만들어진다.
 
 ## 명세가 바뀌었을 때
 
