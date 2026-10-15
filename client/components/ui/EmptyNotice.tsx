@@ -49,7 +49,7 @@ export function EmptyNotice({ icon, image, title, detail, size = "section", clas
 
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-[#D1D3D8] ${
+      className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-[#D1D3D8] ${
         /* 그림에는 둘레 여백이 이미 들어 있어 사이를 더 띄우면 문구가 멀어 보인다. */
         image ? shape.box.replace(/gap-\S+/, "gap-0") : shape.box
       } ${className}`}

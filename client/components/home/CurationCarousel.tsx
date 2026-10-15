@@ -785,7 +785,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
         <div className="relative -mx-4">
           {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
           <div className="px-4">
-            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-[18px]" />
+            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-3xl" />
           </div>
         </div>
       </section>
@@ -897,7 +897,7 @@ export function CurationCarousel({ items }: CurationCarouselProps) {
                     키우면 1.9배쯤부터 그렇게 된다. `overflow-clip` 은 둥근 모서리 밖을 똑같이
                     잘라 내면서도 이 동작을 지킨다.
                   */}
-                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-[18px] px-5 py-4">
+                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.

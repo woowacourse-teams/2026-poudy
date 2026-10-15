@@ -24,7 +24,7 @@ export function TargetProduct({
   const source = failed || !imageUrl ? PRODUCT_PLACEHOLDER : imageUrl;
 
   return (
-    <section className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
+    <section className="flex items-center gap-3 rounded-lg bg-surface-subtle p-3">
       {/* 제품 사진은 여백이 넓고 세로로 길다. 잘라내면 흰 부분만 남으므로 비율을 지켜 담는다. */}
       <span className="relative size-14 shrink-0">
         <ProductImage

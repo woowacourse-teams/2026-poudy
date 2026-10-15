@@ -124,7 +124,7 @@ export function SheetDetailLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`flex h-12 w-full items-center justify-center rounded-[14px] bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132] ${PRESS_SCALE}`}
+      className={`flex h-12 w-full items-center justify-center rounded-xl bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132] ${PRESS_SCALE}`}
     >
       <span className="truncate">{children}</span>
     </Link>

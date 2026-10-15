@@ -23,7 +23,7 @@ export function FilterChip({ label, selected = false, count = 0, onClick }: Filt
        * 못하므로 색만 사이를 이어 준다.
        */
       className={[
-        "filter-chip inline-flex h-8 shrink-0 items-center gap-1 rounded-2xl border px-3 text-[13px] leading-none font-medium",
+        "filter-chip inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-[13px] leading-none font-medium",
         "motion-reduce:transition-none",
         selected ? "border-[#212124] bg-[#212124] text-white" : "border-[#D1D3D8] bg-white text-[#212124]",
       ].join(" ")}

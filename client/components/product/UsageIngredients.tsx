@@ -64,7 +64,7 @@ export function UsageIngredients({
           */
           <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-[#DEE2E9] py-3 last:border-b-0">
             <span className="flex min-h-9 w-[calc(100em/14)] shrink-0 items-center gap-2 text-[14px]">
-              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-2xl bg-[#EFF1F5] text-[16px]">
+              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-full bg-[#EFF1F5] text-[16px]">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-[#424E5F]" />
               </span>

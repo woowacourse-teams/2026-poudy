@@ -34,7 +34,7 @@ export function ConditionButton({ kind, active, onClick, ingredientName }: Condi
       onClick={onClick}
       aria-pressed={active}
       aria-label={`${ingredientName} ${label}`}
-      className={`h-8 w-12 shrink-0 rounded-2xl border text-[12px] ${
+      className={`h-8 w-12 shrink-0 rounded-full border text-[12px] ${
         active ? `${activeStyle} font-bold text-white` : "border-[#DDE0E4] bg-white font-semibold text-[#212124]"
       }`}
     >

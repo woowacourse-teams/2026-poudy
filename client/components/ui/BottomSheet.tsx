@@ -98,7 +98,7 @@ function Shell({ shown, onClose, onExited, children }: ShellProps) {
         onTransitionEnd={(event) => {
           if (event.target === event.currentTarget && !shown) onExited();
         }}
-        className="bottom-sheet fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[70vh] w-full max-w-md flex-col rounded-t-3xl bg-white"
+        className="bottom-sheet fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[70vh] w-full max-w-md flex-col rounded-t-4xl bg-white"
       >
         {children}
       </div>
@@ -118,7 +118,7 @@ function Header({ title, description }: { readonly title: string; readonly descr
   return (
     <div {...handleProps} className="shrink-0 cursor-grab touch-none active:cursor-grabbing">
       <div className="flex h-5 items-center justify-center">
-        <span className="h-1 w-9 rounded-sm bg-[#C9CDD2]" aria-hidden="true" />
+        <span className="h-1 w-9 rounded-full bg-[#C9CDD2]" aria-hidden="true" />
       </div>
 
       <div className="flex flex-col gap-1 px-5 pt-3 pb-5">
@@ -141,7 +141,7 @@ function CustomHeader({ children }: { readonly children: React.ReactNode }) {
   return (
     <div {...handleProps} className="shrink-0 cursor-grab touch-none active:cursor-grabbing">
       <div className="flex h-5 items-center justify-center">
-        <span className="h-1 w-9 rounded-sm bg-[#B0BAC7]" aria-hidden="true" />
+        <span className="h-1 w-9 rounded-full bg-[#B0BAC7]" aria-hidden="true" />
       </div>
       {children}
     </div>
@@ -195,7 +195,7 @@ function ResetButton({ onClick }: { readonly onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="h-12 flex-1 rounded-[10px] bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
+      className="h-12 flex-1 rounded-xl bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
     >
       초기화
     </button>
@@ -216,7 +216,7 @@ function SubmitButton({ children, onClick, disabled }: SubmitButtonProps) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="h-12 flex-2 rounded-[10px] bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+      className="h-12 flex-2 rounded-xl bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>

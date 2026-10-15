@@ -54,7 +54,7 @@ export function WithdrawScreen() {
         <div className="flex-1 px-4 pt-4 pb-[var(--inquiry-button-clearance)]">
           <h1 className="text-[20px] font-bold tracking-tight">탈퇴하기 전에 확인해 주세요</h1>
 
-          <div className="mt-5 rounded-xl bg-surface p-4">
+          <div className="mt-5 rounded-lg bg-surface p-4">
             <p className="text-[14px] font-semibold">탈퇴하고 30일이 지나면 이 정보가 모두 지워져요</p>
             <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-[14px] text-text-primary">
               {ERASED_ITEMS.map((item) => (

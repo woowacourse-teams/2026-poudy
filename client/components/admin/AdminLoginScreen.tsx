@@ -46,7 +46,7 @@ export function AdminLoginScreen() {
     <main data-desktop-page className="flex min-h-svh items-center justify-center bg-surface px-6">
       <form
         onSubmit={submit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-background p-8"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border bg-background p-8"
       >
         <h1 className="text-[22px] font-bold tracking-tight">관리자</h1>
         <label className="flex flex-col gap-1.5 text-[14px] font-bold">

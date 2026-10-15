@@ -33,7 +33,7 @@ export const PRESS_TEXT =
  * 항목에 여백을 주면 원래 배치가 밀리므로 가상 요소로 칠한다. 두 칸 격자의 간격(12px) 안에서 서로 겹치지 않는다.
  */
 export const PRESS_SURFACE_OUTSET =
-  "relative isolate before:absolute before:-inset-x-1.5 before:-inset-y-1 before:-z-10 before:rounded-lg before:transition-colors before:duration-control-state before:ease-out before:content-[''] active:before:bg-[#EFF1F5] active:before:duration-press pointer-fine:hover:before:bg-[#EFF1F5]";
+  "relative isolate before:absolute before:-inset-x-1.5 before:-inset-y-1 before:-z-10 before:rounded-md before:transition-colors before:duration-control-state before:ease-out before:content-[''] active:before:bg-[#EFF1F5] active:before:duration-press pointer-fine:hover:before:bg-[#EFF1F5]";
 
 /**
  * 배지가 든 목록 행. 행의 바탕이 배지 바탕(#EFF1F5)과 같아 배지 모양이 묻히므로, 그동안 배지를 흰색으로 바꾼다.

@@ -17,7 +17,7 @@ export default function TermsPage() {
     <>
       <TopBar title="이용약관" variant="sub" />
       <LegalDocument title={`${OPERATOR.serviceName} 이용약관`} effectiveDate={CURRENT_TERMS_EFFECTIVE_DATE}>
-        <details className="rounded-xl border border-border p-3">
+        <details className="rounded-lg border border-border p-3">
           <summary className="cursor-pointer font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-action">
             {OPERATOR.effectiveDate.terms} 시행 예정 약관 펼쳐보기
           </summary>

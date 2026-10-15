@@ -66,14 +66,14 @@ export function SignupSheet() {
       <BottomSheet.Header title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
 
       <form onSubmit={submit} className="flex flex-col px-5 pb-6">
-        <label className="flex h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border border-[#d3d6dc] px-4">
+        <label className="flex h-[52px] cursor-pointer items-center gap-2.5 rounded-lg border border-[#d3d6dc] px-4">
           <input
             type="checkbox"
             checked={overFourteen}
             onChange={(event) => setOverFourteen(event.target.checked)}
             className="peer sr-only"
           />
-          <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action">
+          <span className="rounded-xs peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action">
             <CheckMark checked={overFourteen} />
           </span>
           <span className="text-[15px]">만 14세 이상이에요</span>

@@ -188,7 +188,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         들어가지 않으면 다음 줄로 넘긴다. 기본 크기에서는 한 줄에 들어간다.
       */}
       <div
-        className={`@container flex min-h-12.5 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border border-border bg-background px-3.5 py-1.5 ${
+        className={`@container flex min-h-12.5 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-lg border border-border bg-background px-3.5 py-1.5 ${
           expanded ? "rounded-b-none border-b-transparent" : ""
         }`}
       >
@@ -296,7 +296,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
       {expanded ? (
         <ol
           id={listId}
-          className={`flex flex-col rounded-b-xl border border-t-0 border-border bg-background pb-1.5 ${
+          className={`flex flex-col rounded-b-lg border border-t-0 border-border bg-background pb-1.5 ${
             panel ? "" : "absolute inset-x-0 top-full z-10 shadow-lg"
           }`}
         >

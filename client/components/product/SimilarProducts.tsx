@@ -43,7 +43,7 @@ export function SimilarProducts({ products }: { readonly products: readonly Simi
                 alt=""
                 size={64}
                 loading="lazy"
-                className="col-start-1 row-span-2 row-start-1 size-16 self-start rounded-xl object-contain @min-[calc(88px_+_10.7em)]:row-span-1 @min-[calc(88px_+_10.7em)]:self-center"
+                className="col-start-1 row-span-2 row-start-1 size-16 self-start rounded-sm object-contain @min-[calc(88px_+_10.7em)]:row-span-1 @min-[calc(88px_+_10.7em)]:self-center"
               />
 
               <span className="col-start-2 row-start-2 flex min-w-0 flex-col gap-1 self-start @min-[calc(88px_+_10.7em)]:row-start-1 @min-[calc(88px_+_10.7em)]:self-center">

@@ -36,7 +36,7 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
               aria-expanded={expanded}
               onClick={() => setExpandedId(expanded ? undefined : category.id)}
               className={`flex h-10 w-full items-center justify-between px-3 text-[15px] font-semibold text-[#212124] ${
-                expanded ? "rounded-[10px] bg-[#F7F7F8]" : "border-b border-border"
+                expanded ? "rounded-md bg-[#F7F7F8]" : "border-b border-border"
               }`}
             >
               {category.name}
@@ -67,7 +67,7 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
                           aria-checked={selected}
                           onClick={() => onSelect(toggleCategoryIds(selectedIds, ids))}
                           className={`flex h-10 w-full items-center gap-2.5 py-0 pr-3 pl-7 text-left ${
-                            selected ? "rounded-[10px] bg-[#F2F3F5]" : ""
+                            selected ? "rounded-md bg-[#F2F3F5]" : ""
                           }`}
                         >
                           <CheckMark checked={selected} />

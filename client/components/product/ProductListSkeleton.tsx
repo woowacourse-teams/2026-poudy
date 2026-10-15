@@ -9,7 +9,7 @@ export function ProductRowsSkeleton({ rows = 20 }: { readonly rows?: number }) {
       <div aria-hidden="true" className="animate-pulse bg-white px-4">
         <div className="flex items-center justify-between py-2">
           <div className="h-4 w-16 rounded bg-[#EDEEF0]" />
-          <div className="h-9 w-20 rounded-[10px] bg-[#F2F3F5]" />
+          <div className="h-9 w-20 rounded-full bg-[#F2F3F5]" />
         </div>
       </div>
 

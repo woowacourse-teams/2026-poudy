@@ -41,7 +41,7 @@ function Choice<T extends string>({ group, value, selected, onSelect, children, 
         className="peer sr-only"
       />
       <span
-        className={`flex rounded-xl border border-[#d3d6dc] bg-background text-[15px] peer-checked:border-action peer-checked:ring-1 peer-checked:ring-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action ${
+        className={`flex rounded-lg border border-[#d3d6dc] bg-background text-[15px] peer-checked:border-action peer-checked:ring-1 peer-checked:ring-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action ${
           card ? "min-h-[108px] flex-col items-start gap-2 p-3.5" : "h-[52px] items-center justify-center gap-2"
         }`}
       >
@@ -128,7 +128,7 @@ export function OnboardingScreen() {
             <button
               type="button"
               onClick={() => router.replace(takeLoginReturn())}
-              className="mt-1 shrink-0 rounded-sm py-1 text-[14px] text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+              className="mt-1 shrink-0 rounded-xs py-1 text-[14px] text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
             >
               건너뛰기
             </button>

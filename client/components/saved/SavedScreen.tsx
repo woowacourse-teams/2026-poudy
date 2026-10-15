@@ -109,7 +109,7 @@ function UndoRow({
           type="button"
           onClick={onUndo}
           aria-label={`${productName} 저장 되돌리기`}
-          className="flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-white px-3 text-[12px] font-bold text-text-primary"
+          className="flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-sm border border-border bg-white px-3 text-[12px] font-bold text-text-primary"
         >
           되돌리기
         </button>
@@ -320,7 +320,7 @@ export function SavedScreen() {
         <p className="py-10 text-center text-[13px] text-text-secondary">검색 결과가 없어요.</p>
       )}
 
-      <Link href="/search/products" className="mt-2 mb-6 flex items-center gap-3 rounded-xl bg-surface p-3.5">
+      <Link href="/search/products" className="mt-2 mb-6 flex items-center gap-3 rounded-lg bg-surface p-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background">
           <Icon name="search" size={20} className="text-text-secondary" />
         </span>

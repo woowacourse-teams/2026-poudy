@@ -47,7 +47,7 @@ export function OtherCurations({ currentId, curations }: OtherCurationsProps) {
                 제목·설명의 자리는 홈 카드와 같게 둔다. 본문을 다 내려온 뒤에야 보이는 자리라
                 그림은 미뤄 받는다.
               */}
-              <article className="relative flex h-32 flex-col justify-end overflow-hidden rounded-[18px] p-5">
+              <article className="relative flex h-32 flex-col justify-end overflow-hidden rounded-3xl p-5">
                 <Image
                   src={imageDeliveryUrl(curation.thumbnailImageUrl)}
                   alt=""

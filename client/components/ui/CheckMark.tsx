@@ -27,7 +27,7 @@ const CHECKED_TONE = {
 export function CheckMark({ checked, tone = "neutral" }: CheckMarkProps) {
   return (
     <span
-      className={`flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors duration-control-state ease-out motion-reduce:transition-none ${
+      className={`flex size-4 shrink-0 items-center justify-center rounded-xs border transition-colors duration-control-state ease-out motion-reduce:transition-none ${
         checked ? CHECKED_TONE[tone] : "border-[#B9BDC5] bg-white"
       }`}
     >

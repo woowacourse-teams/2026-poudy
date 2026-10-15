@@ -66,7 +66,7 @@ function ProductThumbnailImage({
    */
   return (
     <div
-      className={`size-20 shrink-0 overflow-hidden rounded-lg ${settled ? "bg-transparent" : "bg-[#F2F3F5]"}`}
+      className={`size-20 shrink-0 overflow-hidden rounded-sm ${settled ? "bg-transparent" : "bg-[#F2F3F5]"}`}
       data-thumbnail-state={settled ? "loaded" : "loading"}
     >
       <ProductImage

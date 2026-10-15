@@ -281,7 +281,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
       ) : typing ? (
         <>
           {empty ? (
-            <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
+            <p className="rounded-lg bg-surface p-3 text-center text-[13px] text-text-secondary">
               ‘{trimmed}’에 대한 검색 결과가 없어요
             </p>
           ) : (
@@ -293,7 +293,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                 recordKeyword(trimmed);
                 rememberFilter(trimmed);
               }}
-              className="flex items-center gap-3 rounded-xl bg-surface p-3"
+              className="flex items-center gap-3 rounded-lg bg-surface p-3"
             >
               <Icon name="search" size={18} className="text-text-secondary" />
               <span className="flex flex-1 flex-col gap-0.5">
@@ -344,7 +344,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                         alt=""
                         size={40}
                         loading="lazy"
-                        className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
+                        className="size-10 shrink-0 rounded-sm bg-transparent object-contain"
                       />
                       <span className="flex flex-1 flex-col gap-0.5">
                         {/*

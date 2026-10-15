@@ -24,7 +24,7 @@ export function SelectedIngredientChip({ kind, name, onRemove }: SelectedIngredi
 
   return (
     <span className="flex h-10 items-center gap-[7px] rounded-[20px] border border-[#E8E9EC] bg-white px-3">
-      <span className={`flex h-5 shrink-0 items-center rounded-[10px] px-[7px] text-[10px] font-bold ${badge}`}>
+      <span className={`flex h-5 shrink-0 items-center rounded-md px-[7px] text-[10px] font-bold ${badge}`}>
         {label}
       </span>
 

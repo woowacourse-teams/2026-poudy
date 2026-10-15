@@ -86,7 +86,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
 
         <Link
           href={`/products?includeGroupCodes=${encodeURIComponent(group.code)}`}
-          className={`flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] font-bold text-white ${PRESS_SCALE}`}
+          className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#182132] px-4 text-[14px] font-bold text-white ${PRESS_SCALE}`}
         >
           <span className="truncate">{name} 성분군 포함 제품 보기</span>
           <Icon name="chevron-right" size={16} scalable className="shrink-0" />

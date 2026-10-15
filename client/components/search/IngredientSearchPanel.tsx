@@ -297,7 +297,7 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
                   role="checkbox"
                   aria-checked={checked}
                   onClick={() => toggleCode(code.code)}
-                  className={`quick-filter-toggle flex min-h-13 w-full items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left ${
+                  className={`quick-filter-toggle flex min-h-13 w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left ${
                     checked ? "border-red-200 bg-red-50" : "border-[#DDE0E4] bg-[#F7F7F8]"
                   }`}
                 >

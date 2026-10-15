@@ -41,7 +41,7 @@ export function IngredientSuggestions({
   return (
     /* 제목 줄을 두지 않는다. 무엇을 찾는 중인지는 바로 위 입력창에 그대로 떠 있고,
        고를 것은 아래 목록에 이미 보인다. 같은 말을 한 번 더 얹지 않는다. */
-    <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-[#E8E9EC] bg-white shadow-lg">
+    <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-[#E8E9EC] bg-white shadow-lg">
       {loading ? (
         <p className="flex min-h-40 items-center justify-center text-[13px] text-text-secondary">검색하는 중…</p>
       ) : items.length + groups.length === 0 ? (

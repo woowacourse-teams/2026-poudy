@@ -59,14 +59,14 @@ export default function LoginPage() {
           시작하면{" "}
           <Link
             href="/terms"
-            className="rounded-sm font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="rounded-xs font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             이용약관
           </Link>
           과{" "}
           <Link
             href="/privacy"
-            className="rounded-sm font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="rounded-xs font-bold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             개인정보 처리방침
           </Link>
