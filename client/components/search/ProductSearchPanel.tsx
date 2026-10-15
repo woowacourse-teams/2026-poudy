@@ -317,7 +317,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                 )}
               </h2>
 
-              <ul className="divide-y divide-divider">
+              <ul className="divide-y divide-border">
                 {items.map((item, index) => (
                   // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
                   <li key={item.id} {...{ [ANCHOR_ATTRIBUTE]: item.id }}>
@@ -400,7 +400,7 @@ function RecentSearches({ items }: { readonly items: readonly RecentSearch[] }) 
           </button>
         </div>
 
-        <ul className="divide-y divide-divider">
+        <ul className="divide-y divide-border">
           {items.map((item, index) => {
             const id = recentSearchId(item);
             /* 제품은 그 상세로, 검색어는 그 말의 결과 목록으로 되돌아간다. */

@@ -10,7 +10,7 @@ import { useFieldError } from "@/lib/hooks/useFieldError";
 
 /* inquiry-input 은 iOS 확대를 막으려고 font-size 를 16px 로 두고 scale 로 줄인다. */
 const inputClass =
-  "inquiry-input rounded-sm bg-surface-subtle px-3 py-3 text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60";
+  "inquiry-input rounded-sm bg-surface px-3 py-3 text-text-primary outline-none placeholder:text-text-secondary disabled:opacity-60";
 
 /**
  * 제품 등록 요청은 자유 입력 대신 제품명과 브랜드를 받는다.
@@ -77,7 +77,7 @@ export function ProductFields({
         <FieldMessage id="inquiry-brand-name-message" error={brandError} />
       </section>
 
-      <section className="flex gap-3 rounded-lg bg-surface-subtle p-3">
+      <section className="flex gap-3 rounded-lg p-3">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft">
           <Icon name="sparkles" size={16} className="text-brand" />
         </span>

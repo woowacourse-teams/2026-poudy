@@ -7,20 +7,11 @@
  * 다시 적으면 패키지 값을 덮어쓰므로 적지 않는다. 남은 토큰은 화면을 옮기면서 지운다(#743).
  */
 @theme {
+  /*
+   * 관리자 화면만 쓰는 색. 관리자 화면은 명세에서 admin- 체계로 따로 정해 두었고,
+   * 디자인 시스템 패키지는 그 체계를 내보내지 않는다.
+   */
   --color-surface-subtle: #fafafb;
-  --color-danger: #dc3545;
-
-  /*
-   * 유수분 글자색. 명세의 --color-droplet-moisture-text · --color-droplet-oil-text 와 값이 같은
-   * 옛 이름이다.
-   */
-  --color-level-moisture-text: #1f6b8e;
-  --color-level-oil-text: #854c2c;
-
-  /*
-   * 목록에서 카드 사이를 가르는 선. `--color-border` 보다 연하다.
-   * 버튼 테두리와 탭 밑줄은 또렷해야 하므로 그쪽 토큰과 나눠 둔다.
-   */
   --color-divider: #f1f2f4;
 
   /* 타이포 */
@@ -34,7 +25,10 @@
   --transition-duration-control-state: 160ms;
   --transition-duration-disclosure: 200ms;
 
-  /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
+  /*
+   * 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자.
+   * 명세는 모바일 화면만 그려 이 자리가 없다. 명세 밖 예외로 남긴다(#724).
+   */
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
@@ -668,7 +662,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 /* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
 @media (hover: hover) and (pointer: fine) {
   .skin-type-segment:hover {
-    background-color: var(--color-surface-subtle);
+    background-color: var(--color-hover);
   }
 }
 

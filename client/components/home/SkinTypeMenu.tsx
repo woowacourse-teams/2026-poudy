@@ -46,7 +46,7 @@ export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
             않아야 한 줄로 읽힌다. 첫 칸을 뺀 나머지에만 왼쪽 선을 두어 양 끝에는
             선이 서지 않는다.
           */
-          <li key={code} className="flex-1 border-l border-divider first:border-l-0">
+          <li key={code} className="flex-1 border-l border-border first:border-l-0">
             <Link
               href={`/products?skinType=${code}&from=skin_type`}
               onClick={() => track("skin_type_selected", { skin_type: code })}

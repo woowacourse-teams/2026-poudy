@@ -31,7 +31,7 @@ export function ContentField({
         {label}
       </FieldLabel>
 
-      <div className="flex flex-col rounded-sm bg-surface-subtle px-3 pt-3 pb-1.5">
+      <div className="flex flex-col rounded-sm bg-surface px-3 pt-3 pb-1.5">
         <textarea
           id={FIELD_ID}
           value={value}

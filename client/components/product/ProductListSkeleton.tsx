@@ -14,7 +14,7 @@ export function ProductRowsSkeleton({ rows = 20 }: { readonly rows?: number }) {
       </div>
 
       <div aria-hidden="true" className="flex-1 px-4">
-        <ul className="divide-y divide-divider">
+        <ul className="divide-y divide-border">
           {Array.from({ length: rows }, (_, index) => (
             <li key={index}>
               <ProductCardSkeleton />

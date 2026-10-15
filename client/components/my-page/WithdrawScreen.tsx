@@ -87,7 +87,7 @@ export function WithdrawScreen() {
             type="button"
             onClick={resign}
             disabled={!confirmed || pending}
-            className="flex h-13 w-full items-center justify-center rounded-button bg-danger text-[15px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-13 w-full items-center justify-center rounded-button bg-danger-action text-[15px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             탈퇴하기
           </button>

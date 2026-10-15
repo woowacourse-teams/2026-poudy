@@ -289,7 +289,7 @@ export function SavedScreen() {
         </div>
       )}
 
-      <ul data-private className="divide-y divide-divider">
+      <ul data-private className="divide-y divide-border">
         {shown.map((product, index) => {
           const card = (
             <ProductCard

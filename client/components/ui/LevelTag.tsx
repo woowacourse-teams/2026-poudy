@@ -14,8 +14,8 @@ type LevelTagProps = {
  * 채운 칸과 빈 칸은 색이 아니라 모양으로 가른다. 빈 칸은 같은 색의 테두리만 남은 물방울이다.
  */
 const TEXT = {
-  moisture: { label: "수분", droplet: "text-droplet-moisture", text: "text-level-moisture-text" },
-  oil: { label: "유분", droplet: "text-droplet-oil", text: "text-level-oil-text" },
+  moisture: { label: "수분", droplet: "text-droplet-moisture", text: "text-droplet-moisture-text" },
+  oil: { label: "유분", droplet: "text-droplet-oil", text: "text-droplet-oil-text" },
 } as const;
 
 /**
