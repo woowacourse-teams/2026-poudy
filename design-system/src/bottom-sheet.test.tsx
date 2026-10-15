@@ -32,11 +32,10 @@ function Sample({ onClose = () => undefined }: { readonly onClose?: (reason: str
         <BottomSheetBody>
           <button type="button">스킨/토너</button>
         </BottomSheetBody>
-        <BottomSheetFooter>
-          <button type="button" onClick={() => setConfirm(true)}>
-            초기화
-          </button>
-        </BottomSheetFooter>
+        <BottomSheetFooter
+          secondary={{ label: "초기화", onClick: () => setConfirm(true) }}
+          primary={{ label: "제품 보기", onClick: () => setOpen(false) }}
+        />
       </BottomSheet>
       <ConfirmSheet
         open={confirm}
@@ -98,7 +97,7 @@ describe("BottomSheet", () => {
     render(<Sample />);
     fireEvent.click(screen.getByRole("button", { name: "필터 열기" }));
     const dialog = await screen.findByRole("dialog");
-    const last = screen.getByRole("button", { name: "초기화" });
+    const last = screen.getByRole("button", { name: "제품 보기" });
 
     last.focus();
     fireEvent.keyDown(dialog, { key: "Tab" });
@@ -148,5 +147,21 @@ describe("ConfirmSheet", () => {
     expect(confirm).toHaveAccessibleDescription("만 14세 이상인지 확인해 주세요.");
     fireEvent.click(confirm);
     expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("하단 버튼은 틀이 그린다. 막을 때는 버튼 위 안내 문구와 잇고 누름을 막는다", async () => {
+    const onClick = vi.fn();
+    render(
+      <BottomSheet open onClose={() => undefined}>
+        <BottomSheetHeader title="메모" />
+        <BottomSheetFooter primary={{ label: "저장", onClick, disabledReason: "메모를 적으면 저장할 수 있어요." }} />
+      </BottomSheet>,
+    );
+    const save = await screen.findByRole("button", { name: "저장" });
+
+    expect(save).toHaveAttribute("aria-disabled", "true");
+    expect(save).toHaveAccessibleDescription("메모를 적으면 저장할 수 있어요.");
+    fireEvent.click(save);
+    expect(onClick).not.toHaveBeenCalled();
   });
 });

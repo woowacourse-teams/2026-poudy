@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode, RefObject } from "react";
 
+import { Button } from "./button";
 import { cn } from "./cn";
 import { IconButton } from "./icon-button";
 import { Glyph } from "./icons";
@@ -310,15 +311,67 @@ export function BottomSheetBody({
   );
 }
 
-/** 시트 발. 버튼을 가로로 놓고, 본문이 스크롤되어도 제자리에 남는다. 아래로 기기의 안전 영역만큼 더 띄운다. */
-export function BottomSheetFooter({
-  children,
-  className,
-}: {
-  readonly children: ReactNode;
-  readonly className?: string;
-}) {
-  return <div className={cn("flex shrink-0 gap-2 px-5 pt-4 pb-safe", className)}>{children}</div>;
+export type SheetAction = {
+  /** 버튼 글자 */
+  readonly label: NonNullable<ReactNode>;
+  readonly onClick: () => void;
+};
+
+export type SheetPrimaryAction = SheetAction & {
+  /** 되돌리기 어려운 행동(삭제·빼기)은 destructive */
+  readonly tone?: "primary" | "destructive";
+  /** 처리 중. 다시 누를 수 없고 aria-busy 를 알린다. */
+  readonly busy?: boolean;
+  /**
+   * 지금 누를 수 없는 이유. 주면 버튼 위에 안내 문구를 두고 버튼을 막는다(aria-disabled + aria-describedby).
+   * 필수값이 비었을 때처럼 이유를 알려야 하는 비활성이다(FEEDBACK F06, STATE S06).
+   */
+  readonly disabledReason?: ReactNode;
+};
+
+export type BottomSheetFooterProps = {
+  /** 주 행동. 오른쪽에 두고, 보조 행동이 있으면 폭 2, 없으면 폭 전체를 쓴다. */
+  readonly primary: SheetPrimaryAction;
+  /** 보조 행동(예: 초기화). 왼쪽에 폭 1 로 둔다. */
+  readonly secondary?: SheetAction;
+};
+
+/**
+ * 시트 발. 버튼은 틀이 그린다. 화면은 버튼의 모양이나 위치를 고르지 않고 무엇을 할지만 넘긴다(#729 원칙).
+ * 버튼은 Button md(48), 보조 1 : 주 2, 간격 8 이고, 본문이 스크롤되어도 제자리에 남는다. 아래로 기기의 안전 영역만큼 띄운다.
+ * 명세의 시트 하단은 버튼 둘까지다. 더 필요하면 명세에 하단 모양을 먼저 그리고 여기에 더한다.
+ */
+export function BottomSheetFooter({ primary, secondary }: BottomSheetFooterProps) {
+  const reasonId = useId();
+  const blocked =
+    primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
+
+  return (
+    <div className="flex shrink-0 flex-col gap-2 px-5 pt-4 pb-safe">
+      {blocked ? (
+        <p id={reasonId} className="text-center text-caption text-text-secondary">
+          {primary.disabledReason}
+        </p>
+      ) : null}
+      <div className="flex gap-2">
+        {secondary ? (
+          <Button variant="secondary" onClick={secondary.onClick} className="flex-1">
+            {secondary.label}
+          </Button>
+        ) : null}
+        <Button
+          variant={primary.tone === "destructive" ? "destructive" : "primary"}
+          onClick={primary.onClick}
+          busy={primary.busy}
+          aria-disabled={blocked || undefined}
+          aria-describedby={blocked ? reasonId : undefined}
+          className={secondary ? "flex-2" : "flex-1"}
+        >
+          {primary.label}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 /** 시트 제목·설명 id 를 쓰는 다른 머리(확인 시트)가 쓴다. 패키지 안에서만 쓴다. */
