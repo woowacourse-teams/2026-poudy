@@ -8,6 +8,7 @@ const PATHS = {
   search: ["M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0", "M21 21l-6 -6"],
   x: ["M18 6l-12 12", "M6 6l12 12"],
   "chevron-down": ["M6 9l6 6l6 -6"],
+  "chevron-left": ["M15 6l-6 6l6 6"],
   check: ["M5 12l5 5l10 -10"],
   "circle-check": ["M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0", "M9 12l2 2l4 -4"],
   "alert-circle": ["M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0 -20z", "M12 8l0 4", "M12 16l.01 0"],
