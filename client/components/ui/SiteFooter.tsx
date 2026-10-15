@@ -4,7 +4,7 @@ import { FooterLink } from "@/components/legal/FooterLink";
 import { OPERATOR } from "@/components/legal/operator";
 import { INSTAGRAM_URL } from "@/lib/seo/site";
 
-/** 화면 맨 아래의 약관 링크와 연락처. 홈과 큐레이션 상세가 함께 쓴다. */
+/** 화면 맨 아래의 서비스 소개·약관 링크와 연락처. 홈과 큐레이션 상세, 서비스 소개가 함께 쓴다. */
 export function SiteFooter() {
   return (
     /*
@@ -54,6 +54,8 @@ export function SiteFooter() {
           두 항목이 한 덩어리로 읽히는데, 세로선은 높이가 있어 경계가 또렷하다.
         */}
         <p className="flex items-center justify-center gap-2.5">
+          <FooterLink href="/about">서비스 소개</FooterLink>
+          <span aria-hidden="true" className="h-2.5 w-px bg-border" />
           <FooterLink href="/privacy">개인정보 처리방침</FooterLink>
           <span aria-hidden="true" className="h-2.5 w-px bg-border" />
           <FooterLink href="/terms">이용약관</FooterLink>

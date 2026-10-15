@@ -44,6 +44,7 @@ export const ICON_IDS = [
   "trending-down",
   "droplet",
   "droplet-solid",
+  "book",
 ] as const;
 
 export type IconId = (typeof ICON_IDS)[number];
@@ -212,6 +213,15 @@ export function IconSprite() {
         <symbol id="icon-mail" viewBox="0 0 24 24">
           <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10" />
           <path d="M3 7l9 6l9 -6" />
+        </symbol>
+
+        {/* Tabler · book */}
+        <symbol id="icon-book" viewBox="0 0 24 24">
+          <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+          <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+          <path d="M3 6l0 13" />
+          <path d="M12 6l0 13" />
+          <path d="M21 6l0 13" />
         </symbol>
 
         {/* Tabler · user */}
