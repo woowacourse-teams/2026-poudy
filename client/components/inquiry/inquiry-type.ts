@@ -22,22 +22,22 @@ export const INQUIRY_COPY: Record<InquiryChoice, InquiryCopy> = {
   BUG_REPORT: {
     label: "오류를 발견했어요",
     fieldLabel: "문의 내용",
-    placeholder: "예를 들어 어느 화면에서 무엇을 누르셨는지 적어주시면 도움이 돼요.",
+    placeholder: "예를 들어 어느 화면에서 무엇을 누르셨는지 적어 주시면 도움이 돼요.",
   },
   IMPROVEMENT: {
     label: "개선하고 싶은 점이 있어요",
     fieldLabel: "문의 내용",
-    placeholder: "지금 어떤 점이 아쉬운지 함께 적어주시면 도움이 돼요.",
+    placeholder: "지금 어떤 점이 아쉬운지 함께 적어 주시면 도움이 돼요.",
   },
   PRODUCT_REQUEST: {
     label: "등록하고 싶은 제품이 있어요",
     fieldLabel: "제품명",
-    placeholder: "등록을 원하는 제품명을 적어주세요.",
+    placeholder: "등록을 원하는 제품명을 적어 주세요.",
   },
   OTHER: {
     label: "그 밖의 문의가 있어요",
     fieldLabel: "문의 내용",
-    placeholder: "궁금하거나 알리고 싶은 내용을 적어주세요.",
+    placeholder: "궁금하거나 알리고 싶은 내용을 적어 주세요.",
   },
 };
 
@@ -48,5 +48,5 @@ export const INQUIRY_CHOICES: readonly InquiryChoice[] = ["BUG_REPORT", "IMPROVE
 export const PRODUCT_CORRECTION_COPY = {
   title: "제품 정보가 정확하지 않나요?",
   fieldLabel: "제보 내용",
-  placeholder: "성분이나 용량, 가격 중 무엇이 다른지 실제 정보와 함께 적어주시면 확인이 빨라요.",
+  placeholder: "성분이나 용량, 가격 중 무엇이 다른지 실제 정보와 함께 적어 주시면 확인이 빨라요.",
 } as const;

@@ -30,14 +30,14 @@ const DONE_DESCRIPTION = "보내주신 내용을 확인해 반영할게요.";
  */
 const messageOf = (error: unknown): string => {
   if (error instanceof ApiError && error.status === 429) {
-    return "요청이 잦아요. 잠시 뒤 다시 시도해주세요.";
+    return "요청이 잦아요. 잠시 후 다시 시도해 주세요.";
   }
 
   if (error instanceof ApiError && error.status === 400) {
-    return "입력한 내용을 다시 확인해주세요.";
+    return "입력한 내용을 다시 확인해 주세요.";
   }
 
-  return "접수하지 못했어요. 잠시 뒤 다시 시도해주세요.";
+  return "접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
 };
 
 type FixedProduct = {

@@ -260,7 +260,7 @@ describe("접수 완료에서 돌아가기", () => {
 describe("오류 처리", () => {
   const fail = (status: number, code: string) => new ApiError(status, code, "실패");
 
-  it("429 로 실패하면 잠시 뒤 다시 시도해 달라고 알린다", async () => {
+  it("429 로 실패하면 잠시 후 다시 시도해 달라고 알린다", async () => {
     const user = userEvent.setup();
     sendFeedback.mockRejectedValue(fail(429, "TOO_MANY_REQUESTS"));
 
@@ -367,7 +367,7 @@ describe("유형이 정해진 채로 들어온 경우", () => {
   const fixed = {
     productId: 123,
     fieldLabel: "제보 내용",
-    placeholder: "무엇이 다른지 적어주세요.",
+    placeholder: "무엇이 다른지 적어 주세요.",
     header: <h2>제품 정보가 정확하지 않나요?</h2>,
   };
 
