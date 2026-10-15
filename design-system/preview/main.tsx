@@ -11,6 +11,7 @@ import { ChipSamples } from "./chip-samples";
 import { ChoiceSamples } from "./choice-samples";
 import { InputSamples } from "./input-samples";
 import { Section } from "./section";
+import { TabSamples } from "./tab-samples";
 
 /** 디자인 시스템 부품을 한 화면에 늘어놓은 견본이다. 폭은 앱 화면과 같다. */
 function Preview() {
@@ -77,6 +78,7 @@ function Preview() {
       <InputSamples />
       <ChoiceSamples />
       <ChipSamples />
+      <TabSamples />
     </main>
   );
 }

@@ -22,7 +22,10 @@
     "./filter-chip": "./src/filter-chip.tsx",
     "./toggle-chip": "./src/toggle-chip.tsx",
     "./tag": "./src/tag.tsx",
-    "./badge": "./src/badge.tsx"
+    "./badge": "./src/badge.tsx",
+    "./tabs": "./src/tabs.tsx",
+    "./tab-nav": "./src/tab-nav.tsx",
+    "./disclosure": "./src/disclosure.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",

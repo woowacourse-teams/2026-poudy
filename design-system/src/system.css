@@ -68,3 +68,15 @@
 @utility pb-safe {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
+
+/*
+ * 가로로 흐르는 줄(칩 줄, 스크롤 탭)에서 스크롤 막대를 감춘다. 손가락으로 밀어 보는 곳이라 막대가 내용 아래를 가로질러
+ * 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다. Tailwind 코어에는 이 유틸리티가 없다.
+ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
