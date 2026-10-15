@@ -6,7 +6,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
 import com.poudy.product.domain.ProductPage;
@@ -19,11 +19,12 @@ import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
@@ -50,21 +51,33 @@ public class ProductQueryRepository {
             from product p %s join category c on c.id = p.category_id
             where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
               and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
-              and not exists (select 1 from unnest(cast(:included as bigint[])) wanted(id)
-                  where not exists (select 1 from product_component pc
-                      join product_ingredient pi on pi.component_id = pc.id
-                      where pc.product_id = p.id and pi.ingredient_id = wanted.id))
+              %s
               and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
                   where not exists (select 1 from product_component pc
                       join product_ingredient pi on pi.component_id = pc.id
                       join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
                       where pc.product_id = p.id and g.group_code = wanted.code))
-              and not exists (select 1 from product_component pc
+              %s
+        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok)
+        """;
+
+    private static final String INCLUDED = """
+        and p.id in (
+            select pc.product_id from product_component pc
+            join product_ingredient pi on pi.component_id = pc.id
+            where pi.ingredient_id = any(cast(:included as bigint[]))
+            group by pc.product_id
+            having count(distinct pi.ingredient_id) =
+                (select count(distinct wanted.id) from unnest(cast(:included as bigint[])) wanted(id))
+        )
+        """;
+
+    private static final String EXCLUDED = """
+        and not exists (select 1 from product_component pc
                   join product_ingredient pi on pi.component_id = pc.id where pc.product_id = p.id
                   and (pi.ingredient_id = any(:excluded) or exists (
                       select 1 from ingredient_group_ingredient e where e.ingredient_id = pi.ingredient_id
                           and e.group_code = any(:codes))))
-        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok)
         """;
 
     private static final String PAGE = """
@@ -96,18 +109,15 @@ public class ProductQueryRepository {
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
-    private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
 
     public ProductQueryRepository(
         NamedParameterJdbcTemplate jdbc,
-        ProductLoader loader,
         BrandRepository brandRepository,
         Clock clock
     ) {
         this.jdbc = jdbc;
-        this.loader = loader;
         this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
     }
@@ -138,7 +148,7 @@ public class ProductQueryRepository {
         Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
         return new ProductPage(
-            loader.load(ids),
+            cards(ids),
             total,
             facets.brands("MATCH"),
             facets.categories("MATCH"),
@@ -181,13 +191,27 @@ public class ProductQueryRepository {
                 rs.getInt("finish")
             )
         );
-        Map<Long, Product> products = loader
-            .load(hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList())
-            .stream().collect(toMap(Product::id, Function.identity()));
+        List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
+        Map<Long, SuggestionDisplay> products = ids.isEmpty() ? Map.of() : jdbc.query(
+            """
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
+                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new SuggestionDisplay(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                rs.getString("image_url"),
+                rs.getString("korean_name")
+            )
+        ).stream().collect(toMap(SuggestionDisplay::id, display -> display));
         return new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
                 h -> new ProductSuggestion(
-                    products.get(h.id()),
+                    h.id(),
+                    products.get(h.id()).name(),
+                    products.get(h.id()).imageUrl(),
+                    products.get(h.id()).brandName(),
                     ProductMatchField.valueOf(h.field()),
                     h.text(),
                     new MatchRange(h.start(), h.finish())
@@ -198,6 +222,42 @@ public class ProductQueryRepository {
         );
     }
 
+    private List<ProductCard> cards(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, ProductCard> cards = jdbc.query(
+            """
+                select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level, p.updated_at,
+                    b.korean_name, b.english_name, b.image_url as brand_image,
+                    v.price, v.volume_value, v.volume_unit
+                from product p join brand b on b.id = p.brand_id
+                join lateral (select price, volume_value, volume_unit from product_variant
+                    where product_id = p.id order by display_order limit 1) v on true
+                where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new ProductCard(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                new Brand(
+                    rs.getLong("brand_id"),
+                    rs.getString("korean_name"),
+                    rs.getString("english_name"),
+                    rs.getString("brand_image")
+                ),
+                Objects.requireNonNullElse(rs.getString("image_url"), ""),
+                rs.getLong("price"),
+                rs.getBigDecimal("volume_value"),
+                rs.getString("volume_unit"),
+                rs.getInt("moisture_level"),
+                rs.getInt("oil_level"),
+                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
+            )
+        ).stream().collect(toMap(ProductCard::id, card -> card));
+        return ids.stream().map(cards::get).toList();
+    }
+
     private String candidates(ProductQuery query) {
         String searchedCte = query.hasKeyword() ? """
             select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
@@ -206,7 +266,10 @@ public class ProductQueryRepository {
         String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
         String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
         String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
-        return CANDIDATES.formatted(cte, searchRank, searchedJoin);
+        String included = query.includeIngredientIds().isEmpty() ? "" : INCLUDED;
+        String excluded = query.excludeIngredientIds().isEmpty() && query.allExcludedCodes().isEmpty()
+            ? "" : EXCLUDED;
+        return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
@@ -276,6 +339,9 @@ public class ProductQueryRepository {
     }
 
     private record Aggregate(String section, String id, long amount) {
+    }
+
+    private record SuggestionDisplay(long id, String name, String imageUrl, String brandName) {
     }
 
     private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {
