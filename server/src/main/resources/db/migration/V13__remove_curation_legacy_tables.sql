@@ -1,5 +1,4 @@
--- 두 번째 배포용 SQL 초안. 이 파일은 Flyway 자동 탐색 경로에 두지 않는다.
--- 모든 서버의 JSONB 읽기 전환과 데이터 비교가 끝난 뒤, 다음 Flyway 버전으로 배포한다.
+-- JSONB 읽기 전환과 운영 데이터 확인을 마친 뒤 별도 배포로 구형 구조를 제거한다.
 LOCK TABLE curation, curation_block, curation_block_filter,
     curation_block_product, curation_block_product_filter IN ACCESS EXCLUSIVE MODE;
 
