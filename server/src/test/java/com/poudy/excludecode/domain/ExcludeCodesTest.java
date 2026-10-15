@@ -44,6 +44,21 @@ class ExcludeCodesTest {
     }
 
     @Test
+    @DisplayName("모든 제외 성분군의 성분 ID를 중복 없이 모은다")
+    void collectsIngredientIdsOfAllGroups() {
+        ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
+            ExcludeCode.FRAGRANCE_ALLERGENS,
+            "향료/알레르기 성분",
+            "향료",
+            "설명",
+            List.of(new ExcludeCodeIngredient(10L, "성분 10", null), new ExcludeCodeIngredient(40L, "성분 40", null))
+        );
+
+        assertThat(new ExcludeCodes(List.of(fragrance, SULFATES)).ingredientIds())
+            .containsExactlyInAnyOrder(10L, 20L, 30L, 40L);
+    }
+
+    @Test
     @DisplayName("DB 정의에 성분이 없으면 만들 수 없다")
     void rejectsEmptyCode() {
         assertThatThrownBy(() -> new ExcludeCodeGroup(ExcludeCode.SULFATES, "설페이트 성분", "설페이트", "설명", List.of()))

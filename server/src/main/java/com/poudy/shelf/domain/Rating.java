@@ -29,6 +29,10 @@ public final class Rating {
         return preference == RatingPreference.BAD;
     }
 
+    public boolean isGood() {
+        return preference == RatingPreference.GOOD;
+    }
+
     public RatingPreference preference() {
         return preference;
     }

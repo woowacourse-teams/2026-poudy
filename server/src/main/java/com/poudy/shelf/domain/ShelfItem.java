@@ -7,10 +7,12 @@ public final class ShelfItem {
 
     private final ShelfProduct shelfProduct;
     private final Product product;
+    private final boolean possiblyUnsuitable;
 
-    public ShelfItem(ShelfProduct shelfProduct, Product product) {
+    public ShelfItem(ShelfProduct shelfProduct, Product product, boolean possiblyUnsuitable) {
         this.shelfProduct = shelfProduct;
         this.product = product;
+        this.possiblyUnsuitable = possiblyUnsuitable;
     }
 
     public boolean belongsTo(ShelfTab tab) {
@@ -22,8 +24,11 @@ public final class ShelfItem {
     }
 
     public boolean isPossiblyUnsuitable() {
-        // TODO: 성분 분석 알고리즘이 생기면 분석 결과 성분을 포함하는지로 판단한다. 지금은 임의의 값을 돌려준다.
-        return false;
+        return possiblyUnsuitable;
+    }
+
+    public boolean holds(long productId) {
+        return shelfProduct.productId() == productId;
     }
 
     public Product product() {

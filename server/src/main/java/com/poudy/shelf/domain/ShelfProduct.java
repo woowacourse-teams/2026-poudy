@@ -24,6 +24,10 @@ public final class ShelfProduct {
         return rating.isBad();
     }
 
+    public boolean isRatedGood() {
+        return rating.isGood();
+    }
+
     public long productId() {
         return productId;
     }

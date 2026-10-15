@@ -121,6 +121,20 @@ public final class Product {
         return List.copyOf(ingredientsById.values());
     }
 
+    public boolean containsIngredient(Long ingredientId) {
+        return parts.stream().anyMatch(part -> part.ingredients().contains(ingredientId));
+    }
+
+    public int ingredientPosition(Long ingredientId) {
+        List<Ingredient> combinedIngredients = ingredients();
+        for (int position = 0; position < combinedIngredients.size(); position++) {
+            if (combinedIngredients.get(position).hasId(ingredientId)) {
+                return position;
+            }
+        }
+        return -1;
+    }
+
     public Optional<ProductPart> firstPart() {
         return parts.stream().findFirst();
     }
