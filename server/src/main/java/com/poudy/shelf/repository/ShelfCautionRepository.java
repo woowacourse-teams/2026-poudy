@@ -38,9 +38,9 @@ public class ShelfCautionRepository {
     private void validateGroups(MapSqlParameterSource parameters) {
         List<String> missing = jdbc.queryForList(
             """
-                select code from unnest(cast(:groupCodes as text[])) as code
-                where not exists (select 1 from ingredient_group g where g.code = code)
-                order by code
+                select requested.code from unnest(cast(:groupCodes as text[])) as requested(code)
+                where not exists (select 1 from ingredient_group g where g.code = requested.code)
+                order by requested.code
                 """,
             parameters,
             String.class
