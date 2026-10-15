@@ -874,6 +874,22 @@ export type delete_RemoveIngredients = {
 
     }
 /**
+ * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
+ */
+export type get_FindShelfProducts = {
+      method: "GET",
+      path: "/api/users/me/shelf/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.ShelfResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다.
  */
 export type post_Add = {
@@ -1173,22 +1189,6 @@ export type get_FindSkinFilter = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.SkinFilterResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
- */
-export type get_FindShelf = {
-      method: "GET",
-      path: "/api/users/me/shelf",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.ShelfResponse,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1982,14 +1982,9 @@ post: {
 "/api/members/logout": Endpoints.post_Logout,
 "/api/admin/logout": Endpoints.post_AdminLogout
          },
-patch: {
-           "/api/members/me/profile": Endpoints.patch_UpdateMyProfile,
-"/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
-"/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
-         },
 get: {
-           "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
-"/api/users/me/shelf": Endpoints.get_FindShelf,
+           "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+"/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
 "/api/users/me/shelf/product-ids": Endpoints.get_FindProductIds,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
@@ -2025,11 +2020,16 @@ get: {
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
 "/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
+         },
+patch: {
+           "/api/members/me/profile": Endpoints.patch_UpdateMyProfile,
+"/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
+"/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          }
      }
 
     export type PutEndpoints = EndpointByMethod["put"]
 export type DeleteEndpoints = EndpointByMethod["delete"]
 export type PostEndpoints = EndpointByMethod["post"]
-export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type PatchEndpoints = EndpointByMethod["patch"]

@@ -39,10 +39,10 @@ public class ShelfController {
         this.shelfService = shelfService;
     }
 
-    @Operation(summary = "선반 조회", description = "선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.")
+    @Operation(summary = "선반 제품 조회", description = "선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping
-    public ResponseEntity<ShelfResponse> findShelf(@AuthenticationPrincipal LoginMember loginMember) {
+    @GetMapping("/products")
+    public ResponseEntity<ShelfResponse> findShelfProducts(@AuthenticationPrincipal LoginMember loginMember) {
         Shelf shelf = shelfService.findShelf(loginMember.id());
         return ResponseEntity.ok(ShelfResponse.from(shelf));
     }

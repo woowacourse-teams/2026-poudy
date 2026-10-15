@@ -448,6 +448,16 @@ export const delete_RemoveIngredients = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindShelfProducts = __TypedOpenapi.Endpoints.get_FindShelfProducts;
+export const get_FindShelfProducts = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: ShelfResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Add = __TypedOpenapi.Endpoints.post_Add;
 export const post_Add = {
   method: z.literal("POST"),
@@ -606,16 +616,6 @@ export const get_FindSkinFilter = {
   responseFormat: z.literal("json"),
   parameters: z.never(),
   responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
-export type get_FindShelf = __TypedOpenapi.Endpoints.get_FindShelf;
-export const get_FindShelf = {
-  method: z.literal("GET"),
-  path: z.literal("/api/users/me/shelf"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: ShelfResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProductIds = __TypedOpenapi.Endpoints.get_FindProductIds;
@@ -1030,14 +1030,9 @@ post: {
 "/api/members/logout": post_Logout as any,
 "/api/admin/logout": post_AdminLogout as any
          },
-patch: {
-           "/api/members/me/profile": patch_UpdateMyProfile as any,
-"/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
-"/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
-         },
 get: {
-           "/api/users/me/skin-filter": get_FindSkinFilter as any,
-"/api/users/me/shelf": get_FindShelf as any,
+           "/api/users/me/shelf/products": get_FindShelfProducts as any,
+"/api/users/me/skin-filter": get_FindSkinFilter as any,
 "/api/users/me/shelf/product-ids": get_FindProductIds as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
 "/api/skin-types": get_FindSkinTypes as any,
@@ -1073,6 +1068,11 @@ get: {
 "/api/admin/feedbacks": get_FindAll_1 as any,
 "/api/admin/feedbacks/{feedbackId}": get_FindById_1 as any,
 "/api/oauth2/authorization/{provider}": get_StartSocialLogin as any
+         },
+patch: {
+           "/api/members/me/profile": patch_UpdateMyProfile as any,
+"/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
+"/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
          }
      }
      export type EndpointByMethod = __TypedOpenapi.EndpointByMethod;
@@ -1082,8 +1082,8 @@ get: {
     export type PutEndpoints = EndpointByMethod["put"]
 export type DeleteEndpoints = EndpointByMethod["delete"]
 export type PostEndpoints = EndpointByMethod["post"]
-export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type PatchEndpoints = EndpointByMethod["patch"]
     // </EndpointByMethod.Shorthands>
 
 // <ApiClientTypes>
@@ -1551,33 +1551,6 @@ export class ApiClient {
     }
     // </ApiClient.post>
 
-// <ApiClient.patch>
-    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<SafeApiResponse<TEndpoint>>;
-
-    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<InferSuccessData<TEndpoint>>;
-
-    patch<Path extends keyof PatchEndpoints, _TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<any>
-    ): Promise<any> {
-        return this.request("patch", path, ...params);
-    }
-    // </ApiClient.patch>
-
 // <ApiClient.get>
     get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
       path: Path,
@@ -1604,6 +1577,33 @@ export class ApiClient {
         return this.request("get", path, ...params);
     }
     // </ApiClient.get>
+
+// <ApiClient.patch>
+    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<SafeApiResponse<TEndpoint>>;
+
+    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<InferSuccessData<TEndpoint>>;
+
+    patch<Path extends keyof PatchEndpoints, _TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<any>
+    ): Promise<any> {
+        return this.request("patch", path, ...params);
+    }
+    // </ApiClient.patch>
 
     // <ApiClient.request>
     /**

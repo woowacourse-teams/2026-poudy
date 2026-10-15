@@ -74,7 +74,7 @@ class SecurityConfigTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @ValueSource(strings = {"/api/members/me", "/api/users/me/shelf", "/api/admin/me", "/api/auth/withdrawn"})
+    @ValueSource(strings = {"/api/members/me", "/api/users/me/shelf/products", "/api/admin/me", "/api/auth/withdrawn"})
     @DisplayName("회원·관리자·로그인 API 응답에는 캐시 금지 헤더를 붙인다")
     void forbidsCachingPrivateResponses(String path) throws Exception {
         mockMvc.perform(get(path))
