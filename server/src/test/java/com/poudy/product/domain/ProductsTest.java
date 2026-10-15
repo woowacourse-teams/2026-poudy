@@ -78,10 +78,12 @@ class ProductsTest {
             "제품 " + id,
             brand,
             category,
+            List.of(),
             List.of(new ProductPart(id, null, ingredients)),
             "https://example.com/" + id + ".png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }

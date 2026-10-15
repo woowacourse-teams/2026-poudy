@@ -29,7 +29,7 @@ class GoogleAppTokenVerifierTest {
             Jwt.withTokenValue("google-token")
                 .header("alg", "RS256")
                 .claims(
-                    claims -> claims.putAll(Map.of("sub", "sub-1", "email", "member@gmail.com", "email_verified", true))
+                    claims -> claims.putAll(Map.of("sub", "sub-1", "email", "user@gmail.com", "email_verified", true))
                 )
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(60))
@@ -40,7 +40,7 @@ class GoogleAppTokenVerifierTest {
 
         assertThat(account.provider()).isEqualTo(OAuthProvider.GOOGLE);
         assertThat(account.providerId()).isEqualTo("sub-1");
-        assertThat(account.verifiedEmail()).isEqualTo("member@gmail.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@gmail.com");
     }
 
     @Test

@@ -36,6 +36,7 @@ const FILTER_KEYS = new Set(
     includeGroupCodes: ["x"],
     excludeGroupCodes: ["x"],
     skinType: SkinType.options[0],
+    sensitiveSkin: true,
     /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */
     sort: SORTS.find((sort) => sort !== DEFAULT_SORT) ?? DEFAULT_SORT,
     page: FIRST_PAGE + 1,

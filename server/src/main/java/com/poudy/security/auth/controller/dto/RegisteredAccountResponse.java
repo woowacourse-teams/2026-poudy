@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record RegisteredAccountResponse(
     @NotNull @Schema(example = "KAKAO") OAuthProvider provider,
-    @NotNull @Schema(example = "member@example.com") String email) {
+    @NotNull @Schema(example = "user@example.com") String email) {
 
     public static RegisteredAccountResponse from(RegisteredAccount account) {
         return new RegisteredAccountResponse(account.provider(), account.email());

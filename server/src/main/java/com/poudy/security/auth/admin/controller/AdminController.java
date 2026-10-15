@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -60,8 +59,6 @@ public class AdminController {
     @ApiResponse(responseCode = "200", description = "관리자 세션 있음")
     @GetMapping("/me")
     public ResponseEntity<AdminSessionResponse> findMe(@AuthenticationPrincipal LoginAdmin loginAdmin) {
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(AdminSessionResponse.from(loginAdmin));
+        return ResponseEntity.ok(AdminSessionResponse.from(loginAdmin));
     }
 }

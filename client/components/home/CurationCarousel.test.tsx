@@ -85,7 +85,7 @@ const fakeFrames = () => {
 
 describe("CurationCarousel", () => {
   it("받은 큐레이션의 제목과 설명을 그린다", () => {
-    render(<CurationCarousel items={items} />);
+    render(<CurationCarousel items={items} withGuide={false} />);
 
     expect(screen.getByText("가을 장벽")).toBeInTheDocument();
     expect(screen.getByText("보습 성분 모아보기")).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe("CurationCarousel", () => {
    * 낭독기가 보이지 않는 카드까지 거친다. 받은 카드만 한 번씩 그린다.
    */
   it("받은 큐레이션 수만큼만 카드를 그린다", () => {
-    render(<CurationCarousel items={items} />);
+    render(<CurationCarousel items={items} withGuide={false} />);
 
     expect(screen.getAllByRole("link")).toHaveLength(items.length);
   });
@@ -106,7 +106,7 @@ describe("CurationCarousel", () => {
    * 큐레이션이 들어오는 순간 화면이 한 번 밀린다. 빈 카드로 자리를 잡아 그 밀림을 막는다.
    */
   it("큐레이션이 없어도 자리를 지킨다", () => {
-    const { container } = render(<CurationCarousel items={[]} />);
+    const { container } = render(<CurationCarousel items={[]} withGuide={false} />);
 
     const section = container.querySelector("section");
 
@@ -117,7 +117,7 @@ describe("CurationCarousel", () => {
 
   /* 사람이 할 일이 없는 자리라 낭독기에서는 읽어 줄 것이 없다. */
   it("빈 자리는 낭독기에서 숨긴다", () => {
-    const { container } = render(<CurationCarousel items={[]} />);
+    const { container } = render(<CurationCarousel items={[]} withGuide={false} />);
 
     expect(container.querySelector("section")).toHaveAttribute("aria-hidden", "true");
   });
@@ -127,7 +127,7 @@ describe("CurationCarousel", () => {
    * 제목과 같은 규칙을 적용해 두었는지 확인한다.
    */
   it("설명 문구의 줄바꿈을 살린다", () => {
-    render(<CurationCarousel items={items} />);
+    render(<CurationCarousel items={items} withGuide={false} />);
 
     const description = screen.getByText("보습 성분 모아보기");
 
@@ -136,7 +136,7 @@ describe("CurationCarousel", () => {
 
   /* 캐러셀은 상세 화면으로 가는 입구다. 카드가 실제로 그 주소를 가리키는지 본다. */
   it("카드가 큐레이션 상세로 이어진다", () => {
-    render(<CurationCarousel items={items} />);
+    render(<CurationCarousel items={items} withGuide={false} />);
 
     const link = screen.getByRole("link", { name: /가을 장벽/ });
 
@@ -144,7 +144,7 @@ describe("CurationCarousel", () => {
   });
 
   it("카드를 누르면 몇 번째 큐레이션인지와 함께 남긴다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
     const list = trackOf(container);
     layOut(list);
     list.scrollLeft = STEP;
@@ -163,7 +163,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -185,7 +185,7 @@ describe("CurationCarousel", () => {
    * 밀어 넘길 때마다 상세 화면이 열려, 카드를 넘겨 볼 수가 없다.
    */
   it("끌어서 넘긴 뒤에는 상세로 가지 않는다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
     const list = container.querySelector(".curation-track");
     if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
@@ -210,7 +210,7 @@ describe("CurationCarousel", () => {
    * `scrollLeft` 에 반영하는지 확인한다.
    */
   it("마우스로 끌면 끈 거리만큼 목록이 움직인다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
     const track = container.querySelector(".curation-track");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
@@ -232,7 +232,7 @@ describe("CurationCarousel", () => {
    * 때마다 목록이 조금씩 밀린다.
    */
   it("누르는 정도의 미세한 흔들림으로는 움직이지 않는다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
     const track = container.querySelector(".curation-track");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
@@ -252,7 +252,7 @@ describe("CurationCarousel", () => {
    * 가로채면 이미 잘 동작하는 관성과 스냅을 직접 흉내내야 한다.
    */
   it("손가락으로 미는 동작은 브라우저에 맡긴다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
     const track = container.querySelector(".curation-track");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
@@ -275,7 +275,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -304,7 +304,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -331,7 +331,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = STEP;
@@ -352,7 +352,7 @@ describe("CurationCarousel", () => {
     Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
 
@@ -388,7 +388,7 @@ describe("CurationCarousel", () => {
     Object.defineProperty(window, "onscrollend", { value: null, configurable: true });
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       const end = STEP - 16;
@@ -419,7 +419,7 @@ describe("CurationCarousel", () => {
     vi.useFakeTimers();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 100;
@@ -447,7 +447,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -472,7 +472,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -497,7 +497,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -521,7 +521,7 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
 
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 0;
@@ -546,7 +546,7 @@ describe("CurationCarousel", () => {
    * 조금 밀려 끝에 닿았음을 알리고, 손을 떼면 제자리로 돌아와야 한다.
    */
   it("첫 카드에서 더 끌면 목록이 조금만 따라오고, 놓으면 돌아온다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
     const list = trackOf(container);
     layOut(list);
     Object.defineProperty(list, "scrollWidth", { value: list.clientWidth + STEP, configurable: true });
@@ -579,7 +579,7 @@ describe("CurationCarousel", () => {
     ];
 
     try {
-      const { container } = render(<CurationCarousel items={three} />);
+      const { container } = render(<CurationCarousel items={three} withGuide={false} />);
       const list = trackOf(container);
       layOut(list);
       list.scrollLeft = 2 * STEP;
@@ -596,7 +596,7 @@ describe("CurationCarousel", () => {
    * 마우스로 카드를 끄는 순간 브라우저가 그림을 집어 들면 목록을 미는 동작이 끊긴다.
    */
   it("카드의 그림을 집어 들지 못하게 한다", () => {
-    const { container } = render(<CurationCarousel items={items} />);
+    const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
     for (const image of container.querySelectorAll("img")) {
       expect(image).toHaveAttribute("draggable", "false");
@@ -606,7 +606,7 @@ describe("CurationCarousel", () => {
   it("실제로 다른 카드에 도착했을 때만 수동 넘김을 기록한다", () => {
     vi.useFakeTimers();
     try {
-      const { container } = render(<CurationCarousel items={items} />);
+      const { container } = render(<CurationCarousel items={items} withGuide={false} />);
       const trackElement = trackOf(container);
       layOut(trackElement);
       trackElement.scrollLeft = 0;
@@ -627,5 +627,57 @@ describe("CurationCarousel", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("CurationCarousel 서비스 가이드", () => {
+  it("맨 앞에 서비스 소개로 가는 장을 둔다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+
+    const links = screen.getAllByRole("link");
+
+    expect(links).toHaveLength(items.length + 1);
+    expect(links[0]).toHaveAttribute("href", "/about");
+    expect(links[0]).toHaveTextContent("서비스 가이드");
+    expect(trackOf(container).children).toHaveLength(items.length + 1);
+  });
+
+  /* 가이드 장이 앞에 서도 큐레이션의 자리는 큐레이션 목록 안에서 센다. 집계가 이어져야 한다. */
+  it("가이드 장이 있어도 큐레이션의 자리는 큐레이션끼리 센다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    list.scrollLeft = STEP * 2;
+
+    fireEvent.click(screen.getByRole("link", { name: /순한 클렌징/ }));
+
+    expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
+  });
+
+  it("가이드 장을 누르면 큐레이션과 따로 서비스 가이드 열기를 남긴다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    layOut(trackOf(container));
+
+    fireEvent.click(screen.getByRole("link", { name: /서비스 가이드/ }));
+
+    expect(track).toHaveBeenCalledWith("service_guide_opened", { surface: "home" });
+    expect(track).not.toHaveBeenCalledWith("curation_opened", expect.anything());
+  });
+
+  it("옆에 걸친 가이드 장을 누르면 그 장으로 넘기기만 하고 남기지 않는다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    list.scrollLeft = STEP;
+
+    fireEvent.click(screen.getByRole("link", { name: /서비스 가이드/ }));
+
+    expect(track).not.toHaveBeenCalledWith("service_guide_opened", expect.anything());
+  });
+
+  it("큐레이션을 받지 못해도 가이드 장은 보여 준다", () => {
+    render(<CurationCarousel items={[]} />);
+
+    expect(screen.getByRole("link", { name: /서비스 가이드/ })).toHaveAttribute("href", "/about");
   });
 });

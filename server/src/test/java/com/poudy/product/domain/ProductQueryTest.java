@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("제품 조회 조건")
 class ProductQueryTest {
@@ -26,7 +28,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            com.poudy.skintype.domain.SkinType.DRY
+            com.poudy.skintype.domain.SkinType.DRY,
+            false
         );
         assertThat(query.hasFilters()).isTrue();
     }
@@ -34,7 +37,7 @@ class ProductQueryTest {
     @Test
     @DisplayName("누락된 목록 조건을 빈 목록으로 다룬다")
     void defaultsMissingListsToEmpty() {
-        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null, false);
 
         assertThat(query.categoryIds()).isEmpty();
         assertThat(query.brandIds()).isEmpty();
@@ -49,7 +52,20 @@ class ProductQueryTest {
     @DisplayName("목록 조건을 방어적으로 복사한다")
     void copiesListConditions() {
         List<Long> categoryIds = new ArrayList<>(List.of(1L));
-        ProductQuery query = new ProductQuery("토너", categoryIds, null, null, null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery(
+            "토너",
+            categoryIds,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false
+        );
 
         categoryIds.add(2L);
 
@@ -61,7 +77,20 @@ class ProductQueryTest {
     @Test
     @DisplayName("목록 조건 중 하나라도 있으면 필터가 있다고 판단한다")
     void checksWhetherItHasFilters() {
-        ProductQuery noFilters = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery noFilters = new ProductQuery(
+            "토너",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false
+        );
         ProductQuery withFilter = new ProductQuery(
             "토너",
             null,
@@ -73,7 +102,8 @@ class ProductQueryTest {
             List.of(ExcludeCode.SULFATES),
             null,
             null,
-            null
+            null,
+            false
         );
 
         assertThat(noFilters.hasFilters()).isFalse();
@@ -94,7 +124,8 @@ class ProductQueryTest {
             null,
             null,
             List.of("CERAMIDES"),
-            null
+            null,
+            false
         );
         ProductQuery includeIngredient = new ProductQuery(
             null,
@@ -107,7 +138,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         ProductQuery includeGroup = new ProductQuery(
             null,
@@ -120,11 +152,49 @@ class ProductQueryTest {
             null,
             List.of("CERAMIDES"),
             null,
-            null
+            null,
+            false
         );
 
         assertThat(excludeOnly.hasIncludeConditions()).isFalse();
         assertThat(includeIngredient.hasIncludeConditions()).isTrue();
         assertThat(includeGroup.hasIncludeConditions()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {0, 0.5, 2.5, 3})
+    @DisplayName("0부터 3까지 0.5 단위의 수분감·유분감 필터를 받는다")
+    void acceptsHalfStepLevels(double level) {
+        ProductQuery query = new ProductQuery(
+            null,
+            null,
+            null,
+            List.of(level),
+            List.of(level),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false
+        );
+
+        assertThat(query.moistureLevels()).containsExactly(level);
+        assertThat(query.oilLevels()).containsExactly(level);
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {-0.5, 1.2, 2.25, 3.5})
+    @DisplayName("0.5 단위가 아니거나 0부터 3까지가 아닌 수분감·유분감 필터는 거부한다")
+    void rejectsInvalidLevels(double level) {
+        assertThatThrownBy(
+            () -> new ProductQuery(null, null, null, List.of(level), null, null, null, null, null, null, null, false)
+        )
+            .isInstanceOf(InvalidSensoryFilterException.class);
+        assertThatThrownBy(
+            () -> new ProductQuery(null, null, null, null, List.of(level), null, null, null, null, null, null, false)
+        )
+            .isInstanceOf(InvalidSensoryFilterException.class);
     }
 }

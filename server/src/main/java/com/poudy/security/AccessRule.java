@@ -9,21 +9,21 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 public enum AccessRule {
-    MEMBER("/api/members/**", Role.MEMBER, "/api/members/logout"),
-    ADMIN("/api/admin/**", Role.ADMIN, "/api/admin/logout", "/api/admin/login");
+    USER(List.of("/api/users/**"), Role.MEMBER, "/api/users/logout"),
+    ADMIN(List.of("/api/admin/**"), Role.ADMIN, "/api/admin/logout", "/api/admin/login");
 
-    private final String pathPattern;
+    private final List<String> pathPatterns;
     private final Role role;
     private final String logoutPath;
     private final List<String> publicPaths;
 
-    AccessRule(String pathPattern, Role role, String logoutPath, String... publicPaths) {
-        this.pathPattern = pathPattern;
+    AccessRule(List<String> pathPatterns, Role role, String logoutPath, String... publicPaths) {
+        this.pathPatterns = pathPatterns;
         this.role = role;
         this.logoutPath = logoutPath;
         this.publicPaths = List.of(publicPaths);
@@ -37,7 +37,7 @@ public enum AccessRule {
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry requests
     ) {
         publicPaths.forEach(publicPath -> requests.requestMatchers(publicPath).permitAll());
-        requests.requestMatchers(pathPattern).hasAuthority(role.authority());
+        pathPatterns.forEach(pathPattern -> requests.requestMatchers(pathPattern).hasAuthority(role.authority()));
     }
 
     public String logoutPath() {
@@ -45,7 +45,11 @@ public enum AccessRule {
     }
 
     public RequestMatcher requestMatcher() {
-        return PathPatternRequestMatcher.withDefaults().matcher(pathPattern);
+        return new OrRequestMatcher(
+            pathPatterns.stream()
+                .<RequestMatcher>map(pathPattern -> PathPatternRequestMatcher.withDefaults().matcher(pathPattern))
+                .toList()
+        );
     }
 
     public RequestMatcher logoutRequest() {
@@ -55,7 +59,10 @@ public enum AccessRule {
     }
 
     private boolean protects(String path) {
-        PathPattern pattern = PathPatternParser.defaultInstance.parse(pathPattern);
-        return pattern.matches(PathContainer.parsePath(path)) && !publicPaths.contains(path);
+        PathContainer container = PathContainer.parsePath(path);
+        return pathPatterns.stream()
+            .map(PathPatternParser.defaultInstance::parse)
+            .anyMatch(pattern -> pattern.matches(container))
+            && !publicPaths.contains(path);
     }
 }

@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -60,9 +59,7 @@ public class AppLoginController {
             httpRequest,
             httpResponse
         );
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
-            .body(new AppLoginResponse(status));
+        return ResponseEntity.ok(new AppLoginResponse(status));
     }
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)

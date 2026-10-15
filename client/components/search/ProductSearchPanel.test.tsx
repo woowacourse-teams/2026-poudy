@@ -34,7 +34,7 @@ const suggestionsAre = (items: readonly { id: number; name: string; brandName: s
   server.use(
     http.get("*/api/products/suggestions", () =>
       HttpResponse.json({
-        items: items.map((item) => ({ ...item, imageUrl: "", match: nameMatch(item.name) })),
+        items: items.map((item) => ({ ...item, badges: [], imageUrl: "", match: nameMatch(item.name) })),
         pagination: {
           page: 1,
           size: 20,
@@ -55,6 +55,7 @@ const pagedSuggestionsAre = (total: number, size: number) =>
         id: start + index + 1,
         name: `제품 ${start + index + 1}`,
         brandName: "브랜드",
+        badges: [],
         imageUrl: "",
         match: nameMatch(`제품 ${start + index + 1}`),
       }));

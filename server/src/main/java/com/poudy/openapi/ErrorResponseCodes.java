@@ -18,10 +18,13 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_LOGIN_PATH = "/api/admin/login";
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
-    private static final String MEMBER_PROFILE_PATH = "/api/members/me/profile";
-    private static final String SAVED_PRODUCT_PATH = "/api/members/me/saved-products/{productId}";
-    private static final String WITHDRAWN_MEMBER_PATH = "/api/auth/withdrawn";
-    private static final String WITHDRAWN_MEMBER_RESTORE_PATH = "/api/auth/withdrawn/restore";
+    private static final String USER_PROFILE_PATH = "/api/users/me/profile";
+    private static final String WISHLIST_PRODUCT_PATH = "/api/users/me/wishlist/products/{productId}";
+    private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
+    private static final String SHELF_PRODUCT_PATH = "/api/users/me/shelf/products/{productId}";
+    private static final String SKIN_FILTER_INGREDIENTS_PATH = "/api/users/me/skin-filter/ingredients";
+    private static final String WITHDRAWN_USER_PATH = "/api/auth/withdrawn";
+    private static final String WITHDRAWN_USER_RESTORE_PATH = "/api/auth/withdrawn/restore";
     private static final String REGISTERED_ACCOUNT_PATH = "/api/auth/registered-account";
     private static final String APP_LOGIN_PATH = "/api/auth/{provider}/app-login";
     private static final String SIGNUP_PATH = "/api/auth/signup";
@@ -74,7 +77,16 @@ public final class ErrorResponseCodes {
         if (PENDING_IMAGES_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
-        if (ADMIN_LOGIN_PATH.equals(path) || MEMBER_PROFILE_PATH.equals(path)) {
+        if (ADMIN_LOGIN_PATH.equals(path) || USER_PROFILE_PATH.equals(path)) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        if (SHELF_PRODUCTS_PATH.equals(path)) {
+            return List.of(ErrorCode.INVALID_REQUEST_BODY, ErrorCode.SHELF_PRODUCT_ALREADY_EXISTS);
+        }
+        if (SHELF_PRODUCT_PATH.equals(path) && method == HttpMethod.PUT) {
+            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+        }
+        if (SKIN_FILTER_INGREDIENTS_PATH.equals(path) && method == HttpMethod.POST) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
@@ -106,9 +118,15 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path, HttpMethod method) {
-        if (SAVED_PRODUCT_PATH.equals(path)) {
+        if (WISHLIST_PRODUCT_PATH.equals(path)) {
             if (method == HttpMethod.PUT) {
                 return List.of(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            return List.of();
+        }
+        if (SHELF_PRODUCT_PATH.equals(path)) {
+            if (method == HttpMethod.PUT) {
+                return List.of(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
             }
             return List.of();
         }
@@ -116,7 +134,7 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path) {
-        if (WITHDRAWN_MEMBER_PATH.equals(path) || WITHDRAWN_MEMBER_RESTORE_PATH.equals(path)) {
+        if (WITHDRAWN_USER_PATH.equals(path) || WITHDRAWN_USER_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);
         }
         if (REGISTERED_ACCOUNT_PATH.equals(path)) {
@@ -138,7 +156,7 @@ public final class ErrorResponseCodes {
         if (path.startsWith("/api/admin/product-requests/")) {
             return List.of(ErrorCode.PRODUCT_REQUEST_NOT_FOUND);
         }
-        if (path.startsWith("/api/admin/members/")) {
+        if (path.startsWith("/api/admin/users/")) {
             return List.of(ErrorCode.RESTORE_REQUEST_NOT_FOUND);
         }
 

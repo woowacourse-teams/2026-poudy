@@ -5,7 +5,7 @@
  * 자세한 배경은 docs/exec-plans/analytics-events.md 를 본다.
  */
 
-import type { SkinType } from "@poudy/api/api.zod";
+import type { SkinChoice } from "@/lib/domain/filter";
 
 export type PageName =
   | "home"
@@ -17,7 +17,8 @@ export type PageName =
   | "saved"
   | "category"
   | "brand"
-  | "curation_detail";
+  | "curation_detail"
+  | "about";
 
 export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
 
@@ -248,6 +249,11 @@ export type EventMap = {
    * position 은 그 목록 안에서 1 부터 센 자리다.
    */
   curation_opened: { curation_id: number; position: number; surface: "home" | "curation_detail" };
+  /**
+   * 홈 캐러셀 첫 장의 서비스 가이드를 눌러 서비스 소개(/about)로 갈 때.
+   * 푸터 링크로 온 방문과 가르려고 따로 남긴다. 큐레이션이 아니라 `curation_opened` 에 섞지 않는다.
+   */
+  service_guide_opened: { surface: "home" };
   /** 큐레이션 상세가 그려졌을 때. 캐러셀 밖(공유 링크, 검색)에서 들어온 경우까지 센다. */
   curation_viewed: { curation_id: number };
   /**
@@ -257,7 +263,7 @@ export type EventMap = {
    */
   curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
-  skin_type_selected: { skin_type: SkinType } & DiscoveryProperties;
+  skin_type_selected: { skin_type: SkinChoice } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
   ranking_category_changed: { category_id?: number };
   /** 홈 인기 제품에서 제품을 눌렀을 때. 카테고리 변경 여부는 속성으로 나눈다. */

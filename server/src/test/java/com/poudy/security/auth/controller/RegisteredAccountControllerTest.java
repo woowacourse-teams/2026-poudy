@@ -35,7 +35,7 @@ class RegisteredAccountControllerTest {
     void findsRegisteredAccount() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         loginSession.holdRegisteredAccount(
-            new RegisteredAccount(OAuthProvider.KAKAO, "member@example.com"),
+            new RegisteredAccount(OAuthProvider.KAKAO, "user@example.com"),
             request,
             new MockHttpServletResponse()
         );
@@ -44,7 +44,7 @@ class RegisteredAccountControllerTest {
         mockMvc.perform(get(PATH).session(session))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.provider").value("KAKAO"))
-            .andExpect(jsonPath("$.email").value("member@example.com"));
+            .andExpect(jsonPath("$.email").value("user@example.com"));
         mockMvc.perform(get(PATH).session(session))
             .andExpect(status().isOk());
     }

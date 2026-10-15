@@ -1,9 +1,9 @@
 import {
   AppLoginResponse,
-  MemberResponse,
   RegisteredAccountResponse,
+  UserResponse,
   WithdrawnAccountResponse,
-  type MemberProfileRequest,
+  type UserProfileRequest,
 } from "@poudy/api/api.zod";
 
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, publicApiUrl } from "./client";
@@ -31,14 +31,14 @@ export const socialLoginUrl = (
 export const appLogin = (provider: SocialProvider, token: string): Promise<AppLoginResponse> =>
   apiPostFor(`/api/auth/${provider}/app-login`, AppLoginResponse, { token });
 
-export const findMe = (): Promise<MemberResponse> => apiGet("/api/members/me", MemberResponse, { withSession: true });
+export const findMe = (): Promise<UserResponse> => apiGet("/api/users/me", UserResponse, { withSession: true });
 
-export const updateMyProfile = (profile: MemberProfileRequest): Promise<MemberResponse> =>
-  apiPatch("/api/members/me/profile", MemberResponse, profile);
+export const updateMyProfile = (profile: UserProfileRequest): Promise<UserResponse> =>
+  apiPatch("/api/users/me/profile", UserResponse, profile);
 
-export const logout = (): Promise<void> => apiPost("/api/members/logout", undefined, { withSession: true });
+export const logout = (): Promise<void> => apiPost("/api/users/logout", undefined, { withSession: true });
 
-export const withdraw = (): Promise<void> => apiDelete("/api/members/me");
+export const withdraw = (): Promise<void> => apiDelete("/api/users/me");
 
 /** 처음 소셜 로그인한 사람만 보낼 수 있다. 가입하면 같은 세션으로 바로 로그인된다. */
 export const signUp = (): Promise<void> => apiPost("/api/auth/signup", undefined, { withSession: true });

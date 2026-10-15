@@ -25,6 +25,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductPart;
@@ -77,7 +78,8 @@ class ProductServiceTest {
             List.of(ExcludeCode.HARSH_PRESERVATIVES),
             null,
             null,
-            null
+            null,
+            false
         );
 
         ProductPage found = service.findProducts(
@@ -87,7 +89,7 @@ class ProductServiceTest {
             20
         );
 
-        assertThat(found.items()).containsExactly(product);
+        assertThat(found.items()).extracting(ProductCard::id).containsExactly(product.id());
         verify(queries).find(query, ProductSort.DEFAULT, 1, 20);
     }
 
@@ -202,7 +204,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
 
         ProductPage found = service.findProducts(query, ProductSort.DEFAULT, 1, 20);
@@ -236,8 +239,8 @@ class ProductServiceTest {
             ingredientGroupRepository(),
             new ProductSearchLogger()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, false);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false);
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -269,7 +272,7 @@ class ProductServiceTest {
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false),
             ProductSort.DEFAULT,
             1,
             20
@@ -281,7 +284,31 @@ class ProductServiceTest {
 
     private void stubPage(Product product) {
         given(queries.find(any(ProductQuery.class), any(), anyInt(), anyInt()))
-            .willReturn(new ProductPage(List.of(product), 1, List.of(), List.of(), List.of(), null));
+            .willReturn(
+                new ProductPage(
+                    List.of(
+                        new ProductCard(
+                            product.id(),
+                            product.name(),
+                            product.brand(),
+                            product.badges(),
+                            product.imageUrl(),
+                            product.representativeVariant().price(),
+                            product.representativeVariant().volumeValue(),
+                            product.representativeVariant().volumeUnit(),
+                            product.moistureLevel(),
+                            product.oilLevel(),
+                            product.isForSensitiveSkin(),
+                            product.updatedAt()
+                        )
+                    ),
+                    1,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    null
+                )
+            );
     }
 
     private static Product product(Long id) {
@@ -294,6 +321,7 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
+            List.of(),
             List.of(
                 new ProductPart(
                     1L,
@@ -304,6 +332,7 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }

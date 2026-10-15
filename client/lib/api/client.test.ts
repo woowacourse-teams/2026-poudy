@@ -177,9 +177,9 @@ describe("로그인 세션 요청", () => {
   it("세션 조회는 쿠키를 함께 보내고 응답을 담아 두지 않는다", async () => {
     const fetchMock = prepareFetch();
 
-    await apiGet("/api/members/me", Member, { withSession: true });
+    await apiGet("/api/users/me", Member, { withSession: true });
 
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/users/me", {
       credentials: "include",
       cache: "no-store",
     });
@@ -188,10 +188,10 @@ describe("로그인 세션 요청", () => {
   it("변경 요청은 쿠키와 함께 JSON 본문을 PATCH 로 보내고 응답을 검증해 돌려준다", async () => {
     const fetchMock = prepareFetch();
 
-    const member = await apiPatch("/api/members/me/profile", Member, { gender: "FEMALE" });
+    const member = await apiPatch("/api/users/me/profile", Member, { gender: "FEMALE" });
 
     expect(member).toEqual({ id: 1 });
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me/profile", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/users/me/profile", {
       credentials: "include",
       cache: "no-store",
       method: "PATCH",
@@ -205,9 +205,9 @@ describe("로그인 세션 요청", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
 
-    await apiPost("/api/members/logout", undefined, { withSession: true });
+    await apiPost("/api/users/logout", undefined, { withSession: true });
 
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/logout", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/users/logout", {
       credentials: "include",
       cache: "no-store",
       method: "POST",
@@ -252,13 +252,13 @@ describe("로그인 세션 요청", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("POUDY_SERVER_API_BASE_URL", "https://api.example");
 
-    await apiDelete("/api/members/me");
+    await apiDelete("/api/users/me");
 
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/members/me", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example/api/users/me", {
       credentials: "include",
       cache: "no-store",
       method: "DELETE",
     });
-    await expect(apiDelete("/api/members/me")).rejects.toMatchObject({ status: 401, code: "UNAUTHORIZED" });
+    await expect(apiDelete("/api/users/me")).rejects.toMatchObject({ status: 401, code: "UNAUTHORIZED" });
   });
 });

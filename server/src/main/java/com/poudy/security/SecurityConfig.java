@@ -1,8 +1,8 @@
 package com.poudy.security;
 
 import com.poudy.security.auth.oauth.OAuthLoginConfigurer;
-import com.poudy.security.domain.MemberActivity;
-import com.poudy.security.filter.ActiveMemberFilter;
+import com.poudy.security.domain.UserActivity;
+import com.poudy.security.filter.ActiveUserFilter;
 import com.poudy.security.filter.ForeignOriginFilter;
 import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -22,7 +24,11 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Configuration
@@ -35,7 +41,7 @@ public class SecurityConfig {
         SecurityContextRepository securityContextRepository,
         OAuthLoginConfigurer oauthLoginConfigurer,
         LoginSession loginSession,
-        MemberActivity memberActivity,
+        UserActivity userActivity,
         @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
     ) {
         http
@@ -51,7 +57,16 @@ public class SecurityConfig {
                     .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             )
             .requestCache(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
+            .headers(
+                headers -> headers
+                    .cacheControl(HeadersConfigurer.CacheControlConfig::disable)
+                    .addHeaderWriter(
+                        new DelegatingRequestMatcherHeaderWriter(
+                            privateResponses(),
+                            new StaticHeadersWriter(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue())
+                        )
+                    )
+            )
             .securityContext(context -> context.securityContextRepository(securityContextRepository))
             .authorizeHttpRequests(requests -> {
                 Arrays.stream(AccessRule.values()).forEach(rule -> rule.authorize(requests));
@@ -78,7 +93,7 @@ public class SecurityConfig {
                     )
             )
             .addFilterAfter(
-                new ActiveMemberFilter(memberActivity, loginSession, handlerExceptionResolver),
+                new ActiveUserFilter(userActivity, loginSession, handlerExceptionResolver),
                 SecurityContextHolderFilter.class
             )
             .addFilterBefore(
@@ -103,5 +118,13 @@ public class SecurityConfig {
     @Bean
     public SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
+    }
+
+    private static RequestMatcher privateResponses() {
+        return new OrRequestMatcher(
+            AccessRule.USER.requestMatcher(),
+            AccessRule.ADMIN.requestMatcher(),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/auth/**")
+        );
     }
 }

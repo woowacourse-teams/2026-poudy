@@ -107,12 +107,12 @@ describe("필터 시트의 적용 버튼", () => {
             categories: [],
             skinTypes: [
               { code: "DRY", name: "건성" },
-              { code: "SENSITIVE", name: "민감성" },
+              { code: "COMBINATION", name: "복합성" },
             ],
           },
           skinTypes: [
             { code: "DRY", name: "건성" },
-            { code: "SENSITIVE", name: "민감성" },
+            { code: "COMBINATION", name: "복합성" },
           ],
         }),
       ),
@@ -121,9 +121,9 @@ describe("필터 시트의 적용 버튼", () => {
     const sheet = await openSheet(/피부 타입/);
 
     expect(sheet.getByRole("radio", { name: "건성" })).toBeInTheDocument();
+    expect(sheet.getByRole("radio", { name: "복합성" })).toBeInTheDocument();
     expect(sheet.getByRole("radio", { name: "민감성" })).toBeInTheDocument();
     expect(sheet.queryByRole("radio", { name: "지성" })).not.toBeInTheDocument();
-    expect(sheet.queryByRole("radio", { name: "복합성" })).not.toBeInTheDocument();
   });
 
   it("초기화하면 고른 피부 타입이 풀린다", async () => {

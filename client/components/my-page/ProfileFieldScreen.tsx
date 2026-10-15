@@ -1,6 +1,6 @@
 "use client";
 
-import type { MemberProfileRequest, MemberResponse } from "@poudy/api/api.zod";
+import type { UserProfileRequest, UserResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,11 +9,19 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Button } from "@/components/ui/Button";
 import { TopBar } from "@/components/ui/TopBar";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
-import { AGE_RANGES, GENDERS, type ProfileOption, SKIN_TYPES, type SkinTypeOption } from "@/lib/domain/member-profile";
+import {
+  AGE_RANGES,
+  GENDERS,
+  type ProfileOption,
+  SKIN_TYPES,
+  type SkinTypeOption,
+  skinChoiceOf,
+  skinProfileOf,
+} from "@/lib/domain/member-profile";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-export type ProfileField = keyof MemberProfileRequest;
+export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin">;
 
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
@@ -44,11 +52,21 @@ const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주�
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string | null): T | null =>
   options.find((option) => option.value === value)?.value ?? null;
 
-const profileWith = (member: MemberResponse, field: ProfileField, value: string | null): MemberProfileRequest => {
-  const profile = { gender: member.gender, ageRange: member.ageRange, skinType: member.skinType };
+const currentValue = (member: UserResponse, field: ProfileField): string | null => {
+  if (field === "skinType") return skinChoiceOf(member);
+  return member[field];
+};
+
+const profileWith = (member: UserResponse, field: ProfileField, value: string | null): UserProfileRequest => {
+  const profile = {
+    gender: member.gender,
+    ageRange: member.ageRange,
+    skinType: member.skinType,
+    sensitiveSkin: member.sensitiveSkin,
+  };
   if (field === "gender") return { ...profile, gender: valueIn(GENDERS, value) };
   if (field === "ageRange") return { ...profile, ageRange: valueIn(AGE_RANGES, value) };
-  return { ...profile, skinType: valueIn(SKIN_TYPES, value) };
+  return { ...profile, ...skinProfileOf(valueIn(SKIN_TYPES, value)) };
 };
 
 const radioMarkClass = (checked: boolean): string => {
@@ -58,7 +76,7 @@ const radioMarkClass = (checked: boolean): string => {
 
 export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) {
   const router = useRouter();
-  const [member, setMember] = useState<MemberResponse | null>(null);
+  const [member, setMember] = useState<UserResponse | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -81,7 +99,7 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
     findMe()
       .then((loaded) => {
         setMember(loaded);
-        setSelected(loaded[field]);
+        setSelected(currentValue(loaded, field));
       })
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
@@ -163,7 +181,7 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
         </fieldset>
 
         <div className="sticky bottom-0 h-[var(--bottom-action-bar-height)] border-t border-border bg-background px-4 pt-3 pb-6">
-          <Button type="submit" disabled={!member || saving || selected === member[field]}>
+          <Button type="submit" disabled={!member || saving || selected === currentValue(member, field)}>
             저장
           </Button>
         </div>

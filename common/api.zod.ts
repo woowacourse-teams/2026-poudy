@@ -4,6 +4,33 @@ import type * as __TypedOpenapi from "./api.zod.types.js";
   import { z } from "zod";
 
 // <Schemas>
+export type RatingPreference = __TypedOpenapi.Schemas.RatingPreference;
+export const RatingPreference = z.enum(["GOOD", "BAD"]);
+
+export type ShelfUsageStatus = __TypedOpenapi.Schemas.ShelfUsageStatus;
+export const ShelfUsageStatus = z.enum(["IN_USE", "USED"]);
+
+export type ShelfProductUpdateRequest = __TypedOpenapi.Schemas.ShelfProductUpdateRequest;
+export const ShelfProductUpdateRequest = z.object({ usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional() });
+
+export type BadgeResponse = __TypedOpenapi.Schemas.BadgeResponse;
+export const BadgeResponse = z.object({ code: z.string(), name: z.string() });
+
+export type RatingResponse = __TypedOpenapi.Schemas.RatingResponse;
+export const RatingResponse = z.object({ preference: RatingPreference.nullable(), moistureLevel: z.number().nullable(), oilLevel: z.number().nullable() });
+
+export type ShelfProductInfoResponse = __TypedOpenapi.Schemas.ShelfProductInfoResponse;
+export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string() });
+
+export type ShelfProductResponse = __TypedOpenapi.Schemas.ShelfProductResponse;
+export const ShelfProductResponse = z.object({ product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: z.boolean(), registeredAt: z.iso.datetime({ offset: true }) });
+
+export type SkinFilterIngredientsRequest = __TypedOpenapi.Schemas.SkinFilterIngredientsRequest;
+export const SkinFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
+
+export type ShelfProductAddRequest = __TypedOpenapi.Schemas.ShelfProductAddRequest;
+export const ShelfProductAddRequest = z.object({ productId: z.number().int(), usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional() });
+
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
 
@@ -40,17 +67,17 @@ export const AgeRange = z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIF
 export type Gender = __TypedOpenapi.Schemas.Gender;
 export const Gender = z.enum(["FEMALE", "MALE"]);
 
-export type MemberSkinType = __TypedOpenapi.Schemas.MemberSkinType;
-export const MemberSkinType = z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]);
+export type SkinType = __TypedOpenapi.Schemas.SkinType;
+export const SkinType = z.enum(["DRY", "OILY", "COMBINATION"]);
 
-export type MemberProfileRequest = __TypedOpenapi.Schemas.MemberProfileRequest;
-export const MemberProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: MemberSkinType.nullable() });
+export type UserProfileRequest = __TypedOpenapi.Schemas.UserProfileRequest;
+export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
 
 export type OAuthProvider = __TypedOpenapi.Schemas.OAuthProvider;
 export const OAuthProvider = z.enum(["KAKAO", "GOOGLE"]);
 
-export type MemberResponse = __TypedOpenapi.Schemas.MemberResponse;
-export const MemberResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: MemberSkinType.nullable() });
+export type UserResponse = __TypedOpenapi.Schemas.UserResponse;
+export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
 
 export type ProductRequestStatus = __TypedOpenapi.Schemas.ProductRequestStatus;
 export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
@@ -76,8 +103,50 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
-export type SkinType = __TypedOpenapi.Schemas.SkinType;
-export const SkinType = z.enum(["DRY", "OILY", "SENSITIVE", "COMBINATION"]);
+export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
+export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
+
+export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
+export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), updatedAt: z.iso.datetime({ offset: true }) });
+
+export type WishlistResponse = __TypedOpenapi.Schemas.WishlistResponse;
+export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
+
+export type WishlistProductIdsResponse = __TypedOpenapi.Schemas.WishlistProductIdsResponse;
+export const WishlistProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
+
+export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
+export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
+export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
+export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+
+export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
+export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
+
+export type ShelfTab = __TypedOpenapi.Schemas.ShelfTab;
+export const ShelfTab = z.enum(["ALL", "IN_USE", "USED"]);
+
+export type ShelfUsageResponse = __TypedOpenapi.Schemas.ShelfUsageResponse;
+export const ShelfUsageResponse = z.object({ code: ShelfTab, name: z.string(), count: z.number().int() });
+
+export type ShelfResponse = __TypedOpenapi.Schemas.ShelfResponse;
+export const ShelfResponse = z.object({ usages: z.array(ShelfUsageResponse), items: z.array(ShelfProductResponse) });
+
+export type ShelfProductIdsResponse = __TypedOpenapi.Schemas.ShelfProductIdsResponse;
+export const ShelfProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
+
+export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
+export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
+
+export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
+export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
+
+export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
+export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
@@ -106,9 +175,6 @@ export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HA
 export type ProductSort = __TypedOpenapi.Schemas.ProductSort;
 export const ProductSort = z.enum(["DEFAULT", "CREATED_ASC", "PRICE_DESC", "PRICE_ASC", "UNIT_PRICE_DESC", "UNIT_PRICE_ASC"]).default("DEFAULT");
 
-export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
-export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
-
 export type CategoryChildResponse = __TypedOpenapi.Schemas.CategoryChildResponse;
 export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.string(), productCount: z.number().int() });
 
@@ -120,9 +186,6 @@ export const PaginationResponse = z.object({ page: z.number().int(), size: z.num
 
 export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterOptionsResponse;
 export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse) });
-
-export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
-export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), filterOptions: ProductFilterOptionsResponse.optional() });
@@ -136,9 +199,6 @@ export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.str
 export type ExcludeGroupResponse = __TypedOpenapi.Schemas.ExcludeGroupResponse;
 export const ExcludeGroupResponse = z.object({ code: z.string(), name: z.string(), contains: z.boolean() });
 
-export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
-export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
-
 export type IngredientCautionResponse = __TypedOpenapi.Schemas.IngredientCautionResponse;
 export const IngredientCautionResponse = z.object({ code: z.string(), label: z.string() });
 
@@ -150,9 +210,6 @@ export const ProductVariantResponse = z.object({ id: z.number().int(), price: z.
 
 export type ProductPartSummaryResponse = __TypedOpenapi.Schemas.ProductPartSummaryResponse;
 export const ProductPartSummaryResponse = z.object({ id: z.number().int(), name: z.string().nullable(), cautionCount: z.number().int() });
-
-export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
-export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type ProductIngredientResponse = __TypedOpenapi.Schemas.ProductIngredientResponse;
 export const ProductIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), cautions: z.array(IngredientCautionResponse) });
@@ -170,10 +227,10 @@ export type ProductPartResponse = __TypedOpenapi.Schemas.ProductPartResponse;
 export const ProductPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), ingredients: z.array(ProductIngredientResponse), skinEffectGroups: z.array(SkinEffectGroupResponse), excludeGroups: z.array(ExcludeGroupResponse) });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
-export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
 
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
@@ -185,7 +242,7 @@ export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSugge
 export const ProductSuggestionMatchResponse = z.object({ field: ProductMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
-export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string(), brandName: z.string(), match: ProductSuggestionMatchResponse });
+export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), match: ProductSuggestionMatchResponse });
 
 export type ProductSuggestionPageResponse = __TypedOpenapi.Schemas.ProductSuggestionPageResponse;
 export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSuggestionResponse), pagination: PaginationResponse });
@@ -197,7 +254,7 @@ export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: ShareMatchStatus, productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
 
 export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
-export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
+export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
 
 export type ProductRankingItemResponse = __TypedOpenapi.Schemas.ProductRankingItemResponse;
 export const ProductRankingItemResponse = z.object({ product: ProductRankingProductResponse });
@@ -207,12 +264,6 @@ export const ProductRankingResponse = z.object({ items: z.array(ProductRankingIt
 
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
-
-export type SavedProductsResponse = __TypedOpenapi.Schemas.SavedProductsResponse;
-export const SavedProductsResponse = z.object({ items: z.array(ProductResponse) });
-
-export type SavedProductIdsResponse = __TypedOpenapi.Schemas.SavedProductIdsResponse;
-export const SavedProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
 
 export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
 export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse) });
@@ -269,7 +320,7 @@ export type CurationImageBlockResponse = __TypedOpenapi.Schemas.CurationImageBlo
 export const CurationImageBlockResponse = z.object({ id: z.uuid(), type: z.literal("IMAGE"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), imageUrl: z.string(), altText: z.string().nullable(), bodyText: z.string().nullable() });
 
 export type CurationProductResponse = __TypedOpenapi.Schemas.CurationProductResponse;
-export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().int().min(0).max(3), oilLevel: z.number().int().min(0).max(3) });
+export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
 
 export type CurationProductsBlockResponse = __TypedOpenapi.Schemas.CurationProductsBlockResponse;
 export const CurationProductsBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), products: z.array(CurationProductResponse).min(1).max(2147483647) });
@@ -313,14 +364,14 @@ export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, emai
 export type RegisteredAccountResponse = __TypedOpenapi.Schemas.RegisteredAccountResponse;
 export const RegisteredAccountResponse = z.object({ provider: OAuthProvider, email: z.string() });
 
-export type AdminProductRequestPageResponse = __TypedOpenapi.Schemas.AdminProductRequestPageResponse;
-export const AdminProductRequestPageResponse = z.object({ items: z.array(AdminProductRequestResponse), pagination: PaginationResponse });
-
 export type AdminRestoreRequestResponse = __TypedOpenapi.Schemas.AdminRestoreRequestResponse;
-export const AdminRestoreRequestResponse = z.object({ memberId: z.number().int(), provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }) });
+export const AdminRestoreRequestResponse = z.object({ userId: z.number().int(), provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }) });
 
 export type AdminRestoreRequestPageResponse = __TypedOpenapi.Schemas.AdminRestoreRequestPageResponse;
 export const AdminRestoreRequestPageResponse = z.object({ items: z.array(AdminRestoreRequestResponse), pagination: PaginationResponse });
+
+export type AdminProductRequestPageResponse = __TypedOpenapi.Schemas.AdminProductRequestPageResponse;
+export const AdminProductRequestPageResponse = z.object({ items: z.array(AdminProductRequestResponse), pagination: PaginationResponse });
 
 export type AdminSessionResponse = __TypedOpenapi.Schemas.AdminSessionResponse;
 export const AdminSessionResponse = z.object({ username: z.string() });
@@ -329,7 +380,7 @@ export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPage
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });
@@ -337,24 +388,84 @@ export const ProblemDetail = z.object({ type: z.url().optional(), title: z.strin
 // </Schemas>
 
 // <Endpoints>
-export type put_Save = __TypedOpenapi.Endpoints.put_Save;
-export const put_Save = {
+export type put_AddToWishlist = __TypedOpenapi.Endpoints.put_AddToWishlist;
+export const put_AddToWishlist = {
   method: z.literal("PUT"),
-  path: z.literal("/api/members/me/saved-products/{productId}"),
+  path: z.literal("/api/users/me/wishlist/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
-export type delete_Unsave = __TypedOpenapi.Endpoints.delete_Unsave;
-export const delete_Unsave = {
+export type delete_RemoveFromWishlist = __TypedOpenapi.Endpoints.delete_RemoveFromWishlist;
+export const delete_RemoveFromWishlist = {
   method: z.literal("DELETE"),
-  path: z.literal("/api/members/me/saved-products/{productId}"),
+  path: z.literal("/api/users/me/wishlist/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type put_Update = __TypedOpenapi.Endpoints.put_Update;
+export const put_Update = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/users/me/shelf/products/{productId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }), body: ShelfProductUpdateRequest },
+  responses: { 200: ShelfProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_Remove = __TypedOpenapi.Endpoints.delete_Remove;
+export const delete_Remove = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/shelf/products/{productId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
+export const post_AddIngredients = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/skin-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: SkinFilterIngredientsRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_RemoveIngredients = __TypedOpenapi.Endpoints.delete_RemoveIngredients;
+export const delete_RemoveIngredients = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/skin-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ ingredientIds: z.array(z.coerce.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindShelfProducts = __TypedOpenapi.Endpoints.get_FindShelfProducts;
+export const get_FindShelfProducts = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: ShelfResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_Add = __TypedOpenapi.Endpoints.post_Add;
+export const post_Add = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/shelf/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: ShelfProductAddRequest },
+  responses: { 201: ShelfProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
@@ -450,10 +561,10 @@ export const post_SignUp = {
 export type post_Restore = __TypedOpenapi.Endpoints.post_Restore;
 export const post_Restore = {
   method: z.literal("POST"),
-  path: z.literal("/api/admin/members/{memberId}/restore"),
+  path: z.literal("/api/admin/users/{userId}/restore"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { path: z.object({ memberId: z.coerce.number().int() }) },
+  parameters: { path: z.object({ userId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -470,11 +581,11 @@ export const post_Login_1 = {
 export type patch_UpdateMyProfile = __TypedOpenapi.Endpoints.patch_UpdateMyProfile;
 export const patch_UpdateMyProfile = {
   method: z.literal("PATCH"),
-  path: z.literal("/api/members/me/profile"),
+  path: z.literal("/api/users/me/profile"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { body: MemberProfileRequest },
-  responses: { 200: MemberResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+  parameters: { body: UserProfileRequest },
+  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_ChangeStatus = __TypedOpenapi.Endpoints.patch_ChangeStatus;
@@ -495,6 +606,76 @@ export const patch_ChangeStatus_1 = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ feedbackId: z.uuid() }), body: AdminFeedbackStatusUpdateRequest },
   responses: { 200: AdminFeedbackResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindMe = __TypedOpenapi.Endpoints.get_FindMe;
+export const get_FindMe = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: UserResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_Withdraw = __TypedOpenapi.Endpoints.delete_Withdraw;
+export const delete_Withdraw = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 204: z.unknown(), 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindWishlistProducts = __TypedOpenapi.Endpoints.get_FindWishlistProducts;
+export const get_FindWishlistProducts = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/wishlist/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: WishlistResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindWishlistProductIds = __TypedOpenapi.Endpoints.get_FindWishlistProductIds;
+export const get_FindWishlistProductIds = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/wishlist/product-ids"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: WishlistProductIdsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindSkinFilter = __TypedOpenapi.Endpoints.get_FindSkinFilter;
+export const get_FindSkinFilter = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/skin-filter"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindProductIds = __TypedOpenapi.Endpoints.get_FindProductIds;
+export const get_FindProductIds = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/product-ids"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: ShelfProductIdsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_AnalyzeIngredients = __TypedOpenapi.Endpoints.get_AnalyzeIngredients;
+export const get_AnalyzeIngredients = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/ingredient-analysis"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: IngredientAnalysisResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindSkinTypes = __TypedOpenapi.Endpoints.get_FindSkinTypes;
@@ -533,7 +714,7 @@ export const get_FindProducts = {
   path: z.literal("/api/products"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: SkinType, sort: ProductSort, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: SkinType, sensitiveSkin: z.coerce.boolean(), sort: ProductSort, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
   responses: { 200: ProductPageResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -593,48 +774,8 @@ export const get_CountProducts = {
   path: z.literal("/api/products/count"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().int().min(0).max(3)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: SkinType }).partial().optional() },
+  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: SkinType, sensitiveSkin: z.coerce.boolean() }).partial().optional() },
   responses: { 200: ProductCountResponse, 400: ProblemDetail, 500: ProblemDetail },
-};
-
-export type get_FindMe = __TypedOpenapi.Endpoints.get_FindMe;
-export const get_FindMe = {
-  method: z.literal("GET"),
-  path: z.literal("/api/members/me"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: MemberResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
-export type delete_Withdraw = __TypedOpenapi.Endpoints.delete_Withdraw;
-export const delete_Withdraw = {
-  method: z.literal("DELETE"),
-  path: z.literal("/api/members/me"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 204: z.unknown(), 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
-export type get_FindSavedProducts = __TypedOpenapi.Endpoints.get_FindSavedProducts;
-export const get_FindSavedProducts = {
-  method: z.literal("GET"),
-  path: z.literal("/api/members/me/saved-products"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: SavedProductsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
-export type get_FindSavedProductIds = __TypedOpenapi.Endpoints.get_FindSavedProductIds;
-export const get_FindSavedProductIds = {
-  method: z.literal("GET"),
-  path: z.literal("/api/members/me/saved-products/ids"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: SavedProductIdsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
@@ -767,6 +908,16 @@ export const get_FindRegisteredAccount = {
   responses: { 200: RegisteredAccountResponse, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindRestoreRequests = __TypedOpenapi.Endpoints.get_FindRestoreRequests;
+export const get_FindRestoreRequests = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/users/restore-requests"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: AdminRestoreRequestPageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindAll = __TypedOpenapi.Endpoints.get_FindAll;
 export const get_FindAll = {
   method: z.literal("GET"),
@@ -785,16 +936,6 @@ export const get_FindById = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ requestId: z.uuid() }) },
   responses: { 200: AdminProductRequestResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
-};
-
-export type get_FindRestoreRequests = __TypedOpenapi.Endpoints.get_FindRestoreRequests;
-export const get_FindRestoreRequests = {
-  method: z.literal("GET"),
-  path: z.literal("/api/admin/members/restore-requests"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
-  responses: { 200: AdminRestoreRequestPageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindMe_1 = __TypedOpenapi.Endpoints.get_FindMe_1;
@@ -841,7 +982,7 @@ export const get_StartSocialLogin = {
 export type post_Logout = __TypedOpenapi.Endpoints.post_Logout;
 export const post_Logout = {
   method: z.literal("POST"),
-  path: z.literal("/api/members/logout"),
+  path: z.literal("/api/users/logout"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: z.never(),
@@ -863,14 +1004,19 @@ export const post_AdminLogout = {
      // <EndpointByMethod>
      export const EndpointByMethod: __TypedOpenapi.EndpointByMethod = {
      put: {
-           "/api/members/me/saved-products/{productId}": put_Save as any
+           "/api/users/me/wishlist/products/{productId}": put_AddToWishlist as any,
+"/api/users/me/shelf/products/{productId}": put_Update as any
          },
 delete: {
-           "/api/members/me/saved-products/{productId}": delete_Unsave as any,
-"/api/members/me": delete_Withdraw as any
+           "/api/users/me/wishlist/products/{productId}": delete_RemoveFromWishlist as any,
+"/api/users/me/shelf/products/{productId}": delete_Remove as any,
+"/api/users/me/skin-filter/ingredients": delete_RemoveIngredients as any,
+"/api/users/me": delete_Withdraw as any
          },
 post: {
-           "/api/search-keywords": post_Record as any,
+           "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
+"/api/users/me/shelf/products": post_Add as any,
+"/api/search-keywords": post_Record as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,
 "/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
 "/api/products/registration-requests": post_Submit as any,
@@ -879,18 +1025,20 @@ post: {
 "/api/auth/{provider}/app-login": post_Login as any,
 "/api/auth/withdrawn/restore": post_RequestRestore as any,
 "/api/auth/signup": post_SignUp as any,
-"/api/admin/members/{memberId}/restore": post_Restore as any,
+"/api/admin/users/{userId}/restore": post_Restore as any,
 "/api/admin/login": post_Login_1 as any,
-"/api/members/logout": post_Logout as any,
+"/api/users/logout": post_Logout as any,
 "/api/admin/logout": post_AdminLogout as any
          },
-patch: {
-           "/api/members/me/profile": patch_UpdateMyProfile as any,
-"/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
-"/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
-         },
 get: {
-           "/api/skin-types": get_FindSkinTypes as any,
+           "/api/users/me/shelf/products": get_FindShelfProducts as any,
+"/api/users/me": get_FindMe as any,
+"/api/users/me/wishlist/products": get_FindWishlistProducts as any,
+"/api/users/me/wishlist/product-ids": get_FindWishlistProductIds as any,
+"/api/users/me/skin-filter": get_FindSkinFilter as any,
+"/api/users/me/shelf/product-ids": get_FindProductIds as any,
+"/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
+"/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,
 "/api/products": get_FindProducts as any,
@@ -900,9 +1048,6 @@ get: {
 "/api/products/share-matches": get_MatchSharedProduct as any,
 "/api/products/rankings": get_FindRankings as any,
 "/api/products/count": get_CountProducts as any,
-"/api/members/me": get_FindMe as any,
-"/api/members/me/saved-products": get_FindSavedProducts as any,
-"/api/members/me/saved-products/ids": get_FindSavedProductIds as any,
 "/api/ingredients": get_FindIngredients as any,
 "/api/ingredients/{ingredientId}": get_FindIngredientDetail as any,
 "/api/ingredients/suggestions": get_SuggestIngredients as any,
@@ -916,13 +1061,18 @@ get: {
 "/api/brands/{brandId}": get_FindBrand as any,
 "/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
+"/api/admin/users/restore-requests": get_FindRestoreRequests as any,
 "/api/admin/product-requests": get_FindAll as any,
 "/api/admin/product-requests/{requestId}": get_FindById as any,
-"/api/admin/members/restore-requests": get_FindRestoreRequests as any,
 "/api/admin/me": get_FindMe_1 as any,
 "/api/admin/feedbacks": get_FindAll_1 as any,
 "/api/admin/feedbacks/{feedbackId}": get_FindById_1 as any,
 "/api/oauth2/authorization/{provider}": get_StartSocialLogin as any
+         },
+patch: {
+           "/api/users/me/profile": patch_UpdateMyProfile as any,
+"/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
+"/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
          }
      }
      export type EndpointByMethod = __TypedOpenapi.EndpointByMethod;
@@ -932,8 +1082,8 @@ get: {
     export type PutEndpoints = EndpointByMethod["put"]
 export type DeleteEndpoints = EndpointByMethod["delete"]
 export type PostEndpoints = EndpointByMethod["post"]
-export type PatchEndpoints = EndpointByMethod["patch"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type PatchEndpoints = EndpointByMethod["patch"]
     // </EndpointByMethod.Shorthands>
 
 // <ApiClientTypes>
@@ -1401,33 +1551,6 @@ export class ApiClient {
     }
     // </ApiClient.post>
 
-// <ApiClient.patch>
-    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<SafeApiResponse<TEndpoint>>;
-
-    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<InferSuccessData<TEndpoint>>;
-
-    patch<Path extends keyof PatchEndpoints, _TEndpoint extends PatchEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<any>
-    ): Promise<any> {
-        return this.request("patch", path, ...params);
-    }
-    // </ApiClient.patch>
-
 // <ApiClient.get>
     get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
       path: Path,
@@ -1454,6 +1577,33 @@ export class ApiClient {
         return this.request("get", path, ...params);
     }
     // </ApiClient.get>
+
+// <ApiClient.patch>
+    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<SafeApiResponse<TEndpoint>>;
+
+    patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<InferSuccessData<TEndpoint>>;
+
+    patch<Path extends keyof PatchEndpoints, _TEndpoint extends PatchEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<any>
+    ): Promise<any> {
+        return this.request("patch", path, ...params);
+    }
+    // </ApiClient.patch>
 
     // <ApiClient.request>
     /**

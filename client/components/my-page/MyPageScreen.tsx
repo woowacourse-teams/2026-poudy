@@ -1,6 +1,6 @@
 "use client";
 
-import type { MemberResponse } from "@poudy/api/api.zod";
+import type { UserResponse } from "@poudy/api/api.zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -13,7 +13,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import type { IconId } from "@/components/ui/icons/sprite";
 import { TopBar } from "@/components/ui/TopBar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
-import { AGE_RANGES, GENDERS, profileLabel, SKIN_TYPES } from "@/lib/domain/member-profile";
+import { AGE_RANGES, GENDERS, profileLabel, SKIN_TYPES, skinChoiceOf } from "@/lib/domain/member-profile";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import {
@@ -70,7 +70,7 @@ const savedCountLabel = (status: string, count: number): string => {
 
 export function MyPageScreen() {
   const router = useRouter();
-  const [member, setMember] = useState<MemberResponse | null>(null);
+  const [member, setMember] = useState<UserResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -168,7 +168,7 @@ export function MyPageScreen() {
             href="/my-page/skin-type"
             icon="droplet"
             label="피부 타입"
-            value={profileLabel(SKIN_TYPES, member.skinType)}
+            value={profileLabel(SKIN_TYPES, skinChoiceOf(member))}
           />
         </Section>
 

@@ -1,6 +1,4 @@
-import { SkinType } from "@poudy/api/api.zod";
-
-import { type Filter, SKIN_TYPE_NAMES } from "./filter";
+import { type Filter, SKIN_TYPE_NAMES, skinChoiceOf } from "./filter";
 import { groupLabel, type IngredientGroups } from "./ingredient-groups";
 import { firstOf, keepIf, pick } from "./optional";
 import { LEVEL_LABELS } from "./product-display";
@@ -36,9 +34,7 @@ const levelPart = (label: string, levels: readonly number[]): readonly string[] 
   keepIf(levels.length > 0, `${label} ${rangeLabel(levels)}`);
 
 const skinTypePart = (filter: Filter): readonly string[] =>
-  SkinType.options
-    .filter((skinType) => skinType === filter.skinType)
-    .map((skinType) => `${SKIN_TYPE_NAMES[skinType]} 피부`);
+  [skinChoiceOf(filter)].filter((choice) => choice !== undefined).map((choice) => `${SKIN_TYPE_NAMES[choice]} 피부`);
 
 const countPart = (label: string, count: number): readonly string[] => keepIf(count > 0, `${label} ${count}개`);
 
@@ -69,7 +65,7 @@ const countAsOne = (levels: readonly number[]): number => firstOf(keepIf(levels.
 /** 적용 조건 개수. 디자인의 `탐색 조건 8` 배지에 쓴다. */
 export const countConditions = (filter: Filter): number =>
   firstOf(keepIf(Boolean(filter.keyword), 1), 0) +
-  firstOf(keepIf(Boolean(filter.skinType), 1), 0) +
+  firstOf(keepIf(Boolean(skinChoiceOf(filter)), 1), 0) +
   filter.categoryIds.length +
   filter.brandIds.length +
   filter.includeIngredientIds.length +

@@ -17,11 +17,11 @@ export function RestoreRequestList() {
   const { data, failed, setPage, reload, handleFailure } = useAdminPage(findRestoreRequests);
   const [restoring, setRestoring] = useState<number | null>(null);
 
-  const restore = (memberId: number, email: string) => {
+  const restore = (userId: number, email: string) => {
     if (!window.confirm(`${email} 계정을 복구할까요? 복구하면 다시 로그인할 수 있어요.`)) return;
 
-    setRestoring(memberId);
-    restoreMember(memberId)
+    setRestoring(userId);
+    restoreMember(userId)
       .then(reload)
       .catch(handleFailure)
       .finally(() => setRestoring(null));
@@ -39,7 +39,7 @@ export function RestoreRequestList() {
         {data && data.items.length > 0 && (
           <AdminTable label="계정 복구 요청 목록" columns={COLUMNS}>
             {data.items.map((request) => (
-              <tr key={request.memberId}>
+              <tr key={request.userId}>
                 <td className={`${CELL_CLASS} font-bold break-all`}>{request.email}</td>
                 <td className={`${CELL_CLASS} whitespace-nowrap`}>{providerName(request.provider)}</td>
                 <td className={`${CELL_CLASS} whitespace-nowrap text-text-secondary`}>
@@ -51,8 +51,8 @@ export function RestoreRequestList() {
                 <td className={`${CELL_CLASS} text-right`}>
                   <button
                     type="button"
-                    disabled={restoring === request.memberId}
-                    onClick={() => restore(request.memberId, request.email)}
+                    disabled={restoring === request.userId}
+                    onClick={() => restore(request.userId, request.email)}
                     className="h-9 rounded-button bg-action px-4 text-[14px] font-bold whitespace-nowrap text-action-text disabled:opacity-40"
                   >
                     복구하기

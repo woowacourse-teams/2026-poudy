@@ -12,12 +12,14 @@ const product: ProductResponse = {
   id: 1,
   name: "1025 독도 토너",
   brand: { id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" },
+  badges: [],
   imageUrl: "",
   price: 18000,
   volumeValue: 200,
   volumeUnit: "ml",
   moistureLevel: 2,
   oilLevel: 1,
+  sensitiveSkin: false,
   updatedAt: "2026-08-03T00:00:00+09:00",
 };
 

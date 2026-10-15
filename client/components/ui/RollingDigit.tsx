@@ -8,6 +8,8 @@ type RollingDigitProps = {
   readonly digit: number;
   /** 오른쪽에서 센 자리. 테스트가 자리를 짚을 때 쓴다. */
   readonly place: number;
+  /** 구르기 시작하기 전에 기다리는 시간(ms). 여러 자리를 차례로 굴릴 때 쓴다. */
+  readonly delay?: number;
 };
 
 /**
@@ -17,7 +19,7 @@ type RollingDigitProps = {
  * 각각 `lh` 로 적으면 둘을 다른 자리에서 재게 되어, 반올림이 갈리는 화면에서 숫자가
  * 칸 사이에 걸린다.
  */
-export function RollingDigit({ digit, place }: RollingDigitProps) {
+export function RollingDigit({ digit, place, delay = 0 }: RollingDigitProps) {
   const [ready, setReady] = useState(false);
   const frame = useRef<number | undefined>(undefined);
 
@@ -38,7 +40,7 @@ export function RollingDigit({ digit, place }: RollingDigitProps) {
     >
       <span
         className={`absolute inset-x-0 top-0 flex h-[1000%] flex-col ${ready ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out" : ""}`}
-        style={{ transform: `translateY(-${digit * 10}%)` }}
+        style={{ transform: `translateY(-${digit * 10}%)`, transitionDelay: delay ? `${delay}ms` : undefined }}
       >
         {DIGITS.map((candidate) => (
           <span key={candidate} className="flex h-[10%] min-h-0 items-center justify-center">

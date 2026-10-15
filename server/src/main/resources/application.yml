@@ -136,7 +136,7 @@ poudy:
       batch-size: 500
       max-batches: 20
       cron: "0 30 3 * * *"
-  member:
+  user:
     retention:
       enabled: false
       max-age: P30D

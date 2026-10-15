@@ -250,8 +250,9 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 
 다음 이벤트는 제품 경험을 진단하기 위한 것이므로 PostHog에만 남깁니다.
 
-- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `home_search_selected`, `popular_keyword_used`,
-  `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`, `home_product_selected`
+- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`,
+  `popular_keyword_used`, `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`,
+  `home_product_selected`
 - 검색 과정 — `search_started`, `search_used`, `search_results_viewed`, `search_suggestion_selected`
 - 목록과 조건 조작 — `product_list_viewed`, `filter_applied`, `filter_reset`, `sort_applied`,
   `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`
@@ -288,6 +289,10 @@ Android intent는 앱이 없을 때 `/open-app?source=…&store=google_play`를 
 `curation_slide_viewed`로 가운데 카드가 바뀐 시점과 `transition = manual | autoplay`를 남깁니다.
 [큐레이션 노출→수동 넘김 퍼널](https://us.posthog.com/project/562550/insights/7FSy0f6p)은 직접 조작만
 집계합니다. 큐레이션 상세 화면이 생기기 전에는 `curation_opened`를 보내지 않습니다.
+
+캐러셀 첫 장의 서비스 가이드는 큐레이션이 아니므로 `curation_slide_viewed`와 `curation_opened`를 보내지
+않고, 두 이벤트의 `position`도 가이드를 뺀 큐레이션 목록 안에서 셉니다. 가이드를 누르면
+`service_guide_opened`를 남기고, 서비스 소개(`/about`)는 `page_viewed.page = about`으로 집계합니다.
 
 운영 측정 ID를 배포하기 전에 GA4 관리 화면에서 다음 설정을 확인합니다.
 
