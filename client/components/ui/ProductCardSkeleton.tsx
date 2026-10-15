@@ -3,7 +3,7 @@ export function ProductCardSkeleton({ overlay = false }: { readonly overlay?: bo
   return (
     <div data-product-skeleton aria-hidden="true" className={overlay ? "absolute inset-0 z-10 bg-white" : "bg-white"}>
       <div className="flex h-full min-h-27 animate-pulse items-center gap-3 py-3">
-        <div className="size-20 shrink-0 rounded-lg bg-[#F2F3F5]" />
+        <div className="size-20 shrink-0 rounded-sm bg-[#F2F3F5]" />
 
         <div className="flex flex-1 flex-col gap-2">
           <div className="h-3 w-16 rounded bg-[#EDEEF0]" />

@@ -1,0 +1,88 @@
+# @poudy/design-system
+
+디자인 파일 `client/design/poudy-ui.pen`의 명세를 코드로 옮기는 패키지다. 명세를 단일 원천으로 두고, 코드는 이 패키지를 거쳐 명세를 따른다(#722).
+
+## 구성
+
+| 파일                       | 내용                                                                               | 고치는 방법                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tokens.json`              | `.pen` 변수를 가공하지 않고 그대로 옮긴 것                                         | 아래 절차대로 다시 내보낸다                                                     |
+| `src/tokens.css`           | `tokens.json`에서 만든 Tailwind `@theme`                                           | 손으로 고치지 않는다. `pnpm --filter @poudy/design-system tokens`로 다시 만든다 |
+| `src/system.css`           | 변수로 표현하지 않는 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티) | 주인 보드(SHAPE E06, MOTION M04, LAYOUT L02·L09)를 고친 뒤 함께 고친다          |
+| `scripts/build-tokens.mjs` | 변수 이름을 코드 이름으로 옮기는 규칙(MAP G03)                                     | 새 변수에 규칙이 없으면 생성이 실패한다. 규칙을 먼저 정한다                     |
+
+client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다.
+
+## 명세가 바뀌었을 때
+
+1. 주인 보드를 고치고, 보드의 수정 기록에 날짜와 함께 남긴다(MAP G03).
+2. `tokens.json`을 다시 내보낸다.
+   - `.pen`은 암호화된 파일이라 직접 읽을 수 없다. pen.dev 데스크톱 앱에서 파일을 열고, 앱에 연결된 MCP(`pen-desktop`)의 `execute` 도구로 아래 코드를 실행한다.
+
+     ```js
+     const v = GetVariables().variables;
+     const out = {};
+     for (const k of Object.keys(v).sort()) out[k] = v[k];
+     Print(JSON.stringify(out, null, 2));
+     ```
+
+   - 출력을 `tokens.json`에 그대로 붙여 넣는다. 파일 끝에는 줄바꿈 하나를 둔다.
+3. `pnpm --filter @poudy/design-system tokens`로 `src/tokens.css`를 다시 만든다.
+4. 코드 PR을 올리고, PR 본문에 고친 보드 섹션을 적는다(PR 템플릿의 명세 변경 항목은 #724에서 추가한다).
+
+CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만든 결과가 `src/tokens.css`와 같은지 확인한다. 생성한 CSS를 손으로 고치면 실패한다.
+
+## 이름 규칙
+
+디자인 변수는 MAP G03의 규칙대로 `ui-` 접두사를 떼고 Tailwind 이름으로 옮긴다.
+
+| 디자인 변수                                      | 코드 이름                             | 쓰는 법                                            |
+| ------------------------------------------------ | ------------------------------------- | -------------------------------------------------- |
+| 색 `ui-{이름}`                                   | `--color-{이름}` (OKLCH)              | `bg-surface`, `text-text-primary`, `border-border` |
+| 물방울 `droplet-*`                               | `--color-droplet-*`                   | `text-droplet-moisture-text`                       |
+| 브랜드 지정 색 `brand-kakao-*`, `brand-google-*` | `--color-kakao-*`, `--color-google-*` | 로그인 버튼에만 쓴다                               |
+| 글자 크기 `ui-text-{px}`                         | `--text-{px}`                         | `text-13`                                          |
+| 글자 역할(TYPO T02·T11)                          | `--text-{역할}`과 역할별 행간         | `text-body`, `text-section`                        |
+| 행간 `ui-leading-*`                              | `--leading-*`                         | `leading-snug`                                     |
+| 반경 `ui-radius-*`                               | `--radius-*`                          | `rounded-xl`(14px)                                 |
+| 시간 `ui-motion-*`                               | `--duration-*`                        | `duration-(--duration-fast)`                       |
+| 상태 `ui-*-opacity`, `ui-focus-ring-*`           | `--{이름}-opacity`, `--focus-ring-*`  | `opacity-(--pressed-opacity)`                      |
+
+내보내지 않는 변수도 있다. 이유는 `scripts/build-tokens.mjs`의 `SKIPPED`에 함께 적었다.
+
+- 원료 색(`app-*`): 팔레트 보드에서만 쓰고, 코드에는 역할만 내보낸다.
+- 간격(`ui-space-*`): Tailwind 기본 숫자 스케일과 1:1이라 `gap-2`처럼 쓴다.
+- 관리자 화면(`admin-*`)과 피부 타입 테스트(`skin-test-*`): 이 패키지의 범위가 아니다.
+
+반경과 행간은 Tailwind 기본 이름에 명세 값을 넣는다. 그래서 `rounded-xl`은 Tailwind 기본값인 12px가 아니라 명세 값인 14px다.
+
+## 컴포넌트 대응표
+
+명세 컴포넌트와 코드 컴포넌트의 대응이다. 각 1단계 이슈가 자기 행의 코드 이름을 확정한다.
+
+| 명세 컴포넌트                                                                                                                              | 코드 컴포넌트 (안)                                                                                                                                  | 이슈 |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| BTN · Large Primary · Large Destructive · Primary · Secondary · Destructive · Compact Text (앞·뒤 아이콘, 비활성), BTN · Outline (높이 32) | `Button`                                                                                                                                            | #725 |
+| BTN · Icon · Overlay · 썸네일 삭제 · 투명(앱바 오른쪽·큰 제목 내비·시트 머리의 공유·도움말·추가·닫기)                                      | `IconButton` (변형: `overlay`, `thumbnail-remove`, `ghost`)                                                                                         | #725 |
+| APP · 입력 · 한 줄 · 여러 줄 · 선택                                                                                                        | `TextField`, `TextArea`, `Select`                                                                                                                   | #726 |
+| APP · 검색 입력 (기본·입력 중)                                                                                                             | `SearchField` (입력 칸: 평소·입력 중, 지우기 ✕. 시트용 변형은 따로 두지 않고 폭을 채운다)                                                           | #726 |
+| 검색 입력 + 자동완성 목록 (A11Y D04·D06)                                                                                                   | `Combobox` (`SearchField`와 결과 목록을 잇는 동작과 목록 그릇. 목록 안의 행은 client가 넣는다)                                                      | #726 |
+| 하나만 고르기: APP · 라디오 목록 행, 선택 버튼(일반·컴팩트), 선택 카드, 선택 행                                                            | `RadioGroup` + `RadioGroup.Item` (모양 변형: `list` 라디오 목록 행, `button` 선택 버튼(크기 `md` 52·`sm` 44), `card` 선택 카드, `card-row` 선택 행) | #726 |
+| 여러 개 고르기: APP · 체크 목록 행, 성분 체크 행                                                                                           | `CheckboxGroup` + `Checkbox` (모양 변형: `list`, 오른쪽 보조 글자 선택)                                                                             | #726 |
+| APP · 라디오, APP · 체크박스 (선택 표시)                                                                                                   | 패키지 안의 `RadioIndicator`, `CheckboxIndicator` (밖으로 내보내지 않고 위 두 부품이 안에서 쓴다)                                                   | #726 |
+| APP · 범위 슬라이더, 유수분 평가 슬라이더                                                                                                  | `RangeSlider`, `Slider`                                                                                                                             | #726 |
+| APP · 필터 칩 (기본·선택)                                                                                                                  | `FilterChip` (누르면 시트를 연다. 조건을 고르면 선택 모양)                                                                                          | #726 |
+| APP · 빠른 필터 (기본·선택)                                                                                                                | `ToggleGroup` + `ToggleGroup.Item` (모양 변형 `chip`. 켜고 끄기 `aria-pressed`)                                                                     | #726 |
+| APP · 선택 성분 칩, 적용 조건 칩, 효과 태그 · 주의 태그 · 기능 태그                                                                        | `Tag` (`removable`을 켜면 빼기 ✕. 선택 성분 칩은 켜고, 적용 조건 칩과 태그는 끈다)                                                                  | #726 |
+| APP · AI 요약 배지, 평가 배지 (잘 맞음·안 맞음)                                                                                            | `Badge`                                                                                                                                             | #726 |
+| APP · 검색 모드 탭, 카테고리·브랜드 전환                                                                                                   | `TabNav` (다른 화면으로 가는 링크 탭, `aria-current="page"`)                                                                                        | #726 |
+| CS · 구성품 탭(탭 안의 내용은 client), APP · 디렉터리 레일 항목                                                                            | `Tabs` (같은 화면의 패널을 바꾸는 탭. 모양 변형 `underline`·`rail`(세로), 배치 `fixed`·`scroll`)                                                    | #726 |
+| APP · 질문 행 (접힘·펼침), 묶음 머리 행 (펼침·접힘)                                                                                        | `Disclosure`, `DisclosureGroup` (동작만 맡는다. 행 모양은 client의 도메인 컴포넌트가 만든다)                                                        | #726 |
+| APP · 바텀시트                                                                                                                             | `BottomSheet` (그릇만 맡는다. 안의 행은 `RadioGroup`, `CheckboxGroup`, `Disclosure`를 그대로 쓴다)                                                  | #727 |
+| APP · 확인 시트                                                                                                                            | `ConfirmSheet` (안에서 `BottomSheet`를 쓰고 틀만 고정한다: 제목 + 이유 + 내용 칸 + 취소·실행. 내용 칸은 client가 채운다)                            | #727 |
+| APP · 토스트                                                                                                                               | `Toast` (방금 한 행동의 결과. 화면 아래에 떠서 4초 뒤 사라진다)                                                                                     | #728 |
+| APP · 안내 줄                                                                                                                              | `Notice` (사용자가 하지 않은 변경이나 이미 적용된 상태. 본문 안에 붙어 ✕로 닫을 때까지 남는다)                                                      | #728 |
+| 빈 상태, 스켈레톤(S50a), 섹션·화면 오류(S51 계열)                                                                                          | `EmptyState`, `Skeleton`, `ErrorState`                                                                                                              | #728 |
+| APP · 목록 더 불러오기 상태 (불러오는 중·마지막·실패), APP · 이전 제품 보기                                                                | `LoadMore` (다음 장은 스크롤로 자동, 실패 후 재시도와 이전 장은 버튼으로만)                                                                         | #728 |
+| APP · 상단 내비 · 하위 · 큰 제목, 하단 내비게이션(5칸), 하단 행동 영역                                                                     | `TopBar`, `BottomNavigation`, `BottomActionBar`                                                                                                     | #729 |
+| 아이콘(Tabler), APP · 사진 첨부 버튼 · 첨부 사진                                                                                           | `Icon`, `ImageAttachment`                                                                                                                           | #729 |

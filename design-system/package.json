@@ -1,0 +1,13 @@
+{
+  "name": "@poudy/design-system",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./src/index.css"
+  },
+  "scripts": {
+    "tokens": "node scripts/build-tokens.mjs",
+    "tokens:check": "node scripts/build-tokens.mjs --check",
+    "test": "node --test"
+  }
+}

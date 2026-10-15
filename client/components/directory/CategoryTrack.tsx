@@ -107,7 +107,7 @@ export function CategoryTrack({
                   })
                 }
                 aria-current={selected ? "page" : undefined}
-                className={`flex h-10 items-center rounded-xl px-3.5 text-[13px] ${
+                className={`flex h-10 items-center rounded-lg px-3.5 text-[13px] ${
                   selected
                     ? "border border-[#F5CBD4] bg-[#FFF0F4] font-bold text-[#E83D61]"
                     : "bg-[#F2F3F5] font-semibold text-[#54575C]"

@@ -57,7 +57,7 @@ export function LegalRecords({ headers, rows }: LegalRecordsProps) {
   return (
     <ul className="flex flex-col gap-2" aria-label={title}>
       {rows.map((row) => (
-        <li key={row[0]} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+        <li key={row[0]} className="flex flex-col gap-2 rounded-lg border border-border p-3">
           <strong className="text-[13px] font-bold text-text-primary">{row[0]}</strong>
 
           <dl className="flex flex-col gap-1 text-[12px]">

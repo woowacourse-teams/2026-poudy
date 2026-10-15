@@ -107,7 +107,7 @@ export function SortDropdown<T extends string = Sort>({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={menuId}
-        className="sort-dropdown-trigger flex h-9 items-center gap-1 rounded-[10px] bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+        className="sort-dropdown-trigger flex h-9 items-center gap-1 rounded-md bg-[#F2F3F5] px-3 text-[12px] font-semibold text-[#54575C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
       >
         {labelOf(value)}
         <span className="sort-dropdown-chevron" data-open={open} aria-hidden="true">
@@ -127,7 +127,7 @@ export function SortDropdown<T extends string = Sort>({
           어색하다. 여백을 없애 첫 옵션과 마지막 옵션이 모서리까지 닿게 한다.
           모서리를 넘어 칠해지지 않도록 넘치는 부분은 잘라 낸다.
         */
-        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-max min-w-[156px] overflow-hidden rounded-[10px] border border-border bg-white shadow-lg"
+        className="sort-dropdown-menu absolute right-0 z-10 mt-1 w-max min-w-[156px] overflow-hidden rounded-md border border-border bg-white shadow-lg"
       >
         {ORDER.map((sort, index) => (
           <button

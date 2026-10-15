@@ -12,7 +12,7 @@ export function SiteFooter() {
       줄마다 폭이 넓고 좁고 넓으면 푸터 윤곽이 가운데에서 움푹 들어가 보이므로,
       위에서 아래로 갈수록 넓어지게 세운다.
     */
-    <footer className="flex flex-col items-center gap-9 bg-surface-subtle px-4 py-9 text-center text-[11px] text-text-secondary">
+    <footer className="flex flex-col items-center gap-9 bg-surface px-4 py-9 text-center text-[11px] text-text-secondary">
       {/*
         푸터 글자가 11px 이라 아이콘이 작으면 함께 묻힌다. 회색 원 위에 흰 그림을 얹어
         덩어리로 세운다. 누르는 자리는 36px 그대로라 손가락에 넉넉하다.

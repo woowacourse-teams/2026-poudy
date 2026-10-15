@@ -22,6 +22,9 @@ importers:
       '@poudy/api':
         specifier: workspace:*
         version: link:../common
+      '@poudy/design-system':
+        specifier: workspace:*
+        version: link:../design-system
       next:
         specifier: 16.3.0
         version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -128,6 +131,8 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.4.3
+
+  design-system: {}
 
 packages:
 

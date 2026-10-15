@@ -17,7 +17,7 @@ export function LogoutSheet({ open, pending, onClose, onConfirm }: Props) {
         <button
           type="button"
           onClick={onClose}
-          className="h-12 flex-1 rounded-[10px] bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
+          className="h-12 flex-1 rounded-xl bg-[#F3F4F5] text-[14px] font-bold text-[#4D5159]"
         >
           취소
         </button>
@@ -25,7 +25,7 @@ export function LogoutSheet({ open, pending, onClose, onConfirm }: Props) {
           type="button"
           onClick={onConfirm}
           disabled={pending}
-          className="h-12 flex-1 rounded-[10px] bg-action text-[14px] font-bold text-action-text disabled:opacity-40"
+          className="h-12 flex-1 rounded-xl bg-action text-[14px] font-bold text-action-text disabled:opacity-40"
         >
           로그아웃
         </button>

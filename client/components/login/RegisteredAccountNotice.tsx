@@ -51,7 +51,7 @@ export function RegisteredAccountNotice({ provider }: Props) {
           </p>
 
           {account && (
-            <div className="mt-5 flex items-center gap-3 rounded-xl bg-surface p-4">
+            <div className="mt-5 flex items-center gap-3 rounded-lg bg-surface p-4">
               <ProviderBadge provider={account.provider} size="large" />
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-[15px] font-bold break-all">{account.email}</span>

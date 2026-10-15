@@ -5,7 +5,7 @@ type Props = {
   readonly emptyMessage: string;
 };
 
-const MESSAGE_CLASS = "rounded-xl border border-border bg-background py-16 text-center text-[14px] text-text-secondary";
+const MESSAGE_CLASS = "rounded-lg border border-border bg-background py-16 text-center text-[14px] text-text-secondary";
 
 export function AdminListState({ failed, loading, empty, emptyMessage }: Props) {
   if (failed) {

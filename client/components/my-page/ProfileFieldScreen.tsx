@@ -157,7 +157,7 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
                 disabled={!member}
                 className="peer sr-only"
               />
-              <span className="flex min-h-13 items-center gap-3 rounded-xl border border-[#d3d6dc] bg-background px-4 py-3 peer-checked:border-action peer-checked:ring-1 peer-checked:ring-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
+              <span className="flex min-h-13 items-center gap-3 rounded-lg border border-[#d3d6dc] bg-background px-4 py-3 peer-checked:border-action peer-checked:ring-1 peer-checked:ring-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-action">
                 <OptionContent option={option} />
                 <span
                   aria-hidden="true"

@@ -3,7 +3,7 @@ export function CategoryTrackSkeleton() {
   return (
     <div aria-hidden="true" className="flex h-10 animate-pulse gap-2 overflow-hidden px-4">
       {["w-20", "w-24", "w-20", "w-28"].map((width, index) => (
-        <div key={`${width}-${index}`} className={`h-10 ${width} shrink-0 rounded-xl bg-[#F2F3F5]`} />
+        <div key={`${width}-${index}`} className={`h-10 ${width} shrink-0 rounded-lg bg-[#F2F3F5]`} />
       ))}
     </div>
   );

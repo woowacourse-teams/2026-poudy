@@ -220,7 +220,7 @@ export function ProductRows({
         {empty ? (
           <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
         ) : (
-          <ul className="divide-y divide-divider">
+          <ul className="divide-y divide-border">
             {items.map((product, index) => (
               // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
               <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>

@@ -281,7 +281,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
       ) : typing ? (
         <>
           {empty ? (
-            <p className="rounded-xl bg-surface p-3 text-center text-[13px] text-text-secondary">
+            <p className="rounded-lg bg-surface p-3 text-center text-[13px] text-text-secondary">
               ‘{trimmed}’에 대한 검색 결과가 없어요
             </p>
           ) : (
@@ -293,7 +293,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                 recordKeyword(trimmed);
                 rememberFilter(trimmed);
               }}
-              className="flex items-center gap-3 rounded-xl bg-surface p-3"
+              className="flex items-center gap-3 rounded-lg bg-surface p-3"
             >
               <Icon name="search" size={18} className="text-text-secondary" />
               <span className="flex flex-1 flex-col gap-0.5">
@@ -317,7 +317,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                 )}
               </h2>
 
-              <ul className="divide-y divide-divider">
+              <ul className="divide-y divide-border">
                 {items.map((item, index) => (
                   // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
                   <li key={item.id} {...{ [ANCHOR_ATTRIBUTE]: item.id }}>
@@ -344,7 +344,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
                         alt=""
                         size={40}
                         loading="lazy"
-                        className="size-10 shrink-0 rounded-lg bg-transparent object-contain"
+                        className="size-10 shrink-0 rounded-sm bg-transparent object-contain"
                       />
                       <span className="flex flex-1 flex-col gap-0.5">
                         {/*
@@ -400,7 +400,7 @@ function RecentSearches({ items }: { readonly items: readonly RecentSearch[] }) 
           </button>
         </div>
 
-        <ul className="divide-y divide-divider">
+        <ul className="divide-y divide-border">
           {items.map((item, index) => {
             const id = recentSearchId(item);
             /* 제품은 그 상세로, 검색어는 그 말의 결과 목록으로 되돌아간다. */

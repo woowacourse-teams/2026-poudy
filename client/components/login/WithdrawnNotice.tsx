@@ -85,7 +85,7 @@ export function WithdrawnNotice() {
             </p>
           )}
 
-          <div className="mt-5 rounded-xl bg-surface p-4">
+          <div className="mt-5 rounded-lg bg-surface p-4">
             <p className="text-[14px] text-text-secondary">되살리면 그대로 돌아와요</p>
             <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-[14px] text-text-primary">
               {RESTORED_ITEMS.map((item) => (

@@ -291,9 +291,9 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
     .replace(/\. /g, ".");
 
   return (
-    <section className="flex flex-col gap-2 rounded-xl bg-[#EFF1F5] px-4 pt-4 pb-1">
+    <section className="flex flex-col gap-2 rounded-lg bg-[#EFF1F5] px-4 pt-4 pb-1">
       <div className="flex items-center gap-2">
-        <span className="flex size-[max(24px,calc(24em/14))] shrink-0 items-center justify-center rounded-xl bg-[#E0F4EA] text-[14px]">
+        <span className="flex size-[max(24px,calc(24em/14))] shrink-0 items-center justify-center rounded-lg bg-[#E0F4EA] text-[14px]">
           <Icon name="badge-check" size={14} scalable className="text-[#0A6B52]" />
         </span>
         <h3 className="text-[14px] font-bold text-[#182132]">정보 출처</h3>

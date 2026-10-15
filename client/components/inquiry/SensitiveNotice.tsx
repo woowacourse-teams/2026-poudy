@@ -3,7 +3,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 /** 자유 입력을 받는 화면에 공통으로 둔다. */
 export function SensitiveNotice() {
   return (
-    <section className="flex gap-3 rounded-xl bg-surface-subtle p-3">
+    <section className="flex gap-3 rounded-lg p-3">
       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft">
         <Icon name="info" size={16} className="text-brand" />
       </span>

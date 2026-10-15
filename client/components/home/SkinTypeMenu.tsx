@@ -45,14 +45,14 @@ export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
         모서리는 바로 위 인기 검색어 바와 같은 값을 쓴다. 폭과 테두리, 바탕이 같은 두 바가
         나란히 서 있어 모서리만 다르면 한 세트로 읽히지 않는다.
       */}
-      <ul className="flex items-stretch overflow-hidden rounded-xl border border-border">
+      <ul className="flex items-stretch overflow-hidden rounded-lg border border-border">
         {[...items, SENSITIVE_OPTION].map(({ code, name }) => (
           /*
             칸은 고르게 나눈다. 이름의 길이가 달라도(`건성`·`민감성`) 칸이 들쭉날쭉하지
             않아야 한 줄로 읽힌다. 첫 칸을 뺀 나머지에만 왼쪽 선을 두어 양 끝에는
             선이 서지 않는다.
           */
-          <li key={code} className="flex-1 border-l border-divider first:border-l-0">
+          <li key={code} className="flex-1 border-l border-border first:border-l-0">
             <Link
               href={hrefOf(code)}
               onClick={() => track("skin_type_selected", { skin_type: code })}

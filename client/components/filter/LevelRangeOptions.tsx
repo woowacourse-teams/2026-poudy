@@ -231,7 +231,7 @@ export function LevelRange({ label, levels, onChange }: LevelRangeProps) {
                 <span
                   aria-hidden="true"
                   style={dragStyle}
-                  className={`h-[3px] flex-1 rounded-sm transition-colors duration-control-state ease-out motion-reduce:transition-none ${
+                  className={`h-[3px] flex-1 rounded-full transition-colors duration-control-state ease-out motion-reduce:transition-none ${
                     !anyLevel && level >= min && level < max ? "bg-brand" : "bg-border"
                   }`}
                 />

@@ -37,6 +37,7 @@ jobs:
           filters: |
             client:
               - 'client/**'
+              - 'design-system/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'package.json'
@@ -84,10 +85,15 @@ jobs:
         continue-on-error: true
         run: pnpm run typecheck
 
+      # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
+      # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.
       - name: Test
         id: test
         continue-on-error: true
-        run: pnpm run test
+        run: |
+          pnpm run test
+          pnpm --filter @poudy/design-system run tokens:check
+          pnpm --filter @poudy/design-system run test
 
       # preview 를 만들지 못하면 Lighthouse 를 잴 수 없다. 목으로는 빌드 중 API
       # 요청을 받을 수 없어 대신 잴 수단도 없다. 조용히 건너뛰면 점수가 빠진

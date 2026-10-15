@@ -80,7 +80,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           type="button"
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
-          className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-[10px] bg-[#DEE2E9] px-4 py-2 text-center text-[13px] font-semibold text-[#182132] ${PRESS_SCALE}`}
+          className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-[#DEE2E9] px-4 py-2 text-center text-[13px] font-semibold text-[#182132] ${PRESS_SCALE}`}
         >
           {expanded ? "성분 목록 접기" : `나머지 ${restCount}개 성분 펼쳐보기`}
           <Icon name={expanded ? "chevron-up" : "chevron-down"} size={16} scalable className="text-[#566273]" />

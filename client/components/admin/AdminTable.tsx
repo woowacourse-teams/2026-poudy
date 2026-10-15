@@ -10,7 +10,7 @@ export const CELL_CLASS = "px-4 py-3 align-top text-[14px]";
 
 export function AdminTable({ label, columns, children }: Props) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-background">
+    <div className="overflow-x-auto rounded-lg border border-border bg-background">
       <table aria-label={label} className="w-full border-collapse text-left">
         <thead className="border-b border-border bg-surface-subtle">
           <tr>

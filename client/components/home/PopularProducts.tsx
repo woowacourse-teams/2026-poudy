@@ -82,7 +82,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
                   onClick={() => select(chip.id)}
                   aria-pressed={active}
                   className={[
-                    "filter-chip inline-flex h-8 shrink-0 items-center rounded-2xl border px-3 text-[13px] leading-none font-medium",
+                    "filter-chip inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-[13px] leading-none font-medium",
                     "motion-reduce:transition-none",
                     active
                       ? "border-[#212124] bg-[#212124] font-semibold text-white"
