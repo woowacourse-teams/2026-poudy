@@ -26,6 +26,7 @@
     "./tabs": "./src/tabs.tsx",
     "./tab-nav": "./src/tab-nav.tsx",
     "./disclosure": "./src/disclosure.tsx",
+    "./bottom-sheet": "./src/bottom-sheet.tsx",
     "./portal": "./src/portal.tsx"
   },
   "scripts": {
