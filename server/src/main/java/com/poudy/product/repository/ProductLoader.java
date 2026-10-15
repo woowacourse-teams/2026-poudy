@@ -10,6 +10,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.product.domain.Badge;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductVariant;
@@ -44,53 +45,9 @@ class ProductLoader {
             return List.of();
         }
         Map<String, Object> parameters = Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray()));
-        Map<Long, List<ProductVariant>> variants = jdbc.query(
-            """
-                select * from product_variant where product_id = any(:ids) order by product_id, display_order
-                """,
-            parameters,
-            (rs, row) -> Map.entry(
-                rs.getLong("product_id"),
-                new ProductVariant(
-                    rs.getLong("id"),
-                    rs.getLong("price"),
-                    rs.getBigDecimal("volume_value"),
-                    rs.getString("volume_unit"),
-                    rs.getString("status")
-                )
-            )
-        )
-            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
-        List<PartIngredientRow> partRows = jdbc.query(
-            """
-                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id
-                from product_component component
-                left join product_ingredient ingredient on ingredient.component_id = component.id
-                where component.product_id = any(:ids)
-                order by component.product_id, component.display_order, ingredient.display_order
-                """,
-            parameters,
-            (rs, row) -> new PartIngredientRow(
-                rs.getLong("product_id"),
-                rs.getLong("component_id"),
-                rs.getString("name"),
-                rs.getObject("ingredient_id", Long.class)
-            )
-        );
-        IngredientCatalog ingredients = ingredientRepository.findByIds(
-            partRows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).distinct()
-                .toList()
-        );
-        Map<Long, List<ProductPart>> parts = partRows.stream()
-            .collect(
-                groupingBy(
-                    PartIngredientRow::productId,
-                    collectingAndThen(
-                        groupingBy(PartIngredientRow::partId, LinkedHashMap::new, toList()),
-                        grouped -> grouped.values().stream().map(rows -> toPart(rows, ingredients)).toList()
-                    )
-                )
-            );
+        Map<Long, List<Badge>> badges = loadBadges(parameters);
+        Map<Long, List<ProductVariant>> variants = loadVariants(parameters);
+        Map<Long, List<ProductPart>> parts = loadParts(parameters);
         Map<Long, Product> loaded = jdbc.query("""
             select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
                 c.parent_id, c.name as category_name, c.depth from product p
@@ -112,6 +69,7 @@ class ProductLoader {
                     rs.getString("category_name"),
                     rs.getInt("depth")
                 ),
+                badges.getOrDefault(id, List.of()),
                 parts.getOrDefault(id, List.of()),
                 rs.getString("image_url"),
                 new ProductVariants(variants.get(id)),
@@ -124,6 +82,79 @@ class ProductLoader {
             );
         }).stream().collect(toMap(Product::id, p -> p));
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
+    }
+
+    Map<Long, List<Badge>> loadBadges(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return loadBadges(Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray())));
+    }
+
+    private Map<Long, List<Badge>> loadBadges(Map<String, Object> parameters) {
+        return jdbc.query(
+            """
+                select pb.product_id, b.code, b.name from product_badge pb
+                join badge b on b.code = pb.badge_code
+                where pb.product_id = any(:ids)
+                order by pb.product_id, pb.badge_code collate "C"
+                """,
+            parameters,
+            (rs, row) -> Map.entry(rs.getLong("product_id"), new Badge(rs.getString("code"), rs.getString("name")))
+        ).stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+    }
+
+    private Map<Long, List<ProductVariant>> loadVariants(Map<String, Object> parameters) {
+        return jdbc.query(
+            """
+                select * from product_variant where product_id = any(:ids) order by product_id, display_order
+                """,
+            parameters,
+            (rs, row) -> Map.entry(
+                rs.getLong("product_id"),
+                new ProductVariant(
+                    rs.getLong("id"),
+                    rs.getLong("price"),
+                    rs.getBigDecimal("volume_value"),
+                    rs.getString("volume_unit"),
+                    rs.getString("status")
+                )
+            )
+        )
+            .stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+    }
+
+    private Map<Long, List<ProductPart>> loadParts(Map<String, Object> parameters) {
+        List<PartIngredientRow> partRows = jdbc.query(
+            """
+                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id
+                from product_component component
+                left join product_ingredient ingredient on ingredient.component_id = component.id
+                where component.product_id = any(:ids)
+                order by component.product_id, component.display_order, ingredient.display_order
+                """,
+            parameters,
+            (rs, row) -> new PartIngredientRow(
+                rs.getLong("product_id"),
+                rs.getLong("component_id"),
+                rs.getString("name"),
+                rs.getObject("ingredient_id", Long.class)
+            )
+        );
+        IngredientCatalog ingredients = ingredientRepository.findByIds(
+            partRows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).distinct()
+                .toList()
+        );
+        return partRows.stream()
+            .collect(
+                groupingBy(
+                    PartIngredientRow::productId,
+                    collectingAndThen(
+                        groupingBy(PartIngredientRow::partId, LinkedHashMap::new, toList()),
+                        grouped -> grouped.values().stream().map(rows -> toPart(rows, ingredients)).toList()
+                    )
+                )
+            );
     }
 
     private static ProductPart toPart(List<PartIngredientRow> rows, IngredientCatalog ingredients) {

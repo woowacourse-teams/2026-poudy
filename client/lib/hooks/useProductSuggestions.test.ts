@@ -24,8 +24,9 @@ const countingSuggestions = () => {
         items: [page * 2 - 1, page * 2].map((id) => ({
           id,
           name: `제품 ${id}`,
-          imageUrl: "",
           brandName: "브랜드",
+          badges: [],
+          imageUrl: "",
           match: { field: "PRODUCT_NAME", text: `제품 ${id}`, startIndex: 0, endIndexExclusive: 2 },
         })),
         pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },

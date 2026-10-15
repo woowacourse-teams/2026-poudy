@@ -291,6 +291,7 @@ class ProductServiceTest {
                             product.id(),
                             product.name(),
                             product.brand(),
+                            product.badges(),
                             product.imageUrl(),
                             product.representativeVariant().price(),
                             product.representativeVariant().volumeValue(),
@@ -320,6 +321,7 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
+            List.of(),
             List.of(
                 new ProductPart(
                     1L,

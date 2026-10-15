@@ -22,6 +22,7 @@ public final class Product {
     private final String name;
     private final Brand brand;
     private final Category category;
+    private final List<Badge> badges;
     private final List<ProductPart> parts;
     private final String imageUrl;
     private final ProductVariants variants;
@@ -34,6 +35,7 @@ public final class Product {
         String name,
         Brand brand,
         Category category,
+        List<Badge> badges,
         List<ProductPart> parts,
         String imageUrl,
         ProductVariants variants,
@@ -51,6 +53,9 @@ public final class Product {
             throw new IllegalArgumentException("제품은 카테고리를 가져야 합니다.");
         }
         requireLeafCategory(category);
+        if (badges == null) {
+            throw new IllegalArgumentException("제품 배지 목록이 필요합니다.");
+        }
         if (parts == null) {
             parts = List.of();
         }
@@ -68,6 +73,7 @@ public final class Product {
         this.name = name;
         this.brand = brand;
         this.category = category;
+        this.badges = List.copyOf(badges);
         this.parts = List.copyOf(parts);
         this.imageUrl = imageUrl;
         this.variants = variants;
@@ -96,6 +102,10 @@ public final class Product {
 
     public Category category() {
         return category;
+    }
+
+    public List<Badge> badges() {
+        return badges;
     }
 
     public List<ProductPart> parts() {

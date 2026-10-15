@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mockingDetails;
 
+import com.poudy.product.domain.Badge;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import java.util.List;
@@ -38,6 +39,8 @@ class ProductReadQueriesTest {
 
     @BeforeEach
     void addIngredientData() {
+        fixture.update("insert into badge(code, name) values ('DAISO', '다이소')");
+        fixture.update("insert into product_badge(product_id, badge_code) values (90001, 'DAISO')");
         fixture.update("""
             insert into product_component (product_id, display_order, name)
             values (90001, 0, '조회 검증 구성품')
@@ -49,12 +52,15 @@ class ProductReadQueriesTest {
     }
 
     @Test
-    @DisplayName("자동완성은 검색과 표시 정보 두 조회만 실행하고 성분을 재로딩하지 않는다")
-    void suggestionsUseTwoSelects() {
+    @DisplayName("자동완성은 검색·표시·배지 세 조회만 실행하고 성분을 재로딩하지 않는다")
+    void suggestionsUseThreeSelects() {
         clearInvocations(jdbc);
         var result = queries.suggest("검증토너", 1, 20);
         assertThat(result.items()).isNotEmpty();
-        assertThat(selects()).hasSize(2).noneMatch(sql -> sql.contains("product_ingredient"));
+        assertThat(selects()).hasSize(3).noneMatch(sql -> sql.contains("product_ingredient"));
+        assertThat(selects()).filteredOn(sql -> sql.contains("product_badge")).hasSize(1);
+        assertThat(result.items().stream().filter(item -> item.id().equals(90001L)).findFirst().orElseThrow().badges())
+            .extracting(Badge::code).containsExactly("DAISO");
     }
 
     @Test
@@ -69,16 +75,18 @@ class ProductReadQueriesTest {
     }
 
     @Test
-    @DisplayName("목록은 후보·브랜드·카테고리·카드 네 조회로 상세와 같은 표시 정보를 반환한다")
+    @DisplayName("목록은 후보·브랜드·카테고리·카드·배지 다섯 조회로 상세와 같은 표시 정보를 반환한다")
     void listLoadsOnlyCardData() {
         var full = products.findById(90001L).orElseThrow();
         clearInvocations(jdbc);
         var result = queries.find(query(List.of()), ProductSort.DEFAULT, 1, 20);
-        assertThat(selects()).hasSize(4)
+        assertThat(selects()).hasSize(5)
             .noneMatch(sql -> sql.contains("ingredient_source") || sql.contains("any(:excluded)"));
+        assertThat(selects()).filteredOn(sql -> sql.contains("product_badge")).hasSize(1);
         var card = result.items().stream().filter(item -> item.id().equals(full.id())).findFirst().orElseThrow();
         assertThat(card.name()).isEqualTo(full.name());
         assertThat(card.brand()).isEqualTo(full.brand());
+        assertThat(card.badges()).extracting(Badge::code).containsExactly("DAISO");
         assertThat(card.imageUrl()).isEqualTo(full.imageUrl());
         assertThat(card.price()).isEqualTo(full.representativeVariant().price());
         assertThat(card.volumeValue()).isEqualByComparingTo(full.representativeVariant().volumeValue());

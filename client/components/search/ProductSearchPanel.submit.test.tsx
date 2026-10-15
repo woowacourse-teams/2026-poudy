@@ -32,6 +32,7 @@ const suggestionsAre = (total: number, delayMs = 0) =>
           id: index + 1,
           name: `제품 ${index + 1}`,
           brandName: "브랜드",
+          badges: [],
           imageUrl: "",
           // 이름 앞 두 글자 `제품` 이 맞은 것으로 둔다. 서버가 주는 모양과 같다.
           match: { field: "PRODUCT_NAME" as const, text: `제품 ${index + 1}`, startIndex: 0, endIndexExclusive: 2 },

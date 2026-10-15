@@ -53,6 +53,7 @@ class NullableResponseFieldsTest {
             "제품",
             null,
             List.of(),
+            List.of(),
             "",
             List.of(),
             0.0,

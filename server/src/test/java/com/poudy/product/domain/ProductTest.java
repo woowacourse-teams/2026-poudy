@@ -13,6 +13,7 @@ import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ class ProductTest {
                 "제품",
                 null,
                 category,
+                List.of(),
                 parts,
                 "image",
                 variants,
@@ -58,6 +60,7 @@ class ProductTest {
                 "제품",
                 brand,
                 null,
+                List.of(),
                 parts,
                 "image",
                 variants,
@@ -81,6 +84,7 @@ class ProductTest {
                 "제품",
                 brand,
                 parent,
+                List.of(),
                 parts,
                 "image",
                 variants,
@@ -103,6 +107,7 @@ class ProductTest {
             "제품",
             brand,
             category,
+            List.of(),
             List.of(
                 new ProductPart(1L, "본품", new Ingredients(List.of(shared))),
                 new ProductPart(2L, "리필", new Ingredients(List.of(onlySecond, shared)))
@@ -130,6 +135,7 @@ class ProductTest {
             "제품",
             brand,
             category,
+            List.of(),
             List.of(
                 new ProductPart(1L, "본품", new Ingredients(List.of(shared))),
                 new ProductPart(2L, "리필", new Ingredients(List.of(onlySecond, shared)))
@@ -153,6 +159,7 @@ class ProductTest {
                 "제품",
                 brand,
                 category,
+                List.of(),
                 parts,
                 "image",
                 variants,
@@ -171,5 +178,27 @@ class ProductTest {
             List.of("확인된 근거")
         );
         return new Ingredient(id, "성분 " + id, null, null, null, null, List.of(tag), null);
+    }
+
+    @Test
+    void ownsAnImmutableCopyOfBadges() {
+        List<Badge> badges = new ArrayList<>(List.of(new Badge("DAISO", "다이소")));
+        Product product = new Product(
+            1L,
+            "제품",
+            brand,
+            category,
+            badges,
+            parts,
+            "image",
+            variants,
+            sensory(1, 1),
+            false,
+            updatedAt
+        );
+        badges.clear();
+
+        assertThat(product.badges()).extracting(Badge::code).containsExactly("DAISO");
+        assertThatThrownBy(() -> product.badges().clear()).isInstanceOf(UnsupportedOperationException.class);
     }
 }
