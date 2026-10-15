@@ -66,7 +66,7 @@ describe("ProductSearchPanel 엔터 검색", () => {
 
     render(<ProductSearchPanel />);
     await userEvent.type(field(), "독");
-    await screen.findByRole("link", { name: /‘독’가 포함된 제품 검색/ });
+    await screen.findByRole("link", { name: /‘독’이 포함된 제품 검색/ });
     await userEvent.type(field(), "{Enter}");
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/products?keyword=%EB%8F%85"));

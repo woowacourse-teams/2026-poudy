@@ -12,6 +12,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { SearchField } from "@/components/ui/SearchField";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
+import { formatCount, josaOf } from "@/lib/domain/format";
 import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
@@ -297,11 +298,11 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
             >
               <Icon name="search" size={18} className="text-text-secondary" />
               <span className="flex flex-1 flex-col gap-0.5">
-                <span className="text-[14px] font-semibold text-text-primary">‘{trimmed}’가 포함된 제품 검색</span>
+                <span className="text-[14px] font-semibold text-text-primary">
+                  ‘{trimmed}’{josaOf(trimmed, "이/가")} 포함된 제품 검색
+                </span>
                 <span className="text-[11px] text-text-secondary">
-                  {total === undefined
-                    ? "검색 결과 전체 보기"
-                    : `검색 결과 ${total.toLocaleString("ko-KR")}개 전체 보기`}
+                  {total === undefined ? "검색 결과 전체 보기" : `검색 결과 ${formatCount(total)} 전체 보기`}
                 </span>
               </span>
               <Icon name="chevron-right" size={16} className="text-text-secondary" />
@@ -313,7 +314,7 @@ export function ProductSearchPanel({ children }: ProductSearchPanelProps) {
               <h2 className="flex items-center gap-1.5 pb-2">
                 <span className="text-[15px] font-bold text-text-primary">제품 바로가기</span>
                 {total === undefined ? null : (
-                  <span className="text-[12px] font-medium text-text-secondary">{total.toLocaleString("ko-KR")}개</span>
+                  <span className="text-[12px] font-medium text-text-secondary">{formatCount(total)}</span>
                 )}
               </h2>
 

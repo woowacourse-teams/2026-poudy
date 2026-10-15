@@ -26,7 +26,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
-import { formatPrice, formatVolume, unitPrice } from "@/lib/domain/format";
+import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
 import { partTabId } from "@/lib/domain/product-parts";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
@@ -237,17 +237,13 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
       <h3 className="sr-only">용량별 가격</h3>
       <ul className="divide-y divide-border border-y border-border">
         {variants.map((variant) => {
-          const perUnit = unitPrice(variant.price, variant);
+          const perUnit = formatUnitPrice(variant.price, variant);
           return (
             <li key={variant.id} className="flex min-h-12 items-center justify-between gap-3 py-1">
               <span className="text-13 leading-snug font-bold text-text-primary">{formatVolume(variant)}</span>
               <span className="flex flex-col items-end gap-0.5 text-caption text-text-secondary">
                 <span>정가 {formatPrice(variant.price)}</span>
-                {perUnit === undefined ? null : (
-                  <span>
-                    {variant.volumeUnit}당 {formatPrice(perUnit)}
-                  </span>
-                )}
+                {perUnit === undefined ? null : <span>{perUnit}</span>}
               </span>
             </li>
           );
@@ -311,10 +307,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductPartRespons
 }
 
 function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly productId: number }) {
-  const date = new Date(updatedAt)
-    .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-    .replace(/\.$/, "")
-    .replace(/\. /g, ".");
+  const date = formatDate(updatedAt);
 
   return (
     <section className="flex flex-col gap-2 rounded-lg bg-layer px-4 pt-4 pb-1">

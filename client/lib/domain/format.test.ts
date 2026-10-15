@@ -9,6 +9,7 @@ import {
   formatUnitPrice,
   formatVolume,
   formatVolumeWithUnitPrice,
+  josaOf,
   unitPrice,
   withJosa,
 } from "./format";
@@ -138,5 +139,12 @@ describe("withJosa", () => {
 
   it("소리를 알 수 없는 글자로 끝나면 받침이 없는 쪽을 쓴다", () => {
     expect(withJosa("Toner", "을/를")).toBe("Toner를");
+  });
+});
+
+describe("josaOf", () => {
+  it("이름은 빼고 조사만 돌려준다", () => {
+    expect(josaOf("토너", "이/가")).toBe("가");
+    expect(josaOf("판테놀", "이/가")).toBe("이");
   });
 });

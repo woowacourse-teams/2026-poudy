@@ -17,6 +17,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
+import { formatCount } from "@/lib/domain/format";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { ingredientStructuredData } from "@/lib/seo/structured-data";
@@ -123,7 +124,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           */}
           <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-1 text-center">
             <span className="max-w-full truncate">{ingredient.koreanName}</span>
-            <span>포함 제품 {ingredient.productCount.toLocaleString("ko-KR")}개 모두 보기</span>
+            <span>포함 제품 {formatCount(ingredient.productCount)} 모두 보기</span>
           </span>
           <Icon name="chevron-right" size={16} scalable className="shrink-0" />
         </Link>
