@@ -7,13 +7,6 @@
  * 다시 적으면 패키지 값을 덮어쓰므로 적지 않는다. 남은 토큰은 화면을 옮기면서 지운다(#743).
  */
 @theme {
-  /*
-   * 관리자 화면만 쓰는 색. 관리자 화면은 명세에서 admin- 체계로 따로 정해 두었고,
-   * 디자인 시스템 패키지는 그 체계를 내보내지 않는다.
-   */
-  --color-surface-subtle: #fafafb;
-  --color-divider: #f1f2f4;
-
   /* 타이포 */
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -106,13 +99,6 @@
    * 닿는다. `InquiryButton` 의 `size-12` 와 `-translate-y-[4rem]` 를 바꾸면 다시 재야 한다.
    */
   --inquiry-button-clearance: 4.5rem;
-
-  /*
-   * 위에 붙은 줄이 본문과 갈리는 그림자. 선으로 그으면 흰 목록 위에서 잘 안 보이고,
-   * 떠 있는 것이 무엇인지 드러나지 않는다. 떠 있는 버튼들의 그림자와 같은 결로 둔다.
-   * 퍼짐을 음수로 줄여 아래로만 드리운다. 위로 번지면 바로 위에 붙은 줄에 얼룩이 진다.
-   */
-  --shadow-sticky-edge: 0 6px 6px -4px rgb(0 0 0 / 0.1);
 
   /*
    * 맞닿아 붙은 두 줄 사이를 메우는 바탕색 띠. 위 줄에 주어 아래 줄 윗부분을 조금 더 덮는다.
@@ -280,31 +266,37 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 위에 붙은 줄의 아래 끝 그림자. 각 줄 앞의 표식이 붙는 자리를 지나간 뒤에만 드리운다.
+ * 위에 붙은 줄의 아래 선. 각 줄 앞의 표식이 붙는 자리를 지나간 뒤에만 색을 입힌다.
  *
- * border 는 쓰지 않는다. 높이를 1px 늘려 선이 생기는 순간 아래가 밀린다.
- * 제품 상세·브랜드관은 축약형이 나타나면 이 그림자를 덮고 제 아래 그림자를 쓴다.
+ * 명세는 같은 면 안의 구분에 그림자가 아니라 테두리(ui-border)를 쓴다(SHAPE E03).
+ * 선은 처음부터 투명하게 두고 색만 바꾼다. 붙는 순간 선을 새로 그으면 높이가 1px 늘어
+ * 아래가 밀린다. 높이를 고정한 줄은 border-box 라 선이 높이 안쪽에 그려진다.
+ *
+ * 유틸리티보다 약한 층에 둔다. 늘 선을 긋는 줄(검색 탭의 border-border)이 이 규칙에 덮이지 않는다.
+ * 제품 상세·브랜드관은 축약형이 나타나면 이 선을 덮고 제 아래 선을 쓴다.
  */
-.stuck-edge {
-  transition: box-shadow var(--transition-duration-control-state) ease-out;
-}
+@layer components {
+  .stuck-edge {
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--transition-duration-control-state) ease-out;
+  }
 
-.stuck-edge[data-stuck="true"] {
-  box-shadow: var(--shadow-sticky-edge);
+  .stuck-edge[data-stuck="true"] {
+    border-bottom-color: var(--color-border);
+  }
 }
 
 /*
  * 내려 읽을 때 물러나는 상단바. 큐레이션 상세처럼 위에서 아래로 길게 읽는 화면에서만 쓴다.
  *
  * 다른 화면의 숨는 줄과 같은 방식으로 붙는 높이(`top`)를 제 높이만큼 올려 화면 밖으로 보낸다.
- * 높이를 줄이지 않아 아래 본문이 끌려 올라가지 않는다. `.stuck-edge` 의 그림자 전환을
- * 덮어쓰지 않도록 함께 적고, 그 규칙보다
- * 뒤에 두어 전환이 덮이지 않게 한다.
+ * 높이를 줄이지 않아 아래 본문이 끌려 올라가지 않는다. `.stuck-edge` 의 선 색 전환을
+ * 덮어쓰지 않도록 함께 적는다.
  */
 .hiding-top-bar {
   transition:
     top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
+    border-color var(--transition-duration-control-state) ease-out;
 }
 
 /* 키보드로 바 안의 단추에 닿으면 숨은 채로 초점만 들어가지 않도록 다시 내려온다. */
@@ -363,6 +355,8 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
  * 자리를 차지하는 속성은 건드리지 않는다. 머리 높이가 늘었다 줄면 아래 본문이 그만큼 튄다.
  */
 .product-summary-bar {
+  /* 아래 선은 붙은 줄과 같은 방식으로 처음부터 투명하게 둔다(`.stuck-edge`). */
+  border-bottom: 1px solid transparent;
   transition-property: opacity, transform;
   transition-duration: var(--transition-duration-disclosure);
   transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
@@ -381,7 +375,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 .product-summary-bar[data-stuck="true"] {
   opacity: 1;
   transform: translateY(0);
-  box-shadow: var(--shadow-sticky-edge);
+  border-bottom-color: var(--color-border);
 }
 
 /*
@@ -733,10 +727,10 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
  */
 .search-tabs,
 .search-field-bar {
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
+  /* `.stuck-edge` 의 선 색 전환을 덮어쓰지 않도록 함께 적는다. */
   transition:
     top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
+    border-color var(--transition-duration-control-state) ease-out;
 }
 
 .search-tabs {
@@ -762,10 +756,10 @@ body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar 
  */
 .filter-summary-bar,
 .filter-chip-bar {
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
+  /* `.stuck-edge` 의 선 색 전환을 덮어쓰지 않도록 함께 적는다. */
   transition:
     top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
+    border-color var(--transition-duration-control-state) ease-out;
 }
 
 .filter-summary-bar {
@@ -802,10 +796,10 @@ body:has(.filter-summary-bar[data-hidden="true"]) .filter-chip-bar {
 
 .category-filter-chip-bar {
   top: calc(3.5rem + var(--category-track-height, 56px));
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
+  /* `.stuck-edge` 의 선 색 전환을 덮어쓰지 않도록 함께 적는다. */
   transition:
     top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
+    border-color var(--transition-duration-control-state) ease-out;
 }
 
 body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-filter-chip-bar {
@@ -817,7 +811,7 @@ body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-f
  *
  * 축약형은 브랜드 소개가 지나간 뒤에 나타나는데, 소개 끝과 칩 줄 사이가 축약형 높이보다
  * 짧아 칩 줄이 먼저 붙는다. 그 사이 칩 줄 위로 목록이 비쳐 보이지 않도록 칩 줄이 붙으면
- * 축약형도 함께 내려오게 한다. 그림자는 칩 줄 아래 한 줄만 남긴다.
+ * 축약형도 함께 내려오게 한다. 아래 선은 칩 줄 아래 한 줄만 남긴다.
  */
 .brand-filter-chip-bar {
   top: calc(2.75rem + 3.5rem);
