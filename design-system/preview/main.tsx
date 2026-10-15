@@ -10,6 +10,7 @@ import { Icon } from "./icons";
 import { ChipSamples } from "./chip-samples";
 import { ChoiceSamples } from "./choice-samples";
 import { InputSamples } from "./input-samples";
+import { LayoutSamples } from "./layout-samples";
 import { Section } from "./section";
 import { TabSamples } from "./tab-samples";
 
@@ -79,6 +80,7 @@ function Preview() {
       <ChoiceSamples />
       <ChipSamples />
       <TabSamples />
+      <LayoutSamples />
     </main>
   );
 }
