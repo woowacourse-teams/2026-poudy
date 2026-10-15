@@ -11,6 +11,7 @@ import { ChipSamples } from "./chip-samples";
 import { ChoiceSamples } from "./choice-samples";
 import { FeedbackSamples } from "./feedback-samples";
 import { InputSamples } from "./input-samples";
+import { LayoutSamples } from "./layout-samples";
 import { Section } from "./section";
 import { SheetSamples } from "./sheet-samples";
 import { TabSamples } from "./tab-samples";
@@ -83,6 +84,7 @@ function Preview() {
       <TabSamples />
       <SheetSamples />
       <FeedbackSamples />
+      <LayoutSamples />
     </main>
   );
 }
