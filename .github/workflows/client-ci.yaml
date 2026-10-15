@@ -80,10 +80,14 @@ jobs:
         continue-on-error: true
         run: pnpm run lint
 
+      # 디자인 시스템 패키지의 부품과 미리보기도 검사한다. client 의 tsc 는 client 가 가져다 쓰는
+      # 파일만 보므로, 아직 화면에서 쓰지 않는 부품의 타입 오류는 여기서만 잡힌다.
       - name: Type check
         id: typecheck
         continue-on-error: true
-        run: pnpm run typecheck
+        run: |
+          pnpm run typecheck
+          pnpm --filter @poudy/design-system run typecheck
 
       # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
       # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.

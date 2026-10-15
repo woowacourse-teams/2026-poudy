@@ -52,7 +52,7 @@ export function AdminSessionNotice({ className }: Props) {
         type="button"
         onClick={signOutAdmin}
         disabled={pending}
-        className="flex h-[52px] w-full max-w-sm items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:opacity-40"
+        className="flex h-[52px] w-full max-w-sm items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text"
       >
         관리자 로그아웃
       </button>

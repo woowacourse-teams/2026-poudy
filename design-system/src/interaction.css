@@ -1,0 +1,185 @@
+/*
+ * 누를 수 있는 자리의 상태 모양(명세 STATE S01~S11). usePressable 이 붙이는 data-hovered · data-pressed 를 보고
+ * 칠한다. hover: · active: 변형과 :hover · :active 는 쓰지 않는다(S09).
+ *
+ * 요소마다 fb-* 하나만 붙인다. 막힌 상태(:disabled, aria-disabled)는 선택자에서 빼서, 비활성이 hover·눌림보다
+ * 앞선다(S01 우선순위).
+ */
+
+/* 상태 전환. 색과 불투명도는 hover 에 --duration-fast 로 들고 나고, 눌리는 순간에는 바로 바뀐다(S07). 크기는 늘 160ms. */
+@utility pressable {
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease,
+    transform 160ms var(--ease-out);
+
+  &[data-pressed] {
+    transition-duration: 0ms, 0ms, 160ms;
+  }
+
+  &[data-pressed]::before,
+  &[data-pressed]::after {
+    transition-duration: 0ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity;
+  }
+}
+
+/* 크기 피드백. 버튼·칩·카드에만 붙이고 목록 행에는 붙이지 않는다. 움직임 줄이기에서는 크기만 뺀다. */
+@utility press-scale {
+  &[data-pressed]:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-pressed]:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+}
+
+/* 흰 바탕 위: 한 단계 진한 면 */
+@utility fb-surface {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover);
+  }
+}
+
+/* 회색 면 위: 한 단계 진한 면 */
+@utility fb-border {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover-on-surface);
+  }
+}
+
+/* 보조 버튼 면 */
+@utility fb-secondary {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-button-secondary-hover);
+  }
+}
+
+/* 디렉터리 행·레일 항목. 옆 회색 레일과 구별되게 한 단계 더 진하게 하고, 수량 글자와 로고 원도 함께 바꾼다(S10). */
+@utility fb-row {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover-on-surface);
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-count] {
+    color: var(--color-text-secondary);
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-logo-disc] {
+    background-color: var(--color-background);
+  }
+}
+
+/* 칠한 면(검정 버튼, 어두운 원): 바탕은 그대로 두고 전체를 옅게 */
+@utility fb-dim {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    opacity: var(--pressed-opacity);
+  }
+}
+
+/* 위험 버튼 */
+@utility fb-danger {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-danger-action-pressed);
+  }
+}
+
+/* 투명 아이콘 버튼: 44 영역 안 가운데 지름 36 원을 칠한다 */
+@utility fb-circle {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 9999px;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
+/* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
+@utility fb-overlay {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::after {
+    background-color: var(--color-hover-overlay);
+  }
+}
+
+/* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
+@utility fb-underline {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-product-name] {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+}
+
+/*
+ * 입력칸(S06·S11). 테두리 자리를 미리 비워 두어, 입력 중이나 오류일 때 테두리가 생겨도 크기가 바뀌지 않는다.
+ * 입력 중에는 2px 링이 아니라 흰 면과 진한 테두리로 알린다. 오류 테두리는 뒤에 두어 입력 중에도 오류가 이긴다.
+ */
+@utility field {
+  border: 1px solid transparent;
+  background-color: var(--color-surface);
+
+  & :is(input, textarea, select):focus {
+    outline: none;
+  }
+
+  &:focus-within {
+    background-color: var(--color-background);
+    border-color: var(--color-text-primary);
+  }
+
+  &:has([aria-invalid="true"]) {
+    border-color: var(--color-danger-action);
+  }
+}
+
+/* 오류 문구 자리를 미리 비워 두어, 오류가 생겨도 아래 내용이 밀리지 않는다(FEEDBACK F06) */
+@utility field-message {
+  min-height: 1lh;
+}
+
+@layer base {
+  /* 비활성 버튼: 면과 글자는 기본 색 그대로 두고 전체를 흐리게 한다(S06) */
+  :is(button, [role="button"]):is(:disabled, [aria-disabled="true"]) {
+    opacity: var(--disabled-opacity);
+  }
+
+  /*
+   * 포커스 링: 버튼·링크·탭에만. 입력칸 안의 입력 요소는 링 대신 .field 의 '입력 중' 모양을 쓴다.
+   * 라디오·체크 행은 숨긴 입력이 아니라 행 전체에 링을 그린다.
+   */
+  :is(button, a[href], [role="tab"], [tabindex]:not([tabindex="-1"])):not(
+      .field :is(input, textarea, select)
+    ):focus-visible,
+  .choice-row:has(input:focus-visible) {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* 사진 위 컨트롤: 링 안쪽 간격을 흰 테로 채운 이중 링. 고대비 모드에서는 outline 만 남는다. */
+  [data-on-image]:focus-visible {
+    box-shadow: 0 0 0 var(--focus-ring-offset) var(--color-background);
+  }
+}

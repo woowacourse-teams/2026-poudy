@@ -4,14 +4,21 @@
 
 ## 구성
 
-| 파일                       | 내용                                                                               | 고치는 방법                                                                     |
-| -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `tokens.json`              | `.pen` 변수를 가공하지 않고 그대로 옮긴 것                                         | 아래 절차대로 다시 내보낸다                                                     |
-| `src/tokens.css`           | `tokens.json`에서 만든 Tailwind `@theme`                                           | 손으로 고치지 않는다. `pnpm --filter @poudy/design-system tokens`로 다시 만든다 |
-| `src/system.css`           | 변수로 표현하지 않는 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티) | 주인 보드(SHAPE E06, MOTION M04, LAYOUT L02·L09)를 고친 뒤 함께 고친다          |
-| `scripts/build-tokens.mjs` | 변수 이름을 코드 이름으로 옮기는 규칙(MAP G03)                                     | 새 변수에 규칙이 없으면 생성이 실패한다. 규칙을 먼저 정한다                     |
+| 파일                       | 내용                                                                                                                                                 | 고치는 방법                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tokens.json`              | `.pen` 변수를 가공하지 않고 그대로 옮긴 것                                                                                                           | 아래 절차대로 다시 내보낸다                                                     |
+| `src/tokens.css`           | `tokens.json`에서 만든 Tailwind `@theme`                                                                                                             | 손으로 고치지 않는다. `pnpm --filter @poudy/design-system tokens`로 다시 만든다 |
+| `src/system.css`           | 변수로 표현하지 않는 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티)                                                                   | 주인 보드(SHAPE E06, MOTION M04, LAYOUT L02·L09)를 고친 뒤 함께 고친다          |
+| `src/interaction.css`      | 누를 수 있는 자리의 상태 모양(`fb-*`, `press-scale`, 포커스 링, 비활성, 입력칸). `usePressable`이 붙이는 `data-hovered`·`data-pressed`를 보고 칠한다 | 주인 보드(STATE S01~S11)를 고친 뒤 함께 고친다                                  |
+| `scripts/build-tokens.mjs` | 변수 이름을 코드 이름으로 옮기는 규칙(MAP G03)                                                                                                       | 새 변수에 규칙이 없으면 생성이 실패한다. 규칙을 먼저 정한다                     |
 
-client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다.
+client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다. `theme.css`는 패키지 소스도 Tailwind가 훑도록 `@source`를 지정하므로, 부품이 쓰는 클래스는 client가 따로 설정하지 않아도 만들어진다.
+
+## 미리보기
+
+부품을 앱 없이 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다.
+
+`preview/`의 Vite 서버가 앱처럼 패키지의 `theme.css`만 가져와 그린다. 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 이 화면에서 함께 확인할 수 있다. 부품을 추가하면 `preview/main.tsx`에 변형과 상태를 늘어놓는다.
 
 ## 명세가 바뀌었을 때
 
@@ -58,16 +65,18 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 
 ## 린트와 예외
 
-`lint/`는 client의 ESLint가 가져다 쓰는 디자인 토큰 린트다. [`@shadcn/lint`](https://github.com/shadcn-ui/lint)의 규칙 네 개를 경고로 켠다.
+`lint/`는 client와 이 패키지의 ESLint가 가져다 쓰는 디자인 토큰 린트다. [`@shadcn/lint`](https://github.com/shadcn-ui/lint)의 규칙 여섯 개를 경고로 켠다.
 
-| 규칙                  | 잡는 것                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `no-arbitrary-values` | `p-[13px]`, `bg-[#182132]`처럼 직접 적은 값                 |
-| `no-raw-colors`       | `bg-red-50`처럼 토큰이 아닌 Tailwind 색, SVG에 직접 적은 색 |
-| `no-inline-styles`    | `style={{ ... }}`와 `<style>`                               |
-| `no-unknown-classes`  | Tailwind가 만들 수 없는 클래스                              |
+| 규칙                     | 잡는 것                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `no-arbitrary-values`    | `p-[13px]`, `bg-[#182132]`처럼 직접 적은 값                                        |
+| `no-raw-colors`          | `bg-red-50`처럼 토큰이 아닌 Tailwind 색, SVG에 직접 적은 색                        |
+| `no-inline-styles`       | `style={{ ... }}`와 `<style>`                                                      |
+| `no-unknown-classes`     | Tailwind가 만들 수 없는 클래스                                                     |
+| `require-static-classes` | 조건이나 변수로 이어 붙여 만든 클래스 이름                                         |
+| `no-restyle`             | 부품의 `className`으로 색·크기·모양을 바꾸는 것. 자리(여백·폭·배치)만 바꿀 수 있다 |
 
-`require-static-classes`와 `no-restyle`은 `cn`과 `cva`를 들인 뒤에 켠다(#725). 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
+`no-restyle`은 이 패키지의 부품(`@poudy/design-system/...`으로 가져온 것)에만 적용한다. client의 컴포넌트는 아직 디자인 시스템 부품이 아니므로 검사하지 않는다. 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
 
 예외는 두 가지다.
 

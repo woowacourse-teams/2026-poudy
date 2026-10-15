@@ -216,7 +216,7 @@ function SubmitButton({ children, onClick, disabled }: SubmitButtonProps) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="h-12 flex-2 rounded-xl bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+      className="h-12 flex-2 rounded-xl bg-[#212124] text-[14px] font-bold text-white disabled:cursor-not-allowed"
     >
       {children}
     </button>

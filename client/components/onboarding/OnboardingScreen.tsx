@@ -217,7 +217,7 @@ export function OnboardingScreen() {
           <button
             type="submit"
             disabled={!canStart}
-            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:bg-[#F3F4F5] disabled:text-[#9EA3AB]"
+            className="flex h-14 w-full items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default"
           >
             {startLabel(answered)}
           </button>

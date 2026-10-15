@@ -4,15 +4,45 @@
   "type": "module",
   "exports": {
     "./theme.css": "./src/index.css",
-    "./lint": "./lint/index.mjs"
+    "./lint": "./lint/index.mjs",
+    "./cn": "./src/cn.ts",
+    "./use-pressable": "./src/use-pressable.ts",
+    "./button": "./src/button.tsx",
+    "./icon-button": "./src/icon-button.tsx"
   },
   "scripts": {
+    "dev": "vite --config preview/vite.config.mts",
     "tokens": "node scripts/build-tokens.mjs",
     "tokens:check": "node scripts/build-tokens.mjs --check",
-    "test": "node --test",
-    "exceptions:check": "node scripts/check-exception-tags.mjs ../client/app ../client/components ../client/lib"
+    "test": "node --test 'scripts/*.test.mjs'",
+    "exceptions:check": "node scripts/check-exception-tags.mjs ../client/app ../client/components ../client/lib",
+    "lint": "eslint .",
+    "typecheck": "tsc"
   },
   "dependencies": {
-    "@shadcn/lint": "0.2.1"
+    "@shadcn/lint": "0.2.1",
+    "class-variance-authority": "0.7.1",
+    "cn": "0.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@typescript-eslint/parser": "8.67.0",
+    "@vitejs/plugin-react": "^6.0.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "pretendard": "1.3.9",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.2.1",
+    "vitest": "^4.1.10"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
   }
 }
