@@ -151,6 +151,69 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("성분 ID로 포함 여부를 판단하고 합친 전성분에서 처음 나온 위치를 찾는다")
+    void judgesIngredientsAcrossParts() {
+        Product product = productWithParts(
+            List.of(
+                new ProductPart(
+                    1L,
+                    "본품",
+                    new Ingredients(
+                        List.of(
+                            ingredient(1L, "FIRST"),
+                            ingredient(2L, "SHARED")
+                        )
+                    )
+                ),
+                new ProductPart(
+                    2L,
+                    "리필",
+                    new Ingredients(
+                        List.of(
+                            ingredient(2L, "SAME_ID"),
+                            ingredient(3L, "SECOND_PART"),
+                            ingredient(1L, "SAME_FIRST_ID")
+                        )
+                    )
+                )
+            )
+        );
+
+        assertThat(product.containsIngredient(1L)).isTrue();
+        assertThat(product.containsIngredient(3L)).isTrue();
+        assertThat(product.containsIngredient(9L)).isFalse();
+        assertThat(product.ingredientPosition(1L)).isZero();
+        assertThat(product.ingredientPosition(2L)).isEqualTo(1);
+        assertThat(product.ingredientPosition(3L)).isEqualTo(2);
+        assertThat(product.ingredientPosition(9L)).isEqualTo(-1);
+    }
+
+    @Test
+    @DisplayName("구성품이 없으면 성분을 포함하지 않고 위치도 없다")
+    void hasNoIngredientsWithoutParts() {
+        Product product = productWithParts(List.of());
+
+        assertThat(product.containsIngredient(1L)).isFalse();
+        assertThat(product.ingredientPosition(1L)).isEqualTo(-1);
+    }
+
+    private Product productWithParts(List<ProductPart> productParts) {
+        return new Product(
+            1L,
+            "제품",
+            brand,
+            category,
+            List.of(),
+            productParts,
+            "image",
+            variants,
+            sensory(1, 1),
+            false,
+            updatedAt
+        );
+    }
+
+    @Test
     @DisplayName("감각 추론 결과가 없으면 만들 수 없다")
     void rejectsMissingSensory() {
         assertThatThrownBy(

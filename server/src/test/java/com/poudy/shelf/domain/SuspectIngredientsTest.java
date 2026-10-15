@@ -130,6 +130,22 @@ class SuspectIngredientsTest {
     }
 
     @Test
+    @DisplayName("동률이면 구성품을 합치고 중복을 뺀 전성분 순서로 정렬한다")
+    void ordersTiesByCombinedIngredientPosition() {
+        Product kit = product(
+            1L,
+            List.of(
+                new Long[] {WATER, LINALOOL},
+                new Long[] {WATER, ALCOHOL, LIMONENE}
+            )
+        );
+
+        SuspectIngredients suspects = SuspectIngredients.of(List.of(kit), List.of(), CANDIDATES);
+
+        assertThat(suspects.ingredientIds()).containsExactly(LINALOOL, ALCOHOL, LIMONENE);
+    }
+
+    @Test
     @DisplayName("고른 성분이 하나라도 든 제품을 알아본다")
     void tellsProductContainingSuspect() {
         SuspectIngredients suspects = SuspectIngredients.of(List.of(product(1L, LIMONENE)), List.of(), CANDIDATES);
