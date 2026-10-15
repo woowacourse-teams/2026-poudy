@@ -3,29 +3,31 @@
 import { useCallback, useId, useLayoutEffect, useRef } from "react";
 import type { ReactNode, Ref, TextareaHTMLAttributes } from "react";
 
+import type { NameProps } from "./accessible-name";
+import { hasVisibleLabel } from "./accessible-name";
 import { FieldFrame } from "./field-frame";
 import type { FieldRule } from "./field-rule";
 import { useFieldError } from "./field-rule";
 
 export type TextAreaProps = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
-  "value" | "onChange" | "className" | "children" | "rows"
-> & {
-  readonly label: ReactNode;
-  readonly value: string;
-  readonly onChange: (value: string) => void;
-  /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
-  readonly optional?: boolean;
-  /** 칸 아래 안내 문구. 오류가 있으면 그 자리에 오류를 보여 준다. */
-  readonly hint?: ReactNode;
-  /** 검사 규칙. 오류를 언제 보여 줄지는 규칙의 validateOn 을 따른다. */
-  readonly rule?: FieldRule;
-  /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
-  readonly serverError?: string;
-  /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
-  readonly className?: string;
-  readonly ref?: Ref<HTMLTextAreaElement>;
-};
+  "value" | "onChange" | "className" | "children" | "rows" | "aria-label" | "aria-labelledby"
+> &
+  NameProps & {
+    readonly value: string;
+    readonly onChange: (value: string) => void;
+    /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
+    readonly optional?: boolean;
+    /** 칸 아래 안내 문구. 오류가 있으면 그 자리에 오류를 보여 준다. */
+    readonly hint?: ReactNode;
+    /** 검사 규칙. 오류를 언제 보여 줄지는 규칙의 validateOn 을 따른다. */
+    readonly rule?: FieldRule;
+    /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
+    readonly serverError?: string;
+    /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
+    readonly className?: string;
+    readonly ref?: Ref<HTMLTextAreaElement>;
+  };
 
 /** .field-control 이 글자를 줄이는 비율(16px → 14px) */
 const SCALE = 0.875;
@@ -38,6 +40,8 @@ const MAX_LINES = 5;
  */
 export function TextArea({
   label,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   value,
   onChange,
   optional = false,
@@ -111,6 +115,8 @@ export function TextArea({
             value={value}
             rows={1}
             maxLength={maxLength}
+            aria-label={hasVisibleLabel(label) ? undefined : ariaLabel}
+            aria-labelledby={hasVisibleLabel(label) ? undefined : ariaLabelledBy}
             aria-required={optional ? undefined : true}
             aria-invalid={error ? true : undefined}
             aria-describedby={messageId}

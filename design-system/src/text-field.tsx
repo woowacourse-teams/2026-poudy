@@ -3,30 +3,32 @@
 import { useId } from "react";
 import type { InputHTMLAttributes, ReactNode, Ref } from "react";
 
+import type { NameProps } from "./accessible-name";
+import { hasVisibleLabel } from "./accessible-name";
 import { FieldFrame } from "./field-frame";
 import type { FieldRule } from "./field-rule";
 import { useFieldError } from "./field-rule";
 
 export type TextFieldProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "value" | "onChange" | "type" | "className" | "children"
-> & {
-  readonly label: ReactNode;
-  readonly value: string;
-  readonly onChange: (value: string) => void;
-  readonly type?: "text" | "email" | "tel" | "url" | "search" | "password" | "number";
-  /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
-  readonly optional?: boolean;
-  /** 칸 아래 안내 문구. 오류가 있으면 그 자리에 오류를 보여 준다. */
-  readonly hint?: ReactNode;
-  /** 검사 규칙. 오류를 언제 보여 줄지는 규칙의 validateOn 을 따른다. */
-  readonly rule?: FieldRule;
-  /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
-  readonly serverError?: string;
-  /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
-  readonly className?: string;
-  readonly ref?: Ref<HTMLInputElement>;
-};
+  "value" | "onChange" | "type" | "className" | "children" | "aria-label" | "aria-labelledby"
+> &
+  NameProps & {
+    readonly value: string;
+    readonly onChange: (value: string) => void;
+    readonly type?: "text" | "email" | "tel" | "url" | "search" | "password" | "number";
+    /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
+    readonly optional?: boolean;
+    /** 칸 아래 안내 문구. 오류가 있으면 그 자리에 오류를 보여 준다. */
+    readonly hint?: ReactNode;
+    /** 검사 규칙. 오류를 언제 보여 줄지는 규칙의 validateOn 을 따른다. */
+    readonly rule?: FieldRule;
+    /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
+    readonly serverError?: string;
+    /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
+    readonly className?: string;
+    readonly ref?: Ref<HTMLInputElement>;
+  };
 
 /**
  * 한 줄 입력(명세 APP · 입력 · 한 줄). 높이 48, 모서리 sm, 좌우 12 의 회색 칸이다.
@@ -34,6 +36,8 @@ export type TextFieldProps = Omit<
  */
 export function TextField({
   label,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   value,
   onChange,
   type = "text",
@@ -70,6 +74,8 @@ export function TextField({
             id={inputId}
             type={type}
             value={value}
+            aria-label={hasVisibleLabel(label) ? undefined : ariaLabel}
+            aria-labelledby={hasVisibleLabel(label) ? undefined : ariaLabelledBy}
             aria-required={optional ? undefined : true}
             aria-invalid={error ? true : undefined}
             aria-describedby={messageId}

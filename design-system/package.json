@@ -14,7 +14,11 @@
     "./select": "./src/select.tsx",
     "./search-field": "./src/search-field.tsx",
     "./combobox": "./src/combobox.tsx",
-    "./field-rule": "./src/field-rule.ts"
+    "./field-rule": "./src/field-rule.ts",
+    "./radio-group": "./src/radio-group.tsx",
+    "./checkbox-group": "./src/checkbox-group.tsx",
+    "./range-slider": "./src/range-slider.tsx",
+    "./slider": "./src/slider.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
