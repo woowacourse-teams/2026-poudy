@@ -57,6 +57,36 @@ describe("선반", () => {
     expect(await within(card).findByRole("link", { name: /관리하기/ })).toHaveAttribute("href", "/my-page/filter");
   });
 
+  it("평가 시트의 수분감·유분감은 '선택 전'으로 시작하고, 고른 값만 보낸다", async () => {
+    const user = userEvent.setup();
+    const sent = vi.fn();
+    server.use(
+      http.put(`${SHELF_PATH}/products/:productId`, async ({ request }) => {
+        // 값만 적어 두고 응답은 목 처리기에 넘긴다(undefined 를 돌려주면 다음 처리기가 받는다).
+        sent(await request.clone().json());
+        return undefined;
+      }),
+    );
+    render(<ShelfScreen />);
+
+    const [rate] = await screen.findAllByRole("button", { name: /평가하기$/ });
+    await user.click(rate);
+    const moisture = await screen.findByRole("slider", { name: "수분감" });
+    const oil = screen.getByRole("slider", { name: "유분감" });
+    expect(moisture).toHaveAttribute("aria-valuetext", "선택 전");
+    expect(moisture).not.toHaveAttribute("aria-valuenow");
+    expect(oil).toHaveAttribute("aria-valuetext", "선택 전");
+
+    moisture.focus();
+    await user.keyboard("{End}");
+    expect(moisture).toHaveAttribute("aria-valuenow", "3");
+    expect(oil).toHaveAttribute("aria-valuetext", "선택 전");
+
+    await user.click(screen.getByRole("button", { name: "평가 저장" }));
+    await waitFor(() => expect(sent).toHaveBeenCalled());
+    expect(sent).toHaveBeenCalledWith(expect.objectContaining({ moistureLevel: 3, oilLevel: null }));
+  });
+
   it("보기 칩을 고르면 그 사용 상태의 제품만 머리 없이 보여 준다", async () => {
     const user = userEvent.setup();
     render(<ShelfScreen />);

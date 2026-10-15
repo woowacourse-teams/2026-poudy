@@ -31,14 +31,11 @@ function LevelField({ question, label, tone, value, onValueChange, startLabel, e
         <span className="text-body font-bold text-text-primary">{question}</span>
         <span className="text-body-sm text-text-secondary">선택</span>
       </p>
-      {/*
-        명세는 값을 고르기 전에 '선택 전'을 적고 손잡이를 감춘다. Slider 에는 고르지 않은 상태가 없어
-        고르기 전에는 0 자리에 둔다. 값은 사용자가 움직인 뒤에만 보낸다(명세 수정 필요 · 보고에 적음).
-      */}
+      {/* 고르기 전(null)에는 Slider 가 손잡이 없이 '선택 전'을 적는다(S52i). 값은 사용자가 고른 뒤에만 보낸다. */}
       <Slider
         label={label}
         tone={tone}
-        value={value ?? 0}
+        value={value}
         onValueChange={onValueChange}
         startLabel={startLabel}
         endLabel={endLabel}
