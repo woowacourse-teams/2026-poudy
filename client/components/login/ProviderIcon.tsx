@@ -1,4 +1,5 @@
 import type { OAuthProvider } from "@poudy/api/api.zod";
+import Image from "next/image";
 
 export function KakaoIcon() {
   return (
@@ -11,24 +12,12 @@ export function KakaoIcon() {
   );
 }
 
+/**
+ * 구글 G 로고. 브랜드 가이드의 4색이라 토큰으로 바꿀 수 없어, 색을 코드에 적지 않고 SVG 파일로 둔다
+ * (명세 색상 팔레트 '따로 관리하는 색').
+ */
 export function GoogleIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        fill="#4285F4"
-        d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.36Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 22c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.6 0-4.81-1.76-5.6-4.12H3.06v2.59A10 10 0 0 0 12 22Z"
-      />
-      <path fill="#FBBC05" d="M6.4 13.91a6 6 0 0 1 0-3.82V7.5H3.06a10 10 0 0 0 0 9l3.34-2.59Z" />
-      <path
-        fill="#EA4335"
-        d="M12 5.97c1.47 0 2.79.5 3.82 1.49l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.94 5.5l3.34 2.59C7.19 7.73 9.4 5.97 12 5.97Z"
-      />
-    </svg>
-  );
+  return <Image src="/images/brands/google-g.svg" alt="" width={20} height={20} aria-hidden="true" />;
 }
 
 type ProviderBadgeProps = {
@@ -37,7 +26,7 @@ type ProviderBadgeProps = {
 };
 
 const BADGE_SIZES = { small: "size-4", large: "size-7" } as const;
-const BADGE_ICON_SIZES = { small: "[&_svg]:size-2.5", large: "[&_svg]:size-4" } as const;
+const BADGE_ICON_SIZES = { small: "[&>*]:size-2.5", large: "[&>*]:size-4" } as const;
 
 /** 가입한 소셜 계정을 동그란 표식으로 보여 준다. 이름은 옆 글자가 전한다. */
 export function ProviderBadge({ provider, size }: ProviderBadgeProps) {
@@ -45,7 +34,7 @@ export function ProviderBadge({ provider, size }: ProviderBadgeProps) {
 
   if (provider === "KAKAO") {
     return (
-      <span aria-hidden="true" className={`${shape} bg-[#fee500] text-[#191919]`}>
+      <span aria-hidden="true" className={`${shape} bg-kakao-bg text-kakao-fg`}>
         <KakaoIcon />
       </span>
     );
