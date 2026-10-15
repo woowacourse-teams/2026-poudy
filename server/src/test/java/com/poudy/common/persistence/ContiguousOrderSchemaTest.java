@@ -3,7 +3,6 @@ package com.poudy.common.persistence;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @DisplayName("목록 순서 컬럼 스키마")
 class ContiguousOrderSchemaTest {
-
-    private static final UUID FILTER_BLOCK_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -42,37 +39,6 @@ class ContiguousOrderSchemaTest {
     @DisplayName("순서가 0에서 시작하지 않으면 거부한다")
     void rejectsOrderNotStartingAtZero() {
         insertIngredientWithTagOrders(1, 2);
-
-        assertThatThrownBy(this::checkDeferredConstraints).isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    @DisplayName("부모 키가 여러 컬럼이어도 부모마다 순서를 검사한다")
-    void checksCompositeParentKey() {
-        // 첫 배포에 남기는 legacy 테이블도 구버전 서버의 제약을 유지한다.
-        jdbcTemplate.update("""
-            INSERT INTO curation_block(id, curation_id, position, type, spacing_top, spacing_bottom)
-            VALUES (?, 12, 0, 'PRODUCTS_BY_FILTER', 0, 0)
-            """, FILTER_BLOCK_ID);
-        jdbcTemplate.update("""
-            INSERT INTO curation_block_filter(id, block_id, position, label) VALUES
-            ('00000000-0000-4000-8000-000000000011', ?, 0, '첫 필터'),
-            ('00000000-0000-4000-8000-000000000012', ?, 1, '다음 필터')
-            """, FILTER_BLOCK_ID, FILTER_BLOCK_ID);
-        jdbcTemplate.update("""
-            INSERT INTO curation_block_product(block_id, product_id, position) VALUES (?, 15, 0)
-            """, FILTER_BLOCK_ID);
-        jdbcTemplate.update("""
-            INSERT INTO curation_block_product_filter(block_id, product_id, filter_id, position) VALUES
-            (?, 15, '00000000-0000-4000-8000-000000000011', 0),
-            (?, 15, '00000000-0000-4000-8000-000000000012', 1)
-            """, FILTER_BLOCK_ID, FILTER_BLOCK_ID);
-        jdbcTemplate.update(
-            "UPDATE curation_block_product_filter SET position = position + 5"
-                + " WHERE block_id = ? AND product_id = ? AND position = 1",
-            FILTER_BLOCK_ID,
-            15L
-        );
 
         assertThatThrownBy(this::checkDeferredConstraints).isInstanceOf(DataIntegrityViolationException.class);
     }

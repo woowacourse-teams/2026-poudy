@@ -34,28 +34,6 @@ class ErdCloudSchemaTest {
             )
         ),
         entry(
-            "curation_block",
-            List.of(
-                "id",
-                "curation_id",
-                "position",
-                "type",
-                "spacing_top",
-                "spacing_bottom",
-                "image_url",
-                "created_at",
-                "updated_at",
-                "alt_text",
-                "body_text"
-            )
-        ),
-        entry("curation_block_filter", List.of("id", "block_id", "position", "label", "created_at", "updated_at")),
-        entry("curation_block_product", List.of("block_id", "product_id", "position", "created_at", "updated_at")),
-        entry(
-            "curation_block_product_filter",
-            List.of("block_id", "product_id", "filter_id", "position", "created_at", "updated_at")
-        ),
-        entry(
             "ingredient_group",
             List.of("code", "display_name", "description", "created_at", "updated_at", "english_name", "tag_name")
         ),
@@ -158,10 +136,6 @@ class ErdCloudSchemaTest {
         entry("brand", List.of("id")),
         entry("category", List.of("id")),
         entry("curation", List.of("id")),
-        entry("curation_block", List.of("id")),
-        entry("curation_block_filter", List.of("id", "block_id")),
-        entry("curation_block_product", List.of("block_id", "product_id")),
-        entry("curation_block_product_filter", List.of("block_id", "product_id", "filter_id")),
         entry("ingredient_group", List.of("code")),
         entry("ingredient_group_ingredient", List.of("group_code", "ingredient_id")),
         entry("feedback", List.of("id")),
