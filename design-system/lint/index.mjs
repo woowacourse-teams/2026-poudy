@@ -26,7 +26,9 @@ export const RULES = [
 ];
 
 /** 디자인 시스템 부품으로 알아볼 import. no-restyle 과 require-static-classes 가 이 부품을 쓰는 곳을 본다. */
-const COMPONENT_IMPORTS = ["^@poudy/design-system/(button|icon-button)$"];
+const COMPONENT_IMPORTS = [
+  "^@poudy/design-system/(button|icon-button|text-field|text-area|select|search-field|combobox)$",
+];
 
 /**
  * 부품으로 보지 않을 import. 린트는 shadcn/ui 관례대로 @/components/ui 를 부품 폴더로 짐작하는데, client 의 그 폴더는

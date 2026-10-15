@@ -8,7 +8,13 @@
     "./cn": "./src/cn.ts",
     "./use-pressable": "./src/use-pressable.ts",
     "./button": "./src/button.tsx",
-    "./icon-button": "./src/icon-button.tsx"
+    "./icon-button": "./src/icon-button.tsx",
+    "./text-field": "./src/text-field.tsx",
+    "./text-area": "./src/text-area.tsx",
+    "./select": "./src/select.tsx",
+    "./search-field": "./src/search-field.tsx",
+    "./combobox": "./src/combobox.tsx",
+    "./field-rule": "./src/field-rule.ts"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",

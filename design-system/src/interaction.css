@@ -140,9 +140,15 @@
 @utility field {
   border: 1px solid transparent;
   background-color: var(--color-surface);
+  color: var(--color-text-primary);
 
   & :is(input, textarea, select):focus {
     outline: none;
+  }
+
+  /* 비활성 입력은 버튼과 같이 칸 전체(면·글자)를 흐리게 한다(S06). 라벨은 칸 밖이라 그대로다. */
+  &:has(:disabled) {
+    opacity: var(--disabled-opacity);
   }
 
   &:focus-within {
@@ -152,6 +158,44 @@
 
   &:has([aria-invalid="true"]) {
     border-color: var(--color-danger-action);
+  }
+}
+
+/*
+ * 입력칸 안의 input·textarea. 보이는 글자는 명세대로 14px 이지만 font-size 는 16px 로 둔다.
+ *
+ * iOS Safari 는 초점이 간 입력의 computed font-size 가 16px 보다 작으면 화면을 저절로 키우고, 입력에서 빠져나와도
+ * 키운 채로 둔다(#219). 확대 판정은 computed font-size 로만 하므로 16px 로 둔 채 scale 로 보이는 크기만 줄인다
+ * (16 × 0.875 = 14). viewport 에 maximum-scale 을 거는 방법과 달리 사용자가 손가락으로 넓히는 확대는 그대로 산다.
+ *
+ * 줄인 만큼 오른쪽에 빈자리가 남으므로 폭을 1 / 0.875 로 늘려 메운다. 한 줄 입력은 왼쪽 가운데를 기준으로 줄여
+ * 세로 가운데를 지킨다. 여러 줄 입력은 왼쪽 위가 기준이다. 위에서 아래로 글이 쌓이므로, 가운데를 기준으로 삼으면
+ * 줄이 늘 때마다 첫 줄의 자리가 흔들린다.
+ */
+@utility field-control {
+  min-width: 0;
+  width: calc(100% / 0.875);
+  transform: scale(0.875);
+  transform-origin: left center;
+
+  &:is(textarea) {
+    transform-origin: left top;
+  }
+  background-color: transparent;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: var(--leading-normal);
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    font-weight: 400;
+    opacity: 1;
+  }
+
+  /* 브라우저의 검색 지우기 버튼은 숨기고 명세의 지우기 버튼만 쓴다. */
+  &::-webkit-search-cancel-button {
+    appearance: none;
   }
 }
 
