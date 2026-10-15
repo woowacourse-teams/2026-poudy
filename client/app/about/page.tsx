@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { StatDial } from "@/components/about/StatDial";
 import { PRESS_SCALE } from "@/components/ui/press";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
@@ -143,7 +144,7 @@ export default function AboutPage() {
               >
                 <dt className="text-[12px] leading-[1.4] text-text-secondary">{label}</dt>
                 <dd className="text-[24px] leading-[1.3] font-bold text-text-primary tabular-nums">
-                  {value.toLocaleString("ko-KR")}
+                  <StatDial value={value} />
                 </dd>
               </div>
             ))}
