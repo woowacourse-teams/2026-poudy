@@ -140,7 +140,10 @@ function RemoveButton({ label, onRemove }: { readonly label: string; readonly on
       onClick={onRemove}
       className="pressable group -my-1 -mr-2 flex h-11 w-8 shrink-0 items-center justify-end pr-2"
     >
-      <span className="flex size-6 items-center justify-center rounded-full text-text-muted transition-colors duration-(--duration-fast) group-data-hovered:bg-hover group-data-pressed:bg-hover group-data-pressed:duration-0">
+      <span
+        data-focus-ring=""
+        className="flex size-6 items-center justify-center rounded-full text-text-muted transition-colors duration-(--duration-fast) group-data-hovered:bg-hover group-data-pressed:bg-hover group-data-pressed:duration-0"
+      >
         <Glyph name="x" size={16} />
       </span>
     </button>

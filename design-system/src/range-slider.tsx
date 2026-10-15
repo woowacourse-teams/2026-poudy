@@ -233,11 +233,12 @@ export function RangeSlider({
               aria-disabled={disabled || undefined}
               onKeyDown={onKeyDown(handle)}
               /* 누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
-              className="group absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full focus-visible:outline-none"
+              className="absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
             >
               <span
+                data-focus-ring=""
                 className={cn(
-                  "size-6.5 rounded-full border-2 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring",
+                  "size-6.5 rounded-full border-2",
                   disabled ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
                 )}
               />

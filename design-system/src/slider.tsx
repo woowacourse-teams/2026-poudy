@@ -171,14 +171,9 @@ export function Slider({
             aria-valuetext={format(value)}
             onKeyDown={onKeyDown}
             /* 누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
-            className="group absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full focus-visible:outline-none"
+            className="absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
           >
-            <span
-              className={cn(
-                "size-6 rounded-full border-2 bg-background group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring",
-                TONE[tone].outline,
-              )}
-            />
+            <span data-focus-ring="" className={cn("size-6 rounded-full border-2 bg-background", TONE[tone].outline)} />
           </div>
         </div>
 

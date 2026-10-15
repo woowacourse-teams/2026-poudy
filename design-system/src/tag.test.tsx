@@ -28,6 +28,17 @@ describe("Tag", () => {
     expect(onRemove).toHaveBeenCalledOnce();
   });
 
+  it("빼기 ✕ 의 포커스 링은 누르는 영역이 아니라 보이는 원에 그린다(S06)", () => {
+    render(
+      <Tag variant="item" onRemove={() => undefined}>
+        판테놀
+      </Tag>,
+    );
+
+    const button = screen.getByRole("button", { name: "판테놀 빼기" });
+    expect(button.querySelector(":scope > [data-focus-ring]")).toHaveClass("rounded-full", "size-6");
+  });
+
   describe("길게 누르기 툴팁", () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
