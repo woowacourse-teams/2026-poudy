@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import { Button } from "../src/button";
 import { IconButton } from "../src/icon-button";
 import { Icon } from "./icons";
+import { ChoiceSamples } from "./choice-samples";
 import { InputSamples } from "./input-samples";
 import { Section } from "./section";
 
@@ -73,6 +74,7 @@ function Preview() {
       </Section>
 
       <InputSamples />
+      <ChoiceSamples />
     </main>
   );
 }
