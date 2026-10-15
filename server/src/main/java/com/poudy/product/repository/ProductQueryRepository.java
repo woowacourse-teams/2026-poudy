@@ -48,7 +48,8 @@ public class ProductQueryRepository {
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
                     where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
             from product p %s join category c on c.id = p.category_id
-            where (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
+            where (not :sensitiveSkin or p.is_sensitive_skin)
+              and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
                   where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
               and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
                   where p.oil_level >= level - 0.25 and p.oil_level < level + 0.25))
@@ -238,7 +239,8 @@ public class ProductQueryRepository {
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name());
+            .addValue("skin", query.skinType() == null ? null : query.skinType().name())
+            .addValue("sensitiveSkin", query.sensitiveSkin());
     }
 
     public boolean hasConflictingIngredients(ProductQuery query) {

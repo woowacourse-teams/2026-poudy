@@ -42,7 +42,7 @@ public class UserController {
         return ResponseEntity.ok(UserResponse.from(userService.findById(loginMember.id())));
     }
 
-    @Operation(summary = "내 프로필 수정", description = "성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다.")
+    @Operation(summary = "내 프로필 수정", description = "성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.")
     @ApiResponse(responseCode = "200", description = "저장 성공")
     @PatchMapping("/me/profile")
     public ResponseEntity<UserResponse> updateMyProfile(
@@ -55,7 +55,8 @@ public class UserController {
                     loginMember.id(),
                     request.gender(),
                     request.ageRange(),
-                    request.skinType()
+                    request.skinType(),
+                    request.sensitiveSkin()
                 )
             )
         );

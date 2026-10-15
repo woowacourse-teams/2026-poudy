@@ -100,7 +100,7 @@ class UserServiceTest {
     @DisplayName("없는 회원의 초기 정보는 저장하지 못한다")
     void failsToUpdateMissingUserProfile() {
         assertThatThrownBy(
-            () -> userService.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY)
+            () -> userService.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY, false)
         ).isInstanceOf(ResourceNotFoundException.class);
     }
 

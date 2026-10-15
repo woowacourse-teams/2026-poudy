@@ -79,8 +79,14 @@ public class UserService implements SocialUsers, UserActivity {
     }
 
     @Transactional
-    public User updateProfile(long userId, Gender gender, AgeRange ageRange, SkinType skinType) {
-        return userRepository.updateProfile(userId, gender, ageRange, skinType)
+    public User updateProfile(
+        long userId,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin
+    ) {
+        return userRepository.updateProfile(userId, gender, ageRange, skinType, sensitiveSkin)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

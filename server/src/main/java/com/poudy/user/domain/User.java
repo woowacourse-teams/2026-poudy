@@ -13,6 +13,7 @@ public final class User {
     private final Gender gender;
     private final AgeRange ageRange;
     private final SkinType skinType;
+    private final Boolean sensitiveSkin;
     private final UserStatus status;
 
     public User(
@@ -22,6 +23,7 @@ public final class User {
         Gender gender,
         AgeRange ageRange,
         SkinType skinType,
+        Boolean sensitiveSkin,
         UserStatus status
     ) {
         this.id = id;
@@ -30,6 +32,7 @@ public final class User {
         this.gender = gender;
         this.ageRange = ageRange;
         this.skinType = skinType;
+        this.sensitiveSkin = sensitiveSkin;
         this.status = status;
     }
 
@@ -63,5 +66,9 @@ public final class User {
 
     public SkinType skinType() {
         return skinType;
+    }
+
+    public Boolean sensitiveSkin() {
+        return sensitiveSkin;
     }
 }

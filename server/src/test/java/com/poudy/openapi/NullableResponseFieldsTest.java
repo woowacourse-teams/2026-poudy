@@ -57,6 +57,7 @@ class NullableResponseFieldsTest {
             List.of(),
             0.0,
             0.0,
+            false,
             List.of(),
             part,
             null

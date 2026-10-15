@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/skin-types")
 public class SkinTypeController {
 
-    @Operation(summary = "피부타입 조회", description = "피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.")
+    @Operation(summary = "피부타입 조회", description = "피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.")
     @GetMapping
     public ResponseEntity<SkinTypesResponse> findSkinTypes() {
         return ResponseEntity.ok(SkinTypesResponse.from());

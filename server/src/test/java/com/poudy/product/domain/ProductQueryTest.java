@@ -28,7 +28,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            com.poudy.skintype.domain.SkinType.DRY
+            com.poudy.skintype.domain.SkinType.DRY,
+            false
         );
         assertThat(query.hasFilters()).isTrue();
     }
@@ -36,7 +37,7 @@ class ProductQueryTest {
     @Test
     @DisplayName("누락된 목록 조건을 빈 목록으로 다룬다")
     void defaultsMissingListsToEmpty() {
-        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null, false);
 
         assertThat(query.categoryIds()).isEmpty();
         assertThat(query.brandIds()).isEmpty();
@@ -62,7 +63,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
 
         categoryIds.add(2L);
@@ -86,7 +88,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         ProductQuery withFilter = new ProductQuery(
             "토너",
@@ -99,7 +102,8 @@ class ProductQueryTest {
             List.of(ExcludeCode.SULFATES),
             null,
             null,
-            null
+            null,
+            false
         );
 
         assertThat(noFilters.hasFilters()).isFalse();
@@ -120,7 +124,8 @@ class ProductQueryTest {
             null,
             null,
             List.of("CERAMIDES"),
-            null
+            null,
+            false
         );
         ProductQuery includeIngredient = new ProductQuery(
             null,
@@ -133,7 +138,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         ProductQuery includeGroup = new ProductQuery(
             null,
@@ -146,7 +152,8 @@ class ProductQueryTest {
             null,
             List.of("CERAMIDES"),
             null,
-            null
+            null,
+            false
         );
 
         assertThat(excludeOnly.hasIncludeConditions()).isFalse();
@@ -169,7 +176,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
 
         assertThat(query.moistureLevels()).containsExactly(level);
@@ -181,11 +189,11 @@ class ProductQueryTest {
     @DisplayName("0.5 단위가 아니거나 0부터 3까지가 아닌 수분감·유분감 필터는 거부한다")
     void rejectsInvalidLevels(double level) {
         assertThatThrownBy(
-            () -> new ProductQuery(null, null, null, List.of(level), null, null, null, null, null, null, null)
+            () -> new ProductQuery(null, null, null, List.of(level), null, null, null, null, null, null, null, false)
         )
             .isInstanceOf(InvalidSensoryFilterException.class);
         assertThatThrownBy(
-            () -> new ProductQuery(null, null, null, null, List.of(level), null, null, null, null, null, null)
+            () -> new ProductQuery(null, null, null, null, List.of(level), null, null, null, null, null, null, false)
         )
             .isInstanceOf(InvalidSensoryFilterException.class);
     }

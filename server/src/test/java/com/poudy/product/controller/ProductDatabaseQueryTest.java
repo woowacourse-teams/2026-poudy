@@ -277,7 +277,8 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);

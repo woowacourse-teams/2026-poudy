@@ -90,12 +90,13 @@ class UserRepositoryTest {
         User saved = repository.save(signup(OAuthProvider.GOOGLE, "sub", "user@example.com"));
 
         User updated = repository
-            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, SkinType.COMBINATION)
+            .updateProfile(saved.id(), Gender.MALE, AgeRange.SIXTIES_OR_OLDER, SkinType.COMBINATION, true)
             .orElseThrow();
 
         assertThat(updated.gender()).isEqualTo(Gender.MALE);
         assertThat(updated.ageRange()).isEqualTo(AgeRange.SIXTIES_OR_OLDER);
         assertThat(updated.skinType()).isEqualTo(SkinType.COMBINATION);
+        assertThat(updated.sensitiveSkin()).isTrue();
         assertThat(repository.findById(saved.id())).get().extracting(User::skinType)
             .isEqualTo(SkinType.COMBINATION);
     }
@@ -103,7 +104,7 @@ class UserRepositoryTest {
     @Test
     @DisplayName("없는 회원의 초기 정보는 저장하지 않는다")
     void skipsMissingUserProfile() {
-        assertThat(repository.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY))
+        assertThat(repository.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY, false))
             .isEmpty();
     }
 

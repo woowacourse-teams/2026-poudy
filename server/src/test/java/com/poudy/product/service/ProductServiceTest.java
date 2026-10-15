@@ -77,7 +77,8 @@ class ProductServiceTest {
             List.of(ExcludeCode.HARSH_PRESERVATIVES),
             null,
             null,
-            null
+            null,
+            false
         );
 
         ProductPage found = service.findProducts(
@@ -202,7 +203,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            null
+            null,
+            false
         );
 
         ProductPage found = service.findProducts(query, ProductSort.DEFAULT, 1, 20);
@@ -236,8 +238,8 @@ class ProductServiceTest {
             ingredientGroupRepository(),
             new ProductSearchLogger()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, false);
+        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false);
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -269,7 +271,7 @@ class ProductServiceTest {
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false),
             ProductSort.DEFAULT,
             1,
             20
@@ -304,6 +306,7 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }

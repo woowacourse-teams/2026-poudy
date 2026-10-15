@@ -8,5 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record UserProfileRequest(
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "FEMALE") Gender gender,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "TWENTIES") AgeRange ageRange,
-    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "COMBINATION") SkinType skinType) {
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "COMBINATION") SkinType skinType,
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "true") Boolean sensitiveSkin) {
 }

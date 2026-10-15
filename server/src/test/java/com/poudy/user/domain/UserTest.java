@@ -39,6 +39,6 @@ class UserTest {
     }
 
     private User userOf(UserStatus status) {
-        return new User(1L, OAuthProvider.KAKAO, "user@example.com", null, null, null, status);
+        return new User(1L, OAuthProvider.KAKAO, "user@example.com", null, null, null, null, status);
     }
 }

@@ -14,7 +14,8 @@ public record UserResponse(
     @NotNull @Schema(example = "user@example.com") String email,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Gender gender,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) AgeRange ageRange,
-    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) SkinType skinType) {
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) SkinType skinType,
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Boolean sensitiveSkin) {
 
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -23,7 +24,8 @@ public record UserResponse(
             user.email(),
             user.gender(),
             user.ageRange(),
-            user.skinType()
+            user.skinType(),
+            user.sensitiveSkin()
         );
     }
 }

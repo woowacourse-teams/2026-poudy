@@ -119,6 +119,7 @@ class ProductLoader {
                     new MoistureLevel(rs.getDouble("moisture_level")),
                     new OilLevel(rs.getDouble("oil_level"))
                 ),
+                rs.getBoolean("is_sensitive_skin"),
                 rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             );
         }).stream().collect(toMap(Product::id, p -> p));

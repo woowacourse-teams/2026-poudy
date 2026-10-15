@@ -1788,7 +1788,7 @@
           "회원"
         ],
         "summary": "내 프로필 수정",
-        "description": "성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다.",
+        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.",
         "operationId": "updateMyProfile",
         "requestBody": {
           "content": {
@@ -2633,7 +2633,7 @@
           "피부타입"
         ],
         "summary": "피부타입 조회",
-        "description": "피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.",
+        "description": "피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.",
         "operationId": "findSkinTypes",
         "responses": {
           "200": {
@@ -2901,6 +2901,16 @@
               "$ref": "#/components/schemas/SkinType"
             },
             "example": "DRY"
+          },
+          {
+            "name": "sensitiveSkin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "example": true
+            },
+            "example": true
           },
           {
             "name": "sort",
@@ -3598,6 +3608,16 @@
               "$ref": "#/components/schemas/SkinType"
             },
             "example": "DRY"
+          },
+          {
+            "name": "sensitiveSkin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "example": true
+            },
+            "example": true
           }
         ],
         "responses": {
@@ -5814,7 +5834,6 @@
         "enum": [
           "DRY",
           "OILY",
-          "SENSITIVE",
           "COMBINATION"
         ]
       },
@@ -5850,11 +5869,19 @@
                 "type": "null"
               }
             ]
+          },
+          "sensitiveSkin": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "example": true
           }
         },
         "required": [
           "ageRange",
           "gender",
+          "sensitiveSkin",
           "skinType"
         ]
       },
@@ -5910,6 +5937,12 @@
                 "type": "null"
               }
             ]
+          },
+          "sensitiveSkin": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5918,6 +5951,7 @@
           "gender",
           "id",
           "provider",
+          "sensitiveSkin",
           "skinType"
         ]
       },
@@ -6199,6 +6233,10 @@
             "minimum": 0,
             "multipleOf": 0.5
           },
+          "sensitiveSkin": {
+            "type": "boolean",
+            "example": false
+          },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
@@ -6213,6 +6251,7 @@
           "name",
           "oilLevel",
           "price",
+          "sensitiveSkin",
           "updatedAt",
           "volumeUnit",
           "volumeValue"
@@ -6987,6 +7026,10 @@
             "minimum": 0,
             "multipleOf": 0.5
           },
+          "sensitiveSkin": {
+            "type": "boolean",
+            "example": false
+          },
           "productParts": {
             "type": "array",
             "items": {
@@ -7019,6 +7062,7 @@
           "oilLevel",
           "productParts",
           "selectedPart",
+          "sensitiveSkin",
           "updatedAt",
           "variants"
         ]

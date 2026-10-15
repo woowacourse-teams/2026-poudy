@@ -22,6 +22,7 @@ public record ProductDetailResponse(
         """) List<ProductVariantResponse> variants,
     @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(example = "2.5", multipleOf = 0.5) Double moistureLevel,
     @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(example = "1", multipleOf = 0.5) Double oilLevel,
+    @NotNull @Schema(example = "false") Boolean sensitiveSkin,
     @NotNull List<ProductPartSummaryResponse> productParts,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) ProductPartResponse selectedPart,
     @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
@@ -38,6 +39,7 @@ public record ProductDetailResponse(
             ProductVariantResponse.from(product.variants().values()),
             product.moistureLevel(),
             product.oilLevel(),
+            product.isForSensitiveSkin(),
             ProductPartSummaryResponse.from(detail),
             ProductPartResponse.from(detail),
             product.updatedAt()

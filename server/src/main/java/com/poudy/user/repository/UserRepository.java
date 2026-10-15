@@ -28,7 +28,7 @@ import org.springframework.stereotype.Repository;
 public class UserRepository {
 
     private static final String COLUMNS = """
-        id, oauth_provider, email, gender, age_range, skin_type,
+        id, oauth_provider, email, gender, age_range, skin_type, is_sensitive_skin,
         case
             when restore_requested_at is not null then 'RESTORE_REQUESTED'
             when deleted_at is not null then 'WITHDRAWN'
@@ -42,6 +42,7 @@ public class UserRepository {
         enumOrNull(rs, "gender", Gender::valueOf),
         enumOrNull(rs, "age_range", AgeRange::valueOf),
         enumOrNull(rs, "skin_type", SkinType::valueOf),
+        rs.getObject("is_sensitive_skin", Boolean.class),
         UserStatus.valueOf(rs.getString("status"))
     );
 
@@ -121,11 +122,18 @@ public class UserRepository {
         );
     }
 
-    public Optional<User> updateProfile(long id, Gender gender, AgeRange ageRange, SkinType skinType) {
+    public Optional<User> updateProfile(
+        long id,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin
+    ) {
         return jdbc.query(
             """
                 update "user"
                 set gender = :gender, age_range = :ageRange, skin_type = :skinType,
+                    is_sensitive_skin = :sensitiveSkin,
                     updated_at = (now() AT TIME ZONE 'Asia/Seoul')
                 where id = :id and deleted_at is null
                 returning\s""" + COLUMNS,
@@ -133,7 +141,8 @@ public class UserRepository {
                 .addValue("id", id)
                 .addValue("gender", nameOf(gender), Types.VARCHAR)
                 .addValue("ageRange", nameOf(ageRange), Types.VARCHAR)
-                .addValue("skinType", nameOf(skinType), Types.VARCHAR),
+                .addValue("skinType", nameOf(skinType), Types.VARCHAR)
+                .addValue("sensitiveSkin", sensitiveSkin, Types.BOOLEAN),
             USER
         ).stream().findFirst();
     }

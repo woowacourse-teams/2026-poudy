@@ -24,7 +24,8 @@ public record ProductFilterRequest(
     @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<@NotNull ExcludeCode> excludeCodes,
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> includeGroupCodes,
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> excludeGroupCodes,
-    @Schema(description = "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다", example = "DRY") SkinType skinType) {
+    @Schema(description = "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다", example = "DRY") SkinType skinType,
+    @Schema(example = "true") Boolean sensitiveSkin) {
 
     public ProductFilterRequest {
         categoryIds = emptyIfMissing(categoryIds);
@@ -54,7 +55,8 @@ public record ProductFilterRequest(
             excludeCodes,
             includeGroupCodes,
             excludeGroupCodes,
-            skinType
+            skinType,
+            Boolean.TRUE.equals(sensitiveSkin)
         );
     }
 }

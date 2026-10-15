@@ -18,7 +18,8 @@ public record ProductQuery(
     List<ExcludeCode> excludeCodes,
     List<String> includeGroupCodes,
     List<String> excludeGroupCodes,
-    SkinType skinType) {
+    SkinType skinType,
+    boolean sensitiveSkin) {
 
     private static final double MAX_LEVEL = 3;
     private static final double LEVEL_STEP = 0.5;
@@ -55,6 +56,7 @@ public record ProductQuery(
 
     public boolean hasFilters() {
         return skinType != null
+            || sensitiveSkin
             || !categoryIds.isEmpty()
             || !brandIds.isEmpty()
             || !moistureLevels.isEmpty()

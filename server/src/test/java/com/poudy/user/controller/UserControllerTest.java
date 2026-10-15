@@ -88,14 +88,15 @@ class UserControllerTest {
                 .with(authentication(new LoginMember(user.id()).toAuthentication()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"gender":"FEMALE","ageRange":"TWENTIES","skinType":"COMBINATION"}
+                    {"gender":"FEMALE","ageRange":"TWENTIES","skinType":"COMBINATION","sensitiveSkin":true}
                     """)
         )
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
             .andExpect(jsonPath("$.gender").value("FEMALE"))
             .andExpect(jsonPath("$.ageRange").value("TWENTIES"))
-            .andExpect(jsonPath("$.skinType").value("COMBINATION"));
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"))
+            .andExpect(jsonPath("$.sensitiveSkin").value(true));
     }
 
     @Test
@@ -103,7 +104,7 @@ class UserControllerTest {
     void updatesPartialProfile() throws Exception {
         User user = userRepository
             .save(UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)));
-        userRepository.updateProfile(user.id(), Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY);
+        userRepository.updateProfile(user.id(), Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, true);
 
         mockMvc.perform(
             patch("/api/users/me/profile")
@@ -116,14 +117,16 @@ class UserControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.gender").isEmpty())
             .andExpect(jsonPath("$.ageRange").isEmpty())
-            .andExpect(jsonPath("$.skinType").value("COMBINATION"));
+            .andExpect(jsonPath("$.skinType").value("COMBINATION"))
+            .andExpect(jsonPath("$.sensitiveSkin").isEmpty());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
             "{\"gender\":\"FEMALE\",\"ageRange\":\"SEVENTIES\",\"skinType\":\"DRY\"}",
             "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"NORMAL\"}",
-            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"UNKNOWN\"}"
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"UNKNOWN\"}",
+            "{\"gender\":\"FEMALE\",\"ageRange\":\"TWENTIES\",\"skinType\":\"SENSITIVE\"}"
     })
     @DisplayName("모르는 값이 있으면 초기 정보를 400으로 거절한다")
     void rejectsInvalidProfile(String body) throws Exception {

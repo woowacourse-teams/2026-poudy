@@ -58,10 +58,10 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type SkinType = ("DRY" | "OILY" | "SENSITIVE" | "COMBINATION")
-export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null) }
+export type SkinType = ("DRY" | "OILY" | "COMBINATION")
+export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
-export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null) }
+export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -122,6 +122,7 @@ export type ProductResponse = {
    * 유분감 단계 (0~3, 0.5 단위)
    */
   oilLevel: number;
+  sensitiveSkin: boolean;
   updatedAt: string;
 }
 export type WishlistResponse = { items: Array<ProductResponse> }
@@ -304,7 +305,7 @@ export type SkinEffectGroupResponse = {
   items: Array<SkinEffectItemResponse>;
 }
 export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
-export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
+export type ProductDetailResponse = { id: number, name: string, brand: BrandResponse, categories: Array<CategoryPathResponse>, imageUrl: string, variants: Array<ProductVariantResponse>, moistureLevel: number, oilLevel: number, sensitiveSkin: boolean, productParts: Array<ProductPartSummaryResponse>, selectedPart: (ProductPartResponse | null), updatedAt: string }
 export type SimilarProductResponse = {
   /**
    * 대상 제품 ID
@@ -1119,7 +1120,7 @@ export type post_Login_1 = {
 
     }
 /**
- * 성별, 나이대, 피부 타입 중 고른 것만 저장하고 고르지 않은 것은 비운다.
+ * 성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",
@@ -1291,7 +1292,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 피부타입 코드와 표시명을 건성, 지성, 민감성, 복합성 순서로 조회한다.
+ * 피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.
  */
 export type get_FindSkinTypes = {
       method: "GET",
@@ -1356,6 +1357,7 @@ export type get_FindProducts = {
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
   skinType: Schemas.SkinType;
+  sensitiveSkin: boolean;
   sort: Schemas.ProductSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
@@ -1511,6 +1513,7 @@ export type get_CountProducts = {
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
   skinType: Schemas.SkinType;
+  sensitiveSkin: boolean;
 }>,
 
           }
