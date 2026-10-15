@@ -36,7 +36,8 @@
     "./notice": "./src/notice.tsx",
     "./empty-state": "./src/empty-state.tsx",
     "./error-state": "./src/error-state.tsx",
-    "./load-more": "./src/load-more.tsx"
+    "./load-more": "./src/load-more.tsx",
+    "./icon": "./src/icon.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
