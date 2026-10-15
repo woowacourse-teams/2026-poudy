@@ -29,7 +29,8 @@
     "./use-delayed-flag": "./src/use-delayed-flag.ts",
     "./skeleton": "./src/skeleton.tsx",
     "./portal": "./src/portal.tsx",
-    "./toast": "./src/toast.tsx"
+    "./toast": "./src/toast.tsx",
+    "./notice": "./src/notice.tsx"
   },
   "scripts": {
     "dev": "vite --config preview/vite.config.mts",
