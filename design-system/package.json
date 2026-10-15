@@ -12,6 +12,8 @@
     "./text-field": "./src/text-field.tsx",
     "./text-area": "./src/text-area.tsx",
     "./select": "./src/select.tsx",
+    "./search-field": "./src/search-field.tsx",
+    "./combobox": "./src/combobox.tsx",
     "./field-rule": "./src/field-rule.ts"
   },
   "scripts": {
