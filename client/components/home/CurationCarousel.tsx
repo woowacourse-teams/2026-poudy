@@ -859,7 +859,9 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     event.preventDefault();
                     selfScrolling.current = false;
                     dropToSlide(0);
+                    return;
                   }
+                  track("service_guide_opened", { surface: "home" });
                 }}
                 className="flex h-full"
                 draggable={false}

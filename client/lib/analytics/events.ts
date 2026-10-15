@@ -17,7 +17,8 @@ export type PageName =
   | "saved"
   | "category"
   | "brand"
-  | "curation_detail";
+  | "curation_detail"
+  | "about";
 
 export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
 
@@ -248,6 +249,11 @@ export type EventMap = {
    * position 은 그 목록 안에서 1 부터 센 자리다.
    */
   curation_opened: { curation_id: number; position: number; surface: "home" | "curation_detail" };
+  /**
+   * 홈 캐러셀 첫 장의 서비스 가이드를 눌러 서비스 소개(/about)로 갈 때.
+   * 푸터 링크로 온 방문과 가르려고 따로 남긴다. 큐레이션이 아니라 `curation_opened` 에 섞지 않는다.
+   */
+  service_guide_opened: { surface: "home" };
   /** 큐레이션 상세가 그려졌을 때. 캐러셀 밖(공유 링크, 검색)에서 들어온 경우까지 센다. */
   curation_viewed: { curation_id: number };
   /**

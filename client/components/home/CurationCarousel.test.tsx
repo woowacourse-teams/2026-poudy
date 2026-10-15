@@ -654,6 +654,27 @@ describe("CurationCarousel 서비스 가이드", () => {
     expect(track).toHaveBeenCalledWith("curation_opened", { curation_id: 2, position: 2, surface: "home" });
   });
 
+  it("가이드 장을 누르면 큐레이션과 따로 서비스 가이드 열기를 남긴다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    layOut(trackOf(container));
+
+    fireEvent.click(screen.getByRole("link", { name: /서비스 가이드/ }));
+
+    expect(track).toHaveBeenCalledWith("service_guide_opened", { surface: "home" });
+    expect(track).not.toHaveBeenCalledWith("curation_opened", expect.anything());
+  });
+
+  it("옆에 걸친 가이드 장을 누르면 그 장으로 넘기기만 하고 남기지 않는다", () => {
+    const { container } = render(<CurationCarousel items={items} />);
+    const list = trackOf(container);
+    layOut(list);
+    list.scrollLeft = STEP;
+
+    fireEvent.click(screen.getByRole("link", { name: /서비스 가이드/ }));
+
+    expect(track).not.toHaveBeenCalledWith("service_guide_opened", expect.anything());
+  });
+
   it("큐레이션을 받지 못해도 가이드 장은 보여 준다", () => {
     render(<CurationCarousel items={[]} />);
 
