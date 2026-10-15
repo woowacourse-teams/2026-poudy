@@ -87,7 +87,12 @@ const renderList = () =>
 
 /** 지켜보는 자리가 화면에 닿게 한다. 목록 끝의 다음 장 자리를 지켜본다. */
 const observers = new Set<(entries: { isIntersecting: boolean }[]) => void>();
-const reachEnd = () =>
+const reachEnd = async () => {
+  // 첫 장을 그린 뒤 다음 장 자리가 지켜보기를 시작할 때까지 기다린다. 그 전에 닿으면 아무도 듣지 않는다.
+  await waitFor(() => expect(observers.size).toBeGreaterThan(0));
+  touchEnd();
+};
+const touchEnd = () =>
   act(() => {
     for (const callback of [...observers]) callback([{ isIntersecting: true }]);
   });
@@ -136,7 +141,7 @@ describe("ProductList 장 링크", () => {
     renderList();
 
     await screen.findAllByRole("listitem");
-    reachEnd();
+    await reachEnd();
 
     await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
     expect(requested).toEqual([1, 2]);
@@ -223,14 +228,14 @@ describe("ProductList 장 링크", () => {
     renderList();
 
     await screen.findAllByRole("listitem");
-    reachEnd();
+    await reachEnd();
 
     const retry = await screen.findByRole("button", { name: "다시 시도" });
     expect(screen.getByText("다음 제품을 불러오지 못했어요")).toBeInTheDocument();
     // 실패한 장을 건너뛰지 않는다. 링크는 여전히 받지 못한 그 장을 가리킨다.
     expect(crawlerLink("다음 제품 보기")).toHaveAttribute("href", "/brands/7?page=2&size=1");
-    // 다시 끝에 닿아도 부르지 않는다.
-    reachEnd();
+    // 다시 끝에 닿아도 부르지 않는다. 실패한 자리는 지켜보기를 멈췄으므로 기다리지 않고 바로 보낸다.
+    touchEnd();
     expect(requested).toEqual([1, 2]);
 
     await userEvent.click(retry);
