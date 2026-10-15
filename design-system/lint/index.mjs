@@ -27,7 +27,7 @@ export const RULES = [
 
 /** 디자인 시스템 부품으로 알아볼 import. no-restyle 과 require-static-classes 가 이 부품을 쓰는 곳을 본다. */
 const COMPONENT_IMPORTS = [
-  "^@poudy/design-system/(button|icon-button|text-field|text-area|select|search-field|combobox|radio-group|checkbox-group|range-slider|slider|filter-chip|toggle-chip|tag|badge|tabs|tab-nav)$",
+  "^@poudy/design-system/(button|icon-button|text-field|text-area|select|search-field|combobox|radio-group|checkbox-group|range-slider|slider|filter-chip|toggle-chip|tag|badge|tabs|tab-nav|disclosure)$",
 ];
 
 /**
