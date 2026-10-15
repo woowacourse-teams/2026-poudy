@@ -140,11 +140,11 @@ public final class Product {
         return keyword.matchesExactly(name);
     }
 
-    public Integer moistureLevel() {
+    public Double moistureLevel() {
         return sensory.moisture().value();
     }
 
-    public Integer oilLevel() {
+    public Double oilLevel() {
         return sensory.oil().value();
     }
 

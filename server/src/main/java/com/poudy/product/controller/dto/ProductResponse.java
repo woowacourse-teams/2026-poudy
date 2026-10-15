@@ -4,8 +4,8 @@ import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductVariant;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -18,8 +18,8 @@ public record ProductResponse(
     @NotNull @Schema(description = "제품 가격 (원)", example = "18000") Long price,
     @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
     @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
-    @NotNull @Min(0) @Max(3) @Schema(description = "수분감 단계 (0~3)", example = "3") Integer moistureLevel,
-    @NotNull @Min(0) @Max(3) @Schema(description = "유분감 단계 (0~3)", example = "1") Integer oilLevel,
+    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(description = "수분감 단계 (0~3, 0.5 단위)", example = "2.5", multipleOf = 0.5) Double moistureLevel,
+    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(description = "유분감 단계 (0~3, 0.5 단위)", example = "1", multipleOf = 0.5) Double oilLevel,
     @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 
     public static ProductResponse from(Product product) {

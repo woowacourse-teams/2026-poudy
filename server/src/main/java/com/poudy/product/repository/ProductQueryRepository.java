@@ -48,8 +48,10 @@ public class ProductQueryRepository {
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
                     where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
             from product p %s join category c on c.id = p.category_id
-            where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
-              and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
+            where (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
+                  where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
+              and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
+                  where p.oil_level >= level - 0.25 and p.oil_level < level + 0.25))
               and not exists (select 1 from unnest(cast(:included as bigint[])) wanted(id)
                   where not exists (select 1 from product_component pc
                       join product_ingredient pi on pi.component_id = pc.id
@@ -230,8 +232,8 @@ public class ProductQueryRepository {
         return new MapSqlParameterSource("keyword", query.keyword())
             .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
-            .addValue("moisture", array("integer", query.moistureLevels()))
-            .addValue("oil", array("integer", query.oilLevels()))
+            .addValue("moisture", array("float8", query.moistureLevels()))
+            .addValue("oil", array("float8", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))

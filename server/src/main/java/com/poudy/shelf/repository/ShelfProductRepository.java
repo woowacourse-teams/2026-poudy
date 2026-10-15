@@ -32,56 +32,56 @@ public class ShelfProductRepository {
         this.jdbc = jdbc;
     }
 
-    public List<ShelfProduct> findAll(long memberId) {
+    public List<ShelfProduct> findAll(long userId) {
         return jdbc.query(
             "select " + COLUMNS + """
                 from user_shelf_product
-                where user_id = :memberId
+                where user_id = :userId
                 order by created_at desc, product_id asc
                 """,
-            new MapSqlParameterSource("memberId", memberId),
+            new MapSqlParameterSource("userId", userId),
             SHELF_PRODUCT
         );
     }
 
-    public Optional<ShelfProduct> find(long memberId, long productId) {
+    public Optional<ShelfProduct> find(long userId, long productId) {
         return jdbc.query(
             "select " + COLUMNS + """
                 from user_shelf_product
-                where user_id = :memberId and product_id = :productId
+                where user_id = :userId and product_id = :productId
                 """,
-            primaryKeyParameters(memberId, productId),
+            primaryKeyParameters(userId, productId),
             SHELF_PRODUCT
         ).stream().findFirst();
     }
 
-    public List<Long> findProductIds(long memberId) {
+    public List<Long> findProductIds(long userId) {
         return jdbc.queryForList(
             """
                 select product_id
                 from user_shelf_product
-                where user_id = :memberId
+                where user_id = :userId
                 order by created_at desc, product_id asc
                 """,
-            new MapSqlParameterSource("memberId", memberId),
+            new MapSqlParameterSource("userId", userId),
             Long.class
         );
     }
 
-    public boolean add(long memberId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+    public boolean add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         return jdbc.update(
             """
                 insert into user_shelf_product (
                     user_id, product_id, usage_status, rating_preference, rating_moisture_level, rating_oil_level
                 )
-                values (:memberId, :productId, :usageStatus, :preference, :moistureLevel, :oilLevel)
+                values (:userId, :productId, :usageStatus, :preference, :moistureLevel, :oilLevel)
                 on conflict (user_id, product_id) do nothing
                 """,
-            rowParameters(memberId, productId, usageStatus, rating)
+            rowParameters(userId, productId, usageStatus, rating)
         ) > 0;
     }
 
-    public boolean update(long memberId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+    public boolean update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         return jdbc.update(
             """
                 update user_shelf_product
@@ -90,16 +90,16 @@ public class ShelfProductRepository {
                     rating_moisture_level = :moistureLevel,
                     rating_oil_level = :oilLevel,
                     updated_at = (now() at time zone 'Asia/Seoul')
-                where user_id = :memberId and product_id = :productId
+                where user_id = :userId and product_id = :productId
                 """,
-            rowParameters(memberId, productId, usageStatus, rating)
+            rowParameters(userId, productId, usageStatus, rating)
         ) > 0;
     }
 
-    public void delete(long memberId, long productId) {
+    public void delete(long userId, long productId) {
         jdbc.update(
-            "delete from user_shelf_product where user_id = :memberId and product_id = :productId",
-            primaryKeyParameters(memberId, productId)
+            "delete from user_shelf_product where user_id = :userId and product_id = :productId",
+            primaryKeyParameters(userId, productId)
         );
     }
 
@@ -129,19 +129,19 @@ public class ShelfProductRepository {
         return RatingPreference.valueOf(preference);
     }
 
-    private MapSqlParameterSource primaryKeyParameters(long memberId, long productId) {
+    private MapSqlParameterSource primaryKeyParameters(long userId, long productId) {
         return new MapSqlParameterSource()
-            .addValue("memberId", memberId)
+            .addValue("userId", userId)
             .addValue("productId", productId);
     }
 
     private MapSqlParameterSource rowParameters(
-        long memberId,
+        long userId,
         long productId,
         ShelfUsageStatus usageStatus,
         Rating rating
     ) {
-        return primaryKeyParameters(memberId, productId)
+        return primaryKeyParameters(userId, productId)
             .addValue("usageStatus", usageStatus.name())
             .addValue("preference", nameOf(rating.preference()), Types.VARCHAR)
             .addValue("moistureLevel", rating.moistureLevel(), Types.DOUBLE)

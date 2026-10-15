@@ -755,12 +755,6 @@ JOIN product_component component
  AND component.display_order = ingredients.component_order
 ORDER BY ingredients.product_id, ingredients.component_order, ingredients.display_order;
 
-INSERT INTO skin_type (code, name) VALUES
-    ('DRY', '건성'),
-    ('OILY', '지성'),
-    ('SENSITIVE', '민감성'),
-    ('COMBINATION', '복합성');
-
 INSERT INTO product_skin_type (product_id, skin_type_code) VALUES
     (1, 'DRY'),
     (1, 'SENSITIVE'),

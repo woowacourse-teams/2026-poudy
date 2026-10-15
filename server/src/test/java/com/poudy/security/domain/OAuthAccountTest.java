@@ -16,9 +16,9 @@ class OAuthAccountTest {
     @Test
     @DisplayName("인증된 이메일은 앞뒤 공백을 지우고 소문자로 정규화한다")
     void normalizesVerifiedEmail() {
-        OAuthAccount account = new OAuthAccount(OAuthProvider.GOOGLE, "sub", "  Member@Example.COM ", true);
+        OAuthAccount account = new OAuthAccount(OAuthProvider.GOOGLE, "sub", "  User@Example.COM ", true);
 
-        assertThat(account.verifiedEmail()).isEqualTo("member@example.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@example.com");
     }
 
     @Test
@@ -26,12 +26,12 @@ class OAuthAccountTest {
     void createsFromProviderResponse() {
         OAuthAccount account = OAuthAccount.from(
             "google",
-            Map.of("sub", "1098765", "email", "Member@Gmail.com", "email_verified", true)
+            Map.of("sub", "1098765", "email", "User@Gmail.com", "email_verified", true)
         );
 
         assertThat(account.provider()).isEqualTo(OAuthProvider.GOOGLE);
         assertThat(account.providerId()).isEqualTo("1098765");
-        assertThat(account.verifiedEmail()).isEqualTo("member@gmail.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@gmail.com");
     }
 
     @ParameterizedTest
@@ -49,7 +49,7 @@ class OAuthAccountTest {
     @ValueSource(strings = " ")
     @DisplayName("제공자 식별자가 없으면 만들지 않는다")
     void rejectsMissingProviderId(String providerId) {
-        assertThatThrownBy(() -> new OAuthAccount(OAuthProvider.KAKAO, providerId, "member@example.com", true))
+        assertThatThrownBy(() -> new OAuthAccount(OAuthProvider.KAKAO, providerId, "user@example.com", true))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

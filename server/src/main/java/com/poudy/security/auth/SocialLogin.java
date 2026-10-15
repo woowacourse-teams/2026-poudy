@@ -4,7 +4,7 @@ import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.SocialLoginResult;
-import com.poudy.security.domain.SocialMembers;
+import com.poudy.security.domain.SocialUsers;
 import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class SocialLogin {
 
-    private final SocialMembers socialMembers;
+    private final SocialUsers socialUsers;
     private final LoginSession loginSession;
 
-    public SocialLogin(SocialMembers socialMembers, LoginSession loginSession) {
-        this.socialMembers = socialMembers;
+    public SocialLogin(SocialUsers socialUsers, LoginSession loginSession) {
+        this.socialUsers = socialUsers;
         this.loginSession = loginSession;
     }
 
@@ -32,9 +32,9 @@ public class SocialLogin {
     ) {
         try {
             OAuthAccount loginAccount = account.get();
-            Optional<SocialLoginResult> result = socialMembers.login(loginAccount);
+            Optional<SocialLoginResult> result = socialUsers.login(loginAccount);
             loginSession.signOut(request, response);
-            return result.map(member -> loginSession.applyLoginResult(member, channel, request, response))
+            return result.map(user -> loginSession.applyLoginResult(user, channel, request, response))
                 .orElseGet(() -> loginSession.holdSignup(loginAccount, channel, request, response));
         } catch (EmailAlreadyRegisteredException exception) {
             loginSession.holdRegisteredAccount(exception.registeredAccount(), request, response);

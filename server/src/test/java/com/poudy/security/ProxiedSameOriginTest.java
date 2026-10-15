@@ -61,7 +61,7 @@ class ProxiedSameOriginTest {
     }
 
     private String postLogout(String... headers) throws IOException {
-        String request = "POST /api/members/logout HTTP/1.1\r\n"
+        String request = "POST /api/users/logout HTTP/1.1\r\n"
             + Arrays.stream(headers).map(header -> header + "\r\n").collect(Collectors.joining())
             + "Content-Length: 0\r\n"
             + "Connection: close\r\n"

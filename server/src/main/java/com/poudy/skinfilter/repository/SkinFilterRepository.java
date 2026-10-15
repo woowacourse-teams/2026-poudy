@@ -15,44 +15,44 @@ public class SkinFilterRepository {
         this.jdbc = jdbc;
     }
 
-    public List<Long> findIngredientIds(long memberId) {
+    public List<Long> findIngredientIds(long userId) {
         return jdbc.queryForList(
             """
                 select ingredient_id
                 from user_skin_filter_ingredient
-                where user_id = :memberId
+                where user_id = :userId
                 order by created_at desc, ingredient_id asc
                 """,
-            new MapSqlParameterSource("memberId", memberId),
+            new MapSqlParameterSource("userId", userId),
             Long.class
         );
     }
 
-    public void add(long memberId, List<Long> ingredientIds) {
+    public void add(long userId, List<Long> ingredientIds) {
         jdbc.update(
             """
                 insert into user_skin_filter_ingredient (user_id, ingredient_id)
-                select :memberId, ingredient_id
+                select :userId, ingredient_id
                 from unnest(cast(:ingredientIds as bigint[])) as ingredient_id
                 on conflict (user_id, ingredient_id) do nothing
                 """,
-            filterIngredientParameters(memberId, ingredientIds)
+            filterIngredientParameters(userId, ingredientIds)
         );
     }
 
-    public void remove(long memberId, List<Long> ingredientIds) {
+    public void remove(long userId, List<Long> ingredientIds) {
         jdbc.update(
             """
                 delete from user_skin_filter_ingredient
-                where user_id = :memberId and ingredient_id = any(cast(:ingredientIds as bigint[]))
+                where user_id = :userId and ingredient_id = any(cast(:ingredientIds as bigint[]))
                 """,
-            filterIngredientParameters(memberId, ingredientIds)
+            filterIngredientParameters(userId, ingredientIds)
         );
     }
 
-    private MapSqlParameterSource filterIngredientParameters(long memberId, List<Long> ingredientIds) {
+    private MapSqlParameterSource filterIngredientParameters(long userId, List<Long> ingredientIds) {
         return new MapSqlParameterSource()
-            .addValue("memberId", memberId)
+            .addValue("userId", userId)
             .addValue("ingredientIds", new SqlArrayValue("bigint", ingredientIds.toArray()));
     }
 }

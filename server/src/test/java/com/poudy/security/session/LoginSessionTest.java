@@ -28,7 +28,7 @@ class LoginSessionTest {
     private static final Duration ADMIN_IDLE = Duration.ofHours(1);
     private static final Duration ADMIN_ABSOLUTE = Duration.ofHours(12);
     private static final Duration APP_IDLE = Duration.ofDays(60);
-    private static final long MEMBER_ID = 7L;
+    private static final long USER_ID = 7L;
     private static final Duration GRACE = Duration.ofMinutes(5);
     private static final int IDLE_SECONDS = 600;
     private static final OAuthAccount ACCOUNT = new OAuthAccount(OAuthProvider.KAKAO, "4321", "new@example.com", true);
@@ -43,11 +43,11 @@ class LoginSessionTest {
     void signsIn() {
         MockHttpServletRequest request = new MockHttpServletRequest();
 
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
 
         SecurityContext context = (SecurityContext) request.getSession()
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(MEMBER_ID));
+        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(USER_ID));
         assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(IDLE.toSeconds());
     }
 
@@ -184,17 +184,17 @@ class LoginSessionTest {
 
     @Test
     @DisplayName("탈퇴 회원을 맡겨 두면 로그인하지 않은 새 세션에 두고, 한 번 꺼내면 다시 꺼낼 수 없다")
-    void holdsWithdrawnMemberOnce() {
+    void holdsWithdrawnUserOnce() {
         MockHttpServletRequest request = signedInRequest();
         MockHttpSession signedInSession = (MockHttpSession) request.getSession();
 
-        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).holdWithdrawnUser(USER_ID, request, new MockHttpServletResponse());
 
         assertThat(signedInSession.isInvalid()).isTrue();
         assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
             .isNull();
-        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).contains(MEMBER_ID);
-        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnUser(request)).contains(USER_ID);
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnUser(request)).isEmpty();
     }
 
     @Test
@@ -220,33 +220,33 @@ class LoginSessionTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, LoginChannel.WEB, request, new MockHttpServletResponse());
 
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
 
         assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request)).isEmpty();
     }
 
     @Test
     @DisplayName("탈퇴 회원을 맡겨 둔 세션에서 다른 계정으로 로그인하면 맡겨 둔 탈퇴 회원을 버린다")
-    void dropsWithdrawnMemberOnSignIn() {
+    void dropsWithdrawnUserOnSignIn() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        sessionAt(SIGNED_IN_AT).holdWithdrawnMember(MEMBER_ID, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).holdWithdrawnUser(USER_ID, request, new MockHttpServletResponse());
 
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID + 1, LoginChannel.WEB, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID + 1, LoginChannel.WEB, request, new MockHttpServletResponse());
 
-        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnMember(request)).isEmpty();
+        assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnUser(request)).isEmpty();
     }
 
     @Test
     @DisplayName("관리자로 로그인하면 기존 세션을 버리고 관리자 인증만 가진 새 세션을 비활동 1시간으로 둔다")
     void signsInAdmin() {
         MockHttpServletRequest request = signedInRequest();
-        MockHttpSession memberSession = (MockHttpSession) request.getSession();
+        MockHttpSession userSession = (MockHttpSession) request.getSession();
 
         sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
 
         SecurityContext context = (SecurityContext) request.getSession()
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        assertThat(memberSession.isInvalid()).isTrue();
+        assertThat(userSession.isInvalid()).isTrue();
         assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginAdmin("admin"));
         assertThat(context.getAuthentication().getAuthorities()).extracting(Object::toString)
             .containsExactly("ROLE_ADMIN");
@@ -271,7 +271,7 @@ class LoginSessionTest {
     @DisplayName("앱으로 로그인하면 비활동 60일로 두고 로그인 후 오래 지나도 버리지 않는다")
     void keepsAppSessionWithoutAbsoluteTimeout() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
         MockHttpSession session = (MockHttpSession) request.getSession();
 
         sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
@@ -284,7 +284,7 @@ class LoginSessionTest {
     @DisplayName("앱 세션은 접속하면 쿠키 수명을 다시 60일로 늘리고, 하루 안에는 다시 늘리지 않는다")
     void extendsAppSessionCookie() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
         ((MockHttpSession) request.getSession()).setNew(false);
 
         MockHttpServletResponse first = new MockHttpServletResponse();
@@ -312,7 +312,7 @@ class LoginSessionTest {
 
     private MockHttpServletRequest signedInRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        sessionAt(SIGNED_IN_AT).signIn(MEMBER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
         return request;
     }
 

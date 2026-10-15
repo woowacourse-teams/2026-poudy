@@ -116,8 +116,8 @@ class ProductLoader {
                 rs.getString("image_url"),
                 new ProductVariants(variants.get(id)),
                 new ProductSensory(
-                    new MoistureLevel(rs.getInt("moisture_level")),
-                    new OilLevel(rs.getInt("oil_level"))
+                    new MoistureLevel(rs.getDouble("moisture_level")),
+                    new OilLevel(rs.getDouble("oil_level"))
                 ),
                 rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             );

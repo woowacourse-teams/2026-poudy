@@ -48,6 +48,18 @@ class NullableResponseFieldsTest {
     }
 
     private ProductDetailResponse detail(ProductPartResponse part) {
-        return new ProductDetailResponse(1L, "제품", null, List.of(), "", List.of(), 0, 0, List.of(), part, null);
+        return new ProductDetailResponse(
+            1L,
+            "제품",
+            null,
+            List.of(),
+            "",
+            List.of(),
+            0.0,
+            0.0,
+            List.of(),
+            part,
+            null
+        );
     }
 }

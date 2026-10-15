@@ -39,7 +39,7 @@ class KakaoAppTokenVerifierTest {
             .andRespond(
                 withSuccess(
                     """
-                        {"id":4321,"kakao_account":{"email":"Member@Example.com","is_email_valid":true,"is_email_verified":true}}
+                        {"id":4321,"kakao_account":{"email":"User@Example.com","is_email_valid":true,"is_email_verified":true}}
                         """,
                     MediaType.APPLICATION_JSON
                 )
@@ -49,7 +49,7 @@ class KakaoAppTokenVerifierTest {
 
         assertThat(account.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(account.providerId()).isEqualTo("4321");
-        assertThat(account.verifiedEmail()).isEqualTo("member@example.com");
+        assertThat(account.verifiedEmail()).isEqualTo("user@example.com");
         kakao.verify();
     }
 
