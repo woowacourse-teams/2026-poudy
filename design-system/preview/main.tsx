@@ -2,12 +2,13 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./preview.css";
 
 import { StrictMode } from "react";
-import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Button } from "../src/button";
 import { IconButton } from "../src/icon-button";
 import { Icon } from "./icons";
+import { InputSamples } from "./input-samples";
+import { Section } from "./section";
 
 /** 디자인 시스템 부품을 한 화면에 늘어놓은 견본이다. 폭은 앱 화면과 같다. */
 function Preview() {
@@ -70,16 +71,9 @@ function Preview() {
           </div>
         </div>
       </Section>
-    </main>
-  );
-}
 
-function Section({ title, children }: { readonly title: string; readonly children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-section font-bold text-text-primary">{title}</h2>
-      {children}
-    </section>
+      <InputSamples />
+    </main>
   );
 }
 
