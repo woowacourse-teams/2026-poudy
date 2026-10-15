@@ -5,15 +5,12 @@ import Link from "next/link";
 
 import { LevelTag } from "./LevelTag";
 import { MatchedText } from "./MatchedText";
-import { ProductThumbnail } from "./ProductThumbnail";
+import { ProductImage } from "./ProductImage";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
-
-// 제품 상세와 검색 패널이 같은 기본 그림을 쓴다. 들여오던 자리를 그대로 둔다.
-export { PRODUCT_PLACEHOLDER } from "./ProductThumbnail";
 
 type ProductCardProps = {
   readonly product: ProductResponse;
@@ -44,7 +41,17 @@ export function ProductCard({
           href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
           className="flex flex-1 items-center gap-3"
         >
-          <ProductThumbnail imageUrl={product.imageUrl} loading={imageLoading} />
+          {/*
+            제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다. 그림은 제품마다 따로 도착하고,
+            칸을 먼저 잡아 두어 늦게 와도 옆의 글이 밀리지 않는다.
+          */}
+          <ProductImage
+            src={product.imageUrl}
+            size={80}
+            loading={imageLoading}
+            data-product-image
+            className="shrink-0"
+          />
 
           {/*
           줄 높이를 좁힌 대신 줄 사이는 넉넉히 벌려, 한 줄씩 또렷하게 끊어 읽히게 한다.

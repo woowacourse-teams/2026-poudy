@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { TargetProduct } from "./TargetProduct";
 
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
+import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductImage";
 
 const image = () => document.querySelector("img") as HTMLImageElement;
 
