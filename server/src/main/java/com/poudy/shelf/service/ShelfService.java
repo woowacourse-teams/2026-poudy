@@ -69,6 +69,7 @@ public class ShelfService {
 
     @Transactional
     public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+        shelfProductRepository.lockShelf(userId);
         if (productRepository.findById(productId).isEmpty()) {
             throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
         }
@@ -80,6 +81,7 @@ public class ShelfService {
 
     @Transactional
     public ShelfItem update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+        shelfProductRepository.lockShelf(userId);
         if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
             throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
@@ -88,6 +90,7 @@ public class ShelfService {
 
     @Transactional
     public void remove(long userId, long productId) {
+        shelfProductRepository.lockShelf(userId);
         shelfProductRepository.delete(userId, productId);
         refreshAnalysis(userId);
     }
