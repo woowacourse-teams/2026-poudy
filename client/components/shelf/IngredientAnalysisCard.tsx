@@ -43,7 +43,8 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
 }
 
 type GuideRowProps = {
-  readonly href: "/my-page/skin-type" | "/shelf/filter";
+  /** 나만의 필터 관리(/my-page/filter, S55j)는 아직 화면이 없다. 링크만 먼저 둔다. */
+  readonly href: "/my-page/skin-type" | "/my-page/filter";
   readonly icon: React.ReactNode;
   readonly action: string;
   readonly children: React.ReactNode;
@@ -130,7 +131,7 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
 
       {summary.showManage ? (
         <GuideRow
-          href="/shelf/filter"
+          href="/my-page/filter"
           // TODO(#729): 필터 아이콘(Tabler filter, 16). Icon 부품이 들어오면 넣는다.
           icon={null}
           action="관리하기"

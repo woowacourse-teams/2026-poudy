@@ -45,6 +45,18 @@ describe("선반", () => {
     expect(screen.getAllByRole("button", { name: /평가하기$/ })).toHaveLength(1);
   });
 
+  it("검색에서 제외 중인 성분이 있으면 관리 줄이 나만의 필터로 이어진다", async () => {
+    server.use(
+      http.get("*/api/users/me/skin-filter", () =>
+        HttpResponse.json({ items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [] }] }),
+      ),
+    );
+    render(<ShelfScreen />);
+
+    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    expect(await within(card).findByRole("link", { name: /관리하기/ })).toHaveAttribute("href", "/my-page/filter");
+  });
+
   it("보기 칩을 고르면 그 사용 상태의 제품만 머리 없이 보여 준다", async () => {
     const user = userEvent.setup();
     render(<ShelfScreen />);
