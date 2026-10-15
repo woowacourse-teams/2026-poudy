@@ -2,6 +2,7 @@ package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductVariant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
@@ -38,6 +39,22 @@ public record ProductResponse(
             product.oilLevel(),
             product.isForSensitiveSkin(),
             product.updatedAt()
+        );
+    }
+
+    public static ProductResponse from(ProductCard card) {
+        return new ProductResponse(
+            card.id(),
+            card.name(),
+            BrandResponse.from(card.brand()),
+            card.imageUrl(),
+            card.price(),
+            card.volumeValue(),
+            card.volumeUnit(),
+            card.moistureLevel(),
+            card.oilLevel(),
+            card.sensitiveSkin(),
+            card.updatedAt()
         );
     }
 
