@@ -1,11 +1,12 @@
 "use client";
 
 import type { CurationProductsByFilterBlockResponse } from "@poudy/api/api.zod";
+import { EmptyState } from "@poudy/design-system/empty-state";
 import { useState } from "react";
 
 import { CurationProductGrid } from "./CurationProductGrid";
 
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
+import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 
 type CurationFilterBlockProps = {
@@ -70,7 +71,11 @@ export function CurationFilterBlock({ curationId, blockId, filters, products }: 
       </ul>
 
       {shown.length === 0 ? (
-        <EmptyNotice icon="search" title="고른 조건에 맞는 제품이 없어요" detail="다른 조건으로 바꿔 보세요" />
+        <EmptyState
+          icon={<Icon name="search" size={28} />}
+          title="고른 조건에 맞는 제품이 없어요"
+          description="다른 조건으로 바꿔 보세요"
+        />
       ) : (
         <CurationProductGrid products={shown.map(({ product }) => product)} />
       )}
