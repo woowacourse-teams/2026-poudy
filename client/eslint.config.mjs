@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import { designSystemLint } from "@poudy/design-system/lint";
 import { defineConfig, globalIgnores } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -11,6 +12,8 @@ const testFiles = ["**/*.test.ts", "**/*.test.tsx"];
 // 테스트는 검증 대상이 아니라 검증하는 쪽이다. expect 호출 자체가 표현식 문이라
 // 함수형 규칙을 그대로 적용할 수 없다.
 const domainFiles = ["lib/domain/**/*.ts"];
+// 관리자 화면은 명세에서 admin- 체계로 따로 정해 두어 디자인 토큰 린트의 대상이 아니다.
+const adminFiles = ["app/admin/**", "components/admin/**"];
 
 const eslintConfig = defineConfig([
   js.configs.recommended,
@@ -96,6 +99,8 @@ const eslintConfig = defineConfig([
       "max-lines-per-function": "off",
     },
   },
+  // 디자인 토큰 린트. 규칙과 명세 예외는 디자인 시스템 패키지가 정한다(design-system/lint).
+  ...designSystemLint({ files: projectFiles, ignores: [...testFiles, ...adminFiles] }),
   eslintConfigPrettier,
   // Override the default ignores from eslint-config-next.
   // mockServiceWorker.js 는 msw 가 생성하는 파일이라 직접 고치지 않는다.
