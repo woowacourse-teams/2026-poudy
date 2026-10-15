@@ -4,7 +4,6 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
-import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.IngredientAnalysis;
 import com.poudy.shelf.domain.Rating;
@@ -65,12 +64,13 @@ public class ShelfService {
 
     @Transactional
     public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
-        Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
+        if (productRepository.findById(productId).isEmpty()) {
+            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
+        }
         if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
-        return shelfItemOf(userId, product);
+        return findShelf(userId).item(productId);
     }
 
     @Transactional
@@ -78,7 +78,7 @@ public class ShelfService {
         if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
             throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
-        return shelfItemOf(userId, productRepository.findById(productId).orElseThrow());
+        return findShelf(userId).item(productId);
     }
 
     @Transactional
@@ -99,10 +99,5 @@ public class ShelfService {
             excludeCodeRepository.findAll().ingredientIds(),
             cautions.ingredientIdsWith(shelfCautionRepository.findGroupIngredientIds(cautions.ingredientGroupCodes()))
         );
-    }
-
-    private ShelfItem shelfItemOf(long userId, Product product) {
-        ShelfProduct shelfProduct = shelfProductRepository.find(userId, product.id()).orElseThrow();
-        return new ShelfItem(shelfProduct, product);
     }
 }

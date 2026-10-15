@@ -74,7 +74,7 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.rating.preference").value("BAD"))
             .andExpect(jsonPath("$.rating.moistureLevel").value(1.5))
             .andExpect(jsonPath("$.rating.oilLevel").value(nullValue()))
-            .andExpect(jsonPath("$.possiblyUnsuitable").value(false))
+            .andExpect(jsonPath("$.possiblyUnsuitable").value(true))
             .andExpect(jsonPath("$.registeredAt").isString());
 
         add("""
@@ -82,7 +82,31 @@ class ShelfControllerTest {
             """)
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.rating.preference").value(nullValue()))
-            .andExpect(jsonPath("$.rating.moistureLevel").value(nullValue()));
+            .andExpect(jsonPath("$.rating.moistureLevel").value(nullValue()))
+            .andExpect(jsonPath("$.possiblyUnsuitable").value(false));
+    }
+
+    @Test
+    @DisplayName("평가와 상관없이 안 맞을 수 있는 성분이 든 선반 제품을 표시한다")
+    void marksPossiblyUnsuitableProducts() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 13, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(13, 15)))
+            .andExpect(jsonPath("$.items[*].possiblyUnsuitable").value(contains(false, true)));
+
+        add("""
+            {"productId": 1, "usageStatus": "USED", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(1, 13, 15)))
+            .andExpect(jsonPath("$.items[*].possiblyUnsuitable").value(contains(true, true, true)));
     }
 
     @Test

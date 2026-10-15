@@ -20,22 +20,42 @@ public final class Shelf {
     public static Shelf of(List<ShelfProduct> shelfProducts, List<Product> products, SuspectCandidates candidates) {
         Map<Long, Product> productsById = products.stream()
             .collect(Collectors.toMap(Product::id, Function.identity()));
-        List<ShelfItem> items = shelfProducts.stream()
-            .map(shelfProduct -> new ShelfItem(shelfProduct, productsById.get(shelfProduct.productId())))
-            .toList();
+        SuspectIngredients suspectIngredients = SuspectIngredients.of(
+            productsOf(shelfProducts, productsById, ShelfProduct::isRatedBad),
+            productsOf(shelfProducts, productsById, ShelfProduct::isRatedGood),
+            candidates
+        );
         return new Shelf(
-            items,
-            SuspectIngredients
-                .of(productsOf(items, ShelfItem::isRatedBad), productsOf(items, ShelfItem::isRatedGood), candidates)
+            shelfProducts.stream()
+                .map(shelfProduct -> {
+                    Product product = productsById.get(shelfProduct.productId());
+                    return new ShelfItem(shelfProduct, product, suspectIngredients.isContainedIn(product));
+                })
+                .toList(),
+            suspectIngredients
         );
     }
 
-    private static List<Product> productsOf(List<ShelfItem> items, Predicate<ShelfItem> condition) {
-        return items.stream().filter(condition).map(ShelfItem::product).toList();
+    private static List<Product> productsOf(
+        List<ShelfProduct> shelfProducts,
+        Map<Long, Product> productsById,
+        Predicate<ShelfProduct> condition
+    ) {
+        return shelfProducts.stream()
+            .filter(condition)
+            .map(shelfProduct -> productsById.get(shelfProduct.productId()))
+            .toList();
     }
 
     public List<ShelfItem> items() {
         return items;
+    }
+
+    public ShelfItem item(long productId) {
+        return items.stream()
+            .filter(item -> item.holds(productId))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("선반에 없는 제품입니다. productId=" + productId));
     }
 
     public long count(ShelfTab tab) {

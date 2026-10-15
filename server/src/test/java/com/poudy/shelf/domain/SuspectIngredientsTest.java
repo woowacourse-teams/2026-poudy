@@ -129,6 +129,15 @@ class SuspectIngredientsTest {
         assertThat(suspects.items().getFirst().unsuitedProducts()).hasSize(2);
     }
 
+    @Test
+    @DisplayName("고른 성분이 하나라도 든 제품을 알아본다")
+    void tellsProductContainingSuspect() {
+        SuspectIngredients suspects = SuspectIngredients.of(List.of(product(1L, LIMONENE)), List.of(), CANDIDATES);
+
+        assertThat(suspects.isContainedIn(product(2L, WATER, LIMONENE))).isTrue();
+        assertThat(suspects.isContainedIn(product(3L, WATER, ALCOHOL))).isFalse();
+    }
+
     private static Product product(Long id, Long... ingredientIds) {
         return product(id, List.<Long[]>of(ingredientIds));
     }

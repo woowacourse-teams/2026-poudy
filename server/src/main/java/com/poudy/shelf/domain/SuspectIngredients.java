@@ -63,6 +63,11 @@ public final class SuspectIngredients {
         return items.stream().map(SuspectIngredient::id).toList();
     }
 
+    public boolean isContainedIn(Product product) {
+        List<Long> ingredientIds = ingredientIds();
+        return product.ingredients().stream().anyMatch(ingredient -> ingredientIds.contains(ingredient.id()));
+    }
+
     private record ProductIngredients(Product product, List<Ingredient> ingredients, List<Long> ingredientIds) {
 
         private ProductIngredients(Product product) {
