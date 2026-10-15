@@ -107,11 +107,9 @@ public class ShelfService {
     // 평가가 바뀐 같은 트랜잭션에서 결과를 다시 계산해, 직전 결과와 성분이 다를 때만 새 성분을 다시 표시한다.
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
-        List<Long> ingredientIds = shelf.suspectIngredients().ingredientIds();
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
-        if (!snapshot.hasSameIngredients(ingredientIds)) {
-            shelfAnalysisRepository.save(userId, snapshot.next(ingredientIds));
-        }
+        snapshot.nextIfChanged(shelf.suspectIngredients().ingredientIds())
+            .ifPresent(next -> shelfAnalysisRepository.save(userId, next));
         return shelf;
     }
 
