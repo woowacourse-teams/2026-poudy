@@ -59,12 +59,12 @@ export function ChipSamples() {
         </div>
       </Section>
 
-      <Section title="Tag · selected (선택 성분 칩, 길게 누르기·올려 두기로 전체 이름)">
+      <Section title="Tag · item (선택 성분 칩, 길게 누르기·올려 두기로 전체 이름)">
         <div className="flex flex-wrap gap-2">
           {chips.map((name) => (
             <Tag
               key={name}
-              variant="selected"
+              variant="item"
               onRemove={() => setChips((current) => current.filter((item) => item !== name))}
             >
               {name}
@@ -73,11 +73,11 @@ export function ChipSamples() {
         </div>
       </Section>
 
-      <Section title="Tag · condition (적용 조건 칩)">
+      <Section title="Tag · summary (적용 조건 칩)">
         <div className="flex flex-wrap gap-2">
-          <Tag variant="condition">나이아신아마이드</Tag>
-          <Tag variant="condition">향료/알레르기 성분</Tag>
-          <Tag variant="condition">{LONG_NAME}</Tag>
+          <Tag variant="summary">나이아신아마이드</Tag>
+          <Tag variant="summary">향료/알레르기 성분</Tag>
+          <Tag variant="summary">{LONG_NAME}</Tag>
         </div>
       </Section>
 

@@ -33,10 +33,10 @@ export type TagTone = keyof typeof TONE;
 export type TagProps =
   | {
       /**
-       * 선택 성분 칩(명세 APP · 선택 성분 칩). 높이 36, 흰 면 + 테두리. 담은 성분을 보여 주고 onRemove 를 주면 ✕ 로 뺀다.
-       * 칩 본문은 누르는 동작이 없다.
+       * 사용자가 고르거나 담은 항목. 높이 36, 흰 면 + 테두리. onRemove 를 주면 ✕ 로 뺀다. ✕ 를 눌러야 하므로 누르는
+       * 높이를 갖는다. 칩 본문은 누르는 동작이 없다. 예: 담은 성분(명세 APP · 선택 성분 칩)
        */
-      readonly variant: "selected";
+      readonly variant: "item";
       /** 전체 이름. 긴 이름은 줄여 보이고, 전체 이름은 접근 가능한 이름과 길게 누르기 툴팁으로 준다. */
       readonly children: string;
       readonly onRemove?: () => void;
@@ -44,8 +44,11 @@ export type TagProps =
       readonly removeLabel?: string;
     }
   | {
-      /** 적용 조건 칩(명세 APP · 적용 조건 칩). 높이 28, 회색 면. 걸린 조건을 보여 주기만 하고 누를 수 없다. */
-      readonly variant: "condition";
+      /**
+       * 걸려 있는 것의 요약. 높이 28, 회색 면. 보여 주기만 하고 누를 수 없어, 요약 줄에 여러 개를 빽빽하게 놓는다.
+       * 예: 결과 위 적용된 조건(명세 APP · 적용 조건 칩)
+       */
+      readonly variant: "summary";
       readonly children: string;
     }
   | {
@@ -81,7 +84,7 @@ export function Tag(props: TagProps) {
   return <NameChip {...props} />;
 }
 
-function NameChip(props: Extract<TagProps, { readonly variant: "selected" | "condition" }>) {
+function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary" }>) {
   const name = props.children;
   const short = shortenName(name);
   const textRef = useRef<HTMLSpanElement>(null);
@@ -90,14 +93,14 @@ function NameChip(props: Extract<TagProps, { readonly variant: "selected" | "con
     const text = textRef.current;
     return short !== name || (text !== null && text.scrollWidth > text.clientWidth);
   });
-  const removable = props.variant === "selected" && props.onRemove !== undefined;
+  const removable = props.variant === "item" && props.onRemove !== undefined;
 
   return (
     <span
       {...anchorProps}
       className={cn(
         "inline-flex max-w-full min-w-0 items-center rounded-full text-text-primary select-none",
-        props.variant === "selected"
+        props.variant === "item"
           ? cn(
               "h-9 gap-1 border border-border-strong bg-background pl-4 text-body leading-none font-semibold",
               removable ? "pr-2" : "pr-4",
@@ -111,7 +114,7 @@ function NameChip(props: Extract<TagProps, { readonly variant: "selected" | "con
       </span>
       <span className="sr-only">{name}</span>
 
-      {props.variant === "selected" && props.onRemove ? (
+      {props.variant === "item" && props.onRemove ? (
         <RemoveButton label={props.removeLabel ?? `${name} 빼기`} onRemove={props.onRemove} />
       ) : null}
 

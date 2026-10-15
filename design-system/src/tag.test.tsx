@@ -17,7 +17,7 @@ describe("Tag", () => {
   it("줄인 칩도 전체 이름을 읽고, 빼기 버튼은 '{이름} 빼기'다", () => {
     const onRemove = vi.fn();
     render(
-      <Tag variant="selected" onRemove={onRemove}>
+      <Tag variant="item" onRemove={onRemove}>
         향료/알레르기 성분
       </Tag>,
     );
@@ -35,7 +35,7 @@ describe("Tag", () => {
     const tooltip = () => document.body.querySelector(":scope > [aria-hidden='true']");
 
     it("줄인 칩을 500ms 누르면 전체 이름을 보이고, 손을 떼면 닫는다", () => {
-      render(<Tag variant="condition">향료/알레르기 성분</Tag>);
+      render(<Tag variant="summary">향료/알레르기 성분</Tag>);
       const chip = screen.getByText("향료/…").parentElement!;
 
       fireEvent.pointerDown(chip, { pointerType: "touch", clientX: 0, clientY: 0 });
@@ -50,7 +50,7 @@ describe("Tag", () => {
     });
 
     it("누른 채 움직이면 스크롤로 보고 열지 않는다", () => {
-      render(<Tag variant="condition">향료/알레르기 성분</Tag>);
+      render(<Tag variant="summary">향료/알레르기 성분</Tag>);
       const chip = screen.getByText("향료/…").parentElement!;
 
       fireEvent.pointerDown(chip, { pointerType: "touch", clientX: 0, clientY: 0 });
@@ -63,8 +63,8 @@ describe("Tag", () => {
     it("마우스는 400ms 올려 두면 열고, 방금 닫힌 직후 옆 칩으로 옮기면 바로 연다", () => {
       render(
         <>
-          <Tag variant="condition">향료/알레르기 성분</Tag>
-          <Tag variant="condition">비스-베헤닐/아이소스테아릴</Tag>
+          <Tag variant="summary">향료/알레르기 성분</Tag>
+          <Tag variant="summary">비스-베헤닐/아이소스테아릴</Tag>
         </>,
       );
       const first = screen.getByText("향료/…").parentElement!;
@@ -83,7 +83,7 @@ describe("Tag", () => {
     });
 
     it("줄이지 않은 칩은 툴팁을 열지 않는다", () => {
-      render(<Tag variant="condition">판테놀</Tag>);
+      render(<Tag variant="summary">판테놀</Tag>);
       const chip = screen.getByText("판테놀", { selector: "[aria-hidden]" }).parentElement!;
 
       fireEvent.pointerDown(chip, { pointerType: "touch", clientX: 0, clientY: 0 });
@@ -98,8 +98,8 @@ describe("Tag 줄 높이", () => {
   it("모든 모양의 글자 줄 높이가 1 이다. 글자 크기 클래스가 뒤에 와도 지워지지 않는다(TYPO T04)", () => {
     const { container } = render(
       <>
-        <Tag variant="selected">판테놀</Tag>
-        <Tag variant="condition">판테놀</Tag>
+        <Tag variant="item">판테놀</Tag>
+        <Tag variant="summary">판테놀</Tag>
         <Tag variant="label" tone="info">
           보습
         </Tag>
