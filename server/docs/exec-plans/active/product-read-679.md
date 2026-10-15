@@ -8,11 +8,13 @@
 
 ## 진행
 
-- [x] 변경 전 live 이미지 확인: e638b89b, 변경 전 7 req/s 측정 시작
+- [x] 변경 전 live 이미지 확인: 467705da. e638b89b 시도는 배포와 겹쳐 대조군에서 제외
 - [x] 자동완성 표시 조회(2 SELECT)와 목록 카드(1 batch SELECT) 분리
 - [x] 빈 제외 검사 생략·포함 상품 집합 선별
 - [x] 회귀·SQL 횟수·전체 verify 검증 (PostgreSQL18, 1,160 tests, 실패0)
-- [ ] staging 배포·동일 조건 재측정 및 이슈 기록
+- staging 배포·동일 조건 재측정·완료 판정은 [#679 결과 댓글](https://github.com/woowacourse-teams/2026-poudy/issues/679#issuecomment-6184612538)에서 관리한다.
+
+GitHub Server CI [38682905191](https://github.com/woowacourse-teams/2026-poudy/actions/runs/38682905191)도 성공했다.
 
 ## 검증·롤백
 
