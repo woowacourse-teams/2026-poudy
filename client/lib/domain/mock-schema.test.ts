@@ -205,6 +205,7 @@ describe("목 응답과 스키마", () => {
       gender: "FEMALE",
       ageRange: "TWENTIES",
       skinType: "COMBINATION",
+      sensitiveSkin: null,
     });
 
     expect(status).toBe(200);
@@ -213,7 +214,12 @@ describe("목 응답과 스키마", () => {
   });
 
   it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
-    const { status, body } = await patch("/users/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
+    const { status, body } = await patch("/users/me/profile", {
+      gender: "OTHER",
+      ageRange: null,
+      skinType: null,
+      sensitiveSkin: null,
+    });
 
     expect(status).toBe(400);
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });

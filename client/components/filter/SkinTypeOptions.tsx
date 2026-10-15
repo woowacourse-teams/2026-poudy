@@ -1,10 +1,12 @@
 "use client";
 
-import type { SkinType, SkinTypeResponse } from "@poudy/api/api.zod";
+import type { SkinTypeResponse } from "@poudy/api/api.zod";
+
+import { SENSITIVE_OPTION, type SkinChoice } from "@/lib/domain/filter";
 
 type SkinTypeOptionsProps = {
-  readonly selected: SkinType | undefined;
-  readonly onSelect: (skinType: SkinType) => void;
+  readonly selected: SkinChoice | undefined;
+  readonly onSelect: (choice: SkinChoice) => void;
   /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
 };
@@ -19,8 +21,8 @@ export function SkinTypeOptions({ selected, onSelect, skinTypes }: SkinTypeOptio
   return (
     /* 한 무리에서 하나만 고르는 자리임을 낭독기에도 알린다. */
     <ul role="radiogroup" aria-label="피부 타입" className="pt-1">
-      {skinTypes.map(({ code, name }) => {
-        const skinType = code as SkinType;
+      {[...skinTypes, SENSITIVE_OPTION].map(({ code, name }) => {
+        const skinType = code as SkinChoice;
         const checked = selected === skinType;
 
         return (

@@ -26,6 +26,7 @@ const member: UserResponse = {
   gender: "FEMALE",
   ageRange: "TWENTIES",
   skinType: null,
+  sensitiveSkin: null,
 };
 
 describe("내 정보 한 항목 바꾸기", () => {
@@ -87,7 +88,34 @@ describe("내 정보 한 항목 바꾸기", () => {
     await user.click(screen.getByRole("button", { name: "저장" }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/my-page"));
-    expect(sent).toHaveBeenCalledWith({ gender: "FEMALE", ageRange: "TWENTIES", skinType: "DRY" });
+    expect(sent).toHaveBeenCalledWith({ gender: "FEMALE", ageRange: "TWENTIES", skinType: "DRY", sensitiveSkin: null });
+  });
+
+  it("민감성을 고르면 피부 타입 대신 민감성 여부로 보낸다", async () => {
+    const user = userEvent.setup();
+    const sent = vi.fn();
+    server.use(
+      http.get("*/api/users/me", () => HttpResponse.json({ ...member, skinType: "DRY" })),
+      http.patch("*/api/users/me/profile", async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        sent(body);
+        return HttpResponse.json({ ...member, ...body });
+      }),
+    );
+    render(<ProfileFieldScreen field="skinType" />);
+
+    await user.click(await screen.findByRole("radio", { name: /민감성/ }));
+    await user.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/my-page"));
+    expect(sent).toHaveBeenCalledWith({ gender: "FEMALE", ageRange: "TWENTIES", skinType: null, sensitiveSkin: true });
+  });
+
+  it("민감성 여부가 참이면 민감성을 고른 것으로 보여 준다", async () => {
+    server.use(http.get("*/api/users/me", () => HttpResponse.json({ ...member, sensitiveSkin: true })));
+    render(<ProfileFieldScreen field="skinType" />);
+
+    expect(await screen.findByRole("radio", { name: /민감성/ })).toBeChecked();
   });
 
   it("마이페이지에서 들어왔으면 저장한 뒤 앞 화면으로 돌아간다", async () => {

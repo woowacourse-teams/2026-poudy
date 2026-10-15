@@ -24,6 +24,7 @@ import {
   pipelineProductIngredients,
   productCategoryIds,
   productSkinTypes,
+  sensitiveProductIds,
   productDetails,
   productPartSets,
   productSimilarities,
@@ -175,6 +176,7 @@ const filterProducts = (url: URL) => {
   const moisture = numbers(url, "moistureLevel");
   const oil = numbers(url, "oilLevel");
   const skinType = url.searchParams.get("skinType")?.trim();
+  const sensitiveSkin = url.searchParams.get("sensitiveSkin") === "true";
   const codes = strings(url, "excludeCodes");
   const include = numbers(url, "includeIngredientIds");
   const exclude = numbers(url, "excludeIngredientIds");
@@ -196,6 +198,7 @@ const filterProducts = (url: URL) => {
     if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
     if (oil.length && !oil.includes(product.oilLevel)) return false;
     if (skinType && !matchesSkinType(skinType, product)) return false;
+    if (sensitiveSkin && !sensitiveProductIds.has(product.id)) return false;
 
     const has = ingredientsOf(product.id);
     // 제외 조건은 하나라도 들어 있으면 뺀다.
@@ -260,6 +263,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   ],
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  sensitiveSkin: product.sensitiveSkin,
   productParts: [{ id: product.id, name: null, cautionCount: 6 }],
   // 목록에는 성분이 없어 어느 성분군이 빠졌는지 알 수 없다. 모두 들어 있는 것으로 둔다.
   selectedPart: {
@@ -348,7 +352,6 @@ const searchKeywordRankings = [
 const skinTypes = [
   { code: "DRY", name: "건성" },
   { code: "OILY", name: "지성" },
-  { code: "SENSITIVE", name: "민감성" },
   { code: "COMBINATION", name: "복합성" },
 ] as const;
 
@@ -513,6 +516,7 @@ const mockSession: { member: UserResponse } = {
     gender: null,
     ageRange: null,
     skinType: null,
+    sensitiveSkin: null,
   },
 };
 

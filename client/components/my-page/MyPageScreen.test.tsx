@@ -21,6 +21,7 @@ const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">)
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
+  sensitiveSkin: null,
   ...profile,
 });
 
