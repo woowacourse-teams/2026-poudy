@@ -13,7 +13,9 @@ import { Icon } from "@/components/ui/icons/Icon";
 import type { IconId } from "@/components/ui/icons/sprite";
 import { TopBar } from "@/components/ui/TopBar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
+import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { AGE_RANGES, GENDERS, profileLabel, SKIN_TYPES, skinChoiceOf } from "@/lib/domain/member-profile";
+import { filterCountLabel } from "@/lib/domain/skin-filter";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import {
@@ -75,6 +77,8 @@ export function MyPageScreen() {
   const [adminSession, setAdminSession] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  // 나만의 필터에 든 성분 수. 읽지 못하면 값 자리를 비워 둔다.
+  const [filterCount, setFilterCount] = useState<number>();
   const saved = useSyncExternalStore(subscribeSavedProducts, getSavedProductsSnapshot, getSavedProductsServerSnapshot);
 
   useEffect(() => {
@@ -93,6 +97,13 @@ export function MyPageScreen() {
         setLoadFailed(true);
       });
   }, [router]);
+
+  useEffect(() => {
+    fetchSkinFilter().then(
+      (filter) => setFilterCount(filter.items.length),
+      () => undefined,
+    );
+  }, []);
 
   const signOut = () => {
     setPending(true);
@@ -178,6 +189,15 @@ export function MyPageScreen() {
             icon="bookmark"
             label="위시리스트"
             value={savedCountLabel(saved.status, saved.ids.length)}
+          />
+        </Section>
+
+        <Section title="검색">
+          <LinkRow
+            href="/my-page/filter"
+            icon="filter"
+            label="나만의 필터"
+            value={filterCount === undefined ? "" : filterCountLabel(filterCount)}
           />
         </Section>
 

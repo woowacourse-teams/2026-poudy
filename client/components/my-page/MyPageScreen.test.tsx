@@ -51,6 +51,19 @@ describe("마이페이지", () => {
     expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveAttribute("href", "/wishlist");
   });
 
+  it("나만의 필터에 든 성분 수를 보여 주고 관리 화면으로 보낸다", async () => {
+    server.use(
+      http.get("*/api/users/me/skin-filter", () =>
+        HttpResponse.json({ items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [] }] }),
+      ),
+    );
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    const row = screen.getByRole("link", { name: /나만의 필터/ });
+    await waitFor(() => expect(row).toHaveTextContent("성분 1개"));
+    expect(row).toHaveAttribute("href", "/my-page/filter");
+  });
+
   it("로그아웃은 시트에서 한 번 더 확인한 뒤에 하고 로그인 화면으로 보낸다", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
