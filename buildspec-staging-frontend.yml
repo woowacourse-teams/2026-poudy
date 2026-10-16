@@ -23,7 +23,7 @@ phases:
       - rm -rf "${CODEBUILD_SRC_DIR}/.poudy-package" "${CODEBUILD_SRC_DIR}/.artifacts"
   build:
     commands:
-      - ./deploy/scripts/package-frontend.sh "${CODEBUILD_SRC_DIR}/.poudy-package/frontend"
+      - ./deploy/scripts/measure-build.sh frontend ./deploy/scripts/package-frontend.sh "${CODEBUILD_SRC_DIR}/.poudy-package/frontend"
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib" "${CODEBUILD_SRC_DIR}/.artifacts/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
       - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/app/"
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
@@ -50,4 +50,5 @@ artifacts:
     - systemd/**/*
     - app/**/*
     - build-metadata.txt
+    - metrics/**/*
   discard-paths: no
