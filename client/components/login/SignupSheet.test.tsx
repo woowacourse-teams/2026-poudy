@@ -27,7 +27,7 @@ describe("가입 확인 시트", () => {
     await user.click(screen.getByRole("checkbox", { name: "만 14세 이상이에요" }));
     await user.click(submit);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/onboarding"));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/signup/profile"));
   });
 
   it("가입하지 못하면 다시 시도하라고 알린다", async () => {

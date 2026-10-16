@@ -122,7 +122,7 @@ const startLabel = (answered: boolean): string => {
  * 마이페이지 피부 타입(S55c)과 같이 피부 타입과 민감한지를 따로 저장한다.
  * 명세의 '내 피부 타입을 잘 모르겠어요' 링크는 피부 타입 테스트를 열기 전까지 숨긴다.
  */
-export function OnboardingScreen() {
+export function SignupProfileScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
   const [skinType, setSkinType] = useState<SkinType | null>(null);

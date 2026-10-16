@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
-import { OnboardingScreen } from "./OnboardingScreen";
+import { SignupProfileScreen } from "./SignupProfileScreen";
 
 import { server } from "@/mocks/server";
 
@@ -29,7 +29,7 @@ const member = (profile: Profile): UserResponse => ({
 
 const renderWith = async (profile: Profile) => {
   server.use(http.get("*/api/users/me", () => HttpResponse.json(member(profile))));
-  render(<OnboardingScreen />);
+  render(<SignupProfileScreen />);
   const loaded = [profile.gender, profile.ageRange, profile.skinType, profile.sensitiveSkin].some(
     (value) => value !== null && value !== undefined,
   );

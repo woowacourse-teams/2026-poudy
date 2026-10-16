@@ -24,8 +24,8 @@ const tokenStrictFiles = [
   "app/login/**/*.{ts,tsx}",
   "components/login/**/*.{ts,tsx}",
   "components/skin-filter/**/*.{ts,tsx}",
-  "app/onboarding/**/*.{ts,tsx}",
-  "components/onboarding/**/*.{ts,tsx}",
+  "app/signup/**/*.{ts,tsx}",
+  "components/signup/**/*.{ts,tsx}",
 ];
 
 const eslintConfig = defineConfig([

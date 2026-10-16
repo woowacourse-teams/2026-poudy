@@ -59,7 +59,7 @@ export function SignupSheet() {
         findMe()
           .then((member) => rememberLastLogin(member.provider))
           .catch(() => undefined);
-        router.replace("/onboarding");
+        router.replace("/signup/profile");
       })
       .catch((error: unknown) => {
         const failure = failureOf(error);
