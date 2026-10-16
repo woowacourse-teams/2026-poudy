@@ -12,6 +12,9 @@ import { server } from "@/mocks/server";
 
 const { router } = vi.hoisted(() => ({ router: { replace: vi.fn() } }));
 
+// 요청이 실패하면 api client 가 분석 모듈을 늦게 불러온다. 테스트가 끝난 뒤 불러오지 않게 미리 바꿔 둔다.
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
   useSearchParams: () => new URLSearchParams("signup=required"),
