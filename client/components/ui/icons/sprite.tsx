@@ -52,6 +52,15 @@ export const ICON_IDS = [
   "droplet-solid",
   "droplet-outline",
   "book",
+  "help-circle",
+  "dots-vertical",
+  "pencil",
+  "eraser",
+  "thumb-up",
+  "thumb-down",
+  "lock",
+  "zoom-exclamation",
+  "flask-solid",
 ] as const;
 
 export type IconId = (typeof ICON_IDS)[number];
@@ -362,6 +371,64 @@ export function IconSprite() {
             stroke="currentColor"
             strokeWidth={0.8}
             strokeLinejoin="round"
+          />
+        </symbol>
+        {/* Tabler · help-circle. 선반 '기능 설명' */}
+        <symbol id="icon-help-circle" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M12 16v.01" />
+          <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
+        </symbol>
+
+        {/* Tabler · dots-vertical. 선반 제품 행의 더보기 */}
+        <symbol id="icon-dots-vertical" viewBox="0 0 24 24">
+          <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+          <path d="M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+          <path d="M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        </symbol>
+
+        {/* Tabler · pencil. 선반 제품 메뉴 '평가 고치기' */}
+        <symbol id="icon-pencil" viewBox="0 0 24 24">
+          <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+          <path d="M13.5 6.5l4 4" />
+        </symbol>
+
+        {/* Tabler · eraser. 선반 제품 메뉴 '평가 지우기' */}
+        <symbol id="icon-eraser" viewBox="0 0 24 24">
+          <path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3" />
+          <path d="M18 13.3l-6.3 -6.3" />
+        </symbol>
+
+        {/* Tabler · thumb-up. 선반 평가 '잘 맞았어요' */}
+        <symbol id="icon-thumb-up" viewBox="0 0 24 24">
+          <path d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3" />
+        </symbol>
+
+        {/* Tabler · thumb-down. 선반 평가 '안 맞았어요' */}
+        <symbol id="icon-thumb-down" viewBox="0 0 24 24">
+          <path d="M7 13v-8a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v7a1 1 0 0 0 1 1h3a4 4 0 0 1 4 4v1a2 2 0 0 0 4 0v-5h3a2 2 0 0 0 2 -2l-1 -5a2 3 0 0 0 -2 -2h-7a3 3 0 0 0 -3 3" />
+        </symbol>
+
+        {/* Tabler · lock. 선반 소개 '나만 보는 선반' */}
+        <symbol id="icon-lock" viewBox="0 0 24 24">
+          <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+          <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+          <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+        </symbol>
+
+        {/* Tabler · zoom-exclamation. 검색 결과 없음 */}
+        <symbol id="icon-zoom-exclamation" viewBox="0 0 24 24">
+          <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+          <path d="M21 21l-6 -6" />
+          <path d="M10 13v.01" />
+          <path d="M10 7v3" />
+        </symbol>
+
+        {/* 주의 성분. 플라스크 안에 느낌표를 뚫은 면 그림이다. 디자인(poudy-ui.pen)의 그림을 그대로 쓴다. */}
+        <symbol id="icon-flask-solid" viewBox="0 0 24 24">
+          <path
+            d="M8.2 0h7.6c.33 0 .6 .27 .6 .6v1c0 .33 -.27 .6 -.6 .6h-.8v3.74a1.2 1.2 0 0 0 .16 .6l7.31 12.66a3.2 3.2 0 0 1 -2.77 4.8h-15.4a3.2 3.2 0 0 1 -2.77 -4.8l7.31 -12.66a1.2 1.2 0 0 0 .16 -.6v-3.74h-.8c-.33 0 -.6 -.27 -.6 -.6v-1c0 -.33 .27 -.6 .6 -.6z m3.8 11a1.15 1.15 0 0 1 1.15 1.15v5a1.15 1.15 0 0 1 -2.3 0v-5a1.15 1.15 0 0 1 1.15 -1.15z m1.15 9.85a1.15 1.15 0 1 1 -2.3 0a1.15 1.15 0 1 1 2.3 0z"
+            fillRule="evenodd"
           />
         </symbol>
       </defs>

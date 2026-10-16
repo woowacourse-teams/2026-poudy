@@ -12,6 +12,8 @@ import { ShelfFaq } from "./ShelfFaq";
 import { ShelfProductRow } from "./ShelfProductRow";
 
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
+import { Icon } from "@/components/ui/icons/Icon";
+import type { IconId } from "@/components/ui/icons/sprite";
 import { TopBar } from "@/components/ui/TopBar";
 
 /*
@@ -66,8 +68,9 @@ function Hero() {
       <h1 className="flex flex-col items-center gap-1 text-center">
         <span className="text-section font-bold text-text-primary">안 맞았던 제품만 알려 주면</span>
         <span className="text-hero font-bold text-text-primary">함께 든 성분을 찾아 주는</span>
-        {/* TODO(#729): '내 선반' 앞 보관함 아이콘(Tabler archive). Icon 부품이 들어오면 넣는다. */}
-        <span className="text-hero font-bold text-brand-text">내 선반</span>
+        <span className="flex items-center gap-1 text-hero font-bold text-brand-text">
+          <Icon name="archive" size={24} strokeWidth={2} className="text-brand-strong" />내 선반
+        </span>
       </h1>
       <div inert className="flex w-full flex-col rounded-t-4xl bg-background px-3 pt-3">
         <p className="pt-2 pb-1 text-caption font-semibold text-text-secondary">사용 중 · 3</p>
@@ -80,10 +83,15 @@ function Hero() {
 }
 
 const FEATURES = [
-  { lead: "제품을 올리고", title: "잘 맞았는지만 골라요", tone: "success" },
-  { lead: "안 맞은 제품이 2개 이상이면", title: "함께 든 성분을 찾아 드려요", tone: "brand" },
-  { lead: "고른 성분을 검색에서 제외하면", title: "검색할 때마다 빼고 보여 드려요", tone: "info" },
-] as const;
+  { lead: "제품을 올리고", title: "잘 맞았는지만 골라요", tone: "success", icon: "thumb-up" },
+  { lead: "안 맞은 제품이 2개 이상이면", title: "함께 든 성분을 찾아 드려요", tone: "brand", icon: "search" },
+  { lead: "고른 성분을 검색에서 제외하면", title: "검색할 때마다 빼고 보여 드려요", tone: "info", icon: "filter" },
+] as const satisfies readonly {
+  readonly lead: string;
+  readonly title: string;
+  readonly tone: string;
+  readonly icon: IconId;
+}[];
 
 function Features() {
   return (
@@ -100,16 +108,17 @@ function Features() {
               <span className="text-title text-text-secondary">{feature.lead}</span>
               <span className="text-bar font-bold text-text-primary">{feature.title}</span>
             </p>
-            {/* TODO(#729): 칸 안의 아이콘(엄지 · 돋보기 · 필터, 24). Icon 부품이 들어오면 넣는다. */}
             <span
               aria-hidden="true"
               className={cn(
-                "size-12 shrink-0 rounded-lg",
-                feature.tone === "success" && "bg-success-soft",
-                feature.tone === "brand" && "bg-brand-soft",
-                feature.tone === "info" && "bg-info-soft",
+                "flex size-12 shrink-0 items-center justify-center rounded-lg",
+                feature.tone === "success" && "bg-success-soft text-success-text",
+                feature.tone === "brand" && "bg-brand-soft text-brand-text",
+                feature.tone === "info" && "bg-info-soft text-info-text",
               )}
-            />
+            >
+              <Icon name={feature.icon} size={24} strokeWidth={2} />
+            </span>
           </li>
         ))}
       </ul>
@@ -127,8 +136,12 @@ function Privacy() {
         나만 볼 수 있어요
       </h2>
       <div className="flex w-full flex-col items-center gap-3 rounded-4xl bg-brand-soft px-5 py-6">
-        {/* TODO(#729): 자물쇠 아이콘(Tabler lock, 24 · ui-brand-strong). Icon 부품이 들어오면 원 안에 넣는다. */}
-        <span aria-hidden="true" className="size-14 rounded-full bg-background" />
+        <span
+          aria-hidden="true"
+          className="flex size-14 items-center justify-center rounded-full bg-background text-brand-strong"
+        >
+          <Icon name="lock" size={28} strokeWidth={2} />
+        </span>
         <ul className="flex flex-col items-center gap-1 text-center text-body text-text-secondary">
           <li>· 다른 사람에게는 보이지 않아요</li>
           <li>· 평가는 언제든 고치거나 지울 수 있어요</li>

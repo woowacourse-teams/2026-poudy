@@ -5,14 +5,18 @@ import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useId } from "react";
 
+import { Icon } from "@/components/ui/icons/Icon";
+import type { IconId } from "@/components/ui/icons/sprite";
+
 const CHOICES = [
-  { value: "GOOD", label: "잘 맞았어요" },
-  { value: "BAD", label: "안 맞았어요" },
-] as const satisfies readonly { readonly value: RatingPreference; readonly label: string }[];
+  { value: "GOOD", label: "잘 맞았어요", icon: "thumb-up" },
+  { value: "BAD", label: "안 맞았어요", icon: "thumb-down" },
+] as const satisfies readonly { readonly value: RatingPreference; readonly label: string; readonly icon: IconId }[];
 
 type ChoiceProps = {
   readonly value: RatingPreference;
   readonly label: string;
+  readonly icon: IconId;
   readonly selected: boolean;
   readonly onPress: () => void;
 };
@@ -21,7 +25,7 @@ type ChoiceProps = {
  * 평가 선택지 하나(명세 APP · 평가 선택지). 고르면 잘 맞았어요는 초록, 안 맞았어요는 빨강 테두리와 면이 된다.
  * 누르는 순간 선택 모양이 바뀌므로 크기 피드백은 두지 않는다(STATE S07).
  */
-function Choice({ value, label, selected, onPress }: ChoiceProps) {
+function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
   const { pressableProps } = usePressable();
 
   return (
@@ -37,7 +41,10 @@ function Choice({ value, label, selected, onPress }: ChoiceProps) {
         selected && value === "BAD" && "border-danger-action bg-danger-soft text-danger-action",
       )}
     >
-      {/* TODO(#729): 엄지 아이콘(Tabler thumb-up · thumb-down, 20). Icon 부품이 들어오면 라벨 앞에 넣는다. */}
+      {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. */}
+      <span className={cn("shrink-0", !selected && "text-text-secondary")}>
+        <Icon name={icon} size={20} strokeWidth={2} />
+      </span>
       {label}
     </button>
   );
@@ -76,6 +83,7 @@ export function RatingChoice({ value, onValueChange, showLabel = true }: RatingC
             key={choice.value}
             value={choice.value}
             label={choice.label}
+            icon={choice.icon}
             selected={value === choice.value}
             onPress={() => onValueChange(value === choice.value ? null : choice.value)}
           />

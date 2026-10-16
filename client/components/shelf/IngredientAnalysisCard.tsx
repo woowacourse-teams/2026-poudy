@@ -34,7 +34,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
       )}
     >
       {isNew ? <span aria-hidden="true" className="size-1.5 rounded-full bg-brand-strong" /> : null}
-      {item.inFilter ? <Icon name="check" size={14} /> : null}
+      {item.inFilter ? <Icon name="check" size={14} strokeWidth={2} /> : null}
       {item.koreanName}
       {item.inFilter ? <span className="sr-only">, 검색에서 제외 중</span> : null}
       {isNew ? <span className="sr-only">, 새로 나온 성분</span> : null}
@@ -64,7 +64,7 @@ function GuideRow({ href, icon, action, children }: GuideRowProps) {
       <span className="min-w-0 flex-1 text-body-sm whitespace-pre-line text-text-primary">{children}</span>
       <span className="flex shrink-0 items-center text-body-sm font-semibold text-brand-text">
         {action}
-        <Icon name="chevron-right" size={16} />
+        <Icon name="chevron-right" size={16} strokeWidth={2} />
       </span>
     </Link>
   );
@@ -93,7 +93,7 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
           aria-hidden="true"
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-danger-soft"
         >
-          {/* TODO(#729): 주의 성분 아이콘(Tabler flask, 14 · ui-danger-action). Icon 부품이 들어오면 넣는다. */}
+          <Icon name="flask-solid" size={14} className="text-danger-action" />
         </span>
         <h2 id="ingredient-analysis-title" className="text-title font-bold text-text-primary">
           안 맞을 수 있는 성분
@@ -113,13 +113,17 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
       </ul>
 
       {askSkinType ? (
-        <GuideRow href="/my-page/skin-type" icon={<Icon name="info" size={16} />} action="알려 주기">
+        <GuideRow
+          href="/my-page/skin-type"
+          icon={<Icon name="info-circle" size={16} strokeWidth={2} />}
+          action="알려 주기"
+        >
           피부 타입을 알려 주면 더 좁혀 드려요
         </GuideRow>
       ) : null}
 
       <p className="flex items-center gap-1 text-caption text-text-secondary">
-        <Icon name="info" size={14} />
+        <Icon name="info-circle" size={14} strokeWidth={2} />
         {analysisHint(analysis.badProductCount)}
       </p>
 
@@ -130,12 +134,7 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
       ) : null}
 
       {summary.showManage ? (
-        <GuideRow
-          href="/my-page/filter"
-          // TODO(#729): 필터 아이콘(Tabler filter, 16). Icon 부품이 들어오면 넣는다.
-          icon={null}
-          action="관리하기"
-        >
+        <GuideRow href="/my-page/filter" icon={<Icon name="filter" size={16} strokeWidth={2} />} action="관리하기">
           {`검색에서 제외 중인 성분 ${filterCount}개`}
           {summary.outsideResultCount > 0 ? `\n${summary.outsideResultCount}개는 지금 결과에 없어요` : null}
         </GuideRow>

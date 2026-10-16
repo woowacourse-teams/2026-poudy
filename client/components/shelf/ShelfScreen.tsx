@@ -34,12 +34,15 @@ function ShelfHeader({ onHelp }: ShelfHeaderProps) {
       variant="root"
       right={
         <div className="flex items-center">
-          {/* TODO(#729): 도움말 아이콘(Tabler help-circle). Icon 부품이 들어오면 넣는다. */}
-          <IconButton label="선반 기능 설명" onClick={onHelp} icon={null} />
+          <IconButton
+            label="선반 기능 설명"
+            onClick={onHelp}
+            icon={<Icon name="help-circle" size={24} strokeWidth={2} />}
+          />
           <IconButton
             label="제품 추가"
             onClick={() => router.push("/shelf/add")}
-            icon={<Icon name="plus" size={24} />}
+            icon={<Icon name="plus" size={24} strokeWidth={2} />}
           />
         </div>
       }

@@ -19,6 +19,7 @@ import { ShelfRatingForm } from "./ShelfRatingForm";
  */
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
+import type { IconId } from "@/components/ui/icons/sprite";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { draftOf, ratingBadge, type RatingDraft, withObjectParticle } from "@/lib/domain/shelf";
 
@@ -45,7 +46,7 @@ function ProductHead({ item, title, onClose }: ProductHeadProps) {
           </p>
           <BottomSheet.Title className="text-screen font-bold text-text-primary">{title}</BottomSheet.Title>
         </div>
-        <IconButton label="닫기" onClick={onClose} icon={<Icon name="x" size={24} />} />
+        <IconButton label="닫기" onClick={onClose} icon={<Icon name="x" size={24} strokeWidth={2} />} />
       </div>
     </BottomSheet.CustomHeader>
   );
@@ -111,13 +112,14 @@ function RatingSheetContent({
 }
 
 type MenuRowProps = {
+  readonly icon: IconId;
   readonly label: string;
   readonly onPress: () => void;
   readonly danger?: boolean;
 };
 
 /** 제품 메뉴의 행. 행 전체가 누르는 영역이다. */
-function MenuRow({ label, onPress, danger = false }: MenuRowProps) {
+function MenuRow({ icon, label, onPress, danger = false }: MenuRowProps) {
   const { pressableProps } = usePressable();
 
   return (
@@ -130,7 +132,9 @@ function MenuRow({ label, onPress, danger = false }: MenuRowProps) {
         danger ? "text-danger-action" : "text-text-primary",
       )}
     >
-      {/* TODO(#729): 행 앞 아이콘(연필 · 지우개 · 보관함 · 휴지통, 20). Icon 부품이 들어오면 넣는다. */}
+      <span className={cn("shrink-0", !danger && "text-text-body")}>
+        <Icon name={icon} size={20} strokeWidth={2} />
+      </span>
       {label}
     </button>
   );
@@ -171,15 +175,15 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
             </div>
           </BottomSheet.CustomHeader>
           <div className="flex flex-col pb-safe">
-            <MenuRow label="평가 고치기" onPress={() => onEdit(item)} />
-            <MenuRow label="평가 지우기" onPress={() => onClear(item)} />
+            <MenuRow icon="pencil" label="평가 고치기" onPress={() => onEdit(item)} />
+            <MenuRow icon="eraser" label="평가 지우기" onPress={() => onClear(item)} />
             {item.usageStatus === "IN_USE" ? (
-              <MenuRow label="사용했던으로 옮기기" onPress={() => onMove(item, "USED")} />
+              <MenuRow icon="archive" label="사용했던으로 옮기기" onPress={() => onMove(item, "USED")} />
             ) : (
-              <MenuRow label="사용 중으로 옮기기" onPress={() => onMove(item, "IN_USE")} />
+              <MenuRow icon="archive" label="사용 중으로 옮기기" onPress={() => onMove(item, "IN_USE")} />
             )}
             <div className="border-t border-border">
-              <MenuRow label="선반에서 빼기" danger onPress={() => onRemove(item)} />
+              <MenuRow icon="trash" label="선반에서 빼기" danger onPress={() => onRemove(item)} />
             </div>
           </div>
         </>

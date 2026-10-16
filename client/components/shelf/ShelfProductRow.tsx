@@ -7,6 +7,7 @@ import { IconButton } from "@poudy/design-system/icon-button";
 
 import { productImageSrc } from "./product-image-src";
 
+import { Icon } from "@/components/ui/icons/Icon";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { isRated, ratingBadge, ratingSummary } from "@/lib/domain/shelf";
 
@@ -59,8 +60,7 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy" }: 
           <IconButton
             label={`${product.name} 메뉴`}
             onClick={onOpenMenu}
-            // TODO(#729): 더보기 아이콘(Tabler dots-vertical). Icon 부품이 들어오면 넣는다.
-            icon={null}
+            icon={<Icon name="dots-vertical" size={20} strokeWidth={2} className="text-text-secondary" />}
           />
         ) : null}
       </div>
