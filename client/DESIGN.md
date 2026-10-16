@@ -2,13 +2,13 @@
 
 색상·폰트·간격 표를 이 문서에 복제하지 않습니다. 현재 기준은 다음 원본을 따릅니다.
 
-| 대상 | 기준 문서·파일 |
-|---|---|
-| 명세와 화면 값 | `design/poudy-ui.pen` |
-| 토큰·컴포넌트·린트 사용법 | [디자인 시스템](../design-system/README.md) |
-| 토큰 실제 값 | [tokens.css](../design-system/src/tokens.css) |
-| 앱 폰트와 전역 스타일 | [globals.css](app/globals.css) |
-| 실행·검사 방법 | [client 안내](README.md) |
+| 대상                      | 기준 문서·파일                                |
+| ------------------------- | --------------------------------------------- |
+| 명세와 화면 값            | `design/poudy-ui.pen`                         |
+| 토큰·컴포넌트·린트 사용법 | [디자인 시스템](../design-system/README.md)   |
+| 토큰 실제 값              | [tokens.css](../design-system/src/tokens.css) |
+| 앱 폰트와 전역 스타일     | [globals.css](app/globals.css)                |
+| 실행·검사 방법            | [client 안내](README.md)                      |
 
 이전 색상 표와 Noto Sans KR 기반 설명은 현재 코드와 달라 제거했습니다.
 과거 내용은 Git 이력에서 확인할 수 있습니다.
