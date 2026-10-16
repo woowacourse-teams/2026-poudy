@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,6 +106,40 @@ class ShelfServiceConcurrencyTest {
         }
     }
 
+    @Test
+    @DisplayName("피부 정보 변경 뒤 다시 계산도 같은 회원의 선반 변경이 끝날 때까지 기다린다")
+    void serializesSkinChangeRefreshWithShelfChanges() throws Exception {
+        long userId = createUser();
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        CountDownLatch firstChanged = new CountDownLatch(1);
+        CountDownLatch commitFirst = new CountDownLatch(1);
+        AtomicInteger firstBackendPid = new AtomicInteger();
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            Future<?> first = executor.submit(() -> transaction.executeWithoutResult(ignored -> {
+                firstBackendPid.set(jdbc.queryForObject("select pg_backend_pid()", Integer.class));
+                Change.ADD.apply(shelfService, userId, 15L);
+                firstChanged.countDown();
+                await(commitFirst);
+            }));
+            try {
+                assertThat(firstChanged.await(5, TimeUnit.SECONDS)).isTrue();
+                Future<?> refresh = executor.submit(() -> shelfService.refreshAnalysisForSkinChange(userId));
+                awaitBlockedBy(firstBackendPid.get(), refresh);
+
+                commitFirst.countDown();
+                first.get(5, TimeUnit.SECONDS);
+                refresh.get(5, TimeUnit.SECONDS);
+
+                assertThat(analysisRepository.find(userId).newByIngredientId())
+                    .isNotEmpty()
+                    .allSatisfy((id, isNew) -> assertThat(isNew).isFalse());
+            } finally {
+                commitFirst.countDown();
+            }
+        }
+    }
+
     private long createUser() {
         String identity = UUID.randomUUID().toString();
         long id = userRepository.save(
@@ -133,6 +168,27 @@ class ShelfServiceConcurrencyTest {
             Thread.sleep(10);
         }
         throw new AssertionError("두 번째 요청의 잠금 대기를 확인하지 못했습니다.");
+    }
+
+    private void awaitBlockedBy(int blockingBackendPid, Future<?> request) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            if (Boolean.TRUE.equals(
+                jdbc.queryForObject(
+                    "select exists(select 1 from pg_stat_activity where ? = any(pg_blocking_pids(pid)))",
+                    Boolean.class,
+                    blockingBackendPid
+                )
+            )) {
+                return;
+            }
+            if (request.isDone()) {
+                request.get(5, TimeUnit.SECONDS);
+                throw new AssertionError("다시 계산이 선반 변경 트랜잭션을 기다리지 않았습니다.");
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("다시 계산의 잠금 대기를 확인하지 못했습니다.");
     }
 
     private static void await(CountDownLatch latch) {

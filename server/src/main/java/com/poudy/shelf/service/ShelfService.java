@@ -23,6 +23,7 @@ import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -82,16 +83,26 @@ public class ShelfService {
     @Transactional
     public ShelfItem update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         shelfProductRepository.lockShelf(userId);
-        if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
-            throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
+        ShelfProduct shelfProduct = shelfProductRepository.find(userId, productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
+        shelfProductRepository.update(userId, productId, usageStatus, rating);
+        if (shelfProduct.changesPreferenceTo(rating)) {
+            return refreshAnalysis(userId).item(productId);
         }
-        return refreshAnalysis(userId).item(productId);
+        return findShelf(userId).item(productId);
     }
 
     @Transactional
     public void remove(long userId, long productId) {
         shelfProductRepository.lockShelf(userId);
-        shelfProductRepository.delete(userId, productId);
+        if (shelfProductRepository.delete(userId, productId)) {
+            refreshAnalysis(userId);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void refreshAnalysisForSkinChange(long userId) {
+        shelfProductRepository.lockShelf(userId);
         refreshAnalysis(userId);
     }
 
@@ -104,12 +115,11 @@ public class ShelfService {
         );
     }
 
-    // 평가가 바뀐 같은 트랜잭션에서 결과를 다시 계산해, 직전 결과와 성분이 다를 때만 새 성분을 다시 표시한다.
+    // 제품을 담거나 빼거나 호불호나 피부 정보가 바뀐 트랜잭션에서 결과를 다시 계산해 새 성분을 다시 표시한다.
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
-        snapshot.nextIfChanged(shelf.suspectIngredients().ingredientIds())
-            .ifPresent(next -> shelfAnalysisRepository.save(userId, next));
+        shelfAnalysisRepository.save(userId, snapshot.next(shelf.suspectIngredients().ingredientIds()));
         return shelf;
     }
 

@@ -1191,6 +1191,7 @@ export type patch_UpdateMyProfile = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
