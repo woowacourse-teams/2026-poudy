@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { CategoryProductsEmpty } from "./empty";
+
 import { RevealingCategoryTrack } from "@/components/directory/CategoryTrack";
 import { CategoryTrackSkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
@@ -152,6 +154,7 @@ async function CategoryProducts({
         stickyChips="category"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
+        empty={<CategoryProductsEmpty />}
       />
     </>
   );

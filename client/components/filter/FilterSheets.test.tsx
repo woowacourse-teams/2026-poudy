@@ -25,7 +25,7 @@ vi.mock("next/navigation", () => ({
 const countIs = (count: number) => server.use(http.get("*/api/products/count", () => HttpResponse.json({ count })));
 
 const openSheet = async (name: RegExp) => {
-  render(<ProductList excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
 
   await waitFor(() => expect(screen.getByRole("list")).toBeInTheDocument());
   await userEvent.click(screen.getByRole("button", { name }));

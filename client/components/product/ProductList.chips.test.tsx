@@ -30,7 +30,7 @@ const excludeCodes: readonly IngredientGroupResponse[] = [
 
 const setup = (query: string) => {
   params.current = new URLSearchParams(query);
-  render(<ProductList excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
 };
 
 const chipCount = async () =>

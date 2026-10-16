@@ -9,6 +9,7 @@ import { IconButton } from "../src/icon-button";
 import { Icon } from "./icons";
 import { ChipSamples } from "./chip-samples";
 import { ChoiceSamples } from "./choice-samples";
+import { FeedbackSamples } from "./feedback-samples";
 import { InputSamples } from "./input-samples";
 import { Section } from "./section";
 import { TabSamples } from "./tab-samples";
@@ -79,6 +80,7 @@ function Preview() {
       <ChoiceSamples />
       <ChipSamples />
       <TabSamples />
+      <FeedbackSamples />
     </main>
   );
 }

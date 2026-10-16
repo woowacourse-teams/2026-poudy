@@ -1,7 +1,11 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
-import { type MouseEvent, useEffect, useLayoutEffect, useRef } from "react";
+import { Button } from "@poudy/design-system/button";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { LoadMore } from "@poudy/design-system/load-more";
+import { useRouter } from "next/navigation";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRowsSkeleton } from "./ProductListSkeleton";
@@ -15,7 +19,6 @@ import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, serializeFilter, skinChoiceOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
-import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import { type InitialPage, useProductPages } from "@/lib/hooks/useProductPages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
@@ -30,6 +33,11 @@ type ProductRowsProps = {
   readonly onCloseSheet: () => void;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
+  /**
+   * 결과가 0개일 때 그릴 빈 상태(FEEDBACK F03). 화면마다 문구가 달라 반드시 넘긴다. 컴포넌트는 그 화면의 경로 옆
+   * `empty.tsx` 에 둔다(예: `app/products/empty.tsx`).
+   */
+  readonly empty: ReactNode;
 };
 
 /** 조건에 걸린 말이 무엇인지. 분석 이벤트에만 쓴다. */
@@ -57,16 +65,17 @@ const pageHref = (basePath: string, filter: Filter, page: number): string => {
   return `${basePath}?${query}`;
 };
 
-/** 다음 장 링크의 문구. 실패했으면 저절로 다시 부르지 않으므로 누르라고 알린다. */
-const nextLabel = (loading: boolean, failed: boolean): string => {
-  if (loading) return "불러오는 중…";
-  if (failed) return "불러오지 못했어요 · 다시 시도";
-  return "제품 더 보기";
+const previousStatus = (loading: boolean, failed: boolean) => {
+  if (loading) return "loading";
+  if (failed) return "failed";
+  return "idle";
 };
 
-/** 새 탭으로 여는 클릭은 브라우저에 맡긴다. */
-const opensElsewhere = (event: MouseEvent<HTMLAnchorElement>): boolean =>
-  event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+const nextStatus = (hasNext: boolean, loading: boolean, failed: boolean) => {
+  if (failed) return "failed";
+  if (loading) return "loading";
+  return hasNext ? "idle" : "end";
+};
 
 /**
  * 정렬 줄과 제품 행. 첫 장이 도착해야 그릴 수 있는 것만 모아 둔다.
@@ -82,7 +91,9 @@ export function ProductRows({
   openSheet,
   onCloseSheet,
   initialPage,
+  empty: emptyState,
 }: ProductRowsProps) {
+  const router = useRouter();
   const { filter: urlFilter, setCondition, setSort } = useFilterQuery(basePath);
   const { isSaved, toggle } = useSavedProducts();
 
@@ -98,11 +109,11 @@ export function ProductRows({
     loadPrevious,
     loading,
     loadingPrevious,
+    previousFailed,
     loaded,
     failed,
     retry,
   } = useProductPages(filter, initialPage);
-  const sentinel = useInfiniteScroll<HTMLAnchorElement>(hasNext && !loading && !failed, loadNext);
   const restoreAnchor = useRef<() => void>(undefined);
 
   // 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
@@ -122,33 +133,23 @@ export function ProductRows({
     });
   };
 
+  // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
+  const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
+  const previousHref = pageHref(basePath, urlFilter, previousPage);
+
   /*
-   * 두 링크 모두 크롤러를 위한 주소다. 사람이 누르면 주소를 옮기지 않고 그 자리에 붙인다.
-   * 다음 장은 스크롤로 닿기 전에 키보드로 누르는 경우다.
+   * 앞쪽 장은 버튼을 눌러야만 부른다. 주소를 옮기지 않고 위에 붙이며, 보던 제품이 그만큼 밀려 내려가므로 붙인 뒤
+   * 같은 자리로 되돌린다. 마지막 장을 넘어선 주소로 들어와 목록이 비었으면 붙일 자리가 없으니 그 주소로 옮겨 간다.
    */
-  const onClickNext = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (opensElsewhere(event)) return;
-    event.preventDefault();
-    if (loading) return;
-    if (failed) {
-      retry();
+  const onLoadPrevious = () => {
+    if (items.length === 0) {
+      router.push(previousHref);
       return;
     }
-    loadNext();
-  };
-
-  // 앞쪽 장을 위에 붙이면 보던 제품이 그만큼 밀려 내려가므로, 붙인 뒤 같은 자리로 되돌린다.
-  // 마지막 장을 넘어선 주소로 들어와 목록이 비었으면 붙일 자리가 없으니 그 주소로 옮겨 간다.
-  const onClickPrevious = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (opensElsewhere(event) || items.length === 0) return;
-    event.preventDefault();
     if (loadingPrevious) return;
     restoreAnchor.current = holdAnchor(items[0].id);
     loadPrevious();
   };
-
-  // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
-  const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
 
   useLayoutEffect(() => {
     restoreAnchor.current?.();
@@ -197,7 +198,25 @@ export function ProductRows({
   // 서버 응답이 없거나 조건을 바꿔 첫 장을 기다릴 때도 카드 자리를 유지한다.
   // 데이터가 오면 각 ProductCard가 자기 이미지 완료 상태로 독립적으로 열린다.
   if (loading && items.length === 0) return <ProductRowsSkeleton />;
-  if (failed && !loaded) return <ProductRowsError onRetry={retry} />;
+  if (failed && !loaded) {
+    // 받지 못한 것을 없는 것으로 말하지 않는다. 화면 오류(S51)와 같은 모양으로 다시 시도하게 한다.
+    return (
+      <main className="flex flex-1 flex-col">
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="info" size={28} />}
+          title="제품을 불러오지 못했어요"
+          description="잠시 후 다시 시도해 주세요."
+          action={
+            <Button variant="secondary" onClick={retry}>
+              다시 시도
+            </Button>
+          }
+          className="flex-1"
+        />
+      </main>
+    );
+  }
 
   return (
     <>
@@ -206,21 +225,20 @@ export function ProductRows({
       </div>
 
       <main className="flex-1 px-4">
-        {/* 주소의 `?page=N` 으로 중간 장부터 들어온 사람이 앞쪽 장으로 돌아갈 길이다. */}
+        {/* 주소의 `?page=N` 으로 중간 장부터 들어온 사람이 앞쪽 장으로 돌아갈 길이다. 링크는 크롤러가 따라간다. */}
         {first > FIRST_PAGE ? (
-          <a
-            href={pageHref(basePath, urlFilter, previousPage)}
-            onClick={onClickPrevious}
-            className="flex h-10 items-center justify-center text-[13px] text-text-secondary"
-          >
-            {loadingPrevious ? "불러오는 중…" : "이전 제품 보기"}
-          </a>
+          <LoadMore
+            direction="previous"
+            status={previousStatus(loadingPrevious, previousFailed)}
+            onLoad={onLoadPrevious}
+            href={previousHref}
+          />
         ) : null}
 
         {empty ? (
-          <p className="py-16 text-center text-[13px] text-text-secondary">조건에 맞는 제품이 없어요</p>
+          emptyState
         ) : (
-          <ul className="divide-y divide-border">
+          <ul aria-busy={loading || undefined} className="divide-y divide-border">
             {items.map((product, index) => (
               // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
               <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>
@@ -236,18 +254,18 @@ export function ProductRows({
           </ul>
         )}
 
-        {hasNext ? (
-          <a
-            ref={sentinel}
+        {/* 다음 장은 목록 끝이 보이면 저절로 부르고, 실패하면 버튼을 눌러야만 다시 부른다. 링크는 크롤러가 따라간다. */}
+        {hasNext || !empty ? (
+          <LoadMore
+            direction="next"
+            status={nextStatus(hasNext, loading, failed)}
+            loadedCount={items.length}
+            totalCount={total}
+            onLoad={loadNext}
+            onRetry={retry}
             href={pageHref(basePath, urlFilter, page + 1)}
-            onClick={onClickNext}
-            className="flex h-10 items-center justify-center text-[13px] text-text-secondary"
-          >
-            {nextLabel(loading, failed)}
-          </a>
-        ) : (
-          <div className="h-10" />
-        )}
+          />
+        ) : null}
       </main>
 
       <FilterSheets
@@ -272,27 +290,5 @@ export function ProductRows({
         initialCount={total}
       />
     </>
-  );
-}
-
-/**
- * 첫 장을 받지 못했을 때. 제품이 없다고 하지 않고 받지 못했다고 말한다.
- * 모양은 화면이 무너졌을 때의 에러 화면(`app/error.tsx`)을 따른다.
- */
-function ProductRowsError({ onRetry }: { readonly onRetry: () => void }) {
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
-      <Icon name="info" size={28} className="text-text-secondary" />
-      <p className="text-[15px] font-bold text-text-primary">제품을 불러오지 못했어요</p>
-      <p className="text-center text-[12px] text-text-secondary">잠시 후 다시 시도해 주세요.</p>
-
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-2 h-11 rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
-      >
-        다시 시도
-      </button>
-    </main>
   );
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SearchField } from "@/components/ui/SearchField";
@@ -136,7 +135,12 @@ function SignInNotice() {
 }
 
 /** S07 저장함. 저장한 제품과 표시 정보를 회원 저장함 API 에서 한 번에 받는다. */
-export function SavedScreen() {
+export function SavedScreen({
+  empty,
+}: {
+  /** 위시리스트가 비었을 때 그릴 빈 상태(FEEDBACK F03). 경로 옆 `app/wishlist/empty.tsx` 의 것을 넘긴다. */
+  readonly empty: React.ReactNode;
+}) {
   const { status: savedStatus, save, unsave } = useSavedProducts();
   const signedOut = savedStatus === "signedOut";
   const adminSession = savedStatus === "adminSession";
@@ -278,16 +282,7 @@ export function SavedScreen() {
         </>
       )}
 
-      {items.length === 0 && (
-        <div className="flex flex-1 flex-col py-4">
-          <EmptyNotice
-            icon="bookmark"
-            image={{ src: "/images/empty-states/no-saved-products-watermark.png", size: 170, loading: "eager" }}
-            title="아직 저장한 제품이 없어요"
-            className="flex-1"
-          />
-        </div>
-      )}
+      {items.length === 0 && <div className="flex flex-1 flex-col py-4">{empty}</div>}
 
       <ul data-private className="divide-y divide-border">
         {shown.map((product, index) => {

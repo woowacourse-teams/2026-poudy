@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { WishlistEmpty } from "./empty";
+
 import { SavedScreen } from "@/components/saved/SavedScreen";
 import { TopBar } from "@/components/ui/TopBar";
 
@@ -16,7 +18,7 @@ export default function WishlistPage() {
     <>
       {/* 아래에 붙는 찾는 칸이 그림자를 맡는다. */}
       <TopBar title="위시리스트" variant="root" edge={false} />
-      <SavedScreen />
+      <SavedScreen empty={<WishlistEmpty />} />
     </>
   );
 }
