@@ -253,3 +253,15 @@ CodeDeploy와 S3에 접근할 수 있어야 합니다. 배포 그룹의 대상�
 - 무중단·blue/green 배포는 제외합니다.
 - 배포 실패 시 우선 CodeDeploy 콘솔에서 동일 아티팩트를 재배포합니다.
 - CodePipeline이 CodeBuild와 CodeDeploy 연결 및 운영 배포 실행을 관리합니다.
+
+### HTTPS 템플릿의 HTTP/2
+
+`deploy/nginx/ec2-frontend-https.conf`의 두 HTTPS 블록은 `http2 on;`을 사용합니다.
+Nginx 1.25.1 이상이 필요하며, #411에서 확인한 운영 버전은 1.30.4입니다.
+이 템플릿은 운영과 staging이 함께 사용하므로 배포 대상 호스트의 버전과
+`--with-http_v2_module` 지원을 먼저 확인합니다.
+
+#411에서 서버에 적용했지만 미커밋으로 남았던 설정을 저장소에 반영한 것입니다.
+이번 변경 자체가 서버 적용을 뜻하지는 않습니다. 다음 프론트 배포의
+`reconcile-nginx.sh`가 템플릿을 반영하고 `nginx -t` 실패 시 기존 설정으로 복구합니다.
+배포 후에는 `curl --http2 -I https://<대상 도메인>/`으로 실제 협상을 확인합니다.
