@@ -92,6 +92,10 @@ jobs:
               ['Lighthouse', results.lighthouse],
             ];
 
+            if (results.docs && results.docs !== 'skipped') {
+              checks.unshift(['Documentation', results.docs]);
+            }
+
             const formatResult = (result) => {
               if (result === 'success') return '✅ 통과';
               if (result === 'skipped') return '⏭️ 건너뜀';

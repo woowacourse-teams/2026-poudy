@@ -49,6 +49,7 @@ jobs:
               - 'pnpm-workspace.yaml'
               - 'package.json'
               - '.github/workflows/client-ci.yaml'
+              - '.github/workflows/client-ci-comment.yaml'
               - '.github/scripts/check-client-docs*'
 
   check:

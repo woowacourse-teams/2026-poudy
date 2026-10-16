@@ -46,6 +46,7 @@ jobs:
               - 'pnpm-workspace.yaml'
               - 'package.json'
               - '.github/workflows/client-ci.yaml'
+              - '.github/workflows/client-ci-comment.yaml'
               - '.github/scripts/check-client-docs*'
               - '!client/*.md'
               - '!client/docs/**/*.md'
@@ -59,12 +60,17 @@ jobs:
 
   # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
   check:
-    name: Client code checks
+    name: Client checks
     needs: changes
-    if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
+    if: always() && (needs.changes.result != 'success' || github.base_ref == 'main' || needs.changes.outputs.client == 'true' || needs.changes.outputs.docs == 'true')
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check change detection
+        if: needs.changes.result != 'success'
+        working-directory: .
+        run: exit 1
+
       - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
@@ -81,15 +87,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 문서 전용 PR도 같은 Client checks로 결과를 보고한다. 추가 러너는 만들지 않는다.
+      - name: Check documentation
+        id: docs
+        if: needs.changes.outputs.docs == 'true'
+        continue-on-error: true
+        env:
+          CHANGED_DOCS: ${{ needs.changes.outputs.docs_files }}
+        working-directory: .
+        run: |
+          node --test .github/scripts/check-client-docs.test.mjs
+          node .github/scripts/check-client-docs.mjs
+
       - name: Generate Next.js types
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         run: pnpm exec next typegen
 
       - name: Format
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: format
         continue-on-error: true
         run: pnpm run format:check
 
       - name: Lint
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: lint
         continue-on-error: true
         run: pnpm run lint
@@ -97,37 +118,18 @@ jobs:
       # 디자인 시스템 패키지의 부품과 미리보기도 검사한다. client 의 tsc 는 client 가 가져다 쓰는
       # 파일만 보므로, 아직 화면에서 쓰지 않는 부품의 타입 오류는 여기서만 잡힌다.
       - name: Type check
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: typecheck
         continue-on-error: true
         run: |
           pnpm run typecheck
           pnpm --filter @poudy/design-system run typecheck
 
-      # #778 비교 계측 후 제거할 임시 단계. 같은 VM에서 기존/변경 설정을 비교한다.
-      - name: Benchmark original test setup
-        if: github.event.pull_request.number == 786
-        env:
-          BASELINE: 3912a0116b4947c7724301bffc5b253af840f5ac
-        run: |
-          echo "CPU: $(nproc)"
-          lscpu | head -20
-          free -m
-          git fetch origin "$BASELINE" --depth=1
-          cp vitest.config.mts /tmp/poudy-vitest.config.mts
-          cp vitest.setup.ts /tmp/poudy-vitest.setup.ts
-          restore() {
-            cp /tmp/poudy-vitest.config.mts vitest.config.mts
-            cp /tmp/poudy-vitest.setup.ts vitest.setup.ts
-          }
-          trap restore EXIT
-          git show "$BASELINE:client/vitest.config.mts" > vitest.config.mts
-          git show "$BASELINE:client/vitest.setup.ts" > vitest.setup.ts
-          pnpm run test --reporter=default --reporter=json --outputFile=vitest-baseline-report.json
-
       # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
       # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.
       # exceptions:check 는 디자인 토큰 린트를 끈 줄에 기한 꼬리표가 없거나 만료일이 지나면 실패한다.
       - name: Test
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: test
         continue-on-error: true
         run: |
@@ -143,6 +145,7 @@ jobs:
       #
       # fork 에서 온 PR 은 secret 을 읽지 못해 항상 이 자리에서 실패한다.
       - name: Check preview secrets
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         run: |
           missing=""
           [ -n "${{ secrets.VERCEL_TOKEN }}" ] || missing="$missing VERCEL_TOKEN"
@@ -164,6 +167,7 @@ jobs:
       # 빌드가 client/ 밖을 읽어야 한다. Vercel 프로젝트의 Root Directory 를 client 로 두고
       # 루트에서 실행해야, 산출물 경로가 client/client 처럼 겹치지 않는다.
       - name: Build preview
+        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: build
         continue-on-error: true
         working-directory: .
@@ -267,12 +271,13 @@ jobs:
           NODE
 
       - name: Save check results
-        if: always()
+        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         run: |
           node <<'NODE'
           const fs = require('node:fs');
 
           const results = {
+            docs: '${{ steps.docs.outcome }}',
             format: '${{ steps.format.outcome }}',
             lint: '${{ steps.lint.outcome }}',
             typecheck: '${{ steps.typecheck.outcome }}',
@@ -324,69 +329,18 @@ jobs:
           NODE
 
       - name: Upload check results
-        if: always()
+        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         uses: actions/upload-artifact@v7
         with:
           name: client-ci-results
           path: |
             client/client-ci-results.json
             client/vitest-report.json
-            client/vitest-baseline-report.json
             client/lighthouse-report.json
             client/lighthouse-runs.json
             client/.lighthouseci-report/
           if-no-files-found: error
 
       - name: Fail if any check failed
-        if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
+        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
         run: exit 1
-
-  docs:
-    name: Client documentation checks
-    needs: changes
-    if: needs.changes.outputs.docs == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.21.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: node --test .github/scripts/check-client-docs.test.mjs
-      - name: Check changed documentation
-        env:
-          CHANGED_DOCS: ${{ needs.changes.outputs.docs_files }}
-        run: node .github/scripts/check-client-docs.mjs
-
-  gate:
-    name: Client checks
-    needs: [changes, check, docs]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - name: Check results
-        env:
-          CHANGES: ${{ needs.changes.result }}
-          CODE: ${{ needs.check.result }}
-          DOCS: ${{ needs.docs.result }}
-        run: |
-          test "$CHANGES" = success
-          for result in "$CODE" "$DOCS"; do
-            case "$result" in
-              success | skipped) ;;
-              *) echo "::error::Client check: $result"; exit 1 ;;
-            esac
-          done
