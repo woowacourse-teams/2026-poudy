@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { Button } from "@poudy/design-system/button";
 import { useSyncExternalStore } from "react";
 
-import { Button } from "@/components/ui/Button";
+import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
+
 import { readAppInfo } from "@/lib/analytics/app-info";
 import { requiresUpdateForLogin } from "@/lib/domain/app-version";
 import { requestAppUpdate } from "@/lib/interaction/app-update";
@@ -32,26 +33,22 @@ export function LoginUpdateNotice() {
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="login-update-title"
-      className="fixed inset-0 z-[60] flex flex-col bg-background px-4 pb-6"
+      className="fixed inset-0 z-(--z-dialog) flex flex-col bg-background px-gutter pb-safe"
     >
-      <div className="flex flex-1 flex-col justify-center">
-        <h2 id="login-update-title" className="text-[20px] font-bold tracking-tight">
+      <div className="flex flex-1 flex-col justify-center gap-2">
+        <h2 id="login-update-title" className="text-screen font-bold text-text-primary">
           로그인하려면 앱을 업데이트해 주세요
         </h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">
+        <p className="text-body text-text-secondary">
           지금 쓰는 앱에서는 로그인할 수 없어요. 업데이트하면 바로 로그인할 수 있어요.
         </p>
       </div>
 
       <div className="flex flex-col gap-1">
-        <Button onClick={requestAppUpdate}>업데이트</Button>
-        <Link
-          href="/"
-          replace
-          className="flex min-h-12 items-center justify-center rounded-button text-[14px] font-bold text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
-        >
-          로그인 없이 둘러보기
-        </Link>
+        <Button size="lg" className="w-full" onClick={requestAppUpdate}>
+          업데이트
+        </Button>
+        <BrowseWithoutLoginLink />
       </div>
     </div>
   );

@@ -25,7 +25,7 @@ describe("login-return", () => {
     expect(takeLoginReturn()).toBe("/");
   });
 
-  it.each(["/login", "/login?signup=required", "/login/callback", "/onboarding"])(
+  it.each(["/login", "/login?signup=required", "/login/callback", "/signup/profile"])(
     "로그인 흐름 안의 %s 은 기억하지 않는다",
     (path) => {
       visit(path);
