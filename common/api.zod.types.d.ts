@@ -27,6 +27,7 @@ export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageSta
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
 export type SearchKeywordRequest = { keyword: string }
+export type PushTokenRequest = { token: string }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
   /**
@@ -976,6 +977,24 @@ export type post_Record = {
       parameters: {
 
         body:  Schemas.SearchKeywordRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인하지 않아도 등록한다. 회원 세션이면 토큰을 그 회원과 잇고, 아니면 잇지 않은 토큰으로 둔다. 이미 있는 토큰은 마지막 등록의 로그인 상태를 따른다.
+ */
+export type post_RegisterPushToken = {
+      method: "POST",
+      path: "/api/push-tokens",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.PushTokenRequest,
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
@@ -2027,6 +2046,7 @@ post: {
            "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/search-keywords": Endpoints.post_Record,
+"/api/push-tokens": Endpoints.post_RegisterPushToken,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
 "/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
 "/api/products/registration-requests": Endpoints.post_Submit,

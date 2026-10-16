@@ -34,6 +34,9 @@ export const ShelfProductAddRequest = z.object({ productId: z.number().int(), us
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
 
+export type PushTokenRequest = __TypedOpenapi.Schemas.PushTokenRequest;
+export const PushTokenRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")) });
+
 export type ProductCorrectionRequest = __TypedOpenapi.Schemas.ProductCorrectionRequest;
 export const ProductCorrectionRequest = z.object({ content: z.string().min(10).max(2000), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
 
@@ -475,6 +478,16 @@ export const post_Record = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { body: SearchKeywordRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_RegisterPushToken = __TypedOpenapi.Endpoints.post_RegisterPushToken;
+export const post_RegisterPushToken = {
+  method: z.literal("POST"),
+  path: z.literal("/api/push-tokens"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: PushTokenRequest },
   responses: { 204: z.unknown(), 400: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -1017,6 +1030,7 @@ post: {
            "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/search-keywords": post_Record as any,
+"/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,
 "/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
 "/api/products/registration-requests": post_Submit as any,
