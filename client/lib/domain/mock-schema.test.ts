@@ -296,10 +296,14 @@ describe("목 응답과 스키마", () => {
 
   it("나만의 필터 성분 추가와 삭제는 내용 없이 204 를 준다", async () => {
     const added = await post("/users/me/skin-filter/ingredients", ...json({ ingredientIds: [9001] }));
+    const filter = await get("/users/me/skin-filter");
     const removed = await fetch(`${BASE}/users/me/skin-filter/ingredients?ingredientIds=9001`, { method: "DELETE" });
     resetMockShelf();
 
     expect(added.status).toBe(204);
+    expect(filter.status).toBe(200);
+    expect(deepStrict(SkinFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
+    expect(filter.body).toMatchObject({ items: [{ id: 9001, groupCodes: [] }] });
     expect(removed.status).toBe(204);
   });
 

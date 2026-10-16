@@ -48,7 +48,9 @@ describe("선반", () => {
   it("검색에서 제외 중인 성분이 있으면 관리 줄이 나만의 필터로 이어진다", async () => {
     server.use(
       http.get("*/api/users/me/skin-filter", () =>
-        HttpResponse.json({ items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [] }] }),
+        HttpResponse.json({
+          items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [], groupCodes: [] }],
+        }),
       ),
     );
     render(<ShelfScreen />);

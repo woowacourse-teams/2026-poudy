@@ -131,7 +131,16 @@ const analysisResponse = () => {
   });
   const items: IngredientAnalysisItemResponse[] = (bad.length === 0 ? [] : suspectsNow()).map((suspect) => {
     const inFilter = filterIds.includes(suspect.id);
-    return { ...suspect, products, inFilter, isNew: newSuspectIds.includes(suspect.id) && !inFilter };
+    return {
+      ...suspect,
+      formulationRoles: ROLES[suspect.id]
+        ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
+        : [],
+      groupCodes: [],
+      products,
+      inFilter,
+      isNew: newSuspectIds.includes(suspect.id) && !inFilter,
+    };
   });
   return { badProductCount: bad.length, items };
 };
@@ -218,6 +227,7 @@ export const shelfHandlers = [
           koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
           formulationRoles: ROLES[id] ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }] : [],
           skinEffects: [],
+          groupCodes: [],
         })),
       }),
   ),
