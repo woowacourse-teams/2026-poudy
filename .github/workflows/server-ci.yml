@@ -93,7 +93,7 @@ jobs:
 
       # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiArtifacts
+        run: ./gradlew generateApiArtifacts --profile
 
       # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
@@ -109,7 +109,16 @@ jobs:
 
       - name: Build and test
         id: test
-        run: ./gradlew build
+        run: ./gradlew build --profile
+
+      - name: Upload Gradle profiles
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-profiles
+          path: server/build/reports/profile/
+          retention-days: 14
+          if-no-files-found: warn
 
       # build 는 spotless 와 checkstyle 도 돌리므로 reports 를 통째로 올린다.
       - name: Upload reports
