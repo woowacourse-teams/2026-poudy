@@ -14,9 +14,9 @@ import { allProducts } from "@/mocks/fixtures";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
-const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace }),
+  useRouter: () => ({ back: vi.fn(), push, replace }),
 }));
 
 const PAGE_SIZE = 20;
@@ -34,14 +34,38 @@ beforeEach(async () => {
   await seed();
 });
 
-describe("저장함", () => {
-  it("저장한 제품이 없으면 빈 안내와 제품을 더 찾는 길을 보여 준다", async () => {
+describe("위시리스트", () => {
+  it("저장한 제품이 없으면 빈 안내와 제품을 둘러보는 버튼을 보여 준다", async () => {
     const { container } = render(<SavedScreen />);
 
-    expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("아직 위시리스트에 추가한 제품이 없어요")).toBeInTheDocument();
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /다른 제품도 둘러보기/ })).toHaveAttribute("href", "/search/products");
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 둘러보기" }));
+    expect(push).toHaveBeenCalledWith("/search/products");
+  });
+
+  it("목록 끝에 제품을 더 찾는 길을 둔다", async () => {
+    await seed(1);
+    render(<SavedScreen />);
+
+    expect(await screen.findByRole("link", { name: /다른 제품도 둘러보기/ })).toHaveAttribute(
+      "href",
+      "/search/products",
+    );
+  });
+
+  it("저장을 풀면 그 자리에 무엇을 뺐는지 남긴다", async () => {
+    await seed(1, 3);
+    render(<SavedScreen />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    expect(await screen.findByText("위시리스트에서 뺐어요")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1025 독도 토너 저장 되돌리기" })).toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {
@@ -149,7 +173,7 @@ describe("저장함", () => {
   });
 });
 
-describe("저장함 검색", () => {
+describe("위시리스트 검색", () => {
   it("한글을 모으는 동안에는 거르지 않고, 조합이 끝나면 그 말로 거른다", async () => {
     await seed(1, 3);
     render(<SavedScreen />);

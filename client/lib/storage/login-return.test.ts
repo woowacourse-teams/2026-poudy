@@ -14,10 +14,10 @@ beforeEach(() => {
 
 describe("login-return", () => {
   it("기억한 페이지를 쿼리까지 돌려주고 한 번 꺼내면 지운다", () => {
-    visit("/wishlist?sort=NAME_ASC");
+    visit("/my-page/wishlist?sort=NAME_ASC");
     rememberLoginReturn();
 
-    expect(takeLoginReturn()).toBe("/wishlist?sort=NAME_ASC");
+    expect(takeLoginReturn()).toBe("/my-page/wishlist?sort=NAME_ASC");
     expect(takeLoginReturn()).toBe("/");
   });
 

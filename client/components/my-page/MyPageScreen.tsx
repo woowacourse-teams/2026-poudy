@@ -185,7 +185,7 @@ export function MyPageScreen() {
 
         <Section title="관심 제품">
           <LinkRow
-            href="/wishlist"
+            href="/my-page/wishlist"
             icon="bookmark"
             label="위시리스트"
             value={savedCountLabel(saved.status, saved.ids.length)}

@@ -48,7 +48,7 @@ describe("마이페이지", () => {
     await renderWith({ gender: null, ageRange: null, skinType: null });
 
     expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveTextContent("2개");
-    expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveAttribute("href", "/wishlist");
+    expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveAttribute("href", "/my-page/wishlist");
   });
 
   it("나만의 필터에 든 성분 수를 보여 주고 관리 화면으로 보낸다", async () => {

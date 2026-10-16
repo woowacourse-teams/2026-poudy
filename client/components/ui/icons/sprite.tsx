@@ -34,6 +34,7 @@ export const ICON_IDS = [
   "trash",
   "plus",
   "minus",
+  "arrow-back-up",
   "filter",
   "share",
   "instagram",
@@ -203,6 +204,12 @@ export function IconSprite() {
         {/* Tabler · minus */}
         <symbol id="icon-minus" viewBox="0 0 24 24">
           <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · arrow-back-up. 위시리스트 '되돌리기' */}
+        <symbol id="icon-arrow-back-up" viewBox="0 0 24 24">
+          <path d="M9 14l-4 -4l4 -4" />
+          <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
         </symbol>
 
         {/* Tabler · filter */}
