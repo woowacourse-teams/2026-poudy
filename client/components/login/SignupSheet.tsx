@@ -1,17 +1,24 @@
 "use client";
 
-import Link from "next/link";
+import { Button } from "@poudy/design-system/button";
+import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
+
+/*
+ * 시트 그릇은 아직 디자인 시스템에 없어(#727) client 의 옛 BottomSheet 를 쓴다.
+ * TODO(#727): ConfirmSheet 가 들어오면 그릇만 바꾼다. 안의 문구와 버튼은 그대로 둔다.
+ */
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { CheckMark } from "@/components/ui/CheckMark";
 import { ApiError } from "@/lib/api/client";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
+const OVER_FOURTEEN = "over-fourteen";
 const SIGNUP_REQUIRED = "required";
 
 /** 처음 소셜 로그인한 사람을 이 주소로 보내면 로그인 화면 위에 가입 확인 시트가 열린다. */
@@ -63,42 +70,45 @@ export function SignupSheet() {
 
   return (
     <BottomSheet open={open} onClose={() => router.replace("/login")}>
-      <BottomSheet.Header title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
+      <BottomSheet.CustomHeader>
+        <div className="flex flex-col gap-2 px-gutter pt-2 pb-5">
+          <BottomSheet.Title className="text-block font-bold text-text-primary">
+            가입 전에 확인해 주세요
+          </BottomSheet.Title>
+          <p className="text-body text-text-secondary">파우디는 만 14세 이상만 가입할 수 있어요.</p>
+        </div>
+      </BottomSheet.CustomHeader>
 
-      <form onSubmit={submit} className="flex flex-col px-5 pb-6">
-        <label className="flex h-[52px] cursor-pointer items-center gap-2.5 rounded-lg border border-[#d3d6dc] px-4">
-          <input
-            type="checkbox"
-            checked={overFourteen}
-            onChange={(event) => setOverFourteen(event.target.checked)}
-            className="peer sr-only"
-          />
-          <span className="rounded-xs peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action">
-            <CheckMark checked={overFourteen} />
-          </span>
-          <span className="text-[15px]">만 14세 이상이에요</span>
-        </label>
+      <form onSubmit={submit} className="flex flex-col gap-5 px-gutter pb-safe">
+        <div className="rounded-lg border border-border-strong bg-background px-3 has-checked:border-action">
+          <CheckboxGroup
+            aria-label="나이 확인"
+            value={overFourteen ? [OVER_FOURTEEN] : []}
+            onValueChange={(value) => setOverFourteen(value.includes(OVER_FOURTEEN))}
+          >
+            <CheckboxGroupItem value={OVER_FOURTEEN}>만 14세 이상이에요</CheckboxGroupItem>
+          </CheckboxGroup>
+        </div>
 
-        {message && (
-          <p role="alert" className="mt-3 text-[13px] text-text-secondary">
-            {message}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={!canSignUp}
-          className="mt-6 flex h-[52px] items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default"
-        >
-          동의하고 계속
-        </button>
-        <Link
-          href="/"
-          replace
-          className="mt-1 flex min-h-12 items-center justify-center rounded-button text-[14px] font-bold text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
-        >
-          로그인 없이 둘러보기
-        </Link>
+        <div className="flex flex-col gap-2">
+          {/* TODO(#728): 가입하지 못하면 토스트로 알린다. 지금은 버튼 위에 문구를 둔다. */}
+          {message ? (
+            <p role="alert" className="text-center text-body text-text-secondary">
+              {message}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!overFourteen || state === "expired"}
+            busy={state === "sending"}
+          >
+            동의하고 계속
+          </Button>
+          <div className="flex justify-center">
+            <BrowseWithoutLoginLink />
+          </div>
+        </div>
       </form>
     </BottomSheet>
   );
