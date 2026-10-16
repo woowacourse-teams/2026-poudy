@@ -1,14 +1,15 @@
 "use client";
 
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { type MouseEvent, type ReactNode, useRef, useState, useSyncExternalStore } from "react";
 
 import { APP_LOGIN_CHANNEL, socialLoginUrl, type SocialProvider } from "@/lib/api/member";
 import { canAppLogin, signInWithApp } from "@/lib/interaction/app-login";
-import { readLastLogin } from "@/lib/storage/last-login";
 
 type Props = {
   readonly provider: SocialProvider;
+  /** 모양과 누름 모양(fb-*). 누를 수 있는 자리의 상태(pressable)는 이 링크가 붙인다. */
   readonly className: string;
   readonly children: ReactNode;
 };
@@ -24,26 +25,12 @@ const previewOrigin = () =>
     ? window.location.origin
     : undefined;
 
-const serverLastLogin = () => null;
-
-function RecentLoginBadge() {
-  return (
-    <span className="pointer-events-none absolute right-6 bottom-full z-10 mb-1 rounded-full bg-[#212124] px-2.5 py-1 text-[11px] leading-none font-bold text-white">
-      최근 로그인
-      <span
-        aria-hidden="true"
-        className="absolute top-full left-1/2 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-[#212124]"
-      />
-    </span>
-  );
-}
-
 export function SocialLoginLink({ provider, className, children }: Props) {
   const lastRequestedAtRef = useRef(0);
   const router = useRouter();
   const returnOrigin = useSyncExternalStore(subscribe, previewOrigin, serverOrigin);
   const [pending, setPending] = useState(false);
-  const lastLogin = useSyncExternalStore(subscribe, readLastLogin, serverLastLogin);
+  const { pressableProps } = usePressable();
 
   // 앱 안에서는 페이지를 옮기지 않고 앱의 네이티브 로그인에 맡긴다. 구글은 WebView 안 OAuth 를 막는다.
   const signInInApp = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -76,10 +63,10 @@ export function SocialLoginLink({ provider, className, children }: Props) {
       href={socialLoginUrl(provider, returnOrigin)}
       onClick={signInInApp}
       aria-busy={pending}
-      className={`relative ${className}`}
+      {...pressableProps}
+      className={`pressable ${className}`}
     >
       {children}
-      {lastLogin === provider && <RecentLoginBadge />}
     </a>
   );
 }

@@ -13,15 +13,16 @@ import { TopBar } from "@/components/ui/TopBar";
 import { findRegisteredAccount, type SocialProvider } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
 
-const LOGIN_BUTTON = "flex h-14 items-center justify-center gap-2 rounded-xl text-16 leading-snug font-bold";
+const LOGIN_BUTTON =
+  "press-scale flex h-14 items-center justify-center gap-2 rounded-xl text-16 leading-snug font-bold";
 
 /** 브랜드 색 로그인 버튼(카카오 노랑, Google 흰 바탕 + 테두리). 명세의 '따로 관리하는 색'이다. */
 const LOGIN_LINKS: Readonly<Record<OAuthProvider, { readonly provider: SocialProvider; readonly className: string }>> =
   {
-    KAKAO: { provider: "kakao", className: `${LOGIN_BUTTON} bg-kakao-bg text-kakao-fg` },
+    KAKAO: { provider: "kakao", className: `${LOGIN_BUTTON} fb-dim bg-kakao-bg text-kakao-fg` },
     GOOGLE: {
       provider: "google",
-      className: `${LOGIN_BUTTON} border border-google-border bg-background text-google-fg`,
+      className: `${LOGIN_BUTTON} fb-surface border border-google-border bg-background text-google-fg`,
     },
   };
 
