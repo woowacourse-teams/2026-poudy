@@ -162,7 +162,8 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           PREVIEW_HOST: pr-${{ github.event.pull_request.number }}.preview.poudy.site
         run: |
-          deployment=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          # 파일별 업로드 요청이 무료 플랜 한도를 소진하지 않도록 빌드 결과를 압축한다.
+          deployment=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
           vercel alias set "$deployment" "$PREVIEW_HOST" --token=${{ secrets.VERCEL_TOKEN }}
           url="https://$PREVIEW_HOST"
           echo "url=$url" >> "$GITHUB_OUTPUT"
