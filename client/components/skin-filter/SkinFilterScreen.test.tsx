@@ -84,7 +84,7 @@ describe("나만의 필터", () => {
     const list = await screen.findByRole("region", { name: "필터에 있는 성분" });
     await user.click(within(list).getByRole("button", { name: "리모넨 필터에서 빼기" }));
 
-    expect(await screen.findByText("필터에서 빼지 못했어요. 잠시 뒤 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(await screen.findByText("필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
     await waitFor(() => expect(rowNames(list)).toEqual(["향료", "리모넨"]));
   });
 

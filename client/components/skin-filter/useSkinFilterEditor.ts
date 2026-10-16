@@ -19,8 +19,8 @@ export type SkinFilterToast = {
   readonly onUndo?: () => void;
 };
 
-const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 뒤 다시 시도해 주세요.";
-const ADD_FAILED = "필터에 넣지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.";
+const ADD_FAILED = "필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요.";
 
 const without = <T extends { readonly id: number }>(items: readonly T[], id: number): readonly T[] =>
   items.filter((item) => item.id !== id);
