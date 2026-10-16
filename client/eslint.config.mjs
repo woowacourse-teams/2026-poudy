@@ -18,7 +18,8 @@ const adminFiles = ["app/admin/**", "components/admin/**"];
 const tokenStrictFiles = [
   "app/shelf/**/*.{ts,tsx}",
   "components/shelf/**/*.{ts,tsx}",
-  "app/my-page/filter/**/*.{ts,tsx}",
+  "app/my-page/**/*.{ts,tsx}",
+  "components/my-page/**/*.{ts,tsx}",
   "components/skin-filter/**/*.{ts,tsx}",
   "components/saved/**/*.{ts,tsx}",
 ];
