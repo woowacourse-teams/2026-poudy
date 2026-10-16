@@ -82,6 +82,9 @@ tasks.named('jar') {
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'spring.profiles.active', 'test'
+    // DB 상태는 Gradle 입력에 포함되지 않으므로 테스트 결과는 재사용하지 않는다.
+    outputs.doNotCacheIf('Tests depend on a live PostgreSQL instance') { true }
+    outputs.upToDateWhen { false }
     testLogging {
         events 'passed', 'skipped', 'failed'
     }
