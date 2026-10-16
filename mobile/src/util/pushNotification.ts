@@ -6,6 +6,7 @@ import type { PushTokenResult } from '@/types/pushNotification';
 import { getNotificationUrl } from '@/util/entryUrl';
 
 export const PUSH_TOKEN_MESSAGE = 'poudy:push-token';
+export const PUSH_PERMISSION_MESSAGE = 'poudy:push-permission';
 const PUSH_TOKEN_EVENT = 'poudy:push-token';
 const DEFAULT_CHANNEL_ID = 'default';
 const DEFAULT_CHANNEL_NAME = '알림';
@@ -24,7 +25,7 @@ export const showNotificationsInForeground = () => {
   });
 };
 
-const prepareChannel = async () => {
+export const prepareNotificationChannel = async () => {
   if (Platform.OS !== 'android') {
     return;
   }
@@ -35,34 +36,43 @@ const prepareChannel = async () => {
   });
 };
 
-const askPermission = async (): Promise<boolean> => {
-  await prepareChannel();
+const tokenResultOf = async (permission: Notifications.NotificationPermissionsStatus): Promise<PushTokenResult> => {
+  if (permission.granted) {
+    const { data } = await Notifications.getExpoPushTokenAsync({ projectId: PROJECT_ID });
+    return { status: 'granted', token: data };
+  }
+
+  if (permission.canAskAgain) {
+    return { status: 'prompt' };
+  }
+
+  return { status: 'denied' };
+};
+
+const askPermission = async (): Promise<Notifications.NotificationPermissionsStatus> => {
+  await prepareNotificationChannel();
   const current = await Notifications.getPermissionsAsync();
 
   if (current.granted || !current.canAskAgain) {
-    return current.granted;
+    return current;
   }
 
-  const requested = await Notifications.requestPermissionsAsync();
-  return requested.granted;
+  return Notifications.requestPermissionsAsync();
 };
 
-export const requestPushPermission = (): Promise<boolean> => askPermission().catch(() => false);
-
-export const readPushToken = async (): Promise<PushTokenResult> => {
+const pushTokenResultWith = async (
+  permissionOf: () => Promise<Notifications.NotificationPermissionsStatus>,
+): Promise<PushTokenResult> => {
   try {
-    const permission = await Notifications.getPermissionsAsync();
-
-    if (!permission.granted) {
-      return { status: 'denied' };
-    }
-
-    const { data } = await Notifications.getExpoPushTokenAsync({ projectId: PROJECT_ID });
-    return { status: 'granted', token: data };
+    return await tokenResultOf(await permissionOf());
   } catch {
     return { status: 'failed' };
   }
 };
+
+export const readPushToken = (): Promise<PushTokenResult> => pushTokenResultWith(Notifications.getPermissionsAsync);
+
+export const requestPushToken = (): Promise<PushTokenResult> => pushTokenResultWith(askPermission);
 
 export const pushTokenResultScript = (result: PushTokenResult): string =>
   `window.dispatchEvent(new CustomEvent(${JSON.stringify(PUSH_TOKEN_EVENT)}, { detail: ${JSON.stringify(result)} }));

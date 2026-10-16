@@ -28,15 +28,10 @@ export default function WebAppShell() {
   const navigation = useWebViewNavigation(serviceBaseUrl, webViewRef);
   const keyboardInset = useKeyboardInset();
   const splash = useSplashTransition();
-  const readPushToken = usePushNotifications({ onNavigate: navigation.navigate, serviceBaseUrl });
-  const handleMessage = useWebViewBridge({
-    onWebLogin: navigation.startWebLogin,
-    readPushToken,
-    serviceOrigin,
-    webViewRef,
-  });
+  const handleMessage = useWebViewBridge({ onWebLogin: navigation.startWebLogin, serviceOrigin, webViewRef });
 
   useAppUpdate();
+  usePushNotifications({ onNavigate: navigation.navigate, serviceBaseUrl });
   useExternalEntry({ onNavigate: navigation.navigate, serviceBaseUrl });
   useQuickActions({ onNavigate: navigation.navigate, serviceBaseUrl });
 

@@ -4,7 +4,7 @@ export interface PushTokenGranted {
 }
 
 export interface PushTokenMissing {
-  readonly status: 'denied' | 'failed';
+  readonly status: 'prompt' | 'denied' | 'failed';
 }
 
 export type PushTokenResult = PushTokenGranted | PushTokenMissing;

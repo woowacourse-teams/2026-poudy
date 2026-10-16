@@ -1,23 +1,17 @@
 import * as Notifications from 'expo-notifications';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-import type { PushNotificationOptions, PushTokenResult } from '@/types/pushNotification';
-import {
-  notificationUrlOf,
-  readPushToken,
-  requestPushPermission,
-  showNotificationsInForeground,
-} from '@/util/pushNotification';
+import type { PushNotificationOptions } from '@/types/pushNotification';
+import { notificationUrlOf, prepareNotificationChannel, showNotificationsInForeground } from '@/util/pushNotification';
 
 export const usePushNotifications = ({ onNavigate, serviceBaseUrl }: PushNotificationOptions) => {
-  const permissionRef = useRef<Promise<boolean> | null>(null);
   const handledResponseRef = useRef<string | null>(null);
 
   const response = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
     showNotificationsInForeground();
-    permissionRef.current = requestPushPermission();
+    prepareNotificationChannel().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -36,9 +30,4 @@ export const usePushNotifications = ({ onNavigate, serviceBaseUrl }: PushNotific
       onNavigate(targetUrl);
     }
   }, [onNavigate, response, serviceBaseUrl]);
-
-  return useCallback(async (): Promise<PushTokenResult> => {
-    await permissionRef.current;
-    return readPushToken();
-  }, []);
 };
