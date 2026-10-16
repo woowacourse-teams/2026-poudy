@@ -103,7 +103,7 @@ jobs:
           vmstat -y -w -t -S M 1 > build/reports/profile/resources-openapi.txt &
           resource_monitor_pid=$!
           trap 'kill "$resource_monitor_pid" 2>/dev/null || true' EXIT
-          ./gradlew generateApiArtifacts --no-build-cache --profile
+          ./gradlew generateApiArtifacts --build-cache --profile
 
       # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
@@ -125,7 +125,7 @@ jobs:
           vmstat -y -w -t -S M 1 > build/reports/profile/resources-build.txt &
           resource_monitor_pid=$!
           trap 'kill "$resource_monitor_pid" 2>/dev/null || true' EXIT
-          ./gradlew build --no-build-cache --profile
+          ./gradlew build --build-cache --profile
 
       - name: Upload Gradle profiles
         if: always()
