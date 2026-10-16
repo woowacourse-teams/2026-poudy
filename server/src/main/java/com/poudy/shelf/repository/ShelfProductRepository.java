@@ -105,11 +105,11 @@ public class ShelfProductRepository {
         ) > 0;
     }
 
-    public void delete(long userId, long productId) {
-        jdbc.update(
+    public boolean delete(long userId, long productId) {
+        return jdbc.update(
             "delete from user_shelf_product where user_id = :userId and product_id = :productId",
             primaryKeyParameters(userId, productId)
-        );
+        ) > 0;
     }
 
     private static ShelfProduct shelfProduct(ResultSet rs) throws SQLException {

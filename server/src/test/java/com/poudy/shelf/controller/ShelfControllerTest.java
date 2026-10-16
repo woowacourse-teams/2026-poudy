@@ -18,6 +18,7 @@ import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -304,6 +305,51 @@ class ShelfControllerTest {
     }
 
     @Test
+    @DisplayName("제품을 담거나 빼거나 호불호를 바꾸면 이전 새 성분 표시를 지우고 직전 결과에 없던 성분에만 표시한다")
+    void remarksNewIngredientsOnRatingChanges() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        expectAnalysis(contains(20, 9), contains(true, true));
+
+        add("""
+            {"productId": 1, "usageStatus": "USED"}
+            """).andExpect(status().isCreated());
+        expectAnalysis(contains(20, 9), contains(false, false));
+
+        updateProduct(1, """
+            {"usageStatus": "USED", "preference": "BAD"}
+            """);
+        expectAnalysis(contains(20, 4815, 9), contains(false, true, false));
+
+        updateProduct(1, """
+            {"usageStatus": "USED"}
+            """);
+        expectAnalysis(contains(20, 9), contains(false, false));
+
+        updateProduct(1, """
+            {"usageStatus": "USED", "preference": "BAD"}
+            """);
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+        expectAnalysis(contains(4815), contains(false));
+    }
+
+    @Test
+    @DisplayName("사용 상태나 수분감·유분감만 바꾸거나 선반에 없는 제품을 빼면 새 성분 표시를 유지한다")
+    void keepsNewIngredientsWithoutRatingChanges() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+
+        updateProduct(15, """
+            {"usageStatus": "USED", "preference": "BAD", "moistureLevel": 1, "oilLevel": 2.5}
+            """);
+        mockMvc.perform(delete(PRODUCTS_PATH + "/1").with(signedIn())).andExpect(status().isNoContent());
+
+        expectAnalysis(contains(20, 9), contains(true, true));
+    }
+
+    @Test
     @DisplayName("피부 타입과 민감성에 따른 주의 성분은 후보에 더하고 같은 조건의 다른 성분보다 앞에 둔다")
     void addsSkinTypeCautions() throws Exception {
         jdbcTemplate.update(
@@ -363,6 +409,19 @@ class ShelfControllerTest {
         return mockMvc.perform(
             post(PRODUCTS_PATH).with(signedIn()).contentType(MediaType.APPLICATION_JSON).content(body)
         );
+    }
+
+    private void updateProduct(long productId, String body) throws Exception {
+        mockMvc.perform(
+            put(PRODUCTS_PATH + "/" + productId).with(signedIn()).contentType(MediaType.APPLICATION_JSON).content(body)
+        ).andExpect(status().isOk());
+    }
+
+    private void expectAnalysis(Matcher<?> ingredientIds, Matcher<?> newFlags) throws Exception {
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(ingredientIds))
+            .andExpect(jsonPath("$.items[*].isNew").value(newFlags));
     }
 
     private RequestPostProcessor signedIn() {

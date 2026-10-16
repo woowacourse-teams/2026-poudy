@@ -33,6 +33,10 @@ public final class Rating {
         return preference == RatingPreference.GOOD;
     }
 
+    public boolean hasSamePreferenceAs(Rating other) {
+        return preference == other.preference;
+    }
+
     public RatingPreference preference() {
         return preference;
     }

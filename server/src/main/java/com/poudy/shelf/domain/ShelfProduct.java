@@ -28,6 +28,10 @@ public final class ShelfProduct {
         return rating.isGood();
     }
 
+    public boolean changesPreferenceTo(Rating next) {
+        return !rating.hasSamePreferenceAs(next);
+    }
+
     public long productId() {
         return productId;
     }
