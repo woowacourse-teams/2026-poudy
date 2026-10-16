@@ -130,13 +130,4 @@ describe("내 정보 한 항목 바꾸기", () => {
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     expect(router.replace).not.toHaveBeenCalled();
   });
-
-  it("피부 타입을 잘 모르겠다는 문구는 고를 수 있는 항목이 아니다", async () => {
-    server.use(http.get("*/api/users/me", () => HttpResponse.json(member)));
-
-    render(<ProfileFieldScreen field="skinType" />);
-
-    expect(await screen.findByText("내 피부 타입을 잘 모르겠어요")).toBeInTheDocument();
-    expect(screen.getAllByRole("radio")).toHaveLength(4);
-  });
 });

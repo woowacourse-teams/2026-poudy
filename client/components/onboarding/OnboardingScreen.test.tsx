@@ -60,13 +60,6 @@ describe("피부 정보 설정", () => {
     expect(combination).not.toBeChecked();
   });
 
-  it("피부 타입을 잘 모르겠다는 문구는 고를 수 있는 항목이 아니다", async () => {
-    await renderWith({ gender: null, ageRange: null, skinType: null });
-
-    expect(screen.getByText("내 피부 타입을 잘 모르겠어요")).toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: "내 피부 타입을 잘 모르겠어요" })).not.toBeInTheDocument();
-  });
-
   it("다른 항목을 누르면 선택이 그 항목으로 옮겨 간다", async () => {
     const user = userEvent.setup();
     await renderWith({ gender: "FEMALE", ageRange: null, skinType: null });

@@ -170,9 +170,6 @@ export function ProfileFieldScreen({ field }: { readonly field: ProfileField }) 
               </span>
             </label>
           ))}
-          {field === "skinType" && (
-            <p className="py-1.5 text-[14px] font-semibold text-text-secondary">내 피부 타입을 잘 모르겠어요</p>
-          )}
           {failed && (
             <p role="alert" className="mt-auto pt-4 text-center text-[14px] text-text-secondary">
               {SAVE_FAILED}

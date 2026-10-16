@@ -204,7 +204,6 @@ export function OnboardingScreen() {
                 </Choice>
               ))}
             </div>
-            <p className="mt-3 py-1.5 text-[14px] font-semibold text-text-secondary">내 피부 타입을 잘 모르겠어요</p>
           </fieldset>
         </div>
 
