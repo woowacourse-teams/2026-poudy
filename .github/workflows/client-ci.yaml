@@ -103,6 +103,27 @@ jobs:
           pnpm run typecheck
           pnpm --filter @poudy/design-system run typecheck
 
+      # #778 비교 계측 후 제거할 임시 단계. 같은 VM에서 기존/변경 설정을 비교한다.
+      - name: Benchmark original test setup
+        if: github.event.pull_request.number == 786
+        env:
+          BASELINE: 3912a0116b4947c7724301bffc5b253af840f5ac
+        run: |
+          echo "CPU: $(nproc)"
+          lscpu | head -20
+          free -m
+          git fetch origin "$BASELINE" --depth=1
+          cp vitest.config.mts /tmp/poudy-vitest.config.mts
+          cp vitest.setup.ts /tmp/poudy-vitest.setup.ts
+          restore() {
+            cp /tmp/poudy-vitest.config.mts vitest.config.mts
+            cp /tmp/poudy-vitest.setup.ts vitest.setup.ts
+          }
+          trap restore EXIT
+          git show "$BASELINE:client/vitest.config.mts" > vitest.config.mts
+          git show "$BASELINE:client/vitest.setup.ts" > vitest.setup.ts
+          pnpm run test --reporter=default --reporter=json --outputFile=vitest-baseline-report.json
+
       # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
       # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.
       # exceptions:check 는 디자인 토큰 린트를 끈 줄에 기한 꼬리표가 없거나 만료일이 지나면 실패한다.
@@ -310,6 +331,7 @@ jobs:
           path: |
             client/client-ci-results.json
             client/vitest-report.json
+            client/vitest-baseline-report.json
             client/lighthouse-report.json
             client/lighthouse-runs.json
             client/.lighthouseci-report/
