@@ -29,6 +29,7 @@ import {
   productPartSets,
   productSimilarities,
 } from "./fixtures";
+import { shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -531,6 +532,8 @@ export const setMockSavedProducts = (productIds: readonly number[]): void => {
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
 export const handlers = [
+  ...shelfHandlers,
+
   http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
 
   http.get("*/api/users/me/wishlist/product-ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),

@@ -45,6 +45,7 @@ import IngredientOpenGraphImage, {
 } from "@/app/ingredients/[ingredientId]/opengraph-image";
 import { generateMetadata as ingredientMetadata } from "@/app/ingredients/[ingredientId]/page";
 import { metadata as rootMetadata } from "@/app/layout";
+import { metadata as wishlistMetadata } from "@/app/my-page/wishlist/page";
 import OpenGraphImage, { alt as rootImageAlt } from "@/app/opengraph-image";
 import Home, { metadata as homeMetadata } from "@/app/page";
 import { metadata as privacyMetadata } from "@/app/privacy/page";
@@ -53,7 +54,6 @@ import { metadata as productsMetadata } from "@/app/products/page";
 import { metadata as ingredientSearchMetadata } from "@/app/search/ingredients/page";
 import { metadata as productSearchMetadata } from "@/app/search/products/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
-import { metadata as wishlistMetadata } from "@/app/wishlist/page";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo/site";
 import { SOCIAL_IMAGE_CACHE_CONTROL } from "@/lib/seo/social-image";
 
@@ -107,7 +107,7 @@ describe("색인 메타데이터", () => {
     expect(wishlistMetadata).toMatchObject({
       title: "위시리스트",
       description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
-      alternates: { canonical: "/wishlist" },
+      alternates: { canonical: "/my-page/wishlist" },
     });
 
     expect(productSearchMetadata.robots).toBeUndefined();

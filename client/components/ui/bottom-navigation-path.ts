@@ -1,4 +1,4 @@
-const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/wishlist", "/my-page"] as const;
+const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/shelf"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
   "/brands",
   "/categories",
@@ -20,6 +20,9 @@ const BOTTOM_ACTION_BAR_PATHS = [
   "/my-page/age-range",
   "/my-page/skin-type",
   "/my-page/withdraw",
+  "/shelf/add",
+  "/shelf/filter",
+  "/shelf/guide",
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>

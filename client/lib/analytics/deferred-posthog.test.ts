@@ -141,7 +141,7 @@ describe("deferPosthog", () => {
       { timestamp: capturedAt },
     );
     mocks.capture.mockClear();
-    window.history.pushState(null, "", "/wishlist");
+    window.history.pushState(null, "", "/my-page/wishlist");
     expect(mocks.capture).not.toHaveBeenCalled();
   });
 

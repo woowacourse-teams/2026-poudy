@@ -20,6 +20,8 @@ export const ICON_IDS = [
   "bookmark-solid",
   "bookmarks",
   "bookmarks-solid",
+  "archive",
+  "archive-solid",
   "chevron-down",
   "chevron-up",
   "chevron-right",
@@ -28,9 +30,13 @@ export const ICON_IDS = [
   "badge-check",
   "sparkles",
   "info",
+  "info-circle",
   "x",
   "trash",
   "plus",
+  "minus",
+  "arrow-back-up",
+  "filter",
   "share",
   "instagram",
   "mail",
@@ -44,6 +50,7 @@ export const ICON_IDS = [
   "trending-down",
   "droplet",
   "droplet-solid",
+  "droplet-outline",
   "book",
 ] as const;
 
@@ -118,6 +125,19 @@ export function IconSprite() {
           <path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" />
         </symbol>
 
+        {/* Tabler · archive. 하단 내비 '선반' */}
+        <symbol id="icon-archive" viewBox="0 0 24 24">
+          <path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" />
+          <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+          <path d="M10 12l4 0" />
+        </symbol>
+
+        {/* Tabler · archive (filled) */}
+        <symbol id="icon-archive-solid" viewBox="0 0 24 24">
+          <path d="M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z" />
+          <path d="M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" />
+        </symbol>
+
         {/* Tabler · chevron-down */}
         <symbol id="icon-chevron-down" viewBox="0 0 24 24">
           <path d="M6 9l6 6l6 -6" />
@@ -181,6 +201,29 @@ export function IconSprite() {
         <symbol id="icon-plus" viewBox="0 0 24 24">
           <path d="M12 5l0 14" />
           <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · minus */}
+        <symbol id="icon-minus" viewBox="0 0 24 24">
+          <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · info-circle. 마이페이지 '서비스 소개' */}
+        <symbol id="icon-info-circle" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M12 9h.01" />
+          <path d="M11 12h1v4h1" />
+        </symbol>
+
+        {/* Tabler · arrow-back-up. 위시리스트 '되돌리기' */}
+        <symbol id="icon-arrow-back-up" viewBox="0 0 24 24">
+          <path d="M9 14l-4 -4l4 -4" />
+          <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+        </symbol>
+
+        {/* Tabler · filter */}
+        <symbol id="icon-filter" viewBox="0 0 24 24">
+          <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227l0 0" />
         </symbol>
 
         {/*
@@ -306,6 +349,11 @@ export function IconSprite() {
             strokeWidth={0.8}
             strokeLinejoin="round"
           />
+        </symbol>
+
+        {/* Tabler · droplet. 선 아이콘. 마이페이지 '피부 타입' 줄. 물방울 레벨의 droplet 과 달리 다른 선 아이콘과 같은 굵기로 그린다 */}
+        <symbol id="icon-droplet-outline" viewBox="0 0 24 24">
+          <path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546" />
         </symbol>
 
         <symbol id="icon-droplet-solid" viewBox="-0.4 -0.4 11.806 16.76">

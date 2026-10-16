@@ -69,7 +69,7 @@ describe("지난 빌드 오류에서 문서 새로 읽기", () => {
   it("다른 주소에서 난 오류는 바로 새로 읽는다", () => {
     reloadForStaleBuild(STALE, 1_000);
     reload.mockClear();
-    stubLocation("https://poudy.site/wishlist");
+    stubLocation("https://poudy.site/my-page/wishlist");
 
     reloadForStaleBuild(STALE, 2_000);
     expect(reload).toHaveBeenCalledTimes(1);

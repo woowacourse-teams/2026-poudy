@@ -45,7 +45,7 @@ export function GET(): Response {
 - [브랜드](${absoluteUrl("/brands")}): 브랜드별 제품 목록과 상세 정보로 이동할 수 있습니다.
 - [제품 검색](${absoluteUrl("/search/products")}): 제품명이나 브랜드로 화장품을 검색하고 전성분을 확인할 수 있습니다.
 - [성분 검색](${absoluteUrl("/search/ingredients")}): 포함하거나 제외할 성분을 선택해 조건에 맞는 화장품을 찾을 수 있습니다.
-- [위시리스트](${absoluteUrl("/wishlist")}): 사용자가 저장한 화장품을 모아 확인할 수 있습니다.
+- [위시리스트](${absoluteUrl("/my-page/wishlist")}): 사용자가 저장한 화장품을 모아 확인할 수 있습니다.
 
 ## 사이트맵
 

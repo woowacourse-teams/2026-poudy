@@ -29,10 +29,10 @@ const TABS = [
       matchesPathSegment(path, "/ingredient-groups"),
   },
   {
-    href: "/wishlist",
-    label: "저장함",
-    icon: "bookmarks",
-    match: (path: string) => matchesPathSegment(path, "/wishlist"),
+    href: "/shelf",
+    label: "선반",
+    icon: "archive",
+    match: (path: string) => matchesPathSegment(path, "/shelf"),
   },
   {
     href: "/my-page",
