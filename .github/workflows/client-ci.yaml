@@ -28,12 +28,16 @@ jobs:
       pull-requests: read
     outputs:
       client: ${{ steps.filter.outputs.client }}
+      docs: ${{ steps.filter.outputs.docs }}
+      docs_files: ${{ steps.filter.outputs.docs_files }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          predicate-quantifier: some-with-excludes
+          list-files: json
           filters: |
             client:
               - 'client/**'
@@ -42,10 +46,20 @@ jobs:
               - 'pnpm-workspace.yaml'
               - 'package.json'
               - '.github/workflows/client-ci.yaml'
+              - '.github/scripts/check-client-docs*'
+              - '!client/*.md'
+              - '!client/docs/**/*.md'
+              - '!design-system/*.md'
+              - '!design-system/docs/**/*.md'
+            docs:
+              - 'client/*.md'
+              - 'client/docs/**/*.md'
+              - 'design-system/*.md'
+              - 'design-system/docs/**/*.md'
 
   # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
   check:
-    name: Client checks
+    name: Client code checks
     needs: changes
     if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
@@ -96,6 +110,7 @@ jobs:
         id: test
         continue-on-error: true
         run: |
+          node --test ../.github/scripts/check-client-docs.test.mjs
           pnpm run test --reporter=default --reporter=json --outputFile=vitest-report.json
           pnpm --filter @poudy/design-system run tokens:check
           pnpm --filter @poudy/design-system run test
@@ -303,3 +318,53 @@ jobs:
       - name: Fail if any check failed
         if: steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
         run: exit 1
+
+  docs:
+    name: Client documentation checks
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: node --test .github/scripts/check-client-docs.test.mjs
+      - name: Check changed documentation
+        env:
+          CHANGED_DOCS: ${{ needs.changes.outputs.docs_files }}
+        run: node .github/scripts/check-client-docs.mjs
+
+  gate:
+    name: Client checks
+    needs: [changes, check, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Check results
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          CODE: ${{ needs.check.result }}
+          DOCS: ${{ needs.docs.result }}
+        run: |
+          test "$CHANGES" = success
+          for result in "$CODE" "$DOCS"; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "::error::Client check: $result"; exit 1 ;;
+            esac
+          done
