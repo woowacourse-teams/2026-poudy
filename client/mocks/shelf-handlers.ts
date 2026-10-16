@@ -59,6 +59,9 @@ const SUSPECTS = [
   { id: 9004, koreanName: "알코올" },
 ] as const;
 
+/** 나만의 필터 화면(S55j)이 성분 아래 줄에 적는 제형 기능. */
+const ROLES: Readonly<Record<number, string>> = { 9001: "착향제", 9002: "착향제", 9003: "보존제", 9004: "용제" };
+
 let shelf: MockItem[] = seed();
 let filterIds: number[] = [];
 let lastSuspectIds: number[] = [];
@@ -205,15 +208,18 @@ export const shelfHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.get("*/api/users/me/skin-filter", () =>
-    HttpResponse.json({
-      items: filterIds.map((id) => ({
-        id,
-        koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
-        formulationRoles: [],
-        skinEffects: [],
-      })),
-    }),
+  http.get(
+    "*/api/users/me/skin-filter",
+    () =>
+      blocked() ??
+      HttpResponse.json({
+        items: filterIds.map((id) => ({
+          id,
+          koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
+          formulationRoles: ROLES[id] ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }] : [],
+          skinEffects: [],
+        })),
+      }),
   ),
 
   http.post("*/api/users/me/skin-filter/ingredients", async ({ request }) => {

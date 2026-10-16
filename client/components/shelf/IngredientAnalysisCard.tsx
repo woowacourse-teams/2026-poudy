@@ -43,7 +43,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
 }
 
 type GuideRowProps = {
-  /** 나만의 필터 관리(/my-page/filter, S55j)는 아직 화면이 없다. 링크만 먼저 둔다. */
+  /** 피부 타입 고르기(S55c)나 나만의 필터 관리(S55j)로 간다. */
   readonly href: "/my-page/skin-type" | "/my-page/filter";
   readonly icon: React.ReactNode;
   readonly action: string;
