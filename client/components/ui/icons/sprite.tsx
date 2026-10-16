@@ -30,6 +30,7 @@ export const ICON_IDS = [
   "badge-check",
   "sparkles",
   "info",
+  "info-circle",
   "x",
   "trash",
   "plus",
@@ -204,6 +205,13 @@ export function IconSprite() {
         {/* Tabler · minus */}
         <symbol id="icon-minus" viewBox="0 0 24 24">
           <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · info-circle. 마이페이지 '서비스 소개' */}
+        <symbol id="icon-info-circle" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M12 9h.01" />
+          <path d="M11 12h1v4h1" />
         </symbol>
 
         {/* Tabler · arrow-back-up. 위시리스트 '되돌리기' */}

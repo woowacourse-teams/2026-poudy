@@ -22,11 +22,16 @@ export function GoogleIcon() {
 
 type ProviderBadgeProps = {
   readonly provider: OAuthProvider;
-  readonly size: "small" | "large";
+  readonly size: "small" | "medium" | "large" | "xlarge";
 };
 
-const BADGE_SIZES = { small: "size-4", large: "size-7" } as const;
-const BADGE_ICON_SIZES = { small: "[&>*]:size-2.5", large: "[&>*]:size-4" } as const;
+const BADGE_SIZES = { small: "size-4", medium: "size-5", large: "size-7", xlarge: "size-8" } as const;
+const BADGE_ICON_SIZES = {
+  small: "[&>*]:size-2.5",
+  medium: "[&>*]:size-3",
+  large: "[&>*]:size-4",
+  xlarge: "[&>*]:size-4.5",
+} as const;
 
 /** 가입한 소셜 계정을 동그란 표식으로 보여 준다. 이름은 옆 글자가 전한다. */
 export function ProviderBadge({ provider, size }: ProviderBadgeProps) {

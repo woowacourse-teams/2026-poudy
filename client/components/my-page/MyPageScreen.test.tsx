@@ -64,7 +64,7 @@ describe("마이페이지", () => {
     expect(row).toHaveAttribute("href", "/my-page/filter");
   });
 
-  it("로그아웃은 시트에서 한 번 더 확인한 뒤에 하고 로그인 화면으로 보낸다", async () => {
+  it("로그아웃은 시트에서 한 번 더 확인한 뒤에 하고 홈으로 보낸다", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     server.use(
@@ -81,8 +81,32 @@ describe("마이페이지", () => {
 
     await user.click(within(sheet).getByRole("button", { name: "로그아웃" }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login"));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/"));
     expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it("피부 타입 뒤에 민감한지를 함께 보여 준다", async () => {
+    server.use(
+      http.get("*/api/users/me", () =>
+        HttpResponse.json({ ...member({ gender: null, ageRange: null, skinType: "DRY" }), sensitiveSkin: true }),
+      ),
+    );
+    render(<MyPageScreen />);
+
+    expect(await screen.findByRole("link", { name: /피부 타입/ })).toHaveTextContent("건성 · 민감성");
+  });
+
+  it("이메일 줄은 가입한 로그인 방법을 함께 읽어 주고 누를 수 없다", async () => {
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    expect(screen.getByText("카카오 계정")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /이메일/ })).not.toBeInTheDocument();
+  });
+
+  it("서비스 소개로 보낸다", async () => {
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    expect(screen.getByRole("link", { name: "서비스 소개" })).toHaveAttribute("href", "/about");
   });
 
   it("탈퇴는 확인 화면으로 보낸다", async () => {
