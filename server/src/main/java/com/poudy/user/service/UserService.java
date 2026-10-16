@@ -12,6 +12,7 @@ import com.poudy.skintype.domain.SkinType;
 import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.RestoreRequestPage;
+import com.poudy.user.domain.SkinProfileChanged;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +28,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService implements SocialUsers, UserActivity {
 
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Duration retention;
 
     public UserService(
         UserRepository userRepository,
+        ApplicationEventPublisher eventPublisher,
         @Value("${poudy.user.retention.max-age:P30D}") Duration retention
     ) {
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
         this.retention = retention;
     }
 
@@ -86,8 +91,13 @@ public class UserService implements SocialUsers, UserActivity {
         SkinType skinType,
         Boolean sensitiveSkin
     ) {
-        return userRepository.updateProfile(userId, gender, ageRange, skinType, sensitiveSkin)
+        User previous = findById(userId);
+        User updated = userRepository.updateProfile(userId, gender, ageRange, skinType, sensitiveSkin)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (!updated.hasSameSkinAs(previous)) {
+            eventPublisher.publishEvent(new SkinProfileChanged(userId));
+        }
+        return updated;
     }
 
     @Transactional

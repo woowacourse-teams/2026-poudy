@@ -23,6 +23,7 @@ import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -99,6 +100,12 @@ public class ShelfService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void refreshAnalysisForSkinChange(long userId) {
+        shelfProductRepository.lockShelf(userId);
+        refreshAnalysis(userId);
+    }
+
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
         return IngredientAnalysis.of(
@@ -108,7 +115,7 @@ public class ShelfService {
         );
     }
 
-    // 제품을 담거나 빼거나 호불호가 바뀐 같은 트랜잭션에서 결과를 다시 계산해 새 성분을 다시 표시한다.
+    // 제품을 담거나 빼거나 호불호나 피부 정보가 바뀐 트랜잭션에서 결과를 다시 계산해 새 성분을 다시 표시한다.
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
