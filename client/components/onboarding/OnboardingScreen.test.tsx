@@ -17,7 +17,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
-const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">): UserResponse => ({
+type Profile = Pick<UserResponse, "gender" | "ageRange" | "skinType"> & Partial<Pick<UserResponse, "sensitiveSkin">>;
+
+const member = (profile: Profile): UserResponse => ({
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
@@ -25,10 +27,12 @@ const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">)
   ...profile,
 });
 
-const renderWith = async (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">) => {
+const renderWith = async (profile: Profile) => {
   server.use(http.get("*/api/users/me", () => HttpResponse.json(member(profile))));
   render(<OnboardingScreen />);
-  const loaded = profile.gender ?? profile.ageRange ?? profile.skinType;
+  const loaded = [profile.gender, profile.ageRange, profile.skinType, profile.sensitiveSkin].some(
+    (value) => value !== null && value !== undefined,
+  );
   if (loaded) {
     await waitFor(() => expect(screen.getByRole("button", { name: "시작하기" })).toBeEnabled());
   }
@@ -70,5 +74,39 @@ describe("피부 정보 설정", () => {
 
     expect(female).not.toBeChecked();
     expect(male).toBeChecked();
+  });
+
+  it("피부 타입과 민감한지를 따로 고르고 따로 저장한다", async () => {
+    const user = userEvent.setup();
+    let saved: unknown = null;
+    server.use(
+      http.patch("*/api/users/me/profile", async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json(
+          member({ gender: null, ageRange: null, skinType: "COMBINATION", sensitiveSkin: true }),
+        );
+      }),
+    );
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    await user.click(screen.getByRole("radio", { name: /복합성/ }));
+    await user.click(screen.getByRole("radio", { name: "네, 민감해요" }));
+    await user.click(screen.getByRole("button", { name: "시작하기" }));
+
+    await waitFor(() =>
+      expect(saved).toEqual({ gender: null, ageRange: null, skinType: "COMBINATION", sensitiveSkin: true }),
+    );
+  });
+
+  it("민감한지만 답해도 시작할 수 있고, 다시 누르면 답이 풀린다", async () => {
+    const user = userEvent.setup();
+    await renderWith({ gender: null, ageRange: null, skinType: null, sensitiveSkin: false });
+    const notSensitive = screen.getByRole("radio", { name: "아니요" });
+    expect(notSensitive).toBeChecked();
+
+    await user.click(notSensitive);
+
+    expect(notSensitive).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toBeDisabled();
   });
 });
