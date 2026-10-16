@@ -60,11 +60,12 @@ staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 �
 ## CodeBuild 캐시와 측정
 
 캐시는 buildspec의 경로와 CodeBuild 프로젝트의 S3 설정을 함께 적용해야 동작합니다.
-현재 캐시 적용 대상은 staging BE입니다. FE는 계측만 추가하며, 운영 buildspec과 배포 순서는 변경하지 않습니다.
+캐시 적용 대상은 staging과 production BE입니다. FE는 계측만 추가하며, 배포 순서는 유지합니다.
 
 | 대상 | buildspec 캐시 경로 | 프로젝트의 S3 경로 접두사 |
 | --- | --- | --- |
 | Staging BE | `/root/.cache/poudy-gradle/staging-be/{caches,wrapper}` | `poudy/codebuild-cache/staging-be/gradle-v1` |
+| Production BE | `/root/.cache/poudy-gradle/production-be/{caches,wrapper}` | `poudy/codebuild-cache/production-be/gradle-v1` |
 
 버킷은 `techcourse-project-2026-artifacts`, 역할은 기존 `codebuild-project`를 사용합니다.
 환경별 접두사와 로컬 경로를 분리합니다. 캐시 형식이나 빌드 이미지가 바뀌면 접두사의 버전을
@@ -81,7 +82,8 @@ CodeBuild 전체 실행 시간도 함께 사용합니다.
 
 캐시 이상 시 프로젝트 캐시 유형을 `NO_CACHE`로 바꾸고 해당 buildspec 변경을 되돌립니다.
 캐시 삭제나 공유 버킷 lifecycle 변경은 필요하지 않습니다. 버킷 버전 관리는 비활성 상태로 확인했으며, 커밋별 새 키 대신 같은 캐시를 갱신합니다.
-형식 변경으로 남은 이전 접두사의 저장 비용은 별도 확인 대상입니다. 실험 조건과 실행 ID는 [#779](https://github.com/woowacourse-teams/2026-poudy/issues/779)에 기록합니다.
+형식 변경으로 남은 이전 접두사의 저장 비용은 별도 확인 대상입니다. 실험 조건과 실행 ID는 staging [#779](https://github.com/woowacourse-teams/2026-poudy/issues/779),
+운영 [#792](https://github.com/woowacourse-teams/2026-poudy/issues/792)에 기록합니다.
 
 ## EC2 초기화
 
