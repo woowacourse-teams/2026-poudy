@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    GRADLE_USER_HOME: /root/.cache/poudy-gradle/production-be
+
 phases:
   install:
     runtime-versions:
@@ -11,7 +15,7 @@ phases:
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
   build:
     commands:
-      - cd "${CODEBUILD_SRC_DIR}/server" && ./gradlew clean bootJar --no-daemon
+      - cd "${CODEBUILD_SRC_DIR}/server" && "${CODEBUILD_SRC_DIR}/deploy/scripts/measure-build.sh" gradle ./gradlew clean bootJar --no-daemon --build-cache --profile
       - |
         set -Eeuo pipefail
         shopt -s nullglob
@@ -38,4 +42,11 @@ artifacts:
     - systemd/**/*
     - app/**/*
     - build-metadata.txt
+    - metrics/**/*
   discard-paths: no
+
+# staging과 다른 S3 접두사에서 운영 Gradle 캐시만 복원한다.
+cache:
+  paths:
+    - "/root/.cache/poudy-gradle/production-be/caches/**/*"
+    - "/root/.cache/poudy-gradle/production-be/wrapper/**/*"
