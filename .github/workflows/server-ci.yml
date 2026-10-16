@@ -97,7 +97,13 @@ jobs:
 
       # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiArtifacts --build-cache --profile
+        run: |
+          mkdir -p build/reports/profile
+          # VM 전체(CI 프로세스와 PostgreSQL 포함)의 초 단위 CPU와 메모리다.
+          vmstat -y -w -t -S M 1 > build/reports/profile/resources-openapi.txt &
+          resource_monitor_pid=$!
+          trap 'kill "$resource_monitor_pid" 2>/dev/null || true' EXIT
+          ./gradlew generateApiArtifacts --no-build-cache --profile
 
       # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
@@ -113,7 +119,13 @@ jobs:
 
       - name: Build and test
         id: test
-        run: ./gradlew build --build-cache --profile
+        run: |
+          mkdir -p build/reports/profile
+          # VM 전체(CI 프로세스와 PostgreSQL 포함)의 초 단위 CPU와 메모리다.
+          vmstat -y -w -t -S M 1 > build/reports/profile/resources-build.txt &
+          resource_monitor_pid=$!
+          trap 'kill "$resource_monitor_pid" 2>/dev/null || true' EXIT
+          ./gradlew build --no-build-cache --profile
 
       - name: Upload Gradle profiles
         if: always()
