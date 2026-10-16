@@ -81,10 +81,13 @@ type IngredientAnalysisCardProps = {
 /**
  * 안 맞을 수 있는 성분 카드(명세 APP · 안 맞을 수 있는 성분 카드 · 펼침).
  * 이미 제외 중인 성분이 있으면 아래에 관리 줄을 두고, 새로 나온 성분이 있을 때만 고르기 버튼을 둔다.
+ * 찾은 성분이 없으면 칩·안내 줄·버튼을 모두 빼고 찾지 못했다고만 알린다(S53m).
  */
 export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: IngredientAnalysisCardProps) {
   const router = useRouter();
   const summary = summarizeAnalysis(analysis.items, filterCount);
+  // 안 맞은 제품은 있지만 주의 성분을 하나도 찾지 못했으면 설명과 정확도 안내만 남긴다(S53m).
+  const found = analysis.items.length > 0;
 
   return (
     <section aria-labelledby="ingredient-analysis-title" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
@@ -100,19 +103,25 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
         </h2>
       </div>
 
-      <p className="text-body-sm text-text-body">
-        {analysisDescription(analysis.badProductCount)}
-        <br />
-        피부 반응의 원인으로 확인된 것은 아니에요.
-      </p>
+      {found ? (
+        <p className="text-body-sm text-text-body">
+          {analysisDescription(analysis.badProductCount)}
+          <br />
+          피부 반응의 원인으로 확인된 것은 아니에요.
+        </p>
+      ) : (
+        <p className="text-body-sm text-text-body">안 맞았던 제품에서 주의 성분을 찾지 못했어요.</p>
+      )}
 
-      <ul className="flex flex-wrap gap-2">
-        {analysis.items.map((item) => (
-          <IngredientChip key={item.id} item={item} markNew={marksNewIngredients(filterCount)} />
-        ))}
-      </ul>
+      {found ? (
+        <ul className="flex flex-wrap gap-2">
+          {analysis.items.map((item) => (
+            <IngredientChip key={item.id} item={item} markNew={marksNewIngredients(filterCount)} />
+          ))}
+        </ul>
+      ) : null}
 
-      {askSkinType ? (
+      {found && askSkinType ? (
         <GuideRow
           href="/my-page/skin-type"
           icon={<Icon name="info-circle" size={16} strokeWidth={2} />}
@@ -127,13 +136,13 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
         {analysisHint(analysis.badProductCount)}
       </p>
 
-      {summary.pickLabel ? (
+      {found && summary.pickLabel ? (
         <Button className="w-full" onClick={() => router.push("/shelf/filter")}>
           {summary.pickLabel}
         </Button>
       ) : null}
 
-      {summary.showManage ? (
+      {found && summary.showManage ? (
         <GuideRow href="/my-page/filter" icon={<Icon name="filter" size={16} strokeWidth={2} />} action="관리하기">
           {`검색에서 제외 중인 성분 ${filterCount}개`}
           {summary.outsideResultCount > 0 ? `\n${summary.outsideResultCount}개는 지금 결과에 없어요` : null}

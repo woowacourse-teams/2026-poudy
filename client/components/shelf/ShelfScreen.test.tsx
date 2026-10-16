@@ -57,6 +57,19 @@ describe("선반", () => {
     expect(await within(card).findByRole("link", { name: /관리하기/ })).toHaveAttribute("href", "/my-page/filter");
   });
 
+  it("안 맞은 제품에서 주의 성분을 찾지 못하면 칩과 버튼 없이 찾지 못했다고 알린다", async () => {
+    server.use(
+      http.get(`${SHELF_PATH}/ingredient-analysis`, () => HttpResponse.json({ badProductCount: 1, items: [] })),
+    );
+    render(<ShelfScreen />);
+
+    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    expect(within(card).getByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).toBeInTheDocument();
+    expect(within(card).queryByRole("listitem")).not.toBeInTheDocument();
+    expect(within(card).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(card).queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("제품 행의 이름을 누르면 제품 상세로 간다", async () => {
     render(<ShelfScreen />);
 
