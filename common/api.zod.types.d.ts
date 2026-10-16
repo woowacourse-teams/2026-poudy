@@ -172,14 +172,14 @@ export type SkinEffectResponse = {
    */
   name: string;
 }
-export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
+export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse>, groupCodes: Array<string> }
 export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
 export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
 export type ShelfProductIdsResponse = { productIds: Array<number> }
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
-export type IngredientAnalysisItemResponse = { id: number, koreanName: string, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
+export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type SkinTypeResponse = {
   code: SkinType;

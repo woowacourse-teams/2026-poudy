@@ -56,6 +56,8 @@ const SAMPLE_ANALYSIS: IngredientAnalysisResponse = {
   items: ["리모넨", "향료", "페녹시에탄올"].map((koreanName, index) => ({
     id: index + 1,
     koreanName,
+    formulationRoles: [],
+    groupCodes: [],
     products: [],
     inFilter: false,
     isNew: false,

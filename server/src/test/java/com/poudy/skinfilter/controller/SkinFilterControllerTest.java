@@ -1,6 +1,8 @@
 package com.poudy.skinfilter.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -76,6 +78,27 @@ class SkinFilterControllerTest {
             .andExpect(jsonPath("$.items[0].skinEffects").isArray())
             .andExpect(jsonPath("$.items[0].englishName").doesNotExist())
             .andExpect(jsonPath("$.items[1].id").value(9L));
+    }
+
+    @Test
+    @DisplayName("성분마다 속한 성분군 코드를 주고, 속한 성분군이 없으면 빈 배열을 준다")
+    void includesGroupCodes() throws Exception {
+        add("""
+            {"ingredientIds": [2]}
+            """).andExpect(status().isNoContent());
+        add("""
+            {"ingredientIds": [20]}
+            """).andExpect(status().isNoContent());
+        jdbcTemplate.update(
+            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
+        );
+
+        mockMvc.perform(get(PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(20L))
+            .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[1].id").value(2L))
+            .andExpect(jsonPath("$.items[1].groupCodes").value(empty()));
     }
 
     @Test

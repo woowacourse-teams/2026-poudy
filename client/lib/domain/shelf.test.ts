@@ -25,9 +25,14 @@ const item = (id: number, overrides: Partial<ShelfProductResponse> = {}): ShelfP
   ...overrides,
 });
 
-const ingredient = (id: number, overrides: Partial<IngredientAnalysisItemResponse> = {}) => ({
+const ingredient = (
+  id: number,
+  overrides: Partial<IngredientAnalysisItemResponse> = {},
+): IngredientAnalysisItemResponse => ({
   id,
   koreanName: `성분 ${id}`,
+  formulationRoles: [],
+  groupCodes: [],
   products: [{ id: 1, name: "제품", imageUrl: "" }],
   inFilter: false,
   isNew: false,

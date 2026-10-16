@@ -3,6 +3,7 @@ package com.poudy.shelf.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
@@ -57,11 +58,15 @@ public class ShelfService {
 
     @Transactional(readOnly = true)
     public Shelf findShelf(long userId) {
+        return findShelf(userId, excludeCodeRepository.findAll());
+    }
+
+    private Shelf findShelf(long userId, ExcludeCodes excludeCodes) {
         List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(userId);
         List<Long> productIds = shelfProducts.stream()
             .map(ShelfProduct::productId)
             .toList();
-        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId));
+        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId, excludeCodes));
     }
 
     public List<Long> findProductIds(long userId) {
@@ -108,10 +113,12 @@ public class ShelfService {
 
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
         return IngredientAnalysis.of(
-            findShelf(userId),
+            findShelf(userId, excludeCodes),
             shelfAnalysisRepository.find(userId),
-            skinFilterRepository.findIngredientIds(userId)
+            skinFilterRepository.findIngredientIds(userId),
+            excludeCodes
         );
     }
 
@@ -123,12 +130,12 @@ public class ShelfService {
         return shelf;
     }
 
-    private SuspectCandidates candidatesOf(long userId) {
+    private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         SkinCautions cautions = SkinCautions.of(user.skinType(), user.sensitiveSkin());
         return new SuspectCandidates(
-            excludeCodeRepository.findAll().ingredientIds(),
+            excludeCodes.ingredientIds(),
             cautions.ingredientIdsWith(shelfCautionRepository.findGroupIngredientIds(cautions.ingredientGroupCodes()))
         );
     }
