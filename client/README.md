@@ -97,6 +97,8 @@ React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 - 문서 링크 검사는 Markdown 링크, 이미지, 참조 링크의 로컬 파일 존재를 확인합니다. 외부 주소, 제목 앵커와 HTML 링크는 검사하지 않습니다.
 
 테스트별 실행 결과는 CI의 `client-ci-results` artifact에 `vitest-report.json`으로 보관합니다.
+문서 전용 PR은 Preview 배포와 Lighthouse를 실행하지 않습니다. 검사가 끝나면 PR의
+`Client checks` 결과를 확인하고, 실패 시 `Check documentation` 로그에서 원인을 확인합니다.
 
 파일을 수정한 뒤 포맷을 적용할 때는 다음 명령을 실행합니다.
 
