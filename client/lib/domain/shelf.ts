@@ -186,5 +186,8 @@ const endsWithConsonant = (name: string): boolean => {
   return (hangul && (code - 0xac00) % 28 !== 0) || (!hangul && /[013678]/.test(last));
 };
 
+/** 이름 뒤에 '와/과'를 붙인다. 예: '1025 독도 크림과', '블랙 스네일 토너와' */
+export const withAndParticle = (name: string): string => `${name}${(endsWithConsonant(name) && "과") || "와"}`;
+
 /** 이름 뒤에 목적격 조사를 붙인다. 예: '1025 독도 크림을', '블랙 스네일 토너를' */
 export const withObjectParticle = (name: string): string => `${name}${(endsWithConsonant(name) && "을") || "를"}`;
