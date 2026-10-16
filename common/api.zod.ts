@@ -122,7 +122,7 @@ export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
-export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()) });
 
 export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
 export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
@@ -143,7 +143,7 @@ export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.Ingredien
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
 export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
-export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
+export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
 
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });

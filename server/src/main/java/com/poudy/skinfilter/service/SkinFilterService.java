@@ -2,8 +2,11 @@ package com.poudy.skinfilter.service;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
+import com.poudy.excludecode.domain.ExcludeCodes;
+import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredient.repository.IngredientRepository;
+import com.poudy.skinfilter.domain.SkinFilterIngredient;
 import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -14,15 +17,25 @@ public class SkinFilterService {
 
     private final SkinFilterRepository skinFilterRepository;
     private final IngredientRepository ingredientRepository;
+    private final ExcludeCodeRepository excludeCodeRepository;
 
-    public SkinFilterService(SkinFilterRepository skinFilterRepository, IngredientRepository ingredientRepository) {
+    public SkinFilterService(
+        SkinFilterRepository skinFilterRepository,
+        IngredientRepository ingredientRepository,
+        ExcludeCodeRepository excludeCodeRepository
+    ) {
         this.skinFilterRepository = skinFilterRepository;
         this.ingredientRepository = ingredientRepository;
+        this.excludeCodeRepository = excludeCodeRepository;
     }
 
-    public Ingredients findIngredients(long userId) {
+    public List<SkinFilterIngredient> findIngredients(long userId) {
         List<Long> ingredientIds = skinFilterRepository.findIngredientIds(userId);
-        return ingredientRepository.findInOrder(ingredientIds);
+        Ingredients ingredients = ingredientRepository.findInOrder(ingredientIds);
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
+        return ingredients.values().stream()
+            .map(ingredient -> new SkinFilterIngredient(ingredient, excludeCodes.codesOf(ingredient.id())))
+            .toList();
     }
 
     @Transactional

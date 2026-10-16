@@ -254,6 +254,8 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.badProductCount").value(2))
             .andExpect(jsonPath("$.items[*].id").value(contains(20, 4815, 9)))
             .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
+            .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())

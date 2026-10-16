@@ -6392,10 +6392,18 @@
             "items": {
               "$ref": "#/components/schemas/SkinEffectResponse"
             }
+          },
+          "groupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "HARSH_PRESERVATIVES"
+            }
           }
         },
         "required": [
           "formulationRoles",
+          "groupCodes",
           "id",
           "koreanName",
           "skinEffects"
@@ -6494,6 +6502,19 @@
             "type": "string",
             "example": "페녹시에탄올"
           },
+          "formulationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormulationRoleResponse"
+            }
+          },
+          "groupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "HARSH_PRESERVATIVES"
+            }
+          },
           "products": {
             "type": "array",
             "items": {
@@ -6510,6 +6531,8 @@
           }
         },
         "required": [
+          "formulationRoles",
+          "groupCodes",
           "id",
           "inFilter",
           "isNew",
