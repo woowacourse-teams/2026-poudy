@@ -96,7 +96,7 @@ jobs:
         id: test
         continue-on-error: true
         run: |
-          pnpm run test
+          pnpm run test --reporter=default --reporter=json --outputFile=vitest-report.json
           pnpm --filter @poudy/design-system run tokens:check
           pnpm --filter @poudy/design-system run test
           pnpm --filter @poudy/design-system run exceptions:check
@@ -294,6 +294,7 @@ jobs:
           name: client-ci-results
           path: |
             client/client-ci-results.json
+            client/vitest-report.json
             client/lighthouse-report.json
             client/lighthouse-runs.json
             client/.lighthouseci-report/
