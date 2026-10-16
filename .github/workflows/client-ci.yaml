@@ -62,7 +62,7 @@ jobs:
   check:
     name: Client checks
     needs: changes
-    if: always() && (needs.changes.result != 'success' || github.base_ref == 'main' || needs.changes.outputs.client == 'true' || needs.changes.outputs.docs == 'true')
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || github.base_ref == 'main' || needs.changes.outputs.client == 'true' || needs.changes.outputs.docs == 'true') }}
     runs-on: ubuntu-latest
 
     steps:
