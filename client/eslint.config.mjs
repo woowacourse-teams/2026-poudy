@@ -20,8 +20,10 @@ const tokenStrictFiles = [
   "components/shelf/**/*.{ts,tsx}",
   "app/my-page/**/*.{ts,tsx}",
   "components/my-page/**/*.{ts,tsx}",
-  "components/skin-filter/**/*.{ts,tsx}",
   "components/saved/**/*.{ts,tsx}",
+  "components/login/WithdrawnNotice.tsx",
+  "components/login/RegisteredAccountNotice.tsx",
+  "components/skin-filter/**/*.{ts,tsx}",
 ];
 
 const eslintConfig = defineConfig([
