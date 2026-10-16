@@ -585,7 +585,7 @@ export const patch_UpdateMyProfile = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { body: UserProfileRequest },
-  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_ChangeStatus = __TypedOpenapi.Endpoints.patch_ChangeStatus;

@@ -15,6 +15,7 @@ import com.poudy.user.domain.RestoreRequestPage;
 import com.poudy.user.domain.SkinProfileChanged;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
+import com.poudy.user.ratelimit.ProfileUpdateRateLimiter;
 import com.poudy.user.repository.UserRepository;
 import java.time.Duration;
 import java.util.List;
@@ -28,15 +29,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService implements SocialUsers, UserActivity {
 
     private final UserRepository userRepository;
+    private final ProfileUpdateRateLimiter profileUpdateRateLimiter;
     private final ApplicationEventPublisher eventPublisher;
     private final Duration retention;
 
     public UserService(
         UserRepository userRepository,
+        ProfileUpdateRateLimiter profileUpdateRateLimiter,
         ApplicationEventPublisher eventPublisher,
         @Value("${poudy.user.retention.max-age:P30D}") Duration retention
     ) {
         this.userRepository = userRepository;
+        this.profileUpdateRateLimiter = profileUpdateRateLimiter;
         this.eventPublisher = eventPublisher;
         this.retention = retention;
     }
@@ -91,6 +95,7 @@ public class UserService implements SocialUsers, UserActivity {
         SkinType skinType,
         Boolean sensitiveSkin
     ) {
+        profileUpdateRateLimiter.requireAllowed(userId);
         User previous = findById(userId);
         User updated = userRepository.updateProfile(userId, gender, ageRange, skinType, sensitiveSkin)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));

@@ -106,7 +106,8 @@ public final class ErrorResponseCodes {
             || FEEDBACK_PATH.equals(path)
             || PRODUCT_CORRECTION_REQUESTS_PATH.equals(path)
             || PENDING_IMAGES_PATH.equals(path)
-            || ADMIN_LOGIN_PATH.equals(path);
+            || ADMIN_LOGIN_PATH.equals(path)
+            || USER_PROFILE_PATH.equals(path);
     }
 
     public static boolean authenticated(String path) {

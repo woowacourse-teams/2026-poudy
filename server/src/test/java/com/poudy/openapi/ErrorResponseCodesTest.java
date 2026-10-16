@@ -18,6 +18,12 @@ class ErrorResponseCodesTest {
     }
 
     @Test
+    @DisplayName("프로필 수정은 요청 제한 초과를 문서화한다")
+    void documentsProfileUpdateRateLimit() {
+        assertThat(ErrorResponseCodes.rateLimited("/api/users/me/profile")).isTrue();
+    }
+
+    @Test
     @DisplayName("관리자 요청은 쿼리와 본문 오류 코드를 문서화한다")
     void documentsAdminRequestErrors() {
         assertThat(ErrorResponseCodes.badRequest("/api/admin/feedbacks/{feedbackId}/status", HttpMethod.PATCH))

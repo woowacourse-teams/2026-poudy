@@ -30,6 +30,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -144,6 +145,25 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("프로필 수정은 회원마다 1분에 5번까지 받고, 넘으면 429와 Retry-After를 돌려준다")
+    void limitsProfileUpdatesPerUser() throws Exception {
+        User user = userRepository
+            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)));
+        User other = userRepository
+            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "8765", "other@example.com", true)));
+
+        for (int request = 0; request < 5; request++) {
+            updateProfile(user).andExpect(status().isOk());
+        }
+
+        updateProfile(user)
+            .andExpect(status().isTooManyRequests())
+            .andExpect(header().exists(HttpHeaders.RETRY_AFTER))
+            .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"));
+        updateProfile(other).andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("로그인하지 않았으면 초기 정보를 401로 거절한다")
     void rejectsAnonymousProfileUpdate() throws Exception {
         mockMvc.perform(
@@ -179,5 +199,16 @@ class UserControllerTest {
     void rejectsAnonymousWithdrawal() throws Exception {
         mockMvc.perform(delete("/api/users/me"))
             .andExpect(status().isUnauthorized());
+    }
+
+    private ResultActions updateProfile(User user) throws Exception {
+        return mockMvc.perform(
+            patch("/api/users/me/profile")
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"skinType":"DRY","sensitiveSkin":true}
+                    """)
+        );
     }
 }
