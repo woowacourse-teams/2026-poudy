@@ -128,3 +128,6 @@ OpenAPI 생성과 생성물 드리프트 검사도 유지한다. 태스크별 �
 
 `resources-*.txt`는 PostgreSQL을 포함한 CI 러너 VM의 1초 간격 `vmstat` 기록이다.
 Java 프로세스만의 CPU나 최대 RSS가 아니므로 태스크 프로파일과 구분해서 읽는다.
+
+캐시 적용 조건과 전후 측정값은 [#777 결과](https://github.com/woowacourse-teams/2026-poudy/issues/777#issuecomment-6207553716)에 기록했다.
+새 PR에서 재사용되는 캐시는 dev의 Server CI가 먼저 생성해야 한다.
