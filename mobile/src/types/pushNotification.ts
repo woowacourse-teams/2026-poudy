@@ -13,3 +13,8 @@ export interface PushNotificationOptions {
   readonly onNavigate: (url: string) => void;
   readonly serviceBaseUrl: string;
 }
+
+export interface PushTokenAccess {
+  readonly read: () => Promise<PushTokenResult>;
+  readonly request: () => Promise<PushTokenResult>;
+}

@@ -5,13 +5,7 @@ import type { WebViewBridgeOptions } from '@/types/webView';
 import { LOGOUT_MESSAGE, loginProviderOf, loginResultScript, loginWith, signOutProviders } from '@/util/appLogin';
 import { APP_UPDATE_MESSAGE, startAppUpdate } from '@/util/appUpdate';
 import { playSelectionHaptic } from '@/util/haptic';
-import {
-  PUSH_PERMISSION_MESSAGE,
-  PUSH_TOKEN_MESSAGE,
-  pushTokenResultScript,
-  readPushToken,
-  requestPushToken,
-} from '@/util/pushNotification';
+import { PUSH_PERMISSION_MESSAGE, PUSH_TOKEN_MESSAGE, pushTokenResultScript } from '@/util/pushNotification';
 import { shareText } from '@/util/share';
 import { shouldLoadInWebView } from '@/util/webViewRequest';
 
@@ -19,7 +13,7 @@ const HAPTIC_SELECTION_MESSAGE = 'poudy:haptic:selection';
 
 const SHARE_MESSAGE_PREFIX = 'poudy:share:';
 
-export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebViewBridgeOptions) => {
+export const useWebViewBridge = ({ onWebLogin, pushToken, serviceOrigin, webViewRef }: WebViewBridgeOptions) => {
   const latestLoginRef = useRef(0);
 
   const startLogin = useCallback(
@@ -77,19 +71,19 @@ export const useWebViewBridge = ({ onWebLogin, serviceOrigin, webViewRef }: WebV
       }
 
       if (data === PUSH_TOKEN_MESSAGE) {
-        const result = await readPushToken();
+        const result = await pushToken.read();
         webViewRef.current?.injectJavaScript(pushTokenResultScript(result));
         return;
       }
 
       if (data === PUSH_PERMISSION_MESSAGE) {
-        const result = await requestPushToken();
+        const result = await pushToken.request();
         webViewRef.current?.injectJavaScript(pushTokenResultScript(result));
         return;
       }
 
       await startLogin(data);
     },
-    [serviceOrigin, startLogin, webViewRef],
+    [pushToken, serviceOrigin, startLogin, webViewRef],
   );
 };

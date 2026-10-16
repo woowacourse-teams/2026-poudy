@@ -25,7 +25,7 @@ export const showNotificationsInForeground = () => {
   });
 };
 
-export const prepareNotificationChannel = async () => {
+const prepareChannel = async () => {
   if (Platform.OS !== 'android') {
     return;
   }
@@ -50,7 +50,7 @@ const tokenResultOf = async (permission: Notifications.NotificationPermissionsSt
 };
 
 const askPermission = async (): Promise<Notifications.NotificationPermissionsStatus> => {
-  await prepareNotificationChannel();
+  await prepareChannel();
   const current = await Notifications.getPermissionsAsync();
 
   if (current.granted || !current.canAskAgain) {

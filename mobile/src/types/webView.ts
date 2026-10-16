@@ -1,6 +1,8 @@
 import type { RefObject } from 'react';
 import type { WebView } from 'react-native-webview';
 
+import type { PushTokenAccess } from '@/types/pushNotification';
+
 export type WebViewFailure = 'offline' | 'address' | 'timeout' | 'server' | 'unknown';
 
 export interface HardwareBackOptions {
@@ -47,6 +49,7 @@ export interface WebViewNavigation {
 
 export interface WebViewBridgeOptions {
   readonly onWebLogin: () => void;
+  readonly pushToken: PushTokenAccess;
   readonly serviceOrigin: string;
   readonly webViewRef: RefObject<WebView | null>;
 }

@@ -1,17 +1,23 @@
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import type { PushNotificationOptions } from '@/types/pushNotification';
-import { notificationUrlOf, prepareNotificationChannel, showNotificationsInForeground } from '@/util/pushNotification';
+import type { PushNotificationOptions, PushTokenAccess, PushTokenResult } from '@/types/pushNotification';
+import {
+  notificationUrlOf,
+  readPushToken,
+  requestPushToken,
+  showNotificationsInForeground,
+} from '@/util/pushNotification';
 
-export const usePushNotifications = ({ onNavigate, serviceBaseUrl }: PushNotificationOptions) => {
+export const usePushNotifications = ({ onNavigate, serviceBaseUrl }: PushNotificationOptions): PushTokenAccess => {
+  const launchRequestRef = useRef<Promise<PushTokenResult> | null>(null);
   const handledResponseRef = useRef<string | null>(null);
 
   const response = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
     showNotificationsInForeground();
-    prepareNotificationChannel().catch(() => undefined);
+    launchRequestRef.current = requestPushToken();
   }, []);
 
   useEffect(() => {
@@ -30,4 +36,16 @@ export const usePushNotifications = ({ onNavigate, serviceBaseUrl }: PushNotific
       onNavigate(targetUrl);
     }
   }, [onNavigate, response, serviceBaseUrl]);
+
+  const read = useCallback(async () => {
+    await launchRequestRef.current;
+    return readPushToken();
+  }, []);
+
+  const request = useCallback(async () => {
+    await launchRequestRef.current;
+    return requestPushToken();
+  }, []);
+
+  return useMemo(() => ({ read, request }), [read, request]);
 };
