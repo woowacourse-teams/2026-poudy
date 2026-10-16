@@ -43,6 +43,10 @@ describe("levelLabel", () => {
     expect([0, 1, 2, 3].map(levelLabel)).toEqual(["없음", "낮음", "보통", "높음"]);
   });
 
+  it("0.5 단위 값은 가까운 단계로 올린다", () => {
+    expect([0.5, 1.5, 2.5].map(levelLabel)).toEqual(["낮음", "보통", "높음"]);
+  });
+
   it("범위를 벗어나면 없음으로 본다", () => {
     expect(levelLabel(9)).toBe("없음");
   });

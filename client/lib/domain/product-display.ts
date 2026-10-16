@@ -28,7 +28,11 @@ export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string
   return `${formatVolume(volume)}${firstOf(suffix, "")}`;
 };
 
-export const levelLabel = (level: number): string => pick(level in LEVEL_LABELS, LEVEL_LABELS[level], LEVEL_LABELS[0]);
+/** 단계 이름. 서버는 0.5 단위로 주므로 가까운 단계로 반올림한다(1.5 는 보통). */
+export const levelLabel = (level: number): string => {
+  const step = Math.round(level);
+  return pick(step in LEVEL_LABELS, LEVEL_LABELS[step], LEVEL_LABELS[0]);
+};
 
 /** 유수분 레벨을 물방울 아이콘 3 칸의 채움 여부로 바꾼다. 0 단계면 모두 빈 칸이다. */
 export const dropletFills = (level: number, total = 3): readonly boolean[] =>
