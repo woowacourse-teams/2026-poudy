@@ -23,6 +23,7 @@ test("상대 경로, 루트 경로, 한글과 공백을 해석한다", () => {
     localTarget(source, "./%ED%95%9C%20%EA%B8%80.md?raw=1"),
     path.join(root, "client/한 글.md"),
   );
+  assert.throws(() => localTarget(source, "../../outside.md"), /저장소 밖/);
   for (const url of [
     "#title",
     "https://example.com",

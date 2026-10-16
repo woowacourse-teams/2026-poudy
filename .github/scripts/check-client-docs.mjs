@@ -13,9 +13,12 @@ export function localTarget(source, url) {
     return null;
   const target = decodeURIComponent(url.split(/[?#]/, 1)[0]);
   if (!target) return null;
-  return url.startsWith("/")
+  const resolved = url.startsWith("/")
     ? path.resolve(root, `.${target}`)
     : path.resolve(path.dirname(source), target);
+  if (resolved !== path.resolve(root) && !resolved.startsWith(root))
+    throw new Error("링크 대상이 저장소 밖입니다.");
+  return resolved;
 }
 
 export function links(text) {
