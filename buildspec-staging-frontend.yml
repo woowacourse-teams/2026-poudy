@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     PNPM_VERSION: "11.21.0"
-    PNPM_STORE_PATH: /root/.cache/poudy-pnpm/staging-fe
     # staging 프론트 EC2도 운영처럼 화면과 API를 같은 출처(staging.poudy.site)로 받는다.
     # NEXT_PUBLIC_POSTHOG_KEY처럼 값이 필요한 환경값은 CodeBuild 프로젝트 환경 변수로 주입한다.
     NEXT_PUBLIC_API_MOCKING: ""
@@ -18,7 +17,6 @@ phases:
       nodejs: 22
     commands:
       - npm install --global "pnpm@${PNPM_VERSION}"
-      - pnpm config set store-dir "${PNPM_STORE_PATH}"
   pre_build:
     commands:
       - test "$(uname -m)" = "aarch64"
@@ -54,11 +52,3 @@ artifacts:
     - build-metadata.txt
     - metrics/**/*
   discard-paths: no
-
-# 응답 데이터(fetch-cache)와 standalone 산출물은 재사용하지 않는다.
-cache:
-  paths:
-    - '/root/.cache/poudy-pnpm/staging-fe/**/*'
-    - 'client/.next/cache/turbopack/**/*'
-    - 'client/.next/cache/swc/**/*'
-    - 'client/.next/cache/.tsbuildinfo'
