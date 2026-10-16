@@ -15,6 +15,7 @@ import { ShelfViewFilter } from "./ShelfViewFilter";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
+import { StickyBar } from "@/components/ui/StickyBar";
 // TODO(#729): 큰 제목 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
 import { clearedDraft, countInTab, movedDraft, type RatingDraft, shelfSections } from "@/lib/domain/shelf";
@@ -23,15 +24,18 @@ import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type ShelfHeaderProps = {
   readonly onHelp: () => void;
+  /** 바 아래에 보기 필터가 함께 붙는지. 붙으면 필터 쪽이 아래 선을 맡는다. */
+  readonly withFilter: boolean;
 };
 
-function ShelfHeader({ onHelp }: ShelfHeaderProps) {
+function ShelfHeader({ onHelp, withFilter }: ShelfHeaderProps) {
   const router = useRouter();
 
   return (
     <TopBar
       title="선반"
       variant="root"
+      edge={!withFilter}
       right={
         <div className="flex items-center">
           <IconButton
@@ -60,10 +64,18 @@ function ShelfList({ data, onRate, onOpenMenu }: ShelfListProps) {
   const [tab, setTab] = useState<ShelfTab>("ALL");
   const { items, usages } = data.shelf;
 
+  // 표식과 붙는 줄이 본문의 gap 을 따로 받지 않도록 한 덩어리로 묶는다.
   return (
-    <>
-      <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
-      <section aria-label="선반 제품" className="flex flex-col">
+    <div className="flex flex-col">
+      {/*
+        큰 제목 상단 내비(56) 아래에 붙는다. 제품 목록만 그 아래로 흐른다.
+        붙었을 때 칩이 바에 닿지 않게 위아래 여백을 두고, 위 여백은 음의 여백으로 덜어 카드와의 간격은 그대로 둔다.
+        표식은 줄보다 8 아래에 있으므로 붙는 높이(56)에 8 을 더한 곳을 지날 때 붙은 것으로 본다.
+      */}
+      <StickyBar stuckAt={64} className="sticky top-14 z-20 -mt-2 bg-background px-gutter py-2">
+        <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
+      </StickyBar>
+      <section aria-label="선반 제품" className="flex flex-col px-gutter pt-2">
         <p className="pb-1 text-body-sm text-text-secondary">{`${countInTab(items, tab)}개`}</p>
         {shelfSections(items, tab).map((section, sectionIndex) => (
           <div key={section.heading ?? tab} className="flex flex-col">
@@ -85,7 +97,7 @@ function ShelfList({ data, onRate, onOpenMenu }: ShelfListProps) {
           </div>
         ))}
       </section>
-    </>
+    </div>
   );
 }
 
@@ -112,13 +124,16 @@ function ShelfBody({ data, update, remove }: ShelfBodyProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 px-gutter pt-4 pb-6">
+    // 보기 필터가 화면 폭 끝까지 바탕을 깔고 붙도록 좌우 여백은 본문이 아니라 각 덩어리가 맡는다.
+    <div className="flex flex-col gap-4 pt-4 pb-6">
       {data.analysis.badProductCount > 0 ? (
-        <IngredientAnalysisCard
-          analysis={data.analysis}
-          filterCount={data.filterCount}
-          askSkinType={data.member.skinType === null}
-        />
+        <div className="px-gutter">
+          <IngredientAnalysisCard
+            analysis={data.analysis}
+            filterCount={data.filterCount}
+            askSkinType={data.member.skinType === null}
+          />
+        </div>
       ) : null}
 
       <ShelfList data={data} onRate={setRatingItem} onOpenMenu={setMenuItem} />
@@ -166,10 +181,11 @@ export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove } = useShelf();
   const [helpOpen, setHelpOpen] = useState(false);
+  const hasItems = state.status === "ready" && state.data.shelf.items.length > 0;
 
   return (
     <>
-      <ShelfHeader onHelp={() => setHelpOpen(true)} />
+      <ShelfHeader onHelp={() => setHelpOpen(true)} withFilter={hasItems} />
       <main className="flex flex-1 flex-col">
         {/* TODO(#728): 불러오는 동안 스켈레톤(S50a)을 둔다. 지금은 빈 본문이다. */}
         {state.status === "signedOut" ? (
