@@ -2,6 +2,9 @@
 
 import { useCallback, useRef, useState } from "react";
 
+/** 누르면 제 일을 하는 요소. 머리 안에 있어도 끌기로 잡지 않는다. */
+const INTERACTIVE = "button, a, input, select, textarea, [role='button']";
+
 /** 이만큼 내렸으면 닫는다. */
 const DISTANCE_THRESHOLD = 96;
 /** 조금만 내렸어도 이 속도보다 빠르게 튕겼으면 닫는다(px/ms). */
@@ -35,6 +38,11 @@ export const useDragToDismiss = (onDismiss: () => void) => {
   const onPointerDown = useCallback((event: React.PointerEvent<HTMLElement>) => {
     // 마우스는 왼쪽 버튼만 받는다. 오른쪽 버튼으로 끌리면 메뉴와 겹친다.
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    /*
+     * 머리 안의 버튼·링크에서 누른 것은 끌기로 잡지 않는다. 잡으면 포인터를 머리가 가져가
+     * 클릭이 버튼에 닿지 않는다. 평가 시트 머리의 닫기(×)가 눌러도 닫히지 않았다.
+     */
+    if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
 
     drag.current = { pointerId: event.pointerId, startY: event.clientY, startedAt: Date.now() };
     setDragging(true);
