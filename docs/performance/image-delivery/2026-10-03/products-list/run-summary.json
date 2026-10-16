@@ -1,0 +1,2306 @@
+{
+  "kind": "derived-from-original-lighthouse-reports",
+  "note": "Full original reports are preserved locally; source SHA256 identifies each report. No current-state claim.",
+  "runs": [
+    {
+      "source": "after/run-1.json",
+      "sourceSha256": "a19326fda1dd90b3ece8240a168098c7bfb3869ef4b7cb2fcdefc8a189ab9237",
+      "fetchTime": "2026-10-03T09:55:24.749Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.78,
+      "metrics": {
+        "first-contentful-paint": 1552.7085,
+        "largest-contentful-paint": 4552.7085,
+        "total-blocking-time": 175.00000000000045,
+        "speed-index": 4450.679770633971,
+        "cumulative-layout-shift": 0.005126017046368898,
+        "server-response-time": 9
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 71241,
+      "totalTransferBytes": 955182,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22831,
+          "resourceSize": 250263,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 3137,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 3047,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "h2",
+          "transferSize": 4035,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "h2",
+          "transferSize": 5765,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 4678,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3771,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3300,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2348,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2809,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2810,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 2841,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3171,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3505,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 5311,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4510,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4854,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3746,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2716,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 2421,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2466,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "after/run-2.json",
+      "sourceSha256": "230d89a4b174e665a9b24b82f970f1789d1836afd15ed6efc33d0694cf35e07a",
+      "fetchTime": "2026-10-03T09:55:41.285Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.64,
+      "metrics": {
+        "first-contentful-paint": 3599.6105,
+        "largest-contentful-paint": 6008.6105,
+        "total-blocking-time": 175,
+        "speed-index": 5567.259908171248,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 10
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 71253,
+      "totalTransferBytes": 954504,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22969,
+          "resourceSize": 250263,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 3137,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 3047,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "h2",
+          "transferSize": 4035,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "h2",
+          "transferSize": 5766,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 4678,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3770,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3300,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2349,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2808,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2811,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 2842,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3170,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3506,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 5312,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4510,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4863,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3746,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2715,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 2422,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2466,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "after/run-3.json",
+      "sourceSha256": "1d1c776733632626f4af62e4bf568ef078c0a2146f12214294f786cdd1d2ad01",
+      "fetchTime": "2026-10-03T09:55:56.706Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.63,
+      "metrics": {
+        "first-contentful-paint": 3758.96,
+        "largest-contentful-paint": 5896.960000000001,
+        "total-blocking-time": 198.5,
+        "speed-index": 5710.086151231797,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 71315,
+      "totalTransferBytes": 954820,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22810,
+          "resourceSize": 250263,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 3137,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 3047,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "h2",
+          "transferSize": 4034,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "h2",
+          "transferSize": 5773,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 4678,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3771,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3305,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2353,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2813,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2815,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 2846,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3176,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3510,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 5317,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4514,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4859,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3752,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2719,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 2426,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2470,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "after/run-4.json",
+      "sourceSha256": "8308b52dc8ba1e1d947e99978ec65ddb451b6a4310ca48cddeb2153d76bd7f9f",
+      "fetchTime": "2026-10-03T09:56:12.002Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.64,
+      "metrics": {
+        "first-contentful-paint": 3554.4845,
+        "largest-contentful-paint": 6076.9845000000005,
+        "total-blocking-time": 178,
+        "speed-index": 5652.789446143348,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 71325,
+      "totalTransferBytes": 955220,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 23021,
+          "resourceSize": 250263,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 3138,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 3047,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "h2",
+          "transferSize": 4034,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "h2",
+          "transferSize": 5765,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 4678,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3770,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3306,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2354,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2815,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2815,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 2847,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3177,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3512,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 5317,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4515,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4860,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3754,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2721,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 2427,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2473,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "after/run-5.json",
+      "sourceSha256": "614c3611c86ca25075e84797c4c0c3b6c9b6b2779cffdf2e4bc6b17550fd68bf",
+      "fetchTime": "2026-10-03T09:56:26.872Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.64,
+      "metrics": {
+        "first-contentful-paint": 3902.0575,
+        "largest-contentful-paint": 6013.0575,
+        "total-blocking-time": 167,
+        "speed-index": 5818.249252925954,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 71348,
+      "totalTransferBytes": 954815,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-oiuhrj2hf-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22819,
+          "resourceSize": 250263,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 3140,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 3049,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "h2",
+          "transferSize": 4036,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "h2",
+          "transferSize": 5766,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 4679,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3773,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3306,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2355,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2815,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2817,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "h2",
+          "transferSize": 2849,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3176,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3512,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 5318,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4517,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 4862,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 3753,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "h2",
+          "transferSize": 2722,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "h2",
+          "transferSize": 2429,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://d2rcowg6kz7uw3.cloudfront.net/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "h2",
+          "transferSize": 2474,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "before/run-1.json",
+      "sourceSha256": "a800b55edac6e3d3eed00377e6e6929cd94141a662e0afbb3dbff147ef2afe64",
+      "fetchTime": "2026-10-03T09:53:32.583Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.73,
+      "metrics": {
+        "first-contentful-paint": 1531.8199999999997,
+        "largest-contentful-paint": 5893.855,
+        "total-blocking-time": 174,
+        "speed-index": 4205.566021026631,
+        "cumulative-layout-shift": 0.05520507759153971,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 73004,
+      "totalTransferBytes": 955838,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22796,
+          "resourceSize": 254059,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3219,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3131,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4117,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5847,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4761,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3855,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3391,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2437,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2899,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2901,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2931,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3261,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3595,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5401,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4599,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4945,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3839,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2805,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2513,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2557,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "before/run-2.json",
+      "sourceSha256": "0fa6506cac9dc562ba3e1598759917930aff4302a91e0fd3f7727285b14000a1",
+      "fetchTime": "2026-10-03T09:54:11.016Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.62,
+      "metrics": {
+        "first-contentful-paint": 3560.9755,
+        "largest-contentful-paint": 6499.1525,
+        "total-blocking-time": 209.5,
+        "speed-index": 5673.058976031634,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 73004,
+      "totalTransferBytes": 955249,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22833,
+          "resourceSize": 254059,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3219,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3131,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4117,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5847,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4761,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3855,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3391,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2437,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2899,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2901,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2931,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3261,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3595,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5401,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4599,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4945,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3839,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2805,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2513,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2557,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "before/run-3.json",
+      "sourceSha256": "e1cffa2b0123814073942584edfa9929a80a0c24760fe5c5fd19350cb2c6338e",
+      "fetchTime": "2026-10-03T09:54:27.202Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.74,
+      "metrics": {
+        "first-contentful-paint": 1820.632,
+        "largest-contentful-paint": 5863.541000000001,
+        "total-blocking-time": 176.99999999999955,
+        "speed-index": 3233.2469094509115,
+        "cumulative-layout-shift": 0.06033109463790861,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 73004,
+      "totalTransferBytes": 955447,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22796,
+          "resourceSize": 254059,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3219,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3131,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4117,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5847,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4761,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3855,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3391,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2437,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2899,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2901,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2931,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3261,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3595,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5401,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4599,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4945,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3839,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2805,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2513,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2557,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "before/run-4.json",
+      "sourceSha256": "9fda88d73a93128e4fb4fc299625584388f9c4b8cf16ba8cba1973c08aa59a79",
+      "fetchTime": "2026-10-03T09:54:41.203Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.62,
+      "metrics": {
+        "first-contentful-paint": 3590.3575,
+        "largest-contentful-paint": 6562.3575,
+        "total-blocking-time": 222,
+        "speed-index": 5614.134087085166,
+        "cumulative-layout-shift": 0,
+        "server-response-time": 8
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 73004,
+      "totalTransferBytes": 956416,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22811,
+          "resourceSize": 254059,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3219,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3131,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4117,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5847,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4761,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3855,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3391,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2437,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2899,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2901,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2931,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3261,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3595,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5401,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4599,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4945,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3839,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2805,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2513,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2557,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "source": "before/run-5.json",
+      "sourceSha256": "c9b8e6c9f2b4416c98ceef44dc65b1a4321376d03461e65bbf820272674c66c2",
+      "fetchTime": "2026-10-03T09:54:56.065Z",
+      "lighthouseVersion": "13.4.1",
+      "requestedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "finalDisplayedUrl": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+      "performanceScore": 0.79,
+      "metrics": {
+        "first-contentful-paint": 1530.1329999999998,
+        "largest-contentful-paint": 5225.313,
+        "total-blocking-time": 50.5,
+        "speed-index": 2707.3353045627555,
+        "cumulative-layout-shift": 0.06033109463790861,
+        "server-response-time": 10
+      },
+      "imageRequests": 20,
+      "imageTransferBytes": 73004,
+      "totalTransferBytes": 955433,
+      "settings": {
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        }
+      },
+      "imageAndDocumentRequests": [
+        {
+          "url": "https://poudy-staging-iitfmxuhv-inaemins-projects.vercel.app/products",
+          "protocol": "h2",
+          "transferSize": 22811,
+          "resourceSize": 254059,
+          "statusCode": 200,
+          "resourceType": "Document",
+          "priority": "VeryHigh"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A2%E1%86%A8%20%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3219,
+          "resourceSize": 2710,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_%E1%84%87%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%89%E1%85%B3%E1%84%90%E1%85%B5%E1%86%A8%20SPF50%2B%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3131,
+          "resourceSize": 2622,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%B0%A8%EC%95%A4%EB%B0%95_%EB%8D%94%EB%A7%88%EC%95%A4%EC%84%9C%20%EB%B0%B0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%EC%85%8B%20%ED%81%AC%EB%A6%BC_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4117,
+          "resourceSize": 3608,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%83%E1%85%A1%E1%86%A8%E1%84%90%E1%85%A5%E1%84%8C%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%86%E1%85%B5%E1%84%89%E1%85%B1%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20EX_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5847,
+          "resourceSize": 5338,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%86%E1%85%A6%E1%84%83%E1%85%B5%E1%84%8F%E1%85%B2%E1%84%87%E1%85%B3_%E1%84%8F%E1%85%A9%E1%84%8C%E1%85%B5%E1%86%A8%E1%84%8B%E1%85%A2%E1%84%8A%E1%85%B5%E1%84%83%E1%85%B3%20%E1%84%90%E1%85%A5%E1%84%86%E1%85%A6%E1%84%85%E1%85%B5%E1%86%A8%20%E1%84%85%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4761,
+          "resourceSize": 4252,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%91%E1%85%A9%E1%84%8B%E1%85%A5%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%A5%20%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%8E%E1%85%A1%E1%84%8F%E1%85%A9%E1%86%AF%20%E1%84%91%E1%85%A2%E1%86%A8%20%E1%84%90%E1%85%AE%20%E1%84%91%E1%85%A9%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3855,
+          "resourceSize": 3346,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "High"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3391,
+          "resourceSize": 2882,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%83%E1%85%B3%E1%84%85%E1%85%A2%E1%86%B8_1025%20%E1%84%83%E1%85%A9%E1%86%A8%E1%84%83%E1%85%A9%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2437,
+          "resourceSize": 1928,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%5BNEW%5D%20%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2899,
+          "resourceSize": 2390,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%89%E1%85%A6%E1%86%AF%E1%84%91%E1%85%B2%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%8A%E1%85%B5_%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%A5%20%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%87%E1%85%A5%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A7%E1%86%AB%20%E1%84%8B%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2901,
+          "resourceSize": 2392,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%84%89%E1%85%B5%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF30%20PA%2B%2B%2B%2B_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2931,
+          "resourceSize": 2422,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%20%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3261,
+          "resourceSize": 2752,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%A9%E1%84%83%E1%85%A5%E1%84%86%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%83%E1%85%A5%E1%86%B7%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%90%E1%85%A6%E1%86%AB%E1%84%89%E1%85%B5%E1%84%87%E1%85%B3%E1%84%87%E1%85%A1%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3595,
+          "resourceSize": 3086,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%82%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A5_%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%AE%E1%84%8B%E1%85%A1%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%A1%E1%84%89%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 5401,
+          "resourceSize": 4892,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A6%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%85%E1%85%A1_%E1%84%8B%E1%85%A1%E1%84%90%E1%85%A9%E1%84%87%E1%85%A6%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A5365%20%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%20%E1%84%89%E1%85%AE%E1%84%83%E1%85%B5%E1%86%BC%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4599,
+          "resourceSize": 4090,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%82%E1%85%AE%E1%84%8B%E1%85%A1_PDRN%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20100%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 4945,
+          "resourceSize": 4436,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B3%E1%84%85%E1%85%B5%E1%86%BC%E1%84%80%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB_%E1%84%87%E1%85%B3%E1%86%AF%E1%84%85%E1%85%AE%E1%84%87%E1%85%B5%E1%86%AB%20B5-PDRN%20%E1%84%86%E1%85%A1%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%83%E1%85%B3%20%E1%84%87%E1%85%A5%E1%84%87%E1%85%B3%E1%86%AF%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 3839,
+          "resourceSize": 3330,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%87%E1%85%B5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AB_%E1%84%82%E1%85%A9%E1%86%A8%E1%84%83%E1%85%AE%20%E1%84%86%E1%85%A9%E1%84%80%E1%85%A9%E1%86%BC%20%E1%84%90%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%90%E1%85%B3%E1%84%8B%E1%85%A5%E1%86%B8%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2805,
+          "resourceSize": 2296,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%85%E1%85%B5%E1%84%8C%E1%85%B2%E1%84%85%E1%85%A1%E1%86%AB_%E1%84%86%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%89%E1%85%B3%E1%84%8E%E1%85%A5%20%E1%84%90%E1%85%B3%E1%84%85%E1%85%B5%E1%84%90%E1%85%B3%E1%84%86%E1%85%A5%E1%86%AB%E1%84%90%E1%85%B3%20%E1%84%90%E1%85%A9%E1%84%82%E1%85%A5_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2513,
+          "resourceSize": 2004,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        },
+        {
+          "url": "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%90%E1%85%A9%E1%84%85%E1%85%B5%E1%84%83%E1%85%B3%E1%86%AB_%E1%84%83%E1%85%A1%E1%84%8B%E1%85%B5%E1%84%87%E1%85%B3%E1%84%8B%E1%85%B5%E1%86%AB%20%E1%84%8C%E1%85%A5%E1%84%87%E1%85%AE%E1%86%AB%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%B5%E1%84%8B%E1%85%A1%E1%86%AF%E1%84%85%E1%85%AE%E1%84%85%E1%85%A9%E1%86%AB%E1%84%89%E1%85%A1%E1%86%AB%20%E1%84%8F%E1%85%B3%E1%86%AF%E1%84%85%E1%85%A6%E1%86%AB%E1%84%8C%E1%85%B5%E1%86%BC%20%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B5%E1%86%AF_192.webp",
+          "protocol": "http/1.1",
+          "transferSize": 2557,
+          "resourceSize": 2048,
+          "statusCode": 200,
+          "resourceType": "Image",
+          "priority": "Low"
+        }
+      ]
+    }
+  ]
+}
