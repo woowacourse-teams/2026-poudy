@@ -37,6 +37,7 @@ export const WEBVIEW_INIT_SCRIPT = appInfo
   window.__POUDY_WEB_SCROLL_INDICATOR__ = true;
   window.__POUDY_APP_LOGIN__ = ${JSON.stringify(APP_LOGIN_PROVIDERS)};
   window.__POUDY_APP_UPDATE__ = ${JSON.stringify(canAppUpdate)};
+  window.__POUDY_APP_PUSH__ = true;
 
   const lockViewport = () => {
     const viewport = document.querySelector('meta[name="viewport"]');
