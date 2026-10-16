@@ -50,6 +50,7 @@ export const ICON_IDS = [
   "trending-down",
   "droplet",
   "droplet-solid",
+  "droplet-outline",
   "book",
 ] as const;
 
@@ -348,6 +349,11 @@ export function IconSprite() {
             strokeWidth={0.8}
             strokeLinejoin="round"
           />
+        </symbol>
+
+        {/* Tabler · droplet. 선 아이콘. 마이페이지 '피부 타입' 줄. 물방울 레벨의 droplet 과 달리 다른 선 아이콘과 같은 굵기로 그린다 */}
+        <symbol id="icon-droplet-outline" viewBox="0 0 24 24">
+          <path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546" />
         </symbol>
 
         <symbol id="icon-droplet-solid" viewBox="-0.4 -0.4 11.806 16.76">

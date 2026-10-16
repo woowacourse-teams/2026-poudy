@@ -197,7 +197,7 @@ export function MyPageScreen() {
             label="나이대"
             value={profileLabel(AGE_RANGES, member.ageRange)}
           />
-          <MenuRow href="/my-page/skin-type" icon="droplet" label="피부 타입" value={skinSummaryOf(member)} />
+          <MenuRow href="/my-page/skin-type" icon="droplet-outline" label="피부 타입" value={skinSummaryOf(member)} />
         </Section>
 
         <Section title="관심 제품">
