@@ -1,11 +1,12 @@
-import "@testing-library/jest-dom/vitest";
-
-import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { clearProductPages } from "./lib/storage/product-pages-cache";
 import { clearSuggestionPages } from "./lib/storage/suggestion-pages-cache";
 import { server } from "./mocks/server";
+
+// DOM 검사 도구는 jsdom 테스트에서만 불러온다.
+const cleanup = typeof document === "undefined" ? () => {} : (await import("@testing-library/react")).cleanup;
+if (typeof document !== "undefined") await import("@testing-library/jest-dom/vitest");
 
 // jsdom 에 없다.
 if (!("IntersectionObserver" in globalThis)) {

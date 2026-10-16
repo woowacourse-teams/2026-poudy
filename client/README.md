@@ -83,7 +83,20 @@ pnpm run typecheck
 pnpm run check
 ```
 
-`check`는 ESLint, Prettier, TypeScript 검사와 production build를 순서대로 실행합니다.
+`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다.
+
+Vitest의 `domain` 프로젝트는 순수 함수를 별도 초기화 없이 검사합니다.
+HTTP 목을 검증하는 `mock-*` 테스트와 나머지 테스트는 `application` 프로젝트에서 MSW와 캐시 정리를 유지합니다.
+React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
+
+### PR 검사 범위
+
+- dev 대상 PR에서 `client/`, `design-system/` 바로 아래 Markdown과 `docs/`의 Markdown만 바뀌면 포맷과 로컬 링크 대상을 검사합니다.
+- 코드, 설정, 생성 파일, 의존성, CI 스크립트 변경은 전체 검사를 실행합니다. main 대상 PR도 항상 전체 검사합니다.
+- `Client checks` 안에서 코드 검사와 문서 검사 결과를 모읍니다. 문서 검사에 추가 러너를 만들지 않습니다. 실패 또는 취소된 검사는 통과시키지 않습니다.
+- 문서 링크 검사는 Markdown 링크, 이미지, 참조 링크의 로컬 파일 존재를 확인합니다. 외부 주소, 제목 앵커와 HTML 링크는 검사하지 않습니다.
+
+테스트별 실행 결과는 CI의 `client-ci-results` artifact에 `vitest-report.json`으로 보관합니다.
 
 파일을 수정한 뒤 포맷을 적용할 때는 다음 명령을 실행합니다.
 
