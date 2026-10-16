@@ -82,6 +82,10 @@ jobs:
       # --no-daemon 을 쓰지 않는다. setup-gradle 이 데몬 재사용을 전제로 캐시를 관리한다.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # dev/main은 다음 PR용 캐시를 저장하고, 팀 PR은 같은 PR의 재실행에 재사용한다.
+          # fork PR은 읽기 전용으로 유지한다.
+          cache-read-only: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
 
       # v5 부터 packageManager 를 보고 캐시를 켠다. 여기선 npx 만 쓰므로
       # 루트에 package.json 이 생기면 없는 pnpm 을 찾다 실패한다.
@@ -93,7 +97,7 @@ jobs:
 
       # 훅을 우회했거나 훅이 없는 채로 올라온 변경을 잡는다.
       - name: Regenerate OpenAPI artifacts
-        run: ./gradlew generateApiArtifacts --profile
+        run: ./gradlew generateApiArtifacts --build-cache --profile
 
       # git diff 는 추적되지 않는 파일을 보지 못해 생성물이 새로 생긴 경우를 놓친다.
       - name: Verify OpenAPI artifacts are up to date
@@ -109,7 +113,7 @@ jobs:
 
       - name: Build and test
         id: test
-        run: ./gradlew build --profile
+        run: ./gradlew build --build-cache --profile
 
       - name: Upload Gradle profiles
         if: always()
