@@ -96,7 +96,8 @@ public class UserService implements SocialUsers, UserActivity {
         Boolean sensitiveSkin
     ) {
         profileUpdateRateLimiter.requireAllowed(userId);
-        User previous = findById(userId);
+        User previous = userRepository.findByIdForUpdate(userId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         User updated = userRepository.updateProfile(userId, gender, ageRange, skinType, sensitiveSkin)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         if (!updated.hasSameSkinAs(previous)) {

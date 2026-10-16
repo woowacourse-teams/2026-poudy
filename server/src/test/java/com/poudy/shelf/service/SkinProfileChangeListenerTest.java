@@ -3,6 +3,8 @@ package com.poudy.shelf.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
@@ -18,6 +20,11 @@ import com.poudy.user.repository.UserRepository;
 import com.poudy.user.service.UserService;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +36,8 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
@@ -49,6 +58,9 @@ class SkinProfileChangeListenerTest {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private long userId;
 
@@ -82,6 +94,39 @@ class SkinProfileChangeListenerTest {
     }
 
     @Test
+    @DisplayName("같은 회원의 같은 피부 정보 변경 요청이 겹쳐도 변경 전 조회부터 순서대로 처리해 한 번만 다시 계산한다")
+    void refreshesOnceForConcurrentSameSkinChanges() throws Exception {
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        CountDownLatch firstUpdated = new CountDownLatch(1);
+        CountDownLatch commitFirst = new CountDownLatch(1);
+        AtomicInteger firstBackendPid = new AtomicInteger();
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            Future<?> first = executor.submit(() -> transaction.executeWithoutResult(ignored -> {
+                firstBackendPid.set(jdbc.queryForObject("select pg_backend_pid()", Integer.class));
+                userService.updateProfile(userId, null, null, SkinType.DRY, null);
+                firstUpdated.countDown();
+                await(commitFirst);
+            }));
+            try {
+                assertThat(firstUpdated.await(5, TimeUnit.SECONDS)).isTrue();
+                Future<?> second = executor.submit(
+                    () -> userService.updateProfile(userId, null, null, SkinType.DRY, null)
+                );
+                awaitBlockedBy(firstBackendPid.get(), second);
+
+                commitFirst.countDown();
+                first.get(5, TimeUnit.SECONDS);
+                second.get(5, TimeUnit.SECONDS);
+            } finally {
+                commitFirst.countDown();
+            }
+        }
+
+        verify(shelfService, times(1)).refreshAnalysisForSkinChange(userId);
+    }
+
+    @Test
     @DisplayName("선반 성분 분석을 다시 계산하지 못해도 피부 정보 저장은 유지하고 오류 로그를 남긴다")
     void keepsSkinProfileWhenRefreshFails(CapturedOutput output) {
         willThrow(new IllegalStateException("주의 성분군 누락")).given(shelfService).refreshAnalysisForSkinChange(anyLong());
@@ -91,5 +136,37 @@ class SkinProfileChangeListenerTest {
         assertThat(userService.findById(userId).skinType()).isEqualTo(SkinType.DRY);
         assertThat(userService.findById(userId).sensitiveSkin()).isTrue();
         assertThat(output).contains("shelf analysis refresh failed: userId=" + userId);
+    }
+
+    private void awaitBlockedBy(int blockingBackendPid, Future<?> request) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            if (Boolean.TRUE.equals(
+                jdbc.queryForObject(
+                    "select exists(select 1 from pg_stat_activity where ? = any(pg_blocking_pids(pid)))",
+                    Boolean.class,
+                    blockingBackendPid
+                )
+            )) {
+                return;
+            }
+            if (request.isDone()) {
+                request.get(5, TimeUnit.SECONDS);
+                throw new AssertionError("두 번째 프로필 변경이 첫 번째 트랜잭션을 기다리지 않았습니다.");
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("두 번째 프로필 변경의 잠금 대기를 확인하지 못했습니다.");
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(20, TimeUnit.SECONDS)) {
+                throw new AssertionError("첫 번째 트랜잭션의 커밋 신호를 기다리다 시간이 초과됐습니다.");
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(exception);
+        }
     }
 }
