@@ -5,6 +5,8 @@ import { dropletFills, levelLabel } from "@/lib/domain/product-display";
 type LevelTagProps = {
   readonly kind: "moisture" | "oil";
   readonly level: number;
+  /** 단계 이름까지 글자로 적는다(`수분감 높음`). 제품 상세처럼 자리가 넉넉한 곳에서 쓴다. */
+  readonly detailed?: boolean;
 };
 
 /**
@@ -22,7 +24,7 @@ const TEXT = {
  * 유수분 레벨을 물방울 아이콘 3 칸으로 보여 준다.
  * 색과 모양만으로는 값을 알 수 없으므로 단계 이름을 함께 읽히게 한다.
  */
-export function LevelTag({ kind, level }: LevelTagProps) {
+export function LevelTag({ kind, level, detailed = false }: LevelTagProps) {
   const { label, droplet, text } = TEXT[kind];
 
   return (
@@ -44,8 +46,16 @@ export function LevelTag({ kind, level }: LevelTagProps) {
           />
         ))}
       </span>
-      <span className={`text-[12px] leading-none font-semibold ${text}`}>{label}</span>
-      <span className="sr-only">{levelLabel(level)}</span>
+      {detailed ? (
+        <span className="text-caption font-medium text-text-secondary">
+          {label}감 {levelLabel(level)}
+        </span>
+      ) : (
+        <>
+          <span className={`text-[12px] leading-none font-semibold ${text}`}>{label}</span>
+          <span className="sr-only">{levelLabel(level)}</span>
+        </>
+      )}
     </span>
   );
 }

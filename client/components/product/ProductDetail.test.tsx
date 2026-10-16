@@ -81,24 +81,26 @@ describe("제품 성분 요약", () => {
   it("전성분 펼쳐보기 버튼을 본문 폭에 꽉 채운다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const toggle = screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" });
+    const toggle = screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" });
 
-    expect(toggle).toHaveClass("w-full", "bg-[#DEE2E9]");
+    expect(toggle).toHaveClass("w-full", "bg-button-secondary");
   });
 
   it("펼치기 전에도 전성분 전체를 본문에 그려 두고 보이기만 감춘다", () => {
     const { container } = render(<ProductDetail product={untaggedProductDetail} />);
 
     const links = container.querySelectorAll('a[href^="/ingredients/"]');
-    const sixth = links[5]?.closest("li");
+    // 여섯째는 주의 성분이라 접힌 동안에도 보인다. 그 뒤의 일곱째부터 감춘다.
+    const seventh = links[6]?.closest("li");
 
     expect(links).toHaveLength(untaggedProductDetail.selectedPart?.ingredients.length ?? 0);
     expect(links[0]?.closest("li")).not.toHaveAttribute("hidden");
-    expect(sixth).toHaveAttribute("hidden");
+    expect(links[5]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(seventh).toHaveAttribute("hidden");
 
-    act(() => screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" }).click());
+    act(() => screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" }).click());
 
-    expect(sixth).not.toHaveAttribute("hidden");
+    expect(seventh).not.toHaveAttribute("hidden");
   });
 
   it("카테고리 경로의 대분류와 소분류를 각각의 목록으로 잇는다", () => {
@@ -156,7 +158,7 @@ describe("제품 성분 요약", () => {
     const source = screen.getByRole("heading", { name: "정보 출처" }).closest("section");
 
     expect(caution?.parentElement).toHaveClass("gap-6");
-    expect(source).toHaveClass("bg-[#EFF1F5]");
+    expect(source).toHaveClass("bg-layer");
   });
 });
 
@@ -459,21 +461,26 @@ describe("성분군 칩", () => {
 });
 
 describe("주의 성분 확인", () => {
-  const itemOf = (text: string) => screen.getByText(text).closest("li");
+  const bundleOf = (title: string) => screen.getByText(title).parentElement!;
 
-  it("들어 있는 기준 수를 머리에 알리고 앞에 둔다", () => {
+  it("들어 있는 기준을 개수와 함께 '들어 있어요' 묶음에 모아 위에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const list = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!.querySelector("ul")!;
+    const contained = bundleOf("들어 있어요");
+    const missing = bundleOf("찾지 못했어요");
 
-    expect(screen.getByText("6개 중 1개 포함")).toHaveClass("text-[#C53030]");
-    expect(list.firstElementChild).toHaveTextContent("향료/알레르기 성분 있음");
+    expect(contained).toHaveTextContent("들어 있어요1종");
+    expect(within(contained).getByRole("link", { name: "향료/알레르기 성분" })).toBeInTheDocument();
+    expect(contained.compareDocumentPosition(missing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("들어 있지 않은 기준은 없음으로 표시한다", () => {
+  it("들어 있지 않은 기준은 '찾지 못했어요' 묶음에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    expect(itemOf("건조 알코올 없음")).toBeInTheDocument();
+    const missing = bundleOf("찾지 못했어요");
+
+    expect(missing).toHaveTextContent("찾지 못했어요5종");
+    expect(within(missing).getByRole("link", { name: "건조 알코올" })).toBeInTheDocument();
   });
 
   const part = untaggedProductDetail.selectedPart!;
@@ -498,7 +505,7 @@ describe("주의 성분 확인", () => {
   it("두 응답의 표시명이 달라도 코드로 연결해 시트에 제품의 해당 성분을 보여 준다", async () => {
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
-    await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분 있음" }));
+    await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분" }));
 
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).getByText("향료/알레르기 성분")).toBeInTheDocument();
@@ -506,10 +513,41 @@ describe("주의 성분 확인", () => {
     expect(within(sheet).queryByText(second!.koreanName)).not.toBeInTheDocument();
   });
 
+  it("들어 있는 기준 옆에 이 제품의 해당 성분을 칩으로 두고 성분 설명으로 잇는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+
+    const contained = bundleOf("들어 있어요");
+
+    expect(within(contained).getByRole("link", { name: first!.koreanName })).toHaveAttribute(
+      "href",
+      `/ingredients/${first!.id}`,
+    );
+  });
+
+  it("걸린 성분 칩을 누르면 화면을 떠나지 않고 그 성분의 시트를 연다", async () => {
+    vi.mocked(track).mockClear();
+    render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
+
+    await userEvent.click(within(bundleOf("들어 있어요")).getByRole("link", { name: first!.koreanName }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("ingredient_sheet_opened", {
+      sheet_type: "ingredient",
+      product_id: untaggedProductDetail.id,
+      ingredient_id: first!.id,
+    });
+  });
+
+  it("성분군 목록을 받지 못해 걸린 성분을 모르면 칩을 두지 않는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    expect(within(bundleOf("들어 있어요")).getAllByRole("link")).toHaveLength(1);
+  });
+
   it("들어 있지 않은 기준은 성분 목록 없이 성분군 설명만 보여 준다", async () => {
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
-    await userEvent.click(screen.getByRole("link", { name: "건조 알코올 없음" }));
+    await userEvent.click(screen.getByRole("link", { name: "건조 알코올" }));
 
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
@@ -523,7 +561,7 @@ describe("주의 성분 확인", () => {
     vi.mocked(track).mockClear();
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
-    await userEvent.click(screen.getByRole("link", { name: "건조 알코올 없음" }));
+    await userEvent.click(screen.getByRole("link", { name: "건조 알코올" }));
     const sheet = await screen.findByRole("dialog");
     await userEvent.click(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ }));
 
@@ -540,7 +578,7 @@ describe("주의 성분 확인", () => {
     vi.mocked(fetchIngredientGroup).mockClear();
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const link = screen.getByRole("link", { name: "합성 색소 없음" });
+    const link = screen.getByRole("link", { name: "합성 색소" });
     expect(link).toHaveAttribute("href", "/ingredient-groups/SYNTHETIC_COLORANTS?from=product_detail");
     await userEvent.click(link);
 
@@ -550,7 +588,7 @@ describe("주의 성분 확인", () => {
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
   });
 
-  it("들어 있는 기준이 없으면 모두 없다고 알린다", () => {
+  it("들어 있는 기준이 없으면 '찾지 못했어요' 묶음만 둔다", () => {
     const product = {
       ...untaggedProductDetail,
       selectedPart: {
@@ -563,7 +601,8 @@ describe("주의 성분 확인", () => {
     };
     render(<ProductDetail product={product} />);
 
-    expect(screen.getByText("6개 모두 없음")).toHaveClass("text-[#0A6B52]");
+    expect(screen.queryByText("들어 있어요")).not.toBeInTheDocument();
+    expect(bundleOf("찾지 못했어요")).toHaveTextContent("찾지 못했어요6종");
   });
 });
 

@@ -56,8 +56,8 @@ describe("전체 성분표", () => {
     render(<IngredientList ingredients={[ingredient(1, LONG_NAME)]} />);
 
     /* 높이를 고정하면 두 줄이 된 이름이 줄 경계를 넘어간다. */
-    expect(rowOf(LONG_NAME)).toHaveClass("min-h-[60px]");
-    expect(rowOf(LONG_NAME)).not.toHaveClass("h-[60px]");
+    expect(rowOf(LONG_NAME)).toHaveClass("min-h-15");
+    expect(rowOf(LONG_NAME)).not.toHaveClass("h-15");
   });
 
   it("이름을 자르지 않고 전부 보여 준다", () => {
@@ -67,5 +67,31 @@ describe("전체 성분표", () => {
 
     expect(name).toHaveTextContent(LONG_NAME);
     expect(name.className).not.toMatch(/truncate|line-clamp/);
+  });
+
+  it("주의 성분에는 작용 대신 주의 태그를 단다", () => {
+    const fragrance = {
+      ...ingredient(1, "향료"),
+      skinEffects: [{ id: "HYDRATION_RELATED", code: "HYDRATION_RELATED", name: "피부 수분 관련" }],
+      cautions: [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }],
+    };
+    render(<IngredientList ingredients={[fragrance]} />);
+
+    const row = within(rowOf("보습제"));
+    expect(row.getAllByText("향료")).toHaveLength(2);
+    expect(row.queryByText("수분")).not.toBeInTheDocument();
+  });
+
+  it("접힌 쪽의 주의 성분도 보이고, 그 앞에 감춘 성분의 순서를 한 줄로 알린다", () => {
+    const ingredients = Array.from({ length: 16 }, (_, index) => ({
+      ...ingredient(index + 1, `성분 ${index + 1}`),
+      cautions: index === 13 ? [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] : [],
+    }));
+    render(<IngredientList ingredients={ingredients} />);
+
+    expect(rowOf("성분 6").closest("li")).toHaveAttribute("hidden");
+    expect(rowOf("성분 14").closest("li")).not.toHaveAttribute("hidden");
+    expect(screen.getByText("06~13번 성분 8개")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "나머지 10개 성분 펼쳐보기" })).toBeInTheDocument();
   });
 });
