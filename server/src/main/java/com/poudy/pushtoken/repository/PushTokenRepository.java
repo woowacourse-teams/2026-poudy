@@ -7,37 +7,47 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PushTokenRepository {
 
+    private static final String ACTIVE_USER_ID = """
+        (select id from "user" where id = cast(:userId as bigint) and deleted_at is null)""";
+
     private final NamedParameterJdbcTemplate jdbc;
 
     public PushTokenRepository(NamedParameterJdbcTemplate jdbc) {
         this.jdbc = jdbc;
     }
 
-    public void saveAnonymous(String token) {
-        jdbc.update(
+    public boolean save(String token, Long userId) {
+        return jdbc.queryForObject(
             """
                 insert into push_token (token, user_id)
-                values (:token, null)
-                on conflict (token) do update
-                set user_id = null,
-                    updated_at = now() at time zone 'Asia/Seoul'
-                """,
-            new MapSqlParameterSource("token", token)
-        );
-    }
-
-    public void saveForUser(String token, long userId) {
-        jdbc.update(
-            """
-                insert into push_token (token, user_id)
-                values (:token, (select id from "user" where id = :userId and deleted_at is null))
+                values (:token, %s)
                 on conflict (token) do update
                 set user_id = excluded.user_id,
                     updated_at = now() at time zone 'Asia/Seoul'
-                """,
-            new MapSqlParameterSource()
-                .addValue("token", token)
-                .addValue("userId", userId)
+                returning is_enabled
+                """.formatted(ACTIVE_USER_ID),
+            parameters(token, userId),
+            Boolean.class
         );
+    }
+
+    public void saveEnabled(String token, Long userId, boolean enabled) {
+        jdbc.update(
+            """
+                insert into push_token (token, user_id, is_enabled)
+                values (:token, %s, :enabled)
+                on conflict (token) do update
+                set user_id = excluded.user_id,
+                    is_enabled = excluded.is_enabled,
+                    updated_at = now() at time zone 'Asia/Seoul'
+                """.formatted(ACTIVE_USER_ID),
+            parameters(token, userId).addValue("enabled", enabled)
+        );
+    }
+
+    private MapSqlParameterSource parameters(String token, Long userId) {
+        return new MapSqlParameterSource()
+            .addValue("token", token)
+            .addValue("userId", userId);
     }
 }

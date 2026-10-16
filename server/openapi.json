@@ -526,6 +526,63 @@
         }
       }
     },
+    "/api/push-tokens/enabled": {
+      "put": {
+        "tags": [
+          "푸시 알림"
+        ],
+        "summary": "푸시 알림 설정 변경",
+        "description": "토큰의 알림을 켜거나 끈다. 없는 토큰이면 그 설정으로 등록한다. 회원 연결은 등록과 같이 이 요청의 로그인 상태를 따른다.",
+        "operationId": "changePushTokenEnabled",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenEnabledRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "변경 성공"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/skin-filter/ingredients": {
       "post": {
         "tags": [
@@ -947,7 +1004,7 @@
           "푸시 알림"
         ],
         "summary": "푸시 토큰 등록",
-        "description": "로그인하지 않아도 등록한다. 회원 세션이면 토큰을 그 회원과 잇고, 아니면 잇지 않은 토큰으로 둔다. 이미 있는 토큰은 마지막 등록의 로그인 상태를 따른다.",
+        "description": "로그인하지 않아도 등록한다. 회원 세션이면 토큰을 그 회원과 잇고, 아니면 잇지 않은 토큰으로 둔다. 이미 있는 토큰은 마지막 등록의 로그인 상태를 따르고 알림 설정은 그대로 둔다. 새 토큰은 알림을 켠 상태로 등록한다.",
         "operationId": "registerPushToken",
         "requestBody": {
           "content": {
@@ -960,8 +1017,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "등록 성공"
+          "200": {
+            "description": "등록 성공. 토큰의 알림 설정을 돌려준다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTokenResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "잘못된 요청",
@@ -5646,6 +5710,26 @@
           "usageStatus"
         ]
       },
+      "PushTokenEnabledRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+            "maxLength": 255,
+            "minLength": 0,
+            "pattern": "^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$"
+          },
+          "enabled": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "enabled",
+          "token"
+        ]
+      },
       "SkinFilterIngredientsRequest": {
         "type": "object",
         "properties": {
@@ -5735,6 +5819,18 @@
         },
         "required": [
           "token"
+        ]
+      },
+      "PushTokenResponse": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "enabled"
         ]
       },
       "ProductCorrectionRequest": {

@@ -14,12 +14,12 @@ public class PushTokenService {
     }
 
     @Transactional
-    public void registerAnonymous(String token) {
-        pushTokenRepository.saveAnonymous(token);
+    public boolean register(String token, Long userId) {
+        return pushTokenRepository.save(token, userId);
     }
 
     @Transactional
-    public void registerForUser(String token, long userId) {
-        pushTokenRepository.saveForUser(token, userId);
+    public void changeEnabled(String token, Long userId, boolean enabled) {
+        pushTokenRepository.saveEnabled(token, userId, enabled);
     }
 }

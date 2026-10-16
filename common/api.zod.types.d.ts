@@ -24,10 +24,12 @@ export type ShelfProductInfoResponse = {
   imageUrl: string;
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
+export type PushTokenEnabledRequest = { token: string, enabled: boolean }
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
+export type PushTokenResponse = { enabled: boolean }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
   /**
@@ -891,6 +893,24 @@ export type delete_Remove = {
 
     }
 /**
+ * 토큰의 알림을 켜거나 끈다. 없는 토큰이면 그 설정으로 등록한다. 회원 연결은 등록과 같이 이 요청의 로그인 상태를 따른다.
+ */
+export type put_ChangePushTokenEnabled = {
+      method: "PUT",
+      path: "/api/push-tokens/enabled",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.PushTokenEnabledRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.
  */
 export type post_AddIngredients = {
@@ -985,7 +1005,7 @@ export type post_Record = {
 
     }
 /**
- * 로그인하지 않아도 등록한다. 회원 세션이면 토큰을 그 회원과 잇고, 아니면 잇지 않은 토큰으로 둔다. 이미 있는 토큰은 마지막 등록의 로그인 상태를 따른다.
+ * 로그인하지 않아도 등록한다. 회원 세션이면 토큰을 그 회원과 잇고, 아니면 잇지 않은 토큰으로 둔다. 이미 있는 토큰은 마지막 등록의 로그인 상태를 따르고 알림 설정은 그대로 둔다. 새 토큰은 알림을 켠 상태로 등록한다.
  */
 export type post_RegisterPushToken = {
       method: "POST",
@@ -996,7 +1016,7 @@ export type post_RegisterPushToken = {
 
         body:  Schemas.PushTokenRequest,
           }
-      responses: {204: unknown,
+      responses: {200: Schemas.PushTokenResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -2034,7 +2054,8 @@ export type post_AdminLogout = {
      export type EndpointByMethod = {
      put: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
-"/api/users/me/shelf/products/{productId}": Endpoints.put_Update
+"/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
+"/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
