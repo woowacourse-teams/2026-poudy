@@ -20,6 +20,8 @@ export const ICON_IDS = [
   "bookmark-solid",
   "bookmarks",
   "bookmarks-solid",
+  "archive",
+  "archive-solid",
   "chevron-down",
   "chevron-up",
   "chevron-right",
@@ -118,6 +120,19 @@ export function IconSprite() {
         <symbol id="icon-bookmarks-solid" viewBox="0 0 24 24">
           <path d="M12 6a4 4 0 0 1 4 4v11a1 1 0 0 1 -1.514 .857l-4.486 -2.691l-4.486 2.691a1 1 0 0 1 -1.508 -.743l-.006 -.114v-11a4 4 0 0 1 4 -4h4z" />
           <path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" />
+        </symbol>
+
+        {/* Tabler · archive. 하단 내비 '선반' */}
+        <symbol id="icon-archive" viewBox="0 0 24 24">
+          <path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" />
+          <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+          <path d="M10 12l4 0" />
+        </symbol>
+
+        {/* Tabler · archive (filled) */}
+        <symbol id="icon-archive-solid" viewBox="0 0 24 24">
+          <path d="M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z" />
+          <path d="M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" />
         </symbol>
 
         {/* Tabler · chevron-down */}
