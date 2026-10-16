@@ -85,3 +85,72 @@ curl --fail --silent --show-error --max-time 10 https://poudy.site/api/categorie
 
 운영에 staging용 부하 시나리오를 실행하지 않는다. 현재 인프라는 프론트·백엔드 각각
 단일 EC2이며 ALB, WAF, Auto Scaling, blue/green을 사용하지 않는다.
+
+## #679: 실제 화면 경로 혼합 부하
+
+결과와 재현 방법은 아래 기록을 기준으로 봅니다. 초기 시험과 보완 시나리오는 요청
+구성이 다르므로 서로의 수치로 개선율을 계산하지 않습니다.
+
+| 기록 | 내용 |
+|---|---|
+| [7~56 req/s 단계 시험](results/user-paths-2026-10-15/README.md) | 1차 개선 후 실제 화면 경로로 보완한 부하 |
+| [성분 필터 SQL 진단](results/search-facets-diagnostic-2026-10-15/README.md) | 실제 실행계획과 결과 동등성 |
+| [최종 7/44 req/s 비교](results/product-read-679-2026-10-15/README.md) | 2차 개선 전후, CI와 원본 링크 |
+
+### 재실행
+
+`user-paths-679.js`는 당시 시나리오 그대로이며 SHA256은
+`3a08625ed24d3d63e7ebf921c5c4ee9341b3343d19e6b6bb3175b2c2680d3bd0`입니다.
+검색/자동완성/피부/카테고리/성분/상세/큐레이션/순위를
+20/20/15/15/10/10/5/5%로 섞습니다. 비율은 실측 빈도가 아닌 가정입니다.
+고정 ID와 데이터가 달라지면 응답 내용 검사가 실패할 수 있으므로 먼저 대조합니다.
+
+Python 3, curl, k6가 필요합니다. 기록 당시 로컬 k6는 2.2.0, AWS는 2.3.0입니다.
+아래 명령은 **실제 부하를 발생**시키므로 팀이 승인한 시험 시간에만 실행합니다.
+이 문서 정리 작업에서는 다시 실행하지 않았습니다.
+
+```sh
+python3 load-tests/run-user-paths-679.py 7 10m \
+  --output-dir load-tests/results/new-run-7 --label 7rps
+```
+
+출력 디렉터리는 새 경로를 사용합니다. 기존 결과 덮어쓰기는 거부합니다.
+기록 당시 wrapper는 날짜와 임시 경로가 고정돼 있었고, 이번 버전은 출력 경로를
+인자로 받도록 정리했습니다. k6 시나리오와 응답 검증 조건은 바꾸지 않았습니다.
+
+wrapper는 약 15초마다 운영과 스테이징의 상품 상세 GET을 확인하고, 실패하면 k6를
+중단합니다. 이 probe는 부하 요청 수와 별도입니다. **DB CPU·메모리 중단 기준은
+자동화하지 않았으므로 별도 관측자가 확인하고 멈춰야 합니다.** #679의 90%·2분은
+안전한 운영 기준이 아닌 당시 합의한 실험 중단선입니다.
+
+44 req/s를 재현할 때는 승인된 두 출발지에서 각각 22 req/s씩 5분 실행합니다.
+단일 IP에서 44를 보내면 기존 IP당 30 req/s 제한에 걸려 다른 시험이 됩니다.
+보안 제한은 변경하지 않으며, 두 발생기의 분위수를 합산하지 않습니다.
+
+### 원본 재계산
+
+전체 SQL 계획과 큰 JSONL은 기록의 이슈 첨부에 있습니다. 압축 파일 안의 빈 Grafana
+캡처는 제외하고, 수치는 k6와 자원 표본을 사용합니다. 압축 파일은 신뢰할 수 있는
+작업 폴더에 풀고 내용을 확인한 뒤 아래 경로를 지정합니다. ZIP 자체는 Git에 복제하지
+않았습니다. 원본 파일과 출력이 섞이지 않도록 재계산에는 복사본을 사용합니다.
+
+```sh
+python3 load-tests/analyze-679.py /path/to/copied-evidence
+python3 load-tests/analyze-679-backend.py /path/to/copied-evidence
+python3 load-tests/analyze-679-sql.py /path/to/copied-evidence
+```
+
+순서대로 `summary.json`과 SQL 증가분 파일을 다시 만듭니다. SQL 비교는 44 구간만
+사용합니다. 개선 후 7 구간 통계에는 후속 단독 호출이 섞여 비교에서 제외했습니다.
+기존 JSON은 측정 결과이며 이번 작업의 실행 결과가 아닙니다.
+
+### 이미지 성능 기록
+
+- [10/1 운영 이미지와 HTTP/2 기준선](../docs/performance/image-optimization-baseline.md)
+- [10/2 홈 Lighthouse 기준선](../docs/performance/image-delivery/2026-10-02/README.md)
+- [10/3 동일 빌드 CDN 대조](../docs/performance/image-delivery/2026-10-03/issue-615/README.md)
+- [10/3~4 Vercel 상품 목록 관측](../docs/performance/image-delivery/2026-10-03/products-list/README.md)
+
+Lighthouse 전체 원본 대신 실행별 지표, 설정, 원본 SHA256을 `run-summary.json`으로
+보존했습니다. HTML과 요청 로그 등이 포함된 전체 원본은 로컬 보관 대상으로 남겼습니다.
+이 기록은 당시 환경의 관측이며 현재 배포 상태를 뜻하지 않습니다.
