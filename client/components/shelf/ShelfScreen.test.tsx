@@ -57,6 +57,13 @@ describe("선반", () => {
     expect(await within(card).findByRole("link", { name: /관리하기/ })).toHaveAttribute("href", "/my-page/filter");
   });
 
+  it("제품 행의 이름을 누르면 제품 상세로 간다", async () => {
+    render(<ShelfScreen />);
+
+    const row = await screen.findByRole("link", { name: /1025 독도 토너/ });
+    expect(row).toHaveAttribute("href", expect.stringMatching(/^\/products\/\d+\?from=shelf$/));
+  });
+
   it("평가 시트의 수분감·유분감은 '선택 전'으로 시작하고, 고른 값만 보낸다", async () => {
     const user = userEvent.setup();
     const sent = vi.fn();

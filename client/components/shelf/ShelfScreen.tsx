@@ -87,6 +87,7 @@ function ShelfList({ data, onRate, onOpenMenu }: ShelfListProps) {
                 <li key={item.product.id}>
                   <ShelfProductRow
                     item={item}
+                    linked
                     loading={sectionIndex === 0 && index < 3 ? "eager" : "lazy"}
                     onRate={() => onRate(item)}
                     onOpenMenu={() => onOpenMenu(item)}

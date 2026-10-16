@@ -54,6 +54,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "recent_search",
   "curation",
   "similar_product",
+  "shelf",
   "direct",
 ] as const;
 
