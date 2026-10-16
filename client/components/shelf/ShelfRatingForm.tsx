@@ -93,7 +93,7 @@ export function ShelfRatingForm({ draft, onDraftChange, usageQuestion }: ShelfRa
       />
 
       <p className="flex items-center gap-1 text-caption text-text-secondary">
-        <Icon name="info" size={14} />
+        <Icon name="info-circle" size={14} strokeWidth={2} />
         수분감·유분감 평가는 유수분 레벨을 다듬는 데 쓰여요
       </p>
     </div>

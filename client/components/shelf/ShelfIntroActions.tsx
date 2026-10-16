@@ -4,6 +4,8 @@ import { Button } from "@poudy/design-system/button";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
+import { Icon } from "@/components/ui/icons/Icon";
+
 /** '자세히 보기'. 선반 소개 페이지(/shelf/guide)로 간다. */
 export function GuideLink({ onNavigate }: { readonly onNavigate?: () => void }) {
   const { pressableProps } = usePressable();
@@ -13,9 +15,10 @@ export function GuideLink({ onNavigate }: { readonly onNavigate?: () => void }) 
       href="/shelf/guide"
       onClick={onNavigate}
       {...pressableProps}
-      className="pressable fb-surface flex h-11 items-center justify-center rounded-xl text-body leading-none font-semibold text-text-primary"
+      className="pressable fb-surface flex h-11 items-center justify-center gap-0.5 rounded-xl text-body leading-none font-semibold text-text-primary"
     >
       자세히 보기
+      <Icon name="chevron-right" size={16} strokeWidth={2} className="text-text-secondary" />
     </Link>
   );
 }

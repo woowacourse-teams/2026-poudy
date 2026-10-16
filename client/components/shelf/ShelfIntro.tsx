@@ -38,7 +38,7 @@ export function ShelfIntro({ titleId }: ShelfIntroProps) {
       <ul className="flex flex-col gap-3 rounded-xl bg-surface px-5 py-4">
         {CHECKS.map((check) => (
           <li key={check} className="flex items-center gap-2 text-title text-text-body">
-            <Icon name="check" size={16} className="shrink-0 text-brand-strong" />
+            <Icon name="check" size={16} strokeWidth={2} className="shrink-0 text-brand-strong" />
             {check}
           </li>
         ))}

@@ -25,7 +25,7 @@ const ACTION = {
  */
 export function SkinFilterRow({ name, note, effects = [], action, onAction }: SkinFilterRowProps) {
   return (
-    <li className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+    <li className="flex items-center gap-3 border-b border-border py-3">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className="text-title font-semibold text-text-primary">{name}</span>
@@ -47,7 +47,7 @@ export function SkinFilterRow({ name, note, effects = [], action, onAction }: Sk
           onClick={onAction}
           icon={
             <span className="flex size-9 items-center justify-center rounded-full border border-border-strong">
-              <Icon name={ACTION[action].icon} size={20} strokeWidth={1.67} />
+              <Icon name={ACTION[action].icon} size={20} strokeWidth={2} />
             </span>
           }
         />

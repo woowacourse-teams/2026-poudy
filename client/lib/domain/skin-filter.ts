@@ -10,7 +10,10 @@ export const formulationRolesLine = (item: SkinFilterIngredientResponse): string
   item.formulationRoles.map((role) => role.name).join(" · ");
 
 /** 성분을 뺀 직후 토스트 문구(S55j-1). */
-export const removedMessage = (name: string): string => `${withObjectParticle(name)} 필터에서 뺐어요`;
+export const removedMessage = (name: string): string => `${withObjectParticle(name)} 나만의 필터에서 뺐어요`;
+
+/** 성분을 넣은 직후 토스트 문구(S55j-3). */
+export const addedMessage = (name: string): string => `${withObjectParticle(name)} 나만의 필터에 넣었어요`;
 
 /** 선반에서 찾았지만 필터에 넣지 않은 성분. 필터에 든 성분은 뺀다. */
 export const ingredientsNotInFilter = (

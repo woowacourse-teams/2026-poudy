@@ -1,6 +1,7 @@
 "use client";
 
 import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import { Button } from "@poudy/design-system/button";
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
@@ -13,8 +14,36 @@ import { ShelfRatingSheet } from "./ShelfSheets";
 import { Icon } from "@/components/ui/icons/Icon";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
+import { withAndParticle } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
+
+type NoResultProps = {
+  readonly keyword: string;
+  readonly onRequest: () => void;
+};
+
+/** 검색어와 맞는 제품이 없을 때(S52h-1). 등록 요청으로 바로 이어 준다. */
+function NoResult({ keyword, onRequest }: NoResultProps) {
+  return (
+    <div className="flex flex-col items-center gap-2 px-2 pt-12 pb-2 text-center">
+      <span aria-hidden="true" className="mb-1 flex size-12 items-center justify-center rounded-full bg-surface">
+        <Icon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
+      </span>
+      <p className="text-section font-bold text-text-primary">{`${withAndParticle(`‘${keyword}’`)} 맞는 제품이 없어요`}</p>
+      <p className="text-body text-text-secondary">
+        브랜드나 제품 이름을 다시 확인해 보세요.
+        <br />
+        아직 등록되지 않은 제품이면 등록을 요청할 수 있어요.
+      </p>
+      <div className="w-full pt-2">
+        <Button variant="secondary" className="w-full" onClick={onRequest}>
+          제품 등록 요청하기
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /** 찾는 제품이 없을 때 등록 요청을 여는 줄. 화면 아래에 붙는다(S52g). */
 function RegistrationBar({ onOpen }: { readonly onOpen: () => void }) {
@@ -48,6 +77,8 @@ export function ShelfAddScreen() {
     router.replace("/login");
   });
   const searching = keyword.trim().length > 0;
+  // 지금 입력한 검색어의 결과가 도착했는데 비었을 때만 알린다. 앞 결과를 기다리는 동안은 띄우지 않는다.
+  const noResult = searching && suggestions.keyword === keyword.trim() && suggestions.total === 0;
   const status = searching ? `${suggestions.keyword} 결과 ${suggestions.total}개` : undefined;
 
   return (
@@ -68,23 +99,26 @@ export function ShelfAddScreen() {
 
           <div className="px-gutter">
             <ComboboxList label="제품 자동완성">
-              <ComboboxGroup
-                label={
-                  <p className="pb-1 text-caption font-semibold text-text-secondary">{`제품 · ${suggestions.total}`}</p>
-                }
-              >
-                {suggestions.items.map((product) => (
-                  <ComboboxOption
-                    key={product.id}
-                    disabled={shelved.has(product.id)}
-                    // TODO(#728): 담지 못하면 토스트로 알린다.
-                    onSelect={() => add(product.id).then(setAdded, () => undefined)}
-                  >
-                    <ShelfAddRow product={product} keyword={suggestions.keyword} shelved={shelved.get(product.id)} />
-                  </ComboboxOption>
-                ))}
-              </ComboboxGroup>
+              {suggestions.items.length > 0 ? (
+                <ComboboxGroup
+                  label={
+                    <p className="pb-1 text-caption font-semibold text-text-secondary">{`제품 · ${suggestions.total}`}</p>
+                  }
+                >
+                  {suggestions.items.map((product) => (
+                    <ComboboxOption
+                      key={product.id}
+                      disabled={shelved.has(product.id)}
+                      // TODO(#728): 담지 못하면 토스트로 알린다.
+                      onSelect={() => add(product.id).then(setAdded, () => undefined)}
+                    >
+                      <ShelfAddRow product={product} keyword={suggestions.keyword} shelved={shelved.get(product.id)} />
+                    </ComboboxOption>
+                  ))}
+                </ComboboxGroup>
+              ) : null}
             </ComboboxList>
+            {noResult ? <NoResult keyword={suggestions.keyword} onRequest={() => setRegistering(true)} /> : null}
           </div>
         </Combobox>
 

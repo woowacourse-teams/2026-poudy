@@ -3,6 +3,17 @@
 import { useEffect } from "react";
 
 /**
+ * 지금 잠금을 건 시트 수. 마지막 시트가 풀 때만 원래 값으로 돌린다.
+ *
+ * 시트마다 잠그기 전 값을 따로 기억해 되돌리면 겹쳐 열린 시트가 서로의 값을 덮는다.
+ * 제품 메뉴에서 평가 시트로 넘어가면 메뉴가 닫히는 전환 중에 평가 시트가 잠그므로,
+ * 평가 시트는 이미 걸린 `hidden` 을 원래 값으로 기억한다. 메뉴가 먼저 풀고 평가 시트가
+ * 나중에 풀면서 `hidden` 을 다시 걸어, 시트를 모두 닫아도 화면이 스크롤되지 않았다.
+ */
+let lockCount = 0;
+let originalOverflow = "";
+
+/**
  * 시트가 열려 있는 동안 뒤 화면이 스크롤되지 않게 한다.
  *
  * 딤은 `fixed inset-0` 이라 누르는 것만 막고 휠과 손가락은 그대로 뒤로 넘어간다.
@@ -22,12 +33,15 @@ export const useScrollLock = (locked: boolean) => {
     if (!locked) return;
 
     const root = document.documentElement;
-    const previousOverflow = root.style.overflow;
-
-    root.style.overflow = "hidden";
+    if (lockCount === 0) {
+      originalOverflow = root.style.overflow;
+      root.style.overflow = "hidden";
+    }
+    lockCount += 1;
 
     return () => {
-      root.style.overflow = previousOverflow;
+      lockCount -= 1;
+      if (lockCount === 0) root.style.overflow = originalOverflow;
     };
   }, [locked]);
 };

@@ -22,7 +22,7 @@ function ShelfNotice() {
 
   return (
     <div className="flex items-center gap-2 rounded-lg bg-surface px-4 py-3">
-      <Icon name="info" size={16} strokeWidth={1.33} className="shrink-0 text-text-secondary" />
+      <Icon name="info-circle" size={16} strokeWidth={2} className="shrink-0 text-text-secondary" />
       <p className="min-w-0 flex-1 text-body-sm text-text-secondary">
         선반에서 &apos;안 맞았어요&apos;로 평가한 제품을 바탕으로 성분을 찾아요.
       </p>
@@ -32,32 +32,42 @@ function ShelfNotice() {
         className="pressable fb-border -my-3 -mr-4 flex min-h-11 shrink-0 items-center gap-0.5 rounded-lg px-4 text-body-sm font-semibold text-text-primary"
       >
         선반 보기
-        <Icon name="chevron-right" size={16} strokeWidth={1.33} />
+        <Icon name="chevron-right" size={16} strokeWidth={2} />
       </Link>
     </div>
   );
 }
 
-/** 목록 위 묶음 이름. 넣지 않은 성분이 함께 보일 때만 두 묶음을 가른다. */
-function GroupHeading({ children }: { readonly children: string }) {
-  return <h2 className="pt-2 text-caption font-semibold text-text-secondary">{children}</h2>;
+/** 묶음 머리. 묶음 이름 뒤에 성분 수를 붙인다. 예: '검색에서 제외 중 · 3' */
+function GroupHeading({ title, count }: { readonly title: string; readonly count: number }) {
+  return <h2 className="pb-1 text-caption font-semibold text-text-secondary">{`${title} · ${count}`}</h2>;
 }
+
+/** 아는 성분이면 제형 기능 줄을, 모르면 비운다. */
+const formulationRolesLineOf = (item: SkinFilterIngredientResponse | undefined): string | undefined =>
+  item && formulationRolesLine(item);
+
+const FILTER_GROUP = "검색에서 제외 중";
+const CANDIDATE_GROUP = "선반에서 찾았지만 넣지 않은 성분";
 
 type FilterListsProps = {
   readonly filter: readonly SkinFilterIngredientResponse[];
   readonly candidates: readonly IngredientAnalysisItemResponse[];
+  /**
+   * 필터에서 뺀 성분의 제형 기능. 넣지 않은 성분 행의 아래 줄에 쓴다.
+   * 선반 결과 응답에는 제형 기능이 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 아래 줄을 비운다.
+   */
+  readonly known: ReadonlyMap<number, SkinFilterIngredientResponse>;
   readonly onRemove: (item: SkinFilterIngredientResponse) => void;
   readonly onAdd: (item: IngredientAnalysisItemResponse) => void;
 };
 
-function FilterLists({ filter, candidates, onRemove, onAdd }: FilterListsProps) {
-  const grouped = candidates.length > 0;
-
+function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterListsProps) {
   return (
     <>
       {filter.length > 0 ? (
-        <section aria-label="필터에 있는 성분">
-          {grouped ? <GroupHeading>필터에 있는 성분</GroupHeading> : null}
+        <section aria-label={FILTER_GROUP}>
+          <GroupHeading title={FILTER_GROUP} count={filter.length} />
           <ul className="flex flex-col pt-1">
             {filter.map((item) => (
               <SkinFilterRow
@@ -72,12 +82,19 @@ function FilterLists({ filter, candidates, onRemove, onAdd }: FilterListsProps) 
           </ul>
         </section>
       ) : null}
-      {grouped ? (
-        <section aria-label="선반에서 찾았지만 넣지 않은 성분">
-          <GroupHeading>선반에서 찾았지만 넣지 않은 성분</GroupHeading>
+      {candidates.length > 0 ? (
+        <section aria-label={CANDIDATE_GROUP}>
+          <GroupHeading title={CANDIDATE_GROUP} count={candidates.length} />
           <ul className="flex flex-col pt-1">
             {candidates.map((item) => (
-              <SkinFilterRow key={item.id} name={item.koreanName} action="add" onAction={() => onAdd(item)} />
+              <SkinFilterRow
+                key={item.id}
+                name={item.koreanName}
+                note={formulationRolesLineOf(known.get(item.id))}
+                effects={known.get(item.id)?.skinEffects}
+                action="add"
+                onAction={() => onAdd(item)}
+              />
             ))}
           </ul>
         </section>
@@ -101,11 +118,11 @@ function EmptyFilter() {
 }
 
 /**
- * 나만의 필터(/my-page/filter, S55j·S55j-1). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
+ * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-3). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
  * 켜고 끄기는 이 화면에 두지 않는다. 검색 화면에서 그때그때 해제한다.
  */
 export function SkinFilterScreen() {
-  const { status, filter, candidates, toast, retry, remove, add, dismissToast } = useSkinFilterEditor();
+  const { status, filter, candidates, known, toast, retry, remove, add, dismissToast } = useSkinFilterEditor();
   const empty = filter.length === 0 && candidates.length === 0;
 
   return (
@@ -130,7 +147,7 @@ export function SkinFilterScreen() {
         ) : null}
         {status === "ready" && !empty ? (
           <div className="flex flex-col gap-5 px-gutter pt-4 pb-6">
-            <FilterLists filter={filter} candidates={candidates} onRemove={remove} onAdd={add} />
+            <FilterLists filter={filter} candidates={candidates} known={known} onRemove={remove} onAdd={add} />
             <ShelfNotice />
           </div>
         ) : null}
