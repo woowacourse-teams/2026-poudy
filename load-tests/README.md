@@ -1,5 +1,10 @@
 # staging 부하테스트
 
+아래는 #288 당시 categories 캐시 비교 시나리오입니다. 당시 Vercel과 수집 환경 설명을
+현재 운영 상태로 사용하지 않습니다. 최신 구성은 [전체 아키텍처](../docs/deploy/architecture.md),
+DB 진단은 [관측 안내](../docs/performance/postgres-load-test-observation.md)를 따릅니다.
+#679의 8종 API 시험은 [PR #774](https://github.com/woowacourse-teams/2026-poudy/pull/774)에 별도로 정리했습니다.
+
 `categories.js`는 로컬 PC에서 staging 공개 API에 읽기 전용 GET 요청만 보내는
 k6 시나리오다. Spring Boot 코드나 애플리케이션 메모리 캐시를 변경하지 않으며,
 `POST`, `PUT`, `DELETE`, feedback, product request, S3 변경 요청은 사용하지 않는다.

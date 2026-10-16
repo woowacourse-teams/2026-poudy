@@ -1,5 +1,9 @@
 # Staging frontend latency investigation
 
+Historical record (2026-09-28): the Vercel staging setup below was later replaced by
+the EC2 frontend. Keep these samples as evidence, not the current deployment guide.
+See [current architecture](../docs/deploy/architecture.md).
+
 ## Measurement
 
 - Target: `GET https://poudy-staging.vercel.app/categories`
