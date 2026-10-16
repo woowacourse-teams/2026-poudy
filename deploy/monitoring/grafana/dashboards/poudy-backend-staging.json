@@ -12,7 +12,7 @@
   "graphTooltip": 1,
   "refresh": "30s",
   "schemaVersion": 41,
-  "version": 9,
+  "version": 10,
   "time": {
     "from": "now-6h",
     "to": "now"
@@ -1177,6 +1177,52 @@
       "fieldConfig": {
         "defaults": {
           "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Hikari Connection Acquisition Wait",
+      "description": "DB 연결을 빌릴 때까지 기다린 시간입니다. 평균은 최근 5분, 최대는 Micrometer 타이머의 time-window 최대값이며 같은 집계 기간이 아닙니다. pending/active, SQL 시간과 함께 확인합니다. 요청이 없으면 평균이 비어 보일 수 있습니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 88,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "1000 * rate(hikaricp_connections_acquire_seconds_sum{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m])",
+          "legendFormat": "mean acquire wait {{pool}}"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "1000 * hikaricp_connections_acquire_seconds_max{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "max acquire wait {{pool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
         },
         "overrides": []
       },
