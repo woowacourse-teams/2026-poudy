@@ -4,10 +4,12 @@
  * tokens.css: poudy-ui.pen 의 변수에서 만든 토큰(손으로 고치지 않는다)
  * system.css: 변수가 아닌 명세 값(그림자 모양, 쌓임 순서, 곡선, 거터와 시스템 유틸리티)
  * interaction.css: 누를 수 있는 자리의 상태 모양(fb-*, press-scale, 포커스 링, 비활성, 입력칸)
+ * overlay.css: 떠 있는 면의 전환(바텀시트·딤)
  */
 @import "./tokens.css";
 @import "./system.css";
 @import "./interaction.css";
+@import "./overlay.css";
 
 /* 부품이 쓰는 클래스도 만들도록 패키지 소스를 훑게 한다. Tailwind 는 가져오는 쪽 앱의 폴더만 저절로 훑는다. */
 @source "./";
