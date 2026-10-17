@@ -25,6 +25,9 @@ export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z
 export type ShelfProductResponse = __TypedOpenapi.Schemas.ShelfProductResponse;
 export const ShelfProductResponse = z.object({ product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: z.boolean(), registeredAt: z.iso.datetime({ offset: true }) });
 
+export type PushTokenEnabledRequest = __TypedOpenapi.Schemas.PushTokenEnabledRequest;
+export const PushTokenEnabledRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")), enabled: z.boolean() });
+
 export type SkinFilterIngredientsRequest = __TypedOpenapi.Schemas.SkinFilterIngredientsRequest;
 export const SkinFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
 
@@ -33,6 +36,12 @@ export const ShelfProductAddRequest = z.object({ productId: z.number().int(), us
 
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
+
+export type PushTokenRequest = __TypedOpenapi.Schemas.PushTokenRequest;
+export const PushTokenRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")) });
+
+export type PushTokenResponse = __TypedOpenapi.Schemas.PushTokenResponse;
+export const PushTokenResponse = z.object({ enabled: z.boolean() });
 
 export type ProductCorrectionRequest = __TypedOpenapi.Schemas.ProductCorrectionRequest;
 export const ProductCorrectionRequest = z.object({ content: z.string().min(10).max(2000), imageIds: z.array(z.uuid()).min(0).max(5).nullable().optional() });
@@ -428,6 +437,16 @@ export const delete_Remove = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type put_ChangePushTokenEnabled = __TypedOpenapi.Endpoints.put_ChangePushTokenEnabled;
+export const put_ChangePushTokenEnabled = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/push-tokens/enabled"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: PushTokenEnabledRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
 export const post_AddIngredients = {
   method: z.literal("POST"),
@@ -476,6 +495,16 @@ export const post_Record = {
   responseFormat: z.literal("json"),
   parameters: { body: SearchKeywordRequest },
   responses: { 204: z.unknown(), 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_RegisterPushToken = __TypedOpenapi.Endpoints.post_RegisterPushToken;
+export const post_RegisterPushToken = {
+  method: z.literal("POST"),
+  path: z.literal("/api/push-tokens"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: PushTokenRequest },
+  responses: { 200: PushTokenResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_IncreaseViewCount = __TypedOpenapi.Endpoints.post_IncreaseViewCount;
@@ -1005,7 +1034,8 @@ export const post_AdminLogout = {
      export const EndpointByMethod: __TypedOpenapi.EndpointByMethod = {
      put: {
            "/api/users/me/wishlist/products/{productId}": put_AddToWishlist as any,
-"/api/users/me/shelf/products/{productId}": put_Update as any
+"/api/users/me/shelf/products/{productId}": put_Update as any,
+"/api/push-tokens/enabled": put_ChangePushTokenEnabled as any
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": delete_RemoveFromWishlist as any,
@@ -1017,6 +1047,7 @@ post: {
            "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/search-keywords": post_Record as any,
+"/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,
 "/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
 "/api/products/registration-requests": post_Submit as any,

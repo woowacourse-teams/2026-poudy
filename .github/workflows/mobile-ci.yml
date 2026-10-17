@@ -56,6 +56,33 @@ jobs:
       - name: Type check
         run: pnpm run typecheck
 
+      # 실제 파일은 Git 에 올리지 않고 EAS 파일 변수로 넘기므로, prebuild 가 복사할 형식만 맞춘 파일을 쓴다.
+      - name: Write placeholder FCM config
+        run: |
+          file="$RUNNER_TEMP/google-services.json"
+          cat > "$file" <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "poudy-ci",
+              "storage_bucket": "poudy-ci.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "com.poudy.app" }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "ci-placeholder" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+          echo "GOOGLE_SERVICES_JSON=$file" >> "$GITHUB_ENV"
+
       - name: Generate native projects
         run: pnpm exec expo prebuild --clean --no-install
 

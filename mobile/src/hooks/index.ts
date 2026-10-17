@@ -2,6 +2,7 @@ export { useAppUpdate } from './useAppUpdate';
 export { useExternalEntry } from './useExternalEntry';
 export { useHardwareBack } from './useHardwareBack';
 export { useKeyboardInset } from './useKeyboardInset';
+export { usePushNotifications } from './usePushNotifications';
 export { useQuickActions } from './useQuickActions';
 export { useSplashTransition } from './useSplashTransition';
 export { useWebViewBridge } from './useWebViewBridge';

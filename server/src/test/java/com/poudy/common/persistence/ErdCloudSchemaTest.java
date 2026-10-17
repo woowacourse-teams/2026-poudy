@@ -150,6 +150,7 @@ class ErdCloudSchemaTest {
             "user_shelf_analysis_ingredient",
             List.of("user_id", "ingredient_id", "is_new", "created_at", "updated_at")
         ),
+        entry("push_token", List.of("token", "user_id", "is_enabled", "created_at", "updated_at")),
         entry("skin_type", List.of("code", "name", "created_at", "updated_at")),
         entry("tag", List.of("code", "category_code", "name", "created_at", "updated_at"))
     );
@@ -170,6 +171,7 @@ class ErdCloudSchemaTest {
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
         entry("user", List.of("id")),
         entry("user_wishlist_product", List.of("user_id", "product_id")),
+        entry("push_token", List.of("token")),
         entry("user_shelf_product", List.of("user_id", "product_id")),
         entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id")),
         entry("user_shelf_analysis_ingredient", List.of("user_id", "ingredient_id")),

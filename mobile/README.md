@@ -29,11 +29,14 @@ pnpm android
 
 ## 환경 변수
 
-| 변수                      | 필수       | 용도                                                                   |
-| ------------------------- | ---------- | ---------------------------------------------------------------------- |
-| `EXPO_PUBLIC_SERVICE_URL` | 예         | 앱이 상대하는 Poudy 서비스 기준 URL. 웹뷰 표시와 출처 판별에 함께 쓴다 |
-| `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app`       |
-| `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다                   |
+| 변수                      | 필수       | 용도                                                                               |
+| ------------------------- | ---------- | ---------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_SERVICE_URL` | 예         | 앱이 상대하는 Poudy 서비스 기준 URL. 웹뷰 표시와 출처 판별에 함께 쓴다             |
+| `POUDY_BUNDLE_IDENTIFIER` | 빌드 시    | iOS Bundle ID와 Android Application ID. 기본값은 `com.poudy.app`                   |
+| `POUDY_APP_VERSION`       | production | 스토어에 노출되는 앱 버전. `x.y.z` 형식만 허용합니다                               |
+| `GOOGLE_SERVICES_JSON`    | EAS 빌드   | FCM 설정 파일 경로. EAS 파일 변수로 넣고, 로컬은 `./google-services.json`을 씁니다 |
+
+`google-services.json`은 Git에 올리지 않습니다. 로컬에서 안드로이드를 빌드하려면 팀원에게 받아 `mobile/`에 둡니다.
 
 실기기에서 `localhost`는 개발 PC가 아니므로 HTTPS 터널을 사용합니다. 값이 없거나 HTTP(S) URL이 아니면 Expo 설정 평가 단계에서 빌드를 중단합니다.
 
