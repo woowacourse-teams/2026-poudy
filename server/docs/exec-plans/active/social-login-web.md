@@ -36,7 +36,7 @@
   바꾼다. 구글은 `openid`·`email`로 OIDC, 카카오는 OIDC 없이 `/v2/user/me`를 쓴다.
 - 로그인에 성공하면 세션의 인증 정보를 회원 ID만 가진 인증으로 바꾼다. 제공자 응답을 세션에
   들고 있지 않고, 이후 모바일 로그인도 같은 인증을 만든다.
-- 세션은 서블릿 컨테이너 메모리에 둔다. 배포하면 모두 로그아웃된다.
+- 세션은 서블릿 컨테이너를 사용한다. 이후 운영 프로필에 파일 기반 세션 보존이 추가됐다(`application-prod.yml`의 `persistent`와 `store-dir`). 배포 때 반드시 모두 로그아웃된다는 초기 설명은 더 이상 현재 정책이 아니다.
 - 웹 세션은 비활동 1일, 로그인 후 7일이 지나면 만료한다. 절대 만료는 서블릿 세션에 없으므로
   세션에 로그인 시각을 두고 Security 필터 앞에서 판정한다.
 - 세션 쿠키는 `HttpOnly`, `SameSite=Lax`, `Domain` 없음, `Max-Age` 60일이다. 쿠키 수명은 전역
@@ -83,7 +83,12 @@
 - 리뷰에서 찾은 결함(로그인 처리 중 예상하지 못한 예외가 나면 Spring이 먼저 저장한 제공자 인증이
   세션에 남아 회원 API가 500을 내는 문제)을 세션 정리로 고쳤다.
 
-## 배포 전 할 일
+## 초기 배포 체크 기록
+
+아래는 2026-10-04의 초기 도메인 전환 항목이다. 현재 staging은 EC2 프론트와
+`staging.poudy.site`를 사용한다. 이 목록을 현재 미완료 작업으로 그대로 실행하지 않는다.
+최신 배포와 환경 설정은 `deploy/config/`와 전체 아키텍처를 대조한다.
+실제 제공자 로그인 검증 여부는 별도 확인이 필요해 이 계획은 active에 유지한다.
 
 - 운영·staging `backend.env`: `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`,
   `GOOGLE_CLIENT_SECRET`, staging은 `CLIENT_DOMAIN`
