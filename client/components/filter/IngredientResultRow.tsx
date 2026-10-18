@@ -121,15 +121,20 @@ function AddButton({
       aria-label={`${name} 담기`}
       {...pressableProps}
       onClick={onToggle}
-      className="pressable group flex size-11 shrink-0 items-center justify-center"
+      // 담기 전은 투명 아이콘 버튼처럼 원(36)에 ui-hover 면을 깔고(fb-circle), 담긴 뒤는 칠한 원을 옅게 한다(fb-dim).
+      className={
+        added
+          ? "pressable fb-dim flex size-11 shrink-0 items-center justify-center"
+          : "pressable fb-circle flex size-11 shrink-0 items-center justify-center"
+      }
     >
       {added ? (
         <span
           data-focus-ring=""
           className={
             tone === "exclude"
-              ? "flex size-9 items-center justify-center rounded-full bg-brand-text text-action-text transition-opacity duration-(--duration-fast) group-data-hovered:opacity-(--pressed-opacity) group-data-pressed:opacity-(--pressed-opacity)"
-              : "flex size-9 items-center justify-center rounded-full bg-action text-action-text transition-opacity duration-(--duration-fast) group-data-hovered:opacity-(--pressed-opacity) group-data-pressed:opacity-(--pressed-opacity)"
+              ? "flex size-9 items-center justify-center rounded-full bg-brand-text text-action-text"
+              : "flex size-9 items-center justify-center rounded-full bg-action text-action-text"
           }
         >
           <Icon name="check" size={20} />
@@ -137,7 +142,7 @@ function AddButton({
       ) : (
         <span
           data-focus-ring=""
-          className="flex size-9 items-center justify-center rounded-full border border-border-strong bg-background text-text-primary transition-colors duration-(--duration-fast) group-data-hovered:bg-surface group-data-pressed:bg-surface"
+          className="relative flex size-9 items-center justify-center rounded-full border border-border-strong text-text-primary"
         >
           <Icon name="plus" size={20} />
         </span>
