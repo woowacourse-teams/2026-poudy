@@ -76,7 +76,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         </span>
 
         {/* 글자를 키워 한 줄에 다 들어가지 않으면 이 묶음이 다음 줄로 넘어간다. 라벨 칩만 홀로 남지 않는다. */}
-        <span className="flex min-w-0 flex-1 basis-40 items-center gap-2">
+        <span className="flex min-w-0 flex-1 basis-44 items-center gap-2">
           {expanded ? (
             <span className="min-w-0 flex-1 text-body-sm font-semibold text-text-body">전체 순위 {items.length}개</span>
           ) : (

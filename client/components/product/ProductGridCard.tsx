@@ -75,9 +75,10 @@ export function ProductGridCard({
 
       {/*
         브랜드와 제품명을 한 덩어리로 이어 두 줄까지 보여 주고, 넘치면 줄임표로 끊는다.
-        글자 단위로 끊어 칸 끝까지 채운다. 사이트 전체의 keep-all 을 따르면 긴 낱말이 통째로 다음 줄로 넘어가 칸 오른쪽이 빈다.
+        사이트 전체의 낱말 단위 줄바꿈(keep-all)을 따른다. 명세 nLmj5 도 낱말 사이에서 줄을 나눈다.
+        글자 단위로 끊으면 기기 글자 크기를 키웠을 때 '인텐/시브'처럼 낱말 한가운데가 갈라진다.
       */}
-      <span data-product-name="" className="line-clamp-2 text-body-sm break-normal text-text-primary">
+      <span data-product-name="" className="line-clamp-2 text-body-sm text-text-primary">
         {brandName} {name}
       </span>
     </Link>

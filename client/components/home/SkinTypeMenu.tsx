@@ -34,6 +34,10 @@ type SkinTypeMenuProps = {
  *
  * 하나의 테두리 상자를 칸으로 고르게 나누고 칸 사이에 선을 긋는다. 360 미만에서는 2줄 2칸이다(A11Y D08).
  * 선은 상자 바탕(ui-border)을 칸 사이 1px 틈으로 드러내 그린다. 줄 수가 바뀌어도 가로선과 세로선이 함께 맞는다.
+ *
+ * 칸은 같은 기준 폭(80)으로 줄을 채우고 남는 폭을 나눠 가져, 기본 크기에서는 네 칸의 폭이 같다. 기기 글자 크기를 키워
+ * 내용이 기준 폭보다 넓어지면 그 폭으로 줄을 다시 나누므로, 네 칸이 한 줄에 들어가지 않으면 넘치지 않고 다음 줄로 넘어간다. 마지막 줄의 칸은 남은 폭을 채워 빈 바탕이 드러나지 않는다.
+ * 360 미만에서는 칸의 기준 폭을 1/3 로 두어(사이 선 때문에 셋이 들어가지 않는다) 한 줄에 두 칸씩 놓는다.
  */
 export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
   const sectionRef = useHomeSectionView("skin_types", 3);
@@ -45,9 +49,9 @@ export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
         피부 타입별로 찾아보세요
       </h2>
 
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border min-[360px]:grid-cols-4">
+      <ul className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-border bg-border">
         {[...items, SENSITIVE_OPTION].map(({ code, name }) => (
-          <li key={code} className="flex bg-background">
+          <li key={code} className="flex grow basis-1/3 bg-background min-[360px]:basis-20">
             <SkinTypeLink code={code} name={name} />
           </li>
         ))}
@@ -65,7 +69,7 @@ function SkinTypeLink({ code, name }: { readonly code: SkinChoice; readonly name
       {...pressableProps}
       onClick={() => track("skin_type_selected", { skin_type: code })}
       /* 포커스 링은 상자의 overflow-hidden 에 잘리지 않게 안쪽으로 그린다. */
-      className="pressable fb-surface flex min-h-11 flex-1 items-center justify-center gap-2 px-1 py-3 select-none focus-visible:-outline-offset-2"
+      className="pressable fb-surface flex min-h-11 flex-1 items-center justify-center gap-2 px-2 py-3 whitespace-nowrap select-none focus-visible:-outline-offset-2"
     >
       {/*
         SVG 는 viewBox 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 벡터라 최적화할 것이 없어 건너뛴다.
