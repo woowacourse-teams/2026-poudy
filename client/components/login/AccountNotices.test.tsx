@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
@@ -16,7 +17,7 @@ vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 describe("로그인 결과 안내", () => {
   it("탈퇴한 계정이면 탈퇴한 날과 되살릴 수 있는 마지막 날을 한국 날짜로 알려 준다", async () => {
-    render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />);
+    render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />, { wrapper: ToastProvider });
 
     expect(await screen.findByText(/2026년 10월 5일에 탈퇴했어요\. 2026년 11월 4일까지 되살리면/)).toBeInTheDocument();
     expect(screen.getByText("member@example.com")).toBeInTheDocument();
@@ -35,7 +36,7 @@ describe("로그인 결과 안내", () => {
       ),
     );
 
-    render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />);
+    render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />, { wrapper: ToastProvider });
 
     expect(await screen.findByText(/이 계정을 다시 쓰려면 복구를 요청해 주세요/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "계정 되살리기" })).toBeEnabled();
@@ -48,7 +49,9 @@ describe("로그인 결과 안내", () => {
       ),
     );
 
-    render(<LoginCallback error="MEMBER_EMAIL_ALREADY_REGISTERED" provider="GOOGLE" status={null} />);
+    render(<LoginCallback error="MEMBER_EMAIL_ALREADY_REGISTERED" provider="GOOGLE" status={null} />, {
+      wrapper: ToastProvider,
+    });
 
     expect(await screen.findByText("member@gmail.com")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Google로 가입한 이메일이에요" })).toBeInTheDocument();
