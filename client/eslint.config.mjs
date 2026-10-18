@@ -26,6 +26,10 @@ const tokenStrictFiles = [
   "components/skin-filter/**/*.{ts,tsx}",
   "app/signup/**/*.{ts,tsx}",
   "components/signup/**/*.{ts,tsx}",
+  "app/products/{page,empty}.tsx",
+  "components/filter/**/*.{ts,tsx}",
+  "components/product/{ProductList,ProductRows,ProductListSkeleton,AppliedConditions,LinkCleanupNotice,ResultCount}.tsx",
+  "components/ui/{ProductCard,FilterChipBar,SortDropdown,SortHeader}.tsx",
 ];
 
 const eslintConfig = defineConfig([

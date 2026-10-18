@@ -1,51 +1,31 @@
 "use client";
 
-import { FilterChip } from "./FilterChip";
+import { FilterChip } from "@poudy/design-system/filter-chip";
 
-import { useScrollEdges } from "@/lib/hooks/useScrollEdges";
-
-export type FilterChipItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly count: number;
-  /**
-   * 개수를 칩에 적을지. 고를 수 있는 값이 하나뿐인 조건은 숫자가 뜻을 더하지 않는다.
-   * `피부 타입 1` 은 걸렸다는 것만 알리는데, 그 일은 색이 이미 하고 있다.
-   */
-  readonly showCount?: boolean;
-};
+import type { FilterChipItem } from "@/components/product/product-chips";
 
 type FilterChipBarProps = {
   readonly chips: readonly FilterChipItem[];
-  readonly onOpen: (id: string) => void;
+  /** 지금 열린 시트의 칩. 시트가 열려 있는 동안 그 칩은 선택 모양이다. */
+  readonly expandedId?: string;
+  readonly onOpen: (id: FilterChipItem["id"]) => void;
 };
 
-/** 디자인의 필터 칩 바. 조건이 걸린 칩은 개수를 함께 보여 준다. */
-export function FilterChipBar({ chips, onOpen }: FilterChipBarProps) {
-  const { ref, edges, onScroll } = useScrollEdges("horizontal");
-
+/**
+ * 필터 칩 줄(명세 S23 제품 결과 Filter Bar Row). 높이 44 줄에 칩을 8 간격으로 놓고, 넘치면 가로로 민다.
+ * 줄은 화면 끝에서 끝까지 깔리고, 첫 칩과 마지막 칩만 거터만큼 안쪽에 둔다.
+ */
+export function FilterChipBar({ chips, expandedId, onOpen }: FilterChipBarProps) {
   return (
-    /*
-     * 스크롤막대를 감췄으므로 더 밀 수 있다는 것을 양 끝의 흐림으로 알린다.
-     * 시트 안쪽과 같은 방식으로, 남은 쪽만 흐린다. 끝까지 밀면 마지막 칩이 또렷해진다.
-     */
-    <div
-      ref={ref}
-      onScroll={onScroll}
-      data-axis="horizontal"
-      data-start={edges.start}
-      data-end={edges.end}
-      className="edge-fade scrollbar-none -mx-4 overflow-x-auto pb-2"
-    >
-      {/* 좌우 여백을 목록 안쪽에 함께 둔다. 한쪽만 바깥에 두면 흐림이 걸리는 자리가 어긋난다. */}
-      <div className="flex w-max gap-1.5 px-4">
+    <div className="scrollbar-none scroll-px-gutter overflow-x-auto">
+      <div className="flex h-11 w-max items-center gap-2 px-gutter">
         {chips.map((chip) => (
           <FilterChip
             key={chip.id}
             label={chip.label}
-            count={chip.showCount === false ? 0 : chip.count}
-            selected={chip.count > 0}
-            onClick={() => onOpen(chip.id)}
+            value={chip.value}
+            expanded={chip.id === expandedId}
+            onOpen={() => onOpen(chip.id)}
           />
         ))}
       </div>
