@@ -11,10 +11,9 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...api,
 }));
 /* 바는 방문 기록과 라우터를 읽는다. 여기서는 어떤 제목을 받았는지만 보므로 제목만 그린다. */
-vi.mock("@/components/ui/HidingTopBar", () => ({
-  HidingTopBar: ({ title }: { title: string }) => <h1>{title}</h1>,
+vi.mock("@/components/curation/CurationTopBar", () => ({
+  CurationTopBar: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
-vi.mock("@/components/ui/ShareButton", () => ({ ShareButton: () => null }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 import CurationDetailPage from "./page";
