@@ -137,7 +137,9 @@ function Shell({
   }, [open, onExited]);
 
   // 층에 올리고, 맨 위일 때 Esc 를 받는다. 본문과 아래 층은 inert 가 된다.
-  useEffect(() => {
+  // 층 등록과 포커스 복귀는 layout effect 로 둔다. 시트가 DOM 에서 빠지는 바로 그 순간 inert 를 풀고
+  // 포커스를 돌려줘야, 포커스가 잠깐 body 로 떨어지거나 아직 inert 인 요소에 포커스를 주지 않는다.
+  useLayoutEffect(() => {
     const element = layerRef.current;
     if (!element) return;
     return pushLayer({ element, onEscape: () => onCloseRef.current("escape") });
@@ -148,7 +150,7 @@ function Shell({
   useEffect(() => {
     returnFocusRef.current = returnFocus;
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const target = initialFocus?.current ?? titleRef.current ?? sheetRef.current;
     target?.focus({ preventScroll: true });

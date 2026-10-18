@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { WishlistEmpty } from "./empty";
+
 import { SavedScreen } from "@/components/saved/SavedScreen";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
@@ -18,7 +20,7 @@ export default function WishlistPage() {
     <>
       {/* 아래에 붙는 찾는 칸이 그림자를 맡는다. */}
       <TopBar title="위시리스트" variant="sub" edge={false} />
-      <SavedScreen />
+      <SavedScreen empty={<WishlistEmpty />} />
     </>
   );
 }
