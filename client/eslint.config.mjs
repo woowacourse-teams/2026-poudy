@@ -35,6 +35,10 @@ const tokenStrictFiles = [
   "components/directory/Directory{TopBar,LinkButton,NotFound,ProductsEmpty}.tsx",
   "app/search/**/*.{ts,tsx}",
   "components/search/**/*.{ts,tsx}",
+  // 카테고리·브랜드 디렉터리(#733)
+  "app/(directory)/**/*.{ts,tsx}",
+  "components/directory/{BrandDirectory,CategoryDirectory,DirectoryList,DirectorySkeleton,DirectoryTabs}.tsx",
+  "components/ui/BrandLogo.tsx",
 ];
 
 const eslintConfig = defineConfig([
