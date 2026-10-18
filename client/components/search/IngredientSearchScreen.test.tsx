@@ -23,6 +23,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams.current,
 }));
 
+/** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
+const WAIT = { timeout: 5000 };
+
+vi.setConfig({ testTimeout: 20_000 });
+
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 /** 조건에 걸린 제품 수를 정해 둔다. */
@@ -59,7 +64,7 @@ describe("IngredientSearchScreen", () => {
     );
     renderScreen();
 
-    await userEvent.click(await screen.findByRole("button", { name: "7개 제품 보기" }));
+    await userEvent.click(await screen.findByRole("button", { name: "7개 제품 보기" }, WAIT));
 
     expect(track).toHaveBeenCalledWith("search_submitted", {
       mode: "ingredient",
@@ -76,7 +81,7 @@ describe("IngredientSearchScreen", () => {
     searchParams.current = new URLSearchParams("includeIngredientIds=6");
     renderScreen();
 
-    const button = await screen.findByRole("button", { name: "0개 제품 보기" });
+    const button = await screen.findByRole("button", { name: "0개 제품 보기" }, WAIT);
     expect(button).toHaveAttribute("aria-disabled", "true");
     expect(track).toHaveBeenCalledWith("search_results_viewed", expect.objectContaining({ result_count: 0 }));
   });
@@ -105,7 +110,7 @@ describe("IngredientSearchScreen", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "향료/알레르기 성분", pressed: false }));
 
-    expect(await screen.findByRole("dialog", { name: /원하는 성분에서 뺄까요/ })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /원하는 성분에서 뺄까요/ }, WAIT)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
 
     await userEvent.click(screen.getByRole("button", { name: "빼고 적용" }));
@@ -119,7 +124,7 @@ describe("IngredientSearchScreen", () => {
     searchParams.current = new URLSearchParams("add=exclude");
     renderScreen();
 
-    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 추가" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 추가" }, WAIT)).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "성분 검색" })).toHaveFocus();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
   });
@@ -130,7 +135,7 @@ describe("IngredientSearchScreen", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "자주 피하는 성분 설명 보기" }));
 
-    expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" })).toHaveTextContent(
+    expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" }, WAIT)).toHaveTextContent(
       "예: 리모넨 · 리날룰",
     );
   });

@@ -25,6 +25,11 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+/** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
+const WAIT = { timeout: 5000 };
+
+vi.setConfig({ testTimeout: 20_000 });
+
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const product = {
@@ -74,7 +79,7 @@ describe("ProductSearchScreen", () => {
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
 
-    expect(await screen.findByRole("option", { name: /‘독도’ 검색 결과\s*24개/ })).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: /‘독도’ 검색 결과\s*24개/ }, WAIT)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("option", { name: /1025 독도 토너/ }));
 
     expect(track).toHaveBeenCalledWith(
@@ -89,7 +94,7 @@ describe("ProductSearchScreen", () => {
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
-    await userEvent.click(await screen.findByRole("option", { name: /‘독도’ 검색 결과/ }));
+    await userEvent.click(await screen.findByRole("option", { name: /‘독도’ 검색 결과/ }, WAIT));
 
     expect(track).toHaveBeenCalledWith("search_submitted", { mode: "product", query: "독도", result_count: 24 });
     expect(push).toHaveBeenCalledWith("/products?keyword=%EB%8F%85%EB%8F%84");
@@ -101,6 +106,6 @@ describe("ProductSearchScreen", () => {
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "없는말");
 
-    expect(await screen.findByText("‘없는말’과 맞는 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("‘없는말’과 맞는 제품이 없어요", {}, WAIT)).toBeInTheDocument();
   });
 });
