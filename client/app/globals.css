@@ -106,6 +106,25 @@
 }
 
 /*
+ * 토스트를 하단 고정 영역 바로 위 12 에 띄운다(FEEDBACK F04). 토스트는 #overlay-root 에 그려 화면의 변수를 물려받지
+ * 못하므로, 하단 영역이 있는 화면이 표식(data-toast-offset)을 두고 여기서 문서 뿌리의 --toast-offset 을 정한다.
+ * - action-bar: BottomActionBar. 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)
+ * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
+ * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
+ */
+:root:has([data-toast-offset="action-bar"]) {
+  --toast-offset: calc(5rem + 1px);
+}
+
+:root:has([data-toast-offset="two-actions"]) {
+  --toast-offset: calc(8rem + 1px);
+}
+
+:root:has([data-toast-offset="sheet-footer"]) {
+  --toast-offset: 8.25rem;
+}
+
+/*
  * 넓은 화면에서는 본문 밖이 드러난다. 그 바탕을 옅은 회색으로 깔아
  * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
  */
