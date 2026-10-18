@@ -23,9 +23,9 @@ export function IngredientGroupRows({
 
         return (
           <li key={`group-${group.code}`} className={rowClassName}>
-            <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-              <span className="line-clamp-2 text-[14px] font-semibold text-text-primary">{label}</span>
-              <span className="flex h-[18px] w-fit items-center rounded-[9px] bg-brand-soft px-1.5 text-[10px] font-semibold text-brand">
+            <span className="flex min-w-0 flex-1 flex-col gap-0.75">
+              <span className="line-clamp-2 text-body font-semibold text-text-primary">{label}</span>
+              <span className="flex h-4.5 w-fit items-center rounded-full bg-brand-soft px-1.5 text-label font-semibold text-brand">
                 성분군
               </span>
             </span>

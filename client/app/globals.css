@@ -506,54 +506,38 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 검색 탭의 밑줄. 고른 자리로 미끄러진다.
- *
- * 탭이 둘뿐이라 오가는 거리가 화면 폭의 절반이다. 서랍만큼 멀지는 않지만 색이 바뀌는
- * 것보다는 길어, 여닫는 것과 같은 길이로 둔다.
- *
- * 글자 색은 탭이 저마다 바꾼다. 밑줄이 도착하는 것과 글자가 진해지는 것이 함께
- * 끝나야 한 몸으로 읽히므로 같은 길이를 쓴다.
+ * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
+ * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
  */
-.search-tab-underline {
-  transition: transform var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.search-tab {
-  transition: color var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
 /*
- * 제품명 검색의 탭 줄과 검색바. 아래로 내리면 탭 줄이 상단바(56px) 뒤로 숨고 검색바가 그
- * 자리로 올라온다. 위로 올리면 둘 다 제자리로 돌아온다(`SearchTabs`).
- *
- * 숨기는 것은 transform 이 아니라 붙는 높이(`top`)를 탭 줄 높이만큼 올려서 한다.
- * 원래 자리에 있을 때는 흐름대로 올라가며 사라져, 검색바와의 사이에 빈 틈이 생기지 않는다.
- * 탭 줄 높이는 글자 크기 설정에 따라 기기마다 달라 JS 가 잰 `--search-tabs-height` 를 쓴다.
- * 46px 은 재기 전의 값이다.
- * 키보드로 탭에 닿으면 숨어 있어도 다시 내려온다.
+ * 제품명 자동완성 목록(MOTION 드롭다운 · 자동완성). 처음 열릴 때만 입력 쪽(위)을 기준으로 0.97 에서 자라며 나타난다.
+ * 목록은 hidden 으로 여닫혀, 열릴 때만 @starting-style 이 걸린다. 입력 중 결과가 바뀔 때는 요소가 그대로라 움직이지 않고,
+ * 닫힐 때는 hidden 이 바로 감춘다. 동작 줄이기에서는 크기 변화 없이 불투명도만 바꾼다.
  */
-.search-tabs,
-.search-field-bar {
-  /* `.stuck-edge` 의 선 색 전환을 덮어쓰지 않도록 함께 적는다. */
+[data-suggestions] > [role="listbox"] {
+  transform-origin: top center;
   transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    border-color var(--transition-duration-control-state) ease-out;
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.97);
+  }
 }
 
-.search-tabs {
-  top: 3.5rem;
+@media (prefers-reduced-motion: reduce) {
+  [data-suggestions] > [role="listbox"] {
+    transition-property: opacity;
+
+    @starting-style {
+      transform: none;
+    }
+  }
 }
 
-.search-tabs[data-hidden="true"]:not(:focus-within) {
-  top: calc(3.5rem - var(--search-tabs-height, 46px));
-}
-
-.search-field-bar {
-  top: calc(3.5rem + var(--search-tabs-height, 46px));
-}
-
-body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar {
-  top: 3.5rem;
+body:has([data-ingredient-picker]) {
+  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
 }
 
 /*
@@ -887,20 +871,6 @@ body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar 
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
   .save-pop[data-popped="true"] {
     transform: none;
-  }
-
-  /*
-   * 밑줄은 자리를 옮기는 움직임이라 미끄러지지 않게 한다. 옮겨 붙는 것 자체는 그대로
-   * 되고, 글자가 진해지는 것은 자리를 옮기지 않으므로 남긴다.
-   */
-  .search-tab-underline {
-    transition-duration: 0s;
-  }
-
-  /* 숨었다 내려오는 줄도 자리를 옮기는 움직임이다. 숨고 나타나는 것은 그대로 된다. */
-  .search-tabs,
-  .search-field-bar {
-    transition-duration: 0s;
   }
 
   .directory-tab-indicator {
