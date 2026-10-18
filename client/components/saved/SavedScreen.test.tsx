@@ -150,14 +150,14 @@ describe("위시리스트", () => {
     await screen.findByText("1025 독도 토너");
 
     await userEvent.click(screen.getByRole("button", { name: /최근 저장순/ }));
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+    expect((await screen.findAllByRole("radio")).map((option) => option.closest("label")?.textContent)).toEqual([
       "최근 저장순",
       "이름 오름차순",
       "이름 내림차순",
       "가격 낮은순",
       "가격 높은순",
     ]);
-    await userEvent.click(screen.getByRole("option", { name: "이름 오름차순" }));
+    await userEvent.click(screen.getByRole("radio", { name: "이름 오름차순" }));
 
     const names = screen.getAllByRole("article").map((card) => card.textContent ?? "");
     expect(names[0]).toContain("1025 독도 토너");

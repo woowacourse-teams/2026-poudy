@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -22,85 +22,35 @@ beforeEach(() => {
 });
 
 describe("SortDropdown", () => {
-  it("메뉴를 열면 선택된 옵션에 초점을 두고 방향키로 옵션을 탐색한다", async () => {
+  it("현재 정렬 기준을 보여 주고 시트를 여는 버튼이다", () => {
     setup();
 
-    await userEvent.click(screen.getByRole("button", { name: "기본순" }));
-
-    expect(screen.getByRole("option", { name: "기본순" })).toHaveFocus();
-    await userEvent.keyboard("{ArrowDown}");
-    expect(screen.getByRole("option", { name: "가격 낮은순" })).toHaveFocus();
-    await userEvent.keyboard("{End}");
-    expect(screen.getByRole("option", { name: "용량별 가격 높은순" })).toHaveFocus();
-    await userEvent.keyboard("{Home}");
-    expect(screen.getByRole("option", { name: "기본순" })).toHaveFocus();
+    const trigger = screen.getByRole("button", { name: /기본순/ });
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("바깥을 눌러 닫아도 메뉴를 남겨 닫힘 전환을 보여 준다", async () => {
+  it("열면 정렬 시트에 정렬 5 종을 라디오로 보여 준다", async () => {
     setup();
-    const trigger = screen.getByRole("button", { name: "기본순" });
 
-    await userEvent.click(trigger);
-    expect(screen.getByRole("listbox", { name: "정렬 기준" })).toHaveAttribute("aria-hidden", "false");
+    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
 
-    await userEvent.click(document.body);
-
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
+    const dialog = await screen.findByRole("dialog", { name: "정렬" });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getAllByRole("radio")).toHaveLength(5);
+    expect(screen.getByRole("radio", { name: "기본순" })).toBeChecked();
   });
 
-  it("정렬 기준을 고르면 값을 전달하고 메뉴를 닫는다", async () => {
+  it("정렬 기준을 고르면 값을 넘기고 시트를 닫는다", async () => {
     const { onChange } = setup();
-    await userEvent.click(screen.getByRole("button", { name: "기본순" }));
+    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
 
-    await userEvent.click(screen.getByRole("option", { name: "가격 낮은순" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "가격 낮은순" }));
 
     expect(onChange).toHaveBeenCalledWith("PRICE_ASC");
     expect(requestSelectionHaptic).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: "기본순" })).toHaveFocus();
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
-  });
-
-  it("키보드로 정렬 기준을 고르면 값을 전달하고 메뉴를 닫는다", async () => {
-    const { onChange } = setup();
-    await userEvent.click(screen.getByRole("button", { name: "기본순" }));
-
-    await userEvent.keyboard("{ArrowDown}{Enter}");
-
-    expect(onChange).toHaveBeenCalledWith("PRICE_ASC");
-    expect(requestSelectionHaptic).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: "기본순" })).toHaveFocus();
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
-  });
-
-  it("Escape로 닫으면 트리거로 초점을 돌려준다", async () => {
-    setup();
-    const trigger = screen.getByRole("button", { name: "기본순" });
-    await userEvent.click(trigger);
-
-    await userEvent.keyboard("{Escape}");
-
-    expect(trigger).toHaveFocus();
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
-  });
-
-  it("Tab으로 메뉴를 벗어나면 메뉴를 닫는다", async () => {
-    setup();
-    await userEvent.click(screen.getByRole("button", { name: "기본순" }));
-
-    await userEvent.tab();
-
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
-  });
-
-  it("이미 선택된 정렬 기준을 다시 고르면 값과 햅틱을 요청하지 않는다", async () => {
-    const { onChange } = setup();
-    await userEvent.click(screen.getByRole("button", { name: "기본순" }));
-
-    await userEvent.click(screen.getByRole("option", { name: "기본순" }));
-
-    expect(onChange).not.toHaveBeenCalled();
-    expect(requestSelectionHaptic).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "기본순" })).toHaveFocus();
-    expect(screen.getByRole("listbox", { hidden: true })).toHaveAttribute("aria-hidden", "true");
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /기본순/ })).toHaveAttribute("aria-expanded", "false"),
+    );
   });
 });

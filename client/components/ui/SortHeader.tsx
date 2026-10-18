@@ -1,7 +1,7 @@
 import { SortDropdown, type SortOption } from "./SortDropdown";
 
+import { ResultCount } from "@/components/product/ResultCount";
 import type { Sort } from "@/lib/domain/filter";
-import { formatCount } from "@/lib/domain/format";
 
 type SortHeaderProps<T extends string> = {
   readonly total: number;
@@ -11,11 +11,14 @@ type SortHeaderProps<T extends string> = {
   readonly options?: readonly SortOption<T>[];
 };
 
-/** 디자인 C08. 결과 개수와 정렬을 한 줄에 둔다. */
+/**
+ * 결과 수와 정렬을 한 줄에 둔다. 명세의 목록 결과 헤더는 결과 수만 두므로(2026-10-14) 제품 목록은 ResultCount 를 쓴다.
+ * 위시리스트만 아직 정렬을 쓴다(#739).
+ */
 export function SortHeader<T extends string = Sort>({ total, sort, onChangeSort, options }: SortHeaderProps<T>) {
   return (
-    <div className="flex items-center justify-between py-2">
-      <p className="text-[13px] font-semibold text-text-secondary">총 {formatCount(total)}</p>
+    <div className="flex items-center justify-between gap-2">
+      <ResultCount total={total} />
       <SortDropdown value={sort} onChange={onChangeSort} options={options} />
     </div>
   );
