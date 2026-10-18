@@ -1,15 +1,19 @@
 "use client";
 
 import type { UserProfileRequest, UserResponse } from "@poudy/api/api.zod";
+import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { useToast } from "@poudy/design-system/toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-// TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 import {
   AGE_RANGES,
@@ -29,6 +33,7 @@ export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin">;
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
 const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const LOAD_FAILED = "회원 정보를 불러오지 못했어요";
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string | null): T | null =>
   options.find((option) => option.value === value)?.value ?? null;
@@ -43,9 +48,11 @@ const profileOf = (member: UserResponse): UserProfileRequest => ({
 /** 회원 정보를 읽고, 고친 정보를 저장한 뒤 마이페이지로 돌아간다. 로그인 전·관리자 세션은 화면마다 같은 방식으로 처리한다. */
 function useProfileEditor() {
   const router = useRouter();
+  const toast = useToast();
   const [member, setMember] = useState<UserResponse | null>(null);
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [adminSession, setAdminSession] = useState(false);
 
   const handleAuthError = (error: unknown): boolean => {
@@ -61,23 +68,39 @@ function useProfileEditor() {
     return false;
   };
 
+  // 회원 정보는 서버에만 있어 화면이 열릴 때(그리고 [다시 시도]를 누를 때) 받아 온다.
   useEffect(() => {
+    let cancelled = false;
     findMe()
-      .then(setMember)
+      .then((found) => {
+        if (!cancelled) setMember(found);
+      })
       .catch((error: unknown) => {
+        if (cancelled) return;
         if (isSignedOut(error)) {
           rememberLoginReturn();
           router.replace("/login");
           return;
         }
-        if (isAdminSession(error)) setAdminSession(true);
+        if (isAdminSession(error)) {
+          setAdminSession(true);
+          return;
+        }
+        setLoadFailed(true);
       });
-  }, [router]);
+    return () => {
+      cancelled = true;
+    };
+  }, [router, attempt]);
+
+  const retry = () => {
+    setLoadFailed(false);
+    setAttempt((count) => count + 1);
+  };
 
   const save = (profile: UserProfileRequest) => {
     if (saving) return;
     setSaving(true);
-    setFailed(false);
     updateMyProfile(profile)
       .then(() => {
         if (hasInSiteHistory()) {
@@ -88,19 +111,21 @@ function useProfileEditor() {
       })
       .catch((error: unknown) => {
         if (handleAuthError(error)) return;
-        setFailed(true);
+        // 고른 값은 화면에 남겨 두고 다시 누를 수 있게 한다(FEEDBACK F01).
+        toast.show({ message: SAVE_FAILED });
         setSaving(false);
       });
   };
 
-  return { member, saving, failed, adminSession, save };
+  return { member, saving, loadFailed, retry, adminSession, save };
 }
 
 type FieldFormProps = {
   readonly title: string;
   readonly changed: boolean;
   readonly saving: boolean;
-  readonly failed: boolean;
+  readonly loadFailed: boolean;
+  readonly onRetry: () => void;
   readonly onSave: () => void;
   readonly children: React.ReactNode;
 };
@@ -109,32 +134,52 @@ type FieldFormProps = {
  * 고르기 페이지의 틀(S55a·b·c). 지금 값이 골라진 채 열리고, 값을 바꾸면 [저장]이 켜진다.
  * 한 번 고른 값은 다른 값으로 바꿀 수만 있어 고른 것을 다시 눌러도 비지 않는다.
  */
-function FieldForm({ title, changed, saving, failed, onSave, children }: FieldFormProps) {
+function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, children }: FieldFormProps) {
+  const formId = useId();
   const submit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // 입력 칸에서 Enter 로 보낼 때도 바뀐 것이 없으면 보내지 않는다. 버튼은 aria-disabled 라 누름만 막힌다.
+    if (!changed) return;
     onSave();
   };
 
   return (
-    <>
-      <TopBar title={title} variant="sub" />
-      <form onSubmit={submit} className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col px-gutter pt-4 pb-6">{children}</div>
-
-        {/* TODO(#729): 하단 행동 영역(BottomActionBar)이 들어오면 그 안에 둔다. 지금은 화면 끝에 붙인다. */}
-        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
-          {/* TODO(#728): 저장하지 못하면 토스트로 알린다. 지금은 버튼 위에 문구를 둔다. */}
-          {failed ? (
-            <p role="alert" className="text-center text-body text-text-secondary">
-              {SAVE_FAILED}
-            </p>
-          ) : null}
-          <Button type="submit" size="lg" className="w-full" disabled={!changed} busy={saving}>
-            저장
-          </Button>
+    <Screen scroll="document">
+      <SubTopBar title={title} />
+      <ScreenBody>
+        {loadFailed ? (
+          <main className="flex flex-1 flex-col">
+            <ErrorState
+              variant="screen"
+              icon={<Icon name="alert-circle" size={28} />}
+              title={LOAD_FAILED}
+              description="잠시 후 다시 시도해 주세요."
+              action={
+                <Button variant="secondary" onClick={onRetry}>
+                  다시 시도
+                </Button>
+              }
+              className="flex-1"
+            />
+          </main>
+        ) : (
+          <main className="flex flex-1 flex-col">
+            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-6">
+              {children}
+            </form>
+          </main>
+        )}
+      </ScreenBody>
+      {loadFailed ? null : (
+        // 토스트를 이 줄 위로 올리는 표식(globals.css). contents 라 줄의 sticky 는 그대로다.
+        <div data-toast-offset="action-bar" className="contents">
+          <BottomActionBar
+            position="screen-end"
+            action={{ label: "저장", type: "submit", form: formId, disabled: !changed, busy: saving }}
+          />
         </div>
-      </form>
-    </>
+      )}
+    </Screen>
   );
 }
 
@@ -145,7 +190,7 @@ const OPTIONS: Readonly<Record<Exclude<ProfileField, "skinType">, readonly Profi
 
 /** 성별(S55a) · 나이대(S55b). 선택 행을 12 간격으로 쌓는다. */
 function ChoiceFieldScreen({ field }: { readonly field: "gender" | "ageRange" }) {
-  const { member, saving, failed, adminSession, save } = useProfileEditor();
+  const { member, saving, loadFailed, retry, adminSession, save } = useProfileEditor();
   const [selected, setSelected] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<UserResponse | null>(null);
 
@@ -167,7 +212,8 @@ function ChoiceFieldScreen({ field }: { readonly field: "gender" | "ageRange" })
       title={title}
       changed={changed}
       saving={saving}
-      failed={failed}
+      loadFailed={loadFailed}
+      onRetry={retry}
       onSave={() => {
         if (!member) return;
         if (field === "gender") save({ ...profileOf(member), gender: valueIn(GENDERS, selected) });
@@ -207,7 +253,7 @@ const isSensitivity = (value: string): value is Sensitivity => SENSITIVITY_VALUE
  * 명세의 '내 피부 타입을 잘 모르겠어요' 링크는 피부 타입 테스트를 열기 전까지 숨긴다.
  */
 function SkinTypeFieldScreen() {
-  const { member, saving, failed, adminSession, save } = useProfileEditor();
+  const { member, saving, loadFailed, retry, adminSession, save } = useProfileEditor();
   const [draft, setDraft] = useState<SkinDraft>({ skinType: null, sensitivity: null });
   const [loaded, setLoaded] = useState<UserResponse | null>(null);
   const skinTypeId = useId();
@@ -236,7 +282,14 @@ function SkinTypeFieldScreen() {
   };
 
   return (
-    <FieldForm title={TITLES.skinType} changed={changed} saving={saving} failed={failed} onSave={submit}>
+    <FieldForm
+      title={TITLES.skinType}
+      changed={changed}
+      saving={saving}
+      loadFailed={loadFailed}
+      onRetry={retry}
+      onSave={submit}
+    >
       <div className="flex flex-col gap-8">
         <section className="flex flex-col gap-3">
           <h2 id={skinTypeId} className="text-section font-bold text-text-primary">
