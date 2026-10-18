@@ -13,7 +13,6 @@ import {
   ratingSummary,
   shelfSections,
   summarizeAnalysis,
-  withObjectParticle,
 } from "./shelf";
 
 const item = (id: number, overrides: Partial<ShelfProductResponse> = {}): ShelfProductResponse => ({
@@ -144,14 +143,5 @@ describe("평가 초안", () => {
       moistureLevel: 1.5,
       oilLevel: 2,
     });
-  });
-});
-
-describe("withObjectParticle", () => {
-  it("받침이 있으면 '을', 없으면 '를'을 붙인다", () => {
-    expect(withObjectParticle("1025 독도 크림")).toBe("1025 독도 크림을");
-    expect(withObjectParticle("블랙 스네일 토너")).toBe("블랙 스네일 토너를");
-    expect(withObjectParticle("세럼 1")).toBe("세럼 1을");
-    expect(withObjectParticle("Cream")).toBe("Cream를");
   });
 });

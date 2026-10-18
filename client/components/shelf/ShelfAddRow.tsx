@@ -1,8 +1,6 @@
 import type { ProductSuggestionResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 
-import { productImageSrc } from "./product-image-src";
-
 import { ProductImage } from "@/components/ui/ProductImage";
 import { splitByKeyword, splitByRange } from "@/lib/domain/highlight";
 import { USAGE_LABEL } from "@/lib/domain/shelf";
@@ -30,7 +28,7 @@ export function ShelfAddRow({ product, keyword, shelved }: ShelfAddRowProps) {
   return (
     <div className="flex items-center gap-3 py-2">
       <div className="flex size-14 shrink-0 items-center justify-center p-0.5">
-        <ProductImage src={productImageSrc(product.imageUrl)} alt="" size={52} className="size-full object-contain" />
+        <ProductImage src={product.imageUrl} size={48} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">

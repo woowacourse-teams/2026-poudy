@@ -18,6 +18,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { StickyBar } from "@/components/ui/StickyBar";
 // TODO(#729): 큰 제목 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
+import { formatCount } from "@/lib/domain/format";
 import { clearedDraft, countInTab, movedDraft, type RatingDraft, shelfSections } from "@/lib/domain/shelf";
 import { type ShelfData, useShelf } from "@/lib/hooks/useShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -76,7 +77,7 @@ function ShelfList({ data, onRate, onOpenMenu }: ShelfListProps) {
         <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
       </StickyBar>
       <section aria-label="선반 제품" className="flex flex-col px-gutter pt-2">
-        <p className="pb-1 text-body-sm text-text-secondary">{`${countInTab(items, tab)}개`}</p>
+        <p className="pb-1 text-body-sm text-text-secondary">{formatCount(countInTab(items, tab))}</p>
         {shelfSections(items, tab).map((section, sectionIndex) => (
           <div key={section.heading ?? tab} className="flex flex-col">
             {section.heading ? (
