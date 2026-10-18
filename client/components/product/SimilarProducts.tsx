@@ -6,7 +6,6 @@ import Link from "next/link";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { Badge } from "@/components/ui/Badge";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { partHref } from "@/lib/domain/product-parts";
 
@@ -49,13 +48,7 @@ function SimilarProductRow({ product }: { readonly product: SimilarProductRespon
       {...pressableProps}
       className="pressable fb-surface flex min-h-22 items-center gap-3 py-3"
     >
-      <ProductImage
-        src={product.imageUrl || PRODUCT_PLACEHOLDER}
-        alt=""
-        size={64}
-        loading="lazy"
-        className="size-16 shrink-0 object-contain"
-      />
+      <ProductImage src={product.imageUrl} size={64} loading="lazy" className="shrink-0" />
 
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex items-center gap-2">

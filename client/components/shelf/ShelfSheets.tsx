@@ -8,7 +8,6 @@ import { IconButton } from "@poudy/design-system/icon-button";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
-import { productImageSrc } from "./product-image-src";
 import { ShelfIntro } from "./ShelfIntro";
 import { ShelfIntroActions } from "./ShelfIntroActions";
 import { ShelfRatingForm } from "./ShelfRatingForm";
@@ -21,7 +20,8 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
 import type { IconId } from "@/components/ui/icons/sprite";
 import { ProductImage } from "@/components/ui/ProductImage";
-import { draftOf, ratingBadge, type RatingDraft, withObjectParticle } from "@/lib/domain/shelf";
+import { withJosa } from "@/lib/domain/format";
+import { draftOf, ratingBadge, type RatingDraft } from "@/lib/domain/shelf";
 
 type ProductHeadProps = {
   readonly item: ShelfProductResponse;
@@ -34,12 +34,7 @@ function ProductHead({ item, title, onClose }: ProductHeadProps) {
   return (
     <BottomSheet.CustomHeader>
       <div className="flex items-center gap-3 px-5 pt-3 pb-4">
-        <ProductImage
-          src={productImageSrc(item.product.imageUrl)}
-          alt=""
-          size={48}
-          className="size-12 shrink-0 object-contain"
-        />
+        <ProductImage src={item.product.imageUrl} size={40} className="shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="truncate text-caption text-text-secondary">
             {item.product.brandName} · {item.product.name}
@@ -159,12 +154,7 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
         <>
           <BottomSheet.CustomHeader>
             <div className="flex items-center gap-3 border-b border-border px-5 pt-2 pb-3">
-              <ProductImage
-                src={productImageSrc(item.product.imageUrl)}
-                alt=""
-                size={44}
-                className="size-11 shrink-0 object-contain"
-              />
+              <ProductImage src={item.product.imageUrl} size={40} className="shrink-0" />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="truncate text-caption text-text-secondary">{item.product.brandName}</p>
                 <BottomSheet.Title className="truncate text-title font-semibold text-text-primary">
@@ -216,7 +206,7 @@ export function ShelfRemoveConfirm({ item, onClose, onConfirm }: RemoveConfirmPr
           <BottomSheet.CustomHeader>
             <div className="flex flex-col gap-2 px-5 pt-3 pb-5">
               <BottomSheet.Title className="text-screen font-bold whitespace-pre-line text-text-primary">
-                {`${withObjectParticle(item.product.name)}\n선반에서 뺄까요?`}
+                {`${withJosa(item.product.name, "을/를")}\n선반에서 뺄까요?`}
               </BottomSheet.Title>
               <p className="text-body text-text-secondary">
                 남긴 평가도 지워지고, 안 맞을 수 있는 성분을 다시 계산해요.

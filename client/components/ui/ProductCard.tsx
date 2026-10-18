@@ -5,15 +5,12 @@ import Link from "next/link";
 
 import { LevelTag } from "./LevelTag";
 import { MatchedText } from "./MatchedText";
-import { ProductThumbnail } from "./ProductThumbnail";
+import { ProductImage } from "./ProductImage";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
-import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/product-display";
-
-// 제품 상세와 검색 패널이 같은 기본 그림을 쓴다. 들여오던 자리를 그대로 둔다.
-export { PRODUCT_PLACEHOLDER } from "./ProductThumbnail";
 
 type ProductCardProps = {
   readonly product: ProductResponse;
@@ -42,9 +39,19 @@ export function ProductCard({
       <div data-product-content className="flex min-h-27 items-center gap-3 py-3">
         <Link
           href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
-          className="flex flex-1 items-center gap-3"
+          className="flex min-w-0 flex-1 items-center gap-3"
         >
-          <ProductThumbnail imageUrl={product.imageUrl} loading={imageLoading} />
+          {/*
+            제품 이름을 옆에 적어 두므로 그림에는 대체 텍스트를 비운다. 그림은 제품마다 따로 도착하고,
+            칸을 먼저 잡아 두어 늦게 와도 옆의 글이 밀리지 않는다.
+          */}
+          <ProductImage
+            src={product.imageUrl}
+            size={80}
+            loading={imageLoading}
+            data-product-image
+            className="shrink-0"
+          />
 
           {/*
           줄 높이를 좁힌 대신 줄 사이는 넉넉히 벌려, 한 줄씩 또렷하게 끊어 읽히게 한다.
@@ -53,7 +60,7 @@ export function ProductCard({
           가격·유수분처럼 따로 읽는 정보와 같은 간격으로 떨어뜨리면 흩어져 보인다.
           gap 은 컨테이너 전체에 걸리므로 이 한 자리만 margin 으로 좁힌다.
         */}
-          <div className="flex flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <span className="mb-[-4px] text-[12px] leading-tight font-medium">
               <MatchedText
                 label={brand.name}
@@ -77,7 +84,8 @@ export function ProductCard({
               {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}
             </p>
 
-            <div className="flex items-center gap-2">
+            {/* 좁은 화면에서 두 레벨이 한 줄에 들어가지 않으면 유분감을 다음 줄로 내린다. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <LevelTag kind="moisture" level={moistureLevel} />
               <LevelTag kind="oil" level={oilLevel} />
             </div>

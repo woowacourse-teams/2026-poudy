@@ -16,6 +16,7 @@ import type { IconId } from "@/components/ui/icons/sprite";
 import { TopBar } from "@/components/ui/TopBar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
 import { fetchSkinFilter } from "@/lib/api/skin-filter";
+import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
 import { filterCountLabel } from "@/lib/domain/skin-filter";
 import { providerName } from "@/lib/domain/social-provider";
@@ -97,7 +98,7 @@ function AccountRow({ member }: { readonly member: UserResponse }) {
 
 const savedCountLabel = (status: string, count: number): string | null => {
   if (status !== "ready") return null;
-  return `${count}개`;
+  return formatCount(count);
 };
 
 function CenterMessage({ role, children }: { readonly role: "alert" | "status"; readonly children: string }) {

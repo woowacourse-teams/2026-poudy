@@ -14,7 +14,7 @@ import { ShelfRatingSheet } from "./ShelfSheets";
 import { Icon } from "@/components/ui/icons/Icon";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
-import { withAndParticle } from "@/lib/domain/shelf";
+import { formatCount, josaOf } from "@/lib/domain/format";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -30,7 +30,7 @@ function NoResult({ keyword, onRequest }: NoResultProps) {
       <span aria-hidden="true" className="mb-1 flex size-12 items-center justify-center rounded-full bg-surface">
         <Icon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
       </span>
-      <p className="text-section font-bold text-text-primary">{`${withAndParticle(`‘${keyword}’`)} 맞는 제품이 없어요`}</p>
+      <p className="text-section font-bold text-text-primary">{`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`}</p>
       <p className="text-body text-text-secondary">
         브랜드나 제품 이름을 다시 확인해 보세요.
         <br />
@@ -79,7 +79,7 @@ export function ShelfAddScreen() {
   const searching = keyword.trim().length > 0;
   // 지금 입력한 검색어의 결과가 도착했는데 비었을 때만 알린다. 앞 결과를 기다리는 동안은 띄우지 않는다.
   const noResult = searching && suggestions.keyword === keyword.trim() && suggestions.total === 0;
-  const status = searching ? `${suggestions.keyword} 결과 ${suggestions.total}개` : undefined;
+  const status = searching ? `${suggestions.keyword} 결과 ${formatCount(suggestions.total)}` : undefined;
 
   return (
     <>
