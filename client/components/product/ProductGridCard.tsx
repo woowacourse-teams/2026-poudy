@@ -1,8 +1,25 @@
+"use client";
+
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
+
+type ProductGridProps = {
+  /** `ProductGridCard` 를 담은 li 들 */
+  readonly children: ReactNode;
+};
+
+/**
+ * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이 8, 행 사이 16 이다.
+ * 거터가 12 로 좁아지는 360 미만에서는 2열, 그 이상은 3열이다. 사진의 sizes(HOME_CARD_SIZES)도 같은 값으로 셈한다.
+ */
+export function ProductGrid({ children }: ProductGridProps) {
+  return <ul className="grid grid-cols-2 gap-x-2 gap-y-4 min-[360px]:grid-cols-3">{children}</ul>;
+}
 
 type ProductGridCardProps = {
   readonly id: number;
@@ -22,13 +39,12 @@ type ProductGridCardProps = {
 };
 
 /**
- * 세로로 선 제품 카드. 썸네일 아래에 브랜드명과 제품명을 잇달아 적는다.
+ * 홈 제품 카드(명세 APP · 홈 제품 카드 nLmj5). 홈의 사람들이 보는 제품과 큐레이션 상세가 함께 쓴다.
  *
- * 홈의 인기 제품과 큐레이션 상세가 함께 쓴다. `components/ui/ProductCard` 는 브랜드를
- * 객체로 받아 `brandName` 만 내려오는 응답에는 쓸 수 없어 이 카드를 따로 둔다.
+ * 폭을 채우는 정사각 사진 아래에 브랜드와 제품명을 이어 두 줄까지 적는다. 저장 버튼은 두지 않는다.
  *
- * 저장 버튼은 두지 않는다. 한 화면에 여럿이 늘어서는 자리라, 카드마다 단추가 붙으면
- * 무엇을 누르는 자리인지 흐려진다.
+ * hover 와 눌림은 제품명 밑줄 하나다(STATE S08 · S11 fb-underline). 사진은 흰 타일 위 누끼라 덮개를 깔면 회색 사각형이
+ * 생기고, 격자 칸은 행처럼 폭 전체에 면을 깔 수 없다. 카드 크기와 자리는 바꾸지 않는다.
  */
 export function ProductGridCard({
   id,
@@ -39,37 +55,30 @@ export function ProductGridCard({
   onClick,
   loading = "lazy",
 }: ProductGridCardProps) {
+  const { pressableProps } = usePressable({ delayMs: 80 });
+
   return (
-    /*
-      누르면 그림만 살짝 가라앉는다. 글자까지 줄이면 두 줄로 끊은 자리가 흔들리고 획이
-      흐려진다. 카드를 통째로 띄우는 hover 는 두지 않는다. 여러 칸이 격자로 늘어서는
-      자리라, 한 칸만 떠오르면 줄이 어긋나 보인다.
-    */
-    <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="popular-product flex flex-col gap-0.75">
-      {/*
-        사진은 카드 폭을 채우는 정사각 칸에 담는다(명세 IMAGE P02). 칸의 폭이 화면 폭을 따라 변하므로
-        실제 폭을 sizes 로 알린다. 사진에는 반경을 주지 않는다(P01).
-      */}
-      <span className="popular-product-image block">
-        <ProductImage
-          src={imageUrl}
-          size={HOME_CARD_MAX}
-          sizes={HOME_CARD_SIZES}
-          loading={loading}
-          className="aspect-square h-auto w-full"
-        />
-      </span>
+    <Link
+      href={`/products/${id}?from=${from}`}
+      onClick={onClick}
+      {...pressableProps}
+      className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
+    >
+      {/* 사진은 카드 폭을 채우는 정사각 칸에 contain 으로 담고 반경을 주지 않는다(명세 IMAGE P01 · P02). */}
+      <ProductImage
+        src={imageUrl}
+        size={HOME_CARD_MAX}
+        sizes={HOME_CARD_SIZES}
+        loading={loading}
+        className="aspect-square h-auto w-full"
+      />
 
       {/*
-        브랜드와 제품명을 한 덩어리로 읽히게 이어 쓰고 브랜드만 옅게 둔다.
-        두 줄까지만 보여 주고 넘치면 줄임표로 끊는다.
-
-        한국어를 글자 단위로 끊어 줄 끝까지 채운다. 사이트 전체의 keep-all 을 따르면 긴 낱말이
-        통째로 다음 줄로 넘어가 칸 오른쪽이 비고, 사진은 가운데인데 글자만 왼쪽으로 쏠려 보인다.
-        영문과 숫자는 낱말 단위를 지키도록 break-all 대신 normal 로 둔다.
+        브랜드와 제품명을 한 덩어리로 이어 두 줄까지 보여 주고, 넘치면 줄임표로 끊는다.
+        글자 단위로 끊어 칸 끝까지 채운다. 사이트 전체의 keep-all 을 따르면 긴 낱말이 통째로 다음 줄로 넘어가 칸 오른쪽이 빈다.
       */}
-      <span className="line-clamp-2 text-body leading-[1.35] [word-break:normal] text-text-primary">
-        <span className="text-text-secondary">{brandName}</span> {name}
+      <span data-product-name="" className="line-clamp-2 text-body-sm break-normal text-text-primary">
+        {brandName} {name}
       </span>
     </Link>
   );
