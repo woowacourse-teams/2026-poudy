@@ -23,7 +23,8 @@ const brand = (id: number, name: string): BrandSummaryResponse => ({
 // 라운드랩(ㄹ), 토리든(ㅌ), 3CE(한글 아님)
 const brands = [brand(1, "라운드랩"), brand(2, "토리든"), brand(3, "3CE")];
 
-const railLabels = () => screen.getByRole("navigation", { name: "브랜드 초성" }).querySelectorAll("button");
+const railLabels = () =>
+  screen.getAllByRole("tab").map((tab) => tab.querySelector("[aria-hidden] + span")?.textContent);
 
 describe("BrandDirectory", () => {
   beforeEach(() => vi.mocked(track).mockReset());
@@ -31,16 +32,18 @@ describe("BrandDirectory", () => {
   it("브랜드를 고르면 그 브랜드와 고른 레일 칸을 남긴다", async () => {
     render(<BrandDirectory brands={brands} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "ㄹ" }));
+    await userEvent.click(screen.getByRole("tab", { name: "ㄹ" }));
     await userEvent.click(screen.getByRole("link", { name: /라운드랩/ }));
 
     expect(track).toHaveBeenCalledWith("brand_selected", { brand_id: 1, brand_name: "라운드랩", index_label: "ㄹ" });
   });
 
-  it("브랜드가 있는 초성만 레일에 둔다", () => {
+  it("브랜드가 있는 초성만 세로 레일(tablist)에 둔다", () => {
     render(<BrandDirectory brands={brands} />);
 
-    const labels = [...railLabels()].map((button) => button.textContent);
+    expect(screen.getByRole("tablist", { name: "브랜드 초성" })).toHaveAttribute("aria-orientation", "vertical");
+
+    const labels = railLabels();
     expect(labels).toEqual(["전체", "ㄹ", "ㅌ", "A-Z"]);
   });
 
@@ -48,13 +51,13 @@ describe("BrandDirectory", () => {
     render(<BrandDirectory brands={brands} />);
 
     // ㄱ 으로 시작하는 브랜드가 없으므로 레일에 나오지 않는다.
-    expect(screen.queryByRole("button", { name: "ㄱ" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "ㄱ" })).not.toBeInTheDocument();
   });
 
   it("초성을 고르면 그 브랜드만 남는다", async () => {
     render(<BrandDirectory brands={brands} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "ㄹ" }));
+    await userEvent.click(screen.getByRole("tab", { name: "ㄹ" }));
 
     expect(screen.getByText("라운드랩")).toBeInTheDocument();
     expect(screen.queryByText("토리든")).not.toBeInTheDocument();
@@ -64,7 +67,7 @@ describe("BrandDirectory", () => {
   it("한글로 시작하지 않는 이름은 숫자로 시작해도 A-Z 로 모은다", async () => {
     render(<BrandDirectory brands={[...brands, brand(4, "SK-II")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "A-Z" }));
+    await userEvent.click(screen.getByRole("tab", { name: "A-Z" }));
 
     expect(screen.getByText("3CE")).toBeInTheDocument();
     expect(screen.getByText("SK-II")).toBeInTheDocument();
@@ -81,7 +84,7 @@ describe("BrandDirectory", () => {
   it("한글 브랜드가 없으면 A-Z 만 남는다", () => {
     render(<BrandDirectory brands={[brand(3, "3CE")]} />);
 
-    const labels = [...railLabels()].map((button) => button.textContent);
+    const labels = railLabels();
     expect(labels).toEqual(["전체", "A-Z"]);
   });
 });
