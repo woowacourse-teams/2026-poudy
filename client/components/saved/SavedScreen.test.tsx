@@ -76,7 +76,8 @@ describe("위시리스트", () => {
     render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText("로그인하면 제품을 저장할 수 있어요")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "로그인하기" })).toHaveAttribute("href", "/login");
+    await userEvent.setup().click(screen.getByRole("button", { name: "로그인하기" }));
+    expect(push).toHaveBeenCalledWith("/login");
   });
 
   it("관리자로 로그인되어 있으면 안내하고 관리자에서 로그아웃하면 로그인 화면으로 보낸다", async () => {

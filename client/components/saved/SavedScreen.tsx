@@ -2,14 +2,18 @@
 
 import type { ProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
+import { EmptyState } from "@poudy/design-system/empty-state";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
 import { SearchField } from "@poudy/design-system/search-field";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-// TODO(#729): 아이콘이 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 Icon 을 쓴다.
-import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SEARCH_KEYWORD_MAX_LENGTH } from "@/components/ui/SearchField";
 import type { SortOption } from "@/components/ui/SortDropdown";
@@ -69,33 +73,37 @@ function UndoRow({
   readonly onUndo: () => void;
   readonly children: React.ReactNode;
 }) {
-  const { pressableProps } = usePressable();
-
   return (
     <div className="relative isolate overflow-hidden rounded-lg bg-surface">
       {/* 제품 사진의 흰 바탕이 회색 칸 위에 밝은 네모로 뜨지 않게 바탕에 섞는다. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none opacity-(--removed-opacity) mix-blend-multiply blur-xs grayscale"
+        className="pointer-events-none opacity-(--removed-opacity) mix-blend-multiply blur-xs grayscale transition duration-(--duration-base) ease-out starting:opacity-100 starting:blur-none starting:grayscale-0"
       >
         {children}
       </div>
 
-      <div role="status" className="absolute inset-y-0 right-0 left-21.5 flex items-center gap-3 bg-surface pr-3 pl-2">
+      {/*
+        카드가 되돌리기 칸으로 바뀌는 순간을 불투명도로만 잇는다(MOTION M02). 자리는 그대로라 움직임이 필요 없고,
+        불투명도만 바꾸므로 동작 줄이기에서도 그대로 둔다.
+      */}
+      <div
+        role="status"
+        className="absolute inset-y-0 right-0 left-21.5 flex items-center gap-3 bg-surface pr-3 pl-2 transition-opacity duration-(--duration-base) ease-out starting:opacity-0"
+      >
         <p className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-body leading-snug font-semibold text-text-primary">{productName}</span>
           <span className="text-caption text-text-secondary">위시리스트에서 뺐어요</span>
         </p>
-        <button
-          type="button"
+        <Button
+          variant="outline"
           onClick={onUndo}
           aria-label={`${productName} 저장 되돌리기`}
-          {...pressableProps}
-          className="pressable fb-surface flex h-9 shrink-0 items-center gap-1 rounded-sm border border-border-strong bg-background px-3 text-body leading-snug font-semibold text-text-primary"
+          leadingIcon={<Icon name="arrow-back-up" size={16} scalable />}
+          className="shrink-0"
         >
-          <Icon name="arrow-back-up" size={14} strokeWidth={1.67} />
           되돌리기
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -113,36 +121,68 @@ function BrowseMoreRow() {
     >
       <span className="flex size-20 shrink-0 items-center justify-center">
         <span className="flex size-15 items-center justify-center rounded-lg border border-border-strong bg-background">
-          <Icon name="search" size={20} strokeWidth={1.67} className="text-text-secondary" />
+          <Icon name="search" size={20} className="text-text-secondary" />
         </span>
       </span>
       <span className="min-w-0 flex-1 text-body leading-snug font-semibold text-text-primary">
         다른 제품도 둘러보기
       </span>
       <span className="flex size-11 shrink-0 items-center justify-center">
-        <Icon name="chevron-right" size={20} strokeWidth={1.67} className="text-text-muted" />
+        <Icon name="chevron-right" size={20} scalable className="text-text-muted" />
       </span>
     </Link>
   );
 }
 
 function SignInNotice() {
-  const { pressableProps } = usePressable();
+  const router = useRouter();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 px-gutter py-14 text-center">
-      <Icon name="bookmark" size={28} className="text-text-secondary" />
-      <p className="text-title font-bold text-text-primary">로그인하면 제품을 저장할 수 있어요</p>
-      <p className="text-caption text-text-secondary">저장한 제품은 다른 기기에서도 그대로 볼 수 있어요.</p>
-      <Link
-        href="/login"
-        onClick={rememberLoginReturn}
-        {...pressableProps}
-        className="pressable fb-dim press-scale mt-2 flex h-11 items-center rounded-xl bg-action px-5 text-body font-bold text-action-text"
-      >
-        로그인하기
-      </Link>
+    <main className="flex flex-1 flex-col px-gutter">
+      <EmptyState
+        icon={<Icon name="bookmark" size={28} />}
+        title="로그인하면 제품을 저장할 수 있어요"
+        description="저장한 제품은 다른 기기에서도 그대로 볼 수 있어요."
+        action={
+          <Button
+            variant="secondary"
+            onClick={() => {
+              rememberLoginReturn();
+              router.push("/login");
+            }}
+          >
+            로그인하기
+          </Button>
+        }
+        className="flex-1"
+      />
     </main>
+  );
+}
+
+/** 처음 불러오는 동안 찾는 칸과 제품 행의 자리(FEEDBACK F02). 높이를 실제와 맞춰 내용이 와도 아래가 밀리지 않는다. */
+function SavedSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col px-gutter">
+      <div className="pt-3 pb-2">
+        <Skeleton shape="panel" className="h-12 w-full" />
+      </div>
+      <div className="flex h-11 items-center">
+        <Skeleton shape="line" size={13} className="w-12" />
+      </div>
+      <ul className="divide-y divide-border">
+        {Array.from({ length: 4 }, (_, index) => (
+          <li key={index} className="flex gap-3 py-4">
+            <Skeleton shape="box" className="size-20" />
+            <div className="flex flex-1 flex-col gap-2 pt-1">
+              <Skeleton shape="line" size={12} className="w-16" />
+              <Skeleton shape="line" size={16} className="w-3/4" />
+              <Skeleton shape="line" size={13} className="w-1/2" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -166,6 +206,7 @@ export function SavedScreen({
   const [settled, setSettled] = useState("");
   const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const showSkeleton = useDelayedFlag(status === "loading" && !signedOut && !adminSession);
 
   useEffect(() => {
     if (signedOut || adminSession) return;
@@ -242,31 +283,35 @@ export function SavedScreen({
     );
   }
 
-  // TODO(#728): 스켈레톤과 화면 오류(ErrorState)로 바꾼다.
   if (status === "loading") {
     return (
-      <main className="flex-1 px-gutter">
-        <p className="py-14 text-center text-body-sm text-text-secondary">불러오는 중…</p>
+      <main aria-busy="true" className="flex flex-1 flex-col pb-6">
+        {showSkeleton ? <SavedSkeleton /> : null}
       </main>
     );
   }
 
   if (status === "error") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-gutter py-14 text-center">
-        <Icon name="info" size={28} className="text-text-secondary" />
-        <p className="text-title font-bold text-text-primary">저장한 제품을 불러오지 못했어요</p>
-        <p className="text-caption text-text-secondary">잠시 후 다시 시도해 주세요. 저장한 목록은 그대로 있어요.</p>
-        <Button
-          variant="secondary"
-          className="mt-2"
-          onClick={() => {
-            setStatus("loading");
-            setRetry((previous) => previous + 1);
-          }}
-        >
-          다시 시도
-        </Button>
+      <main className="flex flex-1 flex-col">
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="alert-circle" size={28} />}
+          title="저장한 제품을 불러오지 못했어요"
+          description={"잠시 후 다시 시도해 주세요.\n저장한 목록은 그대로 있어요."}
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setStatus("loading");
+                setRetry((previous) => previous + 1);
+              }}
+            >
+              다시 시도
+            </Button>
+          }
+          className="flex-1"
+        />
       </main>
     );
   }
