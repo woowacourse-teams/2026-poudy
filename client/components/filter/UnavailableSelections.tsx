@@ -1,4 +1,5 @@
 import type { BrandResponse, CategoryResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import { Tag } from "@poudy/design-system/tag";
 
 import type { SheetKind } from "./FilterSheets";
 
@@ -45,19 +46,21 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
   return [];
 };
 
-/** 후보와 선택 상태는 별개다. 후보에서 사라진 선택도 개별적으로 해제할 수 있다. */
+/** 후보와 선택 상태는 별개다. 지금 조건의 후보에서 사라진 선택도 하나씩 뺄 수 있다. */
 export function UnavailableSelections(props: Props) {
   const missing = missingSelections(props);
 
   if (missing.length === 0) return null;
   return (
-    <section aria-label="현재 후보에 없는 선택" className="py-3">
-      <p className="text-sm text-text-secondary">현재 조건의 후보에 없는 선택</p>
-      {missing.map(({ key, label, remove }) => (
-        <button key={key} type="button" onClick={remove} className="mr-2 py-2 text-sm underline">
-          {label} 해제
-        </button>
-      ))}
+    <section aria-label="지금 후보에 없는 선택" className="flex flex-col gap-2 pb-3">
+      <p className="text-body-sm text-text-secondary">지금 조건의 후보에 없는 선택</p>
+      <div className="flex flex-wrap gap-2">
+        {missing.map(({ key, label, remove }) => (
+          <Tag key={key} variant="item" onRemove={remove}>
+            {label}
+          </Tag>
+        ))}
+      </div>
     </section>
   );
 }

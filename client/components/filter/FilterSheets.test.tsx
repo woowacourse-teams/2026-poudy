@@ -63,30 +63,19 @@ describe("필터 시트의 적용 버튼", () => {
     await waitFor(() => expect(sheet.getByRole("button", { name: label })).toBeEnabled());
   });
 
-  /* 서버가 피부 타입을 하나만 받는다. 고른 것이 바뀌면 앞의 것이 풀려야 한다. */
-  it("피부 타입은 한 번에 하나만 걸린다", async () => {
+  /* 서버가 건성·지성·복합성은 하나만 받는다. 민감성은 함께 걸 수 있다(명세 S23j 체크 목록 행). */
+  it("피부 타입은 건성·지성·복합성 가운데 하나와 민감성을 함께 고른다", async () => {
     countIs(7);
 
     const sheet = await openSheet(/피부 타입/);
 
-    await userEvent.click(sheet.getByRole("radio", { name: "건성" }));
-    expect(sheet.getByRole("radio", { name: "건성" })).toBeChecked();
+    await userEvent.click(sheet.getByRole("checkbox", { name: "건성" }));
+    await userEvent.click(sheet.getByRole("checkbox", { name: "지성" }));
+    await userEvent.click(sheet.getByRole("checkbox", { name: "민감성" }));
 
-    await userEvent.click(sheet.getByRole("radio", { name: "지성" }));
-    expect(sheet.getByRole("radio", { name: "지성" })).toBeChecked();
-    expect(sheet.getByRole("radio", { name: "건성" })).not.toBeChecked();
-  });
-
-  /* 하나만 고르는 자리라 다시 눌러 무르지 않는다. 무르는 일은 초기화가 맡는다. */
-  it("고른 피부 타입을 다시 눌러도 풀리지 않는다", async () => {
-    countIs(7);
-
-    const sheet = await openSheet(/피부 타입/);
-
-    await userEvent.click(sheet.getByRole("radio", { name: "민감성" }));
-    await userEvent.click(sheet.getByRole("radio", { name: "민감성" }));
-
-    expect(sheet.getByRole("radio", { name: "민감성" })).toBeChecked();
+    expect(sheet.getByRole("checkbox", { name: "지성" })).toBeChecked();
+    expect(sheet.getByRole("checkbox", { name: "건성" })).not.toBeChecked();
+    expect(sheet.getByRole("checkbox", { name: "민감성" })).toBeChecked();
   });
 
   /*
@@ -120,10 +109,10 @@ describe("필터 시트의 적용 버튼", () => {
 
     const sheet = await openSheet(/피부 타입/);
 
-    expect(sheet.getByRole("radio", { name: "건성" })).toBeInTheDocument();
-    expect(sheet.getByRole("radio", { name: "복합성" })).toBeInTheDocument();
-    expect(sheet.getByRole("radio", { name: "민감성" })).toBeInTheDocument();
-    expect(sheet.queryByRole("radio", { name: "지성" })).not.toBeInTheDocument();
+    expect(sheet.getByRole("checkbox", { name: "건성" })).toBeInTheDocument();
+    expect(sheet.getByRole("checkbox", { name: "복합성" })).toBeInTheDocument();
+    expect(sheet.getByRole("checkbox", { name: "민감성" })).toBeInTheDocument();
+    expect(sheet.queryByRole("checkbox", { name: "지성" })).not.toBeInTheDocument();
   });
 
   it("초기화하면 고른 피부 타입이 풀린다", async () => {
@@ -131,10 +120,10 @@ describe("필터 시트의 적용 버튼", () => {
 
     const sheet = await openSheet(/피부 타입/);
 
-    await userEvent.click(sheet.getByRole("radio", { name: "복합성" }));
+    await userEvent.click(sheet.getByRole("checkbox", { name: "복합성" }));
     await userEvent.click(sheet.getByRole("button", { name: "초기화" }));
 
-    expect(sheet.getByRole("radio", { name: "복합성" })).not.toBeChecked();
+    expect(sheet.getByRole("checkbox", { name: "복합성" })).not.toBeChecked();
   });
 
   it("아직 세는 중에는 막지 않는다", async () => {
@@ -178,12 +167,12 @@ describe("필터 초안과 적용 상태", () => {
     countIs(0);
     const onApply = vi.fn();
     render(<FilterSheets {...props} brands={[]} openSheet="brand" onApply={onApply} />);
-    await userEvent.click(screen.getByRole("button", { name: "브랜드 #1 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "브랜드 #1 빼기" }));
     await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
     expect(onApply).toHaveBeenCalledWith({ ...props.filter, brandIds: [] });
   });
 
-  it("보이지 않는 카테고리 선택은 후보 전체 선택으로 지워지지 않고 개별 해제할 수 있다", async () => {
+  it("보이지 않는 카테고리 선택을 따로 빼거나, 후보에서 하나를 골라 바꿀 수 있다", async () => {
     const onApply = vi.fn();
     render(
       <FilterSheets
@@ -196,9 +185,9 @@ describe("필터 초안과 적용 상태", () => {
         ]}
       />,
     );
-    await userEvent.click(screen.getByRole("checkbox", { name: "전체" }));
-    expect(screen.getByRole("button", { name: "카테고리 #999 해제" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "카테고리 #999 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "카테고리 #999 빼기" }));
+    expect(screen.queryByRole("button", { name: "카테고리 #999 빼기" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "크림" }));
     await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, categoryIds: [2] });
   });
@@ -208,7 +197,7 @@ describe("필터 초안과 적용 상태", () => {
     render(
       <FilterSheets {...props} openSheet="skinType" onApply={onApply} filter={{ ...EMPTY_FILTER, skinType: "DRY" }} />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "건성 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "건성 빼기" }));
     await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinType: undefined });
   });
