@@ -2,7 +2,17 @@ import { useState } from "react";
 
 import { BottomActionBar } from "../src/bottom-action-bar";
 import { BottomNavigation } from "../src/bottom-navigation";
-import type { BottomNavigationTab } from "../src/bottom-navigation";
+import type { BottomNavigationItem } from "../src/bottom-navigation";
+
+/* 앱의 탭 구성(client 의 BOTTOM_NAVIGATION_TABS)과 같게 둔 견본. 주소는 미리보기 안에서 움직이지 않게 # 으로 둔다. */
+const SAMPLE_TABS = [
+  { key: "home", label: "홈", icon: "home", href: "#home" },
+  { key: "category", label: "카테고리", icon: "grid", href: "#category" },
+  { key: "explore", label: "탐색", icon: "search", href: "#explore" },
+  { key: "shelf", label: "선반", icon: "archive", href: "#shelf" },
+  { key: "my", label: "마이", icon: "user", href: "#my" },
+] as const satisfies readonly BottomNavigationItem[];
+type SampleTab = (typeof SAMPLE_TABS)[number]["key"];
 import { Icon, ICON_NAMES, ICON_SIZES, IconSprite } from "../src/icon";
 import { ImageAttachment } from "../src/image-attachment";
 import type { AttachedImage } from "../src/image-attachment";
@@ -57,7 +67,7 @@ function AttachmentSample() {
 }
 
 export function LayoutSamples() {
-  const [tab, setTab] = useState<BottomNavigationTab>("home");
+  const [tab, setTab] = useState<SampleTab>("home");
 
   return (
     <>
@@ -151,11 +161,7 @@ export function LayoutSamples() {
 
       <Section title="BottomNavigation (5칸)">
         <Frame>
-          <BottomNavigation
-            current={tab}
-            hrefs={{ home: "#home", category: "#category", explore: "#explore", shelf: "#shelf", my: "#my" }}
-            onSelect={setTab}
-          />
+          <BottomNavigation items={SAMPLE_TABS} current={tab} onSelect={setTab} />
         </Frame>
       </Section>
 

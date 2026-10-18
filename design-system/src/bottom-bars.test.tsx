@@ -7,10 +7,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { BottomActionBar } from "./bottom-action-bar";
 import { BottomNavigation } from "./bottom-navigation";
+import type { BottomNavigationItem } from "./bottom-navigation";
+
+const TABS = [
+  { key: "home", label: "홈", icon: "home", href: "/" },
+  { key: "category", label: "카테고리", icon: "grid", href: "/categories" },
+  { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
+  { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
+  { key: "my", label: "마이", icon: "user", href: "/my-page" },
+] as const satisfies readonly BottomNavigationItem[];
 
 describe("BottomNavigation", () => {
-  it("다섯 칸(홈·카테고리·탐색·선반·마이)을 링크로 그리고 지금 탭에만 aria-current 를 붙인다", () => {
-    render(<BottomNavigation current="shelf" />);
+  it("받은 탭을 차례대로 링크로 그리고 지금 탭에만 aria-current 를 붙인다", () => {
+    render(<BottomNavigation items={TABS} current="shelf" />);
     const nav = screen.getByRole("navigation", { name: "주요 메뉴" });
     const links = within(nav).getAllByRole("link");
 
@@ -41,9 +50,7 @@ describe("BottomNavigation", () => {
         </a>
       );
     }
-    render(
-      <BottomNavigation current={null} linkAs={AppLink} hrefs={{ explore: "/search/products" }} onSelect={onSelect} />,
-    );
+    render(<BottomNavigation items={TABS} current={null} linkAs={AppLink} onSelect={onSelect} />);
     const explore = screen.getByRole("link", { name: "탐색" });
     // jsdom 은 다른 문서로 이동하지 못한다. 이동은 막고 알림만 본다.
     explore.addEventListener("click", (event) => event.preventDefault());
@@ -82,7 +89,7 @@ describe("가상 키보드(A11Y D07)", () => {
       <>
         <input aria-label="문의 내용" />
         <BottomActionBar position="screen-end" action={{ label: "문의 접수하기", onClick: vi.fn() }} />
-        <BottomNavigation current="home" />
+        <BottomNavigation items={TABS} current="home" />
       </>,
     );
     screen.getByRole("textbox", { name: "문의 내용" }).focus();

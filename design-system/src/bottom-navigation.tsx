@@ -8,24 +8,17 @@ import type { FilledIconName } from "./icon";
 import { usePressable } from "./use-pressable";
 import { useVirtualKeyboardInset } from "./use-virtual-keyboard";
 
-export type BottomNavigationTab = "home" | "category" | "explore" | "shelf" | "my";
-
 /**
- * 탭 다섯 칸. 로그인 여부와 상관없이 이 하나만 쓴다(명세 APP · 하단 내비게이션). 주소는 앱의 경로가 정하므로
- * 기본값을 두고 hrefs 로 바꿀 수 있다.
+ * 탭 한 칸. 어떤 탭을 어떤 순서로 두고 어디로 보낼지는 앱의 정보 구조라 앱이 정해서 넘긴다. 부품은 칸 배치, 지금 탭 모양,
+ * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채운 아이콘으로 그리므로 채움 그림이 있는 아이콘만 쓸 수 있다.
  */
-export const BOTTOM_NAVIGATION_TABS = [
-  { tab: "home", label: "홈", icon: "home", href: "/" },
-  { tab: "category", label: "카테고리", icon: "grid", href: "/categories" },
-  { tab: "explore", label: "탐색", icon: "search", href: "/search" },
-  { tab: "shelf", label: "선반", icon: "archive", href: "/shelf" },
-  { tab: "my", label: "마이", icon: "user", href: "/my-page" },
-] as const satisfies readonly {
-  readonly tab: BottomNavigationTab;
+export type BottomNavigationItem<K extends string = string> = {
+  /** 탭을 가리키는 이름. current 와 onSelect 가 이 값을 쓴다. */
+  readonly key: K;
   readonly label: string;
   readonly icon: FilledIconName;
   readonly href: string;
-}[];
+};
 
 /** 링크로 그릴 요소. client 는 Next 의 Link 를 넘긴다. */
 export type BottomNavigationLink = ComponentType<{
@@ -37,40 +30,38 @@ export type BottomNavigationLink = ComponentType<{
   readonly "aria-current"?: "page";
 }>;
 
-export type BottomNavigationProps = {
-  /** 지금 화면이 속한 탭. 어느 탭에도 속하지 않는 화면이면 null 이다. 경로로 정하는 일은 앱이 맡는다. */
-  readonly current: BottomNavigationTab | null;
+export type BottomNavigationProps<K extends string> = {
+  /** 탭 목록. 명세는 다섯 칸이다(APP · 하단 내비게이션). 로그인 여부와 상관없이 같은 목록을 쓴다. */
+  readonly items: readonly BottomNavigationItem<K>[];
+  /** 지금 화면이 속한 탭의 key. 어느 탭에도 속하지 않는 화면이면 null 이다. 경로로 정하는 일은 앱이 맡는다. */
+  readonly current: K | null;
   /** 탭 링크로 그릴 요소. 기본은 a 다. */
   readonly linkAs?: BottomNavigationLink | "a";
-  /** 탭별 주소. 넘기지 않은 탭은 BOTTOM_NAVIGATION_TABS 의 기본 주소로 간다. */
-  readonly hrefs?: Partial<Record<BottomNavigationTab, string>>;
   /** 탭을 눌렀을 때. 햅틱처럼 이동 말고 더 할 일이 있을 때 쓴다. */
-  readonly onSelect?: (tab: BottomNavigationTab) => void;
+  readonly onSelect?: (key: K) => void;
   /** 자리. 모양은 부품이 정한다. */
   readonly className?: string;
 };
 
-function NavigationItem({
+function NavigationItem<K extends string>({
   item,
   current,
-  href,
   Link,
   onSelect,
 }: {
-  readonly item: (typeof BOTTOM_NAVIGATION_TABS)[number];
+  readonly item: BottomNavigationItem<K>;
   readonly current: boolean;
-  readonly href: string;
   readonly Link: BottomNavigationLink | "a";
-  readonly onSelect?: (tab: BottomNavigationTab) => void;
+  readonly onSelect?: (key: K) => void;
 }) {
   const { pressableProps } = usePressable();
 
   return (
     <li className="flex min-w-0 flex-1">
       <Link
-        href={href}
+        href={item.href}
         aria-current={current ? "page" : undefined}
-        onClick={onSelect ? () => onSelect(item.tab) : undefined}
+        onClick={onSelect ? () => onSelect(item.key) : undefined}
         {...pressableProps}
         data-current={current ? "" : undefined}
         className="pressable fb-surface flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
@@ -96,7 +87,13 @@ function NavigationItem({
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
  */
-export function BottomNavigation({ current, linkAs = "a", hrefs, onSelect, className }: BottomNavigationProps) {
+export function BottomNavigation<K extends string>({
+  items,
+  current,
+  linkAs = "a",
+  onSelect,
+  className,
+}: BottomNavigationProps<K>) {
   const keyboardInset = useVirtualKeyboardInset();
 
   return (
@@ -109,15 +106,8 @@ export function BottomNavigation({ current, linkAs = "a", hrefs, onSelect, class
       )}
     >
       <ul className="flex">
-        {BOTTOM_NAVIGATION_TABS.map((item) => (
-          <NavigationItem
-            key={item.tab}
-            item={item}
-            current={current === item.tab}
-            href={hrefs?.[item.tab] ?? item.href}
-            Link={linkAs}
-            onSelect={onSelect}
-          />
+        {items.map((item) => (
+          <NavigationItem key={item.key} item={item} current={current === item.key} Link={linkAs} onSelect={onSelect} />
         ))}
       </ul>
     </nav>

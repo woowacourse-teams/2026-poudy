@@ -1,4 +1,18 @@
-import type { BottomNavigationTab } from "@poudy/design-system/bottom-navigation";
+import type { BottomNavigationItem } from "@poudy/design-system/bottom-navigation";
+
+export type BottomNavigationTab = "home" | "category" | "explore" | "shelf" | "my";
+
+/**
+ * 하단 내비의 탭 다섯 칸(명세 APP · 하단 내비게이션). 탭 구성과 주소는 앱의 정보 구조라 여기서 정한다.
+ * 탐색 탭은 제품 탐색부터 연다.
+ */
+export const BOTTOM_NAVIGATION_TABS = [
+  { key: "home", label: "홈", icon: "home", href: "/" },
+  { key: "category", label: "카테고리", icon: "grid", href: "/categories" },
+  { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
+  { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
+  { key: "my", label: "마이", icon: "user", href: "/my-page" },
+] as const satisfies readonly BottomNavigationItem<BottomNavigationTab>[];
 
 const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/shelf"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
