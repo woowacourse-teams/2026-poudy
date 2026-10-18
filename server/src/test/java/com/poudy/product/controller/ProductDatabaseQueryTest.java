@@ -11,6 +11,7 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -446,6 +448,42 @@ class ProductDatabaseQueryTest {
                 .param("excludeIngredientIds", "90003")
         )
             .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {"젤리크림|젤리ㅋㅡ림", "크림|ㅋㅡㄹㅣㅁ", "자모브랜드젤리과일|자모브랜드젤리고ㅏ일"})
+    @Sql({"/db/search-test-data.sql", "/db/product-jamo-search-test-data.sql"})
+    @DisplayName("자모를 나눠 쓴 검색어는 목록·정렬·count·제안·결과 유무에서 붙여 쓴 검색어와 같은 응답을 준다")
+    void searchesSplitJamoAsComposed(String composed, String split) throws Exception {
+        for (String sort : List.of("DEFAULT", "PRICE_ASC")) {
+            assertThat(body(get("/api/products").param("keyword", split).param("sort", sort)))
+                .isEqualTo(body(get("/api/products").param("keyword", composed).param("sort", sort)));
+        }
+        assertThat(body(get("/api/products/count").param("keyword", split)))
+            .isEqualTo(body(get("/api/products/count").param("keyword", composed)));
+        assertThat(body(get("/api/products/suggestions").param("keyword", split)))
+            .isEqualTo(body(get("/api/products/suggestions").param("keyword", composed)));
+        assertThat(products.hasSearchResults(split)).isTrue();
+    }
+
+    @Test
+    @Sql({"/db/search-test-data.sql", "/db/product-jamo-search-test-data.sql"})
+    @DisplayName("자모를 나눠 쓴 검색어도 실제로 맞은 상품명 구간을 강조하고, 모음이 빠진 짧은 입력은 결과가 없다")
+    void highlightsSplitJamoAndRejectsMissingVowel() throws Exception {
+        mockMvc.perform(get("/api/products/suggestions").param("keyword", "젤리ㅋㅡ림"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].id").value(90101))
+            .andExpect(jsonPath("$.items[0].match.field").value("PRODUCT_NAME"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(4));
+        // 세 글자 이상이면 기존 오타 교정이 붙여 쓴 이름으로 고칠 수 있으므로 교정하지 않는 두 글자 입력으로 확인한다.
+        mockMvc.perform(get("/api/products").param("keyword", "ㅋ림"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
+        assertThat(products.hasSearchResults("ㅋ림")).isFalse();
+    }
+
+    private String body(MockHttpServletRequestBuilder request) throws Exception {
+        return mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse()
+            .getContentAsString(StandardCharsets.UTF_8);
     }
 
     private void addIngredients() {
