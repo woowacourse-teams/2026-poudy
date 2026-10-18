@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
-import { HomeSearchLink } from "@/components/home/HomeSearchLink";
+import { HomeTopBar } from "@/components/home/HomeTopBar";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
 import { OPERATOR } from "@/components/legal/operator";
 import { NoticeBanner } from "@/components/notices/NoticeBanner";
 import { SiteFooter } from "@/components/ui/SiteFooter";
-import { TopBar } from "@/components/ui/TopBar";
 import {
   fetchCategories,
   fetchMainBanners,
@@ -68,18 +67,23 @@ const websiteStructuredData = {
 /**
  * 한 곳이라도 무너지면 홈 전체가 빈 화면이 된다. 영역마다 따로 받아서
  * 실패한 자리만 비우고 나머지는 그대로 그린다.
+ *
+ * 실패를 빈 목록과 가려야 하는 영역(사람들이 보는 제품, S51a)은 실패를 null 로 받아 오류 줄과 다시 시도를 둔다.
  */
-const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promise<readonly T[]> =>
+const orNull = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promise<readonly T[] | null> =>
   load()
     .then((response) => response.items)
-    .catch(() => []);
+    .catch(() => null);
+
+const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promise<readonly T[]> =>
+  orNull(load).then((items) => items ?? []);
 
 export default async function Home() {
   const [curations, keywords, skinTypes, rankings, categories] = await Promise.all([
     orEmpty(fetchMainBanners),
     orEmpty(fetchSearchKeywordRankings),
     orEmpty(fetchSkinTypes),
-    orEmpty(() => fetchProductRankings()),
+    orNull(() => fetchProductRankings()),
     orEmpty(fetchCategories),
   ]);
 
@@ -91,10 +95,10 @@ export default async function Home() {
       />
 
       <NoticeBanner />
-      <TopBar title={SITE_NAME} variant="root" showLogo right={<HomeSearchLink />} />
+      <HomeTopBar />
 
-      {/* 디자인(S01)은 영역 사이를 32, 아래 여백을 40 으로 둔다. */}
-      <main className="flex flex-1 flex-col gap-8 px-4 pt-1 pb-10">
+      {/* 명세 S20 은 영역 사이를 32, 끝 여백을 40 으로 둔다(LAYOUT). 좌우는 거터가 맡는다. */}
+      <main className="flex flex-1 flex-col gap-8 px-gutter pb-10">
         <CurationCarousel items={curations.filter(isCurationBanner)} />
         <PopularKeywords items={keywords} />
         <SkinTypeMenu items={skinTypes} />

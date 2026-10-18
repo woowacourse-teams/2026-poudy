@@ -1,140 +1,167 @@
 "use client";
 
 import type { CategoryResponse, ProductRankingItemResponse } from "@poudy/api/api.zod";
-import { useEffect, useState } from "react";
+import { EmptyState } from "@poudy/design-system/empty-state";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
+import { useRef, useState } from "react";
 
-import { ProductGridCard } from "@/components/product/ProductGridCard";
+import { type ChoiceChipOption, ChoiceChips } from "./ChoiceChips";
+
+import { ProductGrid, ProductGridCard } from "@/components/product/ProductGridCard";
 import { track } from "@/lib/analytics/track";
 import { fetchProductRankings } from "@/lib/api/products";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
+type Items = readonly ProductRankingItemResponse[];
+
 type PopularProductsProps = {
-  /** 서버가 미리 받아 둔 첫 화면. 칩을 바꾸기 전까지 이 값을 그대로 쓴다. */
-  readonly initialItems: readonly ProductRankingItemResponse[];
+  /** 서버가 미리 받아 둔 전체 순위. 받지 못했으면 null 이고, 섹션 자리에 오류 줄을 둔다(S51a). */
+  readonly initialItems: Items | null;
   readonly categories: readonly CategoryResponse[];
 };
 
-/** 칩에 세울 카테고리 수. 디자인은 네 개를 보여 준다. */
+/** 칩에 세울 카테고리 수. 명세는 네 개를 보여 준다. */
 const CHIP_COUNT = 4;
 
 /** 서버가 최대 여섯 개를 내려 주므로 기다리는 자리도 같은 수로 잡는다. */
 const SKELETON_COUNT = 6;
 
-/** 3열로 놓으므로 첫 줄은 세 개다. */
+/** 첫 줄은 열자마자 보이는 자리라 미루지 않고 받는다. 3열 기준이다. */
 const FIRST_ROW_COUNT = 3;
 
+const TITLE_ID = "home-popular-products";
+
+/** 전체 순위를 가리키는 칩 값 */
+const ALL = null;
+
+type Scope = number | typeof ALL;
+
+/** 카테고리마다 받은 결과. 받는 중이면 "loading", 실패했으면 "error" 다. */
+type Loaded = Readonly<Record<string, Items | "loading" | "error">>;
+
+const keyOf = (scope: Scope) => String(scope ?? "all");
+
 /**
- * 디자인 S01 의 `지금 사람들이 보고 있어요`.
+ * 사람들이 보는 제품(명세 S20, 오류 S51a).
  *
- * 카테고리 칩을 누르면 그 카테고리 안에서 다시 순위를 받아 온다. 서버가 최대 여섯 개를
- * 내려 주므로 3열 2행으로 놓는다.
+ * 카테고리 칩을 누르면 그 카테고리 안에서 다시 순위를 받아 온다. 한 번 받은 카테고리는 다시 받지 않는다.
+ * 받는 일은 칩을 누른 순간 핸들러가 시작한다. 칩을 빠르게 옮기면 늦게 온 응답이 지금 고른 칩의 자리를 덮지 않도록,
+ * 결과를 카테고리별 자리에 담고 화면은 지금 고른 칩의 자리만 읽는다.
  */
 export function PopularProducts({ initialItems, categories }: PopularProductsProps) {
   const sectionRef = useHomeSectionView("popular_products", 4);
-  const chips = categories.slice(0, CHIP_COUNT);
-  /* 고른 카테고리. 아무것도 고르지 않으면 전체다. */
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Scope>(ALL);
+  /* 바로 앞에 보던 칩. 새 칩의 응답을 기다리는 짧은 동안에는 그 목록을 그대로 둔다. */
+  const [previous, setPrevious] = useState<Scope>(ALL);
+  const [loaded, setLoaded] = useState<Loaded>(() => ({ [keyOf(ALL)]: initialItems ?? "error" }));
+  /* 같은 카테고리를 다시 시도할 때 앞서 보낸 요청의 응답은 버린다. */
+  const requests = useRef(new Map<string, number>());
+
+  const state = loaded[keyOf(selected)] ?? "loading";
   /*
-   * 카테고리를 걸었을 때 받아 온 것만 들고 있는다. 어느 조건의 응답인지 함께 두어야
-   * 칩을 빠르게 옮겼을 때 늦게 온 응답이 지금 고른 칩의 자리를 덮지 않는다.
+   * 스켈레톤은 늦게 켜고, 켜면 잠깐 유지한다(FEEDBACK F02). 켜기 전에는 앞 칩의 목록을 그대로 두어 빈 화면이 깜빡이지 않는다.
    */
-  const [loaded, setLoaded] = useState<{
-    readonly categoryId: number;
-    readonly items: readonly ProductRankingItemResponse[];
-  } | null>(null);
+  const showSkeleton = useDelayedFlag(state === "loading");
+  const before = loaded[keyOf(previous)];
+  const keepsBefore = !showSkeleton && state === "loading" && Array.isArray(before);
+  const shown = showSkeleton ? "loading" : keepsBefore ? before : state;
+  /* 화면에 보이는 목록이 어느 칩의 것인지. 제품을 눌렀을 때 그 칩으로 남긴다. */
+  const shownScope = keepsBefore ? previous : selected;
 
-  useEffect(() => {
-    // 전체는 서버가 이미 준 값을 그대로 쓴다. 다시 받아 오지 않는다.
-    if (selected === null) return;
+  /* 전체 순위가 원래 비어 있으면 보여 줄 것이 없어 섹션을 그리지 않는다. 실패와는 다르다. */
+  if (initialItems !== null && initialItems.length === 0) return null;
 
-    const controller = new AbortController();
-    fetchProductRankings([selected])
-      .then((response) => {
-        if (!controller.signal.aborted) setLoaded({ categoryId: selected, items: response.items });
-      })
-      .catch(() => {});
+  const load = (scope: Scope) => {
+    const key = keyOf(scope);
+    const id = (requests.current.get(key) ?? 0) + 1;
+    requests.current.set(key, id);
+    setLoaded((current) => ({ ...current, [key]: "loading" }));
 
-    return () => controller.abort();
-  }, [selected]);
-
-  if (initialItems.length === 0) return null;
-
-  /* 아직 이 칩의 응답이 오지 않았으면 이전 목록을 그대로 둔다. 빈 화면이 깜빡이지 않는다. */
-  const items = selected === null ? initialItems : loaded?.categoryId === selected ? loaded.items : null;
-
-  const select = (categoryId: number | null) => {
-    setSelected(categoryId);
-    track("ranking_category_changed", categoryId === null ? {} : { category_id: categoryId });
+    fetchProductRankings(scope === ALL ? undefined : [scope])
+      .then((response) => response.items)
+      .catch((): "error" => "error")
+      .then((result) => {
+        if (requests.current.get(key) !== id) return;
+        setLoaded((current) => ({ ...current, [key]: result }));
+      });
   };
 
-  return (
-    <section ref={sectionRef} className="flex flex-col gap-4">
-      <h2 className="text-[17px] font-bold text-text-primary">지금 사람들이 보고 있어요</h2>
+  const select = ({ value }: ChoiceChipOption<Scope>) => {
+    if (value === selected) return;
+    setPrevious(selected);
+    setSelected(value);
+    track("ranking_category_changed", value === ALL ? {} : { category_id: value });
+    if (loaded[keyOf(value)] === undefined || loaded[keyOf(value)] === "error") load(value);
+  };
 
-      {chips.length > 0 ? (
-        <ul className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4">
-          {[{ id: null, name: "전체" }, ...chips].map((chip) => {
-            const active = selected === chip.id;
-            return (
-              <li key={chip.id ?? "all"}>
-                <button
-                  type="button"
-                  onClick={() => select(chip.id)}
-                  aria-pressed={active}
-                  className={[
-                    "filter-chip inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-[13px] leading-none font-medium",
-                    "motion-reduce:transition-none",
-                    active
-                      ? "border-[#212124] bg-[#212124] font-semibold text-white"
-                      : "border-[#DCDEE3] bg-white text-[#212124]",
-                  ].join(" ")}
-                >
-                  {chip.name}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+  const options: readonly ChoiceChipOption<Scope>[] = [
+    { value: ALL, label: "전체" },
+    ...categories.slice(0, CHIP_COUNT).map(({ id, name }) => ({ value: id, label: name })),
+  ];
+
+  return (
+    <section ref={sectionRef} aria-labelledby={TITLE_ID} className="flex flex-col gap-3">
+      <h2 id={TITLE_ID} className="text-section font-bold text-text-primary">
+        지금 사람들이 보고 있어요
+      </h2>
+
+      {categories.length > 0 ? (
+        <ChoiceChips aria-labelledby={TITLE_ID} options={options} selected={selected} onSelect={select} />
       ) : null}
 
-      {items === null ? (
-        /* 응답을 기다리는 동안 자리만 잡아 둔다. 아래 목록과 높이가 같아 화면이 튀지 않는다. */
-        <ul aria-hidden="true" className="grid grid-cols-3 gap-x-2.5 gap-y-4">
-          {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-            <li key={index} className="flex flex-col gap-0.75">
-              <span className="aspect-square rounded-2xl bg-surface" />
-              <span className="h-9.5 rounded bg-surface" />
-            </li>
-          ))}
-        </ul>
-      ) : items.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-text-secondary">아직 볼 만한 제품이 모이지 않았어요</p>
-      ) : (
-        /* 디자인은 열 사이를 10, 행 사이를 16 으로 둔다. 행이 더 벌어져야 두 줄이 갈린다. */
-        <ul className="grid grid-cols-3 gap-x-2.5 gap-y-4">
-          {items.map(({ product }, index) => (
-            <li key={product.id}>
-              {/* 첫 줄은 열자마자 보이는 자리다. 그만큼은 미루지 않고 받는다. */}
-              <ProductGridCard
-                id={product.id}
-                name={product.name}
-                brandName={product.brandName}
-                imageUrl={product.imageUrl}
-                from={selected === null ? "home_ranking" : "home_category"}
-                loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
-                onClick={() =>
-                  track("home_product_selected", {
-                    product_id: product.id,
-                    position: index + 1,
-                    ranking_scope: selected === null ? "overall" : "category",
-                    ...(selected === null ? {} : { category_id: selected }),
-                  })
-                }
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div aria-busy={state === "loading"}>
+        {shown === "loading" ? (
+          <ProductsSkeleton />
+        ) : shown === "error" ? (
+          <ErrorState variant="section" onRetry={() => load(selected)}>
+            제품을 불러오지 못했어요
+          </ErrorState>
+        ) : shown.length === 0 ? (
+          <EmptyState title="아직 볼 만한 제품이 모이지 않았어요" />
+        ) : (
+          <ProductGrid>
+            {shown.map(({ product }, index) => (
+              <li key={product.id}>
+                <ProductGridCard
+                  id={product.id}
+                  name={product.name}
+                  brandName={product.brandName}
+                  imageUrl={product.imageUrl}
+                  from={shownScope === ALL ? "home_ranking" : "home_category"}
+                  loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
+                  onClick={() =>
+                    track("home_product_selected", {
+                      product_id: product.id,
+                      position: index + 1,
+                      ranking_scope: shownScope === ALL ? "overall" : "category",
+                      ...(shownScope === ALL ? {} : { category_id: shownScope }),
+                    })
+                  }
+                />
+              </li>
+            ))}
+          </ProductGrid>
+        )}
+      </div>
     </section>
+  );
+}
+
+/** 응답을 기다리는 동안 카드와 같은 크기의 자리를 잡는다(FEEDBACK F02). 사진 칸과 두 줄 글자다. */
+function ProductsSkeleton() {
+  return (
+    <ProductGrid>
+      {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+        <li key={index} aria-hidden="true" className="flex flex-col gap-1">
+          <Skeleton shape="box" className="aspect-square w-full" />
+          <span className="flex flex-col gap-1.5 py-1">
+            <Skeleton shape="line" size={13} className="w-full" />
+            <Skeleton shape="line" size={13} className="w-2/3" />
+          </span>
+        </li>
+      ))}
+    </ProductGrid>
   );
 }
