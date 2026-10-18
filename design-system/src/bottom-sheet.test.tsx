@@ -123,6 +123,7 @@ describe("ConfirmSheet", () => {
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "모두 지울까요?" })).not.toBeInTheDocument());
     expect(screen.getByRole("dialog", { name: "카테고리" })).toBeInTheDocument();
     expect(reset).toHaveFocus();
+    expect(overlayLayers().some((layer) => layer.hasAttribute("inert"))).toBe(false);
   });
 
   it("실행 버튼은 일반·위험 가운데 고르고, 막을 때는 이유 문구와 잇는다", async () => {
