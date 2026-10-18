@@ -100,7 +100,11 @@ import type { FieldRule } from "@poudy/design-system/field-rule";
 export const productNameRule: FieldRule = { validate: productNameError };
 
 // 입력이 멈춘 뒤 검사한다. 기다리는 시간의 기본값은 300ms다
-export const nicknameRule: FieldRule = { validate: nicknameError, validateOn: "change", debounceMs: 500 };
+export const nicknameRule: FieldRule = {
+  validate: nicknameError,
+  validateOn: "change",
+  debounceMs: 500,
+};
 ```
 
 - 어느 쪽이든 손대지 않은 칸에는 오류를 띄우지 않고, 고치면 기다리지 않고 바로 지운다.
