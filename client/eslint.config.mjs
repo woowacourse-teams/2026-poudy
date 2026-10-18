@@ -59,6 +59,12 @@ const tokenStrictFiles = [
   "components/product/{ProductDetail,PartTabs,PartChips,PressLink,LevelInfoButton,UnsuitableIngredients,WishlistShelfActions,ProductScrollState,ProductTopBar,ProductViewRecorder,CautionCheck,CautionIcon,IngredientList,SimilarProducts,SuggestEditLink,UsageIngredients}.tsx",
   "components/ingredient/{IngredientSheet,IngredientGroupSheet,SheetParts}.tsx",
   "components/navigation/useTopBarBack.tsx",
+  // 홈과 큐레이션 상세(#734)
+  "app/page.tsx",
+  "app/curations/**/*.{ts,tsx}",
+  "components/home/**/*.{ts,tsx}",
+  "components/curation/**/*.{ts,tsx}",
+  "components/product/ProductGridCard.tsx",
 ];
 
 const eslintConfig = defineConfig([
