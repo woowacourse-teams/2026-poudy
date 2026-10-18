@@ -34,7 +34,7 @@ function ProductHead({ item, title, onClose }: ProductHeadProps) {
   return (
     <BottomSheet.CustomHeader>
       <div className="flex items-center gap-3 px-5 pt-3 pb-4">
-        <ProductImage src={item.product.imageUrl} size={48} className="shrink-0" />
+        <ProductImage src={item.product.imageUrl} size={40} className="shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="truncate text-caption text-text-secondary">
             {item.product.brandName} · {item.product.name}
@@ -154,7 +154,7 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
         <>
           <BottomSheet.CustomHeader>
             <div className="flex items-center gap-3 border-b border-border px-5 pt-2 pb-3">
-              <ProductImage src={item.product.imageUrl} size={48} className="shrink-0" />
+              <ProductImage src={item.product.imageUrl} size={40} className="shrink-0" />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="truncate text-caption text-text-secondary">{item.product.brandName}</p>
                 <BottomSheet.Title className="truncate text-title font-semibold text-text-primary">
