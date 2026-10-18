@@ -265,19 +265,21 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   return (
     <main className="flex flex-1 flex-col">
       <SearchTopBar action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
-      <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
-        <Tabs />
-        <IngredientConditionEditor
-          filter={filter}
-          names={names}
-          groups={groups}
-          quickFilters={quickFilters}
-          onAdd={openPicker}
-          onRemoveIngredient={removeIngredient}
-          onRemoveGroup={removeGroup}
-          onToggleQuickFilter={toggleQuickFilter}
-          onOpenQuickFilterInfo={() => setInfoOpen(true)}
-        />
+      <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
+        <div className="flex flex-col">
+          <Tabs />
+          <IngredientConditionEditor
+            filter={filter}
+            names={names}
+            groups={groups}
+            quickFilters={quickFilters}
+            onAdd={openPicker}
+            onRemoveIngredient={removeIngredient}
+            onRemoveGroup={removeGroup}
+            onToggleQuickFilter={toggleQuickFilter}
+            onOpenQuickFilterInfo={() => setInfoOpen(true)}
+          />
+        </div>
 
         {conflicts.length > 0 ? (
           <p role="alert" className="flex gap-2 rounded-lg bg-danger-soft p-4 text-body-sm text-danger-action">

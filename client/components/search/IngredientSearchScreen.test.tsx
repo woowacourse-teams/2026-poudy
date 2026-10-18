@@ -130,8 +130,9 @@ describe("IngredientSearchScreen", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "자주 피하는 성분 설명 보기" }));
 
-    expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" })).toBeInTheDocument();
-    expect(screen.getByText("예: 리모넨 · 리날룰")).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" })).toHaveTextContent(
+      "예: 리모넨 · 리날룰",
+    );
   });
 
   it("초기화하면 성분 조건을 모두 비운다", async () => {

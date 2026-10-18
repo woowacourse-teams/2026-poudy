@@ -93,6 +93,22 @@ describe("IngredientPicker", () => {
     );
   });
 
+  it("원하는 성분이 든 성분군을 피하려 하면 함께 뺄지 묻는다", async () => {
+    suggestionsAre({ items: [], groups: [retinolGroup] });
+    const onApply = renderPicker("exclude", { includeIngredientIds: [7] });
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
+    await userEvent.click(await screen.findByRole("button", { name: "레티놀 담기" }));
+
+    expect(await screen.findByRole("dialog", { name: "레티놀을 원하는 성분에서 뺄까요?" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "빼고 적용" }));
+    await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
+
+    expect(onApply).toHaveBeenCalledWith(
+      expect.objectContaining({ includeIngredientIds: [], excludeGroupCodes: ["RETINOIDS"] }),
+    );
+  });
+
   it("맞는 성분이 없으면 검색어를 인용해 알린다", async () => {
     suggestionsAre({ items: [], groups: [] });
     renderPicker("include", {});

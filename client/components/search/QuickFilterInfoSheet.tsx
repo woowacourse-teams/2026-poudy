@@ -66,7 +66,16 @@ function QuickFilterRow({ code }: { readonly code: KnownExcludeCodeResponse }) {
         </span>
         {code.description ? <span className="text-body text-text-body">{code.description}</span> : null}
         {examples.length > 0 ? (
-          <span className="text-caption text-text-secondary">예: {examples.join(" · ")}</span>
+          // 성분 이름 안(하이픈 등)에서 줄이 갈리지 않게 이름마다 묶고, 이름 사이에서만 줄을 바꾼다.
+          <span className="text-caption text-text-secondary">
+            예:{" "}
+            {examples.map((example, index) => (
+              <span key={example}>
+                {index > 0 ? " · " : null}
+                <span className="whitespace-nowrap">{example}</span>
+              </span>
+            ))}
+          </span>
         ) : null}
       </span>
       <Icon name="chevron-right" size={16} className="text-text-secondary" />

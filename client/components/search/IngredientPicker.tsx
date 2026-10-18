@@ -25,6 +25,7 @@ import {
   groupKeyOf,
   type IngredientCondition,
   ingredientConditionChanged,
+  includedIdsIn,
   ingredientKeyOf,
   releaseExcludes,
   toggleGroupCondition,
@@ -47,6 +48,12 @@ const TITLE: Record<IngredientCondition, string> = {
 };
 
 const FOCUSABLE = 'button:not([disabled]), input, [href], [tabindex]:not([tabindex="-1"])';
+
+type PendingGroup = {
+  readonly group: IngredientGroup;
+  /** 이 성분군에 들어 있는 원하는 성분 */
+  readonly includedIds: readonly number[];
+};
 
 type Pending = {
   readonly item: IngredientSuggestionResponse;
@@ -84,6 +91,7 @@ export function IngredientPicker({
   const [draft, setDraft] = useState(filter);
   const [keyword, setKeyword] = useState("");
   const [pending, setPending] = useState<Pending | undefined>(undefined);
+  const [pendingGroup, setPendingGroup] = useState<PendingGroup | undefined>(undefined);
   const toast = useToast();
   useScrollLock(true);
 
@@ -131,17 +139,37 @@ export function IngredientPicker({
     setPending({ item, codes });
   };
 
-  const toggleGroupRow = (group: IngredientGroup) => {
-    const { filter: next, absorbedIds } = toggleGroupCondition(draft, condition, group);
+  const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id);
+  const subjectOf = (ids: readonly number[]) => {
+    const first = nameOf(ids[0]) ?? "담아 둔 성분";
+    return ids.length > 1 ? `${first} 외 ${ids.length - 1}개` : first;
+  };
+
+  const applyGroup = (base: Filter, group: IngredientGroup) => {
+    const { filter: next, absorbedIds } = toggleGroupCondition(base, condition, group);
     setDraft(next);
     if (absorbedIds.length === 0) return;
 
-    const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id);
-    const first = nameOf(absorbedIds[0]) ?? "담아 둔 성분";
-    const subject = absorbedIds.length > 1 ? `${first} 외 ${absorbedIds.length - 1}개` : first;
+    const subject = subjectOf(absorbedIds);
     toast.show({
       message: `${withJosa(subject, "은/는")} ‘${groupDisplayName(group.name)}’에 들어 있어서 하나로 묶었어요`,
     });
+  };
+
+  /**
+   * 피하고 싶은 성분으로 담으려는 성분군에 원하는 성분이 들어 있으면 결과가 반드시 빈다. 원하는 성분에서 함께 뺄지 먼저 묻는다
+   * (자주 피하는 성분을 켤 때의 S35 와 같은 결정).
+   */
+  const toggleGroupRow = (group: IngredientGroup) => {
+    const adding = !draft[groupKeyOf(condition)].includes(group.code);
+    const includedIds = condition === "exclude" && adding ? includedIdsIn(draft, group.ingredientIds) : [];
+    if (includedIds.length === 0) {
+      applyGroup(draft, group);
+      return;
+    }
+
+    track("filter_conflict_shown", { conflict_count: 1, ingredient_count: includedIds.length });
+    setPendingGroup({ group, includedIds });
   };
 
   const added = addedCount(filter, draft, condition);
@@ -259,6 +287,34 @@ export function IngredientPicker({
           <ConditionChangeSummary
             removed={`피하고 싶은 성분 · ${pendingNames}`}
             applied={`원하는 성분 · ${pending.item.koreanName}`}
+          />
+        ) : null}
+      </ConfirmSheet>
+
+      <ConfirmSheet
+        open={pendingGroup !== undefined}
+        title={pendingGroup ? `${withJosa(subjectOf(pendingGroup.includedIds), "을/를")} 원하는 성분에서 뺄까요?` : ""}
+        description={
+          pendingGroup
+            ? `${withJosa(subjectOf(pendingGroup.includedIds), "은/는")} ‘${groupDisplayName(pendingGroup.group.name)}’에 들어 있어 함께 빠져요.`
+            : ""
+        }
+        confirmLabel="빼고 적용"
+        onCancel={() => setPendingGroup(undefined)}
+        onConfirm={() => {
+          if (!pendingGroup) return;
+          const { group, includedIds } = pendingGroup;
+          applyGroup(
+            { ...draft, includeIngredientIds: draft.includeIngredientIds.filter((id) => !includedIds.includes(id)) },
+            group,
+          );
+          setPendingGroup(undefined);
+        }}
+      >
+        {pendingGroup ? (
+          <ConditionChangeSummary
+            removed={`원하는 성분 · ${pendingGroup.includedIds.map((id) => nameOf(id) ?? `${id}번 성분`).join(", ")}`}
+            applied={`피하고 싶은 성분 · ${groupDisplayName(pendingGroup.group.name)}`}
           />
         ) : null}
       </ConfirmSheet>
