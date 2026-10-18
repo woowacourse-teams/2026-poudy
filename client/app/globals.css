@@ -581,47 +581,12 @@ body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar 
 }
 
 /*
- * 카테고리 상세의 형제 카테고리 줄과 필터 칩 줄. 아래로 내리면 카테고리 줄이 상단바
- * (56px) 뒤로 숨고 필터 칩이 그 자리를 차지한다. 위로 올리거나 숨은 링크에 키보드 초점이
- * 닿으면 카테고리 줄이 다시 내려오고 필터 칩은 그 아래로 밀린다(`CategoryTrack`).
+ * 카테고리 상품과 브랜드 상세의 필터 칩 줄. 탐색 앱바(56px) 바로 아래에 붙는다(명세 S28 · S30).
+ * 카테고리 탭과 브랜드 머리는 붙지 않고 스크롤을 따라 올라간다.
  */
-.category-track-bar {
-  top: 3.5rem;
-  transition: top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.category-track-bar[data-hidden="true"]:not(:focus-within) {
-  top: calc(3.5rem - var(--category-track-height, 56px));
-}
-
-.category-filter-chip-bar {
-  top: calc(3.5rem + var(--category-track-height, 56px));
-  /* `.stuck-edge` 의 선 색 전환을 덮어쓰지 않도록 함께 적는다. */
-  transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    border-color var(--transition-duration-control-state) ease-out;
-}
-
-body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-filter-chip-bar {
-  top: 3.5rem;
-}
-
-/*
- * 브랜드관의 필터 칩 줄. 상단바(44px)와 브랜드 축약형(56px) 아래에 붙는다(`SummaryHeader`).
- *
- * 축약형은 브랜드 소개가 지나간 뒤에 나타나는데, 소개 끝과 칩 줄 사이가 축약형 높이보다
- * 짧아 칩 줄이 먼저 붙는다. 그 사이 칩 줄 위로 목록이 비쳐 보이지 않도록 칩 줄이 붙으면
- * 축약형도 함께 내려오게 한다. 아래 선은 칩 줄 아래 한 줄만 남긴다.
- */
+.category-filter-chip-bar,
 .brand-filter-chip-bar {
-  top: calc(2.75rem + 3.5rem);
-}
-
-body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
-  opacity: 1;
-  transform: translateY(0);
-  /* 축약형은 transform 으로 움직이는 별도 층이라 칩 줄과 다르게 반올림된다. */
-  box-shadow: var(--shadow-seam-cover);
+  top: 3.5rem;
 }
 
 /*
