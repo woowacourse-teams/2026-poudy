@@ -1,7 +1,10 @@
 "use client";
 
-import { Button } from "@poudy/design-system/button";
+import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
+import { Icon } from "@poudy/design-system/icon";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -91,22 +94,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
 function PrivacyNote() {
   return (
     <p className="flex items-center gap-1 pt-1 text-body-sm leading-snug text-text-muted">
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        className="shrink-0"
-        aria-hidden="true"
-        focusable="false"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="4" y="10" width="16" height="11" rx="2" />
-        <path d="M8 10V6a4 4 0 0 1 8 0v4" />
-      </svg>
+      <Icon name="lock" size={14} scalable />
       맞춤 추천에만 쓰고, 다른 사람에게 보이지 않아요.
     </p>
   );
@@ -128,9 +116,10 @@ export function SignupProfileScreen() {
   const [skinType, setSkinType] = useState<SkinType | null>(null);
   const [sensitivity, setSensitivity] = useState<Sensitivity | null>(null);
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
   const [adminSession, setAdminSession] = useState(false);
   const router = useRouter();
+  const toast = useToast();
+  const formId = useId();
   const answered = Boolean(gender || ageRange || skinType || sensitivity);
 
   useEffect(() => {
@@ -152,7 +141,6 @@ export function SignupProfileScreen() {
     if (!answered || saving) return;
 
     setSaving(true);
-    setFailed(false);
     updateMyProfile({ gender, ageRange, skinType, sensitiveSkin: sensitiveSkinOf(sensitivity) })
       .then(() => router.replace(takeLoginReturn()))
       .catch((error: unknown) => {
@@ -164,8 +152,8 @@ export function SignupProfileScreen() {
           setAdminSession(true);
           return;
         }
-        setFailed(true);
         setSaving(false);
+        toast.show({ message: SAVE_FAILED });
       });
   };
 
@@ -176,126 +164,126 @@ export function SignupProfileScreen() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col">
-      <form onSubmit={start} className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col gap-8 px-gutter py-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="text-hero font-bold text-text-primary">
-                피부에 맞는 제품을 <br />
-                보여 드릴게요
-              </h1>
-              <SkipButton onSkip={() => router.replace(takeLoginReturn())} />
+    <Screen scroll="document">
+      <ScreenBody>
+        <main className="flex flex-1 flex-col">
+          {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}
+          <form
+            id={formId}
+            onSubmit={start}
+            data-toast-offset="action-bar"
+            className="flex flex-1 flex-col gap-8 px-gutter py-6"
+          >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-3">
+                <h1 className="text-hero font-bold text-text-primary">
+                  피부에 맞는 제품을 <br />
+                  보여 드릴게요
+                </h1>
+                <SkipButton onSkip={() => router.replace(takeLoginReturn())} />
+              </div>
+              <p className="text-title text-text-secondary">아는 것만 골라 주세요. 나중에 언제든 바꿀 수 있어요.</p>
+              <PrivacyNote />
             </div>
-            <p className="text-title text-text-secondary">아는 것만 골라 주세요. 나중에 언제든 바꿀 수 있어요.</p>
-            <PrivacyNote />
-          </div>
 
-          <Field title="성별">
-            {(labelId) => (
-              <Deselectable selected={gender} onClear={() => setGender(null)}>
-                <RadioGroup
-                  aria-labelledby={labelId}
-                  variant="choice"
-                  columns={2}
-                  value={gender ?? undefined}
-                  onValueChange={(value) => setGender(valueIn(GENDERS, value))}
-                >
-                  {GENDERS.map(({ value, label }) => (
-                    <RadioGroupItem key={value} value={value}>
-                      {label}
-                    </RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </Deselectable>
-            )}
-          </Field>
+            <Field title="성별">
+              {(labelId) => (
+                <Deselectable selected={gender} onClear={() => setGender(null)}>
+                  <RadioGroup
+                    aria-labelledby={labelId}
+                    variant="choice"
+                    columns={2}
+                    value={gender ?? undefined}
+                    onValueChange={(value) => setGender(valueIn(GENDERS, value))}
+                  >
+                    {GENDERS.map(({ value, label }) => (
+                      <RadioGroupItem key={value} value={value}>
+                        {label}
+                      </RadioGroupItem>
+                    ))}
+                  </RadioGroup>
+                </Deselectable>
+              )}
+            </Field>
 
-          <Field title="나이대">
-            {(labelId) => (
-              <Deselectable selected={ageRange} onClear={() => setAgeRange(null)}>
-                <RadioGroup
-                  aria-labelledby={labelId}
-                  variant="choice"
-                  columns={3}
-                  value={ageRange ?? undefined}
-                  onValueChange={(value) => setAgeRange(valueIn(AGE_RANGES, value))}
-                >
-                  {AGE_RANGES.map(({ value, label }) => (
-                    <RadioGroupItem key={value} value={value}>
-                      {label}
-                    </RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </Deselectable>
-            )}
-          </Field>
+            <Field title="나이대">
+              {(labelId) => (
+                <Deselectable selected={ageRange} onClear={() => setAgeRange(null)}>
+                  <RadioGroup
+                    aria-labelledby={labelId}
+                    variant="choice"
+                    columns={3}
+                    value={ageRange ?? undefined}
+                    onValueChange={(value) => setAgeRange(valueIn(AGE_RANGES, value))}
+                  >
+                    {AGE_RANGES.map(({ value, label }) => (
+                      <RadioGroupItem key={value} value={value}>
+                        {label}
+                      </RadioGroupItem>
+                    ))}
+                  </RadioGroup>
+                </Deselectable>
+              )}
+            </Field>
 
-          <Field title="피부 타입">
-            {(labelId) => (
-              <Deselectable selected={skinType} onClear={() => setSkinType(null)}>
-                <RadioGroup
-                  aria-labelledby={labelId}
-                  variant="card"
-                  columns={3}
-                  value={skinType ?? undefined}
-                  onValueChange={(value) => setSkinType(valueIn(SKIN_KINDS, value))}
-                >
-                  {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
-                    <RadioGroupItem
-                      key={value}
-                      value={value}
-                      image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                      description={
-                        <>
-                          {first}
-                          <br />
-                          {second}
-                        </>
-                      }
-                    >
-                      {label}
-                    </RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </Deselectable>
-            )}
-          </Field>
+            <Field title="피부 타입">
+              {(labelId) => (
+                <Deselectable selected={skinType} onClear={() => setSkinType(null)}>
+                  <RadioGroup
+                    aria-labelledby={labelId}
+                    variant="card"
+                    columns={3}
+                    value={skinType ?? undefined}
+                    onValueChange={(value) => setSkinType(valueIn(SKIN_KINDS, value))}
+                  >
+                    {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+                      <RadioGroupItem
+                        key={value}
+                        value={value}
+                        image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
+                        description={
+                          <>
+                            {first}
+                            <br />
+                            {second}
+                          </>
+                        }
+                      >
+                        {label}
+                      </RadioGroupItem>
+                    ))}
+                  </RadioGroup>
+                </Deselectable>
+              )}
+            </Field>
 
-          <Field title="피부가 민감한 편인가요?" description="쉽게 붉어지고 따가워요">
-            {(labelId) => (
-              <Deselectable selected={sensitivity} onClear={() => setSensitivity(null)}>
-                <RadioGroup
-                  aria-labelledby={labelId}
-                  variant="choice"
-                  columns={2}
-                  value={sensitivity ?? undefined}
-                  onValueChange={(value) => setSensitivity(valueIn(SENSITIVITIES, value))}
-                >
-                  {SENSITIVITIES.map(({ value, label }) => (
-                    <RadioGroupItem key={value} value={value}>
-                      {label}
-                    </RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </Deselectable>
-            )}
-          </Field>
-        </div>
+            <Field title="피부가 민감한 편인가요?" description="쉽게 붉어지고 따가워요">
+              {(labelId) => (
+                <Deselectable selected={sensitivity} onClear={() => setSensitivity(null)}>
+                  <RadioGroup
+                    aria-labelledby={labelId}
+                    variant="choice"
+                    columns={2}
+                    value={sensitivity ?? undefined}
+                    onValueChange={(value) => setSensitivity(valueIn(SENSITIVITIES, value))}
+                  >
+                    {SENSITIVITIES.map(({ value, label }) => (
+                      <RadioGroupItem key={value} value={value}>
+                        {label}
+                      </RadioGroupItem>
+                    ))}
+                  </RadioGroup>
+                </Deselectable>
+              )}
+            </Field>
+          </form>
+        </main>
+      </ScreenBody>
 
-        {/* TODO(#729): 하단 행동 영역(BottomActionBar)이 들어오면 그 안에 둔다. 지금은 화면 끝에 붙인다. */}
-        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
-          {/* TODO(#728): 저장하지 못하면 토스트로 알린다. 지금은 버튼 위에 문구를 둔다. */}
-          {failed ? (
-            <p role="alert" className="text-center text-body text-text-secondary">
-              {SAVE_FAILED}
-            </p>
-          ) : null}
-          <Button type="submit" size="lg" className="w-full" disabled={!answered} busy={saving}>
-            {startLabel(answered)}
-          </Button>
-        </div>
-      </form>
-    </main>
+      <BottomActionBar
+        position="screen-end"
+        action={{ label: startLabel(answered), type: "submit", form: formId, disabled: !answered, busy: saving }}
+      />
+    </Screen>
   );
 }

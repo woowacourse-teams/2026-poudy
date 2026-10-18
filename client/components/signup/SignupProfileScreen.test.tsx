@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { UserResponse } from "@poudy/api/api.zod";
+import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -29,12 +30,12 @@ const member = (profile: Profile): UserResponse => ({
 
 const renderWith = async (profile: Profile) => {
   server.use(http.get("*/api/users/me", () => HttpResponse.json(member(profile))));
-  render(<SignupProfileScreen />);
+  render(<SignupProfileScreen />, { wrapper: ToastProvider });
   const loaded = [profile.gender, profile.ageRange, profile.skinType, profile.sensitiveSkin].some(
     (value) => value !== null && value !== undefined,
   );
   if (loaded) {
-    await waitFor(() => expect(screen.getByRole("button", { name: "시작하기" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "시작하기" })).not.toHaveAttribute("aria-disabled"));
   }
 };
 
@@ -48,7 +49,7 @@ describe("피부 정보 설정", () => {
     await user.click(female);
 
     expect(female).not.toBeChecked();
-    expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toHaveAttribute("aria-disabled", "true");
   });
 
   it("고른 나이대와 피부 타입도 다시 누르면 선택이 풀린다", async () => {
@@ -107,6 +108,17 @@ describe("피부 정보 설정", () => {
     await user.click(notSensitive);
 
     expect(notSensitive).not.toBeChecked();
-    expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("저장하지 못하면 토스트로 알리고 다시 누를 수 있게 둔다", async () => {
+    const user = userEvent.setup();
+    server.use(http.patch("*/api/users/me/profile", () => HttpResponse.json({}, { status: 500 })));
+    await renderWith({ gender: "FEMALE", ageRange: null, skinType: null });
+
+    await user.click(screen.getByRole("button", { name: "시작하기" }));
+
+    expect(await screen.findByText("저장하지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "시작하기" })).not.toHaveAttribute("aria-busy");
   });
 });
