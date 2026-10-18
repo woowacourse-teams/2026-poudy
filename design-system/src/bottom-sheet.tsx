@@ -194,7 +194,11 @@ function Shell({
           aria-hidden="true"
           data-state={state}
           onClick={() => close("backdrop")}
-          className={cn("sheet-scrim fixed inset-0", dialog ? "z-(--z-dialog-dim)" : "z-(--z-sheet-dim)")}
+          // 딤은 앱 화면 폭(시트와 같은 max-w-md)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
+          className={cn(
+            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-md",
+            dialog ? "z-(--z-dialog-dim)" : "z-(--z-sheet-dim)",
+          )}
         />
         <div
           ref={sheetRef}
