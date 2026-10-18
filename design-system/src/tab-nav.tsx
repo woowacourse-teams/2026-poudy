@@ -20,7 +20,8 @@ export type TabNavProps = ({ readonly "aria-label": string } | { readonly "aria-
  * (/categories ↔ /brands)이 해당한다. 같은 화면의 패널만 바꾸는 탭은 Tabs 를 쓴다.
  *
  * 링크이므로 뒤로 가기 기록에 남고 새 탭에서 열 수 있다. Tab 키로 탭마다 멈추고 Enter 로 이동한다. 방향키 전환은 없다.
- * 높이 44, 탭이 폭을 똑같이 나누고, 고른 탭은 15/700 + 2px 밑줄이다.
+ * 높이 44, 탭이 폭을 똑같이 나누고, 고른 탭은 15/700 + 2px 밑줄이다. 기기 글자 크기를 키워 이름이 탭 폭을 넘으면
+ * 넘치지 않고 줄을 바꾸며, 탭 높이가 글자를 따라 늘어난다(A11Y 글자 200%).
  */
 export function TabNav({ children, className, ...name }: TabNavProps) {
   return (
@@ -46,7 +47,7 @@ export function TabNavItem({ current, children }: TabNavItemProps) {
       {...pressableProps}
       aria-current={current ? "page" : undefined}
       data-current={current ? "" : undefined}
-      className="pressable fb-surface -mb-px flex h-11 flex-1 basis-0 items-center justify-center border-b-2 border-transparent px-3 text-title leading-none font-medium whitespace-nowrap text-text-secondary select-none data-current:border-text-primary data-current:font-bold data-current:text-text-primary"
+      className="pressable fb-surface -mb-px flex min-h-11 flex-1 basis-0 items-center justify-center border-b-2 border-transparent px-3 py-2 text-center text-title leading-snug font-medium text-text-secondary select-none data-current:border-text-primary data-current:font-bold data-current:text-text-primary"
     >
       {cloneElement(children, { children: <TabLabel>{label}</TabLabel> })}
     </Slot>
