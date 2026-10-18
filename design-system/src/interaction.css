@@ -81,6 +81,28 @@
   }
 }
 
+/*
+ * 거터 안에 놓인 목록 행(상품 목록 카드): 면을 화면 끝에서 끝까지 칠한다(S04). 행은 거터 안쪽에 있어 면만 가상 요소로
+ * 거터만큼 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 바뀌지 않는다. 글자 뒤에 깔리도록 행이 쌓임 맥락을 만든다.
+ */
+@utility fb-bleed {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(var(--gutter) * -1);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
 /* 칠한 면(검정 버튼, 어두운 원): 바탕은 그대로 두고 전체를 옅게 */
 @utility fb-dim {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
