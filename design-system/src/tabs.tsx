@@ -151,7 +151,11 @@ export function TabList({ label, children, end, className }: TabListProps) {
 const ITEM: Record<Variant, string> = {
   underline:
     "fb-surface -mb-px min-h-11 justify-center gap-1 border-b-2 border-transparent px-3 text-body leading-none font-medium whitespace-nowrap text-text-secondary aria-selected:border-text-primary aria-selected:font-bold aria-selected:text-text-primary",
-  rail: "fb-row h-13 px-4 text-title leading-none font-medium text-text-secondary aria-selected:bg-background aria-selected:font-bold aria-selected:text-text-primary",
+  /*
+   * 레일은 ↑↓ 로 연달아 옮기는 자리라 면을 바로 칠한다(MOTION M03 키보드 동작). 굵기도 바로 바뀌어 면만 천천히 바뀌면 따로 논다.
+   * 레일은 스크롤 칸이라 바깥으로 그린 포커스 링이 좌우에서 잘린다. 링을 칸 안쪽에 그린다.
+   */
+  rail: "fb-row h-13 px-4 text-title leading-none font-medium text-text-secondary transition-none focus-visible:-outline-offset-2 aria-selected:bg-background aria-selected:font-bold aria-selected:text-text-primary",
 };
 
 /**
@@ -247,13 +251,19 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
 export type TabPanelProps = {
   readonly value: string;
   readonly children: ReactNode;
+  /**
+   * 고르지 않은 패널도 문서에 그려 두고 hidden 으로 감춘다. 패널 내용이 이미 손에 있어 방향키 자동 전환이 지연 없이
+   * 되어야 하거나(A11Y D04 디렉터리 레일), 검색 로봇이 받는 첫 HTML 에 모든 패널의 링크가 남아야 할 때 쓴다.
+   */
+  readonly keepMounted?: boolean;
   readonly className?: string;
 };
 
-/** 탭 패널. 고른 탭의 패널만 그린다. */
-export function TabPanel({ value, children, className }: TabPanelProps) {
+/** 탭 패널. 기본은 고른 탭의 패널만 그린다. */
+export function TabPanel({ value, children, keepMounted = false, className }: TabPanelProps) {
   const { baseId, value: selected } = useTabs("TabPanel");
-  if (selected !== value) return null;
+  const hidden = selected !== value;
+  if (hidden && !keepMounted) return null;
 
   return (
     <div
@@ -261,6 +271,7 @@ export function TabPanel({ value, children, className }: TabPanelProps) {
       id={panelId(baseId, value)}
       aria-labelledby={tabId(baseId, value)}
       tabIndex={0}
+      hidden={hidden}
       className={className}
     >
       {children}
