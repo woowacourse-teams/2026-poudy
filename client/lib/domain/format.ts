@@ -99,6 +99,17 @@ export const formatDate = (value: string): string => {
   return seoulParts(value)?.date ?? value;
 };
 
+/**
+ * `2026년 10월 5일`. 문장 안에서 읽는 날짜에 쓴다(예: 탈퇴 안내 S55g). 월·일은 0을 채우지 않는다.
+ * 읽을 수 없는 값은 받은 그대로 돌려준다.
+ */
+export const formatLongDate = (value: string): string => {
+  const date = formatDate(value);
+  const parts = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(date);
+  if (!parts) return value;
+  return `${parts[1]}년 ${Number(parts[2])}월 ${Number(parts[3])}일`;
+};
+
 /** `2026.08.12 00:30`. Asia/Seoul 기준의 24시간 표기다(W05). 읽을 수 없는 값은 받은 그대로 돌려준다. */
 export const formatDateTime = (value: string): string => {
   const parts = seoulParts(value);

@@ -4,6 +4,7 @@ import {
   formatCount,
   formatDate,
   formatDateTime,
+  formatLongDate,
   formatPrice,
   formatProgress,
   formatUnitPrice,
@@ -82,6 +83,21 @@ describe("formatProgress", () => {
     expect(formatProgress(4, 350)).toBe("4 / 350");
     expect(formatProgress(2, 5)).toBe("2 / 5");
     expect(formatProgress(120, 1000)).toBe("120 / 1,000");
+  });
+});
+
+describe("formatLongDate", () => {
+  it("문장 안에서 읽는 날짜는 'YYYY년 M월 D일'로 쓰고 월·일에 0을 채우지 않는다", () => {
+    expect(formatLongDate("2026-10-05T14:00:00+09:00")).toBe("2026년 10월 5일");
+    expect(formatLongDate("2026-11-04")).toBe("2026년 11월 4일");
+  });
+
+  it("서울 시각 기준으로 날짜를 정한다", () => {
+    expect(formatLongDate("2026-10-04T15:30:00Z")).toBe("2026년 10월 5일");
+  });
+
+  it("읽을 수 없는 값은 받은 그대로 돌려준다", () => {
+    expect(formatLongDate("unknown")).toBe("unknown");
   });
 });
 
