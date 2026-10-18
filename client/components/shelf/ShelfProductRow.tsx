@@ -35,7 +35,7 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy", li
   const { pressableProps } = usePressable();
   const content = (
     <>
-      <div className="relative flex size-19 shrink-0 items-center justify-center rounded-2xl bg-surface">
+      <div className="relative flex size-16 shrink-0 items-center justify-center rounded-2xl bg-surface">
         <ProductImage src={product.imageUrl} size={48} loading={loading} className="mix-blend-multiply" />
         {badge ? <Badge variant="rating" rating={badge} className="absolute right-1 bottom-1" /> : null}
       </div>
