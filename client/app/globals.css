@@ -77,7 +77,8 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  --bottom-navigation-height: 3.875rem;
+  /* 윗선 1px + 위 여백(0.5rem) + 탭(3.5rem) + 아래 여백(1rem). 디자인 시스템의 BottomNavigation 과 같다. */
+  --bottom-navigation-height: calc(5rem + 1px);
 
   /*
    * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼을 이만큼 올려 그 줄에 겹치지 않게 한다.

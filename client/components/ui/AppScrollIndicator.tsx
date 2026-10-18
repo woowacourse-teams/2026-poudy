@@ -109,7 +109,8 @@ function ScrollThumb() {
       moving: 0,
       caps: collectCaps(),
     };
-    const navigation = document.querySelector<HTMLElement>("[data-bottom-navigation]");
+    // 감싸는 칸은 display: contents 라 상자가 없다. 높이는 안의 nav 에서 잰다.
+    const navigation = document.querySelector<HTMLElement>("[data-bottom-navigation] > nav");
 
     /** 붙은 줄 아래부터 하단 내비게이션 위까지의 트랙과 그 안의 막대 길이를 잡는다. */
     const layout = (top: number) => {
@@ -149,7 +150,10 @@ function ScrollThumb() {
     const measure = () => {
       const root = document.documentElement;
       state.caps = collectCaps();
-      state.bottom = navigation ? Math.max(window.innerHeight - navigation.getBoundingClientRect().top, 0) : 0;
+      // 키보드가 열려 내비가 숨으면(hidden) 상자가 없어 top 이 0 으로 잡힌다. 그때는 아래를 비우지 않는다.
+      const navigationBox = navigation?.getBoundingClientRect();
+      state.bottom =
+        navigationBox && navigationBox.height > 0 ? Math.max(window.innerHeight - navigationBox.top, 0) : 0;
       state.scrollable = root.scrollHeight > root.clientHeight;
       track.style.bottom = `${state.bottom}px`;
       layout(capBottomOf(state.caps));
