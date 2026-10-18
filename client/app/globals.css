@@ -112,7 +112,12 @@
  * - action-bar: BottomActionBar. 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)
  * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
  * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
+ * 하단 내비가 있는 화면은 내비 높이만큼 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
  */
+:root:has([data-bottom-navigation]) {
+  --toast-offset: var(--bottom-navigation-height);
+}
+
 :root:has([data-toast-offset="action-bar"]) {
   --toast-offset: calc(5rem + 1px);
 }
