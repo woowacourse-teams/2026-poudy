@@ -1,19 +1,22 @@
 "use client";
 
 import type { UserResponse } from "@poudy/api/api.zod";
+import { Button } from "@poudy/design-system/button";
+import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon, type IconName } from "@poudy/design-system/icon";
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { useToast } from "@poudy/design-system/toast";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { LogoutSheet } from "./LogoutSheet";
-
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProviderBadge } from "@/components/login/ProviderIcon";
-// TODO(#729): 아이콘과 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 부품을 쓴다.
-import { Icon } from "@/components/ui/icons/Icon";
-import type { IconId } from "@/components/ui/icons/sprite";
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
 import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { formatCount } from "@/lib/domain/format";
@@ -41,12 +44,12 @@ function Section({ title, children }: { readonly title: string; readonly childre
   );
 }
 
-function RowIcon({ name }: { readonly name: IconId }) {
-  return <Icon name={name} size={20} strokeWidth={1.67} className="shrink-0 text-text-primary" />;
+function RowIcon({ name }: { readonly name: IconName }) {
+  return <Icon name={name} size={20} scalable className="text-text-primary" />;
 }
 
 type MenuRowProps = {
-  readonly icon: IconId;
+  readonly icon: IconName;
   readonly label: string;
   /** 지금 값. undefined 면 고르지 않은 항목이라 '선택 필요'를 띄운다. 값 자리가 없는 줄은 null 이다. */
   readonly value: string | null | undefined;
@@ -59,10 +62,20 @@ function MenuRow({ icon, label, value, href, onPress }: MenuRowProps) {
   const content = (
     <>
       <RowIcon name={icon} />
-      <span className="min-w-0 flex-1 text-title text-text-primary">{label}</span>
-      {value === undefined ? <span className="text-body leading-snug text-warning-text">선택 필요</span> : null}
-      {value ? <span className="text-body leading-snug text-text-secondary">{value}</span> : null}
-      <Icon name="chevron-right" size={20} strokeWidth={1.67} className="shrink-0 text-text-secondary" />
+      {/*
+        글자를 키워 한 줄에 다 들지 않으면 값이 이름 아래 줄로 내려간다. 이름과 값이 낱말 가운데에서 갈라지지 않게 한다.
+        값은 남은 폭을 채우고 오른쪽에 붙어, 한 줄일 때도 내려갔을 때도 꺾쇠 쪽에 선다.
+      */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3">
+        <span className="text-title text-text-primary">{label}</span>
+        {value === undefined ? (
+          <span className="grow text-right text-body leading-snug break-keep text-warning-text">선택 필요</span>
+        ) : null}
+        {value ? (
+          <span className="grow text-right text-body leading-snug break-keep text-text-secondary">{value}</span>
+        ) : null}
+      </span>
+      <Icon name="chevron-right" size={20} scalable className="text-text-secondary" />
     </>
   );
 
@@ -75,7 +88,8 @@ function MenuRow({ icon, label, value, href, onPress }: MenuRowProps) {
   }
 
   return (
-    <button type="button" onClick={onPress} {...pressableProps} className={className}>
+    // 링크가 아닌 행은 로그아웃처럼 확인 시트를 여는 행뿐이다.
+    <button type="button" aria-haspopup="dialog" onClick={onPress} {...pressableProps} className={className}>
       {content}
     </button>
   );
@@ -101,32 +115,55 @@ const savedCountLabel = (status: string, count: number): string | null => {
   return formatCount(count);
 };
 
-function CenterMessage({ role, children }: { readonly role: "alert" | "status"; readonly children: string }) {
+/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. */
+const SKELETON_SECTIONS = [1, 3, 1, 1, 3] as const;
+
+/** 회원 정보를 기다리는 동안 묶음과 행의 자리(FEEDBACK F02). 묶음 제목과 행 높이를 실제와 맞춘다. */
+function MyPageSkeleton() {
   return (
-    <main className="flex min-h-svh items-center justify-center px-gutter">
-      <p role={role} className="text-title text-text-secondary">
-        {children}
-      </p>
-    </main>
+    <div aria-hidden="true" className="flex flex-col">
+      {SKELETON_SECTIONS.map((rows, section) => (
+        <div key={section} className="border-b border-border py-2 first:pt-0 last:border-b-0">
+          <div className="px-gutter pt-5 pb-1">
+            <Skeleton shape="line" size={12} className="w-12" />
+          </div>
+          {Array.from({ length: rows }, (_, row) => (
+            <div key={row} className="flex min-h-13 items-center gap-3 px-gutter">
+              <Skeleton shape="circle" className="size-5" />
+              <Skeleton shape="line" size={16} className="w-20" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 
 /** 마이페이지(S55). 계정 · 내 정보 · 관심 제품 · 검색 · 기타 다섯 묶음이다. */
 export function MyPageScreen() {
   const router = useRouter();
+  const toast = useToast();
   const [member, setMember] = useState<UserResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [adminSession, setAdminSession] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [pending, setPending] = useState(false);
   // 나만의 필터에 든 성분 수. 읽지 못하면 값 자리를 비워 둔다.
   const [filterCount, setFilterCount] = useState<number>();
   const saved = useSyncExternalStore(subscribeSavedProducts, getSavedProductsSnapshot, getSavedProductsServerSnapshot);
+  const loading = member === null && !loadFailed && !adminSession;
+  const showSkeleton = useDelayedFlag(loading);
 
+  // 회원 정보는 서버에만 있어 화면이 열릴 때(그리고 [다시 시도]를 누를 때) 받아 온다.
   useEffect(() => {
+    let cancelled = false;
     findMe()
-      .then(setMember)
+      .then((found) => {
+        if (!cancelled) setMember(found);
+      })
       .catch((error: unknown) => {
+        if (cancelled) return;
         if (isSignedOut(error)) {
           rememberLoginReturn();
           router.replace("/login");
@@ -138,8 +175,12 @@ export function MyPageScreen() {
         }
         setLoadFailed(true);
       });
-  }, [router]);
+    return () => {
+      cancelled = true;
+    };
+  }, [router, attempt]);
 
+  // 나만의 필터의 성분 수도 서버에만 있다. 읽지 못해도 화면은 그대로 쓴다.
   useEffect(() => {
     fetchSkinFilter().then(
       (filter) => setFilterCount(filter.items.length),
@@ -147,7 +188,12 @@ export function MyPageScreen() {
     );
   }, []);
 
-  /** 로그아웃하면 로그인 전 상태의 홈으로 보낸다(S55e). */
+  const retry = () => {
+    setLoadFailed(false);
+    setAttempt((count) => count + 1);
+  };
+
+  /** 로그아웃하면 로그인 전 상태의 홈으로 보낸다(S55e). 실패하면 시트를 연 채 토스트로 알린다(FEEDBACK F01). */
   const signOut = () => {
     setPending(true);
     logout()
@@ -165,8 +211,7 @@ export function MyPageScreen() {
           setAdminSession(true);
           return;
         }
-        // TODO(#728): 토스트로 알린다. 지금은 브라우저 알림 창을 쓴다.
-        window.alert(LOGOUT_FAILED);
+        toast.show({ message: LOGOUT_FAILED });
         setPending(false);
       });
   };
@@ -177,15 +222,26 @@ export function MyPageScreen() {
     );
   }
 
-  // TODO(#728): 화면 오류(ErrorState)와 스켈레톤으로 바꾼다.
-  if (loadFailed)
-    return <CenterMessage role="alert">회원 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</CenterMessage>;
-  if (!member) return <CenterMessage role="status">불러오는 중이에요</CenterMessage>;
-
-  return (
-    <>
-      <TopBar title="마이페이지" variant="sub" />
-      <main className="flex flex-1 flex-col pb-6">
+  const content = (() => {
+    if (loadFailed) {
+      return (
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="alert-circle" size={28} />}
+          title="회원 정보를 불러오지 못했어요"
+          description="잠시 후 다시 시도해 주세요."
+          action={
+            <Button variant="secondary" onClick={retry}>
+              다시 시도
+            </Button>
+          }
+          className="flex-1"
+        />
+      );
+    }
+    if (!member) return showSkeleton ? <MyPageSkeleton /> : null;
+    return (
+      <>
         <Section title="계정">
           <AccountRow member={member} />
         </Section>
@@ -198,7 +254,7 @@ export function MyPageScreen() {
             label="나이대"
             value={profileLabel(AGE_RANGES, member.ageRange)}
           />
-          <MenuRow href="/my-page/skin-type" icon="droplet-outline" label="피부 타입" value={skinSummaryOf(member)} />
+          <MenuRow href="/my-page/skin-type" icon="droplet" label="피부 타입" value={skinSummaryOf(member)} />
         </Section>
 
         <Section title="관심 제품">
@@ -224,9 +280,28 @@ export function MyPageScreen() {
           <MenuRow icon="logout" label="로그아웃" value={null} onPress={() => setLogoutOpen(true)} />
           <MenuRow href="/my-page/withdraw" icon="user-x" label="탈퇴하기" value={null} />
         </Section>
-      </main>
+      </>
+    );
+  })();
 
-      <LogoutSheet open={logoutOpen} pending={pending} onClose={() => setLogoutOpen(false)} onConfirm={signOut} />
-    </>
+  return (
+    <Screen scroll="document">
+      <SubTopBar title="마이페이지" />
+      <ScreenBody>
+        <main aria-busy={loading} className="flex flex-1 flex-col pb-6">
+          {content}
+        </main>
+      </ScreenBody>
+
+      <ConfirmSheet
+        open={logoutOpen}
+        title="로그아웃할까요?"
+        description="다시 로그인하면 선반과 위시리스트를 그대로 볼 수 있어요."
+        confirmLabel="로그아웃"
+        busy={pending}
+        onConfirm={signOut}
+        onCancel={() => setLogoutOpen(false)}
+      />
+    </Screen>
   );
 }

@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { UserResponse } from "@poudy/api/api.zod";
+import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -27,7 +28,7 @@ const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">)
 
 const renderWith = async (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">) => {
   server.use(http.get("*/api/users/me", () => HttpResponse.json(member(profile))));
-  render(<MyPageScreen />);
+  render(<MyPageScreen />, { wrapper: ToastProvider });
   await screen.findByText("member@example.com");
 };
 
@@ -93,7 +94,7 @@ describe("마이페이지", () => {
         HttpResponse.json({ ...member({ gender: null, ageRange: null, skinType: "DRY" }), sensitiveSkin: true }),
       ),
     );
-    render(<MyPageScreen />);
+    render(<MyPageScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByRole("link", { name: /피부 타입/ })).toHaveTextContent("건성 · 민감성");
   });
@@ -115,5 +116,38 @@ describe("마이페이지", () => {
     await renderWith({ gender: null, ageRange: null, skinType: null });
 
     expect(screen.getByRole("link", { name: "탈퇴하기" })).toHaveAttribute("href", "/my-page/withdraw");
+  });
+
+  it("로그아웃하지 못하면 토스트로 알리고 화면에 남는다", async () => {
+    const user = userEvent.setup();
+    server.use(http.post("*/api/users/logout", () => HttpResponse.json({ code: "INTERNAL" }, { status: 500 })));
+    router.replace.mockClear();
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    await user.click(screen.getByRole("button", { name: "로그아웃" }));
+    const sheet = await screen.findByRole("dialog", { name: "로그아웃할까요?" });
+    await user.click(within(sheet).getByRole("button", { name: "로그아웃" }));
+
+    expect(await screen.findByText("로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("회원 정보를 읽지 못하면 오류를 알리고 다시 시도할 수 있다", async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    server.use(
+      http.get("*/api/users/me", () =>
+        fail
+          ? HttpResponse.json({ code: "INTERNAL" }, { status: 500 })
+          : HttpResponse.json(member({ gender: null, ageRange: null, skinType: null })),
+      ),
+    );
+    render(<MyPageScreen />, { wrapper: ToastProvider });
+
+    await screen.findByRole("heading", { name: "회원 정보를 불러오지 못했어요" });
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findByText("member@example.com")).toBeInTheDocument();
   });
 });
