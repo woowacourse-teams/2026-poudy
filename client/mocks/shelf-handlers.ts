@@ -88,9 +88,22 @@ recalculate();
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
+const rejectsSensoryRating = (
+  productId: number,
+  rating: { readonly moistureLevel?: number | null; readonly oilLevel?: number | null },
+): boolean => {
+  const product = productOf(productId);
+  return (
+    product !== undefined &&
+    (product.moistureLevel === null || product.oilLevel === null) &&
+    (rating.moistureLevel != null || rating.oilLevel != null)
+  );
+};
+
 const toResponse = (item: MockItem): ShelfProductResponse | undefined => {
   const product = productOf(item.productId);
   if (!product) return undefined;
+  const sensorySupported = product.moistureLevel !== null && product.oilLevel !== null;
   return {
     product: {
       id: product.id,
@@ -98,9 +111,14 @@ const toResponse = (item: MockItem): ShelfProductResponse | undefined => {
       brandName: product.brand.name,
       badges: product.badges,
       imageUrl: product.imageUrl,
+      sensorySupported,
     },
     usageStatus: item.usageStatus,
-    rating: { preference: item.preference, moistureLevel: item.moistureLevel, oilLevel: item.oilLevel },
+    rating: {
+      preference: item.preference,
+      moistureLevel: sensorySupported ? item.moistureLevel : null,
+      oilLevel: sensorySupported ? item.oilLevel : null,
+    },
     possiblyUnsuitable: item.preference === "BAD",
     registeredAt: item.registeredAt,
   };
@@ -179,6 +197,10 @@ export const shelfHandlers = [
       return problem(409, "SHELF_PRODUCT_ALREADY_EXISTS", "이미 선반에 있는 제품입니다.");
     }
 
+    if (rejectsSensoryRating(body.data.productId, body.data)) {
+      return problem(400, "INVALID_REQUEST_BODY", "향수·클렌징 제품에는 수분감·유분감 평가를 남길 수 없습니다.");
+    }
+
     const added: MockItem = {
       productId: body.data.productId,
       usageStatus: body.data.usageStatus,
@@ -198,6 +220,10 @@ export const shelfHandlers = [
     if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
     const current = shelf.find((item) => item.productId === productId);
     if (!current) return problem(404, "SHELF_PRODUCT_NOT_FOUND", "선반에 없는 제품입니다.");
+
+    if (rejectsSensoryRating(productId, body.data)) {
+      return problem(400, "INVALID_REQUEST_BODY", "향수·클렌징 제품에는 수분감·유분감 평가를 남길 수 없습니다.");
+    }
 
     const updated: MockItem = {
       ...current,

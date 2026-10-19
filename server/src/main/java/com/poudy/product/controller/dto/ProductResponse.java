@@ -21,8 +21,8 @@ public record ProductResponse(
     @NotNull @Schema(description = "제품 가격 (원)", example = "18000") Long price,
     @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
     @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
-    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(description = "수분감 단계 (0~3, 0.5 단위)", example = "2.5", multipleOf = 0.5) Double moistureLevel,
-    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(description = "유분감 단계 (0~3, 0.5 단위)", example = "1", multipleOf = 0.5) Double oilLevel,
+    @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, description = "수분감 단계 (0~3, 0.5 단위)", example = "2.5", multipleOf = 0.5) Double moistureLevel,
+    @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, description = "유분감 단계 (0~3, 0.5 단위)", example = "1", multipleOf = 0.5) Double oilLevel,
     @NotNull @Schema(example = "false") Boolean sensitiveSkin,
     @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
 

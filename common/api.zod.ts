@@ -20,7 +20,7 @@ export type RatingResponse = __TypedOpenapi.Schemas.RatingResponse;
 export const RatingResponse = z.object({ preference: RatingPreference.nullable(), moistureLevel: z.number().nullable(), oilLevel: z.number().nullable() });
 
 export type ShelfProductInfoResponse = __TypedOpenapi.Schemas.ShelfProductInfoResponse;
-export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string() });
+export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), sensorySupported: z.boolean() });
 
 export type ShelfProductResponse = __TypedOpenapi.Schemas.ShelfProductResponse;
 export const ShelfProductResponse = z.object({ product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: z.boolean(), registeredAt: z.iso.datetime({ offset: true }) });
@@ -107,7 +107,7 @@ export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
 
 export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
-export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type WishlistResponse = __TypedOpenapi.Schemas.WishlistResponse;
 export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
@@ -227,7 +227,7 @@ export type ProductPartResponse = __TypedOpenapi.Schemas.ProductPartResponse;
 export const ProductPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), ingredients: z.array(ProductIngredientResponse), skinEffectGroups: z.array(SkinEffectGroupResponse), excludeGroups: z.array(ExcludeGroupResponse) });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
 export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
@@ -254,7 +254,7 @@ export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: ShareMatchStatus, productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
 
 export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
-export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
+export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable() });
 
 export type ProductRankingItemResponse = __TypedOpenapi.Schemas.ProductRankingItemResponse;
 export const ProductRankingItemResponse = z.object({ product: ProductRankingProductResponse });
@@ -314,7 +314,7 @@ export type CurationImageBlockResponse = __TypedOpenapi.Schemas.CurationImageBlo
 export const CurationImageBlockResponse = z.object({ id: z.uuid(), type: z.literal("IMAGE"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), imageUrl: z.string(), altText: z.string().nullable(), bodyText: z.string().nullable() });
 
 export type CurationProductResponse = __TypedOpenapi.Schemas.CurationProductResponse;
-export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
+export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable() });
 
 export type CurationProductsBlockResponse = __TypedOpenapi.Schemas.CurationProductsBlockResponse;
 export const CurationProductsBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), products: z.array(CurationProductResponse).min(1).max(2147483647) });

@@ -15,8 +15,6 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
-import com.poudy.product.domain.sensory.MoistureLevel;
-import com.poudy.product.domain.sensory.OilLevel;
 import com.poudy.product.domain.sensory.ProductSensory;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -48,39 +46,45 @@ class ProductLoader {
         Map<Long, List<Badge>> badges = loadBadges(parameters);
         Map<Long, List<ProductVariant>> variants = loadVariants(parameters);
         Map<Long, List<ProductPart>> parts = loadParts(parameters);
-        Map<Long, Product> loaded = jdbc.query("""
-            select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
-                c.parent_id, c.name as category_name, c.depth from product p
-            join brand b on b.id = p.brand_id join category c on c.id = p.category_id where p.id = any(:ids)
-            """, parameters, (rs, row) -> {
-            long id = rs.getLong("id");
-            return new Product(
-                id,
-                rs.getString("product_name"),
-                new Brand(
-                    rs.getLong("brand_id"),
-                    rs.getString("korean_name"),
-                    rs.getString("english_name"),
-                    rs.getString("brand_image")
-                ),
-                new Category(
-                    rs.getLong("category_id"),
-                    rs.getObject("parent_id", Long.class),
-                    rs.getString("category_name"),
-                    rs.getInt("depth")
-                ),
-                badges.getOrDefault(id, List.of()),
-                parts.getOrDefault(id, List.of()),
-                rs.getString("image_url"),
-                new ProductVariants(variants.get(id)),
-                new ProductSensory(
-                    new MoistureLevel(rs.getDouble("moisture_level")),
-                    new OilLevel(rs.getDouble("oil_level"))
-                ),
-                rs.getBoolean("is_sensitive_skin"),
-                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
-            );
-        }).stream().collect(toMap(Product::id, p -> p));
+        Map<Long, Product> loaded = jdbc.query(
+            """
+                select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
+                    c.parent_id, c.name as category_name, c.depth, coalesce(root.name, c.name) as root_category_name from product p
+                join brand b on b.id = p.brand_id join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id where p.id = any(:ids)
+                """,
+            parameters,
+            (rs, row) -> {
+                long id = rs.getLong("id");
+                return new Product(
+                    id,
+                    rs.getString("product_name"),
+                    new Brand(
+                        rs.getLong("brand_id"),
+                        rs.getString("korean_name"),
+                        rs.getString("english_name"),
+                        rs.getString("brand_image")
+                    ),
+                    new Category(
+                        rs.getLong("category_id"),
+                        rs.getObject("parent_id", Long.class),
+                        rs.getString("category_name"),
+                        rs.getInt("depth")
+                    ),
+                    badges.getOrDefault(id, List.of()),
+                    parts.getOrDefault(id, List.of()),
+                    rs.getString("image_url"),
+                    new ProductVariants(variants.get(id)),
+                    ProductSensory.forCategory(
+                        rs.getString("root_category_name"),
+                        rs.getDouble("moisture_level"),
+                        rs.getDouble("oil_level")
+                    ),
+                    rs.getBoolean("is_sensitive_skin"),
+                    rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
+                );
+            }
+        ).stream().collect(toMap(Product::id, p -> p));
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
     }
 

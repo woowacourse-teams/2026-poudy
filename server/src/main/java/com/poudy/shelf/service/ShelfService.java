@@ -5,6 +5,7 @@ import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
 import com.poudy.shelf.domain.IngredientAnalysis;
@@ -76,9 +77,9 @@ public class ShelfService {
     @Transactional
     public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         shelfProductRepository.lockShelf(userId);
-        if (productRepository.findById(productId).isEmpty()) {
-            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
-        }
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
+        rating.validateFor(product);
         if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
@@ -90,6 +91,9 @@ public class ShelfService {
         shelfProductRepository.lockShelf(userId);
         ShelfProduct shelfProduct = shelfProductRepository.find(userId, productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
+        rating.validateFor(product);
         shelfProductRepository.update(userId, productId, usageStatus, rating);
         if (shelfProduct.changesPreferenceTo(rating)) {
             return refreshAnalysis(userId).item(productId);

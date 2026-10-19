@@ -167,12 +167,16 @@ public final class Product {
         return keyword.matchesExactly(name);
     }
 
+    public boolean supportsSensory() {
+        return sensory.isAvailable();
+    }
+
     public Double moistureLevel() {
-        return sensory.moisture().value();
+        return sensory.moistureLevel();
     }
 
     public Double oilLevel() {
-        return sensory.oil().value();
+        return sensory.oilLevel();
     }
 
     public boolean isForSensitiveSkin() {

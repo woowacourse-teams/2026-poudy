@@ -1,7 +1,18 @@
   export namespace Schemas {
   export type RatingPreference = ("GOOD" | "BAD")
 export type ShelfUsageStatus = ("IN_USE" | "USED")
-export type ShelfProductUpdateRequest = { usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type ShelfProductUpdateRequest = {
+  usageStatus: ShelfUsageStatus;
+  preference?: (RatingPreference | null);
+  /**
+   * 수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  moistureLevel?: (number | null);
+  /**
+   * 유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  oilLevel?: (number | null);
+}
 export type BadgeResponse = {
   /**
    * 배지 코드
@@ -22,10 +33,26 @@ export type ShelfProductInfoResponse = {
    */
   badges: Array<BadgeResponse>;
   imageUrl: string;
+  /**
+   * 수분감·유분감 평가 가능 여부. 향수·클렌징 제품은 false
+   */
+  sensorySupported: boolean;
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
-export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type ShelfProductAddRequest = {
+  productId: number;
+  usageStatus: ShelfUsageStatus;
+  preference?: (RatingPreference | null);
+  /**
+   * 수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  moistureLevel?: (number | null);
+  /**
+   * 유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  oilLevel?: (number | null);
+}
 export type SearchKeywordRequest = { keyword: string }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
@@ -140,11 +167,11 @@ export type ProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
   sensitiveSkin: boolean;
   updatedAt: string;
 }
@@ -339,8 +366,8 @@ export type ProductDetailResponse = {
   badges: Array<BadgeResponse>;
   imageUrl: string;
   variants: Array<ProductVariantResponse>;
-  moistureLevel: number;
-  oilLevel: number;
+  moistureLevel: (number | null);
+  oilLevel: (number | null);
   sensitiveSkin: boolean;
   productParts: Array<ProductPartSummaryResponse>;
   selectedPart: (ProductPartResponse | null);
@@ -460,11 +487,11 @@ export type ProductRankingProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
 }
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
@@ -645,11 +672,11 @@ export type CurationProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
 }
 export type CurationProductsBlockResponse = {
   id: string;

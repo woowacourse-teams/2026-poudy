@@ -85,10 +85,12 @@ export function ProductCard({
             </p>
 
             {/* 좁은 화면에서 두 레벨이 한 줄에 들어가지 않으면 유분감을 다음 줄로 내린다. */}
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <LevelTag kind="moisture" level={moistureLevel} />
-              <LevelTag kind="oil" level={oilLevel} />
-            </div>
+            {moistureLevel !== null || oilLevel !== null ? (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <LevelTag kind="moisture" level={moistureLevel} />
+                <LevelTag kind="oil" level={oilLevel} />
+              </div>
+            ) : null}
           </div>
         </Link>
 

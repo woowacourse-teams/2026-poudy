@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfFilterScreen } from "./ShelfFilterScreen";
 import { ShelfScreen } from "./ShelfScreen";
+import { ShelfRatingSheet } from "./ShelfSheets";
 
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
@@ -26,6 +27,35 @@ afterEach(() => {
 });
 
 describe("선반", () => {
+  it("향수·클렌징 평가에서는 유수분 입력을 숨기고 선호도·사용 상태만 저장한다", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ShelfRatingSheet
+        item={{
+          product: { id: 99, name: "클렌징폼", brandName: "브랜드", badges: [], imageUrl: "", sensorySupported: false },
+          rating: { preference: "GOOD", moistureLevel: 2, oilLevel: 1 },
+          usageStatus: "IN_USE",
+          possiblyUnsuitable: false,
+          registeredAt: "2026-10-19T12:00:00+09:00",
+        }}
+        onClose={() => {}}
+        onSave={onSave}
+      />,
+    );
+    expect(screen.queryByRole("slider", { name: "수분감" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("slider", { name: "유분감" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/유수분 레벨을 다듬는/)).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "지금도 쓰고 있나요?" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "평가 저장" }));
+    expect(onSave).toHaveBeenCalledWith({
+      usageStatus: "IN_USE",
+      preference: "GOOD",
+      moistureLevel: null,
+      oilLevel: null,
+    });
+  });
+
   it("안 맞을 수 있는 성분과 사용 상태별 제품을 보여 준다", async () => {
     render(<ShelfScreen />);
 

@@ -24,7 +24,7 @@ const SAMPLE_IMAGE = "/images/products/roundlab-1025-toner.png";
 type SampleProduct = Pick<ShelfProductResponse["product"], "id" | "brandName" | "name">;
 
 const sampleItem = (product: SampleProduct, rating: ShelfProductResponse["rating"]): ShelfProductResponse => ({
-  product: { ...product, badges: [], imageUrl: SAMPLE_IMAGE },
+  product: { ...product, badges: [], imageUrl: SAMPLE_IMAGE, sensorySupported: true },
   usageStatus: "IN_USE",
   rating,
   possiblyUnsuitable: false,
