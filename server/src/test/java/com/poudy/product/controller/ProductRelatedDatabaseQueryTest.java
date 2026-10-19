@@ -12,6 +12,7 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import java.time.LocalDate;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql("/db/search-test-data.sql")
 @DisplayName("상품 연관 기능의 DB 조회")
 class ProductRelatedDatabaseQueryTest {
+    @Autowired
+    private com.poudy.product.search.service.ProductSearchService productSearch;
+
+    @BeforeEach
+    void buildJavaProductSearchIndex() {
+        com.poudy.product.search.support.ProductSearchTestIndex.rebuild(jdbc);
+    }
+
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -124,6 +133,6 @@ class ProductRelatedDatabaseQueryTest {
             .extracting(hit -> hit.product().id()).containsExactly(90001L);
 
         assertThat(repository.findByProductName("검증독도", 90000L)).isEmpty();
-        assertThat(repository.hasSearchResults("검증토너")).isTrue();
+        assertThat(productSearch.hasResults("검증토너")).isTrue();
     }
 }

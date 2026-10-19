@@ -1,4 +1,4 @@
-package com.poudy.product.repository;
+package com.poudy.product.search.repository;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -17,6 +17,9 @@ import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.ViewPeriod;
 import com.poudy.product.domain.sensory.ProductSensory;
+import com.poudy.product.repository.ProductLoader;
+import com.poudy.product.search.domain.query.AnalyzedProductQuery;
+import com.poudy.product.search.repository.query.ProductSearchQueryCodec;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
@@ -36,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-public class ProductQueryRepository {
+public class ProductSearchRepository {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private static final int DEFAULT_SORT_VIEW_DAYS = 30;
@@ -117,12 +120,13 @@ public class ProductQueryRepository {
             where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
         """;
 
+    private final ProductSearchQueryCodec codec = new ProductSearchQueryCodec();
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
 
-    public ProductQueryRepository(
+    public ProductSearchRepository(
         NamedParameterJdbcTemplate jdbc,
         ProductLoader loader,
         BrandRepository brandRepository,
@@ -134,9 +138,15 @@ public class ProductQueryRepository {
         this.clock = clock.withZone(SEOUL);
     }
 
-    public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
+    public ProductSearchResult<ProductPage> find(
+        ProductQuery query,
+        AnalyzedProductQuery analyzed,
+        ProductSort sort,
+        int page,
+        int size
+    ) {
         validatePage(page, size);
-        MapSqlParameterSource parameters = parameters(query)
+        MapSqlParameterSource parameters = parameters(query, analyzed)
             .addValue("size", size).addValue("offset", (long) (page - 1) * size).addValue("options", page == 1);
         ProductSort selectedSort = ProductSort.orDefault(sort);
         String order = orderBy(query, selectedSort);
@@ -151,7 +161,7 @@ public class ProductQueryRepository {
                 """;
         }
         List<Aggregate> rows = jdbc.query(
-            candidates(query) + PAGE.formatted(order, viewsJoin, order),
+            candidates(query) + PAGE.formatted(order, viewsJoin, order) + searchMetadata(query),
             parameters,
             (rs, row) -> new Aggregate(rs.getString("section"), rs.getString("id"), rs.getLong("amount"))
         );
@@ -159,43 +169,92 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
-        return new ProductPage(
+        ProductPage result = new ProductPage(
             cards(ids),
             total,
             facets.brands("MATCH"),
             facets.categories("MATCH"),
             facets.skinTypes("MATCH"),
-            page == 1
-                ? new ProductFilterOptions(
-                    facets.brands("BRAND_OPTION"),
-                    facets.categories("CATEGORY_OPTION"),
-                    facets.skinTypes("SKIN_OPTION")
-                ) : null
+            filterOptions(page, facets)
+        );
+        return result(result, query, rows);
+    }
+
+    public ProductSearchResult<Long> count(ProductQuery query, AnalyzedProductQuery analyzed) {
+        List<Aggregate> rows = jdbc.query(
+            candidates(query) +
+                " select 'TOTAL' as section, null::text as id, count(*) as amount from matched" + searchMetadata(query),
+            parameters(query, analyzed),
+            (rs, row) -> new Aggregate(rs.getString("section"), rs.getString("id"), rs.getLong("amount"))
+        );
+        return result(
+            rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount(),
+            query,
+            rows
         );
     }
 
-    public long count(ProductQuery query) {
-        return jdbc.queryForObject(candidates(query) + " select count(*) from matched", parameters(query), Long.class);
+    private ProductFilterOptions filterOptions(int page, Facets facets) {
+        if (page != 1) {
+            return null;
+        }
+        return new ProductFilterOptions(
+            facets.brands("BRAND_OPTION"),
+            facets.categories("CATEGORY_OPTION"),
+            facets.skinTypes("SKIN_OPTION")
+        );
     }
 
-    public ProductSuggestions suggest(String keyword, int page, int size) {
+    private String searchMetadata(ProductQuery query) {
+        if (!query.hasKeyword()) {
+            return "";
+        }
+        return " union all select 'SEARCH_FULL',null::text,count(*) from search_hits where tier<=2"
+            + " union all select 'SEARCH_TOTAL',null::text,count(*) from search_hits where tier<=2";
+    }
+
+    private <T> ProductSearchResult<T> result(T value, ProductQuery query, List<Aggregate> rows) {
+        if (!query.hasKeyword()) {
+            return new ProductSearchResult<>(value, true, 0);
+        }
+        long full = rows.stream().filter(r -> r.section().equals("SEARCH_FULL")).findFirst().orElseThrow().amount();
+        long total = rows.stream().filter(r -> r.section().equals("SEARCH_TOTAL")).findFirst().orElseThrow().amount();
+        return new ProductSearchResult<>(value, full > 0, total);
+    }
+
+    public ProductSearchResult<Boolean> hasResults(AnalyzedProductQuery analyzed) {
+        return jdbc.queryForObject(
+            "select count(*) filter (where tier<=2) as total from search_product_hits(cast(:analysis as jsonb))",
+            Map.of("analysis", codec.encode(analyzed)),
+            (
+                rs,
+                row) -> new ProductSearchResult<>(rs.getLong("total") > 0, rs.getLong("total") > 0, rs.getLong("total"))
+        );
+    }
+
+    public String correctQuery(String query) {
+        return jdbc
+            .queryForObject("select search_correct_query(:query,'PRODUCT')", Map.of("query", query), String.class);
+    }
+
+    public ProductSearchResult<ProductSuggestions> suggest(AnalyzedProductQuery analyzed, int page, int size) {
         validatePage(page, size);
-        MapSqlParameterSource parameters = new MapSqlParameterSource("keyword", keyword)
+        MapSqlParameterSource parameters = new MapSqlParameterSource("analysis", codec.encode(analyzed))
             .addValue("offset", (long) (page - 1) * size).addValue("size", size);
         List<SuggestionHit> hits = jdbc.query(
             """
-                select result.total,
-                (item.value ->> 'productId')::bigint as id,
-                item.value ->> 'matchField' as field, item.value ->> 'matchText' as text,
-                (item.value -> 'matchRange' ->> 0)::integer as start,
-                (item.value -> 'matchRange' ->> 1)::integer as finish from
-                search_products(:keyword, :offset, :size, 3) result
-                left join lateral jsonb_array_elements(result.items) with ordinality item(value, position) on true
-                order by item.position
+                with hits as materialized (select * from search_product_hits(cast(:analysis as jsonb))),
+                page as (select * from hits order by tier,token_ratio desc,recent_views desc,name_length,product_id limit :size offset :offset)
+                select totals.total,totals.full_match,p.product_id as id,p.match_field as field,p.match_text as text,
+                       p.match_start as start,p.match_end as finish
+                from (select count(*) as total,coalesce(bool_or(tier<=2),false) as full_match from hits) totals
+                left join page p on true
+                order by p.tier,p.token_ratio desc,p.recent_views desc,p.name_length,p.product_id
                 """,
             parameters,
             (rs, row) -> new SuggestionHit(
                 rs.getLong("total"),
+                rs.getBoolean("full_match"),
                 rs.getObject("id", Long.class),
                 rs.getString("field"),
                 rs.getString("text"),
@@ -205,20 +264,8 @@ public class ProductQueryRepository {
         );
         List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
         Map<Long, List<Badge>> badges = loader.loadBadges(ids);
-        Map<Long, SuggestionDisplay> products = ids.isEmpty() ? Map.of() : jdbc.query(
-            """
-                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
-                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
-                """,
-            Map.of("ids", array("bigint", ids)),
-            (rs, row) -> new SuggestionDisplay(
-                rs.getLong("id"),
-                rs.getString("product_name"),
-                rs.getString("image_url"),
-                rs.getString("korean_name")
-            )
-        ).stream().collect(toMap(SuggestionDisplay::id, display -> display));
-        return new ProductSuggestions(
+        Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
+        ProductSuggestions result = new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
                 h -> new ProductSuggestion(
                     h.id(),
@@ -234,6 +281,26 @@ public class ProductQueryRepository {
                 .toList(),
             hits.getFirst().total()
         );
+        return new ProductSearchResult<>(result, hits.getFirst().fullMatch(), hits.getFirst().total());
+    }
+
+    private Map<Long, SuggestionDisplay> suggestionDisplays(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return jdbc.query(
+            """
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
+                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new SuggestionDisplay(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                rs.getString("image_url"),
+                rs.getString("korean_name")
+            )
+        ).stream().collect(toMap(SuggestionDisplay::id, display -> display));
     }
 
     private List<ProductCard> cards(List<Long> ids) {
@@ -286,22 +353,29 @@ public class ProductQueryRepository {
     }
 
     private String candidates(ProductQuery query) {
-        String searchedCte = query.hasKeyword() ? """
-            select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-            from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "";
-        String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
-        String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
-        String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
-        String included = query.includeIngredientIds().isEmpty() ? "" : INCLUDED;
-        String excluded = query.excludeIngredientIds().isEmpty() && query.allExcludedCodes().isEmpty()
-            ? "" : EXCLUDED;
+        String searchedJoin = "";
+        String searchRank = "null::bigint";
+        String cte = "";
+        if (query.hasKeyword()) {
+            searchedJoin = "join searched on searched.id=p.id";
+            searchRank = "searched.search_rank";
+            cte = "search_hits as materialized (select * from search_product_hits(cast(:analysis as jsonb))), "
+                + "searched as (select product_id as id,row_number() over (order by tier,token_ratio desc,recent_views desc,name_length,product_id) as search_rank from search_hits where tier<=2), ";
+        }
+        String included = "";
+        if (!query.includeIngredientIds().isEmpty()) {
+            included = INCLUDED;
+        }
+        String excluded = "";
+        if (!query.excludeIngredientIds().isEmpty() || !query.allExcludedCodes().isEmpty()) {
+            excluded = EXCLUDED;
+        }
         return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
         return switch (sort) {
-            case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case DEFAULT -> defaultOrder(query);
             case CREATED_ASC -> "m.created_at asc";
             case PRICE_DESC -> "v.price desc";
             case PRICE_ASC -> "v.price asc";
@@ -310,14 +384,29 @@ public class ProductQueryRepository {
         };
     }
 
+    private static String defaultOrder(ProductQuery query) {
+        if (query.hasKeyword()) {
+            return "m.search_rank asc";
+        }
+        return "coalesce(views.view_count, 0) desc";
+    }
+
     private static String unitPriceOrder(String direction) {
         return "case when v.volume_unit = 'ea' or v.volume_value = 0 then 1 else 0 end asc, "
             + "case when v.volume_unit <> 'ea' and v.volume_value > 0 "
             + "then v.price::numeric / nullif(v.volume_value, 0) end " + direction + " nulls last";
     }
 
-    private MapSqlParameterSource parameters(ProductQuery query) {
-        return new MapSqlParameterSource("keyword", query.keyword())
+    private MapSqlParameterSource parameters(ProductQuery query, AnalyzedProductQuery analyzed) {
+        String encoded = null;
+        if (analyzed != null) {
+            encoded = codec.encode(analyzed);
+        }
+        String skin = null;
+        if (query.skinType() != null) {
+            skin = query.skinType().name();
+        }
+        return new MapSqlParameterSource("analysis", encoded)
             .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
             .addValue("sensoryExcludedCategories", array("text", ProductSensory.excludedCategoryNames()))
@@ -327,7 +416,7 @@ public class ProductQueryRepository {
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name())
+            .addValue("skin", skin)
             .addValue("sensitiveSkin", query.sensitiveSkin());
     }
 
@@ -337,7 +426,7 @@ public class ProductQueryRepository {
                 where i.id = any(:excluded) or exists (select 1 from ingredient_group_ingredient e
                     where e.ingredient_id = i.id and e.group_code = any(:codes)))
                 or exists (select 1 from unnest(cast(:includedGroups as text[])) g(code) where g.code = any(:codes))
-            """, parameters(query), Boolean.class));
+            """, parameters(query, null), Boolean.class));
     }
 
     private Facets facets(List<Aggregate> rows) {
@@ -373,7 +462,14 @@ public class ProductQueryRepository {
     private record SuggestionDisplay(long id, String name, String imageUrl, String brandName) {
     }
 
-    private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {
+    private record SuggestionHit(
+        long total,
+        boolean fullMatch,
+        Long id,
+        String field,
+        String text,
+        int start,
+        int finish) {
     }
 
     private record Facets(List<Aggregate> rows, List<Brand> brands, List<Category> categories) {

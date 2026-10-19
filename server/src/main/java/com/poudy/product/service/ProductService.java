@@ -15,8 +15,8 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.logging.ProductSearchLogger;
-import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.search.service.ProductSearchService;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
-    private final ProductQueryRepository productQueries;
+    private final ProductSearchService productQueries;
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final IngredientGroupRepository ingredientGroupRepository;
@@ -39,7 +39,7 @@ public class ProductService {
 
     public ProductService(
         ProductRepository productRepository,
-        ProductQueryRepository productQueries,
+        ProductSearchService productQueries,
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,

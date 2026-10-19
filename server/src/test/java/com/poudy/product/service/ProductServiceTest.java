@@ -34,8 +34,8 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.logging.ProductSearchLogger;
-import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.search.service.ProductSearchService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -49,7 +49,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @DisplayName("제품 서비스")
 class ProductServiceTest {
 
-    private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
+    private final ProductSearchService queries = mock(ProductSearchService.class);
 
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")

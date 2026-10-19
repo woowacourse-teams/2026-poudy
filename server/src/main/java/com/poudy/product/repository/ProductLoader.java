@@ -27,7 +27,7 @@ import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Component;
 
 @Component
-class ProductLoader {
+public class ProductLoader {
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -88,7 +88,7 @@ class ProductLoader {
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
     }
 
-    Map<Long, List<Badge>> loadBadges(List<Long> ids) {
+    public Map<Long, List<Badge>> loadBadges(List<Long> ids) {
         if (ids.isEmpty()) {
             return Map.of();
         }

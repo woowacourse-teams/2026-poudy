@@ -4,15 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.search.service.ProductSearchService;
 import org.junit.jupiter.api.Test;
 
 class ProductKeywordSearchTest {
 
     @Test
-    void delegatesSearchResultCheckToProductRepository() {
-        ProductRepository products = mock(ProductRepository.class);
-        given(products.hasSearchResults("토너")).willReturn(true);
+    void delegatesSearchResultCheckToProductSearchService() {
+        ProductSearchService products = mock(ProductSearchService.class);
+        given(products.hasResults("토너")).willReturn(true);
 
         ProductKeywordSearch search = new ProductKeywordSearch(products);
 

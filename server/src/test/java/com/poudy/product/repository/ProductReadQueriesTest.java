@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mockingDetails;
 import com.poudy.product.domain.Badge;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
+import com.poudy.product.search.service.ProductSearchService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,11 +26,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql("/db/search-test-data.sql")
 @DisplayName("상품 표시 조회 SQL 경계")
 class ProductReadQueriesTest {
+    @BeforeEach
+    void buildJavaProductSearchIndex() {
+        com.poudy.product.search.support.ProductSearchTestIndex.rebuild(fixture);
+    }
+
     @MockitoSpyBean
     private NamedParameterJdbcTemplate jdbc;
 
     @Autowired
-    private ProductQueryRepository queries;
+    private ProductSearchService queries;
 
     @Autowired
     private ProductRepository products;

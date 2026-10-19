@@ -47,6 +47,7 @@ class ProductBadgeQueryTest {
 
     @BeforeEach
     void addBadges() {
+        com.poudy.product.search.support.ProductSearchTestIndex.rebuild(jdbc);
         jdbc.update("insert into badge(code, name) values ('OTHER', '다이소'), ('DAISO', '다이소')");
         jdbc.update(
             "insert into product_badge(product_id, badge_code) values (90001, 'OTHER'), (90001, 'DAISO'), (90002, 'DAISO')"

@@ -9,11 +9,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.poudy.exception.ErrorCode;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
-import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.search.service.ProductSearchService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,6 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql("/db/search-test-data.sql")
 @DisplayName("상품 API DB 조회")
 class ProductDatabaseQueryTest {
+    @BeforeEach
+    void buildJavaProductSearchIndex() {
+        com.poudy.product.search.support.ProductSearchTestIndex.rebuild(jdbc);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,7 +45,7 @@ class ProductDatabaseQueryTest {
     private JdbcTemplate jdbc;
 
     @Autowired
-    private ProductQueryRepository repository;
+    private ProductSearchService repository;
 
     @Autowired
     private ProductRepository products;

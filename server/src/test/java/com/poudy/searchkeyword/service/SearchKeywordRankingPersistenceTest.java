@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.poudy.product.repository.ProductRepository;
+import com.poudy.product.search.service.ProductSearchService;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.searchkeyword.domain.bucket.BucketWindow;
 import com.poudy.searchkeyword.domain.bucket.KeywordBuckets;
@@ -39,7 +39,7 @@ class SearchKeywordRankingPersistenceTest {
     @Autowired
     private SearchKeywordDictionaryRepository dictionaries;
     @Autowired
-    private ProductRepository products;
+    private ProductSearchService products;
     @Autowired
     private JdbcTemplate jdbc;
 
@@ -47,11 +47,11 @@ class SearchKeywordRankingPersistenceTest {
     void databaseDictionaryChangesArePublishedWithoutRecreatingServices() {
         SearchKeywordSnapshot snapshot = new SearchKeywordSnapshot(dictionaries.read());
         KeywordBuckets buckets = new KeywordBuckets(AFTER_BOUNDARY, new BucketWindow(168, 600, 0), repository);
-        SearchKeywordService reader = new SearchKeywordService(snapshot, buckets, products::hasSearchResults);
+        SearchKeywordService reader = new SearchKeywordService(snapshot, buckets, products::hasResults);
         SearchKeywordRankingService refresh = new SearchKeywordRankingService(
             dictionaries,
             buckets,
-            products::hasSearchResults,
+            products::hasResults,
             new RankingPolicy(5, 10, Set.of()),
             RankingFallback.of(List.of()),
             snapshot,

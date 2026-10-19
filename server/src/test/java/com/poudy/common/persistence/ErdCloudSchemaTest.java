@@ -123,6 +123,20 @@ class ErdCloudSchemaTest {
                 "updated_at"
             )
         ),
+        entry(
+            "product_search_name",
+            List.of(
+                "product_id",
+                "field",
+                "kind",
+                "analysis_version",
+                "source_text",
+                "normalized",
+                "search_text",
+                "source_starts",
+                "source_ends"
+            )
+        ),
         entry("search_keyword", List.of("id", "keyword", "status", "ranking_eligible", "created_at", "updated_at")),
         entry("search_keyword_bucket", List.of("bucket_start", "keyword_key", "hit_count", "created_at", "updated_at")),
         entry("search_keyword_expression", List.of("expression_key", "keyword_id", "created_at", "updated_at")),
@@ -197,6 +211,7 @@ class ErdCloudSchemaTest {
         entry("product_request", List.of("id")),
         entry("product_skin_type", List.of("product_id", "skin_type_code")),
         entry("product_variant", List.of("id")),
+        entry("product_search_name", List.of("product_id", "field", "kind", "analysis_version")),
         entry("search_keyword", List.of("id")),
         entry("search_keyword_bucket", List.of("bucket_start", "keyword_key")),
         entry("search_keyword_expression", List.of("expression_key")),
