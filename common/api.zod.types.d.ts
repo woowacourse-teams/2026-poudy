@@ -177,6 +177,7 @@ export type ProductResponse = {
 }
 export type WishlistResponse = { items: Array<ProductResponse> }
 export type WishlistProductIdsResponse = { productIds: Array<number> }
+export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
@@ -199,7 +200,16 @@ export type SkinEffectResponse = {
    */
   name: string;
 }
-export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse>, groupCodes: Array<string> }
+export type SkinFilterIngredientResponse = {
+  id: number;
+  koreanName: string;
+  formulationRoles: Array<FormulationRoleResponse>;
+  skinEffects: Array<SkinEffectResponse>;
+  /**
+   * 이 성분이 속한 제외 성분군 코드
+   */
+  excludeCodes: Array<ExcludeCode>;
+}
 export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
@@ -226,10 +236,6 @@ export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands:
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
-/**
- * 빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다
- */
-export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 /**
  * 정렬 조건
  */

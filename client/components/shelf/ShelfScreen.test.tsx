@@ -79,7 +79,7 @@ describe("선반", () => {
     server.use(
       http.get("*/api/users/me/skin-filter", () =>
         HttpResponse.json({
-          items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [], groupCodes: [] }],
+          items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [], excludeCodes: [] }],
         }),
       ),
     );

@@ -6,6 +6,7 @@ import {
   type RatingPreference,
   type ShelfProductResponse,
   type ShelfUsageStatus,
+  type SkinFilterResponse,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
@@ -253,9 +254,9 @@ export const shelfHandlers = [
           koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
           formulationRoles: ROLES[id] ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }] : [],
           skinEffects: [],
-          groupCodes: [],
+          excludeCodes: [],
         })),
-      }),
+      } satisfies SkinFilterResponse),
   ),
 
   http.post("*/api/users/me/skin-filter/ingredients", async ({ request }) => {
