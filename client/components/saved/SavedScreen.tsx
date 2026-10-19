@@ -302,13 +302,12 @@ export function SavedScreen({
       )}
 
       <div className="px-gutter">
-        <ul data-private className="divide-y divide-border">
+        <ul data-private>
           {shown.map((product, index) => {
             const card = (
               <ProductCard
                 product={product}
-                saved={!removedIds.includes(product.id)}
-                onToggleSave={onToggleSave}
+                save={{ saved: !removedIds.includes(product.id), onToggle: onToggleSave }}
                 entryPoint="saved"
                 imageLoading={imageLoadingOf(index)}
                 keyword={settled}

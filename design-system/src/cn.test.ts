@@ -25,6 +25,10 @@ describe("cn", () => {
     expect(cn("shadow-raised", "shadow-sheet")).toBe("shadow-sheet");
   });
 
+  it("글자를 따라 커지는 size-em 을 다른 크기와 겹치는 것으로 본다", () => {
+    expect(cn("[&>svg]:size-6", "[&>svg]:size-em")).toBe("[&>svg]:size-em");
+  });
+
   it("조건에 따라 클래스를 붙인다", () => {
     expect(cn("px-4", false && "py-2", { "w-full": true })).toBe("px-4 w-full");
   });

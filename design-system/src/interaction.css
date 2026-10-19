@@ -81,6 +81,28 @@
   }
 }
 
+/*
+ * 거터 안에 놓인 목록 행(상품 목록 카드): 면을 화면 끝에서 끝까지 칠한다(S04). 행은 거터 안쪽에 있어 면만 가상 요소로
+ * 거터만큼 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 바뀌지 않는다. 글자 뒤에 깔리도록 행이 쌓임 맥락을 만든다.
+ */
+@utility fb-bleed {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(var(--gutter) * -1);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
 /* 칠한 면(검정 버튼, 어두운 원): 바탕은 그대로 두고 전체를 옅게 */
 @utility fb-dim {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
@@ -100,7 +122,7 @@
   &::before {
     content: "";
     position: absolute;
-    inset: 4px;
+    inset: var(--fb-circle-inset, 4px);
     border-radius: 9999px;
     pointer-events: none;
     transition: background-color var(--duration-fast) ease;
@@ -109,6 +131,17 @@
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
     background-color: var(--color-hover);
   }
+}
+
+/*
+ * 글자 옆 작은 아이콘 버튼(IconButton sm)의 원. 아이콘(16)과 함께 커지도록 지름 28 을 글자 크기 기준 em 으로 둔다.
+ * 버튼에 text-16 을 함께 주어 1em 이 아이콘 크기와 같게 한다. 기본 배율에서는 44 안쪽 8 을 띄운 28 이다.
+ * 기기 글자 크기를 키워 원이 44 보다 커지면 버튼도 원만큼 커진다. 그러지 않으면 원이 버튼 밖으로 나가 옆 글자를 덮는다.
+ */
+@utility fb-circle-follow-text {
+  --fb-circle-inset: max(0px, calc(50% - 14em / 16));
+  min-width: calc(28em / 16);
+  min-height: calc(28em / 16);
 }
 
 /* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */

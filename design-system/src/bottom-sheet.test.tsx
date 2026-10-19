@@ -150,6 +150,22 @@ describe("ConfirmSheet", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
+  it("이유 문구 없이 막을 수도 있다. 이때는 안내 줄을 두지 않는다", async () => {
+    const onClick = vi.fn();
+    render(
+      <BottomSheet open onClose={() => undefined}>
+        <BottomSheetHeader title="필터" />
+        <BottomSheetFooter primary={{ label: "0개 제품 보기", onClick, disabled: true }} />
+      </BottomSheet>,
+    );
+    const submit = await screen.findByRole("button", { name: "0개 제품 보기" });
+
+    expect(submit).toHaveAttribute("aria-disabled", "true");
+    expect(submit).not.toHaveAttribute("aria-describedby");
+    fireEvent.click(submit);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it("하단 버튼은 틀이 그린다. 막을 때는 버튼 위 안내 문구와 잇고 누름을 막는다", async () => {
     const onClick = vi.fn();
     render(

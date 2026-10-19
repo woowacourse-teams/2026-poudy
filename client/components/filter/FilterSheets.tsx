@@ -1,22 +1,24 @@
 "use client";
 
 import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { useState } from "react";
 
 import { BrandOptions } from "./BrandOptions";
 import { CategoryOptions } from "./CategoryOptions";
-import { IngredientOptions } from "./IngredientOptions";
-import { LevelRange } from "./LevelRangeOptions";
+import { IngredientSheet } from "./IngredientSheet";
+import { LevelOptions } from "./LevelOptions";
+import { SheetCountLabel } from "./SheetCountLabel";
 import { SkinTypeOptions } from "./SkinTypeOptions";
 import { UnavailableSelections } from "./UnavailableSelections";
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
-import { type Filter, skinChoiceOf, withSkinChoice } from "@/lib/domain/filter";
-import { formatCount } from "@/lib/domain/format";
+import type { Filter } from "@/lib/domain/filter";
+import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
+import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
-import { useProductCount } from "@/lib/hooks/useProductCount";
+import { useCountState } from "@/lib/hooks/useProductCount";
 
 export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType";
 
@@ -32,6 +34,7 @@ type FilterSheetsProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
+  /** 필터 후보를 받지 못한 장(중간 장으로 들어온 경우)에서 후보가 있는 첫 장으로 가는 주소. */
   readonly optionsPageHref?: string;
 };
 
@@ -52,17 +55,24 @@ export const FILTER_TYPES: Record<SheetKind, FilterType> = {
   skinType: "skin_type",
 };
 
-const DESCRIPTIONS: Record<SheetKind, string> = {
-  ingredient: "성분을 선택하고 포함·제외 조건을 정해 보세요",
-  category: "원하는 제품 카테고리를 선택해 주세요",
-  brand: "원하는 브랜드를 선택해 주세요",
-  level: "원하는 사용감 범위를 각각 선택해 주세요",
-  skinType: "본인의 피부 타입을 골라 주세요",
+/** 시트마다 [초기화]가 비우는 조건. */
+export const CLEARED: Record<SheetKind, Partial<Filter>> = {
+  ingredient: {
+    excludeCodes: [],
+    excludeIngredientIds: [],
+    includeIngredientIds: [],
+    includeGroupCodes: [],
+    excludeGroupCodes: [],
+  },
+  category: { categoryIds: [] },
+  brand: { brandIds: [] },
+  level: { moistureLevel: [], oilLevel: [] },
+  skinType: { skinTypes: [], sensitiveSkin: false },
 };
 
 /**
- * 시트 안의 선택은 로컬 상태로 두고 개수만 미리 조회한다.
- * 적용을 눌렀을 때만 URL 에 반영해 취소하면 원래 조건이 남게 한다.
+ * 필터 시트(명세 S23a~S23j). 시트 안의 선택은 초안으로 두고 결과 수만 미리 조회한다.
+ * [N개 제품 보기]를 눌러야 주소에 반영하고, 닫거나 끌어내리면 초안을 버린다(A11Y D02: 닫기는 취소).
  */
 export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
   /*
@@ -78,10 +88,14 @@ export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
   }
   if (!session.kind) return null;
 
-  return <SheetBody key={session.number} kind={session.kind} open={Boolean(openSheet)} {...rest} />;
+  return (
+    <BottomSheet open={Boolean(openSheet)} onClose={rest.onClose}>
+      <SheetContent key={session.number} kind={session.kind} {...rest} />
+    </BottomSheet>
+  );
 }
 
-function SheetBody({
+function SheetContent({
   kind,
   onClose,
   filter,
@@ -92,128 +106,108 @@ function SheetBody({
   excludeCodes,
   initialCount,
   optionsPageHref,
-  open,
-}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind; readonly open: boolean }) {
+}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
   const [draft, setDraft] = useState<Filter>(filter);
-  const count = useProductCount(draft, initialCount);
+  // 초기화하면 슬라이더처럼 안에 상태를 든 선택지를 처음부터 다시 그린다.
+  const [resetCount, setResetCount] = useState(0);
+  const { count, counting } = useCountState(draft, initialCount);
 
-  // 담긴 성분의 이름은 서버에서 가져온다.
+  // 담긴 성분의 이름과 성분군은 서버에서 가져온다.
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
+  const groups = useIngredientGroups(selectedGroupCodes(draft));
 
-  // 유수분만 디자인 문구가 다르다.
-  const countLabel = count === undefined ? "" : `${formatCount(count)} `;
-  const submitLabel = kind === "level" ? `선택한 범위로 ${countLabel}보기` : `${countLabel}제품 보기`;
+  const submitLabel = <SheetCountLabel count={count} />;
+  // 지금 조건으로 센 결과가 0개일 때만 막는다. 세는 동안 남아 있는 이전 0 으로는 막지 않는다.
+  // 버튼 글자('0개 제품 보기')가 이유를 말하므로 따로 문구를 두지 않는다.
+  const submitDisabled = count === 0 && !counting;
 
   const reset = () => {
     track("filter_reset", { filter_type: FILTER_TYPES[kind] });
-
-    setDraft({
-      ...draft,
-      ...(kind === "category" ? { categoryIds: [] } : {}),
-      ...(kind === "brand" ? { brandIds: [] } : {}),
-      ...(kind === "level" ? { moistureLevel: [], oilLevel: [] } : {}),
-      ...(kind === "skinType" ? withSkinChoice(undefined) : {}),
-      ...(kind === "ingredient"
-        ? {
-            excludeCodes: [],
-            excludeIngredientIds: [],
-            includeIngredientIds: [],
-            includeGroupCodes: [],
-            excludeGroupCodes: [],
-          }
-        : {}),
-    });
+    setDraft({ ...draft, ...CLEARED[kind] });
+    setResetCount(resetCount + 1);
   };
 
+  const submit = () => {
+    onApply(draft);
+    onClose();
+  };
+
+  if (kind === "ingredient") {
+    return (
+      <IngredientSheet
+        draft={draft}
+        setDraft={setDraft}
+        excludeCodes={excludeCodes}
+        names={names}
+        groups={groups}
+        submitLabel={submitLabel}
+        submitDisabled={submitDisabled}
+        onSubmit={submit}
+        onReset={reset}
+        onClose={onClose}
+      />
+    );
+  }
+
   return (
-    <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Header title={TITLES[kind]} description={DESCRIPTIONS[kind]} />
+    <>
+      <BottomSheetHeader title={TITLES[kind]} onClose={onClose} />
 
-      <BottomSheet.Body>
-        {(kind === "brand" || kind === "category" || kind === "skinType") && optionsPageHref ? (
-          <a href={optionsPageHref} className="block py-3 text-sm underline">
-            첫 페이지에서 전체 필터 선택지 보기
-          </a>
-        ) : null}
-        <UnavailableSelections
-          kind={kind}
-          draft={draft}
-          brands={brands}
-          categories={categories}
-          skinTypes={skinTypes}
-          onChange={setDraft}
-        />
-        {kind === "category" ? (
-          <CategoryOptions
-            categories={categories}
-            selectedIds={draft.categoryIds}
-            onSelect={(categoryIds) => setDraft({ ...draft, categoryIds })}
-          />
-        ) : null}
-
-        {kind === "brand" ? (
-          <BrandOptions
+      <BottomSheetBody>
+        <div key={resetCount} className="pb-4">
+          {kind !== "level" && optionsPageHref ? (
+            <a href={optionsPageHref} className="flex min-h-11 items-center text-body-sm text-text-secondary underline">
+              첫 페이지에서 전체 필터 선택지 보기
+            </a>
+          ) : null}
+          <UnavailableSelections
+            kind={kind}
+            draft={draft}
             brands={brands}
-            selectedIds={draft.brandIds}
-            onToggle={(brandId) =>
-              setDraft({
-                ...draft,
-                brandIds: draft.brandIds.includes(brandId)
-                  ? draft.brandIds.filter((id) => id !== brandId)
-                  : [...draft.brandIds, brandId],
-              })
-            }
-          />
-        ) : null}
-
-        {kind === "level" ? (
-          <>
-            {/* 소제목은 시트가 그린다. 슬라이더는 값과 상관없음만 담는다. */}
-            <section className="pt-3">
-              <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">수분감</h3>
-              <LevelRange
-                label="수분감"
-                levels={draft.moistureLevel}
-                onChange={(moistureLevel) => setDraft({ ...draft, moistureLevel })}
-              />
-            </section>
-
-            {/* 두 범위는 서로 다른 조건이라 사이를 넉넉히 띄워 한 덩어리로 보이지 않게 한다. */}
-            <section className="pt-8">
-              <h3 className="flex h-6 items-center text-[15px] font-bold text-[#212124]">유분감</h3>
-              <LevelRange
-                label="유분감"
-                levels={draft.oilLevel}
-                onChange={(oilLevel) => setDraft({ ...draft, oilLevel })}
-              />
-            </section>
-          </>
-        ) : null}
-
-        {kind === "skinType" ? (
-          <SkinTypeOptions
-            selected={skinChoiceOf(draft)}
-            onSelect={(choice) => setDraft({ ...draft, ...withSkinChoice(choice) })}
+            categories={categories}
             skinTypes={skinTypes}
+            onChange={setDraft}
           />
-        ) : null}
 
-        {kind === "ingredient" ? (
-          <IngredientOptions draft={draft} setDraft={setDraft} excludeCodes={excludeCodes} names={names} />
-        ) : null}
-      </BottomSheet.Body>
+          {kind === "category" ? (
+            <CategoryOptions
+              categories={categories}
+              selectedIds={draft.categoryIds}
+              onSelect={(categoryIds) => setDraft({ ...draft, categoryIds })}
+            />
+          ) : null}
 
-      <BottomSheet.Footer>
-        <BottomSheet.ResetButton onClick={reset} />
-        <BottomSheet.SubmitButton
-          onClick={() => {
-            onApply(draft);
-            onClose();
-          }}
-        >
-          {submitLabel}
-        </BottomSheet.SubmitButton>
-      </BottomSheet.Footer>
-    </BottomSheet>
+          {kind === "brand" ? (
+            <BrandOptions
+              brands={brands}
+              selectedIds={draft.brandIds}
+              onChange={(brandIds) => setDraft({ ...draft, brandIds })}
+            />
+          ) : null}
+
+          {kind === "level" ? (
+            <LevelOptions
+              moistureLevel={draft.moistureLevel}
+              oilLevel={draft.oilLevel}
+              onChange={(changed) => setDraft((current) => ({ ...current, ...changed }))}
+            />
+          ) : null}
+
+          {kind === "skinType" ? (
+            <SkinTypeOptions
+              selected={draft.skinTypes}
+              sensitiveSkin={draft.sensitiveSkin}
+              skinTypes={skinTypes}
+              onChange={(changed) => setDraft({ ...draft, ...changed })}
+            />
+          ) : null}
+        </div>
+      </BottomSheetBody>
+
+      <BottomSheetFooter
+        primary={{ label: submitLabel, onClick: submit, disabled: submitDisabled }}
+        secondary={{ label: "초기화", onClick: reset }}
+      />
+    </>
   );
 }

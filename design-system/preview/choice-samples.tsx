@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Button } from "../src/button";
 import { CheckboxGroup, CheckboxGroupItem } from "../src/checkbox-group";
+import { Dropdown } from "../src/dropdown";
 import { RadioGroup, RadioGroupItem } from "../src/radio-group";
 import { RangeSlider } from "../src/range-slider";
 import { Slider } from "../src/slider";
@@ -22,6 +23,7 @@ export function ChoiceSamples() {
   const [inquiry, setInquiry] = useState("error");
   const [skin, setSkin] = useState<string>("dry");
   const [age, setAge] = useState("20");
+  const [sort, setSort] = useState("DEFAULT");
   const [reasons, setReasons] = useState<readonly string[]>(["rarely"]);
   const [ingredients, setIngredients] = useState<readonly string[]>(["alcohol", "fragrance"]);
   const [moisture, setMoisture] = useState<readonly [number, number]>([1, 3]);
@@ -157,6 +159,24 @@ export function ChoiceSamples() {
         <Button variant="text" className="self-start" onClick={() => setOilRating(null)}>
           선택 전으로 되돌리기 (견본용)
         </Button>
+      </Section>
+
+      <Section title="Dropdown · 목록 결과 헤더의 정렬">
+        <div className="flex items-center justify-between">
+          <span className="text-body-sm font-semibold text-text-secondary">총 350개</span>
+          <Dropdown
+            aria-label="정렬 기준"
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: "DEFAULT", label: "기본순" },
+              { value: "PRICE_ASC", label: "가격 낮은순" },
+              { value: "PRICE_DESC", label: "가격 높은순" },
+              { value: "UNIT_PRICE_ASC", label: "용량별 가격 낮은순" },
+              { value: "UNIT_PRICE_DESC", label: "용량별 가격 높은순" },
+            ]}
+          />
+        </div>
       </Section>
     </>
   );

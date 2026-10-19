@@ -1,58 +1,59 @@
 "use client";
 
 import type { BrandResponse } from "@poudy/api/api.zod";
-import { useState } from "react";
+import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
+import { SearchField } from "@poudy/design-system/search-field";
+import { useId, useState } from "react";
 
-import { CheckMark } from "@/components/ui/CheckMark";
-import { SearchField } from "@/components/ui/SearchField";
+import { formatCount } from "@/lib/domain/format";
 
 type BrandOptionsProps = {
   readonly brands: readonly BrandResponse[];
   readonly selectedIds: readonly number[];
-  readonly onToggle: (brandId: number) => void;
+  readonly onChange: (brandIds: readonly number[]) => void;
 };
 
-/** 디자인의 브랜드 시트. 검색으로 좁히고 여러 개를 고른다. */
-export function BrandOptions({ brands, selectedIds, onToggle }: BrandOptionsProps) {
+/** 브랜드 시트(명세 S23a). 검색으로 좁히고 여러 개를 고른다. */
+export function BrandOptions({ brands, selectedIds, onChange }: BrandOptionsProps) {
   const [keyword, setKeyword] = useState("");
+  const headingId = useId();
 
   // 목록이 이미 손에 있으므로 서버에 다시 묻지 않는다.
-  const shown = keyword.trim()
-    ? brands.filter((brand) =>
-        `${brand.name} ${brand.englishName ?? ""}`.toLowerCase().includes(keyword.trim().toLowerCase()),
-      )
+  const query = keyword.trim().toLowerCase();
+  const shown = query
+    ? brands.filter((brand) => `${brand.name} ${brand.englishName ?? ""}`.toLowerCase().includes(query))
     : brands;
 
   return (
-    <>
+    <div className="flex flex-col gap-3">
       <SearchField value={keyword} onChange={setKeyword} placeholder="브랜드명 검색" label="브랜드명 검색" />
 
-      <ul className="pt-2">
-        {shown.map((brand) => {
-          const selected = selectedIds.includes(brand.id);
+      <div className="flex flex-col gap-1">
+        <div className="flex h-8 items-center justify-between">
+          <h3 id={headingId} className="text-body-sm font-semibold text-text-primary">
+            전체 브랜드 {formatCount(brands.length)}
+          </h3>
+          {selectedIds.length > 0 ? (
+            <span className="text-body-sm text-text-secondary">{formatCount(selectedIds.length)} 선택</span>
+          ) : null}
+        </div>
 
-          return (
-            <li key={brand.id}>
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                onClick={() => onToggle(brand.id)}
-                className="flex h-12 w-full items-center gap-2.5 border-b border-border px-1 text-left"
-              >
-                <CheckMark checked={selected} />
-                <span className={`text-[15px] text-[#212124] ${selected ? "font-semibold" : "font-normal"}`}>
-                  {brand.name}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {shown.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-text-secondary">찾는 브랜드가 없어요.</p>
-      ) : null}
-    </>
+        {shown.length === 0 ? (
+          <p className="py-8 text-center text-body-sm text-text-secondary">찾는 브랜드가 없어요.</p>
+        ) : (
+          <CheckboxGroup
+            aria-labelledby={headingId}
+            value={selectedIds.map(String)}
+            onValueChange={(ids) => onChange(ids.map(Number))}
+          >
+            {shown.map((brand) => (
+              <CheckboxGroupItem key={brand.id} value={String(brand.id)}>
+                {brand.name}
+              </CheckboxGroupItem>
+            ))}
+          </CheckboxGroup>
+        )}
+      </div>
+    </div>
   );
 }

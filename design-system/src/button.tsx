@@ -17,9 +17,15 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - text: 행 전체가 누르는 영역인 글자 버튼(Compact Text). 뒤에 꺾쇠를 둔다
  *
  * 크기 lg(56)는 화면 아래에 고정된 유일한 다음 단계에만 쓴다. 본문 안 버튼은 md(48)다.
+ *
+ * 기기 글자 크기를 키워도 글자가 버튼 밖으로 넘치지 않게 한다(text-scale-check).
+ * - 높이는 최소 높이로 둔다. 기본 배율에서는 48·56 그대로이고, 글자가 한 줄에 들어가지 않으면 낱말 단위로 줄을 넘기며 버튼이 커진다.
+ * - 앞뒤 아이콘은 em 으로 그린다(text-16 + size-em). 기본 배율에서는 명세의 16 이고, 글자를 따라 함께 커진다.
+ * - outline 은 목록 행 안의 짧은 낱말이라 줄을 넘기지 않는다. text 는 말줄임으로 자른다.
  */
 const buttonVariants = cva(
-  "pressable inline-flex items-center justify-center gap-2 rounded-xl whitespace-nowrap select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed",
+  // 앞뒤 아이콘(16)은 Icon 의 scalable 과 같은 방식(text-16 + size-em)으로 그려 글자 크기를 따라 커지게 한다.
+  "pressable inline-flex items-center justify-center gap-2 rounded-xl text-center break-keep select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&>svg]:size-em [&>svg]:shrink-0 [&>svg]:text-16",
   {
     variants: {
       variant: {
@@ -28,13 +34,13 @@ const buttonVariants = cva(
         destructive: "press-scale fb-danger bg-danger-action text-action-text",
         // 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12).
         outline:
-          "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 leading-none font-semibold text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
+          "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 leading-none font-semibold whitespace-nowrap text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
         // 행이라 크기는 바꾸지 않고 색만 바꾼다(STATE S07).
         text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 leading-none font-semibold text-text-primary",
       },
       size: {
-        md: "h-12 px-4 text-14 leading-none font-semibold",
-        lg: "h-14 px-6 text-16 leading-none font-bold",
+        md: "min-h-12 px-4 py-3 text-14 leading-none font-semibold",
+        lg: "min-h-14 px-6 py-3 text-16 leading-none font-bold",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

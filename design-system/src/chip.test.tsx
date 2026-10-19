@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { FilterChip } from "./filter-chip";
+import { FilterChip, FilterResetChip } from "./filter-chip";
 import { ToggleChip, ToggleGroup } from "./toggle-chip";
 
 describe("FilterChip", () => {
@@ -21,6 +21,16 @@ describe("FilterChip", () => {
 
     rerender(<FilterChip label="피부 타입" value="건성" expanded={false} onOpen={onOpen} />);
     expect(screen.getByRole("button", { name: "피부 타입, 건성" })).toHaveTextContent("건성");
+  });
+});
+
+describe("FilterResetChip", () => {
+  it("무엇을 비우는지 이름으로 읽고, 누르면 onReset 을 부른다", () => {
+    const onReset = vi.fn();
+    render(<FilterResetChip onReset={onReset} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "필터 조건 모두 초기화" }));
+    expect(onReset).toHaveBeenCalledOnce();
   });
 });
 

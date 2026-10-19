@@ -178,6 +178,8 @@ export type EventMap = {
     DiscoveryProperties;
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
+  /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
+  filter_bar_reset: { filter_count: number };
   sort_applied: { sort: string };
   product_viewed: {
     product_id: number;

@@ -55,7 +55,7 @@ describe("ProductList 브랜드 시트", () => {
     );
 
     const { container } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
-    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(20);
+    expect(container.querySelectorAll("[data-product-skeleton]")).toHaveLength(5);
     expect(container.querySelectorAll("[data-product-card]")).toHaveLength(0);
     expect(screen.queryByText("조건에 맞는 제품이 없어요")).not.toBeInTheDocument();
 

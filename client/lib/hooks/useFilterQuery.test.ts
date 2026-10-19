@@ -84,7 +84,7 @@ describe("useFilterQuery", () => {
     searchParams.current = new URLSearchParams("skinType=OILY");
     const { result } = renderHook(() => useFilterQuery("/products"));
 
-    act(() => result.current.setCondition({ skinType: "DRY" }));
+    act(() => result.current.setCondition({ skinTypes: ["DRY"] }));
 
     expect(query().getAll("skinType")).toEqual(["DRY"]);
   });
@@ -105,7 +105,7 @@ describe("useFilterQuery", () => {
       excludeCodes: ["SULFATES"],
       includeGroupCodes: ["CERAMIDES"],
       excludeGroupCodes: ["LIPIDS"],
-      skinType: "DRY",
+      skinTypes: ["DRY"],
       sensitiveSkin: true,
       sort: "PRICE_ASC",
       page: 2,

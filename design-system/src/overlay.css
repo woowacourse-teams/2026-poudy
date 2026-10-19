@@ -52,3 +52,39 @@
     transition-duration: var(--duration-fast);
   }
 }
+
+/*
+ * 앵커 팝오버(Dropdown): 연 버튼 바로 아래 4 에 오른쪽 끝을 맞춰 붙인다. popovertarget 으로 연 팝오버는 그 버튼이
+ * 앵커라 크기를 재지 않는다. 아래 자리가 모자라면 위로 뒤집는다. 앵커 위치를 모르는 브라우저는 화면 가운데에 뜬다.
+ * 열 때는 버튼 쪽(오른쪽 위)에서 0.97 → 1 로 커지며 나타나고(fast · ease-out), 동작 줄이기에서는 불투명도만 바꾼다.
+ */
+@utility popover-below-end {
+  inset: auto;
+  margin: 0;
+  position-area: block-end span-inline-start;
+  position-try-fallbacks: flip-block;
+  translate: 0 4px;
+  transform-origin: top right;
+  box-shadow: var(--shadow-raised);
+  opacity: 0;
+  scale: 0.97;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out),
+    display var(--duration-fast) allow-discrete,
+    overlay var(--duration-fast) allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    scale: 1;
+  }
+}

@@ -28,6 +28,7 @@
     "./disclosure": "./src/disclosure.tsx",
     "./bottom-sheet": "./src/bottom-sheet.tsx",
     "./confirm-sheet": "./src/confirm-sheet.tsx",
+    "./dropdown": "./src/dropdown.tsx",
     "./portal": "./src/portal.tsx",
     "./use-delayed-flag": "./src/use-delayed-flag.ts",
     "./skeleton": "./src/skeleton.tsx",

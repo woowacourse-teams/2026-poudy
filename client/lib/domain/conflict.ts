@@ -28,3 +28,51 @@ export const hasConflict = (filter: Filter, codeIngredients: ExcludeCodeIngredie
  */
 export const findContradictingIngredientIds = (filter: Filter): readonly number[] =>
   filter.includeIngredientIds.filter((id) => filter.excludeIngredientIds.includes(id));
+
+/**
+ * 링크로 들어온 조건에서 원하는 성분 쪽을 뺀 한 건. 무엇과 부딪혔는지(code 는 성분군, 없으면 같은 성분의 제외)를 남겨
+ * 안내 줄이 알리고 되돌릴 수 있게 한다.
+ */
+export type LinkCleanup = {
+  readonly ingredientId: number;
+  /** 부딪힌 자주 피하는 성분·성분군 코드. 같은 성분을 포함과 제외에 함께 넣은 경우는 없다. */
+  readonly code?: string;
+};
+
+/**
+ * 링크·주소로 들어온 조건이 서로 부딪히면 막지 않고 정리한다(명세 S36). 피하고 싶은 성분이 우선이라 원하는 성분 쪽을 뺀다.
+ * 부딪히는 것이 없으면 받은 조건을 그대로 돌려준다.
+ */
+export const resolveLinkConflicts = (
+  filter: Filter,
+  codeIngredients: ExcludeCodeIngredients,
+): { readonly filter: Filter; readonly removed: readonly LinkCleanup[] } => {
+  const removed: readonly LinkCleanup[] = [
+    ...findContradictingIngredientIds(filter).map((ingredientId) => ({ ingredientId })),
+    ...findConflicts(filter, codeIngredients).flatMap((conflict) =>
+      conflict.ingredientIds.map((ingredientId) => ({ ingredientId, code: conflict.code })),
+    ),
+  ];
+  if (removed.length === 0) return { filter, removed };
+
+  const removedIds = new Set(removed.map((cleanup) => cleanup.ingredientId));
+  return {
+    filter: { ...filter, includeIngredientIds: filter.includeIngredientIds.filter((id) => !removedIds.has(id)) },
+    removed,
+  };
+};
+
+/**
+ * 정리를 반대로 한다(명세 S36 [대신 ○○ 남기기]). 뺀 원하는 성분을 되살리고, 부딪힌 피하기 조건을 뺀다.
+ */
+export const keepIncludedInstead = (filter: Filter, removed: readonly LinkCleanup[]): Partial<Filter> => {
+  const ids = new Set(removed.map((cleanup) => cleanup.ingredientId));
+  const codes = new Set(removed.map((cleanup) => cleanup.code).filter((code): code is string => Boolean(code)));
+
+  return {
+    includeIngredientIds: [...new Set([...filter.includeIngredientIds, ...ids])],
+    excludeIngredientIds: filter.excludeIngredientIds.filter((id) => !ids.has(id)),
+    excludeCodes: filter.excludeCodes.filter((code) => !codes.has(code)),
+    excludeGroupCodes: filter.excludeGroupCodes.filter((code) => !codes.has(code)),
+  };
+};
