@@ -6,6 +6,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { Tag } from "@poudy/design-system/tag";
 import { ToggleChip, ToggleGroup } from "@poudy/design-system/toggle-chip";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useId } from "react";
 
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
@@ -158,10 +159,28 @@ function ConditionSection({
           ))}
         </div>
       ) : (
-        <Button variant="secondary" leadingIcon={<Icon name="plus" size={16} />} onClick={() => onAdd(purpose)}>
-          {`${title} 검색해서 추가`}
-        </Button>
+        <EmptyAddButton label={`${title} 검색해서 추가`} onClick={() => onAdd(purpose)} />
       )}
     </section>
+  );
+}
+
+/**
+ * 섹션이 비었을 때의 추가 영역(명세 '빈 상태 · 추가 영역'). 보조 버튼(gray-100)보다 옅은 회색 면(ui-surface)에
+ * 본문 색 글자를 두어, 빈 자리를 채우는 안내처럼 보이게 한다. 높이 48, 모서리 lg.
+ */
+function EmptyAddButton({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <button
+      type="button"
+      {...pressableProps}
+      onClick={onClick}
+      className="pressable fb-border flex min-h-12 items-center justify-center gap-2 rounded-lg bg-surface px-4 py-3 text-body font-semibold break-keep text-text-body"
+    >
+      <Icon name="plus" size={16} scalable />
+      {label}
+    </button>
   );
 }
