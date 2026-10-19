@@ -345,21 +345,31 @@ export type BottomSheetFooterProps = {
   readonly primary: SheetPrimaryAction;
   /** 보조 행동(예: 초기화). 왼쪽에 폭 1 로 둔다. */
   readonly secondary?: SheetAction;
+  /**
+   * 버튼 크기. 기본 md(48)는 시트의 적용·초기화 버튼이다. lg(56)는 시트 안에서 다음 단계로 넘어가 행동 하나만 두는
+   * 자리(명세 '추가 단계 하단 행동 영역', 예: 성분 검색의 'N개 추가하기')로, 위에 구분선을 두고 하단 행동 영역과 같은 큰 버튼을 쓴다.
+   */
+  readonly size?: "md" | "lg";
 };
 
 /**
  * 시트 발. 버튼은 틀이 그린다. 화면은 버튼의 모양이나 위치를 고르지 않고 무엇을 할지만 넘긴다(#729 원칙).
- * 버튼은 Button md(48), 보조 1 : 주 2, 간격 8 이고, 본문이 스크롤되어도 제자리에 남는다. 아래로 기기의 안전 영역만큼 띄운다.
+ * 버튼은 Button md(48, size 로 lg 56), 보조 1 : 주 2, 간격 8 이고, 본문이 스크롤되어도 제자리에 남는다. 아래로 기기의 안전 영역만큼 띄운다.
  * 명세의 시트 하단은 버튼 둘까지다. 더 필요하면 명세에 하단 모양을 먼저 그리고 여기에 더한다.
  */
-export function BottomSheetFooter({ primary, secondary }: BottomSheetFooterProps) {
+export function BottomSheetFooter({ primary, secondary, size = "md" }: BottomSheetFooterProps) {
   const reasonId = useId();
   const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
   const blocked = hasReason || primary.disabled === true;
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 px-5 pt-4 pb-safe">
+    <div
+      className={cn(
+        "flex shrink-0 flex-col gap-2 px-5 pb-safe",
+        size === "lg" ? "border-t border-border pt-3" : "pt-4",
+      )}
+    >
       {hasReason ? (
         <p id={reasonId} className="text-center text-caption text-text-secondary">
           {primary.disabledReason}
@@ -377,6 +387,7 @@ export function BottomSheetFooter({ primary, secondary }: BottomSheetFooterProps
           busy={primary.busy}
           aria-disabled={blocked || undefined}
           aria-describedby={hasReason ? reasonId : undefined}
+          size={size}
           className={secondary ? "flex-2" : "flex-1"}
         >
           {primary.label}

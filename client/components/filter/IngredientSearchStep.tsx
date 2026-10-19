@@ -222,7 +222,9 @@ export function IngredientSearchStep({
         </div>
       </BottomSheetBody>
       {changed ? (
+        // 다음 단계로 넘어와 행동이 하나뿐인 자리라 큰 버튼을 쓴다(명세 '추가 단계 하단 행동 영역').
         <BottomSheetFooter
+          size="lg"
           primary={{
             label: added > 0 ? `${formatCount(added)} 추가하기` : "적용하기",
             onClick: () => onApply(local),
