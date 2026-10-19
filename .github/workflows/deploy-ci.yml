@@ -1,0 +1,32 @@
+name: Deploy scripts CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'deploy/**'
+      - '.github/workflows/deploy-ci.yml'
+  pull_request:
+    paths:
+      - 'deploy/**'
+      - '.github/workflows/deploy-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check container deployment shell syntax
+        run: |
+          for script_file in deploy/codedeploy/backend-container/scripts/*.sh; do
+            bash -n "$script_file"
+          done
+      - name: Test deployment scripts
+        run: |
+          for test_file in deploy/tests/*.test.py; do
+            python3 "$test_file"
+          done
