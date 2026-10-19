@@ -25,7 +25,8 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
       }));
   }
   if (kind === "category") {
-    const offered = categories.flatMap((category) => category.children);
+    // 대분류 ID 는 '전체'를 고른 값이라 대분류도 후보에 넣는다.
+    const offered = [...categories, ...categories.flatMap((category) => category.children)];
     return draft.categoryIds
       .filter((id) => !offered.some((category) => category.id === id))
       .map((id) => ({

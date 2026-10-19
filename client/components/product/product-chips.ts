@@ -41,6 +41,10 @@ export const ingredientConditionCount = (filter: Filter): number =>
 const categoryValue = (ids: readonly number[], categories: readonly CategoryResponse[]): string | undefined => {
   if (ids.length === 0) return undefined;
 
+  // 대분류 ID 하나는 그 대분류 전체다(카테고리 시트의 '전체').
+  const parent = ids.length === 1 ? categories.find((category) => category.id === ids[0]) : undefined;
+  if (parent) return parent.name;
+
   const whole = categories.find(
     (category) =>
       category.children.length > 0 &&

@@ -50,6 +50,7 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
   });
 
   it("카테고리는 대분류 전체면 대분류 이름, 소분류면 소분류 이름이다", () => {
+    expect(valueOf("category", { categoryIds: [1] })).toBe("스킨케어");
     expect(valueOf("category", { categoryIds: [11, 12] })).toBe("스킨케어");
     expect(valueOf("category", { categoryIds: [12] })).toBe("크림");
   });

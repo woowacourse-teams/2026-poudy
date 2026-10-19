@@ -15,11 +15,18 @@ type CategoryOptionsProps = {
 /** 라디오 값. 대분류 전체는 `all-{대분류}`, 소분류는 `{소분류}` 다. */
 const ALL_PREFIX = "all-";
 
-/** 고른 ID 들을 라디오 값 하나로 바꾼다. 대분류의 소분류를 모두 골랐으면 전체, 소분류 하나면 그 소분류다. */
+/**
+ * 고른 ID 들을 라디오 값 하나로 바꾼다. 대분류 ID 하나면 그 대분류의 전체, 소분류 ID 하나면 그 소분류다.
+ *
+ * 전체를 소분류를 모두 고른 것으로 두면, 소분류가 하나뿐인 대분류(예: 바디케어 › 샤워/입욕)에서 그 소분류와
+ * 전체가 같은 값이 되어 소분류를 고를 수 없다. 그래서 전체는 대분류 ID 로 둔다. 서버는 대분류 ID 를 받으면 그
+ * 아래 소분류를 모두 찾는다. 예전 주소처럼 소분류를 모두 담은 값도 전체로 읽는다.
+ */
 const selectedValueOf = (categories: readonly CategoryResponse[], ids: readonly number[]): string | undefined => {
+  if (ids.length === 1 && categories.some((category) => category.id === ids[0])) return `${ALL_PREFIX}${ids[0]}`;
   const whole = categories.find(
     (category) =>
-      category.children.length > 0 &&
+      category.children.length > 1 &&
       category.children.length === ids.length &&
       category.children.every((child) => ids.includes(child.id)),
   );
@@ -28,14 +35,11 @@ const selectedValueOf = (categories: readonly CategoryResponse[], ids: readonly 
   return undefined;
 };
 
-const idsOf = (categories: readonly CategoryResponse[], value: string): readonly number[] => {
-  if (!value.startsWith(ALL_PREFIX)) return [Number(value)];
-  const parentId = Number(value.slice(ALL_PREFIX.length));
-  return categories.find((category) => category.id === parentId)?.children.map((child) => child.id) ?? [];
-};
+const idsOf = (value: string): readonly number[] =>
+  value.startsWith(ALL_PREFIX) ? [Number(value.slice(ALL_PREFIX.length))] : [Number(value)];
 
 const ownerOf = (categories: readonly CategoryResponse[], ids: readonly number[]) =>
-  categories.find((category) => category.children.some((child) => ids.includes(child.id)));
+  categories.find((category) => ids.includes(category.id) || category.children.some((child) => ids.includes(child.id)));
 
 /**
  * 카테고리 시트(명세 S23c). 대분류마다 묶음 머리 행을 두고, 펼친 대분류에서 하나를 고른다(단일 선택).
@@ -57,7 +61,7 @@ export function CategoryOptions({ categories, selectedIds, onSelect }: CategoryO
             category={category}
             open={expanded === String(category.id)}
             selected={selected}
-            onSelect={(value) => onSelect(idsOf(categories, value))}
+            onSelect={(value) => onSelect(idsOf(value))}
           />
         ))}
       </div>
