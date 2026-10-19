@@ -70,8 +70,9 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
   });
 
   it("피부 타입은 이름을 적고 민감성과 함께면 '외 1개'를 붙인다", () => {
-    expect(valueOf("skinType", { skinType: "DRY" })).toBe("건성");
-    expect(valueOf("skinType", { skinType: "DRY", sensitiveSkin: true })).toBe("건성 외 1개");
+    expect(valueOf("skinType", { skinTypes: ["DRY"] })).toBe("건성");
+    expect(valueOf("skinType", { skinTypes: ["DRY"], sensitiveSkin: true })).toBe("건성 외 1개");
+    expect(valueOf("skinType", { skinTypes: ["DRY", "OILY"], sensitiveSkin: true })).toBe("건성 외 2개");
     expect(valueOf("skinType", { sensitiveSkin: true })).toBe("민감성");
   });
 });

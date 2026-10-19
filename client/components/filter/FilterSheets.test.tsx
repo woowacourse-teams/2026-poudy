@@ -65,8 +65,8 @@ describe("필터 시트의 적용 버튼", () => {
     await waitFor(() => expect(sheet.getByRole("button", { name: label })).toBeEnabled());
   });
 
-  /* 서버가 건성·지성·복합성은 하나만 받는다. 민감성은 함께 걸 수 있다(명세 S23j 체크 목록 행). */
-  it("피부 타입은 건성·지성·복합성 가운데 하나와 민감성을 함께 고른다", async () => {
+  /* 네 가지 모두 체크 목록 행이라 여러 개를 함께 고른다(명세 S23j). 민감성은 쿼리에서 sensitiveSkin 으로 따로 간다. */
+  it("피부 타입은 건성·지성·복합성·민감성을 모두 함께 고를 수 있다", async () => {
     countIs(7);
 
     const sheet = await openSheet(/피부 타입/);
@@ -75,8 +75,8 @@ describe("필터 시트의 적용 버튼", () => {
     await userEvent.click(sheet.getByRole("checkbox", { name: "지성" }));
     await userEvent.click(sheet.getByRole("checkbox", { name: "민감성" }));
 
+    expect(sheet.getByRole("checkbox", { name: "건성" })).toBeChecked();
     expect(sheet.getByRole("checkbox", { name: "지성" })).toBeChecked();
-    expect(sheet.getByRole("checkbox", { name: "건성" })).not.toBeChecked();
     expect(sheet.getByRole("checkbox", { name: "민감성" })).toBeChecked();
   });
 
@@ -197,10 +197,15 @@ describe("필터 초안과 적용 상태", () => {
   it("후보에 없는 피부 타입도 이름을 표시하고 해제할 수 있다", async () => {
     const onApply = vi.fn();
     render(
-      <FilterSheets {...props} openSheet="skinType" onApply={onApply} filter={{ ...EMPTY_FILTER, skinType: "DRY" }} />,
+      <FilterSheets
+        {...props}
+        openSheet="skinType"
+        onApply={onApply}
+        filter={{ ...EMPTY_FILTER, skinTypes: ["DRY"] }}
+      />,
     );
     await userEvent.click(screen.getByRole("button", { name: "건성 빼기" }));
     await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
-    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinType: undefined });
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinTypes: [] });
   });
 });

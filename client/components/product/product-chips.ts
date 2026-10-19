@@ -2,7 +2,7 @@ import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinType
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import { type Filter, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
+import { type Filter, SKIN_TYPE_NAMES, skinChoicesOf } from "@/lib/domain/filter";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 
 /** 필터 칩 하나. 값이 있으면 칩 이름 자리에 값을 쓰고 선택 모양이 된다(명세 APP · 필터 칩 · 선택). */
@@ -80,10 +80,7 @@ const levelValue = (filter: Filter): string | undefined =>
 
 /** 피부 타입 칩의 값. 건성·지성·복합성 가운데 하나와 민감성을 함께 걸 수 있다. */
 const skinTypeValue = (filter: Filter): string | undefined =>
-  firstAndRest([
-    ...(filter.skinType ? [SKIN_TYPE_NAMES[filter.skinType]] : []),
-    ...(filter.sensitiveSkin ? [SKIN_TYPE_NAMES.SENSITIVE] : []),
-  ]);
+  firstAndRest([...skinChoicesOf(filter).map((choice) => SKIN_TYPE_NAMES[choice])]);
 
 /** 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입으로 고정한다(명세 S23e). */
 export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipItem[] => {
@@ -129,6 +126,6 @@ export const filterValueCount = (
     case "level":
       return (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0);
     case "skinType":
-      return (filter.skinType ? 1 : 0) + (filter.sensitiveSkin ? 1 : 0);
+      return skinChoicesOf(filter).length;
   }
 };

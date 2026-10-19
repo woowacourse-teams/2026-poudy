@@ -34,14 +34,14 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
         remove: () => onChange({ ...draft, categoryIds: draft.categoryIds.filter((value) => value !== id) }),
       }));
   }
-  if (kind === "skinType" && draft.skinType && !skinTypes.some((type) => type.code === draft.skinType)) {
-    return [
-      {
-        key: draft.skinType,
-        label: SKIN_TYPE_NAMES[draft.skinType],
-        remove: () => onChange({ ...draft, skinType: undefined }),
-      },
-    ];
+  if (kind === "skinType") {
+    return draft.skinTypes
+      .filter((skinType) => !skinTypes.some((type) => type.code === skinType))
+      .map((skinType) => ({
+        key: skinType,
+        label: SKIN_TYPE_NAMES[skinType],
+        remove: () => onChange({ ...draft, skinTypes: draft.skinTypes.filter((value) => value !== skinType) }),
+      }));
   }
   return [];
 };

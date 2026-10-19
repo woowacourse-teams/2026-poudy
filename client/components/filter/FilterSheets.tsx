@@ -67,7 +67,7 @@ const CLEARED: Record<SheetKind, Partial<Filter>> = {
   category: { categoryIds: [] },
   brand: { brandIds: [] },
   level: { moistureLevel: [], oilLevel: [] },
-  skinType: { skinType: undefined, sensitiveSkin: false },
+  skinType: { skinTypes: [], sensitiveSkin: false },
 };
 
 /**
@@ -195,7 +195,7 @@ function SheetContent({
 
           {kind === "skinType" ? (
             <SkinTypeOptions
-              skinType={draft.skinType}
+              selected={draft.skinTypes}
               sensitiveSkin={draft.sensitiveSkin}
               skinTypes={skinTypes}
               onChange={(changed) => setDraft({ ...draft, ...changed })}

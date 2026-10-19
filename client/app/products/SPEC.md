@@ -65,7 +65,7 @@
 | 카테고리  | 대분류마다 `Disclosure` 머리 행을 두고 펼치면 `RadioGroup`(`list`)으로 하나를 고릅니다. 펼침은 `DisclosureGroup`(`single`)이 맡습니다         |
 | 브랜드    | `SearchField`로 좁히고 `CheckboxGroup`으로 여러 개를 고릅니다                                                                                 |
 | 유수분    | 수분감과 유분감마다 `RangeSlider`와 '상관없음' `ToggleChip`(`sm`)을 둡니다                                                                    |
-| 피부 타입 | 건성·지성·복합성 가운데 하나와 민감성을 `CheckboxGroup`으로 고릅니다                                                                          |
+| 피부 타입 | 건성·지성·복합성·민감성을 `CheckboxGroup`으로 여러 개 고릅니다. 고른 타입 가운데 하나에 맞는 제품을 찾습니다                                  |
 
 ### 접근성
 
@@ -90,7 +90,7 @@
 | `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                             |
 | `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                        |
 | `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                             |
-| `skinType`, `sensitiveSkin`                              | 피부 타입                                             |
+| `skinType`(되풀이), `sensitiveSkin`                      | 피부 타입(여러 개), 민감성                            |
 | `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기 |
 | `from`                                                   | 진입 경로(`popular_keyword`, `skin_type`)             |
 
