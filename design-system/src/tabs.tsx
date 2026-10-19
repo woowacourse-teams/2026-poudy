@@ -30,8 +30,6 @@ const idPart = (value: string) => value.replace(/[^\w-]/g, "_");
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${idPart(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${idPart(value)}`;
 
-/** 스크롤 배치에서 고른 탭을 맞출 때 끝에서 띄우는 폭. 끝을 흐리는 자리에 가리지 않게 한다. */
-const EDGE_CLEARANCE = 24;
 
 export type TabsProps = {
   readonly value: string | undefined;
@@ -93,10 +91,12 @@ export function TabList({ label, children, end, className }: TabListProps) {
     if (!list || vertical || layout !== "scroll") return;
     const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     if (!tab) return;
-    const left = tab.offsetLeft - EDGE_CLEARANCE;
-    const right = tab.offsetLeft + tab.offsetWidth + EDGE_CLEARANCE;
-    if (left < list.scrollLeft) list.scrollLeft = left;
-    else if (right > list.scrollLeft + list.clientWidth) list.scrollLeft = right - list.clientWidth;
+    /*
+     * 위치는 브라우저가 맞춘다. offsetLeft 는 목록이 아니라 위치를 가진 조상(body) 기준이라, 앱이 가운데에 놓이는
+     * 넓은 화면에서는 맨 앞 탭도 화면 밖에 있다고 잘못 보고 목록을 밀어 '전체'가 잘렸다.
+     * 끝에서 띄우는 여유(24)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
+     */
+    tab.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" });
   }, [value, vertical, layout]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -128,7 +128,8 @@ export function TabList({ label, children, end, className }: TabListProps) {
       className={cn(
         "flex",
         vertical && "flex-col bg-surface",
-        !vertical && layout === "scroll" && "scrollbar-none min-w-0 flex-1 overflow-x-auto",
+        // 끝에서 24 를 띄워 고른 탭이 끝을 흐리는 자리에 가리지 않게 한다(scrollIntoView 가 따른다).
+        !vertical && layout === "scroll" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
         !vertical && layout === "fixed" && "flex-1",
         vertical && className,
       )}
