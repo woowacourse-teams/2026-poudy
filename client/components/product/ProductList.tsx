@@ -22,7 +22,7 @@ import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
-import { type InitialPage, useProductPages } from "@/lib/hooks/useProductPages";
+import { type InitialPage, useProductPages, isEmptyResult } from "@/lib/hooks/useProductPages";
 
 type ProductListProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
@@ -141,7 +141,7 @@ export function ProductList({
         칩 줄과 그 아래 목록을 묶어, 결과가 적어도 칩 줄이 붙는 자리까지 스크롤되게 한다.
         칩 줄은 sticky 라 부모 안에서만 붙어 있다. 묶음 안의 첫 줄로 둔다.
       */}
-      <ChipBarRunway sticky={stickyChips}>
+      <ChipBarRunway sticky={stickyChips} empty={isEmptyResult(pages)}>
         <ChipBarSlot sticky={stickyChips}>
           <FilterChipBar chips={chips} expandedId={openSheet} onOpen={setOpenSheet} onReset={resetChips} />
         </ChipBarSlot>
@@ -184,9 +184,23 @@ export function ProductList({
   );
 }
 
-/** 붙는 칩 줄과 그 아래 목록을 묶어, 결과가 적어도 칩 줄이 붙는 자리까지 스크롤되게 한다. */
-function ChipBarRunway({ sticky, children }: { readonly sticky?: StickyChips; readonly children: ReactNode }) {
-  if (!sticky) return <div className="flex flex-1 flex-col">{children}</div>;
+/**
+ * 붙는 칩 줄과 그 아래 목록을 묶어, 결과가 적어도 칩 줄이 붙는 자리까지 스크롤되게 한다.
+ *
+ * 결과가 하나도 없으면 최소 높이를 풀고 남은 화면만 채운다. 그대로 두면 칩 줄 위에 머리(브랜드 히어로 등)가 있는 화면에서
+ * 묶음이 화면 아래로 넘쳐, 그 가운데에 놓이는 빈 상태가 스크롤 전 화면에서 아래로 치우친다.
+ * 칩 줄이 붙은 채 조건을 바꿔 0개가 되면 문서가 짧아져 화면이 위로 움직이지만, 빈 상태가 가운데에 보이는 쪽을 택했다.
+ */
+function ChipBarRunway({
+  sticky,
+  empty,
+  children,
+}: {
+  readonly sticky?: StickyChips;
+  readonly empty: boolean;
+  readonly children: ReactNode;
+}) {
+  if (!sticky || empty) return <div className="flex flex-1 flex-col">{children}</div>;
   return <div className={STICKY_CHIP_BARS[sticky].runwayClassName}>{children}</div>;
 }
 

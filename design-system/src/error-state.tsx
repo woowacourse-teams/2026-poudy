@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { LiveMessage } from "./live-message";
 import { TextButton } from "./text-button";
 
@@ -52,7 +52,7 @@ export function ErrorState(props: ErrorStateProps) {
     const { children, onRetry, retryLabel = "다시 시도", className } = props;
     return (
       <div className={cn("flex items-center gap-2 rounded-lg bg-surface px-4 py-3", className)}>
-        <Glyph name="alert-circle" size={16} className="shrink-0 text-text-secondary" />
+        <Icon name="alert-circle" size={16} scalable className="shrink-0 text-text-secondary" />
         <p aria-hidden="true" className="min-w-0 flex-1 text-body-sm text-text-body">
           {children}
         </p>

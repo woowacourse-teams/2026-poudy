@@ -39,6 +39,8 @@ describe("HistoryDepthTracker", () => {
       </StrictMode>,
     );
 
+    // 라우터처럼 기록을 더한 뒤 경로를 바꾼다.
+    window.history.pushState(null, "", "/ingredients/1");
     pathname = "/ingredients/1";
     rerender(
       <StrictMode>
@@ -49,6 +51,24 @@ describe("HistoryDepthTracker", () => {
     expect(hasInSiteHistory()).toBe(true);
 
     markPop();
+
+    expect(hasInSiteHistory()).toBe(false);
+  });
+
+  it("replace 로 옮겨 기록이 늘지 않은 이동은 세지 않는다", () => {
+    const { rerender } = render(
+      <StrictMode>
+        <HistoryDepthTracker />
+      </StrictMode>,
+    );
+
+    window.history.replaceState(null, "", "/categories/2");
+    pathname = "/categories/2";
+    rerender(
+      <StrictMode>
+        <HistoryDepthTracker />
+      </StrictMode>,
+    );
 
     expect(hasInSiteHistory()).toBe(false);
   });

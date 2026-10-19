@@ -74,6 +74,15 @@
     display var(--duration-fast) allow-discrete,
     overlay var(--duration-fast) allow-discrete;
 
+  /*
+   * 닫힌 목록은 숨긴다. 목록에 flex 같은 display 클래스를 주면 브라우저 기본 규칙(닫힌 popover 는 display: none)을
+   * 덮어써, 보이지 않는 목록이 제자리에 남아 그 아래 탭이나 칩의 클릭을 가로챈다. display 는 위에서 allow-discrete 로
+   * 전환하므로 닫힐 때의 사라지는 전환은 그대로 보인다.
+   */
+  &:not(:popover-open) {
+    display: none;
+  }
+
   &:popover-open {
     opacity: 1;
     scale: 1;
@@ -87,4 +96,24 @@
   @media (prefers-reduced-motion: reduce) {
     scale: 1;
   }
+}
+
+/*
+ * 탭 밑줄이 이전 탭에서 새 탭으로 옮겨 가는 전환(Tabs 의 transitionName). 화면 안에서 자리를 옮기는 움직임이라
+ * base 길이와 ease-in-out 을 쓴다. 움직임 줄이기 설정이면 옮기지 않고 바로 바꾼다.
+ */
+::view-transition-group(.tab-indicator) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-in-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(.tab-indicator) {
+    animation: none;
+  }
+}
+
+/* 시트 본문(BottomSheetBody)의 좌우 여백 20. 안의 목록 행이 hover 면을 시트 끝까지 넓혀 칠한다(fb-bleed). */
+[data-sheet-body] {
+  --bleed: 1.25rem;
 }

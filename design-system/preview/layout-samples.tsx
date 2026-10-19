@@ -13,7 +13,7 @@ const SAMPLE_TABS = [
   { key: "my", label: "마이", icon: "user", href: "#my" },
 ] as const satisfies readonly BottomNavigationItem[];
 type SampleTab = (typeof SAMPLE_TABS)[number]["key"];
-import { Icon, ICON_NAMES, ICON_SIZES, IconSprite } from "../src/icon";
+import { Icon, ICON_NAMES, ICON_SIZES } from "../src/icon";
 import { ImageAttachment } from "../src/image-attachment";
 import type { AttachedImage } from "../src/image-attachment";
 import { TopBar } from "../src/top-bar";
@@ -71,8 +71,6 @@ export function LayoutSamples() {
 
   return (
     <>
-      <IconSprite />
-
       <Section title="Icon · 크기 단계 (12 · 14 · 16 · 20 · 24 · 28 · 40)">
         <div className="flex items-end gap-3 text-text-primary">
           {ICON_SIZES.map((size) => (

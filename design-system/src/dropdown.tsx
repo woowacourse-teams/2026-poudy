@@ -2,7 +2,7 @@
 
 import { type KeyboardEvent, useId, useRef, useState } from "react";
 
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
 /** 고를 수 있는 값과 화면에 적을 이름의 짝. */
@@ -80,7 +80,7 @@ export function Dropdown<T extends string>({ value, options, onChange, "aria-lab
               : "flex transition-transform duration-(--duration-fast) ease-out motion-reduce:transition-none"
           }
         >
-          <Glyph name="chevron-down" size={12} />
+          <Icon name="chevron-down" size={12} scalable />
         </span>
       </button>
 
@@ -143,7 +143,7 @@ function DropdownItem({
       {label}
       {selected ? (
         <span aria-hidden="true" className="flex text-text-muted">
-          <Glyph name="check" size={16} />
+          <Icon name="check" size={16} scalable />
         </span>
       ) : null}
     </button>

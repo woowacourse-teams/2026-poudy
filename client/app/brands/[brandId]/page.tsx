@@ -2,19 +2,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { BrandHero } from "./brand-hero";
+import { BrandBarTitle, BrandTitleScope } from "./brand-title";
 import { BrandProductsEmpty } from "./empty";
 
-import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
+import { DirectoryTopBar } from "@/components/directory/DirectoryTopBar";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { BrandLogo } from "@/components/ui/BrandLogo";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
-import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import { ApiError } from "@/lib/api/client";
-import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { fetchBrand, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
-import { formatCount } from "@/lib/domain/format";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
@@ -61,60 +60,6 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
   } catch {
     return { alternates: { canonical } };
   }
-}
-
-/** 브랜드 소개는 제품 목록과 별개로 스트리밍한다. */
-async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[brandId]">["params"] }) {
-  const { brandId } = await params;
-  const [brand, brands] = await Promise.all([load(brandId), fetchBrands()]);
-
-  // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
-  const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
-  const brandDescription = [brand.englishName, productCount === undefined ? null : `제품 ${formatCount(productCount)}`]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <>
-      {/*
-        칩 줄은 상단바 아래 축약형(56) 밑에 붙는다. 소개가 그보다 낮으면 스크롤하기 전부터 칩 줄이 아래로 밀려
-        목록을 덮으므로, 소개도 축약형만큼은 차지하게 한다.
-      */}
-      <section className="relative flex min-h-14 items-center gap-3 px-4">
-        <JsonLd
-          data={breadcrumbList([
-            { name: "브랜드", path: "/brands" },
-            { name: brand.name, path: `/brands/${brand.id}` },
-          ])}
-        />
-        <BrandLogo name={brand.name} imageUrl={brand.imageUrl} loading="eager" size={40} />
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
-          <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
-        </div>
-        {/* 소개의 아래 끝. 여기가 머리 아래로 지나가면 축약형이 나타난다. 높이를 더하면 결과가 적을 때 1px 스크롤이 생긴다. */}
-        <SummaryEnd overlay />
-      </section>
-    </>
-  );
-}
-
-/**
- * 브랜드 소개가 머리 아래로 지나간 뒤 그 자리를 대신하는 축약형.
- * 바의 `브랜드관` 만 남으면 어느 브랜드의 목록을 보고 있는지 알 수 없다.
- *
- * 로고는 원래 배치와 같은 크기로 받는다. 줄여 받으면 같은 그림을 한 번 더 내려받는다.
- */
-async function BrandCompact({ params }: { readonly params: PageProps<"/brands/[brandId]">["params"] }) {
-  const { brandId } = await params;
-  const brand = await load(brandId);
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-2">
-      <BrandLogo name={brand.name} imageUrl={brand.imageUrl} size={40} />
-      <p className="truncate text-body font-bold text-text-primary">{brand.name}</p>
-    </div>
-  );
 }
 
 /** 필터 재료와 첫 장. 브랜드 소개를 막지 않고 별도 경계에서 스트리밍한다. */
@@ -164,7 +109,7 @@ async function BrandProducts({
         stickyChips="brand"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
-        empty={<BrandProductsEmpty />}
+        empty={<BrandProductsEmpty brandId={brand.id} />}
       />
     </>
   );
@@ -172,30 +117,43 @@ async function BrandProducts({
 
 export default async function BrandDetailPage(props: PageProps<"/brands/[brandId]">) {
   const [{ brandId }, searchParams] = await Promise.all([props.params, props.searchParams]);
-  const id = Number(brandId);
+
+  /*
+   * 브랜드 이름이 바의 제목이라 셸 전에 받는다. 상세 조회는 캐시되어 셸을 거의 늦추지 않고,
+   * 없는 브랜드면 스트리밍 전이라 404 와 경로의 not-found.tsx 를 낼 수 있다.
+   */
+  const brand = await load(brandId);
   const filter = parseFilter(toSearchParams(searchParams));
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
-  if (!stream && Number.isInteger(id)) await requireProductPage({ ...filter, brandIds: [id] });
+  if (!stream) await requireProductPage({ ...filter, brandIds: [brand.id] });
 
   return (
-    /* 이 화면의 대표 제목은 본문의 브랜드명이다. 바의 `브랜드관` 은 모양만 그대로 둔다. */
-    <SummaryHeader
-      title="브랜드관"
-      summary={
-        <StreamBoundary stream={stream} fallback={null}>
-          <BrandCompact params={props.params} />
-        </StreamBoundary>
-      }
-    >
-      <StreamBoundary stream={stream} fallback={<BrandSummarySkeleton />}>
-        <BrandSummary params={props.params} />
-      </StreamBoundary>
+    <BrandTitleScope>
+      {/*
+        이 화면의 대표 제목은 히어로의 브랜드명이다. 바의 제목은 p 로 내리고, 맨 위에서는 '브랜드관'이다가
+        브랜드명이 바 아래로 가려지면 로고와 브랜드명으로 바뀐다(명세 S30-1).
+      */}
+      <DirectoryTopBar
+        title={<BrandBarTitle name={brand.name} imageUrl={brand.imageUrl} />}
+        align="center"
+        titleAs="p"
+        fallback={{ href: "/brands", label: "브랜드 전체" }}
+      />
+      <JsonLd
+        data={breadcrumbList([
+          { name: "브랜드", path: "/brands" },
+          { name: brand.name, path: `/brands/${brand.id}` },
+        ])}
+      />
+
+      {/* 브랜드 정보는 바 제목 때문에 이미 받아 두었으므로 기다리지 않고 바로 그린다. */}
+      <BrandHero name={brand.name} englishName={brand.englishName} imageUrl={brand.imageUrl} />
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
       <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} stickyChips="brand" />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
-    </SummaryHeader>
+    </BrandTitleScope>
   );
 }

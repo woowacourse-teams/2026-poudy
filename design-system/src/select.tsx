@@ -6,7 +6,7 @@ import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import type { NameProps } from "./accessible-name";
 import { hasVisibleLabel } from "./accessible-name";
 import { FieldFrame } from "./field-frame";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 
 export type SelectProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -99,7 +99,7 @@ export function Select({
             {ariaLabel}
           </span>
         ) : null}
-        <Glyph name="chevron-down" size={16} className="shrink-0 text-text-secondary" />
+        <Icon name="chevron-down" size={16} scalable className="shrink-0 text-text-secondary" />
       </button>
     </FieldFrame>
   );

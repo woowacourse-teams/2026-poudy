@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 
 const RATING = {
   good: { icon: "thumb-up", color: "text-success-text", name: "내 평가: 잘 맞았어요" },
@@ -41,7 +41,7 @@ export function Badge(props: BadgeProps) {
           props.className,
         )}
       >
-        <Glyph name={rating.icon} size={16} />
+        <Icon name={rating.icon} size={16} scalable />
       </span>
     );
   }
@@ -54,7 +54,7 @@ export function Badge(props: BadgeProps) {
       )}
     >
       {/* 보라 글자(ui-ai)는 작은 글자 대비가 부족해 아이콘에만 쓴다. */}
-      <Glyph name="sparkles" size={12} className="text-ai" />
+      <Icon name="sparkles" size={12} scalable className="text-ai" />
       {props.children ?? "AI 요약"}
     </span>
   );

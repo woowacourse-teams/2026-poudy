@@ -82,8 +82,9 @@
 }
 
 /*
- * 거터 안에 놓인 목록 행(상품 목록 카드): 면을 화면 끝에서 끝까지 칠한다(S04). 행은 거터 안쪽에 있어 면만 가상 요소로
- * 거터만큼 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 바뀌지 않는다. 글자 뒤에 깔리도록 행이 쌓임 맥락을 만든다.
+ * 거터 안에 놓인 목록 행(상품 목록 카드, 체크 목록 행): 면을 화면 끝에서 끝까지 칠한다(S04). 행은 거터 안쪽에 있어 면만
+ * 가상 요소로 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 바뀌지 않는다. 글자 뒤에 깔리도록 행이 쌓임 맥락을 만든다.
+ * 넓히는 폭은 행을 담은 곳의 좌우 여백이다. 기본은 거터이고, 여백이 다른 곳(시트 본문 20)은 --bleed 로 알린다.
  */
 @utility fb-bleed {
   isolation: isolate;
@@ -92,7 +93,7 @@
     content: "";
     position: absolute;
     inset-block: 0;
-    inset-inline: calc(var(--gutter) * -1);
+    inset-inline: calc(var(--bleed, var(--gutter)) * -1);
     z-index: -1;
     pointer-events: none;
     transition: background-color var(--duration-fast) ease;

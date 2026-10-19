@@ -97,9 +97,9 @@ function CategoryGroup({
         >
           {category.name}
           {open ? (
-            <Icon name="chevron-down" size={16} className="text-text-body" />
+            <Icon name="chevron-down" size={16} scalable className="text-text-body" />
           ) : (
-            <Icon name="chevron-right" size={16} className="text-text-muted" />
+            <Icon name="chevron-right" size={16} scalable className="text-text-muted" />
           )}
         </button>
       </DisclosureTrigger>

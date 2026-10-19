@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useRef } from "react";
+import { cloneElement, createContext, useContext, useEffect, useId, useRef, ViewTransition } from "react";
 import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 
 import { cn } from "./cn";
@@ -15,6 +15,7 @@ type TabsContextValue = {
   readonly onValueChange: (value: string) => void;
   readonly variant: Variant;
   readonly layout: "fixed" | "scroll";
+  readonly transitionName?: string;
 };
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -29,9 +30,6 @@ const idPart = (value: string) => value.replace(/[^\w-]/g, "_");
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${idPart(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${idPart(value)}`;
 
-/** 스크롤 배치에서 고른 탭을 맞출 때 끝에서 띄우는 폭. 끝을 흐리는 자리에 가리지 않게 한다. */
-const EDGE_CLEARANCE = 24;
-
 export type TabsProps = {
   readonly value: string | undefined;
   /** 탭을 고를 때 부른다. 링크 탭(asChild)은 링크가 이동을 맡으므로 주소에서 값을 읽어 넘기면 된다. */
@@ -43,6 +41,11 @@ export type TabsProps = {
   readonly variant?: Variant;
   /** underline 의 배치. fixed 는 탭이 폭을 똑같이 나누고, scroll 은 내용 폭대로 두고 가로로 민다. */
   readonly layout?: "fixed" | "scroll";
+  /**
+   * underline 에서 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 옮겨 가게 한다(View Transition 의 이름).
+   * 링크 탭(asChild)처럼 고를 때 화면이 새로 그려지는 탭에 쓴다. 화면에 하나뿐인 이름을 넘긴다.
+   */
+  readonly transitionName?: string;
   readonly children: ReactNode;
 };
 
@@ -52,9 +55,18 @@ export type TabsProps = {
  * Tab 으로는 고른 탭 하나에만 들어가고, 방향키(밑줄은 ←→, 레일은 ↑↓)와 Home/End 로 옮기며 바로 고른다(자동 전환).
  * 방향키로 옮길 때는 전환 효과 없이 바로 바꾼다(MOTION M03). 다른 화면으로 가는 탭은 TabNav 를 쓴다.
  */
-export function Tabs({ value, onValueChange, variant = "underline", layout = "fixed", children }: TabsProps) {
+export function Tabs({
+  value,
+  onValueChange,
+  variant = "underline",
+  layout = "fixed",
+  transitionName,
+  children,
+}: TabsProps) {
   const baseId = useId();
-  return <TabsContext value={{ baseId, value, onValueChange, variant, layout }}>{children}</TabsContext>;
+  return (
+    <TabsContext value={{ baseId, value, onValueChange, variant, layout, transitionName }}>{children}</TabsContext>
+  );
 }
 
 export type TabListProps = {
@@ -78,10 +90,12 @@ export function TabList({ label, children, end, className }: TabListProps) {
     if (!list || vertical || layout !== "scroll") return;
     const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     if (!tab) return;
-    const left = tab.offsetLeft - EDGE_CLEARANCE;
-    const right = tab.offsetLeft + tab.offsetWidth + EDGE_CLEARANCE;
-    if (left < list.scrollLeft) list.scrollLeft = left;
-    else if (right > list.scrollLeft + list.clientWidth) list.scrollLeft = right - list.clientWidth;
+    /*
+     * 위치는 브라우저가 맞춘다. offsetLeft 는 목록이 아니라 위치를 가진 조상(body) 기준이라, 앱이 가운데에 놓이는
+     * 넓은 화면에서는 맨 앞 탭도 화면 밖에 있다고 잘못 보고 목록을 밀어 '전체'가 잘렸다.
+     * 끝에서 띄우는 여유(24)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
+     */
+    tab.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" });
   }, [value, vertical, layout]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -113,7 +127,8 @@ export function TabList({ label, children, end, className }: TabListProps) {
       className={cn(
         "flex",
         vertical && "flex-col bg-surface",
-        !vertical && layout === "scroll" && "scrollbar-none min-w-0 flex-1 overflow-x-auto",
+        // 끝에서 24 를 띄워 고른 탭이 끝을 흐리는 자리에 가리지 않게 한다(scrollIntoView 가 따른다).
+        !vertical && layout === "scroll" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
         !vertical && layout === "fixed" && "flex-1",
         vertical && className,
       )}
@@ -139,6 +154,19 @@ const ITEM: Record<Variant, string> = {
   rail: "fb-row h-13 px-4 text-title leading-none font-medium text-text-secondary aria-selected:bg-background aria-selected:font-bold aria-selected:text-text-primary",
 };
 
+/**
+ * 밑줄에 View Transition 이름을 단다. ViewTransition 은 Next 가 쓰는 React canary 에만 있어, 없는 환경(테스트 등)에서는
+ * 밑줄만 그리고 옮겨 가는 전환은 생략한다.
+ */
+function IndicatorTransition({ name, children }: { readonly name?: string; readonly children: ReactNode }) {
+  if (!ViewTransition) return children;
+  return (
+    <ViewTransition name={name} share="tab-indicator" default="none">
+      {children}
+    </ViewTransition>
+  );
+}
+
 export type TabProps = {
   readonly value: string;
   /**
@@ -159,6 +187,7 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
   const selected = context.value === value;
   const { pressableProps } = usePressable({ disabled });
   const content = typeof children === "string" ? <TabLabel>{children}</TabLabel> : children;
+  const moving = context.variant === "underline" && context.transitionName !== undefined;
 
   const props = {
     ...pressableProps,
@@ -176,17 +205,34 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
       "pressable flex shrink-0 cursor-pointer items-center select-none",
       ITEM[context.variant],
       context.variant === "underline" && (context.layout === "fixed" ? "flex-1 basis-0" : "min-w-max"),
+      // 밑줄을 옮겨 그릴 때는 테두리 대신 아래 indicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
+      moving && "aria-selected:border-transparent",
     ),
   };
 
+  /*
+   * 고른 탭의 밑줄. 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
+   * 위치를 재지 않는다. 고르지 않은 탭에는 두지 않는다.
+   */
+  const indicator =
+    moving && selected ? (
+      <IndicatorTransition name={context.transitionName}>
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
+      </IndicatorTransition>
+    ) : null;
+
   if (asChild) {
     if (typeof children === "string") throw new Error("asChild 에는 요소 하나를 넘긴다.");
-    return <Slot {...props}>{children as ReactElement}</Slot>;
+    const child = children as ReactElement<{ readonly children?: ReactNode }>;
+    return (
+      <Slot {...props}>{indicator ? cloneElement(child, undefined, child.props.children, indicator) : child}</Slot>
+    );
   }
 
   return (
     <button type="button" {...props}>
       {content}
+      {indicator}
     </button>
   );
 }

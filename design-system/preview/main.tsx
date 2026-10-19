@@ -5,6 +5,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Button } from "../src/button";
+import { IconSprite } from "../src/icon";
 import { IconButton } from "../src/icon-button";
 import { Icon } from "./icons";
 import { ChipSamples } from "./chip-samples";
@@ -20,6 +21,8 @@ import { TabSamples } from "./tab-samples";
 function Preview() {
   return (
     <main className="mx-auto flex max-w-md flex-col gap-8 bg-background px-gutter py-6 font-sans">
+      {/* 부품 안의 아이콘(Icon)이 참조하는 그림 묶음. 앱처럼 맨 위에 한 번 그린다. */}
+      <IconSprite />
       <h1 className="text-screen font-bold text-text-primary">디자인 시스템 미리보기</h1>
 
       <Section title="Button · 크기 lg (화면 아래 고정 CTA)">

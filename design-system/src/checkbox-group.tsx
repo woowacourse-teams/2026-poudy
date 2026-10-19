@@ -7,7 +7,7 @@ import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
 import type { GroupLabelProps } from "./accessible-name";
 import { hasVisibleLabel } from "./accessible-name";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
 type CheckboxGroupContextValue = {
@@ -115,7 +115,8 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
       {...pressableProps}
       {...state}
       className={cn(
-        "choice-row pressable fb-surface flex h-12 cursor-pointer items-center gap-2 px-1 select-none",
+        // hover 면은 행의 안쪽 여백을 넘어 시트·화면의 좌우 여백까지 이어 칠한다(fb-bleed 의 가상 요소).
+        "choice-row pressable fb-bleed flex h-12 cursor-pointer items-center gap-2 px-1 select-none",
         "data-disabled:cursor-not-allowed",
         context.divided && "border-b border-border",
       )}
@@ -130,7 +131,7 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
       />
 
       <span aria-hidden="true" {...state} className="checkbox-indicator size-5">
-        {checked ? <Glyph name="check" size={14} strokeWidth={3} /> : null}
+        {checked ? <Icon name="check" size={14} bold /> : null}
       </span>
 
       <span className={cn("min-w-0 flex-1 text-title text-text-primary", checked ? "font-semibold" : "font-medium")}>

@@ -4,7 +4,7 @@ import { useRef } from "react";
 import type { InputHTMLAttributes, Ref } from "react";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
 export type SearchFieldProps = Omit<
@@ -58,7 +58,7 @@ export function SearchField({
       className={cn("w-full", className)}
     >
       <div className="field flex h-12 items-center gap-2 rounded-sm px-3">
-        <Glyph name="search" size={20} className="shrink-0 text-text-secondary" />
+        <Icon name="search" size={20} scalable className="shrink-0 text-text-secondary" />
 
         <div className="min-w-0 flex-1">
           <input
@@ -123,7 +123,7 @@ function ClearButton({ onClear }: { readonly onClear: () => void }) {
         data-focus-ring=""
         className="flex size-6 items-center justify-center rounded-full bg-layer text-text-secondary transition-colors duration-(--duration-fast) group-data-hovered:bg-border group-data-pressed:bg-border"
       >
-        <Glyph name="x" size={14} />
+        <Icon name="x" size={14} />
       </span>
     </button>
   );
