@@ -1,4 +1,4 @@
-import { scalableIconStyle } from "@/components/ui/icons/Icon";
+import { cn } from "@poudy/design-system/cn";
 
 /**
  * 주의 성분 상태 아이콘. design/v2.pen 의 `정의 · 주의 성분 없음` · `정의 · 주의 성분 있음` 을 따른다.
@@ -11,18 +11,31 @@ const NO_CAUTION_PATH =
 const HAS_CAUTION_PATH =
   "M6.822 0h10.356c0.75 0 1.363 0.568 1.363 1.263 0 0.695-0.613 1.263-1.363 1.263h-1.09v4.042l7.359 11.811c1.567 2.514-0.382 5.621-3.516 5.621h-15.862c-3.134 0-5.083-3.107-3.516-5.621l7.359-11.811v-4.042h-1.09c-0.75 0-1.363-0.568-1.363-1.263 0-0.695 0.613-1.263 1.363-1.263z m5.178 9.537c0.947 0 1.705 0.758 1.705 1.705v3.979c0 0.947-0.758 1.705-1.705 1.705-0.947 0-1.705-0.758-1.705-1.705v-3.979c0-0.947 0.758-1.705 1.705-1.705z m0 9.031a1.705 1.705 0 1 1 0 3.411 1.705 1.705 0 1 1 0-3.411z";
 
-export function CautionStatusIcon({ caution, size }: { readonly caution: boolean; readonly size: number }) {
+/** 글자와 함께 커지는 크기(EffectIcon 과 같은 방식). 구성품 탭(13)과 유사 제품 배지(12)에서 쓴다. */
+const SIZE_CLASS = {
+  12: "size-em text-12",
+  13: "size-em text-13",
+  14: "size-em text-14",
+  16: "size-em text-16",
+} as const;
+
+export function CautionStatusIcon({
+  caution,
+  size,
+}: {
+  readonly caution: boolean;
+  readonly size: keyof typeof SIZE_CLASS;
+}) {
   return (
     <svg
       width={size}
       height={size}
-      // 글자 옆에만 쓰이므로 늘 글자와 함께 커진다.
-      style={scalableIconStyle(size, size)}
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
-      className={`shrink-0 ${caution ? "text-[#9A4D00]" : "text-[#0A6B52]"}`}
+      // 글자 옆에만 쓰이므로 늘 글자와 함께 커진다.
+      className={cn("shrink-0", SIZE_CLASS[size], caution ? "text-warning-text" : "text-success-text")}
     >
       <path d={caution ? HAS_CAUTION_PATH : NO_CAUTION_PATH} fillRule="evenodd" />
     </svg>
