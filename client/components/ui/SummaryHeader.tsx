@@ -79,7 +79,7 @@ export function SummaryHeader({ title, right, summary, children }: SummaryHeader
  * 스크롤 양을 세지 않고 자리를 지켜본다. 원래 배치의 높이는 용량 개수나 이름 길이에
  * 따라 달라져 어림잡은 값으로는 나타나는 때가 화면마다 어긋난다.
  */
-export function SummaryEnd({ overlay = false }: { readonly overlay?: boolean } = {}) {
+export function SummaryEnd() {
   const setPassed = useContext(Context);
   const { ref, passed } = usePassedTopBoundary<HTMLDivElement>({
     enterAt: TOP_BAR_HEIGHT,
@@ -91,6 +91,5 @@ export function SummaryEnd({ overlay = false }: { readonly overlay?: boolean } =
     setPassed?.(passed);
   }, [passed, setPassed]);
 
-  // overlay 면 원래 배치(relative)의 아래 끝에 겹쳐 두어 높이를 더하지 않는다.
-  return <div ref={ref} aria-hidden="true" className={overlay ? "absolute inset-x-0 bottom-0 h-px" : "h-px"} />;
+  return <div ref={ref} aria-hidden="true" className="h-px" />;
 }
