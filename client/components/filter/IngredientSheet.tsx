@@ -182,7 +182,7 @@ function IngredientEditor({ draft, setDraft, excludeCodes, names, groups, onSear
         <section aria-labelledby={quickId} className="flex flex-col gap-2 pt-1">
           <div className="flex flex-wrap items-center justify-between gap-x-2">
             <div className="flex items-center">
-              <h3 id={quickId} className="text-body-sm font-medium text-text-secondary">
+              <h3 id={quickId} className="text-body-sm font-semibold text-text-body">
                 자주 피하는 성분
               </h3>
               <IconButton
