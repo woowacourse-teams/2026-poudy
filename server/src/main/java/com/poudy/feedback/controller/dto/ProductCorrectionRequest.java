@@ -16,6 +16,7 @@ public record ProductCorrectionRequest(
     @Size(max = Feedback.MAX_IMAGE_COUNT, message = "INVALID_FEEDBACK_IMAGE_ID") @Schema(nullable = true) List<@NotNull(message = "INVALID_FEEDBACK_IMAGE_ID") UUID> imageIds) {
 
     public ProductCorrectionRequest {
+        content = content == null ? null : content.trim();
         imageIds = copyOf(imageIds);
     }
 

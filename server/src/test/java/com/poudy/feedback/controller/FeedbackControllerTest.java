@@ -77,14 +77,16 @@ class FeedbackControllerTest {
                 .content("""
                     {
                       "type": "BUG_REPORT",
-                      "content": "제품 정보가 실제 패키지와 달라요.",
+                      "content": "  가 나 다 라 마바  ",
                       "path": "/products/12345"
                     }
                     """)
         )
             .andExpect(status().isNoContent());
 
-        verify(feedbackRepository).save(any());
+        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
+        verify(feedbackRepository).save(feedbackCaptor.capture());
+        assertThat(feedbackCaptor.getValue().content().value()).isEqualTo("가 나 다 라 마바");
         verify(webhook).send(any(), any());
         verify(rateLimits).requireSubmitAllowed("203.0.113.7");
     }
@@ -213,7 +215,7 @@ class FeedbackControllerTest {
     }
 
     @Test
-    @DisplayName("공백을 제외하고 10자보다 짧은 의견을 거절한다")
+    @DisplayName("앞뒤 공백을 제외하고 10자보다 짧은 의견을 거절한다")
     void rejectsShortContentAfterStripping() throws Exception {
         mockMvc.perform(
             post(PATH)
@@ -221,7 +223,7 @@ class FeedbackControllerTest {
                 .content("""
                     {
                       "type": "OTHER",
-                      "content": "짧 은 의 견 입 니 다",
+                      "content": "  짧 은 의 견  ",
                       "path": "/"
                     }
                     """)
@@ -371,7 +373,7 @@ class FeedbackControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "content": "전성분 표기가 실제 패키지와 달라요."
+                      "content": "  가 나 다 라 마바  "
                     }
                     """)
         )
@@ -382,6 +384,7 @@ class FeedbackControllerTest {
         assertThat(feedbackCaptor.getValue()).isInstanceOfSatisfying(ProductCorrection.class, correction -> {
             assertThat(correction.productId()).isEqualTo(1L);
             assertThat(correction.productName()).isEqualTo("블랙 스네일 토너");
+            assertThat(correction.content().value()).isEqualTo("가 나 다 라 마바");
         });
         verify(rateLimits).requireSubmitAllowed("203.0.113.7");
         verify(webhook).send(any(), any());

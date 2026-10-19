@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -123,6 +123,22 @@ describe("유형 선택", () => {
 });
 
 describe("입력과 제출 버튼의 상태", () => {
+  it("중간 공백을 포함해 열 자를 채우면 앞뒤 공백을 제거해 보낸다", async () => {
+    const user = userEvent.setup();
+    render(<InquiryForm originPath="/" />);
+    await chooseBug(user);
+    fireEvent.change(screen.getByLabelText(/문의 내용/), { target: { value: "  가 나 다 라 마바  " } });
+
+    await user.click(submitButton());
+
+    expect(sendFeedback).toHaveBeenCalledWith({
+      type: "BUG_REPORT",
+      content: "가 나 다 라 마바",
+      originPath: "/",
+      imageIds: [],
+    });
+  });
+
   it("열 자에 미치지 못하면 제출 버튼을 누를 수 없다", async () => {
     const user = userEvent.setup();
     render(<InquiryForm originPath="/" />);

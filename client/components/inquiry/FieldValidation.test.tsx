@@ -59,16 +59,43 @@ describe("문의 내용 검사", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("열 자를 채우면 알림이 사라진다", async () => {
+  it("앞뒤 공백을 빼고 중간 공백을 포함해 열 자를 채우면 알림이 즉시 사라진다", async () => {
     const user = await startBug();
     const field = screen.getByLabelText(/문의 내용/);
 
     await user.type(field, "짧아요");
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
 
-    await user.type(field, " 이제는 열 자가 넘습니다");
+    fireEvent.change(field, { target: { value: "  가 나 다 라 마바  " } });
 
-    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(field).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByRole("button", { name: "문의 접수하기" })).toBeEnabled();
+    expect(screen.getByText("10 / 2,000")).toBeInTheDocument();
+  });
+
+  it("입력을 비우면 이전 오류가 즉시 사라진다", async () => {
+    const user = await startBug();
+    const field = screen.getByLabelText(/문의 내용/);
+
+    await user.type(field, "짧아요");
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+
+    fireEvent.change(field, { target: { value: "   " } });
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(field).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByRole("button", { name: "문의 접수하기" })).toBeDisabled();
+    expect(screen.getByText("0 / 2,000")).toBeInTheDocument();
+  });
+
+  it("앞뒤 공백은 글자 수와 제출에 필요한 길이에 포함하지 않는다", async () => {
+    await startBug();
+    fireEvent.change(screen.getByLabelText(/문의 내용/), { target: { value: "  가 나 다 라 마  " } });
+
+    expect(screen.getByText("9 / 2,000")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "문의 접수하기" })).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("지금 9자예요."));
   });
 
   it("입력 칸과 알림을 이어 둔다", async () => {
