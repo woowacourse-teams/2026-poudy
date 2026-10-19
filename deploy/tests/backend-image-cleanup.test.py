@@ -15,6 +15,10 @@ class BackendImageCleanupTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        self.environment_file = self.root / "backend-image.env"
+        self.script = self.root / "cleanup.sh"
+        self.script.write_text(SCRIPT.read_text().replace(
+            "/etc/poudy/backend-image.env", str(self.environment_file)))
         self.state = {"images": [], "containers": {}, "fail": None}
         shim = self.root / "docker"
         shim.write_text("""#!/usr/bin/env python3
@@ -31,6 +35,11 @@ elif args[:2] == ['container', 'inspect']:
     print(state['containers'][args[-1]])
 elif args[:2] == ['image', 'ls']:
     print('\\n'.join(' '.join(image) for image in state['images']))
+elif args[:2] == ['image', 'inspect']:
+    repo, tag = args[-1].split(':')
+    found = [image[2] for image in state['images'] if image[:2] == [repo, tag]]
+    if not found: sys.exit(1)
+    print(found[0])
 elif args[:2] == ['image', 'rm']:
     if state['fail'] == 'remove': sys.exit(1)
     assert len(args) == 3, 'forced or broad removal is forbidden'
@@ -55,7 +64,7 @@ else:
 
     def run_cleanup(self):
         (self.root / "state.json").write_text(json.dumps(self.state))
-        result = subprocess.run(["bash", str(SCRIPT)], env=self.env, capture_output=True, text=True)
+        result = subprocess.run(["bash", str(self.script)], env=self.env, capture_output=True, text=True)
         self.state = json.loads((self.root / "state.json").read_text())
         return result
 
@@ -94,6 +103,25 @@ else:
         result = self.run_cleanup()
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual([], self.removals())
+
+    def test_configured_image_is_kept_even_when_container_is_absent(self):
+        self.images(6)
+        self.environment_file.write_text(f"POUDY_BACKEND_IMAGE=poudy-backend:{1:040x}\n")
+        result = self.run_cleanup()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([f"poudy-backend:{index:040x}" for index in [3, 2]], self.removals())
+
+    def test_missing_configured_image_prevents_cleanup(self):
+        self.images(6)
+        self.environment_file.write_text("POUDY_BACKEND_IMAGE=poudy-backend:abcdef0\n")
+        self.assertNotEqual(0, self.run_cleanup().returncode)
+        self.assertEqual([], self.removals())
+
+    def test_invalid_configured_reference_prevents_cleanup(self):
+        self.images(6)
+        self.environment_file.write_text("POUDY_BACKEND_IMAGE=other:latest\n")
+        self.assertNotEqual(0, self.run_cleanup().returncode)
+        self.assertEqual(6, len(self.state["images"]))
 
     def test_repeated_cleanup_keeps_remaining_images(self):
         self.images(6)

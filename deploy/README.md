@@ -65,9 +65,19 @@ staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 �
 직후에는 새 이미지를 포함해 보통 네 개가 남습니다. 다른 저장소·임의 태그·컨테이너·볼륨은
 삭제하지 않으며, 이미지 삭제 실패 시 기존 서비스를 유지한 채 배포를 중단합니다.
 정리 전후 루트 디스크 사용량과 삭제한 태그는 배포 로그에 남습니다.
+서비스가 중지돼도 `/etc/poudy/backend-image.env`가 가리키는 이미지는 보존합니다.
+그 참조가 잘못됐거나 로컬 이미지가 없으면 복원 대상을 확인할 수 없으므로 정리를 중단합니다.
 
 디스크 부족으로 이미지 로딩이 실패하면 같은 스크립트를 서버에서 실행해 공간을 확보한 뒤
 실패한 산출물로 재배포합니다. CodeDeploy의 S3 산출물은 이미지 정리와 무관하게 유지됩니다.
+
+로컬 이미지는 빠른 복원을 위한 사본이고, 전체 배포 원본은 CodeDeploy revision의
+S3 산출물입니다. 해당 ZIP에는 `app/image.tar.gz`, 이미지 참조와 배포 스크립트가 있습니다.
+원본 위치는 `aws deploy get-deployment --deployment-id <배포 ID> --region ap-northeast-2`의
+`deploymentInfo.revision.s3Location`에서 확인합니다. 복구 시 같은 application·deployment
+group과 S3 revision으로 `aws deploy create-deployment`를 실행하고, 배포 성공과
+`http://127.0.0.1:8081/actuator/health`의 `UP`을 확인합니다. S3 산출물이 삭제되지 않았는지
+복구 전에 확인해야 합니다. 이 스크립트는 S3 원본·DB·세션 저장소를 정리하지 않습니다.
 
 ## CodeBuild 캐시와 측정
 

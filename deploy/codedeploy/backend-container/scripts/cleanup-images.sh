@@ -5,9 +5,19 @@ set -Eeuo pipefail
 # docker image ls는 생성 시각의 내림차순이다. 최근 세 이미지와 모든 컨테이너가
 # 참조하는 이미지를 보존한다. 태그만 지워 다른 저장소의 별칭도 보존한다.
 readonly retained_image_count=3
+readonly image_environment_file="/etc/poudy/backend-image.env"
 protected_ids=()
 recent_ids=()
 remove_references=()
+
+# 서비스가 중지돼 컨테이너가 없어도 현재 배포 설정의 이미지는 복원용으로 남긴다.
+# 참조가 손상됐거나 이미지가 사라졌다면 추가 정리를 하지 않는다.
+if [[ -e "${image_environment_file}" ]]; then
+    configured_reference="$(sed -n 's/^POUDY_BACKEND_IMAGE=//p' "${image_environment_file}")"
+    [[ "${configured_reference}" =~ ^poudy-backend:[[:xdigit:]]{7,64}$ ]]
+    protected_ids+=("$(docker image inspect --format '{{.Id}}' "${configured_reference}")")
+    printf '[poudy-images] 현재 배포 이미지 보존: %s\n' "${configured_reference}"
+fi
 
 container_ids="$(docker container ls --all --quiet)"
 for container_id in ${container_ids}; do
