@@ -9,7 +9,8 @@ export type SearchMode = "product" | "ingredient";
  */
 export function SearchModeTabs({ current }: { readonly current: SearchMode }) {
   return (
-    <TabNav aria-label="검색 방식">
+    // 탭을 고르면 밑줄이 이전 탭에서 새 탭으로 미끄러진다(View Transition). 두 화면이 같은 이름을 써서 이어진다.
+    <TabNav aria-label="검색 방식" transitionName="search-mode-tab-indicator">
       <TabNavItem current={current === "product"}>
         <Link href="/search/products">제품명 검색</Link>
       </TabNavItem>

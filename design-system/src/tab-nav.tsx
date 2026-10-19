@@ -1,11 +1,11 @@
 "use client";
 
-import { cloneElement } from "react";
+import { cloneElement, createContext, useContext } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "./cn";
 import { Slot } from "./slot";
-import { TabLabel } from "./tabs";
+import { TabIndicator, TabLabel } from "./tabs";
 import { usePressable } from "./use-pressable";
 
 export type TabNavProps = ({ readonly "aria-label": string } | { readonly "aria-labelledby": string }) & {
@@ -13,7 +13,14 @@ export type TabNavProps = ({ readonly "aria-label": string } | { readonly "aria-
   readonly children: ReactNode;
   /** 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
+  /**
+   * 밑줄에 달 View Transition 이름. 넘기면 화면을 옮길 때 밑줄이 이전 탭에서 새 탭으로 미끄러진다(Tabs 의 transitionName 과
+   * 같은 방식). 두 화면이 같은 이름을 써야 이어진다.
+   */
+  readonly transitionName?: string;
 };
+
+const TabNavContext = createContext<string | undefined>(undefined);
 
 /**
  * 다른 화면으로 가는 링크 탭(STATE S06 '위치 이동', A11Y D04). 검색 모드 탭(?mode=)과 카테고리·브랜드 전환
@@ -23,10 +30,10 @@ export type TabNavProps = ({ readonly "aria-label": string } | { readonly "aria-
  * 높이 44, 탭이 폭을 똑같이 나누고, 고른 탭은 15/700 + 2px 밑줄이다. 기기 글자 크기를 키워 이름이 탭 폭을 넘으면
  * 넘치지 않고 줄을 바꾸며, 탭 높이가 글자를 따라 늘어난다(A11Y 글자 200%).
  */
-export function TabNav({ children, className, ...name }: TabNavProps) {
+export function TabNav({ children, className, transitionName, ...name }: TabNavProps) {
   return (
     <nav {...name} className={cn("flex border-b border-border", className)}>
-      {children}
+      <TabNavContext value={transitionName}>{children}</TabNavContext>
     </nav>
   );
 }
@@ -40,16 +47,29 @@ export type TabNavItemProps = {
 
 export function TabNavItem({ current, children }: TabNavItemProps) {
   const { pressableProps } = usePressable();
+  const transitionName = useContext(TabNavContext);
   const label = children.props.children;
+  // 밑줄을 옮겨 그릴 때는 테두리 대신 TabIndicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
+  const moving = current && transitionName !== undefined;
 
   return (
     <Slot
       {...pressableProps}
       aria-current={current ? "page" : undefined}
       data-current={current ? "" : undefined}
-      className="pressable fb-surface -mb-px flex min-h-11 flex-1 basis-0 items-center justify-center border-b-2 border-transparent px-3 py-2 text-center text-title leading-snug font-medium text-text-secondary select-none data-current:border-text-primary data-current:font-bold data-current:text-text-primary"
+      className={cn(
+        "pressable fb-surface -mb-px flex min-h-11 flex-1 basis-0 items-center justify-center border-b-2 border-transparent px-3 py-2 text-center text-title leading-snug font-medium text-text-secondary select-none data-current:border-text-primary data-current:font-bold data-current:text-text-primary",
+        moving && "data-current:border-transparent",
+      )}
     >
-      {cloneElement(children, { children: <TabLabel>{label}</TabLabel> })}
+      {cloneElement(children, {
+        children: (
+          <>
+            <TabLabel>{label}</TabLabel>
+            {moving ? <TabIndicator name={transitionName} /> : null}
+          </>
+        ),
+      })}
     </Slot>
   );
 }
