@@ -9,7 +9,8 @@ import { fetchIngredientsByIds } from "@/lib/api/products";
  * URL 에는 ID 만 남으므로 링크로 들어와도 이름을 보여 주려면 서버에 물어야 한다.
  */
 export const useIngredientNames = (ids: readonly number[]): ReadonlyMap<number, string> => {
-  const key = [...ids].sort((a, b) => a - b).join(",");
+  // 같은 성분이 여러 조건에 함께 실려 올 수 있다(링크 충돌로 뺀 성분 등). 서버는 중복 ID 를 400 으로 거절하므로 한 번씩만 묻는다.
+  const key = [...new Set(ids)].sort((a, b) => a - b).join(",");
   const [names, setNames] = useState<ReadonlyMap<number, string>>(new Map());
 
   useEffect(() => {
