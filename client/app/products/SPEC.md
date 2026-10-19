@@ -121,19 +121,19 @@
 
 ## 부품
 
-| 옛 부품                                      | 바꿀 부품                                                                                   |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                             |
-| `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                     |
-| `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                             |
-| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                     |
-| `ProductCard`                                | 명세 `r4q5g`대로 다시 그립니다. 저장 버튼을 뺍니다                                          |
-| `ProductCardSkeleton`, `ProductListSkeleton` | `Skeleton`                                                                                  |
-| 옛 `BottomSheet`(client)                     | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter`                   |
-| `CheckMark`, 직접 그린 라디오                | `RadioGroup`, `CheckboxGroup`                                                               |
-| `LevelRange`                                 | `RangeSlider` + `ToggleChip`                                                                |
-| `SelectedIngredientChip`, `ConditionButton`  | 시트에서는 `Tag`(`item`)와 [+ 추가]로 바꿉니다. 탐색 조건(#735)이 쓰는 동안 파일은 남깁니다 |
-| 빈 상태(문구만)                              | `EmptyState` + `Button`(`secondary`)                                                        |
+| 옛 부품                                      | 바꿀 부품                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                           |
+| `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                   |
+| `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                           |
+| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                   |
+| `ProductCard`                                | 명세 `r4q5g`대로 다시 그립니다. 저장 버튼을 뺍니다                                        |
+| `ProductCardSkeleton`, `ProductListSkeleton` | `Skeleton`                                                                                |
+| 옛 `BottomSheet`(client)                     | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter`                 |
+| `CheckMark`, 직접 그린 라디오                | `RadioGroup`, `CheckboxGroup`                                                             |
+| `LevelRange`                                 | `RangeSlider` + `ToggleChip`                                                              |
+| `SelectedIngredientChip`, `ConditionButton`  | 시트에서는 `Tag`(`item`)와 [+ 추가]로 바꿉니다. 탐색 조건(#735)도 옮겨 가 파일을 지웁니다 |
+| 빈 상태(문구만)                              | `EmptyState` + `Button`(`secondary`)                                                      |
 
 ## PostHog 이벤트
 

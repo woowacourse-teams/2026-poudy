@@ -98,14 +98,14 @@
 
 ## 바꿀 옛 부품과 쓸 디자인 시스템 부품
 
-| 옛 부품                                                                                           | 새 부품                                                                          | 처리                                                                         |
-| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `components/ui/TopBar`(`root`), `SearchTabs`                                                      | `TopBar`(`sub`), `TabNav`                                                        | `SearchTabs`는 지웁니다. 옛 `TopBar`는 다른 화면이 써서 둡니다               |
-| `ProductSearchPanel`                                                                              | `ProductSearchScreen` + `Combobox`·`SearchField`·`EmptyState`                    | 지웁니다                                                                     |
-| `IngredientSearchPanel`, `IngredientSuggestions`                                                  | `IngredientConditionEditor` + `IngredientPicker`                                 | 지웁니다                                                                     |
-| `SelectedIngredientChip`, `ConditionButton`, `CheckMark`, 옛 `SearchField`, `IngredientGroupRows` | `Tag`(`item`), `ToggleChip`, `SearchField`                                       | 필터 시트(#736)가 아직 써서 둡니다                                           |
-| 하단 개수 버튼                                                                                    | `Button`(`lg`)을 하단 행동 영역 모양으로 감쌉니다                                | `BottomActionBar`의 `label`이 글자만 받아 `RollingNumber`를 넣을 수 없습니다 |
-| 없음                                                                                              | `BottomSheet`, `ConfirmSheet`, `Toast`(`ToastProvider`를 앱 레이아웃에 붙입니다) | 새로 씁니다                                                                  |
+| 옛 부품                                                                                           | 새 부품                                                                    | 처리                                                                         |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `components/ui/TopBar`(`root`), `SearchTabs`                                                      | `TopBar`(`sub`), `TabNav`                                                  | `SearchTabs`는 지웁니다. 옛 `TopBar`는 다른 화면이 써서 둡니다               |
+| `ProductSearchPanel`                                                                              | `ProductSearchScreen` + `Combobox`·`SearchField`·`EmptyState`              | 지웁니다                                                                     |
+| `IngredientSearchPanel`, `IngredientSuggestions`                                                  | `IngredientConditionBody` + `IngredientPicker`                             | 지웁니다                                                                     |
+| `SelectedIngredientChip`, `ConditionButton`, `CheckMark`, 옛 `SearchField`, `IngredientGroupRows` | `Tag`(`item`), `ToggleChip`, `SearchField`                                 | 지웁니다. 옛 `SearchField`는 선반 화면이 써서 둡니다                         |
+| 하단 개수 버튼                                                                                    | `Button`(`lg`)을 하단 행동 영역 모양으로 감쌉니다                          | `BottomActionBar`의 `label`이 글자만 받아 `RollingNumber`를 넣을 수 없습니다 |
+| 없음                                                                                              | `BottomSheet`, `Notice`, `Toast`(`ToastProvider`를 앱 레이아웃에 붙입니다) | 새로 씁니다                                                                  |
 
 ## PostHog 이벤트
 
