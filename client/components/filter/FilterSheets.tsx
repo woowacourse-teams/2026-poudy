@@ -56,7 +56,7 @@ export const FILTER_TYPES: Record<SheetKind, FilterType> = {
 };
 
 /** 시트마다 [초기화]가 비우는 조건. */
-const CLEARED: Record<SheetKind, Partial<Filter>> = {
+export const CLEARED: Record<SheetKind, Partial<Filter>> = {
   ingredient: {
     excludeCodes: [],
     excludeIngredientIds: [],

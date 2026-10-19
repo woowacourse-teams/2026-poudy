@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ProductList } from "./ProductList";
@@ -63,5 +63,30 @@ describe("적용된 조건 줄", () => {
     setup("brandIds=1");
 
     expect(screen.queryByRole("group", { name: "적용된 조건" })).not.toBeInTheDocument();
+  });
+});
+
+describe("필터 초기화 버튼", () => {
+  it("값이 걸린 칩이 없으면 두지 않는다", async () => {
+    setup("keyword=크림");
+
+    await screen.findByRole("button", { name: "성분" });
+    expect(screen.queryByRole("button", { name: "필터 조건 모두 초기화" })).not.toBeInTheDocument();
+  });
+
+  it("칩 조건만 비우고 검색어와 정렬은 남기며, 포커스를 첫 칩으로 옮긴다", async () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    setup("keyword=크림&brandIds=1&excludeCodes=FRAGRANCE_ALLERGENS&moistureLevel=2&sort=PRICE_ASC");
+
+    fireEvent.click(await screen.findByRole("button", { name: "필터 조건 모두 초기화" }));
+
+    const url = new URL(String(replaceState.mock.lastCall?.[2]), "http://localhost");
+    expect(url.searchParams.get("keyword")).toBe("크림");
+    expect(url.searchParams.get("sort")).toBe("PRICE_ASC");
+    expect(url.searchParams.has("brandIds")).toBe(false);
+    expect(url.searchParams.has("excludeCodes")).toBe(false);
+    expect(url.searchParams.has("moistureLevel")).toBe(false);
+    expect(document.activeElement).toHaveAttribute("aria-haspopup", "dialog");
+    replaceState.mockRestore();
   });
 });

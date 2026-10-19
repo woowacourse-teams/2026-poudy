@@ -55,6 +55,14 @@
 | 오류                   | 첫 장을 받지 못하면 `ErrorState`(`screen`)와 [다시 시도]를 보여 줍니다. 다음 장 실패는 `LoadMore`가 재시도를 맡습니다                                |
 | 링크 조건 충돌(S36)    | 주소의 조건이 서로 부딪히면 원하는 성분 쪽을 빼고 목록을 보여 줍니다. 맨 위 `Notice`로 무엇을 뺐는지 알리고, [대신 ○○ 남기기]와 [조건 보기]를 둡니다 |
 
+### 필터 초기화 버튼
+
+값이 걸린 칩이 하나라도 있으면 칩 줄 맨 앞에 `FilterResetChip`(명세 APP · 필터 초기화 버튼)을 둡니다. 칩이 넘치면 줄 끝은 가로로 밀어야 보이므로 앞에 둡니다.
+
+- 누르면 값이 걸린 칩의 조건(성분·카테고리·브랜드·유수분·피부 타입)을 한 번에 비웁니다. 시트를 거치지 않고 바로 주소에 반영합니다.
+- 검색어와 정렬은 남깁니다. 화면이 고정한 조건(카테고리 상품의 카테고리, 브랜드 상세의 브랜드)도 칩이 아니므로 남습니다.
+- 버튼이 사라지므로 포커스는 첫 칩으로 옮깁니다.
+
 ### 필터 시트
 
 시트는 디자인 시스템의 `BottomSheet`로 그립니다. 시트 안의 선택은 초안으로 두고 결과 수만 미리 조회합니다. [N개 제품 보기]를 눌러야 주소에 반영하고, 닫거나 끌어내리면 초안을 버립니다. 비울 것이 없으면 [초기화]를 막습니다.
@@ -69,6 +77,7 @@
 
 ### 접근성
 
+- 필터 초기화 버튼은 아이콘만 보이므로 이름을 '필터 조건 모두 초기화'로 읽습니다.
 - 필터 칩은 `button` + `aria-haspopup="dialog"` + `aria-expanded`이고, 접근 가능한 이름은 `성분, 성분 5`처럼 조건 이름과 값을 함께 읽습니다.
 - 적용된 조건 줄은 `role="group"`과 이름 '적용된 조건'을 갖고, 숨기거나 말줄임한 칩도 모두 읽습니다. `외 N개`는 화면에만 보입니다.
 - 빈 상태와 결과 영역은 `aria-live="polite"`로 한 번 알립니다. 목록은 다음 장을 받는 동안 `aria-busy`를 겁니다.
@@ -122,6 +131,7 @@
 | `empty_result_shown`               | 결과가 0개일 때                                                  | `surface`, `condition_count`                                                                      | 그대로                                                                     |
 | `filter_applied`                   | 시트에서 [N개 제품 보기]를 눌렀을 때                             | `filter_type`, `filter_value_count`                                                               | 그대로                                                                     |
 | `filter_reset`                     | 시트에서 [초기화]를 눌렀을 때                                    | `filter_type`                                                                                     | 그대로                                                                     |
+| `filter_bar_reset`                 | 칩 줄 맨 앞의 초기화 버튼을 눌렀을 때                            | `filter_count`(값이 걸려 있던 칩의 수)                                                            | **새로 보냄**                                                              |
 | `ingredient_condition_toggled`     | 성분 시트에서 성분·성분군·자주 피하는 성분을 담거나 뺐을 때      | `target_type`, `ingredient_id?`, `group_code?`, `exclude_code?`, `condition`, `action`, `surface` | 그대로(`surface: "filter_sheet"`)                                          |
 | `search_suggestion_selected`       | 성분 시트 검색 화면에서 검색 결과를 담았을 때                    | `mode`, `query`, `position`, `ingredient_id`                                                      | 그대로                                                                     |
 | `filter_conflict_shown`            | 링크 조건 충돌을 정리하고 안내 줄을 띄웠을 때                    | `conflict_count`, `ingredient_count`                                                              | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |

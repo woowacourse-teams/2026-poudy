@@ -11,7 +11,7 @@ import { ProductListContext } from "./product-list-context";
 import { ProductRows } from "./ProductRows";
 import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 
-import { FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
+import { CLEARED, FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
 import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
@@ -107,6 +107,13 @@ export function ProductList({
     brands: filterOptions?.brands ?? [],
   }).filter((chip) => !hiddenChips.includes(chip.id));
 
+  // 보이는 칩 가운데 값이 걸린 것만 비운다. 화면이 고정한 조건과 검색어는 칩이 아니므로 남는다.
+  const resetChips = () => {
+    const applied = chips.filter((chip) => chip.value !== undefined);
+    setCondition(Object.assign({}, ...applied.map((chip) => CLEARED[chip.id])));
+    track("filter_bar_reset", { filter_count: applied.length });
+  };
+
   const actions = useMemo(
     () => ({ filter, fixedFilter, basePath, openSheet: setOpenSheet }),
     [basePath, filter, fixedFilter],
@@ -136,7 +143,7 @@ export function ProductList({
       */}
       <ChipBarRunway sticky={stickyChips}>
         <ChipBarSlot sticky={stickyChips}>
-          <FilterChipBar chips={chips} expandedId={openSheet} onOpen={setOpenSheet} />
+          <FilterChipBar chips={chips} expandedId={openSheet} onOpen={setOpenSheet} onReset={resetChips} />
         </ChipBarSlot>
 
         <div className="flex flex-1 flex-col gap-2 pt-2">
