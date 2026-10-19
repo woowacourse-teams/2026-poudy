@@ -12,6 +12,7 @@ const SERVICE_BASE_URL = process.env.EXPO_PUBLIC_SERVICE_URL;
 const APP_VERSION = process.env.POUDY_APP_VERSION;
 const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_SERVICES_FILE = process.env.GOOGLE_SERVICES_JSON ?? './google-services.json';
 const KAKAO_MAVEN_REPOSITORY = 'https://devrepo.kakao.com/nexus/content/groups/public/';
 const KAKAO_PROGUARD_RULES = [
   '-keep class com.kakao.sdk.**.model.* { <fields>; }',
@@ -148,6 +149,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
       package: bundleIdentifier,
+      googleServicesFile: GOOGLE_SERVICES_FILE,
       ...androidAppLinksOf(appLinkHost),
     },
     plugins: [
@@ -169,6 +171,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       './plugins/withQuickActionIcons',
+      'expo-notifications',
       './plugins/withAndroidReleaseOptimization.ts',
       [
         'expo-dev-client',

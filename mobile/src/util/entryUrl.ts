@@ -40,6 +40,20 @@ export const getDeepLinkUrl = (value: string, serviceBaseUrl: string): string | 
   }
 };
 
+export const getNotificationUrl = (value: string, serviceBaseUrl: string): string | null => {
+  try {
+    const target = new URL(value, serviceBaseUrl);
+
+    if (target.origin !== new URL(serviceBaseUrl).origin) {
+      return null;
+    }
+
+    return target.toString();
+  } catch {
+    return null;
+  }
+};
+
 export const getShareRedirectUrl = (text: string, serviceBaseUrl: string): string | null => {
   try {
     const url = new URL(SHARE_REDIRECT_PATH, serviceBaseUrl);

@@ -24,3 +24,6 @@ modules/*/android/build/
 *.key
 credentials.json
 google-service-account.json
+google-services.json
+*-firebase-adminsdk-*.json
+poudy-fcm-key.json
