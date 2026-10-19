@@ -600,7 +600,7 @@ body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar 
 }
 
 .brand-filter-chip-runway {
-  min-height: calc(100lvh - 56px);
+  min-height: calc(100lvh - 100px);
 }
 
 /*

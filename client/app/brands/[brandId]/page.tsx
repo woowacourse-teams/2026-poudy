@@ -76,7 +76,11 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
 
   return (
     <>
-      <section className="flex items-center gap-3 px-4">
+      {/*
+        칩 줄은 상단바 아래 축약형(56) 밑에 붙는다. 소개가 그보다 낮으면 스크롤하기 전부터 칩 줄이 아래로 밀려
+        목록을 덮으므로, 소개도 축약형만큼은 차지하게 한다.
+      */}
+      <section className="flex min-h-14 items-center gap-3 px-4">
         <JsonLd
           data={breadcrumbList([
             { name: "브랜드", path: "/brands" },
