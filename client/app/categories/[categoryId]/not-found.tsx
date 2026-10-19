@@ -13,8 +13,8 @@ export default function CategoryNotFound() {
     <DirectoryNotFound
       title="카테고리"
       icon={<Icon name="grid" size={28} />}
-      heading="이정표에 없는 카테고리예요"
-      description={"정리됐거나 주소가 바뀐 카테고리예요.\n전체 카테고리에서 길을 다시 찾아봐요."}
+      heading="찾을 수 없는 카테고리예요"
+      description={"정리됐거나 주소가 바뀐 카테고리예요.\n전체 카테고리에서 다시 찾아보세요."}
       action={{ href: "/categories", label: "카테고리 전체 보기" }}
     />
   );
