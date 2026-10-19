@@ -321,6 +321,11 @@ export type SheetAction = {
   /** 버튼 글자 */
   readonly label: NonNullable<ReactNode>;
   readonly onClick: () => void;
+  /**
+   * 지금 할 일이 없어 막는다(예: 비울 조건이 없는 초기화). 버튼 글자가 이유를 말하므로 문구는 두지 않는다.
+   * 포커스는 남기고 누름만 막아(aria-disabled) 흐리게 보인다(STATE S06).
+   */
+  readonly disabled?: boolean;
 };
 
 export type SheetPrimaryAction = SheetAction & {
@@ -377,7 +382,12 @@ export function BottomSheetFooter({ primary, secondary, size = "md" }: BottomShe
       ) : null}
       <div className="flex gap-2">
         {secondary ? (
-          <Button variant="secondary" onClick={secondary.onClick} className="flex-1">
+          <Button
+            variant="secondary"
+            onClick={secondary.onClick}
+            aria-disabled={secondary.disabled || undefined}
+            className="flex-1"
+          >
             {secondary.label}
           </Button>
         ) : null}

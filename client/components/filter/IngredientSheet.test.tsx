@@ -46,6 +46,16 @@ const renderSheet = (filter: Partial<Filter>) => {
   return { sheet: within(screen.getByRole("dialog")), onApply };
 };
 
+describe("성분 시트의 초기화", () => {
+  it("비울 성분 조건이 없으면 초기화를 막고, 하나라도 담으면 풀린다(S23i)", async () => {
+    const { sheet } = renderSheet({});
+
+    expect(sheet.getByRole("button", { name: "초기화" })).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(sheet.getByRole("button", { name: "건조 알코올", pressed: false }));
+    expect(sheet.getByRole("button", { name: "초기화" })).not.toHaveAttribute("aria-disabled");
+  });
+});
+
 describe("성분 시트의 조건 충돌", () => {
   it("원하는 성분이 든 자주 피하는 성분을 켜면 바로 빼고 되돌릴 수 있다(S35a)", async () => {
     // 1006 은 향료/알레르기 성분에 든 리모넨이다.

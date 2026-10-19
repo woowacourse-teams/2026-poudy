@@ -163,6 +163,24 @@ describe("ConfirmSheet", () => {
     expect(add.closest(".border-t")).not.toBeNull();
   });
 
+  it("보조 행동도 막을 수 있다. 막으면 누름이 닿지 않는다", async () => {
+    const onReset = vi.fn();
+    render(
+      <BottomSheet open onClose={() => undefined}>
+        <BottomSheetHeader title="성분" />
+        <BottomSheetFooter
+          primary={{ label: "64개 제품 보기", onClick: () => undefined }}
+          secondary={{ label: "초기화", onClick: onReset, disabled: true }}
+        />
+      </BottomSheet>,
+    );
+    const reset = await screen.findByRole("button", { name: "초기화" });
+
+    expect(reset).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(reset);
+    expect(onReset).not.toHaveBeenCalled();
+  });
+
   it("이유 문구 없이 막을 수도 있다. 이때는 안내 줄을 두지 않는다", async () => {
     const onClick = vi.fn();
     render(

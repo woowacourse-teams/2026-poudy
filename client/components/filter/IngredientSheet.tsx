@@ -31,6 +31,8 @@ type IngredientSheetProps = {
   readonly submitDisabled?: boolean;
   readonly onSubmit: () => void;
   readonly onReset: () => void;
+  /** 비울 성분 조건이 없어 [초기화]를 막는다(명세 S23i). */
+  readonly resetDisabled?: boolean;
   readonly onClose: () => void;
 };
 
@@ -100,6 +102,7 @@ export function IngredientSheet(props: IngredientSheetProps) {
             conflict.clear();
             props.onReset();
           },
+          disabled: props.resetDisabled,
         }}
       />
     </>

@@ -121,6 +121,9 @@ function SheetContent({
   // 버튼 글자('0개 제품 보기')가 이유를 말하므로 따로 문구를 두지 않는다.
   const submitDisabled = count === 0 && !counting;
 
+  // 이 시트가 비울 조건이 없으면 [초기화]를 막는다(명세 S23i). 비운 모습과 지금 초안이 같은지로 본다.
+  const resetDisabled = JSON.stringify({ ...draft, ...CLEARED[kind] }) === JSON.stringify(draft);
+
   const reset = () => {
     track("filter_reset", { filter_type: FILTER_TYPES[kind] });
     setDraft({ ...draft, ...CLEARED[kind] });
@@ -144,6 +147,7 @@ function SheetContent({
         submitDisabled={submitDisabled}
         onSubmit={submit}
         onReset={reset}
+        resetDisabled={resetDisabled}
         onClose={onClose}
       />
     );
@@ -206,7 +210,7 @@ function SheetContent({
 
       <BottomSheetFooter
         primary={{ label: submitLabel, onClick: submit, disabled: submitDisabled }}
-        secondary={{ label: "초기화", onClick: reset }}
+        secondary={{ label: "초기화", onClick: reset, disabled: resetDisabled }}
       />
     </>
   );
