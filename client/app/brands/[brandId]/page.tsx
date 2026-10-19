@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { BrandHero, BrandHeroSkeleton } from "./brand-hero";
+import { BrandHero } from "./brand-hero";
+import { BrandBarTitle, BrandTitleScope } from "./brand-title";
 import { BrandProductsEmpty } from "./empty";
 
 import { DirectoryTopBar } from "@/components/directory/DirectoryTopBar";
@@ -11,9 +12,8 @@ import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { ApiError } from "@/lib/api/client";
-import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { fetchBrand, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
-import { formatCount } from "@/lib/domain/format";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
@@ -60,24 +60,6 @@ export async function generateMetadata(props: PageProps<"/brands/[brandId]">): P
   } catch {
     return { alternates: { canonical } };
   }
-}
-
-/** 브랜드 머리. 제품 수는 목록 조회를 기다려야 해서 제품 목록과 별개로 스트리밍한다. */
-async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[brandId]">["params"] }) {
-  const { brandId } = await params;
-  const [brand, brands] = await Promise.all([load(brandId), fetchBrands()]);
-
-  // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
-  const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
-
-  return (
-    <BrandHero
-      name={brand.name}
-      englishName={brand.englishName}
-      imageUrl={brand.imageUrl}
-      productCount={productCount === undefined ? undefined : formatCount(productCount)}
-    />
-  );
 }
 
 /** 필터 재료와 첫 장. 브랜드 소개를 막지 않고 별도 경계에서 스트리밍한다. */
@@ -147,10 +129,13 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
   if (!stream) await requireProductPage({ ...filter, brandIds: [brand.id] });
 
   return (
-    <>
-      {/* 이 화면의 대표 제목은 머리의 브랜드명이다. 바의 제목은 모양만 같고 p 로 내린다. */}
+    <BrandTitleScope>
+      {/*
+        이 화면의 대표 제목은 히어로의 브랜드명이다. 바의 제목은 p 로 내리고, 맨 위에서는 '브랜드관'이다가
+        브랜드명이 바 아래로 가려지면 로고와 브랜드명으로 바뀐다(명세 S30-1).
+      */}
       <DirectoryTopBar
-        title={brand.name}
+        title={<BrandBarTitle name={brand.name} imageUrl={brand.imageUrl} />}
         align="center"
         titleAs="p"
         fallback={{ href: "/brands", label: "브랜드 전체" }}
@@ -162,14 +147,13 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
         ])}
       />
 
-      <StreamBoundary stream={stream} fallback={<BrandHeroSkeleton />}>
-        <BrandSummary params={props.params} />
-      </StreamBoundary>
+      {/* 브랜드 정보는 바 제목 때문에 이미 받아 두었으므로 기다리지 않고 바로 그린다. */}
+      <BrandHero name={brand.name} englishName={brand.englishName} imageUrl={brand.imageUrl} />
 
       {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
       <StreamBoundary stream={stream} fallback={<ProductListSkeleton hiddenChips={["brand"]} stickyChips="brand" />}>
         <BrandProducts params={props.params} searchParams={props.searchParams} />
       </StreamBoundary>
-    </>
+    </BrandTitleScope>
   );
 }
