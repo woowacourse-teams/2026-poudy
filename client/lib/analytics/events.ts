@@ -195,6 +195,10 @@ export type EventMap = {
     save_source: SaveSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
+  /** 제품 상세에서 선반에 담았을 때. 위시리스트(product_saved)와 목적이 달라 따로 남긴다. */
+  shelf_product_added: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
+  /** 제품 상세에서 선반에서 뺐을 때. */
+  shelf_product_removed: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
