@@ -659,10 +659,6 @@ export type CurationProductResponse = {
    */
   brandName: string;
   /**
-   * 제품 배지, 없으면 빈 배열
-   */
-  badges: Array<BadgeResponse>;
-  /**
    * 제품 대표 이미지 URL
    */
   imageUrl: string;

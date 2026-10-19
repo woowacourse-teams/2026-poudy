@@ -3,6 +3,7 @@ package com.poudy.product.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -114,15 +115,32 @@ class ProductBadgeQueryTest {
     }
 
     @Test
-    void includesBadgesInCurationAndSimilarProducts() throws Exception {
+    void excludesBadgesFromCurationProducts() throws Exception {
         jdbc.update("""
-            update curation set blocks = '[{"id":"00000000-0000-4000-8000-000000000001","type":"PRODUCTS",
-              "spacingTop":0,"spacingBottom":16,"productIds":[90001,90003]}]'::jsonb where id = 12
+            update curation set blocks = '[
+              {"id":"00000000-0000-4000-8000-000000000001","type":"PRODUCTS",
+                "spacingTop":0,"spacingBottom":16,"productIds":[90001,90003]},
+              {"id":"00000000-0000-4000-8000-000000000002","type":"PRODUCTS_BY_FILTER",
+                "spacingTop":0,"spacingBottom":16,
+                "filters":[{"id":"00000000-0000-4000-8000-000000000003","label":"추천"}],
+                "products":[
+                  {"productId":90001,"filterIds":["00000000-0000-4000-8000-000000000003"]},
+                  {"productId":90003,"filterIds":["00000000-0000-4000-8000-000000000003"]}
+                ]}
+            ]'::jsonb where id = 12
             """);
         mvc.perform(get("/api/curations/12"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.blocks[0].products[0].badges[*].code").value(contains("DAISO", "OTHER")))
-            .andExpect(jsonPath("$.blocks[0].products[1].badges").isEmpty());
+            .andExpect(jsonPath("$.blocks[0].products[*].id").value(contains(90001, 90003)))
+            .andExpect(jsonPath("$.blocks[0].products[0].badges").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.blocks[0].products[1].badges").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.blocks[1].products[*].product.id").value(contains(90001, 90003)))
+            .andExpect(jsonPath("$.blocks[1].products[0].product.badges").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.blocks[1].products[1].product.badges").doesNotHaveJsonPath());
+    }
+
+    @Test
+    void includesBadgesInSimilarProducts() throws Exception {
         jdbc.update(
             "insert into product_component(id, product_id, display_order) overriding system value values (90001, 90001, 0), (90002, 90002, 0)"
         );
@@ -186,7 +204,6 @@ class ProductBadgeQueryTest {
             "ProductResponse",
             "ProductDetailResponse",
             "ProductRankingProductResponse",
-            "CurationProductResponse",
             "SimilarProductResponse",
             "ProductSuggestionResponse",
             "ShelfProductInfoResponse"
@@ -199,5 +216,8 @@ class ProductBadgeQueryTest {
                 );
         }
         result.andExpect(jsonPath("$.components.schemas.BadgeResponse.required").value(contains("code", "name")));
+        result
+            .andExpect(jsonPath("$.components.schemas.CurationProductResponse.properties.badges").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.components.schemas.CurationProductResponse.required", not(hasItem("badges"))));
     }
 }
