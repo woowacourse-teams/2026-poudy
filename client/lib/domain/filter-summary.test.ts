@@ -55,7 +55,8 @@ describe("countConditions", () => {
   });
 
   it("피부 타입은 하나로 센다", () => {
-    expect(countConditions(filterWith({ skinType: "DRY" }))).toBe(1);
+    expect(countConditions(filterWith({ skinTypes: ["DRY"] }))).toBe(1);
+    expect(countConditions(filterWith({ skinTypes: ["DRY", "OILY"], sensitiveSkin: true }))).toBe(3);
   });
 
   it("나머지는 값의 개수로 센다", () => {

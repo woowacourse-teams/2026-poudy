@@ -176,7 +176,11 @@ const filterProducts = (url: URL) => {
   const categoryIds = numbers(url, "categoryIds");
   const moisture = numbers(url, "moistureLevel");
   const oil = numbers(url, "oilLevel");
-  const skinType = url.searchParams.get("skinType")?.trim();
+  // 피부 타입은 되풀이해 여러 개를 받고, 그 가운데 하나에 맞으면 남긴다.
+  const skinTypes = url.searchParams
+    .getAll("skinType")
+    .map((value) => value.trim())
+    .filter(Boolean);
   const sensitiveSkin = url.searchParams.get("sensitiveSkin") === "true";
   const codes = strings(url, "excludeCodes");
   const include = numbers(url, "includeIngredientIds");
@@ -198,7 +202,7 @@ const filterProducts = (url: URL) => {
       return false;
     if (moisture.length && (product.moistureLevel === null || !moisture.includes(product.moistureLevel))) return false;
     if (oil.length && (product.oilLevel === null || !oil.includes(product.oilLevel))) return false;
-    if (skinType && !matchesSkinType(skinType, product)) return false;
+    if (skinTypes.length && !skinTypes.some((skinType) => matchesSkinType(skinType, product))) return false;
     if (sensitiveSkin && !sensitiveProductIds.has(product.id)) return false;
 
     const has = ingredientsOf(product.id);

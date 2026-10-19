@@ -64,6 +64,7 @@ class ErdCloudSchemaTest {
         entry("ingredient_alias", List.of("id", "ingredient_id", "alias", "created_at", "updated_at")),
         entry("ingredient_source", List.of("id", "ingredient_id", "type", "content", "created_at", "updated_at")),
         entry("ingredient_tag", List.of("ingredient_id", "tag_code", "display_order", "created_at", "updated_at")),
+        entry("manufacturer", List.of("id", "name", "created_at", "updated_at")),
         entry(
             "product",
             List.of(
@@ -76,7 +77,9 @@ class ErdCloudSchemaTest {
                 "oil_level",
                 "updated_at",
                 "created_at",
-                "is_sensitive_skin"
+                "is_sensitive_skin",
+                "manufacturer_id",
+                "manufacturing_country"
             )
         ),
         entry("product_component", List.of("id", "product_id", "display_order", "name", "created_at", "updated_at")),
@@ -182,6 +185,7 @@ class ErdCloudSchemaTest {
         entry("ingredient_alias", List.of("id")),
         entry("ingredient_source", List.of("id")),
         entry("ingredient_tag", List.of("ingredient_id", "tag_code")),
+        entry("manufacturer", List.of("id")),
         entry("user", List.of("id")),
         entry("user_wishlist_product", List.of("user_id", "product_id")),
         entry("push_token", List.of("token")),

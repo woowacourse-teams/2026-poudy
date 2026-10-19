@@ -25,13 +25,17 @@ export function RevealingCategoryTrack({
   readonly items: readonly CategoryTrackItem[];
   readonly selectedId: number;
 }) {
+  /*
+   * 칩 줄은 '상단바 + 이 줄의 높이'에 붙는다. 그 높이가 이 줄이 실제로 차지하는 자리와 같아야, 스크롤하기 전에도
+   * 칩 줄이 제자리에 머물고 아래 목록을 덮지 않는다. 그래서 위아래 여백을 음의 여백으로 되돌리지 않는다.
+   */
   const heightRef = useHeightVariable<HTMLDivElement>("--category-track-height");
   const hidden = useHideOnScrollDown({});
 
   if (items.length === 0) return null;
 
   return (
-    <div ref={heightRef} data-hidden={hidden} className="category-track-bar sticky z-20 -my-2 bg-background px-4 py-2">
+    <div ref={heightRef} data-hidden={hidden} className="category-track-bar sticky z-20 bg-background px-4 py-2">
       <CategoryTrack items={items} selectedId={selectedId} />
     </div>
   );

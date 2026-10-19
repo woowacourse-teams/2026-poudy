@@ -65,3 +65,49 @@ export function FilterChip({ label, value, expanded, onOpen, className, ...rest 
     </button>
   );
 }
+
+export type FilterResetChipProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "children" | "className" | "onClick" | "aria-label"
+> & {
+  /** 누르면 부른다. 어떤 조건을 비울지는 화면이 정한다. */
+  readonly onReset: () => void;
+  /** 접근 가능한 이름. 아이콘만 보이므로 무엇을 비우는지 말한다. */
+  readonly label?: string;
+  /** 자리. 모양은 부품이 정하므로 여백만 바꾼다. */
+  readonly className?: string;
+  readonly ref?: Ref<HTMLButtonElement>;
+};
+
+/**
+ * 필터 칩 줄 맨 앞의 초기화 버튼(명세 APP · 필터 초기화 버튼). 32 원 안에 아이콘 16 을 둔다.
+ *
+ * 칩과 같은 기본 모양(fb-surface, 흰 면 + 테두리)이고, 누르는 영역도 칩처럼 위아래로 6 씩 넓혀 44 다(A11Y D12).
+ * 비울 것이 없으면 화면이 disabled 로 막는다. 모양은 비활성 버튼의 공통 규칙(전체를 흐리게)을 따른다.
+ */
+export function FilterResetChip({
+  onReset,
+  label = "필터 조건 모두 초기화",
+  className,
+  ...rest
+}: FilterResetChipProps) {
+  const { pressableProps } = usePressable({ disabled: Boolean(rest.disabled) });
+
+  return (
+    <button
+      {...rest}
+      type="button"
+      aria-label={label}
+      {...pressableProps}
+      onPointerDown={chainHandlers(pressableProps.onPointerDown, rest.onPointerDown)}
+      onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
+      onClick={onReset}
+      className={cn(
+        "pressable fb-surface inline-flex size-8 shrink-0 disabled:cursor-not-allowed items-center justify-center rounded-full border border-border-strong bg-background text-text-primary select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
+        className,
+      )}
+    >
+      <Glyph name="rotate" size={16} />
+    </button>
+  );
+}

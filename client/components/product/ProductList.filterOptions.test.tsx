@@ -24,8 +24,8 @@ afterEach(() => {
 
 it.each([
   ["brandIds=1", "브랜드", "checkbox"],
-  ["categoryIds=3", "카테고리", "checkbox"],
-  ["skinType=DRY", "피부 타입", "radio"],
+  ["categoryIds=3", "카테고리", "radio"],
+  ["skinType=DRY", "피부 타입", "checkbox"],
 ] as const)("%s 적용 후 시트는 추가 목록 요청 없이 다른 후보를 제공한다", async (query, sheet, role) => {
   navigation.query = query;
   const paths: string[] = [];
@@ -34,7 +34,9 @@ it.each([
   await screen.findByRole("main");
   await userEvent.click(screen.getByRole("button", { name: new RegExp(sheet) }));
   const dialog = within(await screen.findByRole("dialog"));
-  const alternatives = dialog.getAllByRole(role).filter((option) => option.getAttribute("aria-checked") !== "true");
+  const alternatives = dialog
+    .getAllByRole(role)
+    .filter((option) => option instanceof HTMLInputElement && !option.checked);
   expect(alternatives.length).toBeGreaterThan(0);
   await userEvent.click(alternatives[0]);
   await waitFor(() => expect(paths).toContain("/api/products/count"));
@@ -54,6 +56,6 @@ it("중간 페이지 직접 진입은 목록을 추가 요청하지 않고 첫 �
   await userEvent.click(screen.getByRole("button", { name: /브랜드/ }));
   const dialog = within(await screen.findByRole("dialog"));
   expect(dialog.getByRole("link", { name: /첫 페이지/ })).toHaveAttribute("href", "/products?brandIds=99999");
-  expect(dialog.getByRole("button", { name: "브랜드 #99999 해제" })).toBeEnabled();
+  expect(dialog.getByRole("button", { name: "브랜드 #99999 빼기" })).toBeEnabled();
   expect(paths.filter((path) => path === "/api/products")).toHaveLength(1);
 });

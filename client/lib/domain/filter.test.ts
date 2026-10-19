@@ -74,20 +74,24 @@ describe("parseFilter", () => {
   });
 
   it("알 수 없는 피부 타입은 버린다", () => {
-    expect(parse("skinType=DRY").skinType).toBe("DRY");
-    expect(parse("skinType=NOPE").skinType).toBeUndefined();
-    expect(parse("skinType=dry").skinType).toBeUndefined();
+    expect(parse("skinType=DRY").skinTypes).toEqual(["DRY"]);
+    expect(parse("skinType=NOPE").skinTypes).toEqual([]);
+    expect(parse("skinType=dry").skinTypes).toEqual([]);
   });
 
   it("민감성은 피부 타입이 아니라 민감성 조건으로 읽는다", () => {
     expect(parse("sensitiveSkin=true")).toMatchObject({ sensitiveSkin: true });
     expect(parse("skinType=SENSITIVE")).toMatchObject({ sensitiveSkin: true });
-    expect(parse("skinType=SENSITIVE").skinType).toBeUndefined();
+    expect(parse("skinType=SENSITIVE").skinTypes).toEqual([]);
     expect(parse("sensitiveSkin=false").sensitiveSkin).toBe(false);
   });
 
-  it("피부 타입이 여러 번 오면 첫 값만 쓴다", () => {
-    expect(parse("skinType=DRY&skinType=OILY").skinType).toBe("DRY");
+  it("피부 타입은 여러 개를 읽고, 겹친 값은 한 번만 코드 순서로 둔다", () => {
+    expect(parse("skinType=OILY&skinType=DRY&skinType=OILY").skinTypes).toEqual(["DRY", "OILY"]);
+    expect(serializeFilter({ ...EMPTY_FILTER, skinTypes: ["DRY", "OILY"] }).getAll("skinType")).toEqual([
+      "DRY",
+      "OILY",
+    ]);
   });
 });
 
@@ -115,7 +119,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
     ["빠른 필터", { ...EMPTY_FILTER, excludeCodes: ["SULFATES", "FRAGRANCE_ALLERGENS"] }],
     ["성분군 포함·제외", { ...EMPTY_FILTER, includeGroupCodes: ["CERAMIDES"], excludeGroupCodes: ["LIPIDS"] }],
     ["수분·유분", { ...EMPTY_FILTER, moistureLevel: [1, 2], oilLevel: [0] }],
-    ["피부 타입", { ...EMPTY_FILTER, skinType: "OILY" }],
+    ["피부 타입", { ...EMPTY_FILTER, skinTypes: ["OILY", "COMBINATION"] }],
     ["민감성", { ...EMPTY_FILTER, sensitiveSkin: true }],
     [
       "모든 조건",
@@ -130,7 +134,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         excludeCodes: ["DRYING_ALCOHOLS"],
         includeGroupCodes: ["CERAMIDES"],
         excludeGroupCodes: ["LIPIDS"],
-        skinType: "COMBINATION",
+        skinTypes: ["COMBINATION"],
         sensitiveSkin: true,
         sort: "PRICE_DESC",
         page: 3,
@@ -155,7 +159,7 @@ describe("hasCondition", () => {
 
   it("조건이 하나라도 있으면 true 다", () => {
     expect(hasCondition({ ...EMPTY_FILTER, excludeCodes: ["SULFATES"] })).toBe(true);
-    expect(hasCondition({ ...EMPTY_FILTER, skinType: "DRY" })).toBe(true);
+    expect(hasCondition({ ...EMPTY_FILTER, skinTypes: ["DRY"] })).toBe(true);
     expect(hasCondition({ ...EMPTY_FILTER, sensitiveSkin: true })).toBe(true);
   });
 });

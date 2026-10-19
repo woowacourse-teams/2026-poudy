@@ -30,6 +30,9 @@ export const TEXT_SIZES = [
   "label",
 ] as const;
 
+/** 글자 크기를 따라 커지는 정사각형(system.css 의 size-em). 병합기가 size-6 같은 크기와 겹친다고 알게 한다. */
+export const EM_SIZES = ["em"] as const;
+
 /** 그림자 토큰. 기본 이름(sm, md …)이 아니라 병합기에 알려 준다. */
 export const SHADOWS = ["raised", "sheet"] as const;
 
@@ -42,6 +45,7 @@ export const cn = createCn({
     classGroups: {
       "font-size": [{ text: [...TEXT_SIZES] }],
       shadow: [{ shadow: [...SHADOWS] }],
+      size: [{ size: [...EM_SIZES] }],
     },
   },
 });

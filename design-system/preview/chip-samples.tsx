@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Badge } from "../src/badge";
-import { FilterChip } from "../src/filter-chip";
+import { FilterChip, FilterResetChip } from "../src/filter-chip";
 import { Tag } from "../src/tag";
 import { ToggleChip, ToggleGroup } from "../src/toggle-chip";
 import { Icon } from "./icons";
@@ -19,8 +19,9 @@ export function ChipSamples() {
 
   return (
     <>
-      <Section title="FilterChip">
-        <div className="flex flex-wrap gap-2">
+      <Section title="FilterChip · FilterResetChip">
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterResetChip onReset={() => setOpen(undefined)} />
           <FilterChip
             label="성분"
             expanded={open === "성분"}
