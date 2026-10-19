@@ -30,13 +30,14 @@ const iconButtonVariants = cva(
       /*
        * 투명 버튼(ghost)의 아이콘 크기. md 는 앱바·시트 머리의 24, sm 은 글자 옆에 붙는 작은 도움말·정보 버튼의 16 이다.
        * 어느 쪽이든 누르는 영역은 44 이고, sm 은 피드백 원도 아이콘에 맞춰 28 로 줄인다.
+       * sm 은 글자 옆에 붙으므로 아이콘을 em 으로 그려(text-16 + size-em) 기기 글자 크기를 키우면 옆 글자와 함께 커진다.
        */
       size: {
         md: "",
         sm: "",
       },
     },
-    compoundVariants: [{ variant: "ghost", size: "sm", className: "[&>svg]:size-4 before:inset-2" }],
+    compoundVariants: [{ variant: "ghost", size: "sm", className: "[&>svg]:size-em [&>svg]:text-16 before:inset-2" }],
     defaultVariants: { variant: "ghost", size: "md" },
   },
 );

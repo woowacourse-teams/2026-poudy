@@ -158,13 +158,13 @@ describe("usePressable 의 지연", () => {
 describe("Button 의 변형", () => {
   it("검정 면 버튼은 fb-dim 과 press-scale 을 쓴다", () => {
     const { button } = renderButton();
-    expect(button).toHaveClass("pressable", "fb-dim", "press-scale", "bg-action", "h-12", "rounded-xl");
+    expect(button).toHaveClass("pressable", "fb-dim", "press-scale", "bg-action", "min-h-12", "rounded-xl");
   });
 
   it("목록 행 오른쪽의 테두리 버튼은 높이 32 이고 크기를 받지 않는다", () => {
     const { button } = renderButton({ variant: "outline", size: "lg" });
     expect(button).toHaveClass("h-8", "fb-surface", "border-border-strong");
-    expect(button).not.toHaveClass("h-14");
+    expect(button).not.toHaveClass("min-h-14");
   });
 
   it("글자 버튼은 행이라 크기를 줄이지 않는다", () => {
@@ -186,10 +186,10 @@ describe("IconButton", () => {
     expect(screen.getByRole("button", { name: "닫기" })).toHaveClass("fb-circle", "size-11");
   });
 
-  it("작은 정보 버튼(sm)은 아이콘을 16 으로 두고 누르는 영역은 44 를 지킨다", () => {
+  it("작은 정보 버튼(sm)은 아이콘을 16(em)으로 두어 글자 크기를 따르고, 누르는 영역은 44 를 지킨다", () => {
     render(<IconButton size="sm" label="설명" icon={<svg />} />);
     const button = screen.getByRole("button", { name: "설명" });
-    expect(button).toHaveClass("size-11", "[&>svg]:size-4");
+    expect(button).toHaveClass("size-11", "[&>svg]:size-em", "[&>svg]:text-16");
     expect(button).not.toHaveClass("[&>svg]:size-6");
   });
 
