@@ -1,6 +1,7 @@
 package com.poudy.curation.repository;
 
 import com.poudy.curation.domain.CurationBlockContent.ProductLink;
+import com.poudy.curation.domain.CurationProductLinkQuery;
 import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Repository;
 
-/** 링크 조건의 참조를 요청당 종류별로 한 번씩 조회한다. 제품 존재/검색 결과 수와는 무관하다. */
 @Repository
 public class CurationProductLinkRepository {
     private final NamedParameterJdbcTemplate jdbc;
@@ -21,19 +21,25 @@ public class CurationProductLinkRepository {
     }
 
     public Set<UUID> findInvalidBlockIds(List<ProductLink> links) {
+        Set<CurationProductLinkQuery> invalid = findInvalidQueries(links.stream().map(ProductLink::query).toList());
+        return links.stream().filter(link -> invalid.contains(link.query())).map(ProductLink::id)
+            .collect(Collectors.toSet());
+    }
+
+    public Set<CurationProductLinkQuery> findInvalidQueries(List<CurationProductLinkQuery> queries) {
         Set<Long> brands = existingIds(
             "brand",
-            links.stream().flatMap(link -> link.query().brandIds().stream()).toList()
+            queries.stream().flatMap(query -> query.brandIds().stream()).toList()
         );
         Set<Long> categories = existingIds(
             "category",
-            links.stream().flatMap(link -> link.query().categoryIds().stream()).toList()
+            queries.stream().flatMap(query -> query.categoryIds().stream()).toList()
         );
         Set<Long> ingredients = existingIds(
             "ingredient",
-            links.stream().flatMap(link -> link.query().includeIngredientIds().stream()).toList()
+            queries.stream().flatMap(query -> query.includeIngredientIds().stream()).toList()
         );
-        List<String> codes = links.stream().flatMap(link -> link.query().includeGroupCodes().stream()).distinct()
+        List<String> codes = queries.stream().flatMap(query -> query.includeGroupCodes().stream()).distinct()
             .toList();
         Set<String> groups = codes.isEmpty() ? Set.of() : Set.copyOf(
             jdbc.queryForList(
@@ -47,9 +53,9 @@ public class CurationProductLinkRepository {
                 String.class
             )
         );
-        return links.stream()
-            .filter(link -> link.query().hasMissingReferences(brands, categories, ingredients, groups))
-            .map(ProductLink::id).collect(Collectors.toSet());
+        return queries.stream()
+            .filter(query -> query.hasMissingReferences(brands, categories, ingredients, groups))
+            .collect(Collectors.toSet());
     }
 
     private Set<Long> existingIds(String table, List<Long> ids) {

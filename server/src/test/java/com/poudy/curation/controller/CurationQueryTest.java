@@ -32,17 +32,15 @@ class CurationQueryTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void returnsPublicBannerInConfiguredOrder() throws Exception {
-        mockMvc.perform(get("/api/curations"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id", contains(12)))
-            .andExpect(jsonPath("$.items[*].slug").doesNotExist())
-            .andExpect(jsonPath("$.items[*].status").isEmpty())
-            .andExpect(jsonPath("$.items[*].bannerVisible").isEmpty())
-            .andExpect(jsonPath("$.items[0].title").value("환절기 장벽 케어"))
-            .andExpect(jsonPath("$.items[0].description").value("환절기를 위한 제품 모음"))
-            .andExpect(jsonPath("$.items[0].thumbnailImageUrl").value("https://cdn.example.com/curations/banner.png"))
-            .andExpect(jsonPath("$.items[0].imageUrl").doesNotExist());
+    void removesCurationListEndpoint() throws Exception {
+        mockMvc.perform(get("/api/curations")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
+    void publishedDetailDoesNotRequireABanner() throws Exception {
+        jdbcTemplate.update("delete from banner where target ->> 'curationId' = '12'");
+        mockMvc.perform(get("/api/curations/12")).andExpect(status().isOk());
     }
 
     @Test
@@ -132,7 +130,7 @@ class CurationQueryTest {
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {20L, 30L, 40L, 999L})
+    @ValueSource(longs = {20L, 999L})
     void unavailableCurationReturns404(Long id) throws Exception {
         mockMvc.perform(get("/api/curations/{id}", id))
             .andExpect(status().isNotFound())

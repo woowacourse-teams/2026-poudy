@@ -2,13 +2,16 @@ package com.poudy.curation.repository;
 
 import com.poudy.curation.domain.Curation;
 import com.poudy.curation.domain.CurationPublicationStatus;
-import com.poudy.curation.domain.Curations;
 import com.poudy.exception.InfrastructureException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,18 +26,21 @@ public class CurationRepository {
         this.jdbc = jdbc;
     }
 
-    public Curations findAll() {
-        return Curations.from(jdbc.query("select * from curation order by position", (rs, row) -> read(rs)));
+    public Optional<Curation> findPublishedById(Long id) {
+        return jdbc.query(
+            "select * from curation where id = :id and publication_status = 'PUBLISHED'",
+            new MapSqlParameterSource("id", id),
+            (rs, row) -> read(rs)
+        ).stream().findFirst();
     }
 
-    public Optional<Curation> findPublishedById(Long id) {
-        return Curations.from(
-            jdbc.query(
-                "select * from curation where id = :id",
-                new MapSqlParameterSource("id", id),
-                (rs, row) -> read(rs)
-            )
-        ).findPublishedById(id);
+    public Set<Long> findPublishedIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(jdbc.queryForList("""
+            select id from curation where id = any(:ids) and publication_status = 'PUBLISHED'
+            """, Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray())), Long.class));
     }
 
     private Curation read(ResultSet rs) throws SQLException {
@@ -45,8 +51,6 @@ public class CurationRepository {
                 rs.getString("title"),
                 rs.getString("description"),
                 CurationPublicationStatus.valueOf(rs.getString("publication_status")),
-                rs.getBoolean("banner_visible"),
-                rs.getString("banner_thumbnail_image_url"),
                 codec.decode(rs.getString("blocks"))
             );
         } catch (IllegalArgumentException exception) {

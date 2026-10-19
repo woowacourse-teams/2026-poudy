@@ -9,7 +9,7 @@ import { HidingTopBar } from "@/components/ui/HidingTopBar";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ApiError } from "@/lib/api/client";
-import { fetchCuration, fetchCurations } from "@/lib/api/products";
+import { fetchCuration, fetchMainBanners } from "@/lib/api/products";
 import { curationOneLine } from "@/lib/domain/curation-text";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_DESCRIPTION } from "@/lib/seo/site";
@@ -68,7 +68,7 @@ export async function generateMetadata(props: PageProps<"/curations/[curationId]
 export default async function CurationDetailPage(props: PageProps<"/curations/[curationId]">) {
   const { curationId } = await props.params;
   /* 이어 볼 목록은 본문과 함께 받는다. 받지 못해도 본문은 그대로 보여 주고 목록만 비운다. */
-  const [curation, list] = await Promise.all([load(curationId), fetchCurations().catch(() => ({ items: [] }))]);
+  const [curation, list] = await Promise.all([load(curationId), fetchMainBanners().catch(() => ({ items: [] }))]);
 
   return (
     <>

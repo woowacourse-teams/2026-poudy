@@ -2,7 +2,7 @@
 
 큐레이션 메타데이터와 본문은 PostgreSQL의 한 행에 저장한다. 본문만 JSONB 문서로 관리하며,
 제품명·가격·이미지 등 상품 응답은 복제하지 않고 공개 조회 시 현재 카탈로그에서 읽는다.
-기존 목록·상세 API, 게시·배너 정책은 유지한다. PRODUCT_LINK는 조건에 맞는 제품 목록으로 이동한다.
+큐레이션 상세 API와 게시 정책은 유지하며, 홍보·노출은 별도 banner가 소유한다. PRODUCT_LINK는 조건에 맞는 제품 목록으로 이동한다.
 사이트맵의 큐레이션 수정일도 JSONB의 제품 참조로 집계한다. 큐레이션과 참조 제품 중
 가장 늦은 수정일을 사용하며, 없는 제품이 있으면 남은 데이터로 계산한다.
 
@@ -14,13 +14,22 @@
 erDiagram
     curation {
         bigint id PK
-        int position
         varchar title
         text description
         varchar publication_status
-        boolean banner_visible
-        varchar banner_thumbnail_image_url
         jsonb blocks "NOT NULL, root array, no default"
+        timestamp created_at
+        timestamp updated_at
+    }
+    banner {
+        bigint id PK
+        varchar slot "MAIN 또는 STRIP"
+        varchar title
+        text description
+        varchar image_url "노출 시 필수"
+        jsonb target "NOT NULL, root object"
+        int display_order
+        boolean visible
         timestamp created_at
         timestamp updated_at
     }
@@ -31,6 +40,33 @@ erDiagram
 - 본문 수정은 배열 전체를 교체한다. 메타데이터·게시 상태와 함께 바뀌면 같은 트랜잭션에서 갱신하고
   `updated_at`도 명시적으로 갱신한다. 자동 갱신 트리거는 없다.
 - 문서 내부 검색과 버전 이력은 이번 범위에 없으므로 GIN 인덱스와 버전 테이블을 두지 않는다.
+
+## 배너 계약
+
+`GET /api/banners?slot=MAIN|STRIP`은 해당 슬롯에서 노출 가능하고 대상이 유효한 배너를
+`display_order, id` 순서로 반환한다. 기존 `GET /api/curations` 목록은 제거한다.
+배너 문구는 홍보용이고 큐레이션 제목·요약은 상세와 검색·공유용 메타데이터다.
+
+- CURATION: `{ "type": "CURATION", "curationId": 12 }`. 양의 64비트 정수 ID를 사용한다.
+- PRODUCT_LIST: `{ "type": "PRODUCT_LIST", "query": { ... } }`.
+  query는 아래 PRODUCT_LINK와 같은 필드·유효성·참조 검증을 사용한다.
+- EXTERNAL: `{ "type": "EXTERNAL", "url": "https://example.com/event" }`.
+  host가 있는 절대 HTTP(S) URL만 허용하며 userinfo는 받지 않는다. 서버가 URL에 접속하지 않는다.
+
+필드 누락·알 수 없는 필드·지원하지 않는 타입·잘못된 자료형은 codec에서 거절한다.
+노출하지 않는 배너는 해석하지 않는다. 잘못된 노출 문서는 배너 ID를 포함한 인프라 오류다.
+미존재·미게시 큐레이션이나 무효한 제품 검색 참조는 해당 배너 전체를 제외하고 ID 중심 로그를 남긴다.
+유효한 조건의 제품 검색 결과가 0개라는 이유로는 제외하지 않는다. 조회는 저장 데이터를 수정하지 않는다.
+
+관리자 저장 API는 없다. 직접 SQL 적재에서 `banner` INSERT 또는 target UPDATE 시
+`require_banner_curation` 트리거가 CURATION의 ID·존재를 검사한다. 미게시 연결 저장도 허용한다.
+FK는 없으므로 대상 삭제를 막지 않으며, 공개 여부와 저장 후 참조 변경은 조회 시 판정한다.
+문구·이미지·대상·순서·노출을 수정할 때 banner.updated_at을 함께 갱신한다.
+
+V20은 기존 배너 정보·순서를 MAIN으로 이전하고 큐레이션의 배너 컬럼을 같은 트랜잭션에서
+제거한다. 본문·큐레이션 ID·시각은 유지한다. 같은 DB를 읽는 구형 서버가 중지된 상태에서
+적용하고 클라이언트의 구 목록 호출을 전환한다. 적용 후 구형 컬럼 조회 버전으로 롤백할 수 없다.
+공개 큐레이션은 배너 없이 상세 접근 가능하며, 사이트맵은 `/api/sitemap`의 curations를 사용한다.
 
 ## 본문 계약
 

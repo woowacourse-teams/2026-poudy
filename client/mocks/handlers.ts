@@ -602,7 +602,23 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
+  http.get("*/api/banners", ({ request }) => {
+    const slot = new URL(request.url).searchParams.get("slot");
+    if (slot !== "MAIN" && slot !== "STRIP")
+      return problem(400, "유효한 배너 슬롯이 필요합니다.", "INVALID_QUERY_PARAMETER");
+    return HttpResponse.json({
+      items:
+        slot === "STRIP"
+          ? []
+          : curations.map((curation) => ({
+              id: curation.id + 100,
+              title: curation.title,
+              description: curation.description,
+              imageUrl: curation.thumbnailImageUrl,
+              target: { type: "CURATION", curationId: curation.id },
+            })),
+    });
+  }),
 
   http.get("*/api/curations/:curationId", ({ params }) => {
     const curation = curations.find(({ id }) => id === Number(params.curationId));

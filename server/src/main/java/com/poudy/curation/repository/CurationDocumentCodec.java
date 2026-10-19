@@ -2,7 +2,6 @@ package com.poudy.curation.repository;
 
 import com.poudy.curation.domain.CurationBlock;
 import com.poudy.curation.domain.CurationFilter;
-import com.poudy.curation.domain.CurationProductLinkQuery;
 import com.poudy.curation.domain.CurationProductMapping;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +20,7 @@ public final class CurationDocumentCodec {
         .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
         .build();
     private static final Set<String> COMMON = Set.of("id", "type", "spacingTop", "spacingBottom");
+    private final CurationProductLinkQueryCodec queryCodec = new CurationProductLinkQueryCodec();
 
     public List<CurationBlock> decode(String document) {
         return blocks(read(document));
@@ -90,21 +90,10 @@ public final class CurationDocumentCodec {
                 top,
                 bottom,
                 text(node.get("label")),
-                query(node.get("query"))
+                queryCodec.decode(node.get("query"))
             );
             default -> throw invalid("지원하지 않는 블록 타입입니다.");
         };
-    }
-
-    private CurationProductLinkQuery query(JsonNode node) {
-        fields(node, Set.of("keyword", "brandIds", "categoryIds", "includeIngredientIds", "includeGroupCodes"));
-        return new CurationProductLinkQuery(
-            nullableText(node.get("keyword")),
-            array(node.get("brandIds")).valueStream().map(this::integer).toList(),
-            array(node.get("categoryIds")).valueStream().map(this::integer).toList(),
-            array(node.get("includeIngredientIds")).valueStream().map(this::integer).toList(),
-            array(node.get("includeGroupCodes")).valueStream().map(this::text).toList()
-        );
     }
 
     private CurationFilter filter(JsonNode node) {

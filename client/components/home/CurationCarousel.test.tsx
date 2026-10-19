@@ -16,16 +16,18 @@ beforeEach(() => {
 
 const items = [
   {
-    id: 1,
+    id: 101,
+    target: { type: "CURATION" as const, curationId: 1 },
     title: "가을 장벽",
     description: "보습 성분 모아보기",
-    thumbnailImageUrl: "/images/a.jpg",
+    imageUrl: "/images/a.jpg",
   },
   {
-    id: 2,
+    id: 102,
+    target: { type: "CURATION" as const, curationId: 2 },
     title: "순한 클렌징",
     description: "설페이트 뺀 클렌저",
-    thumbnailImageUrl: "/images/b.jpg",
+    imageUrl: "/images/b.jpg",
   },
 ];
 
@@ -575,7 +577,13 @@ describe("CurationCarousel", () => {
     const restore = fakeFrames();
     const three = [
       ...items,
-      { id: 3, title: "맑은 진정", description: "시카 성분 모아보기", thumbnailImageUrl: "/images/c.jpg" },
+      {
+        id: 103,
+        target: { type: "CURATION" as const, curationId: 3 },
+        title: "맑은 진정",
+        description: "시카 성분 모아보기",
+        imageUrl: "/images/c.jpg",
+      },
     ];
 
     try {
