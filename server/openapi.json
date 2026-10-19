@@ -8450,13 +8450,6 @@
             "description": "브랜드명",
             "example": "브랜드명"
           },
-          "badges": {
-            "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
-            "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
-            }
-          },
           "imageUrl": {
             "type": "string",
             "description": "제품 대표 이미지 URL",
@@ -8504,7 +8497,6 @@
           }
         },
         "required": [
-          "badges",
           "brandName",
           "id",
           "imageUrl",
