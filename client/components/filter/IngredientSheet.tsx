@@ -7,7 +7,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { Tag } from "@poudy/design-system/tag";
 import { ToggleChip, ToggleGroup } from "@poudy/design-system/toggle-chip";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { IngredientSearchStep, type SearchPurpose } from "./IngredientSearchStep";
 
@@ -28,7 +28,9 @@ type IngredientSheetProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
   readonly names: ReadonlyMap<number, string>;
   readonly groups: IngredientGroups;
-  readonly submitLabel: string;
+  readonly submitLabel: NonNullable<ReactNode>;
+  /** 주 버튼을 막는 이유. 결과가 0개일 때 준다. */
+  readonly submitDisabledReason?: string;
   readonly onSubmit: () => void;
   readonly onReset: () => void;
   readonly onClose: () => void;
@@ -84,7 +86,7 @@ export function IngredientSheet(props: IngredientSheetProps) {
         />
       </BottomSheetBody>
       <BottomSheetFooter
-        primary={{ label: props.submitLabel, onClick: props.onSubmit }}
+        primary={{ label: props.submitLabel, onClick: props.onSubmit, disabledReason: props.submitDisabledReason }}
         secondary={{ label: "초기화", onClick: props.onReset }}
       />
     </>

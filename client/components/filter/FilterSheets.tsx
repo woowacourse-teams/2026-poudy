@@ -8,17 +8,17 @@ import { BrandOptions } from "./BrandOptions";
 import { CategoryOptions } from "./CategoryOptions";
 import { IngredientSheet } from "./IngredientSheet";
 import { LevelOptions } from "./LevelOptions";
+import { SheetCountLabel } from "./SheetCountLabel";
 import { SkinTypeOptions } from "./SkinTypeOptions";
 import { UnavailableSelections } from "./UnavailableSelections";
 
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
-import { formatCount } from "@/lib/domain/format";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
-import { useProductCount } from "@/lib/hooks/useProductCount";
+import { useCountState } from "@/lib/hooks/useProductCount";
 
 export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType";
 
@@ -110,13 +110,15 @@ function SheetContent({
   const [draft, setDraft] = useState<Filter>(filter);
   // 초기화하면 슬라이더처럼 안에 상태를 든 선택지를 처음부터 다시 그린다.
   const [resetCount, setResetCount] = useState(0);
-  const count = useProductCount(draft, initialCount);
+  const { count, counting } = useCountState(draft, initialCount);
 
   // 담긴 성분의 이름과 성분군은 서버에서 가져온다.
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
   const groups = useIngredientGroups(selectedGroupCodes(draft));
 
-  const submitLabel = count === undefined ? "제품 보기" : `${formatCount(count)} 제품 보기`;
+  const submitLabel = <SheetCountLabel count={count} />;
+  // 지금 조건으로 센 결과가 0개일 때만 막는다. 세는 동안 남아 있는 이전 0 으로는 막지 않는다.
+  const submitDisabledReason = count === 0 && !counting ? "조건에 맞는 제품이 없어요. 조건을 바꿔 보세요." : undefined;
 
   const reset = () => {
     track("filter_reset", { filter_type: FILTER_TYPES[kind] });
@@ -138,6 +140,7 @@ function SheetContent({
         names={names}
         groups={groups}
         submitLabel={submitLabel}
+        submitDisabledReason={submitDisabledReason}
         onSubmit={submit}
         onReset={reset}
         onClose={onClose}
@@ -201,7 +204,7 @@ function SheetContent({
       </BottomSheetBody>
 
       <BottomSheetFooter
-        primary={{ label: submitLabel, onClick: submit }}
+        primary={{ label: submitLabel, onClick: submit, disabledReason: submitDisabledReason }}
         secondary={{ label: "초기화", onClick: reset }}
       />
     </>

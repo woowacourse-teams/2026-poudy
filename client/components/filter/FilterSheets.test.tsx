@@ -46,13 +46,15 @@ const SHEETS = [
 ] as const;
 
 describe("필터 시트의 적용 버튼", () => {
-  it.each(SHEETS)("결과가 0개여도 조건 변경을 적용할 수 있다 ($name)", async ({ name, label }) => {
+  it.each(SHEETS)("결과가 0개면 이유를 알리고 적용 버튼을 막는다 ($name)", async ({ name, label }) => {
     countIs(0);
 
     const sheet = await openSheet(name);
 
-    await waitFor(() => expect(sheet.getByRole("button", { name: label })).toHaveTextContent("0개"));
-    expect(sheet.getByRole("button", { name: label })).toBeEnabled();
+    const submit = sheet.getByRole("button", { name: label });
+    await waitFor(() => expect(submit).toHaveAttribute("aria-disabled", "true"));
+    expect(submit).toHaveAccessibleName(/0개/);
+    expect(submit).toHaveAccessibleDescription("조건에 맞는 제품이 없어요. 조건을 바꿔 보세요.");
   });
 
   it.each(SHEETS)("제품이 있으면 누를 수 있다 ($name)", async ({ name, label }) => {
@@ -163,8 +165,8 @@ describe("필터 초안과 적용 상태", () => {
     expect(screen.getByRole("checkbox", { name: "둘째 브랜드" })).not.toBeChecked();
   });
 
-  it("후보에서 빠진 기존 선택을 해제해 0개 결과에도 적용한다", async () => {
-    countIs(0);
+  it("후보에서 빠진 기존 선택을 해제해 적용한다", async () => {
+    countIs(3);
     const onApply = vi.fn();
     render(<FilterSheets {...props} brands={[]} openSheet="brand" onApply={onApply} />);
     await userEvent.click(screen.getByRole("button", { name: "브랜드 #1 빼기" }));
