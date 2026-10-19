@@ -97,3 +97,18 @@
     scale: 1;
   }
 }
+
+/*
+ * 탭 밑줄이 이전 탭에서 새 탭으로 옮겨 가는 전환(Tabs 의 transitionName). 화면 안에서 자리를 옮기는 움직임이라
+ * base 길이와 ease-in-out 을 쓴다. 움직임 줄이기 설정이면 옮기지 않고 바로 바꾼다.
+ */
+::view-transition-group(.tab-indicator) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-in-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(.tab-indicator) {
+    animation: none;
+  }
+}
