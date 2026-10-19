@@ -9,7 +9,7 @@ import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { SearchField } from "@poudy/design-system/search-field";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
-import { type KeyboardEvent, useState } from "react";
+import { type KeyboardEvent, type RefObject, useState } from "react";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientResultGroup } from "@/components/filter/IngredientResultGroup";
@@ -64,7 +64,7 @@ export type IngredientPickerProps = {
   readonly onApply: (next: Filter) => void;
   readonly onBack: () => void;
   /** 닫힌 뒤 포커스를 돌려줄 요소. 이 화면을 연 버튼이다(A11Y D02). */
-  readonly returnFocus: () => HTMLElement | null | undefined;
+  readonly returnFocus: RefObject<HTMLElement | null>;
 };
 
 /**
@@ -83,6 +83,11 @@ export function IngredientPicker({
   onBack,
   returnFocus,
 }: IngredientPickerProps) {
+  // 닫히면 연 버튼으로 포커스를 돌려준다. 붙고 떨어지는 순간에만 하는 일이라 ref 정리 함수로 둔다.
+  // 콜백을 고정해야 한다. 렌더마다 새 콜백을 넘기면 React 가 그때마다 정리 함수를 불러 포커스가 뒤 화면으로 갔다 오고,
+  // 그 사이 한글 조합이 끊겨 'ㅅㅔㄹㅏ'처럼 자소가 하나씩 확정된다.
+  // 한 번만 만든다. returnFocus 는 ref 객체라 바뀌지 않는다.
+  const [restoreFocus] = useState(() => () => () => returnFocus.current?.focus({ preventScroll: true }));
   const [draft, setDraft] = useState(filter);
   const [keyword, setKeyword] = useState("");
   const conflict = useConditionNotice<Filter>();
@@ -191,8 +196,7 @@ export function IngredientPicker({
         aria-label={TITLE[condition]}
         data-ingredient-picker=""
         onKeyDown={keepFocusInside}
-        // 닫히면 연 버튼으로 포커스를 돌려준다. 붙고 떨어지는 순간에만 하는 일이라 ref 정리 함수로 둔다.
-        ref={() => () => returnFocus()?.focus({ preventScroll: true })}
+        ref={restoreFocus}
         className="fixed inset-0 z-(--z-sheet) flex justify-center"
       >
         <div className="w-full max-w-md bg-background">

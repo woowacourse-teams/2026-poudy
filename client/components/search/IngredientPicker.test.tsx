@@ -46,7 +46,7 @@ const renderPicker = (condition: "include" | "exclude", filter: Partial<Filter>,
         names={new Map([[7, "레티놀"]])}
         onApply={onApply}
         onBack={vi.fn()}
-        returnFocus={() => null}
+        returnFocus={{ current: null }}
       />
     </ToastProvider>,
   );

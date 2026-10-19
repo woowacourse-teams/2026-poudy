@@ -314,7 +314,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
           names={names}
           onApply={applyPicked}
           onBack={() => closePicker()}
-          returnFocus={() => opener.current}
+          returnFocus={opener}
         />
       ) : null}
     </main>
