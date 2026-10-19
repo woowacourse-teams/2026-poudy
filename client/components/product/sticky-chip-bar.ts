@@ -19,7 +19,7 @@ export const STICKY_CHIP_BARS = {
     runwayClassName: "category-filter-chip-runway flex flex-1 flex-col",
   },
   brand: {
-    stuckAt: 100,
+    stuckAt: 56,
     className: "brand-filter-chip-bar sticky z-(--z-sticky) bg-background pt-2",
     runwayClassName: "brand-filter-chip-runway flex flex-1 flex-col",
   },
