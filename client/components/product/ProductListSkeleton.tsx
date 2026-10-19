@@ -63,11 +63,11 @@ export function ProductListSkeleton({
           <ChipBarSkeleton hiddenChips={hiddenChips} />
         </div>
       ) : (
-        <div className="pt-2">
+        <div className="py-2">
           <ChipBarSkeleton hiddenChips={hiddenChips} />
         </div>
       )}
-      <div className="flex flex-1 flex-col pt-2">
+      <div className="flex flex-1 flex-col">
         <ProductRowsSkeleton />
       </div>
     </>

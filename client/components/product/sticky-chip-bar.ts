@@ -10,17 +10,17 @@
 export const STICKY_CHIP_BARS = {
   products: {
     stuckAt: 44,
-    className: "filter-chip-bar sticky z-(--z-sticky) bg-background pt-2",
+    className: "filter-chip-bar sticky z-(--z-sticky) bg-background py-2",
     runwayClassName: "filter-chip-runway flex flex-1 flex-col",
   },
   category: {
     stuckAt: 56,
-    className: "category-filter-chip-bar sticky z-(--z-sticky) bg-background pt-2",
+    className: "category-filter-chip-bar sticky z-(--z-sticky) bg-background py-2",
     runwayClassName: "category-filter-chip-runway flex flex-1 flex-col",
   },
   brand: {
     stuckAt: 100,
-    className: "brand-filter-chip-bar sticky z-(--z-sticky) bg-background pt-2",
+    className: "brand-filter-chip-bar sticky z-(--z-sticky) bg-background py-2",
     runwayClassName: "brand-filter-chip-runway flex flex-1 flex-col",
   },
 } as const;

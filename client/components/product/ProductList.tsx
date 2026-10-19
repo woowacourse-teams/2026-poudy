@@ -146,7 +146,7 @@ export function ProductList({
           <FilterChipBar chips={chips} expandedId={openSheet} onOpen={setOpenSheet} onReset={resetChips} />
         </ChipBarSlot>
 
-        <div className="flex flex-1 flex-col gap-2 pt-2">
+        <div className="flex flex-1 flex-col gap-2">
           <AppliedConditions filter={filter} excludeCodes={excludeCodes} names={names} groups={groups} />
 
           <ProductRows
@@ -192,7 +192,7 @@ function ChipBarRunway({ sticky, children }: { readonly sticky?: StickyChips; re
 
 /** 칩 줄 자리. 붙는 화면이면 그 화면의 자리에 붙인다. */
 function ChipBarSlot({ sticky, children }: { readonly sticky?: StickyChips; readonly children: ReactNode }) {
-  if (!sticky) return <div className="bg-background pt-2">{children}</div>;
+  if (!sticky) return <div className="bg-background py-2">{children}</div>;
 
   const { stuckAt, className } = STICKY_CHIP_BARS[sticky];
   return (
