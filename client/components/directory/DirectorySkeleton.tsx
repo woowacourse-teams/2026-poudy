@@ -24,7 +24,7 @@ export function DirectorySkeleton() {
       {shown ? (
         <>
           <div className="w-(--directory-rail) shrink-0 bg-surface" />
-          <ul className="flex min-w-0 grow flex-col pt-1">
+          <ul className="flex min-w-0 grow flex-col">
             {NAMES.map((name) => (
               <li
                 key={name.key}
