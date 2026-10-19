@@ -7,6 +7,7 @@ import { SearchField } from "@poudy/design-system/search-field";
 import { useState } from "react";
 
 import { ConditionNotice, useConditionNotice } from "./ConditionNotice";
+import { IngredientResultGroup } from "./IngredientResultGroup";
 import { IngredientResultRow, type ResultRowState } from "./IngredientResultRow";
 
 import { EffectIcon } from "@/components/ingredient/EffectTag";
@@ -181,34 +182,42 @@ export function IngredientSearchStep({
             />
           ) : null}
 
-          {query ? (
-            <ul aria-label="성분 검색 결과" aria-busy={loading || undefined}>
-              {foundGroups.map((group) => (
-                <li key={`group-${group.code}`}>
-                  <IngredientResultRow
-                    name={groupLabel(group)}
-                    badge="성분군"
-                    state={local[groupKey].includes(group.code) ? "added" : "idle"}
-                    tone={purpose}
-                    onToggle={() => toggleGroupRow(group)}
-                  />
-                </li>
-              ))}
-              {items.map((item, index) => (
-                <li key={item.id}>
-                  <IngredientResultRow
-                    name={item.koreanName}
-                    description={item.englishName}
-                    icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
-                      <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
-                    ))}
-                    state={ingredientState(item)}
-                    tone={purpose}
-                    onToggle={() => toggleItem(item, index)}
-                  />
-                </li>
-              ))}
-            </ul>
+          {query && foundGroups.length + items.length > 0 ? (
+            <div aria-busy={loading || undefined} className="flex flex-col">
+              {foundGroups.length > 0 ? (
+                <IngredientResultGroup title="성분군" count={foundGroups.length}>
+                  {foundGroups.map((group) => (
+                    <li key={`group-${group.code}`}>
+                      <IngredientResultRow
+                        name={groupLabel(group)}
+                        badge="성분군"
+                        state={local[groupKey].includes(group.code) ? "added" : "idle"}
+                        tone={purpose}
+                        onToggle={() => toggleGroupRow(group)}
+                      />
+                    </li>
+                  ))}
+                </IngredientResultGroup>
+              ) : null}
+              {items.length > 0 ? (
+                <IngredientResultGroup title="성분" count={items.length}>
+                  {items.map((item, index) => (
+                    <li key={item.id}>
+                      <IngredientResultRow
+                        name={item.koreanName}
+                        description={item.englishName}
+                        icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
+                          <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
+                        ))}
+                        state={ingredientState(item)}
+                        tone={purpose}
+                        onToggle={() => toggleItem(item, index)}
+                      />
+                    </li>
+                  ))}
+                </IngredientResultGroup>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </BottomSheetBody>

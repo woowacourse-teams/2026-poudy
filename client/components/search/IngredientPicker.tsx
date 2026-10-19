@@ -9,9 +9,10 @@ import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { SearchField } from "@poudy/design-system/search-field";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
-import { type KeyboardEvent, type ReactNode, useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
+import { IngredientResultGroup } from "@/components/filter/IngredientResultGroup";
 import { IngredientResultRow, type ResultRowState } from "@/components/filter/IngredientResultRow";
 import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
@@ -297,7 +298,7 @@ function Results({
   return (
     <div className="flex flex-col">
       {groupItems.length > 0 ? (
-        <ResultGroup title="성분군" count={groupItems.length}>
+        <IngredientResultGroup title="성분군" count={groupItems.length}>
           {groupItems.map((group) => (
             <li key={group.code}>
               <IngredientResultRow
@@ -309,10 +310,10 @@ function Results({
               />
             </li>
           ))}
-        </ResultGroup>
+        </IngredientResultGroup>
       ) : null}
       {items.length > 0 ? (
-        <ResultGroup title="성분" count={items.length}>
+        <IngredientResultGroup title="성분" count={items.length}>
           {items.map((item) => (
             <li key={item.id}>
               <IngredientResultRow
@@ -327,29 +328,8 @@ function Results({
               />
             </li>
           ))}
-        </ResultGroup>
+        </IngredientResultGroup>
       ) : null}
     </div>
-  );
-}
-
-function ResultGroup({
-  title,
-  count,
-  children,
-}: {
-  readonly title: string;
-  readonly count: number;
-  readonly children: ReactNode;
-}) {
-  return (
-    <section aria-label={`${title} ${count}개`} className="flex flex-col">
-      <h3 aria-hidden="true" className="flex gap-1 pt-3 pb-1 text-body-sm text-text-secondary">
-        <span className="font-semibold">{title}</span>
-        <span className="font-medium">{count}</span>
-      </h3>
-      {/* 행마다 아래 선을 그린다(조건 일치 제품의 성분 검색 결과 행과 같다). */}
-      <ul className="flex flex-col">{children}</ul>
-    </section>
   );
 }

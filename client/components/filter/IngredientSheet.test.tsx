@@ -87,6 +87,8 @@ describe("성분 시트의 조건 충돌", () => {
     await userEvent.click(await sheet.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
 
     expect(sheet.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.")).toBeInTheDocument();
+    // 결과는 탐색 조건의 성분 추가 화면처럼 '성분 N' 묶음으로 나눈다.
+    expect(sheet.getByRole("region", { name: "성분 1개" })).toBeInTheDocument();
     await userEvent.click(sheet.getByRole("button", { name: "1개 추가하기" }));
 
     // 편집 화면으로 돌아와 원하는 성분은 비고, 적용하면 옮겨 온 대로 반영한다.
