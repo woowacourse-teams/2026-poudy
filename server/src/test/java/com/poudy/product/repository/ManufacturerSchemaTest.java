@@ -21,35 +21,37 @@ class ManufacturerSchemaTest {
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "\t"})
     public void rejectsBlankName(String name) {
-        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1, ?)", name))
+        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1001, ?)", name))
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     public void rejectsNullName() {
-        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1, null)"))
+        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1001, null)"))
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     public void rejectsDuplicateName() {
-        jdbc.update("insert into manufacturer(id, name) values (1, '코스맥스')");
-        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (2, '코스맥스')"))
+        jdbc.update("insert into manufacturer(id, name) values (1001, '테스트 제조업체')");
+        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1002, '테스트 제조업체')"))
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     public void rejectsNonNfcName() {
-        assertThatThrownBy(() -> jdbc.update("insert into manufacturer(id, name) values (1, ?)", "Estée Lauder"))
+        assertThatThrownBy(
+            () -> jdbc.update("insert into manufacturer(id, name) values (1001, ?)", "Este\u0301e Lauder")
+        )
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     public void storesTimestamps() {
-        jdbc.update("insert into manufacturer(id, name) values (1, 'Estée Lauder Companies')");
+        jdbc.update("insert into manufacturer(id, name) values (1001, 'Tést Manufacturer')");
         assertThat(
             jdbc.queryForObject(
-                "select count(*) from manufacturer where created_at is not null and updated_at is not null",
+                "select count(*) from manufacturer where id = 1001 and created_at is not null and updated_at is not null",
                 Long.class
             )
         )
@@ -58,11 +60,11 @@ class ManufacturerSchemaTest {
 
     @Test
     public void linksProductToManufacturerAndCountry() {
-        jdbc.update("insert into manufacturer(id, name) values (1, '코스맥스')");
-        jdbc.update("update product set manufacturer_id = 1, manufacturing_country = 'KR' where id = 1");
+        jdbc.update("insert into manufacturer(id, name) values (1001, '테스트 제조업체')");
+        jdbc.update("update product set manufacturer_id = 1001, manufacturing_country = 'KR' where id = 1");
         assertThat(
             jdbc.queryForObject(
-                "select manufacturing_country from product where id = 1 and manufacturer_id = 1",
+                "select manufacturing_country from product where id = 1 and manufacturer_id = 1001",
                 String.class
             )
         )
@@ -95,9 +97,9 @@ class ManufacturerSchemaTest {
 
     @Test
     public void rejectsDeletionOfLinkedManufacturer() {
-        jdbc.update("insert into manufacturer(id, name) values (1, '코스맥스')");
-        jdbc.update("update product set manufacturer_id = 1 where id = 1");
-        assertThatThrownBy(() -> jdbc.update("delete from manufacturer where id = 1"))
+        jdbc.update("insert into manufacturer(id, name) values (1001, '테스트 제조업체')");
+        jdbc.update("update product set manufacturer_id = 1001 where id = 1");
+        assertThatThrownBy(() -> jdbc.update("delete from manufacturer where id = 1001"))
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 }
