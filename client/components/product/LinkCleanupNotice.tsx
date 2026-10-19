@@ -31,8 +31,11 @@ const messageOf = (
   }
 
   const [{ ingredientId, code }] = removed;
-  const name = names.get(ingredientId) ?? "성분";
-  const topic = `‘${name}’${josaOf(name, "은/는")}`;
+  const fullName = names.get(ingredientId) ?? "성분";
+  // 성분 이름은 하이픈에서 줄이 갈리지 않게 단어 결합자(U+2060)로 잇는다(예: '에스디알코올40-B'). 글자를 키운 화면에서
+  // '40-'와 'B'가 두 줄로 나뉘면 다른 성분처럼 읽힌다. 낭독에는 영향이 없다.
+  const name = fullName.replaceAll("-", "-\u2060");
+  const topic = `‘${name}’${josaOf(fullName, "은/는")}`;
   if (!code) {
     return {
       text: `링크 조건 중 ${topic} 피하고 싶은 성분에도 있어서 원하는 성분에서 뺐어요.`,
