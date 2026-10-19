@@ -62,6 +62,11 @@ const OUTLINE = {
   ],
   // Tabler info-circle. 하단 행동 영역의 안내 줄
   "info-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 9h.01", "M11 12h1v4h1"],
+  // Tabler shield-check. 제품 상세 '정보 출처'
+  "shield-check": [
+    "M11.46 20.846a12 12 0 0 1 -7.96 -14.846a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3a12 12 0 0 1 -.09 7.06",
+    "M15 19l2 2l4 -4",
+  ],
   "alert-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 8v4", "M12 16h.01"],
   // Tabler help-circle. 큰 제목 내비의 도움말
   "help-circle": [

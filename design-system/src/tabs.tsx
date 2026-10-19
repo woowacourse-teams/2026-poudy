@@ -14,12 +14,21 @@ type TabsContextValue = {
   readonly value: string | undefined;
   readonly onValueChange: (value: string) => void;
   readonly variant: Variant;
-  readonly layout: "fixed" | "scroll";
+  readonly layout: TabsLayout;
   readonly transitionName?: string;
   /** 마지막으로 고른 것이 키보드였다. 그때는 밑줄을 옮기지 않고 바로 그린다(MOTION M03). */
   readonly instant: boolean;
   readonly setInstant: (instant: boolean) => void;
 };
+
+/**
+ * 밑줄 탭의 배치.
+ * - fixed: 탭이 폭을 똑같이 나눈다.
+ * - scroll: 내용 폭대로 두고 넘치면 가로로 민다.
+ * - fit: 다 들어가면 fixed 처럼 폭을 나누고, 넘치면 scroll 처럼 내용 폭대로 민다. 구성품 탭처럼 개수와 이름 길이,
+ *   기기 글자 크기에 따라 같은 화면에서도 달라질 때 쓴다. 판단은 CSS 가 맡아 그린 뒤에 재지 않는다.
+ */
+export type TabsLayout = "fixed" | "scroll" | "fit";
 
 const TabsContext = createContext<TabsContextValue | null>(null);
 
@@ -42,8 +51,8 @@ export type TabsProps = {
    * - rail: 세로 레일(디렉터리 레일). 회색 레일 위에서 고른 항목만 흰 면이다. 높이 52.
    */
   readonly variant?: Variant;
-  /** underline 의 배치. fixed 는 탭이 폭을 똑같이 나누고, scroll 은 내용 폭대로 두고 가로로 민다. */
-  readonly layout?: "fixed" | "scroll";
+  /** underline 의 배치(TabsLayout). */
+  readonly layout?: TabsLayout;
   /**
    * underline 에서 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 옮겨 가게 한다(View Transition 의 이름).
    * 링크 탭(asChild)처럼 고를 때 화면이 새로 그려지는 탭에 쓴다. 화면에 하나뿐인 이름을 넘긴다.
@@ -93,7 +102,7 @@ export function TabList({ label, children, end, className }: TabListProps) {
   // 스크롤 배치에서 고른 탭이 보이지 않으면 보이도록 민다. 공유받은 주소로 들어와 뒤쪽 탭이 골라져 있을 때다.
   useEffect(() => {
     const list = listRef.current;
-    if (!list || vertical || layout !== "scroll") return;
+    if (!list || vertical || layout === "fixed") return;
     const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     if (!tab) return;
     /*
@@ -134,7 +143,7 @@ export function TabList({ label, children, end, className }: TabListProps) {
         "flex",
         vertical && "flex-col bg-surface",
         // 끝에서 24 를 띄워 고른 탭이 끝을 흐리는 자리에 가리지 않게 한다(scrollIntoView 가 따른다).
-        !vertical && layout === "scroll" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
+        !vertical && layout !== "fixed" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
         !vertical && layout === "fixed" && "flex-1",
         vertical && className,
       )}
@@ -189,6 +198,13 @@ export function TabIndicator({ name }: { readonly name?: string }) {
   return name ? <IndicatorTransition name={name}>{line}</IndicatorTransition> : line;
 }
 
+/* fit 은 똑같이 나눈 몫(basis-0 · grow)이 내용보다 좁아지면 내용 폭(min-w-max)에서 멈추고, 그때부터 목록이 넘쳐 밀린다. */
+const LAYOUT_ITEM: Record<TabsLayout, string> = {
+  fixed: "flex-1 basis-0",
+  scroll: "min-w-max",
+  fit: "min-w-max flex-1 basis-0",
+};
+
 export type TabProps = {
   readonly value: string;
   /**
@@ -228,7 +244,7 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
     className: cn(
       "pressable flex shrink-0 items-center select-none",
       ITEM[context.variant],
-      context.variant === "underline" && (context.layout === "fixed" ? "flex-1 basis-0" : "min-w-max"),
+      context.variant === "underline" && LAYOUT_ITEM[context.layout],
       // 밑줄을 옮겨 그릴 때는 테두리 대신 아래 indicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
       moving && "aria-selected:border-transparent",
     ),
