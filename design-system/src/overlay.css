@@ -112,3 +112,8 @@
     animation: none;
   }
 }
+
+/* 시트 본문(BottomSheetBody)의 좌우 여백 20. 안의 목록 행이 hover 면을 시트 끝까지 넓혀 칠한다(fb-bleed). */
+[data-sheet-body] {
+  --bleed: 1.25rem;
+}

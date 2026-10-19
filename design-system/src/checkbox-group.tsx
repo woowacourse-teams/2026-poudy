@@ -115,7 +115,8 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
       {...pressableProps}
       {...state}
       className={cn(
-        "choice-row pressable fb-surface flex h-12 cursor-pointer items-center gap-2 px-1 select-none",
+        // hover 면은 행의 안쪽 여백을 넘어 시트·화면의 좌우 여백까지 이어 칠한다(fb-bleed 의 가상 요소).
+        "choice-row pressable fb-bleed flex h-12 cursor-pointer items-center gap-2 px-1 select-none",
         "data-disabled:cursor-not-allowed",
         context.divided && "border-b border-border",
       )}
