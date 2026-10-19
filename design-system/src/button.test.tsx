@@ -189,7 +189,7 @@ describe("IconButton", () => {
   it("작은 정보 버튼(sm)은 아이콘을 16(em)으로 두어 글자 크기를 따르고, 누르는 영역은 44 를 지킨다", () => {
     render(<IconButton size="sm" label="설명" icon={<svg />} />);
     const button = screen.getByRole("button", { name: "설명" });
-    expect(button).toHaveClass("size-11", "[&>svg]:size-em", "[&>svg]:text-16");
+    expect(button).toHaveClass("size-11", "fb-circle-follow-text", "[&>svg]:size-em", "[&>svg]:text-16");
     expect(button).not.toHaveClass("[&>svg]:size-6");
   });
 
