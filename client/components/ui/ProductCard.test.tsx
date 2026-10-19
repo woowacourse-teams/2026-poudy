@@ -25,13 +25,7 @@ const product: ProductResponse = {
 
 describe("ProductCard", () => {
   it("유수분을 제공하지 않는 제품은 수분·유분 태그를 표시하지 않는다", () => {
-    render(
-      <ProductCard
-        product={{ ...product, moistureLevel: null, oilLevel: null }}
-        saved={false}
-        onToggleSave={() => {}}
-      />,
-    );
+    render(<ProductCard product={{ ...product, moistureLevel: null, oilLevel: null }} />);
     expect(screen.queryByText(/^수분감 /)).not.toBeInTheDocument();
     expect(screen.queryByText(/^유분감 /)).not.toBeInTheDocument();
     expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
