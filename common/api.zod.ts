@@ -20,7 +20,7 @@ export type RatingResponse = __TypedOpenapi.Schemas.RatingResponse;
 export const RatingResponse = z.object({ preference: RatingPreference.nullable(), moistureLevel: z.number().nullable(), oilLevel: z.number().nullable() });
 
 export type ShelfProductInfoResponse = __TypedOpenapi.Schemas.ShelfProductInfoResponse;
-export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string() });
+export const ShelfProductInfoResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), sensorySupported: z.boolean() });
 
 export type ShelfProductResponse = __TypedOpenapi.Schemas.ShelfProductResponse;
 export const ShelfProductResponse = z.object({ product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: z.boolean(), registeredAt: z.iso.datetime({ offset: true }) });
@@ -116,13 +116,16 @@ export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
 
 export type ProductResponse = __TypedOpenapi.Schemas.ProductResponse;
-export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type WishlistResponse = __TypedOpenapi.Schemas.WishlistResponse;
 export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
 
 export type WishlistProductIdsResponse = __TypedOpenapi.Schemas.WishlistProductIdsResponse;
 export const WishlistProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
+
+export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
+export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
 
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
@@ -131,7 +134,7 @@ export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
-export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), excludeCodes: z.array(ExcludeCode) });
 
 export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
 export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
@@ -152,7 +155,7 @@ export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.Ingredien
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
 export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
-export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
+export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
 
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
@@ -177,9 +180,6 @@ export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(
 
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });
-
-export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
-export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
 
 export type ProductSort = __TypedOpenapi.Schemas.ProductSort;
 export const ProductSort = z.enum(["DEFAULT", "CREATED_ASC", "PRICE_DESC", "PRICE_ASC", "UNIT_PRICE_DESC", "UNIT_PRICE_ASC"]).default("DEFAULT");
@@ -236,7 +236,7 @@ export type ProductPartResponse = __TypedOpenapi.Schemas.ProductPartResponse;
 export const ProductPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), ingredients: z.array(ProductIngredientResponse), skinEffectGroups: z.array(SkinEffectGroupResponse), excludeGroups: z.array(ExcludeGroupResponse) });
 
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
 export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
@@ -263,7 +263,7 @@ export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: ShareMatchStatus, productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
 
 export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
-export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
+export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable() });
 
 export type ProductRankingItemResponse = __TypedOpenapi.Schemas.ProductRankingItemResponse;
 export const ProductRankingItemResponse = z.object({ product: ProductRankingProductResponse });
@@ -319,17 +319,11 @@ export const ExcludeCodeResponse = z.object({ code: z.string(), name: z.string()
 export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResponse;
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
 
-export type CurationSummaryResponse = __TypedOpenapi.Schemas.CurationSummaryResponse;
-export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), thumbnailImageUrl: z.string() });
-
-export type CurationListResponse = __TypedOpenapi.Schemas.CurationListResponse;
-export const CurationListResponse = z.object({ items: z.array(CurationSummaryResponse) });
-
 export type CurationImageBlockResponse = __TypedOpenapi.Schemas.CurationImageBlockResponse;
 export const CurationImageBlockResponse = z.object({ id: z.uuid(), type: z.literal("IMAGE"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), imageUrl: z.string(), altText: z.string().nullable(), bodyText: z.string().nullable() });
 
 export type CurationProductResponse = __TypedOpenapi.Schemas.CurationProductResponse;
-export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5), oilLevel: z.number().min(0).max(3).multipleOf(0.5) });
+export const CurationProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable() });
 
 export type CurationProductsBlockResponse = __TypedOpenapi.Schemas.CurationProductsBlockResponse;
 export const CurationProductsBlockResponse = z.object({ id: z.uuid(), type: z.literal("PRODUCTS"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), products: z.array(CurationProductResponse).min(1).max(2147483647) });
@@ -366,6 +360,27 @@ export const BrandOverviewResponse = z.object({ items: z.array(BrandSummaryRespo
 
 export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
 export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
+
+export type BannerSlot = __TypedOpenapi.Schemas.BannerSlot;
+export const BannerSlot = z.enum(["MAIN", "STRIP"]);
+
+export type CurationBannerTargetResponse = __TypedOpenapi.Schemas.CurationBannerTargetResponse;
+export const CurationBannerTargetResponse = z.object({ type: z.literal("CURATION"), curationId: z.number().int().min(1) });
+
+export type ProductListBannerTargetResponse = __TypedOpenapi.Schemas.ProductListBannerTargetResponse;
+export const ProductListBannerTargetResponse = z.object({ type: z.literal("PRODUCT_LIST"), query: CurationProductLinkQueryResponse });
+
+export type ExternalBannerTargetResponse = __TypedOpenapi.Schemas.ExternalBannerTargetResponse;
+export const ExternalBannerTargetResponse = z.object({ type: z.literal("EXTERNAL"), url: z.string() });
+
+export type BannerTargetResponse = __TypedOpenapi.Schemas.BannerTargetResponse;
+export const BannerTargetResponse = z.discriminatedUnion("type", [CurationBannerTargetResponse.extend({ type: z.literal("CURATION") }), ProductListBannerTargetResponse.extend({ type: z.literal("PRODUCT_LIST") }), ExternalBannerTargetResponse.extend({ type: z.literal("EXTERNAL") })]);
+
+export type BannerResponse = __TypedOpenapi.Schemas.BannerResponse;
+export const BannerResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrl: z.string(), target: BannerTargetResponse });
+
+export type BannerListResponse = __TypedOpenapi.Schemas.BannerListResponse;
+export const BannerListResponse = z.object({ items: z.array(BannerResponse) });
 
 export type WithdrawnAccountResponse = __TypedOpenapi.Schemas.WithdrawnAccountResponse;
 export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), restorableUntil: z.iso.datetime({ offset: true }) });
@@ -614,7 +629,7 @@ export const patch_UpdateMyProfile = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { body: UserProfileRequest },
-  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_ChangeStatus = __TypedOpenapi.Endpoints.patch_ChangeStatus;
@@ -867,16 +882,6 @@ export const get_FindExcludeCodes = {
   responses: { 200: ExcludeCodeListResponse, 500: ProblemDetail },
 };
 
-export type get_FindCurations = __TypedOpenapi.Endpoints.get_FindCurations;
-export const get_FindCurations = {
-  method: z.literal("GET"),
-  path: z.literal("/api/curations"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: CurationListResponse, 500: ProblemDetail },
-};
-
 export type get_FindCuration = __TypedOpenapi.Endpoints.get_FindCuration;
 export const get_FindCuration = {
   method: z.literal("GET"),
@@ -915,6 +920,16 @@ export const get_FindBrand = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ brandId: z.coerce.number().int() }) },
   responses: { 200: BrandDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindBanners = __TypedOpenapi.Endpoints.get_FindBanners;
+export const get_FindBanners = {
+  method: z.literal("GET"),
+  path: z.literal("/api/banners"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ slot: BannerSlot }) },
+  responses: { 200: BannerListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindWithdrawn = __TypedOpenapi.Endpoints.get_FindWithdrawn;
@@ -1085,11 +1100,11 @@ get: {
 "/api/ingredient-groups": get_FindIngredientGroups as any,
 "/api/ingredient-groups/{code}": get_FindIngredientGroup as any,
 "/api/exclude-codes": get_FindExcludeCodes as any,
-"/api/curations": get_FindCurations as any,
 "/api/curations/{curationId}": get_FindCuration as any,
 "/api/categories": get_FindCategories as any,
 "/api/brands": get_FindBrands as any,
 "/api/brands/{brandId}": get_FindBrand as any,
+"/api/banners": get_FindBanners as any,
 "/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
 "/api/admin/users/restore-requests": get_FindRestoreRequests as any,

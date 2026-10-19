@@ -15,12 +15,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 describe("로그인 결과 안내", () => {
-  it("탈퇴한 계정이면 탈퇴한 날과 복구를 요청할 수 있는 날을 한국 날짜로 알려 준다", async () => {
+  it("탈퇴한 계정이면 탈퇴한 날과 되살릴 수 있는 마지막 날을 한국 날짜로 알려 준다", async () => {
     render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />);
 
-    expect(await screen.findByText(/10월 5일에 탈퇴했어요\. 11월 4일까지 복구를 요청하면/)).toBeInTheDocument();
+    expect(await screen.findByText(/2026년 10월 5일에 탈퇴했어요\. 2026년 11월 4일까지 되살리면/)).toBeInTheDocument();
     expect(screen.getByText("member@example.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "계정 되살리기" })).toBeEnabled();
+    expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "다음에 할게요" })).toHaveAttribute("href", "/");
   });
 
   it("탈퇴 정보를 읽지 못해도 복구 요청은 할 수 있다", async () => {

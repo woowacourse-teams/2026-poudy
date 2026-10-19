@@ -14,10 +14,10 @@ beforeEach(() => {
 
 describe("login-return", () => {
   it("기억한 페이지를 쿼리까지 돌려주고 한 번 꺼내면 지운다", () => {
-    visit("/wishlist?sort=NAME_ASC");
+    visit("/my-page/wishlist?sort=NAME_ASC");
     rememberLoginReturn();
 
-    expect(takeLoginReturn()).toBe("/wishlist?sort=NAME_ASC");
+    expect(takeLoginReturn()).toBe("/my-page/wishlist?sort=NAME_ASC");
     expect(takeLoginReturn()).toBe("/");
   });
 
@@ -25,7 +25,7 @@ describe("login-return", () => {
     expect(takeLoginReturn()).toBe("/");
   });
 
-  it.each(["/login", "/login?signup=required", "/login/callback", "/onboarding"])(
+  it.each(["/login", "/login?signup=required", "/login/callback", "/signup/profile"])(
     "로그인 흐름 안의 %s 은 기억하지 않는다",
     (path) => {
       visit(path);

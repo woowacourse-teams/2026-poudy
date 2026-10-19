@@ -1,7 +1,7 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { chipsOf } from "./product-chips";
 import { ProductRows } from "./ProductRows";
@@ -40,6 +40,8 @@ type ProductListProps = {
    * 카테고리 줄을 쓴다. 브랜드관은 머리가 붙여 두는 브랜드 축약형 아래에 칩 줄을 붙인다.
    */
   readonly stickyChips?: StickyChips;
+  /** 결과가 0개일 때 그릴 빈 상태. 화면마다 문구가 달라 반드시 넘긴다(FEEDBACK F03). */
+  readonly empty: ReactNode;
 };
 
 /**
@@ -57,6 +59,7 @@ export function ProductList({
   entryPoint,
   initialPage,
   stickyChips,
+  empty,
 }: ProductListProps) {
   const { filter: urlFilter } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
@@ -112,6 +115,7 @@ export function ProductList({
           openSheet={openSheet}
           onCloseSheet={() => setOpenSheet(undefined)}
           initialPage={initialPage}
+          empty={empty}
         />
       </ChipBarRunway>
     </>

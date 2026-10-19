@@ -35,7 +35,7 @@ class FeedbackTest {
         assertThat(feedback.id()).isNotNull();
         assertThat(feedback.feedbackType()).isEqualTo(FeedbackType.BUG_REPORT);
         assertThat(feedback.path()).isEqualTo(FeedbackPath.from("/products/12345"));
-        assertThat(feedback.content().value()).isEqualTo("  검색 버튼을 눌러도 반응이 없어요.  ");
+        assertThat(feedback.content().value()).isEqualTo("검색 버튼을 눌러도 반응이 없어요.");
         assertThat(feedback.receivedAt()).isEqualTo(OffsetDateTime.parse("2026-08-23T16:20:30+09:00"));
         assertThat(feedback.status()).isEqualTo(FeedbackStatus.RECEIVED);
         assertThat(feedback.statusChangedAt()).isEqualTo(feedback.receivedAt());
@@ -79,10 +79,10 @@ class FeedbackTest {
     }
 
     @Test
-    @DisplayName("공백을 제외하고 10자보다 짧은 의견을 거절한다")
+    @DisplayName("앞뒤 공백을 제외하고 10자보다 짧은 의견을 거절한다")
     void rejectsShortContentAfterStripping() {
         assertThatThrownBy(
-            () -> ServiceFeedback.register(FeedbackType.OTHER, FeedbackPath.from("/"), "짧 은 의 견 입 니 다", CLOCK)
+            () -> ServiceFeedback.register(FeedbackType.OTHER, FeedbackPath.from("/"), "  짧 은 의 견  ", CLOCK)
         )
             .isInstanceOf(InvalidFeedbackException.class);
     }

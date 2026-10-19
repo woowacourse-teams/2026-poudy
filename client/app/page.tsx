@@ -10,11 +10,12 @@ import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
 import {
   fetchCategories,
-  fetchCurations,
+  fetchMainBanners,
   fetchProductRankings,
   fetchSearchKeywordRankings,
   fetchSkinTypes,
 } from "@/lib/api/products";
+import { isCurationBanner } from "@/lib/domain/banner";
 import { absoluteUrl, INSTAGRAM_URL, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
@@ -74,7 +75,7 @@ const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promis
 
 export default async function Home() {
   const [curations, keywords, skinTypes, rankings, categories] = await Promise.all([
-    orEmpty(fetchCurations),
+    orEmpty(fetchMainBanners),
     orEmpty(fetchSearchKeywordRankings),
     orEmpty(fetchSkinTypes),
     orEmpty(() => fetchProductRankings()),
@@ -92,7 +93,7 @@ export default async function Home() {
 
       {/* 디자인(S01)은 영역 사이를 32, 아래 여백을 40 으로 둔다. */}
       <main className="flex flex-1 flex-col gap-8 px-4 pt-1 pb-10">
-        <CurationCarousel items={curations} />
+        <CurationCarousel items={curations.filter(isCurationBanner)} />
         <PopularKeywords items={keywords} />
         <SkinTypeMenu items={skinTypes} />
         <PopularProducts initialItems={rankings} categories={categories} />

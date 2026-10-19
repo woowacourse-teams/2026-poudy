@@ -15,20 +15,27 @@ import com.poudy.security.domain.WithdrawnAccount;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
+import com.poudy.user.domain.SkinProfileChanged;
 import com.poudy.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
+@RecordApplicationEvents
 @DisplayName("회원 서비스")
 class UserServiceTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ApplicationEvents events;
 
     @Test
     @DisplayName("처음 로그인하면 가입시키지 않고 가입할 계정임만 알린다")
@@ -102,6 +109,25 @@ class UserServiceTest {
         assertThatThrownBy(
             () -> userService.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY, false)
         ).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("피부 타입이나 민감성이 실제로 바뀔 때만 피부 정보 변경을 알린다")
+    void publishesSkinProfileChangedOnlyWhenSkinChanges() {
+        long userId = userService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "user@example.com", true));
+
+        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, null);
+        assertThat(events.stream(SkinProfileChanged.class)).isEmpty();
+
+        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, null);
+        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, null);
+        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true);
+        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true);
+
+        assertThat(events.stream(SkinProfileChanged.class)).containsExactly(
+            new SkinProfileChanged(userId),
+            new SkinProfileChanged(userId)
+        );
     }
 
     @Test

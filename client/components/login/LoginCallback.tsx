@@ -1,6 +1,7 @@
 "use client";
 
 import { OAuthProvider } from "@poudy/api/api.zod";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,19 +22,42 @@ type Props = {
   readonly status: string | null;
 };
 
-const BACK_TO_LOGIN_CLASS =
-  "flex h-[52px] w-full max-w-sm items-center justify-center rounded-button border border-border bg-background text-[16px] font-bold";
+/** 로그인 화면으로 돌아가는 버튼 모양의 링크. 주 행동이면 검정 면, 아니면 보조 면이다(BTN · Large). */
+const BACK_TO_LOGIN_CLASS = {
+  primary:
+    "pressable press-scale fb-dim flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-action text-16 leading-none font-bold text-action-text",
+  secondary:
+    "pressable press-scale fb-secondary flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-button-secondary text-16 leading-none font-bold text-text-primary",
+} as const;
+
+function BackToLoginLink({ variant }: { readonly variant: keyof typeof BACK_TO_LOGIN_CLASS }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <Link href="/login" replace {...pressableProps} className={BACK_TO_LOGIN_CLASS[variant]}>
+      로그인 화면으로
+    </Link>
+  );
+}
+
+function Signing() {
+  return (
+    <main className="flex min-h-svh items-center justify-center px-gutter">
+      <p role="status" className="text-title text-text-secondary">
+        로그인하는 중이에요
+      </p>
+    </main>
+  );
+}
 
 function RestoreRequestedNotice() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 text-center">
-      <p role="status" className="text-[15px] leading-relaxed">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-gutter text-center">
+      <p role="status" className="text-title leading-relaxed text-text-primary">
         복구 요청을 확인하고 있어요. <br />
         확인되면 다시 로그인할 수 있어요.
       </p>
-      <Link href="/login" replace className={BACK_TO_LOGIN_CLASS}>
-        로그인 화면으로
-      </Link>
+      <BackToLoginLink variant="secondary" />
     </main>
   );
 }
@@ -63,13 +87,7 @@ function SignupRedirect() {
 
   useEffect(() => router.replace(SIGNUP_SHEET_PATH), [router]);
 
-  return (
-    <main className="flex min-h-svh items-center justify-center px-4">
-      <p role="status" className="text-[15px] text-text-secondary">
-        로그인하는 중이에요
-      </p>
-    </main>
-  );
+  return <Signing />;
 }
 
 function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
@@ -88,28 +106,14 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);
 
-  if (!failure) {
-    return (
-      <main className="flex min-h-svh items-center justify-center px-4">
-        <p role="status" className="text-[15px] text-text-secondary">
-          로그인하는 중이에요
-        </p>
-      </main>
-    );
-  }
+  if (!failure) return <Signing />;
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 text-center">
-      <p role="alert" className="text-[15px] leading-relaxed">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-gutter text-center">
+      <p role="alert" className="text-title leading-relaxed text-text-primary">
         {loginErrorMessage(failure, provider)}
       </p>
-      <Link
-        href="/login"
-        replace
-        className="flex h-[52px] w-full max-w-sm items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text"
-      >
-        로그인 화면으로
-      </Link>
+      <BackToLoginLink variant="primary" />
     </main>
   );
 }

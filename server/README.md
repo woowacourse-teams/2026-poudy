@@ -116,3 +116,18 @@ DTO 필드의 Bean Validation 애노테이션이 그대로 내려갑니다.
 ```bash
 ./gradlew test
 ```
+
+### CI 빌드 캐시
+
+Server CI는 `--build-cache`로 컴파일과 정적 검사 결과를 재사용한다. dev/main은 다음 PR용
+캐시를 저장하고, 팀 PR은 같은 PR의 후속 실행용 캐시를 저장한다. fork PR은 읽기 전용이다.
+
+DB 상태는 Gradle 입력에 포함되지 않으므로 테스트 결과는 캐시하지 않고 매번 실행한다.
+OpenAPI 생성과 생성물 드리프트 검사도 유지한다. 태스크별 시간은 CI의 `gradle-profiles`
+아티팩트에서 확인하며 14일간 보관한다. 캐시 복원과 저장 비용은 Job 전체 시간에 포함해 비교한다.
+
+`resources-*.txt`는 PostgreSQL을 포함한 CI 러너 VM의 1초 간격 `vmstat` 기록이다.
+Java 프로세스만의 CPU나 최대 RSS가 아니므로 태스크 프로파일과 구분해서 읽는다.
+
+캐시 적용 조건과 전후 측정값은 [#777 결과](https://github.com/woowacourse-teams/2026-poudy/issues/777#issuecomment-6207553716)에 기록했다.
+새 PR에서 재사용되는 캐시는 dev의 Server CI가 먼저 생성해야 한다.

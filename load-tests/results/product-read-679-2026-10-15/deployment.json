@@ -1,0 +1,23 @@
+{
+  "commit": "366bf382017aa81f4a66d9201ed090e02c5cc141",
+  "execution": "ebc11455-89a8-4113-923e-12551e8dba25",
+  "status": "all stages succeeded",
+  "actions": [
+    {
+      "name": "AWS CodeBuild",
+      "url": "https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/843255971531/projects/poudy-staging-codebuild/build/poudy-staging-codebuild%3A5d264257-58ad-40a4-bade-d1eed9e1e029/?region=ap-northeast-2"
+    },
+    {
+      "name": "AWS CodeDeploy",
+      "url": "https://ap-northeast-2.console.aws.amazon.com/codesuite/codedeploy/deployments/d-CMQQEXZ29?region=ap-northeast-2"
+    },
+    {
+      "name": "AWS CodeBuild",
+      "url": "https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/843255971531/projects/poudy-staging-frontend-codebuild/build/poudy-staging-frontend-codebuild%3Ade071a87-4559-4f17-8f6b-ec7886ccf81b/?region=ap-northeast-2"
+    },
+    {
+      "name": "AWS CodeDeploy",
+      "url": "https://ap-northeast-2.console.aws.amazon.com/codesuite/codedeploy/deployments/d-I8319M7DL?region=ap-northeast-2"
+    }
+  ]
+}

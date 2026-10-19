@@ -51,6 +51,13 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async redirects() {
+    return [
+      // 위시리스트가 마이페이지 아래로 옮겨 갔다(S55d). 옛 주소의 북마크와 검색 결과를 새 주소로 보낸다.
+      { source: "/wishlist", destination: "/my-page/wishlist", permanent: true },
+    ];
+  },
+
   async headers() {
     if (process.env.NEXT_PUBLIC_ENVIRONMENT !== "production") return [];
 

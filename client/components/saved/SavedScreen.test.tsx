@@ -8,15 +8,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SavedScreen } from "./SavedScreen";
 
+import { WishlistEmpty } from "@/app/my-page/wishlist/empty";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { getSavedProductsSnapshot, reloadSavedProducts } from "@/lib/storage/saved-products";
 import { allProducts } from "@/mocks/fixtures";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
-const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace }),
+  useRouter: () => ({ back: vi.fn(), push, replace }),
 }));
 
 const PAGE_SIZE = 20;
@@ -34,21 +35,45 @@ beforeEach(async () => {
   await seed();
 });
 
-describe("저장함", () => {
-  it("저장한 제품이 없으면 빈 안내와 제품을 더 찾는 길을 보여 준다", async () => {
-    const { container } = render(<SavedScreen />);
+describe("위시리스트", () => {
+  it("저장한 제품이 없으면 빈 안내와 제품을 둘러보는 버튼을 보여 준다", async () => {
+    const { container } = render(<SavedScreen empty={<WishlistEmpty />} />);
 
-    expect(await screen.findByText("아직 저장한 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("아직 위시리스트에 추가한 제품이 없어요")).toBeInTheDocument();
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /다른 제품도 둘러보기/ })).toHaveAttribute("href", "/search/products");
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 둘러보기" }));
+    expect(push).toHaveBeenCalledWith("/search/products");
+  });
+
+  it("목록 끝에 제품을 더 찾는 길을 둔다", async () => {
+    await seed(1);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
+
+    expect(await screen.findByRole("link", { name: /다른 제품도 둘러보기/ })).toHaveAttribute(
+      "href",
+      "/search/products",
+    );
+  });
+
+  it("저장을 풀면 그 자리에 무엇을 뺐는지 남긴다", async () => {
+    await seed(1, 3);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+
+    expect(await screen.findByText("위시리스트에서 뺐어요")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1025 독도 토너 저장 되돌리기" })).toBeInTheDocument();
+    expect(screen.getByText("총 1개")).toBeInTheDocument();
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {
     server.use(http.get(`${SAVED_PATH}/product-ids`, () => problem(401, "UNAUTHORIZED")));
     await reloadSavedProducts();
 
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText("로그인하면 제품을 저장할 수 있어요")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "로그인하기" })).toHaveAttribute("href", "/login");
@@ -61,7 +86,7 @@ describe("저장함", () => {
     );
     await reloadSavedProducts();
 
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText(ADMIN_SESSION_MESSAGE)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "관리자 로그아웃" }));
@@ -70,7 +95,7 @@ describe("저장함", () => {
 
   it("저장한 제품을 최근 저장순으로 채운다", async () => {
     await seed(1, 3);
-    const { container } = render(<SavedScreen />);
+    const { container } = render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText("총 2개")).toBeInTheDocument();
     const names = screen.getAllByRole("article").map((card) => card.textContent ?? "");
@@ -83,7 +108,7 @@ describe("저장함", () => {
 
   it("찾는 칸을 개수와 정렬 위에 둔다", async () => {
     await seed(1);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
 
     const count = await screen.findByText("총 1개");
     const search = screen.getByRole("searchbox");
@@ -94,7 +119,7 @@ describe("저장함", () => {
 
   it("저장한 제품 안에서 검색하고 없으면 알려 준다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     await userEvent.type(screen.getByRole("searchbox"), "독도");
@@ -109,10 +134,10 @@ describe("저장함", () => {
   it("조회가 실패하면 빈 상태와 구분해서 알리고 다시 시도할 수 있다", async () => {
     await seed(1);
     server.use(http.get(`${SAVED_PATH}/products`, () => problem(500, "INTERNAL_SERVER_ERROR")));
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
-    expect(screen.queryByText("아직 저장한 제품이 없어요")).not.toBeInTheDocument();
+    expect(screen.queryByText("아직 위시리스트에 추가한 제품이 없어요")).not.toBeInTheDocument();
 
     server.resetHandlers();
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
@@ -121,7 +146,7 @@ describe("저장함", () => {
 
   it("이름 오름차순으로 바꾸면 순서가 다시 매겨진다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     await userEvent.click(screen.getByRole("button", { name: /최근 저장순/ }));
@@ -142,17 +167,17 @@ describe("저장함", () => {
   it("담은 것이 많으면 한 번에 다 그리지 않는다", async () => {
     const saved = allProducts.slice(0, PAGE_SIZE + 5).map((product) => product.id);
     await seed(...saved);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText(`총 ${saved.length}개`);
 
     expect(screen.getAllByRole("article")).toHaveLength(Math.min(PAGE_SIZE, saved.length));
   });
 });
 
-describe("저장함 검색", () => {
+describe("위시리스트 검색", () => {
   it("한글을 모으는 동안에는 거르지 않고, 조합이 끝나면 그 말로 거른다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     const search = screen.getByRole("searchbox");
@@ -173,7 +198,7 @@ describe("저장함 검색", () => {
 describe("저장을 풀 때", () => {
   it("삭제와 재조회가 모두 실패해도 삭제 표시를 되돌린다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
     server.use(
       http.delete(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
@@ -190,7 +215,7 @@ describe("저장을 풀 때", () => {
   it("삭제가 실패하면 제품과 개수를 되돌린다", async () => {
     await seed(1, 3);
     server.use(http.delete(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
@@ -203,7 +228,7 @@ describe("저장을 풀 때", () => {
 
   it("되돌리기가 실패하면 삭제 상태와 개수를 유지한다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
     await reloadSavedProducts();
@@ -226,7 +251,7 @@ describe("저장을 풀 때", () => {
       }),
       http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
     await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
@@ -240,7 +265,7 @@ describe("저장을 풀 때", () => {
 
   it("그 자리에 되돌리기를 남기고 개수에서 빼며 서버에서도 지운다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
@@ -256,7 +281,7 @@ describe("저장을 풀 때", () => {
 
   it("되돌리면 그 자리에 다시 서고 서버에도 다시 저장한다", async () => {
     await seed(1, 3);
-    render(<SavedScreen />);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));

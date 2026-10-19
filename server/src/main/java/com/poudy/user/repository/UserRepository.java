@@ -82,6 +82,15 @@ public class UserRepository {
         ).stream().findFirst();
     }
 
+    // 회원 행을 잠가 프로필 변경 전 조회부터 커밋까지 같은 회원의 프로필 변경을 순서대로 처리한다.
+    public Optional<User> findByIdForUpdate(long id) {
+        return jdbc.query(
+            "select " + COLUMNS + " from \"user\" where id = :id and deleted_at is null for no key update",
+            new MapSqlParameterSource("id", id),
+            USER
+        ).stream().findFirst();
+    }
+
     public Optional<WithdrawnUser> findWithdrawnById(long id) {
         return jdbc.query(
             "select oauth_provider, email, deleted_at from \"user\" where id = :id and deleted_at is not null",

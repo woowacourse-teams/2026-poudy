@@ -3,7 +3,9 @@ package com.poudy.shelf.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
 import com.poudy.shelf.domain.IngredientAnalysis;
@@ -23,6 +25,7 @@ import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -56,11 +59,15 @@ public class ShelfService {
 
     @Transactional(readOnly = true)
     public Shelf findShelf(long userId) {
+        return findShelf(userId, excludeCodeRepository.findAll());
+    }
+
+    private Shelf findShelf(long userId, ExcludeCodes excludeCodes) {
         List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(userId);
         List<Long> productIds = shelfProducts.stream()
             .map(ShelfProduct::productId)
             .toList();
-        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId));
+        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId, excludeCodes));
     }
 
     public List<Long> findProductIds(long userId) {
@@ -70,9 +77,9 @@ public class ShelfService {
     @Transactional
     public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         shelfProductRepository.lockShelf(userId);
-        if (productRepository.findById(productId).isEmpty()) {
-            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
-        }
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
+        rating.validateFor(product);
         if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
@@ -82,43 +89,57 @@ public class ShelfService {
     @Transactional
     public ShelfItem update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         shelfProductRepository.lockShelf(userId);
-        if (!shelfProductRepository.update(userId, productId, usageStatus, rating)) {
-            throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
+        ShelfProduct shelfProduct = shelfProductRepository.find(userId, productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
+        rating.validateFor(product);
+        shelfProductRepository.update(userId, productId, usageStatus, rating);
+        if (shelfProduct.changesPreferenceTo(rating)) {
+            return refreshAnalysis(userId).item(productId);
         }
-        return refreshAnalysis(userId).item(productId);
+        return findShelf(userId).item(productId);
     }
 
     @Transactional
     public void remove(long userId, long productId) {
         shelfProductRepository.lockShelf(userId);
-        shelfProductRepository.delete(userId, productId);
+        if (shelfProductRepository.delete(userId, productId)) {
+            refreshAnalysis(userId);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void refreshAnalysisForSkinChange(long userId) {
+        shelfProductRepository.lockShelf(userId);
         refreshAnalysis(userId);
     }
 
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
         return IngredientAnalysis.of(
-            findShelf(userId),
+            findShelf(userId, excludeCodes),
             shelfAnalysisRepository.find(userId),
-            skinFilterRepository.findIngredientIds(userId)
+            skinFilterRepository.findIngredientIds(userId),
+            excludeCodes
         );
     }
 
-    // 평가가 바뀐 같은 트랜잭션에서 결과를 다시 계산해, 직전 결과와 성분이 다를 때만 새 성분을 다시 표시한다.
+    // 제품을 담거나 빼거나 호불호나 피부 정보가 바뀐 트랜잭션에서 결과를 다시 계산해 새 성분을 다시 표시한다.
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
-        snapshot.nextIfChanged(shelf.suspectIngredients().ingredientIds())
-            .ifPresent(next -> shelfAnalysisRepository.save(userId, next));
+        shelfAnalysisRepository.save(userId, snapshot.next(shelf.suspectIngredients().ingredientIds()));
         return shelf;
     }
 
-    private SuspectCandidates candidatesOf(long userId) {
+    private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         SkinCautions cautions = SkinCautions.of(user.skinType(), user.sensitiveSkin());
         return new SuspectCandidates(
-            excludeCodeRepository.findAll().ingredientIds(),
+            excludeCodes.ingredientIds(),
             cautions.ingredientIdsWith(shelfCautionRepository.findGroupIngredientIds(cautions.ingredientGroupCodes()))
         );
     }

@@ -259,12 +259,33 @@ export const apiPut = async (path: string): Promise<void> => {
 };
 
 /**
- * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ * 로그인한 회원의 값을 통째로 바꾸고 바뀐 결과를 받는 요청. 같은 요청을 다시 보내도 결과가 같다.
  */
-export const apiDelete = async (path: string): Promise<void> => {
-  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "DELETE" }).catch((cause: unknown) => {
+export const apiPutFor = async <T>(path: string, schema: ZodType<T>, body: unknown): Promise<T> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });
+
+  if (!response.ok) throw await toApiError(response, path);
+
+  return checkResponse(schema, response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ * 지울 대상을 주소의 쿼리로 넘기는 API 는 query 를 함께 준다.
+ */
+export const apiDelete = async (path: string, query?: URLSearchParams): Promise<void> => {
+  const response = await fetch(apiUrl(path, query), { ...SESSION_REQUEST, method: "DELETE" }).catch(
+    (cause: unknown) => {
+      throw networkError(cause, path);
+    },
+  );
 
   if (!response.ok) throw await toApiError(response, path);
 };

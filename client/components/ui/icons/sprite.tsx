@@ -20,17 +20,24 @@ export const ICON_IDS = [
   "bookmark-solid",
   "bookmarks",
   "bookmarks-solid",
+  "archive",
+  "archive-solid",
   "chevron-down",
   "chevron-up",
   "chevron-right",
   "chevron-left",
   "check",
   "badge-check",
+  "shield-check",
   "sparkles",
   "info",
+  "info-circle",
   "x",
   "trash",
   "plus",
+  "minus",
+  "arrow-back-up",
+  "filter",
   "share",
   "instagram",
   "mail",
@@ -44,7 +51,17 @@ export const ICON_IDS = [
   "trending-down",
   "droplet",
   "droplet-solid",
+  "droplet-outline",
   "book",
+  "help-circle",
+  "dots-vertical",
+  "pencil",
+  "eraser",
+  "thumb-up",
+  "thumb-down",
+  "lock",
+  "zoom-exclamation",
+  "flask-solid",
 ] as const;
 
 export type IconId = (typeof ICON_IDS)[number];
@@ -118,6 +135,19 @@ export function IconSprite() {
           <path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" />
         </symbol>
 
+        {/* Tabler · archive. 하단 내비 '선반' */}
+        <symbol id="icon-archive" viewBox="0 0 24 24">
+          <path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" />
+          <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+          <path d="M10 12l4 0" />
+        </symbol>
+
+        {/* Tabler · archive (filled) */}
+        <symbol id="icon-archive-solid" viewBox="0 0 24 24">
+          <path d="M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z" />
+          <path d="M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z" />
+        </symbol>
+
         {/* Tabler · chevron-down */}
         <symbol id="icon-chevron-down" viewBox="0 0 24 24">
           <path d="M6 9l6 6l6 -6" />
@@ -147,6 +177,12 @@ export function IconSprite() {
         <symbol id="icon-badge-check" viewBox="0 0 24 24">
           <path d="M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1" />
           <path d="M9 12l2 2l4 -4" />
+        </symbol>
+
+        {/* Tabler · shield-check. 제품 상세 '정보 출처' */}
+        <symbol id="icon-shield-check" viewBox="0 0 24 24">
+          <path d="M11.46 20.846a12 12 0 0 1 -7.96 -14.846a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3a12 12 0 0 1 -.09 7.06" />
+          <path d="M15 19l2 2l4 -4" />
         </symbol>
 
         {/* Tabler · sparkles-2 */}
@@ -181,6 +217,29 @@ export function IconSprite() {
         <symbol id="icon-plus" viewBox="0 0 24 24">
           <path d="M12 5l0 14" />
           <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · minus */}
+        <symbol id="icon-minus" viewBox="0 0 24 24">
+          <path d="M5 12l14 0" />
+        </symbol>
+
+        {/* Tabler · info-circle. 마이페이지 '서비스 소개' */}
+        <symbol id="icon-info-circle" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M12 9h.01" />
+          <path d="M11 12h1v4h1" />
+        </symbol>
+
+        {/* Tabler · arrow-back-up. 위시리스트 '되돌리기' */}
+        <symbol id="icon-arrow-back-up" viewBox="0 0 24 24">
+          <path d="M9 14l-4 -4l4 -4" />
+          <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+        </symbol>
+
+        {/* Tabler · filter */}
+        <symbol id="icon-filter" viewBox="0 0 24 24">
+          <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227l0 0" />
         </symbol>
 
         {/*
@@ -308,12 +367,75 @@ export function IconSprite() {
           />
         </symbol>
 
+        {/* Tabler · droplet. 선 아이콘. 마이페이지 '피부 타입' 줄. 물방울 레벨의 droplet 과 달리 다른 선 아이콘과 같은 굵기로 그린다 */}
+        <symbol id="icon-droplet-outline" viewBox="0 0 24 24">
+          <path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546" />
+        </symbol>
+
         <symbol id="icon-droplet-solid" viewBox="-0.4 -0.4 11.806 16.76">
           <path
             d="M5.478 15.9595C2.4575 15.9595 0 13.5358 0 10.5568C0 7.07729 4.86925 0.481038 5.07675 0.201788C5.12292 0.139615 5.18291 0.0890237 5.25198 0.0540082C5.32106 0.0189927 5.39733 0.000511214 5.47477 2.25944e-05C5.6495 -0.00147741 5.7805 0.0717882 5.87575 0.196273C6.08525 0.470288 11.006 6.9498 11.006 10.5566C11.006 13.5358 8.526 15.9595 5.478 15.9595Z"
             stroke="currentColor"
             strokeWidth={0.8}
             strokeLinejoin="round"
+          />
+        </symbol>
+        {/* Tabler · help-circle. 선반 '기능 설명' */}
+        <symbol id="icon-help-circle" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M12 16v.01" />
+          <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
+        </symbol>
+
+        {/* Tabler · dots-vertical. 선반 제품 행의 더보기 */}
+        <symbol id="icon-dots-vertical" viewBox="0 0 24 24">
+          <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+          <path d="M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+          <path d="M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        </symbol>
+
+        {/* Tabler · pencil. 선반 제품 메뉴 '평가 고치기' */}
+        <symbol id="icon-pencil" viewBox="0 0 24 24">
+          <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+          <path d="M13.5 6.5l4 4" />
+        </symbol>
+
+        {/* Tabler · eraser. 선반 제품 메뉴 '평가 지우기' */}
+        <symbol id="icon-eraser" viewBox="0 0 24 24">
+          <path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3" />
+          <path d="M18 13.3l-6.3 -6.3" />
+        </symbol>
+
+        {/* Tabler · thumb-up. 선반 평가 '잘 맞았어요' */}
+        <symbol id="icon-thumb-up" viewBox="0 0 24 24">
+          <path d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3" />
+        </symbol>
+
+        {/* Tabler · thumb-down. 선반 평가 '안 맞았어요' */}
+        <symbol id="icon-thumb-down" viewBox="0 0 24 24">
+          <path d="M7 13v-8a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v7a1 1 0 0 0 1 1h3a4 4 0 0 1 4 4v1a2 2 0 0 0 4 0v-5h3a2 2 0 0 0 2 -2l-1 -5a2 3 0 0 0 -2 -2h-7a3 3 0 0 0 -3 3" />
+        </symbol>
+
+        {/* Tabler · lock. 선반 소개 '나만 보는 선반' */}
+        <symbol id="icon-lock" viewBox="0 0 24 24">
+          <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+          <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+          <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+        </symbol>
+
+        {/* Tabler · zoom-exclamation. 검색 결과 없음 */}
+        <symbol id="icon-zoom-exclamation" viewBox="0 0 24 24">
+          <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+          <path d="M21 21l-6 -6" />
+          <path d="M10 13v.01" />
+          <path d="M10 7v3" />
+        </symbol>
+
+        {/* 주의 성분. 플라스크 안에 느낌표를 뚫은 면 그림이다. 디자인(poudy-ui.pen)의 그림을 그대로 쓴다. */}
+        <symbol id="icon-flask-solid" viewBox="0 0 24 24">
+          <path
+            d="M8.2 0h7.6c.33 0 .6 .27 .6 .6v1c0 .33 -.27 .6 -.6 .6h-.8v3.74a1.2 1.2 0 0 0 .16 .6l7.31 12.66a3.2 3.2 0 0 1 -2.77 4.8h-15.4a3.2 3.2 0 0 1 -2.77 -4.8l7.31 -12.66a1.2 1.2 0 0 0 .16 -.6v-3.74h-.8c-.33 0 -.6 -.27 -.6 -.6v-1c0 -.33 .27 -.6 .6 -.6z m3.8 11a1.15 1.15 0 0 1 1.15 1.15v5a1.15 1.15 0 0 1 -2.3 0v-5a1.15 1.15 0 0 1 1.15 -1.15z m1.15 9.85a1.15 1.15 0 1 1 -2.3 0a1.15 1.15 0 1 1 2.3 0z"
+            fillRule="evenodd"
           />
         </symbol>
       </defs>

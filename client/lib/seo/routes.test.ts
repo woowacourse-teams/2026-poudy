@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   fetchBrands: vi.fn(),
   fetchCategories: vi.fn(),
-  fetchCurations: vi.fn(),
   fetchIngredients: vi.fn(),
   fetchSitemap: vi.fn(),
   fetchSitemapProducts: vi.fn(),
@@ -109,7 +108,10 @@ describe("sitemap", () => {
   it("운영 분할 사이트맵이 완성된 API 결과만 XML 200으로 반환한다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemapProducts.mockResolvedValue({ items: [sitemapProduct(30)], pagination: { hasNext: false } });
     api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: false } });
 
@@ -127,7 +129,10 @@ describe("sitemap", () => {
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemapProducts.mockResolvedValue({ items: [sitemapProduct(30)], pagination: { hasNext: false } });
     api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({
@@ -153,7 +158,7 @@ describe("sitemap", () => {
         "https://poudy.site/ingredients/5001",
       ]),
     );
-    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/wishlist");
+    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/my-page/wishlist");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchSitemapProducts).toHaveBeenCalledTimes(1);
   });
@@ -197,7 +202,10 @@ describe("sitemap", () => {
   it("데이터가 없는 화면은 화면 기준일을 lastmod 로 싣는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const entries = await pageEntries();
     const lastModifiedOf = (path: string) =>
@@ -216,7 +224,10 @@ describe("sitemap", () => {
   it("카테고리·브랜드·큐레이션은 데이터가 바뀐 날이 늦으면 그날을 lastmod 로 싣는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }, { id: 21 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemap.mockResolvedValue({
       ...emptySitemap,
       categories: [
@@ -260,7 +271,10 @@ describe("sitemap", () => {
   it("사이트맵 XML 이 lastmod 를 스키마 순서대로 적는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const xml = await (await pagesSitemap()).text();
 
@@ -276,7 +290,10 @@ describe("sitemap", () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const response = await pagesSitemap();
 

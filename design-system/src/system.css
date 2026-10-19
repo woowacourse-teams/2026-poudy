@@ -15,10 +15,30 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /*
+   * 반복 움직임(MOTION M02). 로딩 동안에만 돈다.
+   * 스켈레톤은 불투명도 1 → 0.5 → 1 을 1.6s 마다 되풀이하고, 반복 곡선은 CSS 키워드 ease-in-out 을 쓴다.
+   * 스피너는 0.8s 에 한 바퀴 linear 로 돈다. 진행 중이라는 필수 정보라 동작 줄이기에서도 멈추지 않는다.
+   */
+  --animate-skeleton: skeleton-pulse 1.6s ease-in-out infinite;
+  --animate-spinner: spinner 0.8s linear infinite;
+
+  @keyframes skeleton-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 /*
- * 쌓임 순서 8층(SHAPE E06). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 쌓임 순서 8층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
  *
  * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
  * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
@@ -59,6 +79,14 @@
   right: var(--gutter);
 }
 
+/*
+ * 토스트 자리(FEEDBACK F04). 하단 고정 영역이나 하단 내비 바로 위 12 에 뜬다.
+ * 화면마다 아래에 붙은 영역의 높이가 달라, 앱이 --toast-offset 에 그 높이를 넣는다. 없으면 화면 아래에서 12 다.
+ */
+@utility bottom-toast {
+  bottom: calc(var(--toast-offset, 0px) + 12px);
+}
+
 /* 본문 최대 폭 480 을 넘는 화면에서는 본문 열에 맞춘다 */
 @utility inset-x-content {
   left: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
@@ -67,6 +95,15 @@
 
 @utility pb-safe {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/*
+ * 글자 크기를 따라 커지는 정사각형. 기기 글자 크기를 키우면 요소의 font-size 가 함께 커지므로, 폭과 높이를 1em 으로 잡은
+ * 요소도 같은 비율로 커진다. Icon 의 scalable 이 글자 크기 토큰(text-16 등)과 함께 쓴다. Tailwind 코어에는 em 크기가 없다.
+ */
+@utility size-em {
+  width: 1em;
+  height: 1em;
 }
 
 /*

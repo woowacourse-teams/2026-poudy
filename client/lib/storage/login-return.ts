@@ -1,6 +1,6 @@
 const KEY = "poudy.login-return.v1";
 const HOME = "/";
-const NOT_RETURNABLE = ["/login", "/onboarding"];
+const NOT_RETURNABLE = ["/login", "/signup"];
 
 /*
  * 로그인하러 떠난 페이지를 기억했다가 로그인을 마치면 돌려보낸다. 카카오·구글 OAuth 는 페이지를 떠났다가

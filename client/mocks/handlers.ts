@@ -29,6 +29,7 @@ import {
   productPartSets,
   productSimilarities,
 } from "./fixtures";
+import { shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -195,8 +196,8 @@ const filterProducts = (url: URL) => {
     const parent = categories.find((category) => category.children.some((child) => child.id === categoryId));
     if (categoryIds.length && !categoryIds.includes(categoryId ?? -1) && !categoryIds.includes(parent?.id ?? -1))
       return false;
-    if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
-    if (oil.length && !oil.includes(product.oilLevel)) return false;
+    if (moisture.length && (product.moistureLevel === null || !moisture.includes(product.moistureLevel))) return false;
+    if (oil.length && (product.oilLevel === null || !oil.includes(product.oilLevel))) return false;
     if (skinType && !matchesSkinType(skinType, product)) return false;
     if (sensitiveSkin && !sensitiveProductIds.has(product.id)) return false;
 
@@ -531,6 +532,8 @@ export const setMockSavedProducts = (productIds: readonly number[]): void => {
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
 export const handlers = [
+  ...shelfHandlers,
+
   http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
 
   http.get("*/api/users/me/wishlist/product-ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
@@ -599,7 +602,23 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
+  http.get("*/api/banners", ({ request }) => {
+    const slot = new URL(request.url).searchParams.get("slot");
+    if (slot !== "MAIN" && slot !== "STRIP")
+      return problem(400, "유효한 배너 슬롯이 필요합니다.", "INVALID_QUERY_PARAMETER");
+    return HttpResponse.json({
+      items:
+        slot === "STRIP"
+          ? []
+          : curations.map((curation) => ({
+              id: curation.id + 100,
+              title: curation.title,
+              description: curation.description,
+              imageUrl: curation.thumbnailImageUrl,
+              target: { type: "CURATION", curationId: curation.id },
+            })),
+    });
+  }),
 
   http.get("*/api/curations/:curationId", ({ params }) => {
     const curation = curations.find(({ id }) => id === Number(params.curationId));

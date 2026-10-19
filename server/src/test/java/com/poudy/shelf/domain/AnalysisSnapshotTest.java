@@ -15,7 +15,7 @@ class AnalysisSnapshotTest {
     @Test
     @DisplayName("직전 결과가 없으면 모든 성분이 새 성분이다")
     void marksAllAsNewWithoutPreviousResult() {
-        AnalysisSnapshot next = AnalysisSnapshot.empty().nextIfChanged(List.of(1L, 2L)).orElseThrow();
+        AnalysisSnapshot next = AnalysisSnapshot.empty().next(List.of(1L, 2L));
 
         assertThat(next.isNew(1L)).isTrue();
         assertThat(next.isNew(2L)).isTrue();
@@ -27,42 +27,28 @@ class AnalysisSnapshotTest {
     void marksOnlyIngredientsMissingFromPreviousResult() {
         AnalysisSnapshot previous = new AnalysisSnapshot(Map.of(1L, true, 2L, false));
 
-        AnalysisSnapshot withoutTwo = previous.nextIfChanged(List.of(1L)).orElseThrow();
-        AnalysisSnapshot twoAgain = withoutTwo.nextIfChanged(List.of(1L, 2L, 3L)).orElseThrow();
+        AnalysisSnapshot withoutTwo = previous.next(List.of(1L));
+        AnalysisSnapshot twoAgain = withoutTwo.next(List.of(1L, 2L, 3L));
 
-        assertThat(withoutTwo.isNew(1L)).isFalse();
-        assertThat(withoutTwo.isNew(2L)).isFalse();
-        assertThat(twoAgain.isNew(1L)).isFalse();
-        assertThat(twoAgain.isNew(2L)).isTrue();
-        assertThat(twoAgain.isNew(3L)).isTrue();
+        assertThat(withoutTwo.newByIngredientId()).isEqualTo(Map.of(1L, false));
+        assertThat(twoAgain.newByIngredientId()).isEqualTo(Map.of(1L, false, 2L, true, 3L, true));
     }
 
     @Test
-    @DisplayName("성분이 같으면 순서와 상관없이 저장할 결과를 만들지 않고 새 성분 표시를 유지한다")
-    void keepsNewFlagsWhenIngredientsAreUnchanged() {
-        AnalysisSnapshot snapshot = new AnalysisSnapshot(Map.of(1L, true, 2L, false));
+    @DisplayName("성분이 같으면 순서와 상관없이 이전 새 성분 표시를 모두 지운다")
+    void clearsNewFlagsWhenIngredientsAreUnchanged() {
+        AnalysisSnapshot snapshot = new AnalysisSnapshot(Map.of(1L, true, 2L, true));
 
-        assertThat(snapshot.nextIfChanged(List.of(2L, 1L))).isEmpty();
-        assertThat(snapshot.isNew(1L)).isTrue();
-        assertThat(snapshot.isNew(2L)).isFalse();
+        assertThat(snapshot.next(List.of(2L, 1L)).newByIngredientId()).isEqualTo(Map.of(1L, false, 2L, false));
     }
 
     @Test
-    @DisplayName("모든 성분이 사라지면 빈 결과로 갱신하고, 다시 비어 있으면 저장하지 않는다")
-    void clearsPreviousIngredientsOnlyOnce() {
-        AnalysisSnapshot previous = new AnalysisSnapshot(Map.of(1L, true));
+    @DisplayName("모든 성분이 사라지면 빈 결과가 되고, 다음 결과는 모두 새 성분이다")
+    void clearsPreviousIngredients() {
+        AnalysisSnapshot cleared = new AnalysisSnapshot(Map.of(1L, true)).next(List.of());
 
-        AnalysisSnapshot cleared = previous.nextIfChanged(List.of()).orElseThrow();
-
-        assertThat(cleared.isNew(1L)).isFalse();
-        assertThat(cleared.nextIfChanged(List.of())).isEmpty();
-        assertThat(cleared.nextIfChanged(List.of(1L)).orElseThrow().isNew(1L)).isTrue();
-    }
-
-    @Test
-    @DisplayName("처음부터 결과가 비어 있으면 저장하지 않는다")
-    void skipsEmptyInitialResult() {
-        assertThat(AnalysisSnapshot.empty().nextIfChanged(List.of())).isEmpty();
+        assertThat(cleared.newByIngredientId()).isEmpty();
+        assertThat(cleared.next(List.of(1L)).isNew(1L)).isTrue();
     }
 
     @Test
@@ -71,15 +57,13 @@ class AnalysisSnapshotTest {
         Map<Long, Boolean> storedFlags = new HashMap<>(Map.of(1L, true));
         AnalysisSnapshot previous = new AnalysisSnapshot(storedFlags);
         List<Long> ingredientIds = new ArrayList<>(List.of(1L, 2L));
-        AnalysisSnapshot next = previous.nextIfChanged(ingredientIds).orElseThrow();
+        AnalysisSnapshot next = previous.next(ingredientIds);
 
         storedFlags.clear();
         ingredientIds.clear();
 
         assertThat(previous.isNew(1L)).isTrue();
-        assertThat(previous.nextIfChanged(List.of(1L))).isEmpty();
         assertThat(next.isNew(1L)).isFalse();
         assertThat(next.isNew(2L)).isTrue();
-        assertThat(next.nextIfChanged(List.of(1L, 2L))).isEmpty();
     }
 }

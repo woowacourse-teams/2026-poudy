@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Button } from "../src/button";
 import { CheckboxGroup, CheckboxGroupItem } from "../src/checkbox-group";
 import { RadioGroup, RadioGroupItem } from "../src/radio-group";
 import { RangeSlider } from "../src/range-slider";
@@ -27,6 +28,7 @@ export function ChoiceSamples() {
   const [oil, setOil] = useState<readonly [number, number]>([2, 2]);
   const [any, setAny] = useState(true);
   const [rating, setRating] = useState(2.5);
+  const [oilRating, setOilRating] = useState<number | null>(null);
 
   return (
     <>
@@ -141,6 +143,20 @@ export function ChoiceSamples() {
           startLabel="건조해요"
           endLabel="촉촉해요"
         />
+      </Section>
+
+      <Section title="Slider · 선택 전 (value=null, 누르거나 방향키로 고름)">
+        <Slider
+          label="유분감"
+          value={oilRating}
+          onValueChange={setOilRating}
+          tone="oil"
+          startLabel="산뜻해요"
+          endLabel="번들거려요"
+        />
+        <Button variant="text" className="self-start" onClick={() => setOilRating(null)}>
+          선택 전으로 되돌리기 (견본용)
+        </Button>
       </Section>
     </>
   );

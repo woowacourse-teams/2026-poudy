@@ -1,0 +1,294 @@
+import type { ReactNode } from "react";
+
+import { cn } from "./cn";
+
+/**
+ * 아이콘(명세 ICON · 아이콘 인계 명세). 그림은 Tabler(https://tabler.io/icons, MIT)의 24×24 outline 이다.
+ *
+ * 모든 그림을 IconSprite 에 한 번만 그려 두고 Icon 이 <use> 로 참조한다. 같은 아이콘이 여러 번 나와도 path 는 한 벌만
+ * 내려간다. 쓰는 앱은 IconSprite 를 레이아웃 맨 위에 한 번 넣는다.
+ *
+ * 심볼 id 는 client 의 옛 스프라이트(components/ui/icons, id 'icon-*')와 겹치지 않게 'ds-icon-*' 으로 둔다.
+ * 화면을 옮기는 동안 두 스프라이트가 한 문서에 함께 있어도, 같은 이름의 다른 그림이 서로를 덮지 않는다.
+ *
+ * 새 아이콘은 Tabler 원본의 path 만 옮긴다. 원본 맨 앞의 투명한 사각형(stroke="none")은 옮기지 않는다.
+ * 채움 그림(filled)은 상태가 켜졌다는 뜻일 때만 쓴다(ICON I03). 선택·활성을 굵기로 나타내지 않는다.
+ */
+const OUTLINE = {
+  home: [
+    "M5 12l-2 0l9 -9l9 9l-2 0",
+    "M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7",
+    "M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6",
+  ],
+  // Tabler layout-grid. 하단 내비 '카테고리'
+  grid: [
+    "M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
+    "M14 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
+    "M4 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
+    "M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
+  ],
+  search: ["M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0", "M21 21l-6 -6"],
+  // 하단 내비 '선반'
+  archive: [
+    "M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2",
+    "M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10",
+    "M10 12l4 0",
+  ],
+  user: ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"],
+  bookmark: ["M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4"],
+  bookmarks: ["M15 10v11l-5 -3l-5 3v-11a3 3 0 0 1 3 -3h4a3 3 0 0 1 3 3", "M11 3h5a3 3 0 0 1 3 3v11"],
+  "chevron-down": ["M6 9l6 6l6 -6"],
+  "chevron-up": ["M6 15l6 -6l6 6"],
+  "chevron-right": ["M9 6l6 6l-6 6"],
+  "chevron-left": ["M15 6l-6 6l6 6"],
+  check: ["M5 12l5 5l10 -10"],
+  x: ["M18 6l-12 12", "M6 6l12 12"],
+  plus: ["M12 5l0 14", "M5 12l14 0"],
+  // Tabler rosette-discount-check
+  "badge-check": [
+    "M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1",
+    "M9 12l2 2l4 -4",
+  ],
+  // Tabler sparkles-2
+  sparkles: [
+    "M14 6a9.3 9.3 0 0 0 1.516 -.546c.911 -.438 1.494 -1.015 1.937 -1.932c.207 -.428 .382 -.928 .547 -1.522c.165 .595 .34 1.095 .547 1.521c.443 .918 1.026 1.495 1.937 1.933c.426 .205 .925 .38 1.516 .546a9.3 9.3 0 0 0 -1.516 .547c-.911 .438 -1.494 1.015 -1.937 1.932a9 9 0 0 0 -.547 1.521c-.165 -.594 -.34 -1.095 -.547 -1.521c-.443 -.918 -1.026 -1.494 -1.937 -1.932a9 9 0 0 0 -1.516 -.547",
+    "M3 14a21 21 0 0 0 1.652 -.532c2.542 -.953 3.853 -2.238 4.816 -4.806a20 20 0 0 0 .532 -1.662a20 20 0 0 0 .532 1.662c.963 2.567 2.275 3.853 4.816 4.806q .75 .28 1.652 .532a21 21 0 0 0 -1.652 .532c-2.542 .953 -3.854 2.238 -4.816 4.806a20 20 0 0 0 -.532 1.662a20 20 0 0 0 -.532 -1.662c-.963 -2.568 -2.275 -3.853 -4.816 -4.806a21 21 0 0 0 -1.652 -.532",
+  ],
+  // Tabler info-square-rounded
+  info: [
+    "M12 9h.01",
+    "M11 12h1v4h1",
+    "M12 3c7.2 0 9 1.8 9 9c0 7.2 -1.8 9 -9 9c-7.2 0 -9 -1.8 -9 -9c0 -7.2 1.8 -9 9 -9",
+  ],
+  // Tabler info-circle. 하단 행동 영역의 안내 줄
+  "info-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 9h.01", "M11 12h1v4h1"],
+  "alert-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 8v4", "M12 16h.01"],
+  // Tabler help-circle. 큰 제목 내비의 도움말
+  "help-circle": [
+    "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0",
+    "M12 16v.01",
+    "M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483",
+  ],
+  // Tabler dots-vertical. 선반의 더보기(⋯)
+  "dots-vertical": [
+    "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+    "M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+    "M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+  ],
+  trash: [
+    "M4 7l16 0",
+    "M10 11l0 6",
+    "M14 11l0 6",
+    "M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12",
+    "M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3",
+  ],
+  // 점 세 개를 선으로 이은 모양. 상자에서 화살표가 나가는 모양은 내려받기로 읽히기 쉬워 쓰지 않는다.
+  share: [
+    "M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+    "M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+    "M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+    "M8.7 10.7l6.6 -3.4",
+    "M8.7 13.3l6.6 3.4",
+  ],
+  // Tabler brand-instagram
+  instagram: [
+    "M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8",
+    "M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0",
+    "M16.5 7.5v.01",
+  ],
+  mail: ["M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10", "M3 7l9 6l9 -6"],
+  book: [
+    "M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0",
+    "M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0",
+    "M3 6l0 13",
+    "M12 6l0 13",
+    "M21 6l0 13",
+  ],
+  "user-x": ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h3.5", "M22 22l-5 -5", "M17 22l5 -5"],
+  cake: [
+    "M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z",
+    "M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197",
+    "M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737z",
+  ],
+  logout: [
+    "M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2",
+    "M9 12h12l-3 -3",
+    "M18 15l3 -3",
+  ],
+  // Tabler message-circle-question
+  "message-question": [
+    "M15.02 19.52c-2.341 .736 -5 .606 -7.32 -.52l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.649 1.407 2.575 3.253 2.742 5.152",
+    "M19 22v.01",
+    "M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483",
+  ],
+  "trending-up": ["M3 17l6 -6l4 4l8 -8", "M14 7l7 0l0 7"],
+  "trending-down": ["M3 7l6 6l4 -4l8 8", "M21 10l0 7l-7 0"],
+  // 사진 첨부 버튼
+  "photo-plus": [
+    "M15 8h.01",
+    "M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5",
+    "M3 16l5 -5c.928 -.893 2.072 -.893 3 0l4 4",
+    "M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54",
+    "M16 19h6",
+    "M19 16v6",
+  ],
+  // 첨부 사진의 업로드 진행 표시. 돌리는 쪽이 animate-spin 을 붙인다.
+  "loader-2": ["M12 3a9 9 0 1 0 9 9"],
+  // 첨부 사진의 다시 시도
+  "rotate-clockwise": ["M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5"],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * 채움 그림. 선으로 그린 아이콘에 fill 만 입히면 획 사이 빈 곳까지 메워져 뭉개지므로 모양을 따로 그린다.
+ * 하단 내비의 고른 탭과 저장됨 상태에서 쓴다.
+ */
+const FILLED = {
+  home: [
+    "M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z",
+  ],
+  grid: [
+    "M9 3a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2z",
+    "M19 3a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2z",
+    "M9 13a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2z",
+    "M19 13a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2z",
+  ],
+  search: [
+    "M14 3.072a8 8 0 0 1 2.617 11.424l4.944 4.943a1.5 1.5 0 0 1 -2.008 2.225l-.114 -.103l-4.943 -4.944a8 8 0 0 1 -12.49 -6.332l-.006 -.285l.005 -.285a8 8 0 0 1 11.995 -6.643z",
+  ],
+  archive: [
+    "M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z",
+    "M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z",
+  ],
+  user: [
+    "M12 2a5 5 0 1 1 -5 5l.005 -.217a5 5 0 0 1 4.995 -4.783z",
+    "M14 14a5 5 0 0 1 5 5v1a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-1a5 5 0 0 1 5 -5h4z",
+  ],
+  bookmark: [
+    "M14 2a5 5 0 0 1 5 5v14a1 1 0 0 1 -1.555 .832l-5.445 -3.63l-5.444 3.63a1 1 0 0 1 -1.55 -.72l-.006 -.112v-14a5 5 0 0 1 5 -5h4z",
+  ],
+  bookmarks: [
+    "M12 6a4 4 0 0 1 4 4v11a1 1 0 0 1 -1.514 .857l-4.486 -2.691l-4.486 2.691a1 1 0 0 1 -1.508 -.743l-.006 -.114v-11a4 4 0 0 1 4 -4h4z",
+    "M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z",
+  ],
+} as const satisfies Partial<Record<keyof typeof OUTLINE, readonly string[]>>;
+
+export type IconName = keyof typeof OUTLINE;
+/** 채움 그림이 있는 아이콘. filled 는 이 이름에만 줄 수 있다. */
+export type FilledIconName = keyof typeof FILLED;
+
+export const ICON_NAMES = Object.keys(OUTLINE) as readonly IconName[];
+
+/**
+ * 크기 단계(ICON I02). 5단계와 강조 2단계(28·40)만 쓴다. 옆에 글자가 있으면 글자 크기로, 혼자 있으면 놓이는 자리로 고른다.
+ *
+ * - 12: 라벨·캡션(11–12) 옆, 작은 배지 안
+ * - 14: 보조 본문(13) 옆, 효과 태그 안
+ * - 16: 본문(14–15) 옆, 칩·입력 안, 목록 끝 스피너
+ * - 20: 버튼 안, 목록 행 끝(›), 시트 머리. 기본값
+ * - 24: 하단 내비, 앱바, 혼자 있는 아이콘 버튼
+ * - 28 · 40: 빈 상태·오류·완료 화면의 대표 아이콘 하나
+ */
+export const ICON_SIZES = [12, 14, 16, 20, 24, 28, 40] as const;
+export type IconSize = (typeof ICON_SIZES)[number];
+
+/**
+ * 글자와 함께 커질 수 있는 크기. 옆 글자(11–17)에 맞추는 단계만 든다. 28·40 은 혼자 있는 대표 아이콘이라 따라 커질 글자가 없다.
+ */
+export type ScalableIconSize = Exclude<IconSize, 28 | 40>;
+
+/**
+ * scalable 일 때 쓰는 클래스. 글자 크기를 아이콘 크기(px)로 두고 폭과 높이를 1em 으로 잡는다. 1배에서는 지금과 같은
+ * 정수 px 로 그리고, 기기 글자 크기를 키우면 font-size 가 함께 커져 아이콘도 글자와 같은 비율로 커진다.
+ * Tailwind 가 클래스를 찾도록 이름을 통째로 적는다.
+ */
+const SCALABLE_SIZE_CLASS = {
+  12: "size-em text-12",
+  14: "size-em text-14",
+  16: "size-em text-16",
+  20: "size-em text-20",
+  24: "size-em text-24",
+} as const satisfies Record<ScalableIconSize, string>;
+
+type IconSizeProps =
+  | {
+      /** 표에 없는 크기는 타입이 막는다. 기본 20. */
+      readonly size?: IconSize;
+      readonly scalable?: false;
+    }
+  | {
+      readonly size?: ScalableIconSize;
+      /**
+       * 글자 옆 아이콘을 글자와 함께 키운다. 기기 글자 크기를 키우면 글자만 커지고 px 로 잡은 아이콘은 그대로 남아,
+       * 행 끝 꺾쇠(›)·배지 안 기호·저장 버튼 아이콘이 옆 글자보다 작아진다. client 의 옛 Icon 이 같은 자리에서 쓰던
+       * scalable 과 뜻이 같다. 혼자 있는 아이콘(하단 내비·앱바·대표 아이콘)은 자리 크기가 정해져 있어 쓰지 않는다.
+       */
+      readonly scalable: true;
+    };
+
+export type IconProps<N extends IconName = IconName> = IconSizeProps & {
+  readonly name: N;
+  /**
+   * 상태가 켜졌다는 뜻일 때만 채운다. 예: 저장됨, 하단 내비의 지금 탭. 채움 그림이 있는 이름(FilledIconName)에만 줄 수 있다.
+   */
+  readonly filled?: N extends FilledIconName ? boolean : never;
+  /**
+   * 채운 원·네모 안의 작은 기호(체크·✕)만 굵게 그린다. 선 굵기가 1.5배(viewBox 기준 3)가 된다(ICON I03).
+   * 그 밖의 자리는 굵기를 바꾸지 않는다.
+   */
+  readonly bold?: boolean;
+  /** 색과 자리. 색은 ICON I04 의 역할(text-text-secondary 등)을 쓴다. */
+  readonly className?: string;
+};
+
+const symbolId = (name: IconName, filled: boolean) => `ds-icon-${name}${filled ? "-filled" : ""}`;
+
+/**
+ * 스프라이트의 아이콘 하나를 그린다. 뜻은 옆 글자나 버튼 이름이 전하므로 그림은 보조 기술에서 감춘다(ICON I05).
+ * 아이콘만 있는 버튼은 이름을 버튼에 준다(IconButton 의 label).
+ *
+ * 선 굵기는 viewBox(24) 기준 2 다. SVG 가 크기에 맞춰 줄이므로 20 으로 그리면 1.67, 16 으로 그리면 1.33 이 되어
+ * 명세의 굵기와 맞는다.
+ */
+export function Icon<N extends IconName>({ name, size = 20, scalable, filled, bold = false, className }: IconProps<N>) {
+  const fill = Boolean(filled) && name in FILLED;
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={fill ? "currentColor" : "none"}
+      stroke={fill ? "none" : "currentColor"}
+      strokeWidth={fill ? undefined : bold ? 3 : 2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("shrink-0", scalable && SCALABLE_SIZE_CLASS[size as ScalableIconSize], className)}
+    >
+      <use href={`#${symbolId(name, fill)}`} />
+    </svg>
+  );
+}
+
+const symbol = (id: string, paths: readonly string[]): ReactNode => (
+  <symbol key={id} id={id} viewBox="0 0 24 24">
+    {paths.map((d) => (
+      <path key={d} d={d} />
+    ))}
+  </symbol>
+);
+
+/**
+ * 문서에 한 번만 넣는다. 레이아웃 맨 위에 두어 모든 화면의 Icon 이 참조하게 한다.
+ * 화면에 보이지 않게 크기를 0 으로 두고 보조 기술에서도 감춘다.
+ */
+export function IconSprite() {
+  return (
+    <svg aria-hidden="true" focusable="false" width="0" height="0" className="absolute overflow-hidden">
+      <defs>
+        {Object.entries(OUTLINE).map(([name, paths]) => symbol(symbolId(name as IconName, false), paths))}
+        {Object.entries(FILLED).map(([name, paths]) => symbol(symbolId(name as IconName, true), paths))}
+      </defs>
+    </svg>
+  );
+}

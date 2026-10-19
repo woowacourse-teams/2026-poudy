@@ -4,6 +4,7 @@ import { FieldLabel } from "./FieldLabel";
 import { FieldMessage } from "./FieldMessage";
 
 import { CONTENT_MAX_LENGTH } from "@/lib/api/feedback";
+import { formatProgress } from "@/lib/domain/format";
 import { contentError } from "@/lib/domain/inquiry-validation";
 import { useFieldError } from "@/lib/hooks/useFieldError";
 
@@ -47,7 +48,7 @@ export function ContentField({
 
         {/* 남은 분량을 눈으로 볼 수 있어야 2,000 자에 걸려 놀라지 않는다. */}
         <span aria-hidden="true" className="self-end text-[11px] text-text-secondary">
-          {value.length.toLocaleString("ko-KR")} / {CONTENT_MAX_LENGTH.toLocaleString("ko-KR")}
+          {formatProgress(value.trim().length, CONTENT_MAX_LENGTH)}
         </span>
       </div>
 

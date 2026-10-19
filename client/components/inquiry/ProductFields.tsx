@@ -45,7 +45,7 @@ export function ProductFields({
           onChange={(event) => onProductNameChange(event.target.value)}
           maxLength={PRODUCT_NAME_MAX_LENGTH}
           disabled={disabled}
-          placeholder="등록을 원하는 제품명을 적어주세요."
+          placeholder="등록을 원하는 제품명을 적어 주세요."
           aria-invalid={productError ? true : undefined}
           aria-describedby="inquiry-product-name-message"
           className={inputClass}
@@ -55,7 +55,7 @@ export function ProductFields({
         <FieldMessage
           id="inquiry-product-name-message"
           error={productError}
-          hint="용량이나 버전이 있다면 함께 적어주세요."
+          hint="용량이나 버전이 있다면 함께 적어 주세요."
         />
       </section>
 
@@ -68,7 +68,7 @@ export function ProductFields({
           onChange={(event) => onBrandNameChange(event.target.value)}
           maxLength={BRAND_NAME_MAX_LENGTH}
           disabled={disabled}
-          placeholder="브랜드를 알고 있다면 적어주세요."
+          placeholder="브랜드를 알고 있다면 적어 주세요."
           aria-invalid={brandError ? true : undefined}
           aria-describedby="inquiry-brand-name-message"
           className={inputClass}
@@ -83,7 +83,7 @@ export function ProductFields({
         </span>
 
         <span className="flex flex-col gap-1">
-          <span className="text-[13px] font-semibold text-text-primary">제품 정보를 확인해주세요</span>
+          <span className="text-[13px] font-semibold text-text-primary">제품 정보를 확인해 주세요</span>
           <span className="text-[12px] text-text-secondary">
             보내주신 정보를 확인해 제품 목록에 반영할게요. 등록까지는 시간이 걸릴 수 있어요.
           </span>

@@ -9,8 +9,11 @@ import { IconButton } from "../src/icon-button";
 import { Icon } from "./icons";
 import { ChipSamples } from "./chip-samples";
 import { ChoiceSamples } from "./choice-samples";
+import { FeedbackSamples } from "./feedback-samples";
 import { InputSamples } from "./input-samples";
+import { LayoutSamples } from "./layout-samples";
 import { Section } from "./section";
+import { SheetSamples } from "./sheet-samples";
 import { TabSamples } from "./tab-samples";
 
 /** 디자인 시스템 부품을 한 화면에 늘어놓은 견본이다. 폭은 앱 화면과 같다. */
@@ -79,6 +82,9 @@ function Preview() {
       <ChoiceSamples />
       <ChipSamples />
       <TabSamples />
+      <SheetSamples />
+      <FeedbackSamples />
+      <LayoutSamples />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -123,6 +123,22 @@ describe("유형 선택", () => {
 });
 
 describe("입력과 제출 버튼의 상태", () => {
+  it("중간 공백을 포함해 열 자를 채우면 앞뒤 공백을 제거해 보낸다", async () => {
+    const user = userEvent.setup();
+    render(<InquiryForm originPath="/" />);
+    await chooseBug(user);
+    fireEvent.change(screen.getByLabelText(/문의 내용/), { target: { value: "  가 나 다 라 마바  " } });
+
+    await user.click(submitButton());
+
+    expect(sendFeedback).toHaveBeenCalledWith({
+      type: "BUG_REPORT",
+      content: "가 나 다 라 마바",
+      originPath: "/",
+      imageIds: [],
+    });
+  });
+
   it("열 자에 미치지 못하면 제출 버튼을 누를 수 없다", async () => {
     const user = userEvent.setup();
     render(<InquiryForm originPath="/" />);
@@ -260,7 +276,7 @@ describe("접수 완료에서 돌아가기", () => {
 describe("오류 처리", () => {
   const fail = (status: number, code: string) => new ApiError(status, code, "실패");
 
-  it("429 로 실패하면 잠시 뒤 다시 시도해 달라고 알린다", async () => {
+  it("429 로 실패하면 잠시 후 다시 시도해 달라고 알린다", async () => {
     const user = userEvent.setup();
     sendFeedback.mockRejectedValue(fail(429, "TOO_MANY_REQUESTS"));
 
@@ -367,7 +383,7 @@ describe("유형이 정해진 채로 들어온 경우", () => {
   const fixed = {
     productId: 123,
     fieldLabel: "제보 내용",
-    placeholder: "무엇이 다른지 적어주세요.",
+    placeholder: "무엇이 다른지 적어 주세요.",
     header: <h2>제품 정보가 정확하지 않나요?</h2>,
   };
 

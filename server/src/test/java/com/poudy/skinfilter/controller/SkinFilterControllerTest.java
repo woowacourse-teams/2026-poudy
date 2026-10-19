@@ -1,6 +1,8 @@
 package com.poudy.skinfilter.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -76,6 +78,65 @@ class SkinFilterControllerTest {
             .andExpect(jsonPath("$.items[0].skinEffects").isArray())
             .andExpect(jsonPath("$.items[0].englishName").doesNotExist())
             .andExpect(jsonPath("$.items[1].id").value(9L));
+    }
+
+    @Test
+    @DisplayName("성분마다 속한 제외 성분군 정보를 주고, 해당하지 않으면 빈 배열을 준다")
+    void includesExcludeCodes() throws Exception {
+        add("""
+            {"ingredientIds": [2]}
+            """).andExpect(status().isNoContent());
+        add("""
+            {"ingredientIds": [20]}
+            """).andExpect(status().isNoContent());
+        jdbcTemplate.update(
+            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
+        );
+
+        mockMvc.perform(get(PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(20L))
+            .andExpect(jsonPath("$.items[0].excludeCodes").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[1].id").value(2L))
+            .andExpect(jsonPath("$.items[1].excludeCodes").value(empty()));
+    }
+
+    @Test
+    @DisplayName("성분별 제외 성분군 코드만 주고 일반 성분군은 제외한다")
+    void includesOnlyExcludeCodeValues() throws Exception {
+        jdbcTemplate.update(
+            "insert into ingredient_group (code, display_name, description) values ('TEST_GENERAL', '일반 성분군', '일반 설명')"
+        );
+        jdbcTemplate.update(
+            "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)"
+                + " values ('TEST_GENERAL', 20, 0), ('HARSH_PRESERVATIVES', 20, 1000)"
+        );
+        add("""
+            {"ingredientIds": [20, 2]}
+            """).andExpect(status().isNoContent());
+        jdbcTemplate.update(
+            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
+        );
+
+        mockMvc.perform(get(PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(20L))
+            .andExpect(
+                jsonPath("$.items[0].excludeCodes").value(contains("FRAGRANCE_ALLERGENS", "HARSH_PRESERVATIVES"))
+            )
+            .andExpect(jsonPath("$.items[0].groupCodes").doesNotExist())
+            .andExpect(jsonPath("$.items[0].formulationRoles").isArray())
+            .andExpect(jsonPath("$.items[0].skinEffects").isArray())
+            .andExpect(jsonPath("$.items[1].id").value(2L))
+            .andExpect(jsonPath("$.items[1].excludeCodes").value(empty()));
+    }
+
+    @Test
+    @DisplayName("담은 성분이 없으면 빈 목록을 준다")
+    void findsEmptyFilter() throws Exception {
+        mockMvc.perform(get(PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items").value(empty()));
     }
 
     @Test

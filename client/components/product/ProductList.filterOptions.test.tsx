@@ -30,7 +30,7 @@ it.each([
   navigation.query = query;
   const paths: string[] = [];
   server.events.on("request:start", ({ request }) => paths.push(new URL(request.url).pathname));
-  const { rerender } = render(<ProductList excludeCodes={excludeCodes} />);
+  const { rerender } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
   await screen.findByRole("main");
   await userEvent.click(screen.getByRole("button", { name: new RegExp(sheet) }));
   const dialog = within(await screen.findByRole("dialog"));
@@ -41,7 +41,7 @@ it.each([
   expect(paths.filter((path) => path === "/api/products")).toHaveLength(1);
   await userEvent.click(dialog.getByRole("button", { name: /제품 보기/ }));
   navigation.query = window.location.search;
-  rerender(<ProductList excludeCodes={excludeCodes} />);
+  rerender(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
   await waitFor(() => expect(paths.filter((path) => path === "/api/products")).toHaveLength(2));
 });
 
@@ -49,7 +49,7 @@ it("중간 페이지 직접 진입은 목록을 추가 요청하지 않고 첫 �
   navigation.query = "page=2&brandIds=99999";
   const paths: string[] = [];
   server.events.on("request:start", ({ request }) => paths.push(new URL(request.url).pathname));
-  render(<ProductList excludeCodes={excludeCodes} />);
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
   await screen.findByRole("main");
   await userEvent.click(screen.getByRole("button", { name: /브랜드/ }));
   const dialog = within(await screen.findByRole("dialog"));

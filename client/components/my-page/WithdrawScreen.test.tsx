@@ -15,7 +15,7 @@ const { router } = vi.hoisted(() => ({ router: { back: vi.fn(), push: vi.fn(), r
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 describe("탈퇴하기", () => {
-  it("안내를 확인했다고 체크해야 탈퇴할 수 있고, 탈퇴하면 로그인 화면으로 보낸다", async () => {
+  it("안내를 확인했다고 체크해야 탈퇴할 수 있고, 탈퇴하면 홈으로 보낸다", async () => {
     const user = userEvent.setup();
     const withdraw = vi.fn();
     server.use(
@@ -25,13 +25,14 @@ describe("탈퇴하기", () => {
       }),
     );
     render(<WithdrawScreen />);
+    expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
     const button = screen.getByRole("button", { name: "탈퇴하기" });
     expect(button).toBeDisabled();
 
     await user.click(screen.getByRole("checkbox", { name: "위 내용을 확인했고, 탈퇴할게요" }));
     await user.click(button);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login"));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/"));
     expect(withdraw).toHaveBeenCalledTimes(1);
   });
 });

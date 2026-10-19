@@ -4,7 +4,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ fetchCuration: vi.fn(), fetchCurations: vi.fn() }));
+const api = vi.hoisted(() => ({ fetchCuration: vi.fn(), fetchMainBanners: vi.fn() }));
 
 vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/products")>()),
@@ -33,10 +33,22 @@ const renderPage = async (curationId: string) =>
   render(await CurationDetailPage({ params: Promise.resolve({ curationId }), searchParams: Promise.resolve({}) }));
 
 beforeEach(() => {
-  api.fetchCurations.mockResolvedValue({
+  api.fetchMainBanners.mockResolvedValue({
     items: [
-      { id: 5, title: "지금 기획전", description: "", thumbnailImageUrl: "/a.jpg" },
-      { id: 6, title: "다음 기획전", description: "", thumbnailImageUrl: "/b.jpg" },
+      {
+        id: 105,
+        target: { type: "CURATION" as const, curationId: 5 },
+        title: "지금 기획전",
+        description: "",
+        imageUrl: "/a.jpg",
+      },
+      {
+        id: 106,
+        target: { type: "CURATION" as const, curationId: 6 },
+        title: "다음 기획전",
+        description: "",
+        imageUrl: "/b.jpg",
+      },
     ],
   });
 });
@@ -77,7 +89,7 @@ describe("큐레이션 상세", () => {
   /* 목록을 받지 못해도 본문은 그대로 보여 준다. 이어 볼 목록만 빠진다. */
   it("다른 큐레이션 목록을 받지 못해도 본문을 그린다", async () => {
     api.fetchCuration.mockResolvedValue(curation);
-    api.fetchCurations.mockRejectedValue(new Error("down"));
+    api.fetchMainBanners.mockRejectedValue(new Error("down"));
 
     await renderPage("5");
 

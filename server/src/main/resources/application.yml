@@ -141,6 +141,9 @@ poudy:
       enabled: false
       max-age: P30D
       cron: "0 40 3 * * *"
+    profile-rate-limit:
+      max-requests: 5
+      window: PT1M
   product-request:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}

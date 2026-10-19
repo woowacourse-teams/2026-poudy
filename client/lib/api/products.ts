@@ -3,7 +3,7 @@ import {
   BrandOverviewResponse,
   CategoryListResponse,
   CurationDetailResponse,
-  CurationListResponse,
+  BannerListResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
   IngredientGroupResponse,
@@ -157,7 +157,8 @@ export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
  * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을
  * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
  */
-export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", CurationListResponse);
+export const fetchMainBanners = (): Promise<BannerListResponse> =>
+  apiGet("/api/banners", BannerListResponse, { query: new URLSearchParams({ slot: "MAIN" }) });
 
 export const fetchSitemap = (): Promise<SitemapResponse> => apiGet("/api/sitemap", SitemapResponse);
 

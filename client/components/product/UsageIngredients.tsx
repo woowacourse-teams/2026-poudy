@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProductIngredientResponse, ProductPartResponse, SkinEffectItemResponse } from "@poudy/api/api.zod";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,7 +10,6 @@ import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
 import { openInPlace } from "@/components/ui/open-in-place";
-import { PRESS_SURFACE } from "@/components/ui/press";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 
@@ -53,8 +53,8 @@ export function UsageIngredients({
 
   return (
     <section data-no-select className="flex flex-col gap-1">
-      <h3 className="text-[14px] font-bold text-[#182132]">쓰임새별 성분</h3>
-      <p className="text-[12px] text-[#566273]">성분이 화장품에서 주로 쓰이는 목적으로 묶었어요</p>
+      <h3 className="text-body leading-snug font-bold text-text-primary">쓰임새별 성분</h3>
+      <p className="text-caption text-text-secondary">성분이 화장품에서 주로 쓰이는 목적으로 묶었어요</p>
 
       <ul>
         {part.skinEffectGroups.map((effect) => (
@@ -62,16 +62,16 @@ export function UsageIngredients({
             라벨 칸과 칩 목록의 폭을 글자 크기(em)로 잡는다. 기기에서 글자를 키우면 라벨 칸이 함께 넓어지고,
             칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다. 1배에서는 디자인의 100px 그대로다.
           */
-          <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-[#DEE2E9] py-3 last:border-b-0">
-            <span className="flex min-h-9 w-[calc(100em/14)] shrink-0 items-center gap-2 text-[14px]">
-              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-full bg-[#EFF1F5] text-[16px]">
+          <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
+            <span className="flex min-h-9 w-[calc(100em/14)] shrink-0 items-center gap-2 text-body">
+              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-full bg-surface text-16">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
-                <EffectIcon code={effect.code} size={16} className="text-[#424E5F]" />
+                <EffectIcon code={effect.code} size={16} className="text-text-body" />
               </span>
-              <span className="text-[14px] leading-[1.3] font-semibold text-[#182132]">{effectLabel(effect)}</span>
+              <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
             </span>
 
-            <ul className="flex min-w-[min(100%,calc(170em/13))] flex-1 flex-wrap gap-2 text-[13px]">
+            <ul className="flex min-w-[min(100%,calc(170em/13))] flex-1 flex-wrap gap-2 text-13">
               {effect.items.map((item) => (
                 <li key={chipKey(item)}>
                   <Chip item={item} ingredients={ingredients} onOpen={show} />
@@ -98,7 +98,8 @@ export function UsageIngredients({
 
 const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
 
-const CHIP = `flex h-9 items-center rounded-full border border-[#CAD1DB] bg-white px-3 text-[13px] font-medium text-[#182132] ${PRESS_SURFACE}`;
+const CHIP =
+  "pressable fb-surface press-scale flex h-9 items-center rounded-full border border-border-strong bg-background px-3 text-13 leading-snug font-medium text-text-primary";
 
 function Chip({
   item,
@@ -109,12 +110,14 @@ function Chip({
   readonly ingredients: ReadonlyMap<number, ProductIngredientResponse>;
   readonly onOpen: (sheet: Sheet) => void;
 }) {
+  const { pressableProps } = usePressable();
   const group = item.ingredientGroup;
 
   if (group) {
     return (
       <Link
         href={`/ingredient-groups/${encodeURIComponent(group.code)}?from=product_detail`}
+        {...pressableProps}
         onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: group.code }))}
         className={CHIP}
       >
@@ -129,6 +132,7 @@ function Chip({
   return (
     <Link
       href={`/ingredients/${ingredient.id}`}
+      {...pressableProps}
       onClick={(event) => {
         // 전성분에 없는 성분이면 시트에 그릴 것이 없어 성분 설명 화면으로 보낸다.
         if (!ingredients.has(ingredient.id)) return;

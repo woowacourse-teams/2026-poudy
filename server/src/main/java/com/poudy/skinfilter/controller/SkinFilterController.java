@@ -1,15 +1,16 @@
 package com.poudy.skinfilter.controller;
 
-import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.security.session.LoginMember;
 import com.poudy.skinfilter.controller.dto.SkinFilterIngredientIdsRequest;
 import com.poudy.skinfilter.controller.dto.SkinFilterIngredientsRequest;
 import com.poudy.skinfilter.controller.dto.SkinFilterResponse;
+import com.poudy.skinfilter.domain.SkinFilterIngredient;
 import com.poudy.skinfilter.service.SkinFilterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,7 +36,7 @@ public class SkinFilterController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     public ResponseEntity<SkinFilterResponse> findSkinFilter(@AuthenticationPrincipal LoginMember loginMember) {
-        Ingredients ingredients = skinFilterService.findIngredients(loginMember.id());
+        List<SkinFilterIngredient> ingredients = skinFilterService.findIngredients(loginMember.id());
         return ResponseEntity.ok(SkinFilterResponse.from(ingredients));
     }
 

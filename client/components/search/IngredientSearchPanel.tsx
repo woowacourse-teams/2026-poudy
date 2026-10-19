@@ -1,12 +1,13 @@
 "use client";
 
 import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import { EmptyState } from "@poudy/design-system/empty-state";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientSuggestions } from "./IngredientSuggestions";
 
 import { CheckMark } from "@/components/ui/CheckMark";
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
+import { Icon } from "@/components/ui/icons/Icon";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
 import { track } from "@/lib/analytics/track";
@@ -230,7 +231,11 @@ export function IngredientSearchPanel({ filter, onChange, excludeCodes, names }:
             개수를 덧붙이지 않는다. 빠른 필터는 제 섹션에서 이미 몇 개인지 말하고 있고,
             없다고 한 뒤에 걸려 있다고 이으면 두 문장이 서로 반박하는 것으로 읽힌다.
           */
-          <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
+          <EmptyState
+            icon={<Icon name="search" size={28} />}
+            title="선택한 성분 없음"
+            description="성분을 검색해 담으면 여기에 쌓여요"
+          />
         ) : (
           <ul className="grid grid-cols-2 gap-2">
             {filter.includeGroupCodes.map((code) => (

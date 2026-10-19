@@ -1,5 +1,6 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.product.domain.Product;
 import java.time.OffsetDateTime;
 
 public final class ShelfProduct {
@@ -28,6 +29,10 @@ public final class ShelfProduct {
         return rating.isGood();
     }
 
+    public boolean changesPreferenceTo(Rating next) {
+        return !rating.hasSamePreferenceAs(next);
+    }
+
     public long productId() {
         return productId;
     }
@@ -36,7 +41,10 @@ public final class ShelfProduct {
         return usageStatus;
     }
 
-    public Rating rating() {
+    public Rating ratingFor(Product product) {
+        if (!product.supportsSensory()) {
+            return rating.withoutSensory();
+        }
         return rating;
     }
 

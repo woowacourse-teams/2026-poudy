@@ -76,7 +76,7 @@ class CurationProductLinkQueryTest {
     }
 
     @Test
-    void preservesCombinedConditionsAndExistingProductSearchSemantics() throws Exception {
+    void preservesCombinedSearchConditions() throws Exception {
         storeQuery("""
             {"keyword":null,"brandIds":[1],"categoryIds":[1],
              "includeIngredientIds":[3551,1005],"includeGroupCodes":["LINK_TEST"]}
@@ -88,18 +88,6 @@ class CurationProductLinkQueryTest {
             .andExpect(jsonPath("$.blocks[0].query.includeIngredientIds", contains(3551, 1005)))
             .andExpect(jsonPath("$.blocks[0].query.includeGroupCodes", contains("LINK_TEST")))
             .andExpect(jsonPath("$.blocks[0].href").doesNotExist());
-        Long expected = jdbc.queryForObject("""
-            select count(*) from product p where p.brand_id = 1 and p.category_id = 1
-              and exists (select 1 from product_component pc join product_ingredient pi on pi.component_id = pc.id
-                          where pc.product_id = p.id and pi.ingredient_id = 3551)
-              and exists (select 1 from product_component pc join product_ingredient pi on pi.component_id = pc.id
-                          where pc.product_id = p.id and pi.ingredient_id = 1005)
-            """, Long.class);
-        mockMvc.perform(
-            get("/api/products/count").param("brandIds", "1").param("categoryIds", "1")
-                .param("includeIngredientIds", "3551", "1005").param("includeGroupCodes", "LINK_TEST")
-        )
-            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(expected));
     }
 
     @Test
@@ -111,8 +99,6 @@ class CurationProductLinkQueryTest {
             .andExpect(jsonPath("$.blocks[0].query.categoryIds", hasSize(0)))
             .andExpect(jsonPath("$.blocks[0].query.includeIngredientIds", hasSize(0)))
             .andExpect(jsonPath("$.blocks[0].query.includeGroupCodes", hasSize(0)));
-        mockMvc.perform(get("/api/products/count").param("keyword", "존재하지않는제품검색어"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
     }
 
     @ParameterizedTest

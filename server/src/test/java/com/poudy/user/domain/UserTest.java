@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.domain.SocialLoginResult;
+import com.poudy.skintype.domain.SkinType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +37,31 @@ class UserTest {
 
         assertThat(result.status()).isEqualTo(LoginStatus.RESTORE_REQUESTED);
         assertThat(result.userId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("피부 타입과 민감성 피부 여부가 모두 같아야 같은 피부이고, 성별·나이대는 보지 않는다")
+    void comparesSkinOnly() {
+        User dry = profileOf(Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, false);
+
+        assertThat(dry.hasSameSkinAs(profileOf(Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, false))).isTrue();
+        assertThat(dry.hasSameSkinAs(profileOf(Gender.FEMALE, AgeRange.TWENTIES, SkinType.OILY, false))).isFalse();
+        assertThat(dry.hasSameSkinAs(profileOf(Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, true))).isFalse();
+        assertThat(dry.hasSameSkinAs(profileOf(Gender.FEMALE, AgeRange.TWENTIES, null, false))).isFalse();
+        assertThat(dry.hasSameSkinAs(profileOf(Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, null))).isFalse();
+    }
+
+    private User profileOf(Gender gender, AgeRange ageRange, SkinType skinType, Boolean sensitiveSkin) {
+        return new User(
+            1L,
+            OAuthProvider.KAKAO,
+            "user@example.com",
+            gender,
+            ageRange,
+            skinType,
+            sensitiveSkin,
+            UserStatus.ACTIVE
+        );
     }
 
     private User userOf(UserStatus status) {
