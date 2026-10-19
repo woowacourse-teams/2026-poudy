@@ -1,13 +1,14 @@
 "use client";
 
 import type { ProductIngredientResponse, ProductPartResponse } from "@poudy/api/api.zod";
+import { cn } from "@poudy/design-system/cn";
+import { Icon } from "@poudy/design-system/icon";
 import { Tag } from "@poudy/design-system/tag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useState } from "react";
 
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
-import { Icon } from "@/components/ui/icons/Icon";
 import { collapsedView } from "@/lib/domain/ingredient-collapse";
 
 /** 접기 전까지 보여 줄 성분 개수. 명세 S24 의 `전성분 앞 5개 목록` 을 따른다. */
@@ -60,7 +61,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
               className="flex min-h-8 items-center gap-2 px-0.5 text-caption text-text-secondary"
             >
               <span className="flex w-6 shrink-0 justify-center">
-                <Icon name="dots-vertical" size={14} strokeWidth={2} scalable />
+                <Icon name="dots-vertical" size={14} scalable />
               </span>
               {String(gap.from).padStart(2, "0")}~{String(gap.to).padStart(2, "0")}번 성분 {gap.to - gap.from + 1}개
             </li>,
@@ -78,7 +79,16 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-13 leading-snug font-semibold text-text-primary"
         >
           {expanded ? "성분 목록 접기" : `나머지 ${view.hiddenCount}개 성분 펼쳐보기`}
-          <Icon name={expanded ? "chevron-up" : "chevron-down"} size={16} scalable className="text-text-secondary" />
+          {/* 펼치면 꺾쇠만 반 바퀴 돈다(MOTION '펼치기 · 접기', fast). 움직임 줄이기에서는 돌지 않고 바로 바뀐다. */}
+          <Icon
+            name="chevron-down"
+            size={16}
+            scalable
+            className={cn(
+              "text-text-secondary transition-transform duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
+              expanded && "rotate-180",
+            )}
+          />
         </button>
       )}
     </div>
@@ -112,11 +122,11 @@ function IngredientRow({
 
       {/*
         이름 칸과 태그를 한 묶음으로 두고, 자리가 모자라면 태그가 이름 아래 줄 오른쪽으로 내려가게 한다.
-        이름 칸에는 최소 폭을 준다. 기기에서 글자를 키워도 이름이 태그에 밀려
+        이름 칸은 글자 폭을 기본 폭으로 삼는다(grow). 기기에서 글자를 키워도 이름이 태그에 밀려
         낱말 가운데서 갈라지기 전에 태그가 먼저 다음 줄로 넘어간다. 1배에서는 한 줄 그대로다.
       */}
       <span className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-2 gap-y-1">
-        <span className="flex min-w-24 flex-1 flex-col gap-0.5">
+        <span className="flex min-w-24 grow flex-col gap-0.5">
           <span className="text-13 leading-snug font-semibold text-text-primary">{ingredient.koreanName}</span>
           <span className="text-caption text-text-secondary">
             {ingredient.formulationRoles.map((role) => role.name).join(" · ")}

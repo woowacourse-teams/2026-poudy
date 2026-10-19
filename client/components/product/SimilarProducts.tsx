@@ -1,11 +1,11 @@
 "use client";
 
 import type { SimilarProductResponse } from "@poudy/api/api.zod";
+import { Tag } from "@poudy/design-system/tag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
-import { Badge } from "@/components/ui/Badge";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { partHref } from "@/lib/domain/product-parts";
 
@@ -55,9 +55,13 @@ function SimilarProductRow({ product }: { readonly product: SimilarProductRespon
           <span className="min-w-0 flex-1 truncate text-caption font-medium text-text-secondary">
             {product.brand.name}
           </span>
-          <Badge variant={caution ? "caution" : "noCaution"} icon={<CautionStatusIcon caution={caution} size={12} />}>
+          <Tag
+            variant="label"
+            tone={caution ? "warning" : "success"}
+            icon={<CautionStatusIcon caution={caution} size={14} />}
+          >
             {caution ? "주의" : "주의 없음"}
-          </Badge>
+          </Tag>
         </span>
         <span className="text-title font-medium text-text-primary">{product.name}</span>
       </span>

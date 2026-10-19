@@ -1,9 +1,8 @@
 "use client";
 
+import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
-
-import { Icon } from "@/components/ui/icons/Icon";
 
 /** 정보 출처 아래의 수정 제안 행. 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */
 export function SuggestEditLink({ productId }: { readonly productId: number }) {

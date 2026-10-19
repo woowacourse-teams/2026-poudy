@@ -84,13 +84,14 @@ export function CautionCheck({
         {missing.length > 0 ? (
           <CautionBundle title="찾지 못했어요" count={missing.length} tone="missing">
             {/*
-              이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 두 칸 격자로 줄을 맞춘다.
-              칸 수를 글자 크기로 정한다. 1배에서는 두 칸이지만, 글자를 키워 한 칸이 130px(글자 기준)보다
-              좁아지면 한 칸으로 바뀐다. 두 칸에 억지로 담으면 긴 이름이 낱말 가운데서 갈라진다.
+              이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 한 줄에 두 칸씩 둔다.
+              칸마다 폭의 2/5 를 기본으로 주고 남는 폭을 나눠 가져, 1배에서는 두 칸이 같은 폭이 된다.
+              글자를 키워 이름이 그 폭에 들어가지 않으면 칸이 내용만큼 넓어져 한 줄에 하나씩 놓인다.
+              두 칸에 억지로 담으면 긴 이름이 낱말 가운데서 갈라진다.
             */}
-            <ul className="grid grid-cols-[repeat(auto-fit,minmax(max(min(100%,calc(130em/14)),calc((100%_-_12px)/2)),1fr))] gap-3 text-body">
+            <ul className="flex flex-wrap gap-3 text-body">
               {missing.map((group) => (
-                <li key={group.code} className="flex">
+                <li key={group.code} className="flex grow basis-2/5">
                   <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
                 </li>
               ))}
@@ -144,7 +145,8 @@ function CautionBundle({
 
 /**
  * 기준 아이콘과 이름. 누르면 성분군 시트를 연다.
- * 누름 면은 글자 자리를 그대로 두고 바깥으로 8px·6px 넓혀 칠한다. 음수 여백과 같은 크기의 안쪽 여백으로 넓힌다.
+ * 누름 면은 글자 자리를 그대로 두고 바깥으로 8px·6px 넓혀 칠한다. 여백으로 넓히면 배치가 밀리므로, 뒤에 깐 가상 요소를
+ * 바깥으로 넓혀 그 면만 칠한다(STATE S10 · fb-surface 와 같은 ui-hover).
  * 아이콘 원은 글자를 키워도 32 그대로 둔다. 원 안의 아이콘도 크기가 정해져 있어 넘치지 않는다.
  */
 function CautionItem({
@@ -164,8 +166,8 @@ function CautionItem({
       onClick={(event) => openInPlace(event, () => onOpen(group))}
       className={
         contains
-          ? "pressable fb-surface -mx-2 flex min-h-9 items-center gap-2 rounded-md px-2"
-          : "pressable fb-surface -mx-2 -my-1.5 flex flex-1 items-center gap-2 rounded-md px-2 py-1.5"
+          ? "pressable relative isolate flex items-center gap-2 before:absolute before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0 min-h-9 before:-inset-x-2 before:inset-y-0"
+          : "pressable relative isolate flex items-center gap-2 before:absolute before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0 flex-1 before:-inset-x-2 before:-inset-y-1.5"
       }
     >
       <span

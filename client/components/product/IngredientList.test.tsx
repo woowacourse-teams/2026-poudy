@@ -29,7 +29,8 @@ describe("전체 성분표", () => {
      * `min-w-0` 이 없으면 flex 항목의 최소 너비가 글자 너비로 잡혀 칸이 부풀고,
      * 그만큼 오른쪽 태그와 화살표가 줄 밖으로 밀려난다.
      */
-    expect(screen.getByText(LONG_NAME).parentElement).toHaveClass("flex-1");
+    // 이름 칸은 글자 폭을 기본 폭으로 삼아(grow) 태그가 먼저 다음 줄로 내려가고, 이름이 갈라지지 않는다.
+    expect(screen.getByText(LONG_NAME).parentElement).toHaveClass("grow", "min-w-24");
     expect(screen.getByText(LONG_NAME).parentElement?.parentElement).toHaveClass("min-w-0", "flex-wrap");
   });
 

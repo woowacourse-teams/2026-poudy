@@ -59,18 +59,23 @@ export function UsageIngredients({
       <ul>
         {part.skinEffectGroups.map((effect) => (
           /*
-            라벨 칸과 칩 목록의 폭을 글자 크기(em)로 잡는다. 기기에서 글자를 키우면 라벨 칸이 함께 넓어지고,
-            칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다. 1배에서는 디자인의 100px 그대로다.
+            라벨 칸은 디자인의 100px 을 두되, 기기에서 글자를 키워 이름이 넘치면 내용만큼 넓어진다(min-w-fit).
+            칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다.
           */
           <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
-            <span className="flex min-h-9 w-[calc(100em/14)] shrink-0 items-center gap-2 text-body">
-              <span className="flex size-[2em] shrink-0 items-center justify-center rounded-full bg-surface text-16">
+            <span className="flex min-h-9 w-25 min-w-fit shrink-0 items-center gap-2 text-body">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-text-body" />
               </span>
               <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
             </span>
 
+            {/*
+              칩 목록의 최소 폭은 글자 크기(em)로 잡는다. 기기에서 글자를 키우면 함께 넓어져, 긴 성분명 칩이 좁은 칸에서
+              갈라지기 전에 목록째 라벨 아래 줄로 내려간다. 1배에서는 170px 이다. 토큰에 글자 크기를 따르는 폭이 없어 잠시 예외로 둔다.
+            */}
+            {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
             <ul className="flex min-w-[min(100%,calc(170em/13))] flex-1 flex-wrap gap-2 text-13">
               {effect.items.map((item) => (
                 <li key={chipKey(item)}>
