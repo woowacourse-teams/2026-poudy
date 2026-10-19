@@ -287,21 +287,21 @@ function ConditionSection({ purpose, draft, names, groups, onSearch, onRemove }:
 function AboutExcludeCodes({ excludeCodes }: { readonly excludeCodes: readonly IngredientGroupResponse[] }) {
   return (
     <div className="flex flex-col gap-2 pb-4">
-      <p className="text-body text-text-secondary">
+      <p className="text-body-sm text-text-secondary">
         피부 상태나 취향에 따라 빼고 보는 분들이 많은 성분군이에요. 누구에게나 나쁜 성분이라는 뜻은 아니에요.
       </p>
       <ul>
         {knownExcludeCodes(excludeCodes).map((code) => (
           <li key={code.code} className="flex flex-col gap-1 border-b border-border py-4 last:border-b-0">
             <div className="flex items-center gap-2">
-              <span className="text-title font-bold text-text-primary">{code.name}</span>
+              <span className="text-title font-semibold text-text-primary">{code.name}</span>
               <Tag variant="label" tone="muted">
                 {`${code.ingredients.length}종`}
               </Tag>
             </div>
             <p className="text-body-sm text-text-body">{code.description}</p>
             {code.ingredients.length > 0 ? (
-              <p className="text-caption text-text-secondary">
+              <p className="text-caption text-text-muted">
                 예:{" "}
                 {code.ingredients
                   .slice(0, 3)
