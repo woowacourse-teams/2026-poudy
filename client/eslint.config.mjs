@@ -47,6 +47,10 @@ const tokenStrictFiles = [
   "components/legal/**/*.{ts,tsx}",
   "components/navigation/{SubTopBar,useSubScreenBack}.tsx",
   "components/navigation/OpenAppDestinationRedirect.tsx",
+  "app/ingredients/**/*.{ts,tsx}",
+  "app/ingredient-groups/**/*.{ts,tsx}",
+  // 성분·성분군 설명(#732). 제품 상세가 여는 시트(IngredientSheet·IngredientGroupSheet·SheetParts)는 #731 이 맡는다.
+  "components/ingredient/{AiSummaryBadge,CautionStatusIcon,EffectTag,IngredientLinks,IngredientReferences,IngredientRole,IngredientTitle,IngredientTopBar}.tsx",
 ];
 
 const eslintConfig = defineConfig([
