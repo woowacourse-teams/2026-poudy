@@ -79,6 +79,17 @@ tasks.named('jar') {
     enabled = false
 }
 
+// 서버와 적재기가 동일한 분석 바이트코드를 사용한다. 분석 명령에는 Spring이나 DB 드라이버가 필요 없다.
+tasks.register('productSearchAnalyzerJar', Jar) {
+    dependsOn 'classes'
+    archiveFileName = 'product-search-analyzer.jar'
+    from(sourceSets.main.output) {
+        include 'com/poudy/product/search/domain/**'
+        include 'com/poudy/product/search/indexing/**'
+    }
+    manifest { attributes 'Main-Class': 'com.poudy.product.search.indexing.command.ProductSearchAnalysisCommand' }
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'spring.profiles.active', 'test'
