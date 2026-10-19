@@ -18,6 +18,7 @@ public record FeedbackRequest(
     @Size(max = Feedback.MAX_IMAGE_COUNT, message = "INVALID_FEEDBACK_IMAGE_ID") @Schema(description = "미리 업로드한 선택적 이미지 ID 목록", nullable = true) List<@NotNull(message = "INVALID_FEEDBACK_IMAGE_ID") UUID> imageIds) {
 
     public FeedbackRequest {
+        content = content == null ? null : content.trim();
         imageIds = copyOf(imageIds);
     }
 

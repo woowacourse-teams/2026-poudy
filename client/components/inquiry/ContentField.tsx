@@ -48,7 +48,7 @@ export function ContentField({
 
         {/* 남은 분량을 눈으로 볼 수 있어야 2,000 자에 걸려 놀라지 않는다. */}
         <span aria-hidden="true" className="self-end text-[11px] text-text-secondary">
-          {formatProgress(value.length, CONTENT_MAX_LENGTH)}
+          {formatProgress(value.trim().length, CONTENT_MAX_LENGTH)}
         </span>
       </div>
 
