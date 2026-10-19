@@ -18,7 +18,7 @@ import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
-import { josaOf, withJosa } from "@/lib/domain/format";
+import { josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -113,10 +113,6 @@ export function IngredientPicker({
     quickFilters.find((found) => found.code === code)?.name ?? groupDisplayName(groups.get(code)?.name ?? code);
 
   const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id) ?? `성분 ${id}`;
-  const subjectOf = (ids: readonly number[]) => {
-    const first = nameOf(ids[0]);
-    return ids.length > 1 ? `${first} 외 ${ids.length - 1}개` : first;
-  };
 
   const edit = (next: Filter) => {
     conflict.clear();
@@ -156,7 +152,7 @@ export function IngredientPicker({
     if (resolved.absorbedIds.length === 0) return;
 
     toast.show({
-      message: `${withJosa(subjectOf(resolved.absorbedIds), "은/는")} ‘${groupDisplayName(group.name)}’에 들어 있어서 하나로 묶었어요`,
+      message: `${namesWithJosa(resolved.absorbedIds.map(nameOf), "은/는")} ‘${shortName(groupDisplayName(group.name))}’에 들어 있어서 하나로 묶었어요`,
     });
   };
 

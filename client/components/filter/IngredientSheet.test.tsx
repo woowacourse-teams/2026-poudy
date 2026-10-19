@@ -10,6 +10,7 @@ import { FilterSheets } from "./FilterSheets";
 
 import { track } from "@/lib/analytics/track";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
@@ -64,7 +65,9 @@ describe("성분 시트의 조건 충돌", () => {
     const chip = sheet.getByRole("button", { name: "향료/알레르기 성분", pressed: false });
     await userEvent.click(chip);
 
-    expect(sheet.getByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./)).toBeInTheDocument();
+    expect(
+      sheet.getByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, VISIBLE_TEXT),
+    ).toBeInTheDocument();
     expect(chip).toHaveAttribute("aria-pressed", "true");
     expect(chip).toHaveFocus();
     expect(sheet.getByRole("button", { name: "원하는 성분 검색해서 추가" })).toBeInTheDocument();

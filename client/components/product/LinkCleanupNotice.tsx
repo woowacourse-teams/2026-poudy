@@ -4,7 +4,7 @@ import type { IngredientGroupResponse } from "@poudy/api/api.zod";
 import { Notice } from "@poudy/design-system/notice";
 
 import type { LinkCleanup } from "@/lib/domain/conflict";
-import { josaOf } from "@/lib/domain/format";
+import { josaOf, shortName } from "@/lib/domain/format";
 
 type LinkCleanupNoticeProps = {
   readonly removed: readonly LinkCleanup[];
@@ -32,9 +32,9 @@ const messageOf = (
 
   const [{ ingredientId, code }] = removed;
   const fullName = names.get(ingredientId) ?? "성분";
-  // 성분 이름은 하이픈에서 줄이 갈리지 않게 단어 결합자(U+2060)로 잇는다(예: '에스디알코올40-B'). 글자를 키운 화면에서
-  // '40-'와 'B'가 두 줄로 나뉘면 다른 성분처럼 읽힌다. 낭독에는 영향이 없다.
-  const name = fullName.replaceAll("-", "-\u2060");
+  // 긴 이름은 줄인다(shortName, 예: '비스-베헤닐/…'). 하이픈에서 줄이 갈리지 않게 단어 결합자(U+2060)로 잇는다
+  // (예: '에스디알코올40-B'). 글자를 키운 화면에서 '40-'와 'B'가 두 줄로 나뉘면 다른 성분처럼 읽힌다. 낭독에는 영향이 없다.
+  const name = shortName(fullName).replaceAll("-", "-\u2060");
   const topic = `‘${name}’${josaOf(fullName, "은/는")}`;
   if (!code) {
     return {

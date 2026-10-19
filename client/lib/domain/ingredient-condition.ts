@@ -1,5 +1,5 @@
 import type { Filter } from "./filter";
-import { withJosa } from "./format";
+import { namesWithJosa, shortName, withJosaShort } from "./format";
 import { type GroupConditionKey, type IngredientGroup, toggleGroup } from "./ingredient-groups";
 
 /** 원하는 성분(include)과 피하고 싶은 성분(exclude). */
@@ -204,13 +204,8 @@ export type ResolutionNames = {
   readonly group: (code: string) => string;
 };
 
-const subjectOf = (names: readonly string[]): string => {
-  if (names.length > 1) return `${names[0]} 외 ${names.length - 1}개`;
-  return names[0] ?? "";
-};
-
 /**
- * 정리한 것을 알리는 안내 줄 문구(S33 · S33a · S35 · S35a). 정리한 것이 없으면 빈 문자열이다.
+ * 정리한 것을 알리는 안내 줄 문구(S33 · S33a · S35 · S35a). 정리한 것이 없으면 빈 문자열이다. 긴 이름은 줄인다(shortName).
  * condition 은 담은 쪽이다. 옮겨 온 것은 어느 쪽에서 어느 쪽으로 옮겼는지 두 쪽 이름을 모두 적는다.
  */
 export const resolutionMessage = (
@@ -219,15 +214,15 @@ export const resolutionMessage = (
   names: ResolutionNames,
 ): string => {
   const moved = [...resolved.movedGroupCodes.map(names.group), ...resolved.movedIds.map(names.ingredient)];
-  const released = resolved.releasedCodes.map(names.group).join("’, ‘");
+  const released = resolved.releasedCodes.map((code) => shortName(names.group(code))).join("’, ‘");
   const dropped = resolved.droppedIds.map(names.ingredient);
   return [
     ...when(moved.length > 0, [
-      `${withJosa(subjectOf(moved), "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 담았어요.`,
+      `${namesWithJosa(moved, "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 담았어요.`,
     ]),
-    ...when(released.length > 0, [`${withJosa(names.target, "을/를")} 담으려고 ‘${released}’ 피하기를 풀었어요.`]),
+    ...when(released.length > 0, [`${withJosaShort(names.target, "을/를")} 담으려고 ‘${released}’ 피하기를 풀었어요.`]),
     ...when(dropped.length > 0, [
-      `${withJosa(subjectOf(dropped), "은/는")} ‘${names.target}’에 들어 있어 원하는 성분에서 뺐어요.`,
+      `${namesWithJosa(dropped, "은/는")} ‘${shortName(names.target)}’에 들어 있어 원하는 성분에서 뺐어요.`,
     ]),
   ].join(" ");
 };

@@ -13,6 +13,7 @@ import { IngredientPicker } from "./IngredientPicker";
 import { track } from "@/lib/analytics/track";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import { EMPTY_FILTER, type Filter } from "@/lib/domain/filter";
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
@@ -122,7 +123,9 @@ describe("IngredientPicker", () => {
     // 성분군 행 이름은 조건 일치 제품의 결과 행과 같이 '이름 N종'이다.
     await userEvent.click(await screen.findByRole("button", { name: "레티놀 2종 담기", pressed: false }, WAIT));
 
-    expect(await screen.findByText("레티놀은 ‘레티놀’에 들어 있어서 하나로 묶었어요", {}, WAIT)).toBeInTheDocument();
+    expect(
+      await screen.findByText("레티놀은 ‘레티놀’에 들어 있어서 하나로 묶었어요", VISIBLE_TEXT, WAIT),
+    ).toBeInTheDocument();
     // 성분군으로 담긴 성분은 더 누를 수 없는 표시로 바뀐다.
     expect(screen.getByText("레티놀 성분군으로 담김")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "레티놀 담기" })).not.toBeInTheDocument();
@@ -135,7 +138,7 @@ describe("IngredientPicker", () => {
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
     await userEvent.click(await screen.findByRole("button", { name: "레티놀 2종 담기" }, WAIT));
 
-    expect(screen.getByText("레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.")).toBeInTheDocument();
+    expect(screen.getByText("레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
     expect(onApply).toHaveBeenCalledWith(

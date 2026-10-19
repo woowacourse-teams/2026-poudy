@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { FocusEvent, ReactNode, RefObject } from "react";
 
 import { cn } from "./cn";
+import { keepQuoteWithParticle } from "./keep-quote";
 import { Portal } from "./portal";
 import { TextButton } from "./text-button";
 
@@ -185,7 +186,9 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
                 "motion-reduce:duration-(--duration-fast) motion-reduce:starting:translate-y-0",
               )}
             >
-              <p className="min-w-0 flex-1 text-body-sm leading-normal text-action-text">{toast.message}</p>
+              <p className="min-w-0 flex-1 text-body-sm leading-normal wrap-anywhere text-action-text">
+                {keepQuoteWithParticle(toast.message)}
+              </p>
               {toast.action ? (
                 <TextButton tone="on-dark" onClick={() => runAction(toast.action!)}>
                   {toast.action.label}

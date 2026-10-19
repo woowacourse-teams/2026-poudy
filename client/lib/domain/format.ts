@@ -154,3 +154,28 @@ export const josaOf = (word: string, pair: JosaPair): string => {
 
 /** 이름 뒤에 받침에 맞는 조사를 붙인다(W06). `withJosa("판테놀", "을/를")` → `판테놀을` */
 export const withJosa = (word: string, pair: JosaPair): string => `${word}${josaOf(word, pair)}`;
+
+/** 안내 문구에 넣는 성분 이름의 최대 글자 수. 이보다 길면 줄인다. */
+const MESSAGE_NAME_MAX = 12;
+
+/**
+ * 안내 문구(안내 줄, 토스트)에 넣는 성분 이름. 다 보일 필요는 없어, 긴 이름은 줄여서 문장이 몇 줄로 늘어나지 않게 한다.
+ * 12자 이하는 그대로 둔다(예: '향료/알레르기 성분'). 더 길면 '/'가 앞쪽에 있으면 첫 '/'까지(선택 성분 칩과 같은 규칙,
+ * 예: '비스-베헤닐/…'), 아니면 12자까지 두고 '…'를 붙인다.
+ */
+export const shortName = (name: string): string => {
+  const chars = Array.from(name);
+  if (chars.length <= MESSAGE_NAME_MAX) return name;
+  const slash = chars.indexOf("/");
+  if (slash > 0 && slash < MESSAGE_NAME_MAX) return `${chars.slice(0, slash + 1).join("")}…`;
+  return `${chars.slice(0, MESSAGE_NAME_MAX).join("")}…`;
+};
+
+/** 줄인 이름 뒤에 원래 이름의 받침에 맞는 조사를 붙인다. 줄인 이름은 '…'로 끝나 받침을 알 수 없다. */
+export const withJosaShort = (name: string, pair: JosaPair): string => `${shortName(name)}${josaOf(name, pair)}`;
+
+/** 이름 여럿을 '첫 이름 외 N개'로 묶고 조사를 붙인다. 하나면 그 이름을 줄여 쓴다. */
+export const namesWithJosa = (names: readonly string[], pair: JosaPair): string => {
+  if (names.length > 1) return withJosa(`${shortName(names[0] ?? "")} 외 ${names.length - 1}개`, pair);
+  return withJosaShort(names[0] ?? "", pair);
+};
